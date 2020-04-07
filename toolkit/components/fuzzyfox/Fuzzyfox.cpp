@@ -7,9 +7,9 @@
 #include "Fuzzyfox.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/TimeStamp.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
@@ -50,7 +50,7 @@ void Fuzzyfox::Start() {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Fuzzyfox> r = new Fuzzyfox();
-  SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 Fuzzyfox::Fuzzyfox()
@@ -111,7 +111,7 @@ Fuzzyfox::Observe(nsISupports* aObject, const char* aTopic,
       if (sFuzzyfoxInitializing) {
         // Queue a runnable
         nsCOMPtr<nsIRunnable> r = this;
-        SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
       } else {
         mStartTime = 0;
         mTickType = eUptick;
@@ -123,9 +123,9 @@ Fuzzyfox::Observe(nsISupports* aObject, const char* aTopic,
   return NS_OK;
 }
 
-#define DISPATCH_AND_RETURN()                             \
-  nsCOMPtr<nsIRunnable> r = this;                         \
-  SystemGroup::Dispatch(TaskCategory::Other, r.forget()); \
+#define DISPATCH_AND_RETURN()                                \
+  nsCOMPtr<nsIRunnable> r = this;                            \
+  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()); \
   return NS_OK
 
 NS_IMETHODIMP

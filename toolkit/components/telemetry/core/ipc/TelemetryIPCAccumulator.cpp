@@ -12,6 +12,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPtr.h"
@@ -343,6 +344,6 @@ void TelemetryIPCAccumulator::DeInitializeGlobalState() {
 
 void TelemetryIPCAccumulator::DispatchToMainThread(
     already_AddRefed<nsIRunnable>&& aEvent) {
-  SystemGroup::EventTargetFor(TaskCategory::Other)
-      ->Dispatch(std::move(aEvent), nsIEventTarget::DISPATCH_NORMAL);
+  SchedulerGroup::Dispatch(TaskCategory::Other,
+      std::move(aEvent));
 }

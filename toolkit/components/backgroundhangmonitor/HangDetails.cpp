@@ -11,6 +11,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"  // For RemoteTypePrefix
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 #include "mozilla/ResultExtensions.h"
@@ -304,7 +305,7 @@ void nsHangDetails::Submit() {
       });
 
   nsresult rv =
-      SystemGroup::Dispatch(TaskCategory::Other, notifyObservers.forget());
+      SchedulerGroup::Dispatch(TaskCategory::Other, notifyObservers.forget());
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }
 

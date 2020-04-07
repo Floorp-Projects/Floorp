@@ -10,7 +10,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/SystemGroup.h"
+#include "mozilla/SchedulerGroup.h"
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"
 #endif
@@ -93,7 +93,7 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
   StaticMutexAutoLock lock(sMutex);
   if (aTrack == TrackType::kAudioTrack) {
     static RefPtr<AllocPolicyImpl> sAudioPolicy = []() {
-      SystemGroup::Dispatch(
+      SchedulerGroup::Dispatch(
           TaskCategory::Other,
           NS_NewRunnableFunction(
               "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
@@ -104,7 +104,7 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
     return WrapNotNull(sAudioPolicy.get());
   }
   static RefPtr<AllocPolicyImpl> sVideoPolicy = []() {
-    SystemGroup::Dispatch(
+    SchedulerGroup::Dispatch(
         TaskCategory::Other,
         NS_NewRunnableFunction(
             "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {

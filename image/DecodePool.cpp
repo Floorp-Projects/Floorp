@@ -10,6 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
@@ -91,7 +92,7 @@ class DecodePoolImpl {
     // pool explicitly. Otherwise we could try to shut down the same thread
     // twice.
     if (removed) {
-      SystemGroup::Dispatch(
+      SchedulerGroup::Dispatch(
           TaskCategory::Other,
           NewRunnableMethod("DecodePoolImpl::ShutdownThread", aThisThread,
                             &nsIThread::AsyncShutdown));

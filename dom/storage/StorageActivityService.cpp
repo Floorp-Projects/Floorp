@@ -7,6 +7,7 @@
 #include "StorageActivityService.h"
 
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIMutableArray.h"
 #include "nsSupportsPrimitives.h"
@@ -59,7 +60,7 @@ void StorageActivityService::SendActivity(
         StorageActivityService::SendActivity(principal);
       });
 
-  SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 /* static */
@@ -84,7 +85,7 @@ void StorageActivityService::SendActivity(const nsACString& aOrigin) {
   if (NS_IsMainThread()) {
     Unused << r->Run();
   } else {
-    SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 }
 

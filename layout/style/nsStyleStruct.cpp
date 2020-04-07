@@ -37,6 +37,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/PreferenceSheet.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
@@ -207,7 +208,7 @@ void Gecko_LoadData_Drop(StyleLoadData* aData) {
       task->Run();
     } else {
       // if Resolve was not called at some point, mDocGroup is not set.
-      SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+      SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
     }
   }
 

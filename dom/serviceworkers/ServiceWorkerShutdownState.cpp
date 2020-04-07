@@ -12,6 +12,7 @@
 #include "MainThreadUtils.h"
 #include "ServiceWorkerUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -112,7 +113,8 @@ void ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId,
   if (NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(r->Run());
   } else {
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
   }
 }
 

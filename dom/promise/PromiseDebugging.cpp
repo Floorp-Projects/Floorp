@@ -9,7 +9,7 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/SystemGroup.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 
@@ -41,8 +41,8 @@ class FlushRejections : public CancelableRunnable {
       return;
     }
     sDispatched.set(true);
-    SystemGroup::Dispatch(TaskCategory::Other,
-                          do_AddRef(new FlushRejections()));
+    SchedulerGroup::Dispatch(TaskCategory::Other,
+                             do_AddRef(new FlushRejections()));
   }
 
   static void FlushSync() {

@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/SchedulerGroup.h"
 
 #include "ChromiumCDMCallback.h"
 #include "GMPTestMonitor.h"
@@ -194,11 +195,10 @@ static void ClearCDMStorage(already_AddRefed<nsIRunnable> aContinuation,
                             nsIThread* aTarget, PRTime aSince = -1) {
   RefPtr<ClearCDMStorageTask> task(
       new ClearCDMStorageTask(std::move(aContinuation), aTarget, aSince));
-  SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
 }
 
 static void SimulatePBModeExit() {
-  // SystemGroup::EventTargetFor() doesn't support NS_DISPATCH_SYNC.
   NS_DispatchToMainThread(new NotifyObserversTask("last-pb-context-exited"),
                           NS_DISPATCH_SYNC);
 }
@@ -508,7 +508,7 @@ class CDMStorageTest {
     EnumerateCDMStorageDir(NS_LITERAL_CSTRING("id"),
                            NodeIdCollector(siteInfo.get()));
     // Invoke "Forget this site" on the main thread.
-    SystemGroup::Dispatch(
+    SchedulerGroup::Dispatch(
         TaskCategory::Other,
         NewRunnableMethod<UniquePtr<NodeInfo>&&>(
             "CDMStorageTest::TestForgetThisSite_Forget", this,
@@ -920,7 +920,7 @@ class CDMStorageTest {
         NewRunnableMethod("CDMStorageTest::Shutdown", this,
                           &CDMStorageTest::Shutdown),
         std::move(aContinuation), mNodeId));
-    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void Shutdown() {
@@ -938,7 +938,7 @@ class CDMStorageTest {
     Shutdown();
     nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
         "CDMStorageTest::Dummy", this, &CDMStorageTest::Dummy);
-    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,

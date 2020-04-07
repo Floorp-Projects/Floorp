@@ -9,7 +9,7 @@
 #include "DDLogUtils.h"
 #include "DDMediaLogs.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/SystemGroup.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -112,7 +112,7 @@ bool DecoderDoctorLogger::EnsureLogIsEnabled() {
           MOZ_ASSERT(mediaLogsConstruction.mMediaLogs);
           sMediaLogs = mediaLogsConstruction.mMediaLogs;
           // Setup shutdown-time clean-up.
-          MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(
+          MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(
               TaskCategory::Other,
               NS_NewRunnableFunction("DDLogger shutdown setup", [] {
                 sDDLogShutdowner = MakeUnique<DDLogShutdowner>();

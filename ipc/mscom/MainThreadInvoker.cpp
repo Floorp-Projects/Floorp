@@ -11,9 +11,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "private/prpriv.h"  // For PR_GetThreadID
 #include <winternl.h>        // For NTSTATUS and NTAPI
@@ -154,8 +154,8 @@ bool MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable) {
 
   // 2. Post a Gecko runnable (which always runs). If the APC hasn't run, the
   // Gecko runnable runs it. Otherwise, it does nothing.
-  if (NS_FAILED(SystemGroup::Dispatch(TaskCategory::Other,
-                                      do_AddRef(syncRunnable)))) {
+  if (NS_FAILED(SchedulerGroup::Dispatch(TaskCategory::Other,
+                                         do_AddRef(syncRunnable)))) {
     return false;
   }
 

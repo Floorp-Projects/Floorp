@@ -26,6 +26,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -117,7 +118,7 @@ class DeleteObjectTask : public Runnable {
 template <class T>
 void DeleteOnMainThread(UniquePtr<T>&& aObject) {
   nsCOMPtr<nsIRunnable> r = new DeleteObjectTask<T>(std::move(aObject));
-  SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 LayersBackend GetCompositorBackendType(

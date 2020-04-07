@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/EnsureMTA.h"
-#include "mozilla/SystemGroup.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/UniquePtr.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
@@ -41,7 +41,7 @@ struct MainThreadRelease {
       aPtr->Release();
       return;
     }
-    DebugOnly<nsresult> rv = SystemGroup::Dispatch(
+    DebugOnly<nsresult> rv = SchedulerGroup::Dispatch(
         TaskCategory::Other,
         NewNonOwningRunnableMethod("mscom::MainThreadRelease", aPtr,
                                    &T::Release));
