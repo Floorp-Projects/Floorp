@@ -6,11 +6,11 @@
 
 #include "mozilla/dom/DOMQuad.h"
 
-#include "mozilla/dom/DOMQuadBinding.h"
 #include "mozilla/dom/DOMPoint.h"
+#include "mozilla/dom/DOMQuadBinding.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMRectBinding.h"
-#include <algorithm>
+#include "mozilla/FloatingPoint.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -91,8 +91,8 @@ void DOMQuad::GetHorizontalMinMax(double* aX1, double* aX2) const {
   x1 = x2 = Point(0)->X();
   for (uint32_t i = 1; i < 4; ++i) {
     double x = Point(i)->X();
-    x1 = std::min(x1, x);
-    x2 = std::max(x2, x);
+    x1 = NaNSafeMin(x1, x);
+    x2 = NaNSafeMax(x2, x);
   }
   *aX1 = x1;
   *aX2 = x2;
@@ -103,8 +103,8 @@ void DOMQuad::GetVerticalMinMax(double* aY1, double* aY2) const {
   y1 = y2 = Point(0)->Y();
   for (uint32_t i = 1; i < 4; ++i) {
     double y = Point(i)->Y();
-    y1 = std::min(y1, y);
-    y2 = std::max(y2, y);
+    y1 = NaNSafeMin(y1, y);
+    y2 = NaNSafeMax(y2, y);
   }
   *aY1 = y1;
   *aY2 = y2;

@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
-#include <algorithm>
+#include "mozilla/FloatingPoint.h"
 
 struct nsRect;
 class nsIGlobalObject;
@@ -59,19 +59,19 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
 
   double Left() const {
     double x = X(), w = Width();
-    return std::min(x, x + w);
+    return NaNSafeMin(x, x + w);
   }
   double Top() const {
     double y = Y(), h = Height();
-    return std::min(y, y + h);
+    return NaNSafeMin(y, y + h);
   }
   double Right() const {
     double x = X(), w = Width();
-    return std::max(x, x + w);
+    return NaNSafeMax(x, x + w);
   }
   double Bottom() const {
     double y = Y(), h = Height();
-    return std::max(y, y + h);
+    return NaNSafeMax(y, y + h);
   }
 
   bool WriteStructuredClone(JSContext* aCx,

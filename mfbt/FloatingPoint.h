@@ -16,6 +16,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Types.h"
 
+#include <algorithm>
 #include <limits>
 #include <stdint.h>
 #include <type_traits>
@@ -515,6 +516,30 @@ static inline bool EqualOrBothNaN(T aValue1, T aValue2) {
     return IsNaN(aValue2);
   }
   return aValue1 == aValue2;
+}
+
+/**
+ * Return NaN if either |aValue1| or |aValue2| is NaN, or the minimum of
+ * |aValue1| and |aValue2| otherwise.
+ */
+template <typename T>
+static inline T NaNSafeMin(T aValue1, T aValue2) {
+  if (IsNaN(aValue1) || IsNaN(aValue2)) {
+    return UnspecifiedNaN<T>();
+  }
+  return std::min(aValue1, aValue2);
+}
+
+/**
+ * Return NaN if either |aValue1| or |aValue2| is NaN, or the maximum of
+ * |aValue1| and |aValue2| otherwise.
+ */
+template <typename T>
+static inline T NaNSafeMax(T aValue1, T aValue2) {
+  if (IsNaN(aValue1) || IsNaN(aValue2)) {
+    return UnspecifiedNaN<T>();
+  }
+  return std::max(aValue1, aValue2);
 }
 
 namespace detail {
