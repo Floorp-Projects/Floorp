@@ -362,18 +362,38 @@
         android:label="@string/preferences_passwords_logins_and_passwords">
         <action
             android:id="@+id/action_loginsFragment_to_savedLoginsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/savedLoginsFragment" />
         <action
             android:id="@+id/action_loginsFragment_to_accountSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/accountSettingsFragment" />
         <action
             android:id="@+id/action_loginsFragment_to_accountProblemFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/accountProblemFragment" />
         <action
             android:id="@+id/action_loginsFragment_to_turnOnSyncFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/turnOnSyncFragment" />
         <action
             android:id="@+id/action_loginsFragment_to_saveLoginSettingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/saveLoginSettingFragment" />
     </fragment>
 
@@ -516,10 +536,18 @@
         android:label="@string/preferences_site_permissions">
         <action
             android:id="@+id/action_site_permissions_to_manage_phone_features"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/SitePermissionsManagePhoneFeature"
             app:popUpTo="@id/sitePermissionsFragment" />
         <action
             android:id="@+id/action_site_permissions_to_exceptions"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/sitePermissionsExceptionsFragment"
             app:popUpTo="@id/sitePermissionsFragment" />
     </fragment>
@@ -597,9 +625,17 @@
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment">
         <action
             android:id="@+id/action_trackingProtectionFragment_to_exceptionsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/exceptionsFragment" />
         <action
             android:id="@+id/action_trackingProtectionFragment_to_trackingProtectionBlockingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/trackingProtectionBlockingFragment" />
         <action
             android:id="@+id/action_trackingProtectionFragment_to_browserFragment"
@@ -678,7 +714,7 @@
             android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment"
             app:popUpTo="@id/shareFragment"
-            app:popUpToInclusive="true"></action>
+            app:popUpToInclusive="true"/>
         <action
             android:id="@+id/action_shareFragment_to_accountProblemFragment"
             app:destination="@id/accountProblemFragment" />
