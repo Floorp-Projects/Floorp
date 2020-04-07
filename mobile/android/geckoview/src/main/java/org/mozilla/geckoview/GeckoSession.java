@@ -299,6 +299,7 @@ public class GeckoSession implements Parcelable {
             new String[]{
                 "GeckoView:OnVisited",
                 "GeckoView:GetVisited",
+                "GeckoView:StateUpdated",
             }
         ) {
             @Override
@@ -334,6 +335,33 @@ public class GeckoSession implements Parcelable {
                     result.accept(
                         visited -> callback.sendSuccess(visited),
                         exception -> callback.sendError("Failed to fetch visited statuses for URIs"));
+                } else if ("GeckoView:StateUpdated".equals(event)) {
+
+                    final GeckoBundle update = message.getBundle("data");
+
+                    if (update == null) {
+                        return;
+                    }
+                    final int previousHistorySize = mStateCache.size();
+                    mStateCache.updateSessionState(update);
+
+                    ProgressDelegate progressDelegate = getProgressDelegate();
+                    if (progressDelegate != null) {
+                        progressDelegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
+                    }
+
+                    if (update.getBundle("historychange") != null) {
+                        final SessionState state = new SessionState(mStateCache);
+
+                        delegate.onHistoryStateChange(GeckoSession.this, state);
+
+                        // If the previous history was larger than one entry and the new size is one, it means the
+                        // History has been purged and the navigation delegate needs to be update.
+                        if ((previousHistorySize > 1) && (state.size() == 1) && mNavigationHandler.getDelegate() != null) {
+                            mNavigationHandler.getDelegate().onCanGoForward(GeckoSession.this, false);
+                            mNavigationHandler.getDelegate().onCanGoBack(GeckoSession.this, false);
+                        }
+                    }
                 }
             }
         };
@@ -607,7 +635,7 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:PageStop",
                 "GeckoView:ProgressChanged",
                 "GeckoView:SecurityChanged",
-                "GeckoView:StateUpdated"
+                "GeckoView:StateUpdated",
             }
         ) {
             @Override
@@ -629,23 +657,11 @@ public class GeckoSession implements Parcelable {
                     final GeckoBundle identity = message.getBundle("identity");
                     delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
                 } else if ("GeckoView:StateUpdated".equals(event)) {
-                    final HistoryDelegate historyDelegate = getHistoryDelegate();
                     final GeckoBundle update = message.getBundle("data");
                     if (update != null) {
-                        final int previousHistorySize = mStateCache.size();
-                        mStateCache.updateSessionState(update);
-                        final SessionState state = new SessionState(mStateCache);
-                        delegate.onSessionStateChange(GeckoSession.this, state);
-                        if (update.getBundle("historychange") != null) {
-                            if (historyDelegate != null) {
-                                historyDelegate.onHistoryStateChange(GeckoSession.this, state);
-                            }
-                            // If the previous history was larger than one entry and the new size is one, it means the
-                            // History has been purged and the navigation delegate needs to be update.
-                            if ((previousHistorySize > 1) && (state.size() == 1) && mNavigationHandler.getDelegate() != null) {
-                                mNavigationHandler.getDelegate().onCanGoForward(GeckoSession.this, false);
-                                mNavigationHandler.getDelegate().onCanGoBack(GeckoSession.this, false);
-                            }
+                        if (getHistoryDelegate() == null) {
+                            mStateCache.updateSessionState(update);
+                            delegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
                         }
                     }
                 }
