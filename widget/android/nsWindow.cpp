@@ -1932,15 +1932,11 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsIWidgetListener* listener = GetWidgetListener();
-  if (listener) {
-    listener->FullscreenWillChange(aFullScreen);
-  }
-
   mIsFullScreen = aFullScreen;
   mAndroidView->mEventDispatcher->Dispatch(
       aFullScreen ? u"GeckoView:FullScreenEnter" : u"GeckoView:FullScreenExit");
 
+  nsIWidgetListener* listener = GetWidgetListener();
   if (listener) {
     mSizeMode = mIsFullScreen ? nsSizeMode_Fullscreen : nsSizeMode_Normal;
     listener->SizeModeChanged(mSizeMode);
