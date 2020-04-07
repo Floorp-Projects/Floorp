@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/XRInputSourceArray.h"
 #include "mozilla/dom/XRSession.h"
+#include "mozilla/dom/XRInputSourcesChangeEvent.h"
 
 namespace mozilla {
 namespace dom {
@@ -40,8 +41,16 @@ void XRInputSourceArray::Update(XRSession* aSession) {
   for (int32_t i = 0; i < gfx::kVRControllerMaxCount; ++i) {
     const gfx::VRControllerState& controllerState = displayClient->GetDisplayInfo().mControllerState[i];
     if (controllerState.controllerName[0] == '\0') {
-      break; // We would not have an empty slot before others.
+      // Checking if exising controllers need to be removed.
+      for (auto& input : mInputSources) {
+        if (input->GetIndex() == i) {
+          removedInputs.AppendElement(input);
+          break;
+        }
+      }
+      continue;
     }
+
     bool found = false;
     RefPtr<XRInputSource> inputSource = nullptr;
     for (auto& input : mInputSources) {
@@ -57,18 +66,60 @@ void XRInputSourceArray::Update(XRSession* aSession) {
       inputSource = new XRInputSource(mParent);
       inputSource->Setup(aSession, i);
       mInputSources.AppendElement(inputSource);
+
+      addInit.mBubbles = false;
+      addInit.mCancelable = false;
+      addInit.mSession = aSession;
+      addInit.mAdded.AppendElement(*inputSource, mozilla::fallible);
     }
     // If added, updating the current controller states.
     if (inputSource) {
       inputSource->Update(aSession);
     }
   }
+
+  // Send `inputsourceschange` for new controllers.
+  if (addInit.mAdded.Length()) {
+    RefPtr<XRInputSourcesChangeEvent> event = XRInputSourcesChangeEvent::Constructor(aSession,
+        NS_LITERAL_STRING("inputsourceschange"), addInit);
+
+    event->SetTrusted(true);
+    aSession->DispatchEvent(*event);
+  }
+
+  // If there's a controller is removed, dispatch `inputsourceschange`.
+  if (removedInputs.Length()) {
+    DispatchInputSourceRemovedEvent(removedInputs, aSession);
+  }
+  for (auto& input: removedInputs) {
+    mInputSources.RemoveElement(input);
+  }
 }
 
-void XRInputSourceArray::Clear() {
-  for (auto& input: mInputSources) {
+void XRInputSourceArray::DispatchInputSourceRemovedEvent(
+  const nsTArray<RefPtr<XRInputSource>>& aInputs, XRSession* aSession) {
+  XRInputSourcesChangeEventInit init;
+
+  for (auto& input: aInputs) {
     input->SetGamepadIsConnected(false);
+
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mSession = aSession;
+    init.mRemoved.AppendElement(*input, mozilla::fallible);
   }
+
+  if (init.mRemoved.Length()) {
+    RefPtr<XRInputSourcesChangeEvent> event = XRInputSourcesChangeEvent::Constructor(aSession,
+      NS_LITERAL_STRING("inputsourceschange"), init);
+
+    event->SetTrusted(true);
+    aSession->DispatchEvent(*event);
+  }
+}
+
+void XRInputSourceArray::Clear(XRSession* aSession) {
+  DispatchInputSourceRemovedEvent(mInputSources, aSession);
   mInputSources.Clear();
 }
 
