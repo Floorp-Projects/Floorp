@@ -110,6 +110,7 @@ jobs:
             tooltool-downloads: internal
         fetches:
             toolchain:
+                - linux64-binutils
                 - linux64-cctools-port
                 - linux64-clang-macosx-cross
                 - linux64-hfsplus
