@@ -30,7 +30,6 @@
 #include "js/StructuredClone.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"

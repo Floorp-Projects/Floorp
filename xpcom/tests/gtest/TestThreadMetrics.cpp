@@ -9,7 +9,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/PerformanceCounter.h"
@@ -118,10 +117,10 @@ class ThreadMetrics : public ::testing::Test {
 
  protected:
   virtual void SetUp() {
-    // building the TabGroup/DocGroup structure
-    RefPtr<dom::TabGroup> tabGroup = new dom::TabGroup(false);
-    mDocGroup = tabGroup->AddDocument(NS_LITERAL_CSTRING("key"), nullptr);
-    mDocGroup2 = tabGroup->AddDocument(NS_LITERAL_CSTRING("key2"), nullptr);
+    // building the DocGroup structure
+    RefPtr<dom::BrowsingContextGroup> group = new dom::BrowsingContextGroup();
+    mDocGroup = group->AddDocument(NS_LITERAL_CSTRING("key"), nullptr);
+    mDocGroup2 = group->AddDocument(NS_LITERAL_CSTRING("key2"), nullptr);
     mCounter = mDocGroup->GetPerformanceCounter();
     mCounter2 = mDocGroup2->GetPerformanceCounter();
     mThreadMgr = do_GetService("@mozilla.org/thread-manager;1");

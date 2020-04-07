@@ -7,7 +7,6 @@
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
 #include "mozilla/dom/PromiseBinding.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/TaskCategory.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"

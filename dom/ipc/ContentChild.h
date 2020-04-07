@@ -498,10 +498,9 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvConstructBrowser(
       ManagedEndpoint<PBrowserChild>&& aBrowserEp,
       ManagedEndpoint<PWindowGlobalChild>&& aWindowEp, const TabId& aTabId,
-      const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
-      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, const bool& aIsForBrowser,
-      const bool& aIsTopLevel);
+      const IPCTabContext& aContext, const WindowGlobalInit& aWindowInit,
+      const uint32_t& aChromeFlags, const ContentParentId& aCpID,
+      const bool& aIsForBrowser, const bool& aIsTopLevel);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 
@@ -713,9 +712,6 @@ class ContentChild final
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ProcessingError(Result aCode, const char* aReason) override;
-
-  virtual already_AddRefed<nsIEventTarget> GetSpecificMessageEventTarget(
-      const Message& aMsg) override;
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 

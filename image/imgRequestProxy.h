@@ -34,10 +34,6 @@ class imgStatusNotifyRunnable;
 class ProxyBehaviour;
 
 namespace mozilla {
-namespace dom {
-class TabGroup;
-}
-
 namespace image {
 class Image;
 class ProgressTracker;
@@ -213,7 +209,6 @@ class imgRequestProxy : public imgIRequest,
       "they are destroyed") mListener;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  RefPtr<mozilla::dom::TabGroup> mTabGroup;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
   nsLoadFlags mLoadFlags;

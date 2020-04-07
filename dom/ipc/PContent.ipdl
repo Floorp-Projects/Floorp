@@ -428,7 +428,7 @@ parent:
 child:
     async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
                            ManagedEndpoint<PWindowGlobalChild> windowEp,
-                           TabId tabId, TabId sameTabGroupAs,
+                           TabId tabId,
                            IPCTabContext context,
                            WindowGlobalInit windowInit,
                            uint32_t chromeFlags, ContentParentId cpId,

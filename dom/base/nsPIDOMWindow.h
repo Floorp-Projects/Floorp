@@ -57,7 +57,6 @@ class ClientState;
 class ContentFrameMessageManager;
 class DocGroup;
 class Document;
-class TabGroup;
 class Element;
 class Navigator;
 class Performance;
@@ -314,7 +313,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   void TryToCacheTopInnerWindow();
 
   // Increase/Decrease the number of active IndexedDB databases for the
-  // decision making of TabGroup scheduling and timeout-throttling.
+  // decision making of timeout-throttling.
   void UpdateActiveIndexedDBDatabaseCount(int32_t aDelta);
 
   // Return true if there is any active IndexedDB databases which could block
@@ -339,12 +338,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   void NoteDOMContentLoaded();
-
-  mozilla::dom::TabGroup* TabGroup();
-
-  // Like MaybeTabGroup, but it is more tolerant of being called at peculiar
-  // times, and it can return null.
-  mozilla::dom::TabGroup* MaybeTabGroup();
 
   virtual mozilla::dom::CustomElementRegistry* CustomElements() = 0;
 
@@ -639,8 +632,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // The AudioContexts created for the current document, if any.
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts;  // Weak
 
-  RefPtr<mozilla::dom::TabGroup> mTabGroup;
-
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
@@ -769,12 +760,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   bool IsTopLevelWindow();
   bool HadOriginalOpener() const;
 
-  mozilla::dom::TabGroup* TabGroup();
-
-  // Like MaybeTabGroup, but it is more tolerant of being called at peculiar
-  // times, and it can return null.
-  mozilla::dom::TabGroup* MaybeTabGroup();
-
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
 
   virtual void ActivateOrDeactivate(bool aActivate) = 0;
@@ -874,6 +859,11 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * Get the browsing context in this window.
    */
   inline mozilla::dom::BrowsingContext* GetBrowsingContext() const;
+
+  /**
+   * Get the browsing context group this window belongs to.
+   */
+  mozilla::dom::BrowsingContextGroup* GetBrowsingContextGroup() const;
 
   /**
    * Set a new document in the window. Calling this method will in most cases
@@ -1138,8 +1128,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mInnerWindow;
-
-  RefPtr<mozilla::dom::TabGroup> mTabGroup;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.

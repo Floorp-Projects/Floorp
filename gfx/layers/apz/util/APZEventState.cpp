@@ -22,7 +22,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/widget/nsAutoRollup.h"
 #include "nsCOMPtr.h"
@@ -184,12 +183,6 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 
   APZES_LOG("Scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = NS_NewTimer();
-  dom::BrowserChild* browserChild = widget->GetOwningBrowserChild();
-
-  if (browserChild && XRE_IsContentProcess()) {
-    timer->SetTarget(
-        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-  }
   RefPtr<DelayedFireSingleTapEvent> callback = new DelayedFireSingleTapEvent(
       mWidget, ldPoint, aModifiers, aClickCount, timer, touchRollup);
   nsresult rv = timer->InitWithCallback(

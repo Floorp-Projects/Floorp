@@ -12,7 +12,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/quota/QuotaManager.h"

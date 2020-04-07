@@ -1192,8 +1192,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
 already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,
     const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
-    ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs,
-    uint64_t aNextRemoteTabId) {
+    ContentParent* aOpenerContentParent, uint64_t aNextRemoteTabId) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
@@ -1324,7 +1323,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   // Tell the content process to set up its PBrowserChild.
   bool ok = constructorSender->SendConstructBrowser(
       std::move(childEp), std::move(windowEp), tabId,
-      aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
       aContext.AsIPCTabContext(), windowInit, chromeFlags,
       constructorSender->ChildID(), constructorSender->IsForBrowser(),
       /* aIsTopLevel */ true);

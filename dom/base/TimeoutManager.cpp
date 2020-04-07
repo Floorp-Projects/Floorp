@@ -16,7 +16,6 @@
 #include "nsINamed.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/PopupBlocker.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "TimeoutExecutor.h"
 #include "TimeoutBudgetManager.h"
@@ -1343,5 +1342,5 @@ void TimeoutManager::EndSyncOperation() {
 }
 
 nsIEventTarget* TimeoutManager::EventTarget() {
-  return mWindow.EventTargetFor(TaskCategory::Timer);
+  return mWindow.GetBrowsingContextGroup()->GetTimerEventQueue();
 }

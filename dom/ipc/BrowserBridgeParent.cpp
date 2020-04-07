@@ -86,7 +86,7 @@ nsresult BrowserBridgeParent::InitWithProcess(
 
   // Tell the content process to set up its PBrowserChild.
   bool ok = aContentParent->SendConstructBrowser(
-      std::move(childEp), std::move(windowChildEp), aTabId, TabId(0),
+      std::move(childEp), std::move(windowChildEp), aTabId,
       tabContext.AsIPCTabContext(), aWindowInit, aChromeFlags,
       aContentParent->ChildID(), aContentParent->IsForBrowser(),
       /* aIsTopLevel */ false);

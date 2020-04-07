@@ -35,10 +35,6 @@ namespace mozilla {
 
 struct ActiveScrolledRoot;
 
-namespace dom {
-class TabGroup;
-}
-
 namespace layers {
 
 class CompositorBridgeChild;
@@ -175,8 +171,6 @@ class WebRenderLayerManager final : public LayerManager {
 
   void WrUpdated();
   nsIWidget* GetWidget() { return mWidget; }
-
-  dom::TabGroup* GetTabGroup();
 
   uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
   void StopFrameTimeRecording(uint32_t aStartIndex,

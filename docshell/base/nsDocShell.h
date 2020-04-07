@@ -1000,9 +1000,8 @@ class nsDocShell final : public nsDocLoader,
   void FirePageHideNotificationInternal(bool aIsUnload,
                                         bool aSkipCheckingDynEntries);
 
-  // Dispatch a runnable to the TabGroup associated to this docshell.
-  nsresult DispatchToTabGroup(mozilla::TaskCategory aCategory,
-                              already_AddRefed<nsIRunnable>&& aRunnable);
+  nsresult Dispatch(mozilla::TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable);
 
   void SetupReferrerInfoFromChannel(nsIChannel* aChannel);
   void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo);
