@@ -377,17 +377,20 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   funbox->setArgCount(nargs);
   funbox->synchronizeArgCount();
 
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
+
+  // Compute the flags that frontend doesn't directly compute.
+  immutableFlags.setFlag(ImmutableFlags::Strict, funbox->strict());
+
   SourceExtent extent(start, end, start, end,
                       /* lineno = */ 0, start);
-  BINJS_TRY_DECL(lazy, BaseScript::CreateLazy(
-                           cx_, this->getCompilationInfo(), fun, sourceObject_,
-                           pc_->closedOverBindingsForLazy(),
-                           pc_->innerFunctionIndexesForLazy, extent,
-                           funbox->immutableFlags()));
+  BINJS_TRY_DECL(lazy, BaseScript::CreateLazy(cx_, this->getCompilationInfo(),
+                                              fun, sourceObject_,
+                                              pc_->closedOverBindingsForLazy(),
+                                              pc_->innerFunctionIndexesForLazy,
+                                              extent, immutableFlags));
 
-  if (funbox->strict()) {
-    lazy->setStrict();
-  }
   MOZ_ASSERT(lazy->isBinAST());
   funbox->initLazyScript(lazy);
 

@@ -1745,32 +1745,28 @@ bool LazyScriptCreationData::create(JSContext* cx,
                                     FunctionBox* funbox,
                                     HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(function);
+
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
+
+  // Compute the flags that frontend doesn't directly compute.
+  immutableFlags.setFlag(ImmutableFlags::ForceStrict, forceStrict);
+  immutableFlags.setFlag(ImmutableFlags::Strict, strict);
+  immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
+                         funbox->hasMappedArgsObj());
+
   BaseScript* lazy = BaseScript::CreateLazy(
       cx, compilationInfo, function, sourceObject, closedOverBindings,
-      innerFunctionIndexes, funbox->extent, funbox->immutableFlags());
+      innerFunctionIndexes, funbox->extent, immutableFlags);
   if (!lazy) {
     return false;
   }
 
-  // Flags that need to be copied into the JSScript when we do the full
-  // parse.
-  if (forceStrict) {
-    lazy->setForceStrict();
-  }
-  if (strict) {
-    lazy->setStrict();
-  }
-
-  // Flags which are computed at this point.
-  if (funbox->hasMappedArgsObj()) {
-    lazy->setHasMappedArgsObj();
-  }
-
-  function->initLazyScript(lazy);
-
   if (fieldInitializers) {
     lazy->setFieldInitializers(*fieldInitializers);
   }
+
+  function->initLazyScript(lazy);
 
   return true;
 }
