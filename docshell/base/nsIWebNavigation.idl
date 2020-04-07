@@ -345,13 +345,6 @@ interface nsIWebNavigation : nsISupports
   %}
 
   /**
-   * Set an OriginAttributes dictionary in the docShell. This can be done only
-   * before loading any content.
-   */
-  [implicit_jscontext]
-  void setOriginAttributesBeforeLoading(in jsval originAttributes);
-
-  /**
    * Resume a load which has been redirected from another process.
    *
    * A negative |aHistoryIndex| value corresponds to a non-history load being
