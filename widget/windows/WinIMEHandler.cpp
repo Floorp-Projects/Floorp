@@ -166,13 +166,6 @@ bool IMEHandler::ProcessRawKeyMessage(const MSG& aMsg) {
 bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                                 WPARAM& aWParam, LPARAM& aLParam,
                                 MSGResult& aResult) {
-  if (aMessage == MOZ_WM_DISMISS_ONSCREEN_KEYBOARD) {
-    if (!sFocusedWindow) {
-      DismissOnScreenKeyboard(aWindow);
-    }
-    return true;
-  }
-
   // If we're putting native caret over our caret, Windows dispatches
   // EVENT_OBJECT_LOCATIONCHANGE event on other applications which hook
   // the event with ::SetWinEventHook() and handles WM_GETOBJECT for
@@ -823,8 +816,19 @@ void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow) {
   if (sPluginHasFocus || !IsWin8OrLater()) {
     return;
   }
-  ::PostMessage(aWindow->GetWindowHandle(), MOZ_WM_DISMISS_ONSCREEN_KEYBOARD, 0,
-                0);
+
+  RefPtr<nsWindow> window(aWindow);
+  NS_DispatchToCurrentThreadQueue(
+      NS_NewRunnableFunction("IMEHandler::MaybeDismissOnScreenKeyboard",
+                             [window]() {
+                               if (window->Destroyed()) {
+                                 return;
+                               }
+                               if (!sFocusedWindow) {
+                                 DismissOnScreenKeyboard(window);
+                               }
+                             }),
+      EventQueuePriority::Idle);
 }
 
 // static
