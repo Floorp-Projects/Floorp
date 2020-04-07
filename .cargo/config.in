@@ -62,11 +62,6 @@ git = "https://github.com/badboy/failure"
 replace-with = "vendored-sources"
 rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5"
 
-[source."https://github.com/alexcrichton/mio-named-pipes"]
-branch = "master"
-git = "https://github.com/alexcrichton/mio-named-pipes"
-replace-with = "vendored-sources"
-
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
 replace-with = "vendored-sources"

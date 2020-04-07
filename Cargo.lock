@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "audioipc"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "audio_thread_priority",
  "bincode",
@@ -2558,7 +2558,8 @@ dependencies = [
 [[package]]
 name = "mio-named-pipes"
 version = "0.1.6"
-source = "git+https://github.com/alexcrichton/mio-named-pipes#2072ae0de5b3632dbb065fcd9c8be6c6a2fc39ae"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5e374eff525ce1c5b7687c4cef63943e7686524a387933ad27ca7ec43779cb3"
 dependencies = [
  "log",
  "mio",
