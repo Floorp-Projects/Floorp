@@ -991,7 +991,6 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
         strncpy(controllerState.controllerName, deviceId.BeginReading(),
                 kVRControllerNameMaxLen);
         controllerState.numHaptics = kNumOpenVRHaptics;
-        controllerState.targetRayMode = gfx::TargetRayMode::TrackedPointer;
         controllerState.type = controllerType;
       }
       controllerPresent[stateIndex] = true;
@@ -1047,7 +1046,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
     VRControllerState& controllerState = aState.controllerState[stateIndex];
     controllerState.hand = GetControllerHandFromControllerRole(role);
     mControllerMapper->UpdateButtons(controllerState, mControllerHand[role]);
-    SetControllerSelectionAndSqueezeFrameId(controllerState, aState.displayState.lastSubmittedFrameId);
   }
 }
 
@@ -1073,8 +1071,7 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
       const ::vr::TrackedDevicePose_t& pose = poseData.pose;
       if (pose.bDeviceIsConnected) {
         controllerState.flags = (dom::GamepadCapabilityFlags::Cap_Orientation |
-                                 dom::GamepadCapabilityFlags::Cap_Position |
-                                 dom::GamepadCapabilityFlags::Cap_TargetRaySpacePosition);
+                                 dom::GamepadCapabilityFlags::Cap_Position);
       } else {
         controllerState.flags = dom::GamepadCapabilityFlags::Cap_None;
       }

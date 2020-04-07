@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/XRSession.h"
 
-#include "mozilla/dom/XRSessionEvent.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "XRSystem.h"
 #include "XRRenderState.h"
@@ -113,9 +112,6 @@ XRSession::XRSession(
   if (IsImmersive()) {
     mDisplayPresentation =
         mDisplayClient->BeginPresentation({}, gfx::kVRGroupContent);
-  }
-  if (mDisplayClient) {
-    mDisplayClient->SetXRAPIMode(gfx::VRAPIMode::WebXR);
   }
   // TODO: Handle XR input sources are no longer available cases.
   // https://immersive-web.github.io/webxr/#dom-xrsession-inputsources
@@ -400,9 +396,6 @@ void XRSession::Shutdown() {
 }
 
 void XRSession::ExitPresentInternal() {
-  if (mInputSources) {
-    mInputSources->Clear(this);
-  }
   if (mDisplayClient) {
     mDisplayClient->SessionEnded(this);
   }
@@ -414,16 +407,7 @@ void XRSession::ExitPresentInternal() {
   mDisplayPresentation = nullptr;
   if (!mEnded) {
     mEnded = true;
-
-    XRSessionEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    init.mSession = this;
-    RefPtr<XRSessionEvent> event = XRSessionEvent::Constructor(this,
-      NS_LITERAL_STRING("end"), init);
-
-    event->SetTrusted(true);
-    this->DispatchEvent(*event);
+    DispatchTrustedEvent(NS_LITERAL_STRING("end"));
   }
 }
 
