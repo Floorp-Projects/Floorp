@@ -42,7 +42,6 @@ UNIFIED_SOURCES = [
     'XRNativeOriginFixed.cpp',
     'XRNativeOriginLocal.cpp',
     'XRNativeOriginLocalFloor.cpp',
-    'XRNativeOriginTracker.cpp',
     'XRNativeOriginViewer.cpp',
     'XRPermissionRequest.cpp',
     'XRPose.cpp',

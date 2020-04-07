@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XRPermissionRequest.h"
-#include "nsGlobalWindowInner.h"
+#include "nsIGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 
