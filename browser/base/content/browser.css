@@ -1169,8 +1169,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 }
 
 toolbarpaletteitem[dragover] {
-  border-left-color: transparent;
-  border-right-color: transparent;
+  border-inline-color: transparent;
 }
 
 #customization-palette-container {

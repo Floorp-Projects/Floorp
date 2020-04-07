@@ -8,15 +8,10 @@
   border-top: none;
   box-shadow: 0 5px 10px hsla(0, 0%, 0%, .1);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   z-index: 1001;
   -moz-user-select: none;
   cursor: default;
-}
-
-.contentSearchSuggestionTable:dir(rtl) {
-  left: auto;
-  right: 0;
 }
 
 .contentSearchSuggestionsList {
@@ -118,7 +113,7 @@
 }
 
 .contentSearchOneOffItem:dir(rtl) {
-  background-position: left center;
+  background-position-x: left;
 }
 
 .contentSearchOneOffItem > img {
