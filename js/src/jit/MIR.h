@@ -4455,12 +4455,13 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
       : MBinaryInstruction(op, left, right),
         maskMatchesLeftRange(false),
         maskMatchesRightRange(false) {
-    MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
-    setResultType(MIRType::Value);
+    MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64 ||
+               (isUrsh() && type == MIRType::Double));
+    specialization_ = type;
+    setResultType(type);
     setMovable();
   }
 
-  void specializeAs(MIRType type);
   bool maskMatchesLeftRange;
   bool maskMatchesRightRange;
 
@@ -4493,12 +4494,13 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
 
 class MBitAnd : public MBinaryBitwiseInstruction {
   MBitAnd(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {}
+      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {
+    setCommutative();
+  }
 
  public:
   INSTRUCTION_HEADER(BitAnd)
-  static MBitAnd* New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right, MIRType type);
+  TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldIfZero(size_t operand) override {
     return getOperand(operand);  // 0 & x => 0;
@@ -4526,12 +4528,13 @@ class MBitAnd : public MBinaryBitwiseInstruction {
 
 class MBitOr : public MBinaryBitwiseInstruction {
   MBitOr(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {}
+      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {
+    setCommutative();
+  }
 
  public:
   INSTRUCTION_HEADER(BitOr)
-  static MBitOr* New(TempAllocator& alloc, MDefinition* left,
-                     MDefinition* right, MIRType type);
+  TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldIfZero(size_t operand) override {
     return getOperand(1 -
@@ -4556,12 +4559,13 @@ class MBitOr : public MBinaryBitwiseInstruction {
 
 class MBitXor : public MBinaryBitwiseInstruction {
   MBitXor(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {}
+      : MBinaryBitwiseInstruction(classOpcode, left, right, type) {
+    setCommutative();
+  }
 
  public:
   INSTRUCTION_HEADER(BitXor)
-  static MBitXor* New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right, MIRType type);
+  TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldIfZero(size_t operand) override {
     return getOperand(1 - operand);  // 0 ^ x => x
@@ -4598,8 +4602,7 @@ class MLsh : public MShiftInstruction {
 
  public:
   INSTRUCTION_HEADER(Lsh)
-  static MLsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                   MIRType type);
+  TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldIfZero(size_t operand) override {
     // 0 << x => 0
@@ -4623,8 +4626,7 @@ class MRsh : public MShiftInstruction {
 
  public:
   INSTRUCTION_HEADER(Rsh)
-  static MRsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                   MIRType type);
+  TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldIfZero(size_t operand) override {
     // 0 >> x => 0
@@ -4653,10 +4655,8 @@ class MUrsh : public MShiftInstruction {
 
  public:
   INSTRUCTION_HEADER(Ursh)
-  static MUrsh* New(TempAllocator& alloc, MDefinition* left,
-                    MDefinition* right);
-  static MUrsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                    MIRType type);
+  TRIVIAL_NEW_WRAPPERS
+
   static MUrsh* NewWasm(TempAllocator& alloc, MDefinition* left,
                         MDefinition* right, MIRType type);
 
