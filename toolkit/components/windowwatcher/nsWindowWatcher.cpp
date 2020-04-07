@@ -1054,24 +1054,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       cx ? nsContentUtils::SubjectPrincipal()
          : nsContentUtils::GetSystemPrincipal();
 
-  bool isPrivateBrowsingWindow = false;
-
   if (windowIsNew) {
-    // If this is not a chrome docShell, we apply originAttributes from the
-    // subjectPrincipal unless if it's an expanded or system principal.
     if (subjectPrincipal &&
         !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
-        newDocShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
-      isPrivateBrowsingWindow =
-          !!subjectPrincipal->OriginAttributesRef().mPrivateBrowsingId;
-      newDocShell->SetOriginAttributes(subjectPrincipal->OriginAttributesRef());
-    } else {
-      nsCOMPtr<nsIDocShellTreeItem> parentItem;
-      GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
-      nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentItem);
-      if (parentContext) {
-        isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
-      }
+        newBC->IsContent()) {
+      MOZ_DIAGNOSTIC_ASSERT(subjectPrincipal->OriginAttributesRef() ==
+                            newBC->OriginAttributesRef());
     }
 
     bool autoPrivateBrowsing =
@@ -1079,10 +1067,20 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
     if (!autoPrivateBrowsing &&
         (chromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW)) {
-      isPrivateBrowsingWindow = false;
+      if (newBC->IsChrome()) {
+        newBC->SetUsePrivateBrowsing(false);
+      }
+      MOZ_DIAGNOSTIC_ASSERT(
+          !newBC->UsePrivateBrowsing(),
+          "CHROME_NON_PRIVATE_WINDOW passed, but got private window");
     } else if (autoPrivateBrowsing ||
                (chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW)) {
-      isPrivateBrowsingWindow = true;
+      if (newBC->IsChrome()) {
+        newBC->SetUsePrivateBrowsing(true);
+      }
+      MOZ_DIAGNOSTIC_ASSERT(
+          newBC->UsePrivateBrowsing(),
+          "CHROME_PRIVATE_WINDOW passed, but got non-private window");
     }
 
     // Now set the opener principal on the new window.  Note that we need to do
@@ -1121,25 +1119,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   // We rely on CalculateChromeFlags to decide whether remote (out-of-process)
   // tabs should be used.
-  bool isRemoteWindow =
-      !!(chromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
-  bool isFissionWindow =
-      !!(chromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
-
-  if (isNewToplevelWindow) {
-    nsCOMPtr<nsIDocShellTreeItem> childRoot;
-    newDocShell->GetInProcessRootTreeItem(getter_AddRefs(childRoot));
-    nsCOMPtr<nsILoadContext> childContext = do_QueryInterface(childRoot);
-    if (childContext) {
-      childContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
-      childContext->SetRemoteTabs(isRemoteWindow);
-      childContext->SetRemoteSubframes(isFissionWindow);
-    }
-  } else if (windowIsNew) {
-    newDocShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
-    newDocShell->SetRemoteTabs(isRemoteWindow);
-    newDocShell->SetRemoteSubframes(isFissionWindow);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(
+      newBC->UseRemoteTabs() ==
+      !!(chromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
+  MOZ_DIAGNOSTIC_ASSERT(
+      newBC->UseRemoteSubframes() ==
+      !!(chromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
 
   RefPtr<nsDocShellLoadState> loadState = aLoadState;
   if (uriToLoad && loadState) {
@@ -1252,7 +1237,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
           parentWindow->GetCurrentInnerWindow();
       parentStorageManager->GetStorage(
           pInnerWin, subjectPrincipal, subjectPrincipal,
-          isPrivateBrowsingWindow, getter_AddRefs(storage));
+          newBC->UsePrivateBrowsing(), getter_AddRefs(storage));
       if (storage) {
         newStorageManager->CloneStorage(storage);
       }
