@@ -3957,8 +3957,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
     MOZ_ASSERT(!term.term->isConstant());
     if (term.scale == 1) {
       if (def) {
-        def = MAdd::New(alloc, def, term.term);
-        def->toAdd()->setInt32Specialization();
+        def = MAdd::New(alloc, def, term.term, MIRType::Int32);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
@@ -3970,21 +3969,18 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       }
-      def = MSub::New(alloc, def, term.term);
-      def->toSub()->setInt32Specialization();
+      def = MSub::New(alloc, def, term.term, MIRType::Int32);
       block->insertAtEnd(def->toInstruction());
       def->computeRange(alloc);
     } else {
       MOZ_ASSERT(term.scale != 0);
       MConstant* factor = MConstant::New(alloc, Int32Value(term.scale));
       block->insertAtEnd(factor);
-      MMul* mul = MMul::New(alloc, term.term, factor);
-      mul->setInt32Specialization();
+      MMul* mul = MMul::New(alloc, term.term, factor, MIRType::Int32);
       block->insertAtEnd(mul);
       mul->computeRange(alloc);
       if (def) {
-        def = MAdd::New(alloc, def, mul);
-        def->toAdd()->setInt32Specialization();
+        def = MAdd::New(alloc, def, mul, MIRType::Int32);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
@@ -3998,8 +3994,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
     block->insertAtEnd(constant);
     constant->computeRange(alloc);
     if (def) {
-      def = MAdd::New(alloc, def, constant);
-      def->toAdd()->setInt32Specialization();
+      def = MAdd::New(alloc, def, constant, MIRType::Int32);
       block->insertAtEnd(def->toInstruction());
       def->computeRange(alloc);
     } else {
@@ -4067,8 +4062,7 @@ MCompare* jit::ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block,
     MDefinition* constant = MConstant::New(alloc, Int32Value(lhs.constant()));
     block->insertAtEnd(constant->toInstruction());
     constant->computeRange(alloc);
-    lhsDef = MAdd::New(alloc, lhsDef, constant);
-    lhsDef->toAdd()->setInt32Specialization();
+    lhsDef = MAdd::New(alloc, lhsDef, constant, MIRType::Int32);
     block->insertAtEnd(lhsDef->toInstruction());
     lhsDef->computeRange(alloc);
   } while (false);
