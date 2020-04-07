@@ -6358,9 +6358,10 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
 }
 
 AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
-  if (!val_.isNumber() || !res_.isNumber()) {
+  if (!val_.isNumber()) {
     return AttachDecision::NoAction;
   }
+  MOZ_ASSERT(res_.isNumber());
 
   ValOperandId valId(writer.setInputOperandId(0));
   NumberOperandId numId = writer.guardIsNumber(valId);
@@ -6395,6 +6396,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
   if (!val_.isBigInt()) {
     return AttachDecision::NoAction;
   }
+  MOZ_ASSERT(res_.isBigInt());
 
   ValOperandId valId(writer.setInputOperandId(0));
   BigIntOperandId bigIntId = writer.guardToBigInt(valId);
