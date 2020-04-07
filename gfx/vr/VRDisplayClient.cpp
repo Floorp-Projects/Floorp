@@ -103,6 +103,10 @@ void VRDisplayClient::MakePresentationGenerationCurrent() {
   mLastPresentingGeneration = mDisplayInfo.mDisplayState.presentingGeneration;
 }
 
+gfx::VRAPIMode VRDisplayClient::GetXRAPIMode() const {
+  return mAPIMode;
+}
+
 void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) {
   mAPIMode = aMode;
 }

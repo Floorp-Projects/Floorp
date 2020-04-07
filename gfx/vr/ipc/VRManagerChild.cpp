@@ -586,6 +586,15 @@ void VRManagerChild::AddPromise(const uint32_t& aID, dom::Promise* aPromise) {
   mGamepadPromiseList.Put(aID, RefPtr{aPromise});
 }
 
+gfx::VRAPIMode VRManagerChild::GetVRAPIMode(uint32_t aDisplayID) const {
+  for (auto& display : mDisplays) {
+    if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
+      return display->GetXRAPIMode();
+    }
+  }
+  return VRAPIMode::WebXR;
+}
+
 mozilla::ipc::IPCResult VRManagerChild::RecvReplyGamepadVibrateHaptic(
     const uint32_t& aPromiseID) {
   // VRManagerChild could be at other processes, but GamepadManager
