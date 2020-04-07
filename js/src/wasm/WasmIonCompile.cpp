@@ -340,6 +340,15 @@ class FunctionCompiler {
     return ins;
   }
 
+  MDefinition* add(MDefinition* lhs, MDefinition* rhs, MIRType type) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    auto* ins = MAdd::NewWasm(alloc(), lhs, rhs, type);
+    curBlock_->add(ins);
+    return ins;
+  }
+
   bool mustPreserveNaN(MIRType type) {
     return IsFloatingPointType(type) && !env().isAsmJS();
   }
@@ -2523,7 +2532,7 @@ static bool EmitAdd(FunctionCompiler& f, ValType type, MIRType mirType) {
     return false;
   }
 
-  f.iter().setResult(f.binary<MAdd>(lhs, rhs, mirType));
+  f.iter().setResult(f.add(lhs, rhs, mirType));
   return true;
 }
 

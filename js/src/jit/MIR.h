@@ -5356,20 +5356,14 @@ class MAdd : public MBinaryArithInstruction {
     setResultType(MIRType::Value);
   }
 
-  MAdd(MDefinition* left, MDefinition* right, MIRType type,
-       TruncateKind truncateKind = Truncate)
+  MAdd(MDefinition* left, MDefinition* right, MIRType type)
       : MAdd(left, right) {
     specialization_ = type;
     setResultType(type);
-    if (type == MIRType::Int32) {
-      setTruncateKind(truncateKind);
-      setCommutative();
-    }
+  }
 
   MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
-      : MAdd(left, right) {
-    specialization_ = MIRType::Int32;
-    setResultType(MIRType::Int32);
+      : MAdd(left, right, MIRType::Int32) {
     setTruncateKind(truncateKind);
     setCommutative();
   }
@@ -5377,6 +5371,16 @@ class MAdd : public MBinaryArithInstruction {
  public:
   INSTRUCTION_HEADER(Add)
   TRIVIAL_NEW_WRAPPERS
+
+  static MAdd* NewWasm(TempAllocator& alloc, MDefinition* left,
+                       MDefinition* right, MIRType type) {
+    auto* ret = new (alloc) MAdd(left, right, type);
+    if (type == MIRType::Int32) {
+      ret->setTruncateKind(Truncate);
+      ret->setCommutative();
+    }
+    return ret;
+  }
 
   bool isFloat32Commutative() const override { return true; }
 
