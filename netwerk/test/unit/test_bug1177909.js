@@ -85,12 +85,14 @@ add_task(async function testHttpsProxy() {
   equal(pi.type, "https", "Expected proxy type to be https");
 });
 
-add_task(async function testFtpProxy() {
-  let pi = await TestProxyTypeByURI("ftp://ftp.mozilla.org/");
-  equal(pi.host, "localhost", "Expected proxy host to be localhost");
-  equal(pi.port, 8080, "Expected proxy port to be 8080");
-  equal(pi.type, "http", "Expected proxy type to be http");
-});
+if (Services.prefs.getBoolPref("network.ftp.enabled")) {
+  add_task(async function testFtpProxy() {
+    let pi = await TestProxyTypeByURI("ftp://ftp.mozilla.org/");
+    equal(pi.host, "localhost", "Expected proxy host to be localhost");
+    equal(pi.port, 8080, "Expected proxy port to be 8080");
+    equal(pi.type, "http", "Expected proxy type to be http");
+  });
+}
 
 add_task(async function testSocksProxy() {
   let pi = await TestProxyTypeByURI("http://www.mozilla.org:1234/");
