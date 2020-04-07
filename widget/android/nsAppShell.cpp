@@ -9,6 +9,7 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/Hal.h"
+#include "nsExceptionHandler.h"
 #include "nsIScreen.h"
 #include "nsWindow.h"
 #include "nsThreadUtils.h"
@@ -256,6 +257,12 @@ class GeckoAppShellSupport final
 
     obsServ->NotifyObservers(nullptr, aTopic->ToCString().get(),
                              aData ? aData->ToString().get() : nullptr);
+  }
+
+  static void AppendAppNotesToCrashReport(jni::String::Param aNotes) {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aNotes);
+    CrashReporter::AppendAppNotesToCrashReport(aNotes->ToCString());
   }
 
   static void OnSensorChanged(int32_t aType, float aX, float aY, float aZ,

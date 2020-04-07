@@ -115,24 +115,6 @@ public class GeckoAppShell {
         }
 
         @Override
-        protected Bundle getCrashExtras(final Thread thread, final Throwable exc) {
-            final Bundle extras = super.getCrashExtras(thread, exc);
-
-            extras.putString("ProductName", BuildConfig.MOZ_APP_BASENAME);
-            extras.putString("ProductID", BuildConfig.MOZ_APP_ID);
-            extras.putString("Version", BuildConfig.MOZ_APP_VERSION);
-            extras.putString("BuildID", BuildConfig.MOZ_APP_BUILDID);
-            extras.putString("Vendor", BuildConfig.MOZ_APP_VENDOR);
-            extras.putString("ReleaseChannel", BuildConfig.MOZ_UPDATE_CHANNEL);
-
-            final String appNotes = getAppNotes();
-            if (appNotes != null) {
-                extras.putString("Notes", appNotes);
-            }
-            return extras;
-        }
-
-        @Override
         public boolean reportException(final Thread thread, final Throwable exc) {
             try {
                 if (exc instanceof OutOfMemoryError) {
@@ -258,6 +240,9 @@ public class GeckoAppShell {
 
     @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
+
+    @WrapForJNI(stubName = "AppendAppNotesToCrashReport", dispatchTo = "gecko")
+    public static native void nativeAppendAppNotesToCrashReport(final String notes);
 
     @RobocopTarget
     public static void notifyObservers(final String topic, final String data) {

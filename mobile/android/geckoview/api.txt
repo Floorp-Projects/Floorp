@@ -460,6 +460,7 @@ package org.mozilla.geckoview {
   }
 
   public final class GeckoRuntime implements Parcelable {
+    method @AnyThread public void appendAppNotesToCrashReport(@NonNull String);
     method @UiThread public void attachTo(@NonNull Context);
     method @UiThread public void configurationChanged(@NonNull Configuration);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context);

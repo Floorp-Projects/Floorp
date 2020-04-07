@@ -815,6 +815,23 @@ public final class GeckoRuntime implements Parcelable {
         return mPushController;
     }
 
+    /**
+     * Appends notes to crash report.
+     * @param notes The application notes to append to the crash report.
+     */
+    @AnyThread
+    public void appendAppNotesToCrashReport(@NonNull final String notes) {
+        final String notesWithNewLine = notes + "\n";
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            GeckoAppShell.nativeAppendAppNotesToCrashReport(notesWithNewLine);
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, GeckoAppShell.class,
+                    "nativeAppendAppNotesToCrashReport", String.class, notesWithNewLine);
+        }
+        // This function already adds a newline
+        GeckoAppShell.appendAppNotesToCrashReport(notes);
+    }
+
     @Override // Parcelable
     @AnyThread
     public int describeContents() {
