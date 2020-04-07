@@ -141,9 +141,11 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
             &functionEntryStackMap)) {
       return false;
     }
+
     // In debug builds, we'll always have a stack map, even if there are no
     // refs to track.
     MOZ_ALWAYS_TRUE(functionEntryStackMap);
+
     if (functionEntryStackMap &&
         !stackMaps->add((uint8_t*)(uintptr_t)trapInsnOffset.offset(),
                         functionEntryStackMap)) {
@@ -228,19 +230,16 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     // Check code offsets.
     MOZ_ASSERT(offset.value() >= offsets->normalEntry);
     MOZ_ASSERT(offset.value() < offsets->ret);
+    MOZ_ASSERT(metadata.moduleBytecodeOffset != 0);
 
     // Check bytecode offsets.
-    if (metadata.moduleBytecodeOffset > 0 && lineOrBytecode > 0) {
+    if (lineOrBytecode > 0) {
       MOZ_ASSERT(metadata.moduleBytecodeOffset >= lineOrBytecode);
       MOZ_ASSERT(metadata.moduleBytecodeOffset <
                  lineOrBytecode + funcBytecodeSize);
     }
 #endif
-    // TODO(bug 1532716): Cranelift gives null bytecode offsets for symbolic
-    // accesses.
-    uint32_t bytecodeOffset = metadata.moduleBytecodeOffset
-                                  ? metadata.moduleBytecodeOffset
-                                  : lineOrBytecode;
+    uint32_t bytecodeOffset = metadata.moduleBytecodeOffset;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
@@ -259,15 +258,14 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
         masm.append(trap, wasm::TrapSite(offset.value(), trapOffset));
         break;
       }
-      case CraneliftMetadataEntry::Which::MemoryAccess: {
-        BytecodeOffset trapOffset(bytecodeOffset);
-        masm.appendOutOfBoundsTrap(trapOffset, offset.value());
-        break;
-      }
       case CraneliftMetadataEntry::Which::SymbolicAccess: {
+        CodeOffset raOffset(offset.value());
+        CallSiteDesc desc(bytecodeOffset, CallSiteDesc::Symbolic);
+        masm.append(desc, raOffset);
+
         SymbolicAddress sym =
             ToSymbolicAddress(BD_SymbolicAddress(metadata.extra));
-        masm.append(SymbolicAccess(CodeOffset(offset.value()), sym));
+        masm.append(SymbolicAccess(raOffset, sym));
         break;
       }
       default: {
