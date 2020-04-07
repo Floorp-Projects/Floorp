@@ -130,7 +130,7 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
 
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
-  mFrameLoader = nsFrameLoader::Create(this, mOpenerWindow, mNetworkCreated);
+  mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
 }
 
 void nsGenericHTMLFrameElement::DisallowCreateFrameLoader() {
@@ -370,7 +370,7 @@ nsresult nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest) {
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
         static_cast<nsGenericHTMLFrameElement*>(aDest);
-    RefPtr<nsFrameLoader> fl = nsFrameLoader::Create(dest, nullptr, false);
+    RefPtr<nsFrameLoader> fl = nsFrameLoader::Create(dest, false);
     NS_ENSURE_STATE(fl);
     dest->mFrameLoader = fl;
     mFrameLoader->CreateStaticClone(fl);
