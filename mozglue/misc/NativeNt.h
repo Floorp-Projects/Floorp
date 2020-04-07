@@ -1243,6 +1243,34 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
 
 #if !defined(MOZILLA_INTERNAL_API)
 
+inline LauncherResult<HMODULE> GetModuleHandleFromLeafName(
+    const UNICODE_STRING& aTarget) {
+  auto maybePeb = nt::GetProcessPebPtr(kCurrentProcess);
+  if (maybePeb.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(maybePeb);
+  }
+
+  const PPEB peb = reinterpret_cast<PPEB>(maybePeb.unwrap());
+  if (!peb->Ldr) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  auto firstItem = &peb->Ldr->InMemoryOrderModuleList;
+  for (auto p = firstItem->Flink; p != firstItem; p = p->Flink) {
+    const auto currentTableEntry =
+        CONTAINING_RECORD(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+
+    UNICODE_STRING leafName;
+    nt::GetLeafName(&leafName, &currentTableEntry->FullDllName);
+
+    if (::RtlCompareUnicodeString(&leafName, &aTarget, TRUE) == 0) {
+      return reinterpret_cast<HMODULE>(currentTableEntry->DllBase);
+    }
+  }
+
+  return LAUNCHER_ERROR_FROM_WIN32(ERROR_MOD_NOT_FOUND);
+}
+
 class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS SRWLock final {
  public:
   constexpr SRWLock() : mLock(SRWLOCK_INIT) {}
