@@ -608,38 +608,29 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Visible if the urlbar is not focused and it overflows at the start.
    Uses the required-valid trick to check if it contains a value */
-#urlbar[textoverflow="left"][domaindir="rtl"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
+#urlbar[textoverflow="left"][hasrtldomain]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
   visibility: visible;
 }
 
-/* Fade out URL on overflow, considering directionality of text and domains.
+/* Fade out URL on overflow
    This mask may be overriden when a Contextual Feature Recommendation is shown,
    see browser/themes/shared/urlbar-searchbar.inc.css for details */
 #urlbar[textoverflow="right"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
-#urlbar[textoverflow="left"][domaindir="rtl"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
+
+#urlbar[textoverflow="left"][rtltext]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent, black 3ch);
 }
 
-#urlbar[textoverflow="left"][rtltext]:not([focused]):not([domaindir]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input,
-#urlbar[textoverflow="right"][rtltext]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to right, transparent, black 3ch);
+#urlbar[textoverflow="left"][hasrtldomain]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
 #urlbar-input {
   mask-repeat: no-repeat;
   unicode-bidi: plaintext;
   text-align: match-parent;
-}
-
-#urlbar[domaindir]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  /* When a url doesn't have an explicit protocol the domain decides the
-     directionality, though if that is only made of weak LTR chars (like an IP)
-     it would delegate to the path, and sometimes invert their position.
-     We must ensure LTR directionality of formatted URLs to avoid confusion. */
-  direction: ltr;
-  unicode-bidi: embed;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
