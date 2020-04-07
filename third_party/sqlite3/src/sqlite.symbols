@@ -15,6 +15,7 @@ sqlite3_bind_parameter_name
 sqlite3_bind_text
 sqlite3_bind_text16
 sqlite3_bind_value
+sqlite3_bind_zeroblob
 sqlite3_busy_handler
 sqlite3_busy_timeout
 sqlite3_changes
@@ -26,6 +27,7 @@ sqlite3_column_blob
 sqlite3_column_bytes
 sqlite3_column_bytes16
 sqlite3_column_count
+sqlite3_column_decltype
 sqlite3_column_double
 sqlite3_column_int
 sqlite3_column_int64
@@ -119,11 +121,13 @@ sqlite3_snprintf
 sqlite3_sql
 sqlite3_status
 sqlite3_step
+sqlite3_stmt_busy
 sqlite3_stmt_readonly
 sqlite3_stmt_status
 #ifdef XP_UNIX
 sqlite3_temp_directory
 #endif
+sqlite3_threadsafe
 sqlite3_total_changes
 sqlite3_trace_v2
 sqlite3_unlock_notify
