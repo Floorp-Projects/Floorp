@@ -49,6 +49,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
             'user32.dll',
         ]
 
+    OS_LIBS += [
+        'ntdll',
+    ]
+
     DELAYLOAD_DLLS += [
         'xul.dll',
     ]

@@ -74,6 +74,19 @@ PVOID WINAPI MapViewOfFile3(HANDLE FileMapping, HANDLE Process,
 extern "C" errno_t rand_s(unsigned int* randomValue);
 #endif  // !defined(_CRT_RAND_S)
 
+// Declaring only the functions we need in NativeNt.h.  To include the entire
+// NativeNt.h causes circular dependency.
+namespace mozilla {
+namespace nt {
+SIZE_T WINAPI VirtualQueryEx(HANDLE aProcess, LPCVOID aAddress,
+                             PMEMORY_BASIC_INFORMATION aMemInfo,
+                             SIZE_T aMemInfoLen);
+
+SIZE_T WINAPI VirtualQuery(LPCVOID aAddress, PMEMORY_BASIC_INFORMATION aMemInfo,
+                           SIZE_T aMemInfoLen);
+}  // namespace nt
+}  // namespace mozilla
+
 namespace mozilla {
 namespace interceptor {
 
@@ -276,7 +289,7 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
     // Scan the range for a free chunk that is at least as large as
     // aDesiredBytesLen
     while (address <= kMaxPtr &&
-           ::VirtualQueryEx(aProcess, address, &mbi, len)) {
+           nt::VirtualQueryEx(aProcess, address, &mbi, len)) {
       if (mbi.State == MEM_FREE && mbi.RegionSize >= aDesiredBytesLen) {
         return mbi.BaseAddress;
       }
@@ -424,7 +437,7 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcess : public MMPolicyBase {
    */
   bool IsPageAccessible(void* aVAddress) const {
     MEMORY_BASIC_INFORMATION mbi;
-    SIZE_T result = ::VirtualQuery(aVAddress, &mbi, sizeof(mbi));
+    SIZE_T result = nt::VirtualQuery(aVAddress, &mbi, sizeof(mbi));
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
@@ -696,7 +709,7 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
    */
   bool IsPageAccessible(void* aVAddress) const {
     MEMORY_BASIC_INFORMATION mbi;
-    SIZE_T result = ::VirtualQueryEx(mProcess, aVAddress, &mbi, sizeof(mbi));
+    SIZE_T result = nt::VirtualQueryEx(mProcess, aVAddress, &mbi, sizeof(mbi));
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
