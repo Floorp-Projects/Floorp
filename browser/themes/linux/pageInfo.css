@@ -50,7 +50,8 @@
 }
 
 #mainDeck {
-  padding-inline: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
 #mainDeck {
@@ -100,7 +101,8 @@ html|input:disabled {
 /* Media Tab */
 #imagetree {
   min-height: 10em;
-  margin-block: 2px 0;
+  margin-top: 2px;
+  margin-bottom: 0;
 }
 
 #mediaSplitter {

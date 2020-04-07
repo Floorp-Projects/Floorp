@@ -349,11 +349,12 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item:not(.subviewbutton) > .menu-iconic-left {
-  margin-block: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  padding-inline-start: 0;
+  padding-inline-start: 0px;
 }
 
 .bookmark-item[cutting] > .toolbarbutton-icon,
@@ -564,11 +565,11 @@ menuitem.bookmark-item {
   }
 }
 
-/* Bookmarking panel */
+/* bookmarking panel */
 
 %include ../shared/places/editBookmarkPanel.inc.css
 
-/* ::::: Content area ::::: */
+/* ::::: content area ::::: */
 
 %include ../shared/sidebar.inc.css
 
@@ -806,7 +807,8 @@ notification[value="translation"] {
    * Override the --arrowpanel-padding so the background extends
    * to the sides and bottom of the panel.
    */
-  margin-inline: -10px;
+  margin-left: -10px;
+  margin-right: -10px;
   margin-bottom: -10px;
 }
 
@@ -817,16 +819,19 @@ notification[value="translation"] {
 panel[touchmode] .PanelUI-subView .subviewbutton,
 menupopup[touchmode] menu,
 menupopup[touchmode] menuitem {
-  padding-block: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 panel[touchmode] .PanelUI-subView #appMenu-edit-controls > .subviewbutton,
 panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic {
-  padding-inline: 12px;
+  padding-inline-start: 12px;
+  padding-inline-end: 12px;
 }
 
 #contentAreaContextMenu[touchmode] > #context-navigation > menuitem {
-  padding-block: 7px;
+  padding-top: 7px;
+  padding-bottom: 7px;
 }
 
 #context-navigation {
@@ -870,7 +875,8 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 #ContentSelectDropdown > menupopup > menuitem > .menu-iconic-text {
   /* Padding should follow the 4/12 ratio, where 12px is the default font-size
      with 4px being the preferred padding size. */
-  padding-block: .3333em;
+  padding-top: .3333em;
+  padding-bottom: .3333em;
 }
 
 #ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text {
@@ -894,5 +900,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 #ContentSelectDropdown > .isOpenedViaTouch > menuitem > .menu-iconic-text {
   /* Touch padding should follow the 11/12 ratio, where 12px is the default
      font-size with 11px being the preferred padding size. */
-  padding-block: .9167em;
+  padding-top: .9167em;
+  padding-bottom: .9167em;
 }

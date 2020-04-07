@@ -22,12 +22,12 @@ html.private {
  * spread across the full page width.
  */
 body.showBanner {
-  padding: 0 0 40px;
+  padding: 0px 0px 40px;
   min-height: 0;
 }
 
 .showBanner > .showPrivate {
-  padding: 40px 48px 0;
+  padding: 40px 48px 0px;
 }
 
 a:link {
@@ -82,7 +82,7 @@ p {
 
 .search-handoff-button,
 .search-handoff-button:active,
-.search-handoff-button:enabled:hover:active {
+.search-handoff-button:enabled:hover:active  {
   background: #fff var(--newtab-search-icon) 12px center no-repeat;
   background-size: 24px;
   border: solid 1px rgba(249, 249, 250, 0.2);
@@ -91,8 +91,9 @@ p {
   cursor: text;
   font-size: 15px;
   margin: 0;
-  padding-block: 0;
-  padding-inline: 46px 48px;
+  padding: 0;
+  padding-inline-end: 48px;
+  padding-inline-start: 46px;
   position: relative;
   opacity: 1;
   transition: opacity 500ms;
@@ -131,11 +132,11 @@ p {
 .fake-editable {
   border: 0;
   height: 100%;
-  top: 0;
-  inset-inline-start: 0;
+  left: 0;
   opacity: 0;
   padding: 0;
   position: absolute;
+  top: 0;
   width: 100%;
 }
 
@@ -211,7 +212,7 @@ p {
 }
 
 .info:dir(rtl) {
-  background-position-x: right 32px;
+  background-position: right 32px top 20px;
 }
 
 .info h1 {

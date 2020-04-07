@@ -96,6 +96,8 @@
 .customizationmode-button > .box-inherit {
   border-width: 0;
   padding: 3px 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
 }
 
 /* We use a smaller padding to ensure images don't have padding.
@@ -223,11 +225,14 @@ toolbarpaletteitem[mousedown] > toolbaritem.toolbaritem-combined-buttons {
 
 /* Override the toolkit styling for items being dragged over. */
 toolbarpaletteitem[place="toolbar"] {
-  border-inline-width: 0;
-  margin-inline: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+  margin-right: 0;
+  margin-left: 0;
 }
 #widget-overflow-fixed-list > toolbarpaletteitem[place="menu-panel"] {
-  border-block: 0 solid transparent;
+  border-top: 0px solid transparent;
+  border-bottom: 0px solid transparent;
 }
 
 #customization-palette:not([hidden]) {
@@ -277,7 +282,8 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   outline: 1px solid;
   outline-offset: -2px;
   opacity: .6;
-  margin-block: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
@@ -342,8 +348,10 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   -moz-appearance: none;
   border: 1px solid transparent;
   margin: 0 -5px 5px;
-  padding-block: 0;
-  padding-inline: 0 5px;
+  padding-top: 0;
+  padding-inline-end: 5px;
+  padding-bottom: 0;
+  padding-inline-start: 0;
 }
 
 .customization-uidensity-menuitem {
@@ -394,7 +402,8 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #customization-lwtheme-menu-header,
 #customization-lwtheme-menu-recommended,
 #customization-lwtheme-menu-footer {
-  margin-inline: -10px;
+  margin-right: -10px;
+  margin-left: -10px;
 }
 
 #customization-lwtheme-menu-header {
@@ -417,7 +426,8 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   color: inherit;
   border-style: none;
   padding: 10px;
-  margin-inline: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .customization-lwtheme-menu-footeritem:hover {
@@ -437,6 +447,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
+
 
 #customization-panelWrapper > .panel-arrowcontent {
   color: var(--arrowpanel-color);
@@ -595,7 +606,8 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #customization-pong-arena {
   width: 300px;
   height: 300px;
-  border-inline: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
   margin: 16px auto 0;
   box-sizing: content-box;
 }

@@ -37,8 +37,10 @@
 }
 
 #placesMenu > menu {
-  padding-block: 2px;
-  padding-inline: 4px 1px;
+  padding-inline-start: 4px;
+  padding-inline-end: 1px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   -moz-appearance: toolbarbutton;
 %ifdef XP_WIN
 % use standard menu colors on OS/2
@@ -57,8 +59,10 @@
 
 #placesMenu > menu[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  padding-block: 3px 1px;
-  padding-inline: 5px 0;
+  padding-inline-start: 5px;
+  padding-inline-end: 0px;
+  padding-top: 3px;
+  padding-bottom: 1px;
 }
 
 #placesMenu > menu > .menubar-text {
@@ -67,7 +71,7 @@
 }
 
 #placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
-  background-position-x: left;
+  background-position: left center;
 }
 
 /* organize button */
@@ -108,7 +112,8 @@
 }
 
 #clearDownloadsButton {
-  padding-inline: 9px;
+  padding-inline-start: 9px;
+  padding-inline-end: 9px;
 }
 
 @media (-moz-windows-classic: 0) {

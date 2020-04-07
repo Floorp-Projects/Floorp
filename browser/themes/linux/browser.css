@@ -90,11 +90,12 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item:not(.subviewbutton) > .menu-iconic-left {
-  margin-block: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  padding-inline-start: 0;
+  padding-inline-start: 0px;
 }
 
 /* Bookmark drag and drop styles */
@@ -180,7 +181,7 @@ menuitem.bookmark-item {
   border-color: ThreeDShadow;
 }
 
-/* Identity box */
+/* identity box */
 
 %include ../shared/identity-block/identity-block.inc.css
 
@@ -452,7 +453,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
  * to the sides and bottom of the panel.
  */
 #UITourTooltipButtons {
-  margin-inline-start: -10px;
+  margin-left: -10px;
   margin-bottom: -10px;
 }
 

@@ -394,7 +394,8 @@ textarea.browser-style:invalid:not(:focus) {
 
 .panel-list-item:not(.disabled):hover {
   background-color: rgba(0, 0, 0, 0.06);
-  border-block: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .panel-list-item:not(.disabled):hover:active {

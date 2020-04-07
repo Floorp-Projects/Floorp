@@ -290,12 +290,14 @@
   width: 16px;
   height: 16px;
   margin-top: -8px;
-  margin-inline: -15px -1px;
+  margin-inline-start: -15px;
+  margin-inline-end: -1px;
   position: relative;
 }
 
 .tab-icon-overlay[pinned] {
-  margin-inline: -6px -10px;
+  margin-inline-start: -6px;
+  margin-inline-end: -10px;
 }
 
 .tab-icon-overlay[crashed] {
@@ -356,7 +358,8 @@
 }
 
 .tab-label {
-  margin-inline: 0;
+  margin-inline-end: 0;
+  margin-inline-start: 0;
   /* Maintain consistent alignment in case of font fallback for non-Latin characters. */
   line-height: 1.7em;
 }
@@ -455,11 +458,13 @@
 }
 
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator) {
-  margin-inline: -1px -17px;
+  margin-inline-start: -1px;
+  margin-inline-end: -17px;
 }
 
 #tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
-  margin-inline: -17px -1px;
+  margin-inline-start: -17px;
+  margin-inline-end: -1px;
 }
 
 #tabbrowser-arrowscrollbox[scrolledtostart]::part(overflow-start-indicator),
@@ -582,7 +587,8 @@
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]::after {
   display: block;
   position: absolute;
-  inset-block: 0;
+  top: 0;
+  bottom: 0;
   inset-inline-end: 0;
 }
 
@@ -644,7 +650,8 @@
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
   border-left: 1px solid var(--lwt-background-tab-separator-color, currentColor);
-  margin-block: 5px 4px;
+  margin-top: 5px;
+  margin-bottom: 4px;
   opacity: 0.3;
 }
 

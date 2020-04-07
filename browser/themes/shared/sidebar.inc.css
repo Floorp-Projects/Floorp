@@ -35,8 +35,10 @@
 }
 
 #sidebar-box[positionend] + .sidebar-splitter {
-  border-inline-width: 1px 0;
-  margin-inline-start: 0 -4px;
+  border-inline-end-width: 0;
+  border-inline-start-width: 1px;
+  margin-inline-start: 0;
+  margin-inline-end: -4px;
 }
 %endif
 
@@ -54,7 +56,8 @@
 #sidebar-title {
   margin: 0;
   padding: 0;
-  padding-inline: 8px 4px;
+  padding-inline-start: 8px;
+  padding-inline-end: 4px;
 }
 
 #sidebar-switcher-arrow {
@@ -114,21 +117,21 @@ toolbarseparator + #sidebar-extensions-separator {
 %ifdef XP_MACOSX
 
 #sidebarMenu-popup > .subviewbutton[checked="true"] {
-  background-position: left 4px top 7px;
+  background-position: top 7px left 4px;
 }
 
 #sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position-x: right 4px;
+  background-position: top 7px right 4px;
 }
 
 %else
 
 #sidebarMenu-popup > .subviewbutton[checked="true"] {
-  background-position: left 7px center;
+  background-position: center left 7px;
 }
 
 #sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position-x: right 7px;
+  background-position: center right 7px;
 }
 
 /* Allow room for the checkbox drawn as a background image at the start of the toolbarbutton */

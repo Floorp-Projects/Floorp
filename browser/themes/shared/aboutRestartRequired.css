@@ -12,7 +12,7 @@
 }
 
 #errorPageContainer:dir(rtl) {
-  background-position-x: right;
+  background-position: right center;
 }
 
 #header {

@@ -171,7 +171,7 @@
 
 #placeContent > treechildren::-moz-tree-cell,
 #placeContent > treechildren::-moz-tree-column {
-  border-inline-end: 1px solid #d7dad7;
+  border-right: 1px solid #d7dad7;
 }
 
 #placeContent > treechildren::-moz-tree-cell(separator) {

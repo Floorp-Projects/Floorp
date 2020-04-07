@@ -19,7 +19,8 @@
 .config-background {
   background: url("chrome://browser/content/aboutconfig/background.svg") no-repeat;
   height: 182px;
-  margin: 32px auto;
+  margin-block: 32px;
+  margin-inline: auto;
   width: 235px;
 }
 
@@ -234,7 +235,8 @@ td.cell-value > form > input[type="number"] {
   position: absolute;
   top: 0;
   /* Make it wider by the border width so the border-inline is hidden. */
-  inset-inline: calc(var(--prefs-table-border-width) * -1);
+  left: calc(var(--prefs-table-border-width) * -1);
+  right: calc(var(--prefs-table-border-width) * -1);
   height: 12px;
   background-color: var(--in-content-page-background);
   /* This is visually the top border on the add row. */
