@@ -1015,10 +1015,6 @@ nsresult ContentChild::ProvideWindowCommon(
     ipcContext->get_PopupIPCTabContext().opener() = aTabOpener;
   }
 
-  nsCOMPtr<nsIEventTarget> target =
-      tabGroup->EventTargetFor(TaskCategory::Other);
-  SetEventTargetForActor(newChild, target);
-
   if (IsShuttingDown()) {
     return NS_ERROR_ABORT;
   }

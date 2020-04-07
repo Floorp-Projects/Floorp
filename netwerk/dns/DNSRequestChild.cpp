@@ -10,7 +10,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSByTypeRecord.h"
@@ -248,10 +247,6 @@ void DNSRequestChild::StartRequest() {
   }
 
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-    gNeckoChild->SetEventTargetForActor(this, systemGroupEventTarget);
-
     mozilla::dom::ContentChild* cc =
         static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
     if (cc->IsShuttingDown()) {
