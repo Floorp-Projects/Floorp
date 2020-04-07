@@ -103,6 +103,26 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+static const uint8_t NS_INPUTMODE_NONE = 1;
+static const uint8_t NS_INPUTMODE_TEXT = 2;
+static const uint8_t NS_INPUTMODE_TEL = 3;
+static const uint8_t NS_INPUTMODE_URL = 4;
+static const uint8_t NS_INPUTMODE_EMAIL = 5;
+static const uint8_t NS_INPUTMODE_NUMERIC = 6;
+static const uint8_t NS_INPUTMODE_DECIMAL = 7;
+static const uint8_t NS_INPUTMODE_SEARCH = 8;
+
+static const nsAttrValue::EnumTable kInputmodeTable[] = {
+    {"none", NS_INPUTMODE_NONE},
+    {"text", NS_INPUTMODE_TEXT},
+    {"tel", NS_INPUTMODE_TEL},
+    {"url", NS_INPUTMODE_URL},
+    {"email", NS_INPUTMODE_EMAIL},
+    {"numeric", NS_INPUTMODE_NUMERIC},
+    {"decimal", NS_INPUTMODE_DECIMAL},
+    {"search", NS_INPUTMODE_SEARCH},
+    {nullptr, 0}};
+
 nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
   MOZ_ASSERT(!aDst->GetUncomposedDoc(),
              "Should not CopyInnerTo an Element in a document");
@@ -833,6 +853,10 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::rel) {
       aResult.ParseAtomArray(aValue);
       return true;
+    }
+
+    if (aAttribute == nsGkAtoms::inputmode) {
+      return aResult.ParseEnumValue(aValue, kInputmodeTable, false);
     }
   }
 
