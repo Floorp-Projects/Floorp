@@ -1364,7 +1364,11 @@ class AddonPageHeader extends HTMLElement {
           }
           break;
       }
-    } else if (e.type == "mousedown" && e.target == pageOptionsMenuButton) {
+    } else if (
+      e.type == "mousedown" &&
+      e.target == pageOptionsMenuButton &&
+      e.button == 0
+    ) {
       this.pageOptionsMenu.toggle(e);
     } else if (
       e.target == pageOptionsMenu.panel &&
@@ -2980,7 +2984,7 @@ class AddonCard extends HTMLElement {
       }
     } else if (e.type == "mousedown") {
       // Open panel on mousedown when the mouse is used.
-      if (action == "more-options") {
+      if (action == "more-options" && e.button == 0) {
         this.panel.toggle(e);
       }
     } else if (e.type === "shown" || e.type === "hidden") {
