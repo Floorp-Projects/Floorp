@@ -206,6 +206,7 @@ class RegExpObject : public NativeObject {
 #ifdef DEBUG
   static MOZ_MUST_USE bool dumpBytecode(JSContext* cx,
                                         Handle<RegExpObject*> regexp,
+                                        bool match_only,
                                         HandleLinearString input);
 #endif
 
