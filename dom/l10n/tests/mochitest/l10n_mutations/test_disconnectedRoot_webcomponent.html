@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
+  async function* mockGenerateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
 key1 = Key 1
@@ -20,8 +20,7 @@ key4 = Key 4
 
   document.domLoc = new DOMLocalization(
     [],
-    false,
-    { generateBundles }
+    mockGenerateMessages
   );
   document.domLoc.connectRoot(document.documentElement);
   </script>

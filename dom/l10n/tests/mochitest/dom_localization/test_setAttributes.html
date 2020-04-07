@@ -8,15 +8,14 @@
   <script type="application/javascript">
   "use strict";
 
-  async function* generateBundles(resourceIds) {}
+  async function* mockGenerateMessages(resourceIds) {}
 
   window.onload = function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
       [],
-      false,
-      { generateBundles },
+      mockGenerateMessages
     );
 
     const p1 = document.querySelectorAll("p")[0];
