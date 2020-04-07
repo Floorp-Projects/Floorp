@@ -4471,7 +4471,6 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
   virtual MDefinition* foldIfNegOne(size_t operand) = 0;
   virtual MDefinition* foldIfEqual() = 0;
   virtual MDefinition* foldIfAllBitsSet(size_t operand) = 0;
-  virtual void infer(BaselineInspector* inspector, jsbytecode* pc);
   void collectRangeInfoPreTrunc() override;
 
   void setInt32Specialization() {
@@ -4597,7 +4596,6 @@ class MShiftInstruction : public MBinaryBitwiseInstruction {
   MDefinition* foldIfNegOne(size_t operand) override { return this; }
   MDefinition* foldIfEqual() override { return this; }
   MDefinition* foldIfAllBitsSet(size_t operand) override { return this; }
-  virtual void infer(BaselineInspector* inspector, jsbytecode* pc) override;
 };
 
 class MLsh : public MShiftInstruction {
@@ -4677,11 +4675,14 @@ class MUrsh : public MShiftInstruction {
     return this;
   }
 
-  void infer(BaselineInspector* inspector, jsbytecode* pc) override;
-
   bool bailoutsDisabled() const { return bailoutsDisabled_; }
 
   bool fallible() const;
+
+  void setDoubleSpecialization() {
+    specialization_ = MIRType::Double;
+    setResultType(MIRType::Double);
+  }
 
   void computeRange(TempAllocator& alloc) override;
   void collectRangeInfoPreTrunc() override;

@@ -2532,20 +2532,6 @@ MDefinition* MBinaryBitwiseInstruction::foldUnnecessaryBitop() {
   return this;
 }
 
-void MBinaryBitwiseInstruction::infer(BaselineInspector*, jsbytecode*) {
-  if (getOperand(0)->mightBeType(MIRType::Object) ||
-      getOperand(0)->mightBeType(MIRType::Symbol) ||
-      getOperand(0)->mightBeType(MIRType::BigInt) ||
-      getOperand(1)->mightBeType(MIRType::Object) ||
-      getOperand(1)->mightBeType(MIRType::Symbol) ||
-      getOperand(1)->mightBeType(MIRType::BigInt)) {
-    specialization_ = MIRType::None;
-    setResultType(MIRType::Value);
-  } else {
-    specializeAs(MIRType::Int32);
-  }
-}
-
 void MBinaryBitwiseInstruction::specializeAs(MIRType type) {
   MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
   MOZ_ASSERT(this->type() == MIRType::Value || this->type() == type);
@@ -2556,43 +2542,6 @@ void MBinaryBitwiseInstruction::specializeAs(MIRType type) {
   if (isBitOr() || isBitAnd() || isBitXor()) {
     setCommutative();
   }
-}
-
-void MShiftInstruction::infer(BaselineInspector*, jsbytecode*) {
-  if (getOperand(0)->mightBeType(MIRType::Object) ||
-      getOperand(1)->mightBeType(MIRType::Object) ||
-      getOperand(0)->mightBeType(MIRType::Symbol) ||
-      getOperand(1)->mightBeType(MIRType::Symbol) ||
-      getOperand(0)->mightBeType(MIRType::BigInt) ||
-      getOperand(1)->mightBeType(MIRType::BigInt)) {
-    specialization_ = MIRType::None;
-    setResultType(MIRType::Value);
-  } else {
-    specialization_ = MIRType::Int32;
-    setResultType(MIRType::Int32);
-  }
-}
-
-void MUrsh::infer(BaselineInspector* inspector, jsbytecode* pc) {
-  if (getOperand(0)->mightBeType(MIRType::Object) ||
-      getOperand(1)->mightBeType(MIRType::Object) ||
-      getOperand(0)->mightBeType(MIRType::Symbol) ||
-      getOperand(1)->mightBeType(MIRType::Symbol) ||
-      getOperand(0)->mightBeType(MIRType::BigInt) ||
-      getOperand(1)->mightBeType(MIRType::BigInt)) {
-    specialization_ = MIRType::None;
-    setResultType(MIRType::Value);
-    return;
-  }
-
-  if (inspector->hasSeenDoubleResult(pc)) {
-    specialization_ = MIRType::Double;
-    setResultType(MIRType::Double);
-    return;
-  }
-
-  specialization_ = MIRType::Int32;
-  setResultType(MIRType::Int32);
 }
 
 static inline bool CanProduceNegativeZero(MDefinition* def) {
