@@ -40,7 +40,8 @@ VRDisplayClient::VRDisplayClient(const VRDisplayInfo& aDisplayInfo)
       mPresentationCount(0),
       mLastEventFrameId(0),
       mLastPresentingGeneration(0),
-      mLastEventControllerState{} {
+      mLastEventControllerState{},
+      mAPIMode(VRAPIMode::WebXR) {
   MOZ_COUNT_CTOR(VRDisplayClient);
 }
 
@@ -102,6 +103,10 @@ void VRDisplayClient::MakePresentationGenerationCurrent() {
   mLastPresentingGeneration = mDisplayInfo.mDisplayState.presentingGeneration;
 }
 
+void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) {
+  mAPIMode = aMode;
+}
+
 void VRDisplayClient::FireEvents() {
   RefPtr<VRManagerChild> vm = VRManagerChild::Get();
   // Only fire these events for non-chrome VR sessions
@@ -143,15 +148,14 @@ void VRDisplayClient::FireEvents() {
 
   // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad attribute
   // MUST NOT be included in the array returned by navigator.getGamepads().
-  if (!StaticPrefs::dom_vr_webxr_enabled()) { // Checking mWebVR?
+  if (mAPIMode == VRAPIMode::WebVR) {
     FireGamepadEvents();
-  } else {
-    // Update controller states into XRInputSourceArray.
-    for (auto& session : mSessions) {
-      dom::XRInputSourceArray* inputs = session->InputSources();
-      if (inputs) {
-        inputs->Update(session);
-      }
+  }
+  // Update controller states into XRInputSourceArray.
+  for (auto& session : mSessions) {
+    dom::XRInputSourceArray* inputs = session->InputSources();
+    if (inputs) {
+      inputs->Update(session);
     }
   }
 }
