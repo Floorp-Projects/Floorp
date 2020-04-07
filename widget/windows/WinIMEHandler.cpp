@@ -649,67 +649,112 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
 
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
-    if (aHTMLInputInputmode.EqualsLiteral("url")) {
-      scopes.AppendElement(IS_URL);
-    } else if (aHTMLInputInputmode.EqualsLiteral("mozAwesomebar")) {
-      // Even if Awesomebar has focus, user may not input URL directly.
-      // However, on-screen keyboard for URL should be shown because it has
-      // some useful additional keys like ".com" and they are not hindrances
-      // even when inputting non-URL text, e.g., words to search something in
-      // the web.  On the other hand, a lot of Microsoft's IMEs and Google
-      // Japanese Input make their open state "closed" automatically if we
-      // notify them of URL as the input scope.  However, this is very annoying
-      // for the users when they try to input some words to search the web or
-      // bookmark/history items.  Therefore, if they are active, we need to
-      // notify them of the default input scope for avoiding this issue.
-      // FYI: We cannot check active TIP without TSF.  Therefore, if it's
-      //      not in TSF mode, this will check only if active IMM-IME is Google
-      //      Japanese Input.  Google Japanese Input is a TIP of TSF basically.
-      //      However, if the OS is Win7 or it's installed on Win7 but has not
-      //      been updated yet even after the OS is upgraded to Win8 or later,
-      //      it's installed as IMM-IME.
-      if (TSFTextStore::ShouldSetInputScopeOfURLBarToDefault()) {
-        scopes.AppendElement(IS_DEFAULT);
-      } else {
-        scopes.AppendElement(IS_URL);
-      }
-    } else if (aHTMLInputInputmode.EqualsLiteral("email")) {
-      scopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
-    } else if (aHTMLInputInputmode.EqualsLiteral("tel")) {
-      scopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
-      scopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
-    } else if (aHTMLInputInputmode.EqualsLiteral("numeric")) {
-      scopes.AppendElement(IS_NUMBER);
-    } else {
-      scopes.AppendElement(IS_DEFAULT);
-    }
-  } else if (aHTMLInputType.EqualsLiteral("url")) {
-    scopes.AppendElement(IS_URL);
-  } else if (aHTMLInputType.EqualsLiteral("search")) {
-    scopes.AppendElement(IS_SEARCH);
-  } else if (aHTMLInputType.EqualsLiteral("email")) {
-    scopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
-  } else if (aHTMLInputType.EqualsLiteral("password")) {
-    scopes.AppendElement(IS_PASSWORD);
-  } else if (aHTMLInputType.EqualsLiteral("datetime") ||
-             aHTMLInputType.EqualsLiteral("datetime-local")) {
-    scopes.AppendElement(IS_DATE_FULLDATE);
-    scopes.AppendElement(IS_TIME_FULLTIME);
-  } else if (aHTMLInputType.EqualsLiteral("date") ||
-             aHTMLInputType.EqualsLiteral("month") ||
-             aHTMLInputType.EqualsLiteral("week")) {
-    scopes.AppendElement(IS_DATE_FULLDATE);
-  } else if (aHTMLInputType.EqualsLiteral("time")) {
-    scopes.AppendElement(IS_TIME_FULLTIME);
-  } else if (aHTMLInputType.EqualsLiteral("tel")) {
-    scopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
-    scopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
-  } else if (aHTMLInputType.EqualsLiteral("number")) {
-    scopes.AppendElement(IS_NUMBER);
+    AppendInputScopeFromInputmode(aHTMLInputInputmode, scopes);
+  } else {
+    AppendInputScopeFromType(aHTMLInputType, scopes);
   }
-  if (!scopes.IsEmpty()) {
-    sSetInputScopes(aWindow->GetWindowHandle(), scopes.Elements(),
-                    scopes.Length(), nullptr, 0, nullptr, nullptr);
+
+  if (scopes.IsEmpty()) {
+    // At least, 1 item is necessary.
+    scopes.AppendElement(IS_DEFAULT);
+  }
+
+  sSetInputScopes(aWindow->GetWindowHandle(), scopes.Elements(),
+                  scopes.Length(), nullptr, 0, nullptr, nullptr);
+}
+
+// static
+void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
+                                               nsTArray<InputScope>& aScopes) {
+  if (aInputmode.EqualsLiteral("mozAwesomebar")) {
+    // Even if Awesomebar has focus, user may not input URL directly.
+    // However, on-screen keyboard for URL should be shown because it has
+    // some useful additional keys like ".com" and they are not hindrances
+    // even when inputting non-URL text, e.g., words to search something in
+    // the web.  On the other hand, a lot of Microsoft's IMEs and Google
+    // Japanese Input make their open state "closed" automatically if we
+    // notify them of URL as the input scope.  However, this is very annoying
+    // for the users when they try to input some words to search the web or
+    // bookmark/history items.  Therefore, if they are active, we need to
+    // notify them of the default input scope for avoiding this issue.
+    // FYI: We cannot check active TIP without TSF.  Therefore, if it's
+    //      not in TSF mode, this will check only if active IMM-IME is Google
+    //      Japanese Input.  Google Japanese Input is a TIP of TSF basically.
+    //      However, if the OS is Win7 or it's installed on Win7 but has not
+    //      been updated yet even after the OS is upgraded to Win8 or later,
+    //      it's installed as IMM-IME.
+    if (TSFTextStore::ShouldSetInputScopeOfURLBarToDefault()) {
+      return;
+    }
+    // Don't append IS_SEARCH here for showing on-screen keyboard for URL.
+    aScopes.AppendElement(IS_URL);
+    return;
+  }
+
+  // https://html.spec.whatwg.org/dev/interaction.html#attr-inputmode
+  if (aInputmode.EqualsLiteral("url")) {
+    aScopes.AppendElement(IS_URL);
+    return;
+  }
+  if (aInputmode.EqualsLiteral("email")) {
+    aScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+    return;
+  }
+  if (aInputmode.EqualsLiteral("tel")) {
+    aScopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
+    aScopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
+    return;
+  }
+  if (aInputmode.EqualsLiteral("numeric")) {
+    aScopes.AppendElement(IS_NUMBER);
+    return;
+  }
+}
+
+// static
+void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
+                                          nsTArray<InputScope>& aScopes) {
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
+  if (aHTMLInputType.EqualsLiteral("url")) {
+    aScopes.AppendElement(IS_URL);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("search")) {
+    aScopes.AppendElement(IS_SEARCH);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("email")) {
+    aScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("password")) {
+    aScopes.AppendElement(IS_PASSWORD);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("datetime") ||
+      aHTMLInputType.EqualsLiteral("datetime-local")) {
+    aScopes.AppendElement(IS_DATE_FULLDATE);
+    aScopes.AppendElement(IS_TIME_FULLTIME);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("date") ||
+      aHTMLInputType.EqualsLiteral("month") ||
+      aHTMLInputType.EqualsLiteral("week")) {
+    aScopes.AppendElement(IS_DATE_FULLDATE);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("time")) {
+    aScopes.AppendElement(IS_TIME_FULLTIME);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("tel")) {
+    aScopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
+    aScopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
+    return;
+  }
+  if (aHTMLInputType.EqualsLiteral("number")) {
+    aScopes.AppendElement(IS_NUMBER);
+    return;
   }
 }
 
