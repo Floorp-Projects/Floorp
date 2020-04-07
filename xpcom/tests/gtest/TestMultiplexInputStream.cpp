@@ -14,6 +14,9 @@
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
+using mozilla::GetCurrentThreadSerialEventTarget;
+using mozilla::SpinEventLoopUntil;
+
 TEST(MultiplexInputStream, Seek_SET)
 {
   nsCString buf1;

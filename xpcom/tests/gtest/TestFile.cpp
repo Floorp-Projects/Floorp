@@ -10,6 +10,7 @@
 #ifdef XP_WIN
 #  include "nsILocalFileWin.h"
 #endif
+#include "nsComponentManagerUtils.h"
 #include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"

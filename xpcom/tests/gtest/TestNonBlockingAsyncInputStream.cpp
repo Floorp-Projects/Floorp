@@ -7,6 +7,9 @@
 #include "nsStringStream.h"
 #include "Helpers.h"
 
+using mozilla::NonBlockingAsyncInputStream;
+using mozilla::SpinEventLoopUntil;
+
 TEST(TestNonBlockingAsyncInputStream, Simple)
 {
   nsCString data;

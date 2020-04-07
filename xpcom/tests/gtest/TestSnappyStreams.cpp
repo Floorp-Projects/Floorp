@@ -9,6 +9,7 @@
 #include "Helpers.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
+#include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"
@@ -83,9 +84,9 @@ static void TestCompressUncompress(uint32_t aNumBytes) {
 static void TestUncompressCorrupt(const char* aCorruptData,
                                   uint32_t aCorruptLength) {
   nsCOMPtr<nsIInputStream> source;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(source),
-                                      MakeSpan(aCorruptData, aCorruptLength),
-                                      NS_ASSIGNMENT_DEPEND);
+  nsresult rv = NS_NewByteInputStream(
+      getter_AddRefs(source), mozilla::MakeSpan(aCorruptData, aCorruptLength),
+      NS_ASSIGNMENT_DEPEND);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIInputStream> uncompress = new SnappyUncompressInputStream(source);
