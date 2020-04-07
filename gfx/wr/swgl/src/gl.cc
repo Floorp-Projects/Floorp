@@ -436,11 +436,13 @@ struct Context {
     GLuint texture_2d_binding = 0;
     GLuint texture_3d_binding = 0;
     GLuint texture_2d_array_binding = 0;
+    GLuint texture_rectangle_binding = 0;
 
     void unlink(GLuint n) {
       ::unlink(texture_2d_binding, n);
       ::unlink(texture_3d_binding, n);
       ::unlink(texture_2d_array_binding, n);
+      ::unlink(texture_rectangle_binding, n);
     }
   };
   TextureUnit texture_units[MAX_TEXTURE_UNITS];
@@ -478,6 +480,8 @@ struct Context {
         return texture_units[active_texture_unit].texture_2d_array_binding;
       case GL_TEXTURE_3D:
         return texture_units[active_texture_unit].texture_3d_binding;
+      case GL_TEXTURE_RECTANGLE:
+        return texture_units[active_texture_unit].texture_rectangle_binding;
       case GL_TIME_ELAPSED:
         return time_elapsed_query;
       case GL_SAMPLES_PASSED:
@@ -493,6 +497,22 @@ struct Context {
         assert(false);
         return unknown_binding;
     }
+  }
+
+  Texture& get_texture(sampler2D, int unit) {
+    return textures[texture_units[unit].texture_2d_binding];
+  }
+
+  Texture& get_texture(isampler2D, int unit) {
+    return textures[texture_units[unit].texture_2d_binding];
+  }
+
+  Texture& get_texture(sampler2DArray, int unit) {
+    return textures[texture_units[unit].texture_2d_array_binding];
+  }
+
+  Texture& get_texture(sampler2DRect, int unit) {
+    return textures[texture_units[unit].texture_rectangle_binding];
   }
 };
 static Context* ctx = nullptr;
@@ -530,7 +550,7 @@ static inline void init_sampler(S* s, Texture& t) {
 
 template <typename S>
 S* lookup_sampler(S* s, int texture) {
-  Texture& t = ctx->textures[ctx->texture_units[texture].texture_2d_binding];
+  Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
     *s = S();
   } else {
@@ -542,7 +562,7 @@ S* lookup_sampler(S* s, int texture) {
 
 template <typename S>
 S* lookup_isampler(S* s, int texture) {
-  Texture& t = ctx->textures[ctx->texture_units[texture].texture_2d_binding];
+  Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
     *s = S();
   } else {
@@ -553,8 +573,7 @@ S* lookup_isampler(S* s, int texture) {
 
 template <typename S>
 S* lookup_sampler_array(S* s, int texture) {
-  Texture& t =
-      ctx->textures[ctx->texture_units[texture].texture_2d_array_binding];
+  Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
     *s = S();
   } else {
