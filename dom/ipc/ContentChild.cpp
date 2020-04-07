@@ -783,7 +783,7 @@ ContentChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
                             bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
-  return ProvideWindowCommon(nullptr, aOpenWindowInfo, false, aChromeFlags,
+  return ProvideWindowCommon(nullptr, aOpenWindowInfo, aChromeFlags,
                              aCalledFromJS, aWidthSpecified, aURI, aName,
                              aFeatures, aForceNoOpener, aForceNoReferrer,
                              aLoadState, aWindowIsNew, aReturn);
@@ -867,11 +867,10 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
 
 nsresult ContentChild::ProvideWindowCommon(
     BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
-    bool aIframeMoz, uint32_t aChromeFlags, bool aCalledFromJS,
-    bool aWidthSpecified, nsIURI* aURI, const nsAString& aName,
-    const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
-    nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-    BrowsingContext** aReturn) {
+    uint32_t aChromeFlags, bool aCalledFromJS, bool aWidthSpecified,
+    nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
+    bool aForceNoOpener, bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
+    bool* aWindowIsNew, BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
   UniquePtr<IPCTabContext> ipcContext;
@@ -1165,52 +1164,31 @@ nsresult ContentChild::ProvideWindowCommon(
   };
 
   // Send down the request to open the window.
-  if (aIframeMoz) {
-    MOZ_ASSERT(aTabOpener);
-    nsAutoCString url;
-    if (aURI) {
-      aURI->GetSpec(url);
-    } else {
-      // We can't actually send a nullptr up as the URI, since IPDL doesn't let
-      // us send nullptr's for primitives. We indicate that the nsString for the
-      // URI should be converted to a nullptr by voiding the string.
-      url.SetIsVoid(true);
-    }
-
-    // NOTE: BrowserFrameOpenWindowPromise is the same type as
-    // CreateWindowPromise, and this code depends on that fact.
-    newChild->SendBrowserFrameOpenWindow(
-        aTabOpener, NS_ConvertUTF8toUTF16(url), name, aForceNoReferrer,
-        NS_ConvertUTF8toUTF16(features), std::move(resolve), std::move(reject));
-  } else {
-    float fullZoom;
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                               &fullZoom, getter_AddRefs(referrerInfo),
-                               getter_AddRefs(triggeringPrincipal),
-                               getter_AddRefs(csp));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
-                     aWidthSpecified, aURI, features, fullZoom,
-                     Principal(triggeringPrincipal), csp, referrerInfo,
-                     aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
-                     std::move(reject));
+  float fullZoom;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
+                             &fullZoom, getter_AddRefs(referrerInfo),
+                             getter_AddRefs(triggeringPrincipal),
+                             getter_AddRefs(csp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
+
+  SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
+                   aWidthSpecified, aURI, features, fullZoom,
+                   Principal(triggeringPrincipal), csp, referrerInfo,
+                   aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
+                   std::move(reject));
 
   // =======================
   // Begin Nested Event Loop
   // =======================
 
-  // We have to wait for a response from either SendCreateWindow or
-  // SendBrowserFrameOpenWindow with information we're going to need to return
-  // from this function, So we spin a nested event loop until they get back to
-  // us.
-  //
+  // We have to wait for a response from SendCreateWindow or with information
+  // we're going to need to return from this function, So we spin a nested event
+  // loop until they get back to us.
 
   // Prevent the docshell from becoming active while the nested event loop is
   // spinning.

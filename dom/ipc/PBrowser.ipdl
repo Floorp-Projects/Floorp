@@ -485,22 +485,6 @@ parent:
     async IndexedDBPermissionRequest(nsIPrincipal aPrincipal) returns (uint32_t permission);
 
     /**
-     * window.open from inside <iframe mozbrowser> is special.  When the child
-     * process calls window.open, it creates a new PBrowser (in its own
-     * process), then calls BrowserFrameOpenWindow on it.
-     *
-     * The parent process gets a chance to accept or reject the window.open
-     * call, and windowOpened is set to true if we ended up going through with
-     * the window.open.
-     *
-     * @param opener the PBrowser whose content called window.open.
-     */
-    async BrowserFrameOpenWindow(PBrowser opener,
-                                 nsString aURL, nsString aName,
-                                 bool aForceNoReferrer, nsString aFeatures)
-        returns (CreatedWindowInfo window);
-
-    /**
      * Tells the containing widget whether the given input block results in a
      * swipe. Should be called in response to a WidgetWheelEvent that has
      * mFlags.mCanTriggerSwipe set on it.
