@@ -1167,12 +1167,12 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   // usercontextid attribute before comparing our originAttributes with the
   // other one.
   OriginAttributes ourOriginAttributes = browserParent->OriginAttributesRef();
-  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
+  rv = PopulateOriginContextIdsFromAttributes(ourOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   OriginAttributes otherOriginAttributes =
       otherBrowserParent->OriginAttributesRef();
-  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
+  rv = aOther->PopulateOriginContextIdsFromAttributes(otherOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ourOriginAttributes != otherOriginAttributes) {
@@ -1597,11 +1597,11 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // usercontextid attribute before comparing our originAttributes with the
   // other one.
   OriginAttributes ourOriginAttributes = ourDocshell->GetOriginAttributes();
-  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
+  rv = PopulateOriginContextIdsFromAttributes(ourOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   OriginAttributes otherOriginAttributes = otherDocshell->GetOriginAttributes();
-  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
+  rv = aOther->PopulateOriginContextIdsFromAttributes(otherOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ourOriginAttributes != otherOriginAttributes) {
@@ -2186,7 +2186,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   ApplySandboxFlags(sandboxFlags);
 
   // Grab the userContextId from owner
-  nsresult rv = PopulateUserContextIdFromAttribute(attrs);
+  nsresult rv = PopulateOriginContextIdsFromAttributes(attrs);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3399,7 +3399,7 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   // set the userContextId on the attrs before we pass them into
   // the tab context
-  rv = PopulateUserContextIdFromAttribute(attrs);
+  rv = PopulateOriginContextIdsFromAttributes(attrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString presentationURLStr;
@@ -3440,21 +3440,32 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   return NS_OK;
 }
 
-nsresult nsFrameLoader::PopulateUserContextIdFromAttribute(
+nsresult nsFrameLoader::PopulateOriginContextIdsFromAttributes(
     OriginAttributes& aAttr) {
+  // Only XUL or mozbrowser frames are allowed to set context IDs
+  uint32_t namespaceID = mOwnerContent->GetNameSpaceID();
+  if (namespaceID != kNameSpaceID_XUL && !OwnerIsMozBrowserFrame()) {
+    return NS_OK;
+  }
+
+  nsAutoString attributeValue;
   if (aAttr.mUserContextId ==
-      nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
-    // Grab the userContextId from owner if XUL or mozbrowser frame
-    nsAutoString userContextIdStr;
-    int32_t namespaceID = mOwnerContent->GetNameSpaceID();
-    if ((namespaceID == kNameSpaceID_XUL || OwnerIsMozBrowserFrame()) &&
-        mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid,
-                               userContextIdStr) &&
-        !userContextIdStr.IsEmpty()) {
-      nsresult rv;
-      aAttr.mUserContextId = userContextIdStr.ToInteger(&rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+          nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID &&
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid,
+                             attributeValue) &&
+      !attributeValue.IsEmpty()) {
+    nsresult rv;
+    aAttr.mUserContextId = attributeValue.ToInteger(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aAttr.mGeckoViewSessionContextId.IsEmpty() &&
+      mOwnerContent->GetAttr(kNameSpaceID_None,
+                             nsGkAtoms::geckoViewSessionContextId,
+                             attributeValue) &&
+      !attributeValue.IsEmpty()) {
+    // XXX: Should we check the format from `GeckoViewNavigation.jsm` here?
+    aAttr.mGeckoViewSessionContextId = attributeValue;
   }
 
   return NS_OK;
