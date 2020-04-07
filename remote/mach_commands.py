@@ -193,9 +193,12 @@ class MochaOutputHandler(object):
 
         self.has_unexpected = False
         self.logger.suite_start([], name="puppeteer-tests")
-        self.status_map = {"OK": "PASS",
-                           "TIME": "TIMEOUT",
-                           "TERMINATED": "CRASH"}
+        self.status_map = {
+            "CRASHED": "CRASH",
+            "OK": "PASS",
+            "TERMINATED": "CRASH",
+            "TIME": "TIMEOUT",
+        }
 
     @property
     def pid(self):
