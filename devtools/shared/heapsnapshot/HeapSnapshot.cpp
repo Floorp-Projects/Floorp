@@ -1011,7 +1011,7 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter {
     // that the 64MB size limit used by Coded{Output,Input}Stream to prevent
     // integer overflow is enforced per message rather than on the whole stream.
     ::google::protobuf::io::CodedOutputStream codedStream(&stream);
-    codedStream.WriteVarint32(message.ByteSize());
+    codedStream.WriteVarint32(message.ByteSizeLong());
     message.SerializeWithCachedSizes(&codedStream);
     return !codedStream.HadError();
   }
