@@ -60,7 +60,7 @@ void* Pointer::ToPtr(FontList* aFontList) const {
     }
     MOZ_ASSERT(block < aFontList->mBlocks.Length());
   }
-  return static_cast<char*>(aFontList->mBlocks[block]->mAddr) + Offset();
+  return static_cast<char*>(aFontList->mBlocks[block]->Memory()) + Offset();
 }
 
 void String::Assign(const nsACString& aString, FontList* aList) {
@@ -524,17 +524,11 @@ bool FontList::AppendShmBlock() {
     MOZ_CRASH("failed to create shared memory");
     return false;
   }
-  if (!newShm->Map(SHM_BLOCK_SIZE)) {
+  if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
     MOZ_CRASH("failed to map shared memory");
   }
 
-  char* addr = static_cast<char*>(newShm->memory());
-  if (!addr) {
-    MOZ_CRASH("null shared memory?");
-    return false;
-  }
-
-  ShmBlock* block = new ShmBlock(newShm, addr);
+  ShmBlock* block = new ShmBlock(newShm);
   // Allocate space for the Allocated() header field present in all blocks
   block->Allocated().store(4);
 
@@ -576,14 +570,10 @@ FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
   if (!newShm->SetHandle(handle, true)) {
     MOZ_CRASH("failed to set shm handle");
   }
-  if (!newShm->Map(SHM_BLOCK_SIZE)) {
+  if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
     MOZ_CRASH("failed to map shared memory");
   }
-  char* addr = static_cast<char*>(newShm->memory());
-  if (!addr) {
-    MOZ_CRASH("null shared memory?");
-  }
-  return new ShmBlock(newShm, addr);
+  return new ShmBlock(newShm);
 }
 
 bool FontList::UpdateShmBlocks() {
@@ -924,7 +914,7 @@ Pointer FontList::ToSharedPointer(const void* aPtr) {
   const char* p = (const char*)aPtr;
   const uint32_t blockCount = mBlocks.Length();
   for (uint32_t i = 0; i < blockCount; ++i) {
-    const char* blockAddr = (const char*)mBlocks[i]->mAddr;
+    const char* blockAddr = (const char*)mBlocks[i]->Memory();
     if (p >= blockAddr && p < blockAddr + SHM_BLOCK_SIZE) {
       return Pointer(i, p - blockAddr);
     }
