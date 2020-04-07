@@ -1707,8 +1707,7 @@ nsIFrame::Sides nsIFrame::GetSkipSides(const ReflowInput* aReflowInput) const {
 }
 
 nsRect nsIFrame::GetPaddingRectRelativeToSelf() const {
-  nsMargin border(GetUsedBorder());
-  border.ApplySkipSides(GetSkipSides());
+  nsMargin border = GetUsedBorder().ApplySkipSides(GetSkipSides());
   nsRect r(0, 0, mRect.width, mRect.height);
   r.Deflate(border);
   return r;
@@ -1732,8 +1731,7 @@ WritingMode nsIFrame::WritingModeForLine(WritingMode aSelfWM,
 }
 
 nsRect nsIFrame::GetMarginRectRelativeToSelf() const {
-  nsMargin m = GetUsedMargin();
-  m.ApplySkipSides(GetSkipSides());
+  nsMargin m = GetUsedMargin().ApplySkipSides(GetSkipSides());
   nsRect r(0, 0, mRect.width, mRect.height);
   r.Inflate(m);
   return r;
@@ -1850,8 +1848,7 @@ bool nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const {
 }
 
 nsRect nsIFrame::GetContentRectRelativeToSelf() const {
-  nsMargin bp(GetUsedBorderAndPadding());
-  bp.ApplySkipSides(GetSkipSides());
+  nsMargin bp = GetUsedBorderAndPadding().ApplySkipSides(GetSkipSides());
   nsRect r(0, 0, mRect.width, mRect.height);
   r.Deflate(bp);
   return r;
