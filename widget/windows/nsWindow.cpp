@@ -81,6 +81,7 @@
 #include <dbt.h>
 #include <unknwn.h>
 #include <psapi.h>
+#include <rpc.h>
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
@@ -2073,6 +2074,62 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     // we activate here to ensure that the right child window is focused
     if (mode == SW_MAXIMIZE || mode == SW_SHOW)
       DispatchFocusToTopLevelWindow(true);
+  }
+}
+
+RefPtr<IVirtualDesktopManager> GetVirtualDesktopManager() {
+#ifdef __MINGW32__
+  return nullptr;
+#else
+  if (!IsWin10OrLater()) {
+    return nullptr;
+  }
+
+  RefPtr<IServiceProvider> serviceProvider;
+  HRESULT hr = ::CoCreateInstance(
+      CLSID_ImmersiveShell, NULL, CLSCTX_LOCAL_SERVER,
+      __uuidof(IServiceProvider), getter_AddRefs(serviceProvider));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  RefPtr<IVirtualDesktopManager> desktopManager;
+  serviceProvider->QueryService(__uuidof(IVirtualDesktopManager),
+                                desktopManager.StartAssignment());
+  return desktopManager;
+#endif
+}
+
+void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
+  RefPtr<IVirtualDesktopManager> desktopManager = GetVirtualDesktopManager();
+  if (!desktopManager) {
+    return;
+  }
+
+  GUID desktop;
+  HRESULT hr = desktopManager->GetWindowDesktopId(mWnd, &desktop);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  RPC_WSTR workspaceIDStr = nullptr;
+  if (UuidToStringW(&desktop, &workspaceIDStr) == RPC_S_OK) {
+    workspaceID.Assign((wchar_t*)workspaceIDStr);
+    RpcStringFreeW(&workspaceIDStr);
+  }
+}
+
+void nsWindow::MoveToWorkspace(const nsAString& workspaceID) {
+  RefPtr<IVirtualDesktopManager> desktopManager = GetVirtualDesktopManager();
+  if (!desktopManager) {
+    return;
+  }
+
+  GUID desktop;
+  const nsString& flat = PromiseFlatString(workspaceID);
+  RPC_WSTR workspaceIDStr = reinterpret_cast<RPC_WSTR>((wchar_t*)flat.get());
+  if (UuidFromStringW(workspaceIDStr, &desktop) == RPC_S_OK) {
+    desktopManager->MoveWindowToDesktop(mWnd, desktop);
   }
 }
 
