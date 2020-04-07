@@ -1,0 +1,2 @@
+Content-Security-Policy: default-src https://bug1627235.test.com
+Cache-Control: no-cache
