@@ -343,11 +343,6 @@ class BrowserParent final : public PBrowserParent,
       const bool aNeedCollectSHistory, const uint32_t& aFlushId,
       const bool& aIsFinal, const uint32_t& aEpoch);
 
-  mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
-      PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
-      bool aForceNoReferrer, const nsString& aFeatures,
-      BrowserFrameOpenWindowResolver&& aResolve);
-
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
       nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,

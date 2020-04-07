@@ -32,7 +32,6 @@
 #include "ipc/nsGUIEventIPC.h"
 #include "js/JSON.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/BrowserElementParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/EventListenerManager.h"
@@ -880,41 +879,29 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
 
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
 
-  // If parent is inside an <iframe mozbrowser> and this isn't a request to
-  // open a modal-type window, we're going to create a new <iframe mozbrowser>
-  // and return its window here.
-  nsCOMPtr<nsIDocShell> docshell = parent->GetDocShell();
-  bool iframeMoz =
-      (docshell && docshell->GetIsInMozBrowser() &&
-       !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
-                         nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME)));
+  int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
+      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
 
-  if (!iframeMoz) {
-    int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-        parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
+  // If it turns out we're opening in the current browser, just hand over the
+  // current browser's docshell.
+  if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+    nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
+    *aWindowIsNew = false;
 
-    // If it turns out we're opening in the current browser, just hand over the
-    // current browser's docshell.
-    if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-      nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
-      *aWindowIsNew = false;
+    nsCOMPtr<mozIDOMWindowProxy> win;
+    MOZ_TRY(browser->GetContentDOMWindow(getter_AddRefs(win)));
 
-      nsCOMPtr<mozIDOMWindowProxy> win;
-      MOZ_TRY(browser->GetContentDOMWindow(getter_AddRefs(win)));
-
-      RefPtr<BrowsingContext> bc(
-          nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
-      bc.forget(aReturn);
-      return NS_OK;
-    }
+    RefPtr<BrowsingContext> bc(
+        nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
+    bc.forget(aReturn);
+    return NS_OK;
   }
 
   // Note that ProvideWindowCommon may return NS_ERROR_ABORT if the
   // open window call was canceled.  It's important that we pass this error
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
-  return cc->ProvideWindowCommon(this, aOpenWindowInfo, iframeMoz, aChromeFlags,
+  return cc->ProvideWindowCommon(this, aOpenWindowInfo, aChromeFlags,
                                  aCalledFromJS, aWidthSpecified, aURI, aName,
                                  aFeatures, aForceNoOpener, aForceNoReferrer,
                                  aLoadState, aWindowIsNew, aReturn);

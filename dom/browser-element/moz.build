@@ -7,14 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-EXPORTS.mozilla += [
-    'BrowserElementParent.h',
-]
-
-SOURCES += [
-    'BrowserElementParent.cpp',
-]
-
 XPIDL_SOURCES += [
     'nsIBrowserElementAPI.idl',
 ]
