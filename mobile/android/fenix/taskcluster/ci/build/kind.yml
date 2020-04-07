@@ -40,6 +40,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 7200
         chain-of-trust: true
+        retry-exit-status: [1]
 
 
 jobs:
