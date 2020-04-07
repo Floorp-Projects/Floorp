@@ -8239,21 +8239,12 @@ nsresult nsFrame::MakeFrameName(const nsAString& aType,
   return NS_OK;
 }
 
-void nsIFrame::DumpFrameTree() const { RootFrameList(PresContext(), stderr); }
+void nsIFrame::DumpFrameTree() const {
+  PresShell()->GetRootFrame()->List(stderr);
+}
 
 void nsIFrame::DumpFrameTreeLimited() const { List(stderr); }
 
-void nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out,
-                             const char* aPrefix) {
-  if (!aPresContext || !out) return;
-
-  if (mozilla::PresShell* presShell = aPresContext->GetPresShell()) {
-    nsIFrame* frame = presShell->GetRootFrame();
-    if (frame) {
-      frame->List(out, aPrefix);
-    }
-  }
-}
 #endif
 
 bool nsIFrame::IsVisibleForPainting() { return StyleVisibility()->IsVisible(); }
