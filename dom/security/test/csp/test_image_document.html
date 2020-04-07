@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1627235: Test CSP for images loaded as iframe</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let testframe = document.getElementById("testframe");
+
+testframe.onload = function() {
+  ok(true, "sanity: should fire onload for image document");
+  
+  let contentDoc = SpecialPowers.wrap(testframe.contentDocument);
+  let cspJSON = contentDoc.cspJSON;
+  ok(cspJSON.includes("default-src"), "found default-src directive");
+  ok(cspJSON.includes("https://bug1627235.test.com"), "found default-src value");
+  SimpleTest.finish();
+}
+testframe.onerror = function() {
+  ok(false, "sanity: should not fire onerror for image document");
+}
+testframe.src = "file_image_document_pixel.png";
+
+</script>
+</body>
+</html>
