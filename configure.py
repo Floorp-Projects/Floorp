@@ -83,21 +83,24 @@ def config_status(config):
     # Ideally, all the backend and frontend code would handle the booleans, but
     # there are so many things involved, that it's easier to keep config.status
     # untouched for now.
-    def sanitized_bools(v):
+    def sanitize_config(v):
         if v is True:
             return '1'
         if v is False:
             return ''
+        # Serialize types that look like lists and tuples as lists.
+        if not isinstance(v, (bytes, six.text_type, dict)) and isinstance(v, Iterable):
+            return list(v)
         return v
 
     sanitized_config = {}
     sanitized_config['substs'] = {
-        k: sanitized_bools(v) for k, v in six.iteritems(config)
+        k: sanitize_config(v) for k, v in six.iteritems(config)
         if k not in ('DEFINES', 'non_global_defines', 'TOPSRCDIR', 'TOPOBJDIR',
                      'CONFIG_STATUS_DEPS')
     }
     sanitized_config['defines'] = {
-        k: sanitized_bools(v) for k, v in six.iteritems(config['DEFINES'])
+        k: sanitize_config(v) for k, v in six.iteritems(config['DEFINES'])
     }
     sanitized_config['non_global_defines'] = config['non_global_defines']
     sanitized_config['topsrcdir'] = config['TOPSRCDIR']
