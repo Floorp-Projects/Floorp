@@ -250,6 +250,7 @@ add_task(async function test_passthrough() {
 });
 
 add_task(async function test_ftp() {
+  Services.prefs.setBoolPref("network.ftp.enabled", true);
   let extension = await getExtension({
     host: "1.2.3.4",
     port: 8888,
@@ -263,6 +264,27 @@ add_task(async function test_ftp() {
   equal(proxyInfo.type, "http", `proxy type correct`);
 
   await extension.unload();
+  Services.prefs.clearUserPref("network.ftp.enabled");
+});
+
+add_task(async function test_ftp_disabled() {
+  Services.prefs.setBoolPref("network.ftp.enabled", false);
+  let extension = await getExtension({
+    host: "1.2.3.4",
+    port: 8888,
+    type: "http",
+  });
+
+  let proxyInfo = await getProxyInfo("ftp://somewhere.mozilla.org/");
+
+  equal(
+    proxyInfo,
+    null,
+    `proxy of ftp request is not available when ftp is disabled`
+  );
+
+  await extension.unload();
+  Services.prefs.clearUserPref("network.ftp.enabled");
 });
 
 add_task(async function test_ws() {

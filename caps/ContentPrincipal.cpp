@@ -399,7 +399,10 @@ static nsresult GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aURI,
     return rv;
   }
 
-  if (hasNoRelativeFlag) {
+  // In case of FTP we want to get base domain via TLD service even if FTP
+  // protocol handler is disabled and the scheme is handled by external protocol
+  // handler which returns URI_NORELATIVE flag.
+  if (hasNoRelativeFlag && !aURI->SchemeIs("ftp")) {
     *aHandled = true;
     return aURI->GetSpec(aBaseDomain);
   }
