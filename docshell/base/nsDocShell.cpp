@@ -101,6 +101,7 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIFormPOSTActionChannel.h"
 #include "nsIFrame.h"
@@ -265,9 +266,6 @@ const char kBrandBundleURL[] = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] =
     "chrome://global/locale/appstrings.properties";
 
-// Global reference to the URI fixup service.
-nsIURIFixup* nsDocShell::sURIFixup = nullptr;
-
 static void FavorPerformanceHint(bool aPerfOverStarvation) {
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   if (appShell) {
@@ -419,14 +417,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
     mContentWindowID = nsContentUtils::GenerateWindowId();
   }
 
-  if (gDocShellCount++ == 0) {
-    NS_ASSERTION(sURIFixup == nullptr,
-                 "Huh, sURIFixup not null in first nsDocShell ctor!");
-
-    nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
-    uriFixup.forget(&sURIFixup);
-  }
-
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p created\n", this));
 
 #ifdef DEBUG
@@ -454,10 +444,6 @@ nsDocShell::~nsDocShell() {
     mContentViewer->Close(nullptr);
     mContentViewer->Destroy();
     mContentViewer = nullptr;
-  }
-
-  if (--gDocShellCount == 0) {
-    NS_IF_RELEASE(sURIFixup);
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
@@ -3491,8 +3477,7 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
 
   RefPtr<nsDocShellLoadState> loadState;
   nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      GetAsSupports(this), sURIFixup, aURI, aLoadURIOptions,
-      getter_AddRefs(loadState));
+      GetAsSupports(this), aURI, aLoadURIOptions, getter_AddRefs(loadState));
 
   uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
   if (NS_ERROR_MALFORMED_URI == rv) {
@@ -6000,6 +5985,45 @@ nsDocShell::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
+    const nsACString& aKeyword, bool aIsPrivateContext,
+    nsIInputStream** aPostData) {
+  nsCOMPtr<nsIURIFixupInfo> info;
+  if (XRE_IsContentProcess()) {
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+    if (!contentChild) {
+      return nullptr;
+    }
+
+    info = do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
+    if (NS_WARN_IF(!info)) {
+      return nullptr;
+    }
+    RefPtr<nsIInputStream> postData;
+    RefPtr<nsIURI> uri;
+    nsAutoString providerName;
+    nsAutoCString keyword(aKeyword);
+    // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
+    if (contentChild->SendKeywordToURI(keyword, aIsPrivateContext,
+                                       &providerName, &postData, &uri)) {
+      NS_ConvertUTF8toUTF16 keywordW(aKeyword);
+      info->SetKeywordAsSent(keywordW);
+      info->SetKeywordProviderName(providerName);
+      if (aPostData) {
+        postData.forget(aPostData);
+      }
+      info->SetPreferredURI(uri);
+    }
+  } else {
+    nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+    if (uriFixup) {
+      uriFixup->KeywordToURI(aKeyword, aIsPrivateContext, aPostData,
+                             getter_AddRefs(info));
+    }
+  }
+  return info.forget();
+}
+
 nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                  nsIChannel* aChannel, nsresult aStatus) {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -6175,7 +6199,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
       return NS_OK;
     }
 
-    if (sURIFixup) {
+    if ((aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) &&
+        ((mLoadType == LOAD_NORMAL && isTopFrame) || mAllowKeywordFixup)) {
       //
       // Try and make an alternative URI from the old one
       //
@@ -6190,16 +6215,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
       //
       nsAutoString keywordProviderName, keywordAsSent;
       if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup) {
-        bool keywordsEnabled = Preferences::GetBool("keyword.enabled", false);
-
-        nsAutoCString host;
-        url->GetHost(host);
-
-        nsAutoCString scheme;
-        url->GetScheme(scheme);
-
-        int32_t dotLoc = host.FindChar('.');
-
         // we should only perform a keyword search under the following
         // conditions:
         // (0) Pref keyword.enabled is true
@@ -6212,51 +6227,66 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         // Someone needs to clean up keywords in general so we can
         // determine on a per url basis if we want keywords
         // enabled...this is just a bandaid...
-        if (keywordsEnabled && !scheme.IsEmpty() &&
-            (scheme.Find("http") != 0)) {
-          keywordsEnabled = false;
-        }
-
-        if (keywordsEnabled && (kNotFound == dotLoc)) {
-          nsCOMPtr<nsIURIFixupInfo> info;
-          // only send non-qualified hosts to the keyword server
-          if (!mOriginalUriString.IsEmpty()) {
-            sURIFixup->KeywordToURI(mOriginalUriString, UsePrivateBrowsing(),
-                                    getter_AddRefs(newPostData),
-                                    getter_AddRefs(info));
+        nsAutoCString scheme;
+        Unused << url->GetScheme(scheme);
+        if (Preferences::GetBool("keyword.enabled", false) &&
+            StringBeginsWith(scheme, NS_LITERAL_CSTRING("http"))) {
+          bool attemptFixup = false;
+          nsAutoCString host;
+          Unused << url->GetHost(host);
+          if (host.FindChar('.') == kNotFound) {
+            attemptFixup = true;
           } else {
-            //
-            // If this string was passed through nsStandardURL by
-            // chance, then it may have been converted from UTF-8 to
-            // ACE, which would result in a completely bogus keyword
-            // query.  Here we try to recover the original Unicode
-            // value, but this is not 100% correct since the value may
-            // have been normalized per the IDN normalization rules.
-            //
-            // Since we don't have access to the exact original string
-            // that was entered by the user, this will just have to do.
-            bool isACE;
-            nsAutoCString utf8Host;
-            nsCOMPtr<nsIIDNService> idnSrv =
-                do_GetService(NS_IDNSERVICE_CONTRACTID);
-            if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-                NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
-              sURIFixup->KeywordToURI(utf8Host, UsePrivateBrowsing(),
-                                      getter_AddRefs(newPostData),
-                                      getter_AddRefs(info));
-            } else {
-              sURIFixup->KeywordToURI(host, UsePrivateBrowsing(),
-                                      getter_AddRefs(newPostData),
-                                      getter_AddRefs(info));
+            // For domains with dots, we check the public suffix validity.
+            nsCOMPtr<nsIEffectiveTLDService> tldService =
+                do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+            if (tldService) {
+              nsAutoCString suffix;
+              attemptFixup =
+                  NS_SUCCEEDED(tldService->GetKnownPublicSuffix(url, suffix)) &&
+                  suffix.IsEmpty();
             }
           }
-
-          info->GetPreferredURI(getter_AddRefs(newURI));
-          if (newURI) {
-            info->GetKeywordAsSent(keywordAsSent);
-            info->GetKeywordProviderName(keywordProviderName);
+          if (attemptFixup) {
+            nsCOMPtr<nsIURIFixupInfo> info;
+            // only send non-qualified hosts to the keyword server
+            if (!mOriginalUriString.IsEmpty()) {
+              info = KeywordToURI(mOriginalUriString, UsePrivateBrowsing(),
+                                  getter_AddRefs(newPostData));
+            } else {
+              //
+              // If this string was passed through nsStandardURL by
+              // chance, then it may have been converted from UTF-8 to
+              // ACE, which would result in a completely bogus keyword
+              // query.  Here we try to recover the original Unicode
+              // value, but this is not 100% correct since the value may
+              // have been normalized per the IDN normalization rules.
+              //
+              // Since we don't have access to the exact original string
+              // that was entered by the user, this will just have to do.
+              bool isACE;
+              nsAutoCString utf8Host;
+              nsCOMPtr<nsIIDNService> idnSrv =
+                  do_GetService(NS_IDNSERVICE_CONTRACTID);
+              if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) &&
+                  isACE &&
+                  NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
+                info = KeywordToURI(utf8Host, UsePrivateBrowsing(),
+                                    getter_AddRefs(newPostData));
+              } else {
+                info = KeywordToURI(host, UsePrivateBrowsing(),
+                                    getter_AddRefs(newPostData));
+              }
+            }
+            if (info) {
+              info->GetPreferredURI(getter_AddRefs(newURI));
+              if (newURI) {
+                info->GetKeywordAsSent(keywordAsSent);
+                info->GetKeywordProviderName(keywordProviderName);
+              }
+            }
           }
-        }  // end keywordsEnabled
+        }
       }
 
       //
@@ -6297,9 +6327,12 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           newPostData = nullptr;
           keywordProviderName.Truncate();
           keywordAsSent.Truncate();
-          sURIFixup->CreateFixupURI(
-              oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-              getter_AddRefs(newPostData), getter_AddRefs(newURI));
+          nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+          if (uriFixup) {
+            uriFixup->CreateFixupURI(
+                oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+                getter_AddRefs(newPostData), getter_AddRefs(newURI));
+          }
         }
       }
 
