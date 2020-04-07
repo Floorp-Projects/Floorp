@@ -142,17 +142,6 @@ testWidthHeight('height');
 
 // .indeterminate doesn't reflect a content attribute.
 
-// .inputmode
-if (SpecialPowers.getBoolPref("dom.forms.inputmode")) {
-reflectLimitedEnumerated({
-  element: document.createElement("input"),
-  attribute: "inputMode",
-  validValues: [ "none", "text", "tel", "url", "email", "numeric", "decimal", "search" ],
-  invalidValues: [ "", "foo", "tulip" ],
-  defaultValue: ""
-});
-}
-
 // TODO: list (HTMLElement)
 
 // .max

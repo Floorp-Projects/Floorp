@@ -508,11 +508,6 @@ class HTMLInputElement final : public TextControlElement,
   bool IsDraggingRange() const { return mIsDraggingRange; }
   void SetIndeterminate(bool aValue);
 
-  void GetInputMode(nsAString& aValue);
-  void SetInputMode(const nsAString& aValue, ErrorResult& aRv) {
-    SetHTMLAttr(nsGkAtoms::inputmode, aValue, aRv);
-  }
-
   nsGenericHTMLElement* GetList() const;
 
   void GetMax(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::max, aValue); }
