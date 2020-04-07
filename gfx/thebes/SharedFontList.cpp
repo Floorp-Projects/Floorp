@@ -520,7 +520,7 @@ FontList::~FontList() { DetachShmBlocks(); }
 bool FontList::AppendShmBlock() {
   MOZ_ASSERT(XRE_IsParentProcess());
   base::SharedMemory* newShm = new base::SharedMemory();
-  if (!newShm->Create(SHM_BLOCK_SIZE)) {
+  if (!newShm->CreateFreezeable(SHM_BLOCK_SIZE)) {
     MOZ_CRASH("failed to create shared memory");
     return false;
   }
@@ -541,6 +541,13 @@ bool FontList::AppendShmBlock() {
   mBlocks.AppendElement(block);
   GetHeader().mBlockCount.store(mBlocks.Length());
 
+  auto* readOnly = new base::SharedMemory();
+  if (!newShm->ReadOnlyCopy(readOnly)) {
+    MOZ_CRASH("failed to create read-only copy");
+    return false;
+  }
+  mReadOnlyShmems.AppendElement(readOnly);
+
   return true;
 }
 
@@ -548,7 +555,8 @@ void FontList::DetachShmBlocks() {
   for (auto& i : mBlocks) {
     i->mShmem = nullptr;
   }
-  mBlocks.SetLength(0);
+  mBlocks.Clear();
+  mReadOnlyShmems.Clear();
 }
 
 FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
