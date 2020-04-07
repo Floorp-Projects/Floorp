@@ -193,8 +193,8 @@ void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
   j.endStringProperty();
 }
 
-void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
-                                CacheIROpFormat::ArgType arg) {
+void CacheIRSpewer::CacheIRArg(JSONPrinter& j, CacheIRReader& r,
+                               CacheIROpFormat::ArgType arg) {
   j.beginObject();
   switch (arg) {
     case CacheIROpFormat::None:
@@ -222,11 +222,10 @@ void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
 }
 template <typename... Args>
 void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
-                                CacheIROpFormat::ArgType arg, Args... args) {
+                                Args... args) {
   using namespace js::jit::CacheIROpFormat;
 
-  CacheIRArgs(j, r, arg);
-  CacheIRArgs(j, r, args...);
+  (CacheIRArg(j, r, args), ...);
 }
 
 void CacheIRSpewer::cacheIRSequence(CacheIRReader& reader) {
