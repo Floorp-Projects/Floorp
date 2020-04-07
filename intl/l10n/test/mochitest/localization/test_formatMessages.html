@@ -8,7 +8,7 @@
   <script type="application/javascript">
   "use strict";
 
-  async function* mockGenerateMessages(resourceIds) {
+  async function* generateBundles(resourceIds) {
     const bundle = new FluentBundle("en-US", {
       useIsolating: false,
     });
@@ -31,7 +31,8 @@ key2 =
 
     const loc = new Localization(
       ['mock.ftl'],
-      mockGenerateMessages,
+      false,
+      { generateBundles },
     );
 
     {

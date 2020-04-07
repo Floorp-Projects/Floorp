@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* mockGenerateMessages(resourceIds) {
+  async function* generateBundles(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource("title = Hello World"));
     bundle.addResource(new FluentResource("title2 = Hello Another World"));
@@ -19,7 +19,8 @@
 
     const domLoc = new DOMLocalization(
       [],
-      mockGenerateMessages
+      false,
+      { generateBundles },
     );
 
     const frag1 = document.querySelectorAll("div")[0];
