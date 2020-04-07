@@ -1272,8 +1272,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
 
   if (aContent) {
     if (aContent->IsHTMLElement(nsGkAtoms::input)) {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                                     context.mHTMLInputType);
+      HTMLInputElement::FromNode(aContent)->GetType(context.mHTMLInputType);
       GetActionHint(*aContent, context.mActionHint);
     } else if (aContent->IsHTMLElement(nsGkAtoms::textarea)) {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
