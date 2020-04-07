@@ -2430,6 +2430,31 @@ bool CacheIRCompiler::emitDoubleModResult() {
 
   return true;
 }
+bool CacheIRCompiler::emitDoublePowResult() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+  masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ecmaPow), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(FloatReg0);
+
+  LiveRegisterSet ignore;
+  ignore.add(FloatReg0);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+  return true;
+}
 
 bool CacheIRCompiler::emitInt32AddResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -2565,6 +2590,59 @@ bool CacheIRCompiler::emitInt32ModResult() {
 
   EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
 
+  return true;
+}
+
+// Like AutoScratchRegisterMaybeOutput, but tries to use the ValueOperand's
+// type register for the scratch register on 32-bit.
+//
+// Word of warning: Passing an instance of this class and AutoOutputRegister to
+// functions may not work correctly, because no guarantee is given that the type
+// register is used last when modifying the output's ValueOperand.
+class MOZ_RAII AutoScratchRegisterMaybeOutputType {
+  mozilla::Maybe<AutoScratchRegister> scratch_;
+  Register scratchReg_;
+
+ public:
+  AutoScratchRegisterMaybeOutputType(CacheRegisterAllocator& alloc,
+                                     MacroAssembler& masm,
+                                     const AutoOutputRegister& output) {
+#if defined(JS_NUNBOX32)
+    scratchReg_ = output.hasValue() ? output.valueReg().typeReg() : InvalidReg;
+#else
+    scratchReg_ = InvalidReg;
+#endif
+    if (scratchReg_ == InvalidReg) {
+      scratch_.emplace(alloc, masm);
+      scratchReg_ = scratch_.ref();
+    }
+  }
+
+  AutoScratchRegisterMaybeOutputType(
+      const AutoScratchRegisterMaybeOutputType&) = delete;
+
+  void operator=(const AutoScratchRegisterMaybeOutputType&) = delete;
+
+  operator Register() const { return scratchReg_; }
+};
+
+bool CacheIRCompiler::emitInt32PowResult() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register base = allocator.useRegister(masm, reader.int32OperandId());
+  Register power = allocator.useRegister(masm, reader.int32OperandId());
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
+  AutoScratchRegister scratch3(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.pow32(base, power, scratch1, scratch2, scratch3, failure->label());
+
+  EmitStoreResult(masm, scratch1, JSVAL_TYPE_INT32, output);
   return true;
 }
 

@@ -121,6 +121,26 @@ warmup(funMod3, [[10, 0, NaN], [8, 4, 0], [9, 4, 1], [-1, 2, -1], [4294967297, 2
 var funMod4 = (a,b) => {return a % b};
 warmup(funMod4, [[10, false, NaN], [8, true, 0], [false, 4, 0], [true, 2, 1]]);
 
+//Pow: Int32
+var funPow1 = (a,b) => {return a ** b};
+warmup(funPow1, [[8, 4, 4096], [9, 4, 6561], [-1, 2, 1], [2, -10000, 0],
+               [-3, 3, -27]]);
+
+//Pow: Double
+var funPow2 = (a,b) => {return a ** b};
+warmup(funPow2, [[8.5, 1, 8.5], [16, 0.5, 4], [4.5, 5, 1845.28125], [1.64, 1.16, 1.7750838132231606],
+                 [4, -1, 0.25]]);
+
+//Pow: Type change Int32 -> Double
+var funPow3 = (a,b) => {return a ** b};
+warmup(funPow3, [[10, 0, 1], [8, 4, 4096], [9, 4, 6561], [-1, 2, 1], [2, -10000, 0],
+                 [8.5, 1, 8.5], [16, 0.5, 4], [4.5, 5, 1845.28125], [1.64, 1.16, 1.7750838132231606],
+                 [4, -1, 0.25]]);
+
+//Pow: Boolean w/ Int32
+var funPow4 = (a,b) => {return a ** b};
+warmup(funPow4, [[10, 2, 100], [8, true, 8], [false, 4, 0], [true, 2, 1]]);
+
 //BitOr Int32
 var funBitOr1 = (a, b) => { return a | b; }
 warmup(funBitOr1, [[1, 1, 1], [8, 1, 9], [0, 1233, 1233], [5, 0, 5],
