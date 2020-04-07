@@ -242,9 +242,9 @@ extern const uint32_t ArgLengths[];
   _(GuardFrameHasNoArgumentsObject, None)                                      \
   _(GuardNoDenseElements, Id)                                                  \
   _(GuardAndGetIndexFromString, Id, Id)                                        \
+  _(GuardAndGetInt32FromString, Id, Id)                                        \
   _(GuardAndGetNumberFromString, Id, Id)                                       \
   _(GuardAndGetNumberFromBoolean, Id, Id)                                      \
-  _(GuardAndGetInt32FromNumber, Id, Id)                                        \
   _(GuardAndGetIterator, Id, Id, Field, Field)                                 \
   _(GuardHasGetterSetter, Id, Field)                                           \
   _(GuardGroupHasUnanalyzedNewScript, Field)                                   \
@@ -1118,6 +1118,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
+  Int32OperandId guardAndGetInt32FromString(StringOperandId str) {
+    Int32OperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::GuardAndGetInt32FromString, str);
+    writeOperandId(res);
+    return res;
+  }
+
   NumberOperandId guardAndGetNumberFromString(StringOperandId str) {
     NumberOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
@@ -1128,13 +1135,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   NumberOperandId guardAndGetNumberFromBoolean(Int32OperandId boolean) {
     NumberOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromBoolean, boolean);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardAndGetInt32FromNumber(NumberOperandId number) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetInt32FromNumber, number);
     writeOperandId(res);
     return res;
   }

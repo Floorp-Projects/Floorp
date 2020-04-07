@@ -2029,6 +2029,67 @@ bool CacheIRCompiler::emitGuardNoDenseElements() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardAndGetInt32FromString() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register str = allocator.useRegister(masm, reader.stringOperandId());
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label vmCall, done;
+  // Use indexed value as fast path if possible.
+  masm.loadStringIndexValue(str, output, &vmCall);
+  masm.jump(&done);
+  {
+    masm.bind(&vmCall);
+
+    // Reserve stack for holding the result value of the call.
+    masm.reserveStack(sizeof(int32_t));
+    masm.moveStackPtrTo(output);
+
+    // We cannot use callVM, as callVM expects to be able to clobber all
+    // operands, however, since this op is not the last in the generated IC, we
+    // want to be able to reference other live values.
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                                 liveVolatileFloatRegs());
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(str);
+    masm.passABIArg(output);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetInt32FromStringPure));
+    masm.mov(ReturnReg, scratch);
+
+    LiveRegisterSet ignore;
+    ignore.add(scratch);
+    masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+
+    Label ok;
+    masm.branchIfTrueBool(scratch, &ok);
+    {
+      // OOM path, recovered by GetInt32FromStringPure.
+      //
+      // Use addToStackPtr instead of freeStack as freeStack tracks stack height
+      // flow-insensitively, and using it twice would confuse the stack height
+      // tracking.
+      masm.addToStackPtr(Imm32(sizeof(int32_t)));
+      masm.jump(failure->label());
+    }
+    masm.bind(&ok);
+
+    masm.load32(Address(output, 0), output);
+    masm.freeStack(sizeof(int32_t));
+  }
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardAndGetNumberFromString() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register str = allocator.useRegister(masm, reader.stringOperandId());
@@ -2041,18 +2102,19 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromString() {
     return false;
   }
 
-  Label vmCall, done, failureRestoreStack;
+  Label vmCall, done;
   // Use indexed value as fast path if possible.
   masm.loadStringIndexValue(str, scratch, &vmCall);
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output);
   masm.jump(&done);
   {
     masm.bind(&vmCall);
+
     // Reserve stack for holding the result value of the call.
     masm.reserveStack(sizeof(double));
     masm.moveStackPtrTo(output.payloadOrValueReg());
 
-    // We cannot use callVM, as callVM exepcts to be able to clobber all
+    // We cannot use callVM, as callVM expects to be able to clobber all
     // operands, however, since this op is not the last in the generated IC, we
     // want to be able to reference other live values.
     LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
@@ -2135,21 +2197,6 @@ bool CacheIRCompiler::emitGuardAndGetIndexFromString() {
   }
 
   masm.bind(&done);
-  return true;
-}
-
-bool CacheIRCompiler::emitGuardAndGetInt32FromNumber() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  Register output = allocator.defineRegister(masm, reader.int32OperandId());
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Failure on -0 and other non-int32 doubles.
-  masm.convertDoubleToInt32(FloatReg0, output, failure->label());
   return true;
 }
 
