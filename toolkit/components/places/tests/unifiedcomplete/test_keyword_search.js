@@ -21,7 +21,11 @@ add_task(async function test_keyword_search() {
     { uri: uri2, title: "Generic page title" },
     { uri: uri3, title: "This page uri contains the keyword" },
   ]);
-  await addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri1,
+    title: "Bookmark title",
+    keyword: "key",
+  });
 
   info("Plain keyword query");
   await check_autocomplete({

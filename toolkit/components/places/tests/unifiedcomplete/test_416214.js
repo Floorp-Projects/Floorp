@@ -24,13 +24,13 @@ add_task(async function test_tag_match_url() {
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" },
   ]);
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: uri1,
     title: "title",
     tags: ["superTag"],
     style: ["bookmark-tag"],
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: uri2,
     title: "title",
     tags: ["superTag"],

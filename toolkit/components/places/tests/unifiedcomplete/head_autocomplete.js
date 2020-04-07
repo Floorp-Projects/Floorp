@@ -379,33 +379,6 @@ async function check_autocomplete(test) {
   return input;
 }
 
-var addBookmark = async function(aBookmarkObj) {
-  await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    title: aBookmarkObj.title || "A bookmark",
-    url: aBookmarkObj.uri,
-  });
-
-  if (aBookmarkObj.keyword) {
-    await PlacesUtils.keywords.insert({
-      keyword: aBookmarkObj.keyword,
-      url:
-        aBookmarkObj.uri instanceof Ci.nsIURI
-          ? aBookmarkObj.uri.spec
-          : aBookmarkObj.uri,
-      postData: aBookmarkObj.postData,
-    });
-  }
-
-  if (aBookmarkObj.tags) {
-    let uri =
-      aBookmarkObj.uri instanceof Ci.nsIURI
-        ? aBookmarkObj.uri
-        : Services.io.newURI(aBookmarkObj.uri);
-    PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
-  }
-};
-
 async function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   for (let i = 0; i < aCount; i++) {
     await UrlbarProviderOpenTabs.registerOpenTab(aUri.spec, aUserContextId);

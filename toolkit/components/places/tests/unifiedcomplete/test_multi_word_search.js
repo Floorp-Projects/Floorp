@@ -23,8 +23,14 @@ add_task(async function test_match_beginning() {
     { uri: uri3, title: "f(o)o b<a>r" },
     { uri: uri4, title: "f(o)o b<a>r" },
   ]);
-  await addBookmark({ uri: uri3, title: "f(o)o b<a>r" });
-  await addBookmark({ uri: uri4, title: "b(a)r b<a>z" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri3,
+    title: "f(o)o b<a>r",
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri4,
+    title: "b(a)r b<a>z",
+  });
 
   info("Match 2 terms all in url");
   await check_autocomplete({

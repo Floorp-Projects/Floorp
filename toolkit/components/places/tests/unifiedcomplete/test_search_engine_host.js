@@ -17,7 +17,10 @@ add_task(async function test_searchEngine_autoFill() {
     visits.push({ uri, title: "Terms - SearchEngine Search" });
   }
   await PlacesTestUtils.addVisits(visits);
-  await addBookmark({ uri, title: "Example bookmark" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri,
+    title: "Example bookmark",
+  });
   await PlacesTestUtils.promiseAsyncUpdates();
   ok(
     frecencyForUrl(uri) > 10000,

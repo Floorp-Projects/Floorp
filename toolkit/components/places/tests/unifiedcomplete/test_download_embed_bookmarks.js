@@ -24,9 +24,18 @@ add_task(async function test_download_embed_bookmarks() {
     { uri: uri5, title: "embed2", transition: TRANSITION_EMBED },
     { uri: uri6, title: "framed2", transition: TRANSITION_FRAMED_LINK },
   ]);
-  await addBookmark({ uri: uri1, title: "download-bookmark" });
-  await addBookmark({ uri: uri2, title: "embed-bookmark" });
-  await addBookmark({ uri: uri3, title: "framed-bookmark" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri1,
+    title: "download-bookmark",
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri2,
+    title: "embed-bookmark",
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri3,
+    title: "framed-bookmark",
+  });
 
   info("Searching for bookmarked download uri matches");
   await check_autocomplete({

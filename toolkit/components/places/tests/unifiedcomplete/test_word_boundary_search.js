@@ -30,12 +30,12 @@ add_task(async function test_escape() {
     { uri: "http://ideograph/", title: ideograph.join("") },
     { uri: "http://camel/pleaseMatchMe/", title: "title1" },
   ]);
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://tag/1",
     title: "title1",
     tags: ["matchme2"],
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://tag/2",
     title: "title1",
     tags: ["dontmatchme3"],

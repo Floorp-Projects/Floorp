@@ -17,7 +17,10 @@ add_task(async function test_searchEngine() {
     uri: uri1,
     title: "Terms - SearchEngine Search",
   });
-  await addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri2,
+    title: "Terms - SearchEngine Search",
+  });
 
   info("Past search terms should be styled, unless bookmarked");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);

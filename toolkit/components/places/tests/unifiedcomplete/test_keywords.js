@@ -7,7 +7,9 @@ add_task(async function test_non_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({ uri: Services.io.newURI("http://mozilla.org/test/") });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+  });
   await check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
@@ -21,7 +23,7 @@ add_task(async function test_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.org/test/"),
     keyword: "moz",
   });
@@ -38,7 +40,7 @@ add_task(async function test_more_than_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.org/test/"),
     keyword: "moz",
   });
@@ -55,7 +57,7 @@ add_task(async function test_less_than_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.org/test/"),
     keyword: "moz",
   });
@@ -72,7 +74,7 @@ add_task(async function test_keyword_casing() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.org/test/"),
     keyword: "moz",
   });
@@ -91,7 +93,7 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     transition: TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits("http://mozilla.com/");
-  addBookmark({
+  PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.com/"),
     keyword: "moz",
   });

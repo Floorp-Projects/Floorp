@@ -21,7 +21,9 @@ add_task(async function test_urls_order() {
 
 add_task(async function test_bookmark_first() {
   info("With a bookmark and history, the query result should be the bookmark");
-  await addBookmark({ uri: NetUtil.newURI("http://bookmark1.mozilla.org/") });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: NetUtil.newURI("http://bookmark1.mozilla.org/"),
+  });
   await PlacesTestUtils.addVisits(
     NetUtil.newURI("http://bookmark1.mozilla.org/foo")
   );
