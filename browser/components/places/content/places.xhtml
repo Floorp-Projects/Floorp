@@ -43,7 +43,6 @@
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
     <html:link rel="localization" href="browser/browserSets.ftl"/>
-    <html:link rel="localization" href="browser/places.ftl"/>
     <html:link rel="localization" href="browser/downloads.ftl"/>
   </linkset>
 
@@ -178,13 +177,16 @@
           <menupopup id="organizeButtonPopup">
             <menuitem id="newbookmark"
                       command="placesCmd_new:bookmark"
-                      data-l10n-id="places-new-bookmark"/>
+                      label="&cmd.new_bookmark.label;"
+                      accesskey="&cmd.new_bookmark.accesskey;"/>
             <menuitem id="newfolder"
                       command="placesCmd_new:folder"
-                      data-l10n-id="places-new-folder"/>
+                      label="&cmd.new_folder.label;"
+                      accesskey="&cmd.new_folder.accesskey;"/>
             <menuitem id="newseparator"
                       command="placesCmd_new:separator"
-                      data-l10n-id="places-new-separator"/>
+                      label="&cmd.new_separator.label;"
+                      accesskey="&cmd.new_separator.accesskey;"/>
 
 #ifdef XP_MACOSX
             <menuseparator id="orgDeleteSeparator"/>
