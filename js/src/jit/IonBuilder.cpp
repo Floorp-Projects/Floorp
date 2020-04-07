@@ -3447,8 +3447,19 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitnot() {
   return arithUnaryBinaryCache(JSOp::BitNot, nullptr, input);
 }
 
-AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
-    JSOp op, MDefinition* left, MDefinition* right) {
+AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
+                                                        MDefinition* left,
+                                                        MDefinition* right) {
+  MOZ_ASSERT(*emitted == false);
+
+  // Try to emit a specialized binary instruction based on the input types
+  // of the operands.
+
+  // Anything complex - objects, symbols, and bigints - are not specialized
+  if (!SimpleBitOpOperand(left) || !SimpleBitOpOperand(right)) {
+    return Ok();
+  }
+
   MBinaryBitwiseInstruction* ins;
   switch (op) {
     case JSOp::BitAnd:
@@ -3490,24 +3501,6 @@ AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
   if (ins->isEffectful()) {
     MOZ_TRY(resumeAfter(ins));
   }
-
-  return ins;
-}
-
-AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
-                                                        MDefinition* left,
-                                                        MDefinition* right) {
-  MOZ_ASSERT(*emitted == false);
-
-  // Try to emit a specialized binary instruction based on the input types
-  // of the operands.
-
-  // Anything complex - objects, symbols, and bigints - are not specialized
-  if (!SimpleBitOpOperand(left) || !SimpleBitOpOperand(right)) {
-    return Ok();
-  }
-
-  MOZ_TRY(binaryBitOpEmit(op, left, right));
 
   *emitted = true;
   return Ok();
