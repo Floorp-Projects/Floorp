@@ -2,14 +2,7 @@
   {
     "namespace": "experiments.urlbar",
     "description": "APIs supporting urlbar experiments",
-    "types": [
-      {
-        "id": "BrowserUpdateStatus",
-        "type": "string",
-        "enum": ["checking", "downloadAndInstall", "downloadFailed", "downloading", "manualUpdate", "neverChecked", "noUpdater", "noUpdatesFound", "otherInstanceHandlingUpdates", "readyForRestart", "staging", "unsupportedSystem", "updateDisabledByPolicy"],
-        "description": "The browser's current update state. Each value corresponds to an AppUpdater.STATUS value."
-      }
-    ],
+    "types": [],
     "properties": {
       "engagementTelemetry": {
         "$ref": "types.Setting",
@@ -22,69 +15,10 @@
     },
     "functions": [
       {
-        "name": "checkForBrowserUpdate",
-        "type": "function",
-        "async": true,
-        "description": "Checks for an update to the app. If an update is available and the user's preferences allow, the update will automatically be downloaded and installed. This function will not restart the browser, however.",
-        "parameters": []
-      },
-      {
         "name": "clearInput",
         "type": "function",
         "async": true,
         "description": "Sets urlbar.value to the empty string and the pageproxystate to invalid.",
-        "parameters": []
-      },
-      {
-        "name": "getBrowserUpdateStatus",
-        "type": "function",
-        "async": true,
-        "description": "Returns the browser's current update status. The return value is one of the <code>BrowserUpdateStatus</code> enums.",
-        "parameters": []
-      },
-      {
-        "name": "installBrowserUpdateAndRestart",
-        "type": "function",
-        "async": true,
-        "description": "If an update is available and the updater is ready to download it, this function downloads and installs it, and if the user's preferences allow, the browser is then restarted. If an update isn't available or the updater isn't ready to download it, this function does nothing.",
-        "parameters": [],
-        "requireUserInput": true
-      },
-      {
-        "name": "isBrowserShowingNotification",
-        "type": "function",
-        "async": true,
-        "description": "Returns true if the browser is showing any kind of notification.",
-        "parameters": []
-      },
-      {
-        "name": "lastBrowserUpdateDate",
-        "type": "function",
-        "async": true,
-        "description": "Returns the date of the last browser update. If there's no update history, then the date the profile was first used is returned instead. The return value is milliseconds since 1 January 1970 UTC (i.e., suitable for passing to <code>new Date()</code>).",
-        "parameters": []
-      },
-      {
-        "name": "openClearHistoryDialog",
-        "type": "function",
-        "async": true,
-        "description": "Shows the 'Clear Recent History' dialog unless the user is in Private Browsing Mode.",
-        "parameters": [],
-        "requireUserInput": true
-      },
-      {
-        "name": "restartBrowser",
-        "type": "function",
-        "async": true,
-        "description": "Restarts the application.",
-        "requireUserInput": true,
-        "parameters": []
-      },
-      {
-        "name": "resetBrowser",
-        "type": "function",
-        "async": true,
-        "description": "Opens a confirmation dialogue asking if the user wants to reset their profile.",
         "parameters": []
       }
     ]

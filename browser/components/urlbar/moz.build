@@ -33,7 +33,6 @@ BROWSER_CHROME_MANIFESTS += [
     'tests/browser-tips/browser.ini',
     'tests/browser/browser.ini',
     'tests/ext/browser/browser.ini',
-    'tests/ext/browser/update/browser.ini',
 ]
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
