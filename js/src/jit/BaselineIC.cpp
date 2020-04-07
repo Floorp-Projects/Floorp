@@ -3578,7 +3578,7 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
       break;
     }
     case JSOp::Ursh: {
-      if (!UrshOperation(cx, &lhsCopy, &rhsCopy, ret)) {
+      if (!UrshValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;

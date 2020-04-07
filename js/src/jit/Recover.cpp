@@ -284,7 +284,7 @@ bool RUrsh::recover(JSContext* cx, SnapshotIterator& iter) const {
   MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
   RootedValue result(cx);
-  if (!js::UrshOperation(cx, &lhs, &rhs, &result)) {
+  if (!js::UrshValues(cx, &lhs, &rhs, &result)) {
     return false;
   }
 
