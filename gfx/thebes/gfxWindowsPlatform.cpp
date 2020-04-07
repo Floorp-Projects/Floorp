@@ -579,8 +579,11 @@ already_AddRefed<gfxASurface> gfxWindowsPlatform::CreateOffscreenSurface(
   RefPtr<gfxASurface> surf = nullptr;
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-  if (mRenderMode == RENDER_GDI || mRenderMode == RENDER_DIRECT2D)
-    surf = new gfxWindowsSurface(aSize, aFormat);
+  if (!XRE_IsContentProcess()) {
+    if (mRenderMode == RENDER_GDI || mRenderMode == RENDER_DIRECT2D) {
+      surf = new gfxWindowsSurface(aSize, aFormat);
+    }
+  }
 #endif
 
   if (!surf || surf->CairoStatus()) {
