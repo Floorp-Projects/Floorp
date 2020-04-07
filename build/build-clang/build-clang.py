@@ -252,6 +252,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
         return path.replace('\\', '/')
 
     def cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir):
+        machine_targets = "X86;ARM;AArch64" if is_final_stage else "X86"
         cmake_args = [
             "-GNinja",
             "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
@@ -266,12 +267,14 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             "-DCMAKE_SHARED_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
             "-DCMAKE_BUILD_TYPE=%s" % build_type,
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
-            "-DLLVM_TARGETS_TO_BUILD=X86;ARM;AArch64",
+            "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
             "-DPYTHON_EXECUTABLE=%s" % slashify_path(python_path),
             "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
         ]
+        if not is_final_stage:
+            cmake_args += ["-DLLVM_ENABLE_PROJECTS=clang;compiler-rt"]
         if build_wasm:
             cmake_args += ["-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly"]
         if is_linux():
@@ -500,7 +503,8 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
 
     # Remove the target-specific files.
     if is_linux():
-        shutil.rmtree(os.path.join(final_dir, "x86_64-unknown-linux-gnu"))
+        if os.path.exists(os.path.join(final_dir, "x86_64-unknown-linux-gnu")):
+            shutil.rmtree(os.path.join(final_dir, "x86_64-unknown-linux-gnu"))
 
     # In lib/, only keep lib/clang/N.M.O/include and the LLVM shared library.
     re_ver_num = re.compile(r"^\d+\.\d+\.\d+$", re.I)
@@ -521,7 +525,7 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
         if os.path.basename(f) != "include":
             delete(f)
 
-    # Completely remove libexec/, msbuilld-bin and tools, if it exists.
+    # Completely remove libexec/, msbuild-bin and tools, if it exists.
     shutil.rmtree(os.path.join(final_dir, "libexec"))
     for d in ("msbuild-bin", "tools"):
         d = os.path.join(final_dir, d)
