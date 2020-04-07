@@ -5365,6 +5365,13 @@ class MAdd : public MBinaryArithInstruction {
       setTruncateKind(truncateKind);
       setCommutative();
     }
+
+  MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
+      : MAdd(left, right) {
+    specialization_ = MIRType::Int32;
+    setResultType(MIRType::Int32);
+    setTruncateKind(truncateKind);
+    setCommutative();
   }
 
  public:
