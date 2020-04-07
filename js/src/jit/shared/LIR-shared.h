@@ -5543,20 +5543,6 @@ class LToNumeric : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
   const MToNumeric* mir() const { return mir_->toToNumeric(); }
 };
 
-class LToNumber : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ToNumber)
-
-  explicit LToNumber(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
-
-  const MToNumber* mir() const { return mir_->toToNumber(); }
-};
-
 // Guard that a value is in a TypeSet.
 class LTypeBarrierV : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 2> {
  public:

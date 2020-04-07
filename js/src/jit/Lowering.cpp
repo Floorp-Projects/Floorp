@@ -2170,13 +2170,6 @@ void LIRGenerator::visitToNumeric(MToNumeric* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitToNumber(MToNumber* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::Value);
-  LToNumber* lir = new (alloc()) LToNumber(useBoxAtStart(ins->input()));
-  defineBox(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate) {
   MDefinition* opd = truncate->input();
 
