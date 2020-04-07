@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_canvas.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
@@ -216,9 +215,7 @@ class CanvasImageCacheShutdownObserver final : public nsIObserver {
 };
 
 ImageCache::ImageCache()
-    : nsExpirationTracker<ImageCacheEntryData, 4>(
-          GENERATION_MS, "ImageCache",
-          SystemGroup::EventTargetFor(TaskCategory::Other)),
+    : nsExpirationTracker<ImageCacheEntryData, 4>(GENERATION_MS, "ImageCache"),
       mTotal(0) {
   mImageCacheObserver = new ImageCacheObserver(this);
   MOZ_RELEASE_ASSERT(mImageCacheObserver,

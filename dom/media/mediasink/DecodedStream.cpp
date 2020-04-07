@@ -482,8 +482,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   nsCOMPtr<nsIRunnable> r = new R(
       std::move(init), nsTArray<RefPtr<ProcessedMediaTrack>>(mOutputTracks),
       std::move(audioEndedHolder), std::move(videoEndedHolder));
-  SyncRunnable::DispatchToThread(
-      SystemGroup::EventTargetFor(TaskCategory::Other), r);
+  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), r);
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {

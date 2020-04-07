@@ -12,8 +12,6 @@
 #include "RasterImage.h"
 #include "SurfaceCache.h"
 
-#include "mozilla/SystemGroup.h"
-
 namespace mozilla {
 
 using gfx::IntRect;
@@ -40,7 +38,7 @@ void IDecodingTask::EnsureHasEventTarget(NotNull<RasterImage*> aImage) {
     if (tracker) {
       mEventTarget = tracker->GetEventTarget();
     } else {
-      mEventTarget = SystemGroup::EventTargetFor(TaskCategory::Other);
+      mEventTarget = GetMainThreadSerialEventTarget();
     }
   }
 }

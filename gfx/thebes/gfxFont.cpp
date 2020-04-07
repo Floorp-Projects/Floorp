@@ -146,8 +146,7 @@ gfxFontCache::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 
 nsresult gfxFontCache::Init() {
   NS_ASSERTION(!gGlobalCache, "Where did this come from?");
-  gGlobalCache =
-      new gfxFontCache(SystemGroup::EventTargetFor(TaskCategory::Other));
+  gGlobalCache = new gfxFontCache(GetMainThreadSerialEventTarget());
   if (!gGlobalCache) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
