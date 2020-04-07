@@ -60,7 +60,7 @@ void* Pointer::ToPtr(FontList* aFontList) const {
     }
     MOZ_ASSERT(block < aFontList->mBlocks.Length());
   }
-  return static_cast<char*>(aFontList->mBlocks[block]->Memory()) + Offset();
+  return static_cast<char*>(aFontList->mBlocks[block]->mAddr) + Offset();
 }
 
 void String::Assign(const nsACString& aString, FontList* aList) {
@@ -519,28 +519,27 @@ FontList::~FontList() { DetachShmBlocks(); }
 
 bool FontList::AppendShmBlock() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  base::SharedMemory* newShm = new base::SharedMemory();
-  if (!newShm->CreateFreezeable(SHM_BLOCK_SIZE)) {
+  ipc::SharedMemoryBasic* newShm = new ipc::SharedMemoryBasic();
+  if (!newShm->Create(SHM_BLOCK_SIZE)) {
     MOZ_CRASH("failed to create shared memory");
     return false;
   }
-  if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
+  if (!newShm->Map(SHM_BLOCK_SIZE)) {
     MOZ_CRASH("failed to map shared memory");
   }
 
-  ShmBlock* block = new ShmBlock(newShm);
+  char* addr = static_cast<char*>(newShm->memory());
+  if (!addr) {
+    MOZ_CRASH("null shared memory?");
+    return false;
+  }
+
+  ShmBlock* block = new ShmBlock(newShm, addr);
   // Allocate space for the Allocated() header field present in all blocks
   block->Allocated().store(4);
 
   mBlocks.AppendElement(block);
   GetHeader().mBlockCount.store(mBlocks.Length());
-
-  auto* readOnly = new base::SharedMemory();
-  if (!newShm->ReadOnlyCopy(readOnly)) {
-    MOZ_CRASH("failed to create read-only copy");
-    return false;
-  }
-  mReadOnlyShmems.AppendElement(readOnly);
 
   return true;
 }
@@ -549,8 +548,7 @@ void FontList::DetachShmBlocks() {
   for (auto& i : mBlocks) {
     i->mShmem = nullptr;
   }
-  mBlocks.Clear();
-  mReadOnlyShmems.Clear();
+  mBlocks.SetLength(0);
 }
 
 FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
@@ -558,22 +556,27 @@ FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
   // If we have no existing blocks, we don't want a generation check yet;
   // the header in the first block will define the generation of this list
   uint32_t generation = aIndex == 0 ? 0 : GetGeneration();
-  base::SharedMemoryHandle handle = base::SharedMemory::NULLHandle();
+  ipc::SharedMemoryBasic::Handle handle = ipc::SharedMemoryBasic::NULLHandle();
   if (!dom::ContentChild::GetSingleton()->SendGetFontListShmBlock(
           generation, aIndex, &handle)) {
     return nullptr;
   }
-  base::SharedMemory* newShm = new base::SharedMemory();
+  RefPtr<ipc::SharedMemoryBasic> newShm = new ipc::SharedMemoryBasic();
   if (!newShm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!newShm->SetHandle(handle, true)) {
+  if (!newShm->SetHandle(handle,
+                         mozilla::ipc::SharedMemoryBasic::RightsReadOnly)) {
     MOZ_CRASH("failed to set shm handle");
   }
-  if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
+  if (!newShm->Map(SHM_BLOCK_SIZE)) {
     MOZ_CRASH("failed to map shared memory");
   }
-  return new ShmBlock(newShm);
+  char* addr = static_cast<char*>(newShm->memory());
+  if (!addr) {
+    MOZ_CRASH("null shared memory?");
+  }
+  return new ShmBlock(newShm, addr);
 }
 
 bool FontList::UpdateShmBlocks() {
@@ -914,7 +917,7 @@ Pointer FontList::ToSharedPointer(const void* aPtr) {
   const char* p = (const char*)aPtr;
   const uint32_t blockCount = mBlocks.Length();
   for (uint32_t i = 0; i < blockCount; ++i) {
-    const char* blockAddr = (const char*)mBlocks[i]->Memory();
+    const char* blockAddr = (const char*)mBlocks[i]->mAddr;
     if (p >= blockAddr && p < blockAddr + SHM_BLOCK_SIZE) {
       return Pointer(i, p - blockAddr);
     }
