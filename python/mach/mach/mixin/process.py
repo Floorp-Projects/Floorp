@@ -101,6 +101,8 @@ class ProcessExecutionMixin(LoggingMixin):
             if append_env:
                 use_env.update(append_env)
 
+        use_env['PYTHONUNBUFFERED'] = '1'
+
         self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
         use_env = ensure_subprocess_env(use_env)
