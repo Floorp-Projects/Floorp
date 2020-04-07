@@ -494,7 +494,7 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
 }
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
   mMonitor.AssertCurrentThreadOwns();
 
   // Flush the timestretcher pipeline, if we were playing using a playback rate
@@ -530,7 +530,7 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
 }
 
 void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
   mMonitor.AssertCurrentThreadOwns();
 
   // We need to call the non-locking version, because we already have the lock.
@@ -580,7 +580,7 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
 
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
