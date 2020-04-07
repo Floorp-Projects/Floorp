@@ -129,6 +129,8 @@ class IonCacheIRCompiler;
   _(LoadTypedElementExistsResult)         \
   _(LoadTypedElementResult)               \
   _(LoadObjectResult)                     \
+  _(LoadInt32Result)                      \
+  _(LoadDoubleResult)                     \
   _(LoadTypeOfObjectResult)               \
   _(LoadInt32TruthyResult)                \
   _(LoadDoubleTruthyResult)               \

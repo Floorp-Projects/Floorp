@@ -1717,6 +1717,7 @@ class ICRest_Fallback : public ICFallbackStub {
 
 // UnaryArith
 //     JSOp::BitNot
+//     JSOp::Pos
 //     JSOp::Neg
 //     JSOp::Inc
 //     JSOp::Dec

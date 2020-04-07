@@ -3958,6 +3958,39 @@ bool CacheIRCompiler::emitLoadObjectResult() {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadInt32Result() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register val = allocator.useRegister(masm, reader.int32OperandId());
+
+  if (output.hasValue()) {
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+  } else {
+    masm.mov(val, output.typedReg().gpr());
+  }
+
+  return true;
+}
+
+bool CacheIRCompiler::emitLoadDoubleResult() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+#ifdef DEBUG
+  Label ok;
+  masm.branchTestDouble(Assembler::Equal, val, &ok);
+  masm.branchTestInt32(Assembler::Equal, val, &ok);
+  masm.assumeUnreachable("input must be double or int32");
+  masm.bind(&ok);
+#endif
+
+  masm.moveValue(val, output.valueReg());
+  masm.convertInt32ValueToDouble(output.valueReg());
+
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadTypeOfObjectResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

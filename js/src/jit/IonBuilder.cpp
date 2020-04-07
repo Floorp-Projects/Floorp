@@ -3735,11 +3735,13 @@ AbortReasonOr<Ok> IonBuilder::arithUnaryBinaryCache(JSOp op, MDefinition* left,
                                                     MDefinition* right) {
   MInstruction* stub = nullptr;
   switch (JSOp(*pc)) {
+    case JSOp::Pos:
     case JSOp::Neg:
     case JSOp::BitNot:
       MOZ_ASSERT_IF(op == JSOp::Mul,
                     left->maybeConstantValue() &&
-                        left->maybeConstantValue()->toInt32() == -1);
+                        (left->maybeConstantValue()->toInt32() == -1 ||
+                         left->maybeConstantValue()->toInt32() == 1));
       MOZ_ASSERT_IF(op != JSOp::Mul, !left);
       stub = MUnaryCache::New(alloc(), right);
       break;
@@ -3851,21 +3853,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_pos() {
     return Ok();
   }
 
+  // Compile +x as 1 * x.
   MDefinition* value = current->pop();
   MConstant* one = MConstant::New(alloc(), Int32Value(1));
   current->add(one);
 
-  // Compile +x as x * 1.
-  MBinaryArithInstruction* ins = MBinaryArithInstruction::New(
-      alloc(), MDefinition::Opcode::Mul, value, one);
-
-  // Decrease type from 'any type' to 'empty type' when one of the operands
-  // is 'empty typed'.
-  maybeMarkEmpty(ins);
-
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins);
+  return jsop_binary_arith(JSOp::Mul, one, value);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_neg() {

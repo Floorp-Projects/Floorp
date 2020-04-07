@@ -825,13 +825,9 @@ bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_Pos(BytecodeLocation loc) {
-  // TODO: MToNumber is the most basic implementation. Optimize it for known
+  // TODO: MUnaryCache is the most basic implementation. Optimize it for known
   // numbers at least.
-  MDefinition* value = current->pop();
-  MToNumber* ins = MToNumber::New(alloc(), value);
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins, loc);
+  return buildUnaryOp(loc);
 }
 
 bool WarpBuilder::buildUnaryOp(BytecodeLocation loc) {

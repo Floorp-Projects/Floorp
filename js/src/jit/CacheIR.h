@@ -335,6 +335,8 @@ extern const uint32_t ArgLengths[];
   _(LoadEnvironmentFixedSlotResult, Id, Field)                                 \
   _(LoadEnvironmentDynamicSlotResult, Id, Field)                               \
   _(LoadObjectResult, Id)                                                      \
+  _(LoadInt32Result, Id)                                                       \
+  _(LoadDoubleResult, Id)                                                      \
   _(CallScriptedGetterResult, Id, Field, Byte)                                 \
   _(CallScriptedGetterByValueResult, Id, Field, Byte)                          \
   _(CallNativeGetterResult, Id, Field)                                         \
@@ -1957,6 +1959,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void loadObjectResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
+  }
+
+  void loadInt32Result(Int32OperandId val) {
+    writeOpWithOperandId(CacheOp::LoadInt32Result, val);
+  }
+
+  void loadDoubleResult(NumberOperandId val) {
+    writeOpWithOperandId(CacheOp::LoadDoubleResult, val);
   }
 
   void loadInstanceOfObjectResult(ValOperandId lhs, ObjOperandId protoId,

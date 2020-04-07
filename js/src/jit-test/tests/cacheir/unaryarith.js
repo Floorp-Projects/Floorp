@@ -12,18 +12,40 @@ function warmup(fun, input_array, output_array) {
     }
 }
 
-var fun1 = (x) => { return -x; }
-var fun2 = (x) => { return -x; }
+// Unary - operator with transition between int32 and double.
+var fun_neg_int32_double = (x) => { return -x; }
+var fun_neg_double_int32 = (x) => { return -x; }
 
-var fun3 = (x) => { return ~x; }
-var fun4 = (x) => { return ~x; }
+// Unary ~ operator using either int32 or double.
+var fun_bitnot_int32 = (x) => { return ~x; }
+var fun_bitnot_double = (x) => { return ~x; }
 
-warmup(fun1, [1, 2], [-1, -2]);
-warmup(fun2, [0], [-0]);
+// Unary ++ operator using either int32 or double.
+var fun_inc_int32 = (x) => { return ++x; }
+var fun_inc_double = (x) => { return ++x; }
 
-warmup(fun2, [3, 4], [-3, -4]);
-warmup(fun1, [1.2, 1.4], [-1.2, -1.4]);
+// Unary -- operator using either int32 or double.
+var fun_dec_int32 = (x) => { return --x; }
+var fun_dec_double = (x) => { return --x; }
 
-warmup(fun3, [-1, 0], [0, -1]);
-warmup(fun4, [-1.0, 0.0, 1.2, 3], [0, -1, -2, -4]);
+// Unary + operator using either int32 or double.
+var fun_pos_int32 = (x) => { return +x; }
+var fun_pos_double = (x) => { return +x; }
 
+warmup(fun_neg_int32_double, [1, 2], [-1, -2]);
+warmup(fun_neg_double_int32, [0], [-0]);
+
+warmup(fun_neg_double_int32, [3, 4], [-3, -4]);
+warmup(fun_neg_int32_double, [1.2, 1.4], [-1.2, -1.4]);
+
+warmup(fun_bitnot_int32, [-1, 0], [0, -1]);
+warmup(fun_bitnot_double, [-1.0, 0.0, 1.2, 3], [0, -1, -2, -4]);
+
+warmup(fun_inc_int32, [-1, 0], [0, 1]);
+warmup(fun_inc_double, [-1.0, 0.0, 1.2, 3], [0, 1, 2.2, 4]);
+
+warmup(fun_dec_int32, [-1, 0], [-2, -1]);
+warmup(fun_dec_double, [-1.0, 0.0, 1.5, 3], [-2, -1, 0.5, 2]);
+
+warmup(fun_pos_int32, [-1, 0], [-1, 0]);
+warmup(fun_pos_double, [-1.0, 0.0, 1.2, 3], [-1.0, 0.0, 1.2, 3]);
