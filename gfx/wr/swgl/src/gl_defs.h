@@ -100,6 +100,7 @@ typedef intptr_t GLintptr;
 #define GL_TEXTURE_2D 0x0DE1
 #define GL_TEXTURE_3D 0x806F
 #define GL_TEXTURE_2D_ARRAY 0x8C1A
+#define GL_TEXTURE_RECTANGLE 0x84F5
 #define GL_TEXTURE0 0x84C0
 #define GL_TEXTURE1 0x84C1
 #define GL_TEXTURE2 0x84C2
