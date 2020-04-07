@@ -178,7 +178,7 @@ add_task(async function testUpdatingCommands() {
   }
   checkLabel("commandOne", "commandOne");
   checkLabel("commandTwo", "Command Two!");
-  checkLabel("_execute_browser_action", "shortcuts-browserAction");
+  checkLabel("_execute_browser_action", "shortcuts-browserAction2");
 
   await closeView(win);
   await extension.unload();
