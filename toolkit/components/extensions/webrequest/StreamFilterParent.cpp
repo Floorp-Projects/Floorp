@@ -133,6 +133,11 @@ bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
       &parent, &child);
   NS_ENSURE_SUCCESS(rv, false);
 
+  // Disable alt-data for extension stream listeners.
+  nsCOMPtr<nsIHttpChannelInternal> internal(do_QueryObject(channel));
+  NS_ENSURE_TRUE(internal, false);
+  internal->DisableAltDataCache();
+
   if (!chan->AttachStreamFilter(std::move(parent))) {
     return false;
   }
