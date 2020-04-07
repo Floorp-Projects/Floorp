@@ -33,6 +33,8 @@
 #define MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE (WM_APP + 0x0315)
 // Internal message used in correcting backwards clock skew
 #define MOZ_WM_SKEWFIX (WM_APP + 0x0316)
+// Internal message used for hiding the on-screen keyboard
+#define MOZ_WM_DISMISS_ONSCREEN_KEYBOARD (WM_APP + 0x0317)
 
 // Following MOZ_WM_*KEY* messages are used by PluginInstanceChild and
 // NativeKey internally. (never posted to the queue)

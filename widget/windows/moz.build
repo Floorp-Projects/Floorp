@@ -10,9 +10,6 @@ with Files("**"):
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
-with Files("OSK*"):
-    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
-
 TEST_DIRS += ['tests']
 
 EXPORTS += [
@@ -99,7 +96,6 @@ SOURCES += [
     'nsFilePicker.cpp',
     'nsSharePicker.cpp',
     'nsWidgetFactory.cpp',
-    'OSKInputPaneManager.cpp',
     'WinCompositorWidget.cpp',
     'WindowsSMTCProvider.cpp',
     'WindowsUIUtils.cpp',
