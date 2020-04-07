@@ -353,6 +353,28 @@ class nsThread : public nsIThreadInternal,
   bool mIsInLocalExecutionMode = false;
 };
 
+struct nsThreadShutdownContext {
+  nsThreadShutdownContext(NotNull<nsThread*> aTerminatingThread,
+                          NotNull<nsThread*> aJoiningThread,
+                          bool aAwaitingShutdownAck)
+      : mTerminatingThread(aTerminatingThread),
+        mTerminatingPRThread(aTerminatingThread->GetPRThread()),
+        mJoiningThread(aJoiningThread),
+        mAwaitingShutdownAck(aAwaitingShutdownAck),
+        mIsMainThreadJoining(NS_IsMainThread()) {
+    MOZ_COUNT_CTOR(nsThreadShutdownContext);
+  }
+  MOZ_COUNTED_DTOR(nsThreadShutdownContext)
+
+  // NB: This will be the last reference.
+  NotNull<RefPtr<nsThread>> mTerminatingThread;
+  PRThread* const mTerminatingPRThread;
+  NotNull<nsThread*> MOZ_UNSAFE_REF(
+      "Thread manager is holding reference to joining thread") mJoiningThread;
+  bool mAwaitingShutdownAck;
+  bool mIsMainThreadJoining;
+};
+
 class nsLocalExecutionRecord;
 
 // This RAII class controls the duration of the associated nsThread's local
