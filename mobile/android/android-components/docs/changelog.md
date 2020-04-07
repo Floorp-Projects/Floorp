@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 75.0
+    * `browser-engine-gecko-beta`: GeckoView 76.0
+    * `browser-engine-gecko-nightly`: GeckoView 77.0
+
 * **support-locale**
   * Updates `updateResources` to always update the context configuration
 

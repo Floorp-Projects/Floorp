@@ -18,9 +18,10 @@ import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
 import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
@@ -32,22 +33,33 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
 class GeckoWebExtension(
     id: String,
     url: String,
-    webExtensionController: WebExtensionController,
+    val runtime: GeckoRuntime,
     allowContentMessaging: Boolean = true,
     supportActions: Boolean = false,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
         createWebExtensionFlags(allowContentMessaging),
-        webExtensionController
+        runtime.webExtensionController
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
 ) : WebExtension(id, url, supportActions) {
 
     private val logger = Logger("GeckoWebExtension")
 
-    constructor(native: GeckoNativeWebExtension, webExtensionController: WebExtensionController) :
-        this(native.id, native.location, webExtensionController, true, true, native)
+    constructor(native: GeckoNativeWebExtension, runtime: GeckoRuntime) :
+        this(native.id, native.location, runtime, true, true, native)
+
+    init {
+        // By default, we currently allow extension scripts to run for private sessions.
+        // We'll later expose this API so apps can control this via an extension-specific setting:
+        // https://github.com/mozilla-mobile/android-components/issues/6228
+        if (nativeExtension.metaData?.allowedInPrivateBrowsing == false) {
+            // We have do this once because GV defaults to 'false', and only once because
+            // the state persists.
+            runtime.webExtensionController.setAllowedInPrivateBrowsing(nativeExtension, true)
+        }
+    }
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -133,7 +145,7 @@ class GeckoWebExtension(
         }
 
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        geckoSession.setMessageDelegate(nativeExtension, messageDelegate, name)
+        geckoSession.webExtensionController.setMessageDelegate(nativeExtension, messageDelegate, name)
     }
 
     /**
@@ -141,7 +153,7 @@ class GeckoWebExtension(
      */
     override fun hasContentMessageHandler(session: EngineSession, name: String): Boolean {
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        return geckoSession.getMessageDelegate(nativeExtension, name) != null
+        return geckoSession.webExtensionController.getMessageDelegate(nativeExtension, name) != null
     }
 
     /**
@@ -245,7 +257,7 @@ class GeckoWebExtension(
         }
 
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        geckoSession.setWebExtensionActionDelegate(nativeExtension, actionDelegate)
+        geckoSession.webExtensionController.setActionDelegate(nativeExtension, actionDelegate)
     }
 
     /**
@@ -253,7 +265,79 @@ class GeckoWebExtension(
      */
     override fun hasActionHandler(session: EngineSession): Boolean {
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
+        return geckoSession.webExtensionController.getActionDelegate(nativeExtension) != null
+    }
+
+    /**
+     * See [WebExtension.registerTabHandler].
+     */
+    override fun registerTabHandler(tabHandler: TabHandler) {
+
+        val tabDelegate = object : GeckoNativeWebExtension.TabDelegate {
+
+            override fun onNewTab(
+                ext: GeckoNativeWebExtension,
+                tabDetails: GeckoNativeWebExtension.CreateTabDetails
+            ): GeckoResult<GeckoSession>? {
+                val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
+
+                tabHandler.onNewTab(
+                    this@GeckoWebExtension,
+                    geckoEngineSession,
+                    tabDetails.active == true,
+                    tabDetails.url ?: ""
+                )
+                return GeckoResult.fromValue(geckoEngineSession.geckoSession)
+            }
+        }
+
+        nativeExtension.tabDelegate = tabDelegate
+    }
+
+    /**
+     * See [WebExtension.registerTabHandler].
+     */
+    override fun registerTabHandler(session: EngineSession, tabHandler: TabHandler) {
+
+        val tabDelegate = object : GeckoNativeWebExtension.SessionTabDelegate {
+
+            override fun onUpdateTab(
+                ext: GeckoNativeWebExtension,
+                geckoSession: GeckoSession,
+                tabDetails: GeckoNativeWebExtension.UpdateTabDetails
+            ): GeckoResult<AllowOrDeny> {
+
+                return if (tabHandler.onUpdateTab(
+                    this@GeckoWebExtension,
+                    session,
+                    tabDetails.active == true,
+                    tabDetails.url)
+                ) {
+                    GeckoResult.ALLOW
+                } else {
+                    GeckoResult.DENY
+                }
+            }
+
+            override fun onCloseTab(
+                ext: GeckoNativeWebExtension?,
+                geckoSession: GeckoSession
+            ): GeckoResult<AllowOrDeny> {
+
+                return if (ext != null) {
+                    if (tabHandler.onCloseTab(this@GeckoWebExtension, session)) {
+                        GeckoResult.ALLOW
+                    } else {
+                        GeckoResult.DENY
+                    }
+                } else {
+                    GeckoResult.DENY
+                }
+            }
+        }
+
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        geckoSession.webExtensionController.setTabDelegate(nativeExtension, tabDelegate)
     }
 
     /**
@@ -273,18 +357,14 @@ class GeckoWebExtension(
                 disabledFlags = DisabledFlags.select(it.disabledFlags),
                 optionsPageUrl = it.optionsPageUrl,
                 openOptionsPageInTab = it.openOptionsPageInTab,
-                baseUrl = "" // Not yet supported
+                baseUrl = it.baseUrl
             )
         }
     }
 
     override fun isEnabled(): Boolean {
-        return nativeExtension.metaData?.enabled == true
+        return nativeExtension.metaData?.enabled ?: true
     }
-
-    // Not yet supported
-    override fun registerTabHandler(tabHandler: TabHandler) = Unit
-    override fun registerTabHandler(session: EngineSession, tabHandler: TabHandler) = Unit
 }
 
 /**

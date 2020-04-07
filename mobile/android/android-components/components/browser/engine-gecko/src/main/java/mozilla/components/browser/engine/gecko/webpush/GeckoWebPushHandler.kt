@@ -5,7 +5,6 @@
 package mozilla.components.browser.engine.gecko.webpush
 
 import mozilla.components.concept.engine.webpush.WebPushHandler
-import mozilla.components.concept.engine.webpush.WebPushSubscription
 import org.mozilla.geckoview.GeckoRuntime
 
 /**
@@ -26,7 +25,7 @@ internal class GeckoWebPushHandler(
     /**
      * See [WebPushHandler].
      */
-    override fun onSubscriptionChanged(subscription: WebPushSubscription) {
-        runtime.webPushController.onSubscriptionChanged(subscription.toGeckoSubscription())
+    override fun onSubscriptionChanged(scope: String) {
+        runtime.webPushController.onSubscriptionChanged(scope)
     }
 }
