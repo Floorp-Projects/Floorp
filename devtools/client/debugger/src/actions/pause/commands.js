@@ -4,7 +4,11 @@
 
 // @flow
 
-import { getSelectedFrame, getThreadContext } from "../../selectors";
+import {
+  getSelectedFrame,
+  getThreadContext,
+  getCurrentThread,
+} from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { evaluateExpressions } from "../expressions";
 import { selectLocation } from "../sources";
@@ -20,6 +24,10 @@ import type { Command } from "../../reducers/types";
 
 export function selectThread(cx: Context, thread: ThreadId) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
+    if (getCurrentThread(getState()) === thread) {
+      return;
+    }
+
     await dispatch({ cx, type: "SELECT_THREAD", thread });
 
     // Get a new context now that the current thread has changed.
