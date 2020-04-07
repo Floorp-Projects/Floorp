@@ -776,7 +776,7 @@ nsBinaryInputStream::ReadBytes(uint32_t aLength, char** aResult) {
 NS_IMETHODIMP
 nsBinaryInputStream::ReadByteArray(uint32_t aLength,
                                    nsTArray<uint8_t>& aResult) {
-  if (!aResult.SetLength(aLength, fallible)) {
+  if (!aResult.SetLength(aLength, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = ReadBytesToBuffer(aLength, aResult.Elements());
