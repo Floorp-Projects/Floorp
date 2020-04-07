@@ -23,7 +23,8 @@ add_task(async function() {
   await pushPref("devtools.toolbox.selectedTool", "performance");
 
   const { document, tab, window } = await openAboutDebugging();
-  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+  const { store } = window.AboutDebugging;
+  await selectThisFirefoxPage(document, store);
 
   const inspectionTarget = "about:debugging";
   info(`Open ${inspectionTarget} as inspection target`);
@@ -40,7 +41,12 @@ add_task(async function() {
     "Check the tab state after clicking inspect button " +
       "when another tab was selected"
   );
+  const onTabsSuccess1 = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
   gBrowser.selectedTab = tab;
+
+  info("Wait for the tablist update after updating the selected tab");
+  await onTabsSuccess1;
+
   clickInspectButton(inspectionTarget, document);
   const devtoolsURL = devtoolsWindow.location.href;
   assertDevtoolsToolboxTabState(devtoolsURL);
@@ -56,17 +62,24 @@ add_task(async function() {
       newNavigator.gBrowser.selectedTab.linkedBrowser.contentWindow.location
         .href === devtoolsURL
   );
+
   info(
     "Create a tab in the window and select the tab " +
       "so that the about:devtools-toolbox tab loses focus"
   );
-  newNavigator.gBrowser.selectedTab = newNavigator.gBrowser.addTab(
+  const newTestTab = newNavigator.gBrowser.addTab(
     "data:text/html,<title>TEST_TAB</title>",
     {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     }
   );
   await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
+
+  const onTabsSuccess2 = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
+  newNavigator.gBrowser.selectedTab = newTestTab;
+
+  info("Wait for the tablist update after updating the selected tab");
+  await onTabsSuccess2;
 
   clickInspectButton(inspectionTarget, document);
   assertDevtoolsToolboxTabState(devtoolsURL);
