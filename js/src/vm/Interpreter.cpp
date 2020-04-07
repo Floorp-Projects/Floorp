@@ -2551,18 +2551,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(Not)
 
     CASE(BitNot) {
-      MutableHandleValue value = REGS.stackHandleAt(-1);
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      if (!BitNot(cx, value, res)) {
+      MutableHandleValue val = REGS.stackHandleAt(-1);
+      if (!BitNot(cx, val, val)) {
         goto error;
       }
     }
     END_CASE(BitNot)
 
     CASE(Neg) {
-      ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      if (!NegOperation(cx, &val, res)) {
+      MutableHandleValue val = REGS.stackHandleAt(-1);
+      if (!NegOperation(cx, val, val)) {
         goto error;
       }
     }
@@ -4241,18 +4239,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(IsConstructing)
 
     CASE(Inc) {
-      ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      if (!IncOperation(cx, &val, res)) {
+      MutableHandleValue val = REGS.stackHandleAt(-1);
+      if (!IncOperation(cx, val, val)) {
         goto error;
       }
     }
     END_CASE(Inc)
 
     CASE(Dec) {
-      ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      if (!DecOperation(cx, &val, res)) {
+      MutableHandleValue val = REGS.stackHandleAt(-1);
+      if (!DecOperation(cx, val, val)) {
         goto error;
       }
     }
