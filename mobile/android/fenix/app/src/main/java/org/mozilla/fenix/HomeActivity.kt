@@ -219,6 +219,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         super.onBackPressed()
     }
 
+    final override fun onUserLeaveHint() {
+        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
+            if (it is UserInteractionHandler && it.onHomePressed()) {
+                return
+            }
+        }
+
+        super.onUserLeaveHint()
+    }
+
     protected open fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
         return "Changing to fragment $fragmentName, isCustomTab: false"

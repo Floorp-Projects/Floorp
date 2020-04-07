@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
@@ -45,6 +46,7 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.FullScreenFeature
+import mozilla.components.feature.session.PictureInPictureFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SwipeRefreshFeature
@@ -123,6 +125,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val webchannelIntegration = ViewBoundFeatureWrapper<FxaWebChannelFeature>()
     private val sitePermissionWifiIntegration = ViewBoundFeatureWrapper<SitePermissionsWifiIntegration>()
+    private var pipFeature: PictureInPictureFeature? = null
 
     var customTabSessionId: String? = null
 
@@ -324,6 +327,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
+            if (FeatureFlags.pictureInPicture) {
+                pipFeature = PictureInPictureFeature(
+                    requireComponents.core.sessionManager,
+                    requireActivity(),
+                    customTabSessionId,
+                    ::pipModeChanged
+                )
+            }
+
             appLinksFeature.set(
                 feature = AppLinksFeature(
                     context,
@@ -423,39 +435,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 feature = FullScreenFeature(
                     sessionManager,
                     SessionUseCases(sessionManager),
-                    customTabSessionId
-                ) { inFullScreen ->
-                    if (inFullScreen) {
-                        FenixSnackbar.make(
-                            view = view,
-                            duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedOnBrowserFragment = true
-                        )
-                            .setText(getString(R.string.full_screen_notification))
-                            .show()
-                        activity?.enterToImmersiveMode()
-                        browserToolbarView.view.visibility = View.GONE
-
-                        if (FeatureFlags.dynamicBottomToolbar) {
-                            engineView.setDynamicToolbarMaxHeight(0)
-                            browserToolbarView.expand()
-                            // Without this, fullscreen has a margin at the top.
-                            engineView.setVerticalClipping(0)
-                        }
-                    } else {
-                        activity?.exitImmersiveModeIfNeeded()
-                        (activity as? HomeActivity)?.let { activity ->
-                            activity.themeManager.applyStatusBarTheme(activity)
-                        }
-                        browserToolbarView.view.visibility = View.VISIBLE
-                        if (FeatureFlags.dynamicBottomToolbar) {
-                            engineView.setDynamicToolbarMaxHeight(toolbarHeight)
-                        }
-                    }
-                    if (!FeatureFlags.dynamicBottomToolbar) {
-                        updateLayoutMargins(inFullScreen)
-                    }
-                },
+                    customTabSessionId,
+                    ::fullScreenChanged
+                ),
                 owner = this,
                 view = view
             )
@@ -593,7 +575,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         if (findNavController().currentDestination?.id != R.id.searchFragment) {
             view?.hideKeyboard()
         }
-        fullScreenFeature.onBackPressed()
     }
 
     @CallSuper
@@ -810,6 +791,63 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         .show()
                 }
             }
+        }
+    }
+
+    override fun onHomePressed(): Boolean {
+        if (pipFeature?.onHomePressed() == true) {
+            return true
+        }
+        return false
+    }
+
+    private fun pipModeChanged(enabled: Boolean) {
+        val fullScreenMode =
+            requireComponents.core.sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
+                session.fullScreenMode
+            }
+        // If we're exiting PIP mode and we're in fullscreen mode, then we should exit fullscreen mode as well.
+        if (!enabled && fullScreenMode) {
+            onBackPressed()
+            fullScreenChanged(false)
+        }
+    }
+
+    final override fun onPictureInPictureModeChanged(enabled: Boolean) {
+        pipFeature?.onPictureInPictureModeChanged(enabled)
+    }
+
+    private fun fullScreenChanged(inFullScreen: Boolean) {
+        if (inFullScreen) {
+            FenixSnackbar.make(
+                view = view!!,
+                duration = Snackbar.LENGTH_SHORT,
+                isDisplayedOnBrowserFragment = true
+            )
+                .setText(getString(R.string.full_screen_notification))
+                .show()
+            activity?.enterToImmersiveMode()
+            browserToolbarView.view.visibility = View.GONE
+
+            if (FeatureFlags.dynamicBottomToolbar) {
+                engineView.setDynamicToolbarMaxHeight(0)
+                browserToolbarView.expand()
+                // Without this, fullscreen has a margin at the top.
+                engineView.setVerticalClipping(0)
+            }
+        } else {
+            activity?.exitImmersiveModeIfNeeded()
+            (activity as? HomeActivity)?.let { activity ->
+                activity.themeManager.applyStatusBarTheme(activity)
+            }
+            browserToolbarView.view.visibility = View.VISIBLE
+            if (FeatureFlags.dynamicBottomToolbar) {
+                val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                engineView.setDynamicToolbarMaxHeight(toolbarHeight)
+            }
+        }
+        if (!FeatureFlags.dynamicBottomToolbar) {
+            updateLayoutMargins(inFullScreen)
         }
     }
 
