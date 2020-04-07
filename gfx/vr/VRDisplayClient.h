@@ -57,6 +57,7 @@ class VRDisplayClient {
 
   bool IsPresenting();
   bool IsReferenceSpaceTypeSupported(dom::XRReferenceSpaceType aType) const;
+  void SetXRAPIMode(gfx::VRAPIMode aMode);
 
  protected:
   virtual ~VRDisplayClient();
@@ -92,6 +93,7 @@ class VRDisplayClient {
   void GamepadMappingForWebVR(VRControllerState& aControllerState);
 
   VRSubmitFrameResultInfo mSubmitFrameResult;
+  gfx::VRAPIMode mAPIMode;
 };
 
 }  // namespace gfx
