@@ -13,10 +13,13 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 
+#include "new-regexp/regexp-compiler.h"
+#include "new-regexp/regexp-macro-assembler-arch.h"
 #include "new-regexp/regexp-parser.h"
 #include "new-regexp/regexp-shim.h"
 #include "new-regexp/regexp.h"
 #include "util/StringBuffer.h"
+#include "vm/RegExpShared.h"
 
 namespace js {
 namespace irregexp {
@@ -30,8 +33,11 @@ using frontend::TokenStreamAnyChars;
 using v8::internal::FlatStringReader;
 using v8::internal::RegExpCompileData;
 using v8::internal::RegExpError;
+using v8::internal::RegExpNode;
 using v8::internal::RegExpParser;
 using v8::internal::Zone;
+
+using namespace v8::internal::regexp_compiler_constants;
 
 static uint32_t ErrorNumber(RegExpError err) {
   switch (err) {
@@ -232,6 +238,94 @@ bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
     return false;
   }
   return true;
+}
+
+// A regexp is a good candidate for Boyer-Moore if it has at least 3
+// times as many characters as it has unique characters. Note that
+// table lookups in irregexp are done modulo tableSize (128).
+template <typename CharT>
+static bool HasFewDifferentCharacters(const CharT* chars, size_t length) {
+  const uint32_t tableSize =
+      v8::internal::NativeRegExpMacroAssembler::kTableSize;
+  bool character_found[tableSize];
+  uint32_t different = 0;
+  memset(&character_found[0], 0, sizeof(character_found));
+  for (uint32_t i = 0; i < length; i++) {
+    uint32_t ch = chars[i] % tableSize;
+    if (!character_found[ch]) {
+      character_found[ch] = true;
+      different++;
+      // We declare a regexp low-alphabet if it has at least 3 times as many
+      // characters as it has different characters.
+      if (different * 3 > length) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Identifies the sort of pattern where Boyer-Moore is faster than string search
+static bool UseBoyerMoore(HandleAtom pattern, JS::AutoAssertNoGC& nogc) {
+  size_t length =
+      std::min(size_t(kMaxLookaheadForBoyerMoore), pattern->length());
+  if (length <= kPatternTooShortForBoyerMoore) {
+    return false;
+  }
+
+  if (pattern->hasLatin1Chars()) {
+    return HasFewDifferentCharacters(pattern->latin1Chars(nogc), length);
+  }
+  MOZ_ASSERT(pattern->hasTwoByteChars());
+  return HasFewDifferentCharacters(pattern->twoByteChars(nogc), length);
+}
+
+bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
+                    HandleLinearString input) {
+  RootedAtom pattern(cx, re->getSource());
+  JS::RegExpFlags flags = re->getFlags();
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  Zone zone(allocScope.alloc());
+
+  RegExpCompileData data;
+  {
+    FlatStringReader patternBytes(pattern);
+    if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
+                                   &data)) {
+      MOZ_ASSERT(data.error == RegExpError::kStackOverflow);
+      JS::CompileOptions options(cx);
+      TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+      ReportSyntaxError(dummyTokenStream, data, pattern);
+      return false;
+    }
+  }
+
+  if (re->kind() == RegExpShared::Kind::Unparsed) {
+    // This is the first time we have compiled this regexp.
+    // First, check to see if we should use simple string search
+    // with an atom.
+    if (!flags.ignoreCase() && !flags.sticky()) {
+      RootedAtom searchAtom(cx);
+      if (data.simple) {
+        // The parse-tree is a single atom that is equal to the pattern.
+        searchAtom = re->getSource();
+      } else if (data.tree->IsAtom() && data.capture_count == 0) {
+        // The parse-tree is a single atom that is not equal to the pattern.
+        v8::internal::RegExpAtom* atom = data.tree->AsAtom();
+        const char16_t* twoByteChars = atom->data().begin();
+        searchAtom = AtomizeChars(cx, twoByteChars, atom->length());
+        if (!searchAtom) {
+          return false;
+        }
+      }
+      JS::AutoAssertNoGC nogc(cx);
+      if (searchAtom && !UseBoyerMoore(searchAtom, nogc)) {
+        re->useAtomMatch(searchAtom);
+        return true;
+      }
+    }
+  }
+  MOZ_CRASH("TODO");
 }
 
 }  // namespace irregexp

@@ -946,10 +946,7 @@ bool js::StringHasRegExpMetaChars(JSLinearString* str) {
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
-    : headerAndSource(source),
-      parenCount(0),
-      flags(flags),
-      canStringMatch(false) {}
+    : headerAndSource(source), parenCount(0), flags(flags) {}
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
@@ -958,9 +955,19 @@ void RegExpShared::traceChildren(JSTracer* trc) {
   }
 
   TraceNullableEdge(trc, &headerAndSource, "RegExpShared source");
+#ifdef ENABLE_NEW_REGEXP
+  if (kind() == RegExpShared::Kind::Atom) {
+    TraceNullableEdge(trc, &patternAtom_, "RegExpShared pattern atom");
+  } else {
+    for (auto& comp : compilationArray) {
+      TraceNullableEdge(trc, &comp.jitCode, "RegExpShared code");
+    }
+  }
+#else
   for (auto& comp : compilationArray) {
     TraceNullableEdge(trc, &comp.jitCode, "RegExpShared code");
   }
+#endif
 }
 
 void RegExpShared::discardJitCode() {
@@ -1003,7 +1010,17 @@ bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
                                       HandleLinearString input,
                                       ForceByteCodeEnum force) {
-  MOZ_CRASH("TODO");
+  bool needsCompile = false;
+  if (re->kind() == RegExpShared::Kind::Unparsed) {
+    needsCompile = true;
+  }
+
+  // TODO: tier-up from interpreter to generated code
+
+  if (needsCompile) {
+    return irregexp::CompilePattern(cx, re, input);
+  }
+  return true;
 }
 
 /* static */
@@ -1011,9 +1028,40 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
                                       MutableHandleRegExpShared re,
                                       HandleLinearString input, size_t start,
                                       VectorMatchPairs* matches) {
+  MOZ_ASSERT(matches);
+
+  // TODO: Add tracelogger support
+
+  /* Compile the code at point-of-use. */
+  if (!compileIfNecessary(cx, re, input, DontForceByteCode)) {
+    return RegExpRunStatus_Error;
+  }
+
+  /*
+   * Ensure sufficient memory for output vector.
+   * No need to initialize it. The RegExp engine fills them in on a match.
+   */
+  if (!matches->allocOrExpandArray(re->pairCount())) {
+    ReportOutOfMemory(cx);
+    return RegExpRunStatus_Error;
+  }
+
+  if (re->kind() == RegExpShared::Kind::Atom) {
+    return RegExpShared::executeAtom(cx, re, input, start, matches);
+  }
+
   MOZ_CRASH("TODO");
 }
-#else
+
+void RegExpShared::useAtomMatch(HandleAtom pattern) {
+  MOZ_ASSERT(kind() == RegExpShared::Kind::Unparsed);
+  kind_ = RegExpShared::Kind::Atom;
+  patternAtom_ = pattern;
+  parenCount = 0;
+}
+
+#else   // !ENABLE_NEW_REGEXP
+
 /* static */
 bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
                            HandleAtom pattern, HandleLinearString input,
@@ -1185,7 +1233,8 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   }
   return result;
 }
-#endif  // ENABLE_NEW_REGEXP
+#endif  // !ENABLE_NEW_REGEXP
+
 /* static */
 RegExpRunStatus RegExpShared::executeAtom(JSContext* cx,
                                           MutableHandleRegExpShared re,
