@@ -44,16 +44,11 @@ add_task(async function() {
     win: window,
   });
 
-  const {
-    gFront,
-    EVENTS,
-    $,
-    PerformanceController,
-    PerformanceView,
-  } = panel.panelWin;
+  const { EVENTS, $, PerformanceController, PerformanceView } = panel.panelWin;
 
   // Set a fast profiler-status update interval
-  await gFront.setProfilerStatusInterval(10);
+  const performanceFront = await panel.target.getFront("performance");
+  await performanceFront.setProfilerStatusInterval(10);
 
   const DETAILS_CONTAINER = $("#details-pane-container");
   const NORMAL_BUFFER_STATUS_MESSAGE = $(
