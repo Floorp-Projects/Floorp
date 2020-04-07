@@ -1014,12 +1014,6 @@ child:
     async AllowScriptsToClose();
 
     /**
-     * Tell the BrowserChild what OriginAttributes it should inherit from. This must
-     * be called before the first non-blank document is loaded in the BrowserChild.
-     */
-    async SetOriginAttributes(OriginAttributes aOriginAttributes);
-
-    /**
      * Pass the current handle for the current native widget to the content
      * process, so it can be used by PuppetWidget.
      */

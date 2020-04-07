@@ -566,12 +566,12 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
     return NS_ERROR_UNEXPECTED;
   }
 
-  chromeContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
-  chromeContext->SetRemoteSubframes(isFissionWindow);
+  MOZ_ASSERT(chromeContext->UsePrivateBrowsing() == isPrivateBrowsingWindow);
+  MOZ_ASSERT(chromeContext->UseRemoteSubframes() == isFissionWindow);
 
   // Tabs opened from a content process can only open new windows
   // that will also run with out-of-process tabs.
-  chromeContext->SetRemoteTabs(true);
+  MOZ_ASSERT(chromeContext->UseRemoteTabs());
 
   MaybeDisablePersistence(aFeatures, chromeTreeOwner);
 

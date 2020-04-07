@@ -525,13 +525,17 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
 
   docShell->SetAffectPrivateSessionLifetime(
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
+
+#ifdef DEBUG
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(WebNavigation());
   MOZ_ASSERT(loadContext);
-  loadContext->SetPrivateBrowsing(OriginAttributesRef().mPrivateBrowsingId > 0);
-  loadContext->SetRemoteTabs(mChromeFlags &
-                             nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
-  loadContext->SetRemoteSubframes(mChromeFlags &
-                                  nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
+  MOZ_ASSERT(loadContext->UsePrivateBrowsing() ==
+             (OriginAttributesRef().mPrivateBrowsingId > 0));
+  MOZ_ASSERT(loadContext->UseRemoteTabs() ==
+             !!(mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
+  MOZ_ASSERT(loadContext->UseRemoteSubframes() ==
+             !!(mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
+#endif  // defined(DEBUG)
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
@@ -3294,14 +3298,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvAllowScriptsToClose() {
   if (window) {
     nsGlobalWindowOuter::Cast(window)->AllowScriptsToClose();
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvSetOriginAttributes(
-    const OriginAttributes& aOriginAttributes) {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  nsDocShell::Cast(docShell)->SetOriginAttributes(aOriginAttributes);
-
   return IPC_OK();
 }
 
