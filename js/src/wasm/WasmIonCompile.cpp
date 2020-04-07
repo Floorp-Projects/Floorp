@@ -340,6 +340,15 @@ class FunctionCompiler {
     return ins;
   }
 
+  MDefinition* ursh(MDefinition* lhs, MDefinition* rhs, MIRType type) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    auto* ins = MUrsh::NewWasm(alloc(), lhs, rhs, type);
+    curBlock_->add(ins);
+    return ins;
+  }
+
   MDefinition* add(MDefinition* lhs, MDefinition* rhs, MIRType type) {
     if (inDeadCode()) {
       return nullptr;
@@ -2582,6 +2591,18 @@ static bool EmitBitwise(FunctionCompiler& f, ValType operandType,
   return true;
 }
 
+static bool EmitUrsh(FunctionCompiler& f, ValType operandType,
+                     MIRType mirType) {
+  MDefinition* lhs;
+  MDefinition* rhs;
+  if (!f.iter().readBinary(operandType, &lhs, &rhs)) {
+    return false;
+  }
+
+  f.iter().setResult(f.ursh(lhs, rhs, mirType));
+  return true;
+}
+
 static bool EmitMul(FunctionCompiler& f, ValType operandType, MIRType mirType) {
   MDefinition* lhs;
   MDefinition* rhs;
@@ -4128,7 +4149,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I32ShrS):
         CHECK(EmitBitwise<MRsh>(f, ValType::I32, MIRType::Int32));
       case uint16_t(Op::I32ShrU):
-        CHECK(EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitUrsh(f, ValType::I32, MIRType::Int32));
       case uint16_t(Op::I32Rotl):
       case uint16_t(Op::I32Rotr):
         CHECK(EmitRotate(f, ValType::I32, Op(op.b0) == Op::I32Rotl));
@@ -4163,7 +4184,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64ShrS):
         CHECK(EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64));
       case uint16_t(Op::I64ShrU):
-        CHECK(EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitUrsh(f, ValType::I64, MIRType::Int64));
       case uint16_t(Op::I64Rotl):
       case uint16_t(Op::I64Rotr):
         CHECK(EmitRotate(f, ValType::I64, Op(op.b0) == Op::I64Rotl));

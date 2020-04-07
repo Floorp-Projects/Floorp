@@ -3664,6 +3664,13 @@ MUrsh* MUrsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                   MIRType type) {
   MUrsh* ins = new (alloc) MUrsh(left, right, type);
   ins->specializeAs(type);
+  return ins;
+}
+
+MUrsh* MUrsh::NewWasm(TempAllocator& alloc, MDefinition* left,
+                      MDefinition* right, MIRType type) {
+  MUrsh* ins = new (alloc) MUrsh(left, right, type);
+  ins->specializeAs(type);
 
   // Since Ion has no UInt32 type, we use Int32 and we have a special
   // exception to the type rules: we can return values in
