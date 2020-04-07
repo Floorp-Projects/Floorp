@@ -33,6 +33,10 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
+import mozilla.components.concept.engine.permission.Permission.AppLocationCoarse
+import mozilla.components.concept.engine.permission.Permission.AppLocationFine
+import mozilla.components.concept.engine.permission.Permission.AppAudio
+import mozilla.components.concept.engine.permission.Permission.AppCamera
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
@@ -41,6 +45,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import java.lang.IllegalStateException
 import java.security.InvalidParameterException
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
@@ -62,6 +67,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
  * @property dialogConfig optional customization for dialog initial state. See [DialogConfig].
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested. Once the request is completed, [onPermissionsResult] needs to be invoked.
+ * @property onShouldShowRequestPermissionRationale a callback that allows the feature to query
+ * the ActivityCompat.shouldShowRequestPermissionRationale or the Fragment.shouldShowRequestPermissionRationale values.
  **/
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -74,7 +81,8 @@ class SitePermissionsFeature(
     private val fragmentManager: FragmentManager,
     var promptsStyling: PromptsStyling? = null,
     private val dialogConfig: DialogConfig? = null,
-    override val onNeedToRequestPermissions: OnNeedToRequestPermissions
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
+    val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     private val observer = SitePermissionsRequestObserver(sessionManager, feature = this)
@@ -105,6 +113,7 @@ class SitePermissionsFeature(
      * @param grantResults the grant results for the corresponding permissions
      * @see [onNeedToRequestPermissions].
      */
+    @Suppress("MaxLineLength")
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
             session.appPermissionRequest.consume { permissionsRequest ->
@@ -117,6 +126,14 @@ class SitePermissionsFeature(
                     permissionsRequest.grant()
                 } else {
                     permissionsRequest.reject()
+                    permissions.forEach { systemPermission ->
+                        if (!onShouldShowRequestPermissionRationale(systemPermission)) {
+                            // The system permission is denied permanently
+                            val appPermission = listOf(permissionsRequest.permissions.find { it.id == systemPermission }
+                                    ?: throw IllegalStateException("$systemPermission is not part of the permission request"))
+                            storeSitePermissions(session, permissionsRequest, appPermission, status = BLOCKED)
+                        }
+                    }
                 }
                 true
             }
@@ -173,7 +190,6 @@ class SitePermissionsFeature(
         }
     }
 
-    @Synchronized
     internal fun storeSitePermissions(
         session: Session,
         request: PermissionRequest,
@@ -183,19 +199,17 @@ class SitePermissionsFeature(
         if (session.private) {
             return
         }
-
         ioCoroutineScope.launch {
-            var sitePermissions = storage.findSitePermissionsBy(request.host)
+            synchronized(storage) {
+                var sitePermissions = storage.findSitePermissionsBy(request.getHost(session))
 
-            if (sitePermissions == null) {
-                sitePermissions = request.toSitePermissions(
-                    status = status,
-                    permissions = permissions
-                )
-                storage.save(sitePermissions)
-            } else {
-                sitePermissions = request.toSitePermissions(status, sitePermissions)
-                storage.update(sitePermissions)
+                if (sitePermissions == null) {
+                    sitePermissions = request.toSitePermissions(session, status = status, permissions = permissions)
+                    storage.save(sitePermissions)
+                } else {
+                    sitePermissions = request.toSitePermissions(session, status, sitePermissions)
+                    storage.update(sitePermissions)
+                }
             }
         }
     }
@@ -231,7 +245,7 @@ class SitePermissionsFeature(
         }
 
         val permissionFromStorage = withContext(ioCoroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(request.host)
+            storage.findSitePermissionsBy(request.getHost(session))
         }
 
         val prompt = if (shouldApplyRules(permissionFromStorage) ||
@@ -323,8 +337,9 @@ class SitePermissionsFeature(
     }
 
     private fun PermissionRequest.toSitePermissions(
+        session: Session,
         status: SitePermissions.Status,
-        initialSitePermission: SitePermissions = getInitialSitePermissions(this),
+        initialSitePermission: SitePermissions = getInitialSitePermissions(session, this),
         permissions: List<Permission> = this.permissions
     ): SitePermissions {
         var sitePermissions = initialSitePermission
@@ -334,10 +349,10 @@ class SitePermissionsFeature(
         return sitePermissions
     }
 
-    internal fun getInitialSitePermissions(request: PermissionRequest): SitePermissions {
+    internal fun getInitialSitePermissions(session: Session, request: PermissionRequest): SitePermissions {
         val rules = sitePermissionsRules
-        return rules?.toSitePermissions(request.host, savedAt = System.currentTimeMillis())
-                ?: SitePermissions(request.host, savedAt = System.currentTimeMillis())
+        return rules?.toSitePermissions(request.getHost(session), savedAt = System.currentTimeMillis())
+                ?: SitePermissions(request.getHost(session), savedAt = System.currentTimeMillis())
     }
 
     private fun PermissionRequest.isForAutoplay() =
@@ -349,16 +364,16 @@ class SitePermissionsFeature(
         sitePermissions: SitePermissions
     ): SitePermissions {
         return when (permission) {
-            is ContentGeoLocation -> {
+            is ContentGeoLocation, is AppLocationCoarse, is AppLocationFine -> {
                 sitePermissions.copy(location = status)
             }
             is ContentNotification -> {
                 sitePermissions.copy(notification = status)
             }
-            is ContentAudioCapture, is ContentAudioMicrophone -> {
+            is ContentAudioCapture, is ContentAudioMicrophone, is AppAudio -> {
                 sitePermissions.copy(microphone = status)
             }
-            is ContentVideoCamera, is ContentVideoCapture -> {
+            is ContentVideoCamera, is ContentVideoCapture, is AppCamera -> {
                 sitePermissions.copy(camera = status)
             }
             is ContentAutoPlayAudible -> {
@@ -376,7 +391,7 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         session: Session
     ): SitePermissionsDialogFragment {
-        val host = permissionRequest.host
+        val host = permissionRequest.getHost(session)
         return if (!permissionRequest.containsVideoAndAudioSources()) {
             val permission = permissionRequest.permissions.first()
             handlingSingleContentPermissions(session.id, permission, host)
@@ -484,7 +499,8 @@ class SitePermissionsFeature(
         return false
     }
 
-    private val PermissionRequest.host get() = uri?.toUri()?.host ?: ""
+    private fun PermissionRequest.getHost(session: Session) = (uri?.toUri()?.host ?: session.url.toUri().host ?: "")
+
     private val PermissionRequest.isMedia: Boolean
         get() {
             return when (permissions.first()) {
