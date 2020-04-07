@@ -20,7 +20,14 @@ class FormValidationChild extends JSWindowActorChild {
     super();
     this._validationMessage = "";
     this._element = null;
-    this._addedPageShowListener = false;
+  }
+
+  actorCreated() {
+    // Listening to ‘pageshow’ event is only relevant
+    // if an invalid form popup was open. So we add
+    // a listener here and not during registration to
+    // avoid a premature instantiation of the actor.
+    this.contentWindow.addEventListener("pageshow", this);
   }
 
   /*
@@ -28,15 +35,6 @@ class FormValidationChild extends JSWindowActorChild {
    */
 
   handleEvent(aEvent) {
-    if (!this._addedPageShowListener) {
-      // Listening to ‘pageshow’ event is only relevant
-      // if an invalid form popup was open. So we add
-      // a listener here and not during registration to
-      // avoid a premature instantiation of the actor.
-      this.contentWindow.addEventListener("pageshow", this);
-      this._addedPageShowListener = true;
-    }
-
     switch (aEvent.type) {
       case "MozInvalidForm":
         aEvent.preventDefault();
