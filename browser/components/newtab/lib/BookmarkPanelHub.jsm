@@ -45,7 +45,7 @@ class _BookmarkPanelHub {
     this._handleMessageRequest = handleMessageRequest;
     this._addImpression = addImpression;
     this._dispatch = dispatch;
-    this._l10n = new DOMLocalization([]);
+    this._l10n = new DOMLocalization();
     this._initialized = true;
   }
 

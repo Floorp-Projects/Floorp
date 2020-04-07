@@ -14,28 +14,21 @@
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
 interface mozILocalization : nsISupports
 {
-  void setGenerateBundles(in jsval generateBundles);
-  void setGenerateBundlesSync(in jsval generateBundlesSync);
-  void setIsSync(in boolean isSync);
-
-  void init(in boolean aEager);
-
   unsigned long addResourceIds(in Array<AString> resourceIds, in bool aEager);
   unsigned long removeResourceIds(in Array<AString> resourceIds);
+  void onChange();
 
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
   Promise formatValue(in AUTF8String aId, [optional] in jsval aArgs);
 
-  AUTF8String formatValueSync(in AUTF8String aId, [optional] in jsval aArgs);
-  Array<AUTF8String> formatValuesSync(in Array<jsval> aKeys);
   Array<jsval> formatMessagesSync(in Array<jsval> aKeys);
-
-  void onChange(in boolean aEager);
+  void setIsSync(in boolean isSync);
 };
 
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]
 interface mozILocalizationJSM : nsISupports
 {
-  mozILocalization getLocalization(in Array<AString> resourceIds);
+  mozILocalization getLocalization(in Array<AString> resourceIds, in bool sync);
+  mozILocalization getLocalizationWithCustomGenerateMessages(in Array<AString> resourceIds, in jsval generateMessages);
 };
