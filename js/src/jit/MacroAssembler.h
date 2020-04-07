@@ -1005,6 +1005,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void maxDouble(FloatRegister other, FloatRegister srcDest,
                         bool handleNaN) PER_SHARED_ARCH;
 
+  // Compute |pow(base, power)| and store the result in |dest|. If the result
+  // exceeds the int32 range, jumps to |onOver|.
+  // |base| and |power| are preserved, the other input registers are clobbered.
+  void pow32(Register base, Register power, Register dest, Register temp1,
+             Register temp2, Label* onOver);
+
   // ===============================================================
   // Shift functions
 
@@ -1274,6 +1280,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <typename T>
   inline void branchMul32(Condition cond, T src, Register dest,
                           Label* label) PER_SHARED_ARCH;
+  template <typename T>
+  inline void branchRshift32(Condition cond, T src, Register dest,
+                             Label* label) PER_SHARED_ARCH;
 
   inline void decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                            Label* label) PER_SHARED_ARCH;

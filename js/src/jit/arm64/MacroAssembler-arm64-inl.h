@@ -1132,6 +1132,14 @@ void MacroAssembler::branchMul32(Condition cond, T src, Register dest,
   mul32(src, dest, dest, label);
 }
 
+template <typename T>
+void MacroAssembler::branchRshift32(Condition cond, T src, Register dest,
+                                    Label* label) {
+  MOZ_ASSERT(cond == Zero || cond == NonZero);
+  rshift32(src, dest);
+  branch32(cond == Zero ? Equal : NotEqual, dest, Imm32(0), label);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
