@@ -229,6 +229,7 @@
 #include "prio.h"
 #include "private/pprio.h"
 #include "xpcpublic.h"
+#include "nsOpenWindowInfo.h"
 
 #ifdef MOZ_WEBRTC
 #  include "signaling/src/peerconnection/WebrtcGlobalParent.h"
@@ -4606,16 +4607,15 @@ bool ContentParent::DeallocPWebBrowserPersistDocumentParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
-    PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
-    const bool& aCalledFromJS, const bool& aWidthSpecified, nsIURI* aURIToLoad,
-    const nsCString& aFeatures, const float& aFullZoom,
-    uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
-    nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
-    int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
-    nsIReferrerInfo* aReferrerInfo, bool aLoadURI,
-    nsIContentSecurityPolicy* aCsp)
-
-{
+    PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
+    const uint32_t& aChromeFlags, const bool& aCalledFromJS,
+    const bool& aWidthSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
+    const float& aFullZoom, uint64_t aNextRemoteTabId, const nsString& aName,
+    nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
+    bool* aWindowIsNew, int32_t& aOpenLocation,
+    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
+    bool aLoadURI, nsIContentSecurityPolicy* aCsp,
+    const OriginAttributes& aOriginAttributes) {
   // The content process should never be in charge of computing whether or
   // not a window should be private - the parent will do that.
   const uint32_t badFlags = nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
@@ -4625,6 +4625,13 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     return IPC_FAIL(this, "Forbidden aChromeFlags passed");
   }
 
+  RefPtr<nsOpenWindowInfo> openInfo = new nsOpenWindowInfo();
+  openInfo->mForceNoOpener = !aSetOpener;
+  openInfo->mParent = aParent;
+  openInfo->mIsRemote = true;
+  openInfo->mNextRemoteBrowserId = aNextRemoteTabId;
+  openInfo->mOriginAttributes = aOriginAttributes;
+
   RefPtr<BrowserParent> topParent = BrowserParent::GetFrom(aThisTab);
   while (topParent && topParent->GetBrowserBridgeParent()) {
     topParent = topParent->GetBrowserBridgeParent()->Manager();
@@ -4632,17 +4639,21 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   RefPtr<BrowserHost> thisBrowserHost =
       topParent ? topParent->GetBrowserHost() : nullptr;
   MOZ_ASSERT_IF(topParent, thisBrowserHost);
+  RefPtr<BrowsingContext> topBC =
+      topParent ? topParent->GetBrowsingContext() : nullptr;
+  MOZ_ASSERT_IF(topParent, topBC);
 
-  // The content process should not have set its remote or fission flags if the
-  // parent doesn't also have these set.
-  if (thisBrowserHost) {
-    nsCOMPtr<nsILoadContext> context = thisBrowserHost->GetLoadContext();
-
+  // The content process should have set its remote and fission flags correctly.
+  if (topBC) {
     if ((!!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) !=
-         context->UseRemoteTabs()) ||
+         topBC->UseRemoteTabs()) ||
         (!!(aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) !=
-         context->UseRemoteSubframes())) {
+         topBC->UseRemoteSubframes())) {
       return IPC_FAIL(this, "Unexpected aChromeFlags passed");
+    }
+
+    if (!aOriginAttributes.EqualsIgnoringFPD(topBC->OriginAttributesRef())) {
+      return IPC_FAIL(this, "Passed-in OriginAttributes does not match opener");
     }
   }
 
@@ -4692,15 +4703,6 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   MOZ_ASSERT(aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
              aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
 
-  // Read the origin attributes for the tab from the opener browserParent.
-  OriginAttributes openerOriginAttributes;
-  if (thisBrowserHost) {
-    nsCOMPtr<nsILoadContext> loadContext = thisBrowserHost->GetLoadContext();
-    loadContext->GetOriginAttributes(openerOriginAttributes);
-  } else if (Preferences::GetBool("browser.privatebrowsing.autostart")) {
-    openerOriginAttributes.mPrivateBrowsingId = 1;
-  }
-
   if (aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
     if (NS_WARN_IF(!browserDOMWin)) {
       aResult = NS_ERROR_ABORT;
@@ -4710,7 +4712,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     RefPtr<Element> openerElement = do_QueryObject(frame);
 
     nsCOMPtr<nsIOpenURIInFrameParams> params =
-        new nsOpenURIInFrameParams(openerOriginAttributes, openerElement);
+        new nsOpenURIInFrameParams(openInfo, openerElement);
     params->SetReferrerInfo(aReferrerInfo);
     MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
     params->SetTriggeringPrincipal(aTriggeringPrincipal);
@@ -4719,13 +4721,13 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     RefPtr<Element> el;
 
     if (aLoadURI) {
-      aResult = browserDOMWin->OpenURIInFrame(
-          aURIToLoad, params, aOpenLocation, nsIBrowserDOMWindow::OPEN_NEW,
-          aNextRemoteTabId, aName, getter_AddRefs(el));
+      aResult = browserDOMWin->OpenURIInFrame(aURIToLoad, params, aOpenLocation,
+                                              nsIBrowserDOMWindow::OPEN_NEW,
+                                              aName, getter_AddRefs(el));
     } else {
       aResult = browserDOMWin->CreateContentWindowInFrame(
           aURIToLoad, params, aOpenLocation, nsIBrowserDOMWindow::OPEN_NEW,
-          aNextRemoteTabId, aName, getter_AddRefs(el));
+          aName, getter_AddRefs(el));
     }
     RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(el);
     if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
@@ -4760,9 +4762,9 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     return IPC_OK();
   }
 
-  aResult = pwwatch->OpenWindowWithRemoteTab(
-      thisBrowserHost, aFeatures, aCalledFromJS, aFullZoom, aNextRemoteTabId,
-      !aSetOpener, getter_AddRefs(aNewRemoteTab));
+  aResult = pwwatch->OpenWindowWithRemoteTab(thisBrowserHost, aFeatures,
+                                             aCalledFromJS, aFullZoom, openInfo,
+                                             getter_AddRefs(aNewRemoteTab));
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return IPC_OK();
   }
@@ -4796,7 +4798,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   MOZ_ASSERT(newBrowserHost->GetBrowsingContext()->OriginAttributesRef() ==
-             openerOriginAttributes);
+             aOriginAttributes);
 
   if (aURIToLoad && aLoadURI) {
     nsCOMPtr<mozIDOMWindowProxy> openerWindow;
@@ -4811,7 +4813,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     }
     RefPtr<BrowsingContext> bc;
     aResult = newBrowserDOMWin->OpenURI(
-        aURIToLoad, openerWindow, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
+        aURIToLoad, openInfo, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
         nsIBrowserDOMWindow::OPEN_NEW, aTriggeringPrincipal, aCsp,
         getter_AddRefs(bc));
   }
@@ -4820,11 +4822,12 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
-    PBrowserParent* aThisTab, PBrowserParent* aNewTab,
-    const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-    const bool& aWidthSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
-    const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+    PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
+    PBrowserParent* aNewTab, const uint32_t& aChromeFlags,
+    const bool& aCalledFromJS, const bool& aWidthSpecified, nsIURI* aURIToLoad,
+    const nsCString& aFeatures, const float& aFullZoom,
+    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
     CreateWindowResolver&& aResolve) {
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
@@ -4842,6 +4845,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     aResolve(cwi);
   });
 
+  RefPtr<BrowserParent> thisTab = BrowserParent::GetFrom(aThisTab);
   RefPtr<BrowserParent> newTab = BrowserParent::GetFrom(aNewTab);
   MOZ_ASSERT(newTab);
 
@@ -4854,6 +4858,45 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     }
   });
 
+  // Don't continue to try to create a new window if we've been discarded.
+  if (aParent.IsDiscarded()) {
+    rv = NS_ERROR_FAILURE;
+    return IPC_OK();
+  }
+
+  // Validate that our new BrowsingContext looks as we would expect it.
+  RefPtr<BrowsingContext> newBC = newTab->GetBrowsingContext();
+  if (!newBC) {
+    return IPC_FAIL(this, "Missing BrowsingContext for new tab");
+  }
+
+  RefPtr<BrowsingContext> newBCOpener = newBC->GetOpener();
+  if (newBCOpener && aParent.get() != newBCOpener) {
+    return IPC_FAIL(this, "Invalid opener BrowsingContext for new tab");
+  }
+  if (newBC->GetParent() != nullptr) {
+    return IPC_FAIL(this,
+                    "Unexpected non-toplevel BrowsingContext for new tab");
+  }
+  if (!!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) !=
+          newBC->UseRemoteTabs() ||
+      !!(aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) !=
+          newBC->UseRemoteSubframes()) {
+    return IPC_FAIL(this, "Unexpected aChromeFlags passed");
+  }
+  if (!aOriginAttributes.EqualsIgnoringFPD(newBC->OriginAttributesRef())) {
+    return IPC_FAIL(this, "Opened tab has mismatched OriginAttributes");
+  }
+
+  if (thisTab && BrowserParent::GetFrom(thisTab)->GetBrowsingContext()) {
+    BrowsingContext* thisTabBC = thisTab->GetBrowsingContext();
+    if (thisTabBC->UseRemoteTabs() != newBC->UseRemoteTabs() ||
+        thisTabBC->UseRemoteSubframes() != newBC->UseRemoteSubframes() ||
+        thisTabBC->UsePrivateBrowsing() != newBC->UsePrivateBrowsing()) {
+      return IPC_FAIL(this, "New BrowsingContext has mismatched LoadContext");
+    }
+  }
+
   BrowserParent::AutoUseNewTab aunt(newTab, &cwi.urlToLoad());
   const uint64_t nextRemoteTabId = ++sNextRemoteTabId;
   sNextBrowserParents.Put(nextRemoteTabId, newTab);
@@ -4861,11 +4904,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
-      aThisTab, /* aSetOpener = */ true, aChromeFlags, aCalledFromJS,
+      aThisTab, aParent.get(), !!newBCOpener, aChromeFlags, aCalledFromJS,
       aWidthSpecified, aURIToLoad, aFeatures, aFullZoom, nextRemoteTabId,
       VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
       aTriggeringPrincipal, aReferrerInfo,
-      /* aLoadUri = */ false, aCsp);
+      /* aLoadUri = */ false, aCsp, aOriginAttributes);
   if (!ipcResult) {
     return ipcResult;
   }
@@ -4895,12 +4938,18 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
-    PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
-    const bool& aCalledFromJS, const bool& aWidthSpecified, nsIURI* aURIToLoad,
-    const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
+    PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
+    const uint32_t& aChromeFlags, const bool& aCalledFromJS,
+    const bool& aWidthSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
+    const float& aFullZoom, const nsString& aName,
     nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsIReferrerInfo* aReferrerInfo) {
+    nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes) {
   MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(aName));
+
+  // Don't continue to try to create a new window if we've been discarded.
+  if (NS_WARN_IF(aParent.IsDiscarded())) {
+    return IPC_OK();
+  }
 
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   bool windowIsNew;
@@ -4933,11 +4982,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
 
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
-      aThisTab, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
-      aWidthSpecified, aURIToLoad, aFeatures, aFullZoom,
+      aThisTab, aParent.get(), /* aSetOpener = */ false, aChromeFlags,
+      aCalledFromJS, aWidthSpecified, aURIToLoad, aFeatures, aFullZoom,
       /* aNextRemoteTabId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerInfo,
-      /* aLoadUri = */ true, aCsp);
+      /* aLoadUri = */ true, aCsp, aOriginAttributes);
   if (!ipcResult) {
     return ipcResult;
   }
