@@ -81,6 +81,7 @@ class UrlbarValueFormatter {
       // scroll to the left.
       urlMetaData = urlMetaData || this._getUrlMetaData();
       if (!urlMetaData) {
+        this.urlbarInput.removeAttribute("domaindir");
         return;
       }
       let { url, preDomain, domain } = urlMetaData;
@@ -89,10 +90,10 @@ class UrlbarValueFormatter {
         directionality == this.window.windowUtils.DIRECTION_RTL &&
         url[preDomain.length + domain.length] != "\u200E"
       ) {
-        this.urlbarInput.setAttribute("hasrtldomain", "true");
+        this.urlbarInput.setAttribute("domaindir", "rtl");
         this.inputField.scrollLeft = this.inputField.scrollLeftMax;
       } else {
-        this.urlbarInput.removeAttribute("hasrtldomain");
+        this.urlbarInput.setAttribute("domaindir", "ltr");
         this.inputField.scrollLeft = 0;
       }
     });
@@ -205,6 +206,7 @@ class UrlbarValueFormatter {
   _formatURL() {
     let urlMetaData = this._getUrlMetaData();
     if (!urlMetaData) {
+      this.urlbarInput.removeAttribute("domaindir");
       return false;
     }
 
