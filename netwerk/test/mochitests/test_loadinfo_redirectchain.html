@@ -46,7 +46,7 @@ function checkLoadInfoWithoutRedirects() {
 
     // try to pop an element from redirectChain
     try {
-      loadInfo.popRedirectedPrincipal(false);
+      loadinfo.popRedirectedPrincipal(false);
       ok(false, "should not be possible to pop from redirectChain");
     }
     catch(e) {
@@ -55,7 +55,7 @@ function checkLoadInfoWithoutRedirects() {
 
     // try to pop an element from redirectChainIncludingInternalRedirects
     try {
-      loadInfo.popRedirectedPrincipal(true);
+      loadinfo.popRedirectedPrincipal(true);
       ok(false, "should not be possible to pop from redirectChainIncludingInternalRedirects");
     }
     catch(e) {

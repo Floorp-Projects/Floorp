@@ -1,3 +1,5 @@
+"use strict";
+
 function do_info(text, stack) {
   if (!stack) {
     stack = Components.stack.caller;

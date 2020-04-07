@@ -10,6 +10,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
+"use strict";
+
 ChromeUtils.defineModuleGetter(
   this,
   "FileUtils",
@@ -202,7 +204,7 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
           if (Components.isSuccessCode(aStatusCode)) {
             resolve();
           } else {
-            reject(new Components.Exception(aResult));
+            reject(new Components.Exception(aStatusCode));
           }
         },
       },
@@ -250,7 +252,7 @@ function promisePumpToSaver(
           if (Components.isSuccessCode(aStatusCode)) {
             resolve();
           } else {
-            reject(new Components.Exception(aResult));
+            reject(new Components.Exception(aStatusCode));
           }
         },
         onDataAvailable: function PPTS_onDataAvailable(
@@ -685,7 +687,7 @@ add_task(async function test_invalid_hash() {
     do_throw("Shouldn't be able to get hash if hashing not enabled");
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-      throw e;
+      throw ex;
     }
   }
   // Enable hashing, but don't feed any data to saver

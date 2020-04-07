@@ -1,5 +1,7 @@
 // This file tests nsIContentSniffer, introduced in bug 324985
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const unknownType = "application/x-unknown-content-type";

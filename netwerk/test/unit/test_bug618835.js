@@ -11,6 +11,8 @@
 // "/redirect" and "/cl" are loaded from server the expected number of times.
 //
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserv;

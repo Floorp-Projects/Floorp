@@ -1,3 +1,7 @@
+/* eslint-env mozilla/frame-script */
+
+"use strict";
+
 let cs = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
 addMessageListener("getCookieCountAndClear", () => {

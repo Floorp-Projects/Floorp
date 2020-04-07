@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   var f = do_get_file("test_bug336501.js");
 

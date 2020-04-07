@@ -3,6 +3,8 @@
 // caching resources with size out of bounds
 //
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 do_get_profile();
@@ -111,14 +113,14 @@ function InitializeCacheDevices(memDevice, diskDevice) {
   this.start = function() {
     prefService.setBoolPref("browser.cache.memory.enable", memDevice);
     if (memDevice) {
-      cap = prefService.getIntPref("browser.cache.memory.capacity", 0);
+      let cap = prefService.getIntPref("browser.cache.memory.capacity", 0);
       if (cap == 0) {
         prefService.setIntPref("browser.cache.memory.capacity", 1024);
       }
     }
     prefService.setBoolPref("browser.cache.disk.enable", diskDevice);
     if (diskDevice) {
-      cap = prefService.getIntPref("browser.cache.disk.capacity", 0);
+      let cap = prefService.getIntPref("browser.cache.disk.capacity", 0);
       if (cap == 0) {
         prefService.setIntPref("browser.cache.disk.capacity", 1024);
       }
@@ -144,22 +146,22 @@ function TestCacheEntrySize(
     secondExpectedReply = repeatToLargerThan1K(secondExpectedReply);
   }
 
-  (this.start = function() {
+  this.start = function() {
     setSizeFunc();
     var channel = setupChannel("/bug650995", firstRequest);
     channel.asyncOpen(new ChannelListener(this.initialLoad, this));
-  }),
-    (this.initialLoad = function(request, data, ctx) {
-      Assert.equal(firstRequest, data);
-      var channel = setupChannel("/bug650995", secondRequest);
-      executeSoon(function() {
-        channel.asyncOpen(new ChannelListener(ctx.testAndTriggerNext, ctx));
-      });
-    }),
-    (this.testAndTriggerNext = function(request, data, ctx) {
-      Assert.equal(secondExpectedReply, data);
-      executeSoon(nextTest);
+  };
+  this.initialLoad = function(request, data, ctx) {
+    Assert.equal(firstRequest, data);
+    var channel = setupChannel("/bug650995", secondRequest);
+    executeSoon(function() {
+      channel.asyncOpen(new ChannelListener(ctx.testAndTriggerNext, ctx));
     });
+  };
+  this.testAndTriggerNext = function(request, data, ctx) {
+    Assert.equal(secondExpectedReply, data);
+    executeSoon(nextTest);
+  };
 }
 
 function run_test() {

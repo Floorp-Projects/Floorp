@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("ServiceWorker", {
   prefs: [
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],

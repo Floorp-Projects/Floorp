@@ -1,3 +1,5 @@
+"use strict";
+
 const ONLY_NONASCII = Ci.nsINetUtil.ESCAPE_URL_ONLY_NONASCII;
 const SKIP_CONTROL = Ci.nsINetUtil.ESCAPE_URL_SKIP_CONTROL;
 

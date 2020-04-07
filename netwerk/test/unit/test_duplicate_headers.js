@@ -5,6 +5,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test infrastructure
+/* global globalThis */
+
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
@@ -14,7 +17,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 
 var httpserver = new HttpServer();
 var index = 0;
-var test_flags = new Array();
+var test_flags = [];
 var testPathBase = "/dupe_hdrs";
 
 function run_test() {
@@ -25,13 +28,13 @@ function run_test() {
 }
 
 function run_test_number(num) {
-  testPath = testPathBase + num;
-  httpserver.registerPathHandler(testPath, this["handler" + num]);
+  let testPath = testPathBase + num;
+  httpserver.registerPathHandler(testPath, globalThis["handler" + num]);
 
   var channel = setupChannel(testPath);
-  flags = test_flags[num]; // OK if flags undefined for test
+  let flags = test_flags[num]; // OK if flags undefined for test
   channel.asyncOpen(
-    new ChannelListener(this["completeTest" + num], channel, flags)
+    new ChannelListener(globalThis["completeTest" + num], channel, flags)
   );
 }
 
@@ -161,7 +164,7 @@ function handler5(metadata, response) {
 
 function completeTest5(request, data, ctx) {
   try {
-    referer = request.getResponseHeader("Referer");
+    let referer = request.getResponseHeader("Referer");
     Assert.equal(referer, "naive.org");
   } catch (ex) {
     do_throw("Referer header should be present");
@@ -219,7 +222,7 @@ function completeTest7(request, data, ctx) {
   request.QueryInterface(Ci.nsIHttpChannel);
 
   try {
-    referer = request.getResponseHeader("Referer");
+    let referer = request.getResponseHeader("Referer");
     Assert.equal(referer, "naive.org");
   } catch (ex) {
     do_throw("Referer header should be present");
@@ -434,7 +437,7 @@ function completeTest15(request, data, ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 // empty content length is ok
 test_flags[16] = CL_ALLOW_UNKNOWN_CL;
-reran16 = false;
+let reran16 = false;
 
 function handler16(metadata, response) {
   var body = "012345678901234567890123456789";

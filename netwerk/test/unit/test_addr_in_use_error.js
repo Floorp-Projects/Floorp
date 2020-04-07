@@ -2,6 +2,8 @@
 // socket should elicit NS_ERROR_SOCKET_ADDRESS_IN_USE on non-Windows
 // machines.
 
+"use strict";
+
 var CC = Components.Constructor;
 
 const ServerSocket = CC(

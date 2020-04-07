@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("DOM Cache", {
   cookieJarAccessAllowed: async w => {
     await w.caches.open("wow").then(

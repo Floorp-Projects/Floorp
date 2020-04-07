@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+"use strict";
+
 function makeChan(uri, isPrivate) {
   var chan = NetUtil.newChannel({
     uri: uri.spec,

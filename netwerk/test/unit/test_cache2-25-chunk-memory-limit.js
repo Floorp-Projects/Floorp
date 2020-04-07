@@ -1,3 +1,5 @@
+"use strict";
+
 function gen_200k() {
   var i;
   var data = "0123456789ABCDEFGHIJLKMNO";

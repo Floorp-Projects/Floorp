@@ -1,5 +1,7 @@
 /* check resource: protocol for traversal problems */
 
+"use strict";
+
 const specs = [
   "resource:///chrome/../plugins",
   "resource:///chrome%2f../plugins",

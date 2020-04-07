@@ -1,4 +1,9 @@
-var callbacks = new Array();
+/* import-globals-from head_cache.js */
+/* import-globals-from head_channels.js */
+
+"use strict";
+
+var callbacks = [];
 
 // Expect an existing entry
 const NORMAL = 0;

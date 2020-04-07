@@ -3,6 +3,8 @@
  * should be able to accept form POST.
  */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 const SCHEME = "x-bug1241377";

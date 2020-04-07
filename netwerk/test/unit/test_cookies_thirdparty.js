@@ -5,6 +5,8 @@
 // 1) with null channel
 // 2) with channel, but with no docshell parent
 
+"use strict";
+
 function run_test() {
   Services.prefs.setBoolPref(
     "network.cookieJarSettings.unblocked_for_testing",

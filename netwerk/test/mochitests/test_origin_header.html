@@ -231,7 +231,7 @@ function loadDataURIFrame(test, check)
 async function resetFrames()
 {
     let checkPromises = [];
-    for (check of checksToRun) {
+    for (let check of checksToRun) {
         checkPromises.push(new Promise((resolve, reject) => {
             let frame = document.getElementById(check.frameID);
             frame.onload = () => resolve();
@@ -247,12 +247,12 @@ async function resetFrames()
 
 async function runTests()
 {
-    for (test of testsToRun) {
+    for (let test of testsToRun) {
         await resetFrames();
         await SpecialPowers.pushPrefEnv({"set": test.prefs});
 
         let checkPromises = [];
-        for (check of checksToRun) {
+        for (let check of checksToRun) {
             if (check.formID) {
                 checkPromises.push(submitForm(test, check));
             } else if (check.frameSrc) {

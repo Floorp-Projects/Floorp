@@ -7,6 +7,8 @@
  *  are stored in separate namespaces ("cookie jars")
  */
 
+"use strict";
+
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
@@ -98,7 +100,7 @@ function completeCheckCookie(request, data, context) {
   var j;
   for (j = 0; j < tests.length; j++) {
     var cookieToCheck = tests[j].cookieName;
-    found = cookiesSeen.includes(cookieToCheck);
+    let found = cookiesSeen.includes(cookieToCheck);
     if (found && expectedCookie != cookieToCheck) {
       do_throw(
         "test index " +

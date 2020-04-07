@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("SessionStorage", {
   cookieJarAccessAllowed: async w => {
     try {

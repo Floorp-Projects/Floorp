@@ -9,6 +9,8 @@
  * 3. checks presence of index.sql and files in the expected location
  */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpServer = null;

@@ -1,3 +1,5 @@
+"use strict";
+
 const SAMESITE_DOMAIN = "http://example.com/";
 const SAMESITE_PATH = "browser/netwerk/cookie/test/browser/";
 const SAMESITE_TOP_PAGE = SAMESITE_DOMAIN + SAMESITE_PATH + "sameSite.sjs";

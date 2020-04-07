@@ -2,6 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* import-globals-from head_cache.js */
+
+"use strict";
+
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(

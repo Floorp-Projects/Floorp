@@ -1,3 +1,5 @@
+"use strict";
+
 const OVERSIZE_DOMAIN = "http://example.com/";
 const OVERSIZE_PATH = "browser/netwerk/cookie/test/browser/";
 const OVERSIZE_TOP_PAGE = OVERSIZE_DOMAIN + OVERSIZE_PATH + "oversize.sjs";

@@ -1,3 +1,5 @@
+"use strict";
+
 const URL = "ftp://localhost/bug543805/";
 
 var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

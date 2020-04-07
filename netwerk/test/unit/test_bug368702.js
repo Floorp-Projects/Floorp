@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   var tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
     Ci.nsIEffectiveTLDService

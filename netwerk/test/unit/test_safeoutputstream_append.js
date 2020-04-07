@@ -1,5 +1,6 @@
 /* atomic-file-output-stream and safe-file-output-stream should throw and
  * exception if PR_APPEND is explicity specified without PR_TRUNCATE. */
+"use strict";
 
 const PR_WRONLY = 0x02;
 const PR_CREATE_FILE = 0x08;

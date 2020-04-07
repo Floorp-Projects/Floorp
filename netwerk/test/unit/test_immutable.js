@@ -1,3 +1,5 @@
+"use strict";
+
 var prefs;
 var spdypref;
 var http2pref;

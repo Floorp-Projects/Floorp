@@ -5,6 +5,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Test infrastructure
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -13,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 
 var httpserver = new HttpServer();
 var index = 0;
-var test_flags = new Array();
+var test_flags = [];
 var testPathBase = "/cl_hdrs";
 
 var prefs;
@@ -43,18 +45,18 @@ function run_test() {
 }
 
 function run_test_number(num) {
-  testPath = testPathBase + num;
+  let testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
-  flags = test_flags[num]; // OK if flags undefined for test
+  let flags = test_flags[num]; // OK if flags undefined for test
   channel.asyncOpen(
     new ChannelListener(eval("completeTest" + num), channel, flags)
   );
 }
 
 function run_gzip_test(num) {
-  testPath = testPathBase + num;
+  let testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);

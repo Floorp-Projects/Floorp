@@ -2,6 +2,7 @@
 Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/
 */
+"use strict";
 
 // This must be loaded in the remote process for this test to be useful
 const TEST_URL = "http://example.com/browser/netwerk/test/browser/dummy.html";

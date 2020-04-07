@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // We need the profile directory so the test harness will clean up our test
 // files.
 do_get_profile();
@@ -103,7 +105,7 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen) {
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
       Ci.nsIFileInputStream
     );
-    fstream.init(aFile, -1, 0, 0);
+    fstream.init(file, -1, 0, 0);
     getOk = true;
   } catch (e) {
     getOk = false;

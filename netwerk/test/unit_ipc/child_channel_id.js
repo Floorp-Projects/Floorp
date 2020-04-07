@@ -1,6 +1,7 @@
 /**
  * Send HTTP requests and notify the parent about their channelId
  */
+/* global NetUtil, ChannelListener */
 
 let shouldQuit = false;
 

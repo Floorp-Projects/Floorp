@@ -2,6 +2,8 @@
  * Test for Bidi restrictions on IDNs from RFC 3454
  */
 
+"use strict";
+
 var idnService;
 
 function expected_pass(inputIDN) {
@@ -43,7 +45,7 @@ function run_test() {
   // 0341; COMBINING ACUTE TONE MARK
   expected_fail("foo\u0341bar.com");
   // 200E; LEFT-TO-RIGHT MARK
-  expected_fail("foo\200ebar.com");
+  expected_fail("foo\u200ebar.com");
   // 200F; RIGHT-TO-LEFT MARK
   //  Note: this is an RTL IDN so that it doesn't fail test 2) below
   expected_fail(

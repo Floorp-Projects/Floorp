@@ -1,4 +1,7 @@
 // Test algorithm for unicode display of IDNA URL (bug 722299)
+
+"use strict";
+
 const testcases = [
   //  Original             Punycode or         Expected UTF-8 by profile
   //    URL              normalized form      ASCII-Only, High, Moderate

@@ -58,7 +58,7 @@ async function TestProxyType(chan, flags) {
     Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM
   );
 
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     gProxyService.asyncResolve(chan, flags, {
       onProxyAvailable(req, uri, pi, status) {
         resolve(pi);
@@ -68,7 +68,7 @@ async function TestProxyType(chan, flags) {
 }
 
 async function TestProxyTypeByURI(uri) {
-  return await TestProxyType(makeChannel(uri), 0);
+  return TestProxyType(makeChannel(uri), 0);
 }
 
 add_task(async function testHttpProxy() {

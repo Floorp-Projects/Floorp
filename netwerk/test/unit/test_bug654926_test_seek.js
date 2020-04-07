@@ -1,3 +1,5 @@
+"use strict";
+
 function gen_1MiB() {
   var i;
   var data = "x";

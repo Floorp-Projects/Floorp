@@ -1,4 +1,7 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* global _XPCSHELL_PROCESS */
+
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { PermissionTestUtils } = ChromeUtils.import(
@@ -89,7 +92,7 @@ function init_http_server() {
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/app.appcache", manifest_handler);
   httpServer.registerPathHandler("/app", app_handler);
-  for (i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 4; i++) {
     httpServer.registerPathHandler("/pages/foo" + i, datafile_handler);
   }
   httpServer.start(4444);

@@ -1,3 +1,5 @@
+"use strict";
+
 const testURLs = [
   ["http://example.com/<", "http://example.com/%3C"],
   ["http://example.com/>", "http://example.com/%3E"],

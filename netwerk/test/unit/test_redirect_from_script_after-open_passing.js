@@ -22,14 +22,13 @@
  * header.
  *
  */
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
-
 // the topic we observe to use the API.  http-on-opening-request might also
 // work for some purposes.
-redirectHook = "http-on-examine-response";
+let redirectHook = "http-on-examine-response";
 
 var httpServer = null,
   httpServer2 = null;

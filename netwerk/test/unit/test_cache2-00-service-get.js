@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   // Just check the contract ID alias works well.
   try {
