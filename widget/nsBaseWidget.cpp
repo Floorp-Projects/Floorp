@@ -642,9 +642,11 @@ void nsBaseWidget::SetSizeMode(nsSizeMode aMode) {
   mSizeMode = aMode;
 }
 
-int32_t nsBaseWidget::GetWorkspaceID() { return 0; }
+void nsBaseWidget::GetWorkspaceID(nsAString& workspaceID) {
+  workspaceID.Truncate();
+}
 
-void nsBaseWidget::MoveToWorkspace(int32_t workspaceID) {
+void nsBaseWidget::MoveToWorkspace(const nsAString& workspaceID) {
   // Noop.
 }
 
