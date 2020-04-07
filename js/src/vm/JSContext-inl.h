@@ -203,18 +203,17 @@ class ContextChecks {
 
 }  // namespace js
 
-template <class Head, class... Tail>
-inline void JSContext::checkImpl(int argIndex, const Head& head,
-                                 const Tail&... tail) {
-  js::ContextChecks(this).check(head, argIndex);
-  checkImpl(argIndex + 1, tail...);
+template <class... Args>
+inline void JSContext::checkImpl(const Args&... args) {
+  int argIndex = 0;
+  (..., js::ContextChecks(this).check(args, argIndex++));
 }
 
 template <class... Args>
 inline void JSContext::check(const Args&... args) {
 #ifdef JS_CRASH_DIAGNOSTICS
   if (contextChecksEnabled()) {
-    checkImpl(0, args...);
+    checkImpl(args...);
   }
 #endif
 }
@@ -222,7 +221,7 @@ inline void JSContext::check(const Args&... args) {
 template <class... Args>
 inline void JSContext::releaseCheck(const Args&... args) {
   if (contextChecksEnabled()) {
-    checkImpl(0, args...);
+    checkImpl(args...);
   }
 }
 
@@ -230,7 +229,7 @@ template <class... Args>
 MOZ_ALWAYS_INLINE void JSContext::debugOnlyCheck(const Args&... args) {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
   if (contextChecksEnabled()) {
-    checkImpl(0, args...);
+    checkImpl(args...);
   }
 #endif
 }
