@@ -57,6 +57,7 @@ class VRDisplayClient {
 
   bool IsPresenting();
   bool IsReferenceSpaceTypeSupported(dom::XRReferenceSpaceType aType) const;
+  gfx::VRAPIMode GetXRAPIMode() const;
   void SetXRAPIMode(gfx::VRAPIMode aMode);
 
  protected:

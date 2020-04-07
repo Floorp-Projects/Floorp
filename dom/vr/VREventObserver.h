@@ -42,6 +42,8 @@ class VREventObserver final : public gfx::VRManagerEventObserver {
  private:
   ~VREventObserver();
 
+  bool IsWebVR(uint32_t aDisplayID) const;
+
   RefPtr<nsGlobalWindowInner> mWindow;
   // For WebVR telemetry for tracking users who view content
   // in the 2D view.
