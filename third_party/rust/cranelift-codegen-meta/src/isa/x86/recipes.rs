@@ -335,6 +335,7 @@ impl<'builder> Template<'builder> {
                 ("Rex".to_string() + opcode, self.op_bytes.len() as u64 + 1)
             }
             RecipePrefixKind::InferRex => {
+                assert_eq!(self.w_bit, 0, "A REX.W bit always requires a REX prefix; avoid using `infer_rex().w()` and use `rex().w()` instead.");
                 // Hook up the right function for inferred compute_size().
                 assert!(
                     self.inferred_rex_compute_size.is_some(),
@@ -1008,7 +1009,7 @@ pub(crate) fn define<'shared>(
                 ))
                 .emit(
                     r#"
-                    {{PUT_OP}}(bits, rex2(in_reg0, out_reg0), sink);
+                    {{PUT_OP}}(bits, rex2(out_reg0, in_reg0), sink);
                     modrm_rr(out_reg0, in_reg0, sink); // note the flipped register in the ModR/M byte
                     let imm:i64 = lane.into();
                     sink.put1(imm as u8);
@@ -1257,7 +1258,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs4,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         0);
                     sink.put4(0);
@@ -1272,7 +1274,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs8,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs8,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         0);
                     sink.put8(0);
@@ -1287,7 +1290,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs4,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         0);
                     // Write the immediate as `!0` for the benefit of BaldrMonkey.
@@ -1303,7 +1307,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs8,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs8,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         0);
                     // Write the immediate as `!0` for the benefit of BaldrMonkey.
@@ -1323,7 +1328,8 @@ pub(crate) fn define<'shared>(
                     modrm_riprel(out_reg0, sink);
                     // The addend adjusts for the difference between the end of the
                     // instruction and the beginning of the immediate field.
-                    sink.reloc_external(Reloc::X86PCRel4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::X86PCRel4,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         -4);
                     sink.put4(0);
@@ -1342,7 +1348,8 @@ pub(crate) fn define<'shared>(
                     modrm_riprel(out_reg0, sink);
                     // The addend adjusts for the difference between the end of the
                     // instruction and the beginning of the immediate field.
-                    sink.reloc_external(Reloc::X86GOTPCRel4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::X86GOTPCRel4,
                                         &func.dfg.ext_funcs[func_ref].name,
                                         -4);
                     sink.put4(0);
@@ -1357,7 +1364,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs4,
                                         &func.global_values[global_value].symbol_name(),
                                         0);
                     sink.put4(0);
@@ -1372,7 +1380,8 @@ pub(crate) fn define<'shared>(
             .emit(
                 r#"
                     {{PUT_OP}}(bits | (out_reg0 & 7), rex1(out_reg0), sink);
-                    sink.reloc_external(Reloc::Abs8,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::Abs8,
                                         &func.global_values[global_value].symbol_name(),
                                         0);
                     sink.put8(0);
@@ -1390,7 +1399,8 @@ pub(crate) fn define<'shared>(
                     modrm_rm(5, out_reg0, sink);
                     // The addend adjusts for the difference between the end of the
                     // instruction and the beginning of the immediate field.
-                    sink.reloc_external(Reloc::X86PCRel4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::X86PCRel4,
                                         &func.global_values[global_value].symbol_name(),
                                         -4);
                     sink.put4(0);
@@ -1408,7 +1418,8 @@ pub(crate) fn define<'shared>(
                     modrm_rm(5, out_reg0, sink);
                     // The addend adjusts for the difference between the end of the
                     // instruction and the beginning of the immediate field.
-                    sink.reloc_external(Reloc::X86GOTPCRel4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::X86GOTPCRel4,
                                         &func.global_values[global_value].symbol_name(),
                                         -4);
                     sink.put4(0);
@@ -1604,7 +1615,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r register-indirect store with 8-bit offset of FPR.
-        recipes.add_template_recipe(
+        recipes.add_template_inferred(
             EncodingRecipeBuilder::new("fstDisp8", &formats.store, 2)
                 .operands_in(vec![fpr, gpr])
                 .inst_predicate(has_small_offset)
@@ -1626,6 +1637,7 @@ pub(crate) fn define<'shared>(
                         sink.put1(offset as u8);
                     "#,
                 ),
+            "size_plus_maybe_sib_inreg1_plus_rex_prefix_for_inreg0_inreg1",
         );
 
         // XX /r register-indirect store with 32-bit offset.
@@ -1682,7 +1694,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r register-indirect store with 32-bit offset of FPR.
-        recipes.add_template_recipe(
+        recipes.add_template_inferred(
             EncodingRecipeBuilder::new("fstDisp32", &formats.store, 5)
                 .operands_in(vec![fpr, gpr])
                 .clobbers_flags(false)
@@ -1703,6 +1715,7 @@ pub(crate) fn define<'shared>(
                         sink.put4(offset as u32);
                     "#,
                 ),
+            "size_plus_maybe_sib_inreg1_plus_rex_prefix_for_inreg0_inreg1",
         );
     }
 
@@ -2087,7 +2100,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r float load with 8-bit offset.
-        recipes.add_template_recipe(
+        recipes.add_template_inferred(
             EncodingRecipeBuilder::new("fldDisp8", &formats.load, 2)
                 .operands_in(vec![gpr])
                 .operands_out(vec![fpr])
@@ -2110,6 +2123,7 @@ pub(crate) fn define<'shared>(
                         sink.put1(offset as u8);
                     "#,
                 ),
+            "size_plus_maybe_sib_for_inreg_0_plus_rex_prefix_for_inreg0_outreg0",
         );
 
         let has_big_offset =
@@ -2142,7 +2156,7 @@ pub(crate) fn define<'shared>(
         );
 
         // XX /r float load with 32-bit offset.
-        recipes.add_template_recipe(
+        recipes.add_template_inferred(
             EncodingRecipeBuilder::new("fldDisp32", &formats.load, 5)
                 .operands_in(vec![gpr])
                 .operands_out(vec![fpr])
@@ -2165,6 +2179,7 @@ pub(crate) fn define<'shared>(
                         sink.put4(offset as u32);
                     "#,
                 ),
+            "size_plus_maybe_sib_for_inreg_0_plus_rex_prefix_for_inreg0_outreg0",
         );
     }
 
@@ -2397,10 +2412,12 @@ pub(crate) fn define<'shared>(
             {{PUT_OP}}(bits, BASE_REX, sink);
             // The addend adjusts for the difference between the end of the
             // instruction and the beginning of the immediate field.
-            sink.reloc_external(Reloc::X86CallPCRel4,
+            sink.reloc_external(func.srclocs[inst],
+                                Reloc::X86CallPCRel4,
                                 &func.dfg.ext_funcs[func_ref].name,
                                 -4);
             sink.put4(0);
+            sink.add_call_site(opcode, func.srclocs[inst]);
         "#,
         ),
     );
@@ -2410,10 +2427,12 @@ pub(crate) fn define<'shared>(
             r#"
             sink.trap(TrapCode::StackOverflow, func.srclocs[inst]);
             {{PUT_OP}}(bits, BASE_REX, sink);
-            sink.reloc_external(Reloc::X86CallPLTRel4,
+            sink.reloc_external(func.srclocs[inst],
+                                Reloc::X86CallPLTRel4,
                                 &func.dfg.ext_funcs[func_ref].name,
                                 -4);
             sink.put4(0);
+            sink.add_call_site(opcode, func.srclocs[inst]);
         "#,
         ),
     );
@@ -2426,6 +2445,7 @@ pub(crate) fn define<'shared>(
                     sink.trap(TrapCode::StackOverflow, func.srclocs[inst]);
                     {{PUT_OP}}(bits, rex1(in_reg0), sink);
                     modrm_r_bits(in_reg0, bits, sink);
+                    sink.add_call_site(opcode, func.srclocs[inst]);
                 "#,
             ),
     );
@@ -3315,7 +3335,8 @@ pub(crate) fn define<'shared>(
                     const LEA: u8 = 0x8d;
                     sink.put1(LEA); // lea
                     modrm_riprel(0b111/*out_reg0*/, sink); // 0x3d
-                    sink.reloc_external(Reloc::ElfX86_64TlsGd,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::ElfX86_64TlsGd,
                                         &func.global_values[global_value].symbol_name(),
                                         -4);
                     sink.put4(0);
@@ -3325,7 +3346,8 @@ pub(crate) fn define<'shared>(
                     sink.put1(0x66); // data16
                     sink.put1(0b01001000); // rex.w
                     sink.put1(0xe8); // call
-                    sink.reloc_external(Reloc::X86CallPLTRel4,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::X86CallPLTRel4,
                                         &ExternalName::LibCall(LibCall::ElfTlsGetAddr),
                                         -4);
                     sink.put4(0);
@@ -3346,7 +3368,8 @@ pub(crate) fn define<'shared>(
                     sink.put1(0x48); // rex
                     sink.put1(0x8b); // mov
                     modrm_riprel(0b111/*out_reg0*/, sink); // 0x3d
-                    sink.reloc_external(Reloc::MachOX86_64Tlv,
+                    sink.reloc_external(func.srclocs[inst],
+                                        Reloc::MachOX86_64Tlv,
                                         &func.global_values[global_value].symbol_name(),
                                         -4);
                     sink.put4(0);
