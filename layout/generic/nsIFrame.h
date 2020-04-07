@@ -4757,13 +4757,15 @@ class nsIFrame : public nsQueryFrame {
   virtual void ListWithMatchedRules(FILE* out = stderr,
                                     const char* aPrefix = "") const;
   void ListMatchedRules(FILE* out, const char* aPrefix) const;
+
   /**
-   * lists the frames beginning from the root frame
-   * - calls root frame's List(...)
+   * Dump the frame tree beginning from the root frame.
    */
-  static void RootFrameList(nsPresContext* aPresContext, FILE* out = stderr,
-                            const char* aPrefix = "");
-  virtual void DumpFrameTree() const;
+  void DumpFrameTree() const;
+
+  /**
+   * Dump the frame tree beginning from ourselves.
+   */
   void DumpFrameTreeLimited() const;
 
   virtual nsresult GetFrameName(nsAString& aResult) const = 0;
