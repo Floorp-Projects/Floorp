@@ -4594,25 +4594,6 @@ class nsIFrame : public nsQueryFrame {
   static_assert(sizeof(PeekOffsetCharacterOptions) <= sizeof(intptr_t),
                 "aOptions should be changed to const reference");
 
-  /**
-   * Search the frame for the next word boundary
-   * @param  aForward [in] Are we moving forward (or backward) in content order.
-   * @param  aWordSelectEatSpace [in] true: look for non-whitespace following
-   *         whitespace (in the direction of movement).
-   *         false: look for whitespace following non-whitespace (in the
-   *         direction  of movement).
-   * @param  aIsKeyboardSelect [in] Was the action initiated by a keyboard
-   * operation? If true, punctuation immediately following a word is considered
-   * part of that word. Otherwise, a sequence of punctuation is always
-   * considered as a word on its own.
-   * @param  aOffset [in/out] At what offset into the frame to start looking.
-   *         on output - what offset was reached (whether or not we found a
-   * place to stop).
-   * @param  aState [in/out] the state that is carried from frame to frame
-   * @return true: An appropriate offset was found within this frame,
-   *         and is given by aOffset.
-   *         false: Not found within this frame, need to try the next frame.
-   */
   struct PeekWordState {
     // true when we're still at the start of the search, i.e., we can't return
     // this point as a valid offset!
@@ -4650,6 +4631,23 @@ class nsIFrame : public nsQueryFrame {
       mAtStart = false;
     }
   };
+
+  /**
+   * Search the frame for the next word boundary
+   * @param  aForward [in] Are we moving forward (or backward) in content order.
+   * @param  aWordSelectEatSpace [in] true: look for non-whitespace following
+   *         whitespace (in the direction of movement).
+   *         false: look for whitespace following non-whitespace (in the
+   *         direction  of movement).
+   * @param  aIsKeyboardSelect [in] Was the action initiated by a keyboard
+   * operation? If true, punctuation immediately following a word is considered
+   * part of that word. Otherwise, a sequence of punctuation is always
+   * considered as a word on its own.
+   * @param  aOffset [in/out] At what offset into the frame to start looking.
+   *         on output - what offset was reached (whether or not we found a
+   * place to stop).
+   * @param  aState [in/out] the state that is carried from frame to frame
+   */
   virtual FrameSearchResult PeekOffsetWord(
       bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
       int32_t* aOffset, PeekWordState* aState, bool aTrimSpaces) = 0;
