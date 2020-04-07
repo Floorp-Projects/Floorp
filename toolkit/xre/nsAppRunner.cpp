@@ -702,6 +702,39 @@ nsXULAppInfo::GetRemoteType(nsAString& aRemoteType) {
   return NS_OK;
 }
 
+static nsCString gLastAppVersion;
+static nsCString gLastAppBuildID;
+
+NS_IMETHODIMP
+nsXULAppInfo::GetLastAppVersion(nsACString& aResult) {
+  if (XRE_IsContentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!gLastAppVersion.IsVoid() && gLastAppVersion.IsEmpty()) {
+    NS_WARNING("Attempt to retrieve lastAppVersion before it has been set.");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aResult.Assign(gLastAppVersion);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetLastAppBuildID(nsACString& aResult) {
+  if (XRE_IsContentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!gLastAppBuildID.IsVoid() && gLastAppBuildID.IsEmpty()) {
+    NS_WARNING("Attempt to retrieve lastAppBuildID before it has been set.");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aResult.Assign(gLastAppBuildID);
+  return NS_OK;
+}
+
 static bool gBrowserTabsRemoteAutostart = false;
 static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
@@ -2464,6 +2497,9 @@ int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
                               const nsACString& aNewCompatVersion) {
   // Quick path for the common case.
   if (aOldCompatVersion.Equals(aNewCompatVersion)) {
+    gLastAppVersion.Assign(gAppData->version);
+    gLastAppBuildID.Assign(gAppData->buildID);
+
     return 0;
   }
 
@@ -2474,13 +2510,14 @@ int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
   // cannot tell if this is a downgrade or not so just assume it isn't and let
   // the user proceed.
   if (aOldCompatVersion.EqualsLiteral("Safe Mode")) {
+    gLastAppVersion.SetIsVoid(true);
+    gLastAppBuildID.SetIsVoid(true);
+
     return -1;
   }
 
-  nsCString oldVersion;
-  nsCString oldAppBuildID;
   nsCString oldPlatformBuildID;
-  ExtractCompatVersionInfo(aOldCompatVersion, oldVersion, oldAppBuildID,
+  ExtractCompatVersionInfo(aOldCompatVersion, gLastAppVersion, gLastAppBuildID,
                            oldPlatformBuildID);
 
   nsCString newVersion;
@@ -2490,13 +2527,13 @@ int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
                            newPlatformBuildID);
 
   // In most cases the app version will differ and this is an easy check.
-  int32_t result = CompareVersions(oldVersion.get(), newVersion.get());
+  int32_t result = CompareVersions(gLastAppVersion.get(), newVersion.get());
   if (result != 0) {
     return result;
   }
 
   // Fall back to build ID comparison.
-  result = CompareBuildIDs(oldAppBuildID, newAppBuildID);
+  result = CompareBuildIDs(gLastAppBuildID, newAppBuildID);
   if (result != 0) {
     return result;
   }
@@ -2520,6 +2557,8 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                                nsCString& aLastVersion) {
   *aCachesOK = false;
   *aIsDowngrade = false;
+  gLastAppVersion.SetIsVoid(true);
+  gLastAppBuildID.SetIsVoid(true);
 
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -4785,6 +4824,9 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // has gone out of scope.  see bug #386739 for more details
   mProfileLock->Unlock();
   gProfileLock = nullptr;
+
+  gLastAppVersion.Truncate();
+  gLastAppBuildID.Truncate();
 
   mozilla::AppShutdown::MaybeDoRestart();
 
