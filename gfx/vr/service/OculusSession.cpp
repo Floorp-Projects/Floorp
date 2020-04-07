@@ -1265,6 +1265,8 @@ void OculusSession::UpdateControllerPose(VRSystemState& aState,
             dom::GamepadCapabilityFlags::Cap_AngularAcceleration;
         controllerState.flags |=
             dom::GamepadCapabilityFlags::Cap_LinearAcceleration;
+        controllerState.flags |=
+            dom::GamepadCapabilityFlags::Cap_TargetRaySpacePosition;
       }
 
       if (bNewController || trackingState.HandStatusFlags[handIdx] &
@@ -1318,12 +1320,13 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
     VRControllerState& controllerState = aState.controllerState[handIdx];
     if (aInputState.ControllerType & OculusControllerTypes[handIdx]) {
       bool bNewController = false;
-      // Left Touch Controller detected
+      // Touch Controller detected
       if (controllerState.controllerName[0] == '\0') {
         // Controller has been just enumerated
         strncpy(controllerState.controllerName, OculusControllerNames[handIdx],
                 kVRControllerNameMaxLen);
         controllerState.hand = OculusControllerHand[handIdx];
+        controllerState.targetRayMode = gfx::TargetRayMode::TrackedPointer;
         controllerState.numButtons = kNumOculusButtons;
         controllerState.numAxes = kNumOculusAxes;
         controllerState.numHaptics = kNumOculusHaptcs;
@@ -1331,7 +1334,7 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
         bNewController = true;
       }
     } else {
-      // Left Touch Controller not detected
+      // Touch Controller not detected
       if (controllerState.controllerName[0] != '\0') {
         // Clear any newly disconnected ontrollers
         memset(&controllerState, 0, sizeof(VRControllerState));
