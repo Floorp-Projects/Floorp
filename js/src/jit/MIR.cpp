@@ -2789,7 +2789,6 @@ MBinaryArithInstruction* MBinaryArithInstruction::New(TempAllocator& alloc,
                                                       MDefinition* left,
                                                       MDefinition* right,
                                                       MIRType specialization) {
-  MOZ_ASSERT(IsNumberType(specialization));
   switch (op) {
     case Opcode::Add:
       return MAdd::New(alloc, left, right, specialization);
