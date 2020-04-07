@@ -2,9 +2,10 @@
 
 import re
 import linecache
+from builtins import SyntaxError as BaseSyntaxError
 
 
-class SyntaxError(__builtins__['SyntaxError']):
+class SyntaxError(BaseSyntaxError):
     pass
 
 

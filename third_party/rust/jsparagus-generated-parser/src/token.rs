@@ -1,5 +1,6 @@
 use crate::parser_tables_generated::TerminalId;
 use ast::source_atom_set::SourceAtomSetIndex;
+use ast::source_slice_list::SourceSliceIndex;
 use ast::SourceLocation;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -7,6 +8,7 @@ pub enum TokenValue {
     None,
     Number(f64),
     Atom(SourceAtomSetIndex),
+    Slice(SourceSliceIndex),
 }
 
 impl TokenValue {
@@ -20,6 +22,13 @@ impl TokenValue {
     pub fn as_atom(&self) -> SourceAtomSetIndex {
         match self {
             Self::Atom(index) => *index,
+            _ => panic!("expected atom"),
+        }
+    }
+
+    pub fn as_slice(&self) -> SourceSliceIndex {
+        match self {
+            Self::Slice(index) => *index,
             _ => panic!("expected atom"),
         }
     }

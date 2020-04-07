@@ -1,12 +1,11 @@
 #!/usr/bin/python
 import json
 import os.path
-import datetime
 
 filename = 'count/not-implemented.json'
 if not os.path.isfile(filename):
     with open(filename, 'w') as f:
-        json.dump([], f, indent=4) # initialize with an empty list
+        json.dump([], f, indent=4)  # initialize with an empty list
 
 with open(filename, 'r+') as f:
     data = json.load(f)

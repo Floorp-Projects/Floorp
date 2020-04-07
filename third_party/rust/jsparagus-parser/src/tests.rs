@@ -4,6 +4,7 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::{parse_script, ParseOptions};
 use ast::source_atom_set::SourceAtomSet;
+use ast::source_slice_list::SourceSliceList;
 use ast::{arena, source_location::SourceLocation, types::*};
 use bumpalo::{self, Bump};
 use generated_parser::{self, AstBuilder, ParseError, Result, TerminalId};
@@ -70,7 +71,8 @@ where
     let buf = arena::alloc_str(allocator, &chunks_to_string(code));
     let options = ParseOptions::new();
     let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
-    parse_script(allocator, &buf, &options, atoms.clone())
+    let slices = Rc::new(RefCell::new(SourceSliceList::new()));
+    parse_script(allocator, &buf, &options, atoms, slices)
 }
 
 fn assert_parses<'alloc, T: IntoChunks<'alloc>>(code: T) {
@@ -132,19 +134,38 @@ fn assert_incomplete<'alloc, T: IntoChunks<'alloc>>(code: T) {
 // same sequence of tokens (although possibly at different offsets).
 fn assert_same_tokens<'alloc>(left: &str, right: &str) {
     let allocator = &Bump::new();
-    let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
-    let mut left_lexer = Lexer::new(allocator, left.chars(), atoms.clone());
-    let mut right_lexer = Lexer::new(allocator, right.chars(), atoms.clone());
+    let left_atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    let left_slices = Rc::new(RefCell::new(SourceSliceList::new()));
+    let right_atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+    let right_slices = Rc::new(RefCell::new(SourceSliceList::new()));
+    let mut left_lexer = Lexer::new(
+        allocator,
+        left.chars(),
+        left_atoms.clone(),
+        left_slices.clone(),
+    );
+    let mut right_lexer = Lexer::new(
+        allocator,
+        right.chars(),
+        right_atoms.clone(),
+        right_slices.clone(),
+    );
 
-    let mut parser = Parser::new(
-        AstBuilder::new(allocator, atoms.clone()),
+    let mut left_parser = Parser::new(
+        AstBuilder::new(allocator, left_atoms, left_slices),
+        generated_parser::START_STATE_MODULE,
+    );
+    let mut right_parser = Parser::new(
+        AstBuilder::new(allocator, right_atoms, right_slices),
         generated_parser::START_STATE_MODULE,
     );
 
     loop {
-        let left_token = left_lexer.next(&parser).expect("error parsing left string");
+        let left_token = left_lexer
+            .next(&left_parser)
+            .expect("error parsing left string");
         let right_token = right_lexer
-            .next(&parser)
+            .next(&right_parser)
             .expect("error parsing right string");
         assert_eq!(
             left_token.terminal_id, right_token.terminal_id,
@@ -160,18 +181,21 @@ fn assert_same_tokens<'alloc>(left: &str, right: &str) {
         if left_token.terminal_id == TerminalId::End {
             break;
         }
-        parser.write_token(&left_token).unwrap();
+        left_parser.write_token(&left_token).unwrap();
+        right_parser.write_token(&right_token).unwrap();
     }
-    parser.close(left_lexer.offset()).unwrap();
+    left_parser.close(left_lexer.offset()).unwrap();
+    right_parser.close(left_lexer.offset()).unwrap();
 }
 
 fn assert_can_close_after<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
     let buf = chunks_to_string(code);
     let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
-    let mut lexer = Lexer::new(allocator, buf.chars(), atoms.clone());
+    let slices = Rc::new(RefCell::new(SourceSliceList::new()));
+    let mut lexer = Lexer::new(allocator, buf.chars(), atoms.clone(), slices.clone());
     let mut parser = Parser::new(
-        AstBuilder::new(allocator, atoms.clone()),
+        AstBuilder::new(allocator, atoms, slices),
         generated_parser::START_STATE_SCRIPT,
     );
     loop {
@@ -182,6 +206,20 @@ fn assert_can_close_after<'alloc, T: IntoChunks<'alloc>>(code: T) {
         parser.write_token(&t).unwrap();
     }
     assert!(parser.can_close());
+}
+
+fn assert_same_number(code: &str, expected: f64) {
+    let allocator = &Bump::new();
+    let script = try_parse(allocator, code).unwrap().unbox();
+    match &script.statements[0] {
+        Statement::ExpressionStatement(expression) => match &**expression {
+            Expression::LiteralNumericExpression(num) => {
+                assert_eq!(num.value, expected, "{}", code);
+            }
+            _ => panic!("expected LiteralNumericExpression"),
+        },
+        _ => panic!("expected ExpressionStatement"),
+    }
 }
 
 #[test]
@@ -262,9 +300,9 @@ fn test_lexer_decimal() {
 
 #[test]
 fn test_numbers() {
-    assert_parses("0");
-    assert_parses("1");
-    assert_parses("10");
+    assert_same_number("0", 0.0);
+    assert_same_number("1", 1.0);
+    assert_same_number("10", 10.0);
 
     assert_error_eq("0a", ParseError::IllegalCharacter('a'));
     assert_error_eq("1a", ParseError::IllegalCharacter('a'));
@@ -273,21 +311,21 @@ fn test_numbers() {
     assert_error_eq(".0a", ParseError::IllegalCharacter('a'));
     assert_error_eq("1.a", ParseError::IllegalCharacter('a'));
 
-    assert_parses("1.0");
-    assert_parses("1.");
-    assert_parses("0.");
+    assert_same_number("1.0", 1.0);
+    assert_same_number("1.", 1.0);
+    assert_same_number("0.", 0.0);
 
-    assert_parses("1.0e0");
-    assert_parses("1.e0");
-    assert_parses(".0e0");
+    assert_same_number("1.0e0", 1.0);
+    assert_same_number("1.e0", 1.0);
+    assert_same_number(".0e0", 0.0);
 
-    assert_parses("1.0e+0");
-    assert_parses("1.e+0");
-    assert_parses(".0e+0");
+    assert_same_number("1.0e+0", 1.0);
+    assert_same_number("1.e+0", 1.0);
+    assert_same_number(".0e+0", 0.0);
 
-    assert_parses("1.0e-0");
-    assert_parses("1.e-0");
-    assert_parses(".0e-0");
+    assert_same_number("1.0e-0", 1.0);
+    assert_same_number("1.e-0", 1.0);
+    assert_same_number(".0e-0", 0.0);
 
     assert_error_eq("1.0e", ParseError::UnexpectedEnd);
     assert_error_eq("1.e", ParseError::UnexpectedEnd);
@@ -298,37 +336,153 @@ fn test_numbers() {
     assert_error_eq(".0e+", ParseError::UnexpectedEnd);
     assert_error_eq(".0e-", ParseError::UnexpectedEnd);
 
-    assert_parses(".0");
+    assert_same_number("1.0E0", 1.0);
+    assert_same_number("1.E0", 1.0);
+    assert_same_number(".0E0", 0.0);
+
+    assert_same_number("1.0E+0", 1.0);
+    assert_same_number("1.E+0", 1.0);
+    assert_same_number(".0E+0", 0.0);
+
+    assert_same_number("1.0E-0", 1.0);
+    assert_same_number("1.E-0", 1.0);
+    assert_same_number(".0E-0", 0.0);
+
+    assert_error_eq("1.0E", ParseError::UnexpectedEnd);
+    assert_error_eq("1.E", ParseError::UnexpectedEnd);
+    assert_error_eq(".0E", ParseError::UnexpectedEnd);
+
+    assert_error_eq("1.0E+", ParseError::UnexpectedEnd);
+    assert_error_eq("1.0E-", ParseError::UnexpectedEnd);
+    assert_error_eq(".0E+", ParseError::UnexpectedEnd);
+    assert_error_eq(".0E-", ParseError::UnexpectedEnd);
+
+    assert_same_number(".0", 0.0);
     assert_parses("");
 
-    // FIXME: NYI: non-decimal literal
-    // assert_parses("0b0");
-    assert_not_implemented("0b0");
+    assert_same_number("0b0", 0.0);
 
-    /*
-    assert_parses("0b1");
-    assert_parses("0B01");
+    assert_same_number("0b1", 1.0);
+    assert_same_number("0B01", 1.0);
     assert_error_eq("0b", ParseError::UnexpectedEnd);
     assert_error_eq("0b ", ParseError::IllegalCharacter(' '));
     assert_error_eq("0b2", ParseError::IllegalCharacter('2'));
 
-    assert_parses("0o0");
-    assert_parses("0o7");
-    assert_parses("0O01234567");
+    assert_same_number("0o0", 0.0);
+    assert_same_number("0o7", 7.0);
+    assert_same_number("0O01234567", 0o01234567 as f64);
     assert_error_eq("0o", ParseError::UnexpectedEnd);
     assert_error_eq("0o ", ParseError::IllegalCharacter(' '));
     assert_error_eq("0o8", ParseError::IllegalCharacter('8'));
 
-    assert_parses("0x0");
-    assert_parses("0xf");
-    assert_parses("0X0123456789abcdef");
-    assert_parses("0X0123456789ABCDEF");
+    assert_same_number("0x0", 0.0);
+    assert_same_number("0xf", 15.0);
+    assert_not_implemented("0X0123456789abcdef");
+    assert_not_implemented("0X0123456789ABCDEF");
     assert_error_eq("0x", ParseError::UnexpectedEnd);
     assert_error_eq("0x ", ParseError::IllegalCharacter(' '));
     assert_error_eq("0xg", ParseError::IllegalCharacter('g'));
-     */
 
     assert_parses("1..x");
+
+    assert_same_number("1_1", 11.0);
+    assert_same_number("0b1_1", 3.0);
+    assert_same_number("0o1_1", 9.0);
+    assert_same_number("0x1_1", 17.0);
+
+    assert_same_number("1_1.1_1", 11.11);
+    assert_same_number("1_1.1_1e+1_1", 11.11e11);
+
+    assert_error_eq("1_", ParseError::UnexpectedEnd);
+    assert_error_eq("1._1", ParseError::IllegalCharacter('_'));
+    assert_error_eq("1.1_", ParseError::UnexpectedEnd);
+    assert_error_eq("1.1e1_", ParseError::UnexpectedEnd);
+    assert_error_eq("1.1e_1", ParseError::IllegalCharacter('_'));
+}
+
+#[test]
+fn test_numbers_large() {
+    assert_same_number("4294967295", 4294967295.0);
+    assert_same_number("4294967296", 4294967296.0);
+    assert_same_number("4294967297", 4294967297.0);
+
+    assert_same_number("9007199254740991", 9007199254740991.0);
+    assert_same_number("9007199254740992", 9007199254740992.0);
+    assert_same_number("9007199254740993", 9007199254740992.0);
+
+    assert_same_number("18446744073709553664", 18446744073709552000.0);
+    assert_same_number("18446744073709553665", 18446744073709556000.0);
+
+    assert_same_number("0b11111111111111111111111111111111", 4294967295.0);
+    assert_same_number("0b100000000000000000000000000000000", 4294967296.0);
+    assert_same_number("0b100000000000000000000000000000001", 4294967297.0);
+
+    assert_same_number(
+        "0b11111111111111111111111111111111111111111111111111111",
+        9007199254740991.0,
+    );
+    assert_not_implemented("0b100000000000000000000000000000000000000000000000000000");
+
+    assert_same_number("0o77777777777777777", 2251799813685247.0);
+    assert_not_implemented("0o100000000000000000");
+
+    assert_same_number("0xfffffffffffff", 4503599627370495.0);
+    assert_not_implemented("0x10000000000000");
+
+    assert_not_implemented("4.9406564584124654417656879286822e-324");
+}
+
+#[test]
+fn test_bigint() {
+    assert_not_implemented("0n");
+    /*
+        assert_parses("0n");
+        assert_parses("1n");
+        assert_parses("10n");
+
+        assert_error_eq("0na", ParseError::IllegalCharacter('a'));
+        assert_error_eq("1na", ParseError::IllegalCharacter('a'));
+
+        assert_error_eq("1.0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq(".0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1.n", ParseError::IllegalCharacter('n'));
+
+        assert_error_eq("1e0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1e+0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1e-0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1E0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1E+0n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1E-0n", ParseError::IllegalCharacter('n'));
+
+        assert_parses("0b0n");
+
+        assert_parses("0b1n");
+        assert_parses("0B01n");
+        assert_error_eq("0bn", ParseError::IllegalCharacter('n'));
+
+        assert_parses("0o0n");
+        assert_parses("0o7n");
+        assert_parses("0O01234567n");
+        assert_error_eq("0on", ParseError::IllegalCharacter('n'));
+
+        assert_parses("0x0n");
+        assert_parses("0xfn");
+        assert_parses("0X0123456789abcdefn");
+        assert_parses("0X0123456789ABCDEFn");
+        assert_error_eq("0xn", ParseError::IllegalCharacter('n'));
+
+        assert_parses("1_1n");
+        assert_parses("0b1_1n");
+        assert_parses("0o1_1n");
+        assert_parses("0x1_1n");
+
+        assert_error_eq("1_1.1_1n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1_1.1_1e1_1n", ParseError::IllegalCharacter('n'));
+
+        assert_error_eq("1_n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1.1_n", ParseError::IllegalCharacter('n'));
+        assert_error_eq("1.1e1_n", ParseError::IllegalCharacter('n'));
+    */
 }
 
 #[test]
@@ -612,6 +766,35 @@ fn test_async_arrows() {
     */
 
     assert_error_eq("foo(a, b) => {}", ParseError::ArrowHeadInvalid);
+}
+
+#[test]
+fn test_binary() {
+    assert_parses("1 == 2");
+    assert_parses("1 != 2");
+    assert_parses("1 === 2");
+    assert_parses("1 !== 2");
+    assert_parses("1 < 2");
+    assert_parses("1 <= 2");
+    assert_parses("1 > 2");
+    assert_parses("1 >= 2");
+    assert_parses("1 in 2");
+    assert_parses("1 instanceof 2");
+    assert_parses("1 << 2");
+    assert_parses("1 >> 2");
+    assert_parses("1 >>> 2");
+    assert_parses("1 + 2");
+    assert_parses("1 - 2");
+    assert_parses("1 * 2");
+    assert_parses("1 / 2");
+    assert_parses("1 % 2");
+    assert_parses("1 ** 2");
+    assert_parses("1 , 2");
+    assert_parses("1 || 2");
+    assert_parses("1 && 2");
+    assert_parses("1 | 2");
+    assert_parses("1 ^ 2");
+    assert_parses("1 & 2");
 }
 
 #[test]

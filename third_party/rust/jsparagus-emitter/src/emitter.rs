@@ -6,29 +6,94 @@
 #![allow(dead_code)]
 
 use crate::compilation_info::CompilationInfo;
-use crate::frame_slot::FrameSlot;
 use crate::gcthings::{GCThing, GCThingIndex, GCThingList};
 use crate::opcode::Opcode;
-use crate::scope::{ScopeData, ScopeIndex};
+use crate::regexp::{RegExpItem, RegExpList};
 use crate::scope_notes::{ScopeNote, ScopeNoteIndex, ScopeNoteList};
 use crate::script_atom_set::{ScriptAtomSet, ScriptAtomSetIndex};
 use ast::source_atom_set::SourceAtomSetIndex;
 use byteorder::{ByteOrder, LittleEndian};
+use scope::data::{ScopeData, ScopeIndex};
+use scope::frame_slot::FrameSlot;
 use std::cmp;
 use std::convert::TryInto;
 use std::fmt;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ResumeKind {
-    Normal = 0,
-    Throw = 1,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+// @@@@ BEGIN TYPES @@@@
 pub enum AsyncFunctionResolveKind {
     Fulfill = 0,
     Reject = 1,
 }
+
+pub enum CheckIsCallableKind {
+    IteratorReturn = 0,
+}
+
+pub enum CheckIsObjectKind {
+    IteratorNext = 0,
+    IteratorReturn = 1,
+    IteratorThrow = 2,
+    GetIterator = 3,
+    GetAsyncIterator = 4,
+}
+
+pub enum FunctionPrefixKind {
+    None = 0,
+    Get = 1,
+    Set = 2,
+}
+
+pub enum GeneratorResumeKind {
+    Next = 0,
+    Throw = 1,
+    Return = 2,
+}
+
+pub enum ThrowMsgKind {
+    AssignToCall = 0,
+    IteratorNoThrow = 1,
+    CantDeleteSuper = 2,
+}
+
+pub enum TryNoteKind {
+    Catch = 0,
+    Finally = 1,
+    ForIn = 2,
+    Destructuring = 3,
+    ForOf = 4,
+    ForOfIterClose = 5,
+    Loop = 6,
+}
+
+pub enum SymbolCode {
+    IsConcatSpreadable = 0,
+    Iterator = 1,
+    Match = 2,
+    Replace = 3,
+    Search = 4,
+    Species = 5,
+    HasInstance = 6,
+    Split = 7,
+    ToPrimitive = 8,
+    ToStringTag = 9,
+    Unscopables = 10,
+    AsyncIterator = 11,
+    MatchAll = 12,
+}
+
+pub enum SrcNoteType {
+    Null = 0,
+    AssignOp = 1,
+    ColSpan = 2,
+    NewLine = 3,
+    SetLine = 4,
+    Breakpoint = 5,
+    StepSep = 6,
+    Unused7 = 7,
+    XDelta = 8,
+}
+
+// @@@@ END TYPES @@@@
 
 #[allow(non_camel_case_types)]
 pub type u24 = u32;
@@ -59,6 +124,8 @@ pub struct InstructionWriter {
 
     gcthings: GCThingList,
     scope_notes: ScopeNoteList,
+
+    regexps: RegExpList,
 
     main_offset: BytecodeOffset,
 
@@ -98,6 +165,8 @@ pub struct EmitResult<'alloc> {
     pub bytecode: Vec<u8>,
     pub atoms: Vec<SourceAtomSetIndex>,
     pub all_atoms: Vec<&'alloc str>,
+    pub slices: Vec<&'alloc str>,
+    pub regexps: Vec<RegExpItem>,
     pub gcthings: Vec<GCThing>,
     pub scopes: Vec<ScopeData>,
     pub scope_notes: Vec<ScopeNote>,
@@ -145,6 +214,7 @@ impl InstructionWriter {
             atoms: ScriptAtomSet::new(),
             gcthings: GCThingList::new(),
             scope_notes: ScopeNoteList::new(),
+            regexps: RegExpList::new(),
             main_offset: BytecodeOffset::new(0),
             max_fixed_slots: FrameSlot::new(0),
             stack_depth: 0,
@@ -163,6 +233,8 @@ impl InstructionWriter {
             bytecode: self.bytecode,
             atoms: self.atoms.into(),
             all_atoms: compilation_info.atoms.into(),
+            slices: compilation_info.slices.into(),
+            regexps: self.regexps.into(),
             gcthings: self.gcthings.into(),
             scopes: compilation_info.scope_data_map.into(),
             scope_notes: self.scope_notes.into(),
@@ -220,6 +292,10 @@ impl InstructionWriter {
         self.bytecode.extend_from_slice(&value.to_le_bytes());
     }
 
+    fn write_g_c_thing_index(&mut self, value: GCThingIndex) {
+        self.write_u32(usize::from(value) as u32);
+    }
+
     fn write_script_atom_set_index(&mut self, atom_index: ScriptAtomSetIndex) {
         self.write_u32(atom_index.into());
     }
@@ -231,10 +307,6 @@ impl InstructionWriter {
     fn write_f64(&mut self, val: f64) {
         self.bytecode
             .extend_from_slice(&val.to_bits().to_le_bytes());
-    }
-
-    fn write_resume_kind(&mut self, resume_kind: ResumeKind) {
-        self.write_u8(resume_kind as u8);
     }
 
     fn write_ic_index(&mut self) {
@@ -355,6 +427,34 @@ impl InstructionWriter {
         _first_resume_index: u24,
     ) -> Result<(), EmitError> {
         Err(EmitError::NotImplemented("TODO: table_switch"))
+    }
+
+    pub fn numeric(&mut self, value: f64) {
+        if value.is_finite() && value.fract() == 0.0 {
+            if i8::min_value() as f64 <= value && value <= i8::max_value() as f64 {
+                match value as i8 {
+                    0 => self.zero(),
+                    1 => self.one(),
+                    i => self.int8(i),
+                }
+                return;
+            }
+            if 0.0 <= value {
+                if value <= u16::max_value() as f64 {
+                    self.uint16(value as u16);
+                    return;
+                }
+                if value <= 0x00ffffff as f64 {
+                    self.uint24(value as u24);
+                    return;
+                }
+            }
+            if i32::min_value() as f64 <= value && value <= i32::max_value() as f64 {
+                self.int32(value as i32);
+                return;
+            }
+        }
+        self.double_(value);
     }
 
     // WARNING
@@ -659,14 +759,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::EndIter);
     }
 
-    pub fn check_is_obj(&mut self, kind: u8) {
+    pub fn check_is_obj(&mut self, kind: CheckIsObjectKind) {
         self.emit_op(Opcode::CheckIsObj);
-        self.write_u8(kind);
+        self.write_u8(kind as u8);
     }
 
-    pub fn check_is_callable(&mut self, kind: u8) {
+    pub fn check_is_callable(&mut self, kind: CheckIsCallableKind) {
         self.emit_op(Opcode::CheckIsCallable);
-        self.write_u8(kind);
+        self.write_u8(kind as u8);
     }
 
     pub fn check_obj_coercible(&mut self) {
@@ -704,9 +804,9 @@ impl InstructionWriter {
         self.write_u32(object_index);
     }
 
-    pub fn reg_exp(&mut self, regexp_index: u32) {
+    pub fn reg_exp(&mut self, regexp_index: GCThingIndex) {
         self.emit_op(Opcode::RegExp);
-        self.write_u32(regexp_index);
+        self.write_g_c_thing_index(regexp_index);
     }
 
     pub fn lambda(&mut self, func_index: u32) {
@@ -719,9 +819,9 @@ impl InstructionWriter {
         self.write_u32(func_index);
     }
 
-    pub fn set_fun_name(&mut self, prefix_kind: u8) {
+    pub fn set_fun_name(&mut self, prefix_kind: FunctionPrefixKind) {
         self.emit_op(Opcode::SetFunName);
-        self.write_u8(prefix_kind);
+        self.write_u8(prefix_kind as u8);
     }
 
     pub fn init_home_object(&mut self) {
@@ -751,9 +851,8 @@ impl InstructionWriter {
         self.write_u32(source_end);
     }
 
-    pub fn builtin_proto(&mut self, kind: u8) {
-        self.emit_op(Opcode::BuiltinProto);
-        self.write_u8(kind);
+    pub fn function_proto(&mut self) {
+        self.emit_op(Opcode::FunctionProto);
     }
 
     pub fn call(&mut self, argc: u16) {
@@ -883,9 +982,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::AsyncAwait);
     }
 
-    pub fn async_resolve(&mut self, fulfill_or_reject: u8) {
+    pub fn async_resolve(&mut self, fulfill_or_reject: AsyncFunctionResolveKind) {
         self.emit_op(Opcode::AsyncResolve);
-        self.write_u8(fulfill_or_reject);
+        self.write_u8(fulfill_or_reject as u8);
     }
 
     pub fn await_(&mut self, resume_index: u24) {
@@ -897,9 +996,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::TrySkipAwait);
     }
 
-    pub fn resume_kind(&mut self, resume_kind: ResumeKind) {
+    pub fn resume_kind(&mut self, resume_kind: GeneratorResumeKind) {
         self.emit_op(Opcode::ResumeKind);
-        self.write_resume_kind(resume_kind);
+        self.write_u8(resume_kind as u8);
     }
 
     pub fn check_resume_kind(&mut self) {
@@ -985,9 +1084,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::Throw);
     }
 
-    pub fn throw_msg(&mut self, msg_number: u16) {
+    pub fn throw_msg(&mut self, msg_number: ThrowMsgKind) {
         self.emit_op(Opcode::ThrowMsg);
-        self.write_u16(msg_number);
+        self.write_u8(msg_number as u8);
     }
 
     pub fn throw_set_const(&mut self, name_index: ScriptAtomSetIndex) {
@@ -1220,6 +1319,10 @@ impl InstructionWriter {
         self.write_script_atom_set_index(name_index);
     }
 
+    pub fn check_global_or_eval_decl(&mut self) {
+        self.emit_op(Opcode::CheckGlobalOrEvalDecl);
+    }
+
     pub fn del_name(&mut self, name_index: ScriptAtomSetIndex) {
         self.emit_op(Opcode::DelName);
         self.write_script_atom_set_index(name_index);
@@ -1312,6 +1415,11 @@ impl InstructionWriter {
 
     // @@@@ END METHODS @@@@
 
+    pub fn get_regexp_gcthing_index(&mut self, regexp: RegExpItem) -> GCThingIndex {
+        let regexp_index = self.regexps.append(regexp);
+        self.gcthings.append_regexp(regexp_index)
+    }
+
     fn update_max_frame_slots(&mut self, max_frame_slots: FrameSlot) {
         self.max_fixed_slots = cmp::max(self.max_fixed_slots, max_frame_slots);
     }
@@ -1331,12 +1439,12 @@ impl InstructionWriter {
     ) -> ScopeNoteIndex {
         self.update_max_frame_slots(next_frame_slot);
 
-        self.gcthings.append_scope(scope_index);
+        let gcthing_index = self.gcthings.append_scope(scope_index);
         let offset = self.bytecode_offset();
-        let index = self
-            .scope_notes
-            .enter_scope(scope_index, offset, parent_scope_note_index);
-        index
+        let note_index =
+            self.scope_notes
+                .enter_scope(gcthing_index, offset, parent_scope_note_index);
+        note_index
     }
 
     pub fn leave_lexical_scope(&mut self, index: ScopeNoteIndex) {

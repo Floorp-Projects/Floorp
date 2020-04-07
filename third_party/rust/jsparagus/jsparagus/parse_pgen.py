@@ -24,7 +24,7 @@ pgen_lexer = LexicalGrammar(
 )
 
 
-def list_of(e, allow_comments = False):
+def list_of(e, allow_comments=False):
     nt = e + 's'
     prods = [
         Production([e], CallMethod('single', (0,))),
@@ -73,7 +73,7 @@ pgen_grammar = Grammar(
             prod([Optional('COMMENT'), Optional('goal'), 'nt', 'IDENT', '{',
                   gen.Optional('prods'), '}'], 'nt_def'),
         ],
-        'prods': list_of('prod', allow_comments = True),
+        'prods': list_of('prod', allow_comments=True),
         'prod': [
             prod(['terms', gen.Optional('reducer'), ';'], 'prod'),
         ],

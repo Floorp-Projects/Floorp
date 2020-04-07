@@ -1,12 +1,12 @@
 """ Functions for loading the ECMAScript lexical and syntactic grammars. """
 
 from jsparagus.ordered import OrderedSet, OrderedFrozenSet
-from jsparagus import gen
+from jsparagus import gen, grammar
 from .lexer import ECMASCRIPT_FULL_KEYWORDS, ECMASCRIPT_CONDITIONAL_KEYWORDS
 from .parse_esgrammar import parse_esgrammar
 
 
-ECMASCRIPT_LEXICAL_SYNTHETIC_TERMINALS = {
+ECMASCRIPT_LEXICAL_SYNTHETIC_TERMINALS: grammar.SyntheticTerminalsDict = {
     # Theoretically, this should be the set of all Unicode characters, but that
     # would take a lot of memory, and in practice, the set is not used.
     'SourceCharacter': OrderedFrozenSet([]),

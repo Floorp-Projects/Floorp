@@ -23,6 +23,4 @@ cd $(dirname "$0")
 python3 -m jsparagus.parse_pgen --regenerate > jsparagus/parse_pgen_generated_NEW.py
 mv jsparagus/parse_pgen_generated_NEW.py jsparagus/parse_pgen_generated.py
 
-python3 -m jsparagus.main --target=rust pgen.pgen > example_pgen.rs
-
 ./test.sh

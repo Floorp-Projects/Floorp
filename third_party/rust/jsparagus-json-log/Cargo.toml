@@ -1,0 +1,13 @@
+[package]
+name = "jsparagus-json-log"
+version = "0.1.0"
+authors = ["The jsparagus Project Developers"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+log = { version = "0.4.0", features = ["max_level_debug", "release_max_level_warn"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+[features]
+logging = ["log", "serde_json"]

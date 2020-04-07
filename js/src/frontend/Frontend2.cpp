@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"                  // mozilla::Maybe
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
+#include "mozilla/Range.h"                  // mozilla::Range
 #include "mozilla/Span.h"                   // mozilla::{Span, MakeSpan}
 
 #include <stddef.h>  // size_t
@@ -17,18 +18,29 @@
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/CompilationInfo.h"   // CompilationInfo
-#include "frontend/smoosh_generated.h"  // CVec, SmooshResult, SmooshCompileOptions, free_smoosh, run_smoosh
+#include "frontend/smoosh_generated.h"  // CVec, SmooshResult, SmooshCompileOptions, free_smoosh, run_smoosh, smoosh_*
 #include "frontend/SourceNotes.h"  // SrcNote
-#include "frontend/Stencil.h"      // ScopeCreationData
+#include "frontend/Stencil.h"  // ScopeCreationData, RegExpCreationData, RegExpIndex
+#include "frontend/TokenStream.h"  // TokenStreamAnyChars
 #include "gc/Rooting.h"            // RootedScriptSourceObject
+#ifndef ENABLE_NEW_REGEXP
+#  include "irregexp/RegExpParser.h"  // irregexp::ParsePatternSyntax
+#endif
+#include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/HeapAPI.h"            // JS::GCCellPtr
+#include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"          // Rooted{Script,Value,String,Object}
-#include "vm/JSAtom.h"             // AtomizeUTF8Chars
-#include "vm/JSScript.h"           // JSScript
-#include "vm/Scope.h"              // BindingName
-#include "vm/ScopeKind.h"          // ScopeKind
-#include "vm/SharedStencil.h"      // ImmutableScriptData, ScopeNote, TryNote
+#include "js/Utility.h"            // JS::UniqueTwoByteChars, StringBufferArena
+#ifdef ENABLE_NEW_REGEXP
+#  include "new-regexp/RegExpAPI.h"  // irregexp::CheckPatternSyntax
+#endif
+#include "vm/JSAtom.h"         // AtomizeUTF8Chars
+#include "vm/JSScript.h"       // JSScript
+#include "vm/RegExpObject.h"   // RegexpObject
+#include "vm/Scope.h"          // BindingName
+#include "vm/ScopeKind.h"      // ScopeKind
+#include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote
 
 #include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
 
@@ -89,6 +101,10 @@ class SmooshScriptStencil : public ScriptStencil {
       return false;
     }
 
+    if (!createRegExpData(cx)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -105,13 +121,27 @@ class SmooshScriptStencil : public ScriptStencil {
           // `createScopeCreationData`, and i-th item corresponds to
           // the i-th scope.
           MutableHandle<ScopeCreationData> data =
-              compilationInfo_.scopeCreationData[item.scope_index];
+              compilationInfo_.scopeCreationData[item.index];
           Scope* scope = data.get().createScope(cx);
           if (!scope) {
             return false;
           }
 
           output[i] = JS::GCCellPtr(scope);
+
+          break;
+        }
+        case SmooshGCThingKind::RegExpIndex: {
+          // compilationInfo_.regExpData is filed by
+          // `createRegExpData`, and i-th item corresponds to
+          // the i-th RegExp.
+          RegExpCreationData& data = compilationInfo_.regExpData[item.index];
+          RegExpObject* regexp = data.createRegExp(cx);
+          if (!regexp) {
+            return false;
+          }
+
+          output[i] = JS::GCCellPtr(regexp);
 
           break;
         }
@@ -216,6 +246,79 @@ class SmooshScriptStencil : public ScriptStencil {
 
       // `finishGCThings` depends on this condition.
       MOZ_ASSERT(index == i);
+    }
+
+    return true;
+  }
+
+  // Fill `compilationInfo_.regExpData` with scope data, where
+  // i-th item corresponds to i-th RegExp.
+  bool createRegExpData(JSContext* cx) {
+    for (size_t i = 0; i < result_.regexps.len; i++) {
+      SmooshRegExpItem& item = result_.regexps.data[i];
+      auto s = smoosh_get_slice_at(result_, item.pattern);
+      auto len = smoosh_get_slice_len_at(result_, item.pattern);
+
+      JS::RegExpFlags::Flag flags = JS::RegExpFlag::NoFlags;
+      if (item.global) {
+        flags |= JS::RegExpFlag::Global;
+      }
+      if (item.ignore_case) {
+        flags |= JS::RegExpFlag::IgnoreCase;
+      }
+      if (item.multi_line) {
+        flags |= JS::RegExpFlag::Multiline;
+      }
+      if (item.dot_all) {
+        flags |= JS::RegExpFlag::DotAll;
+      }
+      if (item.sticky) {
+        flags |= JS::RegExpFlag::Sticky;
+      }
+      if (item.unicode) {
+        flags |= JS::RegExpFlag::Unicode;
+      }
+
+      // FIXME: This check should be done at parse time.
+      size_t length;
+      JS::UniqueTwoByteChars pattern(
+          UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(s, len), &length,
+                                      StringBufferArena)
+              .get());
+      if (!pattern) {
+        return false;
+      }
+
+      mozilla::Range<const char16_t> range(pattern.get(), length);
+
+      TokenStreamAnyChars ts(cx, compilationInfo_.options, /* smg = */ nullptr);
+
+      // See Parser<FullParseHandler, Unit>::newRegExp.
+
+      LifoAllocScope allocScope(&cx->tempLifoAlloc());
+#ifdef ENABLE_NEW_REGEXP
+      if (!irregexp::CheckPatternSyntax(cx, ts, range, flags)) {
+        return false;
+      }
+#else
+      if (!irregexp::ParsePatternSyntax(ts, allocScope.alloc(), range,
+                                        flags & JS::RegExpFlag::Unicode)) {
+        return false;
+      }
+#endif
+
+      RegExpIndex index(compilationInfo_.regExpData.length());
+      if (!compilationInfo_.regExpData.emplaceBack()) {
+        return false;
+      }
+
+      if (!compilationInfo_.regExpData[index].init(cx, range,
+                                                   JS::RegExpFlags(flags))) {
+        return false;
+      }
+
+      // `finishGCThings` depends on this condition.
+      MOZ_ASSERT(index.index == i);
     }
 
     return true;

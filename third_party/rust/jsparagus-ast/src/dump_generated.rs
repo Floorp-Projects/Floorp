@@ -4,6 +4,7 @@
 
 use crate::arena;
 use crate::source_atom_set::{SourceAtomSet, SourceAtomSetIndex};
+use crate::source_slice_list::{SourceSliceList, SourceSliceIndex};
 use crate::types::*;
 use std::ops::Deref;
 use std::io;
@@ -18,93 +19,93 @@ fn newline<W>(out: &mut W, depth: usize)
 }
 
 pub trait ASTDump {
-    fn dump_with_atoms<W>(&self, out: &mut W, atoms: &SourceAtomSet)
+    fn dump_with_atoms<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList)
         where W: io::Write
     {
-        self.dump_with_atoms_at(out, atoms, 0);
+        self.dump_with_atoms_at(out, atoms, slices, 0);
         writeln!(out, "").expect("failed to dump");
     }
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write;
 }
 
 impl<'alloc> ASTDump for Argument<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Argument::SpreadElement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Argument::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Arguments<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Arguments").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "args=").expect("failed to dump");
-        self.args.dump_with_atoms_at(out, atoms, depth + 1);
+        self.args.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Identifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Identifier").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for IdentifierName {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(IdentifierName").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for PrivateIdentifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(PrivateIdentifier").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Label {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Label").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for VariableDeclarationKind {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -122,7 +123,7 @@ impl<'alloc> ASTDump for VariableDeclarationKind {
 }
 
 impl<'alloc> ASTDump for CompoundAssignmentOperator {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -167,7 +168,7 @@ impl<'alloc> ASTDump for CompoundAssignmentOperator {
 }
 
 impl<'alloc> ASTDump for BinaryOperator {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -254,7 +255,7 @@ impl<'alloc> ASTDump for BinaryOperator {
 }
 
 impl<'alloc> ASTDump for UnaryOperator {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -284,7 +285,7 @@ impl<'alloc> ASTDump for UnaryOperator {
 }
 
 impl<'alloc> ASTDump for UpdateOperator {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -299,64 +300,64 @@ impl<'alloc> ASTDump for UpdateOperator {
 }
 
 impl<'alloc> ASTDump for Function<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Function").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "is_async=").expect("failed to dump");
-        self.is_async.dump_with_atoms_at(out, atoms, depth + 1);
+        self.is_async.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "is_generator=").expect("failed to dump");
-        self.is_generator.dump_with_atoms_at(out, atoms, depth + 1);
+        self.is_generator.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "params=").expect("failed to dump");
-        self.params.dump_with_atoms_at(out, atoms, depth + 1);
+        self.params.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "body=").expect("failed to dump");
-        self.body.dump_with_atoms_at(out, atoms, depth + 1);
+        self.body.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Program<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Program::Module(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Program::Script(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for IfStatement<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(IfStatement").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "test=").expect("failed to dump");
-        self.test.dump_with_atoms_at(out, atoms, depth + 1);
+        self.test.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "consequent=").expect("failed to dump");
-        self.consequent.dump_with_atoms_at(out, atoms, depth + 1);
+        self.consequent.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "alternate=").expect("failed to dump");
-        self.alternate.dump_with_atoms_at(out, atoms, depth + 1);
+        self.alternate.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Statement<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -364,21 +365,21 @@ impl<'alloc> ASTDump for Statement<'alloc> {
                 write!(out, "(BlockStatement").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::BreakStatement { label, .. } => {
                 write!(out, "(BreakStatement").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "label=").expect("failed to dump");
-                label.dump_with_atoms_at(out, atoms, depth + 1);
+                label.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::ContinueStatement { label, .. } => {
                 write!(out, "(ContinueStatement").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "label=").expect("failed to dump");
-                label.dump_with_atoms_at(out, atoms, depth + 1);
+                label.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::DebuggerStatement { .. } => {
@@ -388,185 +389,185 @@ impl<'alloc> ASTDump for Statement<'alloc> {
                 write!(out, "(DoWhileStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "test=").expect("failed to dump");
-                test.dump_with_atoms_at(out, atoms, depth + 1);
+                test.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::EmptyStatement { .. } => {
                 write!(out, "EmptyStatement").expect("failed to dump");
             }
             Statement::ExpressionStatement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Statement::ForInStatement { left, right, block, .. } => {
                 write!(out, "(ForInStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "left=").expect("failed to dump");
-                left.dump_with_atoms_at(out, atoms, depth + 1);
+                left.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "right=").expect("failed to dump");
-                right.dump_with_atoms_at(out, atoms, depth + 1);
+                right.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::ForOfStatement { left, right, block, .. } => {
                 write!(out, "(ForOfStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "left=").expect("failed to dump");
-                left.dump_with_atoms_at(out, atoms, depth + 1);
+                left.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "right=").expect("failed to dump");
-                right.dump_with_atoms_at(out, atoms, depth + 1);
+                right.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::ForStatement { init, test, update, block, .. } => {
                 write!(out, "(ForStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "init=").expect("failed to dump");
-                init.dump_with_atoms_at(out, atoms, depth + 1);
+                init.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "test=").expect("failed to dump");
-                test.dump_with_atoms_at(out, atoms, depth + 1);
+                test.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "update=").expect("failed to dump");
-                update.dump_with_atoms_at(out, atoms, depth + 1);
+                update.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::IfStatement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Statement::LabeledStatement { label, body, .. } => {
                 write!(out, "(LabeledStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "label=").expect("failed to dump");
-                label.dump_with_atoms_at(out, atoms, depth + 1);
+                label.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "body=").expect("failed to dump");
-                body.dump_with_atoms_at(out, atoms, depth + 1);
+                body.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::ReturnStatement { expression, .. } => {
                 write!(out, "(ReturnStatement").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::SwitchStatement { discriminant, cases, .. } => {
                 write!(out, "(SwitchStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "discriminant=").expect("failed to dump");
-                discriminant.dump_with_atoms_at(out, atoms, depth + 1);
+                discriminant.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "cases=").expect("failed to dump");
-                cases.dump_with_atoms_at(out, atoms, depth + 1);
+                cases.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::SwitchStatementWithDefault { discriminant, pre_default_cases, default_case, post_default_cases, .. } => {
                 write!(out, "(SwitchStatementWithDefault").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "discriminant=").expect("failed to dump");
-                discriminant.dump_with_atoms_at(out, atoms, depth + 1);
+                discriminant.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "pre_default_cases=").expect("failed to dump");
-                pre_default_cases.dump_with_atoms_at(out, atoms, depth + 1);
+                pre_default_cases.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "default_case=").expect("failed to dump");
-                default_case.dump_with_atoms_at(out, atoms, depth + 1);
+                default_case.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "post_default_cases=").expect("failed to dump");
-                post_default_cases.dump_with_atoms_at(out, atoms, depth + 1);
+                post_default_cases.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::ThrowStatement { expression, .. } => {
                 write!(out, "(ThrowStatement").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::TryCatchStatement { body, catch_clause, .. } => {
                 write!(out, "(TryCatchStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "body=").expect("failed to dump");
-                body.dump_with_atoms_at(out, atoms, depth + 1);
+                body.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "catch_clause=").expect("failed to dump");
-                catch_clause.dump_with_atoms_at(out, atoms, depth + 1);
+                catch_clause.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::TryFinallyStatement { body, catch_clause, finalizer, .. } => {
                 write!(out, "(TryFinallyStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "body=").expect("failed to dump");
-                body.dump_with_atoms_at(out, atoms, depth + 1);
+                body.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "catch_clause=").expect("failed to dump");
-                catch_clause.dump_with_atoms_at(out, atoms, depth + 1);
+                catch_clause.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "finalizer=").expect("failed to dump");
-                finalizer.dump_with_atoms_at(out, atoms, depth + 1);
+                finalizer.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::WhileStatement { test, block, .. } => {
                 write!(out, "(WhileStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "test=").expect("failed to dump");
-                test.dump_with_atoms_at(out, atoms, depth + 1);
+                test.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "block=").expect("failed to dump");
-                block.dump_with_atoms_at(out, atoms, depth + 1);
+                block.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::WithStatement { object, body, .. } => {
                 write!(out, "(WithStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "object=").expect("failed to dump");
-                object.dump_with_atoms_at(out, atoms, depth + 1);
+                object.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "body=").expect("failed to dump");
-                body.dump_with_atoms_at(out, atoms, depth + 1);
+                body.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Statement::VariableDeclarationStatement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Statement::FunctionDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Statement::ClassDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Expression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Expression::MemberExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::ClassExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::LiteralBooleanExpression { value, .. } => {
                 write!(out, "(LiteralBooleanExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "value=").expect("failed to dump");
-                value.dump_with_atoms_at(out, atoms, depth + 1);
+                value.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::LiteralInfinityExpression { .. } => {
@@ -576,152 +577,155 @@ impl<'alloc> ASTDump for Expression<'alloc> {
                 write!(out, "LiteralNullExpression").expect("failed to dump");
             }
             Expression::LiteralNumericExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
-            Expression::LiteralRegExpExpression { pattern, global, ignore_case, multi_line, sticky, unicode, .. } => {
+            Expression::LiteralRegExpExpression { pattern, global, ignore_case, multi_line, dot_all, sticky, unicode, .. } => {
                 write!(out, "(LiteralRegExpExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "pattern=").expect("failed to dump");
-                pattern.dump_with_atoms_at(out, atoms, depth + 1);
+                pattern.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "global=").expect("failed to dump");
-                global.dump_with_atoms_at(out, atoms, depth + 1);
+                global.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "ignore_case=").expect("failed to dump");
-                ignore_case.dump_with_atoms_at(out, atoms, depth + 1);
+                ignore_case.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "multi_line=").expect("failed to dump");
-                multi_line.dump_with_atoms_at(out, atoms, depth + 1);
+                multi_line.dump_with_atoms_at(out, atoms, slices, depth + 1);
+                newline(out, depth + 1);
+                write!(out, "dot_all=").expect("failed to dump");
+                dot_all.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "sticky=").expect("failed to dump");
-                sticky.dump_with_atoms_at(out, atoms, depth + 1);
+                sticky.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "unicode=").expect("failed to dump");
-                unicode.dump_with_atoms_at(out, atoms, depth + 1);
+                unicode.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::LiteralStringExpression { value, .. } => {
                 write!(out, "(LiteralStringExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "value=").expect("failed to dump");
-                value.dump_with_atoms_at(out, atoms, depth + 1);
+                value.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::ArrayExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::ArrowExpression { is_async, params, body, .. } => {
                 write!(out, "(ArrowExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "is_async=").expect("failed to dump");
-                is_async.dump_with_atoms_at(out, atoms, depth + 1);
+                is_async.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "params=").expect("failed to dump");
-                params.dump_with_atoms_at(out, atoms, depth + 1);
+                params.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "body=").expect("failed to dump");
-                body.dump_with_atoms_at(out, atoms, depth + 1);
+                body.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::AssignmentExpression { binding, expression, .. } => {
                 write!(out, "(AssignmentExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "binding=").expect("failed to dump");
-                binding.dump_with_atoms_at(out, atoms, depth + 1);
+                binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::BinaryExpression { operator, left, right, .. } => {
                 write!(out, "(BinaryExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "operator=").expect("failed to dump");
-                operator.dump_with_atoms_at(out, atoms, depth + 1);
+                operator.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "left=").expect("failed to dump");
-                left.dump_with_atoms_at(out, atoms, depth + 1);
+                left.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "right=").expect("failed to dump");
-                right.dump_with_atoms_at(out, atoms, depth + 1);
+                right.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::CallExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::CompoundAssignmentExpression { operator, binding, expression, .. } => {
                 write!(out, "(CompoundAssignmentExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "operator=").expect("failed to dump");
-                operator.dump_with_atoms_at(out, atoms, depth + 1);
+                operator.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "binding=").expect("failed to dump");
-                binding.dump_with_atoms_at(out, atoms, depth + 1);
+                binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::ConditionalExpression { test, consequent, alternate, .. } => {
                 write!(out, "(ConditionalExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "test=").expect("failed to dump");
-                test.dump_with_atoms_at(out, atoms, depth + 1);
+                test.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "consequent=").expect("failed to dump");
-                consequent.dump_with_atoms_at(out, atoms, depth + 1);
+                consequent.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "alternate=").expect("failed to dump");
-                alternate.dump_with_atoms_at(out, atoms, depth + 1);
+                alternate.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::FunctionExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::IdentifierExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::NewExpression { callee, arguments, .. } => {
                 write!(out, "(NewExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "callee=").expect("failed to dump");
-                callee.dump_with_atoms_at(out, atoms, depth + 1);
+                callee.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "arguments=").expect("failed to dump");
-                arguments.dump_with_atoms_at(out, atoms, depth + 1);
+                arguments.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::NewTargetExpression { .. } => {
                 write!(out, "NewTargetExpression").expect("failed to dump");
             }
             Expression::ObjectExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::OptionalExpression { object, tail, .. } => {
                 write!(out, "(OptionalExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "object=").expect("failed to dump");
-                object.dump_with_atoms_at(out, atoms, depth + 1);
+                object.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "tail=").expect("failed to dump");
-                tail.dump_with_atoms_at(out, atoms, depth + 1);
+                tail.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::OptionalChain(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::UnaryExpression { operator, operand, .. } => {
                 write!(out, "(UnaryExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "operator=").expect("failed to dump");
-                operator.dump_with_atoms_at(out, atoms, depth + 1);
+                operator.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "operand=").expect("failed to dump");
-                operand.dump_with_atoms_at(out, atoms, depth + 1);
+                operand.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::TemplateExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Expression::ThisExpression { .. } => {
                 write!(out, "ThisExpression").expect("failed to dump");
@@ -730,41 +734,41 @@ impl<'alloc> ASTDump for Expression<'alloc> {
                 write!(out, "(UpdateExpression").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "is_prefix=").expect("failed to dump");
-                is_prefix.dump_with_atoms_at(out, atoms, depth + 1);
+                is_prefix.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "operator=").expect("failed to dump");
-                operator.dump_with_atoms_at(out, atoms, depth + 1);
+                operator.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "operand=").expect("failed to dump");
-                operand.dump_with_atoms_at(out, atoms, depth + 1);
+                operand.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::YieldExpression { expression, .. } => {
                 write!(out, "(YieldExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::YieldGeneratorExpression { expression, .. } => {
                 write!(out, "(YieldGeneratorExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::AwaitExpression { expression, .. } => {
                 write!(out, "(AwaitExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             Expression::ImportCallExpression { argument, .. } => {
                 write!(out, "(ImportCallExpression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "argument=").expect("failed to dump");
-                argument.dump_with_atoms_at(out, atoms, depth + 1);
+                argument.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
         }
@@ -772,25 +776,25 @@ impl<'alloc> ASTDump for Expression<'alloc> {
 }
 
 impl<'alloc> ASTDump for MemberExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             MemberExpression::ComputedMemberExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             MemberExpression::StaticMemberExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             MemberExpression::PrivateFieldExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for OptionalChain<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -798,331 +802,331 @@ impl<'alloc> ASTDump for OptionalChain<'alloc> {
                 write!(out, "(ComputedMemberExpressionTail").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             OptionalChain::StaticMemberExpressionTail { property, .. } => {
                 write!(out, "(StaticMemberExpressionTail").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "property=").expect("failed to dump");
-                property.dump_with_atoms_at(out, atoms, depth + 1);
+                property.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             OptionalChain::CallExpressionTail { arguments, .. } => {
                 write!(out, "(CallExpressionTail").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "arguments=").expect("failed to dump");
-                arguments.dump_with_atoms_at(out, atoms, depth + 1);
+                arguments.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             OptionalChain::ComputedMemberExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             OptionalChain::StaticMemberExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             OptionalChain::CallExpression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for PropertyName<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             PropertyName::ComputedPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             PropertyName::StaticPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             PropertyName::StaticNumericPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for CallExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(CallExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "callee=").expect("failed to dump");
-        self.callee.dump_with_atoms_at(out, atoms, depth + 1);
+        self.callee.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "arguments=").expect("failed to dump");
-        self.arguments.dump_with_atoms_at(out, atoms, depth + 1);
+        self.arguments.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ClassElementName<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ClassElementName::ComputedPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ClassElementName::StaticPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ClassElementName::StaticNumericPropertyName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ClassElementName::PrivateFieldName(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ObjectProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ObjectProperty::NamedObjectProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ObjectProperty::ShorthandProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ObjectProperty::SpreadProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for NamedObjectProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             NamedObjectProperty::MethodDefinition(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             NamedObjectProperty::DataProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for MethodDefinition<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             MethodDefinition::Method(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             MethodDefinition::Getter(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             MethodDefinition::Setter(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ImportDeclaration<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ImportDeclaration::Import(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ImportDeclaration::ImportNamespace(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ExportDeclaration<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ExportDeclaration::ExportAllFrom(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDeclaration::ExportFrom(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDeclaration::ExportLocals(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDeclaration::Export(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDeclaration::ExportDefault(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for VariableReference {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             VariableReference::BindingIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             VariableReference::AssignmentTargetIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for BindingPattern<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             BindingPattern::ObjectBinding(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             BindingPattern::ArrayBinding(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Binding<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Binding::BindingPattern(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Binding::BindingIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for SimpleAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             SimpleAssignmentTarget::AssignmentTargetIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             SimpleAssignmentTarget::MemberAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetPattern<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             AssignmentTargetPattern::ArrayAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             AssignmentTargetPattern::ObjectAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             AssignmentTarget::AssignmentTargetPattern(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             AssignmentTarget::SimpleAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Parameter<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Parameter::Binding(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Parameter::BindingWithDefault(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for BindingWithDefault<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(BindingWithDefault").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "init=").expect("failed to dump");
-        self.init.dump_with_atoms_at(out, atoms, depth + 1);
+        self.init.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for BindingIdentifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(BindingIdentifier").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetIdentifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(AssignmentTargetIdentifier").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ExpressionOrSuper<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ExpressionOrSuper::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExpressionOrSuper::Super { .. } => {
                 write!(out, "Super").expect("failed to dump");
@@ -1132,268 +1136,268 @@ impl<'alloc> ASTDump for ExpressionOrSuper<'alloc> {
 }
 
 impl<'alloc> ASTDump for MemberAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             MemberAssignmentTarget::ComputedMemberAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             MemberAssignmentTarget::StaticMemberAssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ComputedMemberAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ComputedMemberAssignmentTarget").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "object=").expect("failed to dump");
-        self.object.dump_with_atoms_at(out, atoms, depth + 1);
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "expression=").expect("failed to dump");
-        self.expression.dump_with_atoms_at(out, atoms, depth + 1);
+        self.expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for StaticMemberAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(StaticMemberAssignmentTarget").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "object=").expect("failed to dump");
-        self.object.dump_with_atoms_at(out, atoms, depth + 1);
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "property=").expect("failed to dump");
-        self.property.dump_with_atoms_at(out, atoms, depth + 1);
+        self.property.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ArrayBinding<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ArrayBinding").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "rest=").expect("failed to dump");
-        self.rest.dump_with_atoms_at(out, atoms, depth + 1);
+        self.rest.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ObjectBinding<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ObjectBinding").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "properties=").expect("failed to dump");
-        self.properties.dump_with_atoms_at(out, atoms, depth + 1);
+        self.properties.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "rest=").expect("failed to dump");
-        self.rest.dump_with_atoms_at(out, atoms, depth + 1);
+        self.rest.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for BindingProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             BindingProperty::BindingPropertyIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             BindingProperty::BindingPropertyProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for BindingPropertyIdentifier<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(BindingPropertyIdentifier").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "init=").expect("failed to dump");
-        self.init.dump_with_atoms_at(out, atoms, depth + 1);
+        self.init.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for BindingPropertyProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(BindingPropertyProperty").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetWithDefault<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(AssignmentTargetWithDefault").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "init=").expect("failed to dump");
-        self.init.dump_with_atoms_at(out, atoms, depth + 1);
+        self.init.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetMaybeDefault<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             AssignmentTargetMaybeDefault::AssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ArrayAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ArrayAssignmentTarget").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "rest=").expect("failed to dump");
-        self.rest.dump_with_atoms_at(out, atoms, depth + 1);
+        self.rest.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ObjectAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ObjectAssignmentTarget").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "properties=").expect("failed to dump");
-        self.properties.dump_with_atoms_at(out, atoms, depth + 1);
+        self.properties.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "rest=").expect("failed to dump");
-        self.rest.dump_with_atoms_at(out, atoms, depth + 1);
+        self.rest.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             AssignmentTargetProperty::AssignmentTargetPropertyProperty(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetPropertyIdentifier<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(AssignmentTargetPropertyIdentifier").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "init=").expect("failed to dump");
-        self.init.dump_with_atoms_at(out, atoms, depth + 1);
+        self.init.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for AssignmentTargetPropertyProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(AssignmentTargetPropertyProperty").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ClassExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ClassExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "super_=").expect("failed to dump");
-        self.super_.dump_with_atoms_at(out, atoms, depth + 1);
+        self.super_.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ClassDeclaration<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ClassDeclaration").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "super_=").expect("failed to dump");
-        self.super_.dump_with_atoms_at(out, atoms, depth + 1);
+        self.super_.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ClassElement<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -1401,20 +1405,20 @@ impl<'alloc> ASTDump for ClassElement<'alloc> {
                 write!(out, "(MethodDefinition").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "is_static=").expect("failed to dump");
-                is_static.dump_with_atoms_at(out, atoms, depth + 1);
+                is_static.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "method=").expect("failed to dump");
-                method.dump_with_atoms_at(out, atoms, depth + 1);
+                method.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             ClassElement::FieldDefinition { name, init, .. } => {
                 write!(out, "(FieldDefinition").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "name=").expect("failed to dump");
-                name.dump_with_atoms_at(out, atoms, depth + 1);
+                name.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 newline(out, depth + 1);
                 write!(out, "init=").expect("failed to dump");
-                init.dump_with_atoms_at(out, atoms, depth + 1);
+                init.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
         }
@@ -1422,324 +1426,324 @@ impl<'alloc> ASTDump for ClassElement<'alloc> {
 }
 
 impl<'alloc> ASTDump for ModuleItems<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ModuleItems::ImportDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ModuleItems::ExportDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ModuleItems::Statement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Module<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Module").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "directives=").expect("failed to dump");
-        self.directives.dump_with_atoms_at(out, atoms, depth + 1);
+        self.directives.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "items=").expect("failed to dump");
-        self.items.dump_with_atoms_at(out, atoms, depth + 1);
+        self.items.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Import<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Import").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "module_specifier=").expect("failed to dump");
-        self.module_specifier.dump_with_atoms_at(out, atoms, depth + 1);
+        self.module_specifier.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "default_binding=").expect("failed to dump");
-        self.default_binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.default_binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "named_imports=").expect("failed to dump");
-        self.named_imports.dump_with_atoms_at(out, atoms, depth + 1);
+        self.named_imports.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ImportNamespace {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ImportNamespace").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "module_specifier=").expect("failed to dump");
-        self.module_specifier.dump_with_atoms_at(out, atoms, depth + 1);
+        self.module_specifier.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "default_binding=").expect("failed to dump");
-        self.default_binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.default_binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "namespace_binding=").expect("failed to dump");
-        self.namespace_binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.namespace_binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ImportSpecifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ImportSpecifier").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ExportAllFrom {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ExportAllFrom").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "module_specifier=").expect("failed to dump");
-        self.module_specifier.dump_with_atoms_at(out, atoms, depth + 1);
+        self.module_specifier.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ExportFrom<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ExportFrom").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "named_exports=").expect("failed to dump");
-        self.named_exports.dump_with_atoms_at(out, atoms, depth + 1);
+        self.named_exports.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "module_specifier=").expect("failed to dump");
-        self.module_specifier.dump_with_atoms_at(out, atoms, depth + 1);
+        self.module_specifier.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ExportLocals<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ExportLocals").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "named_exports=").expect("failed to dump");
-        self.named_exports.dump_with_atoms_at(out, atoms, depth + 1);
+        self.named_exports.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Export<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Export::FunctionDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Export::ClassDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             Export::VariableDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ExportDefault<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ExportDefault::FunctionDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDefault::ClassDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ExportDefault::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ExportFromSpecifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ExportFromSpecifier").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "exported_name=").expect("failed to dump");
-        self.exported_name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.exported_name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ExportLocalSpecifier {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ExportLocalSpecifier").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "exported_name=").expect("failed to dump");
-        self.exported_name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.exported_name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Method<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Method").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "is_async=").expect("failed to dump");
-        self.is_async.dump_with_atoms_at(out, atoms, depth + 1);
+        self.is_async.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "is_generator=").expect("failed to dump");
-        self.is_generator.dump_with_atoms_at(out, atoms, depth + 1);
+        self.is_generator.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "params=").expect("failed to dump");
-        self.params.dump_with_atoms_at(out, atoms, depth + 1);
+        self.params.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "body=").expect("failed to dump");
-        self.body.dump_with_atoms_at(out, atoms, depth + 1);
+        self.body.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Getter<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Getter").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "property_name=").expect("failed to dump");
-        self.property_name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.property_name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "body=").expect("failed to dump");
-        self.body.dump_with_atoms_at(out, atoms, depth + 1);
+        self.body.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Setter<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Setter").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "property_name=").expect("failed to dump");
-        self.property_name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.property_name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "param=").expect("failed to dump");
-        self.param.dump_with_atoms_at(out, atoms, depth + 1);
+        self.param.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "body=").expect("failed to dump");
-        self.body.dump_with_atoms_at(out, atoms, depth + 1);
+        self.body.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for DataProperty<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(DataProperty").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "property_name=").expect("failed to dump");
-        self.property_name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.property_name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "expression=").expect("failed to dump");
-        self.expression.dump_with_atoms_at(out, atoms, depth + 1);
+        self.expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ShorthandProperty {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ShorthandProperty").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ComputedPropertyName<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ComputedPropertyName").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "expression=").expect("failed to dump");
-        self.expression.dump_with_atoms_at(out, atoms, depth + 1);
+        self.expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for StaticPropertyName {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(StaticPropertyName").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for NumericLiteral {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(NumericLiteral").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "value=").expect("failed to dump");
-        self.value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ArrayExpressionElement<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ArrayExpressionElement::SpreadElement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ArrayExpressionElement::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ArrayExpressionElement::Elision { .. } => {
                 write!(out, "Elision").expect("failed to dump");
@@ -1749,319 +1753,319 @@ impl<'alloc> ASTDump for ArrayExpressionElement<'alloc> {
 }
 
 impl<'alloc> ASTDump for ArrayExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ArrayExpression").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ArrowExpressionBody<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             ArrowExpressionBody::FunctionBody(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             ArrowExpressionBody::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for ComputedMemberExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ComputedMemberExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "object=").expect("failed to dump");
-        self.object.dump_with_atoms_at(out, atoms, depth + 1);
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "expression=").expect("failed to dump");
-        self.expression.dump_with_atoms_at(out, atoms, depth + 1);
+        self.expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for IdentifierExpression {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(IdentifierExpression").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "name=").expect("failed to dump");
-        self.name.dump_with_atoms_at(out, atoms, depth + 1);
+        self.name.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for ObjectExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(ObjectExpression").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "properties=").expect("failed to dump");
-        self.properties.dump_with_atoms_at(out, atoms, depth + 1);
+        self.properties.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for StaticMemberExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(StaticMemberExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "object=").expect("failed to dump");
-        self.object.dump_with_atoms_at(out, atoms, depth + 1);
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "property=").expect("failed to dump");
-        self.property.dump_with_atoms_at(out, atoms, depth + 1);
+        self.property.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for PrivateFieldExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(PrivateFieldExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "object=").expect("failed to dump");
-        self.object.dump_with_atoms_at(out, atoms, depth + 1);
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "field=").expect("failed to dump");
-        self.field.dump_with_atoms_at(out, atoms, depth + 1);
+        self.field.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for TemplateExpressionElement<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             TemplateExpressionElement::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             TemplateExpressionElement::TemplateElement(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for TemplateExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(TemplateExpression").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "tag=").expect("failed to dump");
-        self.tag.dump_with_atoms_at(out, atoms, depth + 1);
+        self.tag.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "elements=").expect("failed to dump");
-        self.elements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.elements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for VariableDeclarationOrAssignmentTarget<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             VariableDeclarationOrAssignmentTarget::VariableDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             VariableDeclarationOrAssignmentTarget::AssignmentTarget(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for VariableDeclarationOrExpression<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             VariableDeclarationOrExpression::VariableDeclaration(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             VariableDeclarationOrExpression::Expression(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
 }
 
 impl<'alloc> ASTDump for Block<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Block").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "statements=").expect("failed to dump");
-        self.statements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.statements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "declarations=").expect("failed to dump");
-        self.declarations.dump_with_atoms_at(out, atoms, depth + 1);
+        self.declarations.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for CatchClause<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(CatchClause").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "body=").expect("failed to dump");
-        self.body.dump_with_atoms_at(out, atoms, depth + 1);
+        self.body.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Directive {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Directive").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "raw_value=").expect("failed to dump");
-        self.raw_value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.raw_value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for FormalParameters<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(FormalParameters").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "items=").expect("failed to dump");
-        self.items.dump_with_atoms_at(out, atoms, depth + 1);
+        self.items.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "rest=").expect("failed to dump");
-        self.rest.dump_with_atoms_at(out, atoms, depth + 1);
+        self.rest.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for FunctionBody<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(FunctionBody").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "directives=").expect("failed to dump");
-        self.directives.dump_with_atoms_at(out, atoms, depth + 1);
+        self.directives.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "statements=").expect("failed to dump");
-        self.statements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.statements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for Script<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(Script").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "directives=").expect("failed to dump");
-        self.directives.dump_with_atoms_at(out, atoms, depth + 1);
+        self.directives.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "statements=").expect("failed to dump");
-        self.statements.dump_with_atoms_at(out, atoms, depth + 1);
+        self.statements.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for SwitchCase<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(SwitchCase").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "test=").expect("failed to dump");
-        self.test.dump_with_atoms_at(out, atoms, depth + 1);
+        self.test.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "consequent=").expect("failed to dump");
-        self.consequent.dump_with_atoms_at(out, atoms, depth + 1);
+        self.consequent.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for SwitchDefault<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(SwitchDefault").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "consequent=").expect("failed to dump");
-        self.consequent.dump_with_atoms_at(out, atoms, depth + 1);
+        self.consequent.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for TemplateElement {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(TemplateElement").expect("failed to dump");
         write!(out, " ").expect("failed to dump");
         write!(out, "raw_value=").expect("failed to dump");
-        self.raw_value.dump_with_atoms_at(out, atoms, depth + 1);
+        self.raw_value.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for VariableDeclaration<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(VariableDeclaration").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "kind=").expect("failed to dump");
-        self.kind.dump_with_atoms_at(out, atoms, depth + 1);
+        self.kind.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "declarators=").expect("failed to dump");
-        self.declarators.dump_with_atoms_at(out, atoms, depth + 1);
+        self.declarators.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for VariableDeclarator<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "(VariableDeclarator").expect("failed to dump");
         newline(out, depth + 1);
         write!(out, "binding=").expect("failed to dump");
-        self.binding.dump_with_atoms_at(out, atoms, depth + 1);
+        self.binding.dump_with_atoms_at(out, atoms, slices, depth + 1);
         newline(out, depth + 1);
         write!(out, "init=").expect("failed to dump");
-        self.init.dump_with_atoms_at(out, atoms, depth + 1);
+        self.init.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }
 
 impl<'alloc> ASTDump for CoverParenthesized<'alloc> {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
@@ -2069,11 +2073,11 @@ impl<'alloc> ASTDump for CoverParenthesized<'alloc> {
                 write!(out, "(Expression").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
                 write!(out, "expression=").expect("failed to dump");
-                expression.dump_with_atoms_at(out, atoms, depth + 1);
+                expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
             CoverParenthesized::Parameters(ast) => {
-                ast.dump_with_atoms_at(out, atoms, depth);
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
         }
     }
@@ -2082,14 +2086,14 @@ impl<'alloc> ASTDump for CoverParenthesized<'alloc> {
 impl<'alloc, T> ASTDump for arena::Vec<'alloc, T>
     where T: ASTDump
 {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "[").expect("failed to dump");
         if self.len() > 0 {
             for item in self {
                 newline(out, depth + 1);
-                item.dump_with_atoms_at(out, atoms, depth + 1);
+                item.dump_with_atoms_at(out, atoms, slices, depth + 1);
             }
             newline(out, depth);
         }
@@ -2100,12 +2104,12 @@ impl<'alloc, T> ASTDump for arena::Vec<'alloc, T>
 impl<T> ASTDump for Option<T>
     where T: ASTDump
 {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         match self {
             Some(v) => {
-                v.dump_with_atoms_at(out, atoms, depth);
+                v.dump_with_atoms_at(out, atoms, slices, depth);
             }
             None => {
                 write!(out, "None").expect("failed to dump");
@@ -2117,15 +2121,15 @@ impl<T> ASTDump for Option<T>
 impl<'alloc, T> ASTDump for arena::Box<'alloc, T>
     where T: ASTDump
 {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
-        self.deref().dump_with_atoms_at(out, atoms, depth);
+        self.deref().dump_with_atoms_at(out, atoms, slices, depth);
     }
 }
 
 impl ASTDump for bool {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         if *self {
@@ -2137,14 +2141,21 @@ impl ASTDump for bool {
 }
 
 impl ASTDump for SourceAtomSetIndex {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "{:?}", atoms.get(self.clone())).expect("failed to dump");
     }
 }
+impl ASTDump for SourceSliceIndex {
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
+        where W: io::Write
+    {
+        write!(out, "{:?}", slices.get(self.clone())).expect("failed to dump");
+    }
+}
 impl ASTDump for f64 {
-    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, depth: usize)
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
         where W: io::Write
     {
         write!(out, "{}", self).expect("failed to dump");

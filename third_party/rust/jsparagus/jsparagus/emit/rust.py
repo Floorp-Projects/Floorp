@@ -4,13 +4,14 @@ import json
 import re
 import unicodedata
 import sys
-import itertools
 
 from ..runtime import (ERROR, ErrorToken, SPECIAL_CASE_TAG)
 from ..ordered import OrderedSet
 
-from ..grammar import (CallMethod, Some, is_concrete_element, Nt, InitNt, Optional, End, ErrorSymbol)
-from ..actions import Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag, PopFlag, FunCall, Seq
+from ..grammar import (CallMethod, Some, is_concrete_element, Nt, InitNt, Optional, End,
+                       ErrorSymbol)
+from ..actions import (Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag, PopFlag,
+                       FunCall, Seq)
 
 from .. import types
 
@@ -71,6 +72,7 @@ TERMINAL_NAMES = {
     '...': 'Ellipsis',
 }
 
+
 class RustParserWriter:
     def __init__(self, out, pt, fallible_methods):
         self.out = out
@@ -128,7 +130,6 @@ class RustParserWriter:
         self.write(0, "")
         self.write(0, "const ERROR: i64 = {};", hex(ERROR))
         self.write(0, "")
-
 
     def terminal_name(self, value):
         if isinstance(value, End) or value is None:
@@ -199,6 +200,7 @@ class RustParserWriter:
         self.write(0, "#[rustfmt::skip]")
         width = len(self.terminals) + len(self.nonterminals)
         num_shifted_edges = 0
+
         def state_get(state, t):
             nonlocal num_shifted_edges
             res = state.get(t, "ERROR")
@@ -210,6 +212,7 @@ class RustParserWriter:
             else:
                 num_shifted_edges += 1
             return res
+
         self.write(0, "static SHIFT: [i64; {}] = [", self.shift_count * width)
         assert self.terminals[-1] == "ErrorToken"
         for i, state in enumerate(self.states[:self.shift_count]):
@@ -223,7 +226,7 @@ class RustParserWriter:
                        ' '.join("{},".format(state_get(state, t)) for t in self.nonterminals))
             try:
                 assert sum(1 for _ in state.shifted_edges()) == num_shifted_edges
-            except:
+            except Exception:
                 print("Some edges are not encoded.")
                 print("List of terminals: {}".format(', '.join(map(repr, self.terminals))))
                 print("List of nonterminals: {}".format(', '.join(map(repr, self.nonterminals))))
@@ -454,6 +457,7 @@ class RustParserWriter:
         has_ast_builder = False
         used_variables = set()
         traits = []
+
         def implement_trait(funcall):
             "Returns True if this function call should be encoded"
             ty = funcall.trait
@@ -498,9 +502,9 @@ class RustParserWriter:
             assert not act.is_inconsistent()
             if isinstance(act, Reduce):
                 value = "value"
-                try:
+                if value in is_packed:
                     packed = is_packed[value]
-                except:
+                else:
                     packed = False
                     value = "None"
                 if packed:
@@ -511,7 +515,6 @@ class RustParserWriter:
                     else:
                         value = "value"
 
-                replay_list = []
                 self.write(indent, "let term = Term::Nonterminal(NonterminalId::{});",
                            self.nonterminal_to_camel(act.nt))
                 if value != "value":
@@ -540,14 +543,13 @@ class RustParserWriter:
             elif isinstance(act, FunCall):
                 def no_unpack(val):
                     return val
+
                 def unpack(val):
-                    try:
-                        packed = is_packed[val]
-                    except:
-                        packed = True
+                    packed = is_packed.get(val, True)
                     if packed:
                         return "{}.value.to_ast()?".format(val)
                     return val
+
                 def map_with_offset(args, unpack):
                     get_value = "s{}"
                     for a in args:
@@ -620,7 +622,9 @@ class RustParserWriter:
             used_variables = set()
             traits = mode_traits
             has_ast_builder = ast_builder in traits
-            self.write(0, "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) -> Result<'alloc, bool>",
+            self.write(0,
+                       "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) "
+                       "-> Result<'alloc, bool>",
                        mode)
             self.write(0, "where")
             self.write(1, "Handler: {}", ' + '.join(map(self.type_to_rust, traits)))
@@ -633,15 +637,15 @@ class RustParserWriter:
                     self.write(3, "// {}", ctx)
                 for act, d in state.edges():
                     self.write(3, "// {} --> {}", str(act), d)
-                    is_packed = {} # Map variable names to a boolean to know if the data is packed or not.
+                    is_packed = {}  # Map variable names to a boolean to know if the data is packed or not.
                     try:
                         used_variables = set(collect_uses(act))
                         fallthrough = write_action(3, act, is_packed)
-                    except:
+                    except Exception as exc:
                         print("{}: Error while writing code for {}\n\n".format(mode, state))
                         self.parse_table.debug_info = True
                         print(self.parse_table.debug_context(state.index, "\n", "# "))
-                        raise
+                        raise exc
                     if fallthrough:
                         self.write(3, "parser.epsilon({});", d)
                         self.write(3, "return Ok(false)")
@@ -650,7 +654,6 @@ class RustParserWriter:
             self.write(1, "}")
             self.write(0, "}")
             self.write(0, "")
-
 
     def reduce(self):
         if self.parse_table:
@@ -746,7 +749,8 @@ class RustParserWriter:
                             if is_discarding_reduction:
                                 self.write(3, "let x{} = stack.pop().unwrap();", index)
                             else:
-                                self.write(3, "let x{}: {} = stack.pop().unwrap().to_ast()?;", index, rust_ty)
+                                self.write(3, "let x{}: {} = stack.pop().unwrap().to_ast()?;",
+                                           index, rust_ty)
                         else:
                             self.write(3, "stack.pop();", index)
 
@@ -809,6 +813,7 @@ class RustParserWriter:
             self.write(0, "pub static START_STATE_{}: usize = {};",
                        self.nonterminal_to_snake(init_nt).upper(), index)
             self.write(0, "")
+
 
 def write_rust_parse_table(out, parse_table, handler_info):
     if not handler_info:

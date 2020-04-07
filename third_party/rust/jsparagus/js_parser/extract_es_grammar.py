@@ -20,7 +20,7 @@ You can also use this script on a random HTTPS URL, like:
 
 import argparse
 import urllib
-import html5lib
+import html5lib  # type: ignore
 import re
 from textwrap import dedent
 
@@ -134,7 +134,7 @@ def apply_prefix_postfix_rule(e, rule, name):
         return
 
     fix = rule.get(name)
-    if isinstance(fix, type(lambda:0)):
+    if callable(fix):
         yield fix(e)
     elif isinstance(fix, list):
         for item in fix:
@@ -454,7 +454,7 @@ def generate_ul_fragment_patch(e, depth):
 
     for item in e:
         if item.tag != '{http://www.w3.org/1999/xhtml}li':
-            raise ValueError("unrecognized element: " + child.tag)
+            raise ValueError("unrecognized element: " + item.tag)
 
         pairs = generate_fragment_patch(item,
                                         extra_rules=EXTRA_RULES_FOR_EE)
@@ -498,8 +498,8 @@ def generate_early_errors_fragment_patch(parent_map, e):
                                             extra_rules=EXTRA_RULES_FOR_EE)
             yield from dedent_pairs(pairs)
             yield KEEP, ''
-        elif (child.tag == '{http://www.w3.org/1999/xhtml}emu-alg' and
-              e.attrib.get('id') == 'sec-__proto__-property-names-in-object-initializers'):
+        elif (child.tag == '{http://www.w3.org/1999/xhtml}emu-alg'
+              and e.attrib.get('id') == 'sec-__proto__-property-names-in-object-initializers'):
             # "__proto__ Property Names in Object Initializers" section
             # contains changes both for early errors and algorithm.
             # Ignore algorithm part.
@@ -507,6 +507,7 @@ def generate_early_errors_fragment_patch(parent_map, e):
         else:
             raise ValueError('unsupported element in early errors section: {}'
                              .format(child.tag))
+
 
 def print_early_errors(parent_map, e):
     pairs = generate_early_errors_fragment_patch(parent_map, e)
@@ -541,7 +542,6 @@ def extract(filename, unfiltered, target):
 
 
 if __name__ == '__main__':
-    import sys
     parser = argparse.ArgumentParser(
         description="Extract esgrammar from ECMAScript specifications.")
     parser.add_argument(

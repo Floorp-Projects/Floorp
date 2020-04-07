@@ -1,10 +1,10 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
 use crate::emitter_scope::NameLocation;
-use crate::frame_slot::FrameSlot;
-use crate::scope::BindingKind;
 use crate::script_atom_set::ScriptAtomSetIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
+use scope::data::BindingKind;
+use scope::frame_slot::FrameSlot;
 
 #[derive(Debug, PartialEq)]
 enum AssignmentReferenceKind {

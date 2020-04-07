@@ -1,7 +1,9 @@
 //! JavaScript lexer.
 
+use crate::numeric_value::{parse_float, parse_int, NumericLiteralBase};
 use crate::parser::Parser;
-use ast::source_atom_set::SourceAtomSet;
+use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet};
+use ast::source_slice_list::SourceSliceList;
 use ast::SourceLocation;
 use bumpalo::{collections::String, Bump};
 use generated_parser::{ParseError, Result, TerminalId, Token, TokenValue};
@@ -25,6 +27,19 @@ pub struct Lexer<'alloc> {
     is_on_new_line: bool,
 
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
+
+    slices: Rc<RefCell<SourceSliceList<'alloc>>>,
+}
+
+enum NumericResult {
+    Int {
+        base: NumericLiteralBase,
+    },
+    Float,
+    BigInt {
+        #[allow(dead_code)]
+        base: NumericLiteralBase,
+    },
 }
 
 impl<'alloc> Lexer<'alloc> {
@@ -32,8 +47,9 @@ impl<'alloc> Lexer<'alloc> {
         allocator: &'alloc Bump,
         chars: Chars<'alloc>,
         atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
+        slices: Rc<RefCell<SourceSliceList<'alloc>>>,
     ) -> Lexer<'alloc> {
-        Self::with_offset(allocator, chars, 0, atoms)
+        Self::with_offset(allocator, chars, 0, atoms, slices)
     }
 
     /// Create a lexer for a part of a JS script or module. `offset` is the
@@ -44,6 +60,7 @@ impl<'alloc> Lexer<'alloc> {
         chars: Chars<'alloc>,
         offset: usize,
         atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
+        slices: Rc<RefCell<SourceSliceList<'alloc>>>,
     ) -> Lexer<'alloc> {
         let source_length = offset + chars.as_str().len();
         Lexer {
@@ -52,6 +69,7 @@ impl<'alloc> Lexer<'alloc> {
             chars,
             is_on_new_line: true,
             atoms,
+            slices,
         }
     }
 
@@ -74,32 +92,14 @@ impl<'alloc> Lexer<'alloc> {
     }
 
     pub fn next<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, Token> {
-        let (loc, value, terminal_id) = self.advance_impl(parser)?;
-        let value = match terminal_id {
-            TerminalId::NumericLiteral => {
-                // FIXME: Not all syntax is supported yet (issue #340)
-                let n = value
-                    .unwrap()
-                    .parse::<f64>()
-                    .map_err(|_| ParseError::NotImplemented("Cannot parse numeric literal"))?;
-                TokenValue::Number(n)
-            }
-            _ => match value {
-                Some(atom) => {
-                    let index = self.atoms.borrow_mut().insert(atom);
-                    TokenValue::Atom(index)
-                }
-                None => TokenValue::None,
-            },
-        };
-
+        let result = self.advance_impl(parser)?;
         let is_on_new_line = self.is_on_new_line;
         self.is_on_new_line = false;
         Ok(Token {
-            terminal_id,
-            loc,
+            terminal_id: result.terminal_id,
+            loc: result.loc,
             is_on_new_line,
-            value,
+            value: result.value,
         })
     }
 
@@ -159,6 +159,14 @@ const LS: char = '\u{2028}';
 
 /// U+2029 PARAGRAPH SEPARATOR, abbreviated <PS>.
 const PS: char = '\u{2029}';
+
+/// `Token` struct without `is_on_new_line` field, for the return value of
+/// `advance_impl`.
+struct AdvanceResult {
+    terminal_id: TerminalId,
+    loc: SourceLocation,
+    value: TokenValue,
+}
 
 // ----------------------------------------------------------------------------
 // 11.4 Comments
@@ -386,7 +394,7 @@ impl<'alloc> Lexer<'alloc> {
         &mut self,
         start: usize,
         builder: AutoCow<'alloc>,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    ) -> Result<'alloc, AdvanceResult> {
         let (has_different, text) = self.identifier_name_tail(builder)?;
 
         // https://tc39.es/ecma262/#sec-keywords-and-reserved-words
@@ -394,91 +402,263 @@ impl<'alloc> Lexer<'alloc> {
         // keywords in the grammar match literal sequences of specific
         // SourceCharacter elements. A code point in a keyword cannot be
         // expressed by a `\` UnicodeEscapeSequence.
-        let id = if has_different {
+        let (id, value) = if has_different {
             // Always return `NameWithEscape`.
             //
             // Error check against reserved word should be handled in the
             // consumer.
-            TerminalId::NameWithEscape
+            (TerminalId::NameWithEscape, self.string_to_token_value(text))
         } else {
             match &text as &str {
-                "as" => TerminalId::As,
+                "as" => (
+                    TerminalId::As,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::as_()),
+                ),
                 "async" => {
-                    //TerminalId::Async
+                    /*
+                    (
+                        TerminalId::Async,
+                        TokenValue::Atom(CommonSourceAtomSetIndices::async_()),
+                    ),
+                    */
                     return Err(ParseError::NotImplemented(
                         "async cannot be handled in parser due to multiple lookahead",
                     ));
                 }
                 "await" => {
-                    //TerminalId::Await
+                    /*
+                    (
+                        TerminalId::Await,
+                        TokenValue::Atom(CommonSourceAtomSetIndices::await_()),
+                    ),
+                     */
                     return Err(ParseError::NotImplemented(
                         "await cannot be handled in parser",
                     ));
                 }
-                "break" => TerminalId::Break,
-                "case" => TerminalId::Case,
-                "catch" => TerminalId::Catch,
-                "class" => TerminalId::Class,
-                "const" => TerminalId::Const,
-                "continue" => TerminalId::Continue,
-                "debugger" => TerminalId::Debugger,
-                "default" => TerminalId::Default,
-                "delete" => TerminalId::Delete,
-                "do" => TerminalId::Do,
-                "else" => TerminalId::Else,
-                "enum" => TerminalId::Enum,
-                "export" => TerminalId::Export,
-                "extends" => TerminalId::Extends,
-                "finally" => TerminalId::Finally,
-                "for" => TerminalId::For,
-                "from" => TerminalId::From,
-                "function" => TerminalId::Function,
-                "get" => TerminalId::Get,
-                "if" => TerminalId::If,
-                "implements" => TerminalId::Implements,
-                "import" => TerminalId::Import,
-                "in" => TerminalId::In,
-                "instanceof" => TerminalId::Instanceof,
-                "interface" => TerminalId::Interface,
+                "break" => (
+                    TerminalId::Break,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::break_()),
+                ),
+                "case" => (
+                    TerminalId::Case,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::case()),
+                ),
+                "catch" => (
+                    TerminalId::Catch,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::catch()),
+                ),
+                "class" => (
+                    TerminalId::Class,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::class()),
+                ),
+                "const" => (
+                    TerminalId::Const,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::const_()),
+                ),
+                "continue" => (
+                    TerminalId::Continue,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::continue_()),
+                ),
+                "debugger" => (
+                    TerminalId::Debugger,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::debugger()),
+                ),
+                "default" => (
+                    TerminalId::Default,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::default()),
+                ),
+                "delete" => (
+                    TerminalId::Delete,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::delete()),
+                ),
+                "do" => (
+                    TerminalId::Do,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::do_()),
+                ),
+                "else" => (
+                    TerminalId::Else,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::else_()),
+                ),
+                "enum" => (
+                    TerminalId::Enum,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::enum_()),
+                ),
+                "export" => (
+                    TerminalId::Export,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::export()),
+                ),
+                "extends" => (
+                    TerminalId::Extends,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::extends()),
+                ),
+                "finally" => (
+                    TerminalId::Finally,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::finally()),
+                ),
+                "for" => (
+                    TerminalId::For,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::for_()),
+                ),
+                "from" => (
+                    TerminalId::From,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::from()),
+                ),
+                "function" => (
+                    TerminalId::Function,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::function()),
+                ),
+                "get" => (
+                    TerminalId::Get,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::get()),
+                ),
+                "if" => (
+                    TerminalId::If,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::if_()),
+                ),
+                "implements" => (
+                    TerminalId::Implements,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::implements()),
+                ),
+                "import" => (
+                    TerminalId::Import,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::import()),
+                ),
+                "in" => (
+                    TerminalId::In,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::in_()),
+                ),
+                "instanceof" => (
+                    TerminalId::Instanceof,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::instanceof()),
+                ),
+                "interface" => (
+                    TerminalId::Interface,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::interface()),
+                ),
                 "let" => {
-                    //TerminalId::Let,
+                    /*
+                    (
+                        TerminalId::Let,
+                        TokenValue::Atom(CommonSourceAtomSetIndices::let_()),
+                    ),
+                    */
                     return Err(ParseError::NotImplemented(
                         "let cannot be handled in parser due to multiple lookahead",
                     ));
                 }
-                "new" => TerminalId::New,
-                "of" => TerminalId::Of,
-                "package" => TerminalId::Package,
-                "private" => TerminalId::Private,
-                "protected" => TerminalId::Protected,
-                "public" => TerminalId::Public,
-                "return" => TerminalId::Return,
-                "set" => TerminalId::Set,
-                "static" => TerminalId::Static,
-                "super" => TerminalId::Super,
-                "switch" => TerminalId::Switch,
-                "target" => TerminalId::Target,
-                "this" => TerminalId::This,
-                "throw" => TerminalId::Throw,
-                "try" => TerminalId::Try,
-                "typeof" => TerminalId::Typeof,
-                "var" => TerminalId::Var,
-                "void" => TerminalId::Void,
-                "while" => TerminalId::While,
-                "with" => TerminalId::With,
+                "new" => (
+                    TerminalId::New,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::new_()),
+                ),
+                "of" => (
+                    TerminalId::Of,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::of()),
+                ),
+                "package" => (
+                    TerminalId::Package,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::package()),
+                ),
+                "private" => (
+                    TerminalId::Private,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::private()),
+                ),
+                "protected" => (
+                    TerminalId::Protected,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::protected()),
+                ),
+                "public" => (
+                    TerminalId::Public,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::public()),
+                ),
+                "return" => (
+                    TerminalId::Return,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::return_()),
+                ),
+                "set" => (
+                    TerminalId::Set,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::set()),
+                ),
+                "static" => (
+                    TerminalId::Static,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::static_()),
+                ),
+                "super" => (
+                    TerminalId::Super,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::super_()),
+                ),
+                "switch" => (
+                    TerminalId::Switch,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::switch()),
+                ),
+                "target" => (
+                    TerminalId::Target,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::target()),
+                ),
+                "this" => (
+                    TerminalId::This,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::this()),
+                ),
+                "throw" => (
+                    TerminalId::Throw,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::throw()),
+                ),
+                "try" => (
+                    TerminalId::Try,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::try_()),
+                ),
+                "typeof" => (
+                    TerminalId::Typeof,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::typeof_()),
+                ),
+                "var" => (
+                    TerminalId::Var,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::var()),
+                ),
+                "void" => (
+                    TerminalId::Void,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::void()),
+                ),
+                "while" => (
+                    TerminalId::While,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::while_()),
+                ),
+                "with" => (
+                    TerminalId::With,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::with()),
+                ),
                 "yield" => {
-                    //TerminalId::Yield
+                    /*
+                    (
+                        TerminalId::Yield,
+                        TokenValue::Atom(CommonSourceAtomSetIndices::yield_()),
+                    ),
+                     */
                     return Err(ParseError::NotImplemented(
                         "yield cannot be handled in parser",
                     ));
                 }
-                "null" => TerminalId::NullLiteral,
-                "true" | "false" => TerminalId::BooleanLiteral,
-                _ => TerminalId::Name,
+                "null" => (
+                    TerminalId::NullLiteral,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::null()),
+                ),
+                "true" => (
+                    TerminalId::BooleanLiteral,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::true_()),
+                ),
+                "false" => (
+                    TerminalId::BooleanLiteral,
+                    TokenValue::Atom(CommonSourceAtomSetIndices::false_()),
+                ),
+                _ => (TerminalId::Name, self.string_to_token_value(text)),
             }
         };
 
-        Ok((SourceLocation::new(start, self.offset()), Some(text), id))
+        Ok(AdvanceResult {
+            terminal_id: id,
+            loc: SourceLocation::new(start, self.offset()),
+            value,
+        })
     }
 
     /// ```text
@@ -489,13 +669,13 @@ impl<'alloc> Lexer<'alloc> {
         &mut self,
         start: usize,
         builder: AutoCow<'alloc>,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    ) -> Result<'alloc, AdvanceResult> {
         let name = self.identifier_name(builder)?;
-        Ok((
-            SourceLocation::new(start, self.offset()),
-            Some(name),
-            TerminalId::PrivateIdentifier,
-        ))
+        Ok(AdvanceResult {
+            terminal_id: TerminalId::PrivateIdentifier,
+            loc: SourceLocation::new(start, self.offset()),
+            value: self.string_to_token_value(name),
+        })
     }
 
     /// ```text
@@ -534,17 +714,11 @@ impl<'alloc> Lexer<'alloc> {
     }
 }
 
-enum NumericType {
-    Normal,
-    BigInt,
-}
-
 impl<'alloc> Lexer<'alloc> {
     // ------------------------------------------------------------------------
     // 11.8.3 Numeric Literals
 
-    /// Advance over decimal digits in the input, returning true if any were
-    /// found.
+    /// Advance over decimal digits in the input.
     ///
     /// ```text
     /// NumericLiteralSeparator::
@@ -557,15 +731,26 @@ impl<'alloc> Lexer<'alloc> {
     /// DecimalDigit :: one of
     ///     `0` `1` `2` `3` `4` `5` `6` `7` `8` `9`
     /// ```
-    fn decimal_digits(&mut self) -> Result<'alloc, bool> {
+    fn decimal_digits(&mut self) -> Result<'alloc, ()> {
         if let Some('0'..='9') = self.peek() {
             self.chars.next();
         } else {
-            return Ok(false);
+            return Err(self.unexpected_err());
         }
 
         self.decimal_digits_after_first_digit()?;
-        Ok(true)
+        Ok(())
+    }
+
+    fn optional_decimal_digits(&mut self) -> Result<'alloc, ()> {
+        if let Some('0'..='9') = self.peek() {
+            self.chars.next();
+        } else {
+            return Ok(());
+        }
+
+        self.decimal_digits_after_first_digit()?;
+        Ok(())
     }
 
     fn decimal_digits_after_first_digit(&mut self) -> Result<'alloc, ()> {
@@ -603,18 +788,23 @@ impl<'alloc> Lexer<'alloc> {
     ///     `+` DecimalDigits
     ///     `-` DecimalDigits
     /// ```
-    fn optional_exponent(&mut self) -> Result<'alloc, ()> {
+    fn optional_exponent(&mut self) -> Result<'alloc, bool> {
         if let Some('e') | Some('E') = self.peek() {
             self.chars.next();
-
-            if let Some('+') | Some('-') = self.peek() {
-                self.chars.next();
-            }
-            if !self.decimal_digits()? {
-                // require at least one digit
-                return Err(self.unexpected_err());
-            }
+            self.decimal_exponent()?;
+            return Ok(true);
         }
+
+        Ok(false)
+    }
+
+    fn decimal_exponent(&mut self) -> Result<'alloc, ()> {
+        if let Some('+') | Some('-') = self.peek() {
+            self.chars.next();
+        }
+
+        self.decimal_digits()?;
+
         Ok(())
     }
 
@@ -707,7 +897,8 @@ impl<'alloc> Lexer<'alloc> {
     /// BigIntLiteralSuffix ::
     ///     `n`
     /// ```
-    fn numeric_literal_starting_with_zero(&mut self) -> Result<'alloc, NumericType> {
+    fn numeric_literal_starting_with_zero(&mut self) -> Result<'alloc, NumericResult> {
+        let mut base = NumericLiteralBase::Decimal;
         match self.peek() {
             // BinaryIntegerLiteral ::
             //     `0b` BinaryDigits
@@ -721,6 +912,8 @@ impl<'alloc> Lexer<'alloc> {
             //     `0` `1`
             Some('b') | Some('B') => {
                 self.chars.next();
+
+                base = NumericLiteralBase::Binary;
 
                 if let Some('0'..='1') = self.peek() {
                     self.chars.next();
@@ -749,7 +942,7 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('n') = self.peek() {
                     self.chars.next();
                     self.check_after_numeric_literal()?;
-                    return Ok(NumericType::BigInt);
+                    return Ok(NumericResult::BigInt { base });
                 }
             }
 
@@ -766,6 +959,8 @@ impl<'alloc> Lexer<'alloc> {
             //
             Some('o') | Some('O') => {
                 self.chars.next();
+
+                base = NumericLiteralBase::Octal;
 
                 if let Some('0'..='7') = self.peek() {
                     self.chars.next();
@@ -794,7 +989,7 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('n') = self.peek() {
                     self.chars.next();
                     self.check_after_numeric_literal()?;
-                    return Ok(NumericType::BigInt);
+                    return Ok(NumericResult::BigInt { base });
                 }
             }
 
@@ -810,6 +1005,8 @@ impl<'alloc> Lexer<'alloc> {
             //     `0` `1` `2` `3` `4` `5` `6` `7` `8` `9` `a` `b` `c` `d` `e` `f` `A` `B` `C` `D` `E` `F`
             Some('x') | Some('X') => {
                 self.chars.next();
+
+                base = NumericLiteralBase::Hex;
 
                 if let Some('0'..='9') | Some('a'..='f') | Some('A'..='F') = self.peek() {
                     self.chars.next();
@@ -839,18 +1036,25 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('n') = self.peek() {
                     self.chars.next();
                     self.check_after_numeric_literal()?;
-                    return Ok(NumericType::BigInt);
+                    return Ok(NumericResult::BigInt { base });
                 }
             }
 
-            Some('.') | Some('e') | Some('E') => {
-                return self.decimal_literal();
+            Some('.') => {
+                self.chars.next();
+                return self.decimal_literal_after_decimal_point_after_digits();
+            }
+
+            Some('e') | Some('E') => {
+                self.chars.next();
+                self.decimal_exponent()?;
+                return Ok(NumericResult::Float);
             }
 
             Some('n') => {
                 self.chars.next();
                 self.check_after_numeric_literal()?;
-                return Ok(NumericType::BigInt);
+                return Ok(NumericResult::BigInt { base });
             }
 
             Some('0'..='9') => {
@@ -896,11 +1100,12 @@ impl<'alloc> Lexer<'alloc> {
         }
 
         self.check_after_numeric_literal()?;
-        Ok(NumericType::Normal)
+        Ok(NumericResult::Int { base })
     }
 
-    /// Scan a NumericLiteral (defined in 11.8.3, extended by B.1.1).
-    fn decimal_literal(&mut self) -> Result<'alloc, NumericType> {
+    /// Scan a NumericLiteral (defined in 11.8.3, extended by B.1.1) after
+    /// having already consumed the first character, which is a decimal digit.
+    fn decimal_literal_after_first_digit(&mut self) -> Result<'alloc, NumericResult> {
         // DecimalLiteral ::
         //     DecimalIntegerLiteral `.` DecimalDigits? ExponentPart?
         //     `.` DecimalDigits ExponentPart?
@@ -916,33 +1121,59 @@ impl<'alloc> Lexer<'alloc> {
         // NonZeroDigit :: one of
         //     `1` `2` `3` `4` `5` `6` `7` `8` `9`
 
-        self.decimal_digits()?;
-        self.decimal_literal_after_digits()
-    }
-
-    /// Scan a NumericLiteral (defined in 11.8.3, extended by B.1.1) after
-    /// having already consumed the first character, which is a decimal digit.
-    fn decimal_literal_after_first_digit(&mut self) -> Result<'alloc, NumericType> {
         self.decimal_digits_after_first_digit()?;
-        self.decimal_literal_after_digits()
-    }
-
-    fn decimal_literal_after_digits(&mut self) -> Result<'alloc, NumericType> {
         match self.peek() {
             Some('.') => {
                 self.chars.next();
-                self.decimal_digits()?;
+                return self.decimal_literal_after_decimal_point_after_digits();
             }
             Some('n') => {
                 self.chars.next();
                 self.check_after_numeric_literal()?;
-                return Ok(NumericType::BigInt);
+                return Ok(NumericResult::BigInt {
+                    base: NumericLiteralBase::Decimal,
+                });
             }
             _ => {}
         }
+
+        let has_exponent = self.optional_exponent()?;
+        self.check_after_numeric_literal()?;
+
+        let result = if has_exponent {
+            NumericResult::Float
+        } else {
+            NumericResult::Int {
+                base: NumericLiteralBase::Decimal,
+            }
+        };
+
+        Ok(result)
+    }
+
+    fn decimal_literal_after_decimal_point(&mut self) -> Result<'alloc, NumericResult> {
+        // The parts after `.` in
+        //
+        //     `.` DecimalDigits ExponentPart?
+        self.decimal_digits()?;
         self.optional_exponent()?;
         self.check_after_numeric_literal()?;
-        Ok(NumericType::Normal)
+
+        Ok(NumericResult::Float)
+    }
+
+    fn decimal_literal_after_decimal_point_after_digits(
+        &mut self,
+    ) -> Result<'alloc, NumericResult> {
+        // The parts after `.` in
+        //
+        // DecimalLiteral ::
+        //     DecimalIntegerLiteral `.` DecimalDigits? ExponentPart?
+        self.optional_decimal_digits()?;
+        self.optional_exponent()?;
+        self.check_after_numeric_literal()?;
+
+        Ok(NumericResult::Float)
     }
 
     fn check_after_numeric_literal(&self) -> Result<'alloc, ()> {
@@ -1134,10 +1365,7 @@ impl<'alloc> Lexer<'alloc> {
     ///     `\` EscapeSequence
     ///     LineContinuation
     /// ```
-    fn string_literal(
-        &mut self,
-        delimiter: char,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    fn string_literal(&mut self, delimiter: char) -> Result<'alloc, AdvanceResult> {
         let offset = self.offset() - 1;
         let mut builder = AutoCow::new(&self);
         loop {
@@ -1148,11 +1376,11 @@ impl<'alloc> Lexer<'alloc> {
 
                 Some(c @ '"') | Some(c @ '\'') => {
                     if c == delimiter {
-                        return Ok((
-                            SourceLocation::new(offset, self.offset()),
-                            Some(builder.finish_without_push(&self)),
-                            TerminalId::StringLiteral,
-                        ));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::StringLiteral,
+                            loc: SourceLocation::new(offset, self.offset()),
+                            value: self.string_to_token_value(builder.finish_without_push(&self)),
+                        });
                     } else {
                         builder.push_matching(c);
                     }
@@ -1181,17 +1409,10 @@ impl<'alloc> Lexer<'alloc> {
     // ------------------------------------------------------------------------
     // 11.8.5 Regular Expression Literals
 
-    fn regular_expression_backslash_sequence(
-        &mut self,
-        text: &mut String<'alloc>,
-    ) -> Result<'alloc, ()> {
-        text.push('\\');
+    fn regular_expression_backslash_sequence(&mut self) -> Result<'alloc, ()> {
         match self.chars.next() {
             None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => Err(ParseError::UnterminatedRegExp),
-            Some(c) => {
-                text.push(c);
-                Ok(())
-            }
+            Some(_) => Ok(()),
         }
     }
 
@@ -1199,7 +1420,7 @@ impl<'alloc> Lexer<'alloc> {
     fn regular_expression_literal(
         &mut self,
         builder: &mut AutoCow<'alloc>,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    ) -> Result<'alloc, AdvanceResult> {
         let offset = self.offset();
 
         loop {
@@ -1212,7 +1433,6 @@ impl<'alloc> Lexer<'alloc> {
                 }
                 Some('[') => {
                     // RegularExpressionClass.
-                    builder.push_matching('[');
                     loop {
                         match self.chars.next() {
                             None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => {
@@ -1222,32 +1442,23 @@ impl<'alloc> Lexer<'alloc> {
                                 break;
                             }
                             Some('\\') => {
-                                let text = builder.get_mut_string_without_current_ascii_char(&self);
-                                self.regular_expression_backslash_sequence(text)?;
+                                self.regular_expression_backslash_sequence()?;
                             }
-                            Some(ch) => {
-                                builder.push_matching(ch);
-                            }
+                            Some(_) => {}
                         }
                     }
-                    builder.push_matching(']');
                 }
                 Some('\\') => {
-                    let text = builder.get_mut_string_without_current_ascii_char(&self);
-                    self.regular_expression_backslash_sequence(text)?;
+                    self.regular_expression_backslash_sequence()?;
                 }
-                Some(ch) => {
-                    builder.push_matching(ch);
-                }
+                Some(_) => {}
             }
         }
-        builder.push_matching('/');
         let mut flag_text = AutoCow::new(&self);
         while let Some(ch) = self.peek() {
             match ch {
                 '$' | '_' | 'a'..='z' | 'A'..='Z' | '0'..='9' => {
                     self.chars.next();
-                    builder.push_matching(ch);
                     flag_text.push_matching(ch);
                 }
                 _ => break,
@@ -1286,11 +1497,11 @@ impl<'alloc> Lexer<'alloc> {
         // TODO: 12.2.8.2.4 and 12.2.8.2.5 Check that the body matches the
         // grammar defined in 21.2.1.
 
-        Ok((
-            SourceLocation::new(offset, self.offset()),
-            Some(literal),
-            TerminalId::RegularExpressionLiteral,
-        ))
+        Ok(AdvanceResult {
+            terminal_id: TerminalId::RegularExpressionLiteral,
+            loc: SourceLocation::new(offset, self.offset()),
+            value: self.slice_to_token_value(literal),
+        })
     }
 
     // ------------------------------------------------------------------------
@@ -1322,7 +1533,7 @@ impl<'alloc> Lexer<'alloc> {
         start: usize,
         subst: TerminalId,
         tail: TerminalId,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    ) -> Result<'alloc, AdvanceResult> {
         let mut builder = AutoCow::new(&self);
         while let Some(ch) = self.chars.next() {
             // TemplateCharacter ::
@@ -1353,18 +1564,18 @@ impl<'alloc> Lexer<'alloc> {
             //   HexDigits [> but only if MV of |HexDigits| ≤ 0x10FFFF ]
             if ch == '$' && self.peek() == Some('{') {
                 self.chars.next();
-                return Ok((
-                    SourceLocation::new(start, self.offset()),
-                    Some(builder.finish_without_push(&self)),
-                    subst,
-                ));
+                return Ok(AdvanceResult {
+                    terminal_id: subst,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: self.string_to_token_value(builder.finish_without_push(&self)),
+                });
             }
             if ch == '`' {
-                return Ok((
-                    SourceLocation::new(start, self.offset()),
-                    Some(builder.finish_without_push(&self)),
-                    tail,
-                ));
+                return Ok(AdvanceResult {
+                    terminal_id: tail,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: self.string_to_token_value(builder.finish_without_push(&self)),
+                });
             }
             // TODO: Support escape sequences.
             if ch == '\\' {
@@ -1377,10 +1588,7 @@ impl<'alloc> Lexer<'alloc> {
         Err(ParseError::UnterminatedString)
     }
 
-    fn advance_impl<'parser>(
-        &mut self,
-        parser: &Parser<'parser>,
-    ) -> Result<'alloc, (SourceLocation, Option<&'alloc str>, TerminalId)> {
+    fn advance_impl<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, AdvanceResult> {
         let mut builder = AutoCow::new(&self);
         let mut start = self.offset();
         while let Some(c) = self.chars.next() {
@@ -1431,41 +1639,13 @@ impl<'alloc> Lexer<'alloc> {
                 }
 
                 '0' => {
-                    match self.numeric_literal_starting_with_zero()? {
-                        NumericType::Normal => {
-                            return Ok((
-                                SourceLocation::new(start, self.offset()),
-                                Some(builder.finish(&self)),
-                                TerminalId::NumericLiteral,
-                            ));
-                        }
-                        NumericType::BigInt => {
-                            return Ok((
-                                SourceLocation::new(start, self.offset()),
-                                Some(builder.finish_without_push(&self)),
-                                TerminalId::BigIntLiteral,
-                            ));
-                        }
-                    }
+                    let result = self.numeric_literal_starting_with_zero()?;
+                    return Ok(self.numeric_result_to_advance_result(builder.finish(&self), start, result)?);
                 }
 
                 '1'..='9' => {
-                    match self.decimal_literal_after_first_digit()? {
-                        NumericType::Normal => {
-                            return Ok((
-                                SourceLocation::new(start, self.offset()),
-                                Some(builder.finish(&self)),
-                                TerminalId::NumericLiteral,
-                            ));
-                        }
-                        NumericType::BigInt => {
-                            return Ok((
-                                SourceLocation::new(start, self.offset()),
-                                Some(builder.finish_without_push(&self)),
-                                TerminalId::BigIntLiteral,
-                            ));
-                        }
-                    }
+                    let result = self.decimal_literal_after_first_digit()?;
+                    return Ok(self.numeric_result_to_advance_result(builder.finish(&self), start, result)?);
                 }
 
                 '"' | '\'' => {
@@ -1482,32 +1662,64 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::StrictNotEqual));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::StrictNotEqual,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LaxNotEqual)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::LaxNotEqual,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LogicalNot)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::LogicalNot,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '%' => match self.peek() {
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::RemainderAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::RemainderAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Remainder)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::Remainder,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '&' => match self.peek() {
                     Some('&') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LogicalAnd));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::LogicalAnd,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseAndAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::BitwiseAndAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseAnd)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::BitwiseAnd,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '*' => match self.peek() {
@@ -1516,28 +1728,56 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::ExponentiateAssign));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::ExponentiateAssign,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Exponentiate)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::Exponentiate,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::MultiplyAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::MultiplyAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Star)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::Star,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '+' => match self.peek() {
                     Some('+') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Increment));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::Increment,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::AddAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::AddAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Plus)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::Plus,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '-' => match self.peek() {
@@ -1550,14 +1790,26 @@ impl<'alloc> Lexer<'alloc> {
                                 self.skip_single_line_comment(&mut builder);
                                 continue;
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Decrement)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::Decrement,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::SubtractAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::SubtractAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Minus)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::Minus,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '.' => match self.peek() {
@@ -1566,27 +1818,24 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('.') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Ellipsis));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::Ellipsis,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
                             _ => return Err(ParseError::IllegalCharacter('.')),
                         }
                     }
                     Some('0'..='9') => {
-                        self.decimal_digits()?;
-                        self.optional_exponent()?;
-
-                        // The SourceCharacter immediately following a
-                        // NumericLiteral must not be an IdentifierStart or
-                        // DecimalDigit. (11.8.3)
-                        if let Some(ch) = self.peek() {
-                            if is_identifier_start(ch) || ch.is_digit(10) {
-                                return Err(ParseError::IllegalCharacter(ch));
-                            }
-                        }
-
-                        return Ok((SourceLocation::new(start, self.offset()), Some(builder.finish(&self)), TerminalId::NumericLiteral));
+                        let result = self.decimal_literal_after_decimal_point()?;
+                        return Ok(self.numeric_result_to_advance_result(builder.finish(&self), start, result)?);
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Dot)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::Dot,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '/' => match self.peek() {
@@ -1608,12 +1857,19 @@ impl<'alloc> Lexer<'alloc> {
                             match self.peek() {
                                 Some('=') => {
                                     self.chars.next();
-                                    return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::DivideAssign));
+                                    return Ok(AdvanceResult {
+                                        terminal_id: TerminalId::DivideAssign,
+                                        loc: SourceLocation::new(start, self.offset()),
+                                        value: TokenValue::None,
+                                    });
                                 }
-                                _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Divide)),
+                                _ => return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::Divide,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                }),
                             }
                         }
-                        builder.push_matching('/');
                         return self.regular_expression_literal(&mut builder);
                     }
                 },
@@ -1622,7 +1878,11 @@ impl<'alloc> Lexer<'alloc> {
                     if parser.can_accept_terminal(TerminalId::TemplateMiddle) {
                         return self.template_part(start, TerminalId::TemplateMiddle, TerminalId::TemplateTail);
                     }
-                    return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::CloseBrace));
+                    return Ok(AdvanceResult {
+                        terminal_id: TerminalId::CloseBrace,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    });
                 }
 
                 '<' => match self.peek() {
@@ -1631,14 +1891,26 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LeftShiftAssign));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::LeftShiftAssign,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LeftShift)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::LeftShift,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LessThanOrEqualTo));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::LessThanOrEqualTo,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
                     Some('!') if self.is_looking_at("!--") => {
                         // B.1.3 SingleLineHTMLOpenComment. Note that the above
@@ -1651,7 +1923,11 @@ impl<'alloc> Lexer<'alloc> {
                         start = self.offset();
                         continue;
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LessThan)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::LessThan,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '=' => match self.peek() {
@@ -1660,16 +1936,32 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::StrictEqual));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::StrictEqual,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LaxEqual)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::LaxEqual,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
                     Some('>') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Arrow));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::Arrow,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::EqualSign)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::EqualSign,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '>' => match self.peek() {
@@ -1681,69 +1973,165 @@ impl<'alloc> Lexer<'alloc> {
                                 match self.peek() {
                                     Some('=') => {
                                         self.chars.next();
-                                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::UnsignedRightShiftAssign));
+                                        return Ok(AdvanceResult {
+                                            terminal_id: TerminalId::UnsignedRightShiftAssign,
+                                            loc: SourceLocation::new(start, self.offset()),
+                                            value: TokenValue::None,
+                                        });
                                     }
-                                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::UnsignedRightShift)),
+                                    _ => return Ok(AdvanceResult {
+                                        terminal_id: TerminalId::UnsignedRightShift,
+                                        loc: SourceLocation::new(start, self.offset()),
+                                        value: TokenValue::None,
+                                    }),
                                 }
                             }
                             Some('=') => {
                                 self.chars.next();
-                                return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::SignedRightShiftAssign));
+                                return Ok(AdvanceResult {
+                                    terminal_id: TerminalId::SignedRightShiftAssign,
+                                    loc: SourceLocation::new(start, self.offset()),
+                                    value: TokenValue::None,
+                                });
                             }
-                            _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::SignedRightShift)),
+                            _ => return Ok(AdvanceResult {
+                                terminal_id: TerminalId::SignedRightShift,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            }),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::GreaterThanOrEqualTo));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::GreaterThanOrEqualTo,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::GreaterThan)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::GreaterThan,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '^' => match self.peek() {
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseXorAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::BitwiseXorAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseXor)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::BitwiseXor,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '|' => match self.peek() {
                     Some('|') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::LogicalOr));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::LogicalOr,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseOrAssign));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::BitwiseOrAssign,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseOr)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::BitwiseOr,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 },
 
                 '?' => match self.peek() {
                     Some('?') => {
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Coalesce));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::Coalesce,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
                     Some('.') => {
                         if let Some('0'..='9') = self.double_peek() {
-                            return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::QuestionMark))
+                            return Ok(AdvanceResult {
+                                terminal_id: TerminalId::QuestionMark,
+                                loc: SourceLocation::new(start, self.offset()),
+                                value: TokenValue::None,
+                            })
                         }
                         self.chars.next();
-                        return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::OptionalChain));
+                        return Ok(AdvanceResult {
+                            terminal_id: TerminalId::OptionalChain,
+                            loc: SourceLocation::new(start, self.offset()),
+                            value: TokenValue::None,
+                        });
                     }
-                    _ => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::QuestionMark)),
+                    _ => return Ok(AdvanceResult {
+                        terminal_id: TerminalId::QuestionMark,
+                        loc: SourceLocation::new(start, self.offset()),
+                        value: TokenValue::None,
+                    }),
                 }
 
-                '(' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::OpenParenthesis)),
-                ')' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::CloseParenthesis)),
-                ',' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Comma)),
-                ':' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Colon)),
-                ';' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::Semicolon)),
-                '[' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::OpenBracket)),
-                ']' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::CloseBracket)),
-                '{' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::OpenBrace)),
-                '~' => return Ok((SourceLocation::new(start, self.offset()), None, TerminalId::BitwiseNot)),
+                '(' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::OpenParenthesis,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                ')' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::CloseParenthesis,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                ',' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::Comma,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                ':' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::Colon,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                ';' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::Semicolon,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                '[' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::OpenBracket,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                ']' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::CloseBracket,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                '{' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::OpenBrace,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
+                '~' => return Ok(AdvanceResult {
+                    terminal_id: TerminalId::BitwiseNot,
+                    loc: SourceLocation::new(start, self.offset()),
+                    value: TokenValue::None,
+                }),
 
                 // Idents
                 '$' | '_' | 'a'..='z' | 'A'..='Z' => {
@@ -1789,11 +2177,49 @@ impl<'alloc> Lexer<'alloc> {
                 }
             }
         }
-        Ok((
-            SourceLocation::new(start, self.offset()),
-            None,
-            TerminalId::End,
-        ))
+        Ok(AdvanceResult {
+            terminal_id: TerminalId::End,
+            loc: SourceLocation::new(start, self.offset()),
+            value: TokenValue::None,
+        })
+    }
+
+    fn string_to_token_value(&mut self, s: &'alloc str) -> TokenValue {
+        let index = self.atoms.borrow_mut().insert(s);
+        TokenValue::Atom(index)
+    }
+
+    fn slice_to_token_value(&mut self, s: &'alloc str) -> TokenValue {
+        let index = self.slices.borrow_mut().insert(s);
+        TokenValue::Slice(index)
+    }
+
+    fn numeric_result_to_advance_result(
+        &mut self,
+        s: &'alloc str,
+        start: usize,
+        result: NumericResult,
+    ) -> Result<'alloc, AdvanceResult> {
+        let (terminal_id, value) = match result {
+            NumericResult::Int { base } => {
+                let n = parse_int(s, base).map_err(|s| ParseError::NotImplemented(s))?;
+                (TerminalId::NumericLiteral, TokenValue::Number(n))
+            }
+            NumericResult::Float => {
+                let n = parse_float(s).map_err(|s| ParseError::NotImplemented(s))?;
+                (TerminalId::NumericLiteral, TokenValue::Number(n))
+            }
+            NumericResult::BigInt { .. } => {
+                // FIXME
+                (TerminalId::BigIntLiteral, self.string_to_token_value(s))
+            }
+        };
+
+        Ok(AdvanceResult {
+            terminal_id,
+            loc: SourceLocation::new(start, self.offset()),
+            value,
+        })
     }
 }
 
