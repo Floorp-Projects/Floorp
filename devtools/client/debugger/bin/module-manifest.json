@@ -671,7 +671,7 @@
       "../../babel-loader/lib/index.js??ref--1!../../devtools-modules/src/saveAs.js": 520,
       "../../punycode/punycode.js": 521,
       "../../babel-loader/lib/index.js??ref--1!../../../../../shared/dom-node-constants.js": 522,
-      "external \"\\n(() => {\\n  importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n  return { URL }\\n})()\\n\"": 523
+      "external \"\\n(() => {\\n  let factory;\\n  function define(...args) {\\n    if (factory) {\\n      throw new Error(\\\"expected a single define call\\\");\\n    }\\n\\n    if (\\n      args.length !== 2 ||\\n      !Array.isArray(args[0]) ||\\n      args[0].length !== 0 ||\\n      typeof args[1] !== \\\"function\\\"\\n    ) {\\n      throw new Error(\\\"whatwg-url had unexpected factory arguments.\\\");\\n    }\\n\\n    factory = args[1];\\n  }\\n  define.amd = true;\\n\\n  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, \\\"define\\\");\\n  globalThis.define = define;\\n  let err;\\n  try {\\n    importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n\\n    if (!factory) {\\n      throw new Error(\\\"Failed to load whatwg-url factory\\\");\\n    }\\n  } finally {\\n    if (existingDefine) {\\n      Object.defineProperty(globalThis, \\\"define\\\", existingDefine);\\n    } else {\\n      delete globalThis.define;\\n    }\\n\\n  }\\n\\n  return factory();\\n})()\\n\"": 523
     },
     "usedIds": {
       "0": 0,

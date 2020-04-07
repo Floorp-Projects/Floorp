@@ -13,8 +13,44 @@ const EXCLUDED_FILES = {
 
 const whatwgUrl = `
 (() => {
-  importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
-  return { URL }
+  let factory;
+  function define(...args) {
+    if (factory) {
+      throw new Error("expected a single define call");
+    }
+
+    if (
+      args.length !== 2 ||
+      !Array.isArray(args[0]) ||
+      args[0].length !== 0 ||
+      typeof args[1] !== "function"
+    ) {
+      throw new Error("whatwg-url had unexpected factory arguments.");
+    }
+
+    factory = args[1];
+  }
+  define.amd = true;
+
+  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, "define");
+  globalThis.define = define;
+  let err;
+  try {
+    importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
+
+    if (!factory) {
+      throw new Error("Failed to load whatwg-url factory");
+    }
+  } finally {
+    if (existingDefine) {
+      Object.defineProperty(globalThis, "define", existingDefine);
+    } else {
+      delete globalThis.define;
+    }
+
+  }
+
+  return factory();
 })()
 `
 
