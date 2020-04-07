@@ -40,10 +40,8 @@ JSObject* XRSpace::WrapObject(JSContext* aCx,
 XRSession* XRSpace::GetSession() const { return mSession; }
 
 gfx::QuaternionDouble XRSpace::GetEffectiveOriginOrientation() const {
-  // Currently all of our native origin's will be axis aligned, so
-  // we can just return the offset, as if it were multiplied against
-  // an identity quaternion.
-  return mOriginOffsetOrientation;
+  gfx::QuaternionDouble orientation = mNativeOrigin->GetOrientation() * mOriginOffsetOrientation;
+  return orientation;
 }
 
 gfx::PointDouble3D XRSpace::GetEffectiveOriginPosition() const {
