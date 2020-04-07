@@ -5352,13 +5352,8 @@ class MMathFunction : public MUnaryInstruction,
 };
 
 class MAdd : public MBinaryArithInstruction {
-  MAdd(MDefinition* left, MDefinition* right)
-      : MBinaryArithInstruction(classOpcode, left, right) {
-    setResultType(MIRType::Value);
-  }
-
   MAdd(MDefinition* left, MDefinition* right, MIRType type)
-      : MAdd(left, right) {
+      : MBinaryArithInstruction(classOpcode, left, right) {
     specialization_ = type;
     setResultType(type);
   }
@@ -5403,13 +5398,8 @@ class MAdd : public MBinaryArithInstruction {
 };
 
 class MSub : public MBinaryArithInstruction {
-  MSub(MDefinition* left, MDefinition* right)
-      : MBinaryArithInstruction(classOpcode, left, right) {
-    setResultType(MIRType::Value);
-  }
-
   MSub(MDefinition* left, MDefinition* right, MIRType type)
-      : MSub(left, right) {
+      : MBinaryArithInstruction(classOpcode, left, right) {
     specialization_ = type;
     setResultType(type);
   }
@@ -5471,18 +5461,13 @@ class MMul : public MBinaryArithInstruction {
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
 
-    if (type != MIRType::Value) {
-      specialization_ = type;
-    }
+    specialization_ = type;
     setResultType(type);
   }
 
  public:
   INSTRUCTION_HEADER(Mul)
-  static MMul* New(TempAllocator& alloc, MDefinition* left,
-                   MDefinition* right) {
-    return new (alloc) MMul(left, right, MIRType::Value, MMul::Normal);
-  }
+
   static MMul* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                    MIRType type, Mode mode = Normal) {
     return new (alloc) MMul(left, right, type, mode);
@@ -5571,18 +5556,13 @@ class MDiv : public MBinaryArithInstruction {
         canBeNegativeDividend_(true),
         unsigned_(false),
         trapOnError_(false) {
-    if (type != MIRType::Value) {
-      specialization_ = type;
-    }
+    specialization_ = type;
     setResultType(type);
   }
 
  public:
   INSTRUCTION_HEADER(Div)
-  static MDiv* New(TempAllocator& alloc, MDefinition* left,
-                   MDefinition* right) {
-    return new (alloc) MDiv(left, right, MIRType::Value);
-  }
+
   static MDiv* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                    MIRType type) {
     return new (alloc) MDiv(left, right, type);
@@ -5698,18 +5678,13 @@ class MMod : public MBinaryArithInstruction {
         canBePowerOfTwoDivisor_(true),
         canBeDivideByZero_(true),
         trapOnError_(false) {
-    if (type != MIRType::Value) {
-      specialization_ = type;
-    }
+    specialization_ = type;
     setResultType(type);
   }
 
  public:
   INSTRUCTION_HEADER(Mod)
-  static MMod* New(TempAllocator& alloc, MDefinition* left,
-                   MDefinition* right) {
-    return new (alloc) MMod(left, right, MIRType::Value);
-  }
+
   static MMod* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                    MIRType type) {
     return new (alloc) MMod(left, right, type);
