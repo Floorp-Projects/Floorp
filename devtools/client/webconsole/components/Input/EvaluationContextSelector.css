@@ -5,8 +5,13 @@
 .webconsole-evaluation-selector-button {
   padding: 1px 16px 1px 8px !important;
   margin-top: 2px;
-  background-position-x: calc(100% - 4px) !important;
+  background-position-x: right 4px !important;
   max-width: 150px;
+}
+
+/* This overrides the .devtools-dropdown-button:dir(rtl) rule from toolbars.css */
+html[dir="rtl"] .webconsole-evaluation-selector-button {
+  background-position-x: right 4px !important;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
