@@ -18,7 +18,6 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineView implementation.

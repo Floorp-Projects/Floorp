@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
@@ -20,6 +21,7 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -37,6 +39,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -67,10 +70,15 @@ import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
 
-    private val runtime: GeckoRuntime = mock {
-        whenever(settings).thenReturn(mock())
+    private lateinit var runtime: GeckoRuntime
+    private lateinit var context: Context
+
+    @Before
+    fun setup() {
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
+        context = mock()
     }
-    private val context: Context = mock()
 
     @Test
     fun createView() {
@@ -159,9 +167,7 @@ class GeckoEngineTest {
     fun settings() {
         val defaultSettings = DefaultSettings()
         val contentBlockingSettings = ContentBlocking.Settings.Builder().build()
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val runtimeSettings = mock<GeckoRuntimeSettings>()
         whenever(runtimeSettings.javaScriptEnabled).thenReturn(true)
         whenever(runtimeSettings.webFontsEnabled).thenReturn(true)
@@ -171,7 +177,6 @@ class GeckoEngineTest {
         whenever(runtimeSettings.forceUserScalableEnabled).thenReturn(false)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         whenever(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
-        whenever(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
         whenever(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -384,15 +389,12 @@ class GeckoEngineTest {
 
     @Test
     fun defaultSettings() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val runtimeSettings = mock<GeckoRuntimeSettings>()
         val contentBlockingSettings = ContentBlocking.Settings.Builder().build()
         whenever(runtimeSettings.javaScriptEnabled).thenReturn(true)
         whenever(runtime.settings).thenReturn(runtimeSettings)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
-        whenever(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
         whenever(runtimeSettings.fontInflationEnabled).thenReturn(true)
 
         val engine = GeckoEngine(context,
@@ -417,7 +419,6 @@ class GeckoEngineTest {
         verify(runtimeSettings).fontInflationEnabled = false
         verify(runtimeSettings).fontSizeFactor = 2.0F
         verify(runtimeSettings).remoteDebuggingEnabled = true
-        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
         verify(runtimeSettings).forceUserScalableEnabled = false
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
@@ -476,9 +477,7 @@ class GeckoEngineTest {
 
     @Test
     fun `install built-in web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
         var onSuccessCalled = false
         var onErrorCalled = false
@@ -507,9 +506,7 @@ class GeckoEngineTest {
 
     @Test
     fun `install built-in web extension successfully but do not allow content messaging`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
         var onSuccessCalled = false
         var onErrorCalled = false
@@ -539,9 +536,7 @@ class GeckoEngineTest {
 
     @Test
     fun `install external web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"
         val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
 
@@ -578,9 +573,7 @@ class GeckoEngineTest {
 
     @Test
     fun `install built-in web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
         var onErrorCalled = false
         val expected = IOException()
@@ -603,9 +596,7 @@ class GeckoEngineTest {
 
     @Test
     fun `install external web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"
         val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
 
@@ -631,9 +622,7 @@ class GeckoEngineTest {
 
     @Test
     fun `uninstall web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(extensionController)
 
@@ -645,7 +634,7 @@ class GeckoEngineTest {
         )
         val ext = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             nativeExtension,
-            runtime.webExtensionController
+            runtime
         )
 
         val webExtensionsDelegate: WebExtensionDelegate = mock()
@@ -674,9 +663,7 @@ class GeckoEngineTest {
 
     @Test
     fun `uninstall web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(extensionController)
 
@@ -688,7 +675,7 @@ class GeckoEngineTest {
         )
         val ext = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             nativeExtension,
-            runtime.webExtensionController
+            runtime
         )
 
         val webExtensionsDelegate: WebExtensionDelegate = mock()
@@ -714,9 +701,7 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate handles installation`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -737,9 +722,7 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate handles install prompt`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -764,9 +747,7 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate handles update prompt`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -807,9 +788,6 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate notified of browser actions from built-in extensions`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -823,7 +801,7 @@ class GeckoEngineTest {
         val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         ))
@@ -845,9 +823,6 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate notified of page actions from built-in extensions`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -861,7 +836,7 @@ class GeckoEngineTest {
         val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         ))
@@ -882,10 +857,38 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate notified when built-in extension wants to open tab`() {
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+
+        val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime,
+            true,
+            true
+        ))
+        engine.installWebExtension(extension)
+        result.complete(null)
+
+        val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        verify(extension).registerTabHandler(tabHandlerCaptor.capture())
+
+        val engineSession: EngineSession = mock()
+        tabHandlerCaptor.value.onNewTab(extension, engineSession, true, "https://mozilla.org")
+        verify(webExtensionsDelegate).onNewTab(extension, engineSession, true, "https://mozilla.org")
+    }
+
+    @Test
     fun `web extension delegate notified of browser actions from external extensions`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"
         val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
 
@@ -926,9 +929,7 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate notified of page actions from external extensions`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"
         val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
 
@@ -968,10 +969,62 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate notified when external extension wants to open tab`() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
+
+        val extensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.install(any())).thenReturn(result)
+        engine.installWebExtension(extId, extUrl)
+        val extension = spy(
+            GeckoWebExtension(
+                extUrl,
+                extId,
+                org.mozilla.geckoview.WebExtension.Flags.NONE,
+                runtime.webExtensionController
+            )
+        )
+        result.complete(extension)
+
+        val tabDelegateCaptor = argumentCaptor<org.mozilla.geckoview.WebExtension.TabDelegate>()
+        verify(extension).tabDelegate = tabDelegateCaptor.capture()
+
+        val createTabDetails: org.mozilla.geckoview.WebExtension.CreateTabDetails = mock()
+        tabDelegateCaptor.value.onNewTab(extension, createTabDetails)
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        verify(webExtensionsDelegate).onNewTab(extensionCaptor.capture(), any(), eq(false), eq(""))
+        assertEquals(extId, extensionCaptor.value.id)
+    }
+
+    @Test
+    fun `web extension delegate notified of extension list change`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val debuggerDelegateCaptor = argumentCaptor<WebExtensionController.DebuggerDelegate>()
+        verify(webExtensionController).setDebuggerDelegate(debuggerDelegateCaptor.capture())
+
+        debuggerDelegateCaptor.value.onExtensionListUpdated()
+        verify(webExtensionsDelegate).onExtensionListUpdated()
+    }
+
+    @Test
     fun `update web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val bundle = GeckoBundle()
@@ -989,7 +1042,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1009,9 +1062,7 @@ class GeckoEngineTest {
 
     @Test
     fun `try to update a web extension without a new update available`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val bundle = GeckoBundle()
@@ -1028,7 +1079,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
                 "test-webext",
                 "resource://android/assets/extensions/test",
-                runtime.webExtensionController,
+                runtime,
                 true,
                 true
         )
@@ -1048,9 +1099,7 @@ class GeckoEngineTest {
 
     @Test
     fun `update web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val updateExtensionResult = GeckoResult<GeckoWebExtension>()
@@ -1064,7 +1113,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1093,9 +1142,7 @@ class GeckoEngineTest {
         val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
         val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
 
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
         whenever(extensionController.list()).thenReturn(installedExtensionResult)
         whenever(runtime.webExtensionController).thenReturn(extensionController)
@@ -1118,9 +1165,7 @@ class GeckoEngineTest {
     fun `list web extensions failure`() {
         val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
 
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
         whenever(extensionController.list()).thenReturn(installedExtensionResult)
         whenever(runtime.webExtensionController).thenReturn(extensionController)
@@ -1142,9 +1187,7 @@ class GeckoEngineTest {
 
     @Test
     fun `enable web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val bundle = GeckoBundle()
@@ -1162,7 +1205,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1183,9 +1226,7 @@ class GeckoEngineTest {
 
     @Test
     fun `enable web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val enableExtensionResult = GeckoResult<GeckoWebExtension>()
@@ -1199,7 +1240,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1221,9 +1262,7 @@ class GeckoEngineTest {
 
     @Test
     fun `disable web extension successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val bundle = GeckoBundle()
@@ -1241,7 +1280,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1262,9 +1301,7 @@ class GeckoEngineTest {
 
     @Test
     fun `disable web extension failure`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
 
         val disableExtensionResult = GeckoResult<GeckoWebExtension>()
@@ -1278,7 +1315,7 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
-            runtime.webExtensionController,
+            runtime,
             true,
             true
         )
@@ -1300,9 +1337,7 @@ class GeckoEngineTest {
 
     @Test(expected = RuntimeException::class)
     fun `WHEN GeckoRuntime is shutting down THEN GeckoEngine throws runtime exception`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
 
         GeckoEngine(context, runtime = runtime)
 
@@ -1316,9 +1351,7 @@ class GeckoEngineTest {
 
     @Test
     fun `clear browsing data for all hosts`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val storageController: StorageController = mock()
 
         var onSuccessCalled = false
@@ -1335,9 +1368,7 @@ class GeckoEngineTest {
 
     @Test
     fun `error handler invoked when clearing browsing data for all hosts fails`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val storageController: StorageController = mock()
 
         var throwable: Throwable? = null
@@ -1360,9 +1391,7 @@ class GeckoEngineTest {
 
     @Test
     fun `clear browsing data for specified host`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val storageController: StorageController = mock()
 
         var onSuccessCalled = false
@@ -1370,8 +1399,8 @@ class GeckoEngineTest {
         val result = GeckoResult<Void>()
         whenever(runtime.storageController).thenReturn(storageController)
         whenever(storageController.clearDataFromHost(
-            eq("mozilla.org"),
-            eq(Engine.BrowsingData.all().types.toLong()))
+                eq("mozilla.org"),
+                eq(Engine.BrowsingData.all().types.toLong()))
         ).thenReturn(result)
         result.complete(null)
 
@@ -1382,9 +1411,7 @@ class GeckoEngineTest {
 
     @Test
     fun `error handler invoked when clearing browsing data for specified hosts fails`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val storageController: StorageController = mock()
 
         var throwable: Throwable? = null
@@ -1394,8 +1421,8 @@ class GeckoEngineTest {
         val result = GeckoResult<Void>()
         whenever(runtime.storageController).thenReturn(storageController)
         whenever(storageController.clearDataFromHost(
-            eq("mozilla.org"),
-            eq(Engine.BrowsingData.all().types.toLong()))
+                eq("mozilla.org"),
+                eq(Engine.BrowsingData.all().types.toLong()))
         ).thenReturn(result)
         result.completeExceptionally(exception)
 
@@ -1410,9 +1437,7 @@ class GeckoEngineTest {
 
     @Test
     fun `test parsing engine version`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         val engine = GeckoEngine(context, runtime = runtime)
         val version = engine.version
 
@@ -1425,9 +1450,7 @@ class GeckoEngineTest {
     @Test
     fun `after init is called the trackingProtectionExceptionStore must be restored`() {
         val mockStore: TrackingProtectionExceptionStorage = mock()
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime: GeckoRuntime = mock()
         GeckoEngine(context, runtime = runtime, trackingProtectionExceptionStore = mockStore)
 
         verify(mockStore).restore()
@@ -1435,9 +1458,7 @@ class GeckoEngineTest {
 
     @Test
     fun `fetch trackers logged successfully`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
         var onSuccessCalled = false
         var onErrorCalled = false
@@ -1502,9 +1523,7 @@ class GeckoEngineTest {
 
     @Test
     fun `fetch trackers logged of the level 2 list`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
         val mockSession = mock<GeckoEngineSession>()
         val mockGeckoSetting = mock<GeckoRuntimeSettings>()
@@ -1548,9 +1567,7 @@ class GeckoEngineTest {
 
     @Test
     fun `registerWebNotificationDelegate sets delegate`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
 
         engine.registerWebNotificationDelegate(mock())
@@ -1560,9 +1577,7 @@ class GeckoEngineTest {
 
     @Test
     fun `registerWebPushDelegate sets delegate and returns same handler`() {
-        val runtime = mock<GeckoRuntime> {
-            whenever(settings).thenReturn(mock())
-        }
+        val runtime = mock<GeckoRuntime>()
         val controller: WebPushController = mock()
         val engine = GeckoEngine(context, runtime = runtime)
 

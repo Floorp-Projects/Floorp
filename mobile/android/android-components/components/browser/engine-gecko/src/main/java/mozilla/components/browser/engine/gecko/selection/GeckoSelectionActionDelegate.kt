@@ -13,7 +13,7 @@ import org.mozilla.geckoview.BasicSelectionActionDelegate
 /**
  * An adapter between the GV [BasicSelectionActionDelegate] and a generic [SelectionActionDelegate].
  *
- * @property customDelegate handles as much of this logic as possible.
+ * @param customDelegate handles as much of this logic as possible.
  */
 open class GeckoSelectionActionDelegate(
     activity: Activity,
@@ -26,10 +26,10 @@ open class GeckoSelectionActionDelegate(
          * is an instance of [Activity]. Otherwise, returns null.
          */
         fun maybeCreate(context: Context, customDelegate: SelectionActionDelegate?): GeckoSelectionActionDelegate? {
-            return if (context !is Activity || customDelegate == null) {
-                null
-            } else {
+            return if (context is Activity && customDelegate != null) {
                 GeckoSelectionActionDelegate(context, customDelegate)
+            } else {
+                null
             }
         }
     }
