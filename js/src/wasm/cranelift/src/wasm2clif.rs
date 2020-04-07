@@ -36,16 +36,12 @@ use cranelift_wasm::{
 
 use crate::bindings::{self, SymbolicAddress};
 use crate::compile::{symbolic_function_name, wasm_function_name};
+use crate::isa::POINTER_SIZE;
 
 #[cfg(target_pointer_width = "64")]
-const POINTER_TYPE: ir::Type = ir::types::I64;
+pub const POINTER_TYPE: ir::Type = ir::types::I64;
 #[cfg(target_pointer_width = "32")]
-const POINTER_TYPE: ir::Type = ir::types::I32;
-
-#[cfg(target_pointer_width = "64")]
-pub const POINTER_SIZE: i32 = 8;
-#[cfg(target_pointer_width = "32")]
-pub const POINTER_SIZE: i32 = 4;
+pub const POINTER_TYPE: ir::Type = ir::types::I32;
 
 #[cfg(target_pointer_width = "64")]
 pub const REF_TYPE: ir::Type = ir::types::R64;
@@ -721,7 +717,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             // Get the `TlsData::boundsCheckLimit` field.
             let bound_gv = func.create_global_value(ir::GlobalValueData::Load {
                 base: vcmtx,
-                offset: POINTER_SIZE.into(),
+                offset: (POINTER_SIZE as i32).into(),
                 global_type: ir::types::I32,
                 readonly: false,
             });
@@ -873,9 +869,12 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         // Handle external tables, set up environment.
         // A function table call could redirect execution to another module with a different realm,
         // so switch to this realm just in case.
-        let callee_vmctx =
-            pos.ins()
-                .load(POINTER_TYPE, ir::MemFlags::trusted(), entry, POINTER_SIZE);
+        let callee_vmctx = pos.ins().load(
+            POINTER_TYPE,
+            ir::MemFlags::trusted(),
+            entry,
+            POINTER_SIZE as i32,
+        );
         self.switch_to_indirect_callee_realm(&mut pos, callee_vmctx);
         self.load_pinned_reg(&mut pos, callee_vmctx);
 
@@ -922,9 +921,12 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             let fit_code = pos
                 .ins()
                 .load(POINTER_TYPE, ir::MemFlags::trusted(), gv_addr, 0);
-            let fit_tls =
-                pos.ins()
-                    .load(POINTER_TYPE, ir::MemFlags::trusted(), gv_addr, POINTER_SIZE);
+            let fit_tls = pos.ins().load(
+                POINTER_TYPE,
+                ir::MemFlags::trusted(),
+                gv_addr,
+                POINTER_SIZE as i32,
+            );
 
             // Switch to the callee's realm.
             self.switch_to_import_realm(&mut pos, fit_tls, gv_addr);
@@ -1270,6 +1272,6 @@ impl TableInfo {
     pub fn entry_size(&self) -> i64 {
         // Each entry is an `wasm::FunctionTableElem` which consists of the code pointer and a new
         // VM context pointer.
-        i64::from(POINTER_SIZE) * 2
+        (POINTER_SIZE * 2) as i64
     }
 }
