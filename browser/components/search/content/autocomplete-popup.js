@@ -95,7 +95,7 @@
       return this._oneOffButtons;
     }
 
-    get _markup() {
+    static get markup() {
       return `
       <hbox class="search-panel-header search-panel-current-engine">
         <image class="searchbar-engine-image"></image>

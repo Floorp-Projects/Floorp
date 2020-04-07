@@ -21,6 +21,25 @@
       };
     }
 
+    static get markup() {
+      return `
+        <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
+        <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
+          <image class="searchbar-search-icon"></image>
+          <image class="searchbar-search-icon-overlay"></image>
+        </hbox>
+        <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+        <menupopup class="textbox-contextmenu"></menupopup>
+        <hbox class="search-go-container">
+          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
+        </hbox>
+      `;
+    }
+
+    static get entities() {
+      return ["chrome://browser/locale/browser.dtd"];
+    }
+
     constructor() {
       super();
 
@@ -44,22 +63,6 @@
         QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
       };
 
-      this.content = MozXULElement.parseXULToFragment(
-        `
-        <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
-        <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
-          <image class="searchbar-search-icon"></image>
-          <image class="searchbar-search-icon-overlay"></image>
-        </hbox>
-        <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
-        <menupopup class="textbox-contextmenu"></menupopup>
-        <hbox class="search-go-container">
-          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
-        </hbox>
-        `,
-        ["chrome://browser/locale/browser.dtd"]
-      );
-
       this._ignoreFocus = false;
       this._engines = null;
     }
@@ -70,7 +73,7 @@
         return;
       }
 
-      this.appendChild(document.importNode(this.content, true));
+      this.appendChild(this.constructor.fragment);
       this.initializeAttributeInheritance();
 
       // Don't go further if in Customize mode.
