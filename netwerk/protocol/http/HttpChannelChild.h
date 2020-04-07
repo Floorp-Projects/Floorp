@@ -160,7 +160,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       nsTArray<ConsoleReportCollected>&& aConsoleReports) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
-      const uint32_t& registrarId, nsIURI* newOriginalURI,
+      const uint32_t& registrarId, const URIParams& newURI,
       const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
       const nsHttpResponseHead& responseHead,
@@ -526,7 +526,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
-  void Redirect1Begin(const uint32_t& registrarId, nsIURI* newOriginalURI,
+  void Redirect1Begin(const uint32_t& registrarId, const URIParams& newUri,
                       const uint32_t& newLoadFlags,
                       const uint32_t& redirectFlags,
                       const ParentLoadInfoForwarderArgs& loadInfoForwarder,

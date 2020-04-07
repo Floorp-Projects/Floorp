@@ -845,7 +845,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const uint32_t& aSourceRequestBlockingReason,
     const Maybe<ChildLoadInfoForwarderArgs>& aTargetLoadInfoForwarder,
     const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
-    nsIURI* aAPIRedirectURI, const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
+    const Maybe<URIParams>& aAPIRedirectURI,
+    const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const bool& aChooseAppcache) {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aResult)));
@@ -862,8 +863,10 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         do_QueryInterface(mRedirectChannel);
 
     if (newHttpChannel) {
-      if (aAPIRedirectURI) {
-        rv = newHttpChannel->RedirectTo(aAPIRedirectURI);
+      nsCOMPtr<nsIURI> apiRedirectUri = DeserializeURI(aAPIRedirectURI);
+
+      if (apiRedirectUri) {
+        rv = newHttpChannel->RedirectTo(apiRedirectUri);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
 
@@ -1282,8 +1285,10 @@ void HttpChannelParent::ResponseSynthesized() {
 }
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
-    nsIURI* uri, const mozilla::ipc::PrincipalInfo& requestingPrincipal) {
-  if (!uri) {
+    const URIParams& uri,
+    const mozilla::ipc::PrincipalInfo& requestingPrincipal) {
+  nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(uri);
+  if (!deserializedURI) {
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIPrincipal> principal =
@@ -1291,7 +1296,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
   if (!principal) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCORSListenerProxy::RemoveFromCorsPreflightCache(uri, principal);
+  nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI, principal);
   return IPC_OK();
 }
 
@@ -2059,6 +2064,9 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   nsCOMPtr<nsIURI> newOriginalURI;
   newChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
 
+  URIParams uriParams;
+  SerializeURI(newOriginalURI, uriParams);
+
   uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
   MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadFlags(&newLoadFlags));
 
@@ -2097,7 +2105,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(
-        mRedirectChannelId, newOriginalURI, newLoadFlags, redirectFlags,
+        mRedirectChannelId, uriParams, newLoadFlags, redirectFlags,
         loadInfoForwarderArg, *responseHead, secInfoSerialization, channelId,
         mChannel->GetPeerAddr(), GetTimingAttributes(mChannel));
   }

@@ -8,6 +8,7 @@
 include protocol PNecko;
 include protocol PStreamFilter;
 include InputStreamParams;
+include URIParams;
 include PBackgroundSharedTypes;
 include NeckoChannelParams;
 include IPCServiceWorkerDescriptor;
@@ -19,7 +20,6 @@ include "mozilla/net/NeckoMessageUtils.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 using nsILoadInfo::CrossOriginOpenerPolicy from "nsILoadInfo.h";
 
@@ -49,7 +49,7 @@ parent:
                         uint32_t sourceRequestBlockingReason,
                         ChildLoadInfoForwarderArgs? targetLoadInfoForwarder,
                         uint32_t loadFlags, nsIReferrerInfo referrerInfo,
-                        nsIURI apiRedirectTo,
+                        URIParams? apiRedirectTo,
                         CorsPreflightArgs? corsPreflightArgs,
                         bool chooseAppcache);
 
@@ -86,7 +86,7 @@ parent:
 
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
-  async RemoveCorsPreflightCacheEntry(nsIURI uri,
+  async RemoveCorsPreflightCacheEntry(URIParams uri,
                                       PrincipalInfo requestingPrincipal);
 
   // After receiving this message, the parent calls SendDeleteSelf, and makes
@@ -161,7 +161,7 @@ child:
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
   async Redirect1Begin(uint32_t           registrarId,
-                       nsIURI             newOriginalUri,
+                       URIParams          newOriginalUri,
                        uint32_t           newLoadFlags,
                        uint32_t           redirectFlags,
                        ParentLoadInfoForwarderArgs loadInfoForwarder,
