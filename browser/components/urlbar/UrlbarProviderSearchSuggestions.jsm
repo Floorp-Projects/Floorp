@@ -113,9 +113,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    // TODO: Enable this provider in the next part of this patch.
-    return false;
-    // eslint-disable-next-line no-unreachable
     if (
       !UrlbarPrefs.get("browser.search.suggest.enabled") ||
       !UrlbarPrefs.get("suggest.searches")
