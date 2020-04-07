@@ -2389,6 +2389,7 @@ STATIC_ATOMS = [
 
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
+    Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),
 
     # Namespaces
     Atom("nsuri_xmlns", "http://www.w3.org/2000/xmlns/"),
