@@ -6,6 +6,9 @@
 
 #include "nsSegmentedBuffer.h"
 #include "nsMemory.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize) {
   if (mSegmentArrayCount != 0) {

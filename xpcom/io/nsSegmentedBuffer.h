@@ -7,6 +7,12 @@
 #ifndef nsSegmentedBuffer_h__
 #define nsSegmentedBuffer_h__
 
+#include <stddef.h>
+
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsError.h"
+
 class nsIEventTarget;
 
 class nsSegmentedBuffer {

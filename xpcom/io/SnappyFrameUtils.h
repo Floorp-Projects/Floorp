@@ -7,6 +7,8 @@
 #ifndef mozilla_SnappyFrameUtils_h__
 #define mozilla_SnappyFrameUtils_h__
 
+#include <cstddef>
+
 #include "mozilla/Attributes.h"
 #include "nsError.h"
 

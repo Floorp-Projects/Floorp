@@ -76,7 +76,7 @@ nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString& aResult) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!aResult.SetLength(aCount, fallible)) {
+  if (!aResult.SetLength(aCount, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
