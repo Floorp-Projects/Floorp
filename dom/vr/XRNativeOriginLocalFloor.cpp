@@ -20,19 +20,22 @@ XRNativeOriginLocalFloor::XRNativeOriginLocalFloor(VRDisplayClient* aDisplay)
   //
   // TODO (Bug 1616394) - Convert this constant to a pref.
   const double kFloorFuzz = 0.05f;  // Meters
-  double floor_random = double(rand()) / double(RAND_MAX) * kFloorFuzz;
-  mInitialPosition.y = -floor_random;
+  mFloorRandom = double(rand()) / double(RAND_MAX) * kFloorFuzz;
 }
 
 gfx::PointDouble3D XRNativeOriginLocalFloor::GetPosition() {
   // Keep returning {0,-fuzz,0} until a position can be found
-  if (!mInitialPositionValid) {
+  const auto standing =
+      mDisplay->GetDisplayInfo().GetSittingToStandingTransform();
+  if (!mInitialPositionValid || standing != mStandingTransform) {
     const gfx::VRHMDSensorState& sensorState = mDisplay->GetSensorState();
     gfx::PointDouble3D origin;
     if (sensorState.flags & VRDisplayCapabilityFlags::Cap_Position) {
       mInitialPosition.x = sensorState.pose.position[0];
+      mInitialPosition.y = -mFloorRandom - standing._42;
       mInitialPosition.z = sensorState.pose.position[2];
       mInitialPositionValid = true;
+      mStandingTransform = standing;
     }
   }
   return mInitialPosition;
