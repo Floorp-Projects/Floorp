@@ -18,10 +18,11 @@ add_task(async function() {
     win: window,
   });
 
-  const { gFront, $, PerformanceController } = panel.panelWin;
+  const { $, PerformanceController } = panel.panelWin;
 
   // Set a fast profiler-status update interval
-  await gFront.setProfilerStatusInterval(10);
+  const performanceFront = await panel.target.getFront("performance");
+  await performanceFront.setProfilerStatusInterval(10);
 
   let enabled = false;
 
