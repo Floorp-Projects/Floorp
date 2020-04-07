@@ -45,6 +45,7 @@ class nsIMessageSender;
 class nsIPrintSettings;
 class nsIWebBrowserPersistDocumentReceiver;
 class nsIWebProgressListener;
+class nsIOpenWindowInfo;
 
 namespace mozilla {
 
@@ -101,9 +102,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
  public:
   // Called by Frame Elements to create a new FrameLoader.
-  static already_AddRefed<nsFrameLoader> Create(Element* aOwner,
-                                                BrowsingContext* aOpener,
-                                                bool aNetworkCreated);
+  static already_AddRefed<nsFrameLoader> Create(
+      Element* aOwner, bool aNetworkCreated,
+      nsIOpenWindowInfo* aOpenWindowInfo = nullptr);
 
   // Called by nsFrameLoaderOwner::ChangeRemoteness when switching out
   // FrameLoaders.
@@ -476,6 +477,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
+  nsCOMPtr<nsIOpenWindowInfo> mOpenWindowInfo;
   mozilla::dom::Element* mOwnerContent;  // WEAK
 
   // After the frameloader has been removed from the DOM but before all of the
