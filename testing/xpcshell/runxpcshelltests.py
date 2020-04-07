@@ -851,8 +851,8 @@ class XPCShellTests(object):
         if os.path.exists(ini_path):
             return TestManifest([ini_path], strict=True)
         else:
-            print >> sys.stderr, ("Failed to find manifest at %s; use --manifest "
-                                  "to set path explicitly." % (ini_path,))
+            self.log.error("Failed to find manifest at %s; use --manifest "
+                           "to set path explicitly." % ini_path)
             sys.exit(1)
 
     def normalizeTest(self, root, test_object):
@@ -1345,7 +1345,7 @@ class XPCShellTests(object):
                 shutil.copyfile(options['failure_manifest'], rerun_manifest)
                 os.remove(options['failure_manifest'])
             else:
-                print >> sys.stderr, "No failures were found to re-run."
+                self.log.error("No failures were found to re-run.")
                 sys.exit(1)
 
         if options.get('testingModulesDir'):
