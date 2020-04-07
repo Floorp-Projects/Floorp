@@ -1148,7 +1148,7 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvGetFontListShmBlock(
       const uint32_t& aGeneration, const uint32_t& aIndex,
-      base::SharedMemoryHandle* aOut);
+      mozilla::ipc::SharedMemoryBasic::Handle* aOut);
 
   mozilla::ipc::IPCResult RecvInitializeFamily(const uint32_t& aGeneration,
                                                const uint32_t& aFamilyIndex);

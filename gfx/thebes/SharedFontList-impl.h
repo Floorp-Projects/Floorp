@@ -7,7 +7,7 @@
 
 #include "SharedFontList.h"
 
-#include "base/shared_memory.h"
+#include "mozilla/ipc/SharedMemoryBasic.h"
 
 #include "gfxFontUtils.h"
 #include "nsClassHashtable.h"
@@ -224,13 +224,12 @@ class FontList {
    * specific child process.
    */
   void ShareShmBlockToProcess(uint32_t aIndex, base::ProcessId aPid,
-                              base::SharedMemoryHandle* aOut) {
-    MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
-    if (aIndex >= mReadOnlyShmems.Length()) {
+                              mozilla::ipc::SharedMemoryBasic::Handle* aOut) {
+    if (aIndex >= mBlocks.Length()) {
       // Block index out of range
-      *aOut = base::SharedMemory::NULLHandle();
+      *aOut = mozilla::ipc::SharedMemoryBasic::NULLHandle();
     }
-    if (!mReadOnlyShmems[aIndex]->ShareToProcess(aPid, aOut)) {
+    if (!mBlocks[aIndex]->mShmem->ShareToProcess(aPid, aOut)) {
       MOZ_CRASH("failed to share block");
     }
   }
@@ -241,7 +240,7 @@ class FontList {
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t result = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (const auto& b : mBlocks) {
-      result += aMallocSizeOf(b.get()) + aMallocSizeOf(b->mShmem.get());
+      result += aMallocSizeOf(b.get()) + aMallocSizeOf(b->mShmem);
     }
     return result;
   }
@@ -269,20 +268,20 @@ class FontList {
 
  private:
   struct ShmBlock {
-    // Takes ownership of aShmem
-    ShmBlock(base::SharedMemory* aShmem) : mShmem(aShmem) {}
-
-    // Get pointer to the mapped memory.
-    void* Memory() const { return mShmem->memory(); }
+    ShmBlock(mozilla::ipc::SharedMemoryBasic* aShmem, void* aAddr)
+        : mShmem(aShmem), mAddr(aAddr) {}
 
     // The first 32-bit word of each block holds the current amount allocated
     // in that block; this is updated whenever a new record is stored in the
     // block.
     std::atomic<uint32_t>& Allocated() const {
-      return *static_cast<std::atomic<uint32_t>*>(Memory());
+      return *static_cast<std::atomic<uint32_t>*>(mAddr);
     }
 
-    mozilla::UniquePtr<base::SharedMemory> mShmem;
+    RefPtr<mozilla::ipc::SharedMemoryBasic> mShmem;
+    void* mAddr;  // Address where the shared memory block is mapped in this
+                  // process; avoids virtual call to mShmem->memory() each time
+                  // we need to convert between Pointer and a real C++ pointer.
   };
 
   Header& GetHeader() {
@@ -325,12 +324,6 @@ class FontList {
    * added a block (or blocks) to the list, and we need to update!
    */
   nsTArray<mozilla::UniquePtr<ShmBlock>> mBlocks;
-
-  /**
-   * Auxiliary array, used only in the parent process; holds read-only copies
-   * of the shmem blocks; these are what will be shared to child processes.
-   */
-  nsTArray<mozilla::UniquePtr<base::SharedMemory>> mReadOnlyShmems;
 };
 
 }  // namespace fontlist
