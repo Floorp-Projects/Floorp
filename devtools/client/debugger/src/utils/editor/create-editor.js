@@ -7,7 +7,7 @@
 import SourceEditor from "./source-editor";
 import { features, prefs } from "../prefs";
 
-export function createEditor() {
+export function createEditor(): SourceEditor {
   const gutters = ["breakpoints", "hit-markers", "CodeMirror-linenumbers"];
 
   if (features.codeFolding) {
@@ -39,7 +39,7 @@ export function createEditor() {
   });
 }
 
-export function createHeadlessEditor() {
+export function createHeadlessEditor(): SourceEditor {
   const editor = createEditor();
   editor.appendToLocalElement(document.createElement("div"));
   return editor;

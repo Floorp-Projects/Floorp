@@ -53,7 +53,7 @@ const telemetry = new Telemetry();
  * @memberof utils/telemetry
  * @static
  */
-export function recordEvent(eventName: string, fields: {} = {}) {
+export function recordEvent(eventName: string, fields: {} = {}): void {
   let sessionId = -1;
 
   if (typeof window !== "object") {

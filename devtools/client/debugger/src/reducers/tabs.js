@@ -23,7 +23,7 @@ import {
   resourceAsSourceBase,
 } from "./sources";
 
-import type { SourceId, URL } from "../types";
+import type { Source, SourceId, URL } from "../types";
 import type { Action } from "../actions/types";
 import type { Selector, State } from "./types";
 import type { SourceBase } from "./sources";
@@ -47,11 +47,11 @@ export type TabsState = {
   tabs: TabList,
 };
 
-function initialTabState() {
+function initialTabState(): TabsState {
   return { tabs: [] };
 }
 
-function resetTabState(state) {
+function resetTabState(state): TabsState {
   const tabs = persistTabs(state.tabs);
   return { tabs };
 }
@@ -139,7 +139,7 @@ export function getNewSelectedSourceId(state: State, tabList: TabList): string {
     return "";
   }
 
-  const tabUrls = tabList.map(t => t.url);
+  const tabUrls = tabList.map(tab => tab.url);
   const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
   const lastAvailbleTabIndex = availableTabs.length - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
@@ -160,15 +160,15 @@ export function getNewSelectedSourceId(state: State, tabList: TabList): string {
   return "";
 }
 
-function matchesSource(tab: VisibleTab, source) {
+function matchesSource(tab: VisibleTab, source: Source): boolean {
   return tab.sourceId === source.id || matchesUrl(tab, source);
 }
 
-function matchesUrl(tab: Tab, source) {
+function matchesUrl(tab: Tab, source: Source): boolean {
   return tab.url === source.url && tab.isOriginal == isOriginalId(source.id);
 }
 
-function addSelectedSource(state: TabsState, source) {
+function addSelectedSource(state: TabsState, source: Source) {
   if (
     state.tabs
       .filter(({ sourceId }) => sourceId)
@@ -231,7 +231,7 @@ function removeSourcesFromTabList(state: TabsState, { sources }) {
 function updateTabList(
   state: TabsState,
   { url, framework = null, sourceId, isOriginal = false }
-) {
+): TabsState {
   let { tabs } = state;
   // Set currentIndex to -1 for URL-less tabs so that they aren't
   // filtered by isSimilarTab
@@ -254,7 +254,10 @@ function updateTabList(
   return { ...state, tabs };
 }
 
-function moveTabInList(state: TabsState, { url, tabIndex: newIndex }) {
+function moveTabInList(
+  state: TabsState,
+  { url, tabIndex: newIndex }
+): TabsState {
   let { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.url == url);
   tabs = move(tabs, currentIndex, newIndex);
@@ -264,7 +267,7 @@ function moveTabInList(state: TabsState, { url, tabIndex: newIndex }) {
 function moveTabInListBySourceId(
   state: TabsState,
   { sourceId, tabIndex: newIndex }
-) {
+): TabsState {
   let { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.sourceId == sourceId);
   tabs = move(tabs, currentIndex, newIndex);
@@ -292,7 +295,7 @@ const querySourcesForTabs = makeShallowQuery({
   reduce: items => items,
 });
 
-export function tabExists(state: State, sourceId: SourceId) {
+export function tabExists(state: State, sourceId: SourceId): boolean {
   return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
 }
 

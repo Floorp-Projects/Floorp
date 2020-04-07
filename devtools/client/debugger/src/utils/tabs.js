@@ -23,35 +23,30 @@ export function getHiddenTabs(
   sourceTabEls: Array<any>
 ): TabsSources {
   sourceTabEls = [].slice.call(sourceTabEls);
-  function getTopOffset() {
+  function getTopOffset(): number {
     const topOffsets = sourceTabEls.map(t => t.getBoundingClientRect().top);
     return Math.min(...topOffsets);
   }
 
-  function hasTopOffset(el) {
+  function hasTopOffset(el): boolean {
     // adding 10px helps account for cases where the tab might be offset by
     // styling such as selected tabs which don't have a border.
     const tabTopOffset = getTopOffset();
     return el.getBoundingClientRect().top > tabTopOffset + 10;
   }
 
-  return sourceTabs.filter((tab, index) => {
+  return sourceTabs.filter((tab, index: number) => {
     const element = sourceTabEls[index];
     return element && hasTopOffset(element);
   });
 }
 
-export function getFramework(tabs: TabList, url: URL) {
+export function getFramework(tabs: TabList, url: URL): string {
   const tab = tabs.find(t => t.url === url);
-
-  if (tab) {
-    return tab.framework;
-  }
-
-  return "";
+  return tab?.framework ?? "";
 }
 
-export function getTabMenuItems() {
+export function getTabMenuItems(): Object {
   return {
     closeTab: {
       id: "node-menu-close-tab",
@@ -110,16 +105,12 @@ export function getTabMenuItems() {
   };
 }
 
-export function isSimilarTab(tab: Tab, url: URL, isOriginal: boolean) {
+export function isSimilarTab(tab: Tab, url: URL, isOriginal: boolean): boolean {
   return tab.url === url && tab.isOriginal === isOriginal;
 }
 
 export function persistTabs(tabs: VisibleTab[]): PersistedTab[] {
   return [...tabs]
     .filter(tab => tab.url)
-    .map(tab => {
-      const newTab = { ...tab };
-      newTab.sourceId = null;
-      return newTab;
-    });
+    .map(tab => ({ ...tab, sourceId: null }));
 }

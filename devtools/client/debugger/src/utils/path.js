@@ -4,23 +4,23 @@
 
 // @flow
 
-export function basename(path: string) {
+export function basename(path: string): string {
   return path.split("/").pop();
 }
 
-export function dirname(path: string) {
+export function dirname(path: string): string {
   const idx = path.lastIndexOf("/");
   return path.slice(0, idx);
 }
 
-export function isURL(str: string) {
+export function isURL(str: string): boolean {
   return str.includes("://");
 }
 
-export function isAbsolute(str: string) {
+export function isAbsolute(str: string): boolean {
   return str[0] === "/";
 }
 
-export function join(base: string, dir: string) {
+export function join(base: string, dir: string): string {
   return `${base}/${dir}`;
 }

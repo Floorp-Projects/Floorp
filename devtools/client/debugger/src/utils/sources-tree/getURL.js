@@ -14,7 +14,7 @@ export type ParsedURL = {
   filename: string,
 };
 
-export function getFilenameFromPath(pathname?: string) {
+export function getFilenameFromPath(pathname?: string): string {
   let filename = "";
   if (pathname) {
     filename = pathname.substring(pathname.lastIndexOf("/") + 1);

@@ -4,6 +4,6 @@
 
 // @flow
 
-export function isConsole(expression: string) {
+export function isConsole(expression: string): boolean {
   return /^console/.test(expression);
 }

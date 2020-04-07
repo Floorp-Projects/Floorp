@@ -137,7 +137,7 @@ function filterInLine(
   positions: BreakpointPosition[],
   selectedSource: Source,
   selectedContent
-) {
+): BreakpointPosition[] {
   return positions.filter(position => {
     const location = getSelectedLocation(position, selectedSource);
     const lineText = getLineText(

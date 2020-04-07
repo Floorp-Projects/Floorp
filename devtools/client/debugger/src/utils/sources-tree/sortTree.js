@@ -15,7 +15,7 @@ import type { URL } from "../../types";
  * @memberof utils/sources-tree
  * @static
  */
-export function sortTree(tree: TreeDirectory, debuggeeUrl: URL = "") {
+export function sortTree(tree: TreeDirectory, debuggeeUrl: URL = ""): number {
   return (tree.contents: any).sort((previousNode, currentNode) => {
     const currentNodeIsDir = nodeHasChildren(currentNode);
     const previousNodeIsDir = nodeHasChildren(previousNode);

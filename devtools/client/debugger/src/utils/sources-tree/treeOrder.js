@@ -60,7 +60,7 @@ export type FindNodeInContentsMatcher = (node: TreeNode) => number;
 export function findNodeInContents(
   tree: TreeNode,
   matcher: FindNodeInContentsMatcher
-) {
+): {| found: boolean, index: number |} {
   if (tree.type === "source" || tree.contents.length === 0) {
     return { found: false, index: 0 };
   }

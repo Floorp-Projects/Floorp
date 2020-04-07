@@ -8,7 +8,7 @@ type Value = any;
 type Key = any;
 type Store = WeakMap<Key, Store | Value>;
 
-function hasValue(keys: Key[], store: Store) {
+function hasValue(keys: Key[], store: Store): boolean {
   let currentStore = store;
   for (const key of keys) {
     if (!currentStore || !currentStore.has(key)) {
@@ -32,7 +32,7 @@ function getValue(keys: Key[], store: Store): Value {
   return currentStore;
 }
 
-function setValue(keys: Key[], store: Store, value: Value) {
+function setValue(keys: Key[], store: Store, value: Value): void {
   const keysExceptLast = keys.slice(0, -1);
   const lastKey = keys[keys.length - 1];
 
@@ -54,7 +54,7 @@ function setValue(keys: Key[], store: Store, value: Value) {
 }
 
 // memoize with n arguments
-export default function memoize(func: Function) {
+export default function memoize(func: Function): Value {
   const store = new WeakMap();
 
   return function(...keys: Key[]) {
