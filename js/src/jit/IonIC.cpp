@@ -639,7 +639,7 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
       break;
     }
     case JSOp::Ursh: {
-      if (!UrshOperation(cx, &lhsCopy, &rhsCopy, ret)) {
+      if (!UrshValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
