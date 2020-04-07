@@ -148,7 +148,7 @@ function runDuplicatedModulesTest(loaders, whitelist) {
         false,
         "Whitelisted module not found in the duplicated modules: [" +
           whitelistedModule +
-          "]. Whitelist should be updated."
+          "]. Whitelist of allowed duplicated modules should be updated to remove it."
       );
     }
   }

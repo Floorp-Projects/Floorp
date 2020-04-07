@@ -8,6 +8,8 @@ const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const { throttle } = require("devtools/shared/throttle");
 
+const gridsReducer = require("devtools/client/inspector/grids/reducers/grids");
+const highlighterSettingsReducer = require("devtools/client/inspector/grids/reducers/highlighter-settings");
 const {
   updateGridColor,
   updateGridHighlighted,
@@ -73,6 +75,9 @@ class GridInspector {
     this.maxHighlighters = Services.prefs.getIntPref(
       "devtools.gridinspector.maxHighlighters"
     );
+
+    this.store.injectReducer("grids", gridsReducer);
+    this.store.injectReducer("highlighterSettings", highlighterSettingsReducer);
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);

@@ -10,6 +10,12 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
+
+const extensionsSidebarReducer = require("devtools/client/inspector/extensions/reducers/sidebar");
+const {
+  default: objectInspectorReducer,
+} = require("devtools/client/debugger/packages/devtools-reps/src/object-inspector/reducer");
+
 const ExtensionSidebarComponent = createFactory(
   require("devtools/client/inspector/extensions/components/ExtensionSidebar")
 );
@@ -45,8 +51,10 @@ class ExtensionSidebar {
     this.store = inspector.store;
     this.id = id;
     this.title = title;
-
     this.destroyed = false;
+
+    this.store.injectReducer("extensionsSidebar", extensionsSidebarReducer);
+    this.store.injectReducer("objectInspector", objectInspectorReducer);
   }
 
   /**

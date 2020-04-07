@@ -17,6 +17,7 @@ const App = createFactory(
 );
 const CurrentTimeTimer = require("devtools/client/inspector/animation/current-time-timer");
 
+const animationsReducer = require("devtools/client/inspector/animation/reducers/animations");
 const {
   updateAnimations,
   updateDetailVisibility,
@@ -35,6 +36,8 @@ class AnimationInspector {
   constructor(inspector, win) {
     this.inspector = inspector;
     this.win = win;
+
+    this.inspector.store.injectReducer("animations", animationsReducer);
 
     this.addAnimationsCurrentTimeListener = this.addAnimationsCurrentTimeListener.bind(
       this

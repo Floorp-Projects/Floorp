@@ -25,7 +25,6 @@ DevToolsModules(
     'inspector.js',
     'node-picker.js',
     'panel.js',
-    'reducers.js',
     'store.js',
     'toolsidebar.js',
 )

@@ -18,6 +18,21 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "gridsReducer",
+  "devtools/client/inspector/grids/reducers/grids"
+);
+loader.lazyRequireGetter(
+  this,
+  "highlighterSettingsReducer",
+  "devtools/client/inspector/grids/reducers/highlighter-settings"
+);
+loader.lazyRequireGetter(
+  this,
+  "flexboxReducer",
+  "devtools/client/inspector/flexbox/reducers/flexbox"
+);
 
 const DEFAULT_HIGHLIGHTER_COLOR = "#9400FF";
 const SUBGRID_PARENT_ALPHA = 0.5;
@@ -287,6 +302,12 @@ class HighlightersOverlay {
    * Returns the flexbox highlighter color for the given node.
    */
   async getFlexboxHighlighterColor() {
+    // Load the Redux slice for flexbox if not yet available.
+    const state = this.store.getState();
+    if (!state.flexbox) {
+      this.store.injectReducer("flexbox", flexboxReducer);
+    }
+
     // Attempt to get the flexbox highlighter color from the Redux store.
     const { flexbox } = this.store.getState();
     const color = flexbox.color;
@@ -499,6 +520,21 @@ class HighlightersOverlay {
    *         The NodeFront for which we need highlighter settings.
    */
   getGridHighlighterSettings(nodeFront) {
+    // Load the Redux slices for grids and grid highlighter settings if not yet available.
+    const state = this.store.getState();
+    if (!state.grids) {
+      this.store.injectReducer("grids", gridsReducer);
+    }
+
+    if (!state.highlighterSettings) {
+      this.store.injectReducer(
+        "highlighterSettings",
+        highlighterSettingsReducer
+      );
+    }
+
+    // Get grids and grid highlighter settings from the latest Redux state
+    // in case they were just added above.
     const { grids, highlighterSettings } = this.store.getState();
     const grid = grids.find(g => g.nodeFront === nodeFront);
     const color = grid ? grid.color : DEFAULT_HIGHLIGHTER_COLOR;

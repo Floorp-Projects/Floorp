@@ -13,6 +13,9 @@ const {
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const EventEmitter = require("devtools/shared/event-emitter");
 
+const classListReducer = require("devtools/client/inspector/rules/reducers/class-list");
+const pseudoClassesReducer = require("devtools/client/inspector/rules/reducers/pseudo-classes");
+const rulesReducer = require("devtools/client/inspector/rules/reducers/rules");
 const {
   updateClasses,
   updateClassPanelExpanded,
@@ -101,6 +104,10 @@ class RulesView {
     this.isNewRulesView = true;
 
     this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
+
+    this.store.injectReducer("classList", classListReducer);
+    this.store.injectReducer("pseudoClasses", pseudoClassesReducer);
+    this.store.injectReducer("rules", rulesReducer);
 
     this.onAddClass = this.onAddClass.bind(this);
     this.onAddRule = this.onAddRule.bind(this);
