@@ -516,30 +516,29 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   JSOp op = JSOp(*pc);
 
-  // The unary operations take a copied val because the original value is needed
-  // below.
-  RootedValue valCopy(cx, val);
   switch (op) {
     case JSOp::BitNot: {
-      if (!BitNot(cx, &valCopy, res)) {
+      res.set(val);
+      if (!BitNot(cx, res, res)) {
         return false;
       }
       break;
     }
     case JSOp::Neg: {
-      if (!NegOperation(cx, &valCopy, res)) {
+      res.set(val);
+      if (!NegOperation(cx, res, res)) {
         return false;
       }
       break;
     }
     case JSOp::Inc: {
-      if (!IncOperation(cx, &valCopy, res)) {
+      if (!IncOperation(cx, val, res)) {
         return false;
       }
       break;
     }
     case JSOp::Dec: {
-      if (!DecOperation(cx, &valCopy, res)) {
+      if (!DecOperation(cx, val, res)) {
         return false;
       }
       break;

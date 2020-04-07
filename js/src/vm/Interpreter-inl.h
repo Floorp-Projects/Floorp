@@ -357,8 +357,7 @@ static MOZ_ALWAYS_INLINE bool NegOperation(JSContext* cx,
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool IncOperation(JSContext* cx,
-                                           MutableHandleValue val,
+static MOZ_ALWAYS_INLINE bool IncOperation(JSContext* cx, HandleValue val,
                                            MutableHandleValue res) {
   int32_t i;
   if (val.isInt32() && (i = val.toInt32()) != INT32_MAX) {
@@ -375,8 +374,7 @@ static MOZ_ALWAYS_INLINE bool IncOperation(JSContext* cx,
   return BigInt::incValue(cx, val, res);
 }
 
-static MOZ_ALWAYS_INLINE bool DecOperation(JSContext* cx,
-                                           MutableHandleValue val,
+static MOZ_ALWAYS_INLINE bool DecOperation(JSContext* cx, HandleValue val,
                                            MutableHandleValue res) {
   int32_t i;
   if (val.isInt32() && (i = val.toInt32()) != INT32_MIN) {
