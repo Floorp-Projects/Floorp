@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1262842: Test CSP inline style within svg image</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="img_base"></iframe>
+<iframe id="img_csp"></iframe>
+<iframe id="doc_base"></iframe>
+<iframe id="doc_csp"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+// Description of the two tests:
+//  * CSP should not apply to SVGs loaded as images
+//  * CSP should apply to SVGs loaded as document
+// Since we have to test inline styles within SVGs, we loaded the SVGs
+// and then take screenshots to comopare that the two SVGs are identical.
+
+SimpleTest.waitForExplicitFinish();
+
+let img_base = document.getElementById("img_base");
+let img_csp = document.getElementById("img_csp");
+let doc_base = document.getElementById("doc_base");
+let doc_csp = document.getElementById("doc_csp");
+
+let loadedFrames = 0;
+
+async function compareSVGs() {
+  loadedFrames++;
+  if (loadedFrames != 4) {
+    return;
+  }
+  // compare the two iframes where SVGs are loaded as images
+  try {
+    let img_base_snap = await snapshotWindow(img_base.contentWindow);
+    let img_csp_snap = await snapshotWindow(img_csp.contentWindow);
+
+    ok(compareSnapshots(img_base_snap, img_csp_snap, true)[0],
+       "CSP should not apply to SVG loaded as image");
+  } catch(err) {
+    ok(false, "img error: " + err.message);
+  }
+
+  // compare the two iframes where SVGs are loaded as documents
+  try {
+    let doc_base_snap = await snapshotWindow(doc_base.contentWindow);
+    let doc_csp_snap = await snapshotWindow(doc_csp.contentWindow);
+
+    ok(compareSnapshots(doc_base_snap, doc_csp_snap, true)[0],
+       "CSP should apply to SVG loaded as document");
+  } catch(err) {
+    ok(false, "doc error: " + err.message);
+  }
+
+  SimpleTest.finish();
+}
+
+// load SVG as images
+img_base.onerror = function() {
+  ok(false, "sanity: img_base onerror should not fire");
+}
+img_base.onload = function() {
+  ok(true, "sanity: img_base onload should fire");
+  compareSVGs();
+}
+img_base.src = "file_svg_inline_style_base.html";
+
+img_csp.onerror = function() {
+  ok(false, "sanity: img_csp onerror should not fire");
+}
+img_csp.onload = function() {
+  ok(true, "sanity: img_csp onload should fire");
+  compareSVGs();
+}
+img_csp.src = "file_svg_inline_style_csp.html";
+
+// load SVG as documnents
+doc_base.onerror = function() {
+  ok(false, "sanity: doc_base onerror should not fire");
+}
+doc_base.onload = function() {
+  ok(true, "sanity: doc_base onload should fire");
+  compareSVGs();
+}
+doc_base.src = "file_svg_inline_style_server.sjs?svg_no_inline_style";
+
+doc_csp.onerror = function() {
+  ok(false, "sanity: doc_csp onerror should not fire");
+}
+doc_csp.onload = function() {
+  ok(true, "sanity: doc_csp onload should fire");
+  compareSVGs();
+}
+doc_csp.src = "file_svg_inline_style_server.sjs?svg_inline_style_csp";
+
+</script>
+</body>
+</html>
