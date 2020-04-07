@@ -5069,9 +5069,6 @@ var SessionStoreInternal = {
     let uri = activePageData ? activePageData.url || null : null;
     if (loadArguments) {
       uri = loadArguments.uri;
-      if (loadArguments.userContextId) {
-        browser.setAttribute("usercontextid", loadArguments.userContextId);
-      }
     }
 
     this.markTabAsRestoring(aTab);

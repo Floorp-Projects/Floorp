@@ -528,13 +528,6 @@ nsWebBrowser::LoadURIFromScript(const nsAString& aURI,
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetOriginAttributesBeforeLoading(
-    JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx) {
-  return mDocShellAsNav->SetOriginAttributesBeforeLoading(aOriginAttributes,
-                                                          aCx);
-}
-
-NS_IMETHODIMP
 nsWebBrowser::ResumeRedirectedLoad(uint64_t aIdentifier,
                                    int32_t aHistoryIndex) {
   return mDocShellAsNav->ResumeRedirectedLoad(aIdentifier, aHistoryIndex);
