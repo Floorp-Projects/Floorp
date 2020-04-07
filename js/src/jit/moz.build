@@ -90,6 +90,7 @@ UNIFIED_SOURCES += [
     'VMFunctions.cpp',
     'WarpBuilder.cpp',
     'WarpOracle.cpp',
+    'WarpSnapshot.cpp',
     'WasmBCE.cpp',
 ]
 

@@ -9,7 +9,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "jit/WarpOracle.h"
+#include "jit/WarpSnapshot.h"
 #include "vm/Opcodes.h"
 
 #include "jit/JitScript-inl.h"
