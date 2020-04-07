@@ -117,6 +117,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   static BrowsingContextGroup* GetChromeGroup();
 
+  void GetDocGroups(nsTArray<DocGroup*>& aDocGroups);
+
  private:
   friend class CanonicalBrowsingContext;
 

@@ -697,6 +697,10 @@ class ContentChild final
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
+  const nsTArray<RefPtr<BrowsingContextGroup>>& BrowsingContextGroups() const {
+    return mBrowsingContextGroupHolder;
+  }
+
  private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();
