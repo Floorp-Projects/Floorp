@@ -33,13 +33,7 @@
 class nsDisplayListBuilder;
 
 namespace mozilla {
-
-namespace dom {
-class TabGroup;
-}
 namespace layers {
-
-using dom::TabGroup;
 
 class ClientPaintedLayer;
 class CompositorBridgeChild;
@@ -65,8 +59,6 @@ class ClientLayerManager final : public LayerManager,
   KnowsCompositor* AsKnowsCompositor() override { return mForwarder; }
 
   ClientLayerManager* AsClientLayerManager() override { return this; }
-
-  TabGroup* GetTabGroup();
 
   int32_t GetMaxTextureSize() const override;
 

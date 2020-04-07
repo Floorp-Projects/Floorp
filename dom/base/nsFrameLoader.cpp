@@ -2472,27 +2472,24 @@ uint32_t nsFrameLoader::LazyHeight() const {
   return lazyHeight;
 }
 
-static Tuple<ContentParent*, BrowserParent*> GetContentParent(
-    Element* aBrowser) {
-  using ReturnTuple = Tuple<ContentParent*, BrowserParent*>;
-
+static ContentParent* GetContentParent(Element* aBrowser) {
   nsCOMPtr<nsIBrowser> browser = aBrowser ? aBrowser->AsBrowser() : nullptr;
   if (!browser) {
-    return ReturnTuple(nullptr, nullptr);
+    return nullptr;
   }
 
   RefPtr<nsFrameLoader> otherLoader;
   browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
   if (!otherLoader) {
-    return ReturnTuple(nullptr, nullptr);
+    return nullptr;
   }
 
   BrowserParent* browserParent = BrowserParent::GetFrom(otherLoader);
-  if (browserParent && browserParent->Manager()) {
-    return MakeTuple(browserParent->Manager(), browserParent);
+  if (browserParent) {
+    return browserParent->Manager();
   }
 
-  return ReturnTuple(nullptr, nullptr);
+  return nullptr;
 }
 
 bool nsFrameLoader::EnsureRemoteBrowser() {
@@ -2597,21 +2594,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     }
 
     // Try to get the related content parent from our browser element.
-    Tie(openerContentParent, sameTabGroupAs) = GetContentParent(mOwnerContent);
-    // If we have an opener, it may be in the same process as our new child, and
-    // therefore needs to be in the same tab group. The long term solution to
-    // this problem is to get rid of TabGroups entirely. In the short term, the
-    // following hack deals with the specific problem that when a window has an
-    // opener, it asserts that its BrowserChild is bound to the same tab group
-    // as its opener. There are likely other mismatches that it does not handle,
-    // but those will all be fixed by the removal of TabGroups.
-    if (RefPtr<BrowsingContext> openerBC =
-            mPendingBrowsingContext->GetOpener()) {
-      auto global = openerBC->Canonical()->GetCurrentWindowGlobal();
-      if (global) {
-        sameTabGroupAs = global->GetBrowserParent();
-      }
-    }
+    openerContentParent = GetContentParent(mOwnerContent);
   }
 
   uint32_t chromeFlags = 0;
@@ -2656,7 +2639,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 
   mRemoteBrowser = ContentParent::CreateBrowser(
       context, ownerElement, mRemoteType, mPendingBrowsingContext,
-      openerContentParent, sameTabGroupAs, nextRemoteTabId);
+      openerContentParent, nextRemoteTabId);
   if (!mRemoteBrowser) {
     return false;
   }

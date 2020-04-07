@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "jsfriendapi.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -21,76 +20,11 @@
 
 using namespace mozilla;
 
-/* SchedulerEventTarget */
-
 namespace {
-
-#define NS_DISPATCHEREVENTTARGET_IID                 \
-  {                                                  \
-    0xbf4e36c8, 0x7d04, 0x4ef4, {                    \
-      0xbb, 0xd8, 0x11, 0x09, 0x0a, 0xdb, 0x4d, 0xf7 \
-    }                                                \
-  }
-
-class SchedulerEventTarget final : public nsISerialEventTarget {
-  RefPtr<SchedulerGroup> mDispatcher;
-  TaskCategory mCategory;
-
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DISPATCHEREVENTTARGET_IID)
-
-  SchedulerEventTarget(SchedulerGroup* aDispatcher, TaskCategory aCategory)
-      : mDispatcher(aDispatcher), mCategory(aCategory) {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET_FULL
-
-  SchedulerGroup* Dispatcher() const { return mDispatcher; }
-
- private:
-  ~SchedulerEventTarget() = default;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerEventTarget,
-                              NS_DISPATCHEREVENTTARGET_IID)
 
 static Atomic<uint64_t> gEarliestUnprocessedVsync(0);
 
 }  // namespace
-
-NS_IMPL_ISUPPORTS(SchedulerEventTarget, SchedulerEventTarget, nsIEventTarget,
-                  nsISerialEventTarget)
-
-NS_IMETHODIMP
-SchedulerEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                         uint32_t aFlags) {
-  return Dispatch(do_AddRef(aRunnable), aFlags);
-}
-
-NS_IMETHODIMP
-SchedulerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                               uint32_t aFlags) {
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return mDispatcher->Dispatch(mCategory, std::move(aRunnable));
-}
-
-NS_IMETHODIMP
-SchedulerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-SchedulerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
-  *aIsOnCurrentThread = NS_IsMainThread();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-SchedulerEventTarget::IsOnCurrentThreadInfallible() {
-  return NS_IsMainThread();
-}
 
 /* static */
 nsresult SchedulerGroup::UnlabeledDispatch(
@@ -136,76 +70,6 @@ nsresult SchedulerGroup::DispatchWithDocGroup(
 nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable) {
   return LabeledDispatch(aCategory, std::move(aRunnable), nullptr);
-}
-
-nsISerialEventTarget* SchedulerGroup::EventTargetFor(
-    TaskCategory aCategory) const {
-  MOZ_ASSERT(aCategory != TaskCategory::Count);
-  MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
-  return mEventTargets[size_t(aCategory)];
-}
-
-AbstractThread* SchedulerGroup::AbstractMainThreadFor(TaskCategory aCategory) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return AbstractMainThreadForImpl(aCategory);
-}
-
-AbstractThread* SchedulerGroup::AbstractMainThreadForImpl(
-    TaskCategory aCategory) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCategory != TaskCategory::Count);
-  MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
-
-  if (!mAbstractThreads[size_t(aCategory)]) {
-    mAbstractThreads[size_t(aCategory)] =
-        AbstractThread::CreateEventTargetWrapper(
-            mEventTargets[size_t(aCategory)],
-            /* aDrainDirectTasks = */ true);
-  }
-
-  return mAbstractThreads[size_t(aCategory)];
-}
-
-void SchedulerGroup::CreateEventTargets(bool aNeedValidation) {
-  for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
-    TaskCategory category = static_cast<TaskCategory>(i);
-    if (!aNeedValidation) {
-      // The chrome TabGroup dispatches directly to the main thread. This means
-      // that we don't have to worry about cyclical references when cleaning up
-      // the chrome TabGroup.
-      mEventTargets[i] = GetMainThreadSerialEventTarget();
-    } else {
-      mEventTargets[i] = CreateEventTargetFor(category);
-    }
-  }
-}
-
-void SchedulerGroup::Shutdown(bool aXPCOMShutdown) {
-  // There is a RefPtr cycle TabGroup -> SchedulerEventTarget -> TabGroup. To
-  // avoid leaks, we need to break the chain somewhere. We shouldn't be using
-  // the ThrottledEventQueue for this TabGroup when no windows belong to it,
-  // so it's safe to null out the queue here.
-  for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
-    mEventTargets[i] =
-        aXPCOMShutdown ? nullptr : GetMainThreadSerialEventTarget();
-    mAbstractThreads[i] = nullptr;
-  }
-}
-
-already_AddRefed<nsISerialEventTarget> SchedulerGroup::CreateEventTargetFor(
-    TaskCategory aCategory) {
-  RefPtr<SchedulerEventTarget> target =
-      new SchedulerEventTarget(this, aCategory);
-  return target.forget();
-}
-
-/* static */
-SchedulerGroup* SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget) {
-  RefPtr<SchedulerEventTarget> target = do_QueryObject(aEventTarget);
-  if (!target) {
-    return nullptr;
-  }
-  return target->Dispatcher();
 }
 
 /* static */
@@ -277,7 +141,7 @@ NS_IMETHODIMP
 SchedulerGroup::Runnable::Run() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   // The runnable's destructor can have side effects, so try to execute it in
-  // the scope of the TabGroup.
+  // the scope of the SchedulerGroup.
   nsCOMPtr<nsIRunnable> runnable(std::move(mRunnable));
   return runnable->Run();
 }

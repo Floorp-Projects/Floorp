@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/ProfilerScreenshots.h"
 
-#include "mozilla/SystemGroup.h"
 #include "mozilla/TimeStamp.h"
 
 #include "GeckoProfiler.h"

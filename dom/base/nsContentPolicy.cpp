@@ -23,7 +23,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIContentSecurityPolicy.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/TaskCategory.h"
 
 class nsIDOMWindow;

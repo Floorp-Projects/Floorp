@@ -11,9 +11,8 @@
 #include "nsIPrincipal.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
-
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/PerformanceCounter.h"
@@ -25,25 +24,24 @@ namespace dom {
 
 // Two browsing contexts are considered "related" if they are reachable from one
 // another through window.opener, window.parent, or window.frames. This is the
-// spec concept of a "unit of related browsing contexts"
+// spec concept of a browsing context group.
 //
 // Two browsing contexts are considered "similar-origin" if they can be made to
 // have the same origin by setting document.domain. This is the spec concept of
 // a "unit of similar-origin related browsing contexts"
 //
-// A TabGroup is a set of browsing contexts which are all "related". Within a
-// TabGroup, browsing contexts are broken into "similar-origin" DocGroups. In
-// more detail, a DocGroup is actually a collection of documents, and a
-// TabGroup is a collection of DocGroups. A TabGroup typically will contain
-// (through its DocGroups) the documents from one or more tabs related by
-// window.opener. A DocGroup is a member of exactly one TabGroup.
-
+// A BrowsingContextGroup is a set of browsing contexts which are all
+// "related".  Within a BrowsingContextGroup, browsing contexts are
+// broken into "similar-origin" DocGroups.  A DocGroup is a member
+// of exactly one BrowsingContextGroup.
 class DocGroup final {
  public:
   typedef nsTArray<Document*>::iterator Iterator;
-  friend class TabGroup;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup)
+
+  static already_AddRefed<DocGroup> Create(
+      BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey);
 
   // Returns NS_ERROR_FAILURE and sets |aString| to an empty string if the TLD
   // service isn't available. Returns NS_OK on success, but may still set
@@ -53,6 +51,8 @@ class DocGroup final {
 
   bool MatchesKey(const nsACString& aKey) { return aKey == mKey; }
 
+  const nsACString& GetKey() const { return mKey; }
+
   PerformanceCounter* GetPerformanceCounter() { return mPerformanceCounter; }
 
   JSExecutionManager* GetExecutionManager() const { return mExecutionManager; }
@@ -60,7 +60,9 @@ class DocGroup final {
 
   RefPtr<PerformanceInfoPromise> ReportPerformanceInfo();
 
-  TabGroup* GetTabGroup() { return mTabGroup; }
+  BrowsingContextGroup* GetBrowsingContextGroup() const {
+    return mBrowsingContextGroup;
+  }
 
   mozilla::dom::DOMArena* ArenaAllocator() { return mArena; }
 
@@ -72,7 +74,16 @@ class DocGroup final {
 
     return mReactionsStack;
   }
-  void RemoveDocument(Document* aWindow);
+
+  // Adding documents to a DocGroup should be done through
+  // BrowsingContextGroup::AddDocument (which in turn calls
+  // DocGroup::AddDocument).
+  void AddDocument(Document* aDocument);
+
+  // Removing documents from a DocGroup should be done through
+  // BrowsingContextGroup::RemoveDocument(which in turn calls
+  // DocGroup::RemoveDocument).
+  void RemoveDocument(Document* aDocument);
 
   // Iterators for iterating over every document within the DocGroup
   Iterator begin() {
@@ -117,21 +128,26 @@ class DocGroup final {
 
   const nsID& AgentClusterId() const { return mAgentClusterId; }
 
+  bool IsEmpty() const { return mDocuments.IsEmpty(); }
+
+  void ClearEventTarget();
+
  private:
-  DocGroup(TabGroup* aTabGroup, const nsACString& aKey,
-           const nsID& aAgentClusterId);
+  DocGroup(BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey);
+
   ~DocGroup();
 
   void FlushIframePostMessageQueue();
   nsCString mKey;
-  RefPtr<TabGroup> mTabGroup;
   nsTArray<Document*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
-
+  RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
   nsTHashtable<nsUint64HashKey> mIframesUsedPostMessageQueue;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+  RefPtr<AbstractThread> mAbstractThread;
 
   // non-null if the JS execution for this docgroup is regulated with regards
   // to worker threads. This should only be used when we are forcing serialized

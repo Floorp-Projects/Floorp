@@ -111,7 +111,6 @@
 #include "nsCharTraits.h"  // NS_IS_HIGH/LOW_SURROGATE
 #include "PostMessageEvent.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "PaintWorkletImpl.h"
 
@@ -7089,46 +7088,6 @@ already_AddRefed<Promise> nsGlobalWindowInner::CreateImageBitmap(
                              Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aRv);
 }
 
-mozilla::dom::TabGroup* nsGlobalWindowInner::MaybeTabGroupInner() {
-  // If we don't have a TabGroup yet, try to get it from the outer window and
-  // cache it.
-  if (!mTabGroup) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    if (!outer) {
-      return nullptr;
-    }
-    mTabGroup = outer->MaybeTabGroup();
-    if (!mTabGroup) {
-      return nullptr;
-    }
-  }
-
-#ifdef DEBUG
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  MOZ_ASSERT_IF(outer, outer->TabGroup() == mTabGroup);
-#endif
-
-  return mTabGroup;
-}
-
-mozilla::dom::TabGroup* nsGlobalWindowInner::TabGroupInner() {
-  // This will never be called without either an outer window, or a cached tab
-  // group. This is because of the following:
-  // * This method is only called on inner windows
-  // * This method is called as a document is attached to its script global
-  //   by the document
-  // * Inner windows are created in nsGlobalWindowInner::SetNewDocument, which
-  //   immediately sets a document, which will call this method, causing
-  //   the TabGroup to be cached.
-  MOZ_RELEASE_ASSERT(
-      mTabGroup || GetOuterWindowInternal(),
-      "Inner window without outer window has no cached tab group!");
-
-  mozilla::dom::TabGroup* tabGroup = MaybeTabGroupInner();
-  MOZ_RELEASE_ASSERT(tabGroup);
-  return tabGroup;
-}
-
 nsresult nsGlobalWindowInner::Dispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -7250,14 +7209,6 @@ void nsGlobalWindowInner::StorageAccessGranted() {
   if (mDoc) {
     mDoc->ClearActiveStoragePrincipal();
   }
-}
-
-mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {
-  return nsGlobalWindowInner::Cast(this)->TabGroupInner();
-}
-
-mozilla::dom::TabGroup* nsPIDOMWindowInner::MaybeTabGroup() {
-  return nsGlobalWindowInner::Cast(this)->MaybeTabGroupInner();
 }
 
 /* static */

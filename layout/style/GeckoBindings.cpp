@@ -60,7 +60,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoTraversalStatistics.h"
 #include "mozilla/Telemetry.h"

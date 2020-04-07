@@ -68,7 +68,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabGroup.h"
 #include "nsIAppWindow.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsGlobalWindow.h"
@@ -986,10 +985,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       } else {
         newBC->SetOpener(parentBC);
       }
-    } else if (parentWindow && parentWindow != win) {
-      MOZ_ASSERT(
-          win->TabGroup() != parentWindow->TabGroup(),
-          "If we're forcing no opener, they should be in different tab groups");
+    } else if (parentBC && parentBC != newBC && !newBC->IsChrome()) {
+      MOZ_ASSERT(newBC->Group() != parentBC->Group(),
+                 "If we're forcing no opener, they should be in different "
+                 "browsing context groups");
     }
 
     if (windowIsNew) {

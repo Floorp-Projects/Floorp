@@ -11,6 +11,7 @@
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
+#include "nsIThreadInternal.h"
 #include "nsTObserverArray.h"
 
 class nsIEventTarget;

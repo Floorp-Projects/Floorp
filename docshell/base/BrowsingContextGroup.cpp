@@ -8,6 +8,7 @@
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "nsFocusManager.h"
@@ -21,6 +22,12 @@ BrowsingContextGroup::BrowsingContextGroup() {
   } else {
     ContentParent::HoldBrowsingContextGroup(this);
   }
+
+  mTimerEventQueue = ThrottledEventQueue::Create(
+      GetMainThreadSerialEventTarget(), "BrowsingContextGroup timer queue");
+
+  mWorkerEventQueue = ThrottledEventQueue::Create(
+      GetMainThreadSerialEventTarget(), "BrowsingContextGroup worker queue");
 }
 
 bool BrowsingContextGroup::Contains(BrowsingContext* aBrowsingContext) {
@@ -40,6 +47,7 @@ void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
     // There are no browsing context still referencing this group. We can clear
     // all subscribers.
     UnsubscribeAllContentParents();
+
     if (XRE_IsContentProcess()) {
       ContentChild::GetSingleton()->ReleaseBrowsingContextGroup(this);
     } else {
@@ -219,27 +227,42 @@ BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
 }
 
 void BrowsingContextGroup::GetDocGroups(nsTArray<DocGroup*>& aDocGroups) {
-  nsTHashtable<nsRefPtrHashKey<DocGroup>> docGroups;
-  for (auto& toplevel : mToplevels) {
-    toplevel->PreOrderWalk([&](BrowsingContext* aContext) {
-      if (nsDocShell* docShell = nsDocShell::Cast(aContext->GetDocShell())) {
-        if (!docShell->HasContentViewer()) {
-          return;
-        }
-        if (Document* document = docShell->GetDocument()) {
-          docGroups.PutEntry(document->GetDocGroup());
-        }
-      }
-    });
+  MOZ_ASSERT(NS_IsMainThread());
+  for (auto iter = mDocGroups.ConstIter(); !iter.Done(); iter.Next()) {
+    aDocGroups.AppendElement(iter.Data());
+  }
+}
+
+already_AddRefed<DocGroup> BrowsingContextGroup::AddDocument(
+    const nsACString& aKey, Document* aDocument) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<DocGroup>& docGroup = mDocGroups.GetOrInsert(aKey);
+  if (!docGroup) {
+    docGroup = DocGroup::Create(this, aKey);
   }
 
-  for (auto iter = docGroups.ConstIter(); !iter.Done(); iter.Next()) {
-    aDocGroups.AppendElement(iter.Get()->GetKey());
+  docGroup->AddDocument(aDocument);
+  return do_AddRef(docGroup);
+}
+
+void BrowsingContextGroup::RemoveDocument(const nsACString& aKey,
+                                          Document* aDocument) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<DocGroup> docGroup = aDocument->GetDocGroup();
+  // Removing the last document in DocGroup might decrement the
+  // DocGroup BrowsingContextGroup's refcount to 0.
+  RefPtr<BrowsingContextGroup> kungFuDeathGrip(this);
+  docGroup->RemoveDocument(aDocument);
+
+  if (docGroup->IsEmpty()) {
+    mDocGroups.Remove(aKey);
   }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
-                                      mToplevels, mSubscribers, mCachedContexts)
+                                      mToplevels, mSubscribers, mCachedContexts,
+                                      mTimerEventQueue, mWorkerEventQueue)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContextGroup, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContextGroup, Release)
