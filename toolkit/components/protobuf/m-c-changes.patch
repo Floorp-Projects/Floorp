@@ -1,89 +1,10 @@
 --- a/toolkit/components/protobuf/src/google/protobuf/io/zero_copy_stream_impl_lite.h
 +++ b/toolkit/components/protobuf/src/google/protobuf/io/zero_copy_stream_impl_lite.h
-@@ -43,16 +43,17 @@
- 
- #ifndef GOOGLE_PROTOBUF_IO_ZERO_COPY_STREAM_IMPL_LITE_H__
- #define GOOGLE_PROTOBUF_IO_ZERO_COPY_STREAM_IMPL_LITE_H__
- 
- #include <memory>
- #ifndef _SHARED_PTR_H
- #include <google/protobuf/stubs/shared_ptr.h>
- #endif
-+#include <vector> /* Needed by GCC 4.9 on Android (see Bug 1186561) */
- #include <string>
+@@ -48,6 +48,7 @@
  #include <iosfwd>
- #include <google/protobuf/io/zero_copy_stream.h>
+ #include <memory>
+ #include <string>
++#include <vector> /* Needed by GCC 4.9 on Android (see Bug 1186561) */
+
  #include <google/protobuf/stubs/callback.h>
  #include <google/protobuf/stubs/common.h>
- #include <google/protobuf/stubs/stl_util.h>
- 
- 
-diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
---- a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
-+++ b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
-@@ -84,17 +84,21 @@ typedef int64 Atomic64;
- #else
- typedef intptr_t Atomic64;
- #endif
- #endif
- #endif
- 
- // Use AtomicWord for a machine-sized pointer.  It will use the Atomic32 or
- // Atomic64 routines below, depending on your architecture.
-+#if defined(__OpenBSD__) && !defined(GOOGLE_PROTOBUF_ARCH_64_BIT) /* See Bug 1192556 */
-+typedef Atomic32 AtomicWord;
-+#else
- typedef intptr_t AtomicWord;
-+#endif
- 
- // Atomically execute:
- //      result = *ptr;
- //      if (*ptr == old_value)
- //        *ptr = new_value;
- //      return result;
- //
- // I.e., replace "*ptr" with "new_value" if "*ptr" used to be "old_value".
-diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h b/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
---- a/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
-+++ b/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
-@@ -45,17 +45,17 @@
- #define GOOGLE_PROTOBUF_ARCH_IA32 1
- #define GOOGLE_PROTOBUF_ARCH_32_BIT 1
- #elif defined(__QNX__)
- #define GOOGLE_PROTOBUF_ARCH_ARM_QNX 1
- #define GOOGLE_PROTOBUF_ARCH_32_BIT 1
- #elif defined(_M_ARM) || defined(__ARMEL__)
- #define GOOGLE_PROTOBUF_ARCH_ARM 1
- #define GOOGLE_PROTOBUF_ARCH_32_BIT 1
--#elif defined(__aarch64__)
-+#elif defined(__aarch64__) || defined(_M_ARM64)
- #define GOOGLE_PROTOBUF_ARCH_AARCH64 1
- #define GOOGLE_PROTOBUF_ARCH_64_BIT 1
- #elif defined(__MIPSEL__)
- #if defined(__LP64__)
- #define GOOGLE_PROTOBUF_ARCH_MIPS64 1
- #define GOOGLE_PROTOBUF_ARCH_64_BIT 1
- #else
- #define GOOGLE_PROTOBUF_ARCH_MIPS 1
-diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
---- a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
-+++ b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
-@@ -179,17 +179,17 @@ Atomic64 Release_Load(volatile const Ato
- #define GOOGLE_PROTOBUF_ATOMICOPS_ERROR \
- "Atomic operations are not supported on your platform"
- 
- // ThreadSanitizer, http://clang.llvm.org/docs/ThreadSanitizer.html.
- #if defined(THREAD_SANITIZER)
- #include <google/protobuf/stubs/atomicops_internals_tsan.h>
- // MSVC.
- #elif defined(_MSC_VER)
--#if defined(GOOGLE_PROTOBUF_ARCH_IA32) || defined(GOOGLE_PROTOBUF_ARCH_X64) || defined(GOOGLE_PROTOBUF_ARCH_ARM)
-+#if defined(GOOGLE_PROTOBUF_ARCH_IA32) || defined(GOOGLE_PROTOBUF_ARCH_X64) || defined(GOOGLE_PROTOBUF_ARCH_ARM) || defined(GOOGLE_PROTOBUF_ARCH_AARCH64)
- #include <google/protobuf/stubs/atomicops_internals_x86_msvc.h>
- #else
- #error GOOGLE_PROTOBUF_ATOMICOPS_ERROR
- #endif
- 
- // Solaris
- #elif defined(GOOGLE_PROTOBUF_OS_SOLARIS)
- #include <google/protobuf/stubs/atomicops_internals_solaris.h>

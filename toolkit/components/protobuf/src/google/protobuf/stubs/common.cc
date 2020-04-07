@@ -30,20 +30,18 @@
 
 // Author: kenton@google.com (Kenton Varda)
 
-#include <google/protobuf/message_lite.h>  // TODO(gerbens) ideally remove this.
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/once.h>
-#include <google/protobuf/stubs/status.h>
-#include <google/protobuf/stubs/stringpiece.h>
-#include <google/protobuf/stubs/strutil.h>
-#include <google/protobuf/stubs/int128.h>
+
+#include <atomic>
 #include <errno.h>
 #include <sstream>
 #include <stdio.h>
 #include <vector>
 
 #ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN  // We only need minimal includes
+#endif
 #include <windows.h>
 #define snprintf _snprintf    // see comment in strutil.cc
 #elif defined(HAVE_PTHREAD)
@@ -54,6 +52,16 @@
 #if defined(__ANDROID__)
 #include <android/log.h>
 #endif
+
+#include <google/protobuf/stubs/callback.h>
+#include <google/protobuf/stubs/logging.h>
+#include <google/protobuf/stubs/once.h>
+#include <google/protobuf/stubs/status.h>
+#include <google/protobuf/stubs/stringpiece.h>
+#include <google/protobuf/stubs/strutil.h>
+#include <google/protobuf/stubs/int128.h>
+
+#include <google/protobuf/port_def.inc>
 
 namespace google {
 namespace protobuf {
@@ -174,22 +182,7 @@ void NullLogHandler(LogLevel /* level */, const char* /* filename */,
 }
 
 static LogHandler* log_handler_ = &DefaultLogHandler;
-static int log_silencer_count_ = 0;
-
-static Mutex* log_silencer_count_mutex_ = NULL;
-GOOGLE_PROTOBUF_DECLARE_ONCE(log_silencer_count_init_);
-
-void DeleteLogSilencerCount() {
-  delete log_silencer_count_mutex_;
-  log_silencer_count_mutex_ = NULL;
-}
-void InitLogSilencerCount() {
-  log_silencer_count_mutex_ = new Mutex;
-  OnShutdown(&DeleteLogSilencerCount);
-}
-void InitLogSilencerCountOnce() {
-  GoogleOnceInit(&log_silencer_count_init_, &InitLogSilencerCount);
-}
+static std::atomic<int> log_silencer_count_ = ATOMIC_VAR_INIT(0);
 
 LogMessage& LogMessage::operator<<(const string& value) {
   message_ += value;
@@ -206,8 +199,7 @@ LogMessage& LogMessage::operator<<(const StringPiece& value) {
   return *this;
 }
 
-LogMessage& LogMessage::operator<<(
-    const ::google::protobuf::util::Status& status) {
+LogMessage& LogMessage::operator<<(const util::Status& status) {
   message_ += status.ToString();
   return *this;
 }
@@ -243,8 +235,8 @@ DECLARE_STREAM_OPERATOR(long         , "%ld")
 DECLARE_STREAM_OPERATOR(unsigned long, "%lu")
 DECLARE_STREAM_OPERATOR(double       , "%g" )
 DECLARE_STREAM_OPERATOR(void*        , "%p" )
-DECLARE_STREAM_OPERATOR(long long         , "%" GOOGLE_LL_FORMAT "d")
-DECLARE_STREAM_OPERATOR(unsigned long long, "%" GOOGLE_LL_FORMAT "u")
+DECLARE_STREAM_OPERATOR(long long         , "%" PROTOBUF_LL_FORMAT "d")
+DECLARE_STREAM_OPERATOR(unsigned long long, "%" PROTOBUF_LL_FORMAT "u")
 #undef DECLARE_STREAM_OPERATOR
 
 LogMessage::LogMessage(LogLevel level, const char* filename, int line)
@@ -255,8 +247,6 @@ void LogMessage::Finish() {
   bool suppress = false;
 
   if (level_ != LOGLEVEL_FATAL) {
-    InitLogSilencerCountOnce();
-    MutexLock lock(log_silencer_count_mutex_);
     suppress = log_silencer_count_ > 0;
   }
 
@@ -282,9 +272,9 @@ void LogFinisher::operator=(LogMessage& other) {
 LogHandler* SetLogHandler(LogHandler* new_func) {
   LogHandler* old = internal::log_handler_;
   if (old == &internal::NullLogHandler) {
-    old = NULL;
+    old = nullptr;
   }
-  if (new_func == NULL) {
+  if (new_func == nullptr) {
     internal::log_handler_ = &internal::NullLogHandler;
   } else {
     internal::log_handler_ = new_func;
@@ -293,14 +283,10 @@ LogHandler* SetLogHandler(LogHandler* new_func) {
 }
 
 LogSilencer::LogSilencer() {
-  internal::InitLogSilencerCountOnce();
-  MutexLock lock(internal::log_silencer_count_mutex_);
   ++internal::log_silencer_count_;
 };
 
 LogSilencer::~LogSilencer() {
-  internal::InitLogSilencerCountOnce();
-  MutexLock lock(internal::log_silencer_count_mutex_);
   --internal::log_silencer_count_;
 };
 
@@ -312,86 +298,6 @@ Closure::~Closure() {}
 namespace internal { FunctionClosure0::~FunctionClosure0() {} }
 
 void DoNothing() {}
-
-// ===================================================================
-// emulates google3/base/mutex.cc
-
-#ifdef _WIN32
-
-struct Mutex::Internal {
-  CRITICAL_SECTION mutex;
-#ifndef NDEBUG
-  // Used only to implement AssertHeld().
-  DWORD thread_id;
-#endif
-};
-
-Mutex::Mutex()
-  : mInternal(new Internal) {
-  InitializeCriticalSection(&mInternal->mutex);
-}
-
-Mutex::~Mutex() {
-  DeleteCriticalSection(&mInternal->mutex);
-  delete mInternal;
-}
-
-void Mutex::Lock() {
-  EnterCriticalSection(&mInternal->mutex);
-#ifndef NDEBUG
-  mInternal->thread_id = GetCurrentThreadId();
-#endif
-}
-
-void Mutex::Unlock() {
-#ifndef NDEBUG
-  mInternal->thread_id = 0;
-#endif
-  LeaveCriticalSection(&mInternal->mutex);
-}
-
-void Mutex::AssertHeld() {
-#ifndef NDEBUG
-  GOOGLE_DCHECK_EQ(mInternal->thread_id, GetCurrentThreadId());
-#endif
-}
-
-#elif defined(HAVE_PTHREAD)
-
-struct Mutex::Internal {
-  pthread_mutex_t mutex;
-};
-
-Mutex::Mutex()
-  : mInternal(new Internal) {
-  pthread_mutex_init(&mInternal->mutex, NULL);
-}
-
-Mutex::~Mutex() {
-  pthread_mutex_destroy(&mInternal->mutex);
-  delete mInternal;
-}
-
-void Mutex::Lock() {
-  int result = pthread_mutex_lock(&mInternal->mutex);
-  if (result != 0) {
-    GOOGLE_LOG(FATAL) << "pthread_mutex_lock: " << strerror(result);
-  }
-}
-
-void Mutex::Unlock() {
-  int result = pthread_mutex_unlock(&mInternal->mutex);
-  if (result != 0) {
-    GOOGLE_LOG(FATAL) << "pthread_mutex_unlock: " << strerror(result);
-  }
-}
-
-void Mutex::AssertHeld() {
-  // pthreads dosn't provide a way to check which thread holds the mutex.
-  // TODO(kenton):  Maybe keep track of locking thread ID like with WIN32?
-}
-
-#endif
 
 // ===================================================================
 // emulates google3/util/endian/endian.h
@@ -409,76 +315,6 @@ uint32 ghtonl(uint32 x) {
   result_array[2] = static_cast<uint8>((x >> 8) & 0xFF);
   result_array[3] = static_cast<uint8>(x & 0xFF);
   return result;
-}
-
-// ===================================================================
-// Shutdown support.
-
-namespace internal {
-
-typedef void OnShutdownFunc();
-struct ShutdownData {
-  ~ShutdownData() {
-    for (int i = 0; i < functions.size(); i++) {
-      functions[i]();
-    }
-    for (int i = 0; i < strings.size(); i++) {
-      strings[i]->~string();
-    }
-    for (int i = 0; i < messages.size(); i++) {
-      messages[i]->~MessageLite();
-    }
-  }
-
-  vector<void (*)()> functions;
-  vector<const std::string*> strings;
-  vector<const MessageLite*> messages;
-  Mutex mutex;
-};
-
-ShutdownData* shutdown_data = NULL;
-GOOGLE_PROTOBUF_DECLARE_ONCE(shutdown_functions_init);
-
-void InitShutdownFunctions() {
-  shutdown_data = new ShutdownData;
-}
-
-inline void InitShutdownFunctionsOnce() {
-  GoogleOnceInit(&shutdown_functions_init, &InitShutdownFunctions);
-}
-
-void OnShutdown(void (*func)()) {
-  InitShutdownFunctionsOnce();
-  MutexLock lock(&shutdown_data->mutex);
-  shutdown_data->functions.push_back(func);
-}
-
-void OnShutdownDestroyString(const std::string* ptr) {
-  InitShutdownFunctionsOnce();
-  MutexLock lock(&shutdown_data->mutex);
-  shutdown_data->strings.push_back(ptr);
-}
-
-void OnShutdownDestroyMessage(const void* ptr) {
-  InitShutdownFunctionsOnce();
-  MutexLock lock(&shutdown_data->mutex);
-  shutdown_data->messages.push_back(static_cast<const MessageLite*>(ptr));
-}
-
-}  // namespace internal
-
-void ShutdownProtobufLibrary() {
-  internal::InitShutdownFunctionsOnce();
-
-  // We don't need to lock shutdown_functions_mutex because it's up to the
-  // caller to make sure that no one is using the library before this is
-  // called.
-
-  // Make it safe to call this multiple times.
-  if (internal::shutdown_data == NULL) return;
-
-  delete internal::shutdown_data;
-  internal::shutdown_data = NULL;
 }
 
 #if PROTOBUF_USE_EXCEPTIONS

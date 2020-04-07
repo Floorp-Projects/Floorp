@@ -28,72 +28,68 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Author: kenton@google.com (Kenton Varda)
-//
-// emulates google3/base/once.h
-//
-// This header is intended to be included only by internal .cc files and
-// generated .pb.cc files.  Users should not use this directly.
+#include <google/protobuf/generated_enum_util.h>
 
-#include <google/protobuf/stubs/once.h>
+#include <algorithm>
 
-#ifndef GOOGLE_PROTOBUF_NO_THREAD_SAFETY
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <sched.h>
-#endif
-
-#include <google/protobuf/stubs/atomicops.h>
+#include <google/protobuf/generated_message_util.h>
 
 namespace google {
 namespace protobuf {
-
+namespace internal {
 namespace {
 
-void SchedYield() {
-#ifdef _WIN32
-  Sleep(0);
-#else  // POSIX
-  sched_yield();
-#endif
+bool EnumCompareByName(const EnumEntry& a, const EnumEntry& b) {
+  return StringPiece(a.name) < StringPiece(b.name);
+}
+
+// Gets the numeric value of the EnumEntry at the given index, but returns a
+// special value for the index -1. This gives a way to use std::lower_bound on a
+// sorted array of indices while searching for value that we associate with -1.
+int GetValue(const EnumEntry* enums, int i, int target) {
+  if (i == -1) {
+    return target;
+  } else {
+    return enums[i].value;
+  }
 }
 
 }  // namespace
 
-void GoogleOnceInitImpl(ProtobufOnceType* once, Closure* closure) {
-  internal::AtomicWord state = internal::Acquire_Load(once);
-  // Fast path. The provided closure was already executed.
-  if (state == ONCE_STATE_DONE) {
-    return;
+bool LookUpEnumValue(const EnumEntry* enums, size_t size,
+                     StringPiece name, int* value) {
+  EnumEntry target{name, 0};
+  auto it = std::lower_bound(enums, enums + size, target, EnumCompareByName);
+  if (it != enums + size && it->name == name) {
+    *value = it->value;
+    return true;
   }
-  // The closure execution did not complete yet. The once object can be in one
-  // of the two following states:
-  //   - UNINITIALIZED: We are the first thread calling this function.
-  //   - EXECUTING_CLOSURE: Another thread is already executing the closure.
-  //
-  // First, try to change the state from UNINITIALIZED to EXECUTING_CLOSURE
-  // atomically.
-  state = internal::Acquire_CompareAndSwap(
-      once, ONCE_STATE_UNINITIALIZED, ONCE_STATE_EXECUTING_CLOSURE);
-  if (state == ONCE_STATE_UNINITIALIZED) {
-    // We are the first thread to call this function, so we have to call the
-    // closure.
-    closure->Run();
-    internal::Release_Store(once, ONCE_STATE_DONE);
-  } else {
-    // Another thread has already started executing the closure. We need to
-    // wait until it completes the initialization.
-    while (state == ONCE_STATE_EXECUTING_CLOSURE) {
-      // Note that futex() could be used here on Linux as an improvement.
-      SchedYield();
-      state = internal::Acquire_Load(once);
-    }
-  }
+  return false;
 }
 
+int LookUpEnumName(const EnumEntry* enums, const int* sorted_indices,
+                   size_t size, int value) {
+  auto comparator = [enums, value](int a, int b) {
+    return GetValue(enums, a, value) < GetValue(enums, b, value);
+  };
+  auto it =
+      std::lower_bound(sorted_indices, sorted_indices + size, -1, comparator);
+  if (it != sorted_indices + size && enums[*it].value == value) {
+    return it - sorted_indices;
+  }
+  return -1;
+}
+
+bool InitializeEnumStrings(
+    const EnumEntry* enums, const int* sorted_indices, size_t size,
+    internal::ExplicitlyConstructed<std::string>* enum_strings) {
+  for (int i = 0; i < size; ++i) {
+    enum_strings[i].Construct(enums[sorted_indices[i]].name);
+    internal::OnShutdownDestroyString(enum_strings[i].get_mutable());
+  }
+  return true;
+}
+
+}  // namespace internal
 }  // namespace protobuf
 }  // namespace google
-
-#endif  // GOOGLE_PROTOBUF_NO_THREAD_SAFETY

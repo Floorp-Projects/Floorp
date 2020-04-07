@@ -1,5 +1,5 @@
 // Protocol Buffers - Google's data interchange format
-// Copyright 2014 Google Inc.  All rights reserved.
+// Copyright 2008 Google Inc.  All rights reserved.
 // https://developers.google.com/protocol-buffers/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,28 +27,59 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#ifndef GOOGLE_PROTOBUF_ATOMIC_SEQUENCE_NUM_H_
-#define GOOGLE_PROTOBUF_ATOMIC_SEQUENCE_NUM_H_
 
-#include <google/protobuf/stubs/atomicops.h>
+// #undefs all macros defined in port_def.inc.  See comments in port_def.inc
+// for more info.
 
-namespace google {
-namespace protobuf {
-namespace internal {
+#ifndef PROTOBUF_NAMESPACE
+#error "port_undef.inc must be included after port_def.inc"
+#endif
+#undef PROTOBUF_NAMESPACE
+#undef PROTOBUF_NAMESPACE_ID
+#undef PROTOBUF_ALWAYS_INLINE
+#undef PROTOBUF_COLD
+#undef PROTOBUF_NOINLINE
+#undef PROTOBUF_SECTION_VARIABLE
+#undef PROTOBUF_DEPRECATED
+#undef PROTOBUF_DEPRECATED_ENUM
+#undef PROTOBUF_DEPRECATED_MSG
+#undef PROTOBUF_FUNC_ALIGN
+#undef PROTOBUF_RETURNS_NONNULL
+#undef PROTOBUF_ATTRIBUTE_REINITIALIZES
+#undef PROTOBUF_RTTI
+#undef PROTOBUF_VERSION
+#undef PROTOBUF_VERSION_SUFFIX
+#undef PROTOBUF_FIELD_OFFSET
+#undef PROTOBUF_MIN_HEADER_VERSION_FOR_PROTOC
+#undef PROTOBUF_MIN_PROTOC_VERSION
+#undef PROTOBUF_PREDICT_TRUE
+#undef PROTOBUF_PREDICT_FALSE
+#undef PROTOBUF_LONGLONG
+#undef PROTOBUF_ULONGLONG
+#undef PROTOBUF_LL_FORMAT
+#undef PROTOBUF_GUARDED_BY
+#undef PROTOBUF_FALLTHROUGH_INTENDED
+#undef PROTOBUF_EXPORT
+#undef PROTOC_EXPORT
+#undef PROTOBUF_MUST_USE_RESULT
+#undef PROTOBUF_NAMESPACE_OPEN
+#undef PROTOBUF_NAMESPACE_CLOSE
+#undef PROTOBUF_UNUSED
+#undef PROTOBUF_ASSUME
+#undef PROTOBUF_EXPORT_TEMPLATE_DECLARE
+#undef PROTOBUF_EXPORT_TEMPLATE_DEFINE
 
-class SequenceNumber {
- public:
-  SequenceNumber() : word_(0) {}
+// Restore macro that may have been #undef'd in port_def.inc.
+#ifdef _MSC_VER
+#pragma pop_macro("GetMessage")
+#pragma pop_macro("IGNORE")
+#pragma pop_macro("IN")
+#pragma pop_macro("OUT")
+#pragma pop_macro("OPTIONAL")
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif
 
-  AtomicWord GetNext() {
-    return NoBarrier_AtomicIncrement(&word_, 1) - 1;
-  }
- private:
-  AtomicWord word_;
-};
-
-}  // namespace internal
-}  // namespace protobuf
-}  // namespace google
-
-#endif  // GOOGLE_PROTOBUF_ATOMIC_SEQUENCE_NUM_H_
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
