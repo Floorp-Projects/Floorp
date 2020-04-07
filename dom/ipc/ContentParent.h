@@ -230,7 +230,7 @@ class ContentParent final
   static already_AddRefed<RemoteBrowser> CreateBrowser(
       const TabContext& aContext, Element* aFrameElement,
       const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
-      ContentParent* aOpenerContentParent, uint64_t aNextRemoteTabId);
+      ContentParent* aOpenerContentParent);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -731,11 +731,11 @@ class ContentParent final
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aWidthSpecified, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
-      uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
-      nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
-      int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
-      nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
-      nsIContentSecurityPolicy* aCsp,
+      BrowserParent* aNextRemoteBrowser, const nsString& aName,
+      nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
+      bool* aWindowIsNew, int32_t& aOpenLocation,
+      nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
+      bool aLoadUri, nsIContentSecurityPolicy* aCsp,
       const OriginAttributes& aOriginAttributes);
 
   explicit ContentParent(int32_t aPluginID)
@@ -1460,9 +1460,6 @@ class ContentParent final
   nsTArray<Pref> mQueuedPrefs;
 
   RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
-
-  static uint64_t sNextRemoteTabId;
-  static nsDataHashtable<nsUint64HashKey, BrowserParent*> sNextBrowserParents;
 
   static StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
       sBrowsingContextGroupHolder;
