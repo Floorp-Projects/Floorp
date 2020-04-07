@@ -277,6 +277,7 @@ static MIRType ParseCacheIRStub(ICStub* stub) {
     case CacheOp::BooleanToString:
     case CacheOp::CallNumberToString:
       return MIRType::String;
+    case CacheOp::LoadDoubleResult:
     case CacheOp::DoubleAddResult:
     case CacheOp::DoubleSubResult:
     case CacheOp::DoubleMulResult:
@@ -286,6 +287,7 @@ static MIRType ParseCacheIRStub(ICStub* stub) {
     case CacheOp::DoubleIncResult:
     case CacheOp::DoubleDecResult:
       return MIRType::Double;
+    case CacheOp::LoadInt32Result:
     case CacheOp::Int32AddResult:
     case CacheOp::Int32SubResult:
     case CacheOp::Int32MulResult:
@@ -583,8 +585,6 @@ static bool TryToSpecializeBinaryArithOp(ICStub** stubs, uint32_t nstubs,
 MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
   MIRType result;
   ICStub* stubs[2];
-
-  MOZ_ASSERT(JSOp(*pc) != JSOp::Pos);
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICFallbackStub* stub = entry.fallbackStub();

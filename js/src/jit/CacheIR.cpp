@@ -6337,6 +6337,10 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
       writer.int32NotResult(intId);
       trackAttached("UnaryArith.Int32Not");
       break;
+    case JSOp::Pos:
+      writer.loadInt32Result(intId);
+      trackAttached("UnaryArith.Int32Pos");
+      break;
     case JSOp::Neg:
       writer.int32NegationResult(intId);
       trackAttached("UnaryArith.Int32Neg");
@@ -6372,6 +6376,10 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
       writer.int32NotResult(truncatedId);
       trackAttached("UnaryArith.DoubleNot");
       break;
+    case JSOp::Pos:
+      writer.loadDoubleResult(numId);
+      trackAttached("UnaryArith.DoublePos");
+      break;
     case JSOp::Neg:
       writer.doubleNegationResult(numId);
       trackAttached("UnaryArith.DoubleNeg");
@@ -6397,6 +6405,9 @@ AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
     return AttachDecision::NoAction;
   }
   MOZ_ASSERT(res_.isBigInt());
+
+  MOZ_ASSERT(op_ != JSOp::Pos,
+             "Applying the unary + operator on BigInt values throws an error");
 
   ValOperandId valId(writer.setInputOperandId(0));
   BigIntOperandId bigIntId = writer.guardToBigInt(valId);
