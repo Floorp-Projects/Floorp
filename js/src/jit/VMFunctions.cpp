@@ -2007,11 +2007,6 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   return true;
 }
 
-bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
-  ret.set(arg);
-  return ToNumber(cx, ret);
-}
-
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
   return ToNumeric(cx, ret);
