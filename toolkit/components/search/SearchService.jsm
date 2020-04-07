@@ -1126,47 +1126,7 @@ SearchService.prototype = {
   async _loadEngines(cache, isReload) {
     SearchUtils.log("_loadEngines: start");
     let engines = await this._findEngines();
-
-    // Get the non-empty distribution directories into distDirs...
-    let distDirs = [];
-    let locations;
-    try {
-      locations = Services.dirsvc.get(
-        NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
-        Ci.nsISimpleEnumerator
-      );
-    } catch (e) {
-      // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
-      // so this throws during unit tests (but not xpcshell tests).
-      locations = [];
-    }
-    for (let dir of locations) {
-      let iterator = new OS.File.DirectoryIterator(dir.path, {
-        winPattern: "*.xml",
-      });
-      try {
-        // Add dir to distDirs if it contains any files.
-        let { done } = await iterator.next();
-        if (!done) {
-          distDirs.push(dir);
-        }
-      } catch (ex) {
-        if (!(ex instanceof OS.File.Error)) {
-          throw ex;
-        }
-        if (ex.becauseAccessDenied) {
-          Cu.reportError(
-            "Not loading distribution files because access was denied."
-          );
-        } else if (!ex.becauseNoSuchFile) {
-          throw ex;
-        }
-      } finally {
-        // If there's an issue on close, we can't do anything about it. It could
-        // be that reading the iterator never fully opened.
-        iterator.close().catch(Cu.reportError);
-      }
-    }
+    let distDirs = await this._getDistibutionEngineDirectories();
 
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache =
@@ -1333,6 +1293,59 @@ SearchService.prototype = {
       }
     }
     return engines;
+  },
+
+  /**
+   * Get the directories that contain distribution engines.
+   *
+   * @returns {array}
+   *   Returns an array of directories that contain distribution engines.
+   */
+  async _getDistibutionEngineDirectories() {
+    if (gModernConfig) {
+      return [];
+    }
+    // Get the non-empty distribution directories into distDirs...
+    let distDirs = [];
+    let locations;
+    try {
+      locations = Services.dirsvc.get(
+        NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
+        Ci.nsISimpleEnumerator
+      );
+    } catch (e) {
+      // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
+      // so this throws during unit tests (but not xpcshell tests).
+      locations = [];
+    }
+    for (let dir of locations) {
+      let iterator = new OS.File.DirectoryIterator(dir.path, {
+        winPattern: "*.xml",
+      });
+      try {
+        // Add dir to distDirs if it contains any files.
+        let { done } = await iterator.next();
+        if (!done) {
+          distDirs.push(dir);
+        }
+      } catch (ex) {
+        if (!(ex instanceof OS.File.Error)) {
+          throw ex;
+        }
+        if (ex.becauseAccessDenied) {
+          Cu.reportError(
+            "Not loading distribution files because access was denied."
+          );
+        } else if (!ex.becauseNoSuchFile) {
+          throw ex;
+        }
+      } finally {
+        // If there's an issue on close, we can't do anything about it. It could
+        // be that reading the iterator never fully opened.
+        iterator.close().catch(Cu.reportError);
+      }
+    }
+    return distDirs;
   },
 
   /**
