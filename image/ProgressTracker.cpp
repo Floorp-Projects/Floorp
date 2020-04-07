@@ -15,7 +15,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 
 using mozilla::WeakPtr;
 
@@ -67,8 +66,8 @@ static void CheckProgressConsistency(Progress aOldProgress,
 ProgressTracker::ProgressTracker()
     : mMutex("ProgressTracker::mMutex"),
       mImage(nullptr),
-      mEventTarget(WrapNotNull(nsCOMPtr<nsIEventTarget>(
-          SystemGroup::EventTargetFor(TaskCategory::Other)))),
+      mEventTarget(WrapNotNull(
+          nsCOMPtr<nsIEventTarget>(GetMainThreadSerialEventTarget()))),
       mObserversWithTargets(0),
       mObservers(new ObserverTable),
       mProgress(NoProgress),
@@ -466,10 +465,11 @@ bool ProgressTracker::RemoveObserver(IProgressObserver* aObserver) {
       MOZ_ASSERT(mObserversWithTargets > 0);
       --mObserversWithTargets;
 
-      if (mObserversWithTargets == 0) {
+      // If we've shutdown the main thread there's no need to update
+      // event targets.
+      if ((mObserversWithTargets == 0) && !gXPCOMThreadsShutDown) {
         MutexAutoLock lock(mMutex);
-        nsCOMPtr<nsIEventTarget> target(
-            SystemGroup::EventTargetFor(TaskCategory::Other));
+        nsCOMPtr<nsIEventTarget> target(do_GetMainThread());
         mEventTarget = WrapNotNull(target);
       }
     }

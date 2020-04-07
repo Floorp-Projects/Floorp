@@ -16,7 +16,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/URLPreloader.h"
@@ -2550,7 +2549,7 @@ already_AddRefed<nsISerialEventTarget> Loader::DispatchTarget() {
   } else if (mDocGroup) {
     target = mDocGroup->EventTargetFor(TaskCategory::Other);
   } else {
-    target = SystemGroup::EventTargetFor(TaskCategory::Other);
+    target = GetMainThreadSerialEventTarget();
   }
 
   return target.forget();

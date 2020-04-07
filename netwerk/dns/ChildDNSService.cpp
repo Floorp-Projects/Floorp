@@ -10,7 +10,6 @@
 #include "nsNetCID.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "nsServiceManagerUtils.h"
@@ -80,7 +79,7 @@ nsresult ChildDNSService::AsyncResolveInternal(
   nsCOMPtr<nsIEventTarget> target = target_;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedListener = do_QueryInterface(listener);
   if (wrappedListener && !target) {
-    target = SystemGroup::EventTargetFor(TaskCategory::Network);
+    target = GetMainThreadSerialEventTarget();
   }
   if (target) {
     // Guarantee listener freed on main thread.  Not sure we need this in child

@@ -7,7 +7,6 @@
 #include "ServiceWorkerScriptCache.h"
 
 #include "js/Array.h"  // JS::GetArrayLength
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
@@ -1114,7 +1113,7 @@ void CompareCache::ManageValueResult(JSContext* aCx,
                              0,     /* default segsize */
                              0,     /* default segcount */
                              false, /* default closeWhenDone */
-                             SystemGroup::EventTargetFor(TaskCategory::Other));
+                             GetMainThreadSerialEventTarget());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Finish(rv, false);
     return;

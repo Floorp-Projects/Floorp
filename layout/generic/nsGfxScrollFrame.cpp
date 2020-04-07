@@ -2520,8 +2520,8 @@ void ScrollFrameHelper::MarkRecentlyScrolled() {
     gScrollFrameActivityTracker->MarkUsed(this);
   } else {
     if (!gScrollFrameActivityTracker) {
-      gScrollFrameActivityTracker = new ScrollFrameActivityTracker(
-          SystemGroup::EventTargetFor(TaskCategory::Other));
+      gScrollFrameActivityTracker =
+          new ScrollFrameActivityTracker(GetMainThreadSerialEventTarget());
     }
     gScrollFrameActivityTracker->AddObject(this);
   }

@@ -486,8 +486,8 @@ bool WMFVideoMFTManager::InitializeDXVA() {
     event->Run();
   } else {
     // This logic needs to run on the main thread
-    mozilla::SyncRunnable::DispatchToThread(
-        SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), event);
+    mozilla::SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(),
+                                            event);
   }
   mDXVA2Manager = std::move(event->mDXVA2Manager);
 
@@ -805,8 +805,8 @@ bool WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType, float aFramerate) {
     event->Run();
   } else {
     // This logic needs to run on the main thread
-    mozilla::SyncRunnable::DispatchToThread(
-        SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), event);
+    mozilla::SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(),
+                                            event);
   }
 
   return event->mSupportsConfig;

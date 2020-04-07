@@ -19,7 +19,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/SystemGroup.h"
 #include "jsfriendapi.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIXULRuntime.h"
@@ -473,7 +472,7 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
         RefPtr<GenericErrorResultPromise> inner =
             swm->MaybeClaimClient(clientInfo, desc);
         inner->Then(
-            SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+            GetMainThreadSerialEventTarget(), __func__,
             [promise](bool aResult) {
               promise->Resolve(CopyableErrorResult(), __func__);
             },
@@ -580,7 +579,7 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 
 RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
     const ClientOpenWindowArgs& aArgs) {
-  return InvokeAsync(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+  return InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
                      [aArgs]() { return ClientOpenWindow(aArgs); });
 }
 
