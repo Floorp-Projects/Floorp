@@ -330,6 +330,7 @@ already_AddRefed<Promise> XRSession::RequestReferenceSpace(
         nativeOrigin = new XRNativeOriginLocal(mDisplayClient);
         break;
       case XRReferenceSpaceType::Local_floor:
+      case XRReferenceSpaceType::Bounded_floor:
         nativeOrigin = new XRNativeOriginLocalFloor(mDisplayClient);
         break;
       default:
