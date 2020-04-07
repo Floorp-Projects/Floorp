@@ -16,6 +16,7 @@
 
 #include "DllBlocklistInit.h"
 #include "freestanding/DllBlocklist.h"
+#include "freestanding/FunctionTableResolver.h"
 
 #if defined(_MSC_VER)
 extern "C" IMAGE_DOS_HEADER __ImageBase;
@@ -42,6 +43,11 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
 
 static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     const wchar_t* aFullImagePath, HANDLE aChildProcess) {
+  freestanding::gK32.Init();
+  if (freestanding::gK32.IsInitialized()) {
+    freestanding::gK32.Transfer(aChildProcess, &freestanding::gK32);
+  }
+
   CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
 
