@@ -18,6 +18,9 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 76.0
     * `browser-engine-gecko-nightly`: GeckoView 77.0
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: Added optional `customTabSessionId` param to [PictureInPictureFeature] so consumers can use this feature for custom tab sessions.
+
 * **support-locale**
   * Updates `updateResources` to always update the context configuration
 

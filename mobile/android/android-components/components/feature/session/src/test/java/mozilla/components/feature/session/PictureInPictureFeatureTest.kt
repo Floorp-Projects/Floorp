@@ -167,7 +167,7 @@ class PictureInPictureFeatureTest {
     @Test
     fun `on pip mode changed`() {
         val pipChangedCallback: PipChangedCallback = mock()
-        val pipFeature = PictureInPictureFeature(sessionManager, activity, pipChangedCallback)
+        val pipFeature = PictureInPictureFeature(sessionManager, activity, null, pipChangedCallback)
 
         pipFeature.onPictureInPictureModeChanged(true)
         verify(pipChangedCallback).invoke(true)
@@ -182,6 +182,9 @@ class PictureInPictureFeatureTest {
 }
 
 @Suppress("DEPRECATION")
-private fun verifyDeprecatedPictureInPictureMode(activity: Activity, mode: VerificationMode = times(1)) {
+private fun verifyDeprecatedPictureInPictureMode(
+    activity: Activity,
+    mode: VerificationMode = times(1)
+) {
     verify(activity, mode).enterPictureInPictureMode()
 }
