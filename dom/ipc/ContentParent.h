@@ -230,8 +230,7 @@ class ContentParent final
   static already_AddRefed<RemoteBrowser> CreateBrowser(
       const TabContext& aContext, Element* aFrameElement,
       const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
-      ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs,
-      uint64_t aNextRemoteTabId);
+      ContentParent* aOpenerContentParent, uint64_t aNextRemoteTabId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 

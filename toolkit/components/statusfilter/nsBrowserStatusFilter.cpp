@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsBrowserStatusFilter.h"
-#include "mozilla/SystemGroup.h"
 #include "nsITimer.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"

@@ -2247,8 +2247,9 @@ WorkerPrivate::WorkerPrivate(
   }
 
   MOZ_ASSERT(NS_IsMainThread());
-  target =
-      GetWindow() ? GetWindow()->EventTargetFor(TaskCategory::Worker) : nullptr;
+  target = GetWindow()
+               ? GetWindow()->GetBrowsingContextGroup()->GetWorkerEventQueue()
+               : nullptr;
 
   if (!target) {
     target = GetMainThreadSerialEventTarget();

@@ -12,7 +12,6 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/WebRequestService.h"
 #include "nsIStreamListener.h"
 #include "nsIThread.h"

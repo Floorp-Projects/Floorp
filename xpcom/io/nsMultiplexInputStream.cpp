@@ -13,7 +13,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SystemGroup.h"
 
 #include "base/basictypes.h"
 

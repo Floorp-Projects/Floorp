@@ -8,7 +8,6 @@
 
 #include "gfxPlatform.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -565,13 +564,9 @@ void WebRenderBridgeChild::SetWebRenderLayerManager(
   MOZ_ASSERT(aManager && !mManager);
   mManager = aManager;
 
-  nsCOMPtr<nsIEventTarget> eventTarget = nullptr;
-  if (dom::TabGroup* tabGroup = mManager->GetTabGroup()) {
-    eventTarget = tabGroup->EventTargetFor(TaskCategory::Other);
-  }
-  MOZ_ASSERT(eventTarget || !XRE_IsContentProcess());
+  MOZ_ASSERT(NS_IsMainThread() || !XRE_IsContentProcess());
   mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(
-      1000, "CompositableForwarder", eventTarget);
+      1000, "CompositableForwarder", nullptr);
 }
 
 ipc::IShmemAllocator* WebRenderBridgeChild::GetShmemAllocator() {

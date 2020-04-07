@@ -257,10 +257,6 @@ nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal) {
 // Processing and submitting the stack as an observer notification.
 
 void nsHangDetails::Submit() {
-  if (NS_WARN_IF(!SystemGroup::Initialized())) {
-    return;
-  }
-
   RefPtr<nsHangDetails> hangDetails = this;
   nsCOMPtr<nsIRunnable> notifyObservers =
       NS_NewRunnableFunction("NotifyBHRHangObservers", [hangDetails] {

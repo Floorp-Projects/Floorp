@@ -31,7 +31,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/TabGroup.h"
 #include "nsIWebNavigation.h"
 #include "nsDocShellLoadTypes.h"
 #include "base/process.h"
