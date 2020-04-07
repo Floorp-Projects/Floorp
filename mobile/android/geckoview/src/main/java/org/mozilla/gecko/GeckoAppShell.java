@@ -1146,12 +1146,20 @@ public class GeckoAppShell {
         }
     }
 
+    private static ConnectivityManager sConnectivityManager;
+
+    private static void ensureConnectivityManager() {
+        if (sConnectivityManager == null) {
+            sConnectivityManager = (ConnectivityManager)
+                getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
+    }
+
     @WrapForJNI(calledFrom = "gecko")
     private static boolean isNetworkLinkUp() {
-        ConnectivityManager cm = (ConnectivityManager)
-                getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ensureConnectivityManager();
         try {
-            NetworkInfo info = cm.getActiveNetworkInfo();
+            NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
             if (info == null || !info.isConnected())
                 return false;
         } catch (SecurityException se) {
@@ -1162,10 +1170,9 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean isNetworkLinkKnown() {
-        ConnectivityManager cm = (ConnectivityManager)
-            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ensureConnectivityManager();
         try {
-            if (cm.getActiveNetworkInfo() == null)
+            if (sConnectivityManager.getActiveNetworkInfo() == null)
                 return false;
         } catch (SecurityException se) {
             return false;
@@ -1175,9 +1182,8 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static int getNetworkLinkType() {
-        ConnectivityManager cm = (ConnectivityManager)
-            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = cm.getActiveNetworkInfo();
+        ensureConnectivityManager();
+        NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
         if (info == null) {
             return LINK_TYPE_UNKNOWN;
         }
@@ -1238,14 +1244,13 @@ public class GeckoAppShell {
             return "";
         }
 
-        ConnectivityManager cm = (ConnectivityManager)
-            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        Network net = cm.getActiveNetwork();
+        ensureConnectivityManager();
+        Network net = sConnectivityManager.getActiveNetwork();
         if (net == null) {
             return "";
         }
 
-        LinkProperties lp = cm.getLinkProperties(net);
+        LinkProperties lp = sConnectivityManager.getLinkProperties(net);
         if (lp == null) {
             return "";
         }
