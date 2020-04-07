@@ -26,7 +26,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -517,7 +517,6 @@ class GeckoWebExtensionTest {
     fun `isEnabled depends on native state and defaults to true if state unknown`() {
         val runtime: GeckoRuntime = mock()
         whenever(runtime.webExtensionController).thenReturn(mock())
-
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
@@ -553,7 +552,7 @@ class GeckoWebExtensionTest {
         }
         val nativeExtensionPrivateUnknown = MockWebExtension(bundle)
         GeckoWebExtension(nativeExtensionPrivateUnknown, runtime)
-        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), ArgumentMatchers.anyBoolean())
+        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), anyBoolean())
 
         bundle = GeckoBundle().apply {
             putString("webExtensionId", "id")
@@ -565,7 +564,7 @@ class GeckoWebExtensionTest {
         }
         val nativeExtensionPrivateAllowed = MockWebExtension(bundle)
         GeckoWebExtension(nativeExtensionPrivateAllowed, runtime)
-        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), ArgumentMatchers.anyBoolean())
+        verify(webExtensionController, never()).setAllowedInPrivateBrowsing(any(), anyBoolean())
 
         bundle = GeckoBundle().apply {
             putString("webExtensionId", "id")

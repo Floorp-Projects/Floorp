@@ -102,7 +102,7 @@ class GeckoEngineView @JvmOverloads constructor(
             currentGeckoView.session?.let {
                 // Release a previously assigned session. Otherwise GeckoView will close it
                 // automatically.
-                detachSelectionActionDelegate(currentGeckoView.session)
+                detachSelectionActionDelegate(it)
                 currentGeckoView.releaseSession()
             }
 
@@ -149,7 +149,9 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun release() {
         detachSelectionActionDelegate(currentSession?.geckoSession)
 
-        currentSession?.apply { unregister(observer) }
+        currentSession?.apply {
+            unregister(observer)
+        }
 
         currentSession = null
 
