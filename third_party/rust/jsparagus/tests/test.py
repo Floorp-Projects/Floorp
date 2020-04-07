@@ -13,7 +13,7 @@ LispTokenizer = lexer.LexicalGrammar("( )", SYMBOL=r'[!%&*+:<=>?@A-Z^_a-z~]+')
 
 
 def prod(body, method_name):
-    return Production(body, CallMethod(method_name, list(range(len(body))), "AstBuilder", False))
+    return Production(body, CallMethod(method_name, list(range(len(body)))))
 
 
 class GenTestCase(unittest.TestCase):
@@ -591,9 +591,16 @@ class GenTestCase(unittest.TestCase):
                 ['IF', '(', 'X', ')', 'stmt', 'ELSE', 'stmt'],
             ],
         })
-        def stmt_0(): return ('stmt_0', 'OTHER', ';')
-        def stmt_1(t): return ('stmt_1', 'IF', '(', 'X', ')', t)
-        def stmt_2(t, e): return ('stmt_2', 'IF', '(', 'X', ')', t, 'ELSE', e)
+
+        def stmt_0():
+            return ('stmt_0', 'OTHER', ';')
+
+        def stmt_1(t):
+            return ('stmt_1', 'IF', '(', 'X', ')', t)
+
+        def stmt_2(t, e):
+            return ('stmt_2', 'IF', '(', 'X', ')', t, 'ELSE', e)
+
         self.compile(tokenize, grammar)
         self.assertParse('IF(X) OTHER;', stmt_1(stmt_0()))
         self.assertParse('IF(X) OTHER; ELSE OTHER;',
@@ -698,7 +705,7 @@ class GenTestCase(unittest.TestCase):
         # not forward the restriction from producting a Function to the
         # Primitive rule. Therefore, `Function [lookahead: ;]` is incorrectly
         # reduced to a `Primitive [lookahead: ;]`
-        #self.assertNoParse("function x() {}++;", message="got ';'")
+        # self.assertNoParse("function x() {}++;", message="got ';'")
         self.assertParse("function x() {} ++x;")
 
     # XXX to test: combination of lookaheads, ++, +-, -+, --
@@ -835,7 +842,7 @@ class GenTestCase(unittest.TestCase):
                 [name, "(", ")", ";"],
                 [name, "=", name, ";"],
                 Production(["yield", name, ";"],
-                           reducer=CallMethod("yield_stmt", [1], "AstBuilder", False),
+                           reducer=CallMethod("yield_stmt", [1]),
                            condition=('Yield', True)),
             ], None),
             'name': NtDef(('Yield',), [
@@ -843,7 +850,7 @@ class GenTestCase(unittest.TestCase):
                 # Specifically ask for a method here, because otherwise we
                 # wouldn't get one and then type checking would fail.
                 Production(["yield"],
-                           CallMethod("yield_as_name", [], "AstBuilder", False),
+                           CallMethod("yield_as_name", []),
                            condition=('Yield', False)),
             ], None),
         }, variable_terminals=["IDENT"])
@@ -1072,7 +1079,7 @@ class GenTestCase(unittest.TestCase):
         """A method can be called only in an intermediate reduce expression."""
 
         # The reduce expression `f(g($0))`.
-        reducer = CallMethod("f", [CallMethod("g", [0], "AstBuilder", False)], "AstBuilder", False)
+        reducer = CallMethod("f", [CallMethod("g", [0])])
 
         # The grammar `goal ::= NAME => f(g($1))`.
         grammar = Grammar(

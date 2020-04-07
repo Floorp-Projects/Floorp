@@ -19,33 +19,50 @@ parser.add_argument('PATH_TO_JSPARAGUS',
                     help='Path to jsparagus')
 args = parser.parse_args()
 
-vm_dir = os.path.join(args.PATH_TO_MOZILLA_CENTRAL, 'js', 'src', 'vm')
-if not os.path.exists(vm_dir):
-    print('{} does not exist'.format(vm_dir),
-          file=sys.stderr)
-    sys.exit(1)
 
-opcodes_path = os.path.join(vm_dir, 'Opcodes.h')
-if not os.path.exists(opcodes_path):
-    print('{} does not exist'.format(opcodes_path),
-          file=sys.stderr)
-    sys.exit(1)
+def ensure_input_files(files):
+    paths = dict()
+    for (parent, name) in files:
+        path = os.path.join(parent, name)
 
-util_path = os.path.join(vm_dir, 'BytecodeUtil.h')
-if not os.path.exists(util_path):
-    print('{} does not exist'.format(util_path),
-          file=sys.stderr)
-    sys.exit(1)
+        if not os.path.exists(path):
+            print('{} does not exist'.format(path),
+                  file=sys.stderr)
+            sys.exit(1)
+
+        paths[name] = path
+
+    return paths
+
+
+js_dir = os.path.join(args.PATH_TO_MOZILLA_CENTRAL, 'js')
+frontend_dir = os.path.join(js_dir, 'src', 'frontend')
+vm_dir = os.path.join(js_dir, 'src', 'vm')
+public_dir = os.path.join(js_dir, 'public')
+
+input_paths = ensure_input_files([
+    (frontend_dir, 'SourceNotes.h'),
+    (public_dir, 'Symbol.h'),
+    (vm_dir, 'AsyncFunctionResolveKind.h'),
+    (vm_dir, 'BytecodeFormatFlags.h'),
+    (vm_dir, 'CheckIsCallableKind.h'),
+    (vm_dir, 'CheckIsObjectKind.h'),
+    (vm_dir, 'FunctionPrefixKind.h'),
+    (vm_dir, 'GeneratorResumeKind.h'),
+    (vm_dir, 'Opcodes.h'),
+    (vm_dir, 'ThrowMsgKind.h'),
+    (vm_dir, 'TryNoteKind.h'),
+])
 
 opcode_dest_path = os.path.join(args.PATH_TO_JSPARAGUS,
-                                'crates/emitter/src/opcode.rs')
+                                'crates', 'emitter', 'src', 'opcode.rs')
 if not os.path.exists(opcode_dest_path):
     print('{} does not exist'.format(opcode_dest_path),
           file=sys.stderr)
     sys.exit(1)
 
 emitter_dest_path = os.path.join(args.PATH_TO_JSPARAGUS,
-                                 'crates/emitter/src/emitter.rs')
+                                 'crates', 'emitter', 'src', 'emitter.rs')
 if not os.path.exists(emitter_dest_path):
     print('{} does not exist'.format(emitter_dest_path),
           file=sys.stderr)
@@ -57,10 +74,10 @@ if not os.path.exists(copy_dir):
     os.makedirs(copy_dir)
 
 
-def extract_opcodes(path):
+def extract_opcodes(paths):
     opcodes = []
 
-    with open(path, 'r') as f:
+    with open(paths['Opcodes.h'], 'r') as f:
         for line in f:
             line = line.strip()
             if line.startswith('MACRO(') and ',' in line:
@@ -73,12 +90,12 @@ def extract_opcodes(path):
     return opcodes
 
 
-def extract_flags(path):
+def extract_flags(paths):
     pat = re.compile(r'(JOF_[A-Z0-9_]+)\s=\s([^,]+),\s*/\*\s+(.*)\s+\*/')
 
     flags = []
 
-    with open(path, 'r') as f:
+    with open(paths['BytecodeFormatFlags.h'], 'r') as f:
         for line in f:
             m = pat.search(line)
             if not m:
@@ -98,6 +115,127 @@ def extract_flags(path):
             })
 
     return flags
+
+
+size_types = {
+    'int8_t': 'i8',
+    'uint8_t': 'u8',
+    'uint16_t': 'u16',
+    'uint24_t': 'u24',
+    'int32_t': 'i32',
+    'uint32_t': 'u32',
+}
+
+
+def extract_types(paths):
+    types = dict()
+
+    def extract_enum(ty):
+        variants_pat = re.compile(
+            r'enum class ' + ty + r' : ([A-Za-z0-9_]+) \{([^}]+)\}', re.M)
+
+        name = '{}.h'.format(ty)
+        with open(paths[name], 'r') as f:
+            content = f.read()
+
+        m = variants_pat.search(content)
+        size_type = m.group(1)
+        if size_type not in size_types:
+            print('{} is not supported'.format(size_type),
+                  file=sys.stderr)
+            sys.exit(1)
+
+        size = size_types[size_type]
+        variants = list(map(lambda s: s.strip(), m.group(2).split(',')))
+
+        types[ty] = {
+            'size': size,
+            'variants': variants
+        }
+
+    def extract_symbols():
+        pat = re.compile(r'MACRO\((.+)\)')
+
+        ty = 'SymbolCode'
+        variants = []
+
+        found = False
+        state = 'before'
+        with open(paths['Symbol.h'], 'r') as f:
+            for line in f:
+                if 'enum class SymbolCode : uint32_t {' in line:
+                    found = True
+
+                if state == 'before':
+                    if 'JS_FOR_EACH_WELL_KNOWN_SYMBOL' in line:
+                        state = 'macro'
+                elif state == 'macro':
+                    m = pat.search(line)
+                    if m:
+                        sym = m.group(1)
+                        sym = sym[0].upper() + sym[1:]
+                        variants.append(sym)
+
+                    if not line.strip().endswith('\\'):
+                        state = 'after'
+
+        if not found:
+            print('SymbolCode : uint32_t is not found',
+                  file=sys.stderr)
+            sys.exit(1)
+
+        types[ty] = {
+            'size': 'u32',
+            'variants': variants
+        }
+
+    def extract_source_notes():
+        pat = re.compile(r'M\((.+),(.+),(.+)\)')
+
+        ty = 'SrcNoteType'
+        variants = []
+
+        found = False
+        state = 'before'
+        with open(paths['SourceNotes.h'], 'r') as f:
+            for line in f:
+                if 'enum class SrcNoteType : uint8_t {' in line:
+                    found = True
+
+                if state == 'before':
+                    if 'FOR_EACH_SRC_NOTE_TYPE' in line:
+                        state = 'macro'
+                elif state == 'macro':
+                    m = pat.search(line)
+                    if m:
+                        variants.append(m.group(1))
+
+                    if not line.strip().endswith('\\'):
+                        state = 'after'
+
+        if not found:
+            print('SrcNoteType : uint8_t is not found',
+                  file=sys.stderr)
+            sys.exit(1)
+
+        types[ty] = {
+            'size': 'u8',
+            'variants': variants
+        }
+
+    extract_enum('AsyncFunctionResolveKind')
+    extract_enum('CheckIsCallableKind')
+    extract_enum('CheckIsObjectKind')
+    extract_enum('FunctionPrefixKind')
+    extract_enum('GeneratorResumeKind')
+    extract_enum('ThrowMsgKind')
+    extract_enum('TryNoteKind')
+
+    extract_symbols()
+
+    extract_source_notes()
+
+    return types
 
 
 def format_opcodes(out, opcodes):
@@ -149,27 +287,26 @@ def to_snake_case(s):
 def parse_operands(opcode):
     params = []
 
+    copied_types = [
+        'AsyncFunctionResolveKind',
+        'CheckIsCallableKind',
+        'CheckIsObjectKind',
+        'FunctionPrefixKind',
+        'GeneratorResumeKind',
+        'ThrowMsgKind',
+    ]
+
     for operand in opcode.operands_array:
         tmp = operand.split(' ')
         ty = tmp[0]
         name = to_snake_case(tmp[1])
 
-        if ty == 'int8_t':
-            ty = 'i8'
-        elif ty == 'uint8_t':
-            ty = 'u8'
-        elif ty == 'uint16_t':
-            ty = 'u16'
-        elif ty == 'uint24_t':
-            ty = 'u24'
-        elif ty == 'int32_t':
-            ty = 'i32'
-        elif ty == 'uint32_t':
-            ty = 'u32'
-        elif ty == 'GeneratorResumeKind':
-            ty = 'ResumeKind'
+        if ty in size_types:
+            ty = size_types[ty]
         elif ty == 'double':
             ty = 'f64'
+        elif ty in copied_types:
+            pass
         else:
             print('Unspported operand type {}'.format(ty),
                   file=sys.stderr)
@@ -193,7 +330,22 @@ def parse_operands(opcode):
     return params
 
 
-def generate_emit_methods(out_f, opcodes):
+def generate_emit_types(out_f, types):
+    for ty in types:
+        variants = []
+        for i, variant in enumerate(types[ty]['variants']):
+            variants.append("""\
+    {} = {},
+""".format(variant, i))
+
+        out_f.write("""\
+pub enum {} {{
+{}}}
+
+""".format(ty, ''.join(variants)))
+
+
+def generate_emit_methods(out_f, opcodes, types):
     for op, opcode in opcodes.items():
         if op in ['True', 'False']:
             # done by `boolean` method
@@ -233,6 +385,10 @@ def generate_emit_methods(out_f, opcodes):
             assert int(opcode.nuses) == -1
             method = 'emit_pop_n_op'
             extra_args = ', {}'.format(params[0][1])
+        elif op == 'RegExp':
+            assert len(params) == 1
+            assert params[0][0] == 'u32'
+            params[0] = ('GCThingIndex', params[0][1])
         else:
             assert int(opcode.nuses) != -1
 
@@ -254,9 +410,15 @@ def generate_emit_methods(out_f, opcodes):
            op_snake=op_snake))
 
         for (ty, name) in params:
-            out_f.write("""\
-        self.write_{}({});
-""".format(to_snake_case(ty), name))
+            if ty in types:
+                size_ty = types[ty]['size']
+                out_f.write("""\
+        self.write_{size_ty}({name} as {size_ty});
+""".format(size_ty=size_ty, name=name))
+            else:
+                out_f.write("""\
+        self.write_{ty}({name});
+""".format(ty=to_snake_case(ty), name=name))
 
         out_f.write("""\
     }
@@ -264,7 +426,7 @@ def generate_emit_methods(out_f, opcodes):
 """)
 
 
-def update_emit(path):
+def update_emit(path, types):
     sys.path.append(vm_dir)
     from jsopcode import get_opcodes
 
@@ -279,9 +441,17 @@ def update_emit(path):
                 if '@@@@ BEGIN METHODS @@@@' in line:
                     state = 'methods'
                     out_f.write(line)
-                    generate_emit_methods(out_f, opcodes)
+                    generate_emit_methods(out_f, opcodes, types)
                 elif '@@@@ END METHODS @@@@' in line:
                     assert state == 'methods'
+                    state = 'normal'
+                    out_f.write(line)
+                elif '@@@@ BEGIN TYPES @@@@' in line:
+                    state = 'types'
+                    out_f.write(line)
+                    generate_emit_types(out_f, types)
+                elif '@@@@ END TYPES @@@@' in line:
+                    assert state == 'types'
                     state = 'normal'
                     out_f.write(line)
                 elif state == 'normal':
@@ -291,13 +461,17 @@ def update_emit(path):
     os.replace(tmppath, path)
 
 
-opcodes = extract_opcodes(opcodes_path)
-flags = extract_flags(util_path)
+def copy_input(paths):
+    for name, path in paths.items():
+        shutil.copyfile(path,
+                        os.path.join(copy_dir, name))
+
+
+opcodes = extract_opcodes(input_paths)
+flags = extract_flags(input_paths)
+types = extract_types(input_paths)
 
 update_opcode(opcode_dest_path, opcodes, flags)
-update_emit(emitter_dest_path)
+update_emit(emitter_dest_path, types)
 
-shutil.copyfile(opcodes_path,
-                os.path.join(copy_dir, os.path.basename(opcodes_path)))
-shutil.copyfile(util_path,
-                os.path.join(copy_dir, os.path.basename(util_path)))
+copy_input(input_paths)

@@ -4,6 +4,7 @@ use generated_parser::{
     full_actions, AstBuilder, AstBuilderDelegate, ErrorCode, ParseError, ParserTrait, Result,
     StackValue, Term, TermValue, TerminalId, Token, TABLES,
 };
+use json_log::json_trace;
 
 pub struct Parser<'alloc> {
     /// Vector of states visited in the LR parse table.
@@ -26,6 +27,7 @@ impl<'alloc> AstBuilderDelegate<'alloc> for Parser<'alloc> {
 impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
     fn shift(&mut self, tv: TermValue<StackValue<'alloc>>) -> Result<'alloc, bool> {
         // Shift the new terminal/nonterminal and its associated value.
+        json_trace!({ "enter": "shift" });
         let mut state = self.state();
         assert!(state < TABLES.shift_count);
         let mut tv = tv;
@@ -34,11 +36,17 @@ impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
             assert!(term_index < TABLES.shift_width);
             let index = state * TABLES.shift_width + term_index;
             let goto = TABLES.shift_table[index];
+            json_trace!({
+                "from": state,
+                "to": goto,
+                "term": format!("{:?}", { let s: &'static str = tv.term.into(); s }),
+            });
             if goto < 0 {
                 // Error handling is in charge of shifting an ErrorSymbol from the
                 // current state.
                 self.try_error_handling(tv)?;
                 tv = self.replay_stack.pop().unwrap();
+                json_trace!({ "replay_term": true });
                 continue;
             }
             state = goto as usize;
@@ -47,6 +55,7 @@ impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
             // Execute any actions, such as reduce actions ast builder actions.
             while state >= TABLES.shift_count {
                 assert!(state < TABLES.action_count + TABLES.shift_count);
+                json_trace!({ "action": state });
                 if full_actions(self, state)? {
                     return Ok(true);
                 }
@@ -54,6 +63,7 @@ impl<'alloc> ParserTrait<'alloc, StackValue<'alloc>> for Parser<'alloc> {
             }
             assert!(state < TABLES.shift_count);
             if let Some(tv_temp) = self.replay_stack.pop() {
+                json_trace!({ "replay_term": true });
                 tv = tv_temp;
             } else {
                 break;
@@ -104,6 +114,12 @@ impl<'alloc> Parser<'alloc> {
     }
 
     pub fn write_token(&mut self, token: &Token) -> Result<'alloc, ()> {
+        json_trace!({
+            "method": "write_token",
+            "is_on_new_line": token.is_on_new_line,
+            "start": token.loc.start,
+            "end": token.loc.end,
+        });
         // Shift the token with the associated StackValue.
         let accept = self.shift(TermValue {
             term: Term::Terminal(token.terminal_id),
@@ -117,6 +133,10 @@ impl<'alloc> Parser<'alloc> {
 
     pub fn close(&mut self, position: usize) -> Result<'alloc, StackValue<'alloc>> {
         // Shift the End terminal with the associated StackValue.
+        json_trace!({
+            "method": "close",
+            "position": position,
+        });
         let loc = SourceLocation::new(position, position);
         let token = Token::basic_token(TerminalId::End, loc);
         let accept = self.shift(TermValue {
@@ -147,6 +167,12 @@ impl<'alloc> Parser<'alloc> {
     }
 
     fn try_error_handling(&mut self, t: TermValue<StackValue<'alloc>>) -> Result<'alloc, bool> {
+        json_trace!({
+            "try_error_handling_term": format!("{}", {
+                let s: &'static str = t.term.into();
+                s
+            }),
+        });
         if let StackValue::Token(ref token) = t.value {
             // Error tokens might them-self cause more errors to be reported.
             // This happens due to the fact that the ErrorToken can be replayed,
@@ -202,9 +228,15 @@ impl<'alloc> Parser<'alloc> {
 
     pub fn can_accept_terminal(&self, t: TerminalId) -> bool {
         let bogus_loc = SourceLocation::new(0, 0);
-        self.simulator()
+        let result = self
+            .simulator()
             .write_token(&Token::basic_token(t, bogus_loc))
-            .is_ok()
+            .is_ok();
+        json_trace!({
+            "can_accept": result,
+            "terminal": format!("{:?}", t),
+        });
+        result
     }
 
     /// Return true if self.close() would succeed.

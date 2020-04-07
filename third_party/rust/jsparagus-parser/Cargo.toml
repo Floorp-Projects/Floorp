@@ -8,8 +8,12 @@ license = "MIT/Apache-2.0"
 [dependencies]
 bumpalo = "2.6.0"
 jsparagus-ast = { path = "../ast" }
+jsparagus-json-log = { path = "../json-log" }
 jsparagus-generated-parser = { path = "../generated_parser" }
 unic-ucd-ident = { version = "0.9.0", features = ["id"] }
+
+[features]
+logging = ["jsparagus-json-log/logging"]
 
 [dev-dependencies]
 criterion = "0.3"

@@ -1,18 +1,26 @@
 """Emit code and parser tables in Python."""
 
-from ..grammar import InitNt, CallMethod, Some, is_concrete_element, Nt, ErrorSymbol
-from ..actions import Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag, PopFlag, FunCall, Seq
-from ..runtime import SPECIAL_CASE_TAG, ErrorToken
+from ..grammar import Some, Nt, ErrorSymbol
+from ..actions import (Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag, PopFlag,
+                       FunCall, Seq)
+from ..runtime import ErrorToken
 from ..ordered import OrderedSet
 
+
 def write_python_parse_table(out, parse_table):
+    # Disable MyPy type checking for everything in this module.
+    out.write("# type: ignore\n\n")
+
     out.write("from jsparagus import runtime\n")
     if any(isinstance(key, Nt) for key in parse_table.nonterminals):
-        out.write("from jsparagus.runtime import Nt, InitNt, End, ErrorToken, StateTermValue, ShiftError, ShiftAccept\n")
+        out.write(
+            "from jsparagus.runtime import (Nt, InitNt, End, ErrorToken, StateTermValue,\n"
+            "                               ShiftError, ShiftAccept)\n")
     out.write("\n")
 
     methods = OrderedSet()
-    def write_action(act, indent = ""):
+
+    def write_action(act, indent=""):
         assert isinstance(act, Action)
         assert not act.is_inconsistent()
         if isinstance(act, Reduce):
@@ -83,7 +91,7 @@ def write_python_parse_table(out, parse_table):
         for term, dest in state.edges():
             try:
                 indent, res = write_action(term, "    ")
-            except:
+            except Exception:
                 print("Error while writing code for {}\n\n".format(state))
                 parse_table.debug_info = True
                 print(parse_table.debug_context(state.index, "\n", "# "))
@@ -101,7 +109,7 @@ def write_python_parse_table(out, parse_table):
         assert i == state.index
         out.write("    # {}.\n{}\n".format(i, parse_table.debug_context(i, "\n", "    # ")))
         if state.epsilon == []:
-            row = { term: dest for term, dest in state.edges() }
+            row = {term: dest for term, dest in state.edges()}
             for err, dest in state.errors.items():
                 del row[err]
                 row[ErrorToken()] = dest
@@ -112,6 +120,7 @@ def write_python_parse_table(out, parse_table):
     out.write("]\n\n")
 
     out.write("error_codes = [\n")
+
     def repr_code(symb):
         if isinstance(symb, ErrorSymbol):
             return repr(symb.error_code)
@@ -124,7 +133,7 @@ def write_python_parse_table(out, parse_table):
     out.write("]\n\n")
 
     out.write("goal_nt_to_init_state = {}\n\n".format(
-        repr({ nt.name: goal for nt, goal in parse_table.named_goals })
+        repr({nt.name: goal for nt, goal in parse_table.named_goals})
     ))
 
     if len(parse_table.named_goals) == 1:

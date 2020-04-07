@@ -1,7 +1,11 @@
 """ Data structures for representing grammars. """
 
-import collections
+from __future__ import annotations
+
 import copy
+import typing
+import dataclasses
+from dataclasses import dataclass
 from .ordered import OrderedSet, OrderedFrozenSet
 from . import types
 
@@ -15,8 +19,8 @@ from . import types
 #
 # The most common elements are terminals and nonterminals, so a grammar usually
 # looks something like this:
-def example_grammar():
-    rules = {
+def example_grammar() -> Grammar:
+    rules: typing.Dict[typing.Union[str, InitNt, Nt], LenientNtDef] = {
         'expr': [
             ['term'],
             ['expr', '+', 'term'],
@@ -48,6 +52,8 @@ def example_grammar():
     return Grammar(rules, goal_nts=['expr'], variable_terminals=['NUM', 'VAR'])
 
 
+Condition = typing.Tuple[str, bool]
+
 # A production consists of a left side, an optional condition, a right side,
 # and a reducer. A `Production` object includes everything except the left
 # side. Incorporating reducers lets us transform a grammar while preserving
@@ -59,32 +65,31 @@ def example_grammar():
 # The production `expr ::= expr + term => add($0, $2)` is represented by
 # `Production(["expr", "+", "term"], CallMethod("add", (0, 2))`.
 #
+@dataclass
 class Production:
     __slots__ = ['body', 'reducer', 'condition']
+    body: typing.List[Element]
+    reducer: ReduceExprOrAccept
+    condition: typing.Optional[Condition]
 
-    def __init__(self, body, reducer, *, condition=None):
+    def __init__(self,
+                 body: typing.List[Element],
+                 reducer: ReduceExprOrAccept,
+                 *,
+                 condition: typing.Optional[Condition] = None):
         self.body = body
         self.reducer = reducer
         self.condition = condition
 
-    def __eq__(self, other):
-        return (self.body == other.body
-                and self.reducer == other.reducer
-                and self.condition == other.condition)
-
-    __hash__ = None
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.condition is None:
             return "Production({!r}, reducer={!r})".format(self.body, self.reducer)
         else:
             return ("Production({!r}, reducer={!r}, condition={!r})"
                     .format(self.body, self.reducer, self.condition))
 
-    def copy_with(self, **kwargs):
-        return Production(body=kwargs.get('body', self.body),
-                          reducer=kwargs.get('reducer', self.reducer),
-                          condition=kwargs.get('condition', self.condition))
+    def copy_with(self, **kwargs) -> Production:
+        return dataclasses.replace(self, **kwargs)
 
 
 # *** Reduce expressions ******************************************************
@@ -117,27 +122,25 @@ class Production:
 # In addition, the special reducer 'accept' means stop parsing. This is
 # used only in productions for init nonterminals, created automatically by
 # Grammar.__init__(). It's not a reduce expression, so it can't be nested.
-#
 
-class CallMethod(collections.namedtuple("CallMethod", "method args trait fallible")):
+
+@dataclass(frozen=True)
+class CallMethod:
     """Express a method call, and give it a given set of arguments. A trait is
     added as the parser should implement this trait to call this method."""
-    def __new__(cls, method, args, trait = types.Type("AstBuilder"), fallible = False):
-        if isinstance(trait, str):
-            trait = types.Type(trait)
-        self = super(CallMethod, cls).__new__(cls, method, args, trait, fallible)
-        return self
 
-    def __eq__(self, other):
-        return isinstance(other, CallMethod) and super(CallMethod, self).__eq__(other)
-
-    def __hash__(self):
-        return super(CallMethod, self).__hash__()
-
-Some = collections.namedtuple("Some", "inner")
+    method: str
+    args: typing.Tuple[ReduceExpr, ...]
+    trait: types.Type = types.Type("AstBuilder")
+    fallible: bool = False
 
 
-def expr_to_str(expr):
+@dataclass(frozen=True)
+class Some:
+    inner: ReduceExpr
+
+
+def expr_to_str(expr: ReduceExprOrAccept) -> str:
     if isinstance(expr, int):
         return "${}".format(expr)
     elif isinstance(expr, CallMethod):
@@ -155,21 +158,27 @@ def expr_to_str(expr):
         raise ValueError("unrecognized expression: {!r}".format(expr))
 
 
+# Type parameter for Grammar.intern().
+Internable = typing.TypeVar("Internable")
+
+SyntheticTerminalsDict = typing.Dict[str, OrderedFrozenSet[str]]
+
+
 class Grammar:
     """A collection of productions.
 
-    *   self.variable_terminals - OrderedFrozenSet(str) - Terminals that carry
+    *   self.variable_terminals - OrderedFrozenSet[str] - Terminals that carry
         data, like (in JS) numeric literals and RegExps.
 
-    *   self.terminals - OrderedFrozenSet(str) - All terminals used in the
+    *   self.terminals - OrderedFrozenSet[str] - All terminals used in the
         language, including those in self.variable_terminals and
         self.synthetic_terminals.
 
-    *   self.synthetic_terminals - {str: OrderedFrozenSet(str)} - Maps terminals
+    *   self.synthetic_terminals - {str: OrderedFrozenSet[str]} - Maps terminals
         to sets of terminals. An entry `name: set` in this dictionary means
         that `name` is shorthand for "one of the terminals in `set`".
 
-    *   self.nonterminals - {key: NtDef} - Keys are either (str|InitNt), early
+    *   self.nonterminals - {LenientNt: NtDef} - Keys are either (str|InitNt), early
         in the pipeline, or Nt objects later on. Values are the NtDef objects
         that contain the actual Productions.
 
@@ -178,21 +187,34 @@ class Grammar:
     *   self.init_nts - [InitNt or Nt] - The list of all elements of
         self.nonterminals.keys() that are init nonterminals.
 
+    *   self.exec_modes - DefaultDict{str, OrderedSet[Type]} or None - ?
+
+    *   self.type_to_mods - {Type: [str]} or None - ?
+
     *   self._cache - {object: object} - Cache of immutable objects used by
         Grammar.intern().
-
     """
+
+    variable_terminals: OrderedFrozenSet[str]
+    terminals: OrderedFrozenSet[typing.Union[str, End]]
+    synthetic_terminals: SyntheticTerminalsDict
+    nonterminals: typing.Dict[LenientNt, NtDef]
+    methods: typing.Dict[str, types.MethodType]
+    init_nts: typing.List[typing.Union[Nt, InitNt]]
+    exec_modes: typing.Optional[typing.DefaultDict[str, OrderedSet[types.Type]]]
+    type_to_modes: typing.Optional[typing.Mapping[types.Type, typing.List[str]]]
+    _cache: typing.Dict[object, object]
 
     def __init__(
             self,
-            nonterminals,
+            nonterminals: typing.Mapping[LenientNt, LenientNtDef],
             *,
-            goal_nts=None,
-            variable_terminals=(),
-            synthetic_terminals=None,
-            method_types=None,
-            exec_modes=None,
-            type_to_modes=None):
+            goal_nts: typing.Optional[typing.Iterable[LenientNt]] = None,
+            variable_terminals: typing.Iterable[str] = (),
+            synthetic_terminals: typing.Dict[str, OrderedFrozenSet] = None,
+            method_types: typing.Optional[typing.Dict[str, types.MethodType]] = None,
+            exec_modes: typing.Optional[typing.DefaultDict[str, OrderedSet[types.Type]]] = None,
+            type_to_modes: typing.Optional[typing.Mapping[types.Type, typing.List[str]]] = None):
 
         # This constructor supports passing in a sort of jumbled blob of
         # strings, lists, and actual objects, and normalizes it all to a more
@@ -203,15 +225,15 @@ class Grammar:
         # any other nice properties.
 
         # Copy/infer the arguments.
-        nonterminals = dict(nonterminals.items())
+        my_nonterminals: typing.Dict[LenientNt, LenientNtDef] = dict(nonterminals.items())
         if goal_nts is None:
             # Default to the first nonterminal in the dictionary.
-            goal_nts = []
-            for name in nonterminals:
-                goal_nts.append(name)
+            my_goal_nts = []
+            for name in my_nonterminals:
+                my_goal_nts.append(name)
                 break
         else:
-            goal_nts = list(goal_nts)
+            my_goal_nts = list(goal_nts)
         self.variable_terminals = OrderedFrozenSet(variable_terminals)
         if synthetic_terminals is None:
             synthetic_terminals = {}
@@ -220,13 +242,13 @@ class Grammar:
                 name: OrderedFrozenSet(set)
                 for name, set in synthetic_terminals.items()
             }
-            for key, values in synthetic_terminals.items():
-                if key in nonterminals:
+            for synthetic_key, values in synthetic_terminals.items():
+                if synthetic_key in my_nonterminals:
                     raise ValueError(
                         "invalid grammar: {!r} is both a terminal and a nonterminal"
-                        .format(key))
+                        .format(synthetic_key))
                 for t in values:
-                    if t in nonterminals:
+                    if t in my_nonterminals:
                         raise ValueError(
                             "invalid grammar: {!r} is both ".format(t)
                             + "a representation of a synthetic terminal and a nonterminal")
@@ -239,11 +261,12 @@ class Grammar:
                         raise ValueError(
                             "unsupported: synthetic terminals can't include other "
                             "synthetic terminals; {!r} includes {!r}"
-                            .format(key, t))
+                            .format(synthetic_key, t))
         # self.synthetic_terminals = synthetic_terminals
         self.synthetic_terminals = {}
 
-        keys_are_nt = isinstance(next(iter(nonterminals)), Nt)
+        keys_are_nt = isinstance(next(iter(my_nonterminals)), Nt)
+        key_type: typing.Union[typing.Type, typing.Tuple[typing.Type, ...]]
         key_type = Nt if keys_are_nt else (str, InitNt)
 
         self._cache = {}
@@ -253,50 +276,64 @@ class Grammar:
         #
         # str_to_nt maps the name of each non-parameterized
         # nonterminal to `Nt(name)`, a cache.
-        str_to_nt = {}  # {str: Nt}
+        str_to_nt: typing.Dict[typing.Union[str, InitNt], Nt] = {}
         # nt_params lists the names of each nonterminal's parameters (empty
         # tuple for non-parameterized nts).
-        nt_params = {}  # {str: tuple(str)}
-        for key in nonterminals:
+        nt_params: typing.Dict[typing.Union[str, InitNt], typing.Tuple[str, ...]] = {}
+        for key in my_nonterminals:
             if not isinstance(key, key_type):
                 raise ValueError(
                     "invalid grammar: conflicting key types in nonterminals dict - "
                     "expected either all str or all Nt, got {!r}"
                     .format(key.__class__.__name__))
+            nt_name: typing.Union[str, InitNt]
+            param_names: typing.Tuple[str, ...]
             if keys_are_nt:
-                name = key.name
+                assert isinstance(key, Nt)
+                nt_name = key.name
                 param_names = tuple(name for name, value in key.args)
             else:
-                name = key
+                assert isinstance(key, (str, InitNt))
+                nt_name = key
                 param_names = ()
-                if isinstance(nonterminals[key], NtDef):
-                    param_names = tuple(nonterminals[key].params)
-            if name not in nt_params:
-                nt_params[name] = param_names
+                my_nt = my_nonterminals[key]
+                if isinstance(my_nt, NtDef):
+                    param_names = tuple(my_nt.params)
+            if nt_name not in nt_params:
+                nt_params[nt_name] = param_names
             else:
-                if nt_params[name] != param_names:
+                if nt_params[nt_name] != param_names:
                     raise ValueError(
                         "conflicting parameter name lists for nt {!r}: "
                         "both {!r} and {!r}"
-                        .format(name, nt_params[name], param_names))
-            if param_names == () and name not in str_to_nt:
-                str_to_nt[name] = self.intern(Nt(name))
+                        .format(nt_name, nt_params[nt_name], param_names))
+            if param_names == () and nt_name not in str_to_nt:
+                str_to_nt[nt_name] = self.intern(Nt(nt_name))
 
         # Validate, desugar, and copy the grammar. As a side effect, calling
         # validate_element on every element of the grammar populates
         # all_terminals.
-        all_terminals = OrderedSet(self.variable_terminals)
+        all_terminals: OrderedSet[typing.Union[str, End]] = OrderedSet(self.variable_terminals)
         all_terminals.add(End())
 
-        def note_terminal(t):
+        def note_terminal(t: str) -> None:
             """Add t (and all representations of it, if synthetic) to all_terminals."""
             if t not in all_terminals:
                 all_terminals.add(t)
-                if t in synthetic_terminals:
-                    for k in synthetic_terminals[t]:
+                if t in self.synthetic_terminals:
+                    for k in self.synthetic_terminals[t]:
                         note_terminal(k)
 
-        def validate_element(nt, i, j, e, context_params):
+        # Note: i and j are normally list indexes, but they are sometimes the
+        # special string '?'. It's OK because they are used only in error
+        # messages.
+        def validate_element(
+                nt: LenientNt,
+                i: typing.Union[int, str],
+                j: typing.Union[int, str],
+                e: Element,
+                context_params: typing.Tuple[str, ...]
+        ) -> Element:
             if isinstance(e, str):
                 if e in nt_params:
                     if nt_params[e] != ():
@@ -350,7 +387,7 @@ class Grammar:
             elif isinstance(e, Nt):
                 # Either the application or the original parameterized
                 # production must be present in the dictionary.
-                if e not in nonterminals and e.name not in nonterminals:
+                if e not in my_nonterminals and e.name not in my_nonterminals:
                     raise ValueError(
                         "invalid grammar: unrecognized nonterminal "
                         "in production `grammar[{!r}][{}][{}]`: {!r}"
@@ -384,7 +421,11 @@ class Grammar:
                     .format(nt, i, j, e))
             assert False, "unreachable"
 
-        def check_reduce_expr(nt, i, rhs, expr):
+        def check_reduce_expr(
+                nt: LenientNt,
+                i: int,
+                rhs: Production,
+                expr: ReduceExprOrAccept) -> None:
             if isinstance(expr, int):
                 concrete_len = sum(1 for e in rhs.body
                                    if is_concrete_element(e))
@@ -420,11 +461,17 @@ class Grammar:
                     "in grammar[{!r}][{}].reducer"
                     .format(expr, nt, i))
 
-        def copy_rhs(nt, i, sole_production, rhs, context_params):
+        def copy_rhs(
+                nt: LenientNt,
+                i: int,
+                sole_production: bool,
+                rhs: LenientProduction,
+                context_params: typing.Tuple[str, ...]) -> Production:
             if isinstance(rhs, list):
                 # Bare list, no reducer. Desugar to a Production, inferring a
                 # reasonable default reducer.
                 nargs = sum(1 for e in rhs if is_concrete_element(e))
+                reducer: ReduceExpr
                 if len(rhs) == 1 and nargs == 1:
                     reducer = 0  # don't call a method, just propagate the value
                 else:
@@ -432,7 +479,7 @@ class Grammar:
                     # nonterminal has exactly one production, there's no need
                     # to include the production index `i` to the method name.
                     if sole_production:
-                        method = nt
+                        method = str(nt)
                     else:
                         method = '{}_{}'.format(nt, i)
                     reducer = CallMethod(method, tuple(range(nargs)))
@@ -459,7 +506,11 @@ class Grammar:
                 for j, e in enumerate(rhs.body)
             ])
 
-        def copy_nt_def(nt, nt_def, params):
+        def copy_nt_def(
+                nt: LenientNt,
+                nt_def: typing.Union[NtDef, typing.List[LenientProduction]],
+        ) -> NtDef:
+            rhs_list: typing.Sequence[LenientProduction]
             if isinstance(nt_def, NtDef):
                 for i, param in enumerate(nt_def.params):
                     if not isinstance(param, str):
@@ -482,11 +533,11 @@ class Grammar:
                     .format(nt, type(rhs_list).__name__))
 
             sole_production = len(rhs_list) == 1
-            rhs_list = [copy_rhs(nt, i, sole_production, rhs, params)
-                        for i, rhs in enumerate(rhs_list)]
-            return NtDef(params, rhs_list, ty)
+            productions = [copy_rhs(nt, i, sole_production, rhs, params)
+                           for i, rhs in enumerate(rhs_list)]
+            return NtDef(params, productions, ty)
 
-        def check_nt_key(nt):
+        def check_nt_key(nt: LenientNt) -> None:
             if isinstance(nt, str):
                 if not nt.isidentifier():
                     raise ValueError(
@@ -525,8 +576,8 @@ class Grammar:
                         .format(nt))
                 # nt.goal is a "use", not a "def". Check it like a use.
                 # Bogus question marks appear in error messages :-|
-                validate_element(nt, '?', '?', nt.goal, [])
-                if nt.goal not in goal_nts:
+                validate_element(nt, '?', '?', nt.goal, ())
+                if nt.goal not in my_goal_nts:
                     raise TypeError(
                         "invalid grammar: nonterminal referenced by InitNt "
                         "is not in the list of goals: {!r}"
@@ -536,7 +587,10 @@ class Grammar:
                     "invalid grammar: expected string keys in nonterminals dict, got {!r}"
                     .format(nt))
 
-        def validate_nt(nt, nt_def):
+        def validate_nt(
+                nt: LenientNt,
+                nt_def: LenientNtDef
+        ) -> typing.Tuple[LenientNt, NtDef]:
             check_nt_key(nt)
             if isinstance(nt, InitNt):
                 # Check the form of init productions. Initially these look like
@@ -550,29 +604,29 @@ class Grammar:
                 rhs_list = nt_def.rhs_list
                 g = nt.goal
                 if (rhs_list != [Production([g], 0),
-                                 Production([Nt(nt,()), End()], 'accept')]
+                                 Production([Nt(nt, ()), End()], 'accept')]
                     and rhs_list != [Production([Optional(g)], 0),
-                                     Production([Nt(nt,()), End()], 'accept')]
+                                     Production([Nt(nt, ()), End()], 'accept')]
                     and rhs_list != [Production([End()], 'accept'),
                                      Production([g, End()], 'accept'),
-                                     Production([Nt(nt,()), End()], 'accept')]):
+                                     Production([Nt(nt, ()), End()], 'accept')]):
                     raise ValueError(
                         "invalid grammar: grammar[{!r}] is not one of "
                         "the expected forms: got {!r}"
                         .format(nt, rhs_list))
 
-            return nt, copy_nt_def(nt, nt_def, [])
+            return nt, copy_nt_def(nt, nt_def)
 
         self.nonterminals = {}
-        for nt, nt_def in nonterminals.items():
-            nt, nt_def = validate_nt(nt, nt_def)
+        for nt1, nt_def1 in my_nonterminals.items():
+            nt, nt_def = validate_nt(nt1, nt_def1)
             self.nonterminals[nt] = nt_def
-        for nt, nt_def in synthetic_terminals.items():
-            nt_def = NtDef((nt,), [Production([e], 0) for e in nt_def], None)
-            nt, nt_def = validate_nt(nt, nt_def)
+        for syn_term_name, t_set in synthetic_terminals.items():
+            nt_def = NtDef((syn_term_name,), [Production([e], 0) for e in t_set], None)
+            nt, nt_def = validate_nt(syn_term_name, nt_def)
             self.nonterminals[nt] = nt_def
             # Remove synthetic terminals from the list of terminals.
-            all_terminals -= OrderedSet([nt])
+            all_terminals.remove(syn_term_name)
 
         self.terminals = OrderedFrozenSet(all_terminals)
 
@@ -584,12 +638,13 @@ class Grammar:
             types.infer_types(self)
         else:
             for nt, nt_def in self.nonterminals.items():
+                assert isinstance(nt_def, NtDef)
                 assert isinstance(nt_def.type, types.Type)
             self.methods = method_types
 
         # Synthesize "init" nonterminals.
         self.init_nts = []
-        for goal in goal_nts:
+        for goal in my_goal_nts:
             # Convert str goals to Nt objects and validate.
             if isinstance(goal, str):
                 ok = goal in str_to_nt
@@ -597,30 +652,38 @@ class Grammar:
                     goal = str_to_nt[goal]
             elif isinstance(goal, Nt):
                 if keys_are_nt:
-                    ok = goal in nonterminals
+                    ok = goal in my_nonterminals
                 else:
-                    ok = goal.name in nonterminals
+                    ok = goal.name in my_nonterminals
             if not ok:
                 raise ValueError(
                     "goal nonterminal {!r} is undefined".format(goal))
+            assert isinstance(goal, Nt)
 
             # Weird, but the key of an init nonterminal really is
             # `Nt(InitNt(Nt(goal_name, goal_args)), ())`. It takes no arguments,
             # but it refers to a goal that might take arguments.
-            init_key = InitNt(goal)
-            init_nt = Nt(init_key, ())
+            init_nt = InitNt(goal)
+            init_key: LenientNt = init_nt
+            goal_nt = Nt(init_nt, ())
             if keys_are_nt:
-                init_key = init_nt
+                init_key = goal_nt
             if init_key not in self.nonterminals:
                 self.nonterminals[init_key] = NtDef(
-                    (), [Production([goal], 0), Production([init_nt, End()], 'accept')], types.NoReturnType)
-            self.init_nts.append(init_nt)
+                    (),
+                    [Production([goal], 0),
+                     Production([goal_nt, End()], 'accept')],
+                    types.NoReturnType)
+            self.init_nts.append(goal_nt)
 
         # Add the various execution backends which would rely on the same parse table.
         self.exec_modes = exec_modes
         self.type_to_modes = type_to_modes
 
-    def patch(self, extensions):
+    # The argument is a list of extension.GrammarExtensions. The annotation is
+    # vague because this module does not import the extension module. It would
+    # be a cyclic dependency.
+    def patch(self, extensions: typing.List) -> None:
         assert self.type_to_modes is not None
         assert self.exec_modes is not None
         if extensions == []:
@@ -637,14 +700,16 @@ class Grammar:
         # Replace with the modified version of nonterminals
         self.nonterminals = nonterminals
 
-    def intern(self, obj):
+    def intern(self, obj: Internable) -> Internable:
         """Return a shared copy of the immutable object `obj`.
 
         This saves memory and consistent use allows code to use `is` for
         equality testing.
         """
         try:
-            return self._cache[obj]
+            # mypy doesn't have enough dependent-typing fanciness to say what
+            # self._cache is and get this return statement to type-check.
+            return self._cache[obj]  # type: ignore
         except KeyError:
             self._cache[obj] = obj
             return obj
@@ -652,33 +717,40 @@ class Grammar:
     # Terminals are tokens that must appear verbatim in the input wherever they
     # appear in the grammar, like the operators '+' '-' *' '/' and brackets '(' ')'
     # in the example grammar.
-    def is_terminal(self, element):
+    def is_terminal(self, element: object) -> bool:
         return type(element) is str
 
-    def expand_set_of_terminals(self, terminals):
+    def expand_set_of_terminals(
+            self,
+            terminals: typing.Iterable[typing.Union[str, None, ErrorSymbol]]
+    ) -> OrderedSet[typing.Union[str, None, ErrorSymbol]]:
         """Copy a set of terminals, replacing any synthetic terminals with their representations.
 
         Returns a new OrderedSet.
 
         terminals - an iterable of terminals and/or other unique elements like
-        None or ErrorToken.
+        None or ErrorSymbol.
         """
-        result = OrderedSet()
+        result: OrderedSet[typing.Union[str, None, ErrorSymbol]] = OrderedSet()
         for t in terminals:
-            if t in self.synthetic_terminals:
+            if isinstance(t, str) and t in self.synthetic_terminals:
                 result |= self.expand_set_of_terminals(self.synthetic_terminals[t])
             else:
                 result.add(t)
         return result
 
-    def goals(self):
+    def goals(self) -> typing.List[Nt]:
         """Return a list of this grammar's goal nonterminals."""
-        return [init_nt.name.goal for init_nt in self.init_nts]
+        return [init_nt.name.goal for init_nt in self.init_nts]  # type: ignore
 
-    def with_nonterminals(self, nonterminals):
+    def with_nonterminals(
+            self,
+            nonterminals: typing.Mapping[LenientNt, LenientNtDef]
+    ) -> Grammar:
         """Return a copy of self with the same attributes except different nonterminals."""
         if self.methods is not None:
             for nt_def in nonterminals.values():
+                assert isinstance(nt_def, NtDef)
                 assert nt_def.type is not None
         return Grammar(
             nonterminals,
@@ -691,10 +763,11 @@ class Grammar:
 
     # === A few methods for dumping pieces of grammar.
 
-    def element_to_str(self, e):
+    def element_to_str(self, e: Element) -> str:
         if isinstance(e, Nt):
             return e.pretty()
         elif self.is_terminal(e):
+            assert isinstance(e, str)
             if e in self.variable_terminals or e in self.synthetic_terminals:
                 return e
             return '"' + repr(e)[1:-1] + '"'
@@ -717,10 +790,10 @@ class Grammar:
         else:
             return str(e)
 
-    def symbols_to_str(self, rhs):
+    def symbols_to_str(self, rhs: typing.Iterable[Element]) -> str:
         return " ".join(self.element_to_str(e) for e in rhs)
 
-    def rhs_to_str(self, rhs):
+    def rhs_to_str(self, rhs: LenientProduction):
         if isinstance(rhs, Production):
             if rhs.condition is None:
                 prefix = ''
@@ -734,22 +807,27 @@ class Grammar:
                     condition = "{} == {!r}".format(param, value)
                 prefix = "#[if {}] ".format(condition)
             return prefix + self.rhs_to_str(rhs.body)
-        elif isinstance(rhs, Production):
-            return self.rhs_to_str(rhs.body)
         elif len(rhs) == 0:
             return "[empty]"
         else:
             return self.symbols_to_str(rhs)
 
-    def production_to_str(self, nt, rhs, reducer=()):
+    def production_to_str(
+            self,
+            nt: typing.Union[str, Nt],
+            rhs: LenientProduction,
+            *reducer: ReduceExpr
+    ) -> str:
         # As we have two ways of representing productions at the moment, just
         # take multiple arguments :(
         return "{} ::= {}{}".format(
             self.element_to_str(nt),
             self.rhs_to_str(rhs),
-            "" if reducer == () else " => " + expr_to_str(reducer))
+            "".join(" => " + expr_to_str(expr) for expr in reducer))
 
-    def lr_item_to_str(self, prods, item):
+    # The type of `item` is `gen.LRItem`. No annotation because this module
+    # does not import `gen`. It would be a cyclic dependency.
+    def lr_item_to_str(self, prods: typing.List, item) -> str:
         prod = prods[item.prod_index]
         if item.lookahead is None:
             la = []
@@ -766,21 +844,31 @@ class Grammar:
                 for t in item.followed_by)
         )
 
-    def item_set_to_str(self, prods, item_set):
+    def item_set_to_str(
+            self,
+            prods: typing.List,
+            item_set: OrderedFrozenSet
+    ) -> str:
         return "{{{}}}".format(
             ",  ".join(self.lr_item_to_str(prods, item) for item in item_set)
         )
 
-    def expand_terminal(self, t):
+    def expand_terminal(self, t: str) -> OrderedFrozenSet[str]:
         return self.synthetic_terminals.get(t) or OrderedFrozenSet([t])
 
-    def compatible_elements(self, e1, e2):
+    def compatible_elements(self, e1: Element, e2: Element) -> bool:
+        # "type: ignore" because mypy doesn't know that `self.is_terminal(e1)`
+        # means `e1` is a terminal, and thus `self.expand_terminal(e1)` is OK.
         return (e1 == e2
                 or (self.is_terminal(e1)
                     and self.is_terminal(e2)
-                    and len(self.expand_terminal(e1) & self.expand_terminal(e2)) > 0))
+                    and len(self.expand_terminal(e1)  # type: ignore
+                            & self.expand_terminal(e2)) > 0))  # type: ignore
 
-    def compatible_sequences(self, seq1, seq2):
+    def compatible_sequences(
+            self,
+            seq1: typing.Sequence[Element],
+            seq2: typing.Sequence[Element]) -> bool:
         """True if the two sequences could be the same terminals."""
         return (len(seq1) == len(seq1)
                 and all(self.compatible_elements(e1, e2) for e1, e2 in zip(seq1, seq2)))
@@ -804,7 +892,7 @@ class Grammar:
                           ", ".join(types.type_to_str(ty) for ty in mty.argument_types),
                           types.type_to_str(mty.return_type)))
 
-    def is_shifted_element(self, e):
+    def is_shifted_element(self, e: Element) -> bool:
         if isinstance(e, Nt):
             return True
         elif self.is_terminal(e):
@@ -820,21 +908,21 @@ class Grammar:
         return False
 
 
+@dataclass(frozen=True)
+class InitNt:
+    """InitNt(goal) is the name of the init nonterminal for the given goal.
 
-InitNt = collections.namedtuple("InitNt", "goal")
-InitNt.__doc__ = """\
-InitNt(goal) is the name of the init nonterminal for the given goal.
+    One init nonterminal is created internally for each goal symbol in the grammar.
 
-One init nonterminal is created internally for each goal symbol in the grammar.
+    The idea is to have a nonterminal that the user has no control over, that is
+    never used in any production, but *only* as an entry point for the grammar,
+    that always has a single production "init_nt ::= goal_nt". This predictable
+    structure makes it easier to get into and out of parsing at run time.
 
-The idea is to have a nonterminal that the user has no control over, that is
-never used in any production, but *only* as an entry point for the grammar,
-that always has a single production "init_nt ::= goal_nt". This predictable
-structure makes it easier to get into and out of parsing at run time.
-
-When an init nonterminal is matched, we take the "accept" action rather than
-a "reduce" action.
-"""
+    When an init nonterminal is matched, we take the "accept" action rather than
+    a "reduce" action.
+    """
+    goal: Nt
 
 
 # *** Elements ****************************************************************
@@ -859,7 +947,7 @@ a "reduce" action.
 #     not match anything else.
 
 
-def is_concrete_element(e):
+def is_concrete_element(e: Element) -> bool:
     """True if parsing the element `e` produces a value.
 
     A production's concrete elements can be used in reduce expressions.
@@ -880,25 +968,29 @@ class Nt:
 
     __slots__ = ['name', 'args']
 
-    def __init__(self, name, args=()):
-        assert isinstance(name, (str, InitNt))
+    name: typing.Union[str, InitNt]
+    args: typing.Tuple[typing.Tuple[str, typing.Hashable], ...]
+
+    def __init__(self,
+                 name: typing.Union[str, InitNt],
+                 args: typing.Tuple[typing.Tuple[str, typing.Hashable], ...] = ()):
         self.name = name
         self.args = args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(('nt', self.name, self.args))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return (isinstance(other, Nt)
                 and (self.name, self.args) == (other.name, other.args))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.args:
             return 'Nt({!r}, {!r})'.format(self.name, self.args)
         else:
             return 'Nt({!r})'.format(self.name)
 
-    def pretty(self):
+    def pretty(self) -> str:
         """Unique version of this Nt to use in the Python runtime.
 
         Also used in debug/verbose output.
@@ -924,34 +1016,47 @@ class Nt:
                                          for name, value in self.args))
 
 
-# Optional elements. These are expanded out before states are calculated,
-# so the core of the algorithm never sees them.
-Optional = collections.namedtuple("Optional", "inner")
-Optional.__doc__ = """Optional(nt) matches either nothing or the given nt."""
+@dataclass(frozen=True)
+class Optional:
+    """Optional(nt) matches either nothing or the given nt.
+
+    Optional elements are expanded out before states are calculated, so the
+    core of the algorithm never sees them.
+    """
+    inner: Element
 
 
-# Literal elements. These are sequences of characters which are expected as
-# input.
-Literal = collections.namedtuple("Literal", "text")
-Literal.__doc__ = """Literal(str) matches a sequence of characters."""
+@dataclass(frozen=True)
+class Literal:
+    """Literal(str) matches a sequence of characters.
+
+    Literal elements are sequences of characters which are expected to appear
+    verbatim in the input.
+    """
+    text: str
 
 
-# UnicodeCategory elements. These are a set of literal elements which
-# correspond to a given unicode cat_prefix.
-UnicodeCategory = collections.namedtuple("UnicodeCategory", "cat_prefix")
-UnicodeCategory.__doc__ = """UnicodeCategory(str) matches any character with
-a category matching the cat_prefix."""
+@dataclass(frozen=True)
+class UnicodeCategory:
+    """UnicodeCategory(str) matches any character with a category matching
+    the cat_prefix.
+
+    UnicodeCategory elements are a set of literal elements which correspond to a
+    given unicode cat_prefix.
+    """
+    cat_prefix: str
 
 
-# Lookahead restrictions stay with us throughout the algorithm.
-LookaheadRule = collections.namedtuple("LookaheadRule", "set positive")
-LookaheadRule.__doc__ = """\
-LookaheadRule(set, pos) imposes a lookahead restriction on whatever follows.
+@dataclass(frozen=True)
+class LookaheadRule:
+    """LookaheadRule(set, pos) imposes a lookahead restriction on whatever follows.
 
-It never consumes any tokens itself. Instead, the right-hand side
-[LookaheadRule(frozenset(['a', 'b']), False), 'Thing']
-matches a Thing that does not start with the token `a` or `b`.
-"""
+    It never consumes any tokens itself. Instead, the right-hand side
+    [LookaheadRule(frozenset(['a', 'b']), False), 'Thing']
+    matches a Thing that does not start with the token `a` or `b`.
+    """
+    set: typing.FrozenSet[str]
+    positive: bool
 
 
 # A lookahead restriction really just specifies a set of allowed terminals.
@@ -963,14 +1068,17 @@ matches a Thing that does not start with the token `a` or `b`.
 # -   A negative lookahead restriction instead specifies the set of all tokens
 #     except a few.
 #
-def lookahead_contains(rule, t):
+def lookahead_contains(rule: typing.Optional[LookaheadRule], t: str):
     """True if the given lookahead restriction `rule` allows the terminal `t`."""
     return (rule is None
             or (t in rule.set if rule.positive
                 else t not in rule.set))
 
 
-def lookahead_intersect(a, b):
+def lookahead_intersect(
+        a: typing.Optional[LookaheadRule],
+        b: typing.Optional[LookaheadRule]
+) -> typing.Optional[LookaheadRule]:
     """Returns a single rule enforcing both `a` and `b`, allowing only terminals that pass both."""
     if a is None:
         return b
@@ -995,28 +1103,48 @@ class NoLineTerminatorHereClass:
 
 NoLineTerminatorHere = NoLineTerminatorHereClass()
 
+
 # Optional elements. These are expanded out before states are calculated,
 # so the core of the algorithm never sees them.
-Exclude = collections.namedtuple("Exclude", "inner exclusion_list")
-Exclude.__doc__ = """Exclude(nt1, nt2) matches if nt1 matches and nt2 does not."""
+@dataclass(frozen=True)
+class Exclude:
+    """Exclude(nt1, nt2) matches if nt1 matches and nt2 does not."""
+    inner: Element
+    exclusion_list: typing.Tuple[Element, ...]
+
 
 # End. This is used to represent the terminal which is infinitely produced by
 # the lexer when input end is reached.
-End = collections.namedtuple("End", "")
-End.__doc__ = """End() represent the end of the input content."""
-End_default_eq = End.__eq__
-End.__eq__ = lambda x, y: x.__class__ == y.__class__ and End_default_eq(x, y)
+@dataclass(frozen=True)
+class End:
+    """End() represents the end of the input content."""
+
 
 # Special grammar symbol that can be consumed to handle a syntax error.
 #
 # The error code is passed to an error-handling routine at run time which
 # decides if the error is recoverable or not.
-ErrorSymbol = collections.namedtuple("ErrorSymbol", "error_code")
-ErrorSymbol.__doc__ = """Special grammar symbol that can be consumed to handle a syntax error."""
-ErrorSymbol_default_eq = ErrorSymbol.__eq__
-ErrorSymbol.__eq__ = lambda x, y: x.__class__ == y.__class__ and ErrorSymbol_default_eq(x, y)
+@dataclass(frozen=True)
+class ErrorSymbol:
+    """Special grammar symbol that can be consumed to handle a syntax error."""
+    error_code: int
 
 
+Element = typing.Union[
+    str,
+    Optional,
+    Literal,
+    UnicodeCategory,
+    Exclude,
+    Nt,
+    LookaheadRule,
+    End,
+    ErrorSymbol,
+    NoLineTerminatorHereClass,
+    CallMethod]
+
+
+@dataclass
 class NtDef:
     """Definition of a nonterminal.
 
@@ -1073,27 +1201,30 @@ class NtDef:
 
     __slots__ = ['params', 'rhs_list', 'type']
 
-    def __init__(self, params, rhs_list, type):
-        assert isinstance(params, tuple)
-        self.params = params
-        self.rhs_list = rhs_list
-        self.type = type
+    params: typing.Tuple[str, ...]
+    rhs_list: typing.List[Production]
+    type: typing.Optional[types.Type]
 
-    def __eq__(self, other):
-        return (isinstance(other, NtDef)
-                and ((self.params, self.rhs_list, self.type)
-                     == (other.params, other.rhs_list, other.type)))
-
-    __hash__ = None
-
-    def __repr__(self):
-        return "NtDef({!r}, {!r}, {!r})".format(self.params, self.rhs_list, self.type)
-
-    def with_rhs_list(self, new_rhs_list):
-        return NtDef(self.params, new_rhs_list, self.type)
+    def with_rhs_list(self, new_rhs_list: typing.List[Production]) -> NtDef:
+        return dataclasses.replace(self, rhs_list=new_rhs_list)
 
 
-Var = collections.namedtuple("Var", "name")
-Var.__doc__ = """\
-Var(name) represents the run-time value of the parameter with the given name.
-"""
+@dataclass(frozen=True)
+class Var:
+    """Var(name) represents the run-time value of the parameter with the given name."""
+
+    name: str
+
+
+ReduceExpr = typing.Union[int, CallMethod, None, Some]
+ReduceExprOrAccept = typing.Union[ReduceExpr, str]
+
+# The Grammar constructor is very lax about the types you pass to it. It can
+# accept a `Dict[str, List[List[str]]]`, for example; it copies the data into
+# NtDef and Production objects.
+#
+# The `Lenient` types below are the relaxed types that Grammar() actually
+# accepts.
+LenientNt = typing.Union[Nt, str, InitNt]
+LenientProduction = typing.Union[Production, typing.List[Element]]
+LenientNtDef = typing.Union[NtDef, typing.List[LenientProduction]]

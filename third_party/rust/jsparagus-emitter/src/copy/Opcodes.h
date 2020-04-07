@@ -916,6 +916,8 @@
     /*
      * Define a data property on `obj` with property key `id` and value `val`.
      *
+     * `obj` must be an object.
+     *
      * Implements: [CreateDataPropertyOrThrow][1]. This instruction is used for
      * object literals like `{0: val}` and `{[id]: val}`, and methods like
      * `*[Symbol.iterator]() {}`.
@@ -936,6 +938,8 @@
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
      *
+     * `obj` must be an object and `getter` must be a function.
+     *
      * `JSOp::InitHiddenPropGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
@@ -951,6 +955,8 @@
      *
      * This is used to implement getters like `get [id]() {}` or `get 0() {}`.
      *
+     * `obj` must be an object and `getter` must be a function.
+     *
      * `JSOp::InitHiddenElemGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
@@ -965,6 +971,8 @@
      * Define an accessor property on `obj` with the given `setter`.
      *
      * This is used to implement ordinary setters like `set foo(v) {}`.
+     *
+     * `obj` must be an object and `setter` must be a function.
      *
      * `JSOp::InitHiddenPropSetter` is the same but defines a non-enumerable
      * property, for setters in classes.
@@ -1336,7 +1344,7 @@
     MACRO(IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * No-op instruction to hint to IonBuilder that the value on top of the
-     * stack is the (likely string) key in a for-in loop.
+     * stack is the string key in a for-in loop.
      *
      *   Category: Objects
      *   Type: Enumeration
@@ -1358,7 +1366,7 @@
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
-     * message. It must be in range for `js::CheckIsObjectKind`.
+     * message.
      *
      * Implements: [GetIterator][1] step 5, [IteratorNext][2] step 3. Both
      * operations call a JS method which scripts can define however they want,
@@ -1369,18 +1377,18 @@
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: uint8_t kind
+     *   Operands: CheckIsObjectKind kind
      *   Stack: result => result
      */ \
     MACRO(CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8) \
     /*
      * Check that the top value on the stack is callable, and throw a TypeError
      * if not. The operand `kind` is used only to generate an appropriate error
-     * message. It must be in range for `js::CheckIsCallableKind`.
+     * message.
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: uint8_t kind
+     *   Operands: CheckIsCallableKind kind
      *   Stack: obj => obj
      */ \
     MACRO(CheckIsCallable, check_is_callable, NULL, 2, 1, 1, JOF_UINT8) \
@@ -1593,12 +1601,16 @@
      *
      *   Category: Functions
      *   Type: Creating functions
-     *   Operands: uint8_t prefixKind
+     *   Operands: FunctionPrefixKind prefixKind
      *   Stack: fun, name => fun
      */ \
     MACRO(SetFunName, set_fun_name, NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Initialize the home object for functions with super bindings.
+     *
+     * `fun` must be a method, getter, or setter, so that it has a
+     * [[HomeObject]] slot. `homeObject` must be a plain object or (for static
+     * methods) a constructor.
      *
      *   Category: Functions
      *   Type: Creating functions
@@ -1648,7 +1660,9 @@
      * 10.b. and 12-17.
      *
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
-     * class definition in the source buffer and are used for `toString()`.
+     * class definition in the source buffer, used for `toString()`. They must
+     * be valid offsets into the source buffer, measured in code units, such
+     * that `scriptSource->substring(cx, start, end)` is valid.
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
@@ -1667,8 +1681,8 @@
      * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
      * 10.a. and 12-17.
      *
-     * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
-     * class definition in the source buffer and are used for `toString()`.
+     * `sourceStart` and `sourceEnd` follow the same rules as for
+     * `JSOp::ClassConstructor`.
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
@@ -1679,14 +1693,17 @@
      */ \
     MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
-     * Pushes the current global's builtin prototype for a given proto key.
+     * Pushes the current global's FunctionPrototype.
+     *
+     * `kind` must be in range for `JSProtoKey` (and must not be
+     * `JSProto_LIMIT`).
      *
      *   Category: Functions
      *   Type: Creating constructors
-     *   Operands: uint8_t kind
-     *   Stack: => %BuiltinPrototype%
+     *   Operands:
+     *   Stack: => %FunctionPrototype%
      */ \
-    MACRO(BuiltinProto, builtin_proto, NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(FunctionProto, function_proto, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
@@ -1767,6 +1784,9 @@
      * to prove that the bindings won't need to be captured by closures or
      * accessed using `JSOp::{Get,Bind,Set,Del}Name` instructions. Direct eval
      * makes that analysis impossible.
+     *
+     * The instruction immediately following any `JSOp::*Eval` instruction must
+     * be `JSOp::Lineno`.
      *
      * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
      * syntactic critera for direct eval in step 6 are all met.
@@ -1958,21 +1978,44 @@
      */ \
     MACRO(CheckThisReinit, check_this_reinit, NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Initializes generator frame, creates a generator and pushes it on the
-     * stack.
+     * Create and push a generator object for the current frame.
+     *
+     * This instruction must appear only in scripts for generators, async
+     * functions, and async generators. There must not already be a generator
+     * object for the current frame (that is, this instruction must execute at
+     * most once per generator or async call).
      *
      *   Category: Functions
      *   Type: Generators and async functions
      *   Operands:
-     *   Stack: => generator
+     *   Stack: => gen
      */ \
     MACRO(Generator, generator, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the generator from the top of the stack, suspends it and stops
-     * execution.
+     * Suspend the current generator and return to the caller.
      *
-     * When resuming execution, JSOp::Resume pushes the rval, gen and resumeKind
-     * values. resumeKind is the GeneratorResumeKind stored as int32.
+     * When a generator is called, its script starts running, like any other JS
+     * function, because [FunctionDeclarationInstantation][1] and other
+     * [generator object setup][2] are implemented mostly in bytecode. However,
+     * the *FunctionBody* of the generator is not supposed to start running
+     * until the first `.next()` call, so after setup the script suspends
+     * itself: the "initial yield".
+     *
+     * Later, when resuming execution, `rval`, `gen` and `resumeKind` will
+     * receive the values passed in by `JSOp::Resume`. `resumeKind` is the
+     * `GeneratorResumeKind` stored as an Int32 value.
+     *
+     * This instruction must appear only in scripts for generators and async
+     * generators. `gen` must be the generator object for the current frame. It
+     * must not have been previously suspended. The resume point indicated by
+     * `resumeIndex` must be the next instruction in the script, which must be
+     * `AfterYield`.
+     *
+     * Implements: [GeneratorStart][3], steps 4-7.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
+     * [2]: https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody
+     * [3]: https://tc39.es/ecma262/#sec-generatorstart
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -1981,11 +2024,14 @@
      */ \
     MACRO(InitialYield, initial_yield, NULL, 4, 1, 3, JOF_RESUMEINDEX) \
     /*
-     * Bytecode emitted after 'yield' expressions. This is useful for the
+     * Bytecode emitted after `yield` expressions. This is useful for the
      * Debugger and `AbstractGeneratorObject::isAfterYieldOrAwait`. It's
      * treated as jump target op so that the Baseline Interpreter can
      * efficiently restore the frame's interpreterICEntry when resuming a
      * generator.
+     *
+     * The preceding instruction in the script must be `Yield`, `InitialYield`,
+     * or `Await`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -1994,8 +2040,18 @@
      */ \
     MACRO(AfterYield, after_yield, NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
-     * Pops the generator and suspends and closes it. Yields the value in the
-     * frame's return value slot.
+     * Suspend and close the current generator, async function, or async
+     * generator.
+     *
+     * `gen` must be the generator object for the current frame.
+     *
+     * If the current function is a non-async generator, then the value in the
+     * frame's return value slot is returned to the caller. It should be an
+     * object of the form `{value: returnValue, done: true}`.
+     *
+     * If the current function is an async function or async generator, the
+     * frame's return value slot must contain the current frame's result
+     * promise, which must already be resolved or rejected.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2004,11 +2060,26 @@
      */ \
     MACRO(FinalYieldRval, final_yield_rval, NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pops the generator and the return value 'rval1', stops execution and
-     * returns 'rval1'.
+     * Suspend execution of the current generator or async generator, returning
+     * `rval1`.
      *
-     * When resuming execution, JSOp::Resume pushes the rval2, gen and resumeKind
-     * values.
+     * For non-async generators, `rval1` should be an object of the form
+     * `{value: valueToYield, done: true}`. For async generators, `rval1`
+     * should be the value to yield, and the caller is responsible for creating
+     * the iterator result object (under `js::AsyncGeneratorYield`).
+     *
+     * This instruction must appear only in scripts for generators and async
+     * generators. `gen` must be the generator object for the current stack
+     * frame. The resume point indicated by `resumeIndex` must be the next
+     * instruction in the script, which must be `AfterYield`.
+     *
+     * When resuming execution, `rval2`, `gen` and `resumeKind` receive the
+     * values passed in by `JSOp::Resume`.
+     *
+     * Implements: [GeneratorYield][1] and [AsyncGeneratorYield][2].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-generatoryield
+     * [2]: https://tc39.es/ecma262/#sec-asyncgeneratoryield
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2027,10 +2098,25 @@
      */ \
     MACRO(IsGenClosing, is_gen_closing, NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Pops the top two values 'value' and 'gen' from the stack, then starts
-     * "awaiting" for 'value' to be resolved, which will then resume the
-     * execution of 'gen'. Pushes the async function promise on the stack, so
-     * that it'll be returned to the caller on the very first "await".
+     * Arrange for this async function to resume asynchronously when `value`
+     * becomes resolved.
+     *
+     * This is the last thing an async function does before suspending for an
+     * `await` expression. It coerces the awaited `value` to a promise and
+     * effectively calls `.then()` on it, passing handler functions that will
+     * resume this async function call later. See `js::AsyncFunctionAwait`.
+     *
+     * This instruction must appear only in non-generator async function
+     * scripts. `gen` must be the internal generator object for the current
+     * frame. After this instruction, the script should suspend itself with
+     * `Await` (rather than exiting any other way).
+     *
+     * The result `promise` is the async function's result promise,
+     * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
+     *
+     * Implements: [Await][1], steps 2-9.
+     *
+     * [1]: https://tc39.github.io/ecma262/#await
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2039,23 +2125,74 @@
      */ \
     MACRO(AsyncAwait, async_await, NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * Pops the top two values 'valueOrReason' and 'gen' from the stack, then
-     * pushes the promise resolved with 'valueOrReason'. `gen` must be the
-     * internal generator object created in async functions. The pushed promise
-     * is the async function's result promise, which is stored in `gen`.
+     * Resolve or reject the current async function's result promise with
+     * 'valueOrReason'.
+     *
+     * This instruction must appear only in non-generator async function
+     * scripts. `gen` must be the internal generator object for the current
+     * frame. This instruction must run at most once per async function call,
+     * as resolving/rejecting an already resolved/rejected promise is not
+     * permitted.
+     *
+     * The result `promise` is the async function's result promise,
+     * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
+     *
+     * Implements: [AsyncFunctionStart][1], step 4.d.i. and 4.e.i.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
      *
      *   Category: Functions
      *   Type: Generators and async functions
-     *   Operands: uint8_t fulfillOrReject
+     *   Operands: AsyncFunctionResolveKind fulfillOrReject
      *   Stack: valueOrReason, gen => promise
      */ \
     MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
     /*
-     * Pops the generator and the return value 'promise', stops execution and
-     * returns 'promise'.
+     * Suspend the current frame for an `await` expression.
      *
-     * When resuming execution, JSOp::Resume pushes the resolved, gen and
-     * resumeKind values. resumeKind is the GeneratorResumeKind stored as int32.
+     * This instruction must appear only in scripts for async functions and
+     * async generators. `gen` must be the internal generator object for the
+     * current frame.
+     *
+     * This returns `promise` to the caller. Later, when this async call is
+     * resumed, `resolved`, `gen` and `resumeKind` receive the values passed in
+     * by `JSOp::Resume`, and execution continues at the next instruction,
+     * which must be `AfterYield`.
+     *
+     * This instruction is used in two subtly different ways.
+     *
+     * 1.  In async functions:
+     *
+     *         ...                          # valueToAwait
+     *         GetAliasedVar ".generator"   # valueToAwait gen
+     *         AsyncAwait                   # resultPromise
+     *         GetAliasedVar ".generator"   # resultPromise gen
+     *         Await                        # resolved gen resumeKind
+     *         AfterYield
+     *
+     *     `AsyncAwait` arranges for this frame to be resumed later and pushes
+     *     its result promise. `Await` then suspends the frame and removes it
+     *     from the stack, returning the result promise to the caller. (If this
+     *     async call hasn't awaited before, the caller may be user code.
+     *     Otherwise, the caller is self-hosted code using `resumeGenerator`.)
+     *
+     * 2.  In async generators:
+     *
+     *         ...                          # valueToAwait
+     *         GetAliasedVar ".generator"   # valueToAwait gen
+     *         Await                        # resolved gen resumeKind
+     *         AfterYield
+     *
+     *     `AsyncAwait` is not used, so (1) the value returned to the caller by
+     *     `Await` is `valueToAwait`, not `resultPromise`; and (2) the caller
+     *     is responsible for doing the async-generator equivalent of
+     *     `AsyncAwait` (namely, `js::AsyncGeneratorAwait`, called from
+     *     `js::AsyncGeneratorResume` after `js::CallSelfHostedFunction`
+     *     returns).
+     *
+     * Implements: [Await][1], steps 10-12.
+     *
+     * [1]: https://tc39.es/ecma262/#await
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2064,16 +2201,20 @@
      */ \
     MACRO(Await, await, NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
-     * Pops the top of stack value as 'value', checks if the await for 'value'
-     * can be skipped. If the await operation can be skipped and the resolution
-     * value for 'value' can be acquired, pushes the resolution value and
-     * 'true' onto the stack. Otherwise, pushes 'value' and 'false' on the
-     * stack.
+     * Decide whether awaiting 'value' can be skipped.
+     *
+     * This is part of an optimization for `await` expressions. Programs very
+     * often await values that aren't promises, or promises that are already
+     * resolved. We can then sometimes skip suspending the current frame and
+     * returning to the microtask loop. If the circumstances permit the
+     * optimization, `TrySkipAwait` replaces `value` with the result of the
+     * `await` expression (unwrapping the resolved promise, if any) and pushes
+     * `true`. Otherwise, it leaves `value` unchanged and pushes 'false'.
      *
      *   Category: Functions
      *   Type: Generators and async functions
      *   Operands:
-     *   Stack: value => value_or_resolved, canskip
+     *   Stack: value => value_or_resolved, can_skip
      */ \
     MACRO(TrySkipAwait, try_skip_await, NULL, 1, 1, 2, JOF_BYTE) \
     /*
@@ -2086,10 +2227,13 @@
      */ \
     MACRO(ResumeKind, resume_kind, NULL, 2, 0, 1, JOF_UINT8) \
     /*
-     * Pops the generator and resumeKind values. resumeKind is the
-     * GeneratorResumeKind stored as int32. If resumeKind is Next, continue
-     * execution. If resumeKind is Throw or Return, these completions are
-     * handled by throwing an exception. See GeneratorThrowOrReturn.
+     * Handle Throw and Return resumption.
+     *
+     * `gen` must be the generator object for the current frame. `resumeKind`
+     * must be a `GeneratorResumeKind` stored as an `Int32` value. If it is
+     * `Next`, continue to the next instruction. If `resumeKind` is `Throw` or
+     * `Return`, these completions are handled by throwing an exception. See
+     * `GeneratorThrowOrReturn`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2098,9 +2242,19 @@
      */ \
     MACRO(CheckResumeKind, check_resume_kind, NULL, 1, 3, 1, JOF_BYTE) \
     /*
-     * Pops the generator, argument and resumeKind from the stack, pushes a new
-     * generator frame and resumes execution of it. Pushes the return value
-     * after the generator yields.
+     * Resume execution of a generator, async function, or async generator.
+     *
+     * This behaves something like a call instruction. It pushes a stack frame
+     * (the one saved when `gen` was suspended, rather than a fresh one) and
+     * runs instructions in it. Once `gen` returns or yields, its return value
+     * is pushed to this frame's stack and execution continues in this script.
+     *
+     * This instruction is emitted only for the `resumeGenerator` self-hosting
+     * intrinsic. It is used in the implementation of
+     * `%GeneratorPrototype%.next`, `.throw`, and `.return`.
+     *
+     * `gen` must be a suspended generator object. `resumeKind` must be in
+     * range for `GeneratorResumeKind`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2311,6 +2465,9 @@
     /*
      * Store `rval` in the current stack frame's `returnValue` slot.
      *
+     * This instruction must not be used in a toplevel script compiled with the
+     * `noScriptRval` option.
+     *
      *   Category: Control flow
      *   Type: Return
      *   Operands:
@@ -2394,10 +2551,10 @@
      *
      *   Category: Control flow
      *   Type: Exceptions
-     *   Operands: uint16_t msgNumber
+     *   Operands: ThrowMsgKind msgNumber
      *   Stack: =>
      */ \
-    MACRO(ThrowMsg, throw_msg, NULL, 3, 0, 0, JOF_UINT16) \
+    MACRO(ThrowMsg, throw_msg, NULL, 2, 0, 0, JOF_UINT8) \
     /*
      * Throws a runtime TypeError for invalid assignment to a `const` binding.
      *
@@ -2411,9 +2568,9 @@
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
      *
-     * The `jumpAtEndOffset` operand is the offset (relative to the current op)
-     * of the `JSOp::Goto` at the end of the try-block body. This is used by
-     * bytecode analysis and JIT compilation.
+     * The `jumpAtEndOffset` operand must be the offset (relative to the
+     * current op) of the `JSOp::Goto` at the end of the try-block body. This
+     * is used by bytecode analysis and JIT compilation.
      *
      * Location information for catch/finally blocks is stored in a side table,
      * `script->trynotes()`.
@@ -2428,6 +2585,9 @@
      * No-op instruction used by the exception unwinder to determine the
      * correct environment to unwind to when performing IteratorClose due to
      * destructuring.
+     *
+     * This instruction must appear immediately before each
+     * `JSTRY_DESTRUCTURING` span in a script's try notes.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2547,7 +2707,7 @@
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
      *
-     * This magic value must be used only by `JSOp::Init*Lexical`.
+     * This magic value must be used only by `JSOp::InitLexical`.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2578,9 +2738,13 @@
      */ \
     MACRO(InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME) \
     /*
-     * Initialize a global lexical binding; or mark it as uninitialized.
+     * Initialize a global lexical binding.
      *
-     * Like `JSOp::InitLexical` but for global lexicals.
+     * The binding must already have been created by `DefLet` or `DefConst` and
+     * must be uninitialized.
+     *
+     * Like `JSOp::InitLexical` but for global lexicals. Unlike `InitLexical`
+     * this can't be used to mark a binding as uninitialized.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2759,8 +2923,6 @@
      * `slot` that encode an [`EnvironmentCoordinate`][1], directions to the
      * binding from the current environment object.
      *
-     * `hops` and `slot` must be valid for the current scope.
-     *
      * `Aliased` instructions can't be used when there's a dynamic scope (due
      * to non-strict `eval` or `with`) that might shadow the aliased binding.
      *
@@ -2786,7 +2948,7 @@
      * not bound in `env`, throw a ReferenceError.
      *
      * `env` must be an environment currently on the environment chain, pushed
-     * by `JSOp::BindName`.
+     * by `JSOp::BindName` or `JSOp::BindVar`.
      *
      * Note: `JSOp::BindName` and `JSOp::GetBoundName` are the two halves of the
      * `JSOp::GetName` operation: finding and reading a variable. This
@@ -2841,8 +3003,9 @@
     MACRO(Callee, callee, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Load the callee stored in a CallObject on the environment chain. The
-     * numHops operand is the number of environment objects to skip on the
-     * environment chain.
+     * `numHops` operand is the number of environment objects to skip on the
+     * environment chain. The environment chain element indicated by `numHops`
+     * must be a CallObject.
      *
      *   Category: Variables and scopes
      *   Type: Getting binding values
@@ -2856,7 +3019,7 @@
      * This can call setters and/or proxy traps.
      *
      * `env` must be an environment currently on the environment chain,
-     * pushed by `JSOp::BindName`.
+     * pushed by `JSOp::BindName` or `JSOp::BindVar`.
      *
      * This is the fallback `Set` instruction that handles all unoptimized
      * cases. Optimized instructions follow.
@@ -2973,7 +3136,7 @@
      * #### Fine print for environment chain instructions
      *
      * The following rules for `JSOp::{Push,Pop}LexicalEnv` also apply to
-     * `JSOp::{Push,Pop}VarEnv` and `JSOp::{Enter,Leave}With`.
+     * `JSOp::PushVarEnv` and `JSOp::{Enter,Leave}With`.
      *
      * Each `JSOp::PopLexicalEnv` instruction matches a particular
      * `JSOp::PushLexicalEnv` instruction in the same script and must have the
@@ -3040,6 +3203,8 @@
      * fresh lexical environment for every iteration of a for-in/of loop whose
      * loop-head has a (captured) lexical declaration.
      *
+     * The current environment must be a LexicalEnvironmentObject.
+     *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
      *   Operands:
@@ -3052,6 +3217,8 @@
      * of inducing a fresh lexical environment for every iteration of a
      * `for(let ...; ...; ...)` loop, if any declarations induced by such a
      * loop are captured within the loop.
+     *
+     * The current environment must be a LexicalEnvironmentObject.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3159,8 +3326,9 @@
      * before anything else that might add bindings to the environment, and
      * only once per binding. There must be a correct entry for the new binding
      * in `script->bodyScope()`. (All this ensures that at run time, there is
-     * no existing conflicting binding. We check before running the script, in
-     * `js::CheckGlobalOrEvalDeclarationConflicts`.)
+     * no existing conflicting binding. This is checked by the
+     * `JSOp::CheckGlobalOrEvalDecl` bytecode instruction that must appear
+     * before `JSOp::Def{Var,Let,Const,Fun}`.)
      *
      * Throw a SyntaxError if the current VariableEnvironment is the global
      * environment and a binding with the same name exists on the global
@@ -3196,10 +3364,10 @@
      */ \
     MACRO(DefFun, def_fun, NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Create a new mutable binding in the global lexical environment. Throw a
-     * SyntaxError if a binding with the same name already exists on that
-     * environment, or if a var binding with the same name exists on the
-     * global.
+     * Create a new uninitialized mutable binding in the global lexical
+     * environment. Throw a SyntaxError if a binding with the same name already
+     * exists on that environment, or if a var binding with the same name
+     * exists on the global.
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
@@ -3208,11 +3376,7 @@
      */ \
     MACRO(DefLet, def_let, NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Create a new constant binding in the global lexical environment.
-     *
-     * Throw a SyntaxError if a binding with the same name already exists in
-     * that environment, or if a var binding with the same name exists on the
-     * global.
+     * Like `DefLet`, but create an uninitialized constant binding.
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
@@ -3220,6 +3384,22 @@
      *   Stack: =>
      */ \
     MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
+    /*
+     * Check for conflicting bindings before `JSOp::Def{Var,Let,Const,Fun}` in
+     * global or sloppy eval scripts.
+     *
+     * Implements: [GlobalDeclarationInstantiation][1] steps 5, 6, 10 and 12,
+     * and [EvalDeclarationInstantiation][2] steps 5 and 8.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
+     * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
+     *
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
+     *   Operands:
+     *   Stack: =>
+     */ \
+    MACRO(CheckGlobalOrEvalDecl, check_global_or_eval_decl, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Look up a variable on the environment chain and delete it. Push `true`
      * on success (if a binding was deleted, or if no such binding existed in
@@ -3286,7 +3466,8 @@
     /*
      * Create and push the rest parameter array for current function call.
      *
-     * This must appear only in function scripts.
+     * This must appear only in a script for a function that has a rest
+     * parameter.
      *
      *   Category: Variables and scopes
      *   Type: Function environment setup
@@ -3306,6 +3487,10 @@
      * Functions that have a `this` binding have a local variable named
      * `".this"`, which is initialized using this instruction in the function
      * prologue.
+     *
+     * In non-strict functions, `this` is always an object. Undefined/null
+     * `this` is converted into the global `this` value. Other primitive values
+     * are boxed. See `js::BoxNonStrictThis`.
      *
      *   Category: Variables and scopes
      *   Type: Function environment setup
@@ -3392,7 +3577,11 @@
      */ \
     MACRO(Nop, nop, NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * No-op instruction used to speed up pc-to-line mapping.
+     * No-op instruction emitted immediately after `JSOp::*Eval` so that direct
+     * eval does not have to do slow pc-to-line mapping.
+     *
+     * The `lineno` operand should agree with this script's source notes about
+     * the line number of the preceding `*Eval` instruction.
      *
      *   Category: Other
      *   Operands: uint32_t lineno
@@ -3400,8 +3589,15 @@
      */ \
     MACRO(Lineno, lineno, NULL, 5, 0, 0, JOF_UINT32) \
     /*
-     * No-op instruction used by the decompiler to produce nicer error messages
-     * about destructuring code.
+     * No-op instruction to hint that the top stack value is uninteresting.
+     *
+     * This affects only debug output and some error messages.
+     * In array destructuring, we emit bytecode that is roughly equivalent to
+     * `result.done ? undefined : result.value`.
+     * `NopDestructuring` is emitted after the `undefined`, so that the
+     * expression decompiler and disassembler know to casually ignore the
+     * possibility of `undefined`, and render the result of the conditional
+     * expression simply as "`result.value`".
      *
      *   Category: Other
      *   Operands:
@@ -3475,7 +3671,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

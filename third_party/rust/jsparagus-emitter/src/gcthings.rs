@@ -1,9 +1,11 @@
-use crate::scope::ScopeIndex;
+use crate::regexp::RegExpIndex;
+use scope::data::ScopeIndex;
 
 /// Corresponds to js::frontend::GCThingList::ListType
 /// in m-c/js/src/frontend/BytecodeSection.h.
 #[derive(Debug)]
 pub enum GCThing {
+    RegExp(RegExpIndex),
     Scope(ScopeIndex),
 }
 
@@ -36,6 +38,12 @@ pub struct GCThingList {
 impl GCThingList {
     pub fn new() -> Self {
         Self { things: Vec::new() }
+    }
+
+    pub fn append_regexp(&mut self, regexp_index: RegExpIndex) -> GCThingIndex {
+        let index = self.things.len();
+        self.things.push(GCThing::RegExp(regexp_index));
+        GCThingIndex::new(index)
     }
 
     pub fn append_scope(&mut self, scope_index: ScopeIndex) -> GCThingIndex {

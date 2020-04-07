@@ -12,6 +12,7 @@ bumpalo = "2.6.0"
 byteorder = "1.3.2"
 indexmap = "1.0"
 jsparagus-ast = { path = "../ast" }
+jsparagus-scope = { path = "../scope" }
 
 [dev-dependencies]
 jsparagus-parser = { path = "../parser" }

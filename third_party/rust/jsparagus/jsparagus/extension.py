@@ -1,21 +1,24 @@
 """Data structure extracted from parsing the EDSL which are added within the
 Rust code."""
 
-import collections
+from dataclasses import dataclass
 from .utils import keep_until
+from . import grammar
 
-class ImplFor(collections.namedtuple("ImplFor", "param trait for_type")):
-    def __new__(cls, param, trait, for_type):
-        self = super(ImplFor, cls).__new__(cls, param, trait, for_type)
-        return self
 
-    def __eq__(self, other):
-        return isinstance(other, ImplFor) and super(ImplFor, self).__eq__(other)
+@dataclass(frozen=True)
+class ImplFor:
+    __slots__ = ['param', 'trait', 'for_type']
+    param: str
+    trait: str
+    for_type: str
+
 
 def eq_productions(grammar, prod1, prod2):
     s1 = tuple(e for e in prod1.body if grammar.is_shifted_element(e))
     s2 = tuple(e for e in prod2.body if grammar.is_shifted_element(e))
     return s1 == s2
+
 
 def merge_productions(grammar, prod1, prod2):
     # Consider all shifted elements as non-moveable elements, and insert other
@@ -38,14 +41,12 @@ def merge_productions(grammar, prod1, prod2):
             raise ValueError("We do not know how to sort operations yet.")
     return prod1.copy_with(body=body)
 
-class ExtPatch(collections.namedtuple("ExtPatch", "prod")):
-    "Patch an existing grammar rule by adding Code"
-    def __new__(cls, prod):
-        self = super(ExtPatch, cls).__new__(cls, prod)
-        return self
 
-    def __eq__(self, other):
-        return isinstance(other, ExtPatch) and super(ExtPatch, self).__eq__(other)
+@dataclass(frozen=True)
+class ExtPatch:
+    "Patch an existing grammar rule by adding Code"
+
+    prod: grammar.NtDef
 
     def apply_patch(self, filename, grammar, nonterminals):
         # - name: non-terminal.
@@ -71,6 +72,7 @@ class ExtPatch(collections.namedtuple("ExtPatch", "prod")):
         result = gnt_def.with_rhs_list(new_rhs_list)
         nonterminals[name] = result
 
+
 class GrammarExtension:
     """A collection of grammar extensions, with added code, added traits for the
     action functions.
@@ -92,4 +94,3 @@ class GrammarExtension:
                 ext.apply_patch(self.filename, grammar, nonterminals)
             else:
                 raise ValueError("Extension of type {} not yet supported.".format(ext.__class__))
-

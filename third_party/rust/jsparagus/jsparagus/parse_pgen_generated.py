@@ -1,5 +1,8 @@
+# type: ignore
+
 from jsparagus import runtime
-from jsparagus.runtime import Nt, InitNt, End, ErrorToken, StateTermValue, ShiftError, ShiftAccept
+from jsparagus.runtime import (Nt, InitNt, End, ErrorToken, StateTermValue,
+                               ShiftError, ShiftAccept)
 
 def state_43_actions(parser, lexer):
 

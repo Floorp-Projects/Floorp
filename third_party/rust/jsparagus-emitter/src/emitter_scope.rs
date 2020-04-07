@@ -1,8 +1,8 @@
 use crate::emitter::InstructionWriter;
-use crate::frame_slot::FrameSlot;
-use crate::scope::{BindingKind, GlobalScopeData, LexicalScopeData, ScopeDataMap, ScopeIndex};
 use crate::scope_notes::ScopeNoteIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
+use scope::data::{BindingKind, GlobalScopeData, LexicalScopeData, ScopeDataMap, ScopeIndex};
+use scope::frame_slot::FrameSlot;
 use std::collections::HashMap;
 
 /// Corresponds to js::frontend::NameLocation in
@@ -138,6 +138,10 @@ impl EmitterScopeStack {
     pub fn enter_global(&mut self, emit: &mut InstructionWriter, scope_data_map: &ScopeDataMap) {
         let scope_index = scope_data_map.get_global_index();
         let scope_data = scope_data_map.get_global_at(scope_index);
+
+        if scope_data.bindings.len() > 0 {
+            emit.check_global_or_eval_decl();
+        }
 
         for item in scope_data.iter() {
             let name_index = emit.get_atom_index(item.name());
