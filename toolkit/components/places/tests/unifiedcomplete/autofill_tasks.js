@@ -675,7 +675,7 @@ function addAutofillTasks(origins) {
     }
 
     // Now bookmark another URL.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
 
@@ -723,7 +723,7 @@ function addAutofillTasks(origins) {
   // Bookmarked places should be autofilled when they *do* meet the threshold.
   add_task(async function bookmarkAboveThreshold() {
     // Bookmark a URL.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
 
@@ -760,7 +760,7 @@ function addAutofillTasks(origins) {
   // be autofilled even though its frecency is <= 0 since the autofill threshold
   // is 0.
   add_task(async function zeroThreshold() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
 
@@ -883,7 +883,7 @@ function addAutofillTasks(origins) {
   //   should autofill: yes
   add_task(async function suggestHistoryFalse_bookmark_0() {
     // Add the bookmark.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
 
@@ -935,7 +935,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestHistoryFalse_bookmark_1() {
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
     await check_autocomplete({
@@ -965,7 +965,7 @@ function addAutofillTasks(origins) {
   //   should autofill: yes
   add_task(async function suggestHistoryFalse_bookmark_prefix_0() {
     // Add the bookmark.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
 
@@ -988,7 +988,7 @@ function addAutofillTasks(origins) {
     Assert.ok(originFrecency < threshold);
 
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     await check_autocomplete({
@@ -1020,7 +1020,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestHistoryFalse_bookmark_prefix_1() {
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
     await check_autocomplete({
@@ -1050,7 +1050,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestHistoryFalse_bookmark_prefix_2() {
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
     await check_autocomplete({
@@ -1080,7 +1080,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestHistoryFalse_bookmark_prefix_3() {
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
     await check_autocomplete({
@@ -1281,7 +1281,7 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_unvisitedBookmark() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     await check_autocomplete({
@@ -1317,7 +1317,7 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_0() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     await check_autocomplete({
@@ -1353,7 +1353,7 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_1() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1377,7 +1377,7 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_2() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1401,7 +1401,7 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_3() {
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1426,7 +1426,7 @@ function addAutofillTasks(origins) {
   //   should autofill: yes
   add_task(async function suggestBookmarkFalse_visitedBookmark_above() {
     await PlacesTestUtils.addVisits("http://" + url);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1459,7 +1459,7 @@ function addAutofillTasks(origins) {
   //   should autofill: yes
   add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_0() {
     await PlacesTestUtils.addVisits("http://" + url);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1492,7 +1492,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_1() {
     await PlacesTestUtils.addVisits("ftp://" + url);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1523,7 +1523,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_2() {
     await PlacesTestUtils.addVisits("http://non-matching-" + url);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1554,7 +1554,7 @@ function addAutofillTasks(origins) {
   //   should autofill: no
   add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_3() {
     await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1616,7 +1616,7 @@ function addAutofillTasks(origins) {
       ],
     });
     // Now bookmark it and set suggest.bookmark to false.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1676,7 +1676,7 @@ function addAutofillTasks(origins) {
       ],
     });
     // Now bookmark it and set suggest.bookmark to false.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1736,7 +1736,7 @@ function addAutofillTasks(origins) {
       ],
     });
     // Now bookmark it and set suggest.bookmark to false.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1796,7 +1796,7 @@ function addAutofillTasks(origins) {
       ],
     });
     // Now bookmark it and set suggest.bookmark to false.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
@@ -1856,7 +1856,7 @@ function addAutofillTasks(origins) {
       ],
     });
     // Now bookmark it and set suggest.bookmark to false.
-    await addBookmark({
+    await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);

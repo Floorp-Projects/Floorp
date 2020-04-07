@@ -21,10 +21,22 @@ add_task(async function test() {
     { uri: uri3, title: "tagged" },
     { uri: uri4, title: "tagged" },
   ]);
-  await addBookmark({ uri: uri1, title: "tagged", tags: ["tag1"] });
-  await addBookmark({ uri: uri2, title: "tagged", tags: ["tag1", "tag2"] });
-  await addBookmark({ uri: uri3, title: "tagged", tags: ["tag1", "tag3"] });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri1,
+    title: "tagged",
+    tags: ["tag1"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri2,
+    title: "tagged",
+    tags: ["tag1", "tag2"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri3,
+    title: "tagged",
+    tags: ["tag1", "tag3"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: uri4,
     title: "tagged",
     tags: ["tag1", "tag2", "tag3"],

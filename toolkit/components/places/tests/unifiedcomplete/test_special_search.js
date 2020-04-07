@@ -36,14 +36,30 @@ add_task(async function test_special_searches() {
     { uri: uri6, title: "foo.bar" },
     { uri: uri11, title: "title", transition: TRANSITION_TYPED },
   ]);
-  await addBookmark({ uri: uri5, title: "title" });
-  await addBookmark({ uri: uri6, title: "foo.bar" });
-  await addBookmark({ uri: uri7, title: "title" });
-  await addBookmark({ uri: uri8, title: "foo.bar" });
-  await addBookmark({ uri: uri9, title: "title", tags: ["foo.bar"] });
-  await addBookmark({ uri: uri10, title: "foo.bar", tags: ["foo.bar"] });
-  await addBookmark({ uri: uri11, title: "title", tags: ["foo.bar"] });
-  await addBookmark({ uri: uri12, title: "foo.bar", tags: ["foo.bar"] });
+  await PlacesTestUtils.addBookmarkWithDetails({ uri: uri5, title: "title" });
+  await PlacesTestUtils.addBookmarkWithDetails({ uri: uri6, title: "foo.bar" });
+  await PlacesTestUtils.addBookmarkWithDetails({ uri: uri7, title: "title" });
+  await PlacesTestUtils.addBookmarkWithDetails({ uri: uri8, title: "foo.bar" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri9,
+    title: "title",
+    tags: ["foo.bar"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri10,
+    title: "foo.bar",
+    tags: ["foo.bar"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri11,
+    title: "title",
+    tags: ["foo.bar"],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri12,
+    title: "foo.bar",
+    tags: ["foo.bar"],
+  });
 
   // Test restricting searches.
 
@@ -394,7 +410,7 @@ add_task(async function test_special_searches() {
   info(
     `conflict ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK} -> bookmark wins`
   );
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://bookmark.conflict.com/",
     title: `conflict ${UrlbarTokenizer.RESTRICT.HISTORY}`,
   });
@@ -412,12 +428,12 @@ add_task(async function test_special_searches() {
   info(
     `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG} -> tag wins`
   );
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://tag.conflict.com/",
     title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     tags: ["one"],
   });
-  await addBookmark({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://nontag.conflict.com/",
     title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
   });

@@ -11,7 +11,11 @@ add_task(async function test_tag_match_has_bookmark_title() {
   info("Make sure the tag match gives the bookmark title");
   let uri = NetUtil.newURI("http://theuri/");
   await PlacesTestUtils.addVisits({ uri, title: "Page title" });
-  await addBookmark({ uri, title: "Bookmark title", tags: ["superTag"] });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri,
+    title: "Bookmark title",
+    tags: ["superTag"],
+  });
   await check_autocomplete({
     search: "superTag",
     matches: [
