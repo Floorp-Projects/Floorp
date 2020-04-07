@@ -36,7 +36,7 @@ void Gamepad::UpdateTimestamp() {
   }
 }
 
-Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
+Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, int32_t aIndex,
                  uint32_t aHashKey, GamepadMappingType aMapping,
                  GamepadHand aHand, uint32_t aDisplayID, uint32_t aNumButtons,
                  uint32_t aNumAxes, uint32_t aNumHaptics,
@@ -76,7 +76,7 @@ Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
   UpdateTimestamp();
 }
 
-void Gamepad::SetIndex(uint32_t aIndex) { mIndex = aIndex; }
+void Gamepad::SetIndex(int32_t aIndex) { mIndex = aIndex; }
 
 void Gamepad::SetConnected(bool aConnected) { mConnected = aConnected; }
 
