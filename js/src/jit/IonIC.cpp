@@ -524,6 +524,13 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
       }
       break;
     }
+    case JSOp::Pos: {
+      res.set(val);
+      if (!ToNumber(cx, res)) {
+        return false;
+      }
+      break;
+    }
     case JSOp::Neg: {
       res.set(val);
       if (!NegOperation(cx, res, res)) {

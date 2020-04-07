@@ -272,6 +272,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         break;
       }
       case JSOp::BitNot:
+      case JSOp::Pos:
       case JSOp::Neg:
       case JSOp::Inc:
       case JSOp::Dec: {
@@ -3427,6 +3428,13 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
     case JSOp::BitNot: {
       res.set(val);
       if (!BitNot(cx, res, res)) {
+        return false;
+      }
+      break;
+    }
+    case JSOp::Pos: {
+      res.set(val);
+      if (!ToNumber(cx, res)) {
         return false;
       }
       break;

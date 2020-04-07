@@ -423,7 +423,7 @@
      *   Operands:
      *   Stack: val => (+val)
      */ \
-    MACRO(Pos, pos, "+ ", 1, 1, 1, JOF_BYTE) \
+    MACRO(Pos, pos, "+ ", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The unary `-` operator][1].
      *
