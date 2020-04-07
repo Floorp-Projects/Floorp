@@ -7071,6 +7071,23 @@ bool BytecodeEmitter::emitSelfHostedGetPropertySuper(BinaryNode* callNode) {
   return emitElemOpBase(JSOp::GetElemSuper);
 }
 
+bool BytecodeEmitter::emitSelfHostedToNumeric(BinaryNode* callNode) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  if (argsList->count() != 1) {
+    reportNeedMoreArgsError(callNode, "ToNumeric", "1", "", argsList);
+    return false;
+  }
+
+  ParseNode* argNode = argsList->head();
+
+  if (!emitTree(argNode)) {
+    return false;
+  }
+
+  return emit1(JSOp::ToNumeric);
+}
+
 bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
   if (!sc->isFunctionBox()) {
     return false;
@@ -7543,6 +7560,9 @@ bool BytecodeEmitter::emitCallOrNew(
     }
     if (calleeName == cx->names().getPropertySuper) {
       return emitSelfHostedGetPropertySuper(callNode);
+    }
+    if (calleeName == cx->names().ToNumeric) {
+      return emitSelfHostedToNumeric(callNode);
     }
     // Fall through
   }
