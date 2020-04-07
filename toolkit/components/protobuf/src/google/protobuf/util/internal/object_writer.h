@@ -32,7 +32,10 @@
 #define GOOGLE_PROTOBUF_UTIL_CONVERTER_OBJECT_WRITER_H__
 
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/stringpiece.h>
+#include <google/protobuf/stubs/strutil.h>
+
+// Must be included last.
+#include <google/protobuf/port_def.inc>
 
 namespace google {
 namespace protobuf {
@@ -55,7 +58,7 @@ class DataPiece;
 //
 // TODO(xinb): seems like a prime candidate to apply the RAII paradigm
 // and get rid the need to call EndXXX().
-class LIBPROTOBUF_EXPORT ObjectWriter {
+class PROTOBUF_EXPORT ObjectWriter {
  public:
   virtual ~ObjectWriter() {}
 
@@ -86,6 +89,7 @@ class LIBPROTOBUF_EXPORT ObjectWriter {
   // Renders an 64-bit unsigned integer value.
   virtual ObjectWriter* RenderUint64(StringPiece name, uint64 value) = 0;
 
+
   // Renders a double value.
   virtual ObjectWriter* RenderDouble(StringPiece name, double value) = 0;
 
@@ -93,7 +97,8 @@ class LIBPROTOBUF_EXPORT ObjectWriter {
   virtual ObjectWriter* RenderFloat(StringPiece name, float value) = 0;
 
   // Renders a StringPiece value. This is for rendering strings.
-  virtual ObjectWriter* RenderString(StringPiece name, StringPiece value) = 0;
+  virtual ObjectWriter* RenderString(StringPiece name,
+                                     StringPiece value) = 0;
 
   // Renders a bytes value.
   virtual ObjectWriter* RenderBytes(StringPiece name, StringPiece value) = 0;
@@ -119,13 +124,6 @@ class LIBPROTOBUF_EXPORT ObjectWriter {
     return use_strict_base64_decoding_;
   }
 
-  // Whether empty strings should be rendered for the next name for Start/Render
-  // calls. This setting is only valid until the next key is rendered, after
-  // which it gets reset.
-  // It is up to the derived classes to interpret this and render accordingly.
-  // Default implementation ignores this setting.
-  virtual void empty_name_ok_for_next_key() {}
-
  protected:
   ObjectWriter() : use_strict_base64_decoding_(true) {}
 
@@ -141,6 +139,8 @@ class LIBPROTOBUF_EXPORT ObjectWriter {
 }  // namespace converter
 }  // namespace util
 }  // namespace protobuf
-
 }  // namespace google
+
+#include <google/protobuf/port_undef.inc>
+
 #endif  // GOOGLE_PROTOBUF_UTIL_CONVERTER_OBJECT_WRITER_H__
