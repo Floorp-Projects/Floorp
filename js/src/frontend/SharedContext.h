@@ -154,11 +154,11 @@ class SharedContext {
         needsThisTDZChecks_(false),
         hasExplicitUseStrict_(false) {
     if (kind_ == Kind::FunctionBox) {
-      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsFunction);
+      immutableFlags_.setFlag(ImmutableFlags::IsFunction);
     } else if (kind_ == Kind::Module) {
-      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsModule);
+      immutableFlags_.setFlag(ImmutableFlags::IsModule);
     } else if (kind_ == Kind::Eval) {
-      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsForEval);
+      immutableFlags_.setFlag(ImmutableFlags::IsForEval);
     } else {
       MOZ_ASSERT(kind_ == Kind::Global);
     }

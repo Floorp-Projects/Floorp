@@ -75,22 +75,18 @@ class SmooshScriptStencil : public ScriptStencil {
 
     ngcthings = result_.gcthings.len;
 
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::Strict, result_.strict);
-    immutableFlags.setFlag(
-        ImmutableScriptFlagsEnum::BindingsAccessedDynamically,
-        result_.bindings_accessed_dynamically);
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasCallSiteObj,
+    immutableFlags.setFlag(ImmutableFlags::Strict, result_.strict);
+    immutableFlags.setFlag(ImmutableFlags::BindingsAccessedDynamically,
+                           result_.bindings_accessed_dynamically);
+    immutableFlags.setFlag(ImmutableFlags::HasCallSiteObj,
                            result_.has_call_site_obj);
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsForEval,
-                           result_.is_for_eval);
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsModule,
-                           result_.is_module);
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasNonSyntacticScope,
+    immutableFlags.setFlag(ImmutableFlags::IsForEval, result_.is_for_eval);
+    immutableFlags.setFlag(ImmutableFlags::IsModule, result_.is_module);
+    immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
                            result_.has_non_syntactic_scope);
-    immutableFlags.setFlag(
-        ImmutableScriptFlagsEnum::NeedsFunctionEnvironmentObjects,
-        result_.needs_function_environment_objects);
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasModuleGoal,
+    immutableFlags.setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
+                           result_.needs_function_environment_objects);
+    immutableFlags.setFlag(ImmutableFlags::HasModuleGoal,
                            result_.has_module_goal);
 
     if (!createAtoms(cx)) {
