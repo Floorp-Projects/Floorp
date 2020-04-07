@@ -12,8 +12,8 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 #include "nsIConsoleService.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
@@ -145,7 +145,8 @@ ErrorReporter::~ErrorReporter() {
   // short-term caching.
   if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
     nsCOMPtr<nsIRunnable> runnable(sSpecCache);
-    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    nsresult rv =
+        SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
     if (NS_FAILED(rv)) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();

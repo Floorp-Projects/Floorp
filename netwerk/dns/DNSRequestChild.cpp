@@ -9,6 +9,7 @@
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsIDNSRecord.h"
@@ -239,7 +240,7 @@ DNSRequestChild::DNSRequestChild(
 void DNSRequestChild::StartRequest() {
   // we can only do IPDL on the main thread
   if (!NS_IsMainThread()) {
-    SystemGroup::Dispatch(
+    SchedulerGroup::Dispatch(
         TaskCategory::Other,
         NewRunnableMethod("net::DNSRequestChild::StartRequest", this,
                           &DNSRequestChild::StartRequest));
@@ -347,7 +348,7 @@ DNSRequestChild::Cancel(nsresult reason) {
   if (CanSend()) {
     // We can only do IPDL on the main thread
     nsCOMPtr<nsIRunnable> runnable = new CancelDNSRequestEvent(this, reason);
-    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
   return NS_OK;
 }

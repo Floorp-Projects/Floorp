@@ -10,6 +10,8 @@
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistrationListener.h"
 
+#include "mozilla/SchedulerGroup.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -664,7 +666,8 @@ void ServiceWorkerRegistrationInfo::TransitionWaitingToActive() {
           swm->CheckPendingReadyPromises();
         }
       });
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   UpdateRegistrationState();
   NotifyChromeRegistrationListeners();

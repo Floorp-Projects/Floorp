@@ -8,8 +8,8 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticLocalPtr.h"
-#include "mozilla/SystemGroup.h"
 #include "nsThreadUtils.h"
 
 #include "private/pprthred.h"
@@ -134,7 +134,7 @@ nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
           return bgData;
         }
 
-        SystemGroup::Dispatch(
+        SchedulerGroup::Dispatch(
             TaskCategory::Other,
             NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
                                    std::move(setClearOnShutdown)));

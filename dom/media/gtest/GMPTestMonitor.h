@@ -7,7 +7,7 @@
 #define __GMPTestMonitor_h__
 
 #include "nsThreadUtils.h"
-#include "mozilla/SystemGroup.h"
+#include "mozilla/SchedulerGroup.h"
 
 class GMPTestMonitor {
  public:
@@ -27,10 +27,10 @@ class GMPTestMonitor {
 
  public:
   void SetFinished() {
-    mozilla::SystemGroup::Dispatch(mozilla::TaskCategory::Other,
-                                   mozilla::NewNonOwningRunnableMethod(
-                                       "GMPTestMonitor::MarkFinished", this,
-                                       &GMPTestMonitor::MarkFinished));
+    mozilla::SchedulerGroup::Dispatch(mozilla::TaskCategory::Other,
+                                      mozilla::NewNonOwningRunnableMethod(
+                                          "GMPTestMonitor::MarkFinished", this,
+                                          &GMPTestMonitor::MarkFinished));
   }
 
  private:

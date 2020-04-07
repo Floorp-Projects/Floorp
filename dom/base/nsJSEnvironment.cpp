@@ -50,6 +50,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MainThreadIdlePeriod.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -2278,8 +2279,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
           json.Adopt(aDesc.formatJSONTelemetry(aCx, PR_Now()));
           RefPtr<NotifyGCEndRunnable> notify =
               new NotifyGCEndRunnable(std::move(json));
-          SystemGroup::Dispatch(TaskCategory::GarbageCollection,
-                                notify.forget());
+          SchedulerGroup::Dispatch(TaskCategory::GarbageCollection,
+                                   notify.forget());
         }
       }
 
