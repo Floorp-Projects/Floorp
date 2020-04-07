@@ -196,8 +196,6 @@ class AppWindow final : public nsIBaseWindow,
   NS_IMETHOD ForceRoundedDimensions();
   NS_IMETHOD GetAvailScreenSize(int32_t* aAvailWidth, int32_t* aAvailHeight);
 
-  void FinishFullscreenChange(bool aInFullscreen);
-
   void ApplyChromeFlags();
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void SizeShell();
   void OnChromeLoaded();
@@ -252,47 +250,6 @@ class AppWindow final : public nsIBaseWindow,
   nsresult GetPersistentValue(const nsAtom* aAttr, nsAString& aValue);
   nsresult SetPersistentValue(const nsAtom* aAttr, const nsAString& aValue);
 
-  // Enum for the current state of a fullscreen change.
-  //
-  // It is used to ensure that fullscreen change is issued after both
-  // the window state change and the window size change at best effort.
-  // This is needed because some platforms can't guarantee the order
-  // between such two events.
-  //
-  // It's changed in the following way:
-  // +---------------------------+--------------------------------------+
-  // |                           |                                      |
-  // |                           v                                      |
-  // |                      NotChanging                                 |
-  // |                           +                                      |
-  // |                           | FullscreenWillChange                 |
-  // |                           v                                      |
-  // |        +-----------+ WillChange +------------------+             |
-  // |        | WindowResized           FullscreenChanged |             |
-  // |        v                                           v             |
-  // |  WidgetResized                         WidgetEnteredFullscreen   |
-  // |        +                              or WidgetExitedFullscreen  |
-  // |        | FullscreenChanged                         +             |
-  // |        v                          WindowResized or |             |
-  // +--------+                          delayed dispatch |             |
-  //                                                      v             |
-  //                                                      +-------------+
-  //
-  // The delayed dispatch serves as timeout, which is necessary because it's
-  // not even guaranteed that the widget will be resized at all.
-  enum class FullscreenChangeState : uint8_t {
-    // No current fullscreen change. Any previous change has finished.
-    NotChanging,
-    // Indicate there is going to be a fullscreen change.
-    WillChange,
-    // The widget has been resized since WillChange.
-    WidgetResized,
-    // The widget has entered fullscreen state since WillChange.
-    WidgetEnteredFullscreen,
-    // The widget has exited fullscreen state since WillChange.
-    WidgetExitedFullscreen,
-  };
-
   nsChromeTreeOwner* mChromeTreeOwner;
   nsContentTreeOwner* mContentTreeOwner;
   nsContentTreeOwner* mPrimaryContentTreeOwner;
@@ -305,7 +262,6 @@ class AppWindow final : public nsIBaseWindow,
   nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
   nsCOMPtr<nsIDocShellTreeItem> mPrimaryContentShell;
   nsresult mModalStatus;
-  FullscreenChangeState mFullscreenChangeState;
   bool mContinueModalLoop;
   bool mDebuting;            // being made visible right now
   bool mChromeLoaded;        // True when chrome has loaded

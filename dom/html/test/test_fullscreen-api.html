@@ -79,10 +79,13 @@ function nextTest() {
 
 var gHeadlessSkipList = [
   { test: "file_fullscreen-plugins.html", reason: "bug 1409805" },
+  { test: "file_fullscreen-scrollbar.html", reason: "bug 1468648" },
 ];
 
 var gLinuxE10sSkipList = [
   { "test": "file_fullscreen-plugins.html", "reason": "bug 1330553" },
+  { "test": "file_fullscreen-api.html", "reason": "bug 1332040" },
+  { "test": "file_fullscreen-scrollbar.html", "reason": "bug 1350875" }
 ];
 
 function shouldSkipTest(test) {

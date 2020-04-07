@@ -108,7 +108,6 @@ AppWindow::AppWindow(uint32_t aChromeFlags)
       mContentTreeOwner(nullptr),
       mPrimaryContentTreeOwner(nullptr),
       mModalStatus(NS_OK),
-      mFullscreenChangeState(FullscreenChangeState::NotChanging),
       mContinueModalLoop(false),
       mDebuting(false),
       mChromeLoaded(false),
@@ -2699,21 +2698,6 @@ bool AppWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth,
   // Persist size, but not immediately, in case this OS is firing
   // repeated size events as the user drags the sizing handle
   if (!IsLocked()) SetPersistenceTimer(PAD_POSITION | PAD_SIZE | PAD_MISC);
-  // Check if we need to continue a fullscreen change.
-  switch (mFullscreenChangeState) {
-    case FullscreenChangeState::WillChange:
-      mFullscreenChangeState = FullscreenChangeState::WidgetResized;
-      break;
-    case FullscreenChangeState::WidgetEnteredFullscreen:
-      FinishFullscreenChange(true);
-      break;
-    case FullscreenChangeState::WidgetExitedFullscreen:
-      FinishFullscreenChange(false);
-      break;
-    case FullscreenChangeState::WidgetResized:
-    case FullscreenChangeState::NotChanging:
-      break;
-  }
   return true;
 }
 
@@ -2811,40 +2795,9 @@ void AppWindow::FullscreenWillChange(bool aInFullscreen) {
       ourWindow->FullscreenWillChange(aInFullscreen);
     }
   }
-  MOZ_ASSERT(mFullscreenChangeState == FullscreenChangeState::NotChanging);
-  mFullscreenChangeState = FullscreenChangeState::WillChange;
 }
 
 void AppWindow::FullscreenChanged(bool aInFullscreen) {
-  if (mFullscreenChangeState == FullscreenChangeState::WidgetResized) {
-    FinishFullscreenChange(aInFullscreen);
-  } else {
-    NS_WARNING_ASSERTION(
-        mFullscreenChangeState == FullscreenChangeState::WillChange,
-        "Unexpected fullscreen change state");
-    FullscreenChangeState newState =
-        aInFullscreen ? FullscreenChangeState::WidgetEnteredFullscreen
-                      : FullscreenChangeState::WidgetExitedFullscreen;
-    mFullscreenChangeState = newState;
-    nsCOMPtr<nsIAppWindow> kungFuDeathGrip(this);
-    // Wait for resize for a small amount of time.
-    // 16ms is actually picked arbitrarily. But it shouldn't be too large
-    // in case the widget resize is not going to happen at all, which can
-    // be the case for some Linux window managers and possibly Android.
-    NS_DelayedDispatchToCurrentThread(
-        NS_NewRunnableFunction(
-            "AppWindow::FullscreenChanged",
-            [this, kungFuDeathGrip, newState, aInFullscreen]() {
-              if (mFullscreenChangeState == newState) {
-                FinishFullscreenChange(aInFullscreen);
-              }
-            }),
-        16);
-  }
-}
-
-void AppWindow::FinishFullscreenChange(bool aInFullscreen) {
-  mFullscreenChangeState = FullscreenChangeState::NotChanging;
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> ourWindow = mDocShell->GetWindow()) {
       ourWindow->FinishFullscreenChange(aInFullscreen);
