@@ -30,9 +30,11 @@ class XRWebGLLayer final : public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRWebGLLayer)
 
   explicit XRWebGLLayer(
-      nsISupports* aParent, XRSession& aSession, bool aAntialias,
-      const XRWebGLLayerInit&,
-      const WebGLRenderingContextOrWebGL2RenderingContext& aXRWebGLContext);
+      nsISupports* aParent, XRSession& aSession, bool aIgnoreDepthValues,
+      double aFramebufferScaleFactor,
+      RefPtr<mozilla::ClientWebGLContext> aWebGLContext,
+      RefPtr<WebGLFramebufferJS> aFramebuffer,
+      const Maybe<const webgl::OpaqueFramebufferOptions>& aOptions);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
@@ -44,6 +46,9 @@ class XRWebGLLayer final : public nsWrapperCache {
       const GlobalObject& aGlobal, XRSession& aSession,
       const WebGLRenderingContextOrWebGL2RenderingContext& aXRWebGLContext,
       const XRWebGLLayerInit& aXRWebGLLayerInitDict, ErrorResult& aRv);
+  bool Depth();
+  bool Stencil();
+  bool Alpha();
   bool Antialias();
   bool IgnoreDepthValues();
   WebGLFramebufferJS* GetFramebuffer();
@@ -54,19 +59,24 @@ class XRWebGLLayer final : public nsWrapperCache {
                                                 const XRSession& aSession);
 
   // Non-WebIDL Members
-  RefPtr<XRSession> mSession;
-  RefPtr<nsICanvasRenderingContextInternal> mContext;
+  void StartAnimationFrame();
+  void EndAnimationFrame();
+  HTMLCanvasElement* GetCanvas();
 
  private:
-  virtual ~XRWebGLLayer() = default;
+  virtual ~XRWebGLLayer();
   nsCOMPtr<nsISupports> mParent;
 
  public:
+  RefPtr<XRSession> mSession;
+  RefPtr<mozilla::ClientWebGLContext> mWebGL;
+  double mFramebufferScaleFactor;
   bool mCompositionDisabled;
 
  private:
   bool mIgnoreDepthValues;
-  bool mAntialias;
+  RefPtr<WebGLFramebufferJS> mFramebuffer;
+  Maybe<const webgl::OpaqueFramebufferOptions> mFramebufferOptions;
 };
 
 }  // namespace dom

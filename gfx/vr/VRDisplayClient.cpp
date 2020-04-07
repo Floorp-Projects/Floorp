@@ -64,6 +64,7 @@ void VRDisplayClient::PresentationDestroyed() { --mPresentationCount; }
 
 void VRDisplayClient::SessionStarted(dom::XRSession* aSession) {
   PresentationCreated();
+  MakePresentationGenerationCurrent();
   mSessions.AppendElement(aSession);
 }
 void VRDisplayClient::SessionEnded(dom::XRSession* aSession) {

@@ -300,6 +300,10 @@ bool XRSystem::FeaturePolicyBlocked() const {
   return !(request->CheckPermissionDelegate());
 }
 
+bool XRSystem::HasActiveImmersiveSession() const {
+  return mActiveImmersiveSession;
+}
+
 void XRSystem::ResolveSessionRequestsWithoutHardware() {
   // Resolve promises returned by RequestSession
   nsTArray<RefPtr<gfx::VRDisplayClient>> displays;
@@ -480,7 +484,11 @@ void XRSystem::NotifyVRDisplayDisconnect(uint32_t aDisplayID) {
 }
 
 void XRSystem::NotifyVRDisplayPresentChange(uint32_t aDisplayID) {}
-void XRSystem::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {}
+void XRSystem::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
+  if (mActiveImmersiveSession) {
+    mActiveImmersiveSession->ExitPresent();
+  }
+}
 bool XRSystem::GetStopActivityStatus() const { return true; }
 
 RequestSessionRequest::RequestSessionRequest(

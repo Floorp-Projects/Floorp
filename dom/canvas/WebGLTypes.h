@@ -620,6 +620,18 @@ struct CompileResult final {
 
 // -
 
+struct OpaqueFramebufferOptions {
+  bool depthStencil = true;
+  bool antialias = true;
+  uint32_t width = 0;
+  uint32_t height = 0;
+
+  OpaqueFramebufferOptions() = default;
+  OpaqueFramebufferOptions(const OpaqueFramebufferOptions&) = default;
+};
+
+// -
+
 struct ActiveInfo {
   GLenum elemType = 0;     // `type`
   uint32_t elemCount = 0;  // `size`

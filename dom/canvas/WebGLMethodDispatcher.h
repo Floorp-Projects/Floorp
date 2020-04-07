@@ -29,6 +29,7 @@ DECLARE_METHOD_DISPATCHER(WebGLMethodDispatcher, HostWebGLCommandSink,
 
 DEFINE_ASYNC(HostWebGLContext::CreateBuffer)
 DEFINE_ASYNC(HostWebGLContext::CreateFramebuffer)
+DEFINE_SYNC(HostWebGLContext::CreateOpaqueFramebuffer)
 DEFINE_ASYNC(HostWebGLContext::CreateProgram)
 DEFINE_ASYNC(HostWebGLContext::CreateQuery)
 DEFINE_ASYNC(HostWebGLContext::CreateRenderbuffer)
@@ -165,6 +166,7 @@ DEFINE_ASYNC(HostWebGLContext::BeginQuery)
 DEFINE_ASYNC(HostWebGLContext::EndQuery)
 DEFINE_ASYNC(HostWebGLContext::QueryCounter)
 DEFINE_SYNC(HostWebGLContext::GetQueryParameter)
+DEFINE_ASYNC(HostWebGLContext::SetFramebufferIsInOpaqueRAF)
 
 #undef DEFINE_METHOD_HELPER
 #undef DEFINE_ASYNC

@@ -38,6 +38,10 @@ void VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
   mCanvasElement = aCanvasElement;
 }
 
+void VRLayerChild::SetXRFramebuffer(WebGLFramebufferJS* fb) {
+  mFramebuffer = fb;
+}
+
 void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
   uint64_t frameId = aDisplayInfo.GetFrameId();
 
@@ -66,10 +70,10 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
    */
   if (!mThisFrameTexture || aDisplayInfo.mDisplayState.lastSubmittedFrameId ==
                                 mLastSubmittedFrameId) {
-    mThisFrameTexture = webgl->GetVRFrame();
+    mThisFrameTexture = webgl->GetVRFrame(mFramebuffer.get());
   }
 #else
-  mThisFrameTexture = webgl->GetVRFrame();
+  mThisFrameTexture = webgl->GetVRFrame(mFramebuffer.get());
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   mLastSubmittedFrameId = frameId;

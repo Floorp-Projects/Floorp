@@ -9,6 +9,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 
+#include "MozFramebuffer.h"
 #include "TexUnpackBlob.h"
 #include "WebGL2Context.h"
 #include "WebGLBuffer.h"
@@ -100,9 +101,9 @@ void HostWebGLContext::JsWarning(const std::string& text) const {
   (void)mOwnerData.outOfProcess->mParent.SendJsWarning(text);
 }
 
-RefPtr<layers::SharedSurfaceTextureClient> HostWebGLContext::GetVRFrame()
-    const {
-  return mContext->GetVRFrame();
+RefPtr<layers::SharedSurfaceTextureClient> HostWebGLContext::GetVRFrame(
+    ObjectId id) const {
+  return mContext->GetVRFrame(AutoResolve(id));
 }
 
 //////////////////////////////////////////////
@@ -124,6 +125,17 @@ void HostWebGLContext::CreateFramebuffer(const ObjectId id) {
     return;
   }
   slot = mContext->CreateFramebuffer();
+}
+
+bool HostWebGLContext::CreateOpaqueFramebuffer(
+    const ObjectId id, const webgl::OpaqueFramebufferOptions& options) {
+  auto& slot = mFramebufferMap[id];
+  if (slot) {
+    MOZ_ASSERT(false, "duplicate ID");
+    return false;
+  }
+  slot = mContext->CreateOpaqueFramebuffer(options);
+  return slot;
 }
 
 void HostWebGLContext::CreateProgram(const ObjectId id) {
