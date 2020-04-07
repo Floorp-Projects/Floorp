@@ -113,7 +113,7 @@ fn make_shared_flags(
     sb.set("baldrdash_prologue_words", "3")?;
 
     // Make sure that libcalls use the supplementary VMContext argument.
-    let libcall_call_conv = if env.platformIsWindows {
+    let libcall_call_conv = if env.platform_is_windows {
         "baldrdash_windows"
     } else {
         "baldrdash_system_v"
@@ -157,7 +157,7 @@ fn make_shared_flags(
         sb.enable("use_pinned_reg_as_heap_base")?;
     }
 
-    if env.refTypesEnabled {
+    if env.ref_types_enabled {
         sb.enable("enable_safepoints")?;
     }
 
@@ -168,32 +168,32 @@ fn make_shared_flags(
 fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
     let mut ib = isa::lookup_by_name("x86_64-unknown-unknown").map_err(BasicError::from)?;
 
-    if !env.hasSse2 {
+    if !env.has_sse2 {
         return Err("SSE2 is mandatory for Baldrdash!".into());
     }
 
-    if env.hasSse3 {
+    if env.has_sse3 {
         ib.enable("has_sse3").map_err(BasicError::from)?;
     }
-    if env.hasSse41 {
+    if env.has_sse41 {
         ib.enable("has_sse41").map_err(BasicError::from)?;
     }
-    if env.hasSse42 {
+    if env.has_sse42 {
         ib.enable("has_sse42").map_err(BasicError::from)?;
     }
-    if env.hasPopcnt {
+    if env.has_popcnt {
         ib.enable("has_popcnt").map_err(BasicError::from)?;
     }
-    if env.hasAvx {
+    if env.has_avx {
         ib.enable("has_avx").map_err(BasicError::from)?;
     }
-    if env.hasBmi1 {
+    if env.has_bmi1 {
         ib.enable("has_bmi1").map_err(BasicError::from)?;
     }
-    if env.hasBmi2 {
+    if env.has_bmi2 {
         ib.enable("has_bmi2").map_err(BasicError::from)?;
     }
-    if env.hasLzcnt {
+    if env.has_lzcnt {
         ib.enable("has_lzcnt").map_err(BasicError::from)?;
     }
 
