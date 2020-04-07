@@ -473,10 +473,6 @@ void nsXULPrototypeDocument::RebuildPrototypeFromElement(
     }
     protoAttr->mValue.SetTo(*attr.mValue);
 
-    if (protoAttr->mName.Equals(nsGkAtoms::is)) {
-      aPrototype->mIsAtom = protoAttr->mValue.GetAtomValue();
-    }
-
     protoAttr++;
   }
 
