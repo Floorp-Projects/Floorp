@@ -1047,6 +1047,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
     VRControllerState& controllerState = aState.controllerState[stateIndex];
     controllerState.hand = GetControllerHandFromControllerRole(role);
     mControllerMapper->UpdateButtons(controllerState, mControllerHand[role]);
+    SetControllerSelectionAndSqueezeFrameId(controllerState, aState.displayState.lastSubmittedFrameId);
   }
 }
 
