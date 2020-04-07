@@ -116,6 +116,7 @@
 #include "nsIWebProgress.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
+#include "nsIOpenWindowInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsPointerHashKeys.h"
@@ -868,19 +869,21 @@ BrowserChild::GetInterface(const nsIID& aIID, void** aSink) {
 }
 
 NS_IMETHODIMP
-BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
-                            bool aCalledFromJS, bool aWidthSpecified,
-                            nsIURI* aURI, const nsAString& aName,
-                            const nsACString& aFeatures, bool aForceNoOpener,
-                            bool aForceNoReferrer,
+BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
+                            uint32_t aChromeFlags, bool aCalledFromJS,
+                            bool aWidthSpecified, nsIURI* aURI,
+                            const nsAString& aName, const nsACString& aFeatures,
+                            bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
-  // If aParent is inside an <iframe mozbrowser> and this isn't a request to
+  RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
+
+  // If parent is inside an <iframe mozbrowser> and this isn't a request to
   // open a modal-type window, we're going to create a new <iframe mozbrowser>
   // and return its window here.
-  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
+  nsCOMPtr<nsIDocShell> docshell = parent->GetDocShell();
   bool iframeMoz =
       (docshell && docshell->GetIsInMozBrowser() &&
        !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
@@ -889,8 +892,7 @@ BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
 
   if (!iframeMoz) {
     int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-        nsPIDOMWindowOuter::From(aParent), aChromeFlags, aCalledFromJS,
-        aWidthSpecified);
+        parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
 
     // If it turns out we're opening in the current browser, just hand over the
     // current browser's docshell.
@@ -912,7 +914,7 @@ BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
   // open window call was canceled.  It's important that we pass this error
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
-  return cc->ProvideWindowCommon(this, aParent, iframeMoz, aChromeFlags,
+  return cc->ProvideWindowCommon(this, aOpenWindowInfo, iframeMoz, aChromeFlags,
                                  aCalledFromJS, aWidthSpecified, aURI, aName,
                                  aFeatures, aForceNoOpener, aForceNoReferrer,
                                  aLoadState, aWindowIsNew, aReturn);

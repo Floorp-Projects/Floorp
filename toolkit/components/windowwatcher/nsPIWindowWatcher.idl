@@ -21,6 +21,7 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 interface nsIRemoteTab;
+interface nsIOpenWindowInfo;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
@@ -106,12 +107,9 @@ interface nsPIWindowWatcher : nsISupports
    * @param aOpenerFullZoom
    *        The current zoom multiplier for the opener tab. This is then
    *        applied to the newly opened window.
-   * @param aNextRemoteTabId
-   *        The integer ID for the next remote tab actor.
-   *        0 means there is no next remote tab actor to use.
-   * @param aForceNoOpener
-   *        If true, then aOpeningTab will not be used to set the opener
-   *        for the newly created window.
+   * @param aOpenWindowInfo
+   *        Information used to create the initial content browser in the new
+   *        window.
    *
    * @return the nsIRemoteTab of the initial browser for the newly opened
    *         window.
@@ -120,7 +118,6 @@ interface nsPIWindowWatcher : nsISupports
                                        in ACString aFeatures,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom,
-                                       in unsigned long long aNextRemoteTabId,
-                                       in boolean aForceNoOpener);
+                                       in nsIOpenWindowInfo aOpenWindowInfo);
 };
 

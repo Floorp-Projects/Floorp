@@ -15,6 +15,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIOpenWindowInfo;
 interface nsIRemoteTab;
 interface nsIURI;
 interface nsIWebBrowserChrome;
@@ -30,12 +31,8 @@ interface nsIWindowCreator : nsISupports {
                     the parent, if any (and if the concept applies
                     to the underlying OS).
       @param chromeFlags Chrome features from nsIWebBrowserChrome
-      @param aOpeningTab The RemoteTab that is trying to open this new chrome
-                         window. Can be nullptr.
-      @param aOpener The window which is trying to open this new chrome window.
-                     Can be nullptr
-      @param aNextRemoteTabId The integer ID of the next remote tab actor to use.
-                              0 means there is no next remote tab ID to use.
+      @param aOpenWindowInfo Information used to open initial content in
+                             the new chrome window. Can be nullptr.
       @param cancel Return |true| to reject window creation. If true the
                     implementation has determined the window should not
                     be created at all. The caller should not default
@@ -44,9 +41,7 @@ interface nsIWindowCreator : nsISupports {
   */
   nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
                                          in uint32_t chromeFlags,
-                                         in nsIRemoteTab aOpeningTab,
-                                         in mozIDOMWindowProxy aOpener,
-                                         in unsigned long long aNextRemoteTabId,
+                                         in nsIOpenWindowInfo aOpenWindowInfo,
                                          out boolean cancel);
 };
 

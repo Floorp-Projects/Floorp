@@ -1363,6 +1363,7 @@ parent:
     sync GetHyphDict(nsIURI aURI) returns (Handle aHandle, uint32_t aSize);
 
     async CreateWindow(nullable PBrowser aThisTab,
+                       MaybeDiscardedBrowsingContext aParent,
                        PBrowser aNewTab,
                        uint32_t aChromeFlags,
                        bool aCalledFromJS,
@@ -1372,11 +1373,13 @@ parent:
                        float aFullZoom,
                        Principal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
-                       nsIReferrerInfo aReferrerInfo)
+                       nsIReferrerInfo aReferrerInfo,
+                       OriginAttributes aOriginAttributes)
         returns (CreatedWindowInfo window);
 
     async CreateWindowInDifferentProcess(
       PBrowser aThisTab,
+      MaybeDiscardedBrowsingContext aParent,
       uint32_t aChromeFlags,
       bool aCalledFromJS,
       bool aWidthSpecified,
@@ -1386,7 +1389,8 @@ parent:
       nsString aName,
       nsIPrincipal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,
-      nsIReferrerInfo aReferrerInfo);
+      nsIReferrerInfo aReferrerInfo,
+      OriginAttributes aOriginAttributes);
 
     /**
      * Tells the parent to ungrab the pointer on the default display.
