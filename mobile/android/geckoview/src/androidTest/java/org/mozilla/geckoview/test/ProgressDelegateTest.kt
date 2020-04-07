@@ -18,6 +18,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -374,6 +375,18 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
                 assertThat("Old session state and new should match", sessionState, equalTo(oldState))
+            }
+        })
+    }
+
+    @NullDelegate(GeckoSession.HistoryDelegate::class)
+    @Test fun noHistoryDelegateOnSessionStateChange() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
             }
         })
     }
