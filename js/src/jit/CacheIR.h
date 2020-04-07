@@ -356,11 +356,13 @@ extern const uint32_t ArgLengths[];
   _(DoubleMulResult, Id, Id)                                                   \
   _(DoubleDivResult, Id, Id)                                                   \
   _(DoubleModResult, Id, Id)                                                   \
+  _(DoublePowResult, Id, Id)                                                   \
   _(Int32AddResult, Id, Id)                                                    \
   _(Int32SubResult, Id, Id)                                                    \
   _(Int32MulResult, Id, Id)                                                    \
   _(Int32DivResult, Id, Id)                                                    \
   _(Int32ModResult, Id, Id)                                                    \
+  _(Int32PowResult, Id, Id)                                                    \
   _(BigIntAddResult, Id, Id)                                                   \
   _(BigIntSubResult, Id, Id)                                                   \
   _(BigIntMulResult, Id, Id)                                                   \
@@ -1637,6 +1639,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhsId);
   }
 
+  void doublePowResult(NumberOperandId lhsId, NumberOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::DoublePowResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
   void int32AddResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
     writeOperandId(rhs);
@@ -1659,6 +1666,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void int32ModResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32ModResult, lhs);
+    writeOperandId(rhs);
+  }
+
+  void int32PowResult(Int32OperandId lhs, Int32OperandId rhs) {
+    writeOpWithOperandId(CacheOp::Int32PowResult, lhs);
     writeOperandId(rhs);
   }
 

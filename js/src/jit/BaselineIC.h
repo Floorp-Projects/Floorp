@@ -1751,7 +1751,7 @@ class ICCompare_Fallback : public ICFallbackStub {
 };
 
 // BinaryArith
-//      JSOp::Add, JSOp::Sub, JSOp::Mul, JOP_DIV, JSOp::Mod
+//      JSOp::Add, JSOp::Sub, JSOp::Mul, JSOp::Div, JSOp::Mod, JSOp::Pow,
 //      JSOp::BitAnd, JSOp::BitXor, JSOp::BitOr
 //      JSOp::Lsh, JSOp::Rsh, JSOp::Ursh
 
