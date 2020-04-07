@@ -385,7 +385,7 @@ class DebugGLData : public LinkedListElement<DebugGLData> {
   static bool WriteToStream(Packet& aPacket) {
     if (!gLayerScopeManager.GetSocketManager()) return true;
 
-    uint32_t size = aPacket.ByteSize();
+    size_t size = aPacket.ByteSizeLong();
     auto data = MakeUnique<uint8_t[]>(size);
     aPacket.SerializeToArray(data.get(), size);
     return gLayerScopeManager.GetSocketManager()->WriteAll(data.get(), size);
