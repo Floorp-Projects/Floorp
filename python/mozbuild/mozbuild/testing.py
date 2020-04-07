@@ -174,6 +174,12 @@ class SupportFilesConverter(object):
                         if field == 'support-files':
                             dest_path = mozpath.join(out_dir,
                                                      os.path.basename(pattern))
+                        # If it's not a support file, we ignore it.
+                        # This preserves old behavior so things like
+                        # head files doesn't get installed multiple
+                        # times.
+                        else:
+                            continue
                     info.installs.append((full, mozpath.normpath(dest_path)))
         return info
 
