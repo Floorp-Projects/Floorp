@@ -52,7 +52,7 @@ service('HistoryService', 'mozilla::IHistory',
 service('ThirdPartyUtil', 'mozIThirdPartyUtil',
         "@mozilla.org/thirdpartyutil;1")
 service('URIFixup', 'nsIURIFixup',
-        "@mozilla.org/docshell/uri-fixup;1")
+        "@mozilla.org/docshell/urifixup;1")
 service('Bits', 'nsIBits',
         "@mozilla.org/bits;1")
 # NB: this should also expose nsIXULAppInfo, as does Services.jsm.

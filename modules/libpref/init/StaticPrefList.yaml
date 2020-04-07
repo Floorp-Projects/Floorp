@@ -905,6 +905,17 @@
   value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
 
+# Fix up common scheme typos?
+- name: browser.fixup.typo.scheme
+  type: bool
+  value: true
+  mirror: always
+
+- name: browser.fixup.dns_first_for_single_words
+  type: bool
+  value: false
+  mirror: always
+
 # Render animations and videos as a solid color
 - name: browser.measurement.render_anims_and_video_solid
   type: RelaxedAtomicBool
@@ -4600,6 +4611,15 @@
 #else
   value: 2 * 1024 * 1024
 #endif
+  mirror: always
+
+#---------------------------------------------------------------------------
+# Prefs starting with "keyword."
+#---------------------------------------------------------------------------
+
+- name: keyword.enabled
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

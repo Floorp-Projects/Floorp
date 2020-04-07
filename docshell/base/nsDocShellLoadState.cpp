@@ -13,19 +13,14 @@
 #include "nsIChannel.h"
 #include "ReferrerInfo.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/StaticPtr.h"
 
 #include "mozilla/dom/PContent.h"
-
-// Global reference to the URI fixup service.
-static mozilla::StaticRefPtr<nsIURIFixup> sURIFixup;
 
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : mURI(aURI),
@@ -125,7 +120,7 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
 }
 
 nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
-    nsISupports* aConsumer, const nsAString& aURI,
+    nsISupports* aConsumer, nsIURIFixup* aURIFixup, const nsAString& aURI,
     const LoadURIOptions& aLoadURIOptions, nsDocShellLoadState** aResult) {
   uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
 
@@ -144,28 +139,10 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
-  // Just create a URI and see what happens...
-  rv = NS_NewURI(getter_AddRefs(uri), uriString);
-  bool fixup = true;
-  if (NS_SUCCEEDED(rv) && uri &&
-      (uri->SchemeIs("about") || uri->SchemeIs("chrome"))) {
-    // Avoid third party fixup as a performance optimization.
-    loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    fixup = false;
-  } else if (!sURIFixup) {
-    nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
-    if (uriFixup) {
-      sURIFixup = uriFixup;
-      ClearOnShutdown(&sURIFixup);
-    } else {
-      fixup = false;
-    }
-  }
-
   nsCOMPtr<nsIURIFixupInfo> fixupInfo;
-  if (fixup) {
+  if (aURIFixup) {
     uint32_t fixupFlags;
-    rv = sURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
+    rv = aURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
                                                    &fixupFlags);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -187,7 +164,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
     }
     nsCOMPtr<nsIInputStream> fixupStream;
-    rv = sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
+    rv = aURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                     getter_AddRefs(fixupStream),
                                     getter_AddRefs(fixupInfo));
 
@@ -203,14 +180,17 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       postData = fixupStream;
     }
 
-    if (fixupInfo &&
-        loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    if (loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
       nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
       if (serv) {
         serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
                               PromiseFlatString(aURI).get());
       }
     }
+  } else {
+    // No fixup service so just create a URI and see what happens...
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
 
   if (rv == NS_ERROR_MALFORMED_URI) {
