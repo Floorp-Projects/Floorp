@@ -29,9 +29,8 @@ const SUBMISSION_NO = new Map([
 
 add_task(async function setup() {
   await useTestEngines("data1");
-  if (!gModernConfig) {
-    installDistributionEngine();
-  }
+  installDistributionEngine();
+
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -81,9 +80,6 @@ add_task(async function test_submission_url_built_in() {
 });
 
 add_task(async function test_submission_url_distribution() {
-  if (gModernConfig) {
-    return;
-  }
   const engine = Services.search.getEngineByName("basic");
   await Services.search.setDefault(engine);
 
