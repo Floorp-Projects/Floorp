@@ -775,9 +775,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   //
   // You should call this after calling TabContext::SetTabContext().  We also
   // call this during Init().
-  //
-  // @param aIsPreallocated  true if this is called for Preallocated Tab.
-  void NotifyTabContextUpdated(bool aIsPreallocated);
+  void NotifyTabContextUpdated();
 
   // Update the frameType on our docshell.
   void UpdateFrameType();
