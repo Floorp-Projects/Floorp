@@ -197,10 +197,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       // disabled text in windows, menus, etc.
       aColor = NS_RGB(0xb1, 0xa5, 0x98);
       break;
+    case ColorID::MozCellhighlight:
+    case ColorID::MozHtmlCellhighlight:
     case ColorID::Highlight:
       // background of selected item
       aColor = NS_RGB(0xfa, 0xd1, 0x84);
       break;
+    case ColorID::MozCellhighlighttext:
+    case ColorID::MozHtmlCellhighlighttext:
     case ColorID::Highlighttext:
       // text of selected item
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);
@@ -285,14 +289,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::MozButtonhoverface:
       aColor = NS_RGB(0xf3, 0xf0, 0xed);
-      break;
-    case ColorID::MozCellhighlight:
-    case ColorID::MozHtmlCellhighlight:
-      aColor = mSystemColors.textColorHighlight;
-      break;
-    case ColorID::MozCellhighlighttext:
-    case ColorID::MozHtmlCellhighlighttext:
-      aColor = mSystemColors.textColorPrimaryInverse;
       break;
     case ColorID::MozMenuhover:
       aColor = BG_PRELIGHT_COLOR;
