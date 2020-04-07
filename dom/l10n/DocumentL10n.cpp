@@ -41,11 +41,12 @@ DocumentL10n::DocumentL10n(Document* aDocument)
   }
 }
 
-void DocumentL10n::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
-  DOMLocalization::Init(aResourceIds, aRv);
+void DocumentL10n::Init(Sequence<nsString>& aResourceIds, ErrorResult& aRv) {
+  DOMLocalization::Init(aResourceIds, mIsSync, {}, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+
   mReady = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
