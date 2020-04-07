@@ -183,7 +183,7 @@ def arm_target(compiler, all_flags):
     # have non-ASCII characters. Treat the output as bytearray.
     data = {'fpu': None}  # fpu may not get a value from the preprocessor.
     for line in result.splitlines():
-        if line.startswith(b'%'):
+        if line.startswith('%'):
             k, _, v = line.partition(' ')
             k = k.lstrip('%').lower()
             if k == 'arm_arch':

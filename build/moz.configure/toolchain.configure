@@ -594,7 +594,7 @@ def get_vc_paths(topsrcdir):
     for install in vswhere(['-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
         path = install['installationPath']
         tools_version = open(os.path.join(
-            path, r'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'), 'rb').read().strip()
+            path, r'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'), 'r').read().strip()
         tools_path = os.path.join(
             path, r'VC\Tools\MSVC', tools_version)
         yield (Version(install['installationVersion']), tools_path)
