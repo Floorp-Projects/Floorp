@@ -73,7 +73,7 @@ TEST(UrlClassifierFindFullHash, Request)
     rv =
         urlUtil->ConvertListNameToThreatType(listNames[i], &expectedThreatType);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
-    ASSERT_EQ(threatInfo.threat_types(i), expectedThreatType);
+    ASSERT_EQ(threatInfo.threat_types(i), (int)expectedThreatType);
   }
 
   // Compare prefixes.
