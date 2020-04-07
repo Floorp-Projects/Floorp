@@ -76,6 +76,9 @@ permalink: /changelog/
  * Added an optional URL view to the `TabViewHolder` to display the URL.
  * Will expose a new `layout` parameter which allows consumers to change the tabs tray layout.
 
+* **browser-session**
+  * ⚠️ **This is a breaking change**: `SessionManager.runWithSessionIdOrSelected` now returns the result from the `block` it executes. This is consistent with `runWithSession`.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
