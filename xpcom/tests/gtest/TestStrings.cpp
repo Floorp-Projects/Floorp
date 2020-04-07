@@ -41,6 +41,9 @@ namespace TestStrings {
 
 using mozilla::BlackBox;
 using mozilla::fallible;
+using mozilla::IsAscii;
+using mozilla::IsUtf8;
+using mozilla::MakeSpan;
 
 #define TestExample1                                                           \
   "Sed ut perspiciatis unde omnis iste natus error sit voluptatem "            \

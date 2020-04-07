@@ -20,11 +20,14 @@
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsISerialEventTarget.h"
+#include "nsThreadUtils.h"
 #include "prinrval.h"
 
 using mozilla::CondVar;
 using mozilla::MakeRefPtr;
 using mozilla::Mutex;
+using mozilla::MutexAutoLock;
+using mozilla::ThrottledEventQueue;
 using std::function;
 using std::move;
 using std::string;
