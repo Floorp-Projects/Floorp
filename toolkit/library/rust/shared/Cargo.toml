@@ -54,6 +54,12 @@ unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.12.1", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 
+# Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
+# version less than or equal to what we link to. This isn't a problem because we
+# tend to keep this up to date, but it needs to be taken into consideration when
+# changing this version.
+rusqlite = { version = "=0.22.0-beta.0", features = ["modern_sqlite", "in_gecko"] }
+
 fluent = { version = "0.11" , features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 

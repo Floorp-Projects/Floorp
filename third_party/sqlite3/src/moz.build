@@ -76,7 +76,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
 # Omit unused functions to save some library footprint.
 DEFINES['SQLITE_OMIT_DEPRECATED'] = True
 DEFINES['SQLITE_OMIT_BUILTIN_TEST'] = True
-DEFINES['SQLITE_OMIT_DECLTYPE'] = True
 
 # Try to use a MEMORY temp store when possible. That allows for better
 # performance and doesn't suffer from a full separate tmp partition.
