@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/XRSession.h"
 
+#include "mozilla/dom/XRSessionEvent.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "XRSystem.h"
 #include "XRRenderState.h"
@@ -413,7 +414,16 @@ void XRSession::ExitPresentInternal() {
   mDisplayPresentation = nullptr;
   if (!mEnded) {
     mEnded = true;
-    DispatchTrustedEvent(NS_LITERAL_STRING("end"));
+
+    XRSessionEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mSession = this;
+    RefPtr<XRSessionEvent> event = XRSessionEvent::Constructor(this,
+      NS_LITERAL_STRING("end"), init);
+
+    event->SetTrusted(true);
+    this->DispatchEvent(*event);
   }
 }
 
