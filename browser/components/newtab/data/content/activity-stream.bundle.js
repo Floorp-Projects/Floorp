@@ -114,10 +114,35 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const store = Object(content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_3__["initStore"])(common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_7__["reducers"]);
-new content_src_lib_detect_user_session_start__WEBPACK_IMPORTED_MODULE_2__["DetectUserSessionStart"](store).sendEventOrAddListener();
-store.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
-  type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].NEW_TAB_STATE_REQUEST
-}));
+new content_src_lib_detect_user_session_start__WEBPACK_IMPORTED_MODULE_2__["DetectUserSessionStart"](store).sendEventOrAddListener(); // If this document has already gone into the background by the time we've reached
+// here, we can deprioritize requesting the initial state until the event loop
+// frees up. If, however, the visibility changes, we then send the request.
+
+let didRequest = false;
+let requestIdleCallbackId = 0;
+
+function doRequest() {
+  if (!didRequest) {
+    if (requestIdleCallbackId) {
+      cancelIdleCallback(requestIdleCallbackId);
+    }
+
+    didRequest = true;
+    store.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
+      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].NEW_TAB_STATE_REQUEST
+    }));
+  }
+}
+
+if (document.hidden) {
+  requestIdleCallbackId = requestIdleCallback(doRequest);
+  addEventListener("visibilitychange", doRequest, {
+    once: true
+  });
+} else {
+  doRequest();
+}
+
 react_dom__WEBPACK_IMPORTED_MODULE_6___default.a.hydrate(react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(react_redux__WEBPACK_IMPORTED_MODULE_4__["Provider"], {
   store: store
 }, react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(content_src_components_Base_Base__WEBPACK_IMPORTED_MODULE_1__["Base"], {

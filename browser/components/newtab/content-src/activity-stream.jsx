@@ -15,7 +15,27 @@ const store = initStore(reducers);
 
 new DetectUserSessionStart(store).sendEventOrAddListener();
 
-store.dispatch(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
+// If this document has already gone into the background by the time we've reached
+// here, we can deprioritize requesting the initial state until the event loop
+// frees up. If, however, the visibility changes, we then send the request.
+let didRequest = false;
+let requestIdleCallbackId = 0;
+function doRequest() {
+  if (!didRequest) {
+    if (requestIdleCallbackId) {
+      cancelIdleCallback(requestIdleCallbackId);
+    }
+    didRequest = true;
+    store.dispatch(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
+  }
+}
+
+if (document.hidden) {
+  requestIdleCallbackId = requestIdleCallback(doRequest);
+  addEventListener("visibilitychange", doRequest, { once: true });
+} else {
+  doRequest();
+}
 
 ReactDOM.hydrate(
   <Provider store={store}>
