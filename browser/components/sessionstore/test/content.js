@@ -110,12 +110,6 @@ addMessageListener("ss-test:setAuthorStyleDisabled", function(msg) {
   sendSyncMessage("ss-test:setAuthorStyleDisabled");
 });
 
-addMessageListener("ss-test:setUsePrivateBrowsing", function(msg) {
-  let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
-  loadContext.usePrivateBrowsing = msg.data;
-  sendAsyncMessage("ss-test:setUsePrivateBrowsing");
-});
-
 addMessageListener("ss-test:getScrollPosition", function(msg) {
   let frame = content;
   if (msg.data.hasOwnProperty("frame")) {

@@ -1,5 +1,5 @@
 function destroy_transient_docshell() {
-  let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
+  let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
   windowlessBrowser.docShell.setOriginAttributes({ privateBrowsingId: 1 });
   windowlessBrowser.close();
   do_test_pending();
