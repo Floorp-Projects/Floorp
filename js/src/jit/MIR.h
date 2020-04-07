@@ -5407,20 +5407,25 @@ class MSub : public MBinaryArithInstruction {
     setResultType(MIRType::Value);
   }
 
-  MSub(MDefinition* left, MDefinition* right, MIRType type,
-       bool mustPreserveNaN = false)
+  MSub(MDefinition* left, MDefinition* right, MIRType type)
       : MSub(left, right) {
     specialization_ = type;
     setResultType(type);
-    setMustPreserveNaN(mustPreserveNaN);
-    if (type == MIRType::Int32) {
-      setTruncateKind(Truncate);
-    }
   }
 
  public:
   INSTRUCTION_HEADER(Sub)
   TRIVIAL_NEW_WRAPPERS
+
+  static MSub* NewWasm(TempAllocator& alloc, MDefinition* left,
+                       MDefinition* right, MIRType type, bool mustPreserveNaN) {
+    auto* ret = new (alloc) MSub(left, right, type);
+    ret->setMustPreserveNaN(mustPreserveNaN);
+    if (type == MIRType::Int32) {
+      ret->setTruncateKind(Truncate);
+    }
+    return ret;
+  }
 
   double getIdentity() override { return 0; }
 
