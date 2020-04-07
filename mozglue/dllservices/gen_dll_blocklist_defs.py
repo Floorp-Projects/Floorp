@@ -61,7 +61,6 @@ USE_TIMESTAMP = 'USE_TIMESTAMP'
 CHILD_PROCESSES_ONLY = 'CHILD_PROCESSES_ONLY'
 BROWSER_PROCESS_ONLY = 'BROWSER_PROCESS_ONLY'
 SUBSTITUTE_LSP_PASSTHROUGH = 'SUBSTITUTE_LSP_PASSTHROUGH'
-REDIRECT_TO_NOOP_ENTRYPOINT = 'REDIRECT_TO_NOOP_ENTRYPOINT'
 
 # Only these flags are available in the input script
 INPUT_ONLY_FLAGS = {
@@ -566,27 +565,6 @@ class A11yBlocklistEntry(DllBlocklistEntry):
         super(A11yBlocklistEntry, self).__init__(name, ver, flags, **kwargs)
 
 
-class RedirectToNoOpEntryPoint(DllBlocklistEntry):
-    """ Represents a blocklist entry to hook the entrypoint into a function
-    just returning TRUE to keep a module alive and harmless.
-    This entry is intended to block a DLL which is injected by IAT patching
-    which is planted by a kernel callback routine for LoadImage because
-    blocking such a DLL makes a process fail to launch.
-    """
-
-    def __init__(self, name, ver, flags=(), **kwargs):
-        """These arguments are identical to DllBlocklistEntry.__init__
-        """
-
-        super(RedirectToNoOpEntryPoint, self).__init__(name, ver, flags, **kwargs)
-
-    def get_flags_list(self):
-        flags = super(RedirectToNoOpEntryPoint, self).get_flags_list()
-        # RedirectToNoOpEntryPoint items always include the following flag
-        flags.add(REDIRECT_TO_NOOP_ENTRYPOINT)
-        return flags
-
-
 class LspBlocklistEntry(DllBlocklistEntry):
     """ Represents a blocklist entry for a WinSock Layered Service Provider (LSP).
     """
@@ -683,7 +661,6 @@ def gen_blocklists(first_fd, defs_filename):
         'A11yBlocklistEntry': A11yBlocklistEntry,
         'DllBlocklistEntry': DllBlocklistEntry,
         'LspBlocklistEntry': LspBlocklistEntry,
-        'RedirectToNoOpEntryPoint': RedirectToNoOpEntryPoint,
         # Add the special version types
         'ALL_VERSIONS': Version.ALL_VERSIONS,
         'UNVERSIONED': Version.UNVERSIONED,

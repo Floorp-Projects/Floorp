@@ -89,9 +89,6 @@ VOID NTAPI RtlAcquireSRWLockShared(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockShared(PSRWLOCK aLock);
 
-ULONG NTAPI RtlNtStatusToDosError(NTSTATUS aStatus);
-VOID NTAPI RtlSetLastWin32Error(DWORD aError);
-
 NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
                                    PVOID aBuffer, SIZE_T aNumBytesToRead,
                                    PSIZE_T aNumBytesRead);
@@ -548,7 +545,7 @@ class MOZ_RAII PEHeaders final {
                      IMAGE_DIRECTORY_ENTRY_IMPORT);
   }
 
-  PIMAGE_RESOURCE_DIRECTORY GetResourceTable() const {
+  PIMAGE_RESOURCE_DIRECTORY GetResourceTable() {
     return GetImageDirectoryEntry<PIMAGE_RESOURCE_DIRECTORY>(
         IMAGE_DIRECTORY_ENTRY_RESOURCE);
   }
@@ -578,7 +575,7 @@ class MOZ_RAII PEHeaders final {
     return dirEntry;
   }
 
-  bool GetVersionInfo(uint64_t& aOutVersion) const {
+  bool GetVersionInfo(uint64_t& aOutVersion) {
     // RT_VERSION == 16
     // Version resources require an id of 1
     auto root = FindResourceLeaf<VS_VERSIONINFO_HEADER*>(16, 1);
@@ -596,7 +593,7 @@ class MOZ_RAII PEHeaders final {
     return true;
   }
 
-  bool GetTimeStamp(DWORD& aResult) const {
+  bool GetTimeStamp(DWORD& aResult) {
     if (!(*this)) {
       return false;
     }
@@ -670,7 +667,7 @@ class MOZ_RAII PEHeaders final {
    * If aLangId == 0, we just resolve the first entry regardless of language.
    */
   template <typename T>
-  T FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0) const {
+  T FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0) {
     PIMAGE_RESOURCE_DIRECTORY topLevel = GetResourceTable();
     if (!topLevel) {
       return nullptr;
@@ -764,17 +761,11 @@ class MOZ_RAII PEHeaders final {
 
   void SetImportDirectoryTampered() { mIsImportDirectoryTampered = true; }
 
-  FARPROC GetEntryPoint() const {
-    // Use the unchecked version because the entrypoint may be tampered.
-    return RVAToPtrUnchecked<FARPROC>(
-        mPeHeader->OptionalHeader.AddressOfEntryPoint);
-  }
-
  private:
   enum class BoundsCheckPolicy { Default, Skip };
 
   template <typename T, BoundsCheckPolicy Policy = BoundsCheckPolicy::Default>
-  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) const {
+  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) {
     PIMAGE_DATA_DIRECTORY dirEntry = GetImageDirectoryEntryPtr(aDirectoryIndex);
     if (!dirEntry) {
       return nullptr;
@@ -803,7 +794,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) const {
+  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. Since this function
     // searches by ID, we need to skip past any named entries before iterating.
@@ -820,7 +811,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel) const {
+  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel) {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. We just return the first
     // entry, regardless of whether it is indexed by name or by id.
@@ -835,7 +826,7 @@ class MOZ_RAII PEHeaders final {
     return dirEnt;
   }
 
-  VS_FIXEDFILEINFO* GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo) const {
+  VS_FIXEDFILEINFO* GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo) {
     WORD length = aVerInfo->wLength;
     if (length < sizeof(VS_VERSIONINFO_HEADER)) {
       return nullptr;
@@ -1108,8 +1099,6 @@ inline DWORD RtlGetCurrentThreadId() {
                             0xFFFFFFFFUL);
 }
 
-const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
-
 inline LauncherResult<DWORD> GetParentProcessId() {
   struct PROCESS_BASIC_INFORMATION {
     NTSTATUS ExitStatus;
@@ -1120,6 +1109,7 @@ inline LauncherResult<DWORD> GetParentProcessId() {
     ULONG_PTR InheritedFromUniqueProcessId;
   };
 
+  const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
   ULONG returnLength;
   PROCESS_BASIC_INFORMATION pbi = {};
   NTSTATUS status =
@@ -1130,30 +1120,6 @@ inline LauncherResult<DWORD> GetParentProcessId() {
   }
 
   return static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF);
-}
-
-inline SIZE_T WINAPI VirtualQueryEx(HANDLE aProcess, LPCVOID aAddress,
-                                    PMEMORY_BASIC_INFORMATION aMemInfo,
-                                    SIZE_T aMemInfoLen) {
-#if defined(MOZILLA_INTERNAL_API)
-  return ::VirtualQueryEx(aProcess, aAddress, aMemInfo, aMemInfoLen);
-#else
-  SIZE_T returnedLength;
-  NTSTATUS status = ::NtQueryVirtualMemory(
-      aProcess, const_cast<PVOID>(aAddress), MemoryBasicInformation, aMemInfo,
-      aMemInfoLen, &returnedLength);
-  if (!NT_SUCCESS(status)) {
-    ::RtlSetLastWin32Error(::RtlNtStatusToDosError(status));
-    returnedLength = 0;
-  }
-  return returnedLength;
-#endif  // defined(MOZILLA_INTERNAL_API)
-}
-
-inline SIZE_T WINAPI VirtualQuery(LPCVOID aAddress,
-                                  PMEMORY_BASIC_INFORMATION aMemInfo,
-                                  SIZE_T aMemInfoLen) {
-  return nt::VirtualQueryEx(kCurrentProcess, aAddress, aMemInfo, aMemInfoLen);
 }
 
 struct DataDirectoryEntry : public _IMAGE_DATA_DIRECTORY {
@@ -1242,34 +1208,6 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
 }
 
 #if !defined(MOZILLA_INTERNAL_API)
-
-inline LauncherResult<HMODULE> GetModuleHandleFromLeafName(
-    const UNICODE_STRING& aTarget) {
-  auto maybePeb = nt::GetProcessPebPtr(kCurrentProcess);
-  if (maybePeb.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(maybePeb);
-  }
-
-  const PPEB peb = reinterpret_cast<PPEB>(maybePeb.unwrap());
-  if (!peb->Ldr) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
-  }
-
-  auto firstItem = &peb->Ldr->InMemoryOrderModuleList;
-  for (auto p = firstItem->Flink; p != firstItem; p = p->Flink) {
-    const auto currentTableEntry =
-        CONTAINING_RECORD(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
-
-    UNICODE_STRING leafName;
-    nt::GetLeafName(&leafName, &currentTableEntry->FullDllName);
-
-    if (::RtlCompareUnicodeString(&leafName, &aTarget, TRUE) == 0) {
-      return reinterpret_cast<HMODULE>(currentTableEntry->DllBase);
-    }
-  }
-
-  return LAUNCHER_ERROR_FROM_WIN32(ERROR_MOD_NOT_FOUND);
-}
 
 class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS SRWLock final {
  public:

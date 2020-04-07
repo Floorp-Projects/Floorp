@@ -15,8 +15,7 @@
 # DLL block.
 #
 # The currently supported blocklist entry types are:
-# DllBlocklistEntry, A11yBlocklistEntry, LspBlocklistEntry,
-# RedirectToNoOpEntryPoint
+# DllBlocklistEntry, A11yBlocklistEntry, LspBlocklistEntry
 # (See gen_dll_blocklist_defs.py for their documentation.)
 #
 # Example:
@@ -227,9 +226,9 @@ ALL_PROCESSES += [
     DllBlocklistEntry("pdzipmenu64.dll", UNVERSIONED),
     DllBlocklistEntry("pdzipmenu32.dll", UNVERSIONED),
 
-    # Old versions of Digital Guardian, bug 1318858 and bug 1603974
-    RedirectToNoOpEntryPoint("dgapi.dll", (7, 5, 0, 0xffff)),
-    RedirectToNoOpEntryPoint("dgapi64.dll", (7, 5, 0, 0xffff)),
+    # Old versions of Digital Guardian, bug 1318858
+    DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
+    DllBlocklistEntry("dgapi64.dll", (7, 5, 0, 0xffff)),
 
     # Old versions of COMODO Internet Security, bug 1608048
     DllBlocklistEntry("IseGuard32.dll", (1, 6, 13835, 184)),
@@ -244,8 +243,6 @@ ALL_PROCESSES_TESTS += [
     DllBlocklistEntry("testdllblocklist_matchbyname.dll", ALL_VERSIONS),
     DllBlocklistEntry("testdllblocklist_matchbyversion.dll", (5, 5, 5, 5)),
     DllBlocklistEntry("testdllblocklist_allowbyversion.dll", (5, 5, 5, 5)),
-    RedirectToNoOpEntryPoint("testdllblocklist_noopentrypoint.dll",
-                             (5, 5, 5, 5)),
 ]
 
 BROWSER_PROCESS += [
