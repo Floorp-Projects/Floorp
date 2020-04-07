@@ -232,12 +232,19 @@ function waitForDispatch(store, type) {
  */
 async function selectThisFirefoxPage(doc, store) {
   info("Select This Firefox page");
+
   const onRequestSuccess = waitForRequestsSuccess(store);
   doc.location.hash = "#/runtime/this-firefox";
   info("Wait for requests to be complete");
   await onRequestSuccess;
+
   info("Wait for runtime page to be rendered");
   await waitUntil(() => doc.querySelector(".qa-runtime-page"));
+
+  // Navigating to this-firefox will trigger a title change for the
+  // about:debugging tab. This title change _might_ trigger a tablist update.
+  // If it does, we should make sure to wait for pending tab requests.
+  await waitForRequestsToSettle(store);
 }
 
 /**
