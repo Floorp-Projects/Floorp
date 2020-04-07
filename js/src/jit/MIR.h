@@ -4779,11 +4779,14 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   bool mustPreserveNaN_;
 
  public:
-  MBinaryArithInstruction(Opcode op, MDefinition* left, MDefinition* right)
+  MBinaryArithInstruction(Opcode op, MDefinition* left, MDefinition* right,
+                          MIRType type)
       : MBinaryInstruction(op, left, right),
         implicitTruncate_(NoTruncate),
         mustPreserveNaN_(false) {
-    specialization_ = MIRType::None;
+    MOZ_ASSERT(IsNumberType(type));
+    specialization_ = type;
+    setResultType(type);
     setMovable();
   }
 
@@ -4804,12 +4807,9 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   virtual double getIdentity() = 0;
 
   void setSpecialization(MIRType type) {
+    MOZ_ASSERT(IsNumberType(type));
     specialization_ = type;
     setResultType(type);
-  }
-  void setInt32Specialization() {
-    specialization_ = MIRType::Int32;
-    setResultType(MIRType::Int32);
   }
 
   virtual void trySpecializeFloat32(TempAllocator& alloc) override;
@@ -5353,10 +5353,7 @@ class MMathFunction : public MUnaryInstruction,
 
 class MAdd : public MBinaryArithInstruction {
   MAdd(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryArithInstruction(classOpcode, left, right) {
-    specialization_ = type;
-    setResultType(type);
-  }
+      : MBinaryArithInstruction(classOpcode, left, right, type) {}
 
   MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
       : MAdd(left, right, MIRType::Int32) {
@@ -5399,10 +5396,7 @@ class MAdd : public MBinaryArithInstruction {
 
 class MSub : public MBinaryArithInstruction {
   MSub(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryArithInstruction(classOpcode, left, right) {
-    specialization_ = type;
-    setResultType(type);
-  }
+      : MBinaryArithInstruction(classOpcode, left, right, type) {}
 
  public:
   INSTRUCTION_HEADER(Sub)
@@ -5449,7 +5443,7 @@ class MMul : public MBinaryArithInstruction {
   Mode mode_;
 
   MMul(MDefinition* left, MDefinition* right, MIRType type, Mode mode)
-      : MBinaryArithInstruction(classOpcode, left, right),
+      : MBinaryArithInstruction(classOpcode, left, right, type),
         canBeNegativeZero_(true),
         mode_(mode) {
     if (mode == Integer) {
@@ -5460,9 +5454,6 @@ class MMul : public MBinaryArithInstruction {
       setCommutative();
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
-
-    specialization_ = type;
-    setResultType(type);
   }
 
  public:
@@ -5549,16 +5540,13 @@ class MDiv : public MBinaryArithInstruction {
   wasm::BytecodeOffset bytecodeOffset_;
 
   MDiv(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryArithInstruction(classOpcode, left, right),
+      : MBinaryArithInstruction(classOpcode, left, right, type),
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
         canBeNegativeDividend_(true),
         unsigned_(false),
-        trapOnError_(false) {
-    specialization_ = type;
-    setResultType(type);
-  }
+        trapOnError_(false) {}
 
  public:
   INSTRUCTION_HEADER(Div)
@@ -5672,15 +5660,12 @@ class MMod : public MBinaryArithInstruction {
   wasm::BytecodeOffset bytecodeOffset_;
 
   MMod(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryArithInstruction(classOpcode, left, right),
+      : MBinaryArithInstruction(classOpcode, left, right, type),
         unsigned_(false),
         canBeNegativeDividend_(true),
         canBePowerOfTwoDivisor_(true),
         canBeDivideByZero_(true),
-        trapOnError_(false) {
-    specialization_ = type;
-    setResultType(type);
-  }
+        trapOnError_(false) {}
 
  public:
   INSTRUCTION_HEADER(Mod)
