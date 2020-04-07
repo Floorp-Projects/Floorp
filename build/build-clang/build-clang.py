@@ -597,8 +597,8 @@ if __name__ == "__main__":
     stages = 3
     if "stages" in config:
         stages = int(config["stages"])
-        if stages not in (1, 2, 3):
-            raise ValueError("We only know how to build 1, 2, or 3 stages")
+        if stages not in (1, 2, 3, 4):
+            raise ValueError("We only know how to build 1, 2, 3, or 4 stages.")
     build_type = "Release"
     if "build_type" in config:
         build_type = config["build_type"]
@@ -790,7 +790,7 @@ if __name__ == "__main__":
 
     runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
 
-    if stages > 1:
+    if stages >= 2:
         stage2_dir = build_dir + '/stage2'
         stage2_inst_dir = stage2_dir + '/' + package_name
         final_stage_dir = stage2_dir
@@ -810,7 +810,7 @@ if __name__ == "__main__":
             is_final_stage=(stages == 2), android_targets=android_targets,
             extra_targets=extra_targets)
 
-    if stages > 2:
+    if stages >= 3:
         stage3_dir = build_dir + '/stage3'
         stage3_inst_dir = stage3_dir + '/' + package_name
         final_stage_dir = stage3_dir
@@ -828,6 +828,25 @@ if __name__ == "__main__":
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm,
             compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
             (stages == 3), extra_targets=extra_targets)
+
+    if stages >= 4:
+        stage4_dir = build_dir + '/stage4'
+        stage4_inst_dir = stage4_dir + '/' + package_name
+        final_stage_dir = stage4_dir
+        final_inst_dir = stage4_inst_dir
+        build_one_stage(
+            [stage3_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_cflags2,
+            [stage3_inst_dir + "/bin/%s%s" %
+                (cxx_name, exe_ext)] + extra_cxxflags2,
+            [stage3_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_asmflags,
+            [ld] + extra_ldflags,
+            ar, ranlib, libtool,
+            llvm_source_dir, stage4_dir, package_name, build_libcxx, osx_cross_compile,
+            build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm,
+            compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
+            (stages == 4), extra_targets=extra_targets)
 
     if build_clang_tidy:
         prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, package_name),
