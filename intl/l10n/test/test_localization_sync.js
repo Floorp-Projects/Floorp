@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_calling() {
@@ -23,13 +22,13 @@ add_task(function test_methods_calling() {
   const source = new FileSource("test", ["de", "en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  function* generateMessagesSync(resIds) {
+  function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["de", "en-US"], resIds);
   }
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], true, null, generateMessagesSync);
+  ], true, { generateBundlesSync });
 
   let values = l10n.formatValuesSync([{id: "key"}, {id: "key2"}]);
 
@@ -69,13 +68,13 @@ key = { PLATFORM() ->
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  function* generateMessagesSync(resIds) {
+  function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
   }
 
   const l10n = new Localization([
     "/test.ftl",
-  ], true, null, generateMessagesSync);
+  ], true, { generateBundlesSync });
 
   let values = l10n.formatValuesSync([{id: "key"}]);
 
@@ -104,11 +103,11 @@ add_task(function test_add_remove_resourceIds() {
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  function* generateMessagesSync(resIds) {
+  function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
   }
 
-  const l10n = new Localization(["/browser/menu.ftl"], true, null, generateMessagesSync);
+  const l10n = new Localization(["/browser/menu.ftl"], true, { generateBundlesSync });
 
   let values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
