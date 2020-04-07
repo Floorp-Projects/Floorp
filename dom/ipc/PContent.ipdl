@@ -1266,7 +1266,7 @@ parent:
      * until it has mapped the font-list memory.
      */
     sync GetFontListShmBlock(uint32_t aGeneration, uint32_t aIndex)
-        returns (Handle aHandle);
+        returns (SharedMemoryHandle aHandle);
 
     /**
      * Ask the parent to initialize a given font family, so that face metadata
