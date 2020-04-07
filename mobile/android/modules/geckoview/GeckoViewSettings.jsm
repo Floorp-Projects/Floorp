@@ -73,6 +73,7 @@ class GeckoViewSettings extends GeckoViewModule {
     this.userAgentMode = settings.userAgentMode;
     this.userAgentOverride = settings.userAgentOverride;
     this.sessionContextId = settings.sessionContextId;
+    this.suspendMediaWhenInactive = settings.suspendMediaWhenInactive;
   }
 
   get userAgent() {
@@ -105,6 +106,14 @@ class GeckoViewSettings extends GeckoViewModule {
 
   set userAgentOverride(aUserAgent) {
     this._userAgentOverride = aUserAgent;
+  }
+
+  get suspendMediaWhenInactive() {
+    return this.browser.suspendMediaWhenInactive;
+  }
+
+  set suspendMediaWhenInactive(aSuspendMediaWhenInactive) {
+    this.browser.suspendMediaWhenInactive = aSuspendMediaWhenInactive;
   }
 
   get displayMode() {
