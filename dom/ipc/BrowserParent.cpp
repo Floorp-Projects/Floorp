@@ -476,17 +476,15 @@ ParentShowInfo BrowserParent::GetShowInfo() {
         mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
         mFrameElement->HasAttr(kNameSpaceID_None,
                                nsGkAtoms::mozallowfullscreen);
-    bool isPrivate = mFrameElement->HasAttr(kNameSpaceID_None,
-                                            nsGkAtoms::mozprivatebrowsing);
     bool isTransparent =
         nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
         mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
-    return ParentShowInfo(name, allowFullscreen, isPrivate, false,
-                          isTransparent, mDPI, mRounding, mDefaultScale.scale);
+    return ParentShowInfo(name, allowFullscreen, false, isTransparent, mDPI,
+                          mRounding, mDefaultScale.scale);
   }
 
-  return ParentShowInfo(EmptyString(), false, false, false, false, mDPI,
-                        mRounding, mDefaultScale.scale);
+  return ParentShowInfo(EmptyString(), false, false, false, mDPI, mRounding,
+                        mDefaultScale.scale);
 }
 
 already_AddRefed<nsIPrincipal> BrowserParent::GetContentPrincipal() const {
