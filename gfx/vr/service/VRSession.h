@@ -84,6 +84,7 @@ class VRSession {
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                            const VRLayerTextureHandle& aTexture) = 0;
 #endif
+  void SetControllerSelectionAndSqueezeFrameId(VRControllerState& controllerState, uint64_t aFrameId);
 };
 
 }  // namespace gfx
