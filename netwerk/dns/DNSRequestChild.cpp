@@ -41,7 +41,6 @@ class ChildDNSRecord : public nsIDNSRecord {
   nsCString mCanonicalName;
   nsTArray<NetAddr> mAddresses;
   uint32_t mCurrent;  // addr iterator
-  uint32_t mLength;   // number of addrs
   uint16_t mFlags;
 };
 
@@ -53,11 +52,7 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
 
   // A shame IPDL gives us no way to grab ownership of array: so copy it.
   const nsTArray<NetAddr>& addrs = reply.addrs();
-  uint32_t i = 0;
-  mLength = addrs.Length();
-  for (; i < mLength; i++) {
-    mAddresses.AppendElement(addrs[i]);
-  }
+  mAddresses = addrs;
 }
 
 //-----------------------------------------------------------------------------
@@ -94,7 +89,7 @@ ChildDNSRecord::GetTrrFetchDurationNetworkOnly(double* aTime) {
 
 NS_IMETHODIMP
 ChildDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
-  if (mCurrent >= mLength) {
+  if (mCurrent >= mAddresses.Length()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -145,7 +140,7 @@ ChildDNSRecord::GetNextAddrAsString(nsACString& result) {
 
 NS_IMETHODIMP
 ChildDNSRecord::HasMore(bool* result) {
-  *result = mCurrent < mLength;
+  *result = mCurrent < mAddresses.Length();
   return NS_OK;
 }
 
