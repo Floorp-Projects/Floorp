@@ -231,7 +231,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                     compiler_rt_source_dir=None, runtimes_source_link=None,
                     compiler_rt_source_link=None,
                     is_final_stage=False, android_targets=None,
-                    extra_targets=None):
+                    extra_targets=None, pgo_phase=None):
     if is_final_stage and (android_targets or extra_targets):
         # Linking compiler-rt under "runtimes" activates LLVM_RUNTIME_TARGETS
         # and related arguments.
@@ -308,6 +308,16 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                 "-DDARWIN_osx_ARCHS=x86_64",
                 "-DDARWIN_osx_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                 "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin"
+            ]
+        if pgo_phase == "gen":
+            # Per https://releases.llvm.org/10.0.0/docs/HowToBuildWithPGO.html
+            cmake_args += [
+                "-DLLVM_BUILD_INSTRUMENTED=IR",
+                "-DLLVM_BUILD_RUNTIME=No",
+            ]
+        if pgo_phase == "use":
+            cmake_args += [
+                "-DLLVM_PROFDATA_FILE=%s/merged.profdata" % stage_dir,
             ]
         return cmake_args
 
@@ -599,6 +609,13 @@ if __name__ == "__main__":
         stages = int(config["stages"])
         if stages not in (1, 2, 3, 4):
             raise ValueError("We only know how to build 1, 2, 3, or 4 stages.")
+    pgo = False
+    if "pgo" in config:
+        pgo = config["pgo"]
+        if pgo not in (True, False):
+            raise ValueError("Only boolean values are accepted for pgo.")
+        if pgo and stages != 4:
+            raise ValueError("PGO is only supported in 4-stage builds.")
     build_type = "Release"
     if "build_type" in config:
         build_type = config["build_type"]
@@ -795,6 +812,7 @@ if __name__ == "__main__":
         stage2_inst_dir = stage2_dir + '/' + package_name
         final_stage_dir = stage2_dir
         final_inst_dir = stage2_inst_dir
+        pgo_phase = "gen" if pgo else None
         build_one_stage(
             [stage1_inst_dir + "/bin/%s%s" %
                 (cc_name, exe_ext)] + extra_cflags2,
@@ -808,7 +826,7 @@ if __name__ == "__main__":
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm,
             compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
             is_final_stage=(stages == 2), android_targets=android_targets,
-            extra_targets=extra_targets)
+            extra_targets=extra_targets, pgo_phase=pgo_phase)
 
     if stages >= 3:
         stage3_dir = build_dir + '/stage3'
@@ -834,6 +852,16 @@ if __name__ == "__main__":
         stage4_inst_dir = stage4_dir + '/' + package_name
         final_stage_dir = stage4_dir
         final_inst_dir = stage4_inst_dir
+        pgo_phase = None
+        if pgo:
+            pgo_phase = "use"
+            llvm_profdata = stage3_inst_dir + "/bin/llvm-profdata%s" % exe_ext
+            merge_cmd = [llvm_profdata, 'merge', '-o', 'merged.profdata']
+            profraw_files = glob.glob(os.path.join(stage2_dir, 'build',
+                                                   'profiles', '*.profraw'))
+            if not os.path.exists(stage4_dir):
+                os.mkdir(stage4_dir)
+            run_in(stage4_dir, merge_cmd + profraw_files)
         build_one_stage(
             [stage3_inst_dir + "/bin/%s%s" %
                 (cc_name, exe_ext)] + extra_cflags2,
@@ -846,7 +874,7 @@ if __name__ == "__main__":
             llvm_source_dir, stage4_dir, package_name, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm,
             compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
-            (stages == 4), extra_targets=extra_targets)
+            (stages == 4), extra_targets=extra_targets, pgo_phase=pgo_phase)
 
     if build_clang_tidy:
         prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, package_name),

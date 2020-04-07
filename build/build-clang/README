@@ -44,6 +44,7 @@ build-clang.py accepts a JSON config format with the following fields:
 * build_clang_tidy: Whether to build clang-tidy with the Mozilla checks imported.  The default is false.
 * osx_cross_compile: Whether to invoke CMake for OS X cross compile builds.
 * assertions: Whether to enable LLVM assertions.  The default is false.
+* pgo: Whether to build with PGO (requires stages == 4).  The default is false.
 
 The revisions are defined in taskcluster/ci/fetch/toolchains.yml. They are usually commit sha1s corresponding to upstream tags.
 
