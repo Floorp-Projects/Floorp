@@ -11,9 +11,13 @@ webidl BrowsingContext;
 %{ C++
 namespace mozilla {
 class OriginAttributes;
+namespace dom {
+class BrowserParent;
+} // namespace dom
 } // namespace mozilla
 %}
 [ref] native const_OriginAttributes(const mozilla::OriginAttributes);
+[ptr] native BrowserParent(mozilla::dom::BrowserParent);
 
 /**
  * nsIOpenWindowInfo is a helper type which contains details used when opening
@@ -34,8 +38,9 @@ interface nsIOpenWindowInfo : nsISupports {
   [infallible]
   readonly attribute boolean forceNoOpener;
 
-  [infallible]
-  readonly attribute unsigned long long nextRemoteBrowserId;
+  /** BrowserParent instance to use in the new window */
+  [notxpcom, nostdcall]
+  BrowserParent getNextRemoteBrowser();
 
   /** Origin Attributes for the to-be-created toplevel BrowsingContext */
   [implicit_jscontext, binaryname(ScriptableOriginAttributes)]

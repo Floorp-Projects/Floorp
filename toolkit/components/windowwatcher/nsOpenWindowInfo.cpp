@@ -7,6 +7,7 @@
 #include "nsOpenWindowInfo.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/BrowserParent.h"
 
 NS_IMPL_ISUPPORTS(nsOpenWindowInfo, nsIOpenWindowInfo)
 
@@ -37,8 +38,6 @@ const OriginAttributes& nsOpenWindowInfo::GetOriginAttributes() {
   return mOriginAttributes;
 }
 
-NS_IMETHODIMP nsOpenWindowInfo::GetNextRemoteBrowserId(
-    uint64_t* aNextRemoteBrowserId) {
-  *aNextRemoteBrowserId = mNextRemoteBrowserId;
-  return NS_OK;
+BrowserParent* nsOpenWindowInfo::GetNextRemoteBrowser() {
+  return mNextRemoteBrowser;
 }
