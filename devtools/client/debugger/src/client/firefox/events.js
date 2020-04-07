@@ -101,7 +101,8 @@ async function paused(
     return;
   }
 
-  if (why.type == "alreadyPaused") {
+  // Ignore attached events because they are not useful to the user.
+  if (why.type == "alreadyPaused" || why.type == "attached") {
     return;
   }
 
