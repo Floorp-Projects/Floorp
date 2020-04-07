@@ -59,8 +59,6 @@ namespace jit {
   _(CacheFlush)                            \
   /* Output a list of MIR expressions */   \
   _(MIRExpressions)                        \
-  /* Print control flow graph */           \
-  _(CFG)                                   \
   /* Spew Tracelogger summary stats */     \
   _(ScriptStats)                           \
                                            \
@@ -100,7 +98,12 @@ namespace jit {
   /* Debug info about snapshots */         \
   _(IonSnapshots)                          \
   /* Generated inline cache stubs */       \
-  _(IonIC)
+  _(IonIC)                                 \
+                                           \
+  /* WARP SPEW */                          \
+                                           \
+  /* Generated WarpSnapshots */            \
+  _(WarpSnapshots)
 
 enum JitSpewChannel {
 #define JITSPEW_CHANNEL(name) JitSpew_##name,

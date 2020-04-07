@@ -380,8 +380,8 @@ static void PrintHelpAndExit(int status = 0) {
       "(Note: call enableGeckoProfiling() in your script to enable it).\n"
       "  trackopts-ext Encoding information about optimization tracking\n"
       "  dump-mir-expr Dump the MIR expressions\n"
-      "  cfg           Control flow graph generation\n"
       "  scriptstats   Tracelogger summary stats\n"
+      "  warp-snapshots WarpSnapshots created by WarpOracle\n"
       "  all           Everything\n"
       "\n"
       "  bl-aborts     Baseline compiler abort messages\n"
@@ -476,10 +476,10 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_Profiling);
     } else if (IsFlag(found, "dump-mir-expr")) {
       EnableChannel(JitSpew_MIRExpressions);
-    } else if (IsFlag(found, "cfg")) {
-      EnableChannel(JitSpew_CFG);
     } else if (IsFlag(found, "scriptstats")) {
       EnableChannel(JitSpew_ScriptStats);
+    } else if (IsFlag(found, "warp-snapshots")) {
+      EnableChannel(JitSpew_WarpSnapshots);
     } else if (IsFlag(found, "all")) {
       LoggingBits = uint64_t(-1);
     } else if (IsFlag(found, "bl-aborts")) {
