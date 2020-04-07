@@ -470,6 +470,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult PopulateOriginContextIdsFromAttributes(
       mozilla::OriginAttributes& aAttr);
 
+  bool EnsureBrowsingContextAttached();
+
   RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
