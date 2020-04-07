@@ -450,7 +450,7 @@ def post_old_configure(raw_config):
 @imports(_from='mozbuild.configure.options', _import='Option')
 def remaining_mozconfig_options(_):
     helper = __sandbox__._helper
-    for arg in helper:
+    for arg in list(helper):
         if helper._origins[arg] != 'mozconfig':
             continue
         name = arg.split('=', 1)[0]
