@@ -13,6 +13,7 @@ const {
   updateFlexboxColor,
   updateFlexboxHighlighted,
 } = require("devtools/client/inspector/flexbox/actions/flexbox");
+const flexboxReducer = require("devtools/client/inspector/flexbox/reducers/flexbox");
 
 loader.lazyRequireGetter(
   this,
@@ -30,6 +31,8 @@ class FlexboxInspector {
     this.inspector = inspector;
     this.selection = inspector.selection;
     this.store = inspector.store;
+
+    this.store.injectReducer("flexbox", flexboxReducer);
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);

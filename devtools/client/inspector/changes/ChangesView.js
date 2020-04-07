@@ -21,9 +21,7 @@ loader.lazyRequireGetter(
   "devtools/shared/platform/clipboard"
 );
 
-const ChangesApp = createFactory(
-  require("devtools/client/inspector/changes/components/ChangesApp")
-);
+const changesReducer = require("devtools/client/inspector/changes/reducers/changes");
 const {
   getChangesStylesheet,
 } = require("devtools/client/inspector/changes/selectors/changes");
@@ -32,6 +30,10 @@ const {
   trackChange,
 } = require("devtools/client/inspector/changes/actions/changes");
 
+const ChangesApp = createFactory(
+  require("devtools/client/inspector/changes/components/ChangesApp")
+);
+
 class ChangesView {
   constructor(inspector, window) {
     this.document = window.document;
@@ -39,6 +41,8 @@ class ChangesView {
     this.store = this.inspector.store;
     this.telemetry = this.inspector.telemetry;
     this.window = window;
+
+    this.store.injectReducer("changes", changesReducer);
 
     this.onAddChange = this.onAddChange.bind(this);
     this.onChangesFrontAvailable = this.onChangesFrontAvailable.bind(this);
