@@ -172,6 +172,15 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
+  auto layersBackend = mImageAllocator
+                           ? mImageAllocator->GetCompositorBackendType()
+                           : layers::LayersBackend::LAYERS_BASIC;
+  if (layersBackend != layers::LayersBackend::LAYERS_OPENGL &&
+      layersBackend != layers::LayersBackend::LAYERS_WR) {
+    FFMPEG_LOG("VA-API works with HW accelerated backend only!");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (!mLib->IsVAAPIAvailable()) {
     FFMPEG_LOG("libva library or symbols are missing.");
     return NS_ERROR_NOT_AVAILABLE;
