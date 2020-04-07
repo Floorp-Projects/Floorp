@@ -282,7 +282,7 @@ def unique_list(l):
 #     ('19.0', 'arm', r'C:\...\amd64_arm\cl.exe')
 #     ('19.0', 'x64', r'C:\...\amd64\cl.exe')
 #     ('19.0', 'x86', r'C:\...\amd64_x86\cl.exe')
-@imports(_import='_winreg', _as='winreg')
+@imports(_import='winreg')
 @imports(_from='__builtin__', _import='WindowsError')
 @imports(_from='fnmatch', _import='fnmatch')
 def get_registry_values(pattern, get_32_and_64_bit=False):

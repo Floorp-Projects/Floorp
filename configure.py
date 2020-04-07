@@ -121,7 +121,7 @@ def config_status(config):
             #!%(python)s
             # coding=utf-8
             from __future__ import unicode_literals
-        ''') % {'python': config['PYTHON']})
+        ''') % {'python': config['PYTHON3']})
         for k, v in six.iteritems(sanitized_config):
             fh.write('%s = ' % k)
             write_indented_repr(fh, v)

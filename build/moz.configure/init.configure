@@ -233,13 +233,13 @@ def help_shell(help, shell):
 shell = help_shell | shell
 
 
-# Python 2
+# Python 3
 # ========
 
-option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
+option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends('PYTHON', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
+@depends('PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
 @imports(_from='__builtin__', _import='Exception')
 @imports('os')
 @imports('sys')
@@ -248,11 +248,11 @@ option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports(_from='mozbuild.virtualenv', _import='PY2')
-@imports(_from='mozbuild.pythonutil', _import='find_python2_executable')
+@imports(_from='mozbuild.virtualenv', _import='PY3')
+@imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
-def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
+def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
     # Avoid re-executing python when running configure --help.
     if help:
         return
@@ -266,8 +266,8 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     # Because of this the code is written to re-execute itself with the correct
     # interpreter if required.
 
-    log.debug("python2: running with pid %r" % os.getpid())
-    log.debug("python2: sys.executable: %r" % sys.executable)
+    log.debug("python3: running with pid %r" % os.getpid())
+    log.debug("python3: sys.executable: %r" % sys.executable)
 
     python = env_python[0] if env_python else None
 
@@ -276,16 +276,16 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     # but we'd rather avoid the verbosity when we need to reexecute with
     # a different python.
     if mozconfig['path']:
-        if 'PYTHON' in mozconfig['env']['added']:
-            python = mozconfig['env']['added']['PYTHON']
-        elif 'PYTHON' in mozconfig['env']['modified']:
-            python = mozconfig['env']['modified']['PYTHON'][1]
-        elif 'PYTHON' in mozconfig['vars']['added']:
-            python = mozconfig['vars']['added']['PYTHON']
-        elif 'PYTHON' in mozconfig['vars']['modified']:
-            python = mozconfig['vars']['modified']['PYTHON'][1]
+        if 'PYTHON3' in mozconfig['env']['added']:
+            python = mozconfig['env']['added']['PYTHON3']
+        elif 'PYTHON3' in mozconfig['env']['modified']:
+            python = mozconfig['env']['modified']['PYTHON3'][1]
+        elif 'PYTHON3' in mozconfig['vars']['added']:
+            python = mozconfig['vars']['added']['PYTHON3']
+        elif 'PYTHON3' in mozconfig['vars']['modified']:
+            python = mozconfig['vars']['modified']['PYTHON3'][1]
 
-    log.debug("python2: executable from configuration: %r" % python)
+    log.debug("python3: executable from configuration: %r" % python)
 
     # Verify that the Python version we executed this code with is the minimum
     # required version to handle all project code.
@@ -305,7 +305,7 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
             topsrcdir, topobjdir,
-            os.path.join(virtualenvs_root, 'init'), out,
+            os.path.join(virtualenvs_root, 'init_py3'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
     # If we're not in the virtualenv, we need to update the path to include some
@@ -322,48 +322,49 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     if python:
         found_python = find_program(python)
         if not found_python:
-            die('The PYTHON environment variable does not contain '
+            die('The PYTHON3 environment variable does not contain '
                 'a valid path. Cannot find %s', python)
         python = found_python
         try:
             version = python_executable_version(python).version
         except Exception as e:
-            raise FatalCheckError(
-                'could not determine version of given PYTHON: %s' % e)
+            raise FatalCheckError('could not determine version of PYTHON3 '
+                                  '(%s): %s' % (python, e))
     elif mozillabuild:
-        # MozillaBuild provides a Python 2.
-        python = normsep('%s/python/python2.exe' % mozillabuild)
+        # MozillaBuild provides a Python 3.
+        python = normsep('%s/python3/python3.exe' % mozillabuild)
 
         try:
             version = python_executable_version(python).version
         except Exception as e:
             raise FatalCheckError('could not determine version of '
-                                  'MozillaBuild python: %s' % e)
+                                  'MozillaBuild python3: %s' % e)
     else:
         # Fall back to the search routine.
-        python, version = find_python2_executable()
+        python, version = find_python3_executable(min_version='3.5.0')
+
         # The API returns a bytes whereas everything in configure is unicode.
         if python:
             python = ensure_text(python)
 
     if not python:
-        raise FatalCheckError(
-            'Python 2.7 is required to build. Ensure a `python2.7` executable '
-            'is in your PATH or define PYTHON to point to a Python 2.7 '
-            'executable.')
+        raise FatalCheckError('Python 3.5 or newer is required to build. '
+                              'Ensure a `python3.x` executable is in your '
+                              'PATH or define PYTHON3 to point to a Python '
+                              '3.5 executable.')
 
-    if version < (2, 7, 0):
-        raise FatalCheckError(
-            'Python 2.7 is required to build; '
-            '%s is Python %d.%d' % (python, version[0], version[1]))
+    if version < (3, 5, 0):
+        raise FatalCheckError('Python 3.5 or newer is required to build; '
+                              '%s is Python %d.%d' % (python, version[0],
+                                                      version[1]))
 
-    log.debug("python2: found executable: %r" % python)
+    log.debug("python3: found executable: %r" % python)
 
     if not manager.up_to_date(python):
-        log.info('Creating Python 2 environment')
+        log.info('Creating Python 3 environment')
         manager.build(python)
     else:
-        log.debug("python2: venv is up to date")
+        log.debug("python3: venv is up to date")
 
     python = normsep(manager.python_path)
 
@@ -373,13 +374,17 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     # don't do this then the configure code for the Py 2 and Py 3 virtualenvs could
     # activate each other from inside the other's virtualenv.  We can't guarantee
     # how the virtualenvs would interact if that happens.
-    if PY2:
+    if PY3:
         if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
-            log.debug("python2: executing as %s, should be running as %s" % (
+            log.debug("python3: executing as %s, should be running as %s" % (
                 sys.executable, manager.python_path))
             log.info('Re-executing in the virtualenv')
             if env_python:
-                del os.environ['PYTHON']
+                del os.environ['PYTHON3']
+            # Homebrew on macOS will change Python's sys.executable to a custom
+            # value which messes with mach's virtualenv handling code. Override
+            # Homebrew's changes with the correct sys.executable value.
+            os.environ['PYTHONEXECUTABLE'] = python
             # One would prefer to use os.execl, but that's completely borked on
             # Windows.
             sys.exit(subprocess.call([python] + sys.argv))
@@ -397,14 +402,14 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     )
 
 
-@depends(virtualenv_python2)
-@checking('for Python 2', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
-def virtualenv_python2(venv):
+@depends(virtualenv_python3)
+@checking('for Python 3', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
+def virtualenv_python3(venv):
     return venv
 
 
-set_config('PYTHON', virtualenv_python2.path)
-add_old_configure_assignment('PYTHON', virtualenv_python2.path)
+set_config('PYTHON3', virtualenv_python3.path)
+set_config('PYTHON3_VERSION', virtualenv_python3.str_version)
 
 
 # Inject mozconfig options
@@ -472,21 +477,21 @@ def mozconfig_options(mozconfig, automation, help):
             add(key, value)
 
 
-# Python 3
+# Python 2
 # ========
 
-option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
+option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 
 
-@depends('PYTHON3', check_build_environment, 'MOZILLABUILD')
+@depends('PYTHON', check_build_environment, 'MOZILLABUILD')
 @imports(_from='__builtin__', _import='Exception')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
+@imports(_from='mozbuild.pythonutil', _import='find_python2_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
-def virtualenv_python3(env_python, build_env, mozillabuild):
+def virtualenv_python2(env_python, build_env, mozillabuild):
     # Verify that the Python version we executed this code with is the minimum
     # required version to handle all project code.
     with LineIO(lambda l: log.error(l)) as out:
@@ -494,7 +499,7 @@ def virtualenv_python3(env_python, build_env, mozillabuild):
 
     python = env_python[0] if env_python else None
 
-    log.debug("python3: executable from configuration: %r" % python)
+    log.debug("python2: executable from configuration: %r" % python)
 
     # If this is a mozilla-central build, we'll find the virtualenv in the top
     # source directory. If this is a SpiderMonkey build, we assume we're at
@@ -515,8 +520,8 @@ def virtualenv_python3(env_python, build_env, mozillabuild):
             raise FatalCheckError('could not determine version of PYTHON '
                                   '(%s): %s' % (python, e))
     elif mozillabuild:
-        # MozillaBuild provides a Python 3.
-        python = normsep('%s/python3/python3.exe' % mozillabuild)
+        # MozillaBuild provides a Python 2.
+        python = normsep('%s/python/python2.exe' % mozillabuild)
 
         try:
             version = python_executable_version(python).version
@@ -525,39 +530,39 @@ def virtualenv_python3(env_python, build_env, mozillabuild):
                                   'MozillaBuild python: %s' % e)
     else:
         # Fall back to the search routine.
-        python, version = find_python3_executable(min_version='3.5.0')
+        python, version = find_python2_executable()
 
         # The API returns a bytes whereas everything in configure is unicode.
         if python:
             python = ensure_text(python)
 
     if not python:
-        raise FatalCheckError('Python 3.5 or newer is required to build. '
-                              'Ensure a `python3.x` executable is in your '
-                              'PATH or define PYTHON3 to point to a Python '
-                              '3.5 executable.')
+        raise FatalCheckError('Python 2.7 is required to build. '
+                              'Ensure a `python2.7` executable is in your '
+                              'PATH or define PYTHON to point to a Python '
+                              '2.7 executable.')
 
-    if version < (3, 5, 0):
-        raise FatalCheckError('Python 3.5 or newer is required to build; '
+    if version < (2, 7, 0):
+        raise FatalCheckError('Python 2.7 required to build; '
                               '%s is Python %d.%d' % (python, version[0],
                                                       version[1]))
 
-    log.debug("python3: found executable: %r" % python)
+    log.debug("python2: found executable: %r" % python)
 
     virtualenvs_root = os.path.join(topobjdir, '_virtualenvs')
     with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
             topsrcdir, topobjdir,
-            os.path.join(virtualenvs_root, 'init_py3'), out,
+            os.path.join(virtualenvs_root, 'init'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
-    log.debug("python3: using venv: %r" % manager.virtualenv_root)
+    log.debug("python: using venv: %r" % manager.virtualenv_root)
 
     if not manager.up_to_date(python):
-        log.info('Creating Python 3 environment')
+        log.info('Creating Python 2 environment')
         manager.build(python)
     else:
-        log.debug("python3: venv is up to date")
+        log.debug("python2: venv is up to date")
 
     python = normsep(manager.python_path)
     str_version = '.'.join(str(v) for v in version)
@@ -569,14 +574,14 @@ def virtualenv_python3(env_python, build_env, mozillabuild):
     )
 
 
-@depends(virtualenv_python3)
-@checking('for Python 3', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
-def virtualenv_python3(venv):
+@depends(virtualenv_python2)
+@checking('for Python 2', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
+def virtualenv_python2(venv):
     return venv
 
 
-set_config('PYTHON3', virtualenv_python3.path)
-set_config('PYTHON3_VERSION', virtualenv_python3.str_version)
+set_config('PYTHON', virtualenv_python2.path)
+add_old_configure_assignment('PYTHON', virtualenv_python2.path)
 
 
 # Source checkout and version control integration.
