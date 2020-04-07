@@ -710,6 +710,12 @@ void AudioCallbackDriver::Init() {
   cubeb_stream_register_device_changed_callback(
       mAudioStream, AudioCallbackDriver::DeviceChangedCallback_s);
 
+  // No-op if MOZ_DUMP_AUDIO is not defined as an environment variable. This
+  // is intended for diagnosing issues, and only works if the content sandbox is
+  // disabled.
+  mInputStreamFile.Open("GraphDriverInput", input.channels, input.rate);
+  mOutputStreamFile.Open("GraphDriverOutput", output.channels, output.rate);
+
   if (NS_WARN_IF(!StartStream())) {
     LOG(LogLevel::Warning,
         ("%p: AudioCallbackDriver couldn't start a cubeb stream.", Graph()));
@@ -967,6 +973,14 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     }
   }
 #endif
+
+  // No-op if MOZ_DUMP_AUDIO is not defined as an environment variable
+  if (aInputBuffer) {
+    mInputStreamFile.Write(static_cast<const AudioDataValue*>(aInputBuffer),
+                           aFrames * mInputChannelCount);
+  }
+  mOutputStreamFile.Write(static_cast<const AudioDataValue*>(aOutputBuffer),
+                          aFrames * mOutputChannelCount);
 
   if (result.IsStop()) {
     // Signal that we have stopped.
