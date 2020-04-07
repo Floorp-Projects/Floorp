@@ -938,12 +938,12 @@ android-hw-aarch64-raptor-cpu-memory-power:
 android-hw-aarch64-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-profiling
-    - browsertime-benchmark-speedometer
+    - browsertime-speedometer-mobile
 
 android-hw-arm7-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-profiling
-    - browsertime-benchmark-speedometer
+    - browsertime-speedometer-mobile
 
 linux-tsan-tests:
     - mochitest-plain

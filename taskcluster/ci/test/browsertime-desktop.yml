@@ -73,7 +73,7 @@ browsertime-tp6:
 
 browsertime-speedometer:
     description: "Raptor (browsertime) Speedometer on Firefox"
-    raptor-test: raptor-speedometer
+    raptor-test: speedometer
     run-on-projects:
         by-test-platform:
             .*-ref-hw-2017/.*: []
