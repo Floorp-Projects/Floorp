@@ -9,6 +9,7 @@ interface nsITransportSecurityInfo;
 interface nsIURI;
 interface nsIWebProgress;
 interface nsIReferrerInfo;
+interface nsIOpenWindowInfo;
 
 webidl FrameLoader;
 
@@ -23,6 +24,12 @@ interface nsIBrowser : nsISupports
    * they are loaded in the same process as the content.
    */
   readonly attribute FrameLoader sameProcessAsFrameLoader;
+
+  /**
+   * Gets the optional open window information provided by the window creation
+   * code and used to initialize a new browser.
+   */
+  attribute nsIOpenWindowInfo openWindowInfo;
 
   /*
    * Called by the child to inform the parent that links are dropped into

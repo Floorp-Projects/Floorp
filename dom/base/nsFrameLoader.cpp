@@ -47,6 +47,7 @@
 #include "nsBaseWidget.h"
 #include "nsQueryObject.h"
 #include "ReferrerInfo.h"
+#include "nsIOpenWindowInfo.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -257,7 +258,12 @@ static bool IsTopContent(BrowsingContext* aParent, Element* aOwner) {
 }
 
 static already_AddRefed<BrowsingContext> CreateBrowsingContext(
-    Element* aOwner, BrowsingContext* aOpener) {
+    Element* aOwner, nsIOpenWindowInfo* aOpenWindowInfo) {
+  RefPtr<BrowsingContext> opener;
+  if (aOpenWindowInfo && !aOpenWindowInfo->GetForceNoOpener()) {
+    opener = aOpenWindowInfo->GetParent();
+  }
+
   Document* doc = aOwner->OwnerDoc();
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
@@ -290,7 +296,7 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
     RefPtr<BrowsingContext> bc = BrowsingContext::CreateDetached(
-        nullptr, aOpener, frameName, BrowsingContext::Type::Content);
+        nullptr, opener, frameName, BrowsingContext::Type::Content);
 
     // If this is a mozbrowser frame, pretend it's windowless so that it gets
     // ownership of its BrowsingContext even though it's a top-level content
@@ -304,10 +310,13 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
     return bc.forget();
   }
 
+  MOZ_ASSERT(!aOpenWindowInfo,
+             "Can't have openWindowInfo for non-toplevel context");
+
   auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
                                          : BrowsingContext::Type::Chrome;
 
-  return BrowsingContext::CreateDetached(parentContext, aOpener, frameName,
+  return BrowsingContext::CreateDetached(parentContext, nullptr, frameName,
                                          type);
 }
 
@@ -339,9 +348,8 @@ static bool InitialLoadIsRemote(Element* aOwner) {
                              nsGkAtoms::_true, eCaseMatters);
 }
 
-already_AddRefed<nsFrameLoader> nsFrameLoader::Create(Element* aOwner,
-                                                      BrowsingContext* aOpener,
-                                                      bool aNetworkCreated) {
+already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
+    Element* aOwner, bool aNetworkCreated, nsIOpenWindowInfo* aOpenWindowInfo) {
   NS_ENSURE_TRUE(aOwner, nullptr);
   Document* doc = aOwner->OwnerDoc();
 
@@ -370,7 +378,8 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(Element* aOwner,
                       doc->IsStaticDocument()),
                  nullptr);
 
-  RefPtr<BrowsingContext> context = CreateBrowsingContext(aOwner, aOpener);
+  RefPtr<BrowsingContext> context =
+      CreateBrowsingContext(aOwner, aOpenWindowInfo);
   NS_ENSURE_TRUE(context, nullptr);
 
   // Determine the initial RemoteType from the load environment. An empty or
@@ -378,8 +387,6 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(Element* aOwner,
   // denotes a remote frame.
   nsAutoString remoteType(VoidString());
   if (InitialLoadIsRemote(aOwner)) {
-    MOZ_ASSERT(!aOpener, "Cannot pass `aOpener` for a remote frame!");
-
     // If the `remoteType` attribute is specified and valid, use it. Otherwise,
     // use a default remote type.
     bool hasRemoteType =
@@ -391,6 +398,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(Element* aOwner,
 
   RefPtr<nsFrameLoader> fl =
       new nsFrameLoader(aOwner, context, remoteType, aNetworkCreated);
+  fl->mOpenWindowInfo = aOpenWindowInfo;
   return fl.forget();
 }
 
@@ -411,7 +419,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
 
   RefPtr<BrowsingContext> context = aContext;
   if (!context) {
-    context = CreateBrowsingContext(aOwner, /* opener */ nullptr);
+    context = CreateBrowsingContext(aOwner, /* openWindowInfo */ nullptr);
   }
   NS_ENSURE_TRUE(context, nullptr);
 
@@ -2478,20 +2486,15 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     return false;
   }
 
+  uint64_t nextRemoteBrowserId =
+      mOpenWindowInfo ? mOpenWindowInfo->GetNextRemoteBrowserId() : 0;
+
   if (!EnsureBrowsingContextAttached()) {
     return false;
   }
 
   RefPtr<ContentParent> openerContentParent;
-  RefPtr<nsIPrincipal> openerContentPrincipal;
   RefPtr<BrowserParent> sameTabGroupAs;
-  if (auto* host = BrowserHost::GetFrom(parentDocShell->GetOpener())) {
-    openerContentParent = host->GetContentParent();
-    BrowserParent* openerBrowserParent = host->GetActor();
-    if (openerBrowserParent) {
-      openerContentPrincipal = openerBrowserParent->GetContentPrincipal();
-    }
-  }
 
   // <iframe mozbrowser> gets to skip these checks.
   // iframes for JS plugins also get to skip these checks. We control the URL
@@ -2557,32 +2560,11 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   nsresult rv = GetNewTabContext(&context);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // We need to propagate the first party domain if the opener is presented.
-  if (openerContentPrincipal) {
-    context.SetFirstPartyDomainAttributes(
-        openerContentPrincipal->OriginAttributesRef().mFirstPartyDomain);
-  }
-
-  uint64_t nextRemoteTabId = 0;
-  if (mOwnerContent) {
-    nsAutoString nextBrowserParentIdAttr;
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nextRemoteTabId,
-                           nextBrowserParentIdAttr);
-    nextRemoteTabId = strtoull(
-        NS_ConvertUTF16toUTF8(nextBrowserParentIdAttr).get(), nullptr, 10);
-
-    // We may be in a window that was just opened, so try the
-    // nsIBrowserDOMWindow API as a backup.
-    if (!nextRemoteTabId && window) {
-      Unused << window->GetNextRemoteTabId(&nextRemoteTabId);
-    }
-  }
-
   nsCOMPtr<Element> ownerElement = mOwnerContent;
 
   mRemoteBrowser = ContentParent::CreateBrowser(
       context, ownerElement, mRemoteType, mPendingBrowsingContext,
-      openerContentParent, nextRemoteTabId);
+      openerContentParent, nextRemoteBrowserId);
   if (!mRemoteBrowser) {
     return false;
   }
@@ -2592,7 +2574,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   // detach our original BC and take ownership of the one from the remote
   // browser.
   if (mPendingBrowsingContext != mRemoteBrowser->GetBrowsingContext()) {
-    MOZ_DIAGNOSTIC_ASSERT(nextRemoteTabId);
+    MOZ_DIAGNOSTIC_ASSERT(nextRemoteBrowserId);
     mPendingBrowsingContext->Detach();
     mPendingBrowsingContext = mRemoteBrowser->GetBrowsingContext();
   }
@@ -3337,14 +3319,6 @@ void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
 
 nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                          nsIURI* aURI) {
-  OriginAttributes attrs;
-  nsresult rv;
-
-  // set the userContextId on the attrs before we pass them into
-  // the tab context
-  rv = PopulateOriginContextIdsFromAttributes(attrs);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoString presentationURLStr;
   mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozpresentation,
                          presentationURLStr);
@@ -3353,8 +3327,8 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(docShell);
   NS_ENSURE_STATE(parentContext);
 
-  bool isPrivate = parentContext->UsePrivateBrowsing();
-  attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
+  MOZ_ASSERT(mPendingBrowsingContext->EverAttached());
+  OriginAttributes attrs = mPendingBrowsingContext->OriginAttributesRef();
 
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;

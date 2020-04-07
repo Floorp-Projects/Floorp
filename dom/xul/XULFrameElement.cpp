@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
+#include "nsIBrowser.h"
 #include "nsIContent.h"
+#include "nsIOpenWindowInfo.h"
 #include "nsFrameLoader.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
@@ -75,24 +77,20 @@ void XULFrameElement::LoadSrc() {
   }
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
-    // Check if we have an opener we need to be setting
-    RefPtr<BrowsingContext> opener = mOpener;
-    if (!opener) {
-      // If we are a primary xul-browser, we want to take the opener property!
-      nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
-      if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true,
-                      eIgnoreCase) &&
-          window) {
-        opener = window->TakeOpenerForInitialContentBrowser();
-      }
+    // We may have had a nsIOpenWindowInfo set on our nsIBrowser by browser
+    // chrome, due to being used as the target for a `window.open` call. Fetch
+    // that information if it's available, and clear it out so we don't read it
+    // again.
+    nsCOMPtr<nsIOpenWindowInfo> openWindowInfo;
+    if (nsCOMPtr<nsIBrowser> browser = AsBrowser()) {
+      browser->GetOpenWindowInfo(getter_AddRefs(openWindowInfo));
+      browser->SetOpenWindowInfo(nullptr);
     }
-    mOpener = nullptr;
 
-    // false as the last parameter so that xul:iframe/browser/editor
-    // session history handling works like dynamic html:iframes.
-    // Usually xul elements are used in chrome, which doesn't have
-    // session history at all.
-    mFrameLoader = nsFrameLoader::Create(this, opener, false);
+    // false as the networkCreated parameter so that xul:iframe/browser/editor
+    // session history handling works like dynamic html:iframes. Usually xul
+    // elements are used in chrome, which doesn't have session history at all.
+    mFrameLoader = nsFrameLoader::Create(this, false, openWindowInfo);
     if (NS_WARN_IF(!mFrameLoader)) {
       return;
     }
