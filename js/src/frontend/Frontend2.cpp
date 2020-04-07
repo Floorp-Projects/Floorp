@@ -18,8 +18,8 @@
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/CompilationInfo.h"   // CompilationInfo
-#include "frontend/smoosh_generated.h"  // CVec, SmooshResult, SmooshCompileOptions, free_smoosh, run_smoosh, smoosh_*
-#include "frontend/SourceNotes.h"  // SrcNote
+#include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
+#include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"  // ScopeCreationData, RegExpCreationData, RegExpIndex
 #include "frontend/TokenStream.h"  // TokenStreamAnyChars
 #include "gc/Rooting.h"            // RootedScriptSourceObject
@@ -345,7 +345,7 @@ class AutoFreeSmooshResult {
   explicit AutoFreeSmooshResult(SmooshResult* result) : result_(result) {}
   ~AutoFreeSmooshResult() {
     if (result_) {
-      free_smoosh(*result_);
+      smoosh_free(*result_);
     }
   }
 };
@@ -361,12 +361,12 @@ class AutoFreeSmooshParseResult {
       : result_(result) {}
   ~AutoFreeSmooshParseResult() {
     if (result_) {
-      free_smoosh_parse_result(*result_);
+      smoosh_free_parse_result(*result_);
     }
   }
 };
 
-void InitSmoosh() { init_smoosh(); }
+void InitSmoosh() { smoosh_init(); }
 
 void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
                               int errorNumber, ...) {
@@ -382,7 +382,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
                                       JS::SourceText<Utf8Unit>& srcBuf,
                                       bool* unimplemented) {
   // FIXME: check info members and return with *unimplemented = true
-  //        if any field doesn't match to run_smoosh.
+  //        if any field doesn't match to smoosh_run.
 
   auto bytes = reinterpret_cast<const uint8_t*>(srcBuf.get());
   size_t length = srcBuf.length();
@@ -393,7 +393,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   SmooshCompileOptions compileOptions;
   compileOptions.no_script_rval = options.noScriptRval;
 
-  SmooshResult smoosh = run_smoosh(bytes, length, &compileOptions);
+  SmooshResult smoosh = smoosh_run(bytes, length, &compileOptions);
   AutoFreeSmooshResult afsr(&smoosh);
 
   if (smoosh.error.data) {
@@ -500,7 +500,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 }
 
 bool SmooshParseScript(JSContext* cx, const uint8_t* bytes, size_t length) {
-  SmooshParseResult result = test_parse_script(bytes, length);
+  SmooshParseResult result = smoosh_test_parse_script(bytes, length);
   AutoFreeSmooshParseResult afspr(&result);
   if (result.error.data) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -514,7 +514,7 @@ bool SmooshParseScript(JSContext* cx, const uint8_t* bytes, size_t length) {
 }
 
 bool SmooshParseModule(JSContext* cx, const uint8_t* bytes, size_t length) {
-  SmooshParseResult result = test_parse_module(bytes, length);
+  SmooshParseResult result = smoosh_test_parse_module(bytes, length);
   AutoFreeSmooshParseResult afspr(&result);
   if (result.error.data) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,

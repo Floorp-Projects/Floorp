@@ -309,7 +309,7 @@ enum SmooshError {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn init_smoosh() {
+pub unsafe extern "C" fn smoosh_init() {
     // Gecko might set a logger before we do, which is all fine; try to
     // initialize ours, and reset the FilterLevel env_logger::try_init might
     // have set to what it was in case of initialization failure
@@ -323,7 +323,7 @@ pub unsafe extern "C" fn init_smoosh() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn run_smoosh(
+pub unsafe extern "C" fn smoosh_run(
     text: *const u8,
     text_len: usize,
     options: &SmooshCompileOptions,
@@ -442,7 +442,10 @@ fn convert_parse_result<'alloc, T>(r: jsparagus::parser::Result<T>) -> SmooshPar
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn test_parse_script(text: *const u8, text_len: usize) -> SmooshParseResult {
+pub unsafe extern "C" fn smoosh_test_parse_script(
+    text: *const u8,
+    text_len: usize,
+) -> SmooshParseResult {
     let text = match str::from_utf8(slice::from_raw_parts(text, text_len)) {
         Ok(text) => text,
         Err(_) => {
@@ -466,7 +469,10 @@ pub unsafe extern "C" fn test_parse_script(text: *const u8, text_len: usize) -> 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn test_parse_module(text: *const u8, text_len: usize) -> SmooshParseResult {
+pub unsafe extern "C" fn smoosh_test_parse_module(
+    text: *const u8,
+    text_len: usize,
+) -> SmooshParseResult {
     let text = match str::from_utf8(slice::from_raw_parts(text, text_len)) {
         Ok(text) => text,
         Err(_) => {
@@ -490,7 +496,7 @@ pub unsafe extern "C" fn test_parse_module(text: *const u8, text_len: usize) -> 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn free_smoosh_parse_result(result: SmooshParseResult) {
+pub unsafe extern "C" fn smoosh_free_parse_result(result: SmooshParseResult) {
     let _ = result.error.into();
 }
 
@@ -523,7 +529,7 @@ pub unsafe extern "C" fn smoosh_get_slice_len_at(result: SmooshResult, index: us
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn free_smoosh(result: SmooshResult) {
+pub unsafe extern "C" fn smoosh_free(result: SmooshResult) {
     let _ = result.error.into();
     let _ = result.bytecode.into();
     let _ = result.atoms.into();
