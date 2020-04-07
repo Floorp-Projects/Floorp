@@ -1,6 +1,5 @@
 {
-    "stages": "4",
-    "pgo" : true,
+    "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
@@ -12,7 +11,6 @@
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
       "rG7e18aeba5062.patch",
-      "llvmorg-10-init-5191-ga84b200e604-windows-pgo.patch",
       "loosen-msvc-detection.patch"
     ]
 }
