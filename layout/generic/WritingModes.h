@@ -1368,7 +1368,7 @@ class LogicalMargin {
                : LogicalMargin(aToMode, GetPhysicalMargin(aFromMode));
   }
 
-  void ApplySkipSides(LogicalSides aSkipSides) {
+  LogicalMargin& ApplySkipSides(LogicalSides aSkipSides) {
     if (aSkipSides.BStart()) {
       BStart() = 0;
     }
@@ -1381,6 +1381,7 @@ class LogicalMargin {
     if (aSkipSides.IEnd()) {
       IEnd() = 0;
     }
+    return *this;
   }
 
   bool IsAllZero() const {
