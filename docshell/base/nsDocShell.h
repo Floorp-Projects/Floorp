@@ -1106,7 +1106,6 @@ class nsDocShell final : public nsDocLoader,
   nsID mHistoryID;
   nsString mTitle;
   nsCString mOriginalUriString;
-  nsWeakPtr mOpener;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
   nsTObserverArray<nsWeakPtr> mReflowObservers;
   nsTObserverArray<nsWeakPtr> mScrollObservers;
