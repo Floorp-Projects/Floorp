@@ -881,7 +881,7 @@ class nsLayoutUtils {
    * @param aPt the point, relative to the frame origin
    * @param aFlags some combination of FrameForPointOption.
    */
-  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+  static nsIFrame* GetFrameForPoint(const nsIFrame* aFrame, nsPoint aPt,
                                     mozilla::EnumSet<FrameForPointOption> = {});
 
   /**
@@ -892,7 +892,7 @@ class nsLayoutUtils {
    * @param aOutFrames an array to add all the frames found
    * @param aFlags some combination of FrameForPointOption.
    */
-  static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
+  static nsresult GetFramesForArea(const nsIFrame* aFrame, const nsRect& aRect,
                                    nsTArray<nsIFrame*>& aOutFrames,
                                    mozilla::EnumSet<FrameForPointOption> = {});
 
