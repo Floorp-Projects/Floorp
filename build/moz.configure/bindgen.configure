@@ -224,7 +224,7 @@ def bindgen_config_paths(clang, libclang, build_project):
 @imports(_from='textwrap', _import='dedent')
 def min_libclang_version(libclang):
     try:
-        lib = CDLL(libclang.encode('utf-8'))
+        lib = CDLL(libclang)
         # We want at least 4.0. The API we test below is enough for that.
         # Just accessing it should throw if not found.
         fun = lib.clang_EvalResult_getAsLongLong

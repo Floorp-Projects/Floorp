@@ -22,4 +22,4 @@ SRCDIR=$(dirname $0)
 TOPSRCDIR="$SRCDIR"
 export OLD_CONFIGURE="$SRCDIR"/old-configure
 
-which python2.7 > /dev/null && exec python2.7 "$TOPSRCDIR/configure.py" "$@" || exec python "$TOPSRCDIR/configure.py" "$@"
+exec python3 "$TOPSRCDIR/configure.py" "$@"

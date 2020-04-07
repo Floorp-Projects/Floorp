@@ -195,6 +195,11 @@ class VirtualenvManager(object):
         return self.build(python)
 
     def _log_process_output(self, *args, **kwargs):
+        env = kwargs.pop('env', None) or os.environ.copy()
+        # PYTHONEXECUTABLE can mess up the creation of virtualenvs when set.
+        env.pop('PYTHONEXECUTABLE', None)
+        kwargs['env'] = ensure_subprocess_env(env)
+
         if hasattr(self.log_handle, 'fileno'):
             return subprocess.call(*args, stdout=self.log_handle,
                                    stderr=subprocess.STDOUT, **kwargs)
@@ -226,8 +231,7 @@ class VirtualenvManager(object):
                 '--no-download',
                 self.virtualenv_root]
 
-        result = self._log_process_output(args,
-                                          env=ensure_subprocess_env(os.environ))
+        result = self._log_process_output(args)
 
         if result:
             raise Exception(

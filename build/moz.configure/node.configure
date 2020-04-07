@@ -14,7 +14,6 @@ option(env='NODEJS', nargs=1, help='Path to nodejs')
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='mozbuild.nodeutil', _import='find_node_executable')
 @imports(_from='mozbuild.nodeutil', _import='NODE_MIN_VERSION')
-@imports(_from='mozbuild.util', _import='system_encoding')
 def nodejs(require, env_node):
     node_exe = env_node[0] if env_node else None
 
@@ -52,7 +51,7 @@ def nodejs(require, env_node):
             return
 
     return namespace(
-        path=nodejs.decode(system_encoding),
+        path=nodejs,
         version=version,
         str_version='.'.join(str(v) for v in version),
     )
