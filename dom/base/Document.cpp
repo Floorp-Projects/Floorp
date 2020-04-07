@@ -3326,6 +3326,14 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     return NS_OK;
   }
 
+  // If this is an image, no need to set a CSP. Otherwise SVG images
+  // served with a CSP might block internally applied inline styles.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (loadInfo->GetExternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_IMAGE) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(!mCSP, "where did mCSP get set if not here?");
 
   // If there is a CSP that needs to be inherited from whatever
@@ -3334,7 +3342,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // document needs to inherit the CSP. See:
   // https://w3c.github.io/webappsec-csp/#initialize-document-csp
   if (CSP_ShouldResponseInheritCSP(aChannel)) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     mCSP = loadInfo->GetCspToInherit();
   }
 
