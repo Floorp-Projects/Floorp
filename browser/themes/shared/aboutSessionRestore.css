@@ -13,16 +13,12 @@
   min-height: 300px;
 }
 
+.description-wrapper:dir(rtl) {
+  background-position-x: right;
+}
+
 .title {
   background-image: none;
-}
-
-.description-wrapper:dir(rtl) {
-  background-position: right center;
-}
-
-#tabsToggle:dir(rtl):after {
-  background-position: left center;
 }
 
 #tabsToggle {
@@ -45,11 +41,15 @@
   width: 100%;
   height: 100%;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   background-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
   background-repeat: no-repeat;
   background-size: 20px;
   background-position: right center;
+}
+
+#tabsToggle:dir(rtl):after {
+  background-position-x: left;
 }
 
 #tabsToggle:not(.show-tabs):after {
@@ -71,7 +71,7 @@
 
 treechildren::-moz-tree-image(icon),
 treechildren::-moz-tree-image(noicon) {
-  padding-right: 2px;
+  padding-inline-end: 2px;
   margin: 0 2px;
   width: 16px;
   height: 16px;

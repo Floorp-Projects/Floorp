@@ -10,12 +10,11 @@
   min-height: 20px;
   border: 0;
   border-radius: 0;
-  padding: 0px 1px 0px 1px;
+  padding: 0 1px;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon {
-  margin-inline-start: 4px;
-  margin-inline-end: 0;
+  margin-inline: 4px 0;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem > .ac-title {
@@ -49,8 +48,7 @@
 
 #PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .ac-site-icon {
   display: block;
-  margin-inline-start: auto;
-  margin-inline-end: 4px;
+  margin-inline: auto 4px;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper {
@@ -126,8 +124,7 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
   background-color: var(--arrowpanel-dimmed);
   border-bottom: 1px solid var(--panel-separator-color);
-  padding-bottom: 4px;
-  padding-top: 4px;
+  padding-block: 4px;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] {
