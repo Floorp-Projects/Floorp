@@ -103,8 +103,7 @@ input[type="url"][readOnly] {
 }
 
 .title {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -224,8 +223,7 @@ input[type="url"][readOnly]:hover:active {
   font-size: smaller;
   font-weight: 300;
   color: var(--in-content-deemphasized-text);
-  margin-top: 0;
-  margin-bottom: 8px;
+  margin-block: 0 8px;
 }
 
 .meta-info:first-of-type::before {
@@ -306,8 +304,7 @@ input[name="password"] {
   font-weight: 300;
   line-height: 1.4;
   padding-block: 12px;
-  padding-inline-start: 64px;
-  padding-inline-end: 32px;
+  padding-inline: 64px 32px;
   margin-block-end: 40px;
   position: relative;
 }
@@ -326,8 +323,7 @@ input[name="password"] {
   font-size: 22px;
   font-weight: normal;
   line-height: 1em;
-  margin-top: 0;
-  margin-bottom: 12px;
+  margin-block: 0 12px;
 }
 
 .alert-date {
@@ -375,8 +371,7 @@ input[name="password"] {
   border: 1px solid transparent;
   padding-block: 6px;
   display: inline-block;
-  padding-inline-start: 32px;
-  padding-inline-end: 16px;
+  padding-inline: 32px 16px;
   background-image: url("chrome://global/skin/icons/warning.svg");
   background-repeat: no-repeat;
   background-position: left 10px center;
