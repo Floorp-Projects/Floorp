@@ -138,11 +138,12 @@ class AppWindow final : public nsIBaseWindow,
 
   // AppWindow methods...
   nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
-                      nsIURI* aUrl, int32_t aInitialWidth,
-                      int32_t aInitialHeight, bool aIsHiddenWindow,
-                      nsIRemoteTab* aOpeningTab,
-                      mozIDOMWindowProxy* aOpenerWIndow,
+                      int32_t aInitialWidth, int32_t aInitialHeight,
+                      bool aIsHiddenWindow, nsIRemoteTab* aOpeningTab,
+                      mozIDOMWindowProxy* aOpenerWindow,
                       nsWidgetInitData& widgetInitData);
+
+  nsIDocShell* GetDocShell() { return mDocShell; }
 
   nsresult Toolbar();
 
