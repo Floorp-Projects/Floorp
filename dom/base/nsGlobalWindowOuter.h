@@ -670,9 +670,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
 
   nsIDOMWindowUtils* WindowUtils();
-  bool HasOpenerForInitialContentBrowser() {
-    return !!mOpenerForInitialContentBrowser;
-  }
 
   virtual bool IsInSyncOperation() override {
     return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
