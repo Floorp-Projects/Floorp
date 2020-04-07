@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 // IO functions implementation using Posix API.
 //===----------------------------------------------------------------------===//
+#include "mozilla/Unused.h"
 #include "FuzzerDefs.h"
 #if LIBFUZZER_POSIX || LIBFUZZER_FUCHSIA
 
@@ -159,7 +160,7 @@ bool IsInterestingCoverageFile(const std::string &FileName) {
 }
 
 void RawPrint(const char *Str) {
-  write(2, Str, strlen(Str));
+  mozilla::Unused << write(2, Str, strlen(Str));
 }
 
 void MkDir(const std::string &Path) {
