@@ -5,10 +5,8 @@
 "use strict";
 
 class MozTranslationNotification extends MozElements.Notification {
-  connectedCallback() {
-    this.appendChild(
-      MozXULElement.parseXULToFragment(
-        `
+  static get markup() {
+    return `
       <hbox anonid="details" align="center" flex="1">
         <image class="translate-infobar-element messageImage"/>
         <panel anonid="welcomePanel" class="translation-welcome-panel" type="arrow" align="start">
@@ -82,13 +80,18 @@ class MozTranslationNotification extends MozElements.Notification {
                      class="messageCloseButton close-icon tabbable"
                      tooltiptext="&closeNotification.tooltip;"
                      oncommand="this.parentNode.closeCommand();"/>
-    `,
-        [
-          "chrome://global/locale/notification.dtd",
-          "chrome://browser/locale/translation.dtd",
-        ]
-      )
-    );
+    `;
+  }
+
+  static get entities() {
+    return [
+      "chrome://global/locale/notification.dtd",
+      "chrome://browser/locale/translation.dtd",
+    ];
+  }
+
+  connectedCallback() {
+    this.appendChild(this.constructor.fragment);
 
     for (let [propertyName, selector] of [
       ["details", "[anonid=details]"],
