@@ -110,14 +110,21 @@ set_define('NO_RUST_PANIC_HOOK', True, when='NO_RUST_PANIC_HOOK')
 # JIT support
 # =======================================================
 @depends(target)
-def ion_default(target):
+def jit_default(target):
     if target.cpu in ('x86', 'x86_64', 'arm', 'aarch64', 'mips32', 'mips64'):
         return True
     return False
 
-js_option('--enable-ion',
-          default=ion_default,
-          help='{Enable|Disable} use of the IonMonkey JIT')
+js_option('--enable-jit',
+          default=jit_default,
+          help='{Enable|Disable} use of the JITs')
+
+@deprecated_option('--enable-ion')
+def report_deprecated(value):
+    if value:
+        die('--enable-ion is deprecated, use --enable-jit instead')
+    else:
+        die('--disable-ion is deprecated, use --disable-jit instead')
 
 # JIT code simulator for cross compiles
 # =======================================================
@@ -125,9 +132,9 @@ js_option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
           nargs=1,
           help='Enable a JIT code simulator for the specified architecture')
 
-@depends('--enable-ion', '--enable-simulator', target)
-def simulator(ion_enabled, simulator_enabled, target):
-    if not ion_enabled or not simulator_enabled:
+@depends('--enable-jit', '--enable-simulator', target)
+def simulator(jit_enabled, simulator_enabled, target):
+    if not jit_enabled or not simulator_enabled:
         return
 
     sim_cpu = simulator_enabled[0]
@@ -153,9 +160,9 @@ set_define('JS_SIMULATOR_ARM64', simulator.arm64)
 set_define('JS_SIMULATOR_MIPS32', simulator.mips32)
 set_define('JS_SIMULATOR_MIPS64', simulator.mips64)
 
-@depends('--enable-ion', simulator, target)
-def jit_codegen(ion_enabled, simulator, target):
-    if not ion_enabled:
+@depends('--enable-jit', simulator, target)
+def jit_codegen(jit_enabled, simulator, target):
+    if not jit_enabled:
         return namespace(none=True)
 
     if simulator:
@@ -339,9 +346,9 @@ set_define('JS_STRUCTURED_SPEW',
 set_config('JS_STRUCTURED_SPEW',
            depends_if('--enable-jitspew')(lambda _: True))
 
-@depends('--enable-ion', '--enable-jitspew', simulator, target, moz_debug)
-def jit_disasm_arm(ion_enabled, spew, simulator, target, debug):
-    if not ion_enabled:
+@depends('--enable-jit', '--enable-jitspew', simulator, target, moz_debug)
+def jit_disasm_arm(jit_enabled, spew, simulator, target, debug):
+    if not jit_enabled:
         return
 
     if simulator and (debug or spew):
@@ -354,9 +361,9 @@ def jit_disasm_arm(ion_enabled, spew, simulator, target, debug):
 set_config('JS_DISASM_ARM', jit_disasm_arm)
 set_define('JS_DISASM_ARM', jit_disasm_arm)
 
-@depends('--enable-ion', '--enable-jitspew', simulator, target, moz_debug)
-def jit_disasm_arm64(ion_enabled, spew, simulator, target, debug):
-    if not ion_enabled:
+@depends('--enable-jit', '--enable-jitspew', simulator, target, moz_debug)
+def jit_disasm_arm64(jit_enabled, spew, simulator, target, debug):
+    if not jit_enabled:
         return
 
     if simulator and (debug or spew):
