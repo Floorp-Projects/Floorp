@@ -43,6 +43,7 @@ class nsIURIClassifierCallback;
 struct LookAndFeelInt;
 class nsDocShellLoadState;
 class nsFrameLoader;
+class nsIOpenWindowInfo;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -109,10 +110,10 @@ class ContentChild final
   };
 
   nsresult ProvideWindowCommon(BrowserChild* aTabOpener,
-                               mozIDOMWindowProxy* aParent, bool aIframeMoz,
-                               uint32_t aChromeFlags, bool aCalledFromJS,
-                               bool aWidthSpecified, nsIURI* aURI,
-                               const nsAString& aName,
+                               nsIOpenWindowInfo* aOpenWindowInfo,
+                               bool aIframeMoz, uint32_t aChromeFlags,
+                               bool aCalledFromJS, bool aWidthSpecified,
+                               nsIURI* aURI, const nsAString& aName,
                                const nsACString& aFeatures, bool aForceNoOpener,
                                bool aForceNoReferrer,
                                nsDocShellLoadState* aLoadState,

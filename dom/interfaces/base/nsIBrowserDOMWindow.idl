@@ -11,12 +11,15 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIContentSecurityPolicy;
 interface nsIReferrerInfo;
+interface nsIOpenWindowInfo;
 webidl BrowsingContext;
 webidl Element;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
 {
+  readonly attribute nsIOpenWindowInfo openWindowInfo;
+
   attribute nsIReferrerInfo referrerInfo;
   readonly attribute boolean isPrivate;
   attribute nsIPrincipal triggeringPrincipal;
@@ -107,7 +110,7 @@ interface nsIBrowserDOMWindow : nsISupports
 
    * @param aURI the URI to be opened in the window (can be null).
    * @param aWhere see possible values described above.
-   * @param aOpener window requesting the creation (can be null).
+   * @param aOpenWindowInfo info about the creation (can be null).
    * @param aFlags flags which control the behavior of the load. The
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
@@ -117,7 +120,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * @return the window into which the URI would have been opened.
   */
   BrowsingContext
-  createContentWindow(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
+  createContentWindow(in nsIURI aURI, in nsIOpenWindowInfo aOpenWindowInfo,
                       in short aWhere, in long aFlags,
                       in nsIPrincipal aTriggeringPrincipal,
                       [optional] in nsIContentSecurityPolicy aCsp);
@@ -127,14 +130,12 @@ interface nsIBrowserDOMWindow : nsISupports
    * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
-   * @param aNextRemoteTabId The RemoteTab to associate the window with.
    * @param aName The name to give the window opened in the new tab.
    * @return The frame element for the newly opened window.
    */
   Element
   createContentWindowInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                              in short aWhere, in long aFlags,
-                             in unsigned long long aNextRemoteTabId,
                              in AString aName);
 
   /**
@@ -143,7 +144,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * @param aURI the URI to open. null is not allowed. To create the window
    *        without loading the URI, use createContentWindow instead.
    * @param aWhere see possible values described above.
-   * @param aOpener window requesting the open (can be null).
+   * @param aOpenWindowInfo info about the open (can be null).
    * @param aFlags flags which control the behavior of the load. The
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
@@ -152,7 +153,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * @return the window into which the URI was opened.
   */
   BrowsingContext
-  openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
+  openURI(in nsIURI aURI, in nsIOpenWindowInfo aOpenWindowInfo,
           in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal,
           [optional] in nsIContentSecurityPolicy aCsp);
 
@@ -161,7 +162,6 @@ interface nsIBrowserDOMWindow : nsISupports
    * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
-   * @param aNextRemoteTabId The RemoteTab to associate the window with.
    * @param aName The name to give the window opened in the new tab.
    * @return The frame element for the newly opened window.
    // XXXbz is this the right API?
@@ -170,7 +170,6 @@ interface nsIBrowserDOMWindow : nsISupports
   Element
   openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                  in short aWhere, in long aFlags,
-                 in unsigned long long aNextRemoteTabId,
                  in AString aName);
 
   /**
