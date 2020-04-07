@@ -20,84 +20,49 @@ line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 
 fix_stacks = None
 
-print_slow_warning = False
 
-
-# Initialize stack-fixing machinery. On the first call, this function spawns a
-# `fix-stacks` process that will persist as long as this Python process does.
-# Subsequent calls do nothing.
-#
-# WARNING: on Windows, when this function is called, the spawned `fix-stacks`
-# process will inherit any open file descriptors. This can cause problems as
-# seen in bug 1626272. Specifically, if file F has a file descriptor open when
-# this function is called, `fix-stacks` will inherit that file descriptor, and
-# subsequent attempts to access F from Python code can cause errors of the form
-# "The process cannot access the file because it is being used by another
-# process". Therefore, this function should be called without any file
-# descriptors being open.
-#
-# This appears to be a Windows-only, Python2-only problem. In Python3, file
-# descriptors are non-inheritable by default on all platforms, and `Popen` has
-# `close_fds=True` as the default, either of which would avoid the problem.
-# Unfortunately in Python2 on Windows, file descriptors are inheritable, and
-# `close_fds=True` is unusable (as the `subprocess` docs explain: "on Windows,
-# you cannot set `close_fds` to true and also redirect the standard handles by
-# setting `stdin`, `stdout` or `stderr`", and we need to redirect those
-# standard handles). All this is badly broken, but we have to work around it.
-def init(json_mode=False, slow_warning=False, breakpad_syms_dir=None):
+def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None):
     global fix_stacks
-    global print_slow_warning
-
-    # Only initialize once.
-    if fix_stacks:
-        return
-
-    # Look in MOZ_FETCHES_DIR (for automation), then in MOZBUILD_STATE_PATH
-    # (for a local build where the user has that set), then in ~/.mozbuild (for
-    # a local build with default settings).
-    base = os.environ.get(
-        'MOZ_FETCHES_DIR',
-        os.environ.get(
-            'MOZBUILD_STATE_PATH',
-            os.path.expanduser('~/.mozbuild')
-        )
-    )
-    fix_stacks_exe = base + '/fix-stacks/fix-stacks'
-    if platform.system() == 'Windows':
-        fix_stacks_exe = fix_stacks_exe + '.exe'
-
-    if not (os.path.isfile(fix_stacks_exe) and os.access(fix_stacks_exe, os.X_OK)):
-        raise Exception('cannot find `fix-stacks`; please run `./mach bootstrap`')
-
-    args = [fix_stacks_exe]
-    if json_mode:
-        args.append('-j')
-    if breakpad_syms_dir:
-        # `fileid` should be packaged next to `fix_stacks.py`.
-        here = os.path.dirname(__file__)
-        fileid_exe = os.path.join(here, 'fileid')
-        if platform.system() == 'Windows':
-            fileid_exe = fileid_exe + '.exe'
-
-        args.append('-b')
-        args.append(breakpad_syms_dir + "," + fileid_exe)
-
-    fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=None)
-    print_slow_warning = slow_warning
-
-
-def fix(line):
-    global print_slow_warning
 
     result = line_re.search(line)
     if result is None:
         return line
 
-    # Note that this warning isn't printed until we hit our first stack frame
-    # that requires fixing.
-    if print_slow_warning:
-        print("Initializing stack-fixing for the first stack frame, this may take a while...")
-        print_slow_warning = False
+    if not fix_stacks:
+        # Look in MOZ_FETCHES_DIR (for automation), then in MOZBUILD_STATE_PATH
+        # (for a local build where the user has that set), then in ~/.mozbuild
+        # (for a local build with default settings).
+        base = os.environ.get(
+            'MOZ_FETCHES_DIR',
+            os.environ.get(
+                'MOZBUILD_STATE_PATH',
+                os.path.expanduser('~/.mozbuild')
+            )
+        )
+        fix_stacks_exe = base + '/fix-stacks/fix-stacks'
+        if platform.system() == 'Windows':
+            fix_stacks_exe = fix_stacks_exe + '.exe'
+
+        if not (os.path.isfile(fix_stacks_exe) and os.access(fix_stacks_exe, os.X_OK)):
+            raise Exception('cannot find `fix-stacks`; please run `./mach bootstrap`')
+
+        args = [fix_stacks_exe]
+        if jsonMode:
+            args.append('-j')
+        if breakpadSymsDir:
+            # `fileid` should be packaged next to `fix_stacks.py`.
+            here = os.path.dirname(__file__)
+            fileid_exe = os.path.join(here, 'fileid')
+            if platform.system() == 'Windows':
+                fileid_exe = fileid_exe + '.exe'
+
+            args.append('-b')
+            args.append(breakpadSymsDir + "," + fileid_exe)
+
+        fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=None)
+
+        if slowWarning:
+            print("Initializing stack-fixing for the first stack frame, this may take a while...")
 
     # Sometimes `line` is lacking a trailing newline. If we pass such a `line`
     # to `fix-stacks` it will wait until it receives a newline, causing this
@@ -115,6 +80,5 @@ def fix(line):
 
 
 if __name__ == "__main__":
-    init()
     for line in sys.stdin:
-        sys.stdout.write(fix(line))
+        sys.stdout.write(fixSymbols(line))
