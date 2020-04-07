@@ -1,3 +1,5 @@
+"use strict";
+
 var _PSvc;
 function get_pref_service() {
   if (_PSvc) {

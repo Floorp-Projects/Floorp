@@ -1,4 +1,5 @@
 // This file tests async handling of a channel suspended in http-on-modify-request.
+"use strict";
 
 var CC = Components.Constructor;
 

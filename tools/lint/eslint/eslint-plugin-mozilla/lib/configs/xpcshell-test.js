@@ -15,6 +15,7 @@ module.exports = {
     deepEqual: false,
     do_await_remote_message: false,
     do_check_instanceof: false,
+    do_check_throws_nsIException: false,
     do_get_cwd: false,
     do_get_file: false,
     do_get_idle: false,

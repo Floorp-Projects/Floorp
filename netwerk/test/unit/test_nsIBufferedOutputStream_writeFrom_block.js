@@ -1,3 +1,5 @@
+"use strict";
+
 var CC = Components.Constructor;
 
 var Pipe = CC("@mozilla.org/pipe;1", Ci.nsIPipe, "init");

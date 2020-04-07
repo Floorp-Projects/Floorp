@@ -1,3 +1,5 @@
+"use strict";
+
 const GOOD_COOKIE = "GoodCookie=OMNOMNOM";
 const SPACEY_COOKIE = "Spacey Cookie=Major Tom";
 

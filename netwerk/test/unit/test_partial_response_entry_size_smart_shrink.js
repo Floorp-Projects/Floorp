@@ -7,6 +7,8 @@
 
 */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -54,7 +56,8 @@ function contentHandler(metadata, response) {
   }
 }
 
-var enforcePref;
+let enforceSoftPref;
+let enforceStrictChunkedPref;
 
 function run_test() {
   enforceSoftPref = Services.prefs.getBoolPref(

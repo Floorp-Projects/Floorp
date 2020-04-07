@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("IndexedDB", {
   cookieJarAccessAllowed: async w => {
     w.indexedDB.open("test", "1");

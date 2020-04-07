@@ -5,6 +5,8 @@
 // - HTTPS
 // - Proxies
 
+"use strict";
+
 const nsIAuthInformation = Ci.nsIAuthInformation;
 const nsIAuthPromptAdapterFactory = Ci.nsIAuthPromptAdapterFactory;
 

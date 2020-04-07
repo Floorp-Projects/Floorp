@@ -1,5 +1,7 @@
 // Test based on submitted one from Peter B Shalimoff
 
+"use strict";
+
 var test = function(s, funcName) {
   function Arg() {}
   Arg.prototype.toString = function() {
@@ -21,8 +23,6 @@ var test = function(s, funcName) {
     Assert.ok(true); // make sure it throws an exception instead of crashing
     return x;
   }
-  // should always have an exception to catch
-  Assert.ok(false);
 };
 var s = null;
 var funcs = [

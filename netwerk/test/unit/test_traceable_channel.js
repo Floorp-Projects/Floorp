@@ -1,3 +1,5 @@
+"use strict";
+
 // Test nsITraceableChannel interface.
 // Replace original listener with TracingListener that modifies body of HTTP
 // response. Make sure that body received by original channel's listener

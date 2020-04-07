@@ -1,3 +1,5 @@
+"use strict";
+
 var testpath = "/bug1054739";
 
 function run_test() {

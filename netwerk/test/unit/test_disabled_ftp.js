@@ -1,3 +1,5 @@
+"use strict";
+
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("network.ftp.enabled");
 });

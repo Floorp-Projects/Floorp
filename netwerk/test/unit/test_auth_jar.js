@@ -1,3 +1,5 @@
+"use strict";
+
 function createURI(s) {
   let service = Cc["@mozilla.org/network/io-service;1"].getService(
     Ci.nsIIOService

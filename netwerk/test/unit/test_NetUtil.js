@@ -8,6 +8,8 @@
  * This file tests the methods on NetUtil.jsm.
  */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // We need the profile directory so the test harness will clean up our test

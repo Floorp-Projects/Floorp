@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
     Ci.nsISupportsCString

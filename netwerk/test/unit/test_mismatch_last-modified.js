@@ -1,3 +1,11 @@
+"use strict";
+
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpserver = new HttpServer();
 

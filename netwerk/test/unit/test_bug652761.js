@@ -1,5 +1,7 @@
 // This is just a crashtest for a url that is rejected at parse time (port 80,000)
 
+"use strict";
+
 function run_test() {
   // Bug 1301621 makes invalid ports throw
   Assert.throws(

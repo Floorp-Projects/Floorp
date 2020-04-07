@@ -3,6 +3,7 @@
 //
 
 // Note: sets Cc and Ci variables
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 

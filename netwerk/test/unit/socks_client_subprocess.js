@@ -1,3 +1,7 @@
+/* global arguments */
+
+"use strict";
+
 var CC = Components.Constructor;
 
 const BinaryInputStream = CC(
@@ -47,7 +51,7 @@ function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns) {
 
 for (var arg of arguments) {
   print("client: running test", arg);
-  test = arg.split("|");
+  let test = arg.split("|");
   launchConnection(
     test[0],
     parseInt(test[1]),

@@ -15,6 +15,8 @@ This test exercises the CacheFileContextEvictor::WasEvicted API and code using i
 
 */
 
+"use strict";
+
 const kENTRYCOUNT = 10;
 
 function log_(msg) {

@@ -1,5 +1,8 @@
 // Test that URLs containing characters in the IDN blacklist are
 // always displayed as punycode
+
+"use strict";
+
 const testcases = [
   //  Original  Punycode or
   //            normalized form

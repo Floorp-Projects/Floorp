@@ -3,6 +3,8 @@
 
 // Test that the cookie APIs behave sanely after 'profile-before-change'.
 
+"use strict";
+
 var test_generator = do_run_test();
 
 function run_test() {

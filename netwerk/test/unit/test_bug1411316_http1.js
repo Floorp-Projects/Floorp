@@ -12,6 +12,8 @@
 // 3. We expect that all 6 active connections should be closed with the status
 //    NS_ERROR_ABORT.
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
@@ -79,7 +81,7 @@ HttpResponseListener.prototype = {
   },
 };
 
-var responseQueue = new Array();
+var responseQueue = [];
 function setup_http_server() {
   log("setup_http_server");
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(

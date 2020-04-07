@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   function makeURI(aURLSpec, aCharset) {
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(

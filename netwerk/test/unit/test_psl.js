@@ -1,3 +1,5 @@
+"use strict";
+
 var etld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
   Ci.nsIEffectiveTLDService
 );

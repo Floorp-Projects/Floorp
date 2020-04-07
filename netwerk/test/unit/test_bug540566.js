@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+"use strict";
+
 function continue_test(status, entry) {
   Assert.equal(status, Cr.NS_OK);
   // TODO - mayhemer: remove this tests completely

@@ -4,6 +4,8 @@
 // specified in RFC 2616 section 14.9.3 by letting max-age
 // take precedence
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const BUGID = "203271";
 

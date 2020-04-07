@@ -1,3 +1,5 @@
+"use strict";
+
 function exitPB() {
   var obsvc = Cc["@mozilla.org/observer-service;1"].getService(
     Ci.nsIObserverService

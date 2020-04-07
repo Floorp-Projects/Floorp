@@ -13,6 +13,8 @@
 // 3. Check that the request isn't conditional, i.e. the entry from previous
 //    load was doomed.
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {

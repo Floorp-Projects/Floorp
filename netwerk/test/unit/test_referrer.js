@@ -1,3 +1,5 @@
+"use strict";
+
 const ReferrerInfo = Components.Constructor(
   "@mozilla.org/referrer-info;1",
   "nsIReferrerInfo",

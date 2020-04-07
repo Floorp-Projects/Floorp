@@ -1,3 +1,5 @@
+"use strict";
+
 const url = "http://foo.com/folder/file?/.";
 
 function run_test() {

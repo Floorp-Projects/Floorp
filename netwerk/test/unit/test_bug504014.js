@@ -1,3 +1,5 @@
+"use strict";
+
 var valid_URIs = [
   "http://[::]/",
   "http://[::1]/",

@@ -13,6 +13,7 @@ This test is using a resumable response.
 - the second channel must correctly fail
 
 */
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 

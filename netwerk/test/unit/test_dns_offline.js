@@ -1,3 +1,5 @@
+"use strict";
+
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
   Ci.nsIIOService

@@ -1,3 +1,5 @@
+"use strict";
+
 var CC = Components.Constructor;
 
 const ServerSocket = CC(
@@ -319,7 +321,7 @@ SocksClient.prototype = {
         return;
       }
 
-      buf = this.inbuf.slice(5, 5 + len);
+      let buf = this.inbuf.slice(5, 5 + len);
       this.dest_name = buf2str(buf);
       len += 1;
     } else {

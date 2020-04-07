@@ -1,4 +1,5 @@
 // Exercise Unix domain sockets.
+"use strict";
 
 var CC = Components.Constructor;
 

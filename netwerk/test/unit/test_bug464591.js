@@ -2,6 +2,9 @@
 //   to punycode, not UTF-8 string
 // 2.only hostname-valid percent encoded ASCII characters should be decoded
 // 3.IDN convertion must not bypassed by %00
+
+"use strict";
+
 let reference = [
   [
     "www.example.com%e2%88%95www.mozill%d0%b0.com%e2%81%84www.mozilla.org",

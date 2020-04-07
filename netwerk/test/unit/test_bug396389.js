@@ -1,3 +1,5 @@
+"use strict";
+
 function round_trip(uri) {
   var objectOutStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
     Ci.nsIObjectOutputStream
@@ -45,9 +47,6 @@ function run_test() {
     Ci.nsIPrefBranch
   );
   for (var pref of prefData) {
-    try {
-      pref.oldVal = prefs.getBoolPref(pref.name);
-    } catch (e) {}
     prefs.setBoolPref(pref.name, pref.newVal);
   }
 

@@ -1,5 +1,7 @@
 /* run some tests on the file:// protocol handler */
 
+"use strict";
+
 const PR_RDONLY = 0x1; // see prio.h
 
 const special_type = "application/x-our-special-type";
@@ -263,7 +265,7 @@ function test_load_replace() {
   // lnk files should resolve to their targets
   if (mozinfo.os == "win") {
     dump("*** test_load_replace\n");
-    file = do_get_file("data/system_root.lnk", false);
+    let file = do_get_file("data/system_root.lnk", false);
     var chan = new_file_channel(file);
 
     // The original URI path should differ from the URI path

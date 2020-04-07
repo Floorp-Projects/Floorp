@@ -1,3 +1,5 @@
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const VALUE_HDR_NAME = "X-HTTP-VALUE-HEADER";

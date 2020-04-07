@@ -11,6 +11,7 @@
   <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
+/* eslint-env mozilla/frame-script */
 var script = SpecialPowers.loadChromeScript(() => {
   const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 
@@ -34,7 +35,7 @@ script.addMessageListener('start-test', () => {
 
   iframe.contentWindow.onunload = function () {
     info('initiate sync XHR during the page loading');
-    xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open('GET', window.location, false);
     xhr.send(null);
     ok(true, 'complete without crash');

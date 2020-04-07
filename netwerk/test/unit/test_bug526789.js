@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
@@ -171,7 +173,7 @@ function run_test() {
   cm.removeAll();
 
   // test that an empty file:// host works
-  emptyuri = NetUtil.newURI("file:///");
+  let emptyuri = NetUtil.newURI("file:///");
   Assert.equal(emptyuri.asciiHost, "");
   Assert.equal(NetUtil.newURI("file://./").asciiHost, "");
   Assert.equal(NetUtil.newURI("file://foo.bar/").asciiHost, "");
