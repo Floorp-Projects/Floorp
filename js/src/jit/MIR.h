@@ -4474,20 +4474,10 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
   virtual MDefinition* foldIfAllBitsSet(size_t operand) = 0;
   void collectRangeInfoPreTrunc() override;
 
-  void setInt32Specialization() {
-    specialization_ = MIRType::Int32;
-    setResultType(MIRType::Int32);
-  }
-
   bool congruentTo(const MDefinition* ins) const override {
     return binaryCongruentTo(ins);
   }
-  AliasSet getAliasSet() const override {
-    if (specialization_ >= MIRType::Object) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    return AliasSet::None();
-  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   TruncateKind operandTruncateKind(size_t index) const override;
 };
@@ -4519,9 +4509,7 @@ class MBitAnd : public MBinaryBitwiseInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ != MIRType::None;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MBitAnd)
 };
@@ -4550,9 +4538,7 @@ class MBitOr : public MBinaryBitwiseInstruction {
   void computeRange(TempAllocator& alloc) override;
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ != MIRType::None;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MBitOr)
 };
@@ -4577,9 +4563,7 @@ class MBitXor : public MBinaryBitwiseInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MBitXor)
 };
@@ -4613,9 +4597,7 @@ class MLsh : public MShiftInstruction {
   void computeRange(TempAllocator& alloc) override;
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ != MIRType::None;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MLsh)
 };
@@ -4637,9 +4619,7 @@ class MRsh : public MShiftInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
@@ -4678,9 +4658,7 @@ class MUrsh : public MShiftInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MUrsh)
 };
