@@ -3448,10 +3448,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitnot() {
 }
 
 AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
-    JSOp op, MIRType specialization, MDefinition* left, MDefinition* right) {
-  MOZ_ASSERT(specialization == MIRType::Int32 ||
-             specialization == MIRType::None);
-
+    JSOp op, MDefinition* left, MDefinition* right) {
   MBinaryBitwiseInstruction* ins;
   switch (op) {
     case JSOp::BitAnd:
@@ -3486,12 +3483,8 @@ AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
   ins->infer(inspector, pc);
 
   // The expected specialization should match the inferred specialization.
-  MOZ_ASSERT_IF(specialization == MIRType::None,
-                ins->specialization() == MIRType::None);
-  MOZ_ASSERT_IF(
-      specialization == MIRType::Int32,
-      ins->specialization() == MIRType::Int32 ||
-          (op == JSOp::Ursh && ins->specialization() == MIRType::Double));
+  MOZ_ASSERT(ins->specialization() == MIRType::Int32 ||
+             (op == JSOp::Ursh && ins->specialization() == MIRType::Double));
 
   current->push(ins);
   if (ins->isEffectful()) {
@@ -3514,8 +3507,7 @@ AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
     return Ok();
   }
 
-  MIRType specialization = MIRType::Int32;
-  MOZ_TRY(binaryBitOpEmit(op, specialization, left, right));
+  MOZ_TRY(binaryBitOpEmit(op, left, right));
 
   *emitted = true;
   return Ok();
