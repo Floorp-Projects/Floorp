@@ -9157,7 +9157,7 @@ nsIFrame::FrameSearchResult nsFrame::PeekOffsetCharacter(
 
 nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(
     bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-    int32_t* aOffset, PeekWordState* aState, bool aTrimSpaces) {
+    int32_t* aOffset, PeekWordState* aState, bool /*aTrimSpaces*/) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;
   // This isn't text, so truncate the context
