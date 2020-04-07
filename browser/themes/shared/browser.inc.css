@@ -101,8 +101,7 @@
 menupopup::part(drop-indicator-bar) {
   position: relative;
   /* these two margins must together compensate the indicator's height */
-  margin-top: -1px;
-  margin-bottom: -1px;
+  margin-block: -1px;
 }
 
 menupopup::part(drop-indicator) {
@@ -154,8 +153,7 @@ menupopup::part(drop-indicator) {
   background-position: center;
   width: 24px;
   height: 24px;
-  margin-left: 7px;
-  margin-right: 7px;
+  margin-inline: 7px;
   position: relative;
   /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
    * in case the dark/light themes give that item a background. */
@@ -167,8 +165,7 @@ menupopup::part(drop-indicator) {
   -moz-user-focus: normal;
   /* Clear default button styling */
   -moz-appearance: none;
-  margin-top: unset;
-  margin-bottom: unset;
+  margin-block: unset;
   min-width: unset;
   color: unset;
   text-shadow: unset;
@@ -200,8 +197,7 @@ menupopup::part(drop-indicator) {
 
 #DateTimePickerPanel[side="top"],
 #DateTimePickerPanel[side="bottom"] {
-  margin-left: 0;
-  margin-right: 0;
+  margin-inline: 0;
 }
 
 #widget-overflow .webextension-popup-browser {
@@ -290,8 +286,7 @@ menupopup::part(drop-indicator) {
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] description {
   font-weight: 400;
   margin: unset;
-  margin-inline-end: 12px;
-  margin-inline-start: 12px;
+  margin-inline: 12px;
   transform: translateY(50%);
 }
 
@@ -301,12 +296,8 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button-container {
-  float: right;
+  float: inline-end;
   background-color: transparent;
-}
-
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button-container:-moz-locale-dir(rtl) {
-  float: left;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button {
@@ -322,11 +313,10 @@ menupopup::part(drop-indicator) {
   -moz-context-properties: fill;
   fill: currentColor;
   transform: scaleX(-1) translateY(2px);
-  float: right;
+  float: inline-end;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(rtl) .popup-notification-button.popup-notification-primary-button:after {
-  float: left;
   transform: scaleX(1) translateY(2px);
 }
 
@@ -445,8 +435,7 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-addon-info {
   align-items: center;
   display: flex;
-  margin-top: 10px;
-  margin-bottom: 6px;
+  margin-block: 10px 6px;
 }
 
 #cfr-notification-footer-filled-stars,
