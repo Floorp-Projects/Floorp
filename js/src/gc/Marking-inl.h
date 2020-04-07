@@ -108,21 +108,10 @@ inline T MaybeForwarded(T t) {
   return t;
 }
 
-inline RelocatedCellHeader::RelocatedCellHeader(Cell* location,
-                                                uintptr_t flags) {
-  uintptr_t ptr = uintptr_t(location);
-  MOZ_ASSERT((ptr & RESERVED_MASK) == 0);
-  MOZ_ASSERT((flags & ~RESERVED_MASK) == 0);
-  header_ = ptr | flags | FORWARD_BIT;
-}
-
-inline RelocationOverlay::RelocationOverlay(Cell* dst, uintptr_t flags)
-    : header_(dst, flags) {}
-
-/* static */
-inline RelocationOverlay* RelocationOverlay::forwardCell(Cell* src, Cell* dst) {
-  MOZ_ASSERT(!src->isForwarded());
-  MOZ_ASSERT(!dst->isForwarded());
+inline void RelocationOverlay::forwardTo(Cell* cell) {
+  MOZ_ASSERT(!isForwarded());
+  MOZ_ASSERT((uintptr_t(cell) & CellHeader::RESERVED_MASK) == 0,
+             "preserving flags doesn't clobber any existing bits");
 
   // Preserve old flags because nursery may check them before checking
   // if this is a forwarded Cell.
@@ -132,8 +121,8 @@ inline RelocationOverlay* RelocationOverlay::forwardCell(Cell* src, Cell* dst) {
   //
   // The copied over flags are only used for nursery Cells, when the Cell is
   // tenured, these bits are never read and hence may contain any content.
-  uintptr_t flags = reinterpret_cast<CellHeader*>(dst)->flags();
-  return new (src) RelocationOverlay(dst, flags);
+  uintptr_t gcFlags = dataWithTag_ & CellHeader::RESERVED_MASK;
+  dataWithTag_ = uintptr_t(cell) | gcFlags | CellHeader::FORWARD_BIT;
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell** cellp) {
