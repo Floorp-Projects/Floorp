@@ -51,6 +51,10 @@ job-defaults:
                     - raptor/linux64_config_taskcluster.py
                 default:
                     - raptor/linux_config.py
+        extra-options:
+            # Bug 1626522: Temporarily enable extension logging for
+            # an easier investigation of intermittents on mobile devices
+            - --setpref=extensions.logging.enabled=true
     fission-run-on-projects:
         by-test-platform:
             linux64-shippable-qr/opt: ['mozilla-central']
