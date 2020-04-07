@@ -121,6 +121,7 @@ extern "C" {
         ty: GLenum,
         data: *const c_void,
     );
+    fn GenerateMipmap(target: GLenum);
     fn GetUniformLocation(program: GLuint, name: *const GLchar) -> GLint;
     fn BindAttribLocation(program: GLuint, index: GLuint, name: *const GLchar);
     fn GetAttribLocation(program: GLuint, name: *const GLchar) -> GLint;
@@ -2055,7 +2056,9 @@ impl Gl for Context {
     }
 
     fn generate_mipmap(&self, target: GLenum) {
-        panic!();
+        unsafe {
+            GenerateMipmap(target);
+        }
     }
 
     fn insert_event_marker_ext(&self, message: &str) {

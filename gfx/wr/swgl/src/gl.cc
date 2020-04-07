@@ -1379,6 +1379,10 @@ void TexImage3D(GLenum target, GLint level, GLint internal_format,
   TexSubImage3D(target, 0, 0, 0, 0, width, height, depth, format, ty, data);
 }
 
+void GenerateMipmap(GLenum target) {
+  // TODO: support mipmaps
+}
+
 void TexParameteri(GLenum target, GLenum pname, GLint param) {
   Texture& t = ctx->textures[ctx->get_binding(target)];
   switch (pname) {
@@ -1389,11 +1393,9 @@ void TexParameteri(GLenum target, GLenum pname, GLint param) {
       assert(param == GL_CLAMP_TO_EDGE);
       break;
     case GL_TEXTURE_MIN_FILTER:
-      assert(param == GL_NEAREST || param == GL_LINEAR);
       t.min_filter = param;
       break;
     case GL_TEXTURE_MAG_FILTER:
-      assert(param == GL_NEAREST || param == GL_LINEAR);
       t.mag_filter = param;
       break;
     default:
