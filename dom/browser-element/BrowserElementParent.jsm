@@ -133,7 +133,7 @@ BrowserElementParent.prototype = {
       try {
         this._pendingAPICalls[i]();
       } catch (e) {
-        // throw the expections from pending functions.
+        // throw the exceptions from pending functions.
         debug("Exception when running pending API call: " + e);
       }
     }

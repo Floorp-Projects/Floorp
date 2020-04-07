@@ -100,7 +100,7 @@ struct CharacterDataChangeInfo {
  * any mutations to the current or any other document, or start a
  * network load.  If you need to perform such operations do that
  * during the _last_ nsIDocumentObserver::EndUpdate notification.  The
- * expection for this is ParentChainChanged, where mutations should be
+ * exception for this is ParentChainChanged, where mutations should be
  * done from an async event, as the notification might not be
  * surrounded by BeginUpdate/EndUpdate calls.
  */
