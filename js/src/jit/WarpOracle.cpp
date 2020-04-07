@@ -6,9 +6,11 @@
 
 #include "jit/WarpOracle.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ScopeExit.h"
 
 #include "jit/JitScript.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
 #include "jit/WarpBuilder.h"
 #include "vm/BytecodeIterator.h"
@@ -45,6 +47,14 @@ mozilla::GenericErrorResult<AbortReason> WarpOracle::abort(AbortReason r,
 }
 
 AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
+  JitSpew(JitSpew_IonScripts,
+          "Warp %sompiling script %s:%u:%u (%p) (warmup-counter=%" PRIu32
+          ", level=%s)",
+          (script_->hasIonScript() ? "Rec" : "C"), script_->filename(),
+          script_->lineno(), script_->column(), static_cast<JSScript*>(script_),
+          script_->getWarmUpCount(),
+          OptimizationLevelString(mirGen_.optimizationInfo().level()));
+
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, createScriptSnapshot(script_));
 
@@ -52,6 +62,13 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   if (!snapshot) {
     return abort(AbortReason::Alloc);
   }
+
+#ifdef JS_JITSPEW
+  if (JitSpewEnabled(JitSpew_WarpSnapshots)) {
+    Fprinter& out = JitSpewPrinter();
+    snapshot->dump(out);
+  }
+#endif
 
   return snapshot;
 }
@@ -601,3 +618,104 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
 
   return scriptSnapshot;
 }
+
+#ifdef JS_JITSPEW
+void WarpSnapshot::dump() const {
+  Fprinter out(stderr);
+  dump(out);
+}
+
+void WarpSnapshot::dump(GenericPrinter& out) const {
+  out.printf("WarpSnapshot (0x%p)\n", this);
+  out.printf("------------------------------\n");
+  out.printf("globalLexicalEnv: 0x%p\n", globalLexicalEnv());
+  out.printf("globalLexicalEnvThis: 0x%016" PRIx64 "\n",
+             globalLexicalEnvThis().asRawBits());
+  out.printf("\n");
+
+  script_->dump(out);
+}
+
+void WarpScriptSnapshot::dump(GenericPrinter& out) const {
+  out.printf("Script: %s:%u:%u (0x%p)\n", script_->filename(),
+             script_->lineno(), script_->column(), script_);
+  out.printf("  moduleObject: 0x%p\n", moduleObject());
+  out.printf("  isArrowFunction: %u\n", isArrowFunction());
+  out.printf("  environment: ");
+  switch (environment_.kind()) {
+    case WarpEnvironment::Kind::None:
+      out.printf("None\n");
+      break;
+    case WarpEnvironment::Kind::ConstantObject:
+      out.printf("Object: 0x%p\n", environment_.constantObject());
+      break;
+    case WarpEnvironment::Kind::Function:
+      out.printf(
+          "Function: callobject template 0x%p, named lambda template: 0x%p\n",
+          environment_.maybeCallObjectTemplate(),
+          environment_.maybeNamedLambdaTemplate());
+      break;
+  }
+
+  out.printf("\n");
+  for (const WarpOpSnapshot* snapshot : opSnapshots()) {
+    snapshot->dump(out, script_);
+    out.printf("\n");
+  }
+}
+
+static const char* OpSnapshotKindString(WarpOpSnapshot::Kind kind) {
+  static const char* const names[] = {
+#  define NAME(x) #  x,
+      WARP_OP_SNAPSHOT_LIST(NAME)
+#  undef NAME
+  };
+  return names[unsigned(kind)];
+}
+
+void WarpOpSnapshot::dump(GenericPrinter& out, JSScript* script) const {
+  jsbytecode* pc = script->offsetToPC(offset_);
+  out.printf("  %s (offset %u, JSOp::%s)\n", OpSnapshotKindString(kind_),
+             offset_, CodeName(JSOp(*pc)));
+  switch (kind_) {
+#  define DUMP(kind) \
+    case Kind::kind: \
+      return as<kind>()->dumpData(out);
+    WARP_OP_SNAPSHOT_LIST(DUMP)
+#  undef DUMP
+  }
+}
+
+void WarpArguments::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObj());
+}
+
+void WarpRegExp::dumpData(GenericPrinter& out) const {
+  out.printf("    hasShared: %u\n", hasShared());
+}
+
+void WarpFunctionProto::dumpData(GenericPrinter& out) const {
+  out.printf("    proto: 0x%p\n", proto());
+}
+
+void WarpGetIntrinsic::dumpData(GenericPrinter& out) const {
+  out.printf("    intrinsic: 0x%016" PRIx64 "\n", intrinsic().asRawBits());
+}
+
+void WarpGetImport::dumpData(GenericPrinter& out) const {
+  out.printf("    targetEnv: 0x%p\n", targetEnv());
+  out.printf("    numFixedSlots: %u\n", numFixedSlots());
+  out.printf("    slot: %u\n", slot());
+  out.printf("    needsLexicalCheck: %u\n", needsLexicalCheck());
+}
+
+void WarpLambda::dumpData(GenericPrinter& out) const {
+  out.printf("    baseScript: 0x%p\n", baseScript());
+  out.printf("    flags: 0x%x\n", unsigned(flags().toRaw()));
+  out.printf("    nargs: %u\n", unsigned(nargs_));
+}
+
+void WarpRest::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObject());
+}
+#endif  // JS_JITSPEW
