@@ -3463,41 +3463,33 @@ AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
   MBinaryBitwiseInstruction* ins;
   switch (op) {
     case JSOp::BitAnd:
-      ins = MBitAnd::New(alloc(), left, right);
-      ins->setInt32Specialization();
-      ins->setCommutative();
+      ins = MBitAnd::New(alloc(), left, right, MIRType::Int32);
       break;
 
     case JSOp::BitOr:
-      ins = MBitOr::New(alloc(), left, right);
-      ins->setInt32Specialization();
-      ins->setCommutative();
+      ins = MBitOr::New(alloc(), left, right, MIRType::Int32);
       break;
 
     case JSOp::BitXor:
-      ins = MBitXor::New(alloc(), left, right);
-      ins->setInt32Specialization();
-      ins->setCommutative();
+      ins = MBitXor::New(alloc(), left, right, MIRType::Int32);
       break;
 
     case JSOp::Lsh:
-      ins = MLsh::New(alloc(), left, right);
-      ins->setInt32Specialization();
+      ins = MLsh::New(alloc(), left, right, MIRType::Int32);
       break;
 
     case JSOp::Rsh:
-      ins = MRsh::New(alloc(), left, right);
-      ins->setInt32Specialization();
+      ins = MRsh::New(alloc(), left, right, MIRType::Int32);
       break;
 
-    case JSOp::Ursh:
-      ins = MUrsh::New(alloc(), left, right);
+    case JSOp::Ursh: {
+      MIRType specialization = MIRType::Int32;
       if (inspector->hasSeenDoubleResult(pc)) {
-        ins->toUrsh()->setDoubleSpecialization();
-      } else {
-        ins->setInt32Specialization();
+        specialization = MIRType::Double;
       }
+      ins = MUrsh::New(alloc(), left, right, specialization);
       break;
+    }
 
     default:
       MOZ_CRASH("unexpected bitop");

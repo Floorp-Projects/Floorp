@@ -2533,7 +2533,8 @@ MDefinition* MBinaryBitwiseInstruction::foldUnnecessaryBitop() {
 }
 
 void MBinaryBitwiseInstruction::specializeAs(MIRType type) {
-  MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
+  MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64 ||
+             (isUrsh() && type == MIRType::Double));
   MOZ_ASSERT(this->type() == MIRType::Value || this->type() == type);
 
   specialization_ = type;
@@ -3599,20 +3600,10 @@ void MTypeOf::cacheInputMaybeCallableOrEmulatesUndefined(
 }
 
 MBitAnd* MBitAnd::New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right) {
-  return new (alloc) MBitAnd(left, right, MIRType::Int32);
-}
-
-MBitAnd* MBitAnd::New(TempAllocator& alloc, MDefinition* left,
                       MDefinition* right, MIRType type) {
   MBitAnd* ins = new (alloc) MBitAnd(left, right, type);
   ins->specializeAs(type);
   return ins;
-}
-
-MBitOr* MBitOr::New(TempAllocator& alloc, MDefinition* left,
-                    MDefinition* right) {
-  return new (alloc) MBitOr(left, right, MIRType::Int32);
 }
 
 MBitOr* MBitOr::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
@@ -3623,19 +3614,10 @@ MBitOr* MBitOr::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
 }
 
 MBitXor* MBitXor::New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right) {
-  return new (alloc) MBitXor(left, right, MIRType::Int32);
-}
-
-MBitXor* MBitXor::New(TempAllocator& alloc, MDefinition* left,
                       MDefinition* right, MIRType type) {
   MBitXor* ins = new (alloc) MBitXor(left, right, type);
   ins->specializeAs(type);
   return ins;
-}
-
-MLsh* MLsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right) {
-  return new (alloc) MLsh(left, right, MIRType::Int32);
 }
 
 MLsh* MLsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
@@ -3645,10 +3627,6 @@ MLsh* MLsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
   return ins;
 }
 
-MRsh* MRsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right) {
-  return new (alloc) MRsh(left, right, MIRType::Int32);
-}
-
 MRsh* MRsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                 MIRType type) {
   MRsh* ins = new (alloc) MRsh(left, right, type);
@@ -3656,13 +3634,9 @@ MRsh* MRsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
   return ins;
 }
 
-MUrsh* MUrsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right) {
-  return new (alloc) MUrsh(left, right, MIRType::Int32);
-}
-
 MUrsh* MUrsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                   MIRType type) {
-  MUrsh* ins = new (alloc) MUrsh(left, right, type);
+  MUrsh* ins = new (alloc) MUrsh(left, right, MIRType::Int32);
   ins->specializeAs(type);
   return ins;
 }

@@ -4498,8 +4498,6 @@ class MBitAnd : public MBinaryBitwiseInstruction {
  public:
   INSTRUCTION_HEADER(BitAnd)
   static MBitAnd* New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right);
-  static MBitAnd* New(TempAllocator& alloc, MDefinition* left,
                       MDefinition* right, MIRType type);
 
   MDefinition* foldIfZero(size_t operand) override {
@@ -4533,8 +4531,6 @@ class MBitOr : public MBinaryBitwiseInstruction {
  public:
   INSTRUCTION_HEADER(BitOr)
   static MBitOr* New(TempAllocator& alloc, MDefinition* left,
-                     MDefinition* right);
-  static MBitOr* New(TempAllocator& alloc, MDefinition* left,
                      MDefinition* right, MIRType type);
 
   MDefinition* foldIfZero(size_t operand) override {
@@ -4564,8 +4560,6 @@ class MBitXor : public MBinaryBitwiseInstruction {
 
  public:
   INSTRUCTION_HEADER(BitXor)
-  static MBitXor* New(TempAllocator& alloc, MDefinition* left,
-                      MDefinition* right);
   static MBitXor* New(TempAllocator& alloc, MDefinition* left,
                       MDefinition* right, MIRType type);
 
@@ -4604,7 +4598,6 @@ class MLsh : public MShiftInstruction {
 
  public:
   INSTRUCTION_HEADER(Lsh)
-  static MLsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
   static MLsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                    MIRType type);
 
@@ -4630,7 +4623,6 @@ class MRsh : public MShiftInstruction {
 
  public:
   INSTRUCTION_HEADER(Rsh)
-  static MRsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
   static MRsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                    MIRType type);
 
@@ -4680,11 +4672,6 @@ class MUrsh : public MShiftInstruction {
   bool bailoutsDisabled() const { return bailoutsDisabled_; }
 
   bool fallible() const;
-
-  void setDoubleSpecialization() {
-    specialization_ = MIRType::Double;
-    setResultType(MIRType::Double);
-  }
 
   void computeRange(TempAllocator& alloc) override;
   void collectRangeInfoPreTrunc() override;
