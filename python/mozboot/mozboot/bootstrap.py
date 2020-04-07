@@ -257,6 +257,7 @@ class Bootstrapper(object):
             elif dist_id in DEBIAN_DISTROS:
                 cls = DebianBootstrapper
                 args['distro'] = dist_id
+                args['codename'] = codename
             elif dist_id in ('gentoo', 'funtoo'):
                 cls = GentooBootstrapper
             elif dist_id in ('solus'):
