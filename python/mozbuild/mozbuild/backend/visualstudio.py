@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import os
 import re
+import sys
 import uuid
 
 from xml.dom import getDOMImplementation
@@ -35,6 +36,8 @@ MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
 
 
 def get_id(name):
+    if sys.version_info[0] == 2:
+        name = name.encode('utf-8')
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
 
@@ -306,7 +309,7 @@ class VisualStudioBackend(CommonBackend):
         container_id = '2150E333-8FDC-42A3-9474-1A3956D46DE8'
 
         def write_container(desc):
-            cid = get_id(desc.encode('utf-8'))
+            cid = get_id(desc)
             fh.write('Project("{%s}") = "%s", "%s", "{%s}"\r\n' % (
                 container_id, desc, desc, cid))
             fh.write('EndProject\r\n')
@@ -418,12 +421,12 @@ class VisualStudioBackend(CommonBackend):
 
     def _write_mach_powershell(self, fh):
         for k, v in self._relevant_environment_variables():
-            fh.write(b'$env:%s = "%s"\r\n' % (k, v))
+            fh.write(b'$env:%s = "%s"\r\n' % (k.encode('utf-8'), v.encode('utf-8')))
 
         relpath = os.path.relpath(self.environment.topsrcdir,
                                   self.environment.topobjdir).replace('\\', '/')
 
-        fh.write(b'$bashargs = "%s/mach", "--log-no-times"\r\n' % relpath)
+        fh.write(b'$bashargs = "%s/mach", "--log-no-times"\r\n' % relpath.encode('utf-8'))
         fh.write(b'$bashargs = $bashargs + $args\r\n')
 
         fh.write(b"$expanded = $bashargs -join ' '\r\n")
@@ -442,7 +445,7 @@ class VisualStudioBackend(CommonBackend):
         environment. Then, it builds the tree.
         """
         for k, v in self._relevant_environment_variables():
-            fh.write(b'SET "%s=%s"\r\n' % (k, v))
+            fh.write(b'SET "%s=%s"\r\n' % (k.encode('utf-8'), v.encode('utf-8')))
 
         fh.write(b'cd %TOPOBJDIR%\r\n')
 
@@ -455,11 +458,12 @@ class VisualStudioBackend(CommonBackend):
         # We go through mach because it has the logic for choosing the most
         # appropriate build tool.
         fh.write(b'"%%MOZILLABUILD%%\\msys\\bin\\bash" '
-                 b'-c "%s/mach --log-no-times %%1 %%2 %%3 %%4 %%5 %%6 %%7"' % relpath)
+                 b'-c "%s/mach --log-no-times %%1 %%2 %%3 %%4 %%5 %%6 %%7"'
+                 % relpath.encode('utf-8'))
 
     def _write_vs_project(self, out_dir, basename, name, **kwargs):
         root = '%s.vcxproj' % basename
-        project_id = get_id(basename.encode('utf-8'))
+        project_id = get_id(basename)
 
         with self._write_file(os.path.join(out_dir, root), readmode='rb') as fh:
             project_id, name = VisualStudioBackend.write_vs_project(
