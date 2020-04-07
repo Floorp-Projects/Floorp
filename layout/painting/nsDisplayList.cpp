@@ -1301,7 +1301,7 @@ void nsDisplayListBuilder::EndFrame() {
 }
 
 void nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame,
-                                               nsIFrame* aStopAtFrame) {
+                                               const nsIFrame* aStopAtFrame) {
   mFramesMarkedForDisplay.AppendElement(aFrame);
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
@@ -1321,7 +1321,7 @@ void nsDisplayListBuilder::AddFrameMarkedForDisplayIfVisible(nsIFrame* aFrame) {
 }
 
 void nsDisplayListBuilder::MarkFrameForDisplayIfVisible(
-    nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
+    nsIFrame* aFrame, const nsIFrame* aStopAtFrame) {
   AddFrameMarkedForDisplayIfVisible(aFrame);
   for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetDisplayListParent(f)) {
     if (f->ForceDescendIntoIfVisible()) {
@@ -1507,7 +1507,8 @@ bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
   return true;
 }
 
-static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
+static void UnmarkFrameForDisplay(nsIFrame* aFrame,
+                                  const nsIFrame* aStopAtFrame) {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
@@ -1602,7 +1603,7 @@ void nsDisplayListBuilder::IncrementPresShellPaintCount(PresShell* aPresShell) {
   }
 }
 
-void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
+void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
                                           bool aPointerEventsNoneDoc) {
   PresShellState* state = mPresShellStates.AppendElement();
   state->mPresShell = aReferenceFrame->PresShell();
@@ -1730,7 +1731,7 @@ static bool DisplayListIsContentful(nsDisplayList* aList) {
   return false;
 }
 
-void nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
+void nsDisplayListBuilder::LeavePresShell(const nsIFrame* aReferenceFrame,
                                           nsDisplayList* aPaintedContents) {
   NS_ASSERTION(
       CurrentPresShellState()->mPresShell == aReferenceFrame->PresShell(),
@@ -1805,7 +1806,7 @@ void nsDisplayListBuilder::FreeTemporaryItems() {
 }
 
 void nsDisplayListBuilder::ResetMarkedFramesForDisplayList(
-    nsIFrame* aReferenceFrame) {
+    const nsIFrame* aReferenceFrame) {
   // Unmark and pop off the frames marked for display in this pres shell.
   uint32_t firstFrameForShell =
       CurrentPresShellState()->mFirstFrameMarkedForDisplay;
