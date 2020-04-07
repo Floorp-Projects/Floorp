@@ -4788,7 +4788,8 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   }
 
   static MBinaryArithInstruction* New(TempAllocator& alloc, Opcode op,
-                                      MDefinition* left, MDefinition* right);
+                                      MDefinition* left, MDefinition* right,
+                                      MIRType specialization);
 
   bool constantDoubleResult(TempAllocator& alloc);
 
@@ -5708,6 +5709,10 @@ class MMod : public MBinaryArithInstruction {
   static MMod* New(TempAllocator& alloc, MDefinition* left,
                    MDefinition* right) {
     return new (alloc) MMod(left, right, MIRType::Value);
+  }
+  static MMod* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                   MIRType type) {
+    return new (alloc) MMod(left, right, type);
   }
   static MMod* New(
       TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type,
