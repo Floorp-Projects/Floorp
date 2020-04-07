@@ -1289,6 +1289,9 @@ class ContentParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<FileDescriptor>& aDMDFile) override;
 
+  static void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
+  static void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);
+
   void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
   void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
 
@@ -1302,6 +1305,10 @@ class ContentParent final
   static bool ShouldSyncPreference(const char16_t* aData);
 
   NS_IMETHOD GetChildID(uint64_t* aChildID) override;
+
+  static const nsTArray<RefPtr<BrowsingContextGroup>>& BrowsingContextGroups() {
+    return *sBrowsingContextGroupHolder;
+  }
 
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
@@ -1451,6 +1458,9 @@ class ContentParent final
 
   static uint64_t sNextRemoteTabId;
   static nsDataHashtable<nsUint64HashKey, BrowserParent*> sNextBrowserParents;
+
+  static StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
+      sBrowsingContextGroupHolder;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // When set to true, indicates that content processes should

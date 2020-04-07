@@ -18,6 +18,8 @@ namespace dom {
 BrowsingContextGroup::BrowsingContextGroup() {
   if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->HoldBrowsingContextGroup(this);
+  } else {
+    ContentParent::HoldBrowsingContextGroup(this);
   }
 }
 
@@ -40,10 +42,12 @@ void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
     UnsubscribeAllContentParents();
     if (XRE_IsContentProcess()) {
       ContentChild::GetSingleton()->ReleaseBrowsingContextGroup(this);
-      // We may have been deleted here as the ContentChild may have held the
-      // last references to `this`.
-      // Do not access any members at this point.
+    } else {
+      ContentParent::ReleaseBrowsingContextGroup(this);
     }
+    // We may have been deleted here as the ContentChild/Parent may
+    // have held the last references to `this`.
+    // Do not access any members at this point.
   }
 }
 
@@ -212,6 +216,26 @@ BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
   }
 
   return sChromeGroup;
+}
+
+void BrowsingContextGroup::GetDocGroups(nsTArray<DocGroup*>& aDocGroups) {
+  nsTHashtable<nsRefPtrHashKey<DocGroup>> docGroups;
+  for (auto& toplevel : mToplevels) {
+    toplevel->PreOrderWalk([&](BrowsingContext* aContext) {
+      if (nsDocShell* docShell = nsDocShell::Cast(aContext->GetDocShell())) {
+        if (!docShell->HasContentViewer()) {
+          return;
+        }
+        if (Document* document = docShell->GetDocument()) {
+          docGroups.PutEntry(document->GetDocGroup());
+        }
+      }
+    });
+  }
+
+  for (auto iter = docGroups.ConstIter(); !iter.Done(); iter.Next()) {
+    aDocGroups.AppendElement(iter.Get()->GetKey());
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,

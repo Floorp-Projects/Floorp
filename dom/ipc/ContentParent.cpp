@@ -588,6 +588,8 @@ UniquePtr<SandboxBrokerPolicyFactory>
 uint64_t ContentParent::sNextRemoteTabId = 0;
 nsDataHashtable<nsUint64HashKey, BrowserParent*>
     ContentParent::sNextBrowserParents;
+StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
+    ContentParent::sBrowsingContextGroupHolder;
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
@@ -649,6 +651,9 @@ void ContentParent::StartUp() {
   // FIXME Bug 1023701 - Stop using ContentParent static methods in
   // child process
   sCanLaunchSubprocesses = true;
+
+  sBrowsingContextGroupHolder = new nsTArray<RefPtr<BrowsingContextGroup>>();
+  ClearOnShutdown(&sBrowsingContextGroupHolder);
 
   if (!XRE_IsParentProcess()) {
     return;
@@ -6382,6 +6387,18 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
 
   Unused << cp->SendWindowPostMessage(context, message, aData);
   return IPC_OK();
+}
+
+/* static */
+void ContentParent::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  sBrowsingContextGroupHolder->AppendElement(aBCG);
+}
+
+/* static */
+void ContentParent::ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  if (sBrowsingContextGroupHolder) {
+    sBrowsingContextGroupHolder->RemoveElement(aBCG);
+  }
 }
 
 void ContentParent::OnBrowsingContextGroupSubscribe(
