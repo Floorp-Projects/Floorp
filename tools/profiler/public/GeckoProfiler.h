@@ -438,7 +438,7 @@ using PostSamplingCallback = std::function<void(SamplingState)>;
 //   please be mindful not to block for a long time (e.g., just dispatch a
 //   runnable to another thread.) Calling profiler functions from the callback
 //   is allowed.
-MOZ_MUST_USE bool profiler_callback_after_sampling(
+[[nodiscard]] bool profiler_callback_after_sampling(
     PostSamplingCallback&& aCallback);
 
 // Pause and resume the profiler. No-ops if the profiler is inactive. While
