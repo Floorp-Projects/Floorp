@@ -12,7 +12,6 @@
 const sourceFiles = {
   nestedSource: "nested-source.js",
   codeReload1: "code_reload_1.js",
-  previewGetter: "preview-getter.js",
 };
 
 const nodeSelectors = {
@@ -30,28 +29,13 @@ function waitForBlackboxCount(dbg, count) {
   );
 }
 
-async function waitForSourceToUnBlackBox(dbg, source) {
-  const sourceUrl = findSource(dbg, source).url;
-  const thread = dbg.selectors.getCurrentThread();
-
-  return await waitFor(
-    async () => {
-      const threadSources = await dbg.client.fetchThreadSources(thread);
-
-      const sourceIndex = threadSources.findIndex(
-        threadSource => threadSource.source.url === sourceUrl
-      );
-
-      return threadSources[sourceIndex].source.isBlackBoxed === false;
-  });
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-blackbox-all.html");
- 
-  info("Loads the source file and sets a breakpoint at line 14.");
-  await waitForSources(dbg, sourceFiles.nestedSource, sourceFiles.codeReload1, sourceFiles.previewGetter);
-  await loadAndAddBreakpoint(dbg, sourceFiles.previewGetter, 14, 2);
+
+  info("Loads the source file and sets a breakpoint at line 2.");
+  await waitForSources(dbg, sourceFiles.nestedSource, sourceFiles.codeReload1);
+  await selectSource(dbg, sourceFiles.nestedSource);
+  await addBreakpoint(dbg, sourceFiles.nestedSource, 2);
 
   info("Expands the whole source tree.");
   rightClickElement(dbg, "sourceTreeRootNode");
@@ -60,90 +44,57 @@ add_task(async function() {
 
   const sourceTreeFolderNodeEls = findAllElements(dbg, "sourceTreeFolderNode");
   const sourceTreeRootNodeEl = findElement(dbg, "sourceTreeRootNode");
-  let sources;
+
+  info("Blackbox files in this directory.");
+  rightClickEl(dbg, sourceTreeFolderNodeEls[1]);
+  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
+  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllInside, "Blackbox files in this directory");
+  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllOutside, "Blackbox files outside this directory");
+  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAllInside);
+  await waitForBlackboxCount(dbg, 1);
+  await waitForRequestsToSettle(dbg);
+
+  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, true, "nested-source.js is blackboxed");
+  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, false, "code_reload_1.js is not blackboxed");
+
+  info("The invoked function is blackboxed and the debugger does not pause.");
+  invokeInTab("computeSomething");
+  assertNotPaused(dbg);
+
+  info("Unblackbox files outside this directory.");
+  rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
+  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
+  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllInside, "Blackbox files in this directory");
+  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllOutside, "Unblackbox files outside this directory");
+  selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllOutside);
+  await waitForBlackboxCount(dbg, 0);
+  await waitForRequestsToSettle(dbg);
+
+  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, false, "nested-source.js is not blackboxed");
+  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, false, "code_reload_1.js is not blackboxed");
+
+  info("All sources are unblackboxed and the debugger pauses on line 2.");
+  invokeInTab("computeSomething");
+  await waitForPaused(dbg);
+  await resume(dbg);
 
   info("Blackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
   await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllInside, "Blackbox files in this group");
   selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAllInside);
-  await waitForBlackboxCount(dbg, 3);
-
-  info("Main Thread was selected, all sources are blackboxed.");
-  sources = dbg.selectors.getSourceList();
-  is(sources.every(source => source.isBlackBoxed), true, "All sources are blackboxed as expected.");
-  
-  info("The invoked function is blackboxed and the debugger does not pause as expected.");
-  invokeInTab("funcA");
-  assertNotPaused(dbg);
-
-  info("Unblackbox files in this directory");
-  rightClickEl(dbg, sourceTreeFolderNodeEls[0]);
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this directory");
-  selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllInside);
-  await waitForBlackboxCount(dbg, 0);
-  await waitForSourceToUnBlackBox(dbg, sourceFiles.previewGetter);
-
-  info("All sources inside the selected directory are unblackboxed.");
-  sources = dbg.selectors.getSourceList();
-  is(sources.every(source => !source.isBlackBoxed), true, "All sources are unblackboxed as expected.");
-
-  info("All sources are unblackboxed and the debugger pauses on line 14.");
-  invokeInTab("funcA");
-  await waitForPaused(dbg);
-  await resume(dbg);
-
-  info("Blackbox files outside this directory - folder 'nested'");
-  rightClickEl(dbg, sourceTreeFolderNodeEls[1]);
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllInside, "Blackbox files in this directory");
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllOutside, "Blackbox files outside this directory");
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAllOutside);
   await waitForBlackboxCount(dbg, 2);
+  await waitForRequestsToSettle(dbg);
 
-  info("Only source inside the selected directory is not blackboxed.");
-  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, false, "nested-source.js source file is not blackboxed");
-  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, true, "code_reload_1.js source file is blackboxed");
-  is(findSource(dbg, sourceFiles.previewGetter).isBlackBoxed, true, "preview-getter.js source file is blackboxed");
-
-  info("The invoked function is blackboxed and the debugger does not pause as expected.");
-  invokeInTab("funcA");
-  assertNotPaused(dbg);
-
-  info("Blackbox files outside this directory - folder 'reload'");
-  rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this directory");
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllOutside, "Blackbox files outside this directory");
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAllOutside);
-  await waitForBlackboxCount(dbg, 3);
-
-  info("Unblackbox files outside this directory - folder");
-  rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this directory");
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllOutside, "Unblackbox files outside this directory");
-  selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllOutside);
-  await waitForBlackboxCount(dbg, 1);
-  await waitForSourceToUnBlackBox(dbg, sourceFiles.previewGetter);
-
-  info("Only source inside the selected directory is still blackboxed.");
-  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, false, "nested-source.js source file is not blackboxed");
-  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, true, "code_reload_1.js source file is blackboxed");
-  is(findSource(dbg, sourceFiles.previewGetter).isBlackBoxed, false, "preview-getter.js source file is not blackboxed");
-
-  info("The invoked function is not blackboxed and the debugger pauses on line 14.");
-  invokeInTab("funcA");
-  await waitForPaused(dbg);
-  await resume(dbg);
-
-  info("Unblackbox files in this directory - folder 'reload'");
-  rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
-  selectContextMenuItem(dbg, nodeSelectors.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this directory");
-  await assertContextMenuLabel(dbg, nodeSelectors.nodeBlackBoxAllOutside, "Blackbox files outside this directory");
+  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, true, "nested-source.js is blackboxed");
+  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, true, "code_reload_1.js is blackboxed");
+ 
+  info("Unblackbox files in this group.");
+  rightClickEl(dbg, sourceTreeRootNodeEl);
+  await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this group");
   selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 0);
+  await waitForRequestsToSettle(dbg);
 
-  sources = dbg.selectors.getSourceList();
-  is(sources.every(source => !source.isBlackBoxed), true, "All sources are unblackboxed as expected.");
+  is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, false, "nested-source.js is not blackboxed");
+  is(findSource(dbg, sourceFiles.codeReload1).isBlackBoxed, false, "code_reload_1.js is not blackboxed");
 });
