@@ -156,18 +156,30 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
 
   // TODO (Bug 1616390) - Validate that poses may be reported:
   // https://immersive-web.github.io/webxr/#poses-may-be-reported
+  if (aSpace.GetSession()->VisibilityState() != XRVisibilityState::Visible) {
+    aRv.ThrowInvalidStateError(
+        "An XRSpace ’s visibilityState in not 'visible'.");
+    return nullptr;
+  }
 
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
 
-  // TODO (Bug 1618723) - Implement XRFrame::GetPose
-  // https://immersive-web.github.io/webxr/#dom-xrframe-getpose
-  //
-  // RefPtr<XRViewerPose> pose =
-  //    new XRViewerPose(mParent, transform, emulatedPosition, views);
-  // return pose;
-  //
-  return nullptr;
+  const gfx::PointDouble3D& originPosition = aBaseSpace.GetEffectiveOriginPosition();
+  gfx::PointDouble3D position = aSpace.GetEffectiveOriginPosition();
+  gfx::QuaternionDouble orientation = aSpace.GetEffectiveOriginOrientation();
+
+  gfx::QuaternionDouble invOriginOrientation(aBaseSpace.GetEffectiveOriginOrientation());
+  invOriginOrientation.Invert();
+
+  position = invOriginOrientation.RotatePoint(position);
+  position -= originPosition;
+  orientation *= invOriginOrientation;
+
+  RefPtr<XRRigidTransform> transform = new XRRigidTransform(mParent, position, orientation);
+  RefPtr<XRPose> pose = new XRPose(mParent, transform, false);
+
+  return pose;
 }
 
 void XRFrame::StartAnimationFrame() {

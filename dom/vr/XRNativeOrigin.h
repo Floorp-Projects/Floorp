@@ -19,6 +19,10 @@ class XRNativeOrigin {
   XRNativeOrigin() = default;
 
   virtual gfx::PointDouble3D GetPosition() = 0;
+  virtual gfx::QuaternionDouble GetOrientation() {
+    static const gfx::QuaternionDouble orientation;
+    return orientation;
+  }
 
  protected:
   virtual ~XRNativeOrigin() = default;
