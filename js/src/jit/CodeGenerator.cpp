@@ -8217,42 +8217,6 @@ void CodeGenerator::visitModD(LModD* ins) {
   }
 }
 
-void CodeGenerator::visitBinaryV(LBinaryV* lir) {
-  pushArg(ToValue(lir, LBinaryV::RhsInput));
-  pushArg(ToValue(lir, LBinaryV::LhsInput));
-
-  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
-                      MutableHandleValue);
-  switch (lir->jsop()) {
-    case JSOp::BitAnd:
-      callVM<Fn, js::BitAnd>(lir);
-      break;
-
-    case JSOp::BitOr:
-      callVM<Fn, js::BitOr>(lir);
-      break;
-
-    case JSOp::BitXor:
-      callVM<Fn, js::BitXor>(lir);
-      break;
-
-    case JSOp::Lsh:
-      callVM<Fn, js::BitLsh>(lir);
-      break;
-
-    case JSOp::Rsh:
-      callVM<Fn, js::BitRsh>(lir);
-      break;
-
-    case JSOp::Ursh:
-      callVM<Fn, js::UrshValues>(lir);
-      break;
-
-    default:
-      MOZ_CRASH("Unexpected binary op");
-  }
-}
-
 void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
                                  Register right, Register output) {
   MOZ_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
@@ -8328,8 +8292,8 @@ void CodeGenerator::visitCompareS(LCompareS* lir) {
 }
 
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
-  pushArg(ToValue(lir, LBinaryV::RhsInput));
-  pushArg(ToValue(lir, LBinaryV::LhsInput));
+  pushArg(ToValue(lir, LCompareVM::RhsInput));
+  pushArg(ToValue(lir, LCompareVM::LhsInput));
 
   using Fn =
       bool (*)(JSContext*, MutableHandleValue, MutableHandleValue, bool*);
