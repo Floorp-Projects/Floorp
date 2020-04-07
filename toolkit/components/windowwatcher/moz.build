@@ -11,6 +11,7 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIDialogParamBlock.idl',
+    'nsIOpenWindowInfo.idl',
     'nsIPromptFactory.idl',
     'nsIPromptService.idl',
     'nsIWindowWatcher.idl',
@@ -21,16 +22,15 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'windowwatcher'
 
 EXPORTS += [
+    'nsOpenWindowInfo.h',
     'nsPromptUtils.h',
+    'nsWindowWatcher.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsAutoWindowStateHelper.cpp',
+    'nsOpenWindowInfo.cpp',
     'nsWindowWatcher.cpp',
-]
-
-EXPORTS += [
-    'nsWindowWatcher.h',
 ]
 
 if CONFIG['MOZ_XUL']:
