@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_presence() {
@@ -29,13 +28,13 @@ add_task(async function test_methods_calling() {
   const source = new FileSource("test", ["de", "en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  async function* generateMessages(resIds) {
+  async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["de", "en-US"], resIds);
   }
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], false, generateMessages);
+  ], false, { generateBundles });
 
   let values = await l10n.formatValues([{id: "key"}, {id: "key2"}]);
 
@@ -75,13 +74,13 @@ key = { PLATFORM() ->
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  async function* generateMessages(resIds) {
+  async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
   const l10n = new Localization([
     "/test.ftl",
-  ], false, generateMessages);
+  ], false, { generateBundles });
 
   let values = await l10n.formatValues([{id: "key"}]);
 
@@ -110,11 +109,11 @@ add_task(async function test_add_remove_resourceIds() {
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  async function* generateMessages(resIds) {
+  async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
-  const l10n = new Localization(["/browser/menu.ftl"], false, generateMessages);
+  const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles });
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
@@ -168,15 +167,15 @@ add_task(async function test_switch_to_async() {
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  async function* generateMessages(resIds) {
+  async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
-  function* generateMessagesSync(resIds) {
+  function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
   }
 
-  const l10n = new Localization(["/browser/menu.ftl"], false, generateMessages, generateMessagesSync);
+  const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles, generateBundlesSync });
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
