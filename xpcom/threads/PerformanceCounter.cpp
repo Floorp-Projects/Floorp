@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceCounter.h"
+
+using mozilla::DispatchCategory;
+using mozilla::DispatchCounter;
+using mozilla::PerformanceCounter;
 
 static mozilla::LazyLogModule sPerformanceCounter("PerformanceCounter");
 #ifdef LOG
@@ -15,7 +18,7 @@ static mozilla::LazyLogModule sPerformanceCounter("PerformanceCounter");
 #define LOG(args) MOZ_LOG(sPerformanceCounter, mozilla::LogLevel::Debug, args)
 
 // Global counter used by PerformanceCounter CTOR via NextCounterID().
-static Atomic<uint64_t> gNextCounterID(0);
+static mozilla::Atomic<uint64_t> gNextCounterID(0);
 
 static uint64_t NextCounterID() {
   // This can return the same value on different processes but

@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CondVar.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Unused.h"
