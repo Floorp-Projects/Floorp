@@ -18,6 +18,7 @@ import mozilla.components.feature.media.ext.findPlayingSession
 import mozilla.components.feature.media.ext.getPausedMedia
 import mozilla.components.feature.media.ext.getPlayingMediaIdsForTab
 import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
+import mozilla.components.feature.media.ext.hasMediaWithAudibleAudio
 import mozilla.components.lib.state.MiddlewareStore
 import mozilla.components.support.base.coroutines.Dispatchers
 
@@ -62,9 +63,9 @@ internal class MediaAggregateUpdater(
         if (playingSession != null) {
             val (session, media) = playingSession
             // We only switch to playing state if there's media playing that has a sufficient long
-            // duration. Otherwise we let just Gecko play it and do not request audio focus or show
+            // duration and audio. Otherwise we let just Gecko play it and do not request audio focus or show
             // a media notification. This will let us ignore short audio effects (Beeep!).
-            return if (media.hasMediaWithSufficientLongDuration()) {
+            return if (media.hasMediaWithSufficientLongDuration() && media.hasMediaWithAudibleAudio()) {
                 MediaState.Aggregate(MediaState.State.PLAYING, session, media.map { it.id })
             } else {
                 MediaState.Aggregate(MediaState.State.NONE)

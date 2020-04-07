@@ -43,12 +43,22 @@ abstract class Media(
     abstract val metadata: Metadata
 
     /**
+     * The [Volume] for this media element.
+     */
+    abstract val volume: Volume
+
+    /**
      * Interface to be implemented by classes that want to observe a media element.
      */
     interface Observer {
+        /** Notify the observer that media state changed. */
         fun onStateChanged(media: Media, state: State) = Unit
+        /** Notify the observer that media playback state changed. */
         fun onPlaybackStateChanged(media: Media, playbackState: PlaybackState) = Unit
+        /** Notify the observer that media metadata changed. */
         fun onMetadataChanged(media: Media, metadata: Metadata) = Unit
+        /** Notify the observer that media volume changed. */
+        fun onVolumeChanged(media: Media, volume: Volume) = Unit
     }
 
     /**
@@ -173,6 +183,15 @@ abstract class Media(
     }
 
     /**
+     * Volume associated with [Media].
+     *
+     * @property muted Indicates if the media is muted.
+     */
+    data class Volume(
+        val muted: Boolean = false
+    )
+
+    /**
      * Metadata associated with [Media].
      *
      * @property duration Indicates the duration of the media in seconds.
@@ -184,7 +203,7 @@ abstract class Media(
     /**
      * Helper method to notify observers.
      */
-    private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {
+    protected fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {
         if (old != new) {
             notifyObservers(block)
         }

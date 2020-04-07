@@ -34,16 +34,18 @@ data class MediaState(
      * @property id Unique ID for this media element.
      * @property state The current simplified [State] of this media element (derived from [playbackState]
      * events).
-     * @property playbackState The current [PlaybackState] of this media element.
-     * @property controller The [Controller] for controlling playback of this media element.
-     * @property metadata The [Metadata] for this media element.
+     * @property playbackState The current [Media.PlaybackState] of this media element.
+     * @property controller The [Media.Controller] for controlling playback of this media element.
+     * @property metadata The [Media.Metadata] for this media element.
+     * @property volume The [Media.Volume] for this media element.
      */
     data class Element(
         val id: String = UUID.randomUUID().toString(),
         val state: Media.State,
         val playbackState: PlaybackState,
         val controller: Controller,
-        val metadata: Media.Metadata
+        val metadata: Media.Metadata,
+        val volume: Media.Volume
     )
 
     /**

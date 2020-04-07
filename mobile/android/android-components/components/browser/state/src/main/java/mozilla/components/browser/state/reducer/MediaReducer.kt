@@ -44,6 +44,10 @@ internal object MediaReducer {
                 it.copy(metadata = action.metadata)
             }
 
+            is MediaAction.UpdateMediaVolumeAction -> state.updateMediaElement(action.tabId, action.mediaId) {
+                it.copy(volume = action.volume)
+            }
+
             is MediaAction.UpdateMediaAggregateAction -> state.copy(
                 media = state.media.copy(aggregate = action.aggregate)
             )

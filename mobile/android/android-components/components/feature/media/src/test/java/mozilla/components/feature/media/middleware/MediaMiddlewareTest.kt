@@ -371,4 +371,84 @@ class MediaMiddlewareTest {
         assertTrue(store.state.media.aggregate.activeMedia.contains("test-media-2"))
         assertTrue(store.state.media.aggregate.activeMedia.contains("test-media-3"))
     }
+
+    @Test
+    fun `Muting playing media stays in the playing state`() {
+        val middleware = MediaMiddleware(testContext, AbstractMediaService::class.java)
+
+        val store = BrowserStore(
+                initialState = BrowserState(
+                        tabs = listOf(
+                                createTab("https://www.mozilla.org", id = "test-tab")
+                        )
+                ),
+                middleware = listOf(middleware)
+        )
+
+        val media1 = createMockMediaElement(
+                id = "test-media",
+                state = Media.State.PLAYING,
+                metadata = Media.Metadata(duration = 30.0),
+                volume = Media.Volume(muted = false)
+        )
+
+        store.dispatch(
+                MediaAction.AddMediaAction("test-tab", media1)
+        ).joinBlocking()
+
+        middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+
+        assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
+        assertEquals("test-tab", store.state.media.aggregate.activeTabId)
+        assertEquals(1, store.state.media.aggregate.activeMedia.size)
+
+        store.dispatch(
+                MediaAction.UpdateMediaVolumeAction("test-tab", "test-media", Media.Volume(muted = true))
+        ).joinBlocking()
+        middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+
+        assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
+        assertEquals("test-tab", store.state.media.aggregate.activeTabId)
+        assertEquals(1, store.state.media.aggregate.activeMedia.size)
+    }
+
+    @Test
+    fun `Unumting playing media enters the playing state`() {
+        val middleware = MediaMiddleware(testContext, AbstractMediaService::class.java)
+
+        val store = BrowserStore(
+                initialState = BrowserState(
+                        tabs = listOf(
+                                createTab("https://www.mozilla.org", id = "test-tab")
+                        )
+                ),
+                middleware = listOf(middleware)
+        )
+
+        val media1 = createMockMediaElement(
+                id = "test-media",
+                state = Media.State.PLAYING,
+                metadata = Media.Metadata(duration = 30.0),
+                volume = Media.Volume(muted = true)
+        )
+
+        store.dispatch(
+                MediaAction.AddMediaAction("test-tab", media1)
+        ).joinBlocking()
+
+        middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+
+        assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
+        assertEquals(null, store.state.media.aggregate.activeTabId)
+        assertEquals(0, store.state.media.aggregate.activeMedia.size)
+
+        store.dispatch(
+                MediaAction.UpdateMediaVolumeAction("test-tab", "test-media", Media.Volume(muted = false))
+        ).joinBlocking()
+        middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+
+        assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
+        assertEquals("test-tab", store.state.media.aggregate.activeTabId)
+        assertEquals(1, store.state.media.aggregate.activeMedia.size)
+    }
 }

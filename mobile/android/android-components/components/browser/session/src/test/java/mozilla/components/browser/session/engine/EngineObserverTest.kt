@@ -496,6 +496,7 @@ class EngineObserverTest {
         val media1: Media = spy(object : Media() {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
+            override val volume: Volume = mock()
         })
         observer.onMediaAdded(media1)
 
@@ -507,6 +508,7 @@ class EngineObserverTest {
         val media2: Media = spy(object : Media() {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
+            override val volume: Volume = mock()
         })
         observer.onMediaAdded(media2)
 
@@ -518,6 +520,7 @@ class EngineObserverTest {
         val media3: Media = spy(object : Media() {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
+            override val volume: Volume = mock()
         })
         observer.onMediaAdded(media3)
 
@@ -541,12 +544,14 @@ class EngineObserverTest {
         val media1: Media = spy(object : Media() {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
+            override val volume: Volume = mock()
         })
         observer.onMediaAdded(media1)
 
         val media2: Media = spy(object : Media() {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
+            override val volume: Volume = mock()
         })
         observer.onMediaAdded(media2)
 
