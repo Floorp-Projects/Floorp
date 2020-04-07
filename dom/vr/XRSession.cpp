@@ -396,6 +396,9 @@ void XRSession::Shutdown() {
 }
 
 void XRSession::ExitPresentInternal() {
+  if (mInputSources) {
+    mInputSources->Clear();
+  }
   if (mDisplayClient) {
     mDisplayClient->SessionEnded(this);
   }
