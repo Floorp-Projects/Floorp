@@ -706,7 +706,15 @@ void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
     return;
   }
   if (aInputmode.EqualsLiteral("numeric")) {
+    aScopes.AppendElement(IS_DIGITS);
+    return;
+  }
+  if (aInputmode.EqualsLiteral("decimal")) {
     aScopes.AppendElement(IS_NUMBER);
+    return;
+  }
+  if (aInputmode.EqualsLiteral("search")) {
+    aScopes.AppendElement(IS_SEARCH);
     return;
   }
 }
