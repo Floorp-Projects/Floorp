@@ -4665,6 +4665,8 @@ class MUrsh : public MShiftInstruction {
                     MDefinition* right);
   static MUrsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                     MIRType type);
+  static MUrsh* NewWasm(TempAllocator& alloc, MDefinition* left,
+                        MDefinition* right, MIRType type);
 
   MDefinition* foldIfZero(size_t operand) override {
     // 0 >>> x => 0
