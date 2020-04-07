@@ -12542,21 +12542,6 @@ nsresult nsDocShell::SetOriginAttributes(const OriginAttributes& aAttrs) {
 }
 
 NS_IMETHODIMP
-nsDocShell::SetOriginAttributesBeforeLoading(
-    JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx) {
-  if (!aOriginAttributes.isObject()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  OriginAttributes attrs;
-  if (!attrs.Init(aCx, aOriginAttributes)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return SetOriginAttributes(attrs);
-}
-
-NS_IMETHODIMP
 nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
   RefPtr<nsDocShell> self = this;
   RefPtr<ChildProcessChannelListener> cpcl =
