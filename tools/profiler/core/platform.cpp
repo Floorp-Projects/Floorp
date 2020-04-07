@@ -739,7 +739,7 @@ class ActivePS {
                              aFilterCount, aActiveBrowsingContextID, aDuration);
   }
 
-  static MOZ_MUST_USE SamplerThread* Destroy(PSLockRef aLock) {
+  [[nodiscard]] static SamplerThread* Destroy(PSLockRef aLock) {
     MOZ_ASSERT(sInstance);
     auto samplerThread = sInstance->mSamplerThread;
     delete sInstance;
@@ -794,7 +794,7 @@ class ActivePS {
             sInstance->ThreadSelected(aInfo->Name()));
   }
 
-  static MOZ_MUST_USE bool AppendPostSamplingCallback(
+  [[nodiscard]] static bool AppendPostSamplingCallback(
       PSLockRef, PostSamplingCallback&& aCallback);
 
   // Writes out the current active configuration of the profile.
@@ -2766,7 +2766,7 @@ class SamplerThread {
         : mPrev(std::move(aPrev)), mCallback(std::move(aCallback)) {}
   };
 
-  MOZ_MUST_USE UniquePtr<PostSamplingCallbackListItem>
+  [[nodiscard]] UniquePtr<PostSamplingCallbackListItem>
   TakePostSamplingCallbacks(PSLockRef) {
     return std::move(mPostSamplingCallbackList);
   }
@@ -2822,7 +2822,7 @@ class SamplerThread {
   void operator=(const SamplerThread&) = delete;
 };
 
-// static MOZ_MUST_USE
+// [[nodiscard]] static
 bool ActivePS::AppendPostSamplingCallback(PSLockRef aLock,
                                           PostSamplingCallback&& aCallback) {
   if (!sInstance || !sInstance->mSamplerThread) {
@@ -4311,7 +4311,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   }
 }
 
-static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
+[[nodiscard]] static SamplerThread* locked_profiler_stop(PSLockRef aLock) {
   LOG("locked_profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
@@ -4426,7 +4426,7 @@ bool profiler_is_paused() {
   return ActivePS::IsPaused(lock);
 }
 
-/* MOZ_MUST_USE */ bool profiler_callback_after_sampling(
+/* [[nodiscard]] */ bool profiler_callback_after_sampling(
     PostSamplingCallback&& aCallback) {
   LOG("profiler_callback_after_sampling");
 

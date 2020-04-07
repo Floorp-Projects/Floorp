@@ -29,7 +29,7 @@ class ChildProfilerController final {
   static already_AddRefed<ChildProfilerController> Create(
       mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint);
 
-  MOZ_MUST_USE nsCString GrabShutdownProfileAndShutdown();
+  [[nodiscard]] nsCString GrabShutdownProfileAndShutdown();
   void Shutdown();
 
  private:
