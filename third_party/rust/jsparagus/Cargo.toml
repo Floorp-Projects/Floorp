@@ -17,11 +17,14 @@ jsparagus-ast = { path = "crates/ast" }
 jsparagus-driver = { path = "crates/driver", optional = true }
 jsparagus-emitter = { path = "crates/emitter" }
 jsparagus-generated-parser = { path = "crates/generated_parser" }
-jsparagus-parser = { path = "crates/parser" }
 jsparagus-interpreter = { path = "crates/interpreter", optional = true  }
+jsparagus-json-log = { path = "crates/json-log"  }
+jsparagus-parser = { path = "crates/parser" }
+jsparagus-scope = { path = "crates/scope" }
 
 [features]
 default = []
+logging = ["jsparagus-parser/logging"]
 full = ["jsparagus-driver", "jsparagus-interpreter"]
 
 [profile.release]

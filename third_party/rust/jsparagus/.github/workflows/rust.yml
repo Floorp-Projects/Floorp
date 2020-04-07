@@ -20,7 +20,5 @@ jobs:
         python-version: "3.7"
     - name: Initialize repository
       run: make init
-    - name: Build
-      run: RUSTFLAGS="-D warnings" make all
-    - name: Test
-      run: make check
+    - name: Build & Test
+      run: RUSTFLAGS="-D warnings" make check

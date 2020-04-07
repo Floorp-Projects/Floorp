@@ -1,19 +1,19 @@
 use crate::emitter::BytecodeOffset;
-use crate::scope::ScopeIndex;
+use crate::gcthings::GCThingIndex;
 
 /// Maps to js::ScopeNote in m-c/js/src/vm//JSScript.h.
 #[derive(Debug)]
 pub struct ScopeNote {
-    pub scope_index: ScopeIndex,
+    pub index: GCThingIndex,
     pub start: BytecodeOffset,
     pub end: BytecodeOffset,
     pub parent: Option<ScopeNoteIndex>,
 }
 
 impl ScopeNote {
-    fn new(scope_index: ScopeIndex, start: BytecodeOffset, parent: Option<ScopeNoteIndex>) -> Self {
+    fn new(index: GCThingIndex, start: BytecodeOffset, parent: Option<ScopeNoteIndex>) -> Self {
         Self {
-            scope_index,
+            index,
             start: start.clone(),
             end: start,
             parent,
@@ -53,13 +53,13 @@ impl ScopeNoteList {
 
     pub fn enter_scope(
         &mut self,
-        scope_index: ScopeIndex,
+        index: GCThingIndex,
         offset: BytecodeOffset,
         parent: Option<ScopeNoteIndex>,
     ) -> ScopeNoteIndex {
-        let index = self.notes.len();
-        self.notes.push(ScopeNote::new(scope_index, offset, parent));
-        ScopeNoteIndex::new(index)
+        let note_index = self.notes.len();
+        self.notes.push(ScopeNote::new(index, offset, parent));
+        ScopeNoteIndex::new(note_index)
     }
 
     pub fn leave_scope(&mut self, index: ScopeNoteIndex, offset: BytecodeOffset) {

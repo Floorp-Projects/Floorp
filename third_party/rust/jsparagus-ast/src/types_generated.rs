@@ -3,6 +3,7 @@
 use crate::source_location::SourceLocation;
 use crate::arena;
 use crate::source_atom_set::SourceAtomSetIndex;
+use crate::source_slice_list::SourceSliceIndex;
 
 #[derive(Debug, PartialEq)]
 pub enum Void {
@@ -351,10 +352,11 @@ pub enum Expression<'alloc> {
     },
     LiteralNumericExpression(NumericLiteral),
     LiteralRegExpExpression {
-        pattern: SourceAtomSetIndex,
+        pattern: SourceSliceIndex,
         global: bool,
         ignore_case: bool,
         multi_line: bool,
+        dot_all: bool,
         sticky: bool,
         unicode: bool,
         loc: SourceLocation,

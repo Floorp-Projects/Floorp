@@ -1,36 +1,42 @@
+mod array_emitter;
 mod ast_emitter;
+mod block_emitter;
 mod compilation_info;
 mod dis;
 mod emitter;
 mod emitter_scope;
+mod expression_emitter;
 mod forward_jump_emitter;
-mod frame_slot;
 mod gcthings;
+mod object_emitter;
 pub mod opcode;
 pub mod opcode_info;
 mod reference_op_emitter;
-mod scope;
+mod regexp;
 mod scope_notes;
-mod scope_pass;
 mod script_atom_set;
+mod script_emitter;
 
 extern crate jsparagus_ast as ast;
+extern crate jsparagus_scope as scope;
 
 pub use crate::emitter::{EmitError, EmitOptions, EmitResult};
 pub use crate::gcthings::GCThing;
-pub use crate::scope::{BindingName, ScopeData};
+pub use crate::regexp::RegExpItem;
 pub use crate::scope_notes::ScopeNote;
 pub use dis::dis;
 
 use ast::source_atom_set::SourceAtomSet;
+use ast::source_slice_list::SourceSliceList;
 
 pub fn emit<'alloc>(
-    ast: &mut ast::types::Program,
+    ast: &'alloc ast::types::Program<'alloc>,
     options: &EmitOptions,
     atoms: SourceAtomSet<'alloc>,
+    slices: SourceSliceList<'alloc>,
 ) -> Result<EmitResult<'alloc>, EmitError> {
-    let scope_data_map = scope_pass::generate_scope_data(ast);
-    ast_emitter::emit_program(ast, options, atoms, scope_data_map)
+    let scope_data_map = scope::generate_scope_data(ast);
+    ast_emitter::emit_program(ast, options, atoms, slices, scope_data_map)
 }
 
 #[cfg(test)]
@@ -40,19 +46,29 @@ mod tests {
     use super::{emit, EmitOptions};
     use crate::dis::*;
     use crate::opcode::*;
+    use ast::source_atom_set::SourceAtomSet;
+    use ast::source_slice_list::SourceSliceList;
     use bumpalo::Bump;
     use parser::{parse_script, ParseOptions};
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     fn bytecode(source: &str) -> Vec<u8> {
         let alloc = &Bump::new();
         let parse_options = ParseOptions::new();
-        let parse_result = parse_script(alloc, source, &parse_options).expect("Failed to parse");
+        let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
+        let slices = Rc::new(RefCell::new(SourceSliceList::new()));
+        let parse_result =
+            parse_script(alloc, source, &parse_options, atoms.clone(), slices.clone())
+                .expect("Failed to parse");
         // println!("{:?}", parse_result);
 
         let emit_options = EmitOptions::new();
         let bc = emit(
             &mut ast::types::Program::Script(parse_result.unbox()),
             &emit_options,
+            atoms.replace(SourceAtomSet::new_uninitialized()),
+            slices.replace(SourceSliceList::new()),
         )
         .expect("Should work!")
         .bytecode;

@@ -21,18 +21,18 @@ pub struct BindingName {
 }
 
 impl BindingName {
-    pub fn new(name: SourceAtomSetIndex) -> Self {
+    pub fn new(name: SourceAtomSetIndex, is_closed_over: bool) -> Self {
         Self {
             name,
-            is_closed_over: false,
+            is_closed_over,
             is_top_level_function: false,
         }
     }
 
-    pub fn new_top_level_function(name: SourceAtomSetIndex) -> Self {
+    pub fn new_top_level_function(name: SourceAtomSetIndex, is_closed_over: bool) -> Self {
         Self {
             name,
-            is_closed_over: false,
+            is_closed_over,
             is_top_level_function: true,
         }
     }

@@ -4,6 +4,7 @@ pub mod arena;
 pub mod associated_data;
 pub mod source_atom_set;
 pub mod source_location;
+pub mod source_slice_list;
 
 mod source_location_accessor_generated;
 pub mod source_location_accessor {
