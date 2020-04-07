@@ -173,7 +173,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
   if (!mLib->IsVAAPIAvailable()) {
-    FFMPEG_LOG("libva library is missing");
+    FFMPEG_LOG("libva library or symbols are missing.");
     return NS_ERROR_NOT_AVAILABLE;
   }
 

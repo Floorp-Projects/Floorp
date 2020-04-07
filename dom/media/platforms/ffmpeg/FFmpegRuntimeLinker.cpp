@@ -66,6 +66,9 @@ bool FFmpegRuntimeLinker::Init() {
       PR_UnloadLibrary(sLibAV.mVALib);
       sLibAV.mVALib = nullptr;
     }
+    if (!sLibAV.mVALib) {
+      FFMPEG_LOG("VA-API support: Missing or old %s library.\n", lib);
+    }
   }
 #endif
 
