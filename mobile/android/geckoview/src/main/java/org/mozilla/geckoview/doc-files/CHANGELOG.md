@@ -13,6 +13,12 @@ exclude: true
 
 ⚠️  breaking change
 
+## v77
+- Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
+  ([bug 1626979]({{bugzilla}}1626979))
+
+[77.1]: {{javadoc_uri}}/GeckoRuntime.html#appendAppNotesToCrashReport-java.lang.String-
+
 ## v76
 - Added [`GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS`][76.1] to control EME media key access.
 - [`RuntimeTelemetry#getSnapshots`][68.10] is deprecated and will be removed
@@ -667,4 +673,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d1e459d9f40b32fed4859a0bc3a848e2908b50c1
+[api-version]: 266a352d20a71acc3052a2a9184e5a95a183145b
