@@ -322,6 +322,10 @@
       // Bug 1485961 covers making this more sane.
       let userContextId = window.arguments && window.arguments[5];
 
+      let openWindowInfo = window.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow).initialOpenWindowInfo;
+
       let tabArgument = gBrowserInit.getTabToAdopt();
 
       // We only need sameProcessAsFrameLoader in the case where we're passed a tab
@@ -335,11 +339,13 @@
       if (tabArgument && tabArgument.linkedBrowser) {
         remoteType = tabArgument.linkedBrowser.remoteType;
         sameProcessAsFrameLoader = tabArgument.linkedBrowser.frameLoader;
-      } else if (
-        !gMultiProcessBrowser ||
-        window.hasOpenerForInitialContentBrowser
-      ) {
-        remoteType = E10SUtils.NOT_REMOTE;
+      } else if (openWindowInfo) {
+        userContextId = openWindowInfo.originAttributes.userContextId;
+        if (openWindowInfo.isRemote) {
+          remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+        } else {
+          remoteType = E10SUtils.NOT_REMOTE;
+        }
       } else {
         let uriToLoad = gBrowserInit.uriToLoadPromise;
         if (uriToLoad && Array.isArray(uriToLoad)) {
@@ -370,6 +376,7 @@
         userContextId,
         sameProcessAsFrameLoader,
         remoteType,
+        openWindowInfo,
       };
       let browser = this.createBrowser(createOptions);
       browser.setAttribute("primary", "true");
@@ -1559,10 +1566,9 @@
       var aSameProcessAsFrameLoader;
       var aOriginPrincipal;
       var aOriginStoragePrincipal;
-      var aOpener;
+      var aOpenWindowInfo;
       var aOpenerBrowser;
       var aCreateLazyBrowser;
-      var aNextRemoteTabId;
       var aFocusUrlBar;
       var aName;
       var aCsp;
@@ -1590,10 +1596,9 @@
         aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
         aOriginPrincipal = params.originPrincipal;
         aOriginStoragePrincipal = params.originStoragePrincipal;
-        aOpener = params.opener;
+        aOpenWindowInfo = params.openWindowInfo;
         aOpenerBrowser = params.openerBrowser;
         aCreateLazyBrowser = params.createLazyBrowser;
-        aNextRemoteTabId = params.nextRemoteTabId;
         aFocusUrlBar = params.focusUrlBar;
         aName = params.name;
         aCsp = params.csp;
@@ -1632,9 +1637,8 @@
         originPrincipal: aOriginPrincipal,
         originStoragePrincipal: aOriginStoragePrincipal,
         sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
-        opener: aOpener,
+        openWindowInfo: aOpenWindowInfo,
         openerBrowser: aOpenerBrowser,
-        nextRemoteTabId: aNextRemoteTabId,
         focusUrlBar: aFocusUrlBar,
         name: aName,
         csp: aCsp,
@@ -1883,12 +1887,6 @@
         aBrowser.sameProcessAsFrameLoader = oldSameProcessAsFrameLoader;
       }
 
-      if (opener) {
-        // Set the opener window on the browser, such that when the frame
-        // loader is created the opener is set correctly.
-        aBrowser.presetOpenerWindow(opener);
-      }
-
       // Note that this block is also affected by the
       // rebuild_frameloaders_on_remoteness_change pref. If the pref is set to
       // false, this attribute change is observed by browser-custom-element,
@@ -2052,8 +2050,7 @@
     createBrowser({
       isPreloadBrowser,
       name,
-      nextRemoteTabId,
-      openerWindow,
+      openWindowInfo,
       remoteType,
       sameProcessAsFrameLoader,
       uriIsAboutBlank,
@@ -2088,13 +2085,6 @@
         b.setAttribute("remote", "true");
       }
 
-      if (openerWindow) {
-        if (remoteType) {
-          throw new Error("Cannot set opener window on a remote browser!");
-        }
-        b.presetOpenerWindow(openerWindow);
-      }
-
       if (!isPreloadBrowser) {
         b.setAttribute("autocompletepopup", "PopupAutoComplete");
       }
@@ -2121,16 +2111,13 @@
         b.setAttribute("preloadedState", "preloaded");
       }
 
-      if (nextRemoteTabId) {
-        if (!remoteType) {
-          throw new Error("Cannot have nextRemoteTabId without a remoteType");
-        }
-        // Gecko is going to read this attribute and use it.
-        b.setAttribute("nextRemoteTabId", nextRemoteTabId.toString());
-      }
-
       if (sameProcessAsFrameLoader) {
         b.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+      }
+
+      // Propagate information about the opening content window to the browser.
+      if (openWindowInfo) {
+        b.openWindowInfo = openWindowInfo;
       }
 
       // This will be used by gecko to control the name of the opened
@@ -2522,9 +2509,8 @@
         index,
         lazyTabTitle,
         name,
-        nextRemoteTabId,
         noInitialLabel,
-        opener,
+        openWindowInfo,
         openerBrowser,
         originPrincipal,
         originStoragePrincipal,
@@ -2718,8 +2704,7 @@
             uriIsAboutBlank,
             userContextId,
             sameProcessAsFrameLoader,
-            openerWindow: opener,
-            nextRemoteTabId,
+            openWindowInfo,
             name,
             skipLoad,
           });
