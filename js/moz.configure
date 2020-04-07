@@ -119,8 +119,6 @@ js_option('--enable-ion',
           default=ion_default,
           help='{Enable|Disable} use of the IonMonkey JIT')
 
-set_config('ENABLE_ION', depends_if('--enable-ion')(lambda x: True))
-
 # JIT code simulator for cross compiles
 # =======================================================
 js_option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
