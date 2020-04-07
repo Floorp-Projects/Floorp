@@ -2049,7 +2049,9 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  mPendingBrowsingContext->EnsureAttached();
+  if (!EnsureBrowsingContextAttached()) {
+    return NS_ERROR_FAILURE;
+  }
 
   // nsDocShell::Create will attach itself to the passed browsing
   // context inside of nsDocShell::Create
@@ -2137,37 +2139,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  OriginAttributes attrs;
-  if (parentDocShell->ItemType() == docShell->ItemType()) {
-    attrs = parentDocShell->GetOriginAttributes();
-  }
-
-  // Inherit origin attributes from parent document if
-  // 1. It's in a content docshell.
-  // 2. its nodePrincipal is not a SystemPrincipal.
-  // 3. It's not a mozbrowser frame.
-  //
-  // For example, firstPartyDomain is computed from top-level document, it
-  // doesn't exist in the top-level docshell.
-  if (parentIsContent && !doc->NodePrincipal()->IsSystemPrincipal() &&
-      !OwnerIsMozBrowserFrame()) {
-    OriginAttributes oa = doc->NodePrincipal()->OriginAttributesRef();
-
-    // Assert on the firstPartyDomain from top-level docshell should be empty
-    MOZ_ASSERT_IF(mIsTopLevelContent, attrs.mFirstPartyDomain.IsEmpty());
-
-    // So far we want to make sure Inherit doesn't override any other origin
-    // attribute than firstPartyDomain.
-    MOZ_ASSERT(
-        attrs.mUserContextId == oa.mUserContextId,
-        "docshell and document should have the same userContextId attribute.");
-    MOZ_ASSERT(attrs.mPrivateBrowsingId == oa.mPrivateBrowsingId,
-               "docshell and document should have the same privateBrowsingId "
-               "attribute.");
-
-    attrs = oa;
-  }
-
   if (OwnerIsMozBrowserFrame()) {
     docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
   } else if (mPendingBrowsingContext->GetParent()) {
@@ -2185,19 +2156,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   }
   ApplySandboxFlags(sandboxFlags);
 
-  // Grab the userContextId from owner
-  nsresult rv = PopulateOriginContextIdsFromAttributes(attrs);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool isPrivate = false;
-  rv = parentDocShell->GetUsePrivateBrowsing(&isPrivate);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
-
   if (OwnerIsMozBrowserFrame()) {
     // For inproc frames, set the docshell properties.
     nsAutoString name;
@@ -2208,24 +2166,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
         mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
         mOwnerContent->HasAttr(kNameSpaceID_None,
                                nsGkAtoms::mozallowfullscreen));
-    bool isPrivate = mOwnerContent->HasAttr(kNameSpaceID_None,
-                                            nsGkAtoms::mozprivatebrowsing);
-    if (isPrivate) {
-      if (docShell->GetHasLoadedNonBlankURI()) {
-        nsContentUtils::ReportToConsoleNonLocalized(
-            NS_LITERAL_STRING("We should not switch to Private Browsing after "
-                              "loading a document."),
-            nsIScriptError::warningFlag,
-            NS_LITERAL_CSTRING("mozprivatebrowsing"), nullptr);
-      } else {
-        // This handles the case where a frames private browsing is set by
-        // chrome flags and not inherited by its parent.
-        attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
-      }
-    }
   }
-
-  docShell->SetOriginAttributes(attrs);
 
   // Typically there will be a window, however for some cases such as printing
   // the document is cloned with a docshell that has no window.  We check
@@ -2537,7 +2478,9 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     return false;
   }
 
-  mPendingBrowsingContext->EnsureAttached();
+  if (!EnsureBrowsingContextAttached()) {
+    return false;
+  }
 
   RefPtr<ContentParent> openerContentParent;
   RefPtr<nsIPrincipal> openerContentPrincipal;
@@ -3575,4 +3518,89 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   event->SetTrusted(true);
   EventDispatcher::DispatchDOMEvent(mOwnerContent, nullptr, event, nullptr,
                                     nullptr);
+}
+
+bool nsFrameLoader::EnsureBrowsingContextAttached() {
+  nsresult rv;
+
+  Document* parentDoc = mOwnerContent->OwnerDoc();
+  MOZ_ASSERT(parentDoc);
+  BrowsingContext* parentContext = parentDoc->GetBrowsingContext();
+  MOZ_ASSERT(parentContext);
+
+  // Inherit the `use` flags from our parent BrowsingContext.
+  bool usePrivateBrowsing = parentContext->UsePrivateBrowsing();
+  bool useRemoteSubframes = parentContext->UseRemoteSubframes();
+  bool useRemoteTabs = parentContext->UseRemoteTabs();
+
+  // Determine the exact OriginAttributes which should be used for our
+  // BrowsingContext. This will be used to initialize OriginAttributes if the
+  // BrowsingContext has not already been created.
+  OriginAttributes attrs;
+  if (mPendingBrowsingContext->IsContent()) {
+    if (mPendingBrowsingContext->GetParent()) {
+      MOZ_ASSERT(mPendingBrowsingContext->GetParent() == parentContext);
+      parentContext->GetOriginAttributes(attrs);
+    }
+
+    // Inherit the `mFirstPartyDomain` flag from our parent document's result
+    // principal, if it was set.
+    if (parentContext->IsContent() &&
+        !parentDoc->NodePrincipal()->IsSystemPrincipal() &&
+        !OwnerIsMozBrowserFrame()) {
+      OriginAttributes docAttrs =
+          parentDoc->NodePrincipal()->OriginAttributesRef();
+      // We only want to inherit firstPartyDomain here, other attributes should
+      // be constant.
+      MOZ_ASSERT(attrs.EqualsIgnoringFPD(docAttrs));
+      attrs.mFirstPartyDomain = docAttrs.mFirstPartyDomain;
+    }
+
+    // Inherit the PrivateBrowsing flag across content/chrome boundaries.
+    attrs.SyncAttributesWithPrivateBrowsing(usePrivateBrowsing);
+
+    // A <browser> element may have overridden userContextId or
+    // geckoViewUserContextId.
+    rv = PopulateOriginContextIdsFromAttributes(attrs);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    // <iframe mozbrowser> is allowed to set `mozprivatebrowsing` to
+    // force-enable private browsing.
+    if (OwnerIsMozBrowserFrame()) {
+      if (mOwnerContent->HasAttr(kNameSpaceID_None,
+                                 nsGkAtoms::mozprivatebrowsing)) {
+        attrs.SyncAttributesWithPrivateBrowsing(true);
+        usePrivateBrowsing = true;
+      }
+    }
+  }
+
+  // If we've already been attached, return.
+  if (mPendingBrowsingContext->EverAttached()) {
+    MOZ_DIAGNOSTIC_ASSERT(mPendingBrowsingContext->UsePrivateBrowsing() ==
+                          usePrivateBrowsing);
+    MOZ_DIAGNOSTIC_ASSERT(mPendingBrowsingContext->UseRemoteTabs() ==
+                          useRemoteTabs);
+    MOZ_DIAGNOSTIC_ASSERT(mPendingBrowsingContext->UseRemoteSubframes() ==
+                          useRemoteSubframes);
+    // Don't assert that our OriginAttributes match, as we could have different
+    // OriginAttributes in the case where we were opened using window.open.
+    return true;
+  }
+
+  // Initialize non-synced OriginAttributes and related fields.
+  rv = mPendingBrowsingContext->SetOriginAttributes(attrs);
+  NS_ENSURE_SUCCESS(rv, false);
+  rv = mPendingBrowsingContext->SetUsePrivateBrowsing(usePrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, false);
+  rv = mPendingBrowsingContext->SetRemoteTabs(useRemoteTabs);
+  NS_ENSURE_SUCCESS(rv, false);
+  rv = mPendingBrowsingContext->SetRemoteSubframes(useRemoteSubframes);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Finish attaching.
+  mPendingBrowsingContext->EnsureAttached();
+  return true;
 }
