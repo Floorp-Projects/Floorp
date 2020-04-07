@@ -53,7 +53,7 @@
   justify-items: inherit;
 }
 
-/* miscellaneous form elements */
+/* Miscellaneous form elements */
 
 fieldset > legend {
   inline-size: -moz-fit-content;
@@ -61,18 +61,14 @@ fieldset > legend {
 
 legend {
   display: block;
-  padding-inline-start: 2px;
-  padding-inline-end: 2px;
+  padding-inline: 2px;
 }
 
 fieldset {
   display: block;
-  margin-inline-start: 2px;
-  margin-inline-end: 2px;
-  padding-block-start: 0.35em;
-  padding-block-end: 0.625em;
-  padding-inline-start: 0.75em;
-  padding-inline-end: 0.75em;
+  margin-inline: 2px;
+  padding-block: 0.35em 0.625em;
+  padding-inline: 0.75em;
   border: 2px groove ThreeDFace;
   min-inline-size: min-content;
 }
@@ -81,7 +77,7 @@ label {
   cursor: default;
 }
 
-/* default inputs, text inputs, and selects */
+/* Default inputs, text inputs, and selects */
 
 /* Note: Values in nsNativeTheme IsWidgetStyled function
    need to match textfield background/border values here */
@@ -111,12 +107,10 @@ input::placeholder {
 
 textarea {
   -moz-appearance: textarea;
-  margin-block-start: 1px;
-  margin-block-end: 1px;
+  margin-block: 1px;
   border: 2px inset ThreeDLightShadow;
   /* The 1px inline padding is for parity with Win/IE */
-  padding-inline-start: 1px;
-  padding-inline-end: 1px;
+  padding-inline: 1px;
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
@@ -151,9 +145,9 @@ textarea::placeholder,
 input::-moz-text-control-preview,
 textarea::-moz-text-control-preview {
   overflow: auto;
-  border: 0px;
+  border: 0;
   padding: inherit;
-  margin: 0px;
+  margin: 0;
   text-decoration: inherit;
   display: inline-block;
   ime-mode: inherit;
@@ -263,11 +257,9 @@ select[size][multiple] {
   /* Different alignment and padding for listbox vs combobox */
   background-color: -moz-Field;
   color: -moz-FieldText;
+  padding-block: 1px;
+  padding-inline: 0;
   vertical-align: text-bottom;
-  padding-block-start: 1px;
-  padding-block-end: 1px;
-  padding-inline-start: 0;
-  padding-inline-end: 0;
   -moz-appearance: listbox;
 }
 
@@ -291,8 +283,8 @@ select > button {
   -moz-appearance: -moz-menulist-arrow-button;
 
   /* Make sure to size correctly if the combobox has a non-auto height. */
-  block-size: 100% ! important;
-  box-sizing: border-box ! important;
+  block-size: 100% !important;
+  box-sizing: border-box !important;
 
   /*
     Make sure to align properly with the display frame.  Note that we
@@ -326,10 +318,8 @@ select > button[orientation="right"]:active {
   overflow: -moz-hidden-unscrollable;
   /* This block-start/end padding plus the combobox block-start/end border need to
      add up to the block-start/end borderpadding of text inputs and buttons */
-  padding-block-start: 1px;
-  padding-block-end: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 4px;
+  padding-block: 1px;
+  padding-inline: 4px;
   color: unset;
   white-space: nowrap;
   text-align: unset;
@@ -366,10 +356,8 @@ option {
 }
 
 select > option {
-  padding-block-start : 0;
-  padding-block-end: 0;
-  padding-inline-start: 3px;
-  padding-inline-end: 5px;
+  padding-block: 0;
+  padding-inline: 3px 5px;
 }
 
 option:checked {
@@ -379,8 +367,8 @@ option:checked {
 
 select:focus > option:checked,
 select:focus > optgroup > option:checked {
-  background-color: Highlight ! important;
-  color: HighlightText ! important;
+  background-color: Highlight !important;
+  color: HighlightText !important;
 }
 
 optgroup {
@@ -432,7 +420,7 @@ select optgroup {
    * with the dropmarker.  So set our inline-start border to 2px.
    */
   border: 1px outset black !important;
-  border-inline-start-width: 2px ! important;
+  border-inline-start-width: 2px !important;
 }
 
 input:disabled,
@@ -530,8 +518,7 @@ input[type="color"]::-moz-color-swatch {
   height: 100%;
   min-width: 3px;
   min-height: 3px;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
+  margin-inline: auto;
   box-sizing: border-box;
   border: 1px solid grey;
   display: block;
@@ -540,22 +527,18 @@ input[type="color"]::-moz-color-swatch {
 /* radio buttons */
 input[type="radio"] {
   -moz-appearance: radio;
-  margin-block-start: 3px;
-  margin-block-end: 0px;
-  margin-inline-start: 5px;
-  margin-inline-end: 3px;
+  margin-block: 3px 0;
+  margin-inline: 5px 3px;
 }
 
 /* check boxes */
 input[type="checkbox"] {
   -moz-appearance: checkbox;
-  margin-block-start: 3px;
-  margin-block-end: 3px;
-  margin-inline-start: 4px;
-  margin-inline-end: 3px;
+  margin-block: 3px;
+  margin-inline: 4px 3px;
 }
 
-/* common features of radio buttons and check boxes */
+/* Common features of radio buttons and check boxes */
 
 input[type="radio"],
 input[type="checkbox"] {
@@ -609,10 +592,8 @@ input[type="submit"] {
   /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.
      Note -moz-focus-inner padding does not affect button size. */
-  padding-block-start: 0px;
-  padding-inline-end: 8px;
-  padding-block-end: 0px;
-  padding-inline-start: 8px;
+  padding-block: 0;
+  padding-inline: 8px;
   border: 2px outset ThreeDLightShadow;
   background-color: ButtonFace;
   cursor: default;
@@ -701,10 +682,8 @@ input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
 %ifndef XP_MACOSX
-  padding-block-start: 0px;
-  padding-inline-end: 7px;
-  padding-block-end: 0px;
-  padding-inline-start: 9px;
+  padding-block: 0;
+  padding-inline: 9px 7px;
 %endif
   border-style: inset;
   background-color: ButtonFace;
@@ -728,10 +707,8 @@ input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner {
   /* Note this padding only affects the -moz-focus-inner ring, not the button itself */
-  padding-block-start: 0px;
-  padding-inline-end: 2px;
-  padding-block-end: 0px;
-  padding-inline-start: 2px;
+  padding-block: 0;
+  padding-inline: 2px;
   border: 1px dotted transparent;
 }
 
@@ -756,10 +733,8 @@ input[type="submit"]:disabled:active,
 input[type="submit"]:disabled {
   /* The sum of border and padding on block-start and block-end
      must be the same here and for text inputs */
-  padding-block-start: 0px;
-  padding-inline-end: 8px;
-  padding-block-end: 0px;
-  padding-inline-start: 8px;
+  padding-block: 0;
+  padding-inline: 8px;
   border: 2px outset ThreeDLightShadow;
   cursor: unset;
 }
@@ -825,7 +800,9 @@ output:-moz-ui-invalid {
     -moz-user-input: none !important;
   }
 
-  input[type="file"] { height: 2em; }
+  input[type="file"] {
+    height: 2em;
+  }
 }
 
 progress {
@@ -843,11 +820,11 @@ progress {
 
 ::-moz-progress-bar {
   /* Prevent styling that would change the type of frame we construct. */
-  display: inline-block ! important;
-  float: none ! important;
-  position: static ! important;
-  overflow: visible ! important;
-  box-sizing: border-box ! important;
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
 
   -moz-appearance: progresschunk;
   height: 100%;
@@ -861,16 +838,15 @@ meter {
   -moz-appearance: meter;
   display: inline-block;
   vertical-align: -0.2em;
-
   background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
 }
 
 ::-moz-meter-bar {
   /* Block styles that would change the type of frame we construct. */
-  display: inline-block ! important;
-  float: none ! important;
-  position: static ! important;
-  overflow: visible ! important;
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  overflow: visible !important;
 
   -moz-appearance: meterchunk;
   height: 100%;
@@ -978,6 +954,7 @@ input[type=range]::-moz-range-thumb {
   position: static !important;
   writing-mode: unset !important;
   direction: unset !important;
+
   width: 1em;
   height: 1em;
   border: 0.1em solid #999;
@@ -1075,7 +1052,7 @@ input[type=number]::-moz-number-spin-down {
 }
 
 input[type="number"] > div > div > div:hover {
-  /* give some indication of hover state for the up/down buttons */
+  /* Give some indication of hover state for the up/down buttons */
   background-color: lightblue;
 }
 
