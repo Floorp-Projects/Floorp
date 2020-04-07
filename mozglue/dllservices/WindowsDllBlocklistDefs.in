@@ -227,9 +227,9 @@ ALL_PROCESSES += [
     DllBlocklistEntry("pdzipmenu64.dll", UNVERSIONED),
     DllBlocklistEntry("pdzipmenu32.dll", UNVERSIONED),
 
-    # Old versions of Digital Guardian, bug 1318858
-    DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
-    DllBlocklistEntry("dgapi64.dll", (7, 5, 0, 0xffff)),
+    # Old versions of Digital Guardian, bug 1318858 and bug 1603974
+    RedirectToNoOpEntryPoint("dgapi.dll", (7, 5, 0, 0xffff)),
+    RedirectToNoOpEntryPoint("dgapi64.dll", (7, 5, 0, 0xffff)),
 
     # Old versions of COMODO Internet Security, bug 1608048
     DllBlocklistEntry("IseGuard32.dll", (1, 6, 13835, 184)),
