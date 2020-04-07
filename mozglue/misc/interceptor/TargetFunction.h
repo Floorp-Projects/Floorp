@@ -58,7 +58,7 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
     AutoProtect(const MMPolicy& aMMPolicy, uintptr_t aAddr, size_t aNumBytes,
                 uint32_t aNewProt)
         : mMMPolicy(aMMPolicy) {
-      const uint32_t pageSize = mMMPolicy.GetPageSize();
+      const uint32_t pageSize = MMPolicy::GetPageSize();
       const uintptr_t limit = aAddr + aNumBytes - 1;
       const uintptr_t limitPageNum = limit / pageSize;
       const uintptr_t basePageNum = aAddr / pageSize;
@@ -101,7 +101,7 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
 
    private:
     void Clear() {
-      const uint32_t pageSize = mMMPolicy.GetPageSize();
+      const uint32_t pageSize = MMPolicy::GetPageSize();
       for (auto&& entry : mProtects) {
         uint32_t prevProt;
         DebugOnly<bool> ok =
@@ -398,9 +398,12 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
 };
 
 template <typename MMPolicy>
-class ReadOnlyTargetBytes {
+class ReadOnlyTargetBytes;
+
+template <>
+class ReadOnlyTargetBytes<MMPolicyInProcess> {
  public:
-  ReadOnlyTargetBytes(const MMPolicy& aMMPolicy, const void* aBase)
+  ReadOnlyTargetBytes(const MMPolicyInProcess& aMMPolicy, const void* aBase)
       : mMMPolicy(aMMPolicy), mBase(reinterpret_cast<const uint8_t*>(aBase)) {}
 
   ReadOnlyTargetBytes(ReadOnlyTargetBytes&& aOther)
@@ -454,13 +457,13 @@ class ReadOnlyTargetBytes {
    */
   uintptr_t GetBase() const { return reinterpret_cast<uintptr_t>(mBase); }
 
-  const MMPolicy& GetMMPolicy() const { return mMMPolicy; }
+  const MMPolicyInProcess& GetMMPolicy() const { return mMMPolicy; }
 
   ReadOnlyTargetBytes& operator=(const ReadOnlyTargetBytes&) = delete;
   ReadOnlyTargetBytes& operator=(ReadOnlyTargetBytes&&) = delete;
 
  private:
-  const MMPolicy& mMMPolicy;
+  const MMPolicyInProcess& mMMPolicy;
   uint8_t const* const mBase;
 };
 
@@ -617,12 +620,15 @@ class ReadOnlyTargetBytes<MMPolicyOutOfProcess> {
   uint8_t const* const mBase;
 };
 
-template <typename MMPolicy>
-class TargetBytesPtr {
- public:
-  typedef TargetBytesPtr<MMPolicy> Type;
+template <typename TargetMMPolicy>
+class TargetBytesPtr;
 
-  static Type Make(const MMPolicy& aMMPolicy, const void* aFunc) {
+template <>
+class TargetBytesPtr<MMPolicyInProcess> {
+ public:
+  typedef TargetBytesPtr<MMPolicyInProcess> Type;
+
+  static Type Make(const MMPolicyInProcess& aMMPolicy, const void* aFunc) {
     return TargetBytesPtr(aMMPolicy, aFunc);
   }
 
@@ -631,7 +637,7 @@ class TargetBytesPtr {
     return TargetBytesPtr(aOther, aOffsetFromOther);
   }
 
-  ReadOnlyTargetBytes<MMPolicy>* operator->() { return &mTargetBytes; }
+  ReadOnlyTargetBytes<MMPolicyInProcess>* operator->() { return &mTargetBytes; }
 
   TargetBytesPtr(TargetBytesPtr&& aOther)
       : mTargetBytes(std::move(aOther.mTargetBytes)) {}
@@ -643,13 +649,13 @@ class TargetBytesPtr {
   TargetBytesPtr& operator=(TargetBytesPtr&&) = delete;
 
  private:
-  TargetBytesPtr(const MMPolicy& aMMPolicy, const void* aFunc)
+  TargetBytesPtr(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
       : mTargetBytes(aMMPolicy, aFunc) {}
 
   TargetBytesPtr(const TargetBytesPtr& aOther, const uint32_t aOffsetFromOther)
       : mTargetBytes(aOther.mTargetBytes, aOffsetFromOther) {}
 
-  ReadOnlyTargetBytes<MMPolicy> mTargetBytes;
+  ReadOnlyTargetBytes<MMPolicyInProcess> mTargetBytes;
 };
 
 template <>
