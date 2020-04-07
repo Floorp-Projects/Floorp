@@ -1599,14 +1599,16 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeState = mSizeMode;
 }
 
-int32_t nsWindow::GetWorkspaceID() {
+void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
+  workspaceID.Truncate();
+
   if (!mIsX11Display || !mShell) {
-    return 0;
+    return;
   }
   // Get the gdk window for this widget.
   GdkWindow* gdk_window = gtk_widget_get_window(mShell);
   if (!gdk_window) {
-    return 0;
+    return;
   }
 
   GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
@@ -1622,16 +1624,17 @@ int32_t nsWindow::GetWorkspaceID() {
                         FALSE,      // delete
                         &type_returned, &format_returned, &length_returned,
                         (guchar**)&wm_desktop)) {
-    return 0;
+    return;
   }
 
-  auto desktop = int32_t(wm_desktop[0]);
+  workspaceID.AppendInt((int32_t)wm_desktop[0]);
   g_free(wm_desktop);
-  return desktop;
 }
 
-void nsWindow::MoveToWorkspace(int32_t workspaceID) {
-  if (!workspaceID || !mIsX11Display || !mShell) {
+void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
+  nsresult rv = NS_OK;
+  int32_t workspaceID = workspaceIDStr.ToInteger(&rv);
+  if (NS_FAILED(rv) || !workspaceID || !mIsX11Display || !mShell) {
     return;
   }
 
