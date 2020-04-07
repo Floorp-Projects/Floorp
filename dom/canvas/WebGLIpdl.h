@@ -71,6 +71,11 @@ struct ParamTraits<mozilla::dom::WebGLPowerPreference> final
   static bool Validate(const T& val) { return val <= T::High_performance; }
 };
 
+template <>
+struct ParamTraits<mozilla::webgl::OpaqueFramebufferOptions> final
+    : public PlainOldDataSerializer<mozilla::webgl::OpaqueFramebufferOptions> {
+};
+
 // -
 
 template <>

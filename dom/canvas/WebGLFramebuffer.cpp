@@ -480,6 +480,24 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
   mColorReadBuffer = &mColorAttachments[0];
 }
 
+WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl,
+                                   UniquePtr<gl::MozFramebuffer> fbo)
+    : WebGLContextBoundObject(webgl),
+      mGLName(fbo->mFB),
+      mOpaque(std::move(fbo)),
+      mColorReadBuffer(nullptr) {
+  // Opaque Framebuffer is guaranteed to be complete at this point.
+  // Cache the Completeness info.
+  CompletenessInfo info;
+  info.width = mOpaque->mSize.width;
+  info.height = mOpaque->mSize.height;
+  info.hasFloat32 = false;
+  info.zLayerCount = 1;
+  info.isMultiview = false;
+
+  mCompletenessInfo = Some(std::move(info));
+}
+
 WebGLFramebuffer::~WebGLFramebuffer() {
   InvalidateCaches();
 
@@ -492,7 +510,11 @@ WebGLFramebuffer::~WebGLFramebuffer() {
   }
 
   if (!mContext) return;
-  mContext->gl->fDeleteFramebuffers(1, &mGLName);
+  // If opaque, fDeleteFramebuffers is called in the destructor of
+  // MozFramebuffer.
+  if (!mOpaque) {
+    mContext->gl->fDeleteFramebuffers(1, &mGLName);
+  }
 }
 
 ////
@@ -643,7 +665,6 @@ FBStatus WebGLFramebuffer::PrecheckFramebufferStatus(
     nsCString* const out_info) const {
   MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
              mContext->mBoundReadFramebuffer == this);
-
   if (!HasDefinedAttachments())
     return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;  // No
                                                                 // attachments
@@ -938,6 +959,11 @@ WebGLFramebuffer::CompletenessInfo::~CompletenessInfo() {
 // Entrypoints
 
 FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
+  if (MOZ_UNLIKELY(mOpaque && !mInOpaqueRAF)) {
+    // Opaque Framebuffers are considered incomplete outside of a RAF.
+    return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
+  }
+
   if (mCompletenessInfo) return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
   // Ok, let's try to resolve it!
@@ -1141,6 +1167,11 @@ bool WebGLFramebuffer::FramebufferAttach(const GLenum attachEnum,
   MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
              mContext->mBoundReadFramebuffer == this);
 
+  if (MOZ_UNLIKELY(mOpaque)) {
+    // An opaque framebuffer's attachments cannot be inspected or changed.
+    return false;
+  }
+
   // `attachment`
   const auto maybeAttach = GetAttachPoint(attachEnum);
   if (!maybeAttach || !maybeAttach.value()) return false;
@@ -1166,6 +1197,11 @@ Maybe<double> WebGLFramebuffer::GetAttachmentParameter(GLenum attachEnum,
         "Can only query COLOR_ATTACHMENTi,"
         " DEPTH_ATTACHMENT, DEPTH_STENCIL_ATTACHMENT, or"
         " STENCIL_ATTACHMENT for a framebuffer.");
+    return Nothing();
+  }
+  if (MOZ_UNLIKELY(mOpaque)) {
+    mContext->ErrorInvalidOperation(
+        "An opaque framebuffer's attachments cannot be inspected or changed.");
     return Nothing();
   }
   auto attach = maybeAttach.value();

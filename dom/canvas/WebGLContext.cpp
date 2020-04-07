@@ -885,7 +885,8 @@ void WebGLContext::OnEndOfFrame() {
   BumpLru();
 }
 
-void WebGLContext::BlitBackbufferToCurDriverFB() const {
+void WebGLContext::BlitBackbufferToCurDriverFB(
+    const gl::MozFramebuffer* const source) const {
   DoColorMask(0x0f);
 
   if (mScissorTestEnabled) {
@@ -893,25 +894,25 @@ void WebGLContext::BlitBackbufferToCurDriverFB() const {
   }
 
   [&]() {
-    const auto& size = mDefaultFB->mSize;
+    const auto fb = source ? source : mDefaultFB.get();
 
     if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
-      gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
-                           size.height, LOCAL_GL_COLOR_BUFFER_BIT,
-                           LOCAL_GL_NEAREST);
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
+      gl->fBlitFramebuffer(0, 0, fb->mSize.width, fb->mSize.height, 0, 0,
+                           fb->mSize.width, fb->mSize.height,
+                           LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
       return;
     }
     if (mDefaultFB->mSamples &&
         gl->IsExtensionSupported(
             gl::GLContext::APPLE_framebuffer_multisample)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
       gl->fResolveMultisampleFramebufferAPPLE();
       return;
     }
 
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(mDefaultFB->ColorTex(), size,
-                                                   size);
+    gl->BlitHelper()->DrawBlitTextureToFramebuffer(fb->ColorTex(), fb->mSize,
+                                                   fb->mSize);
   }();
 
   if (mScissorTestEnabled) {
@@ -988,9 +989,10 @@ bool WebGLContext::PresentScreenBuffer(gl::GLScreenBuffer* const targetScreen) {
   if (!ValidateAndInitFB(nullptr)) return false;
 
   const auto& screen = targetScreen ? targetScreen : gl->Screen();
-  if ((!screen->IsReadBufferReady() || mForceResizeOnPresent ||
-       screen->Size() != mDefaultFB->mSize) &&
-      !screen->Resize(mDefaultFB->mSize)) {
+  bool needsResize = mForceResizeOnPresent;
+  needsResize |=
+      !screen->IsReadBufferReady() || (screen->Size() != mDefaultFB->mSize);
+  if (needsResize && !screen->Resize(mDefaultFB->mSize)) {
     GenerateWarning("screen->Resize failed. Losing context.");
     LoseContext();
     return false;
@@ -1028,6 +1030,48 @@ bool WebGLContext::PresentScreenBuffer(gl::GLScreenBuffer* const targetScreen) {
   mResolvedDefaultFB = nullptr;
 
   mShouldPresent = false;
+  OnEndOfFrame();
+
+  return true;
+}
+
+bool WebGLContext::PresentScreenBufferVR(
+    gl::GLScreenBuffer* const aTargetScreen,
+    const gl::MozFramebuffer* const fb) {
+  const FuncScope funcScope(*this, "<PresentScreenBufferVR>");
+  if (IsContextLost()) {
+    return false;
+  }
+
+  if (!fb) {
+    // WebVR fallback
+    return PresentScreenBuffer(aTargetScreen);
+  }
+
+  mDrawCallsSinceLastFlush = 0;
+
+  const auto& screen = aTargetScreen ? aTargetScreen : gl->Screen();
+  bool needsResize = mForceResizeOnPresent;
+  needsResize |= !screen->IsReadBufferReady() || (screen->Size() != fb->mSize);
+  if (needsResize && !screen->Resize(fb->mSize)) {
+    GenerateWarning("screen->Resize failed. Losing context.");
+    LoseContext();
+    return false;
+  }
+
+  mForceResizeOnPresent = false;
+
+  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+  BlitBackbufferToCurDriverFB(fb);
+
+  if (!screen->PublishFrame(screen->Size())) {
+    GenerateWarning("PublishFrame failed. Losing context.");
+    LoseContext();
+    return false;
+  }
+
+  mResolvedDefaultFB = nullptr;
+
   OnEndOfFrame();
 
   return true;
@@ -1602,15 +1646,23 @@ void WebGLContext::ClearVRFrame() {
 #endif
 }
 
-RefPtr<layers::SharedSurfaceTextureClient> WebGLContext::GetVRFrame() {
+RefPtr<layers::SharedSurfaceTextureClient> WebGLContext::GetVRFrame(
+    WebGLFramebuffer* fb) {
   if (!gl) return nullptr;
 
   EnsureVRReady();
+  const gl::MozFramebuffer* maybeFB = nullptr;
+  if (fb) {
+    maybeFB = fb->mOpaque.get();
+    MOZ_ASSERT(maybeFB);
+  }
+
   UniquePtr<gl::GLScreenBuffer>* maybeVrScreen = nullptr;
 #if defined(MOZ_WIDGET_ANDROID)
   maybeVrScreen = &mVRScreen;
 #endif
   RefPtr<layers::SharedSurfaceTextureClient> sharedSurface;
+
   if (maybeVrScreen) {
     auto& vrScreen = *maybeVrScreen;
     // Create a custom GLScreenBuffer for VR.
@@ -1632,7 +1684,7 @@ RefPtr<layers::SharedSurfaceTextureClient> WebGLContext::GetVRFrame() {
     // Swap buffers as though composition has occurred.
     // We will then share the resulting front buffer to be submitted to the VR
     // compositor.
-    PresentScreenBuffer(vrScreen.get());
+    PresentScreenBufferVR(vrScreen.get(), maybeFB);
 
     if (IsContextLost()) return nullptr;
 
@@ -1652,7 +1704,7 @@ RefPtr<layers::SharedSurfaceTextureClient> WebGLContext::GetVRFrame() {
      * We will then share the resulting front buffer to be submitted to the VR
      * compositor.
      */
-    PresentScreenBuffer();
+    PresentScreenBufferVR(nullptr, maybeFB);
 
     gl::GLScreenBuffer* screen = gl->Screen();
     if (!screen) return nullptr;

@@ -115,12 +115,19 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     addEye(XREye::Left, gfx::VRDisplayState::Eye_Left);
     addEye(XREye::Right, gfx::VRDisplayState::Eye_Right);
   } else {
-    // Without a VRDisplayClient, viewerPosition and orientation should be
-    // identity
-
-    // Don't have a VRDisplayClient
-    // TODO (Bug 1618725) - Create XRView for inline sessions without a
-    // VRDisplayClient
+    auto inlineVerticalFov = renderState->GetInlineVerticalFieldOfView();
+    const double fov =
+        inlineVerticalFov.IsNull() ? M_PI * 0.5f : inlineVerticalFov.Value();
+    HTMLCanvasElement* canvas = renderState->GetOutputCanvas();
+    float aspect = 1.0f;
+    if (canvas) {
+      aspect = (float)canvas->Width() / (float)canvas->Height();
+    }
+    Matrix4x4 projection =
+        ConstructInlineProjection((float)fov, aspect, depthNear, depthFar);
+    RefPtr<XRView> view = new XRView(mParent, XREye::None, gfx::PointDouble3D(),
+                                     gfx::QuaternionDouble(), projection);
+    views.AppendElement(view);
   }
 
   RefPtr<XRRigidTransform> transform =
@@ -169,6 +176,24 @@ void XRFrame::StartAnimationFrame() {
 }
 
 void XRFrame::EndAnimationFrame() { mActive = false; }
+
+gfx::Matrix4x4 XRFrame::ConstructInlineProjection(float aFov, float aAspect,
+                                                  float aNear, float aFar) {
+  Matrix4x4 m;
+  const float depth = aFar - aNear;
+  const float invDepth = 1 / depth;
+  if (aFov == 0) {
+    aFov = 0.5f * M_PI;
+  }
+
+  m._22 = 1.0f / tan(0.5f * aFov);
+  m._11 = -m._22 / aAspect;
+  m._33 = depth * invDepth;
+  m._43 = (-aFar * aNear) * invDepth;
+  m._34 = 1.0f;
+
+  return m;
+}
 
 }  // namespace dom
 }  // namespace mozilla

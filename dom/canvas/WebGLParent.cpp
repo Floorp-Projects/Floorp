@@ -134,12 +134,13 @@ mozilla::ipc::IPCResult WebGLParent::RecvUpdateCompositableHandle(
   return IPC_OK();
 }
 
-RefPtr<layers::SharedSurfaceTextureClient> WebGLParent::GetVRFrame() {
+RefPtr<layers::SharedSurfaceTextureClient> WebGLParent::GetVRFrame(
+    webgl::ObjectId id) {
   if (!mHost) {
     return nullptr;
   }
 
-  return mHost->GetVRFrame();
+  return mHost->GetVRFrame(id);
 }
 
 }  // namespace dom

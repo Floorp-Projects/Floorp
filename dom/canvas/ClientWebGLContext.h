@@ -309,7 +309,10 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebufferJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebufferJS)
 
-  explicit WebGLFramebufferJS(const ClientWebGLContext&);
+  explicit WebGLFramebufferJS(const ClientWebGLContext&, bool opaque = false);
+
+  const bool mOpaque;
+  bool mInOpaqueRAF = false;
 
  private:
   ~WebGLFramebufferJS() = default;
@@ -990,7 +993,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void Present();
 
-  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame() const;
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(
+      const WebGLFramebufferJS*) const;
   void ClearVRFrame() const;
 
  private:
@@ -1048,6 +1052,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   already_AddRefed<WebGLBufferJS> CreateBuffer() const;
   already_AddRefed<WebGLFramebufferJS> CreateFramebuffer() const;
+  already_AddRefed<WebGLFramebufferJS> CreateOpaqueFramebuffer(
+      const webgl::OpaqueFramebufferOptions&) const;
   already_AddRefed<WebGLProgramJS> CreateProgram() const;
   already_AddRefed<WebGLQueryJS> CreateQuery() const;
   already_AddRefed<WebGLRenderbufferJS> CreateRenderbuffer() const;
@@ -1060,7 +1066,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   already_AddRefed<WebGLVertexArrayJS> CreateVertexArray() const;
 
   void DeleteBuffer(WebGLBufferJS*);
-  void DeleteFramebuffer(WebGLFramebufferJS*);
+  void DeleteFramebuffer(WebGLFramebufferJS*, bool canDeleteOpaque = false);
   void DeleteProgram(WebGLProgramJS*) const;
   void DeleteQuery(WebGLQueryJS*);
   void DeleteRenderbuffer(WebGLRenderbufferJS*);
@@ -2019,6 +2025,10 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void EndTransformFeedback();
   void PauseTransformFeedback();
   void ResumeTransformFeedback();
+
+  // -------------------------- Opaque Framebuffers ---------------------------
+
+  void SetFramebufferIsInOpaqueRAF(WebGLFramebufferJS*, bool);
 
   // ------------------------------ Extensions ------------------------------
  public:

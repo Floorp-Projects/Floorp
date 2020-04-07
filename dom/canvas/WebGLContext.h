@@ -480,6 +480,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   // Prepare the context for capture before compositing
   bool PresentScreenBuffer(gl::GLScreenBuffer* const screen = nullptr);
+  bool PresentScreenBufferVR(gl::GLScreenBuffer* const screen = nullptr,
+                             const gl::MozFramebuffer* const fb = nullptr);
 
   // Present to compositor
   bool Present();
@@ -507,6 +509,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   RefPtr<WebGLBuffer> CreateBuffer();
   RefPtr<WebGLFramebuffer> CreateFramebuffer();
+  RefPtr<WebGLFramebuffer> CreateOpaqueFramebuffer(
+      const webgl::OpaqueFramebufferOptions& options);
   RefPtr<WebGLProgram> CreateProgram();
   RefPtr<WebGLQuery> CreateQuery();
   RefPtr<WebGLRenderbuffer> CreateRenderbuffer();
@@ -580,7 +584,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   void PixelStorei(GLenum pname, uint32_t param);
   void PolygonOffset(GLfloat factor, GLfloat units);
 
-  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame();
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(WebGLFramebuffer* fb);
   void ClearVRFrame();
   void EnsureVRReady();
 
@@ -1227,7 +1231,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
       uint32_t* out_height,
       GLenum incompleteFbError = LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
   void DoColorMask(uint8_t bitmask) const;
-  void BlitBackbufferToCurDriverFB() const;
+  void BlitBackbufferToCurDriverFB(
+      const gl::MozFramebuffer* const source = nullptr) const;
   bool BindDefaultFBForRead();
 
   // --
