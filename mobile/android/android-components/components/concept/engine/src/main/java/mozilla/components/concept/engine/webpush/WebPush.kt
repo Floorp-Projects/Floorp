@@ -23,13 +23,6 @@ interface WebPushHandler {
 
     /**
      * Invoked when a subscription has now changed/expired.
-     *
-     * This will be deprecated after GeckoView 75; see: https://github.com/mozilla-mobile/android-components/issues/5913
-     */
-    fun onSubscriptionChanged(subscription: WebPushSubscription) = Unit
-
-    /**
-     * Invoked when a subscription has now changed/expired.
      */
     fun onSubscriptionChanged(scope: String) = Unit
 }
