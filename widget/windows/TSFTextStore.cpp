@@ -3966,17 +3966,14 @@ void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
                                  bool aInPrivateBrowsing) {
   mInputScopes.Clear();
 
+  // IME may refer only first input scope, but we will append inputmode's
+  // input scopes too like Chrome since IME may refer it.
+  IMEHandler::AppendInputScopeFromType(aHTMLInputType, mInputScopes);
+  IMEHandler::AppendInputScopeFromInputmode(aHTMLInputInputMode, mInputScopes);
+
   if (aInPrivateBrowsing) {
     mInputScopes.AppendElement(IS_PRIVATE);
   }
-
-  if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
-    IMEHandler::AppendInputScopeFromInputmode(aHTMLInputInputMode,
-                                              mInputScopes);
-    return;
-  }
-
-  IMEHandler::AppendInputScopeFromType(aHTMLInputType, mInputScopes);
 }
 
 int32_t TSFTextStore::GetRequestedAttrIndex(const TS_ATTRID& aAttrID) {
