@@ -4421,19 +4421,6 @@ void CodeGenerator::visitToNumeric(LToNumeric* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitToNumber(LToNumber* lir) {
-  ValueOperand operand = ToValue(lir, LToNumber::Input);
-  ValueOperand output = ToOutValue(lir);
-
-  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  OutOfLineCode* ool =
-      oolCallVM<Fn, DoToNumber>(lir, ArgList(operand), StoreValueTo(output));
-
-  masm.branchTestNumber(Assembler::NotEqual, operand, ool->entry());
-  masm.moveValue(operand, output);
-  masm.bind(ool->rejoin());
-}
-
 void CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir) {
   ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
   Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
