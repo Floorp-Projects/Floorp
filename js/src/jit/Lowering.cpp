@@ -1119,22 +1119,26 @@ void LIRGenerator::visitSameValue(MSameValue* ins) {
 void LIRGenerator::lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
+  MOZ_ASSERT(IsIntType(ins->type()));
+  MOZ_ASSERT(ins->type() == ins->specialization());
 
-  if (lhs->type() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
+    MOZ_ASSERT(lhs->type() == MIRType::Int32);
     MOZ_ASSERT(rhs->type() == MIRType::Int32);
     ReorderCommutative(&lhs, &rhs, ins);
     lowerForALU(new (alloc()) LBitOpI(op), ins, lhs, rhs);
     return;
   }
 
-  if (lhs->type() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
+    MOZ_ASSERT(lhs->type() == MIRType::Int64);
     MOZ_ASSERT(rhs->type() == MIRType::Int64);
     ReorderCommutative(&lhs, &rhs, ins);
     lowerForALUInt64(new (alloc()) LBitOpI64(op), ins, lhs, rhs);
     return;
   }
 
-  lowerBinaryV(op, ins);
+  MOZ_CRASH("Unhandled integer specialization");
 }
 
 void LIRGenerator::visitTypeOf(MTypeOf* ins) {
@@ -1220,15 +1224,20 @@ void LIRGenerator::visitBitXor(MBitXor* ins) { lowerBitOp(JSOp::BitXor, ins); }
 void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
+  MOZ_ASSERT(ins->type() == ins->specialization());
 
-  if (lhs->type() == MIRType::Int32) {
+  if (op == JSOp::Ursh && ins->type() == MIRType::Double) {
+    MOZ_ASSERT(lhs->type() == MIRType::Int32);
     MOZ_ASSERT(rhs->type() == MIRType::Int32);
+    lowerUrshD(ins->toUrsh());
+    return;
+  }
 
-    if (ins->type() == MIRType::Double) {
-      MOZ_ASSERT(op == JSOp::Ursh);
-      lowerUrshD(ins->toUrsh());
-      return;
-    }
+  MOZ_ASSERT(IsIntType(ins->type()));
+
+  if (ins->type() == MIRType::Int32) {
+    MOZ_ASSERT(lhs->type() == MIRType::Int32);
+    MOZ_ASSERT(rhs->type() == MIRType::Int32);
 
     LShiftI* lir = new (alloc()) LShiftI(op);
     if (op == JSOp::Ursh) {
@@ -1240,14 +1249,14 @@ void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
     return;
   }
 
-  if (lhs->type() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
+    MOZ_ASSERT(lhs->type() == MIRType::Int64);
     MOZ_ASSERT(rhs->type() == MIRType::Int64);
     lowerForShiftInt64(new (alloc()) LShiftI64(op), ins, lhs, rhs);
     return;
   }
 
-  MOZ_ASSERT(ins->specialization() == MIRType::None);
-  lowerBinaryV(op, ins);
+  MOZ_CRASH("Unhandled integer specialization");
 }
 
 void LIRGenerator::visitLsh(MLsh* ins) { lowerShiftOp(JSOp::Lsh, ins); }
@@ -1834,19 +1843,6 @@ void LIRGenerator::visitMod(MMod* ins) {
   }
 
   MOZ_CRASH("Unhandled number specialization");
-}
-
-void LIRGenerator::lowerBinaryV(JSOp op, MBinaryInstruction* ins) {
-  MDefinition* lhs = ins->getOperand(0);
-  MDefinition* rhs = ins->getOperand(1);
-
-  MOZ_ASSERT(lhs->type() == MIRType::Value);
-  MOZ_ASSERT(rhs->type() == MIRType::Value);
-
-  LBinaryV* lir =
-      new (alloc()) LBinaryV(op, useBoxAtStart(lhs), useBoxAtStart(rhs));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitConcat(MConcat* ins) {

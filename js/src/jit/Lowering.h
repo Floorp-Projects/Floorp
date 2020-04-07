@@ -57,7 +57,6 @@ class LIRGenerator final : public LIRGeneratorSpecific {
 
   void lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins);
   void lowerShiftOp(JSOp op, MShiftInstruction* ins);
-  void lowerBinaryV(JSOp op, MBinaryInstruction* ins);
   void definePhis();
 
   MOZ_MUST_USE bool lowerCallArguments(MCall* call);
