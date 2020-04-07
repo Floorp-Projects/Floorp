@@ -172,14 +172,13 @@ splitter.devtools-horizontal-splitter,
   background-repeat: no-repeat !important;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-inline-start: 2px !important;
-  padding-inline-end: 10px !important;
+  padding-inline: 2px 10px !important;
   fill: var(--theme-icon-color);
   -moz-context-properties: fill;
 }
 
-html[dir="rtl"] .devtools-dropdown-button {
-  background-position: left center !important;
+.devtools-dropdown-button:dir(rtl) {
+  background-position-x: left !important;
 }
 
 .devtools-dropdown-button:not(:hover) {
