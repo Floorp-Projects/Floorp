@@ -229,11 +229,11 @@ class nsUrlClassifierDBService::FeatureHolder final {
 
   ~FeatureHolder() {
     for (FeatureData& featureData : mFeatureData) {
-      NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mFeatureData",
-                                        featureData.mFeature.forget());
+      NS_ReleaseOnMainThread("FeatureHolder:mFeatureData",
+                             featureData.mFeature.forget());
     }
 
-    NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mURI", mURI.forget());
+    NS_ReleaseOnMainThread("FeatureHolder:mURI", mURI.forget());
   }
 
   TableData* GetOrCreateTableData(const nsACString& aTable) {
@@ -1187,8 +1187,8 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierLookupCallback, nsIUrlClassifierLookupCallback,
 
 nsUrlClassifierLookupCallback::~nsUrlClassifierLookupCallback() {
   if (mCallback) {
-    NS_ReleaseOnMainThreadSystemGroup(
-        "nsUrlClassifierLookupCallback::mCallback", mCallback.forget());
+    NS_ReleaseOnMainThread("nsUrlClassifierLookupCallback::mCallback",
+                           mCallback.forget());
   }
 }
 

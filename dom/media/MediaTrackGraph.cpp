@@ -1753,9 +1753,9 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       // It's not safe to Shutdown() a thread from StableState, and
       // releasing this may shutdown a SystemClockDriver thread.
       // Proxy the release to outside of StableState.
-      NS_ReleaseOnMainThreadSystemGroup("MediaTrackGraphImpl::CurrentDriver",
-                                        driver.forget(),
-                                        true);  // always proxy
+      NS_ReleaseOnMainThread("MediaTrackGraphImpl::CurrentDriver",
+                             driver.forget(),
+                             true);  // always proxy
     }
 
     if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&

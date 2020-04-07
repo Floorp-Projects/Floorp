@@ -29,8 +29,7 @@ void URLExtraData::ReleaseDummy() { sDummy = nullptr; }
 
 URLExtraData::~URLExtraData() {
   if (!NS_IsMainThread()) {
-    NS_ReleaseOnMainThreadSystemGroup("URLExtraData::mPrincipal",
-                                      mPrincipal.forget());
+    NS_ReleaseOnMainThread("URLExtraData::mPrincipal", mPrincipal.forget());
   }
 }
 

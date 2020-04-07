@@ -537,8 +537,8 @@ GetFilesHelperParent::GetFilesHelperParent(const nsID& aUUID,
       mUUID(aUUID) {}
 
 GetFilesHelperParent::~GetFilesHelperParent() {
-  NS_ReleaseOnMainThreadSystemGroup("GetFilesHelperParent::mContentParent",
-                                    mContentParent.forget());
+  NS_ReleaseOnMainThread("GetFilesHelperParent::mContentParent",
+                         mContentParent.forget());
 }
 
 /* static */

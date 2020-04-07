@@ -109,8 +109,8 @@ void RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor) {
 
   RefPtr<ContentParent> contentParent =
       BackgroundParent::GetContentParent(aActor->Manager());
-  auto scopeExit = MakeScopeExit(
-      [&] { NS_ReleaseOnMainThreadSystemGroup(contentParent.forget()); });
+  auto scopeExit =
+      MakeScopeExit([&] { NS_ReleaseOnMainThread(contentParent.forget()); });
   const auto& remoteType = contentParent->GetRemoteType();
 
   if (!mPendings.IsEmpty()) {

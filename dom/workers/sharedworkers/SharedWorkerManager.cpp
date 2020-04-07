@@ -52,11 +52,8 @@ SharedWorkerManager::SharedWorkerManager(
 }
 
 SharedWorkerManager::~SharedWorkerManager() {
-  nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
-
-  NS_ProxyRelease("SharedWorkerManager::mLoadingPrincipal", target,
-                  mLoadingPrincipal.forget());
+  NS_ReleaseOnMainThread("SharedWorkerManager::mLoadingPrincipal",
+                         mLoadingPrincipal.forget());
   NS_ProxyRelease("SharedWorkerManager::mRemoteWorkerController",
                   mPBackgroundEventTarget, mRemoteWorkerController.forget());
 }
@@ -291,8 +288,8 @@ SharedWorkerManagerWrapper::SharedWorkerManagerWrapper(
 }
 
 SharedWorkerManagerWrapper::~SharedWorkerManagerWrapper() {
-  NS_ReleaseOnMainThreadSystemGroup("SharedWorkerManagerWrapper::mHolder",
-                                    mHolder.forget());
+  NS_ReleaseOnMainThread("SharedWorkerManagerWrapper::mHolder",
+                         mHolder.forget());
 }
 
 }  // namespace dom

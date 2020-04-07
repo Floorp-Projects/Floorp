@@ -267,7 +267,7 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
     // In case of shutdown, Run() does not run, so we dispatch mPromise to be
     // released on main thread here.
     void RunDuringShutdown() override {
-      NS_ReleaseOnMainThreadSystemGroup(
+      NS_ReleaseOnMainThread(
           "DOMMediaStream::CountUnderlyingStreams::Counter::RunDuringShutdown",
           mPromise.forget());
     }

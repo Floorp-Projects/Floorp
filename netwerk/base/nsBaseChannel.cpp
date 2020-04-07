@@ -70,8 +70,7 @@ nsBaseChannel::nsBaseChannel()
 }
 
 nsBaseChannel::~nsBaseChannel() {
-  NS_ReleaseOnMainThreadSystemGroup("nsBaseChannel::mLoadInfo",
-                                    mLoadInfo.forget());
+  NS_ReleaseOnMainThread("nsBaseChannel::mLoadInfo", mLoadInfo.forget());
 }
 
 nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,

@@ -42,8 +42,8 @@ class StatementData {
     // We need to ensure that mParamsArray is released on the main thread,
     // as the binding arguments may be XPConnect values, which are safe
     // to release only on the main thread.
-    NS_ReleaseOnMainThreadSystemGroup("StatementData::mParamsArray",
-                                      mParamsArray.forget());
+    NS_ReleaseOnMainThread("StatementData::mParamsArray",
+                           mParamsArray.forget());
   }
 
   /**

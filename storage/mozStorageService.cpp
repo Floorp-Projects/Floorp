@@ -474,16 +474,15 @@ class AsyncInitDatabase final : public Runnable {
   }
 
   ~AsyncInitDatabase() {
-    NS_ReleaseOnMainThreadSystemGroup("AsyncInitDatabase::mStorageFile",
-                                      mStorageFile.forget());
-    NS_ReleaseOnMainThreadSystemGroup("AsyncInitDatabase::mConnection",
-                                      mConnection.forget());
+    NS_ReleaseOnMainThread("AsyncInitDatabase::mStorageFile",
+                           mStorageFile.forget());
+    NS_ReleaseOnMainThread("AsyncInitDatabase::mConnection",
+                           mConnection.forget());
 
     // Generally, the callback will be released by CallbackComplete.
     // However, if for some reason Run() is not executed, we still
     // need to ensure that it is released here.
-    NS_ReleaseOnMainThreadSystemGroup("AsyncInitDatabase::mCallback",
-                                      mCallback.forget());
+    NS_ReleaseOnMainThread("AsyncInitDatabase::mCallback", mCallback.forget());
   }
 
   RefPtr<Connection> mConnection;

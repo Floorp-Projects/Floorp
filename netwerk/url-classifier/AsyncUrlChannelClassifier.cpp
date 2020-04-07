@@ -115,9 +115,7 @@ nsresult URIData::Create(nsIURI* aURI, nsIURI* aInnermostURI,
 
 URIData::URIData() { MOZ_ASSERT(NS_IsMainThread()); }
 
-URIData::~URIData() {
-  NS_ReleaseOnMainThreadSystemGroup("URIData:mURI", mURI.forget());
-}
+URIData::~URIData() { NS_ReleaseOnMainThread("URIData:mURI", mURI.forget()); }
 
 bool URIData::IsEqual(nsIURI* aURI) const {
   MOZ_ASSERT(NS_IsMainThread());
@@ -297,7 +295,7 @@ class FeatureData {
 FeatureData::FeatureData() : mState(eUnclassified) {}
 
 FeatureData::~FeatureData() {
-  NS_ReleaseOnMainThreadSystemGroup("FeatureData:mFeature", mFeature.forget());
+  NS_ReleaseOnMainThread("FeatureData:mFeature", mFeature.forget());
 }
 
 nsresult FeatureData::Initialize(FeatureTask* aTask, nsIChannel* aChannel,
@@ -584,9 +582,9 @@ FeatureTask::FeatureTask(nsIChannel* aChannel,
 }
 
 FeatureTask::~FeatureTask() {
-  NS_ReleaseOnMainThreadSystemGroup("FeatureTask::mChannel", mChannel.forget());
-  NS_ReleaseOnMainThreadSystemGroup("FeatureTask::mCallbackHolder",
-                                    mCallbackHolder.forget());
+  NS_ReleaseOnMainThread("FeatureTask::mChannel", mChannel.forget());
+  NS_ReleaseOnMainThread("FeatureTask::mCallbackHolder",
+                         mCallbackHolder.forget());
 }
 
 nsresult FeatureTask::GetOrCreateURIData(

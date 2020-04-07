@@ -62,11 +62,8 @@ void RemoteWorkerParent::Initialize(bool aAlreadyRegistered) {
       parent->RegisterRemoteWorkerActor();
     }
 
-    nsCOMPtr<nsIEventTarget> target =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-
-    NS_ProxyRelease("RemoteWorkerParent::Initialize ContentParent", target,
-                    parent.forget());
+    NS_ReleaseOnMainThread("RemoteWorkerParent::Initialize ContentParent",
+                           parent.forget());
   }
 }
 

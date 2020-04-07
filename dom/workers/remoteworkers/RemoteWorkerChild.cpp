@@ -25,6 +25,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
@@ -189,10 +190,8 @@ class ReleaseWorkerRunnable final : public WorkerRunnable {
 
     mWeakRef = nullptr;
 
-    nsCOMPtr<nsIEventTarget> target =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-    NS_ProxyRelease("ReleaseWorkerRunnable::mWorkerPrivate", target,
-                    mWorkerPrivate.forget());
+    NS_ReleaseOnMainThread("ReleaseWorkerRunnable::mWorkerPrivate",
+                           mWorkerPrivate.forget());
   }
 
   RefPtr<WorkerPrivate> mWorkerPrivate;
@@ -300,7 +299,8 @@ void RemoteWorkerChild::ExecWorker(const RemoteWorkerData& aData) {
         }
       });
 
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
 nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
@@ -698,10 +698,8 @@ RemoteWorkerChild::WorkerPrivateAccessibleState::
     return;
   }
 
-  nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
-  NS_ProxyRelease(
-      "RemoteWorkerChild::WorkerPrivateAccessibleState::mWorkerPrivate", target,
+  NS_ReleaseOnMainThread(
+      "RemoteWorkerChild::WorkerPrivateAccessibleState::mWorkerPrivate",
       mWorkerPrivate.forget());
 }
 
@@ -726,8 +724,8 @@ RemoteWorkerChild::Running::~Running() {
   if (NS_IsMainThread()) {
     dispatchWorkerRunnableRunnable->Run();
   } else {
-    SystemGroup::Dispatch(TaskCategory::Other,
-                          dispatchWorkerRunnableRunnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other,
+                             dispatchWorkerRunnableRunnable.forget());
   }
 }
 
@@ -862,7 +860,8 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
           self->Exec(owner);
         });
 
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
 #ifdef DEBUG
     mStarted = true;
