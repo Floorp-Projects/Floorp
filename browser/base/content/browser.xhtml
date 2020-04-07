@@ -160,10 +160,10 @@
       <menuitem id="context_bookmarkSelectedTabs"
                 hidden="true"
                 data-lazy-l10n-id="bookmark-selected-tabs"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"/>
+                oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"/>
       <menuitem id="context_bookmarkTab"
                 data-lazy-l10n-id="bookmark-tab"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
+                oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
       <menu id="context_reopenInContainer"
             data-lazy-l10n-id="reopen-in-container"
             hidden="true">
@@ -441,11 +441,11 @@
                 data-lazy-l10n-id="toolbar-context-menu-reload-selected-tabs"/>
       <menuitem id="toolbar-context-bookmarkSelectedTab"
                 contexttype="tabbar"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"
+                oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
                 data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tab"/>
       <menuitem id="toolbar-context-bookmarkSelectedTabs"
                 contexttype="tabbar"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"
+                oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
                 data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tabs"/>
       <menuitem id="toolbar-context-selectAllTabs"
                 contexttype="tabbar"
