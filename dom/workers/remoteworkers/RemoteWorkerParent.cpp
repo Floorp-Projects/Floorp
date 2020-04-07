@@ -94,9 +94,7 @@ void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
     RefPtr<UnregisterActorRunnable> r =
         new UnregisterActorRunnable(parent.forget());
 
-    nsCOMPtr<nsIEventTarget> target =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-    target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 
   if (mController) {

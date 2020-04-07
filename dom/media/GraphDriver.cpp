@@ -8,6 +8,7 @@
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/WorkletThread.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
@@ -90,7 +91,7 @@ ThreadedDriver::~ThreadedDriver() {
   if (mThread) {
     nsCOMPtr<nsIRunnable> event =
         new MediaTrackGraphShutdownThreadRunnable(mThread.forget());
-    SystemGroup::Dispatch(TaskCategory::Other, event.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
   }
 }
 

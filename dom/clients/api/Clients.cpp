@@ -15,8 +15,8 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/SystemGroup.h"
 #include "nsIGlobalObject.h"
 #include "nsString.h"
 
@@ -100,7 +100,7 @@ already_AddRefed<Promise> Clients::Get(const nsAString& aClientID,
                       scope, "ServiceWorkerGetClientStorageError",
                       nsTArray<nsString>());
                 });
-            SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+            SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
             outerPromise->MaybeResolveWithUndefined();
           },
           [outerPromise, holder](const CopyableErrorResult& aResult) {
@@ -183,7 +183,7 @@ already_AddRefed<Promise> Clients::MatchAll(const ClientQueryOptions& aOptions,
                     scope, "ServiceWorkerGetClientStorageError",
                     nsTArray<nsString>());
               });
-          SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+          SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
         }
         clientList.Sort(MatchAllComparator());
         outerPromise->MaybeResolve(clientList);

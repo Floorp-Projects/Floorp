@@ -10,8 +10,8 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowInner.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -116,14 +116,10 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior, State aState)
 
 CookieJarSettings::~CookieJarSettings() {
   if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
-    nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-    MOZ_ASSERT(systemGroupEventTarget);
-
     RefPtr<Runnable> r = new ReleaseCookiePermissions(mCookiePermissions);
     MOZ_ASSERT(mCookiePermissions.IsEmpty());
 
-    systemGroupEventTarget->Dispatch(r.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 }
 

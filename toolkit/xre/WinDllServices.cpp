@@ -10,9 +10,9 @@
 #include <psapi.h>
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticLocalPtr.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/UntrustedModulesProcessor.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
@@ -46,7 +46,7 @@ DllServices* DllServices::Get() {
           return dllSvc.forget();
         }
 
-        SystemGroup::Dispatch(
+        SchedulerGroup::Dispatch(
             TaskCategory::Other,
             NS_NewRunnableFunction("mozilla::DllServices::Get",
                                    std::move(setClearOnShutdown)));

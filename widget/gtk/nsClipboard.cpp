@@ -24,6 +24,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/TimeStamp.h"
 #include "gfxPlatformGtk.h"
 
@@ -113,7 +114,7 @@ nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
   // Save global clipboard content to CLIPBOARD_MANAGER.
   // gtk_clipboard_store() can run an event loop, so call from a dedicated
   // runnable.
-  return SystemGroup::Dispatch(
+  return SchedulerGroup::Dispatch(
       TaskCategory::Other,
       NS_NewRunnableFunction("gtk_clipboard_store()", []() {
         gtk_clipboard_store(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));

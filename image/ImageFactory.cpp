@@ -22,6 +22,7 @@
 #include "nsMediaFragmentURIParser.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_image.h"
 
 namespace mozilla {
@@ -80,7 +81,7 @@ static void NotifyImageLoading(nsIURI* aURI) {
     nsCOMPtr<nsIURI> uri(aURI);
     nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
         "NotifyImageLoading", [uri]() -> void { NotifyImageLoading(uri); });
-    SystemGroup::Dispatch(TaskCategory::Other, ev.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, ev.forget());
     return;
   }
 

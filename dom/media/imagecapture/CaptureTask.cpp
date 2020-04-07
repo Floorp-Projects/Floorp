@@ -11,6 +11,7 @@
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "mozilla/SchedulerGroup.h"
 #include "nsThreadUtils.h"
 #include "VideoSegment.h"
 
@@ -183,7 +184,7 @@ void CaptureTask::PostTrackEndEvent() {
 
   IC_LOG("Got MediaTrack track removed or finished event.");
   nsCOMPtr<nsIRunnable> event = new TrackEndRunnable(this);
-  SystemGroup::Dispatch(TaskCategory::Other, event.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
 }
 
 }  // namespace mozilla

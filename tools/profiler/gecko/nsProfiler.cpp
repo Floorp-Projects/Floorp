@@ -16,8 +16,8 @@
 #include "js/JSON.h"
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsIFileStreams.h"
@@ -216,7 +216,7 @@ nsProfiler::WaitOnePeriodicSampling(JSContext* aCx, Promise** aPromise) {
                new nsMainThreadPtrHolder<Promise>(
                    "WaitOnePeriodicSampling promise for Sampler", promise))](
               SamplingState aSamplingState) mutable {
-            SystemGroup::Dispatch(
+            SchedulerGroup::Dispatch(
                 TaskCategory::Other,
                 NS_NewRunnableFunction(
                     "nsProfiler::WaitOnePeriodicSampling result on main thread",
@@ -883,7 +883,7 @@ RefPtr<nsProfiler::SymbolTablePromise> nsProfiler::GetSymbolTableMozPromise(
         SymbolTable symbolTable;
         bool succeeded = profiler_get_symbol_table(
             debugPath.get(), breakpadID.get(), &symbolTable);
-        SystemGroup::Dispatch(
+        SchedulerGroup::Dispatch(
             TaskCategory::Other,
             NS_NewRunnableFunction(
                 "nsProfiler::GetSymbolTableMozPromise result on main thread",

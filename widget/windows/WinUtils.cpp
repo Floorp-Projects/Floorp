@@ -23,6 +23,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Unused.h"
 #include "nsIContentPolicy.h"
@@ -2105,7 +2106,7 @@ const WinUtils::WhitelistVec& WinUtils::GetWhitelistedPaths() {
     if (NS_IsMainThread()) {
       setClearFn();
     } else {
-      SystemGroup::Dispatch(
+      SchedulerGroup::Dispatch(
           TaskCategory::Other,
           NS_NewRunnableFunction("WinUtils::GetWhitelistedPaths",
                                  std::move(setClearFn)));

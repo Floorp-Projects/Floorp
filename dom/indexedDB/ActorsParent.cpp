@@ -37,6 +37,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
@@ -10405,7 +10406,7 @@ class DeserializeIndexValueHelper final : public Runnable {
 
     RefPtr<Runnable> self = this;
     const nsresult rv =
-        SystemGroup::Dispatch(TaskCategory::Other, self.forget());
+        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return;
@@ -10516,7 +10517,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
 
     RefPtr<Runnable> self = this;
     const nsresult rv =
-        SystemGroup::Dispatch(TaskCategory::Other, self.forget());
+        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

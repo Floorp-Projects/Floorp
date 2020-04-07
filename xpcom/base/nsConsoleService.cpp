@@ -28,8 +28,8 @@
 #include "mozilla/dom/ContentParent.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 
 #if defined(ANDROID)
 #  include <android/log.h>
@@ -405,7 +405,7 @@ nsresult nsConsoleService::LogMessageWithMode(
     // avoid failing in XPCShell tests
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     if (mainThread) {
-      SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
     }
   }
 

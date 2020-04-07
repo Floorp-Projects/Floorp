@@ -19,14 +19,12 @@
 #include "mozilla/mozalloc.h"
 
 #if defined(MOZILLA_INTERNAL_API)
-
 #  include "MainThreadUtils.h"
-#  include "mozilla/SystemGroup.h"
 #  include "nsISupportsImpl.h"
 #  include "nsString.h"
 #  include "nsThreadUtils.h"
 #  include "prthread.h"
-
+#  include "mozilla/SchedulerGroup.h"
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 // For PCUNICODE_STRING
@@ -150,7 +148,7 @@ class DllServices : public detail::DllServicesBase {
             "DllServices::NotifyDllLoad", this, &DllServices::NotifyDllLoad,
             std::move(aModLoadInfo)));
 
-    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
 
   void DispatchModuleLoadBacklogNotification(
@@ -160,7 +158,7 @@ class DllServices : public detail::DllServicesBase {
             "DllServices::NotifyModuleLoadBacklog", this,
             &DllServices::NotifyModuleLoadBacklog, std::move(aEvents)));
 
-    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
 
 #  if defined(DEBUG)

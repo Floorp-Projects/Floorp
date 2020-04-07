@@ -11,9 +11,9 @@
 #include "gfxPlatform.h"  // for gfxPlatform
 #include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/SharedMemory.h"  // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
@@ -413,7 +413,7 @@ static void DestroyTextureData(TextureData* aTextureData,
 
   if (aMainThreadOnly && !NS_IsMainThread()) {
     RefPtr<LayersIPCChannel> allocatorRef = aAllocator;
-    SystemGroup::Dispatch(
+    SchedulerGroup::Dispatch(
         TaskCategory::Other,
         NS_NewRunnableFunction(
             "layers::DestroyTextureData",

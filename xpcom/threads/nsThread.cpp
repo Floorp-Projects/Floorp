@@ -31,7 +31,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/Telemetry.h"
@@ -498,7 +497,7 @@ void nsThread::ThreadFunc(void* aArg) {
   MOZ_ASSERT(context->mTerminatingThread == self);
   event = do_QueryObject(new nsThreadShutdownAckEvent(context));
   if (context->mIsMainThreadJoining) {
-    SystemGroup::Dispatch(TaskCategory::Other, event.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
   } else {
     context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }

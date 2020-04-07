@@ -13,6 +13,7 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIPrompt.h"
@@ -286,7 +287,8 @@ ParentChannelListener::ChannelIntercepted(nsIInterceptedChannel* aChannel) {
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod<nsresult>(
         "ParentChannelListener::CancelInterception", aChannel,
         &nsIInterceptedChannel::CancelInterception, NS_BINDING_ABORTED);
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
     return NS_OK;
   }
 
