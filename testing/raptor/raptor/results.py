@@ -627,9 +627,12 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = test.get("subtest_unit", "ms")
                     LOG.info("parsed new result: %s" % str(new_result))
 
-                    # `extra_options` will be populated with Gecko profiling flags in
+                    # `extra_options` will also be populated with Gecko profiling flags in
                     # the future.
                     new_result["extra_options"] = []
+                    if self.app != "firefox":
+                        new_result["extra_options"].append(self.app)
+
                     return new_result
 
                 if test["type"] == "pageload":
