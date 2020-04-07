@@ -43,7 +43,7 @@ void DecodedSurfaceProvider::DropImageReference() {
   // get evicted is holding the surface cache lock, causing deadlock.
   RefPtr<RasterImage> image = mImage;
   mImage = nullptr;
-  NS_ReleaseOnMainThreadSystemGroup(image.forget(), /* aAlwaysProxy = */ true);
+  NS_ReleaseOnMainThread(image.forget(), /* aAlwaysProxy = */ true);
 }
 
 DrawableFrameRef DecodedSurfaceProvider::DrawableRef(size_t aFrame) {

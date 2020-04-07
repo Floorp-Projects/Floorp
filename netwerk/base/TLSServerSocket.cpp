@@ -285,8 +285,8 @@ TLSServerConnectionInfo::~TLSServerConnectionInfo() {
   }
 
   if (observer) {
-    NS_ReleaseOnMainThreadSystemGroup(
-        "TLSServerConnectionInfo::mSecurityObserver", observer.forget());
+    NS_ReleaseOnMainThread("TLSServerConnectionInfo::mSecurityObserver",
+                           observer.forget());
   }
 }
 

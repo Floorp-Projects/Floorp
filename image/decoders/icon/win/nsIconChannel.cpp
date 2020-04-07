@@ -165,11 +165,11 @@ nsIconChannel::IconSyncOpenTask::Run() {
 nsIconChannel::nsIconChannel() {}
 
 nsIconChannel::~nsIconChannel() {
-  NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadInfo",
-                                    mLoadInfo.forget());
+  if (mLoadInfo) {
+    NS_ReleaseOnMainThread("nsIconChannel::mLoadInfo", mLoadInfo.forget());
+  }
   if (mLoadGroup) {
-    NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadGroup",
-                                      mLoadGroup.forget());
+    NS_ReleaseOnMainThread("nsIconChannel::mLoadGroup", mLoadGroup.forget());
   }
 }
 

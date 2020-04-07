@@ -282,10 +282,8 @@ class ImageDecoderHelper final : public Runnable,
 
  private:
   ~ImageDecoderHelper() {
-    NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mImage",
-                                      mImage.forget());
-    NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mCallback",
-                                      mCallback.forget());
+    NS_ReleaseOnMainThread("ImageDecoderHelper::mImage", mImage.forget());
+    NS_ReleaseOnMainThread("ImageDecoderHelper::mCallback", mCallback.forget());
   }
 
   RefPtr<image::Image> mImage;

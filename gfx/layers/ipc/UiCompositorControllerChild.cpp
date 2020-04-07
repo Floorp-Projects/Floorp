@@ -187,8 +187,8 @@ void UiCompositorControllerChild::Destroy() {
     // Dispatch mWidget to main thread to prevent it from being destructed by
     // the ui thread.
     RefPtr<nsIWidget> widget = std::move(mWidget);
-    NS_ReleaseOnMainThreadSystemGroup("UiCompositorControllerChild::mWidget",
-                                      widget.forget());
+    NS_ReleaseOnMainThread("UiCompositorControllerChild::mWidget",
+                           widget.forget());
   }
 
   if (mIsOpen) {

@@ -397,8 +397,8 @@ nsresult nsConsoleService::LogMessageWithMode(
     // Release |retiredMessage| on the main thread in case it is an instance of
     // a mainthread-only class like nsScriptErrorWithStack and we're off the
     // main thread.
-    NS_ReleaseOnMainThreadSystemGroup("nsConsoleService::retiredMessage",
-                                      retiredMessage.forget());
+    NS_ReleaseOnMainThread("nsConsoleService::retiredMessage",
+                           retiredMessage.forget());
   }
 
   if (r) {

@@ -223,8 +223,7 @@ class AudioProxyThread {
     // Conduits must be released on MainThread, and we might have the last
     // reference We don't need to worry about runnables still trying to access
     // the conduit, since the runnables hold a ref to AudioProxyThread.
-    NS_ReleaseOnMainThreadSystemGroup("AudioProxyThread::mConduit",
-                                      mConduit.forget());
+    NS_ReleaseOnMainThread("AudioProxyThread::mConduit", mConduit.forget());
     MOZ_COUNT_DTOR(AudioProxyThread);
   }
 
@@ -271,8 +270,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
 MediaPipeline::~MediaPipeline() {
   MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
           ("Destroying MediaPipeline: %s", mDescription.c_str()));
-  NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
-                                    mConduit.forget());
+  NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
 }
 
 void MediaPipeline::Shutdown_m() {
@@ -680,8 +678,7 @@ class MediaPipelineTransmit::PipelineListener
         mDirectConnect(false) {}
 
   ~PipelineListener() {
-    NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
-                                      mConduit.forget());
+    NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
     if (mConverter) {
       mConverter->Shutdown();
     }
@@ -1436,8 +1433,7 @@ class MediaPipelineReceiveAudio::PipelineListener
 
  private:
   ~PipelineListener() {
-    NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
-                                      mConduit.forget());
+    NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
   }
 
   void NotifyPullImpl(TrackTime aDesiredTime) {

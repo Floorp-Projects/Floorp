@@ -37,7 +37,9 @@ using namespace mozilla;
 nsIconChannel::nsIconChannel() {}
 
 nsIconChannel::~nsIconChannel() {
-  NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadInfo", mLoadInfo.forget());
+  if (mLoadInfo) {
+    NS_ReleaseOnMainThread("nsIconChannel::mLoadInfo", mLoadInfo.forget());
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver, nsIStreamListener)

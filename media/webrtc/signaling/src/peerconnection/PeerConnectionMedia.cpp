@@ -470,7 +470,7 @@ void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
                   self->mStunAddrsRequest->SendQueryMDNSHostname(
                       nsCString(nsAutoCString(addr.c_str())));
                 }
-                NS_ReleaseOnMainThreadSystemGroup(
+                NS_ReleaseOnMainThread(
                     "PeerConnectionMedia::SendQueryMDNSHostname",
                     self.forget());
               }));

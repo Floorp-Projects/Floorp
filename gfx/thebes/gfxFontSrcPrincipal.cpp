@@ -21,8 +21,8 @@ gfxFontSrcPrincipal::gfxFontSrcPrincipal(nsIPrincipal* aPrincipal) {
 }
 
 gfxFontSrcPrincipal::~gfxFontSrcPrincipal() {
-  NS_ReleaseOnMainThreadSystemGroup("gfxFontSrcPrincipal::mPrincipal",
-                                    mPrincipal.forget());
+  NS_ReleaseOnMainThread("gfxFontSrcPrincipal::mPrincipal",
+                         mPrincipal.forget());
 }
 
 bool gfxFontSrcPrincipal::Equals(gfxFontSrcPrincipal* aOther) {
