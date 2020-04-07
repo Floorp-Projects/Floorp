@@ -8,49 +8,44 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'General')
 
 EXPORTS.google.protobuf += [
+    'src/google/protobuf/any.h',
     'src/google/protobuf/arena.h',
     'src/google/protobuf/arena_impl.h',
     'src/google/protobuf/arenastring.h',
     'src/google/protobuf/extension_set.h',
+    'src/google/protobuf/extension_set_inl.h',
     'src/google/protobuf/generated_enum_util.h',
     'src/google/protobuf/generated_message_table_driven.h',
     'src/google/protobuf/generated_message_table_driven_lite.h',
     'src/google/protobuf/generated_message_util.h',
     'src/google/protobuf/has_bits.h',
+    'src/google/protobuf/implicit_weak_message.h',
+    'src/google/protobuf/inlined_string_field.h',
     'src/google/protobuf/map.h',
     'src/google/protobuf/map_entry_lite.h',
+    'src/google/protobuf/map_field_lite.h',
     'src/google/protobuf/map_type_handler.h',
     'src/google/protobuf/message_lite.h',
     'src/google/protobuf/metadata_lite.h',
+    'src/google/protobuf/parse_context.h',
+    'src/google/protobuf/port.h',
+    'src/google/protobuf/port_def.inc',
+    'src/google/protobuf/port_undef.inc',
     'src/google/protobuf/repeated_field.h',
     'src/google/protobuf/wire_format_lite.h',
-    'src/google/protobuf/wire_format_lite_inl.h',
 ]
 
 EXPORTS.google.protobuf.io += [
     'src/google/protobuf/io/coded_stream.h',
-    'src/google/protobuf/io/coded_stream_inl.h',
     'src/google/protobuf/io/gzip_stream.h',
+    'src/google/protobuf/io/io_win32.h',
+    'src/google/protobuf/io/strtod.h',
     'src/google/protobuf/io/zero_copy_stream.h',
+    'src/google/protobuf/io/zero_copy_stream_impl.h',
     'src/google/protobuf/io/zero_copy_stream_impl_lite.h',
 ]
 
 EXPORTS.google.protobuf.stubs += [
-    'src/google/protobuf/stubs/atomic_sequence_num.h',
-    'src/google/protobuf/stubs/atomicops.h',
-    'src/google/protobuf/stubs/atomicops_internals_arm64_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_arm_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_arm_qnx.h',
-    'src/google/protobuf/stubs/atomicops_internals_atomicword_compat.h',
-    'src/google/protobuf/stubs/atomicops_internals_generic_c11_atomic.h',
-    'src/google/protobuf/stubs/atomicops_internals_generic_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_mips_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_power.h',
-    'src/google/protobuf/stubs/atomicops_internals_ppc_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_solaris.h',
-    'src/google/protobuf/stubs/atomicops_internals_tsan.h',
-    'src/google/protobuf/stubs/atomicops_internals_x86_gcc.h',
-    'src/google/protobuf/stubs/atomicops_internals_x86_msvc.h',
     'src/google/protobuf/stubs/bytestream.h',
     'src/google/protobuf/stubs/callback.h',
     'src/google/protobuf/stubs/casts.h',
@@ -58,58 +53,54 @@ EXPORTS.google.protobuf.stubs += [
     'src/google/protobuf/stubs/fastmem.h',
     'src/google/protobuf/stubs/hash.h',
     'src/google/protobuf/stubs/int128.h',
-    'src/google/protobuf/stubs/io_win32.h',
     'src/google/protobuf/stubs/logging.h',
     'src/google/protobuf/stubs/macros.h',
     'src/google/protobuf/stubs/map_util.h',
-    'src/google/protobuf/stubs/mathlimits.h',
     'src/google/protobuf/stubs/mutex.h',
     'src/google/protobuf/stubs/once.h',
     'src/google/protobuf/stubs/platform_macros.h',
     'src/google/protobuf/stubs/port.h',
-    'src/google/protobuf/stubs/scoped_ptr.h',
-    'src/google/protobuf/stubs/shared_ptr.h',
     'src/google/protobuf/stubs/status.h',
-    'src/google/protobuf/stubs/status_macros.h',
     'src/google/protobuf/stubs/statusor.h',
     'src/google/protobuf/stubs/stl_util.h',
     'src/google/protobuf/stubs/stringpiece.h',
     'src/google/protobuf/stubs/stringprintf.h',
     'src/google/protobuf/stubs/strutil.h',
-    'src/google/protobuf/stubs/template_util.h',
     'src/google/protobuf/stubs/time.h',
-    'src/google/protobuf/stubs/type_traits.h',
 ]
 
 UNIFIED_SOURCES += [
+    'src/google/protobuf/any_lite.cc',
     'src/google/protobuf/arena.cc',
-    'src/google/protobuf/arenastring.cc',
-    'src/google/protobuf/extension_set.cc',
-    'src/google/protobuf/generated_message_util.cc',
-    'src/google/protobuf/io/coded_stream.cc',
-    'src/google/protobuf/io/gzip_stream.cc',
+    'src/google/protobuf/io/strtod.cc',
     'src/google/protobuf/io/zero_copy_stream.cc',
     'src/google/protobuf/io/zero_copy_stream_impl_lite.cc',
-    'src/google/protobuf/message_lite.cc',
-    'src/google/protobuf/repeated_field.cc',
-    'src/google/protobuf/stubs/atomicops_internals_x86_gcc.cc',
-    'src/google/protobuf/stubs/atomicops_internals_x86_msvc.cc',
-    'src/google/protobuf/stubs/bytestream.cc',
-    'src/google/protobuf/stubs/common.cc',
-    'src/google/protobuf/stubs/int128.cc',
-    'src/google/protobuf/stubs/once.cc',
-    'src/google/protobuf/stubs/status.cc',
-    'src/google/protobuf/stubs/statusor.cc',
     'src/google/protobuf/stubs/stringpiece.cc',
-    'src/google/protobuf/stubs/stringprintf.cc',
     'src/google/protobuf/stubs/structurally_valid.cc',
     'src/google/protobuf/stubs/strutil.cc',
-    'src/google/protobuf/wire_format_lite.cc',
 ]
 
 SOURCES += [
+    'src/google/protobuf/extension_set.cc', # port_def conflicts
+    'src/google/protobuf/generated_enum_util.cc', # port_def conflicts
     'src/google/protobuf/generated_message_table_driven_lite.cc',
+    'src/google/protobuf/generated_message_util.cc', # port_def conflicts
+    'src/google/protobuf/implicit_weak_message.cc', # port_def conflicts
+    'src/google/protobuf/io/coded_stream.cc', # port_def conflicts
+    'src/google/protobuf/io/gzip_stream.cc', # technically not in libprotobuf_lite_la_SOURCES but devtools/shared/heapsnapshot/HeapSnapshot.cpp uses it.
+    'src/google/protobuf/io/io_win32.cc', # port_def conflicts
+    'src/google/protobuf/io/zero_copy_stream_impl.cc', # port_def conflicts
+    'src/google/protobuf/message_lite.cc', # port_def conflicts
+    'src/google/protobuf/parse_context.cc', # port_def conflicts
+    'src/google/protobuf/repeated_field.cc', # port_def conflicts
+    'src/google/protobuf/stubs/bytestream.cc', # port_def conflicts
+    'src/google/protobuf/stubs/common.cc', # port_def conflicts
+    'src/google/protobuf/stubs/int128.cc', # port_def conflicts
+    'src/google/protobuf/stubs/status.cc', # port_def conflicts
+    'src/google/protobuf/stubs/statusor.cc', # port_def conflicts
+    'src/google/protobuf/stubs/stringprintf.cc', # port_def conflicts
     'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
+    'src/google/protobuf/wire_format_lite.cc', # port_def conflicts
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.

@@ -35,9 +35,16 @@
 #include <google/protobuf/map_entry_lite.h>
 #include <google/protobuf/map_type_handler.h>
 #include <google/protobuf/metadata.h>
+#include <google/protobuf/port.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/unknown_field_set.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/wire_format_lite.h>
+
+#include <google/protobuf/port_def.inc>
+
+#ifdef SWIG
+#error "You cannot SWIG proto headers"
+#endif
 
 namespace google {
 namespace protobuf {
@@ -48,8 +55,10 @@ template <typename Derived, typename Key, typename Value,
           WireFormatLite::FieldType kValueFieldType, int default_enum_value>
 class MapField;
 }
-}
+}  // namespace protobuf
+}  // namespace google
 
+namespace google {
 namespace protobuf {
 namespace internal {
 
@@ -87,29 +96,6 @@ class MapEntry
     : public MapEntryImpl<Derived, Message, Key, Value, kKeyFieldType,
                           kValueFieldType, default_enum_value> {
  public:
-  // Create default MapEntry instance for given descriptor. Descriptor has to be
-  // given when creating default MapEntry instance because different map field
-  // may have the same type and MapEntry class. The given descriptor is needed
-  // to distinguish instances of the same MapEntry class.
-  static const Reflection* CreateReflection(const Descriptor* descriptor,
-                                            const Derived* entry) {
-    ReflectionSchema schema = {
-        entry,
-        offsets_,
-        has_bits_,
-        GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MapEntry, _has_bits_),
-        GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MapEntry, _internal_metadata_),
-        -1,
-        -1,
-        sizeof(MapEntry),
-        -1,
-    };
-    const Reflection* reflection = new GeneratedMessageReflection(
-        descriptor, schema, DescriptorPool::generated_pool(),
-        MessageFactory::generated_factory());
-    return reflection;
-  }
-
   MapEntry() : _internal_metadata_(NULL) {}
   explicit MapEntry(Arena* arena)
       : MapEntryImpl<Derived, Message, Key, Value, kKeyFieldType,
@@ -118,35 +104,31 @@ class MapEntry
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
 
- private:
-  static uint32 offsets_[2];
-  static uint32 has_bits_[2];
+  typedef
+      typename MapEntryImpl<Derived, Message, Key, Value, kKeyFieldType,
+                            kValueFieldType, default_enum_value>::KeyTypeHandler
+          KeyTypeHandler;
+  typedef typename MapEntryImpl<
+      Derived, Message, Key, Value, kKeyFieldType, kValueFieldType,
+      default_enum_value>::ValueTypeHandler ValueTypeHandler;
+  size_t SpaceUsedLong() const override {
+    size_t size = sizeof(Derived);
+    size += KeyTypeHandler::SpaceUsedInMapEntryLong(this->key_);
+    size += ValueTypeHandler::SpaceUsedInMapEntryLong(this->value_);
+    return size;
+  }
+
   InternalMetadataWithArena _internal_metadata_;
 
-  friend class ::google::protobuf::Arena;
+ private:
+  friend class ::PROTOBUF_NAMESPACE_ID::Arena;
   template <typename C, typename K, typename V,
             WireFormatLite::FieldType k_wire_type, WireFormatLite::FieldType,
             int default_enum>
   friend class internal::MapField;
-  friend class internal::GeneratedMessageReflection;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MapEntry);
 };
-
-template <typename Derived, typename Key, typename Value,
-          WireFormatLite::FieldType kKeyFieldType,
-          WireFormatLite::FieldType kValueFieldType, int default_enum_value>
-uint32 MapEntry<Derived, Key, Value, kKeyFieldType, kValueFieldType,
-                default_enum_value>::offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MapEntry, key_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MapEntry, value_),
-};
-
-template <typename Derived, typename Key, typename Value,
-          WireFormatLite::FieldType kKeyFieldType,
-          WireFormatLite::FieldType kValueFieldType, int default_enum_value>
-uint32 MapEntry<Derived, Key, Value, kKeyFieldType, kValueFieldType,
-                default_enum_value>::has_bits_[2] = {0, 1};
 
 // Specialization for the full runtime
 template <typename Derived, typename Key, typename Value,
@@ -154,11 +136,12 @@ template <typename Derived, typename Key, typename Value,
           WireFormatLite::FieldType kValueFieldType, int default_enum_value>
 struct MapEntryHelper<MapEntry<Derived, Key, Value, kKeyFieldType,
                                kValueFieldType, default_enum_value> >
-    : MapEntryHelper<MapEntryLite<Key, Value, kKeyFieldType, kValueFieldType,
-                                  default_enum_value> > {
+    : MapEntryHelper<MapEntryLite<Derived, Key, Value, kKeyFieldType,
+                                  kValueFieldType, default_enum_value> > {
   explicit MapEntryHelper(const MapPair<Key, Value>& map_pair)
-      : MapEntryHelper<MapEntryLite<Key, Value, kKeyFieldType, kValueFieldType,
-                                    default_enum_value> >(map_pair) {}
+      : MapEntryHelper<MapEntryLite<Derived, Key, Value, kKeyFieldType,
+                                    kValueFieldType, default_enum_value> >(
+            map_pair) {}
 };
 
 template <typename Derived, typename K, typename V,
@@ -174,6 +157,8 @@ struct DeconstructMapEntry<MapEntry<Derived, K, V, key, value, default_enum> > {
 
 }  // namespace internal
 }  // namespace protobuf
-
 }  // namespace google
+
+#include <google/protobuf/port_undef.inc>
+
 #endif  // GOOGLE_PROTOBUF_MAP_ENTRY_H__
