@@ -108,13 +108,14 @@ XRSession::XRSession(
     aClient->SessionStarted(this);
   }
   mActiveRenderState = new XRRenderState(aWindow, this);
-  // TODO (Bug 1611310): Implement XRInputSource and populate mInputSources
-  mInputSources = new XRInputSourceArray(aWindow);
   mStartTimeStamp = TimeStamp::Now();
   if (IsImmersive()) {
     mDisplayPresentation =
         mDisplayClient->BeginPresentation({}, gfx::kVRGroupContent);
   }
+  // TODO: Handle XR input sources are no longer available cases.
+  // https://immersive-web.github.io/webxr/#dom-xrsession-inputsources
+  mInputSources = new XRInputSourceArray(aWindow);
 }
 
 XRSession::~XRSession() { MOZ_ASSERT(mShutdown); }
