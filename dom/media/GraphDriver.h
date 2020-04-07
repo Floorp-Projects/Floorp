@@ -16,6 +16,7 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPtr.h"
+#include "WavDumper.h"
 
 #include <thread>
 
@@ -782,6 +783,9 @@ class AudioCallbackDriver : public GraphDriver,
    * microphone that is located next to the left speaker.  */
   Atomic<bool> mNeedsPanning;
 #endif
+
+  WavDumper mInputStreamFile;
+  WavDumper mOutputStreamFile;
 
   virtual ~AudioCallbackDriver();
 };
