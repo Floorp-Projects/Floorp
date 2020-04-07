@@ -4977,7 +4977,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetOutputColorProfileData(
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFontListShmBlock(
     const uint32_t& aGeneration, const uint32_t& aIndex,
-    mozilla::ipc::SharedMemoryBasic::Handle* aOut) {
+    base::SharedMemoryHandle* aOut) {
   auto fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->ShareFontListShmBlockToProcess(aGeneration, aIndex, Pid(), aOut);
