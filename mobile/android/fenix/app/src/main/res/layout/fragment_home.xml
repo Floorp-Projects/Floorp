@@ -32,6 +32,7 @@
                 android:id="@+id/privateBrowsingButton"
                 android:layout_width="@dimen/glyph_button_height"
                 android:layout_height="@dimen/glyph_button_height"
+                android:layout_marginTop="14dp"
                 android:layout_marginEnd="12dp"
                 android:layout_gravity="end"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
@@ -43,10 +44,10 @@
             <ImageView
                 android:id="@+id/wordmark"
                 android:layout_width="wrap_content"
-                android:layout_height="80dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="60dp"
-                android:layout_marginBottom="32dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
                 android:adjustViewBounds="true"
                 android:clickable="false"
                 android:contentDescription="@string/app_name"
@@ -54,7 +55,7 @@
                 android:importantForAccessibility="no"
                 app:srcCompat="?fenixLogo"
                 app:layout_collapseMode="parallax"
-                app:layout_collapseParallaxMultiplier=".1"/>
+                app:layout_collapseParallaxMultiplier=".8"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
