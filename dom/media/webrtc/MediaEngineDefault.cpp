@@ -47,14 +47,12 @@ static nsString DefaultVideoName() {
   // InvokeAsync, instead of "soft" block, provided by sync dispatch which
   // allows the waiting thread to spin its event loop. The latter would allow
   // miltiple enumeration requests being processed out-of-order.
-  media::Await(
-      do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other)),
-      InvokeAsync(
-          SystemGroup::EventTargetFor(TaskCategory::Other), __func__, [&]() {
-            rv = Preferences::GetString("media.getusermedia.fake-camera-name",
-                                        cameraNameFromPref);
-            return GenericPromise::CreateAndResolve(true, __func__);
-          }));
+  media::Await(do_AddRef(GetMainThreadSerialEventTarget()),
+               InvokeAsync(GetMainThreadSerialEventTarget(), __func__, [&]() {
+                 rv = Preferences::GetString(
+                     "media.getusermedia.fake-camera-name", cameraNameFromPref);
+                 return GenericPromise::CreateAndResolve(true, __func__);
+               }));
 
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);

@@ -1163,9 +1163,8 @@ class imgCacheExpirationTracker final
 };
 
 imgCacheExpirationTracker::imgCacheExpirationTracker()
-    : nsExpirationTracker<imgCacheEntry, 3>(
-          TIMEOUT_SECONDS * 1000, "imgCacheExpirationTracker",
-          SystemGroup::EventTargetFor(TaskCategory::Other)) {}
+    : nsExpirationTracker<imgCacheEntry, 3>(TIMEOUT_SECONDS * 1000,
+                                            "imgCacheExpirationTracker") {}
 
 void imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry) {
   // Hold on to a reference to this entry, because the expiration tracker

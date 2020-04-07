@@ -218,8 +218,8 @@ static LayerActivity* GetLayerActivityForUpdate(nsIFrame* aFrame) {
     gLayerActivityTracker->MarkUsed(layerActivity);
   } else {
     if (!gLayerActivityTracker) {
-      gLayerActivityTracker = new LayerActivityTracker(
-          SystemGroup::EventTargetFor(TaskCategory::Other));
+      gLayerActivityTracker =
+          new LayerActivityTracker(GetMainThreadSerialEventTarget());
     }
     layerActivity = new LayerActivity(aFrame);
     gLayerActivityTracker->AddObject(layerActivity);
@@ -597,8 +597,8 @@ bool ActiveLayerTracker::IsContentActive(nsIFrame* aFrame) {
 /* static */
 void ActiveLayerTracker::SetCurrentScrollHandlerFrame(nsIFrame* aFrame) {
   if (!gLayerActivityTracker) {
-    gLayerActivityTracker = new LayerActivityTracker(
-        SystemGroup::EventTargetFor(TaskCategory::Other));
+    gLayerActivityTracker =
+        new LayerActivityTracker(GetMainThreadSerialEventTarget());
   }
   gLayerActivityTracker->mCurrentScrollHandlerFrame = aFrame;
 }

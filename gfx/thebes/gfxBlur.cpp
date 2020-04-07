@@ -12,7 +12,6 @@
 #include "mozilla/gfx/Blur.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/SystemGroup.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "gfxUtils.h"
@@ -337,9 +336,7 @@ struct BlurCacheData {
 class BlurCache final : public nsExpirationTracker<BlurCacheData, 4> {
  public:
   BlurCache()
-      : nsExpirationTracker<BlurCacheData, 4>(
-            GENERATION_MS, "BlurCache",
-            SystemGroup::EventTargetFor(TaskCategory::Other)) {}
+      : nsExpirationTracker<BlurCacheData, 4>(GENERATION_MS, "BlurCache") {}
 
   virtual void NotifyExpired(BlurCacheData* aObject) override {
     RemoveObject(aObject);

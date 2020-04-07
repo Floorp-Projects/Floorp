@@ -6,7 +6,6 @@
 
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -82,15 +81,4 @@ TEST(TestEventTargetQI, LazyIdleThread)
   EXPECT_TRUE(TestQITo<nsIEventTarget>(thing));
 
   thing->Shutdown();
-}
-
-TEST(TestEventTargetQI, SchedulerGroup)
-{
-  nsCOMPtr<nsIEventTarget> thing =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
-  EXPECT_TRUE(thing);
-
-  EXPECT_TRUE(TestQITo<nsISerialEventTarget>(thing));
-
-  EXPECT_TRUE(TestQITo<nsIEventTarget>(thing));
 }

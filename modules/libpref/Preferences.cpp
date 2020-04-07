@@ -39,7 +39,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefsAll.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/URLPreloader.h"
@@ -5308,8 +5307,7 @@ void MaybeInitOncePrefs() {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
         "Preferences::MaybeInitOncePrefs", [&]() { InitOncePrefs(); });
     // This logic needs to run on the main thread
-    SyncRunnable::DispatchToThread(
-        SystemGroup::EventTargetFor(TaskCategory::Other), runnable);
+    SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
   }
   sOncePrefRead = true;
 }

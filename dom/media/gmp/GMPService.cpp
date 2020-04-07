@@ -20,7 +20,6 @@
 #endif
 #include "mozilla/Services.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -64,9 +63,8 @@ class GMPServiceCreateHelper final : public mozilla::Runnable {
       RefPtr<GMPServiceCreateHelper> createHelper =
           new GMPServiceCreateHelper();
 
-      mozilla::SyncRunnable::DispatchToThread(
-          SystemGroup::EventTargetFor(mozilla::TaskCategory::Other),
-          createHelper, true);
+      mozilla::SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(),
+                                              createHelper, true);
 
       service = std::move(createHelper->mService);
     }
