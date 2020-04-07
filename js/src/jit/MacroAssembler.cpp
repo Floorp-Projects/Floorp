@@ -2273,11 +2273,21 @@ void MacroAssembler::convertValueToInt(
   mov(ImmWord(0), output);
   jump(&done);
 
-  // Try converting a string into a double, then jump to the double case.
+  // |output| needs to be different from |stringReg| to load string indices.
+  bool handleStringIndices = handleStrings && output != stringReg;
+
+  // First try loading a string index. If that fails, try converting a string
+  // into a double, then jump to the double case.
+  Label handleStringIndex;
   if (handleStrings) {
     bind(&isString);
     unboxString(value, stringReg);
-    jump(handleStringEntry);
+    if (handleStringIndices) {
+      loadStringIndexValue(stringReg, output, handleStringEntry);
+      jump(&handleStringIndex);
+    } else {
+      jump(handleStringEntry);
+    }
   }
 
   // Try converting double into integer.
@@ -2303,9 +2313,16 @@ void MacroAssembler::convertValueToInt(
   }
 
   // Integers can be unboxed.
-  if (isInt32.used()) {
-    bind(&isInt32);
-    unboxInt32(value, output);
+  if (isInt32.used() || handleStringIndices) {
+    if (isInt32.used()) {
+      bind(&isInt32);
+      unboxInt32(value, output);
+    }
+
+    if (handleStringIndices) {
+      bind(&handleStringIndex);
+    }
+
     if (behavior == IntConversionBehavior::ClampToUint8) {
       clampIntToUint8(output);
     }
