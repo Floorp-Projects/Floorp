@@ -2474,7 +2474,7 @@ bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
 
   // Push index + 1.
   MConstant* constOne = constant(Int32Value(1));
-  MAdd* nextIndex = MAdd::New(alloc(), index, constOne, MIRType::Int32);
+  MAdd* nextIndex = MAdd::New(alloc(), index, constOne, MDefinition::Truncate);
   current->add(nextIndex);
   current->push(nextIndex);
 

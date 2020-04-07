@@ -6981,7 +6981,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_inc() {
   MDefinition* id = current->pop();
   MDefinition* obj = current->peek(-1);
 
-  MAdd* nextId = MAdd::New(alloc(), id, constantInt(1), MIRType::Int32);
+  MAdd* nextId = MAdd::New(alloc(), id, constantInt(1), MDefinition::Truncate);
   current->add(nextId);
   current->push(nextId);
 

@@ -69,8 +69,7 @@ static void AnalyzeAdd(TempAllocator& alloc, MAdd* add) {
   MInstruction* rhs = MConstant::New(alloc, Int32Value(sum.constant));
   add->block()->insertBefore(add, rhs);
 
-  MAdd* addNew =
-      MAdd::New(alloc, sum.term, rhs, MIRType::Int32, add->truncateKind());
+  MAdd* addNew = MAdd::New(alloc, sum.term, rhs, add->truncateKind());
 
   add->replaceAllLiveUsesWith(addNew);
   add->block()->insertBefore(add, addNew);
