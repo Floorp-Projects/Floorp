@@ -408,7 +408,7 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
 // do not run until after ProcessBlocksOnPorts() has returned.
 bool WorkletNodeEngine::CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                                     JS::Handle<JS::Value> aCallable) {
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
 
   JS::RootedVector<JS::Value> argv(aCx);
   if (NS_WARN_IF(!argv.resize(3))) {
@@ -458,7 +458,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                              bool* aFinished) {
   MOZ_ASSERT(aInput.Length() == InputCount());
   MOZ_ASSERT(aOutput.Length() == OutputCount());
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
 
   bool isSilent = true;
   if (mProcessor) {

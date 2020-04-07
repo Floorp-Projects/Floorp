@@ -1180,7 +1180,7 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
     return;
   }
 
-  TRACE_AUDIO_CALLBACK_COMMENT("Audio");
+  TRACE_COMMENT("Audio");
 
   if (mDirectConnect) {
     // ignore non-direct data if we're also getting direct data
@@ -1441,7 +1441,7 @@ class MediaPipelineReceiveAudio::PipelineListener
   }
 
   void NotifyPullImpl(TrackTime aDesiredTime) {
-    TRACE_AUDIO_CALLBACK_COMMENT("Listener %p", this);
+    TRACE_COMMENT("Listener %p", this);
     uint32_t samplesPer10ms = mRate / 100;
 
     // mSource's rate is not necessarily the same as the graph rate, since there

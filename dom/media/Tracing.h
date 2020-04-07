@@ -48,28 +48,20 @@ void StopAudioCallbackTracing();
  * displaying those elements in two separate lanes.
  * The other thread have "normal" tid. Hashing allows being able to get a
  * string representation that is unique and guaranteed to be portable. */
-#  define TRACE_AUDIO_CALLBACK()                                              \
-    AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(), \
-                     0);
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)                    \
-    AutoTracer budget(gAudioCallbackTraceLogger, "Real-time budget", getpid(), \
-                      1, AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
-#  define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)                             \
-    AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(), \
-                     0, AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
 #  define TRACE()                                                \
     AutoTracer trace(                                            \
         gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(), \
         std::hash<std::thread::id>{}(std::this_thread::get_id()));
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)                    \
+    AutoTracer budget(gAudioCallbackTraceLogger, "Real-time budget", getpid(), \
+                      1, AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
 #  define TRACE_COMMENT(aFmt, ...)                                             \
     AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(),  \
                      std::hash<std::thread::id>{}(std::this_thread::get_id()), \
                      AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
 #else
-#  define TRACE_AUDIO_CALLBACK()
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
-#  define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)
 #  define TRACE()
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
 #  define TRACE_COMMENT(aFmt, ...)
 #endif
 

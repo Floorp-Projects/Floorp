@@ -149,7 +149,7 @@ void ForwardedInputTrack::ProcessInputImpl(MediaTrack* aSource,
 
 void ForwardedInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                        uint32_t aFlags) {
-  TRACE_AUDIO_CALLBACK_COMMENT("ForwardedInputTrack %p", this);
+  TRACE_COMMENT("ForwardedInputTrack %p", this);
   if (mEnded) {
     return;
   }
