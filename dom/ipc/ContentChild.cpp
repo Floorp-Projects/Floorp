@@ -988,10 +988,23 @@ nsresult ContentChild::ProvideWindowCommon(
     browsingContext->SetPendingInitialization(false);
   });
 
-  TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-
-  MOZ_ASSERT(newTabContext.OriginAttributesRef().EqualsIgnoringFPD(
-      browsingContext->OriginAttributesRef()));
+  // Awkwardly manually construct the new TabContext in order to ensure our
+  // OriginAttributes perfectly matches it.
+  MutableTabContext newTabContext;
+  if (aTabOpener) {
+    newTabContext.SetTabContext(
+        aTabOpener->IsMozBrowserElement(), aTabOpener->ChromeOuterWindowID(),
+        aTabOpener->ShowFocusRings(), browsingContext->OriginAttributesRef(),
+        aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
+  } else {
+    newTabContext.SetTabContext(
+        /* isMozBrowserElement */ false,
+        /* chromeOuterWindowID */ 0,
+        /* showFocusRings */ UIStateChangeType_NoChange,
+        browsingContext->OriginAttributesRef(),
+        /* presentationURL */ EmptyString(),
+        /* maxTouchPoints */ 0);
+  }
 
   // The initial about:blank document we generate within the nsDocShell will
   // almost certainly be replaced at some point. Unfortunately, getting the
