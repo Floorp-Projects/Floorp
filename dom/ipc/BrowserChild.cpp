@@ -2805,9 +2805,6 @@ void BrowserChild::InitAPZState() {
   RefPtr<GeckoContentController> contentController =
       new ContentProcessController(this);
   APZChild* apzChild = new APZChild(contentController);
-  cbc->SetEventTargetForActor(apzChild,
-                              TabGroup()->EventTargetFor(TaskCategory::Other));
-  MOZ_ASSERT(apzChild->GetActorEventTarget());
   cbc->SendPAPZConstructor(apzChild, mLayersId);
 }
 

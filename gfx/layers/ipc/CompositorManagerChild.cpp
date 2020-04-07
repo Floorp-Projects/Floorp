@@ -14,7 +14,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"  // for ContentChild
 #include "mozilla/dom/BrowserChild.h"  // for BrowserChild
-#include "mozilla/dom/TabGroup.h"      // for TabGroup
 #include "VsyncSource.h"
 
 namespace mozilla {
@@ -223,31 +222,6 @@ void CompositorManagerChild::ProcessingError(Result aCode,
     gfxDevCrash(gfx::LogReason::ProcessingError)
         << "Processing error in CompositorBridgeChild: " << int(aCode);
   }
-}
-
-already_AddRefed<nsIEventTarget>
-CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg) {
-  if (aMsg.type() == PCompositorBridge::Msg_DidComposite__ID) {
-    LayersId layersId;
-    PickleIterator iter(aMsg);
-    if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
-      return nullptr;
-    }
-
-    BrowserChild* browserChild = BrowserChild::GetFrom(layersId);
-    if (!browserChild) {
-      return nullptr;
-    }
-
-    return do_AddRef(
-        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-  }
-
-  if (aMsg.type() == PCompositorBridge::Msg_ParentAsyncMessages__ID) {
-    return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
-  }
-
-  return nullptr;
 }
 
 void CompositorManagerChild::SetReplyTimeout() {
