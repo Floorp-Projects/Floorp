@@ -65,22 +65,20 @@ IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
     return IPC_OK();
   }
 
+  nsPIDOMWindowInner* window = mParent->GetOwner();
+  uint64_t innerWindowId = window ? window->WindowID() : 0;
+
   if (aValue.type() == ErrorValue::TErrorData &&
       aValue.get_ErrorData().isWarning()) {
-    // Don't fire any events anywhere.  Just log to console.
-    // XXXbz should we log to all the consoles of all the relevant windows?
-    WorkerErrorReport::LogErrorToConsole(aValue.get_ErrorData(), 0);
+    // Don't fire any events for warnings. Just log to console.
+    WorkerErrorReport::LogErrorToConsole(aValue.get_ErrorData(), innerWindowId);
     return IPC_OK();
   }
-
-  // May be null.
-  nsPIDOMWindowInner* window = mParent->GetOwner();
-
-  RefPtr<Event> event;
 
   AutoJSAPI jsapi;
   jsapi.Init();
 
+  RefPtr<Event> event;
   if (aValue.type() == ErrorValue::TErrorData) {
     const ErrorData& errorData = aValue.get_ErrorData();
     RootedDictionary<ErrorEventInit> errorInit(jsapi.cx());
@@ -97,12 +95,6 @@ IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
     event =
         Event::Constructor(mParent, NS_LITERAL_STRING("error"), EventInit());
   }
-
-  if (!event) {
-    ThrowAndReport(window, NS_ERROR_UNEXPECTED);
-    return IPC_OK();
-  }
-
   event->SetTrusted(true);
 
   ErrorResult res;
@@ -118,39 +110,8 @@ IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
     return IPC_OK();
   }
 
-  if (!defaultActionEnabled) {
-    return IPC_OK();
-  }
-
-  bool shouldLogErrorToConsole = true;
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-  MOZ_ASSERT(sgo);
-
-  const ErrorData& errorData = aValue.get_ErrorData();
-
-  MOZ_ASSERT(NS_IsMainThread());
-  RootedDictionary<ErrorEventInit> errorInit(jsapi.cx());
-  errorInit.mLineno = errorData.lineNumber();
-  errorInit.mColno = errorData.columnNumber();
-  errorInit.mFilename = errorData.filename();
-  errorInit.mMessage = errorData.message();
-  errorInit.mCancelable = true;
-  errorInit.mBubbles = true;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if (!sgo->HandleScriptError(errorInit, &status)) {
-    ThrowAndReport(window, NS_ERROR_UNEXPECTED);
-    return IPC_OK();
-  }
-
-  if (status == nsEventStatus_eConsumeNoDefault) {
-    shouldLogErrorToConsole = false;
-  }
-
-  // Finally log a warning in the console if no window tried to prevent it.
-  if (shouldLogErrorToConsole) {
-    WorkerErrorReport::LogErrorToConsole(aValue.get_ErrorData(), 0);
+  if (defaultActionEnabled) {
+    WorkerErrorReport::LogErrorToConsole(aValue.get_ErrorData(), innerWindowId);
   }
 
   return IPC_OK();
