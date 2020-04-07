@@ -1110,35 +1110,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   irregexp::RegExpStackScope stackScope(cx);
 
   if (re->canStringMatch) {
-    MOZ_ASSERT(re->pairCount() == 1);
-    size_t sourceLength = re->getSource()->length();
-    if (re->sticky()) {
-      // First part checks size_t overflow.
-      if (sourceLength + start < sourceLength ||
-          sourceLength + start > length) {
-        return RegExpRunStatus_Success_NotFound;
-      }
-      if (!HasSubstringAt(input, re->getSource(), start)) {
-        return RegExpRunStatus_Success_NotFound;
-      }
-
-      (*matches)[0].start = start;
-      (*matches)[0].limit = start + sourceLength;
-      matches->checkAgainst(length);
-
-      return RegExpRunStatus_Success;
-    }
-
-    int res = StringFindPattern(input, re->getSource(), start);
-    if (res == -1) {
-      return RegExpRunStatus_Success_NotFound;
-    }
-
-    (*matches)[0].start = res;
-    (*matches)[0].limit = res + sourceLength;
-    matches->checkAgainst(length);
-
-    return RegExpRunStatus_Success;
+    return executeAtom(cx, re, input, start, matches);
   }
 
   do {
@@ -1214,6 +1186,44 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   return result;
 }
 #endif  // ENABLE_NEW_REGEXP
+/* static */
+RegExpRunStatus RegExpShared::executeAtom(JSContext* cx,
+                                          MutableHandleRegExpShared re,
+                                          HandleLinearString input,
+                                          size_t start,
+                                          VectorMatchPairs* matches) {
+  MOZ_ASSERT(re->pairCount() == 1);
+
+  size_t length = input->length();
+  size_t searchLength = re->patternAtom()->length();
+
+  if (re->sticky()) {
+    // First part checks size_t overflow.
+    if (searchLength + start < searchLength || searchLength + start > length) {
+      return RegExpRunStatus_Success_NotFound;
+    }
+    if (!HasSubstringAt(input, re->patternAtom(), start)) {
+      return RegExpRunStatus_Success_NotFound;
+    }
+
+    (*matches)[0].start = start;
+    (*matches)[0].limit = start + searchLength;
+    matches->checkAgainst(length);
+
+    return RegExpRunStatus_Success;
+  }
+
+  int res = StringFindPattern(input, re->patternAtom(), start);
+  if (res == -1) {
+    return RegExpRunStatus_Success_NotFound;
+  }
+
+  (*matches)[0].start = res;
+  (*matches)[0].limit = res + searchLength;
+  matches->checkAgainst(length);
+
+  return RegExpRunStatus_Success;
+}
 
 size_t RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t n = 0;
