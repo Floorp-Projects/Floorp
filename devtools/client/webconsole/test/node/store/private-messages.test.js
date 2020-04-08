@@ -176,6 +176,10 @@ describe("private messages", () => {
       actor: privateActor,
     };
 
+    // We need to reassign the timeStamp of the packet to guarantee the order.
+    publicPacket.timeStamp = publicPacket.timeStamp + 1;
+    privatePacket.timeStamp = privatePacket.timeStamp + 2;
+
     dispatch(actions.messagesAdd([publicPacket, privatePacket]));
 
     let networkUpdates = getAllNetworkMessagesUpdateById(getState());

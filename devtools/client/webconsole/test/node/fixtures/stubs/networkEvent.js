@@ -20,7 +20,7 @@ const {
 const rawPackets = new Map();
 rawPackets.set(`GET request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1572865594542,
+  "timeStamp": 1572867483805,
   "node": null,
   "actor": "server0.conn0.netEvent4",
   "discardRequestBody": true,
@@ -102,7 +102,7 @@ rawPackets.set(`GET request update`, {
 
 rawPackets.set(`XHR GET request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1572865594909,
+  "timeStamp": 1572867483805,
   "node": null,
   "actor": "server0.conn0.netEvent20",
   "discardRequestBody": true,
@@ -184,7 +184,7 @@ rawPackets.set(`XHR GET request update`, {
 
 rawPackets.set(`XHR POST request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1572865595007,
+  "timeStamp": 1572867483805,
   "node": null,
   "actor": "server0.conn0.netEvent36",
   "discardRequestBody": true,
