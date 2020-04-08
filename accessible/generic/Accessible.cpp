@@ -1662,6 +1662,20 @@ Relation Accessible::RelationByType(RelationType aType) const {
         rel.AppendTarget(GetGroupInfo()->ConceptualParent());
       }
 
+      // If this is an OOP iframe document, we can't support NODE_CHILD_OF
+      // here, since the iframe resides in a different process. This is fine
+      // because the client will then request the parent instead, which will be
+      // correctly handled by platform/AccessibleOrProxy code.
+      if (XRE_IsContentProcess() && IsRoot()) {
+        dom::Document* doc =
+            const_cast<Accessible*>(this)->AsDoc()->DocumentNode();
+        dom::BrowsingContext* bc = doc->GetBrowsingContext();
+        MOZ_ASSERT(bc);
+        if (!bc->Top()->IsInProcess()) {
+          return rel;
+        }
+      }
+
       // If accessible is in its own Window, or is the root of a document,
       // then we should provide NODE_CHILD_OF relation so that MSAA clients
       // can easily get to true parent instead of getting to oleacc's
