@@ -81,15 +81,8 @@
   }
 
   MozElements.MozAutocompleteProfileListitem = class MozAutocompleteProfileListitem extends MozAutocompleteProfileListitemBase {
-    connectedCallback() {
-      if (this.delayConnectedCallback()) {
-        return;
-      }
-
-      this.textContent = "";
-
-      this.appendChild(
-        MozXULElement.parseXULToFragment(`
+    static get markup() {
+      return `
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box">
           <div class="profile-label-col profile-item-col">
             <span class="profile-label-affix"></span>
@@ -99,8 +92,17 @@
             <span class="profile-comment"></span>
           </div>
         </div>
-      `)
-      );
+        `;
+    }
+
+    connectedCallback() {
+      if (this.delayConnectedCallback()) {
+        return;
+      }
+
+      this.textContent = "";
+
+      this.appendChild(this.constructor.fragment);
 
       this._itemBox = this.querySelector(".autofill-item-box");
       this._labelAffix = this.querySelector(".profile-label-affix");
@@ -158,6 +160,15 @@
   );
 
   class MozAutocompleteProfileListitemFooter extends MozAutocompleteProfileListitemBase {
+    static get markup() {
+      return `
+        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
+          <div class="autofill-footer-row autofill-warning"></div>
+          <div class="autofill-footer-row autofill-button"></div>
+        </div>
+      `;
+    }
+
     constructor() {
       super();
 
@@ -180,14 +191,7 @@
       }
 
       this.textContent = "";
-      this.appendChild(
-        MozXULElement.parseXULToFragment(`
-        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
-          <div class="autofill-footer-row autofill-warning"></div>
-          <div class="autofill-footer-row autofill-button"></div>
-        </div>
-      `)
-      );
+      this.appendChild(this.constructor.fragment);
 
       this._itemBox = this.querySelector(".autofill-footer");
       this._optionButton = this.querySelector(".autofill-button");
@@ -312,16 +316,18 @@
   );
 
   class MozAutocompleteCreditcardInsecureField extends MozAutocompleteProfileListitemBase {
+    static get markup() {
+      return `
+      <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-insecure-item"></div>
+      `;
+    }
+
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;
       }
       this.textContent = "";
-      this.appendChild(
-        MozXULElement.parseXULToFragment(`
-        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-insecure-item"></div>
-      `)
-      );
+      this.appendChild(this.constructor.fragment);
 
       this._itemBox = this.querySelector(".autofill-insecure-item");
 
@@ -353,6 +359,14 @@
   );
 
   class MozAutocompleteProfileListitemClearButton extends MozAutocompleteProfileListitemBase {
+    static get markup() {
+      return `
+        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
+          <div class="autofill-footer-row autofill-button"></div>
+        </div>
+      `;
+    }
+
     constructor() {
       super();
 
@@ -371,13 +385,7 @@
       }
 
       this.textContent = "";
-      this.appendChild(
-        MozXULElement.parseXULToFragment(`
-        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
-          <div class="autofill-footer-row autofill-button"></div>
-        </div>
-      `)
-      );
+      this.appendChild(this.constructor.fragment);
 
       this._itemBox = this.querySelector(".autofill-item-box");
       this._clearBtn = this.querySelector(".autofill-button");

@@ -2170,20 +2170,31 @@ class FiveStarRating extends HTMLElement {
 customElements.define("five-star-rating", FiveStarRating);
 
 class ContentSelectDropdown extends HTMLElement {
+  static get markup() {
+    return `
+    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+      <menupopup rolluponmousewheel="true" activateontab="true"
+                 position="after_start" level="parent"/>
+    </menulist>
+    `;
+  }
+
+  static get fragment() {
+    if (!this.constructor.hasOwnProperty("_fragment")) {
+      this.constructor._fragment = MozXULElement.parseXULToFragment(
+        this.constructor.markup
+      );
+    }
+    return document.importNode(this.constructor._fragment, true);
+  }
+
   connectedCallback() {
     if (this.children.length) {
       return;
     }
     // This creates the menulist and menupopup elements needed for the inline
     // browser to support <select> elements and context menus.
-    this.appendChild(
-      MozXULElement.parseXULToFragment(`
-      <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
-        <menupopup rolluponmousewheel="true" activateontab="true"
-                   position="after_start" level="parent"/>
-      </menulist>
-    `)
-    );
+    this.appendChild(this.constructor.fragment);
   }
 }
 customElements.define("content-select-dropdown", ContentSelectDropdown);

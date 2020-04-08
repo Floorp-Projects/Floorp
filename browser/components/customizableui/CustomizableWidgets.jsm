@@ -941,44 +941,45 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
           break;
       }
     },
+    get markup() {
+      return `
+        <vbox class="panel-subview-body">
+          <hbox id="PanelUI-panic-timeframe">
+            <image id="PanelUI-panic-timeframe-icon" alt=""/>
+            <vbox flex="1">
+              <description data-l10n-id="panic-main-timeframe-desc" id="PanelUI-panic-mainDesc"></description>
+              <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
+                <radio id="PanelUI-panic-5min" data-l10n-id="panic-button-5min" selected="true"
+                      value="5" class="subviewradio"/>
+                <radio id="PanelUI-panic-2hr" data-l10n-id="panic-button-2hr"
+                      value="2" class="subviewradio"/>
+                <radio id="PanelUI-panic-day" data-l10n-id="panic-button-day"
+                      value="6" class="subviewradio"/>
+              </radiogroup>
+            </vbox>
+          </hbox>
+          <vbox id="PanelUI-panic-explanations">
+            <label id="PanelUI-panic-actionlist-main-label" data-l10n-id="panic-button-action-desc"></label>
+
+            <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-tabs-and-windows"></label>
+            <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-cookies"></label>
+            <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-history"></label>
+            <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-open-new-window"></label>
+
+            <label id="PanelUI-panic-warning" data-l10n-id="panic-button-undo-warning"></label>
+          </vbox>
+          <button id="PanelUI-panic-view-button"
+                  data-l10n-id="panic-button-forget-button"/>
+        </vbox>
+      `;
+    },
     onViewShowing(aEvent) {
       let win = aEvent.target.ownerGlobal;
       let doc = win.document;
       let eventBlocker = null;
       if (!doc.querySelector("#PanelUI-panic-timeframe")) {
         win.MozXULElement.insertFTLIfNeeded("browser/panicButton.ftl");
-        let frag = win.MozXULElement.parseXULToFragment(`
-          <vbox class="panel-subview-body">
-            <hbox id="PanelUI-panic-timeframe">
-              <image id="PanelUI-panic-timeframe-icon" alt=""/>
-              <vbox flex="1">
-                <description data-l10n-id="panic-main-timeframe-desc" id="PanelUI-panic-mainDesc"></description>
-                <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
-                  <radio id="PanelUI-panic-5min" data-l10n-id="panic-button-5min" selected="true"
-                        value="5" class="subviewradio"/>
-                  <radio id="PanelUI-panic-2hr" data-l10n-id="panic-button-2hr"
-                        value="2" class="subviewradio"/>
-                  <radio id="PanelUI-panic-day" data-l10n-id="panic-button-day"
-                        value="6" class="subviewradio"/>
-                </radiogroup>
-              </vbox>
-            </hbox>
-            <vbox id="PanelUI-panic-explanations">
-              <label id="PanelUI-panic-actionlist-main-label" data-l10n-id="panic-button-action-desc"></label>
-
-              <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-tabs-and-windows"></label>
-              <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-cookies"></label>
-              <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-history"></label>
-              <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-open-new-window"></label>
-
-              <label id="PanelUI-panic-warning" data-l10n-id="panic-button-undo-warning"></label>
-            </vbox>
-            <button id="PanelUI-panic-view-button"
-                    data-l10n-id="panic-button-forget-button"/>
-          </vbox>
-        `);
-
-        aEvent.target.appendChild(frag);
+        aEvent.target.appendChild(this.constructor.fragment);
         eventBlocker = doc.l10n.translateElements([aEvent.target]);
       }
 
