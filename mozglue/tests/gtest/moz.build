@@ -12,5 +12,6 @@ TEST_DIRS += [
     'TestDllBlocklist_AllowByVersion',
     'TestDllBlocklist_MatchByName',
     'TestDllBlocklist_MatchByVersion',
+    'TestDllBlocklist_NoOpEntryPoint',
 ]
 
