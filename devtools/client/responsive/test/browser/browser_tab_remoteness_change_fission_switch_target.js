@@ -11,7 +11,6 @@ const PAGE_ON_MAIN = "about:robots";
 const TEST_DPPX = 2;
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   // The target-switching only works with the new browserUI RDM.
   await pushPref("devtools.responsive.browserUI.enabled", true);
 
@@ -24,13 +23,10 @@ add_task(async function() {
 
   info("Open RDM");
   const { ui } = await openRDM(tab);
-  const targetForChild = ui.currentTarget;
   await assertDocshell(tab, true, TEST_DPPX);
 
   info("Load a page which runs on the main process");
-  await load(tab.linkedBrowser, PAGE_ON_MAIN);
-  await waitUntil(() => ui.currentTarget !== targetForChild);
-  ok(true, "The target front is switched correctly");
+  await navigateToNewDomain(PAGE_ON_MAIN, ui);
   await assertDocshell(tab, true, TEST_DPPX);
 
   info("Close RDM");
