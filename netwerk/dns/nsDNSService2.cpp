@@ -403,7 +403,6 @@ void nsDNSAsyncRequest::OnResolveHostComplete(nsHostResolver* resolver,
   nsCOMPtr<nsIDNSRecord> rec;
   if (NS_SUCCEEDED(status)) {
     MOZ_ASSERT(hostRecord, "no host record");
-    printf("hostRecordType: %d\n", hostRecord->type);
     if (hostRecord->type != nsDNSService::RESOLVE_TYPE_DEFAULT) {
       rec = new nsDNSByTypeRecord(hostRecord);
     } else {
