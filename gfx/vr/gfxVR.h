@@ -28,6 +28,8 @@ enum class GamepadMappingType : uint8_t;
 enum class GamepadHand : uint8_t;
 }  // namespace dom
 namespace gfx {
+enum class VRAPIMode : uint8_t {WebXR, WebVR, NumVRAPIModes};
+
 class VRLayerParent;
 class VRDisplayHost;
 class VRManagerPromise;

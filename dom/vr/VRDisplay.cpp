@@ -482,6 +482,7 @@ already_AddRefed<Promise> VRDisplay::RequestPresent(
   uint32_t presentationGroup =
       isChromePresentation ? gfx::kVRGroupChrome : gfx::kVRGroupContent;
 
+  mClient->SetXRAPIMode(gfx::VRAPIMode::WebVR);
   if (!UserActivation::IsHandlingUserInput() && !isChromePresentation &&
       !IsHandlingVRNavigationEvent() && StaticPrefs::dom_vr_require_gesture() &&
       !IsPresenting()) {
