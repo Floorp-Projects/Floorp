@@ -270,9 +270,7 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
     return;
   }
 
-  // NOTE: It's safe to call `LoadURI` without an accessor from the parent
-  // process. The load will be performed with ambient "chrome" authority.
-  LoadURI(nullptr, loadState, true);
+  LoadURI(loadState, true);
 }
 
 void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
