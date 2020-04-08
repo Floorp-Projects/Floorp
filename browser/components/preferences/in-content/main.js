@@ -3093,40 +3093,32 @@ function getLocalHandlerApp(aFile) {
   return localHandlerApp;
 }
 
+// eslint-disable-next-line no-undef
+let gHandlerListItemFragment = MozXULElement.parseXULToFragment(`
+  <richlistitem>
+    <hbox flex="1" equalsize="always">
+      <hbox class="typeContainer" flex="1" align="center">
+        <image class="typeIcon" width="16" height="16"
+               src="moz-icon://goat?size=16"/>
+        <label class="typeDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionContainer" flex="1" align="center">
+        <image class="actionIcon" width="16" height="16"/>
+        <label class="actionDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionsMenuContainer" flex="1">
+        <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
+          <menupopup/>
+        </menulist>
+      </hbox>
+    </hbox>
+  </richlistitem>
+`);
+
 /**
  * This is associated to <richlistitem> elements in the handlers view.
  */
 class HandlerListItem {
-  static get fragment() {
-    if (!this.hasOwnProperty("_fragment")) {
-      this._fragment = MozXULElement.parseXULToFragment(this.markup);
-    }
-    return document.importNode(this._fragment, true);
-  }
-
-  static get markup() {
-    return `
-    <richlistitem>
-      <hbox flex="1" equalsize="always">
-        <hbox class="typeContainer" flex="1" align="center">
-          <image class="typeIcon" width="16" height="16"
-                 src="moz-icon://goat?size=16"/>
-          <label class="typeDescription" flex="1" crop="end"/>
-        </hbox>
-        <hbox class="actionContainer" flex="1" align="center">
-          <image class="actionIcon" width="16" height="16"/>
-          <label class="actionDescription" flex="1" crop="end"/>
-        </hbox>
-        <hbox class="actionsMenuContainer" flex="1">
-          <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
-            <menupopup/>
-          </menulist>
-        </hbox>
-      </hbox>
-    </richlistitem>
-    `;
-  }
-
   static forNode(node) {
     return gNodeToObjectMap.get(node);
   }
@@ -3147,7 +3139,7 @@ class HandlerListItem {
   }
 
   createNode(list) {
-    list.appendChild(this.constructor.fragment);
+    list.appendChild(document.importNode(gHandlerListItemFragment, true));
     this.node = list.lastChild;
     gNodeToObjectMap.set(this.node, this);
   }
