@@ -1484,6 +1484,8 @@ def asan():
 
 add_old_configure_assignment('MOZ_ASAN', asan)
 
+imply_option('--enable-jemalloc', False, when='--enable-address-sanitizer')
+
 # MSAN
 # ==============================================================
 
@@ -1497,6 +1499,8 @@ def msan():
 
 add_old_configure_assignment('MOZ_MSAN', msan)
 
+imply_option('--enable-jemalloc', False, when='--enable-memory-sanitizer')
+
 # TSAN
 # ==============================================================
 
@@ -1509,6 +1513,8 @@ def tsan():
 
 
 add_old_configure_assignment('MOZ_TSAN', tsan)
+
+imply_option('--enable-jemalloc', False, when='--enable-thread-sanitizer')
 
 # UBSAN
 # ==============================================================
@@ -1559,6 +1565,8 @@ def ub_unsigned_overflow_san():
 
 
 add_old_configure_assignment('MOZ_UNSIGNED_OVERFLOW_SANITIZE', ub_unsigned_overflow_san)
+
+imply_option('--enable-jemalloc', False, when='--enable-undefined-sanitizer')
 
 # Security Hardening
 # ==============================================================
@@ -2377,6 +2385,8 @@ def libfuzzer_flags(value, tsan):
 set_config('HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK', libfuzzer_flags.no_link_flag_supported)
 set_config('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
 add_old_configure_assignment('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
+
+imply_option('--enable-jemalloc', False, when=enable_libfuzzer)
 
 # Shared library building
 # ==============================================================
