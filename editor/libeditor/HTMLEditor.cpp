@@ -2103,30 +2103,30 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   }
 
   nsCOMPtr<nsINode> startContainer = firstRange->GetStartContainer();
-  if (NS_WARN_IF(!startContainer)) {
+  if (NS_WARN_IF(!startContainer) || NS_WARN_IF(!startContainer->IsContent())) {
     return NS_ERROR_FAILURE;
   }
 
   // is the selection collapsed?
-  nsCOMPtr<nsINode> nodeToExamine;
+  nsCOMPtr<nsIContent> contentToExamine;
   if (SelectionRefPtr()->IsCollapsed() || IsTextNode(startContainer)) {
     // we want to look at the startContainer and ancestors
-    nodeToExamine = startContainer;
+    contentToExamine = startContainer->AsContent();
   } else {
     // otherwise we want to look at the first editable node after
     // {startContainer,offset} and its ancestors for divs with alignment on them
-    nodeToExamine = firstRange->GetChildAtStartOffset();
-    // GetNextNode(startContainer, offset, true, address_of(nodeToExamine));
+    contentToExamine = firstRange->GetChildAtStartOffset();
+    // GetNextNode(startContainer, offset, true, address_of(contentToExamine));
   }
 
-  if (NS_WARN_IF(!nodeToExamine)) {
+  if (NS_WARN_IF(!contentToExamine)) {
     return NS_ERROR_FAILURE;
   }
 
   if (aBlockLevel) {
     // we are querying the block background (and not the text background), let's
     // climb to the block container
-    nsCOMPtr<Element> blockParent = GetBlock(*nodeToExamine);
+    nsCOMPtr<Element> blockParent = GetBlock(*contentToExamine);
     if (NS_WARN_IF(!blockParent)) {
       return NS_OK;
     }
@@ -2148,17 +2148,17 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
     }
   } else {
     // no, we are querying the text background for the Text Highlight button
-    if (IsTextNode(nodeToExamine)) {
+    if (IsTextNode(contentToExamine)) {
       // if the node of interest is a text node, let's climb a level
-      nodeToExamine = nodeToExamine->GetParentNode();
+      contentToExamine = contentToExamine->GetParent();
     }
     // Return default value due to no parent node
-    if (!nodeToExamine) {
+    if (!contentToExamine) {
       return NS_OK;
     }
     do {
       // is the node to examine a block ?
-      if (HTMLEditor::NodeIsBlockStatic(*nodeToExamine)) {
+      if (HTMLEditor::NodeIsBlockStatic(*contentToExamine)) {
         // yes it is a block; in that case, the text background color is
         // transparent
         aOutColor.AssignLiteral("transparent");
@@ -2167,13 +2167,13 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
         // no, it's not; let's retrieve the computed style of background-color
         // for the node to examine
         CSSEditUtils::GetComputedProperty(
-            *nodeToExamine, *nsGkAtoms::backgroundColor, aOutColor);
+            *contentToExamine, *nsGkAtoms::backgroundColor, aOutColor);
         if (!aOutColor.EqualsLiteral("transparent")) {
           break;
         }
       }
-      nodeToExamine = nodeToExamine->GetParentNode();
-    } while (aOutColor.EqualsLiteral("transparent") && nodeToExamine);
+      contentToExamine = contentToExamine->GetParent();
+    } while (aOutColor.EqualsLiteral("transparent") && contentToExamine);
   }
   return NS_OK;
 }
