@@ -25,11 +25,6 @@ const Annotation kCrashPingWhitelist[] = {
 ${whitelist}
 };
 
-// Blacklist of crash annotations that shouldn't be read from a content process
-const Annotation kContentProcessBlacklist[] = {
-${blacklist}
-};
-
 /**
  * Return the string representation of a crash annotation.
  *
@@ -60,17 +55,6 @@ bool AnnotationFromString(Annotation& aResult, const char* aValue);
  *         otherwise
  */
 bool IsAnnotationWhitelistedForPing(Annotation aAnnotation);
-
-/**
- * Checks if the given crash annotation needs to be filtered out when reading
- * a content process crash annotations. Blacklisted annotations will be
- * replaced with ones provided by the parent process.
- *
- * @param aAnnotation the crash annotation to be checked
- * @return true if the annotation needs to be filtered out when reading
- *         annotations provided by a content process, false otherwise
- */
-bool IsAnnotationBlacklistedForContent(Annotation aAnnotation);
 
 /**
  * Abstract annotation writer, this is needed only for code that writes out
