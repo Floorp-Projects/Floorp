@@ -771,7 +771,7 @@ class nsTableFrame : public nsContainerFrame {
                       nsTArray<nsTableRowFrame*>& aCollection);
 
  public: /* ----- Cell Map public methods ----- */
-  int32_t GetStartRowIndex(nsTableRowGroupFrame* aRowGroupFrame);
+  int32_t GetStartRowIndex(const nsTableRowGroupFrame* aRowGroupFrame) const;
 
   /** returns the number of rows in this table.
    */

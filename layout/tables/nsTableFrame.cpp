@@ -819,7 +819,8 @@ void nsTableFrame::RemoveCell(nsTableCellFrame* aCellFrame, int32_t aRowIndex) {
   }
 }
 
-int32_t nsTableFrame::GetStartRowIndex(nsTableRowGroupFrame* aRowGroupFrame) {
+int32_t nsTableFrame::GetStartRowIndex(
+    const nsTableRowGroupFrame* aRowGroupFrame) const {
   RowGroupArray orderedRowGroups;
   OrderRowGroups(orderedRowGroups);
 
