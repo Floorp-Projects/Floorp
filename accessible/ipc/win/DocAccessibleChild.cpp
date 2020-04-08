@@ -72,6 +72,13 @@ ipc::IPCResult DocAccessibleChild::RecvEmulatedWindow(
   return IPC_OK();
 }
 
+ipc::IPCResult DocAccessibleChild::RecvTopLevelDocCOMProxy(
+    const IAccessibleHolder& aCOMProxy) {
+  MOZ_ASSERT(!aCOMProxy.IsNull());
+  mTopLevelDocProxy.reset(const_cast<IAccessibleHolder&>(aCOMProxy).Release());
+  return IPC_OK();
+}
+
 HWND DocAccessibleChild::GetNativeWindowHandle() const {
   if (mEmulatedWindowHandle) {
     return mEmulatedWindowHandle;
