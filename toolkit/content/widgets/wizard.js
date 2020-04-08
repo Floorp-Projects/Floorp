@@ -522,7 +522,7 @@
       this._wizard = this.getRootNode().host;
 
       this.textContent = "";
-      this.appendChild(this.constructor.fragment);
+      this.appendChild(MozXULElement.parseXULToFragment(this._markup));
 
       MozXULElement.insertFTLIfNeeded("toolkit/global/wizard.ftl");
 
@@ -556,7 +556,7 @@
         : null;
     }
 
-    static get _markup() {
+    get _markup() {
       if (AppConstants.platform == "macosx") {
         return `
         <vbox flex="1">

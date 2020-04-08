@@ -8,34 +8,6 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
   class MozTabbrowserTab extends MozElements.MozTab {
-    static get markup() {
-      return `
-      <stack class="tab-stack" flex="1">
-        <vbox class="tab-background">
-          <hbox class="tab-line"/>
-          <spacer flex="1" class="tab-background-inner"/>
-          <hbox class="tab-bottom-line"/>
-        </vbox>
-        <hbox class="tab-loading-burst"/>
-        <hbox class="tab-content" align="center">
-          <hbox class="tab-throbber" layer="true"/>
-          <hbox class="tab-icon-pending"/>
-          <image class="tab-icon-image" validate="never" role="presentation"/>
-          <image class="tab-sharing-icon-overlay" role="presentation"/>
-          <image class="tab-icon-overlay" role="presentation"/>
-          <hbox class="tab-label-container"
-                onoverflow="this.setAttribute('textoverflow', 'true');"
-                onunderflow="this.removeAttribute('textoverflow');"
-                flex="1">
-            <label class="tab-text tab-label" role="presentation"/>
-          </hbox>
-          <image class="tab-icon-sound" role="presentation"/>
-          <image class="tab-close-button close-icon" role="presentation"/>
-        </hbox>
-      </stack>
-      `;
-    }
-
     constructor() {
       super();
 
@@ -97,6 +69,37 @@
       };
     }
 
+    get fragment() {
+      if (!this.constructor.hasOwnProperty("_fragment")) {
+        this.constructor._fragment = MozXULElement.parseXULToFragment(`
+        <stack class="tab-stack" flex="1">
+          <vbox class="tab-background">
+            <hbox class="tab-line"/>
+            <spacer flex="1" class="tab-background-inner"/>
+            <hbox class="tab-bottom-line"/>
+          </vbox>
+          <hbox class="tab-loading-burst"/>
+          <hbox class="tab-content" align="center">
+            <hbox class="tab-throbber" layer="true"/>
+            <hbox class="tab-icon-pending"/>
+            <image class="tab-icon-image" validate="never" role="presentation"/>
+            <image class="tab-sharing-icon-overlay" role="presentation"/>
+            <image class="tab-icon-overlay" role="presentation"/>
+            <hbox class="tab-label-container"
+                  onoverflow="this.setAttribute('textoverflow', 'true');"
+                  onunderflow="this.removeAttribute('textoverflow');"
+                  flex="1">
+              <label class="tab-text tab-label" role="presentation"/>
+            </hbox>
+            <image class="tab-icon-sound" role="presentation"/>
+            <image class="tab-close-button close-icon" role="presentation"/>
+          </hbox>
+        </stack>
+      `);
+      }
+      return document.importNode(this.constructor._fragment, true);
+    }
+
     connectedCallback() {
       this.initialize();
     }
@@ -107,7 +110,7 @@
       }
 
       this.textContent = "";
-      this.appendChild(this.constructor.fragment);
+      this.appendChild(this.fragment);
       this.initializeAttributeInheritance();
       this.setAttribute("context", "tabContextMenu");
       this._initialized = true;

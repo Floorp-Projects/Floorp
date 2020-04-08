@@ -10,8 +10,18 @@
 customElements.define(
   "printpreview-toolbar",
   class PrintPreviewToolbar extends MozXULElement {
-    static get markup() {
-      return `
+    constructor() {
+      super();
+      this.disconnectedCallback = this.disconnectedCallback.bind(this);
+    }
+    connectedCallback() {
+      window.addEventListener("unload", this.disconnectedCallback, {
+        once: true,
+      });
+
+      MozXULElement.insertFTLIfNeeded("toolkit/printing/printPreview.ftl");
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
       <button id="print-preview-print" oncommand="this.parentNode.print();" data-l10n-id="printpreview-print"/>
       <button id="print-preview-pageSetup" oncommand="this.parentNode.doPageSetup();" data-l10n-id="printpreview-page-setup"/>
       <vbox align="center" pack="center">
@@ -61,19 +71,8 @@ customElements.define(
       <toolbarseparator class="toolbarseparator-primary"/>
       <button id="print-preview-toolbar-close-button" oncommand="PrintUtils.exitPrintPreview();" data-l10n-id="printpreview-close"/>
       <data id="print-preview-custom-scale-prompt-title" data-l10n-id="printpreview-custom-scale-prompt-title"/>
-      `;
-    }
-    constructor() {
-      super();
-      this.disconnectedCallback = this.disconnectedCallback.bind(this);
-    }
-    connectedCallback() {
-      window.addEventListener("unload", this.disconnectedCallback, {
-        once: true,
-      });
-
-      MozXULElement.insertFTLIfNeeded("toolkit/printing/printPreview.ftl");
-      this.appendChild(this.constructor.fragment);
+        `)
+      );
 
       this.mPrintButton = document.getElementById("print-preview-print");
 
