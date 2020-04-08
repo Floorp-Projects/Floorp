@@ -693,7 +693,7 @@ impl PrimitiveDependencyInfo {
 
 /// A stable ID for a given tile, to help debugging. These are also used
 /// as unique identifiers for tile surfaces when using a native compositor.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TileId(pub usize);

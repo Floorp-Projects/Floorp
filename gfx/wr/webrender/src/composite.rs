@@ -9,7 +9,7 @@ use crate::batch::{resolve_image, get_buffer_kind};
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::internal_types::TextureSource;
-use crate::picture::{ImageDependency, ResolvedSurfaceTexture, TileCacheInstance, TileSurface};
+use crate::picture::{ImageDependency, ResolvedSurfaceTexture, TileCacheInstance, TileId, TileSurface};
 use crate::prim_store::DeferredResolve;
 use crate::renderer::ImageBufferKind;
 use crate::resource_cache::{ImageRequest, ResourceCache};
@@ -246,7 +246,40 @@ struct Occluder {
     device_rect: DeviceIntRect,
 }
 
-/// Describes the properties that identify a tile composition uniquely.
+/// The backing surface kind for a tile. Same as `TileSurface`, minus
+/// the texture cache handles, visibility masks etc.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(PartialEq, Clone)]
+pub enum TileSurfaceKind {
+    Texture,
+    Color {
+        color: ColorF,
+    },
+    Clear,
+}
+
+impl From<&TileSurface> for TileSurfaceKind {
+    fn from(surface: &TileSurface) -> Self {
+        match surface {
+            TileSurface::Texture { .. } => TileSurfaceKind::Texture,
+            TileSurface::Color { color } => TileSurfaceKind::Color { color: *color },
+            TileSurface::Clear => TileSurfaceKind::Clear,
+        }
+    }
+}
+
+/// Describes properties that identify a tile composition uniquely.
+/// The backing surface for this tile.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(PartialEq, Clone)]
+pub struct CompositeTileDescriptor {
+    pub tile_id: TileId,
+    pub surface_kind: TileSurfaceKind,
+}
+
+/// Describes the properties that identify a surface composition uniquely.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(PartialEq, Clone)]
@@ -259,6 +292,8 @@ pub struct CompositeSurfaceDescriptor {
     // thing that has changed is the generation of an compositor surface
     // image dependency.
     pub image_dependencies: [ImageDependency; 3],
+    // List of the surface information for each tile added to this virtual surface
+    pub tile_descriptors: Vec<CompositeTileDescriptor>,
 }
 
 /// Describes surface properties used to composite a frame. This
@@ -406,6 +441,8 @@ impl CompositeState {
     ) {
         let mut visible_opaque_tile_count = 0;
         let mut visible_alpha_tile_count = 0;
+        let mut opaque_tile_descriptors = Vec::new();
+        let mut alpha_tile_descriptors = Vec::new();
 
         for tile in tile_cache.tiles.values() {
             if !tile.is_visible {
@@ -415,6 +452,11 @@ impl CompositeState {
 
             let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
             let surface = tile.surface.as_ref().expect("no tile surface set!");
+
+            let descriptor = CompositeTileDescriptor {
+                surface_kind: surface.into(),
+                tile_id: tile.id,
+            };
 
             let (surface, is_opaque) = match surface {
                 TileSurface::Color { color } => {
@@ -433,8 +475,10 @@ impl CompositeState {
             };
 
             if is_opaque {
+                opaque_tile_descriptors.push(descriptor);
                 visible_opaque_tile_count += 1;
             } else {
+                alpha_tile_descriptors.push(descriptor);
                 visible_alpha_tile_count += 1;
             }
 
@@ -450,6 +494,13 @@ impl CompositeState {
             self.push_tile(tile, is_opaque);
         }
 
+        // Sort the tile descriptor lists, since iterating values in the tile_cache.tiles
+        // hashmap doesn't provide any ordering guarantees, but we want to detect the
+        // composite descriptor as equal if the tiles list is the same, regardless of
+        // ordering.
+        opaque_tile_descriptors.sort_by_key(|desc| desc.tile_id);
+        alpha_tile_descriptors.sort_by_key(|desc| desc.tile_id);
+
         // Add opaque surface before any compositor surfaces
         if visible_opaque_tile_count > 0 {
             self.descriptor.surfaces.push(
@@ -458,6 +509,7 @@ impl CompositeState {
                     offset: tile_cache.device_position,
                     clip_rect: device_clip_rect,
                     image_dependencies: [ImageDependency::INVALID; 3],
+                    tile_descriptors: opaque_tile_descriptors,
                 }
             );
         }
@@ -562,6 +614,7 @@ impl CompositeState {
                     offset: tile.rect.origin,
                     clip_rect: tile.clip_rect,
                     image_dependencies: external_surface.image_dependencies,
+                    tile_descriptors: Vec::new(),
                 }
             );
 
@@ -576,6 +629,7 @@ impl CompositeState {
                     offset: tile_cache.device_position,
                     clip_rect: device_clip_rect,
                     image_dependencies: [ImageDependency::INVALID; 3],
+                    tile_descriptors: alpha_tile_descriptors,
                 }
             );
         }
