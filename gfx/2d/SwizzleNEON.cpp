@@ -244,6 +244,36 @@ UnpremultiplyVector_NEON(const uint16x8_t& aSrc) {
 }
 
 template <bool aSwapRB>
+static MOZ_ALWAYS_INLINE void UnpremultiplyChunk_NEON(const uint8_t*& aSrc,
+                                                      uint8_t*& aDst,
+                                                      int32_t aAlignedRow,
+                                                      int32_t aRemainder) {
+  // Process all 4-pixel chunks as one vector.
+  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
+    uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
+    px = UnpremultiplyVector_NEON<aSwapRB>(px);
+    vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
+    aSrc += 4 * 4;
+    aDst += 4 * 4;
+  }
+
+  // Handle any 1-3 remaining pixels.
+  if (aRemainder) {
+    uint16x8_t px = LoadRemainder_NEON(aSrc, aRemainder);
+    px = UnpremultiplyVector_NEON<aSwapRB>(px);
+    StoreRemainder_NEON(aDst, aRemainder, px);
+  }
+}
+
+template <bool aSwapRB>
+void UnpremultiplyRow_NEON(const uint8_t* aSrc, uint8_t* aDst,
+                           int32_t aLength) {
+  int32_t alignedRow = 4 * (aLength & ~3);
+  int32_t remainder = aLength & 3;
+  UnpremultiplyChunk_NEON<aSwapRB>(aSrc, aDst, alignedRow, remainder);
+}
+
+template <bool aSwapRB>
 void Unpremultiply_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
                         int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
@@ -253,28 +283,15 @@ void Unpremultiply_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    // Process all 4-pixel chunks as one vector.
-    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
-      uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
-      px = UnpremultiplyVector_NEON<aSwapRB>(px);
-      vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
-      aSrc += 4 * 4;
-      aDst += 4 * 4;
-    }
-
-    // Handle any 1-3 remaining pixels.
-    if (remainder) {
-      uint16x8_t px = LoadRemainder_NEON(aSrc, remainder);
-      px = UnpremultiplyVector_NEON<aSwapRB>(px);
-      StoreRemainder_NEON(aDst, remainder, px);
-    }
-
+    UnpremultiplyChunk_NEON<aSwapRB>(aSrc, aDst, alignedRow, remainder);
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of unpremultiply variants here.
+template void UnpremultiplyRow_NEON<false>(const uint8_t*, uint8_t*, int32_t);
+template void UnpremultiplyRow_NEON<true>(const uint8_t*, uint8_t*, int32_t);
 template void Unpremultiply_NEON<false>(const uint8_t*, int32_t, uint8_t*,
                                         int32_t, IntSize);
 template void Unpremultiply_NEON<true>(const uint8_t*, int32_t, uint8_t*,
