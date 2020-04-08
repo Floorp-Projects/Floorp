@@ -804,9 +804,8 @@ DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScaleByScreen() {
         if (parentWidget) {
           return DesktopToLayoutDeviceScale(
               parentWidget->RoundsWidgetCoordinatesTo());
-        } else {
-          NS_WARNING("Widget has no parent");
         }
+        NS_WARNING("Widget has no parent");
       }
     } else {
       NS_WARNING("Cannot find widget view");
