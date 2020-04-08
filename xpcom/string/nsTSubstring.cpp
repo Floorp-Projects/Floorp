@@ -1056,6 +1056,11 @@ int32_t nsTStringRepr<T>::FindChar(char_type aChar, index_type aOffset) const {
   return -1;
 }
 
+template <typename T>
+bool nsTStringRepr<T>::Contains(char_type aChar) const {
+  return FindChar(aChar) != kNotFound;
+}
+
 }  // namespace detail
 }  // namespace mozilla
 
