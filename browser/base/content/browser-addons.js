@@ -1006,3 +1006,86 @@ var gExtensionsNotifications = {
     }
   },
 };
+
+var BrowserAddonUI = {
+  promptRemoveExtension(addon) {
+    let { name } = addon;
+    let brand = document
+      .getElementById("bundle_brand")
+      .getString("brandShorterName");
+    let { getFormattedString, getString } = gNavigatorBundle;
+    let title = getFormattedString("webext.remove.confirmation.title", [name]);
+    let message = getFormattedString("webext.remove.confirmation.message", [
+      name,
+      brand,
+    ]);
+    let btnTitle = getString("webext.remove.confirmation.button");
+    let {
+      BUTTON_TITLE_IS_STRING: titleString,
+      BUTTON_TITLE_CANCEL: titleCancel,
+      BUTTON_POS_0,
+      BUTTON_POS_1,
+      confirmEx,
+    } = Services.prompt;
+    let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
+    let checkboxState = { value: false };
+    let checkboxMessage = null;
+
+    // Enable abuse report checkbox in the remove extension dialog,
+    // if enabled by the about:config prefs and the addon type
+    // is currently supported.
+    if (
+      gAddonAbuseReportEnabled &&
+      ["extension", "theme"].includes(addon.type)
+    ) {
+      checkboxMessage = getFormattedString(
+        "webext.remove.abuseReportCheckbox.message",
+        [document.getElementById("bundle_brand").getString("vendorShortName")]
+      );
+    }
+    const result = confirmEx(
+      null,
+      title,
+      message,
+      btnFlags,
+      btnTitle,
+      null,
+      null,
+      checkboxMessage,
+      checkboxState
+    );
+    return { remove: result === 0, report: checkboxState.value };
+  },
+
+  async reportAddon(addonId, reportEntryPoint) {
+    const win = await BrowserOpenAddonsMgr("addons://list/extension");
+
+    win.openAbuseReport({ addonId, reportEntryPoint });
+  },
+
+  async removeAddon(addonId, eventObject) {
+    let addon = addonId && (await AddonManager.getAddonByID(addonId));
+    if (!addon || !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
+      return;
+    }
+
+    let { remove, report } = this.promptRemoveExtension(addon);
+
+    AMTelemetry.recordActionEvent({
+      object: eventObject,
+      action: "uninstall",
+      value: remove ? "accepted" : "cancelled",
+      extra: { addonId },
+    });
+
+    if (remove) {
+      // Leave the extension in pending uninstall if we are also reporting the
+      // add-on.
+      await addon.uninstall(report);
+
+      if (report) {
+        await this.reportAddon(addon.id, "uninstall");
+      }
+    }
+  },
+};
