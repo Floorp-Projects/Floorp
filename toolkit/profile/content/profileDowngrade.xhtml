@@ -6,26 +6,25 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/profile/profileDowngrade.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
-#ifdef MOZ_SERVICES_SYNC
-<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
-%syncBrandDTD;
-#endif
-<!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/profileDowngrade.dtd">
-%profileDTD;
-]>
+<!DOCTYPE window>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&window.title;" onload="init()" style="&window.style;">
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="profiledowngrade-window"
+        data-l10n-attrs="title,style"
+        onload="init()">
+
+
+
+  <linkset>
+        <html:link rel="localization" href="branding/brand.ftl"/>
+        <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+        <html:link rel="localization" href="toolkit/global/profileDowngrade.ftl"/>
+  </linkset>
+
 <dialog buttons="accept,extra1" buttonpack="end"
-        buttonlabelextra1="&window.create;"
-#ifdef XP_WIN
-        buttonlabelaccept="&window.quit-win;">
-#else
-        buttonlabelaccept="&window.quit-nonwin;">
-#endif
+        buttonidextra1="profiledowngrade-window-create"
+        buttonidaccept="profiledowngrade-quit">
 
   <script src="profileDowngrade.js"/>
   <script src="chrome://global/content/customElements.js"/>
@@ -33,9 +32,9 @@
   <hbox flex="1" align="start">
     <image id="info" role="presentation"/>
     <vbox flex="1">
-      <description id="nosync">&window.nosync;</description>
+      <description data-l10n-id="profiledowngrade-nosync"></description>
 #ifdef MOZ_SERVICES_SYNC
-      <description id="sync">&window.sync;</description>
+      <description data-l10n-id="profiledowngrade-sync"></description>
 #endif
     </vbox>
   </hbox>
