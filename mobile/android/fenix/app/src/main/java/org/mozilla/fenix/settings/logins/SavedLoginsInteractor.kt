@@ -9,6 +9,7 @@ package org.mozilla.fenix.settings.logins
  * Provides implementations for the SavedLoginsViewInteractor
  */
 class SavedLoginsInteractor(
+    private val savedLoginsController: SavedLoginsController,
     private val itemClicked: (SavedLoginsItem) -> Unit,
     private val learnMore: () -> Unit
 ) : SavedLoginsViewInteractor {
@@ -17,5 +18,9 @@ class SavedLoginsInteractor(
     }
     override fun onLearnMore() {
         learnMore.invoke()
+    }
+
+    override fun sort(sortingStrategy: SortingStrategy) {
+        savedLoginsController.handleSort(sortingStrategy)
     }
 }

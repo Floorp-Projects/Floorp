@@ -28,6 +28,8 @@ interface SavedLoginsViewInteractor {
     fun itemClicked(item: SavedLoginsItem)
 
     fun onLearnMore()
+
+    fun sort(sortingStrategy: SortingStrategy)
 }
 
 /**
@@ -48,6 +50,7 @@ class SavedLoginsView(
         view.saved_logins_list.apply {
             adapter = loginsAdapter
             layoutManager = LinearLayoutManager(containerView.context)
+            itemAnimator = null
         }
 
         val learnMoreText = view.saved_passwords_empty_learn_more.text.toString()

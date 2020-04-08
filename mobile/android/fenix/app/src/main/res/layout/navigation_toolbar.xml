@@ -13,4 +13,11 @@
     app:titleTextAppearance="@style/ToolbarTitleTextStyle"
     android:background="?foundation"
     android:elevation="8dp">
+
+    <FrameLayout
+        android:id="@+id/toolbar_child_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
 </androidx.appcompat.widget.Toolbar>

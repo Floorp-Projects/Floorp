@@ -6,26 +6,31 @@ package org.mozilla.fenix.settings.logins
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.view.Menu
+import android.view.MenuInflater
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_saved_logins.view.*
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.Login
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
@@ -39,10 +44,16 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 
+@SuppressWarnings("TooManyFunctions")
 class SavedLoginsFragment : Fragment() {
     private lateinit var savedLoginsStore: SavedLoginsFragmentStore
     private lateinit var savedLoginsView: SavedLoginsView
     private lateinit var savedLoginsInteractor: SavedLoginsInteractor
+    private lateinit var dropDownMenuAnchorView: View
+    private lateinit var sortingStrategyMenu: SavedLoginsSortingStrategyMenu
+    private lateinit var sortingStrategyPopupMenu: BrowserMenu
+    private lateinit var toolbarChildContainer: FrameLayout
+    private lateinit var sortLoginsMenuRoot: ConstraintLayout
 
     override fun onResume() {
         super.onResume()
@@ -50,7 +61,7 @@ class SavedLoginsFragment : Fragment() {
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
-        showToolbar(getString(R.string.preferences_passwords_saved_logins))
+        initToolbar()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,11 +80,17 @@ class SavedLoginsFragment : Fragment() {
                 SavedLoginsFragmentState(
                     isLoading = true,
                     items = listOf(),
-                    filteredItems = listOf()
+                    filteredItems = listOf(),
+                    searchedForText = null,
+                    sortingStrategy = requireContext().settings().savedLoginsSortingStrategy,
+                    highlightedItem = requireContext().settings().savedLoginsMenuHighlightedItem
                 )
             )
         }
-        savedLoginsInteractor = SavedLoginsInteractor(::itemClicked, ::openLearnMore)
+        val savedLoginsController: SavedLoginsController =
+            DefaultSavedLoginsController(savedLoginsStore, requireContext().settings())
+        savedLoginsInteractor =
+            SavedLoginsInteractor(savedLoginsController, ::itemClicked, ::openLearnMore)
         savedLoginsView = SavedLoginsView(view.savedLoginsLayout, savedLoginsInteractor)
         loadAndMapLogins()
         return view
@@ -84,6 +101,7 @@ class SavedLoginsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         consumeFrom(savedLoginsStore) {
+            sortingStrategyMenu.updateMenu(savedLoginsStore.state.highlightedItem)
             savedLoginsView.update(it)
         }
     }
@@ -111,6 +129,11 @@ class SavedLoginsFragment : Fragment() {
      * If we pause this fragment, we want to pop users back to reauth
      */
     override fun onPause() {
+        toolbarChildContainer.removeAllViews()
+        toolbarChildContainer.visibility = View.GONE
+        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
+        sortingStrategyPopupMenu.dismiss()
+
         if (findNavController().currentDestination?.id != R.id.savedLoginSiteInfoFragment) {
             activity?.let { it.checkAndUpdateScreenshotPermission(it.settings()) }
             findNavController().popBackStack(R.id.loginsFragment, false)
@@ -144,7 +167,7 @@ class SavedLoginsFragment : Fragment() {
             logins?.let {
                 withContext(Main) {
                     savedLoginsStore.dispatch(SavedLoginsFragmentAction.UpdateLogins(logins.map { item ->
-                        SavedLoginsItem(item.origin, item.username, item.password, item.guid!!)
+                        SavedLoginsItem(item.origin, item.username, item.password, item.guid!!, item.timeLastUsed)
                     }))
                 }
             }
@@ -154,5 +177,68 @@ class SavedLoginsFragment : Fragment() {
                 deferredLogins?.cancel()
             }
         }
+    }
+
+    private fun initToolbar() {
+        showToolbar(getString(R.string.preferences_passwords_saved_logins))
+        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary()
+            .setDisplayShowTitleEnabled(false)
+        toolbarChildContainer = initChildContainerFromToolbar()
+        sortLoginsMenuRoot = inflateSortLoginsMenuRoot()
+        dropDownMenuAnchorView = sortLoginsMenuRoot.findViewById(R.id.drop_down_menu_anchor_view)
+        when (requireContext().settings().savedLoginsSortingStrategy) {
+            is SortingStrategy.Alphabetically -> setupMenu(SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort)
+            is SortingStrategy.LastUsed -> setupMenu(SavedLoginsSortingStrategyMenu.Item.LastUsedSort)
+        }
+    }
+
+    private fun initChildContainerFromToolbar(): FrameLayout {
+        val activity = activity as? AppCompatActivity
+        val toolbar = (activity as HomeActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+
+        return (toolbar.findViewById(R.id.toolbar_child_container) as FrameLayout).apply {
+            visibility = View.VISIBLE
+        }
+    }
+
+    private fun inflateSortLoginsMenuRoot(): ConstraintLayout {
+        return LayoutInflater.from(context)
+            .inflate(R.layout.saved_logins_sort_items_toolbar_child, toolbarChildContainer, true)
+            .findViewById(R.id.sort_logins_menu_root)
+    }
+
+    private fun attachMenu() {
+        sortingStrategyPopupMenu = sortingStrategyMenu.menuBuilder.build(requireContext())
+
+        sortLoginsMenuRoot.setOnClickListener {
+            sortLoginsMenuRoot.isActivated = true
+            sortingStrategyPopupMenu.show(
+                anchor = dropDownMenuAnchorView,
+                orientation = BrowserMenu.Orientation.DOWN
+            ) {
+                sortLoginsMenuRoot.isActivated = false
+            }
+        }
+    }
+
+    private fun setupMenu(itemToHighlight: SavedLoginsSortingStrategyMenu.Item) {
+        sortingStrategyMenu = SavedLoginsSortingStrategyMenu(requireContext(), itemToHighlight) {
+            when (it) {
+                SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort -> {
+                    savedLoginsInteractor.sort(SortingStrategy.Alphabetically(requireContext().applicationContext))
+                }
+
+                SavedLoginsSortingStrategyMenu.Item.LastUsedSort -> {
+                    savedLoginsInteractor.sort(SortingStrategy.LastUsed(requireContext().applicationContext))
+                }
+            }
+        }
+
+        attachMenu()
+    }
+
+    companion object {
+        const val SORTING_STRATEGY_ALPHABETICALLY = "ALPHABETICALLY"
+        const val SORTING_STRATEGY_LAST_USED = "LAST_USED"
     }
 }

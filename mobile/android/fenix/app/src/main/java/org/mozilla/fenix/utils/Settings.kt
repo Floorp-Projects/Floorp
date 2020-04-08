@@ -31,6 +31,9 @@ import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
+import org.mozilla.fenix.settings.logins.SavedLoginsFragment
+import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
+import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import java.security.InvalidParameterException
 
@@ -646,5 +649,38 @@ class Settings private constructor(
             preferences.edit()
                 .putBoolean(appContext.getPreferenceKey(R.string.pref_key_enable_new_tab_tray), value)
                 .apply()
+        }
+
+    private var savedLoginsSortingStrategyString by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_saved_logins_sorting_strategy),
+        default = SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY
+    )
+
+    val savedLoginsMenuHighlightedItem: SavedLoginsSortingStrategyMenu.Item
+        get() {
+            return when (savedLoginsSortingStrategyString) {
+                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> {
+                    SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort
+                }
+                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> {
+                    SavedLoginsSortingStrategyMenu.Item.LastUsedSort
+                }
+                else -> SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort
+            }
+        }
+
+    var savedLoginsSortingStrategy: SortingStrategy
+        get() {
+            return when (savedLoginsSortingStrategyString) {
+                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> SortingStrategy.Alphabetically(appContext)
+                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed(appContext)
+                else -> SortingStrategy.Alphabetically(appContext)
+            }
+        }
+        set(value) {
+            savedLoginsSortingStrategyString = when (value) {
+                is SortingStrategy.Alphabetically -> SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY
+                is SortingStrategy.LastUsed -> SavedLoginsFragment.SORTING_STRATEGY_LAST_USED
+            }
         }
 }

@@ -147,4 +147,8 @@
     <dimen name="tab_tray_divider_margin_start">124dp</dimen>
     <dimen name="tab_tray_divider_margin_end">0dp</dimen>
 
+    <!-- Saved Logins Fragment -->
+    <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_margin_start">10dp</dimen>
+    <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_size">12dp</dimen>
+
 </resources>
