@@ -88,7 +88,7 @@ class GeckoWebViewProvider : IWebViewProvider {
     private fun createGeckoRuntime(context: Context) {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
-            runtimeSettingsBuilder.useContentProcessHint(true)
+            runtimeSettingsBuilder.useMultiprocess(true)
             runtimeSettingsBuilder.contentBlocking(ContentBlocking.Settings.Builder()
                     .safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING)
                     .build())
@@ -170,7 +170,6 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         private fun createGeckoSession(): GeckoSession {
             val builder = GeckoSessionSettings.Builder()
-            builder.useMultiprocess(true)
             builder.usePrivateMode(true)
             builder.suspendMediaWhenInactive(true)
             return GeckoSession(builder.build())

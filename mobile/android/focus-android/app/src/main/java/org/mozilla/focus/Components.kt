@@ -53,7 +53,7 @@ private class DummyEngine : Engine {
     override val version: EngineVersion = EngineVersion(1, 0, 0)
     override val settings: Settings = DefaultSettings()
 
-    override fun createSession(private: Boolean): EngineSession {
+    override fun createSession(private: Boolean, contextId: String?): EngineSession {
         throw NotImplementedError()
     }
 
