@@ -1006,10 +1006,6 @@ void nsViewSourceChannel::SetAltDataForChild(bool aIsForChild) {
   mHttpChannelInternal->SetAltDataForChild(aIsForChild);
 }
 
-void nsViewSourceChannel::DisableAltDataCache() {
-  mHttpChannelInternal->DisableAltDataCache();
-}
-
 NS_IMETHODIMP
 nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
                                            const nsACString& aCategory) {

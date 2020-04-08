@@ -330,13 +330,6 @@ interface nsIHttpChannelInternal : nsISupports
     void setAltDataForChild(in boolean aIsForChild);
 
     /**
-     * Prevent the use of alt-data cache for this request.  Use by the
-     * extension StreamFilter class to force use of the regular cache.
-     */
-    [noscript, notxpcom, nostdcall]
-    void disableAltDataCache();
-
-    /**
      * When set to true, the channel will not pop any authentication prompts up
      * to the user.  When provided or cached credentials lead to an
      * authentication failure, that failure will be propagated to the channel
