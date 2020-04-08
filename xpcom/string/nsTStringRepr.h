@@ -198,9 +198,7 @@ class nsTStringRepr {
   size_type NS_FASTCALL CountChar(char_type) const;
   int32_t NS_FASTCALL FindChar(char_type, index_type aOffset = 0) const;
 
-  inline bool Contains(char_type aChar) const {
-    return FindChar(aChar) != kNotFound;
-  }
+  bool Contains(char_type aChar) const;
 
   // Equality.
   bool NS_FASTCALL Equals(const self_type&) const;
