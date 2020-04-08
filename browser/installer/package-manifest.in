@@ -459,13 +459,6 @@ bin/libfreebl_64int_3.so
 ; DMD
 @RESPATH@/dmd.py
 @RESPATH@/fix_stacks.py
-@RESPATH@/fix_stack_using_bpsyms.py
-#ifdef XP_MACOSX
-@RESPATH@/fix_macosx_stack.py
-#endif
-#ifdef XP_LINUX
-@RESPATH@/fix_linux_stack.py
-#endif
 #endif
 
 #ifdef PKG_LOCALE_MANIFEST

@@ -174,8 +174,7 @@ nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
 // - Otherwise, if we are on a platform that supports function name lookup
 //   (Mac or Linux) then the looked-up name will be shown with a
 //   "[from dladdr]" annotation. On Mac the looked-up name will be immediately
-//   useful. On Linux it'll need post-processing with
-//   tools/rb/fix_linux_stack.py.
+//   useful. On Linux it'll need post-processing with `tools/rb/fix_stacks.py`.
 //
 // - Otherwise, no name will be printed. If many timers hit this case then
 //   you'll need to re-run the workload on a Mac to find out which timers they
@@ -675,7 +674,7 @@ void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
           }
 
         } else if (info.dli_fname) {
-          // The "#0: " prefix is necessary for fix_linux_stack.py to interpret
+          // The "#0: " prefix is necessary for `fix_stacks.py` to interpret
           // this string as something to convert.
           snprintf(buf, buflen, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
                    uintptr_t(addr) - uintptr_t(info.dli_fbase));

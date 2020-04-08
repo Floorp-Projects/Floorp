@@ -30,14 +30,7 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     ]
 
 if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:
-    FINAL_TARGET_FILES += [
-        '/tools/rb/fix_stack_using_bpsyms.py',
-        '/tools/rb/fix_stacks.py',
-    ]
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        FINAL_TARGET_FILES += ['/tools/rb/fix_macosx_stack.py']
-    if CONFIG['OS_ARCH'] == 'Linux':
-        FINAL_TARGET_FILES += ['/tools/rb/fix_linux_stack.py']
+    FINAL_TARGET_FILES += ['/tools/rb/fix_stacks.py']
 
 if CONFIG['MOZ_DMD']:
     FINAL_TARGET_FILES += ['/memory/replace/dmd/dmd.py']
