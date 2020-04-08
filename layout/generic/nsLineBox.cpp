@@ -603,7 +603,7 @@ nsresult nsLineIterator::Init(nsLineList& aLines, bool aRightToLeft) {
   return NS_OK;
 }
 
-int32_t nsLineIterator::GetNumLines() { return mNumLines; }
+int32_t nsLineIterator::GetNumLines() const { return mNumLines; }
 
 bool nsLineIterator::GetDirection() { return mRightToLeft; }
 

@@ -1643,7 +1643,7 @@ class nsLineIterator final : public nsILineIterator {
 
   virtual void DisposeLineIterator() override;
 
-  virtual int32_t GetNumLines() override;
+  virtual int32_t GetNumLines() const override;
   virtual bool GetDirection() override;
   NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
                      int32_t* aNumFramesOnLine,
