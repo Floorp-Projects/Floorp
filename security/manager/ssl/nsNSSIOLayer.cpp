@@ -677,6 +677,12 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy() {
     poppedPlaintext->dtor(poppedPlaintext);
   }
 
+  // We need to clear the callback to make sure the ssl layer cannot call the
+  // callback after mFD is nulled.
+  if (net::SSLTokensCache::IsEnabled()) {
+    SSL_SetResumptionTokenCallback(mFd, nullptr, nullptr);
+  }
+
   PRStatus status = mFd->methods->close(mFd);
 
   // the nsNSSSocketInfo instance can out-live the connection, so we need some
@@ -757,8 +763,7 @@ nsNSSSocketInfo::GetPeerId(nsACString& aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
+nsresult nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
   if (!mozilla::net::SSLTokensCache::IsEnabled()) {
     return NS_OK;
   }
@@ -2323,6 +2328,29 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   return NS_OK;
 }
 
+SECStatus StoreResumptionToken(PRFileDesc* fd, const PRUint8* resumptionToken,
+                               unsigned int len, void* ctx) {
+  PRIntn val;
+  if (SSL_OptionGet(fd, SSL_ENABLE_SESSION_TICKETS, &val) != SECSuccess ||
+      val == 0) {
+    return SECFailure;
+  }
+
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)ctx;
+  if (!infoObject) {
+    return SECFailure;
+  }
+
+  nsAutoCString peerId;
+  infoObject->GetPeerId(peerId);
+  if (NS_FAILED(
+          net::SSLTokensCache::Put(peerId, resumptionToken, len, infoObject))) {
+    return SECFailure;
+  }
+
+  return SECSuccess;
+}
+
 nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
@@ -2420,6 +2448,14 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
   }
 
   infoObject->SharedState().NoteSocketCreated();
+
+  if (net::SSLTokensCache::IsEnabled()) {
+    rv = infoObject->SetResumptionTokenFromExternalCache();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    SSL_SetResumptionTokenCallback(sslSock, &StoreResumptionToken, infoObject);
+  }
 
   return NS_OK;
 loser:
