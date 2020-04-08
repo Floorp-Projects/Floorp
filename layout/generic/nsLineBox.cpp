@@ -241,22 +241,27 @@ void nsLineBox::List(FILE* out, const char* aPrefix,
                          static_cast<const void*>(this), GetChildCount(),
                          StateToString(cbuf, sizeof(cbuf)));
   if (IsBlock() && !GetCarriedOutBEndMargin().IsZero()) {
-    str += nsPrintfCString("bm=%d ", GetCarriedOutBEndMargin().get());
+    const nscoord bm = GetCarriedOutBEndMargin().get();
+    str += nsPrintfCString("bm=%s ",
+                           nsIFrame::ConvertToString(bm, aFlags).c_str());
   }
   nsRect bounds = GetPhysicalBounds();
-  str += nsPrintfCString("%s ", ToString(bounds).c_str());
+  str +=
+      nsPrintfCString("%s ", nsIFrame::ConvertToString(bounds, aFlags).c_str());
   if (mWritingMode.IsVertical() || mWritingMode.IsBidiRTL()) {
     str += nsPrintfCString(
         "wm=%s cs=(%s) logical-rect=%s ", ToString(mWritingMode).c_str(),
-        ToString(mContainerSize).c_str(), ToString(mBounds).c_str());
+        nsIFrame::ConvertToString(mContainerSize, aFlags).c_str(),
+        nsIFrame::ConvertToString(mBounds, mWritingMode, aFlags).c_str());
   }
-  if (mData &&
-      (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
-       !mData->mOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
-    str += nsPrintfCString(
-        "vis-overflow=%s scr-overflow=%s ",
-        ToString(mData->mOverflowAreas.VisualOverflow()).c_str(),
-        ToString(mData->mOverflowAreas.ScrollableOverflow()).c_str());
+  if (mData) {
+    const nsRect vo = mData->mOverflowAreas.VisualOverflow();
+    const nsRect so = mData->mOverflowAreas.ScrollableOverflow();
+    if (!vo.IsEqualEdges(bounds) || !so.IsEqualEdges(bounds)) {
+      str += nsPrintfCString("vis-overflow=%s scr-overflow=%s ",
+                             nsIFrame::ConvertToString(vo, aFlags).c_str(),
+                             nsIFrame::ConvertToString(so, aFlags).c_str());
+    }
   }
   fprintf_stderr(out, "%s<\n", str.get());
 

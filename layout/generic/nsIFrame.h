@@ -4732,8 +4732,23 @@ class nsIFrame : public nsQueryFrame {
   void ListTag(FILE* out) const { fputs(ListTag().get(), out); }
   nsAutoCString ListTag() const;
 
-  enum class ListFlag{TraverseSubdocumentFrames};
+  enum class ListFlag{TraverseSubdocumentFrames, DisplayInCSSPixels};
   using ListFlags = mozilla::EnumSet<ListFlag>;
+
+  template <typename T>
+  static std::string ConvertToString(const T& aValue, ListFlags aFlags) {
+    // This method can convert all physical types in app units to CSS pixels.
+    return aFlags.contains(ListFlag::DisplayInCSSPixels)
+               ? mozilla::ToString(mozilla::CSSPixel::FromAppUnits(aValue))
+               : mozilla::ToString(aValue);
+  }
+  static std::string ConvertToString(const mozilla::LogicalRect& aRect,
+                                     const mozilla::WritingMode aWM,
+                                     ListFlags aFlags);
+  static std::string ConvertToString(const mozilla::LogicalSize& aSize,
+                                     const mozilla::WritingMode aWM,
+                                     ListFlags aFlags);
+
   void ListGeneric(nsACString& aTo, const char* aPrefix = "",
                    ListFlags aFlags = ListFlags()) const;
   virtual void List(FILE* out = stderr, const char* aPrefix = "",
