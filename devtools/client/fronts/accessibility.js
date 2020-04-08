@@ -16,6 +16,11 @@ const {
   simulatorSpec,
 } = require("devtools/shared/specs/accessibility");
 const events = require("devtools/shared/event-emitter");
+const Services = require("Services");
+const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
+  "devtools.browsertoolbox.fission",
+  false
+);
 
 class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   constructor(client, targetFront, parentFront) {
@@ -36,6 +41,10 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 
   marshallPool() {
     return this.getParent();
+  }
+
+  get remoteFrame() {
+    return BROWSER_TOOLBOX_FISSION_ENABLED && this._form.remoteFrame;
   }
 
   get role() {
@@ -158,6 +167,34 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     return super.hydrate().then(properties => {
       Object.assign(this._form, properties);
     });
+  }
+
+  async children() {
+    if (!this.remoteFrame) {
+      return super.children();
+    }
+
+    const { walker: domWalkerFront } = await this.targetFront.getFront(
+      "inspector"
+    );
+    const node = await domWalkerFront.getNodeFromActor(this.actorID, [
+      "rawAccessible",
+      "DOMNode",
+    ]);
+    // We are using DOM inspector/walker API here because we want to keep both
+    // the accessiblity tree and the DOM tree in sync. This is necessary for
+    // several features that the accessibility panel provides such as inspecting
+    // a corresponding DOM node or any other functionality that requires DOM
+    // node ancestries to be resolved all the way up to the top level document.
+    const {
+      nodes: [documentNodeFront],
+    } = await domWalkerFront.children(node);
+    const accessibilityFront = await documentNodeFront.targetFront.getFront(
+      "accessibility"
+    );
+    await accessibilityFront.bootstrap();
+
+    return accessibilityFront.accessibleWalkerFront.children();
   }
 }
 

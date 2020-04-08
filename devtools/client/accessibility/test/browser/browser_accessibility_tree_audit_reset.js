@@ -66,18 +66,18 @@ const tests = [
   {
     desc: "Select an accessible object.",
     setup: async env => {
-      await selectAccessibleForNode(env, "body");
+      await selectAccessibleForNode(env, "h1");
     },
     expected: {
       tree: [
         {
           role: "document",
           name: `"Accessibility Panel Test"`,
-          selected: true,
         },
         {
           role: "heading",
           name: `"Top level header"`,
+          selected: true,
         },
         {
           role: "text leaf",
