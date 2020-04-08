@@ -73,7 +73,6 @@ class OpenVRSession : public VRSession {
   bool mIsWindowsMR;
   TimeStamp mLastHapticUpdate;
 
-  static void HapticTimerCallback(nsITimer* aTimer, void* aClosure);
   bool InitState(mozilla::gfx::VRSystemState& aSystemState);
   void UpdateStageParameters(mozilla::gfx::VRDisplayState& aState);
   void UpdateEyeParameters(mozilla::gfx::VRSystemState& aState);
@@ -100,6 +99,7 @@ class OpenVRSession : public VRSession {
   void StopHapticThread();
   void StartHapticTimer();
   void StopHapticTimer();
+  static void HapticTimerCallback(nsITimer* aTimer, void* aClosure);
   RefPtr<nsITimer> mHapticTimer;
   RefPtr<VRThread> mHapticThread;
   mozilla::Mutex mControllerHapticStateMutex;

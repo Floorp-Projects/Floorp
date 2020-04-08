@@ -113,9 +113,6 @@ XRSession::XRSession(
     mDisplayPresentation =
         mDisplayClient->BeginPresentation({}, gfx::kVRGroupContent);
   }
-  if (mDisplayClient) {
-    mDisplayClient->SetXRAPIMode(gfx::VRAPIMode::WebXR);
-  }
   // TODO: Handle XR input sources are no longer available cases.
   // https://immersive-web.github.io/webxr/#dom-xrsession-inputsources
   mInputSources = new XRInputSourceArray(aWindow);
@@ -399,9 +396,6 @@ void XRSession::Shutdown() {
 }
 
 void XRSession::ExitPresentInternal() {
-  if (mInputSources) {
-    mInputSources->Clear();
-  }
   if (mDisplayClient) {
     mDisplayClient->SessionEnded(this);
   }
