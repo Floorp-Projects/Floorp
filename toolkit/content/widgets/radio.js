@@ -466,21 +466,17 @@
 
   customElements.define("radiogroup", MozRadiogroup);
 
-  let gRadioFrag = null;
-  function getRadioFragment() {
-    if (!gRadioFrag) {
-      gRadioFrag = MozXULElement.parseXULToFragment(`
-    <image class="radio-check"></image>
-    <hbox class="radio-label-box" align="center" flex="1">
-      <image class="radio-icon"></image>
-      <label class="radio-label" flex="1"></label>
-    </hbox>
-    `);
-    }
-    return document.importNode(gRadioFrag, true);
-  }
-
   class MozRadio extends MozElements.BaseText {
+    static get markup() {
+      return `
+      <image class="radio-check"></image>
+      <hbox class="radio-label-box" align="center" flex="1">
+        <image class="radio-icon"></image>
+        <label class="radio-label" flex="1"></label>
+      </hbox>
+      `;
+    }
+
     static get inheritedAttributes() {
       return {
         ".radio-check": "disabled,selected",
@@ -513,7 +509,7 @@
         this.connectedOnce = true;
         // If the caller didn't provide custom content then append the default:
         if (!this.firstElementChild) {
-          this.appendChild(getRadioFragment());
+          this.appendChild(this.constructor.fragment);
           this.initializeAttributeInheritance();
         }
       }
