@@ -6,7 +6,6 @@
 #define mozilla_ipc_CrashReporterHelper_h
 
 #include "CrashReporterHost.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/UniquePtr.h"
 #include "nsExceptionHandler.h"
 #include "nsICrashService.h"
@@ -19,7 +18,7 @@ namespace ipc {
  * toplevel protocols representing processes. To use this class, you should:
  *
  * 1. Declare a method to initialize the crash reporter in your IPDL:
- *    `async InitCrashReporter(Shmem shmem, NativeThreadId threadId)`
+ *    `async InitCrashReporter(NativeThreadId threadId)`
  *
  * 2. Inherit from this class, providing the appropriate `GeckoProcessType`
  *    enum value for the template parameter PT.
@@ -33,9 +32,8 @@ template <GeckoProcessType PT>
 class CrashReporterHelper {
  public:
   CrashReporterHelper() : mCrashReporter(nullptr) {}
-  IPCResult RecvInitCrashReporter(Shmem&& aShmem,
-                                  const CrashReporter::ThreadId& aThreadId) {
-    mCrashReporter = MakeUnique<ipc::CrashReporterHost>(PT, aShmem, aThreadId);
+  IPCResult RecvInitCrashReporter(const CrashReporter::ThreadId& aThreadId) {
+    mCrashReporter = MakeUnique<ipc::CrashReporterHost>(PT, aThreadId);
     return IPC_OK();
   }
 
