@@ -264,7 +264,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Peladen Pewali Tidak Ditemukan</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Server Proksi Tidak Ditemukan</string>
 
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
       <p>Program peramban diatur untuk menggunakan server proxy, tetapi server proxy tidak bisa ditemukan.</p>
