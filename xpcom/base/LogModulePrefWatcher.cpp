@@ -8,6 +8,8 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"

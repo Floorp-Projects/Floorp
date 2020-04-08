@@ -35,7 +35,7 @@ nsresult DebuggerOnGCRunnable::Enqueue(JSContext* aCx,
 
 NS_IMETHODIMP
 DebuggerOnGCRunnable::Run() {
-  AutoJSAPI jsapi;
+  dom::AutoJSAPI jsapi;
   jsapi.Init();
   if (!JS::dbg::FireOnGarbageCollectionHook(jsapi.cx(), std::move(mGCData))) {
     return NS_ERROR_OUT_OF_MEMORY;
