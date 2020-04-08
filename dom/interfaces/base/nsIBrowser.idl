@@ -173,40 +173,4 @@ interface nsIBrowser : nsISupports
   void updateSecurityUIForSecurityChange(in nsITransportSecurityInfo aSecurityInfo,
                                          in uint32_t aState,
                                          in boolean aIsSecureContext);
-
-  /**
-   * Called by Gecko when it wants to change the process which is currently
-   * being used to render content in this tab.
-   *
-   * Returns a promise which will be resolved with the ChildID of the new
-   * process.
-   *
-   * @param aRemoteType the new remote type to switch this browser into
-   * @param aPendingSwitchId unique identifier for the ongoing
-   *                         process-switching load
-   * @param aReplaceBrowsingContext if true, do not preserve the
-   *                                BrowsingContext loaded inside this
-   *                                browser after changing processes.
-   */
-  Promise performProcessSwitch(in AString aRemoteType,
-                               in uint64_t aPendingSwitchId,
-                               in boolean aReplaceBrowsingContext);
-
-  /** If `true`, this browser supports the `performProcessSwitch` method */
-  readonly attribute bool canPerformProcessSwitch;
-
-  /**
-   * Helper method for invoking `E10SUtils.getRemoteTypeForPrincipal` from
-   * `DocumentLoadListener`.
-   *
-   * FIXME: DocumentLoadListener should make process selection decisions without
-   * an `nsIBrowser`, as the implementation does not depend on which browser
-   * it's being called on.
-   */
-  AString getRemoteTypeForPrincipal(in nsIPrincipal aPrincipal,
-                                    in boolean aRemoteTabs,
-                                    in boolean aRemoteSubframes,
-                                    in AString aPreferredRemoteType,
-                                    in nsIPrincipal aCurrentPrincipal,
-                                    in boolean aIsSubframe);
 };
