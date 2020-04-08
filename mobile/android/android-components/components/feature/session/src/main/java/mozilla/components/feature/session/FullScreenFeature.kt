@@ -17,6 +17,7 @@ open class FullScreenFeature(
     sessionManager: SessionManager,
     private val sessionUseCases: SessionUseCases,
     private val sessionId: String? = null,
+    private val viewportFitChanged: (Int) -> Unit = {},
     private val fullScreenChanged: (Boolean) -> Unit
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, UserInteractionHandler {
 
@@ -28,6 +29,9 @@ open class FullScreenFeature(
     }
 
     override fun onFullScreenChanged(session: Session, enabled: Boolean) = fullScreenChanged(enabled)
+    override fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int) {
+        viewportFitChanged(layoutInDisplayCutoutMode)
+    }
 
     /**
      * To be called when the back button is pressed, so that only fullscreen mode closes.

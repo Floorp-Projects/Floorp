@@ -246,6 +246,19 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [SearchRequest] of the [ContentState] with the given [sessionId].
      */
     data class ConsumeSearchRequestAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [fullScreenEnabled] with the given [sessionId].
+     */
+    data class FullScreenChangedAction(val sessionId: String, val fullScreenEnabled: Boolean) : ContentAction()
+
+    /**
+     * Updates the [layoutInDisplayCutoutMode] with the given [sessionId].
+     *
+     * @property sessionId the ID of the session
+     * @property layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
+     */
+    data class ViewportFitChangedAction(val sessionId: String, val layoutInDisplayCutoutMode: Int) : ContentAction()
 }
 
 /**

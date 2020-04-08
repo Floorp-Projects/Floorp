@@ -325,6 +325,7 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFind(text: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFullScreenChange(enabled: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLoadingStateChange(loading: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLocationChange(url: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLongPress(hitResult: HitResult)</ID>
@@ -495,6 +496,7 @@
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onDownload(session: Session, download: Download): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFindResult(session: Session, result: FindResult)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFullScreenChanged(session: Session, enabled: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onIconChanged(session: Session, icon: Bitmap?)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadRequest( session: Session, url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean )</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?)</ID>

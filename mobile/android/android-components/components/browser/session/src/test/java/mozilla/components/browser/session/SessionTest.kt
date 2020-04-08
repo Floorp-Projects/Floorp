@@ -5,6 +5,7 @@
 package mozilla.components.browser.session
 
 import android.graphics.Bitmap
+import android.view.WindowManager
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -671,6 +672,21 @@ class SessionTest {
         session.unregister(observer)
         session.fullScreenMode = false
         verify(observer, never()).onFullScreenChanged(session, false)
+    }
+
+    @Test
+    fun `observer is notified on meta viewport fit change`() {
+        val observer = mock(Session.Observer::class.java)
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+        session.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+        verify(observer).onMetaViewportFitChanged(session,
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        reset(observer)
+        session.unregister(observer)
+        session.layoutInDisplayCutoutMode = 123
+        verify(observer, never()).onMetaViewportFitChanged(session, 123)
     }
 
     @Test

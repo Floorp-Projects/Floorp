@@ -17,6 +17,7 @@ import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
+import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
@@ -26,6 +27,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoA
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.ContentAction.ViewportFitChangedAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
@@ -98,6 +100,10 @@ class Session(
         fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
         fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
+        /**
+         * @param layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
+         */
+        fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int) = Unit
         fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
@@ -406,7 +412,17 @@ class Session(
      * Exits fullscreen mode if it's in that state.
      */
     var fullScreenMode: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onFullScreenChanged(this@Session, new) }
+        if (notifyObservers(old, new) { onFullScreenChanged(this@Session, new) }) {
+            store?.syncDispatch(FullScreenChangedAction(id, new))
+        }
+    }
+
+    /**
+     * Display cutout mode state.
+     */
+    var layoutInDisplayCutoutMode: Int by Delegates.observable(0) { _, _, new ->
+        notifyObservers { onMetaViewportFitChanged(this@Session, new) }
+        store?.syncDispatch(ViewportFitChangedAction(id, new))
     }
 
     /**

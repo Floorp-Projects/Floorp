@@ -5,6 +5,7 @@
 package mozilla.components.browser.session.engine
 
 import android.graphics.Bitmap
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -390,6 +391,24 @@ class EngineObserverTest {
         assertEquals(true, session.fullScreenMode)
         observer.onFullScreenChange(false)
         assertEquals(false, session.fullScreenMode)
+    }
+
+    @Test
+    fun engineObserverNotifiesMetaViewportFitChange() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT,
+            session.layoutInDisplayCutoutMode)
+        observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            session.layoutInDisplayCutoutMode)
+        observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER,
+            session.layoutInDisplayCutoutMode)
+        observer.onMetaViewportFitChanged(123)
+        assertEquals(123, session.layoutInDisplayCutoutMode)
     }
 
     @Test
