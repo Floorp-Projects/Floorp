@@ -91,15 +91,17 @@ add_test(() => {
   var ch = make_channel(resource_url);
   ch.asyncOpen(
     new ChannelListener(function(aRequest, aData) {
-      Assert.ok(hit_server);
-      Assert.equal(
-        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
-        304
-      );
-      Assert.ok(!cache_storage.exists(make_uri(resource_url), ""));
-      Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
+      syncWithCacheIOThread(() => {
+        Assert.ok(hit_server);
+        Assert.equal(
+          aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+          304
+        );
+        Assert.ok(!cache_storage.exists(make_uri(resource_url), ""));
+        Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
 
-      run_next_test();
+        run_next_test();
+      }, true);
     }, null)
   );
 });
@@ -115,14 +117,16 @@ add_test(() => {
   var ch = make_channel(resource_url);
   ch.asyncOpen(
     new ChannelListener(function(aRequest, aData) {
-      Assert.ok(hit_server);
-      Assert.equal(
-        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
-        200
-      );
-      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+      syncWithCacheIOThread(() => {
+        Assert.ok(hit_server);
+        Assert.equal(
+          aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+          200
+        );
+        Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
 
-      check_cached_data(response_body, run_next_test);
+        check_cached_data(response_body, run_next_test);
+      }, true);
     }, null)
   );
 });
@@ -139,17 +143,19 @@ add_test(() => {
   var ch = make_channel(resource_url);
   ch.asyncOpen(
     new ChannelListener(function(aRequest, aData) {
-      Assert.ok(hit_server);
-      Assert.equal(
-        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
-        304
-      );
-      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
-      Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
-      Assert.equal(aData, "");
+      syncWithCacheIOThread(() => {
+        Assert.ok(hit_server);
+        Assert.equal(
+          aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+          304
+        );
+        Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+        Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
+        Assert.equal(aData, "");
 
-      // Check the cache data is not changed
-      check_cached_data(cached_body, run_next_test);
+        // Check the cache data is not changed
+        check_cached_data(cached_body, run_next_test);
+      }, true);
     }, null)
   );
 });
@@ -164,18 +170,20 @@ add_test(() => {
   var ch = make_channel(resource_url);
   ch.asyncOpen(
     new ChannelListener(function(aRequest, aData) {
-      Assert.ok(hit_server);
-      Assert.equal(
-        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
-        200
-      );
-      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+      syncWithCacheIOThread(() => {
+        Assert.ok(hit_server);
+        Assert.equal(
+          aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+          200
+        );
+        Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
 
-      // Check the cache data is updated
-      check_cached_data(response_body, () => {
-        run_next_test();
-        httpserver.stop(do_test_finished);
-      });
+        // Check the cache data is updated
+        check_cached_data(response_body, () => {
+          run_next_test();
+          httpserver.stop(do_test_finished);
+        });
+      }, true);
     }, null)
   );
 });
