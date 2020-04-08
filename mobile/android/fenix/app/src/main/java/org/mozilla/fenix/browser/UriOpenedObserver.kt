@@ -4,62 +4,32 @@
 
 package org.mozilla.fenix.browser
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ads.AdsTelemetry
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 
 class UriOpenedObserver(
-    private val context: Context,
     private val owner: LifecycleOwner,
     private val sessionManager: SessionManager,
-    private val metrics: MetricController
+    metrics: MetricController,
+    ads: AdsTelemetry
 ) : SessionManager.Observer {
 
     constructor(activity: FragmentActivity) : this(
         activity,
-        activity,
         activity.components.core.sessionManager,
-        activity.metrics
+        activity.metrics,
+        activity.components.core.ads
     )
 
-    /**
-     * Currently, [Session.Observer.onLoadingStateChanged] is called multiple times the first
-     * time a new session loads a page. This is inflating our telemetry numbers, so we need to
-     * handle it, but we will be able to remove this code when [onLoadingStateChanged] has
-     * been fixed.
-     *
-     * See Fenix #3676
-     * See AC https://github.com/mozilla-mobile/android-components/issues/4795
-     * TODO remove this class after AC #4795 has been fixed
-     */
-    private class TemporaryFix {
-        var eventSentFor: String? = null
-
-        fun shouldSendEvent(newUrl: String): Boolean = eventSentFor != newUrl
-    }
-
     @VisibleForTesting
-    internal val singleSessionObserver = object : Session.Observer {
-        private var urlLoading: String? = null
-
-        private val temporaryFix = TemporaryFix()
-
-        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-            if (loading) {
-                urlLoading = session.url
-            } else if (urlLoading != null && !session.private && temporaryFix.shouldSendEvent(session.url)) {
-                temporaryFix.eventSentFor = session.url
-                metrics.track(Event.UriOpened)
-            }
-        }
-    }
+    internal val singleSessionObserver = TelemetrySessionObserver(metrics, ads)
 
     init {
         sessionManager.register(this, owner)

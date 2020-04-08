@@ -96,6 +96,18 @@ class AdsTelemetry(private val metrics: MetricController) {
             })
     }
 
+    fun trackAdClickedMetric(sessionUrl: String?, urlPath: List<String>) {
+        if (sessionUrl == null) {
+            return
+        }
+        val provider = getProviderForUrl(sessionUrl)
+        provider?.let {
+            if (it.containsAds(urlPath)) {
+                metrics.track(Event.SearchAdClicked(it.name))
+            }
+        }
+    }
+
     private fun getProviderForUrl(url: String): SearchProviderModel? {
         for (provider in providerList) {
             if (Regex(provider.regexp).containsMatchIn(url)) {
