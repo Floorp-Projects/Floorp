@@ -9,9 +9,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd
           target-tasks-method: nightly
-      when:
-          - {hour: 6, minute: 0}
-          - {hour: 18, minute: 0}
+      when: [] # XXX Nightlies are temporarily disabled until Google Play catches up
     - name: fennec-beta
       job:
           type: decision-task
