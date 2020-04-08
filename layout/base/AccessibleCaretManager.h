@@ -230,7 +230,7 @@ class AccessibleCaretManager {
   // See the mRefCnt assertions in AccessibleCaretEventHub.
   //
   // Returns whether mPresShell we're holding is still valid.
-  MOZ_MUST_USE MOZ_CAN_RUN_SCRIPT bool FlushLayout();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT bool FlushLayout();
 
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;

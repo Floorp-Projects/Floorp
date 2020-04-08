@@ -118,7 +118,7 @@ class MOZ_RAII AutoReferenceChainGuard {
    * If it returns false then an error message will be reported to the DevTools
    * console (only once).
    */
-  MOZ_MUST_USE bool Reference() {
+  [[nodiscard]] bool Reference() {
     if (MOZ_UNLIKELY(*mFrameInUse)) {
       mBrokeReference = true;
       ReportErrorToConsole();
