@@ -74,7 +74,7 @@ NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowGroupFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-int32_t nsTableRowGroupFrame::GetRowCount() {
+int32_t nsTableRowGroupFrame::GetRowCount() const {
 #ifdef DEBUG
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(
@@ -87,7 +87,7 @@ int32_t nsTableRowGroupFrame::GetRowCount() {
   return mFrames.GetLength();
 }
 
-int32_t nsTableRowGroupFrame::GetStartRowIndex() {
+int32_t nsTableRowGroupFrame::GetStartRowIndex() const {
   int32_t result = -1;
   if (mFrames.NotEmpty()) {
     NS_ASSERTION(mFrames.FirstChild()->IsTableRowFrame(),
