@@ -8,6 +8,9 @@
 #include "XRNativeOriginViewer.h"
 #include "XRNativeOriginTracker.h"
 
+#include "mozilla/dom/Gamepad.h"
+#include "mozilla/dom/GamepadManager.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -102,7 +105,17 @@ nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
   return profile;
 }
 
-XRInputSource::XRInputSource(nsISupports* aParent) : mParent(aParent) {}
+XRInputSource::XRInputSource(nsISupports* aParent)
+ : mParent(aParent),
+   mGamepad(nullptr),
+   mIndex(-1) {}
+
+XRInputSource::~XRInputSource() {
+  mTargetRaySpace = nullptr;
+  mGripSpace = nullptr;
+  mGamepad = nullptr;
+  mozilla::DropJSObjects(this);
+}
 
 JSObject* XRInputSource::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -130,8 +143,7 @@ void XRInputSource::GetProfiles(nsTArray<nsString>& aResult) {
 }
 
 Gamepad* XRInputSource::GetGamepad() {
-  // TODO (Bug 1617023): Implement Gamepad for XRInputSource.
-  return nullptr;
+  return mGamepad;
 }
 
 void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
@@ -186,13 +198,50 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   }
   mTargetRaySpace = new XRSpace(aSession->GetParentObject(), aSession, nativeOriginTargetRay);
   mGripSpace = new XRSpace(aSession->GetParentObject(), aSession, nativeOriginGrip);
+  const uint32_t gamepadId = displayInfo.mDisplayID * kVRControllerMaxCount + aIndex;
+  const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(gamepadId, GamepadServiceType::VR);
+  mGamepad = new Gamepad(mParent, NS_ConvertASCIItoUTF16(""), -1, hashKey, GamepadMappingType::Xr_standard,
+    controllerState.hand, displayInfo.mDisplayID, controllerState.numButtons, controllerState.numAxes,
+    controllerState.numHaptics, 0, 0);
   mIndex = aIndex;
 }
 
 void XRInputSource::SetGamepadIsConnected(bool aConnected) {
+  mGamepad->SetConnected(aConnected);
 }
 
 void XRInputSource::Update(XRSession* aSession) {
+  MOZ_ASSERT(aSession && mIndex >= 0 && mGamepad);
+
+  gfx::VRDisplayClient* displayClient = aSession->GetDisplayClient();
+  if (!displayClient) {
+    MOZ_ASSERT(displayClient);
+    return;
+  }
+  const gfx::VRDisplayInfo& displayInfo = displayClient->GetDisplayInfo();
+  const gfx::VRControllerState& controllerState = displayInfo.mControllerState[mIndex];
+  MOZ_ASSERT(controllerState.controllerName[0] != '\0');
+
+  // Update button values.
+  nsTArray<RefPtr<GamepadButton>> buttons;
+  mGamepad->GetButtons(buttons);
+  for (uint32_t i = 0; i < controllerState.numButtons; ++i) {
+    const bool pressed = controllerState.buttonPressed & (1ULL << i);
+    const bool touched = controllerState.buttonTouched & (1ULL << i);
+
+    if (buttons[i]->Pressed() != pressed || buttons[i]->Touched() != touched ||
+      buttons[i]->Value() != controllerState.triggerValue[i]) {
+      mGamepad->SetButton(i, pressed, touched, controllerState.triggerValue[i]);
+    }
+  }
+  // Update axis values.
+  nsTArray<double> axes;
+  mGamepad->GetAxes(axes);
+  for (uint32_t i = 0; i < controllerState.numAxes; ++i) {
+    if (axes[i] != controllerState.axisValue[i]) {
+      mGamepad->SetAxis(i, controllerState.axisValue[i]);
+    }
+  }
 }
 
 int32_t XRInputSource::GetIndex() {
