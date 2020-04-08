@@ -10,6 +10,7 @@
 <style id="testbench"></style>
 <script>
   SpecialPowers.wrap(window).docShell.cssErrorReportingEnabled = true;
+  // Tests that apply to all types of style sheets
   var tests = [
     {
       css: "@unknown {}",
@@ -118,6 +119,14 @@
     },
   ];
 
+  // Tests that apply only to constructed style sheets
+  var constructedSheetTests = [
+    {
+      css: '@import url("sheet.css");',
+      error: "@import rules are not yet valid in constructed stylesheets."
+    }
+  ];
+
   function assertMessages(messages, action) {
     return new Promise(resolve => {
       SimpleTest.expectConsoleMessages(action, messages, resolve);
@@ -129,6 +138,12 @@
       let messages = [ { cssSelectors, errorMessage: error } ];
       await assertMessages(messages, () => { testbench.innerHTML = css });
       await assertMessages(messages, () => { new CSSStyleSheet().replaceSync(css) });
+      await assertMessages(messages, async () => { await new CSSStyleSheet().replace(css) });
+    }
+    for (let {css, cssSelectors = "", error} of constructedSheetTests) {
+      let messages = [ { cssSelectors, errorMessage: error } ];
+      await assertMessages(messages, () => { new CSSStyleSheet().replaceSync(css) });
+      await assertMessages(messages, async () => { await new CSSStyleSheet().replace(css) });
     }
   }
 
