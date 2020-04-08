@@ -110,12 +110,12 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
 
   /** return the number of child rows (not necessarily == number of child
    * frames) */
-  int32_t GetRowCount();
+  int32_t GetRowCount() const;
 
   /** return the table-relative row index of the first row in this rowgroup.
    * if there are no rows, -1 is returned.
    */
-  int32_t GetStartRowIndex();
+  int32_t GetStartRowIndex() const;
 
   /** Adjust the row indices of all rows  whose index is >= aRowIndex.
    * @param aRowIndex   - start adjusting with this index
