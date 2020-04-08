@@ -59,6 +59,17 @@
       };
     }
 
+    static get markup() {
+      // TODO: Bug 1534799 - Convert string to Fluent and use manual DOM construction
+      return `
+      <image class="textbox-search-clear" label="&searchTextBox.clear.label;"/>
+      `;
+    }
+
+    static get entities() {
+      return ["chrome://global/locale/textcontext.dtd"];
+    }
+
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;
@@ -84,13 +95,7 @@
       searchBtn.className = "textbox-search-icon";
       searchBtn.addEventListener("click", e => this._iconClick(e));
 
-      // TODO: Bug 1534799 - Convert string to Fluent and use manual DOM construction
-      let clearBtn = MozXULElement.parseXULToFragment(
-        `
-      <image class="textbox-search-clear" label="&searchTextBox.clear.label;"/>
-    `,
-        ["chrome://global/locale/textcontext.dtd"]
-      );
+      let clearBtn = this.constructor.fragment;
       clearBtn = this._searchClearIcon = clearBtn.querySelector(
         ".textbox-search-clear"
       );

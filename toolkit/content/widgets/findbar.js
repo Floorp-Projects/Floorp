@@ -38,28 +38,9 @@
   ]);
   const TOPIC_MAC_APP_ACTIVATE = "mac_app_activate";
 
-  class MozFindbar extends XULElement {
-    constructor() {
-      super();
-      MozXULElement.insertFTLIfNeeded("toolkit/main-window/findbar.ftl");
-      this.destroy = this.destroy.bind(this);
-
-      // We have to guard against `this.close` being |null| due to an unknown
-      // issue, which is tracked in bug 957999.
-      this.addEventListener(
-        "keypress",
-        event => {
-          if (event.keyCode == event.DOM_VK_ESCAPE) {
-            if (this.close) {
-              this.close();
-            }
-            event.preventDefault();
-          }
-        },
-        true
-      );
-
-      this.content = MozXULElement.parseXULToFragment(`
+  class MozFindbar extends MozXULElement {
+    static get markup() {
+      return `
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
           <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
@@ -86,7 +67,28 @@
       </hbox>
       <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon"
         data-l10n-id="findbar-find-button-close" oncommand="close();" />
-    `);
+      `;
+    }
+
+    constructor() {
+      super();
+      MozXULElement.insertFTLIfNeeded("toolkit/main-window/findbar.ftl");
+      this.destroy = this.destroy.bind(this);
+
+      // We have to guard against `this.close` being |null| due to an unknown
+      // issue, which is tracked in bug 957999.
+      this.addEventListener(
+        "keypress",
+        event => {
+          if (event.keyCode == event.DOM_VK_ESCAPE) {
+            if (this.close) {
+              this.close();
+            }
+            event.preventDefault();
+          }
+        },
+        true
+      );
     }
 
     connectedCallback() {
@@ -95,7 +97,7 @@
       // findbar into a new window).
       this.setAttribute("noanim", "true");
       this.hidden = true;
-      this.appendChild(document.importNode(this.content, true));
+      this.appendChild(this.constructor.fragment);
 
       /**
        * Please keep in sync with toolkit/modules/FindBarContent.jsm

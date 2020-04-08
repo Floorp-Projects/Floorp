@@ -8,6 +8,16 @@
 // leaking to window scope.
 {
   class MozCheckbox extends MozElements.BaseText {
+    static get markup() {
+      return `
+      <image class="checkbox-check"/>
+      <hbox class="checkbox-label-box" flex="1">
+        <image class="checkbox-icon"/>
+        <label class="checkbox-label" flex="1"/>
+      </hbox>
+      `;
+    }
+
     constructor() {
       super();
 
@@ -41,23 +51,8 @@
         return;
       }
 
-      if (!MozCheckbox.contentFragment) {
-        let content = `
-        <image class="checkbox-check"/>
-        <hbox class="checkbox-label-box" flex="1">
-          <image class="checkbox-icon"/>
-          <label class="checkbox-label" flex="1"/>
-        </hbox>
-      `;
-        MozCheckbox.contentFragment = MozXULElement.parseXULToFragment(content);
-      }
-
       this.textContent = "";
-      let fragment = this.ownerDocument.importNode(
-        MozCheckbox.contentFragment,
-        true
-      );
-      this.appendChild(fragment);
+      this.appendChild(this.constructor.fragment);
 
       this.initializeAttributeInheritance();
     }
