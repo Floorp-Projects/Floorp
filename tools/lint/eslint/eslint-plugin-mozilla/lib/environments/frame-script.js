@@ -34,6 +34,7 @@ module.exports = {
     RPMGetFormatURLPref: false,
     RPMIsWindowPrivate: false,
     RPMSendAsyncMessage: false,
+    RPMSendQuery: false,
     RPMAddMessageListener: false,
     RPMRecordTelemetryEvent: false,
     RPMAddToHistogram: false,
