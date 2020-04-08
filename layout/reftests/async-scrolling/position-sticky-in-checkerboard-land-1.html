@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="2500">
+
+<title>position:sticky item that's still visible while the rest of the scrollframe contents are checkerboarded</title>
+
+<style>
+html {
+  scrollbar-width: none;
+}
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+#sticky_container {
+  margin-top: 100px;
+  height: 3000px;
+  background-image: linear-gradient(green, blue);
+}
+
+#sticky {
+  position: sticky;
+  top: 0;
+  height: 100px;
+  background-color: green;
+}
+
+</style>
+
+<div id="sticky_container">
+  <div id="sticky"></div>
+</div>
