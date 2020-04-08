@@ -42,7 +42,7 @@ async function setupPrefsAndRecentWindowBehavior() {
 
 async function portalDetected() {
   Services.obs.notifyObservers(null, "captive-portal-login");
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return cps.state == cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal detected.");
 }
@@ -52,7 +52,7 @@ async function freePortal(aSuccess) {
     null,
     "captive-portal-login-" + (aSuccess ? "success" : "abort")
   );
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return cps.state != cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal freed.");
 }
@@ -81,7 +81,7 @@ async function focusWindowAndWaitForPortalUI(aLongRecheck, win) {
 
   // After a new window is opened, CaptivePortalWatcher asks for a recheck, and
   // waits for it to complete. We need to manually tell it a recheck completed.
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return win.CaptivePortalWatcher._waitingForRecheck;
   }, "Waiting for CaptivePortalWatcher to trigger a recheck.");
   Services.obs.notifyObservers(null, "captive-portal-check-complete");
