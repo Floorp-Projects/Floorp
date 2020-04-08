@@ -36,8 +36,9 @@ class nsDocumentFragment;
 class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
-class nsTableWrapperFrame;
 class nsRange;
+class nsStaticAtom;
+class nsTableWrapperFrame;
 
 namespace mozilla {
 class AlignStateAtSelection;
@@ -182,7 +183,8 @@ class HTMLEditor final : public TextEditor,
    * @param aMixed      true if there is more than one font color
    * @param aOutColor   Color string. "" is returned for none.
    */
-  nsresult GetBackgroundColorState(bool* aMixed, nsAString& aOutColor);
+  MOZ_CAN_RUN_SCRIPT nsresult GetBackgroundColorState(bool* aMixed,
+                                                      nsAString& aOutColor);
 
   /**
    * PasteNoFormatting() pastes content in clipboard without any style
@@ -416,7 +418,8 @@ class HTMLEditor final : public TextEditor,
    * returns the deepest absolutely positioned container of the selection
    * if it exists or null.
    */
-  already_AddRefed<Element> GetAbsolutelyPositionedSelectionContainer() const;
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
+  GetAbsolutelyPositionedSelectionContainer() const;
 
   Element* GetPositionedElement() const { return mAbsolutelyPositionedObject; }
 
@@ -438,7 +441,7 @@ class HTMLEditor final : public TextEditor,
    * @return         the z-index of the element
    * @param aElement [IN] the element.
    */
-  int32_t GetZIndex(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT int32_t GetZIndex(Element& aElement);
 
   /**
    * adds aChange to the z-index of the currently positioned element.
@@ -468,34 +471,33 @@ class HTMLEditor final : public TextEditor,
       nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue,
       nsIPrincipal* aPrincipal = nullptr);
 
-  nsresult GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
-                             const nsAString& aValue, bool* aFirst, bool* aAny,
-                             bool* aAll) const;
-  nsresult GetInlinePropertyWithAttrValue(nsAtom* aProperty, nsAtom* aAttr,
-                                          const nsAString& aValue, bool* aFirst,
-                                          bool* aAny, bool* aAll,
-                                          nsAString& outValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlineProperty(
+      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
+      bool* aFirst, bool* aAny, bool* aAll) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyWithAttrValue(
+      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
+      bool* aFirst, bool* aAny, bool* aAll, nsAString& outValue);
 
   /**
    * RemoveInlinePropertyAsAction() removes a property which changes inline
    * style of text.  E.g., bold, italic, super and sub.
    *
-   * @param aProperty   Tag name whcih represents the inline style you want to
-   *                    remove.  E.g., nsGkAtoms::strong, nsGkAtoms::b, etc.
-   *                    If nsGkAtoms::href, <a> element which has href
-   *                    attribute will be removed.
-   *                    If nsGkAtoms::name, <a> element which has non-empty
-   *                    name attribute will be removed.
-   * @param aAttribute  If aProperty is nsGkAtoms::font, aAttribute should be
-   *                    nsGkAtoms::fase, nsGkAtoms::size, nsGkAtoms::color or
-   *                    nsGkAtoms::bgcolor.  Otherwise, set nullptr.
+   * @param aHTMLProperty   Tag name whcih represents the inline style you want
+   *                        to remove.  E.g., nsGkAtoms::strong, nsGkAtoms::b,
+   *                        etc.  If nsGkAtoms::href, <a> element which has
+   *                        href attribute will be removed.
+   *                        If nsGkAtoms::name, <a> element which has non-empty
+   *                        name attribute will be removed.
+   * @param aAttribute  If aHTMLProperty is nsGkAtoms::font, aAttribute should
+   *                    be nsGkAtoms::fase, nsGkAtoms::size, nsGkAtoms::color
+   *                    or nsGkAtoms::bgcolor.  Otherwise, set nullptr.
    *                    Must not use nsGkAtoms::_empty here.
    * @param aPrincipal  Set subject principal if it may be called by JS.  If
    *                    set to nullptr, will be treated as called by system.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  RemoveInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute,
-                               nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertyAsAction(
+      nsStaticAtom& aHTMLProperty, nsStaticAtom* aAttribute,
+      nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult
   RemoveAllInlinePropertiesAsAction(nsIPrincipal* aPrincipal = nullptr);
@@ -531,7 +533,8 @@ class HTMLEditor final : public TextEditor,
    *                            Selection instance has gone, first range
    *                            Selection is broken.
    */
-  nsresult GetFontColorState(bool* aIsMixed, nsAString& aColor);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  GetFontColorState(bool* aIsMixed, nsAString& aColor);
 
   /**
    * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
@@ -889,9 +892,8 @@ class HTMLEditor final : public TextEditor,
    *                      the element
    * @param aReturn  [OUT] the new z-index of the element
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeChangeElementZIndex(Element& aElement,
-                                                          int32_t aChange,
-                                                          int32_t* aReturn);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RelativeChangeElementZIndex(
+      Element& aElement, int32_t aChange, int32_t* aReturn);
 
   virtual bool IsBlockNode(nsINode* aNode) const override;
   using EditorBase::IsBlockNode;
@@ -1199,10 +1201,9 @@ class HTMLEditor final : public TextEditor,
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
 
-  nsresult GetInlinePropertyBase(nsAtom& aProperty, nsAtom* aAttribute,
-                                 const nsAString* aValue, bool* aFirst,
-                                 bool* aAny, bool* aAll,
-                                 nsAString* outValue) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(
+      nsAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
+      bool* aFirst, bool* aAny, bool* aAll, nsAString* outValue) const;
 
   /**
    * ClearStyleAt() splits parent elements to remove the specified style.
@@ -3427,21 +3428,21 @@ class HTMLEditor final : public TextEditor,
    * RemoveInlinePropertyInternal() removes specified style from `mTypeInState`
    * if `Selection` is collapsed.  Otherwise, removing the style.
    *
-   * @param aProperty           nullptr if you want to remove all inline styles.
+   * @param aHTMLProperty       nullptr if you want to remove all inline styles.
    *                            Otherwise, one of the presentation tag names
    *                            which we support in style editor.
-   * @param aAttribute          For some aProperty values, need to be set to
+   * @param aAttribute          For some aHTMLProperty values, need to be set to
    *                            its attribute name.  Otherwise, nullptr.
    * @param aRemoveRelatedElements      If Yes, this method removes different
    *                                    name's elements in the block if
-   *                                    necessary.  For example, if aProperty
-   *                                    is nsGkAtoms::b, `<strong>` elements
-   *                                    are also removed.
+   *                                    necessary.  For example, if
+   *                                    aHTMLProperty is nsGkAtoms::b,
+   *                                    `<strong>` elements are also removed.
    */
   enum class RemoveRelatedElements { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  RemoveInlinePropertyInternal(nsAtom* aProperty, nsAtom* aAttribute,
-                               RemoveRelatedElements aRemoveRelatedElements);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertyInternal(
+      nsStaticAtom* aHTMLProperty, nsStaticAtom* aAttribute,
+      RemoveRelatedElements aRemoveRelatedElements);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
@@ -3453,8 +3454,8 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult ReplaceHeadContentsWithSourceWithTransaction(
       const nsAString& aSourceToInsert);
 
-  nsresult GetCSSBackgroundColorState(bool* aMixed, nsAString& aOutColor,
-                                      bool aBlockLevel);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetCSSBackgroundColorState(
+      bool* aMixed, nsAString& aOutColor, bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
   nsresult GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode);
@@ -4125,10 +4126,14 @@ class HTMLEditor final : public TextEditor,
    * aProperty/aAttribute of parent block can be removed from aContent with
    * creating `<span>` element.  Note that this does NOT check whether the
    * specified style comes from parent block or not.
+   * XXX This may destroy the editor, but using `Result<bool, nsresult>`
+   *     is not reasonable because code for accessing the result becomes
+   *     messy.  However, anybody must forget to check `Destroyed()` after
+   *     calling this.  Which is the way to smart to make every caller
+   *     must check the editor state?
    */
-  static bool IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
-                                                       nsAtom* aProperty,
-                                                       nsAtom* aAttribute);
+  MOZ_CAN_RUN_SCRIPT bool IsRemovableParentStyleWithNewSpanElement(
+      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute) const;
 
   /**
    * XXX These methods seem odd and except the only caller,
@@ -4222,10 +4227,10 @@ class HTMLEditor final : public TextEditor,
    * Returns the offset of an element's frame to its absolute containing block.
    */
   nsresult GetElementOrigin(Element& aElement, int32_t& aX, int32_t& aY);
-  nsresult GetPositionAndDimensions(Element& aElement, int32_t& aX, int32_t& aY,
-                                    int32_t& aW, int32_t& aH,
-                                    int32_t& aBorderLeft, int32_t& aBorderTop,
-                                    int32_t& aMarginLeft, int32_t& aMarginTop);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetPositionAndDimensions(
+      Element& aElement, int32_t& aX, int32_t& aY, int32_t& aW, int32_t& aH,
+      int32_t& aBorderLeft, int32_t& aBorderTop, int32_t& aMarginLeft,
+      int32_t& aMarginTop);
 
   bool IsInObservedSubtree(nsIContent* aChild);
 
@@ -4237,7 +4242,7 @@ class HTMLEditor final : public TextEditor,
    * while this is running, this returns error.  So, callers shouldn't
    * keep handling the resizers if this returns error.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult SetAllResizersPosition();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetAllResizersPosition();
 
   /**
    * Shows active resizers around an element's frame
@@ -4272,10 +4277,9 @@ class HTMLEditor final : public TextEditor,
    * @param aElementX           Left of aElement.
    * @param aElementY           Top of aElement.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult SetShadowPosition(Element& aShadowElement,
-                                                Element& aElement,
-                                                int32_t aElementLeft,
-                                                int32_t aElementTop);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetShadowPosition(Element& aShadowElement, Element& aElement,
+                    int32_t aElementLeft, int32_t aElementTop);
 
   ManualNACPtr CreateResizingInfo(nsIContent& aParentContent);
   MOZ_CAN_RUN_SCRIPT nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
@@ -4354,8 +4358,9 @@ class HTMLEditor final : public TextEditor,
   void SnapToGrid(int32_t& newX, int32_t& newY);
   nsresult GrabberClicked();
   MOZ_CAN_RUN_SCRIPT nsresult EndMoving();
-  nsresult GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
-                                                        nsAString& aReturn);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
+                                               nsAString& aReturn);
 
   /**
    * Shows inline table editing UI around a <table> element which contains
@@ -4654,7 +4659,8 @@ class MOZ_STACK_CLASS ListItemElementSelectionState final {
 class MOZ_STACK_CLASS AlignStateAtSelection final {
  public:
   AlignStateAtSelection() = delete;
-  AlignStateAtSelection(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT AlignStateAtSelection(HTMLEditor& aHTMLEditor,
+                                           ErrorResult& aRv);
 
   nsIHTMLEditor::EAlignment AlignmentAtSelectionStart() const {
     return mFirstAlign;

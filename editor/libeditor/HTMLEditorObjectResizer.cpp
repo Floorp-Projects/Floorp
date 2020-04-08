@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/HTMLEditor.h"
+#include "HTMLEditor.h"
 
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
@@ -141,13 +141,28 @@ nsresult HTMLEditor::SetAllResizersPosition() {
   float resizerWidth, resizerHeight;
   RefPtr<nsAtom> dummyUnit;
   DebugOnly<nsresult> rvIgnored = NS_OK;
-  rvIgnored = CSSEditUtils::GetComputedProperty(*mTopLeftHandle,
+  OwningNonNull<Element> topLeftHandle = *mTopLeftHandle.get();
+  // XXX Do we really need to computed value rather than specified value?
+  //     Because it's an anonymous node.
+  rvIgnored = CSSEditUtils::GetComputedProperty(*topLeftHandle,
                                                 *nsGkAtoms::width, value);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
+    return NS_ERROR_FAILURE;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "CSSEditUtils::GetComputedProperty(nsGkAtoms::width) "
                        "failed, but ignored");
-  rvIgnored = CSSEditUtils::GetComputedProperty(*mTopLeftHandle,
+  rvIgnored = CSSEditUtils::GetComputedProperty(*topLeftHandle,
                                                 *nsGkAtoms::height, value);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
+    return NS_ERROR_FAILURE;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "CSSEditUtils::GetComputedProperty(nsGkAtoms::height) "
                        "failed, but ignored");
@@ -164,46 +179,69 @@ nsresult HTMLEditor::SetAllResizersPosition() {
   // FYI: Note that only checking if mTopLeftHandle is replaced is enough.
   //      We're may be in hot path if user resizes an element a lot.  So,
   //      we should just add-ref mTopLeftHandle.
-  RefPtr<Element> topLeftHandle = mTopLeftHandle.get();
   SetAnonymousElementPosition(x - rw, y - rh, topLeftHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> topHandle = mTopHandle.get();
   SetAnonymousElementPosition(x + w / 2 - rw, y - rh, topHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> topRightHandle = mTopRightHandle.get();
   SetAnonymousElementPosition(x + w - rw - 1, y - rh, topRightHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<Element> leftHandle = mLeftHandle.get();
   SetAnonymousElementPosition(x - rw, y + h / 2 - rh, leftHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> rightHandle = mRightHandle.get();
   SetAnonymousElementPosition(x + w - rw - 1, y + h / 2 - rh, rightHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<Element> bottomLeftHandle = mBottomLeftHandle.get();
   SetAnonymousElementPosition(x - rw, y + h - rh - 1, bottomLeftHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> bottomHandle = mBottomHandle.get();
   SetAnonymousElementPosition(x + w / 2 - rw, y + h - rh - 1, bottomHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> bottomRightHandle = mBottomRightHandle.get();
   SetAnonymousElementPosition(x + w - rw - 1, y + h - rh - 1,
                               bottomRightHandle);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
@@ -231,13 +269,17 @@ nsresult HTMLEditor::RefreshResizersInternal() {
     return NS_OK;
   }
 
+  OwningNonNull<Element> resizedObject = *mResizedObject;
   nsresult rv = GetPositionAndDimensions(
-      *mResizedObject, mResizedObjectX, mResizedObjectY, mResizedObjectWidth,
+      resizedObject, mResizedObjectX, mResizedObjectY, mResizedObjectWidth,
       mResizedObjectHeight, mResizedObjectBorderLeft, mResizedObjectBorderTop,
       mResizedObjectMarginLeft, mResizedObjectMarginTop);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::GetPositionAndDimensions() failed");
     return rv;
+  }
+  if (NS_WARN_IF(resizedObject != mResizedObject)) {
+    return NS_ERROR_FAILURE;
   }
 
   rv = SetAllResizersPosition();
@@ -245,14 +287,19 @@ nsresult HTMLEditor::RefreshResizersInternal() {
     NS_WARNING("HTMLEditor::SetAllResizersPosition() failed");
     return rv;
   }
+  if (NS_WARN_IF(resizedObject != mResizedObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
   MOZ_ASSERT(
       mResizingShadow,
       "SetAllResizersPosition() should return error if resizers are hidden");
   RefPtr<Element> resizingShadow = mResizingShadow.get();
-  RefPtr<Element> resizedObject = mResizedObject;
-  rv = SetShadowPosition(*resizingShadow, *resizedObject, mResizedObjectX,
+  rv = SetShadowPosition(*resizingShadow, resizedObject, mResizedObjectX,
                          mResizedObjectY);
+  if (NS_WARN_IF(resizedObject != mResizedObject)) {
+    return NS_ERROR_FAILURE;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::SetShadowPosition() failed");
   return rv;
@@ -898,6 +945,9 @@ nsresult HTMLEditor::SetShadowPosition(Element& aShadowElement,
                                               : mPositioningShadow.get();
 
   SetAnonymousElementPosition(aElementX, aElementY, &aShadowElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(&aShadowElement != handlingShadowElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -910,6 +960,9 @@ nsresult HTMLEditor::SetShadowPosition(Element& aShadowElement,
   aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::src, imageSource);
   nsresult rv = aShadowElement.SetAttr(kNameSpaceID_None, nsGkAtoms::src,
                                        imageSource, true);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_FAILED(rv)) {
     NS_WARNING("Element::SetAttr(nsGkAtoms::src) failed");
     return NS_ERROR_FAILURE;
