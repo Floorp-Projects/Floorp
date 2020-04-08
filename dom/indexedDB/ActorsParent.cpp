@@ -6876,6 +6876,7 @@ class FactoryOp
  public:
   void NoteDatabaseBlocked(Database* aDatabase);
 
+  void NoteDatabaseClosed(Database* aDatabase, bool aActorDestroyed);
   virtual void NoteDatabaseClosed(Database* aDatabase) = 0;
 
 #ifdef DEBUG
@@ -22050,7 +22051,44 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   return NS_OK;
 }
 
-void OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
+void FactoryOp::NoteDatabaseClosed(Database* const aDatabase,
+                                   const bool aActorDestroyed) {
+  AssertIsOnOwningThread();
+
+  const bool lastMaybeBlockedDatabaseRemoved =
+      mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
+      mMaybeBlockedDatabases.IsEmpty();
+
+  if (lastMaybeBlockedDatabaseRemoved && !aActorDestroyed) {
+    WaitForTransactions();
+    return;
+  }
+
+  if (aActorDestroyed) {
+    // We are being called with an assumption that mWaitingFactoryOp holds
+    // a strong reference to us.
+    DatabaseActorInfo* info;
+    MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
+    MOZ_ASSERT(info->mWaitingFactoryOp == this);
+    RefPtr<OpenDatabaseOp> kungFuDeathGrip =
+        static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
+
+    if (lastMaybeBlockedDatabaseRemoved) {
+      info->mWaitingFactoryOp = nullptr;
+    }
+
+    IDB_REPORT_INTERNAL_ERR();
+    SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
+    // directly.
+
+    mState = State::SendingResults;
+    MOZ_ALWAYS_SUCCEEDS(Run());
+  }
+}
+
+void OpenDatabaseOp::NoteDatabaseClosed(Database* const aDatabase) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose ||
@@ -22067,43 +22105,8 @@ void OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
 
   MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
 
-  bool actorDestroyed = IsActorDestroyed() || mDatabase->IsActorDestroyed();
-
-  nsresult rv;
-  if (actorDestroyed) {
-    IDB_REPORT_INTERNAL_ERR();
-    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  } else {
-    rv = NS_OK;
-  }
-
-  // We are being called with an assumption that mWaitingFactoryOp holds
-  // a strong reference to us.
-  RefPtr<OpenDatabaseOp> kungFuDeathGrip;
-
-  if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
-      mMaybeBlockedDatabases.IsEmpty()) {
-    if (actorDestroyed) {
-      DatabaseActorInfo* info;
-      MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
-      MOZ_ASSERT(info->mWaitingFactoryOp == this);
-      kungFuDeathGrip =
-          static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
-      info->mWaitingFactoryOp = nullptr;
-    } else {
-      WaitForTransactions();
-    }
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    SetFailureCodeIfUnset(rv);
-
-    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
-    // directly.
-
-    mState = State::SendingResults;
-    MOZ_ALWAYS_SUCCEEDS(Run());
-  }
+  FactoryOp::NoteDatabaseClosed(
+      aDatabase, IsActorDestroyed() || mDatabase->IsActorDestroyed());
 }
 
 void OpenDatabaseOp::SendBlockedNotification() {
@@ -22832,48 +22835,12 @@ nsresult DeleteDatabaseOp::DispatchToWorkThread() {
   return NS_OK;
 }
 
-void DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
+void DeleteDatabaseOp::NoteDatabaseClosed(Database* const aDatabase) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
   MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
 
-  bool actorDestroyed = IsActorDestroyed();
-
-  nsresult rv;
-  if (actorDestroyed) {
-    IDB_REPORT_INTERNAL_ERR();
-    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  } else {
-    rv = NS_OK;
-  }
-
-  // We are being called with an assumption that mWaitingFactoryOp holds
-  // a strong reference to us.
-  RefPtr<OpenDatabaseOp> kungFuDeathGrip;
-
-  if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
-      mMaybeBlockedDatabases.IsEmpty()) {
-    if (actorDestroyed) {
-      DatabaseActorInfo* info;
-      MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
-      MOZ_ASSERT(info->mWaitingFactoryOp == this);
-      kungFuDeathGrip =
-          static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
-      info->mWaitingFactoryOp = nullptr;
-    } else {
-      WaitForTransactions();
-    }
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    SetFailureCodeIfUnset(rv);
-
-    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
-    // directly.
-
-    mState = State::SendingResults;
-    MOZ_ALWAYS_SUCCEEDS(Run());
-  }
+  FactoryOp::NoteDatabaseClosed(aDatabase, IsActorDestroyed());
 }
 
 void DeleteDatabaseOp::SendBlockedNotification() {
