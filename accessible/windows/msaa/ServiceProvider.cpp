@@ -11,8 +11,10 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "Relation.h"
+#include "RootAccessible.h"
 #include "uiaRawElmProvider.h"
 
+#include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/Preferences.h"
 
 #include "ISimpleDOM.h"
@@ -56,6 +58,22 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       {0x95, 0x21, 0x07, 0xed, 0x28, 0xfb, 0x07, 0x2e}};
   if (aGuidService == SID_IAccessibleContentDocument) {
     if (aIID != IID_IAccessible) return E_NOINTERFACE;
+
+    // If mAccessible is within an OOP iframe document, the top level document
+    // lives in a different process.
+    if (XRE_IsContentProcess()) {
+      RootAccessible* root = mAccessible->RootAccessible();
+      MOZ_ASSERT(root);
+      DocAccessibleChild* ipcDoc = root->IPCDoc();
+      if (ipcDoc) {
+        RefPtr<IAccessible> topDoc = ipcDoc->GetTopLevelDocIAccessible();
+        // topDoc will be null if this isn't an OOP iframe document.
+        if (topDoc) {
+          topDoc.forget(aInstancePtr);
+          return S_OK;
+        }
+      }
+    }
 
     Relation rel =
         mAccessible->RelationByType(RelationType::CONTAINING_TAB_PANE);

@@ -32,6 +32,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual ipc::IPCResult RecvEmulatedWindow(
       const WindowsHandle& aEmulatedWindowHandle,
       const IDispatchHolder& aEmulatedWindowCOMProxy) override;
+  virtual ipc::IPCResult RecvTopLevelDocCOMProxy(
+      const IAccessibleHolder& aCOMProxy) override;
   virtual ipc::IPCResult RecvRestoreFocus() override;
 
   HWND GetNativeWindowHandle() const;
@@ -40,6 +42,9 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   }
 
   IDispatch* GetParentIAccessible() const { return mParentProxy.get(); }
+  IAccessible* GetTopLevelDocIAccessible() const {
+    return mTopLevelDocProxy.get();
+  }
 
   bool SendEvent(const uint64_t& aID, const uint32_t& type);
   bool SendHideEvent(const uint64_t& aRootID, const bool& aFromUser);
@@ -351,6 +356,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   bool mIsRemoteConstructed;
   mscom::ProxyUniquePtr<IDispatch> mParentProxy;
   mscom::ProxyUniquePtr<IDispatch> mEmulatedWindowProxy;
+  mscom::ProxyUniquePtr<IAccessible> mTopLevelDocProxy;
   nsTArray<UniquePtr<DeferredEvent>> mDeferredEvents;
   HWND mEmulatedWindowHandle;
 };

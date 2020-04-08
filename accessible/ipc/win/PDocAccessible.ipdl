@@ -96,6 +96,7 @@ child:
   async ParentCOMProxy(IDispatchHolder aParentCOMProxy);
   async EmulatedWindow(WindowsHandle aEmulatedWindowHandle,
                        IDispatchHolder aEmulatedWindowCOMProxy);
+  async TopLevelDocCOMProxy(IAccessibleHolder aCOMProxy);
   /*
    * Called as a result of focus shifting from chrome to content
    * elements through keyboard navigation.
