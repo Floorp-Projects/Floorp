@@ -15,11 +15,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -503,5 +506,16 @@ public class GeckoResultTest {
         });
 
         waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void getOrAccept() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        final Method ai = GeckoResult.class.getDeclaredMethod("getOrAccept", GeckoResult.Consumer.class);
+        ai.setAccessible(true);
+
+        final AtomicBoolean ran = new AtomicBoolean(false);
+        ai.invoke(GeckoResult.fromValue(42), (GeckoResult.Consumer<Integer>) o -> ran.set(true));
+        assertThat("Should've ran", ran.get(), equalTo(true));
     }
 }

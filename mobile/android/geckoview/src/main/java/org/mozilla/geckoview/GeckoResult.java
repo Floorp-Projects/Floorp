@@ -435,6 +435,25 @@ public class GeckoResult<T> {
         return then(valueListener, exceptionListener);
     }
 
+    /* package */ @NonNull GeckoResult<Void> getOrAccept(@Nullable final Consumer<T> valueConsumer) {
+        return getOrAccept(valueConsumer, null);
+    }
+
+    /* package */ @NonNull GeckoResult<Void> getOrAccept(@Nullable final Consumer<T> valueConsumer,
+                                                         @Nullable final Consumer<Throwable> exceptionConsumer) {
+        if (haveValue() && valueConsumer != null) {
+            valueConsumer.accept(mValue);
+            return GeckoResult.fromValue(null);
+        }
+
+        if (haveError() && exceptionConsumer != null) {
+            exceptionConsumer.accept(mError);
+            return GeckoResult.fromValue(null);
+        }
+
+        return accept(valueConsumer, exceptionConsumer);
+    }
+
     /**
      * Adds listeners to be called when the {@link GeckoResult} is completed either with
      * a value or {@link Throwable}. Listeners will be invoked on the {@link Looper} returned from
