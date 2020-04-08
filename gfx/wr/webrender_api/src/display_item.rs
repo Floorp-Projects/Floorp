@@ -289,7 +289,7 @@ pub struct ScrollFrameDisplayItem {
     /// should be added to those display item coordinates in order to get a
     /// normalized value that is consistent across display lists.
     pub external_scroll_offset: LayoutVector2D,
-}
+} // IMPLICIT: complex_clips: Vec<ComplexClipRegion>
 
 /// A solid or an animating color to draw (may not actually be a rectangle due to complex clips)
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
