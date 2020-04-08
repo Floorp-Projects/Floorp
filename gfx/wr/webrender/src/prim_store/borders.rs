@@ -14,7 +14,7 @@ use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
-    PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData,
+    PrimitiveInstanceKind, PrimitiveOpacity,
     PrimitiveStore, InternablePrimitive,
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
@@ -146,7 +146,7 @@ pub type NormalBorderDataHandle = intern::Handle<NormalBorderPrim>;
 impl intern::Internable for NormalBorderPrim {
     type Key = NormalBorderKey;
     type StoreData = NormalBorderTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for NormalBorderPrim {
@@ -321,7 +321,7 @@ pub type ImageBorderDataHandle = intern::Handle<ImageBorder>;
 impl intern::Internable for ImageBorder {
     type Key = ImageBorderKey;
     type StoreData = ImageBorderTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for ImageBorder {

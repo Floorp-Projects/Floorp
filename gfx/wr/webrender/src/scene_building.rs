@@ -23,7 +23,7 @@ use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCacheInstance, ClusterFlags};
-use crate::prim_store::{PrimitiveInstance, PrimitiveSceneData};
+use crate::prim_store::PrimitiveInstance;
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{ScrollNodeAndClipChain, PictureIndex};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex};
@@ -1589,12 +1589,7 @@ impl<'a> SceneBuilder<'a> {
         let current_offset = self.current_offset(spatial_node_index);
         let interner = self.interners.as_mut();
         let prim_data_handle = interner
-            .intern(&prim_key, || {
-                PrimitiveSceneData {
-                    prim_size: info.rect.size,
-                    flags: info.flags,
-                }
-            });
+            .intern(&prim_key, || ());
 
         let instance_kind = P::make_instance_kind(
             prim_key,
@@ -2603,13 +2598,7 @@ impl<'a> SceneBuilder<'a> {
 
                         let shadow_prim_data_handle = self.interners
                             .picture
-                            .intern(&shadow_pic_key, || {
-                                PrimitiveSceneData {
-                                    prim_size: LayoutSize::zero(),
-                                    flags: PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                                }
-                            }
-                        );
+                            .intern(&shadow_pic_key, || ());
 
                         let shadow_prim_instance = PrimitiveInstance::new(
                             LayoutPoint::zero(),
@@ -4004,13 +3993,7 @@ fn create_prim_instance(
 
     let data_handle = interners
         .picture
-        .intern(&pic_key, || {
-            PrimitiveSceneData {
-                prim_size: LayoutSize::zero(),
-                flags,
-            }
-        }
-    );
+        .intern(&pic_key, || ());
 
     PrimitiveInstance::new(
         LayoutPoint::zero(),
@@ -4138,13 +4121,7 @@ fn create_tile_cache(
 
     let pic_data_handle = interners
         .picture
-        .intern(&pic_key, || {
-            PrimitiveSceneData {
-                prim_size: LayoutSize::zero(),
-                flags: PrimitiveFlags::IS_BACKFACE_VISIBLE,
-            }
-        }
-        );
+        .intern(&pic_key, || ());
 
     // Build a clip-chain for the tile cache, that contains any of the shared clips
     // we will apply when drawing the tiles. In all cases provided by Gecko, these
