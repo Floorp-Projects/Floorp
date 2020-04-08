@@ -8,6 +8,8 @@
 
 #include "mozilla/IntegerPrintfMacros.h"
 
+#include <type_traits>
+
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
@@ -16,6 +18,9 @@
 
 using namespace js;
 using namespace js::jit;
+
+static_assert(!std::is_polymorphic<WarpOpSnapshot>::value,
+              "WarpOpSnapshot should not have any virtual methods");
 
 WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script)
     : script_(script),
@@ -95,10 +100,13 @@ void WarpOpSnapshot::dump(GenericPrinter& out, JSScript* script) const {
   jsbytecode* pc = script->offsetToPC(offset_);
   out.printf("  %s (offset %u, JSOp::%s)\n", OpSnapshotKindString(kind_),
              offset_, CodeName(JSOp(*pc)));
+
+  // Dispatch to dumpData() methods.
   switch (kind_) {
-#  define DUMP(kind) \
-    case Kind::kind: \
-      return as<kind>()->dumpData(out);
+#  define DUMP(kind)             \
+    case Kind::kind:             \
+      as<kind>()->dumpData(out); \
+      break;
     WARP_OP_SNAPSHOT_LIST(DUMP)
 #  undef DUMP
   }
@@ -137,3 +145,95 @@ void WarpRest::dumpData(GenericPrinter& out) const {
   out.printf("    template: 0x%p\n", templateObject());
 }
 #endif  // JS_JITSPEW
+
+template <typename T>
+static void TraceWarpGCPtr(JSTracer* trc, T& thing, const char* name) {
+#ifdef DEBUG
+  T thingBefore = thing;
+#endif
+  TraceManuallyBarrieredEdge(trc, &thing, name);
+  MOZ_ASSERT(thingBefore == thing, "Unexpected moving GC!");
+}
+
+void WarpSnapshot::trace(JSTracer* trc) {
+  script_->trace(trc);
+  TraceWarpGCPtr(trc, globalLexicalEnv_, "warp-lexical");
+  TraceWarpGCPtr(trc, globalLexicalEnvThis_, "warp-lexicalthis");
+}
+
+void WarpScriptSnapshot::trace(JSTracer* trc) {
+  TraceWarpGCPtr(trc, script_, "warp-script");
+
+  environment_.trace(trc);
+
+  for (WarpOpSnapshot* snapshot : opSnapshots_) {
+    snapshot->trace(trc);
+  }
+
+  if (moduleObject_) {
+    TraceWarpGCPtr(trc, moduleObject_, "warp-module-obj");
+  }
+  if (instrumentationCallback_) {
+    TraceWarpGCPtr(trc, instrumentationCallback_, "warp-instr-callback");
+  }
+}
+
+void WarpEnvironment::trace(JSTracer* trc) {
+  switch (kind()) {
+    case Kind::None:
+      break;
+    case Kind::ConstantObject:
+      TraceWarpGCPtr(trc, constantObject_, "warp-env-object");
+      break;
+    case Kind::Function:
+      if (fun.callObjectTemplate_) {
+        TraceWarpGCPtr(trc, fun.callObjectTemplate_, "warp-env-callobject");
+      }
+      if (fun.namedLambdaTemplate_) {
+        TraceWarpGCPtr(trc, fun.namedLambdaTemplate_, "warp-env-namedlambda");
+      }
+      break;
+  }
+}
+
+void WarpOpSnapshot::trace(JSTracer* trc) {
+  // Dispatch to traceData() methods.
+  switch (kind_) {
+#define TRACE(kind)             \
+  case Kind::kind:              \
+    as<kind>()->traceData(trc); \
+    break;
+    WARP_OP_SNAPSHOT_LIST(TRACE)
+#undef TRACE
+  }
+}
+
+void WarpArguments::traceData(JSTracer* trc) {
+  if (templateObj_) {
+    TraceWarpGCPtr(trc, templateObj_, "warp-args-template");
+  }
+}
+
+void WarpRegExp::traceData(JSTracer* trc) {
+  // No GC pointers.
+}
+
+void WarpFunctionProto::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, proto_, "warp-function-proto");
+}
+
+void WarpGetIntrinsic::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, intrinsic_, "warp-intrinsic");
+}
+
+void WarpGetImport::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, targetEnv_, "warp-import-env");
+}
+
+void WarpLambda::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, baseScript_, "warp-lambda-basescript");
+}
+
+void WarpRest::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObject_, "warp-rest-template");
+}
