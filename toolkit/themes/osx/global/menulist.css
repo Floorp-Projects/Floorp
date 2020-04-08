@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
 
-menulist {
+:host {
   -moz-appearance: menulist;
   margin: 5px 2px 3px;
   min-height: 20px;
@@ -13,29 +12,36 @@ menulist {
   text-shadow: none;
 }
 
-.menulist-label-box {
+:host([disabled="true"]) {
+  color: GrayText;
+}
+
+:host([disabled="true"]) > dropmarker {
+  padding-inline-start: 7px !important;
+}
+
+/* Label box */
+
+#label-box {
   -moz-appearance: menulist-text;
   -moz-box-align: center;
   -moz-box-pack: center;
   margin-bottom: 1px;
 }
 
-.menulist-label {
+/* Labels */
+
+label {
   margin: 1px 3px !important;
 }
 
-/* ..... dropmarker ..... */
-
-.menulist-dropmarker {
+#highlightable-label:not([highlightable="true"]),
+#label[highlightable="true"] {
   display: none;
 }
 
-/* ..... disabled state ..... */
+/* Dropmarker */
 
-menulist[disabled="true"] {
-  color: GrayText;
-}
-
-menulist[disabled="true"] > .menulist-dropmarker {
-  padding-inline-start: 7px !important;
+dropmarker {
+  display: none;
 }

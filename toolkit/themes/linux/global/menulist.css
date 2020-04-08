@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== menulist.css ===================================================
-   == Styles used by the XUL menulist element.
-   ====================================================================== */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
 
-/* :::::::::: menulist :::::::::: */
-
-menulist {
+:host {
   -moz-appearance: menulist;
   margin: 2px 4px;
   color: -moz-DialogText;
@@ -19,32 +12,41 @@ menulist {
   text-shadow: none;
 }
 
-.menulist-label-box {
+:host(:not([disabled="true"]):hover) {
+  color: -moz-buttonhovertext;
+}
+
+:host(:not([disabled="true"]):hover:active),
+:host(:not([disabled="true"])[open="true"]) {
+  color: -moz-gtk-buttonactivetext;
+}
+
+:host([disabled="true"]) {
+  color: GrayText;
+}
+
+/* Label box */
+
+#label-box {
   -moz-appearance: menulist-text;
   -moz-box-align: center;
   -moz-box-pack: center;
   color: inherit;
 }
 
-.menulist-label {
+/* Labels */
+
+label {
   margin: 1px 3px !important;
 }
 
-.menulist-dropmarker {
+#highlightable-label:not([highlightable="true"]),
+#label[highlightable="true"] {
   display: none;
 }
 
-menulist:hover {
-  color: -moz-buttonhovertext;
-}
+/* Dropmarker */
 
-menulist:hover:active,
-menulist[open="true"] {
-  color: -moz-gtk-buttonactivetext;
-}
-
-menulist[disabled="true"],
-menulist[disabled="true"]:hover,
-menulist[disabled="true"]:hover:active {
-  color: GrayText;
+dropmarker {
+  display: none;
 }

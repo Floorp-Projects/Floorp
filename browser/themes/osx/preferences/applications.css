@@ -29,12 +29,12 @@
 
 .typeIcon,
 .actionIcon,
-.actionsMenu .menulist-icon {
+.actionsMenu::part(icon) {
   height: 16px;
   width: 16px;
 }
 
-.actionsMenu .menulist-icon {
+.actionsMenu::part(icon) {
   margin-top: 2px;
   margin-inline: 2px 8px;
 }

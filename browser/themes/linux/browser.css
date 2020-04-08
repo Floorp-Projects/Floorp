@@ -222,7 +222,7 @@ notification[value="translation"] button {
 
 notification[value="translation"] button,
 notification[value="translation"] menulist,
-notification[value="translation"] menulist > .menulist-label-box {
+notification[value="translation"] menulist::part(label-box) {
   margin-inline: 1ch;
 }
 
@@ -255,7 +255,7 @@ notification[value="translation"] button:not([type="menu"]) > .button-box {
   margin-inline-end: 3ch;
 }
 
-notification[value="translation"] menulist > .menulist-dropmarker {
+notification[value="translation"] menulist::part(dropmarker) {
   display: block;
 }
 

@@ -25,7 +25,7 @@ xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
   display: none;
 }
 
-xul|*.menulist-dropmarker {
+xul|menulist::part(dropmarker) {
   display: -moz-box;
   margin-block: 1px;
 }

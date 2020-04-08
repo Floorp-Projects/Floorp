@@ -76,16 +76,6 @@ function createMenulist(v) {
   let [list, popup, item] = [cE("menulist"), cE("menupopup"), elWithValue("menuitem", v)];
   item.setAttribute("selected", "true");
   popup.appendChild(item);
-  // XXX Generate "anonymous" nodes until we could run
-  // custom elements in Reftest, see bug 1465457.
-  list.innerHTML = `
-    <hbox class="menulist-label-box" flex="1">
-      <image class="menulist-icon" />
-      <label class="menulist-label" crop="right" flex="1" value="${v}"/>
-      <label class="menulist-highlightable-label" crop="right" flex="1"/>
-    </hbox>
-    <dropmarker class="menulist-dropmarker" type="menu"/>
-  `;
   list.appendChild(popup);
   return list;
 }

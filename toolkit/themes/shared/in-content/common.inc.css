@@ -372,7 +372,7 @@ html|input[type="color"] {
   width: 50px;
 }
 
-xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
+xul|menulist[image]::part(icon) {
   margin-inline-end: 5px;
 }
 
@@ -381,7 +381,7 @@ xul|*.close-icon > xul|*.button-box {
   padding-inline: 0 !important;
 }
 
-xul|*.menulist-dropmarker {
+xul|menulist::part(dropmarker) {
   -moz-appearance: none;
   margin-inline-end: 4px;
   padding: 0;
@@ -392,7 +392,7 @@ xul|*.menulist-dropmarker {
   fill: currentColor;
 }
 
-xul|*.menulist-dropmarker::part(icon) {
+xul|menulist::part(dropmarker-icon) {
   width: 12px;
   height: 12px;
 }

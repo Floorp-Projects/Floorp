@@ -2,62 +2,59 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== menulist.css ===================================================
-  == Styles used by the XUL menulist element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
 
-/* :::::::::: menulist :::::::::: */
-
-menulist {
+:host {
   -moz-appearance: menulist;
   margin: 2px 4px;
   color: -moz-FieldText;
   text-shadow: none;
 }
 
-.menulist-label-box {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-.menulist-label {
-  margin: 0 3px !important;
-}
-
-/* ..... focused state ..... */
-
-menulist:focus:not([open="true"]) > .menulist-label-box {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-menulist:-moz-focusring:not([open="true"]) > .menulist-label-box {
-  outline: 1px dotted;
-}
-
-/* ..... disabled state ..... */
-
-menulist[disabled="true"] {
+:host([disabled="true"]) {
   background-color: -moz-Dialog;
   color: GrayText;
 }
 
+/* Label box */
+
+#label-box {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+:host(:not([open="true"]):focus) > #label-box {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+:host(:not([open="true"]):-moz-focusring) > #label-box {
+  outline: 1px dotted;
+}
+
+/* Labels */
+
+label {
+  margin: 0 3px !important;
+}
+
+#highlightable-label:not([highlightable="true"]),
+#label[highlightable="true"] {
+  display: none;
+}
+
 @media (-moz-windows-default-theme) {
-  .menulist-label-box {
+  #label-box {
     background-color: transparent !important;
     color: inherit !important;
   }
 
-  .menulist-icon,
-  .menulist-label {
-    margin-top: -1px !important;
-    margin-bottom: -1px !important;
+  image,
+  label {
+    margin-block: -1px !important;
   }
 
-  .menulist-dropmarker {
+  dropmarker {
     margin-top: -2px;
     margin-inline: 3px -3px;
   }
