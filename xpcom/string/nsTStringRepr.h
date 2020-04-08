@@ -353,6 +353,16 @@ Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
         const mozilla::detail::nsTStringRepr<T>& aRhs,
         const nsTStringComparator<T>& = nsTDefaultStringComparator<T>());
 
+extern template int NS_FASTCALL
+Compare<char>(const mozilla::detail::nsTStringRepr<char>&,
+              const mozilla::detail::nsTStringRepr<char>&,
+              const nsTStringComparator<char>&);
+
+extern template int NS_FASTCALL
+Compare<char16_t>(const mozilla::detail::nsTStringRepr<char16_t>&,
+                  const mozilla::detail::nsTStringRepr<char16_t>&,
+                  const nsTStringComparator<char16_t>&);
+
 template <typename T>
 inline constexpr bool operator!=(
     const mozilla::detail::nsTStringRepr<T>& aLhs,

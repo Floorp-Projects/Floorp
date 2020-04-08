@@ -141,6 +141,8 @@ void nsTString<T>::StripChars(const incompatible_char_type* aSet) {
   }
 }
 
+template void nsTString<char16_t>::StripChars(const incompatible_char_type*);
+
 template <typename T>
 template <typename Q, typename EnableIfChar16>
 bool nsTString<T>::StripChars(const incompatible_char_type* aSet,
@@ -153,6 +155,9 @@ bool nsTString<T>::StripChars(const incompatible_char_type* aSet,
       nsBufferRoutines<T>::strip_chars(this->mData, this->mLength, aSet);
   return true;
 }
+
+template bool nsTString<char16_t>::StripChars(const incompatible_char_type*,
+                                              const fallible_t&);
 
 template <typename T>
 void nsTString<T>::StripChars(const char_type* aSet) {
@@ -207,6 +212,8 @@ void nsTString<T>::ReplaceChar(const char_type* aSet, char_type aNewChar) {
     lenRemaining -= i;
   }
 }
+
+template void nsTString<char16_t>::ReplaceChar(const char*, char16_t);
 
 void ReleaseData(void* aData, nsAString::DataFlags aFlags);
 
