@@ -7,12 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-
 import manifestparser
 import mozpack.path as mozpath
 from mozpack.copier import FileCopier
@@ -184,92 +178,14 @@ class SupportFilesConverter(object):
         return info
 
 
-def _resolve_installs(paths, topobjdir, manifest):
-    """Using the given paths as keys, find any unresolved installs noted
-    by the build backend corresponding to those keys, and add them
-    to the given manifest.
-    """
-    filename = os.path.join(topobjdir, 'test-installs.pkl')
-    with open(filename, 'rb') as fh:
-        resolved_installs = pickle.load(fh)
-
-    for path in paths:
-        path = path[2:]
-        if path not in resolved_installs:
-            raise Exception('A cross-directory support file path noted in a '
-                            'test manifest does not appear in any other manifest.\n "%s" '
-                            'must appear in another test manifest to specify an install '
-                            'for "!/%s".' % (path, path))
-        installs = resolved_installs[path]
-        for install_info in installs:
-            try:
-                if len(install_info) == 3:
-                    manifest.add_pattern_link(*install_info)
-                if len(install_info) == 2:
-                    manifest.add_link(*install_info)
-            except ValueError:
-                # A duplicate value here is pretty likely when running
-                # multiple directories at once, and harmless.
-                pass
-
-
-def _make_install_manifest(topsrcdir, topobjdir, test_objs):
-
-    flavor_info = {flavor: (root, prefix, install)
-                   for (flavor, root, prefix, install) in TEST_MANIFESTS.values()}
-
-    converter = SupportFilesConverter()
-    install_info = TestInstallInfo()
-
-    for o in test_objs:
-        flavor = o['flavor']
-        if flavor not in flavor_info:
-            # This is a test flavor that isn't installed by the build system.
-            continue
-        root, prefix, install = flavor_info[flavor]
-        if not install:
-            # This flavor isn't installed to the objdir.
-            continue
-
-        manifest_path = o['manifest']
-        manifest_dir = mozpath.dirname(manifest_path)
-
-        out_dir = mozpath.join(root, prefix, manifest_dir[len(topsrcdir) + 1:])
-        file_relpath = o['file_relpath']
-        source = mozpath.join(topsrcdir, file_relpath)
-        dest = mozpath.join(root, prefix, file_relpath)
-        install_info.installs.append((source, dest))
-        install_info |= converter.convert_support_files(o, root,
-                                                        manifest_dir,
-                                                        out_dir)
-
-    manifest = InstallManifest()
-
-    for source, dest in set(install_info.installs):
-        if dest in install_info.external_installs:
-            continue
-        manifest.add_link(source, dest)
-    for base, pattern, dest in install_info.pattern_installs:
-        manifest.add_pattern_link(base, pattern, dest)
-
-    _resolve_installs(install_info.deferred_installs, topobjdir, manifest)
-
-    return manifest
-
-
-def install_test_files(topsrcdir, topobjdir, tests_root, test_objs):
+def install_test_files(topsrcdir, topobjdir, tests_root):
     """Installs the requested test files to the objdir. This is invoked by
     test runners to avoid installing tens of thousands of test files when
     only a few tests need to be run.
     """
 
-    if test_objs:
-        manifest = _make_install_manifest(topsrcdir, topobjdir, test_objs)
-    else:
-        # If we don't actually have a list of tests to install we install
-        # test and support files wholesale.
-        manifest = InstallManifest(mozpath.join(topobjdir, '_build_manifests',
-                                                'install', '_test_files'))
+    manifest = InstallManifest(mozpath.join(topobjdir, '_build_manifests',
+                                            'install', '_test_files'))
 
     harness_files_manifest = mozpath.join(topobjdir, '_build_manifests',
                                           'install', tests_root)
