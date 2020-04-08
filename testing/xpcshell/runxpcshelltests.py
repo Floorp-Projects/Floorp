@@ -161,6 +161,7 @@ class XPCShellTestThread(Thread):
         self.interactive = kwargs.get('interactive')
         self.prefsFile = kwargs.get('prefsFile')
         self.verboseIfFails = kwargs.get('verboseIfFails')
+        self.headless = kwargs.get('headless')
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -682,7 +683,7 @@ class XPCShellTestThread(Thread):
         if self.test_object.get('subprocess') == 'true':
             self.env['PYTHON'] = sys.executable
 
-        if self.test_object.get('headless', False):
+        if self.test_object.get('headless', 'true' if self.headless else None) == 'true':
             self.env["MOZ_HEADLESS"] = '1'
             self.env["DISPLAY"] = '77'  # Set a fake display.
 
@@ -1397,6 +1398,7 @@ class XPCShellTests(object):
         self.threadCount = options.get('threadCount') or NUM_THREADS
         self.jscovdir = options.get('jscovdir')
         self.enable_webrender = options.get('enable_webrender')
+        self.headless = options.get('headless')
 
         self.testCount = 0
         self.passCount = 0
@@ -1485,6 +1487,7 @@ class XPCShellTests(object):
             'app_dir_key': appDirKey,
             'prefsFile': self.prefsFile,
             'verboseIfFails': self.verboseIfFails,
+            'headless': self.headless,
         }
 
         if self.sequential:
