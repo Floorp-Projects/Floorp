@@ -11,6 +11,8 @@ use std::{slice, str};
 
 use nserror::{nsresult, NS_ERROR_INVALID_ARG, NS_OK};
 
+use rsdparsa::attribute_type::SdpAttributeSsrc;
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct StringView {
@@ -170,6 +172,26 @@ pub unsafe extern "C" fn u8_vec_get(vec: *const Vec<u8>, index: size_t, ret: *mu
     match (*vec).get(index) {
         Some(val) => {
             *ret = *val;
+            NS_OK
+        }
+        None => NS_ERROR_INVALID_ARG,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ssrc_vec_len(vec: *const Vec<SdpAttributeSsrc>) -> size_t {
+    (*vec).len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ssrc_vec_get_id(
+    vec: *const Vec<SdpAttributeSsrc>,
+    index: size_t,
+    ret: *mut u32,
+) -> nsresult {
+    match (*vec).get(index) {
+        Some(val) => {
+            *ret = val.id;
             NS_OK
         }
         None => NS_ERROR_INVALID_ARG,
