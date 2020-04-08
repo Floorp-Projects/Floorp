@@ -1,6 +1,6 @@
 [package]
 name = "neqo-common"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"

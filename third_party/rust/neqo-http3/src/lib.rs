@@ -131,8 +131,8 @@ impl From<AppError> for Error {
             0x10f => Self::HttpConnectError,
             0x110 => Self::HttpVersionFallback,
             0x200 => Self::QpackError(QpackError::DecompressionFailed),
-            0x201 => Self::QpackError(QpackError::EncoderStreamError),
-            0x202 => Self::QpackError(QpackError::DecoderStreamError),
+            0x201 => Self::QpackError(QpackError::EncoderStream),
+            0x202 => Self::QpackError(QpackError::DecoderStream),
             _ => Self::HttpInternalError,
         }
     }

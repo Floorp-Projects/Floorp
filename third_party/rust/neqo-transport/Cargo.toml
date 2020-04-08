@@ -1,6 +1,6 @@
 [package]
 name = "neqo-transport"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["EKR <ekr@rtfm.com>", "Andy Grover <agrover@mozilla.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"

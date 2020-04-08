@@ -170,7 +170,7 @@ fn process(
 }
 
 fn main() -> Result<(), io::Error> {
-    const MAX_TABLE_SIZE: u32 = 65536;
+    const MAX_TABLE_SIZE: u64 = 65536;
     const MAX_BLOCKED_STREAMS: u16 = 10;
 
     let args: Vec<String> = env::args().collect();

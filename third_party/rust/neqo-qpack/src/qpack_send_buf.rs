@@ -6,7 +6,8 @@
 
 use crate::huffman::encode_huffman;
 use crate::prefix::Prefix;
-use std::convert::TryInto;
+use neqo_common::Encoder;
+use std::convert::TryFrom;
 use std::ops::Deref;
 
 #[derive(Default, Debug, PartialEq)]
@@ -19,8 +20,14 @@ impl QPData {
         self.buf.len()
     }
 
-    pub fn write_byte(&mut self, b: u8) {
+    fn write_byte(&mut self, b: u8) {
         self.buf.push(b);
+    }
+
+    pub fn encode_varint(&mut self, i: u64) {
+        let mut enc = Encoder::default();
+        enc.encode_varint(i);
+        self.buf.append(&mut enc.into());
     }
 
     fn encode_prefixed_encoded_int_internal(
@@ -36,10 +43,11 @@ impl QPData {
         };
 
         if val < u64::from(first_byte_max) {
+            let v = u8::try_from(val).unwrap();
             if let Some(offset_val) = offset {
-                self.buf[offset_val] = (prefix.prefix() & !first_byte_max) | (val as u8);
+                self.buf[offset_val] = (prefix.prefix() & !first_byte_max) | v;
             } else {
-                self.write_byte((prefix.prefix() & !first_byte_max) | (val as u8));
+                self.write_byte((prefix.prefix() & !first_byte_max) | v);
             }
             return 1;
         }
@@ -54,7 +62,7 @@ impl QPData {
         let mut written = 1;
         let mut done = false;
         while !done {
-            let mut b = (val as u8) & 0x7f;
+            let mut b = u8::try_from(val & 0x7f).unwrap();
             val >>= 7;
             if val > 0 {
                 b |= 0x80;
@@ -96,10 +104,10 @@ impl QPData {
 
         if use_huffman {
             let encoded = encode_huffman(value);
-            self.encode_prefixed_encoded_int(real_prefix, encoded.len().try_into().unwrap());
+            self.encode_prefixed_encoded_int(real_prefix, u64::try_from(encoded.len()).unwrap());
             self.write_bytes(&encoded);
         } else {
-            self.encode_prefixed_encoded_int(real_prefix, value.len().try_into().unwrap());
+            self.encode_prefixed_encoded_int(real_prefix, u64::try_from(value.len()).unwrap());
             self.write_bytes(&value);
         }
     }
@@ -126,7 +134,7 @@ impl Deref for QPData {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Prefix, QPData};
 
     #[test]
     fn test_encode_prefixed_encoded_int_1() {

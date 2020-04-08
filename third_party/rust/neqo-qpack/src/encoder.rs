@@ -14,6 +14,7 @@ use crate::Header;
 use crate::{Error, Res};
 use neqo_common::{qdebug, qtrace};
 use neqo_transport::Connection;
+use num_traits::ToPrimitive;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::TryInto;
 
@@ -38,6 +39,7 @@ pub struct QPackEncoder {
 }
 
 impl QPackEncoder {
+    #[must_use]
     pub fn new(use_huffman: bool) -> Self {
         Self {
             table: HeaderTable::new(true),
@@ -53,24 +55,37 @@ impl QPackEncoder {
         }
     }
 
+    /// This function is use for setting encoders table max capacity. The value is received as
+    /// a `SETTINGS_QPACK_MAX_TABLE_CAPACITY` setting parameter.
+    /// # Errors
+    /// `EncoderStream` if value is too big.
     pub fn set_max_capacity(&mut self, cap: u64) -> Res<()> {
         if cap > (1 << 30) - 1 {
-            // TODO dragana check what is the correct error.
-            return Err(Error::EncoderStreamError);
+            return Err(Error::EncoderStream);
         }
-        qdebug!([self], "Set max capacity to {}.", cap);
-        self.max_entries = (cap as f64 / 32.0).floor() as u64;
+        qdebug!(
+            [self],
+            "Set max capacity to {} {}.",
+            cap,
+            self.table.capacity()
+        );
+        self.max_entries = (cap.to_f64().unwrap() / 32.0).floor().to_u64().unwrap();
         // we also set our table to the max allowed. TODO we may not want to use max allowed.
         self.change_capacity(cap)
     }
 
+    /// This function is use for setting encoders max blocked streams. The value is received as
+    /// a `SETTINGS_QPACK_BLOCKED_STREAMS` setting parameter.
+    /// # Errors
+    /// `EncoderStream` if value is too big.
     pub fn set_max_blocked_streams(&mut self, blocked_streams: u64) -> Res<()> {
-        self.max_blocked_streams = blocked_streams
-            .try_into()
-            .or(Err(Error::EncoderStreamError))?;
+        self.max_blocked_streams = blocked_streams.try_into().or(Err(Error::EncoderStream))?;
         Ok(())
     }
 
+    /// Reads decoder instructions.
+    /// # Errors
+    /// TODO dragana: I think some errors are not correct, e.g. This can return Error:Internal.
     pub fn recv_if_encoder_stream(&mut self, conn: &mut Connection, stream_id: u64) -> Res<bool> {
         match self.remote_stream_id {
             Some(id) => {
@@ -99,13 +114,9 @@ impl QPackEncoder {
     fn recalculate_blocked_streams(&mut self) {
         let acked_inserts_cnt = self.table.get_acked_inserts_cnt();
         self.blocked_stream_cnt = 0;
-        for (_, hb_list) in self.unacked_header_blocks.iter_mut() {
+        for hb_list in self.unacked_header_blocks.values_mut() {
             debug_assert!(!hb_list.is_empty());
-            if hb_list
-                .iter()
-                .flat_map(|hb| hb.iter())
-                .any(|e| *e >= acked_inserts_cnt)
-            {
+            if hb_list.iter().flatten().any(|e| *e >= acked_inserts_cnt) {
                 self.blocked_stream_cnt += 1;
             }
         }
@@ -173,7 +184,8 @@ impl QPackEncoder {
         }
     }
 
-    pub fn insert_with_name_ref(
+    #[cfg(test)]
+    fn insert_with_name_ref(
         &mut self,
         name_static_table: bool,
         index: u64,
@@ -210,7 +222,7 @@ impl QPackEncoder {
         Ok(())
     }
 
-    pub fn insert_with_name_literal(&mut self, name: &[u8], value: &[u8]) -> Res<u64> {
+    fn insert_with_name_literal(&mut self, name: &[u8], value: &[u8]) -> Res<u64> {
         qdebug!([self], "insert name {:x?}, value={:x?}.", name, value);
         // try to insert a new entry
         let index = self.table.insert(name, value)?;
@@ -225,26 +237,30 @@ impl QPackEncoder {
         Ok(index)
     }
 
-    pub fn duplicate(&mut self, index: u64) -> Res<()> {
+    #[cfg(test)]
+    fn duplicate(&mut self, index: u64) -> Res<()> {
         qdebug!([self], "duplicate entry {}.", index);
         self.table.duplicate(index)?;
         EncoderInstruction::Duplicate { index }.marshal(&mut self.send_buf, self.use_huffman);
         Ok(())
     }
 
-    pub fn change_capacity(&mut self, value: u64) -> Res<()> {
+    fn change_capacity(&mut self, value: u64) -> Res<()> {
         qdebug!([self], "change capacity: {}", value);
         self.table.set_capacity(value)?;
         EncoderInstruction::Capacity { value }.marshal(&mut self.send_buf, self.use_huffman);
         Ok(())
     }
 
+    /// Sends any qpack encoder instructions.
+    /// # Errors
+    ///   returns `EncoderStream` in case of an error.
     pub fn send(&mut self, conn: &mut Connection) -> Res<()> {
         if self.send_buf.is_empty() {
             Ok(())
         } else if let Some(stream_id) = self.local_stream_id {
             match conn.stream_send(stream_id, &self.send_buf[..]) {
-                Err(_) => Err(Error::EncoderStreamError),
+                Err(_) => Err(Error::EncoderStream),
                 Ok(r) => {
                     qdebug!([self], "{} bytes sent.", r);
                     self.send_buf.read(r as usize);
@@ -259,7 +275,7 @@ impl QPackEncoder {
     fn is_stream_blocker(&self, stream_id: u64) -> bool {
         if let Some(hb_list) = self.unacked_header_blocks.get(&stream_id) {
             debug_assert!(!hb_list.is_empty());
-            match hb_list.iter().flat_map(|hb| hb.iter()).max() {
+            match hb_list.iter().flatten().max() {
                 Some(max_ref) => *max_ref >= self.table.get_acked_inserts_cnt(),
                 None => false,
             }
@@ -307,18 +323,15 @@ impl QPackEncoder {
                 if !static_table {
                     ref_entries.insert(index);
                 }
-            } else if !can_block {
-                encoded_h.encode_literal_with_name_literal(&name, &value);
-            } else {
-                match self.insert_with_name_literal(&name, &value) {
-                    Ok(index) => {
-                        encoded_h.encode_indexed_dynamic(index);
-                        ref_entries.insert(index);
-                    }
-                    Err(_) => {
-                        encoded_h.encode_literal_with_name_literal(&name, &value);
-                    }
+            } else if can_block {
+                if let Ok(index) = self.insert_with_name_literal(&name, &value) {
+                    encoded_h.encode_indexed_dynamic(index);
+                    ref_entries.insert(index);
+                } else {
+                    encoded_h.encode_literal_with_name_literal(&name, &value);
                 }
+            } else {
+                encoded_h.encode_literal_with_name_literal(&name, &value);
             }
         }
 
@@ -347,27 +360,29 @@ impl QPackEncoder {
         encoded_h
     }
 
+    /// Encoder stream has been created. Add the stream id.
     pub fn add_send_stream(&mut self, stream_id: u64) {
         if self.local_stream_id.is_some() {
             panic!("Adding multiple local streams");
         }
         self.local_stream_id = Some(stream_id);
-        self.send_buf
-            .write_byte(QPACK_UNI_STREAM_TYPE_ENCODER as u8);
+        self.send_buf.encode_varint(QPACK_UNI_STREAM_TYPE_ENCODER);
     }
 
+    /// We have received a remote decoder stream. Remember its stream id.
+    /// # Errors
+    ///    If we receive multiple decoder streams this function will return `WrongStreamCount`.
     pub fn add_recv_stream(&mut self, stream_id: u64) -> Res<()> {
-        match self.remote_stream_id {
-            Some(_) => Err(Error::WrongStreamCount),
-            None => {
-                self.remote_stream_id = Some(stream_id);
-                Ok(())
-            }
+        if self.remote_stream_id.is_some() {
+            Err(Error::WrongStreamCount)
+        } else {
+            self.remote_stream_id = Some(stream_id);
+            Ok(())
         }
     }
 
     #[cfg(test)]
-    pub fn blocked_stream_cnt(&self) -> u16 {
+    fn blocked_stream_cnt(&self) -> u16 {
         self.blocked_stream_cnt
     }
 }
@@ -380,9 +395,9 @@ impl ::std::fmt::Display for QPackEncoder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Connection, Error, Header, QPackEncoder};
     use neqo_transport::StreamType;
-    use test_fixture::*;
+    use test_fixture::now;
 
     struct TestEncoder {
         encoder: QPackEncoder,
@@ -416,7 +431,7 @@ mod tests {
         encoder.encoder.send(&mut encoder.conn).unwrap();
         let out = encoder.conn.process(None, now());
         encoder.peer_conn.process(out.dgram(), now());
-        let mut buf = [0u8; 100];
+        let mut buf = [0_u8; 100];
         let (amount, fin) = encoder
             .peer_conn
             .stream_recv(encoder.send_stream_id, &mut buf)
@@ -474,7 +489,7 @@ mod tests {
             .encoder
             .insert_with_name_ref(true, 4, VALUE_1)
             .unwrap_err();
-        assert_eq!(Error::EncoderStreamError, e);
+        assert_eq!(Error::EncoderStream, e);
         send_instructions(&mut encoder, &[0x02]);
     }
 
@@ -502,7 +517,7 @@ mod tests {
         let res = encoder
             .encoder
             .insert_with_name_literal(HEADER_CONTENT_LENGTH, VALUE_1);
-        assert_eq!(Error::EncoderStreamError, res.unwrap_err());
+        assert_eq!(Error::EncoderStream, res.unwrap_err());
         send_instructions(&mut encoder, &[0x02]);
     }
 

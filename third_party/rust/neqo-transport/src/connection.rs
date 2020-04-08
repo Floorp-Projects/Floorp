@@ -4276,4 +4276,55 @@ mod tests {
             (Frame::Ack { .. }, PNSpace::ApplicationData)
         ));
     }
+
+    #[test]
+    fn after_fin_is_read_conn_events_for_stream_should_be_removed() {
+        let mut client = default_client();
+        let mut server = default_server();
+        connect(&mut client, &mut server);
+
+        let id = server.stream_create(StreamType::BiDi).unwrap();
+        server.stream_send(id, &[6; 10]).unwrap();
+        server.stream_close_send(id).unwrap();
+        let out = server.process(None, now()).dgram();
+        assert!(out.is_some());
+
+        let _ = client.process(out, now());
+
+        // read from the stream before checking connection events.
+        let mut buf = vec![0; 4000];
+        let (_, fin) = client.stream_recv(id, &mut buf).unwrap();
+        assert_eq!(fin, true);
+
+        // Make sure we do not have RecvStreamReadable events for the stream when fin has been read.
+        let readable_stream_evt =
+            |e| matches!(e, ConnectionEvent::RecvStreamReadable { stream_id } if stream_id == id);
+        assert!(!client.events().any(readable_stream_evt));
+    }
+
+    #[test]
+    fn after_stream_stop_sending_is_called_conn_events_for_stream_should_be_removed() {
+        let mut client = default_client();
+        let mut server = default_server();
+        connect(&mut client, &mut server);
+
+        let id = server.stream_create(StreamType::BiDi).unwrap();
+        server.stream_send(id, &[6; 10]).unwrap();
+        server.stream_close_send(id).unwrap();
+        let out = server.process(None, now()).dgram();
+        assert!(out.is_some());
+
+        let _ = client.process(out, now());
+
+        // send stop seending.
+        client
+            .stream_stop_sending(id, Error::NoError.code())
+            .unwrap();
+
+        // Make sure we do not have RecvStreamReadable events for the stream after stream_stop_sending
+        // has been called.
+        let readable_stream_evt =
+            |e| matches!(e, ConnectionEvent::RecvStreamReadable { stream_id } if stream_id == id);
+        assert!(!client.events().any(readable_stream_evt));
+    }
 }

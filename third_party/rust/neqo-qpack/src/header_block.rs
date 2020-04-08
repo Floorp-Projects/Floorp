@@ -16,7 +16,7 @@ use crate::table::HeaderTable;
 use crate::Header;
 use crate::{Error, Res};
 use neqo_common::qtrace;
-use std::ops::Deref;
+use std::ops::{Deref, Div};
 
 #[derive(Default, Debug, PartialEq)]
 pub struct HeaderEncoder {
@@ -245,13 +245,13 @@ impl<'a> HeaderDecoder<'a> {
 
             let b = self.buf.peek()?;
             if HEADER_FIELD_INDEX_STATIC.cmp_prefix(b) {
-                h.push(self.read_indexed_static(table)?);
+                h.push(self.read_indexed_static()?);
             } else if HEADER_FIELD_INDEX_DYNAMIC.cmp_prefix(b) {
                 h.push(self.read_indexed_dynamic(table)?);
             } else if HEADER_FIELD_INDEX_DYNAMIC_POST.cmp_prefix(b) {
                 h.push(self.read_indexed_dynamic_post(table)?);
             } else if HEADER_FIELD_LITERAL_NAME_REF_STATIC.cmp_prefix(b) {
-                h.push(self.read_literal_with_name_ref_static(table)?);
+                h.push(self.read_literal_with_name_ref_static()?);
             } else if HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC.cmp_prefix(b) {
                 h.push(self.read_literal_with_name_ref_dynamic(table)?);
             } else if HEADER_FIELD_LITERAL_NAME_LITERAL.cmp_prefix(b) {
@@ -271,7 +271,7 @@ impl<'a> HeaderDecoder<'a> {
     fn read_base(&mut self, max_entries: u64, total_num_of_inserts: u64) -> Res<()> {
         let insert_cnt = self.buf.read_prefixed_int(0)?;
         self.req_insert_cnt =
-            self.calc_req_insert_cnt(insert_cnt, max_entries, total_num_of_inserts)?;
+            HeaderDecoder::calc_req_insert_cnt(insert_cnt, max_entries, total_num_of_inserts)?;
 
         let s = self.buf.peek()? & 0x80 != 0;
         let base_delta = self.buf.read_prefixed_int(1)?;
@@ -292,12 +292,7 @@ impl<'a> HeaderDecoder<'a> {
         Ok(())
     }
 
-    fn calc_req_insert_cnt(
-        &self,
-        encoded: u64,
-        max_entries: u64,
-        total_num_of_inserts: u64,
-    ) -> Res<u64> {
+    fn calc_req_insert_cnt(encoded: u64, max_entries: u64, total_num_of_inserts: u64) -> Res<u64> {
         if encoded == 0 {
             Ok(0)
         } else if max_entries == 0 {
@@ -308,7 +303,7 @@ impl<'a> HeaderDecoder<'a> {
                 return Err(Error::DecompressionFailed);
             }
             let max_value = total_num_of_inserts + max_entries;
-            let max_wrapped = (max_value as f64 / full_range as f64).floor() as u64 * full_range;
+            let max_wrapped = max_value.div(full_range) * full_range;
             let mut req_insert_cnt = max_wrapped + encoded - 1;
             if req_insert_cnt > max_value {
                 if req_insert_cnt < full_range {
@@ -321,13 +316,13 @@ impl<'a> HeaderDecoder<'a> {
         }
     }
 
-    fn read_indexed_static(&mut self, table: &HeaderTable) -> Res<Header> {
+    fn read_indexed_static(&mut self) -> Res<Header> {
         let index = self
             .buf
             .read_prefixed_int(HEADER_FIELD_INDEX_STATIC.len())?;
         qtrace!([self], "decoder static indexed {}.", index);
 
-        match table.get_static(index) {
+        match HeaderTable::get_static(index) {
             Ok(entry) => Ok((to_string(entry.name())?, to_string(entry.value())?)),
             Err(_) => Err(Error::DecompressionFailed),
         }
@@ -355,7 +350,7 @@ impl<'a> HeaderDecoder<'a> {
         }
     }
 
-    fn read_literal_with_name_ref_static(&mut self, table: &HeaderTable) -> Res<Header> {
+    fn read_literal_with_name_ref_static(&mut self) -> Res<Header> {
         qtrace!(
             [self],
             "read literal with name reference to the static table."
@@ -365,7 +360,7 @@ impl<'a> HeaderDecoder<'a> {
             .buf
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_STATIC.len())?;
 
-        match table.get_static(index) {
+        match HeaderTable::get_static(index) {
             Ok(entry) => Ok((
                 to_string(entry.name())?,
                 self.buf.read_literal_from_buffer(0)?,
@@ -423,7 +418,7 @@ impl<'a> HeaderDecoder<'a> {
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use super::{Deref, HeaderDecoder, HeaderDecoderResult, HeaderEncoder, HeaderTable};
 
     const INDEX_STATIC_TEST: [(u64, &[u8], &str, &str); 4] = [
         (0, &[0x0, 0x0, 0xc0], ":authority", ""),

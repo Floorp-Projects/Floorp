@@ -4,9 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(clippy::pedantic)]
+
 use crate::huffman_decode_helper::{HuffmanDecodeTable, HUFFMAN_DECODE_ROOT};
 use crate::huffman_table::HUFFMAN_TABLE;
 use crate::{Error, Res};
+use std::convert::TryFrom;
 
 #[derive(Default)]
 pub struct Huffman {
@@ -106,14 +109,14 @@ impl Huffman {
             return Err(Error::DecompressionFailed);
         }
 
-        if entry.prefix_len > u16::from(self.decoding_bits_left) {
+        if entry.prefix_len > self.decoding_bits_left {
             assert!(!self.has_more_data(len, *read));
             // This is the last bit and it is padding.
             return Ok(None);
         }
-        let c = entry.val as u8;
+        let c = u8::try_from(entry.val).unwrap();
 
-        self.decoding_bits_left -= entry.prefix_len as u8;
+        self.decoding_bits_left -= entry.prefix_len;
         if self.decoding_bits_left > 0 {
             self.decoding_byte <<= entry.prefix_len;
         }
@@ -121,6 +124,7 @@ impl Huffman {
     }
 }
 
+#[must_use]
 pub fn encode_huffman(input: &[u8]) -> Vec<u8> {
     let mut output: Vec<u8> = Vec::new();
     let mut left: u8 = 8;
@@ -130,7 +134,8 @@ pub fn encode_huffman(input: &[u8]) -> Vec<u8> {
 
         // Fill the previous byte
         if e.len < left {
-            saved |= (e.val as u8) << (left - e.len);
+            let b = u8::try_from(e.val & 0xFF).unwrap();
+            saved |= b << (left - e.len);
             left -= e.len;
             e.len = 0;
         } else {

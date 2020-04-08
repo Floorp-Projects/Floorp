@@ -126,6 +126,11 @@ impl ConnectionEvents {
         self.insert(ConnectionEvent::ZeroRttRejected);
     }
 
+    pub fn recv_stream_complete(&self, stream_id: StreamId) {
+        // If stopped, no longer readable.
+        self.remove(|evt| matches!(evt, ConnectionEvent::RecvStreamReadable { stream_id: x } if *x == stream_id.as_u64()));
+    }
+
     pub fn events(&self) -> impl Iterator<Item = ConnectionEvent> {
         self.events.replace(VecDeque::new()).into_iter()
     }

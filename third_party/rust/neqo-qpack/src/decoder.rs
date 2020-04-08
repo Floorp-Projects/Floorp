@@ -27,19 +27,20 @@ pub struct QPackDecoder {
     send_buf: QPData,
     local_stream_id: Option<u64>,
     remote_stream_id: Option<u64>,
-    max_table_size: u32,
+    max_table_size: u64,
     max_blocked_streams: usize,
     blocked_streams: Vec<(u64, u64)>, //stream_id and requested inserts count.
 }
 
 impl QPackDecoder {
-    pub fn new(max_table_size: u32, max_blocked_streams: u16) -> Self {
+    #[must_use]
+    pub fn new(max_table_size: u64, max_blocked_streams: u16) -> Self {
         qdebug!("Decoder: creating a new qpack decoder.");
         Self {
             instruction_reader: EncoderInstructionReader::new(),
             table: HeaderTable::new(false),
             total_num_of_inserts: 0,
-            max_entries: (f64::from(max_table_size) / 32.0).floor() as u64,
+            max_entries: max_table_size >> 5,
             send_buf: QPData::default(),
             local_stream_id: None,
             remote_stream_id: None,
@@ -49,27 +50,32 @@ impl QPackDecoder {
         }
     }
 
-    pub fn capacity(&self) -> u64 {
+    #[must_use]
+    fn capacity(&self) -> u64 {
         self.table.capacity()
     }
 
-    pub fn get_max_table_size(&self) -> u32 {
+    #[must_use]
+    pub fn get_max_table_size(&self) -> u64 {
         self.max_table_size
     }
 
+    #[must_use]
     pub fn get_blocked_streams(&self) -> u16 {
         self.max_blocked_streams.try_into().unwrap()
     }
 
-    // returns a list of unblocked streams
+    /// returns a list of unblocked streams
+    /// # Errors
+    /// May return: `ClosedCriticalStream` if stream has been closed or `EncoderStream`
+    /// in case of any other transport error.
     pub fn receive(&mut self, conn: &mut Connection, stream_id: u64) -> Res<Vec<u64>> {
         self.read_instructions(conn, stream_id)?;
         let base = self.table.base();
         let r = self
             .blocked_streams
             .iter()
-            .filter(|(_, req)| *req <= base)
-            .map(|(id, _)| *id)
+            .filter_map(|(id, req)| if *req <= base { Some(*id) } else { None })
             .collect::<Vec<_>>();
         self.blocked_streams.retain(|(_, req)| *req > base);
         Ok(r)
@@ -111,14 +117,14 @@ impl QPackDecoder {
         Ok(())
     }
 
-    pub fn set_capacity(&mut self, cap: u64) -> Res<()> {
+    fn set_capacity(&mut self, cap: u64) -> Res<()> {
         qdebug!([self], "received instruction capacity cap={}", cap);
-        if cap > u64::from(self.max_table_size) {
-            return Err(Error::EncoderStreamError);
+        if cap > self.max_table_size {
+            return Err(Error::EncoderStream);
         }
         self.table
             .set_capacity(cap)
-            .map_err(|_| Error::EncoderStreamError)
+            .map_err(|_| Error::EncoderStream)
     }
 
     fn header_ack(&mut self, stream_id: u64, required_inserts: u64) {
@@ -135,6 +141,8 @@ impl QPackDecoder {
         DecoderInstruction::StreamCancellation { stream_id }.marshal(&mut self.send_buf);
     }
 
+    /// # Errors
+    ///     May return DecoderStream in case of any transport error.
     pub fn send(&mut self, conn: &mut Connection) -> Res<()> {
         // Encode increment instruction if needed.
         let increment = self.total_num_of_inserts - self.table.get_acked_inserts_cnt();
@@ -148,7 +156,7 @@ impl QPackDecoder {
             Ok(())
         } else if let Some(stream_id) = self.local_stream_id {
             match conn.stream_send(stream_id, &self.send_buf[..]) {
-                Err(_) => Err(Error::DecoderStreamError),
+                Err(_) => Err(Error::DecoderStream),
                 Ok(r) => {
                     qdebug!([self], "{} bytes sent.", r);
                     self.send_buf.read(r as usize);
@@ -160,7 +168,10 @@ impl QPackDecoder {
         }
     }
 
-    // this function returns None if the stream is blocked waiting for table insertions.
+    /// This function returns None if the stream is blocked waiting for table insertions.
+    /// 'buf' must contain the complete header block.
+    /// # Errors
+    /// May return `DecompressionFailed` if header block is incorrect or incomplete.
     pub fn decode_header_block(&mut self, buf: &[u8], stream_id: u64) -> Res<Option<Vec<Header>>> {
         qdebug!([self], "decode header block.");
         let mut decoder = HeaderDecoder::new(buf);
@@ -187,6 +198,7 @@ impl QPackDecoder {
         }
     }
 
+    #[must_use]
     pub fn is_recv_stream(&self, stream_id: u64) -> bool {
         match self.remote_stream_id {
             Some(id) => id == stream_id,
@@ -199,17 +211,17 @@ impl QPackDecoder {
             panic!("Adding multiple local streams");
         }
         self.local_stream_id = Some(stream_id);
-        self.send_buf
-            .write_byte(QPACK_UNI_STREAM_TYPE_DECODER as u8);
+        self.send_buf.encode_varint(QPACK_UNI_STREAM_TYPE_DECODER);
     }
 
+    /// # Errors
+    ///     May return WrongStreamCount if Http3 has received multiple encoder streams.
     pub fn add_recv_stream(&mut self, stream_id: u64) -> Res<()> {
-        match self.remote_stream_id {
-            Some(_) => Err(Error::WrongStreamCount),
-            None => {
-                self.remote_stream_id = Some(stream_id);
-                Ok(())
-            }
+        if self.remote_stream_id.is_some() {
+            Err(Error::WrongStreamCount)
+        } else {
+            self.remote_stream_id = Some(stream_id);
+            Ok(())
         }
     }
 }
@@ -222,10 +234,10 @@ impl ::std::fmt::Display for QPackDecoder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Connection, Error, Header, QPackDecoder, Res};
     use neqo_transport::StreamType;
     use std::convert::TryInto;
-    use test_fixture::*;
+    use test_fixture::now;
 
     struct TestDecoder {
         decoder: QPackDecoder,
@@ -255,7 +267,7 @@ mod tests {
         }
     }
 
-    fn recv_instruction(decoder: &mut TestDecoder, encoder_instruction: &[u8], res: Res<()>) {
+    fn recv_instruction(decoder: &mut TestDecoder, encoder_instruction: &[u8], res: &Res<()>) {
         let _ = decoder
             .peer_conn
             .stream_send(decoder.recv_stream_id, encoder_instruction);
@@ -265,7 +277,7 @@ mod tests {
             decoder
                 .decoder
                 .read_instructions(&mut decoder.conn, decoder.recv_stream_id),
-            res
+            *res
         );
     }
 
@@ -273,7 +285,7 @@ mod tests {
         decoder.decoder.send(&mut decoder.conn).unwrap();
         let out = decoder.conn.process(None, now());
         decoder.peer_conn.process(out.dgram(), now());
-        let mut buf = [0u8; 100];
+        let mut buf = [0_u8; 100];
         let (amount, fin) = decoder
             .peer_conn
             .stream_recv(decoder.send_stream_id, &mut buf)
@@ -299,7 +311,7 @@ mod tests {
     fn test_instruction(
         capacity: u64,
         instruction: &[u8],
-        res: Res<()>,
+        res: &Res<()>,
         decoder_instruction: &[u8],
         check_capacity: u64,
     ) {
@@ -326,7 +338,7 @@ mod tests {
         test_instruction(
             0,
             &[0xc4, 0x04, 0x31, 0x32, 0x33, 0x34],
-            Err(Error::DecoderStreamError),
+            &Err(Error::DecoderStream),
             &[0x03],
             0,
         );
@@ -338,7 +350,7 @@ mod tests {
         test_instruction(
             100,
             &[0xc4, 0x04, 0x31, 0x32, 0x33, 0x34],
-            Ok(()),
+            &Ok(()),
             &[0x03, 0x01],
             0,
         );
@@ -353,7 +365,7 @@ mod tests {
                 0x4e, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x6c, 0x65, 0x6e, 0x67, 0x74,
                 0x68, 0x04, 0x31, 0x32, 0x33, 0x34,
             ],
-            Ok(()),
+            &Ok(()),
             &[0x03, 0x01],
             0,
         );
@@ -361,7 +373,7 @@ mod tests {
 
     #[test]
     fn test_recv_change_capacity() {
-        test_instruction(0, &[0x3f, 0xa9, 0x01], Ok(()), &[0x03], 200);
+        test_instruction(0, &[0x3f, 0xa9, 0x01], &Ok(()), &[0x03], 200);
     }
 
     #[test]
@@ -369,7 +381,7 @@ mod tests {
         test_instruction(
             0,
             &[0x3f, 0xf1, 0x02],
-            Err(Error::EncoderStreamError),
+            &Err(Error::EncoderStream),
             &[0x03],
             0,
         );
@@ -389,11 +401,11 @@ mod tests {
                 0x4e, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x6c, 0x65, 0x6e, 0x67, 0x74,
                 0x68, 0x04, 0x31, 0x32, 0x33, 0x34,
             ],
-            Ok(()),
+            &Ok(()),
         );
 
         // receive the second instruction, a duplicate instruction.
-        recv_instruction(&mut decoder, &[0x00], Ok(()));
+        recv_instruction(&mut decoder, &[0x00], &Ok(()));
 
         send_instructions_and_check(&mut decoder, &[0x03, 0x02]);
     }
@@ -430,11 +442,11 @@ mod tests {
 
         assert!(decoder.decoder.set_capacity(200).is_ok());
 
-        recv_instruction(&mut decoder, first_encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, first_encoder_inst, &Ok(()));
 
         send_instructions_and_check(&mut decoder, &[0x03, 0x1]);
 
-        recv_instruction(&mut decoder, second_encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, second_encoder_inst, &Ok(()));
 
         decode_headers(&mut decoder, header_block, &headers, 0);
 
@@ -466,11 +478,11 @@ mod tests {
 
         assert!(decoder.decoder.set_capacity(200).is_ok());
 
-        recv_instruction(&mut decoder, first_encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, first_encoder_inst, &Ok(()));
 
         send_instructions_and_check(&mut decoder, &[0x03, 0x1]);
 
-        recv_instruction(&mut decoder, second_encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, second_encoder_inst, &Ok(()));
 
         decode_headers(&mut decoder, header_block, &headers, 0);
 
@@ -496,7 +508,7 @@ mod tests {
 
         assert!(decoder.decoder.set_capacity(200).is_ok());
 
-        recv_instruction(&mut decoder, encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, encoder_inst, &Ok(()));
 
         decode_headers(&mut decoder, header_block, &headers, 0);
 
@@ -520,7 +532,7 @@ mod tests {
 
         assert!(decoder.decoder.set_capacity(200).is_ok());
 
-        recv_instruction(&mut decoder, encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, encoder_inst, &Ok(()));
 
         decode_headers(&mut decoder, header_block, &headers, 0);
 
@@ -592,7 +604,7 @@ mod tests {
         for (i, t) in test_cases.iter().enumerate() {
             // receive an instruction
             if !t.encoder_inst.is_empty() {
-                recv_instruction(&mut decoder, t.encoder_inst, Ok(()));
+                recv_instruction(&mut decoder, t.encoder_inst, &Ok(()));
             }
 
             decode_headers(
@@ -670,7 +682,7 @@ mod tests {
         for (i, t) in test_cases.iter().enumerate() {
             // receive an instruction.
             if !t.encoder_inst.is_empty() {
-                recv_instruction(&mut decoder, t.encoder_inst, Ok(()));
+                recv_instruction(&mut decoder, t.encoder_inst, &Ok(()));
             }
 
             decode_headers(
@@ -687,6 +699,13 @@ mod tests {
 
     #[test]
     fn test_subtract_overflow_in_header_ack() {
+        const HEADER_BLOCK_1: &[u8] = &[0x03, 0x81, 0x10, 0x11];
+        const ENCODER_INST: &[u8] = &[
+            0x4a, 0x6d, 0x79, 0x2d, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x61, 0x09, 0x6d, 0x79,
+            0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x61, 0x4a, 0x6d, 0x79, 0x2d, 0x68, 0x65, 0x61,
+            0x64, 0x65, 0x72, 0x62, 0x09, 0x6d, 0x79, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x62,
+        ];
+        const HEADER_BLOCK_2: &[u8] = &[0x02, 0x80, 0x10];
         // Test for issue https://github.com/mozilla/neqo/issues/475
         // Send two instructions to insert values into the dynamic table and send a header
         // that references them both. This will increase number of acked inserts in the table
@@ -696,24 +715,17 @@ mod tests {
             (String::from("my-headera"), String::from("my-valuea")),
             (String::from("my-headerb"), String::from("my-valueb")),
         ];
-        let header_block = &[0x03, 0x81, 0x10, 0x11];
-        let encoder_inst = &[
-            0x4a, 0x6d, 0x79, 0x2d, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x61, 0x09, 0x6d, 0x79,
-            0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x61, 0x4a, 0x6d, 0x79, 0x2d, 0x68, 0x65, 0x61,
-            0x64, 0x65, 0x72, 0x62, 0x09, 0x6d, 0x79, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x62,
-        ];
 
         let mut decoder = connect();
 
         assert!(decoder.decoder.set_capacity(200).is_ok());
 
-        recv_instruction(&mut decoder, encoder_inst, Ok(()));
+        recv_instruction(&mut decoder, ENCODER_INST, &Ok(()));
 
-        decode_headers(&mut decoder, header_block, &headers, 0);
+        decode_headers(&mut decoder, HEADER_BLOCK_1, &headers, 0);
 
         let headers = vec![(String::from("my-headera"), String::from("my-valuea"))];
-        let header_block = &[0x02, 0x80, 0x10];
 
-        decode_headers(&mut decoder, header_block, &headers, 0);
+        decode_headers(&mut decoder, HEADER_BLOCK_2, &headers, 0);
     }
 }

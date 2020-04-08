@@ -6,7 +6,7 @@
 
 pub struct HuffmanDecodeEntry {
     pub val: u16,
-    pub prefix_len: u16,
+    pub prefix_len: u8,
 }
 
 pub struct HuffmanDecodeTable<'a> {
