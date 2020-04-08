@@ -50,24 +50,14 @@ void XRInputSourceArray::Update(XRSession* aSession) {
       }
     }
     // Checking if it is added before.
-    if (!found &&
-      (controllerState.numButtons > 0 || controllerState.numAxes > 0)) {
+    if (!found) {
       inputSource = new XRInputSource(mParent);
       inputSource->Setup(aSession, i);
       mInputSources.AppendElement(inputSource);
     }
     // If added, updating the current controller states.
-    if (inputSource) {
-      inputSource->Update(aSession);
-    }
+    inputSource->Update(aSession);
   }
-}
-
-void XRInputSourceArray::Clear() {
-  for (auto& input: mInputSources) {
-    input->SetGamepadIsConnected(false);
-  }
-  mInputSources.Clear();
 }
 
 uint32_t XRInputSourceArray::Length() { return mInputSources.Length(); }
