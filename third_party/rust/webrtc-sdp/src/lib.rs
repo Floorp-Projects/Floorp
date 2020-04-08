@@ -188,7 +188,7 @@ pub struct SdpLine {
 pub struct SdpSession {
     pub version: u64,
     pub origin: SdpOrigin,
-    pub session: String,
+    pub session: Option<String>,
     pub connection: Option<SdpConnection>,
     pub bandwidth: Vec<SdpBandwidth>,
     pub timing: Option<SdpTiming>,
@@ -218,7 +218,7 @@ impl fmt::Display for SdpSession {
              {media_sections}",
             version = self.version,
             origin = self.origin,
-            session = self.session,
+            session = self.get_session_text(),
             timing = option_to_string!("t={}\r\n", self.timing),
             bandwidth = maybe_vector_to_string!("b={}\r\n", self.bandwidth, "\r\nb="),
             connection = option_to_string!("c={}\r\n", self.connection),
@@ -230,6 +230,10 @@ impl fmt::Display for SdpSession {
 
 impl SdpSession {
     pub fn new(version: u64, origin: SdpOrigin, session: String) -> SdpSession {
+        let session = match session.trim() {
+            s if !s.is_empty() => Some(s.to_owned()),
+            _ => None,
+        };
         SdpSession {
             version,
             origin,
@@ -251,10 +255,17 @@ impl SdpSession {
         &self.origin
     }
 
-    pub fn get_session(&self) -> &str {
+    pub fn get_session(&self) -> &Option<String> {
         &self.session
     }
 
+    pub fn get_session_text(&self) -> &str {
+        if let Some(text) = &self.session {
+            text.as_str()
+        } else {
+            " "
+        }
+    }
     pub fn get_connection(&self) -> &Option<SdpConnection> {
         &self.connection
     }
@@ -555,10 +566,10 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
                     line_number,
                 });
             }
-            trimmed
+            trimmed.to_lowercase()
         }
     };
-    let line_value = match splitted_line.next() {
+    let (line_value, untrimmed_line_value) = match splitted_line.next() {
         None => {
             return Err(SdpParserError::Line {
                 error: SdpParserInternalError::Generic("missing value".to_string()),
@@ -568,17 +579,18 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
         }
         Some(v) => {
             let trimmed = v.trim();
-            if trimmed.is_empty() {
+            // For compatibility with sites that don't adhere to "s=-" for no session ID
+            if trimmed.is_empty() && line_type.as_str() != "s" {
                 return Err(SdpParserError::Line {
                     error: SdpParserInternalError::Generic("value is empty".to_string()),
                     line: line.to_string(),
                     line_number,
                 });
             }
-            trimmed
+            (trimmed, v)
         }
     };
-    match line_type.to_lowercase().as_ref() {
+    match line_type.as_ref() {
         "a" => parse_attribute(line_value),
         "b" => parse_bandwidth(line_value),
         "c" => parse_connection(line_value),
@@ -604,7 +616,7 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
             "unsupported type repeat: {}",
             line_value
         ))),
-        "s" => parse_session(line_value),
+        "s" => parse_session(untrimmed_line_value),
         "t" => parse_timing(line_value),
         "u" => Err(SdpParserInternalError::Generic(format!(
             "unsupported type uri: {}",
@@ -653,24 +665,14 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
     if session.timing.is_none() {
         return Err(make_seq_error("Missing timing type at session level"));
     }
-
-    let mut mconnections = 0;
-    for msection in &session.media {
-        if msection.get_connection().is_some() {
-            mconnections += 1;
-        }
-    }
-
-    if session.get_connection().is_none() {
-        if session.media.is_empty() {
-            return Err(make_seq_error("Missing connection type at session level"));
-        }
-        if mconnections != session.media.len() {
-            return Err(make_seq_error(
-                "Without connection type at session level all media section
-                 must have connection types",
-            ));
-        }
+    // Checks that all media have connections if there is no top level
+    // This explicitly allows for zero connection lines if there are no media
+    // sections for interoperability reasons.
+    let media_cons = &session.media.iter().all(|m| m.get_connection().is_some());
+    if !media_cons && session.get_connection().is_none() {
+        return Err(make_seq_error(
+            "Without connection type at session level all media sections must have connection types",
+        ));
     }
 
     // Check that extmaps are not defined on session and media level
@@ -855,7 +857,7 @@ pub fn parse_sdp(sdp: &str, fail_on_warning: bool) -> Result<SdpSession, SdpPars
         if stripped_line.is_empty() {
             continue;
         }
-        match parse_sdp_line(stripped_line, line_number) {
+        match parse_sdp_line(line, line_number) {
             Ok(n) => {
                 sdp_lines.push(n);
             }
@@ -1143,7 +1145,6 @@ mod tests {
     fn test_parse_sdp_line_empty_value() {
         assert!(parse_sdp_line("v=", 0).is_err());
         assert!(parse_sdp_line("o=", 0).is_err());
-        assert!(parse_sdp_line("s=", 0).is_err());
     }
 
     #[test]
@@ -1212,7 +1213,7 @@ mod tests {
         let t = SdpTiming { start: 0, stop: 0 };
         sdp_session.set_timing(t);
 
-        assert!(sanity_check_sdp_session(&sdp_session).is_err());
+        assert!(sanity_check_sdp_session(&sdp_session).is_ok());
 
         // the dummy media section doesn't contain a connection
         sdp_session.extend_media(vec![create_dummy_media_section()]);

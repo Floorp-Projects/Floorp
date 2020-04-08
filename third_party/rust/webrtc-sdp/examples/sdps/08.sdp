@@ -1,3 +1,6 @@
+;
+; This example fails to parse because of a mismatched fingerprint length
+;
 v=0
 o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0
 s=SIP Call
