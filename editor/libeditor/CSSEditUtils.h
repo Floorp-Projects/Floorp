@@ -175,12 +175,6 @@ class CSSEditUtils final {
     return GetCSSEquivalentToHTMLInlineStyleSetInternal(
         aContent, aHTMLProperty, aAttribute, aValue, StyleType::Computed);
   }
-  static nsresult GetSpecifiedCSSEquivalentToHTMLInlineStyleSet(
-      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
-      nsAString& aValue) {
-    return GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Specified);
-  }
 
   /**
    * Does the node aNode (or his parent if it is not an element node) carries
