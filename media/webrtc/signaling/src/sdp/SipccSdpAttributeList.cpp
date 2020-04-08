@@ -467,6 +467,55 @@ void SipccSdpAttributeList::LoadSsrc(sdp_t* sdp, uint16_t level) {
   }
 }
 
+void SipccSdpAttributeList::LoadSsrcGroup(sdp_t* sdp, uint16_t level) {
+  auto ssrcGroups = MakeUnique<SdpSsrcGroupAttributeList>();
+
+  for (uint16_t i = 1; i < UINT16_MAX; ++i) {
+    sdp_attr_t* attr = sdp_find_attr(sdp, level, 0, SDP_ATTR_SSRC_GROUP, i);
+
+    if (!attr) {
+      break;
+    }
+
+    sdp_ssrc_group_t* ssrc_group = &(attr->attr.ssrc_group);
+
+    SdpSsrcGroupAttributeList::Semantics semantic;
+    switch (ssrc_group->semantic) {
+      case SDP_SSRC_GROUP_ATTR_FEC:
+        semantic = SdpSsrcGroupAttributeList::kFec;
+        break;
+      case SDP_SSRC_GROUP_ATTR_FID:
+        semantic = SdpSsrcGroupAttributeList::kFid;
+        break;
+      case SDP_SSRC_GROUP_ATTR_FECFR:
+        semantic = SdpSsrcGroupAttributeList::kFecFr;
+        break;
+      case SDP_SSRC_GROUP_ATTR_DUP:
+        semantic = SdpSsrcGroupAttributeList::kDup;
+        break;
+      case SDP_SSRC_GROUP_ATTR_SIM:
+        semantic = SdpSsrcGroupAttributeList::kSim;
+        break;
+      case SDP_MAX_SSRC_GROUP_ATTR_VAL:
+        continue;
+      case SDP_SSRC_GROUP_ATTR_UNSUPPORTED:
+        continue;
+    }
+
+    std::vector<uint32_t> ssrcs;
+    ssrcs.reserve(ssrc_group->num_ssrcs);
+    for (int i = 0; i < ssrc_group->num_ssrcs; ++i) {
+      ssrcs.push_back(ssrc_group->ssrcs[i]);
+    }
+
+    ssrcGroups->PushEntry(semantic, ssrcs);
+  }
+
+  if (!ssrcGroups->mSsrcGroups.empty()) {
+    SetAttribute(ssrcGroups.release());
+  }
+}
+
 bool SipccSdpAttributeList::LoadImageattr(sdp_t* sdp, uint16_t level,
                                           InternalResults& results) {
   UniquePtr<SdpImageattrAttributeList> imageattrs(
@@ -996,6 +1045,7 @@ bool SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     LoadRtcpFb(sdp, level, results);
     LoadRtcp(sdp, level, results);
     LoadSsrc(sdp, level);
+    LoadSsrcGroup(sdp, level);
     if (!LoadImageattr(sdp, level, results)) {
       return false;
     }
@@ -1287,6 +1337,14 @@ const SdpSsrcAttributeList& SipccSdpAttributeList::GetSsrc() const {
   }
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kSsrcAttribute);
   return *static_cast<const SdpSsrcAttributeList*>(attr);
+}
+
+const SdpSsrcGroupAttributeList& SipccSdpAttributeList::GetSsrcGroup() const {
+  if (!HasAttribute(SdpAttribute::kSsrcGroupAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kSsrcGroupAttribute);
+  return *static_cast<const SdpSsrcGroupAttributeList*>(attr);
 }
 
 void SipccSdpAttributeList::Serialize(std::ostream& os) const {
