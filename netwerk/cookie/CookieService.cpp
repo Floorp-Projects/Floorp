@@ -176,11 +176,15 @@ void CookieService::CloseCookieStorages() {
     return;
   }
 
-  mPrivateStorage->Close();
-  mPrivateStorage = nullptr;
+  // Let's nullify both storages before calling Close().
+  RefPtr<CookiePrivateStorage> privateStorage;
+  privateStorage.swap(mPrivateStorage);
 
-  mPersistentStorage->Close();
-  mPersistentStorage = nullptr;
+  RefPtr<CookiePersistentStorage> persistentStorage;
+  persistentStorage.swap(mPersistentStorage);
+
+  privateStorage->Close();
+  persistentStorage->Close();
 }
 
 CookieService::~CookieService() {
