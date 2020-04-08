@@ -236,7 +236,7 @@ impl<'a> ModuleEnvironment<'a> {
 
 impl FuncCompileInput {
     pub fn bytecode(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.bytecode, self.bytecode_size) }
+        unsafe { slice::from_raw_parts(self.bytecode, self.bytecodeSize) }
     }
 
     pub fn stackmaps(&self) -> Stackmaps {
@@ -246,57 +246,65 @@ impl FuncCompileInput {
 
 impl CompiledFunc {
     pub fn reset(&mut self, compiled_func: &compile::CompiledFunc) {
-        self.num_metadata = compiled_func.metadata.len();
+        self.numMetadata = compiled_func.metadata.len();
         self.metadatas = compiled_func.metadata.as_ptr();
 
-        self.frame_pushed = compiled_func.frame_pushed as usize;
-        self.contains_calls = compiled_func.contains_calls;
+        self.framePushed = compiled_func.frame_pushed as usize;
+        self.containsCalls = compiled_func.contains_calls;
 
         self.code = compiled_func.code_buffer.as_ptr();
-        self.code_size = compiled_func.code_size as usize;
-        self.jumptables_size = compiled_func.jumptables_size as usize;
-        self.rodata_size = compiled_func.rodata_size as usize;
-        self.total_size = compiled_func.code_buffer.len();
+        self.codeSize = compiled_func.code_size as usize;
+        self.jumptablesSize = compiled_func.jumptables_size as usize;
+        self.rodataSize = compiled_func.rodata_size as usize;
+        self.totalSize = compiled_func.code_buffer.len();
 
-        self.num_rodata_relocs = compiled_func.rodata_relocs.len();
-        self.rodata_relocs = compiled_func.rodata_relocs.as_ptr();
+        self.numRodataRelocs = compiled_func.rodata_relocs.len();
+        self.rodataRelocs = compiled_func.rodata_relocs.as_ptr();
     }
 }
 
 impl MetadataEntry {
-    pub fn direct_call(code_offset: CodeOffset, srcloc: SourceLoc, func_index: FuncIndex) -> Self {
+    pub fn direct_call(code_offset: CodeOffset, func_index: FuncIndex, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_DirectCall,
-            code_offset,
-            module_bytecode_offset: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: func_index.index(),
         }
     }
-    pub fn indirect_call(ret_addr: CodeOffset, srcloc: SourceLoc) -> Self {
+
+    pub fn indirect_call(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_IndirectCall,
-            code_offset: ret_addr,
-            module_bytecode_offset: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: 0,
         }
     }
+
     pub fn trap(code_offset: CodeOffset, srcloc: SourceLoc, which: Trap) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_Trap,
-            code_offset,
-            module_bytecode_offset: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: which as usize,
         }
     }
-    pub fn symbolic_access(
-        code_offset: CodeOffset,
-        srcloc: SourceLoc,
-        sym: SymbolicAddress,
-    ) -> Self {
+
+    pub fn memory_access(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
+        Self {
+            which: CraneliftMetadataEntry_Which_MemoryAccess,
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
+            extra: 0,
+        }
+    }
+
+    pub fn symbolic_access(code_offset: CodeOffset, sym: SymbolicAddress) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_SymbolicAccess,
-            code_offset,
-            module_bytecode_offset: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: 0,
             extra: sym as usize,
         }
     }
@@ -305,7 +313,7 @@ impl MetadataEntry {
 impl StaticEnvironment {
     /// Returns the default calling convention on this machine.
     pub fn call_conv(&self) -> isa::CallConv {
-        if self.platform_is_windows {
+        if self.platformIsWindows {
             isa::CallConv::BaldrdashWindows
         } else {
             isa::CallConv::BaldrdashSystemV
