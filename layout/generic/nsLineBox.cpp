@@ -672,7 +672,7 @@ NS_IMETHODIMP
 nsLineIterator::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                             nsIFrame** aFrameFound,
                             bool* aPosIsBeforeFirstFrame,
-                            bool* aPosIsAfterLastFrame) {
+                            bool* aPosIsAfterLastFrame) const {
   MOZ_ASSERT(aFrameFound && aPosIsBeforeFirstFrame && aPosIsAfterLastFrame,
              "null OUT ptr");
 
