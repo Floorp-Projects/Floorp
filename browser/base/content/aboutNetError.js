@@ -1030,7 +1030,7 @@ async function setTechnicalDetailsOnCertError() {
           setL10NLabel("cert-error-domain-mismatch-single-nolink", args);
         }
       } else {
-        let names = subjectAltNames.join(", ");
+        let names = subjectAltNames.slice(0, 50).join(", ");
         args["subject-alt-names"] = names;
         setL10NLabel("cert-error-domain-mismatch-multiple", args);
       }
