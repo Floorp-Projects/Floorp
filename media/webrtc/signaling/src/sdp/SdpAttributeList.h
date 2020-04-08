@@ -62,6 +62,7 @@ class SdpAttributeList {
   virtual uint32_t GetSctpPort() const = 0;
   virtual uint32_t GetMaxMessageSize() const = 0;
   virtual const SdpSsrcAttributeList& GetSsrc() const = 0;
+  virtual const SdpSsrcGroupAttributeList& GetSsrcGroup() const = 0;
 
   // These attributes are effectively simple types, so we'll make life
   // easy by just returning their value.
