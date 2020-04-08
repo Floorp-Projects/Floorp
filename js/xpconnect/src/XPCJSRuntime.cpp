@@ -1060,8 +1060,8 @@ StaticAutoPtr<HelperThreadPool> gHelperThreads;
 
 void InitializeHelperThreadPool() { gHelperThreads = new HelperThreadPool(); }
 
-void DispatchOffThreadTask(RunnableTask* task) {
-  gHelperThreads->Dispatch(MakeAndAddRef<HelperThreadTaskHandler>(task));
+void DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
+  gHelperThreads->Dispatch(MakeAndAddRef<HelperThreadTaskHandler>(std::move(task)));
 }
 
 void XPCJSRuntime::Shutdown(JSContext* cx) {
