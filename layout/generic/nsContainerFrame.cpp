@@ -1983,7 +1983,7 @@ void nsOverflowContinuationTracker::EndFinish(nsIFrame* aChild) {
 
 #ifdef DEBUG_FRAME_DUMP
 void nsContainerFrame::List(FILE* out, const char* aPrefix,
-                            uint32_t aFlags) const {
+                            ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 
