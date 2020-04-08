@@ -239,8 +239,8 @@ function testTableGet(type, x) {
     ins.exports.t.set(0, x);
     assertEq(ins.exports.f(0), x);
     assertEq(ins.exports.f(1), null);
-    assertErrorMessage(() => ins.exports.f(10), RangeError, /index out of bounds/);
-    assertErrorMessage(() => ins.exports.f(-5), RangeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.f(10), WebAssembly.RuntimeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.f(-5), WebAssembly.RuntimeError, /index out of bounds/);
 }
 testTableGet('anyref', {});
 testTableGet('funcref', wasmFun);
@@ -281,8 +281,8 @@ function testTableSet(lhs_type, rhs_type, x) {
     ins.exports.set_null(3);
     assertEq(ins.exports.t.get(3), null);
 
-    assertErrorMessage(() => ins.exports.set_ref(10, x), RangeError, /index out of bounds/);
-    assertErrorMessage(() => ins.exports.set_ref(-1, x), RangeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.set_ref(10, x), WebAssembly.RuntimeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.set_ref(-1, x), WebAssembly.RuntimeError, /index out of bounds/);
 }
 testTableSet('anyref', 'anyref', {});
 testTableSet('funcref', 'funcref', wasmFun);

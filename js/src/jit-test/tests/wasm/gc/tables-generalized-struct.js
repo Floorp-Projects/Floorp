@@ -27,8 +27,8 @@
     ins.exports.set_ref(5, dummy);
     assertEq(ins.exports.t.get(5), dummy);
 
-    assertErrorMessage(() => ins.exports.set_anyref(10, x), RangeError, /index out of bounds/);
-    assertErrorMessage(() => ins.exports.set_anyref(-1, x), RangeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.set_anyref(10, x), WebAssembly.RuntimeError, /index out of bounds/);
+    assertErrorMessage(() => ins.exports.set_anyref(-1, x), WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // table.grow on table of anyref with non-null ref value
