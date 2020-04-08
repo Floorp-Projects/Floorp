@@ -30,7 +30,7 @@ fn parse_minimal_sdp() {
     assert_eq!(o.username, "-");
     assert_eq!(o.session_id, 1);
     assert_eq!(o.session_version, 1);
-    assert_eq!(sdp.get_session(), "-");
+    assert_eq!(sdp.get_session(), &Some("-".to_owned()));
     assert!(sdp.timing.is_some());
     assert!(sdp.get_connection().is_some());
     assert_eq!(sdp.attribute.len(), 0);
@@ -70,7 +70,26 @@ m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
     assert!(sdp_opt.is_some());
     let sdp = sdp_opt.unwrap();
     assert_eq!(sdp.get_version(), 0);
-    assert_eq!(sdp.get_session(), "-");
+    assert_eq!(sdp.get_session(), &Some("-".to_owned()));
+}
+
+#[test]
+fn parse_minimal_sdp_with_single_space_session() {
+    let sdp = "v=0\r\n
+\r\n
+o=- 0 0 IN IP4 0.0.0.0\r\n
+ \r\n
+s= \r\n
+c=IN IP4 0.0.0.0\r\n
+t=0 0\r\n
+m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
+    let sdp_res = webrtc_sdp::parse_sdp(sdp, false);
+    assert!(sdp_res.is_ok());
+    let sdp_opt = sdp_res.ok();
+    assert!(sdp_opt.is_some());
+    let sdp = sdp_opt.unwrap();
+    assert_eq!(sdp.get_version(), 0);
+    assert_eq!(sdp.get_session(), &None);
 }
 
 #[test]
@@ -92,7 +111,7 @@ fn parse_minimal_sdp_with_most_session_types() {
     assert!(sdp_opt.is_some());
     let sdp = sdp_opt.unwrap();
     assert_eq!(sdp.version, 0);
-    assert_eq!(sdp.session, "-");
+    assert_eq!(sdp.session, Some("-".to_owned()));
     assert!(sdp.get_connection().is_some());
 
     check_parse_and_serialize(sdp_str);
@@ -116,7 +135,7 @@ fn parse_minimal_sdp_with_most_media_types() {
     assert!(sdp_opt.is_some());
     let sdp = sdp_opt.unwrap();
     assert_eq!(sdp.version, 0);
-    assert_eq!(sdp.session, "-");
+    assert_eq!(sdp.session, Some("-".to_owned()));
     assert_eq!(sdp.attribute.len(), 0);
     assert_eq!(sdp.media.len(), 1);
 

@@ -577,6 +577,10 @@ pub struct SdpAttributeFmtpParameters {
     // telephone-event
     pub dtmf_tones: String,
 
+    // Rtx
+    pub apt: u8,
+    pub rtx_time: u32,
+
     // Unknown
     pub unknown_tokens: Vec<String>,
 }
@@ -1090,6 +1094,29 @@ impl AnonymizingClone for SdpAttributeSsrc {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+pub enum SdpSsrcGroupSemantic {
+    Duplication,              // RFC7104
+    FlowIdentification,       // RFC5576
+    ForwardErrorCorrection,   // RFC5576
+    ForwardErrorCorrectionFR, // RFC5956
+    SIM,                      // not registered with IANA, but used in hangouts
+}
+
+impl fmt::Display for SdpSsrcGroupSemantic {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            SdpSsrcGroupSemantic::Duplication => "DUP",
+            SdpSsrcGroupSemantic::FlowIdentification => "FID",
+            SdpSsrcGroupSemantic::ForwardErrorCorrection => "FEC",
+            SdpSsrcGroupSemantic::ForwardErrorCorrectionFR => "FEC-FR",
+            SdpSsrcGroupSemantic::SIM => "SIM",
+        }
+        .fmt(f)
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
 pub enum SdpAttribute {
     BundleOnly,
     Candidate(SdpAttributeCandidate),
@@ -1130,7 +1157,7 @@ pub enum SdpAttribute {
     Setup(SdpAttributeSetup),
     Simulcast(SdpAttributeSimulcast),
     Ssrc(SdpAttributeSsrc),
-    SsrcGroup(String),
+    SsrcGroup(SdpSsrcGroupSemantic, Vec<SdpAttributeSsrc>),
 }
 
 impl SdpAttribute {
@@ -1273,7 +1300,7 @@ impl FromStr for SdpAttribute {
             "rtcp-rsize" => Ok(SdpAttribute::RtcpRsize),
             "sendonly" => Ok(SdpAttribute::Sendonly),
             "sendrecv" => Ok(SdpAttribute::Sendrecv),
-            "ssrc-group" => Ok(SdpAttribute::SsrcGroup(string_or_empty(val)?)),
+            "ssrc-group" => parse_ssrc_group(val),
             "sctp-port" => parse_sctp_port(val),
             "candidate" => parse_candidate(val),
             "extmap" => parse_extmap(val),
@@ -1342,7 +1369,11 @@ impl fmt::Display for SdpAttribute {
             SdpAttribute::Setup(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::Simulcast(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::Ssrc(ref a) => attr_to_string(a.to_string()),
-            SdpAttribute::SsrcGroup(ref a) => attr_to_string(a.to_string()),
+            SdpAttribute::SsrcGroup(ref a, ref ssrcs) => {
+                let stringified_ssrcs: Vec<String> =
+                    ssrcs.iter().map(|ssrc| ssrc.to_string()).collect();
+                attr_to_string(a.to_string()) + " " + &stringified_ssrcs.join(" ")
+            }
         }
         .fmt(f)
     }
@@ -1527,6 +1558,55 @@ fn parse_single_direction(to_parse: &str) -> Result<SdpSingleDirection, SdpParse
             x
         ))),
     }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// a=ssrc-group, RFC5576
+//-------------------------------------------------------------------------
+// a=ssrc-group:<semantics> <ssrc-id> ...
+fn parse_ssrc_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
+    let mut tokens = to_parse.split_whitespace();
+    let semantics = match tokens.next() {
+        None => {
+            return Err(SdpParserInternalError::Generic(
+                "Ssrc group attribute is missing semantics".to_string(),
+            ));
+        }
+        Some(x) => match x.to_uppercase().as_ref() {
+            "DUP" => SdpSsrcGroupSemantic::Duplication,
+            "FID" => SdpSsrcGroupSemantic::FlowIdentification,
+            "FEC" => SdpSsrcGroupSemantic::ForwardErrorCorrection,
+            "FEC-FR" => SdpSsrcGroupSemantic::ForwardErrorCorrectionFR,
+            "SIM" => SdpSsrcGroupSemantic::SIM,
+            unknown => {
+                return Err(SdpParserInternalError::Unsupported(format!(
+                    "Unknown ssrc semantic '{:?}' found",
+                    unknown
+                )));
+            }
+        },
+    };
+
+    let mut ssrcs = Vec::new();
+    for token in tokens {
+        match parse_ssrc(token) {
+            Ok(SdpAttribute::Ssrc(ssrc)) => {
+                ssrcs.push(ssrc);
+            }
+            Err(err) => {
+                return Err(err);
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    if ssrcs.is_empty() {
+        return Err(SdpParserInternalError::Generic(
+            "Ssrc group must contain at least one ssrc".to_string(),
+        ));
+    }
+
+    Ok(SdpAttribute::SsrcGroup(semantics, ssrcs))
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1902,6 +1982,8 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
         maxplaybackrate: 48000,
         encodings: Vec::new(),
         dtmf_tones: "".to_string(),
+        apt: 0,
+        rtx_time: 0,
         unknown_tokens: Vec::new(),
     };
 
@@ -1982,7 +2064,11 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                         parameters.useinbandfec = parse_bool(parameter_val, "useinbandfec")?
                     }
                     "CBR" => parameters.cbr = parse_bool(parameter_val, "cbr")?,
-                    _ => parameters.unknown_tokens.push(parameter_token.to_string()),
+                    "APT" => parameters.apt = parameter_val.parse::<u8>()?,
+                    "RTX-TIME" => parameters.rtx_time = parameter_val.parse::<u32>()?,
+                    _ => parameters
+                        .unknown_tokens
+                        .push((*parameter_token).to_string()),
                 }
             }
         } else if parameter_token.contains('/') {
@@ -2045,7 +2131,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
 
             // Set the parsed dtmf tones or in case the parsing was insuccessfull, set it to the default "0-15"
             parameters.dtmf_tones = if dtmf_tone_is_ok {
-                parameter_token.to_string()
+                (*parameter_token).to_string()
             } else {
                 "0-15".to_string()
             };
@@ -2845,9 +2931,10 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
             "goog-remb" => SdpAttributeRtcpFbType::Remb,
             "transport-cc" => SdpAttributeRtcpFbType::TransCC,
             _ => {
-                return Err(SdpParserInternalError::Unsupported(
-                    format!("Unknown rtcpfb feedback type: {:?}", x).to_string(),
-                ));
+                return Err(SdpParserInternalError::Unsupported(format!(
+                    "Unknown rtcpfb feedback type: {:?}",
+                    x
+                )));
             }
         },
         None => {
@@ -2861,11 +2948,12 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
     let parameter = match feedback_type {
         SdpAttributeRtcpFbType::Ack => match tokens.get(2) {
             Some(x) => match *x {
-                "rpsi" | "app" => x.to_string(),
+                "rpsi" | "app" => (*x).to_string(),
                 _ => {
-                    return Err(SdpParserInternalError::Unsupported(
-                        format!("Unknown rtcpfb ack parameter: {:?}", x).to_string(),
-                    ));
+                    return Err(SdpParserInternalError::Unsupported(format!(
+                        "Unknown rtcpfb ack parameter: {:?}",
+                        x
+                    )));
                 }
             },
             None => {
@@ -2876,33 +2964,36 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
         },
         SdpAttributeRtcpFbType::Ccm => match tokens.get(2) {
             Some(x) => match *x {
-                "fir" | "tmmbr" | "tstr" | "vbcm" => x.to_string(),
+                "fir" | "tmmbr" | "tstr" | "vbcm" => (*x).to_string(),
                 _ => {
-                    return Err(SdpParserInternalError::Unsupported(
-                        format!("Unknown rtcpfb ccm parameter: {:?}", x).to_string(),
-                    ));
+                    return Err(SdpParserInternalError::Unsupported(format!(
+                        "Unknown rtcpfb ccm parameter: {:?}",
+                        x
+                    )));
                 }
             },
             None => "".to_string(),
         },
         SdpAttributeRtcpFbType::Nack => match tokens.get(2) {
             Some(x) => match *x {
-                "sli" | "pli" | "rpsi" | "app" => x.to_string(),
+                "sli" | "pli" | "rpsi" | "app" => (*x).to_string(),
                 _ => {
-                    return Err(SdpParserInternalError::Unsupported(
-                        format!("Unknown rtcpfb nack parameter: {:?}", x).to_string(),
-                    ));
+                    return Err(SdpParserInternalError::Unsupported(format!(
+                        "Unknown rtcpfb nack parameter: {:?}",
+                        x
+                    )));
                 }
             },
             None => "".to_string(),
         },
         SdpAttributeRtcpFbType::TrrInt => match tokens.get(2) {
             Some(x) => match x {
-                _ if x.parse::<u32>().is_ok() => x.to_string(),
+                _ if x.parse::<u32>().is_ok() => (*x).to_string(),
                 _ => {
-                    return Err(SdpParserInternalError::Generic(
-                        format!("Unknown rtcpfb trr-int parameter: {:?}", x).to_string(),
-                    ));
+                    return Err(SdpParserInternalError::Generic(format!(
+                        "Unknown rtcpfb trr-int parameter: {:?}",
+                        x
+                    )));
                 }
             },
             None => {
@@ -2911,22 +3002,13 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                 ));
             }
         },
-        SdpAttributeRtcpFbType::Remb => match tokens.get(2) {
+        SdpAttributeRtcpFbType::Remb | SdpAttributeRtcpFbType::TransCC => match tokens.get(2) {
             Some(x) => match x {
                 _ => {
-                    return Err(SdpParserInternalError::Unsupported(
-                        format!("Unknown rtcpfb remb parameter: {:?}", x).to_string(),
-                    ));
-                }
-            },
-            None => "".to_string(),
-        },
-        SdpAttributeRtcpFbType::TransCC => match tokens.get(2) {
-            Some(x) => match x {
-                _ => {
-                    return Err(SdpParserInternalError::Unsupported(
-                        format!("Unknown rtcpfb transport-cc parameter: {:?}", x).to_string(),
-                    ));
+                    return Err(SdpParserInternalError::Unsupported(format!(
+                        "Unknown rtcpfb {} parameter: {:?}",
+                        feedback_type, x
+                    )));
                 }
             },
             None => "".to_string(),
@@ -2938,7 +3020,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
         feedback_type,
         parameter,
         extra: match tokens.get(3) {
-            Some(x) => x.to_string(),
+            Some(x) => (*x).to_string(),
             None => "".to_string(),
         },
     }))
@@ -3140,20 +3222,20 @@ mod tests {
     macro_rules! make_check_parse {
         ($attr_type:ty, $attr_kind:path) => {
             |attr_str: &str| -> $attr_type {
-                if let Ok(SdpType::Attribute($attr_kind(attr))) = parse_attribute(attr_str) {
-                    attr
-                } else {
-                    unreachable!();
+                match parse_attribute(attr_str) {
+                    Ok(SdpType::Attribute($attr_kind(attr))) => attr,
+                    Err(e) => panic!(e),
+                    _ => unreachable!(),
                 }
             }
         };
 
         ($attr_kind:path) => {
             |attr_str: &str| -> SdpAttribute {
-                if let Ok(SdpType::Attribute($attr_kind)) = parse_attribute(attr_str) {
-                    $attr_kind
-                } else {
-                    unreachable!();
+                match parse_attribute(attr_str) {
+                    Ok(SdpType::Attribute($attr_kind)) => $attr_kind,
+                    Err(e) => panic!(e),
+                    _ => unreachable!(),
                 }
             }
         };
@@ -3509,6 +3591,8 @@ mod tests {
         assert!(
             parse_attribute("fmtp:8 x-google-start-bitrate=800; maxplaybackrate=48000;").is_ok()
         );
+        assert!(parse_attribute("fmtp:97 apt=96").is_ok());
+        assert!(parse_attribute("fmtp:97 apt=96;rtx-time=3000").is_ok());
     }
 
     #[test]
@@ -4195,13 +4279,30 @@ mod tests {
 
     #[test]
     fn test_parse_attribute_ssrc_group() {
-        let check_parse = make_check_parse!(String, SdpAttribute::SsrcGroup);
-        let check_parse_and_serialize =
-            make_check_parse_and_serialize!(check_parse, SdpAttribute::SsrcGroup);
-
-        check_parse_and_serialize("ssrc-group:FID 3156517279 2673335628");
+        let parsed = parse_attribute("ssrc-group:FID 3156517279 2673335628");
+        match parsed {
+            Ok(SdpType::Attribute(attr)) => {
+                assert_eq!(attr.to_string(), "ssrc-group:FID 3156517279 2673335628");
+                let (semantic, ssrcs) = match attr {
+                    SdpAttribute::SsrcGroup(semantic, ssrcs) => {
+                        let stringified_ssrcs: Vec<String> =
+                            ssrcs.iter().map(|ssrc| ssrc.to_string()).collect();
+                        (semantic.to_string(), stringified_ssrcs)
+                    }
+                    _ => unreachable!(),
+                };
+                assert_eq!(semantic, "FID");
+                assert_eq!(ssrcs.len(), 2);
+                assert_eq!(ssrcs[0], "3156517279");
+                assert_eq!(ssrcs[1], "2673335628");
+            }
+            Err(e) => panic!(e),
+            _ => unreachable!(),
+        }
 
         assert!(parse_attribute("ssrc-group:").is_err());
+        assert!(parse_attribute("ssrc-group:BLAH").is_err());
+        assert!(parse_attribute("ssrc-group:FID").is_err());
     }
 
     #[test]
