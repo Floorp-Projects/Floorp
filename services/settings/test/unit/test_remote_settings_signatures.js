@@ -3,7 +3,6 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
