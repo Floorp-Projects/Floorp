@@ -963,16 +963,6 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 }
 
 // static
-bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-    nsINode* aNode, nsAtom* aProperty, const nsAString* aAttribute,
-    nsAString& aValue, StyleType aStyleType) {
-  MOZ_ASSERT(aNode && aProperty);
-  RefPtr<nsAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
-  return IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, attribute,
-                                             aValue, aStyleType);
-}
-
-// static
 bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                        nsAtom* aHTMLProperty,
                                                        nsAtom* aHTMLAttribute,
