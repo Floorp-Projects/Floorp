@@ -401,7 +401,7 @@ void XRSession::Shutdown() {
 
 void XRSession::ExitPresentInternal() {
   if (mInputSources) {
-    mInputSources->Clear();
+    mInputSources->Clear(this);
   }
   if (mDisplayClient) {
     mDisplayClient->SessionEnded(this);
