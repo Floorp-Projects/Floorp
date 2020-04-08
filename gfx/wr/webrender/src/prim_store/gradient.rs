@@ -14,7 +14,7 @@ use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{BrushSegment, CachedGradientSegment, GradientTileRange, VectorKey};
-use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
+use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
 use std::{hash, ops::{Deref, DerefMut}};
@@ -282,7 +282,7 @@ pub struct LinearGradient {
 impl Internable for LinearGradient {
     type Key = LinearGradientKey;
     type StoreData = LinearGradientTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for LinearGradient {
@@ -512,7 +512,7 @@ pub struct RadialGradient {
 impl Internable for RadialGradient {
     type Key = RadialGradientKey;
     type StoreData = RadialGradientTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for RadialGradient {
@@ -732,7 +732,7 @@ pub struct ConicGradient {
 impl Internable for ConicGradient {
     type Key = ConicGradientKey;
     type StoreData = ConicGradientTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for ConicGradient {

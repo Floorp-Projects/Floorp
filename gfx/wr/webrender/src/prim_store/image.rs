@@ -15,7 +15,7 @@ use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo};
 use crate::prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
-    PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
+    PrimitiveOpacity, PrimKey, PrimKeyCommonData,
     PrimTemplate, PrimTemplateCommonData, PrimitiveStore, SegmentInstanceIndex,
     SizeKey, InternablePrimitive,
 };
@@ -307,7 +307,7 @@ pub type ImageDataHandle = InternHandle<Image>;
 impl Internable for Image {
     type Key = ImageKey;
     type StoreData = ImageTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for Image {
@@ -489,7 +489,7 @@ pub type YuvImageDataHandle = InternHandle<YuvImage>;
 impl Internable for YuvImage {
     type Key = YuvImageKey;
     type StoreData = YuvImageTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for YuvImage {

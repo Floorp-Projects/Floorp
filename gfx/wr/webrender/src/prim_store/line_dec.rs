@@ -14,7 +14,7 @@ use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
-    InternablePrimitive, PrimitiveSceneData, PrimitiveStore,
+    InternablePrimitive, PrimitiveStore,
 };
 use crate::prim_store::PrimitiveInstanceKind;
 
@@ -127,7 +127,7 @@ pub type LineDecorationDataHandle = intern::Handle<LineDecoration>;
 impl intern::Internable for LineDecoration {
     type Key = LineDecorationKey;
     type StoreData = LineDecorationTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for LineDecoration {

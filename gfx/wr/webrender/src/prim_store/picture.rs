@@ -15,7 +15,7 @@ use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use crate::picture::PictureCompositeMode;
 use crate::prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
-    PrimitiveInstanceKind, PrimitiveSceneData, PrimitiveStore, VectorKey,
+    PrimitiveInstanceKind, PrimitiveStore, VectorKey,
     InternablePrimitive,
 };
 
@@ -279,7 +279,7 @@ pub type PictureDataHandle = InternHandle<Picture>;
 impl Internable for Picture {
     type Key = PictureKey;
     type StoreData = PictureTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for Picture {
