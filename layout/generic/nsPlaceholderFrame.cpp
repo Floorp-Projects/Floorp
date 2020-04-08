@@ -265,7 +265,7 @@ nsresult nsPlaceholderFrame::GetFrameName(nsAString& aResult) const {
 }
 
 void nsPlaceholderFrame::List(FILE* out, const char* aPrefix,
-                              uint32_t aFlags) const {
+                              ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 

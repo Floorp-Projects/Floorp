@@ -489,7 +489,8 @@ NS_QUERYFRAME_HEAD(nsBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-void nsBlockFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
+void nsBlockFrame::List(FILE* out, const char* aPrefix,
+                        ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 

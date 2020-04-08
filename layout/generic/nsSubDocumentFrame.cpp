@@ -616,12 +616,12 @@ nscoord nsSubDocumentFrame::GetIntrinsicBSize() {
 
 #ifdef DEBUG_FRAME_DUMP
 void nsSubDocumentFrame::List(FILE* out, const char* aPrefix,
-                              uint32_t aFlags) const {
+                              ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
   fprintf_stderr(out, "%s\n", str.get());
 
-  if (aFlags & TRAVERSE_SUBDOCUMENT_FRAMES) {
+  if (aFlags.contains(ListFlag::TraverseSubdocumentFrames)) {
     nsSubDocumentFrame* f = const_cast<nsSubDocumentFrame*>(this);
     nsIFrame* subdocRootFrame = f->GetSubdocumentRootFrame();
     if (subdocRootFrame) {

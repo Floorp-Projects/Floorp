@@ -8049,7 +8049,7 @@ nsAutoCString nsIFrame::ListTag() const {
 
 // Debugging
 void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
-                           uint32_t aFlags) const {
+                           ListFlags aFlags) const {
   aTo += aPrefix;
   aTo += ListTag();
   if (HasView()) {
@@ -8161,7 +8161,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   aTo += "]";
 }
 
-void nsIFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
+void nsIFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
   fprintf_stderr(out, "%s\n", str.get());
