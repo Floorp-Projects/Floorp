@@ -738,6 +738,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute bool asyncPanZoomEnabled;
 
   /**
+   * Returns true if we are sandboxed from aTargetDocShell.
+   * aTargetDocShell - the browsing context we are attempting to navigate.
+   */
+  [noscript,notxpcom,nostdcall] bool isSandboxedFrom(in BrowsingContext aTargetBC);
+
+  /**
    * This member variable determines whether a document has Mixed Active Content that
    * was initially blocked from loading, but the user has choosen to override the
    * block and allow the content to load. mMixedContentChannel is set to the document's
@@ -874,8 +880,6 @@ interface nsIDocShell : nsIDocShellTreeItem
  * Get the script global for the document in this docshell.
 */
   [noscript,notxpcom,nostdcall] nsIScriptGlobalObject GetScriptGlobalObject();
-
-  [noscript,notxpcom,nostdcall] Document getExtantDocument();
 
   /**
    * If deviceSizeIsPageSize is set to true, device-width/height media queries
