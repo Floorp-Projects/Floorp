@@ -1101,9 +1101,9 @@ describe("Message reducer:", () => {
       const packet3 = clonePacket(stubPackets.get(key1));
 
       // Repeat ID must be the same even if the timestamp is different.
-      packet1.message.timeStamp = 1;
-      packet2.message.timeStamp = 2;
-      packet3.message.timeStamp = 3;
+      packet1.message.timeStamp = packet1.message.timeStamp + 1;
+      packet2.message.timeStamp = packet2.message.timeStamp + 2;
+      packet3.message.timeStamp = packet3.message.timeStamp + 3;
       dispatch(actions.messagesAdd([packet1, packet2, packet3]));
 
       // There is still only two messages being logged,
