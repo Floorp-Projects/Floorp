@@ -73,9 +73,6 @@
   locale/@AB_CD@/mozapps/handling/handling.dtd                    (%chrome/mozapps/handling/handling.dtd)
   locale/@AB_CD@/mozapps/handling/handling.properties             (%chrome/mozapps/handling/handling.properties)
   locale/@AB_CD@/mozapps/profile/profileSelection.properties      (%chrome/mozapps/profile/profileSelection.properties)
-#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
-  locale/@AB_CD@/mozapps/profile/profileDowngrade.dtd             (%chrome/mozapps/profile/profileDowngrade.dtd)
-#endif
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/mozapps/update/updates.dtd                       (%chrome/mozapps/update/updates.dtd)
   locale/@AB_CD@/mozapps/update/updates.properties                (%chrome/mozapps/update/updates.properties)
