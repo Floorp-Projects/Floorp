@@ -3893,7 +3893,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
     resultList.AppendNewToTop<nsDisplayStickyPosition>(
         aBuilder, this, &resultList, stickyASR,
-        aBuilder->CurrentActiveScrolledRoot());
+        aBuilder->CurrentActiveScrolledRoot(),
+        clipState.IsClippedToDisplayPort());
     ct.TrackContainer(resultList.GetTop());
 
     // If the sticky element is inside a filter, annotate the scroll frame that
