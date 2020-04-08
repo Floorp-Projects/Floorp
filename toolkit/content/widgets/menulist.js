@@ -98,7 +98,7 @@
       }
 
       if (!this.hasAttribute("popuponly")) {
-        this.shadowRoot.appendChild(this.fragment);
+        this.shadowRoot.appendChild(this.constructor.fragment);
         this._labelBox = this.shadowRoot.getElementById("label-box");
         this._dropmarker = this.shadowRoot.querySelector("dropmarker");
         this.initializeAttributeInheritance();
@@ -109,15 +109,6 @@
       this.mSelectedInternal = null;
       this.mAttributeObserver = null;
       this.setInitialSelection();
-    }
-
-    get fragment() {
-      if (!this.constructor.hasOwnProperty("_fragment")) {
-        this.constructor._fragment = MozXULElement.parseXULToFragment(
-          MozMenuList.markup
-        );
-      }
-      return document.importNode(this.constructor._fragment, true);
     }
 
     // nsIDOMXULSelectControlElement
