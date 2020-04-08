@@ -54,7 +54,7 @@ UNIFIED_SOURCES += [
     'tokenize.cc',
 ]
 
-DEFINES['BPLOG_MINIMUM_SEVERITY'] = 'SEVERITY_ERROR'
+DEFINES['BPLOG_MINIMUM_SEVERITY'] = 'SEVERITY_CRITICAL'
 
 Library('breakpad_processor')
 
