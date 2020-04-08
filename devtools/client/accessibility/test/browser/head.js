@@ -752,16 +752,32 @@ async function runA11yPanelTests(tests, env) {
 
 /**
  * Build a valid URL from an HTML snippet.
- * @param  {String} uri HTML snippet
+ * @param  {String}  uri      HTML snippet
+ * @param  {Object}  options  options for the test
  * @return {String}     built URL
  */
-function buildURL(uri) {
+function buildURL(uri, options = {}) {
+  if (options.remoteIframe) {
+    const srcURL = new URL(`http://example.net/document-builder.sjs`);
+    srcURL.searchParams.append(
+      "html",
+      `<html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Accessibility Panel Test (OOP)</title>
+        </head>
+        <body>${uri}</body>
+      </html>`
+    );
+    uri = `<iframe title="Accessibility Panel Test (OOP)" src="${srcURL.href}"/>`;
+  }
+
   return `data:text/html;charset=UTF-8,${encodeURIComponent(uri)}`;
 }
 
 /**
  * Add a test task based on the test structure and a test URL.
- * @param  {JSON}   tests  test data that has the format of:
+ * @param  {JSON}   tests    test data that has the format of:
  *                    {
  *                      desc     {String}    description for better logging
  *                      setup   {Function}   An optional setup that needs to be
@@ -770,11 +786,12 @@ function buildURL(uri) {
  *                      expected {JSON}      An expected states for the tree and
  *                                           the sidebar
  *                    }
- * @param {String}  uri    test URL
- * @param {String}  msg    a message that is printed for the test
+ * @param {String}  uri      test URL
+ * @param {String}  msg      a message that is printed for the test
+ * @param {Object}  options  options for the test
  */
-function addA11yPanelTestsTask(tests, uri, msg) {
-  addA11YPanelTask(msg, uri, env => runA11yPanelTests(tests, env));
+function addA11yPanelTestsTask(tests, uri, msg, options) {
+  addA11YPanelTask(msg, uri, env => runA11yPanelTests(tests, env), options);
 }
 
 /**
@@ -783,11 +800,12 @@ function addA11yPanelTestsTask(tests, uri, msg) {
  * @param {String}   msg    a message that is printed for the test
  * @param {String}   uri    test URL
  * @param {Function} task   task function containing the tests.
+ * @param {Object}   options  options for the test
  */
-function addA11YPanelTask(msg, uri, task) {
+function addA11YPanelTask(msg, uri, task, options = {}) {
   add_task(async function a11YPanelTask() {
     info(msg);
-    const env = await addTestTab(buildURL(uri));
+    const env = await addTestTab(buildURL(uri, options));
     await task(env);
     await disableAccessibilityInspector(env);
   });

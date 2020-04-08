@@ -169,7 +169,7 @@ const accessibleWalkerSpec = generateActorSpec({
     getAccessibleFor: {
       request: { node: Arg(0, "domnode") },
       response: {
-        accessible: RetVal("accessible"),
+        accessible: RetVal("nullable:accessible"),
       },
     },
     getAncestry: {

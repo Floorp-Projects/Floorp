@@ -48,6 +48,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/highlighters/utils/accessibility",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "isRemoteFrame",
+  "devtools/shared/layout/utils",
+  true
+);
 
 const RELATIONS_TO_IGNORE = new Set([
   Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
@@ -240,6 +246,12 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     if (this.isDefunct) {
       return 0;
     }
+    // In case of a remote frame declare at least one child (the #document
+    // element) so that they can be expanded.
+    if (this.remoteFrame) {
+      return 1;
+    }
+
     return this.rawAccessible.childCount;
   },
 
@@ -413,11 +425,23 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return relationObjects;
   },
 
+  get remoteFrame() {
+    if (this.isDefunct) {
+      return false;
+    }
+
+    return (
+      this.rawAccessible.role === Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME &&
+      isRemoteFrame(this.rawAccessible.DOMNode)
+    );
+  },
+
   form() {
     return {
       actor: this.actorID,
       role: this.role,
       name: this.name,
+      remoteFrame: this.remoteFrame,
       childCount: this.childCount,
       checks: this._lastAudit,
     };
