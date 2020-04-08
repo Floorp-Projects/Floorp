@@ -301,6 +301,13 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
             ContextualParseError::InvalidRule(
                 _,
                 ParseError {
+                    kind: ParseErrorKind::Custom(StyleParseErrorKind::DisallowedImportRule),
+                    ..
+                },
+            ) => (cstr!("PEDisallowedImportRule"), Action::Nothing),
+            ContextualParseError::InvalidRule(
+                _,
+                ParseError {
                     kind: ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(_)),
                     ..
                 },
