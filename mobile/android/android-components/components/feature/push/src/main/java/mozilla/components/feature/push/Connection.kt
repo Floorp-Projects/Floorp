@@ -7,8 +7,8 @@ package mozilla.components.feature.push
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import mozilla.appservices.push.BridgeType
+import mozilla.appservices.push.GeneralError
 import mozilla.appservices.push.PushAPI
-import mozilla.appservices.push.PushError
 import mozilla.appservices.push.PushManager
 import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 import mozilla.appservices.push.SubscriptionResponse
@@ -171,9 +171,7 @@ internal class RustPushConnection(
         // This call will fail if we haven't 'subscribed' yet.
         return try {
             pushApi.update(token)
-        } catch (e: PushError) {
-            // Once we get GeneralError, let's catch that instead:
-            // https://github.com/mozilla/application-services/issues/2541
+        } catch (e: GeneralError) {
             val fakeChannelId = "fake".toChannelId()
             // It's possible that we have a race (on a first run) between 'subscribing' and setting a token.
             // 'update' expects that we've called 'subscribe' (which would obtain a 'uaid' from an autopush
