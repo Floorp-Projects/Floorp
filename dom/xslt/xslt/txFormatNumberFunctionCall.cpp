@@ -254,7 +254,7 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
   else
     bufsize = 1 + 30;
 
-  auto buf = MakeUnique<char[]>(bufsize);
+  auto buf = mozilla::MakeUnique<char[]>(bufsize);
   int bufIntDigits, sign;
   char* endp;
   PR_dtoa(value, 0, 0, &bufIntDigits, &sign, &endp, buf.get(), bufsize - 1);
@@ -276,7 +276,7 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
   bool hasFraction = false;
 
   // The number of characters in res that we haven't filled in.
-  CheckedUint32 resRemain = CheckedUint32(res.Length());
+  mozilla::CheckedUint32 resRemain = mozilla::CheckedUint32(res.Length());
 
 #define CHECKED_SET_CHAR(c)                                           \
   --resRemain;                                                        \
