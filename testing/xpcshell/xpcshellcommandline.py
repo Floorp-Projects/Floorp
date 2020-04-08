@@ -144,6 +144,11 @@ def add_common_arguments(parser):
                         action="store_true", default=False,
                         dest="enable_webrender",
                         help="Enable the WebRender compositor in Gecko.")
+    parser.add_argument("--headless",
+                        action="store_true", default=False,
+                        dest="headless",
+                        help="Enable headless mode by default for tests which don't specify "
+                             "whether to use headless mode")
 
 
 def add_remote_arguments(parser):
