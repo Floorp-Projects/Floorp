@@ -593,15 +593,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     if self.fission_enabled:
                         new_result["extra_options"].append("fission")
 
-                    # TODO: Once Bug 1593198 is fixed remove this part
-                    # Currently perfherder doesn't split data / recognize 'application` and for
-                    # browsertime tests we don't use the browser name in the test name as we use
-                    # simplified test INIs; therefore in order to differentiate in perfherder
-                    # between browsers/apps, until Bug 1593198 is fixed, we must add the app name
-                    # to the perfherder data extraOptions fields
-                    if self.app != "firefox":
-                        new_result["extra_options"].append(self.app)
-
                     return new_result
 
                 def _new_benchmark_result(new_result):
