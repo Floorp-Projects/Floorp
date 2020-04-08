@@ -20,6 +20,7 @@
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
+#include "nsIProcessSwitchRequestor.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIMultiPartChannel.h"
 
@@ -59,6 +60,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIParentChannel,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
+                             public nsIProcessSwitchRequestor,
                              public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
@@ -79,6 +81,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIPROCESSSWITCHREQUESTOR
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
 
   // We suspend the underlying channel when replacing ourselves with
@@ -172,10 +175,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // by us, and resumes the underlying source channel.
   void FinishReplacementChannelSetup(bool aSucceeded);
 
-  // Called from `OnStartRequest` to make the decision about whether or not to
-  // change process. This method will return `nullptr` if the current target
-  // process is appropriate.
-  bool MaybeTriggerProcessSwitch();
+  // Called when we have a cross-process switch promise. Waits on the
+  // promise, and then call TriggerRedirectToRealChannel with the
+  // provided content process id.
+  void TriggerCrossProcessSwitch();
 
   // A helper for TriggerRedirectToRealChannel that abstracts over
   // the same-process and cross-process switch cases and returns
@@ -190,8 +193,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
-
-  bool HasCrossOriginOpenerPolicyMismatch();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
@@ -345,8 +346,16 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // channel.
   bool mIsFinished = false;
 
-  // This identifier is set by MaybeTriggerProcessSwitch, and is later
-  // passed to the childChannel in order to identify it in the new process.
+  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
+      ContentProcessIdPromise;
+  // This promise is set following a on-may-change-process observer
+  // notification when the associated channel is getting relocated to another
+  // process. It will be resolved when that process is set up.
+  RefPtr<ContentProcessIdPromise> mRedirectContentProcessIdPromise;
+  // This identifier is set at the same time as the
+  // mRedirectContentProcessIdPromise.
+  // This identifier is later passed to the childChannel in order to identify it
+  // once the promise is resolved.
   uint64_t mCrossProcessRedirectIdentifier = 0;
 };
 

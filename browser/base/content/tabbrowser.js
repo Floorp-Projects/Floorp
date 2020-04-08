@@ -5671,51 +5671,6 @@
         }
       }
     },
-
-    async performProcessSwitch(
-      aBrowser,
-      aRemoteType,
-      aSwitchId,
-      aReplaceBrowsingContext
-    ) {
-      E10SUtils.log().info(
-        `performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
-      );
-
-      // Don't try to switch tabs before delayed startup is completed.
-      await window.delayedStartupPromise;
-
-      // Perform a navigateAndRestore to trigger the process switch.
-      let tab = this.getTabForBrowser(aBrowser);
-      let loadArguments = {
-        newFrameloader: true, // Switch even if remoteType hasn't changed.
-        remoteType: aRemoteType, // Don't derive remoteType to switch to.
-
-        // Information about which channel should be performing the load.
-        redirectLoadSwitchId: aSwitchId,
-
-        // True if this is a process switch due to a policy mismatch, means we
-        // shouldn't preserve our browsing context.
-        replaceBrowsingContext: aReplaceBrowsingContext,
-      };
-
-      await SessionStore.navigateAndRestore(tab, loadArguments, -1);
-
-      // If the process switch seems to have failed, send an error over to our
-      // caller, to give it a chance to kill our channel.
-      if (
-        aBrowser.remoteType != aRemoteType ||
-        !aBrowser.frameLoader ||
-        !aBrowser.frameLoader.remoteTab
-      ) {
-        throw Cr.NS_ERROR_FAILURE;
-      }
-
-      // Tell our caller to redirect the load into this newly created process.
-      let remoteTab = aBrowser.frameLoader.remoteTab;
-      E10SUtils.log().debug(`new tabID: ${remoteTab.tabId}`);
-      return remoteTab.contentProcessId;
-    },
   };
 
   /**

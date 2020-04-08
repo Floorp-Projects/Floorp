@@ -501,6 +501,25 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
   return promise.forget();
 }
 
+already_AddRefed<Promise> CanonicalBrowsingContext::ChangeFrameRemoteness(
+    const nsAString& aRemoteType, uint64_t aPendingSwitchId, ErrorResult& aRv) {
+  nsIGlobalObject* global = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  ChangeFrameRemoteness(aRemoteType, aPendingSwitchId)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [promise](BrowserParent* aBrowserParent) {
+            promise->MaybeResolve(aBrowserParent->Manager()->ChildID());
+          },
+          [promise](nsresult aRv) { promise->MaybeReject(aRv); });
+  return promise.forget();
+}
+
 MediaController* CanonicalBrowsingContext::GetMediaController() {
   // We would only create one media controller per tab, so accessing the
   // controller via the top-level browsing context.

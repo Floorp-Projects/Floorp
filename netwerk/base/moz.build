@@ -75,6 +75,7 @@ XPIDL_SOURCES += [
     'nsIPermission.idl',
     'nsIPermissionManager.idl',
     'nsIPrivateBrowsingChannel.idl',
+    'nsIProcessSwitchRequestor.idl',
     'nsIProgressEventSink.idl',
     'nsIPrompt.idl',
     'nsIProtocolHandler.idl',
