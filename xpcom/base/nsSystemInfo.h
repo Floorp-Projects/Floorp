@@ -60,6 +60,11 @@ typedef mozilla::MozPromise<OSInfo, nsresult, /* IsExclusive */ false>
 typedef mozilla::MozPromise<ProcessInfo, nsresult, /* IsExclusive */ false>
     ProcessInfoPromise;
 
+// Synchronous info collection, avoid calling it from the main thread, consider
+// using the promise-based `nsISystemInfo::GetProcessInfo()` instead.
+// Note that only known fields will be written.
+nsresult CollectProcessInfo(ProcessInfo& info);
+
 class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
  public:
   NS_DECL_ISUPPORTS_INHERITED
