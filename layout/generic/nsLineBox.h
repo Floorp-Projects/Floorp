@@ -1655,7 +1655,7 @@ class nsLineIterator final : public nsILineIterator {
                          bool* aPosIsAfterLastFrame) override;
 
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame,
-                                  int32_t aLineNumber) override;
+                                  int32_t aLineNumber) const override;
   NS_IMETHOD CheckLineOrder(int32_t aLine, bool* aIsReordered,
                             nsIFrame** aFirstVisual,
                             nsIFrame** aLastVisual) override;

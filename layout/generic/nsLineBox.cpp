@@ -753,7 +753,8 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
 }
 
 NS_IMETHODIMP
-nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) {
+nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame,
+                                     int32_t aLineNumber) const {
   aFrame = aFrame->GetNextSibling();
   return NS_OK;
 }
