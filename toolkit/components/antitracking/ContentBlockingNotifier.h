@@ -52,8 +52,7 @@ class ContentBlockingNotifier final {
   static void OnEvent(nsIChannel* aChannel, uint32_t aRejectedReason);
 
   static void OnEvent(
-      nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel,
-      bool aBlocked, uint32_t aRejectedReason,
+      nsIChannel* aChannel, bool aBlocked, uint32_t aRejectedReason,
       const nsACString& aTrackingOrigin,
       const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
 
