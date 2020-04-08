@@ -75,6 +75,5 @@ CRAMTEST_MANIFESTS += [
 
 PYTHON_UNITTEST_MANIFESTS += [
     'lint/test/python.ini',
-    'rb/python.ini',
     'tryselect/test/python.ini',
 ]
