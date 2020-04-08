@@ -28,6 +28,7 @@ toolbar[brighttext] {
   position: absolute;
   overflow: hidden;
   z-index: 2;
+  pointer-events: none;
 }
 
 .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
