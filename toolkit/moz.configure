@@ -1432,7 +1432,7 @@ with only_when(compile_environment):
            help='Use system libvpx (located with pkgconfig)')
 
     with only_when('--with-system-libvpx'):
-        vpx = pkg_check_modules('MOZ_LIBVPX', 'vpx >= 1.7.0')
+        vpx = pkg_check_modules('MOZ_LIBVPX', 'vpx >= 1.8.0')
 
         check_header('vpx/vpx_decoder.h', flags=vpx.cflags, onerror=lambda: die(
             "Couldn't find vpx/vpx_decoder.h, which is required to build "
