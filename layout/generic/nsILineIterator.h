@@ -56,7 +56,7 @@ class nsILineIterator {
   // the line; if a frame was moved because of relative positioning
   // then its coordinates may be outside the line bounds).
   NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine, nsRect& aLineBounds) = 0;
+                     int32_t* aNumFramesOnLine, nsRect& aLineBounds) const = 0;
 
   /**
    * Given a frame that's a child of the block, find which line its on
