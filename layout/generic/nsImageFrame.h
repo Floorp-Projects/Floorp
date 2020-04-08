@@ -118,7 +118,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
   void List(FILE* out = stderr, const char* aPrefix = "",
-            uint32_t aFlags = 0) const final;
+            ListFlags aFlags = ListFlags()) const final;
 #endif
 
   LogicalSides GetLogicalSkipSides(

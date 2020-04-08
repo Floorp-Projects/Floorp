@@ -10026,7 +10026,7 @@ nsresult nsTextFrame::GetFrameName(nsAString& aResult) const {
   return NS_OK;
 }
 
-void nsTextFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
+void nsTextFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 

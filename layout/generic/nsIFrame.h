@@ -71,6 +71,7 @@
 #include "Visibility.h"
 #include "nsChangeHint.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsDisplayItemTypes.h"
@@ -4730,11 +4731,14 @@ class nsIFrame : public nsQueryFrame {
   }
   void ListTag(FILE* out) const { fputs(ListTag().get(), out); }
   nsAutoCString ListTag() const;
+
+  enum class ListFlag{TraverseSubdocumentFrames};
+  using ListFlags = mozilla::EnumSet<ListFlag>;
   void ListGeneric(nsACString& aTo, const char* aPrefix = "",
-                   uint32_t aFlags = 0) const;
-  enum {TRAVERSE_SUBDOCUMENT_FRAMES = 0x01};
+                   ListFlags aFlags = ListFlags()) const;
   virtual void List(FILE* out = stderr, const char* aPrefix = "",
-                    uint32_t aFlags = 0) const;
+                    ListFlags aFlags = ListFlags()) const;
+
   virtual void ListWithMatchedRules(FILE* out = stderr,
                                     const char* aPrefix = "") const;
   void ListMatchedRules(FILE* out, const char* aPrefix) const;

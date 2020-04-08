@@ -224,7 +224,8 @@ char* nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const {
   return aBuf;
 }
 
-void nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const {
+void nsLineBox::List(FILE* out, int32_t aIndent,
+                     nsIFrame::ListFlags aFlags) const {
   nsCString str;
   while (aIndent-- > 0) {
     str += "  ";
@@ -232,7 +233,8 @@ void nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const {
   List(out, str.get(), aFlags);
 }
 
-void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
+void nsLineBox::List(FILE* out, const char* aPrefix,
+                     nsIFrame::ListFlags aFlags) const {
   nsCString str(aPrefix);
   char cbuf[100];
   str += nsPrintfCString("line %p: count=%d state=%s ",
