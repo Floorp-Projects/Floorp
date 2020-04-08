@@ -2,5 +2,5 @@
 #
 # delaytest.html delays the reftest snapshot to allow time for the
 # animation to complete.
-random == delaytest.html?bug411852-1.png bug411852-1-ref.png
-random == delaytest.html?bug546272.png bug546272-ref.png
+random == delaytest.html?bug411852-1.png bug411852-1-ref.html
+random == delaytest.html?bug546272.png bug546272-ref.html
