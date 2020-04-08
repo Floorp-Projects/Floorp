@@ -25,6 +25,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/RangeBinding.h"
@@ -260,10 +261,6 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(*range);
     }
   }
-  nsCOMPtr<nsINode> selStartNode =
-      TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer;
-  nsCOMPtr<nsINode> selEndNode =
-      TopLevelEditSubActionDataRef().mSelectedRange->mEndContainer;
 
   // Register with range updater to track this as we perturb the doc
   RangeUpdaterRef().RegisterRangeItem(
@@ -283,14 +280,15 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       break;
   }
   if (cacheInlineStyles) {
-    nsCOMPtr<nsINode> selNode =
-        aDirectionOfTopLevelEditSubAction == nsIEditor::eNext ? selEndNode
-                                                              : selStartNode;
-    if (NS_WARN_IF(!selNode)) {
+    nsCOMPtr<nsIContent> containerContent = nsIContent::FromNodeOrNull(
+        aDirectionOfTopLevelEditSubAction == nsIEditor::eNext
+            ? TopLevelEditSubActionDataRef().mSelectedRange->mEndContainer
+            : TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer);
+    if (NS_WARN_IF(!containerContent)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    nsresult rv = CacheInlineStyles(*selNode);
+    nsresult rv = CacheInlineStyles(*containerContent);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::CacheInlineStyles() failed");
       aRv.Throw(rv);
@@ -963,12 +961,12 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
     DebugOnly<nsresult> rvIgnored =
-        CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(
-            blockElementAtEditTarget, nullptr, nsGkAtoms::align, value,
-            CSSEditUtils::eComputed);
+        CSSEditUtils::GetComputedCSSEquivalentToHTMLInlineStyleSet(
+            *blockElementAtEditTarget, nullptr, nsGkAtoms::align, value);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
-        "CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsGkAtoms::align, "
+        "CSSEditUtils::GetComputedCSSEquivalentToHTMLInlineStyleSet(nsGkAtoms::"
+        "align, "
         "eComputed) failed, but ignored");
     if (value.EqualsLiteral("center") || value.EqualsLiteral("-moz-center") ||
         value.EqualsLiteral("auto auto")) {
@@ -989,21 +987,21 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
-  for (nsINode* containerNode = editTargetContent; containerNode;
-       containerNode = containerNode->GetParentNode()) {
+  for (nsIContent* containerContent :
+       InclusiveAncestorsOfType<nsIContent>(*editTargetContent)) {
     // If the node is a parent `<table>` element of edit target, let's break
     // here to materialize the 'inline-block' behaviour of html tables
     // regarding to text alignment.
-    if (containerNode != editTargetContent &&
-        containerNode->IsHTMLElement(nsGkAtoms::table)) {
+    if (containerContent != editTargetContent &&
+        containerContent->IsHTMLElement(nsGkAtoms::table)) {
       return;
     }
 
-    if (CSSEditUtils::IsCSSEditableProperty(containerNode, nullptr,
+    if (CSSEditUtils::IsCSSEditableProperty(containerContent, nullptr,
                                             nsGkAtoms::align)) {
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
-          *containerNode, *nsGkAtoms::textAlign, value);
+          *containerContent, *nsGkAtoms::textAlign, value);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "CSSEditUtils::GetSpecifiedProperty(nsGkAtoms::"
                            "textAlign) failed, but ignored");
@@ -1029,13 +1027,13 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
       }
     }
 
-    if (!HTMLEditUtils::SupportsAlignAttr(*containerNode)) {
+    if (!HTMLEditUtils::SupportsAlignAttr(*containerContent)) {
       continue;
     }
 
     nsAutoString alignAttributeValue;
-    containerNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                                        alignAttributeValue);
+    containerContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
+                                           alignAttributeValue);
     if (alignAttributeValue.IsEmpty()) {
       continue;
     }
@@ -1059,10 +1057,10 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   }
 }
 
-static nsStaticAtom& MarginPropertyAtomForIndent(nsINode& aNode) {
+static nsStaticAtom& MarginPropertyAtomForIndent(nsIContent& aContent) {
   nsAutoString direction;
   DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetComputedProperty(
-      aNode, *nsGkAtoms::direction, direction);
+      aContent, *nsGkAtoms::direction, direction);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "CSSEditUtils::GetComputedProperty(nsGkAtoms::direction)"
                        " failed, but ignored");
@@ -6132,16 +6130,16 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
 
     indentedParentIndentedWith = BlockIndentedWith::HTML;
     RefPtr<Element> editingHost = GetActiveEditingHost();
-    for (nsCOMPtr<nsINode> parentNode = content->GetParentNode();
-         parentNode && !parentNode->IsHTMLElement(nsGkAtoms::body) &&
-         parentNode != editingHost &&
-         (parentNode->IsHTMLElement(nsGkAtoms::table) ||
-          !HTMLEditUtils::IsTableElement(parentNode));
-         parentNode = parentNode->GetParentNode()) {
+    for (nsCOMPtr<nsIContent> parentContent = content->GetParent();
+         parentContent && !parentContent->IsHTMLElement(nsGkAtoms::body) &&
+         parentContent != editingHost &&
+         (parentContent->IsHTMLElement(nsGkAtoms::table) ||
+          !HTMLEditUtils::IsTableElement(parentContent));
+         parentContent = parentContent->GetParent()) {
       // If we reach a `<blockquote>` ancestor, it should be split at next
       // time at least for outdenting current node.
-      if (parentNode->IsHTMLElement(nsGkAtoms::blockquote)) {
-        indentedParentElement = parentNode->AsElement();
+      if (parentContent->IsHTMLElement(nsGkAtoms::blockquote)) {
+        indentedParentElement = parentContent->AsElement();
         firstContentToBeOutdented = content;
         lastContentToBeOutdented = content;
         break;
@@ -6154,7 +6152,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
       nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(content);
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
-          *parentNode, marginProperty, value);
+          *parentContent, marginProperty, value);
       if (NS_WARN_IF(Destroyed())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -6171,7 +6169,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
       if (startMargin > 0 &&
           !(HTMLEditUtils::IsList(atContent.GetContainer()) &&
             HTMLEditUtils::IsList(content))) {
-        indentedParentElement = parentNode->AsElement();
+        indentedParentElement = parentContent->AsElement();
         firstContentToBeOutdented = content;
         lastContentToBeOutdented = content;
         indentedParentIndentedWith = BlockIndentedWith::CSS;
@@ -9817,17 +9815,17 @@ Element* HTMLEditor::GetMostAncestorMailCiteElement(nsINode& aNode) const {
   return mailCiteElement;
 }
 
-nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {
+nsresult HTMLEditor::CacheInlineStyles(nsIContent& aContent) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   nsresult rv = GetInlineStyles(
-      aNode, *TopLevelEditSubActionDataRef().mCachedInlineStyles);
+      aContent, *TopLevelEditSubActionDataRef().mCachedInlineStyles);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlineStyles() failed");
   return rv;
 }
 
-nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,
+nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
                                      AutoStyleCacheArray& aStyleCacheArray) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aStyleCacheArray.IsEmpty());
@@ -9860,11 +9858,11 @@ nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,
                      // at creating new StyleCache instance.
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (property == nsGkAtoms::size)) {
-      isSet =
-          IsTextPropertySetByContent(&aNode, tag, attribute, nullptr, &value);
+      isSet = IsTextPropertySetByContent(&aContent, tag, attribute, nullptr,
+                                         &value);
     } else {
-      isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-          &aNode, tag, attribute, value, CSSEditUtils::eComputed);
+      isSet = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
+          aContent, tag, attribute, value);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9893,17 +9891,18 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
 
   const RangeBoundary& atStartOfSelection =
       SelectionRefPtr()->GetRangeAt(0)->StartRef();
-  nsCOMPtr<nsIContent> selNode =
+  nsCOMPtr<nsIContent> startContainerContent =
       atStartOfSelection.Container() &&
               atStartOfSelection.Container()->IsContent()
           ? atStartOfSelection.Container()->AsContent()
           : nullptr;
-  if (NS_WARN_IF(!selNode)) {
+  if (NS_WARN_IF(!startContainerContent)) {
     return NS_OK;
   }
 
   AutoStyleCacheArray styleCacheArrayAtInsertionPoint;
-  nsresult rv = GetInlineStyles(*selNode, styleCacheArrayAtInsertionPoint);
+  nsresult rv =
+      GetInlineStyles(*startContainerContent, styleCacheArrayAtInsertionPoint);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -9918,10 +9917,9 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     nsAutoString currentValue;
     if (useCSS) {
       // check computed style first in css case
-      isAny = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-          selNode, styleCacheBeforeEdit.Tag(),
-          styleCacheBeforeEdit.GetAttribute(), currentValue,
-          CSSEditUtils::eComputed);
+      isAny = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
+          *startContainerContent, styleCacheBeforeEdit.Tag(),
+          styleCacheBeforeEdit.GetAttribute(), currentValue);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
