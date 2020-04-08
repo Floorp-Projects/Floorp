@@ -78,7 +78,8 @@ class nsILineIterator {
 
   // Give the line iterator implementor a chance todo something more complicated
   // than nsIFrame::GetNextSibling()
-  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) = 0;
+  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame,
+                                  int32_t aLineNumber) const = 0;
 
   // Check whether visual and logical order of frames within a line are
   // identical.

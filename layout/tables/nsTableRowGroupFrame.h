@@ -260,7 +260,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    * @param aLineNumber - the index of the row relative to the table
    */
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame,
-                                  int32_t aLineNumber) override;
+                                  int32_t aLineNumber) const override;
 
   // row cursor methods to speed up searching for the row(s)
   // containing a point. The basic idea is that we set the cursor
