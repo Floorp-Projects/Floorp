@@ -580,7 +580,6 @@ void ClassifierDummyChannel::SetCorsPreflightParameters(
     const nsTArray<nsCString>& aUnsafeHeaders) {}
 
 void ClassifierDummyChannel::SetAltDataForChild(bool aIsForChild) {}
-void ClassifierDummyChannel::DisableAltDataCache() {}
 
 NS_IMETHODIMP
 ClassifierDummyChannel::GetBlockAuthPrompt(bool* aBlockAuthPrompt) {

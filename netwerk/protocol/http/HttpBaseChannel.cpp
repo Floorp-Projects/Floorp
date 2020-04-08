@@ -230,7 +230,6 @@ HttpBaseChannel::HttpBaseChannel()
       mAfterOnStartRequestBegun(false),
       mRequireCORSPreflight(false),
       mAltDataForChild(false),
-      mDisableAltDataCache(false),
       mForceMainDocumentChannel(false),
       mPendingInputStreamLengthOperation(false) {
   this->mSelfAddr.inet = {};
@@ -3595,9 +3594,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     httpInternal->SetAltDataForChild(mAltDataForChild);
-    if (mDisableAltDataCache) {
-      httpInternal->DisableAltDataCache();
-    }
   }
 
   // transfer application cache information

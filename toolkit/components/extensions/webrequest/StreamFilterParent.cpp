@@ -133,11 +133,6 @@ bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
       &parent, &child);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // Disable alt-data for extension stream listeners.
-  nsCOMPtr<nsIHttpChannelInternal> internal(do_QueryObject(channel));
-  NS_ENSURE_TRUE(internal, false);
-  internal->DisableAltDataCache();
-
   if (!chan->AttachStreamFilter(std::move(parent))) {
     return false;
   }
@@ -500,24 +495,6 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
           self->mState = State::Disconnected;
           CheckResult(
               self->SendError(NS_LITERAL_CSTRING("Channel redirected")));
-        }
-      });
-    }
-  }
-
-  // Check if alterate cached data is being sent, if so we receive un-decoded
-  // data and we must disconnect the filter and send an error to the extension.
-  if (!mDisconnected) {
-    RefPtr<net::HttpBaseChannel> chan = do_QueryObject(aRequest);
-    if (chan && chan->IsDeliveringAltData()) {
-      mDisconnected = true;
-
-      RefPtr<StreamFilterParent> self(this);
-      RunOnActorThread(FUNC, [=] {
-        if (self->IPCActive()) {
-          self->mState = State::Disconnected;
-          CheckResult(self->SendError(
-              NS_LITERAL_CSTRING("Channel is delivering cached alt-data")));
         }
       });
     }
