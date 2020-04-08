@@ -21,6 +21,7 @@ struct U8Vec;
 struct U32Vec;
 struct U16Vec;
 struct F32Vec;
+struct SsrcVec;
 struct RustHeapString;
 
 enum class RustSdpAddressType { kRustAddrIp4, kRustAddrIp6 };
@@ -106,6 +107,19 @@ struct RustSdpAttributeSsrc {
   uint32_t id;
   StringView attribute;
   StringView value;
+};
+
+enum class RustSdpAttributeSsrcGroupSemantic {
+  kRustDup,
+  kRustFid,
+  kRustFec,
+  kRustFecFr,
+  kRustSim,
+};
+
+struct RustSdpAttributeSsrcGroup {
+  RustSdpAttributeSsrcGroupSemantic semantic;
+  SsrcVec* ssrcs;
 };
 
 struct RustSdpAttributeRtpmap {
@@ -317,6 +331,9 @@ nsresult u16_vec_get(const U16Vec* vec, size_t index, uint16_t* ret);
 size_t u8_vec_len(const U8Vec* vec);
 nsresult u8_vec_get(const U8Vec* vec, size_t index, uint8_t* ret);
 
+size_t ssrc_vec_len(const SsrcVec* vec);
+nsresult ssrc_vec_get_id(const SsrcVec* vec, size_t index, uint32_t* ret);
+
 void sdp_free_string(char* string);
 
 nsresult parse_sdp(StringView sdp, bool fail_on_warning, RustSdpSession** ret,
@@ -389,6 +406,10 @@ nsresult sdp_get_setup(const RustAttributeList* aList, RustSdpSetup* ret);
 size_t sdp_get_ssrc_count(const RustAttributeList* aList);
 void sdp_get_ssrcs(const RustAttributeList* aList, size_t listSize,
                    RustSdpAttributeSsrc* ret);
+
+size_t sdp_get_ssrc_group_count(const RustAttributeList* aList);
+void sdp_get_ssrc_groups(const RustAttributeList* aList, size_t listSize,
+                         RustSdpAttributeSsrcGroup* ret);
 
 size_t sdp_get_rtpmap_count(const RustAttributeList* aList);
 void sdp_get_rtpmaps(const RustAttributeList* aList, size_t listSize,
