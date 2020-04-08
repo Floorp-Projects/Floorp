@@ -31,6 +31,7 @@ extern const sdp_namearray_t sdp_silencesupp_siduse[];
 extern const sdp_namearray_t sdp_srtp_context_crypto_suite[];
 extern const sdp_namearray_t sdp_bw_modifier_val[];
 extern const sdp_namearray_t sdp_group_attr_val[];
+extern const sdp_namearray_t sdp_ssrc_group_attr_val[];
 extern const sdp_namearray_t sdp_src_filter_mode_val[];
 extern const sdp_namearray_t sdp_rtcp_unicast_mode_val[];
 extern const sdp_namearray_t sdp_rtcp_fb_type_val[];
@@ -90,6 +91,10 @@ extern sdp_result_e sdp_parse_attr_ssrc(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         const char *ptr);
 extern sdp_result_e sdp_build_attr_ssrc(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         flex_string *fs);
+extern sdp_result_e sdp_parse_attr_ssrc_group(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                              const char *ptr);
+extern sdp_result_e sdp_build_attr_ssrc_group(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                              flex_string *fs);
 extern sdp_result_e sdp_parse_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
 extern sdp_result_e sdp_build_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
@@ -275,6 +280,7 @@ extern const char *sdp_get_silencesupp_siduse_name(sdp_silencesupp_siduse_e
                                                    siduse);
 
 extern const char *sdp_get_group_attr_name(sdp_group_attr_e group_attr);
+extern const char *sdp_get_ssrc_group_attr_name(sdp_ssrc_group_attr_e group_attr);
 extern const char *sdp_get_src_filter_mode_name(sdp_src_filter_mode_e type);
 extern const char *sdp_get_rtcp_unicast_mode_name(sdp_rtcp_unicast_mode_e type);
 
