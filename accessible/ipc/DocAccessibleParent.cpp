@@ -25,6 +25,20 @@
 #endif
 
 namespace mozilla {
+
+#if defined(XP_WIN)
+namespace mscom {
+namespace detail {
+// Needed by mscom::PassthruProxy::Wrap<IAccessible>.
+template <>
+struct VTableSizer<IAccessible> {
+  // 3 methods in IUnknown + 4 in IDispatch + 21 in IAccessible = 28 total
+  enum { Size = 28 };
+};
+}  // namespace detail
+}  // namespace mscom
+#endif  // defined (XP_WIN)
+
 namespace a11y {
 uint64_t DocAccessibleParent::sMaxDocID = 0;
 
@@ -605,6 +619,27 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
         aChildDoc->SetEmulatedWindowHandle(mEmulatedWindowHandle);
         Unused << aChildDoc->SendEmulatedWindow(
             reinterpret_cast<uintptr_t>(mEmulatedWindowHandle), nullptr);
+      }
+      // Send a COM proxy for the top level document to the embedded document
+      // process. This will be returned when the client calls QueryService
+      // with SID_IAccessibleContentDocument on an accessible in the embedded
+      // document.
+      DocAccessibleParent* topDoc = this;
+      while (DocAccessibleParent* parentDoc = topDoc->ParentDoc()) {
+        topDoc = parentDoc;
+      }
+      MOZ_ASSERT(topDoc && topDoc->IsTopLevel());
+      RefPtr<IAccessible> topDocAcc;
+      topDoc->GetCOMInterface((void**)getter_AddRefs(topDocAcc));
+      RefPtr<IAccessible> topDocWrapped(
+          mscom::PassthruProxy::Wrap<IAccessible>(WrapNotNull(topDocAcc)));
+      IAccessibleHolder::COMPtrType topDocPtr(
+          mscom::ToProxyUniquePtr(std::move(topDocWrapped)));
+      IAccessibleHolder topDocHolder(std::move(topDocPtr));
+      if (aChildDoc->SendTopLevelDocCOMProxy(topDocHolder)) {
+#  if defined(MOZ_SANDBOX)
+        aChildDoc->mTopLevelDocProxyStream = topDocHolder.GetPreservedStream();
+#  endif  // defined(MOZ_SANDBOX)
       }
 #endif  // defined(XP_WIN)
       // We need to fire a reorder event on the outer doc accessible.
