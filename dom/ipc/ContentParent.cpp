@@ -809,8 +809,9 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
 
   for (uint32_t i = 0; i < maxSelectable; i++) {
     ContentParent* p = aContentParents[i];
-    NS_ASSERTION(!p->IsDead(), "Dead contentparent in sBrowserContentParents?");
-    if (!p->mShutdownPending && p->mOpener == aOpener) {
+    MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
+    MOZ_DIAGNOSTIC_ASSERT(!p->mShutdownPending);
+    if (p->mOpener == aOpener) {
       uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
       if (tabCount < min) {
         candidate = p;
@@ -830,7 +831,9 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
   uint32_t numberOfParents = aContentParents.Length();
   nsTArray<RefPtr<nsIContentProcessInfo>> infos(numberOfParents);
   for (auto* cp : aContentParents) {
-    infos.AppendElement(cp->mScriptableHelper);
+    if (cp->mScriptableHelper) {
+      infos.AppendElement(cp->mScriptableHelper);
+    }
   }
 
   if (aPreferUsed && numberOfParents) {
@@ -871,6 +874,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
       (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
     // For pre-allocated process we have not set the opener yet.
     p->mOpener = aOpener;
+    MOZ_DIAGNOSTIC_ASSERT(p->mScriptableHelper);
     aContentParents.AppendElement(p);
     p->mActivateTS = TimeStamp::Now();
     return p.forget();
@@ -1482,6 +1486,7 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
       // Stop sending input events with input priority when shutting down.
       SetInputPriorityEventEnabled(false);
       if (SendShutdown()) {
+        RemoveFromList();
         mShutdownPending = true;
         // Start the force-kill timer if we haven't already.
         StartForceKillTimer();
@@ -1584,7 +1589,9 @@ void ContentParent::RemoveFromList() {
 }
 
 void ContentParent::MarkAsDead() {
-  RemoveFromList();
+  if (!mShutdownPending) {
+    RemoveFromList();
+  }
 
 #ifdef MOZ_WIDGET_ANDROID
   if (mLifecycleState == LifecycleState::ALIVE) {
