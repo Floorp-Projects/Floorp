@@ -2886,7 +2886,9 @@ class AddonCard extends HTMLElement {
             let {
               remove,
               report,
-            } = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            } = windowRoot.ownerGlobal.BrowserAddonUI.promptRemoveExtension(
+              addon
+            );
             let value = remove ? "accepted" : "cancelled";
             this.recordActionEvent("uninstall", value);
             if (remove) {
