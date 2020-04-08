@@ -35,7 +35,6 @@ class nsIHttpUpgradeListener;
 class nsIPrefBranch;
 class nsICancelable;
 class nsICookieService;
-class nsIProcessSwitchRequestor;
 class nsIIOService;
 class nsIRequestContextService;
 class nsISiteSecurityService;
