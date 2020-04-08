@@ -7,9 +7,10 @@
 
 from __future__ import print_function
 
+import os
 import re
-import yaml
 import sys
+import yaml
 
 # This is a list of flags that determine which process a measurement is allowed
 # to record from.
@@ -84,8 +85,8 @@ class ParserError(Exception):
 
     def handle_now(self):
         ParserError.print_eventuals()
-        print(str(self), file=sys.stderr)
-        sys.exit(1)
+        print(str(self), file=sys.stderr, flush=True)
+        os._exit(1)
 
     @classmethod
     def print_eventuals(cls):
