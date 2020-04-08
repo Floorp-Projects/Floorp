@@ -1889,7 +1889,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
       AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
   // The abiArgCount includes a stack result pointer argument if needed.
   unsigned abiArgCount = ArgTypeVector(fi.funcType()).length();
-  unsigned argBytes = std::max<size_t>(1, abiArgCount * sizeof(Value));
+  unsigned argBytes = std::max<size_t>(1, abiArgCount) * sizeof(Value);
   unsigned framePushed =
       StackDecrementForCall(ABIStackAlignment,
                             sizeof(Frame),  // pushed by prologue
