@@ -73,6 +73,7 @@
 #include "nsMemoryReporterManager.h"
 #include "nsProfilerStartParams.h"
 #include "nsScriptSecurityManager.h"
+#include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prdtoa.h"
@@ -2264,17 +2265,15 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
     if (!NS_FAILED(res)) aWriter.StringProperty("sourceURL", string.Data());
   }
 
-  nsCOMPtr<nsIPropertyBag2> systemInfo =
-      do_GetService("@mozilla.org/system-info;1");
-  if (systemInfo) {
-    int32_t cpus;
-    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucores"), &cpus);
-    if (!NS_FAILED(res)) {
-      aWriter.IntProperty("physicalCPUs", cpus);
+  ProcessInfo processInfo;
+  processInfo.cpuCount = 0;
+  processInfo.cpuCores = 0;
+  if (NS_SUCCEEDED(CollectProcessInfo(processInfo))) {
+    if (processInfo.cpuCores > 0) {
+      aWriter.IntProperty("physicalCPUs", processInfo.cpuCores);
     }
-    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
-    if (!NS_FAILED(res)) {
-      aWriter.IntProperty("logicalCPUs", cpus);
+    if (processInfo.cpuCount > 0) {
+      aWriter.IntProperty("logicalCPUs", processInfo.cpuCount);
     }
   }
 
