@@ -308,9 +308,6 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
-// Whether the quantum bar displays design update 1.
-pref("browser.urlbar.update1", true);
-
 // If true, we show actionable tips in the Urlbar when the user is searching
 // for those actions.
 pref("browser.urlbar.update1.interventions", true);

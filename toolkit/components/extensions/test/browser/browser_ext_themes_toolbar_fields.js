@@ -50,9 +50,7 @@ add_task(async function test_support_toolbar_field_properties() {
   });
 
   let fields = [
-    gURLBar.megabar
-      ? document.querySelector("#urlbar-background")
-      : gURLBar.textbox,
+    document.querySelector("#urlbar-background"),
     BrowserSearch.searchBar,
   ].filter(field => {
     let bounds = field.getBoundingClientRect();

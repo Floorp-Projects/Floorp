@@ -45,46 +45,29 @@
 .urlbarView {
   /* Don't handle window drag events in case we are overlapping a toolbar */
   -moz-window-dragging: no-drag;
+
+  display: block;
   text-shadow: none;
   overflow: -moz-hidden-unscrollable;
-}
-
-.urlbarView.megabar {
   margin-inline: @urlbarViewMarginInline@;
   width: calc(100% - 2 * @urlbarViewMarginInline@);
+
   /* Match urlbar-background's border. */
   border-inline: 1px solid transparent;
+
   /* Offsets the toolbar overlap so the view's top border aligns with the
      toolbar. */
   margin-block-start: -@urlbarBreakoutExtend@;
 }
 
-.urlbarView {
-  display: block;
-}
-
-.urlbarView.megabar .urlbarView-body-inner {
+.urlbarView-body-inner {
   width: 100%;
   border-top: 1px solid var(--urlbar-separator-color);
-}
-
-.urlbarView:not(.megabar) {
-  position: fixed;
-  z-index: 3;
-  inset-inline: 0;
-  background: var(--autocomplete-popup-background);
-  color: var(--autocomplete-popup-color);
-  border-block: 1px solid var(--chrome-content-separator-color);
-  box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
 }
 
 .urlbarView-results {
   padding-block: @urlbarViewPadding@;
   white-space: nowrap;
-}
-
-.urlbarView:not(.megabar) .urlbarView-results {
-  padding-inline: @urlbarViewPadding@;
 }
 
 .urlbarView-row {
@@ -93,33 +76,17 @@
   padding-block: 3px;
 }
 
-.urlbarView:not(.megabar) .urlbarView-row,
-.urlbarView.megabar .urlbarView-row-inner {
+.urlbarView-row-inner {
   border-radius: 2px;
   padding-inline-start: @urlbarViewItemInlinePadding@;
-}
-
-.urlbarView:not(.megabar) .urlbarView-row:not([type=tip]),
-.urlbarView.megabar .urlbarView-row-inner {
   padding-block: 6px;
-}
-
-.urlbarView:not(.megabar) .urlbarView-row {
-  padding-inline-start: calc(var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
-  padding-inline-end: var(--item-padding-end, 5px);
 }
 
 :root[uidensity=touch] .urlbarView-row:not([type=tip]) {
   padding-block: 11px;
 }
 
-.urlbarView:not(.megabar) .urlbarView-row[type=tip] {
-  padding-block-start: 24px;
-  /* Compensating for the 16px bottom margin on the tip elements. */
-  padding-block-end: calc(24px - 16px);
-}
-
-.urlbarView.megabar .urlbarView-row[type=tip] {
+.urlbarView-row[type=tip] {
   padding-block-start: 18px;
   /* Compensating for the 16px bottom margin on the tip elements. */
   padding-block-end: calc(18px - 16px);
@@ -147,22 +114,22 @@
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
    window is also short, because fewer results will be shown. */
 @media screen and (min-height: 600px) {
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner {
+  .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner {
     flex-wrap: wrap;
   }
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap {
+  .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap {
     max-width: 100% !important;
     flex-basis: 100%;
   }
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url {
+  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url {
     margin-top: 2px;
     padding-inline-start: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + /* favicon */ 16px);
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab only when selected or :hover */
-  .urlbarView.megabar[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[type=remotetab]:-moz-any(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
+  .urlbarView[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  .urlbarView-results[wrap] > .urlbarView-row[type=remotetab]:-moz-any(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
     display: none;
   }
 }
@@ -170,7 +137,7 @@
 /* We should always wrap tip results at narrow widths regardless of screen
    height. Unlike regular results, unwrapped tips are taller than wrapped
    tips. */
-.urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[type=tip] > .urlbarView-row-inner {
+.urlbarView-results[wrap] > .urlbarView-row[type=tip] > .urlbarView-row-inner {
   flex-wrap: wrap;
 }
 
@@ -188,38 +155,33 @@
   direction: ltr !important;
 }
 
-.urlbarView:not(.megabar) .urlbarView-row:not([type=tip]):hover,
-.urlbarView.megabar .urlbarView-row:not([type=tip]):hover > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip]):hover > .urlbarView-row-inner {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView:not(.megabar) .urlbarView-row:not([type=tip])[selected],
-.urlbarView.megabar .urlbarView-row:not([type=tip])[selected] > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip])[selected] > .urlbarView-row-inner {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
 }
 
-.urlbarView-type-icon,
 .urlbarView-favicon {
   min-width: 16px;
   height: 16px;
+  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
 }
 
-.urlbarView:not(.megabar) .urlbarView-type-icon,
-.urlbarView-favicon {
-  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
-}
-
-.urlbarView.megabar .urlbarView-type-icon {
+.urlbarView-type-icon {
   position: absolute;
   min-width: 12px;
   height: 12px;
   margin-bottom: -4px;
   margin-inline-start: 8px;
+  background-repeat: no-repeat;
+  background-size: contain;
   -moz-context-properties: fill, stroke;
 }
 
@@ -230,10 +192,6 @@
   flex-basis: 24px;
   flex-grow:  0;
   flex-shrink: 0;
-}
-
-.urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
-  margin-inline-start: calc(12px + @urlbarViewIconMarginEnd@);
 }
 
 /* The help icon is a standard Photon ghost button. */
@@ -268,32 +226,26 @@
   }
 }
 
-.urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
   color: #0060df; /* Blue-60 */
   stroke: #fff;
 }
 
-.urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
-.urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab-12.svg);
   color: #008eaf; /* Teal-70 */
   stroke: #fff;
 }
 
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+:root[lwt-toolbar-field-brighttext] .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #0a84ff; /* Blue-50 */
   stroke: #38383d; /* Grey-70 */
 }
 
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+:root[lwt-toolbar-field-brighttext] .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #00c8d7; /* Teal-60 */
   stroke: #38383d; /* Grey-70 */
-}
-
-.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  background-image: url(chrome://browser/skin/bookmark.svg);
 }
 
 .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
@@ -316,13 +268,6 @@
   align-items: center;
   min-height: 32px;
   width: 100%;
-}
-
-/* For non-megabar tips in narrow windows, wrap the buttons below the text. */
-@media screen and (max-width: 800px) {
-  .urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner {
-    flex-wrap: wrap;
-  }
 }
 
 /* For tips, give the title some bottom margin so that when the window is narrow
@@ -398,10 +343,6 @@
   flex-shrink: 1;
 }
 
-.urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
-  flex-basis: calc(100% - /* .urlbarView-favicon margin-inline-start */ (12px + @urlbarViewIconMarginEnd@) - /* .urlbarView-favicon width */ 24px - /* .urlbarView-favicon margin-inline-end */ 12px);
-}
-
 .urlbarView-title-separator::before {
   content: "\2014";
   margin: 0 .4em;
@@ -416,13 +357,6 @@
 .urlbarView-url,
 .urlbarView-title:not(:empty) ~ .urlbarView-action {
   font-size: .85em;
-}
-
-/* The megabar uses full bold weight (700). */
-.urlbarView:not(.megabar) .urlbarView-title > strong,
-.urlbarView:not(.megabar) .urlbarView-url > strong,
-.urlbarView:not(.megabar) .urlbarView-tag > strong {
-  font-weight: 600;
 }
 
 .urlbarView-title:not(:empty) ~ .urlbarView-action {
@@ -478,11 +412,6 @@
   align-items: start;
   padding-block: 16px;
   flex-wrap: wrap;
-}
-
-#urlbar:not(.megabar) .search-one-offs {
-  padding-inline-start: calc(var(--item-padding-start, 5px) - /* icon padding */ 8px);
-  padding-inline-end: var(--item-padding-end, 5px);
 }
 
 #urlbar .search-panel-one-offs-container {

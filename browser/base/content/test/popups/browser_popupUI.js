@@ -24,12 +24,6 @@ add_task(async function toolbar_ui_visibility() {
     "'open location' command is not disabled in the popup"
   );
 
-  is(
-    win.gURLBar.dropmarker.clientWidth,
-    0,
-    "history dropdown button is hidden in the popup"
-  );
-
   EventUtils.synthesizeKey("t", { accelKey: true }, win);
   is(
     win.gBrowser.browsers.length,

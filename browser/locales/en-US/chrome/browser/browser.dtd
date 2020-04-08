@@ -121,8 +121,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY urlbar.permissionsGranted.tooltip       "You have granted this website additional permissions.">
 
 
-<!ENTITY urlbar.openHistoryPopup.tooltip                "Show history">
-
 <!ENTITY searchItem.title             "Search">
 
 <!-- Toolbar items -->
