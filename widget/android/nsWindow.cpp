@@ -535,7 +535,8 @@ class nsWindow::NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return INPUT_RESULT_HANDLED;
+        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
+                                    : INPUT_RESULT_HANDLED_CONTENT;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -659,7 +660,8 @@ class nsWindow::NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return INPUT_RESULT_HANDLED;
+        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
+                                    : INPUT_RESULT_HANDLED_CONTENT;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -788,7 +790,8 @@ class nsWindow::NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return INPUT_RESULT_HANDLED;
+        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
+                                    : INPUT_RESULT_HANDLED_CONTENT;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
