@@ -50,27 +50,6 @@ const uint32_t VR_GAMEPAD_IDX_OFFSET = 0x01 << 16;
 
 NS_IMPL_ISUPPORTS(GamepadManager, nsIObserver)
 
-/*static*/
-uint32_t GamepadManager::GetGamepadIndexWithServiceType(
-    uint32_t aIndex, GamepadServiceType aServiceType) {
-  uint32_t newIndex = 0;
-
-  switch (aServiceType) {
-    case GamepadServiceType::Standard:
-      MOZ_ASSERT(aIndex <= VR_GAMEPAD_IDX_OFFSET);
-      newIndex = aIndex;
-      break;
-    case GamepadServiceType::VR:
-      newIndex = aIndex + VR_GAMEPAD_IDX_OFFSET;
-      break;
-    default:
-      MOZ_ASSERT(false);
-      break;
-  }
-
-  return newIndex;
-}
-
 GamepadManager::GamepadManager()
     : mEnabled(false),
       mNonstandardEventsEnabled(false),
@@ -214,6 +193,26 @@ already_AddRefed<Gamepad> GamepadManager::GetGamepad(uint32_t aIndex) const {
 already_AddRefed<Gamepad> GamepadManager::GetGamepad(
     uint32_t aGamepadId, GamepadServiceType aServiceType) const {
   return GetGamepad(GetGamepadIndexWithServiceType(aGamepadId, aServiceType));
+}
+
+uint32_t GamepadManager::GetGamepadIndexWithServiceType(
+    uint32_t aIndex, GamepadServiceType aServiceType) const {
+  uint32_t newIndex = 0;
+
+  switch (aServiceType) {
+    case GamepadServiceType::Standard:
+      MOZ_ASSERT(aIndex <= VR_GAMEPAD_IDX_OFFSET);
+      newIndex = aIndex;
+      break;
+    case GamepadServiceType::VR:
+      newIndex = aIndex + VR_GAMEPAD_IDX_OFFSET;
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+
+  return newIndex;
 }
 
 void GamepadManager::AddGamepad(uint32_t aIndex, const nsAString& aId,
