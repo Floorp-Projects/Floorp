@@ -5065,14 +5065,9 @@ class MHypot : public MVariadicInstruction, public AllDoublePolicy::Data {
 class MPow : public MBinaryInstruction, public PowPolicy::Data {
   MPow(MDefinition* input, MDefinition* power, MIRType powerType)
       : MBinaryInstruction(classOpcode, input, power) {
-    MOZ_ASSERT(powerType == MIRType::Double || powerType == MIRType::Int32 ||
-               powerType == MIRType::None);
+    MOZ_ASSERT(powerType == MIRType::Double || powerType == MIRType::Int32);
     specialization_ = powerType;
-    if (powerType == MIRType::None) {
-      setResultType(MIRType::Value);
-    } else {
-      setResultType(MIRType::Double);
-    }
+    setResultType(MIRType::Double);
     setMovable();
   }
 
@@ -5089,18 +5084,11 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
-  AliasSet getAliasSet() const override {
-    if (specialization_ == MIRType::None) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    return AliasSet::None();
-  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ != MIRType::None;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
