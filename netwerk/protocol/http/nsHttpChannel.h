@@ -277,16 +277,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   }
   TransactionObserver* GetTransactionObserver() { return mTransactionObserver; }
 
-  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
-      ContentProcessIdPromise;
-  already_AddRefed<ContentProcessIdPromise>
-  TakeRedirectContentProcessIdPromise() {
-    return mRedirectContentProcessIdPromise.forget();
-  }
-  uint64_t CrossProcessRedirectIdentifier() {
-    return mCrossProcessRedirectIdentifier;
-  }
-
   CacheDisposition mCacheDisposition;
 
  protected:
@@ -581,12 +571,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsCOMPtr<nsIURI> mRedirectURI;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIChannel> mPreflightChannel;
-
-  // The associated childChannel is getting relocated to another process.
-  // This promise will be resolved when that process is set up.
-  RefPtr<ContentProcessIdPromise> mRedirectContentProcessIdPromise;
-  // This identifier is passed to the childChannel in order to identify it.
-  uint64_t mCrossProcessRedirectIdentifier = 0;
 
   // nsChannelClassifier checks this channel's URI against
   // the URI classifier service.
