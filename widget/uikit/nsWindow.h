@@ -27,9 +27,9 @@ class nsWindow final : public nsBaseWidget {
   // nsIWidget
   //
 
-  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                                       const LayoutDeviceIntRect& aRect,
-                                       nsWidgetInitData* aInitData = nullptr) override;
+  [[nodiscard]] virtual nsresult
+      Create(nsIWidget* aParent, nsNativeWidget aNativeParent, const LayoutDeviceIntRect& aRect,
+             nsWidgetInitData* aInitData = nullptr) override;
   virtual void Destroy() override;
   virtual void Show(bool aState) override;
   virtual void Enable(bool aState) override {}
