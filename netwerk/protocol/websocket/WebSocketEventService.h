@@ -62,6 +62,9 @@ class WebSocketEventService final : public nsIWebSocketEventService,
                  already_AddRefed<WebSocketFrame> aFrame,
                  nsIEventTarget* aTarget = nullptr);
 
+  void AssociateWebSocketImplWithSerialID(nsWeakPtr aWeakWebSocketImplPtr,
+                                          uint32_t aWebSocketSerialID);
+
   already_AddRefed<WebSocketFrame> CreateFrameIfNeeded(
       bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
       uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
@@ -85,6 +88,8 @@ class WebSocketEventService final : public nsIWebSocketEventService,
   void Shutdown();
 
   typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
+
+  nsClassHashtable<nsUint32HashKey, nsWeakPtr> mWeakWebSocketImpl;
 
   struct WindowListener {
     WindowListeners mListeners;
