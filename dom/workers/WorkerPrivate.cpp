@@ -2721,6 +2721,25 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                                getter_AddRefs(loadInfo.mResolvedScriptURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // We need the correct hasStoragePermission flag for the channel here since
+    // we will do a content blocking check later when we set the storage
+    // principal for the worker. The channel here won't be opened when we do the
+    // check later, so the hasStoragePermission flag is incorrect. To address
+    // this, We copy the hasStoragePermission flag from the document if there is
+    // a window. The worker is created as the same origin of the window. So, the
+    // worker is supposed to have the same storage permission as the window as
+    // well as the hasStoragePermission flag.
+    nsCOMPtr<nsILoadInfo> channelLoadInfo = loadInfo.mChannel->LoadInfo();
+    if (document) {
+      rv = channelLoadInfo->SetHasStoragePermission(
+          document->HasStoragePermission());
+    } else {
+      // If there is no window, we would allow the storage access above. So,
+      // we should assume the worker has the storage permission.
+      rv = channelLoadInfo->SetHasStoragePermission(true);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = loadInfo.SetPrincipalsAndCSPFromChannel(loadInfo.mChannel);
     NS_ENSURE_SUCCESS(rv, rv);
   }
