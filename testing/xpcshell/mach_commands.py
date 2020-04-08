@@ -227,7 +227,7 @@ class MachCommands(MachCommandBase):
             params['manifest'] = m
 
         driver = self._spawn(BuildDriver)
-        driver.install_tests(test_objects)
+        driver.install_tests()
 
         # We should probably have a utility function to ensure the tree is
         # ready to run tests. Until then, we just create the state dir (in
