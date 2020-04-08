@@ -44,16 +44,10 @@ class WarpOpSnapshot : public TempObject,
   // Bytecode offset.
   uint32_t offset_ = 0;
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
   Kind kind_;
-#endif
 
  protected:
-  WarpOpSnapshot(Kind kind, uint32_t offset) : offset_(offset) {
-#if defined(DEBUG) || defined(JS_JITSPEW)
-    kind_ = kind;
-#endif
-  }
+  WarpOpSnapshot(Kind kind, uint32_t offset) : offset_(offset), kind_(kind) {}
 
  public:
   uint32_t offset() const { return offset_; }
@@ -64,6 +58,14 @@ class WarpOpSnapshot : public TempObject,
     return static_cast<const T*>(this);
   }
 
+  template <typename T>
+  T* as() {
+    MOZ_ASSERT(kind_ == T::ThisKind);
+    return static_cast<T*>(this);
+  }
+
+  void trace(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dump(GenericPrinter& out, JSScript* script) const;
 #endif
@@ -73,7 +75,7 @@ using WarpOpSnapshotList = mozilla::LinkedList<WarpOpSnapshot>;
 
 // Template object for JSOp::Arguments.
 class WarpArguments : public WarpOpSnapshot {
-  // TODO: trace this when we can trace snapshots.
+  // Note: this can be nullptr if the realm has no template object yet.
   ArgumentsObject* templateObj_;
 
  public:
@@ -82,6 +84,8 @@ class WarpArguments : public WarpOpSnapshot {
   WarpArguments(uint32_t offset, ArgumentsObject* templateObj)
       : WarpOpSnapshot(ThisKind, offset), templateObj_(templateObj) {}
   ArgumentsObject* templateObj() const { return templateObj_; }
+
+  void traceData(JSTracer* trc);
 
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
@@ -99,6 +103,8 @@ class WarpRegExp : public WarpOpSnapshot {
       : WarpOpSnapshot(ThisKind, offset), hasShared_(hasShared) {}
   bool hasShared() const { return hasShared_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
@@ -106,7 +112,6 @@ class WarpRegExp : public WarpOpSnapshot {
 
 // The proto for JSOp::FunctionProto if it exists at compile-time.
 class WarpFunctionProto : public WarpOpSnapshot {
-  // TODO: trace this.
   JSObject* proto_;
 
  public:
@@ -118,6 +123,8 @@ class WarpFunctionProto : public WarpOpSnapshot {
   }
   JSObject* proto() const { return proto_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
@@ -125,7 +132,6 @@ class WarpFunctionProto : public WarpOpSnapshot {
 
 // The intrinsic for JSOp::GetIntrinsic if it exists at compile-time.
 class WarpGetIntrinsic : public WarpOpSnapshot {
-  // TODO: trace this.
   Value intrinsic_;
 
  public:
@@ -135,6 +141,8 @@ class WarpGetIntrinsic : public WarpOpSnapshot {
       : WarpOpSnapshot(ThisKind, offset), intrinsic_(intrinsic) {}
   Value intrinsic() const { return intrinsic_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
@@ -142,7 +150,6 @@ class WarpGetIntrinsic : public WarpOpSnapshot {
 
 // Target module environment and slot information for JSOp::GetImport.
 class WarpGetImport : public WarpOpSnapshot {
-  // TODO: trace this.
   ModuleEnvironmentObject* targetEnv_;
   uint32_t numFixedSlots_;
   uint32_t slot_;
@@ -163,6 +170,8 @@ class WarpGetImport : public WarpOpSnapshot {
   uint32_t slot() const { return slot_; }
   bool needsLexicalCheck() const { return needsLexicalCheck_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
@@ -171,7 +180,6 @@ class WarpGetImport : public WarpOpSnapshot {
 // JSFunction info we don't want to read off-thread for JSOp::Lambda and
 // JSOp::LambdaArrow.
 class WarpLambda : public WarpOpSnapshot {
-  // TODO: trace this
   BaseScript* baseScript_;
   FunctionFlags flags_;
   uint16_t nargs_;
@@ -189,6 +197,8 @@ class WarpLambda : public WarpOpSnapshot {
   FunctionFlags flags() const { return flags_; }
   uint16_t nargs() const { return nargs_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
@@ -196,7 +206,6 @@ class WarpLambda : public WarpOpSnapshot {
 
 // Template object for JSOp::Rest.
 class WarpRest : public WarpOpSnapshot {
-  // TODO: trace this
   ArrayObject* templateObject_;
 
  public:
@@ -206,13 +215,14 @@ class WarpRest : public WarpOpSnapshot {
       : WarpOpSnapshot(ThisKind, offset), templateObject_(templateObject) {}
   ArrayObject* templateObject() const { return templateObject_; }
 
+  void traceData(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dumpData(GenericPrinter& out) const;
 #endif
 };
 
 // Snapshot data for the environment object(s) created in the script's prologue.
-// TODO: trace object pointers.
 class WarpEnvironment {
  public:
   enum class Kind {
@@ -270,6 +280,8 @@ class WarpEnvironment {
     MOZ_ASSERT(kind_ == Kind::Function);
     return fun.namedLambdaTemplate_;
   }
+
+  void trace(JSTracer* trc);
 };
 
 // Snapshot data for a single JSScript.
@@ -279,11 +291,9 @@ class WarpScriptSnapshot : public TempObject {
   WarpOpSnapshotList opSnapshots_;
 
   // If the script has a JSOp::ImportMeta op, this is the module to bake in.
-  // TODO: trace this
   ModuleObject* moduleObject_;
 
   // Constants pushed by JSOp::Instrumentation* ops in the script.
-  // TODO: trace this
   JSObject* instrumentationCallback_;
   mozilla::Maybe<int32_t> instrumentationScriptId_;
   mozilla::Maybe<bool> instrumentationActive_;
@@ -313,6 +323,8 @@ class WarpScriptSnapshot : public TempObject {
 
   bool isArrowFunction() const { return isArrowFunction_; }
 
+  void trace(JSTracer* trc);
+
 #ifdef JS_JITSPEW
   void dump(GenericPrinter& out) const;
 #endif
@@ -320,16 +332,12 @@ class WarpScriptSnapshot : public TempObject {
 
 // Data allocated by WarpOracle on the main thread that's used off-thread by
 // WarpBuilder to build the MIR graph.
-//
-// TODO: trace op snapshots in IonCompileTask::trace (like MRootList for
-// non-Warp).
 class WarpSnapshot : public TempObject {
   // The script to compile.
   WarpScriptSnapshot* script_;
 
   // The global lexical environment and its thisValue(). We don't inline
   // cross-realm calls so this can be stored once per snapshot.
-  // TODO: trace these values.
   LexicalEnvironmentObject* globalLexicalEnv_;
   Value globalLexicalEnvThis_;
 
@@ -342,6 +350,8 @@ class WarpSnapshot : public TempObject {
     return globalLexicalEnv_;
   }
   Value globalLexicalEnvThis() const { return globalLexicalEnvThis_; }
+
+  void trace(JSTracer* trc);
 
 #ifdef JS_JITSPEW
   void dump() const;
