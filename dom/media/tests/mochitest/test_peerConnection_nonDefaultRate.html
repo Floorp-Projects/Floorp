@@ -185,6 +185,12 @@
     mustThrowWith("Connect stream with graph of different sample rate", "NotSupportedError", () => {
       let source_non_default_rate = nonDefault_ctx.createMediaStreamSource(remoteStream);
     });
+
+    // Close peer connections to make sure we don't get error:
+    // "logged result after SimpleTest.finish(): pc1 addIceCandidate success"
+    // See Bug 1626814.
+    pc1.close();
+    pc2.close();
   })
 </script>
 </pre>
