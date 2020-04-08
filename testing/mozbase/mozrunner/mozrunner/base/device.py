@@ -4,9 +4,11 @@
 
 from __future__ import absolute_import, print_function
 
+import codecs
 import datetime
 import re
 import signal
+import six
 import sys
 import tempfile
 import time
@@ -42,7 +44,11 @@ class DeviceRunner(BaseRunner):
         if env:
             self._device_env.update(env)
 
-        process_args = {'stream': sys.stdout,
+        if six.PY2:
+            stdout = codecs.getwriter('utf-8')(sys.stdout)
+        else:
+            stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+        process_args = {'stream': stdout,
                         'processOutputLine': self.on_output,
                         'onFinish': self.on_finish,
                         'onTimeout': self.on_timeout}

@@ -549,7 +549,8 @@ class BuildMonitor(MozbuildObject):
         ccache = mozfile.which('ccache')
         if ccache:
             try:
-                output = subprocess.check_output([ccache, '-s'])
+                output = subprocess.check_output(
+                    [ccache, '-s'], universal_newlines=True)
                 ccache_stats = CCacheStats(output)
             except ValueError as e:
                 self.log(logging.WARNING, 'ccache', {'msg': str(e)}, '{msg}')
@@ -861,6 +862,7 @@ class CCacheStats(object):
                 self._parse_line(line)
 
     def _parse_line(self, line):
+        line = six.ensure_text(line)
         if line.startswith(self.DIRECTORY_DESCRIPTION):
             self.cache_dir = self._strip_prefix(line, self.DIRECTORY_DESCRIPTION)
         elif line.startswith(self.PRIMARY_CONFIG_DESCRIPTION):
