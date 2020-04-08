@@ -36,10 +36,14 @@ class XRInputSourceArray final : public nsISupports, public nsWrapperCache {
   uint32_t Length();
   void Setup(XRSession* aSession, RefPtr<gfx::VRDisplayClient> aDisplayClient);
   void Update(XRSession* aSession);
-  void Clear();
+  void Clear(XRSession* aSession);
 
  protected:
   virtual ~XRInputSourceArray() = default;
+
+ private:
+  void DispatchInputSourceRemovedEvent(const nsTArray<RefPtr<XRInputSource>>& aInputs,
+                                       XRSession* aSession);
 
   nsCOMPtr<nsISupports> mParent;
   nsTArray<RefPtr<XRInputSource>> mInputSources;
