@@ -17,7 +17,9 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getIconColor
+import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -78,11 +80,11 @@ class CollectionViewHolder(
 
         view.isActivated = expanded
         if (expanded) {
-            view.collection_share_button.visibility = View.VISIBLE
-            view.collection_overflow_button.visibility = View.VISIBLE
+            view.collection_share_button.showAndEnable()
+            view.collection_overflow_button.showAndEnable()
         } else {
-            view.collection_share_button.visibility = View.GONE
-            view.collection_overflow_button.visibility = View.GONE
+            view.collection_share_button.hideAndDisable()
+            view.collection_overflow_button.hideAndDisable()
         }
 
         view.collection_icon.colorFilter = createBlendModeColorFilterCompat(
