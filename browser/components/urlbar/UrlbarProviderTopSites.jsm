@@ -76,7 +76,6 @@ class ProviderTopSites extends UrlbarProvider {
     // the most frecent URLs in the user's history from the UnifiedComplete
     // provider.
     return (
-      UrlbarPrefs.get("update1") &&
       UrlbarPrefs.get("openViewOnFocus") &&
       !queryContext.searchString &&
       Services.prefs.getBoolPref(

@@ -1027,15 +1027,6 @@
       this._selectedTab = newTab;
       this.showTab(newTab);
 
-      gURLBar.setAttribute("switchingtabs", "true");
-      window.addEventListener(
-        "MozAfterPaint",
-        function() {
-          gURLBar.removeAttribute("switchingtabs");
-        },
-        { once: true }
-      );
-
       this._appendStatusPanel();
 
       let oldBrowserPopupsBlocked = oldBrowser.popupBlocker.getBlockedPopupCount();

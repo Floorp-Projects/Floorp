@@ -144,9 +144,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // popular domains will no longer be included in the results.
   ["usepreloadedtopurls.expire_days", 14],
 
-  // Whether the quantum bar displays design update 1.
-  ["update1", true],
-
   // If true, we show actionable tips in the Urlbar when the user is searching
   // for those actions.
   ["update1.interventions", true],

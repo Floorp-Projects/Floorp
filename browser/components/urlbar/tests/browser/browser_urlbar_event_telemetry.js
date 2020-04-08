@@ -503,38 +503,6 @@ const tests = [
     };
   },
 
-  async function(win) {
-    info("Open the panel with dropmarker, type something, Enter.");
-    let dropmarkerWasHidden = win.gURLBar.dropmarker.hidden;
-    win.gURLBar.dropmarker.hidden = false;
-    win.gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(win, () => {
-      EventUtils.synthesizeMouseAtCenter(win.gURLBar.dropmarker, {}, win);
-    });
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      waitForFocus: SimpleTest.waitForFocus,
-      value: "x",
-      fireInputEvent: true,
-    });
-    EventUtils.synthesizeKey("VK_RETURN", {}, win);
-    await promise;
-    win.gURLBar.dropmarker.hidden = dropmarkerWasHidden;
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "topsites",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
-        selType: "search",
-        selIndex: "0",
-      },
-    };
-  },
-
   // The URLs in the openViewOnFocus tests must vary from test to test, else
   // the first Top Site results will be a switch-to-tab result and a page load
   // will not occur.
@@ -911,34 +879,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-      },
-    };
-  },
-
-  async function(win) {
-    info("Open the panel with dropmarker, type something, blur it.");
-    let dropmarkerWasHidden = win.gURLBar.dropmarker.hidden;
-    win.gURLBar.dropmarker.hidden = false;
-    await BrowserTestUtils.withNewTab(
-      { gBrowser: win.gBrowser, url: "about:blank" },
-      async browser => {
-        win.gURLBar.select();
-        await UrlbarTestUtils.promisePopupOpen(win, () => {
-          EventUtils.synthesizeMouseAtCenter(gURLBar.dropmarker, {}, win);
-        });
-        EventUtils.synthesizeKey("x", {}, win);
-        win.gURLBar.blur();
-      }
-    );
-    win.gURLBar.dropmarker.hidden = dropmarkerWasHidden;
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "topsites",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
       },
     };
   },

@@ -174,8 +174,7 @@ menuitem.bookmark-item {
 
 %include ../shared/urlbar-searchbar.inc.css
 
-#urlbar:not(.megabar):not(:-moz-lwtheme):not([focused="true"]),
-#urlbar.megabar:not(:-moz-lwtheme):not([focused="true"]) > #urlbar-background,
+#urlbar:not(:-moz-lwtheme):not([focused="true"]) > #urlbar-background,
 #searchbar:not(:-moz-lwtheme):not(:focus-within) {
   border-color: ThreeDShadow;
 }
