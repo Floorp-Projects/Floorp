@@ -8,7 +8,7 @@
   --panel-border-radius: 0;
 }
 
-xul|*.menulist-dropmarker {
+xul|menulist::part(dropmarker) {
   margin-block: 1px;
 }
 

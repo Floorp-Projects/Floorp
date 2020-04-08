@@ -63,16 +63,33 @@
         },
         { mozSystemGroup: true }
       );
+
+      this.attachShadow({ mode: "open" });
     }
 
     static get inheritedAttributes() {
       return {
-        ".menulist-icon": "src=image",
-        ".menulist-label": "value=label,crop,accesskey,highlightable",
-        ".menulist-highlightable-label":
-          "text=label,crop,accesskey,highlightable",
-        ".menulist-dropmarker": "disabled,open",
+        image: "src=image",
+        "#label": "value=label,crop,accesskey,highlightable",
+        "#highlightable-label": "text=label,crop,accesskey,highlightable",
+        dropmarker: "disabled,open",
       };
+    }
+
+    static get markup() {
+      // Accessibility information of these nodes will be presented
+      // on XULComboboxAccessible generated from <menulist>;
+      // hide these nodes from the accessibility tree.
+      return `
+        <html:link href="chrome://global/skin/menulist.css" rel="stylesheet"/>
+        <hbox id="label-box" part="label-box" flex="1" role="none">
+          <image part="icon" role="none"/>
+          <label id="label" part="label" crop="right" flex="1" role="none"/>
+          <label id="highlightable-label" part="label" crop="right" flex="1" role="none"/>
+        </hbox>
+        <dropmarker part="dropmarker" exportparts="icon: dropmarker-icon" type="menu" role="none"/>
+        <html:slot/>
+    `;
     }
 
     connectedCallback() {
@@ -80,11 +97,13 @@
         return;
       }
 
-      if (this.getAttribute("popuponly") != "true") {
-        this.prepend(MozMenuList.fragment.cloneNode(true));
-        this._labelBox = this.children[0];
-        this._dropmarker = this.children[1];
+      if (!this.hasAttribute("popuponly")) {
+        this.shadowRoot.appendChild(this.fragment);
+        this._labelBox = this.shadowRoot.getElementById("label-box");
+        this._dropmarker = this.shadowRoot.querySelector("dropmarker");
         this.initializeAttributeInheritance();
+      } else {
+        this.shadowRoot.appendChild(document.createElement("slot"));
       }
 
       this.mSelectedInternal = null;
@@ -92,24 +111,13 @@
       this.setInitialSelection();
     }
 
-    static get fragment() {
-      // Accessibility information of these nodes will be
-      // presented on XULComboboxAccessible generated from <menulist>;
-      // hide these nodes from the accessibility tree.
-      let frag = document.importNode(
-        MozXULElement.parseXULToFragment(`
-        <hbox class="menulist-label-box" flex="1" role="none">
-          <image class="menulist-icon" role="none"/>
-          <label class="menulist-label" crop="right" flex="1" role="none"/>
-          <label class="menulist-highlightable-label" crop="right" flex="1" role="none"/>
-        </hbox>
-        <dropmarker class="menulist-dropmarker" type="menu" role="none"/>
-      `),
-        true
-      );
-
-      Object.defineProperty(this, "fragment", { value: frag });
-      return frag;
+    get fragment() {
+      if (!this.constructor.hasOwnProperty("_fragment")) {
+        this.constructor._fragment = MozXULElement.parseXULToFragment(
+          MozMenuList.markup
+        );
+      }
+      return document.importNode(this.constructor._fragment, true);
     }
 
     // nsIDOMXULSelectControlElement

@@ -110,7 +110,7 @@ label {
   font-size: .9em;
 }
 
-menulist > hbox > label,
+menulist::part(label),
 menuitem > label,
 button > hbox > label {
   line-height: unset;

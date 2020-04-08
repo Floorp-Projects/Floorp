@@ -38,7 +38,7 @@ notification[value="translation"] menulist {
   box-shadow: 0 1px rgba(255, 255, 255, 0.5), 0 1px rgba(255, 255, 255, 0.5) inset;
 }
 
-notification[value="translation"] menulist > .menulist-dropmarker {
+notification[value="translation"] menulist::part(dropmarker) {
   -moz-appearance: toolbarbutton-dropdown;
   border: none;
   background-color: transparent;

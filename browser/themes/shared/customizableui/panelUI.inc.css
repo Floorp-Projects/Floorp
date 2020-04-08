@@ -2242,6 +2242,6 @@ panelview[mainview] #PanelUI-whatsNew-content {
   fill: #fff;
 }
 
-#PanelUI-profiler-presets[disabled="true"] .menulist-label-box {
+#PanelUI-profiler-presets[disabled="true"]::part(label-box) {
   opacity: 0.5;
 }
