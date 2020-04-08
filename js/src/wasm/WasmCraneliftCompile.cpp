@@ -119,12 +119,11 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
   // Omit the check when framePushed is small and we know there's no
   // recursion.
-  if (func.frame_pushed < MAX_UNCHECKED_LEAF_FRAME_SIZE &&
-      !func.contains_calls) {
-    masm.reserveStack(func.frame_pushed);
+  if (func.framePushed < MAX_UNCHECKED_LEAF_FRAME_SIZE && !func.containsCalls) {
+    masm.reserveStack(func.framePushed);
   } else {
     std::pair<CodeOffset, uint32_t> pair = masm.wasmReserveStackChecked(
-        func.frame_pushed, BytecodeOffset(lineOrBytecode));
+        func.framePushed, BytecodeOffset(lineOrBytecode));
     CodeOffset trapInsnOffset = pair.first;
     size_t nBytesReservedBeforeTrap = pair.second;
 
@@ -142,11 +141,9 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
             &functionEntryStackMap)) {
       return false;
     }
-
     // In debug builds, we'll always have a stack map, even if there are no
     // refs to track.
     MOZ_ALWAYS_TRUE(functionEntryStackMap);
-
     if (functionEntryStackMap &&
         !stackMaps->add((uint8_t*)(uintptr_t)trapInsnOffset.offset(),
                         functionEntryStackMap)) {
@@ -154,36 +151,36 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
       return false;
     }
   }
-  MOZ_ASSERT(masm.framePushed() == func.frame_pushed);
+  MOZ_ASSERT(masm.framePushed() == func.framePushed);
 
   // Copy the machine code; handle jump tables and other read-only data below.
   uint32_t funcBase = masm.currentOffset();
-  if (!masm.appendRawCode(func.code, func.code_size)) {
+  if (!masm.appendRawCode(func.code, func.codeSize)) {
     return false;
   }
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   uint32_t codeEnd = masm.currentOffset();
 #endif
 
-  wasm::GenerateFunctionEpilogue(masm, func.frame_pushed, offsets);
+  wasm::GenerateFunctionEpilogue(masm, func.framePushed, offsets);
 
-  if (func.num_rodata_relocs > 0) {
+  if (func.numRodataRelocs > 0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     constexpr size_t jumptableElementSize = 4;
 
-    MOZ_ASSERT(func.jumptables_size % jumptableElementSize == 0);
+    MOZ_ASSERT(func.jumptablesSize % jumptableElementSize == 0);
 
     // Align the jump tables properly.
     masm.haltingAlign(jumptableElementSize);
 
     // Copy over the tables and read-only data.
     uint32_t rodataBase = masm.currentOffset();
-    if (!masm.appendRawCode(func.code + func.code_size,
-                            func.total_size - func.code_size)) {
+    if (!masm.appendRawCode(func.code + func.codeSize,
+                            func.totalSize - func.codeSize)) {
       return false;
     }
 
-    uint32_t numElem = func.jumptables_size / jumptableElementSize;
+    uint32_t numElem = func.jumptablesSize / jumptableElementSize;
     uint32_t bias = rodataBase - codeEnd;
 
     // Bias the jump table(s).  The table values are negative values
@@ -198,9 +195,9 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
     // Patch up the code locations.  These represent forward distances that also
     // become greater, so we add a positive value.
-    for (uint32_t i = 0; i < func.num_rodata_relocs; i++) {
-      MOZ_ASSERT(func.rodata_relocs[i] < func.code_size);
-      masm.addToPCRel4(funcBase + func.rodata_relocs[i], bias);
+    for (uint32_t i = 0; i < func.numRodataRelocs; i++) {
+      MOZ_ASSERT(func.rodataRelocs[i] < func.codeSize);
+      masm.addToPCRel4(funcBase + func.rodataRelocs[i], bias);
     }
 #else
     MOZ_CRASH("No jump table support on this platform");
@@ -218,11 +215,11 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     maplet->offsetBy(funcBase);
   }
 
-  for (size_t i = 0; i < func.num_metadata; i++) {
+  for (size_t i = 0; i < func.numMetadata; i++) {
     const CraneliftMetadataEntry& metadata = func.metadatas[i];
 
     CheckedInt<size_t> offset = funcBase;
-    offset += metadata.code_offset;
+    offset += metadata.codeOffset;
     if (!offset.isValid()) {
       return false;
     }
@@ -231,16 +228,19 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     // Check code offsets.
     MOZ_ASSERT(offset.value() >= offsets->normalEntry);
     MOZ_ASSERT(offset.value() < offsets->ret);
-    MOZ_ASSERT(metadata.module_bytecode_offset != 0);
 
     // Check bytecode offsets.
-    if (lineOrBytecode > 0) {
-      MOZ_ASSERT(metadata.module_bytecode_offset >= lineOrBytecode);
-      MOZ_ASSERT(metadata.module_bytecode_offset <
+    if (metadata.moduleBytecodeOffset > 0 && lineOrBytecode > 0) {
+      MOZ_ASSERT(metadata.moduleBytecodeOffset >= lineOrBytecode);
+      MOZ_ASSERT(metadata.moduleBytecodeOffset <
                  lineOrBytecode + funcBytecodeSize);
     }
 #endif
-    uint32_t bytecodeOffset = metadata.module_bytecode_offset;
+    // TODO(bug 1532716): Cranelift gives null bytecode offsets for symbolic
+    // accesses.
+    uint32_t bytecodeOffset = metadata.moduleBytecodeOffset
+                                  ? metadata.moduleBytecodeOffset
+                                  : lineOrBytecode;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
@@ -259,14 +259,15 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
         masm.append(trap, wasm::TrapSite(offset.value(), trapOffset));
         break;
       }
+      case CraneliftMetadataEntry::Which::MemoryAccess: {
+        BytecodeOffset trapOffset(bytecodeOffset);
+        masm.appendOutOfBoundsTrap(trapOffset, offset.value());
+        break;
+      }
       case CraneliftMetadataEntry::Which::SymbolicAccess: {
-        CodeOffset raOffset(offset.value());
-        CallSiteDesc desc(bytecodeOffset, CallSiteDesc::Symbolic);
-        masm.append(desc, raOffset);
-
         SymbolicAddress sym =
             ToSymbolicAddress(BD_SymbolicAddress(metadata.extra));
-        masm.append(SymbolicAccess(raOffset, sym));
+        masm.append(SymbolicAccess(CodeOffset(offset.value()), sym));
         break;
       }
       default: {
@@ -291,15 +292,15 @@ class AutoCranelift {
  public:
   explicit AutoCranelift(const ModuleEnvironment& env)
       : env_(env), compiler_(nullptr) {
-    staticEnv_.ref_types_enabled = env.refTypesEnabled();
+    staticEnv_.refTypesEnabled = env.refTypesEnabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
     if (env.hugeMemoryEnabled()) {
       // In the huge memory configuration, we always reserve the full 4 GB
       // index space for a heap.
-      staticEnv_.static_memory_bound = HugeIndexRange;
-      staticEnv_.memory_guard_size = HugeOffsetGuardLimit;
+      staticEnv_.staticMemoryBound = HugeIndexRange;
+      staticEnv_.memoryGuardSize = HugeOffsetGuardLimit;
     } else {
-      staticEnv_.memory_guard_size = OffsetGuardLimit;
+      staticEnv_.memoryGuardSize = OffsetGuardLimit;
     }
 #endif
     // Otherwise, heap bounds are stored in the `boundsCheckLimit` field
@@ -320,7 +321,7 @@ class AutoCranelift {
 CraneliftFuncCompileInput::CraneliftFuncCompileInput(
     const FuncCompileInput& func)
     : bytecode(func.begin),
-      bytecode_size(func.end - func.begin),
+      bytecodeSize(func.end - func.begin),
       index(func.index),
       offset_in_module(func.lineOrBytecode) {}
 
@@ -330,50 +331,48 @@ static_assert(offsetof(TlsData, boundsCheckLimit) == sizeof(size_t),
 CraneliftStaticEnvironment::CraneliftStaticEnvironment()
     :
 #ifdef JS_CODEGEN_X64
-      has_sse2(Assembler::HasSSE2()),
-      has_sse3(Assembler::HasSSE3()),
-      has_sse41(Assembler::HasSSE41()),
-      has_sse42(Assembler::HasSSE42()),
-      has_popcnt(Assembler::HasPOPCNT()),
-      has_avx(Assembler::HasAVX()),
-      has_bmi1(Assembler::HasBMI1()),
-      has_bmi2(Assembler::HasBMI2()),
-      has_lzcnt(Assembler::HasLZCNT()),
+      hasSse2(Assembler::HasSSE2()),
+      hasSse3(Assembler::HasSSE3()),
+      hasSse41(Assembler::HasSSE41()),
+      hasSse42(Assembler::HasSSE42()),
+      hasPopcnt(Assembler::HasPOPCNT()),
+      hasAvx(Assembler::HasAVX()),
+      hasBmi1(Assembler::HasBMI1()),
+      hasBmi2(Assembler::HasBMI2()),
+      hasLzcnt(Assembler::HasLZCNT()),
 #else
-      has_sse2(false),
-      has_sse3(false),
-      has_sse41(false),
-      has_sse42(false),
-      has_popcnt(false),
-      has_avx(false),
-      has_bmi1(false),
-      has_bmi2(false),
-      has_lzcnt(false),
+      hasSse2(false),
+      hasSse3(false),
+      hasSse41(false),
+      hasSse42(false),
+      hasPopcnt(false),
+      hasAvx(false),
+      hasBmi1(false),
+      hasBmi2(false),
+      hasLzcnt(false),
 #endif
 #if defined(XP_WIN)
-      platform_is_windows(true),
+      platformIsWindows(true),
 #else
-      platform_is_windows(false),
+      platformIsWindows(false),
 #endif
-      ref_types_enabled(false),
-      static_memory_bound(0),
-      memory_guard_size(0),
-      memory_base_tls_offset(offsetof(TlsData, memoryBase)),
-      instance_tls_offset(offsetof(TlsData, instance)),
-      interrupt_tls_offset(offsetof(TlsData, interrupt)),
-      cx_tls_offset(offsetof(TlsData, cx)),
-      realm_cx_offset(JSContext::offsetOfRealm()),
-      realm_tls_offset(offsetof(TlsData, realm)),
-      realm_func_import_tls_offset(offsetof(FuncImportTls, realm)),
-      size_of_wasm_frame(sizeof(wasm::Frame)) {
+      refTypesEnabled(false),
+      staticMemoryBound(0),
+      memoryGuardSize(0),
+      memoryBaseTlsOffset(offsetof(TlsData, memoryBase)),
+      instanceTlsOffset(offsetof(TlsData, instance)),
+      interruptTlsOffset(offsetof(TlsData, interrupt)),
+      cxTlsOffset(offsetof(TlsData, cx)),
+      realmCxOffset(JSContext::offsetOfRealm()),
+      realmTlsOffset(offsetof(TlsData, realm)),
+      realmFuncImportTlsOffset(offsetof(FuncImportTls, realm)) {
 }
 
 // Most of BaldrMonkey's data structures refer to a "global offset" which is a
 // byte offset into the `globalArea` field of the  `TlsData` struct.
 //
 // Cranelift represents global variables with their byte offset from the "VM
-// context pointer" which is the `WasmTlsReg` pointing to the `TlsData`
-// struct.
+// context pointer" which is the `WasmTlsReg` pointing to the `TlsData` struct.
 //
 // This function translates between the two.
 
@@ -516,8 +515,8 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
       const CodeRangeVector& codeRanges = code->codeRanges;
       MOZ_ASSERT(codeRanges.length() >= inputs.length());
 
-      // Within the current batch, functions' code ranges have been added in
-      // the same order as the inputs.
+      // Within the current batch, functions' code ranges have been added in the
+      // same order as the inputs.
       size_t firstCodeRangeIndex = codeRanges.length() - inputs.length();
 
       for (size_t i = 0; i < inputs.length(); i++) {

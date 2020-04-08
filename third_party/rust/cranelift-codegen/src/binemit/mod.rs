@@ -16,9 +16,7 @@ pub use self::relaxation::relax_branches;
 pub use self::shrink::shrink_instructions;
 pub use self::stackmap::Stackmap;
 use crate::ir::entities::Value;
-use crate::ir::{
-    ConstantOffset, ExternalName, Function, Inst, JumpTable, Opcode, SourceLoc, TrapCode,
-};
+use crate::ir::{ConstantOffset, ExternalName, Function, Inst, JumpTable, SourceLoc, TrapCode};
 use crate::isa::TargetIsa;
 pub use crate::regalloc::RegDiversions;
 use core::fmt;
@@ -142,7 +140,7 @@ pub trait CodeSink {
     fn reloc_block(&mut self, _: Reloc, _: CodeOffset);
 
     /// Add a relocation referencing an external symbol plus the addend at the current offset.
-    fn reloc_external(&mut self, _: SourceLoc, _: Reloc, _: &ExternalName, _: Addend);
+    fn reloc_external(&mut self, _: Reloc, _: &ExternalName, _: Addend);
 
     /// Add a relocation referencing a constant.
     fn reloc_constant(&mut self, _: Reloc, _: ConstantOffset);
@@ -164,11 +162,6 @@ pub trait CodeSink {
 
     /// Add a stackmap at the current code offset.
     fn add_stackmap(&mut self, _: &[Value], _: &Function, _: &dyn TargetIsa);
-
-    /// Add a call site for a call with the given opcode, returning at the current offset.
-    fn add_call_site(&mut self, _: Opcode, _: SourceLoc) {
-        // Default implementation doesn't need to do anything.
-    }
 }
 
 /// Type of the frame unwind information.

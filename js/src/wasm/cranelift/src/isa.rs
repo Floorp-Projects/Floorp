@@ -29,11 +29,6 @@ use cranelift_codegen::settings::{self, Configurable};
 use crate::bindings::StaticEnvironment;
 use crate::utils::{BasicError, DashResult};
 
-#[cfg(target_pointer_width = "64")]
-pub const POINTER_SIZE: usize = 8;
-#[cfg(target_pointer_width = "32")]
-pub const POINTER_SIZE: usize = 4;
-
 impl From<isa::LookupError> for BasicError {
     fn from(err: isa::LookupError) -> BasicError {
         BasicError::new(err.to_string())
@@ -109,14 +104,16 @@ fn make_shared_flags(
     sb.enable("avoid_div_traps")?;
 
     // Cranelift needs to know how many words are pushed by `GenerateFunctionPrologue` so it can
-    // compute frame pointer offsets accurately. C++'s "sizeof" gives us the number of bytes, which
-    // we translate to the number of words, as expected by Cranelift.
-    debug_assert_eq!(env.size_of_wasm_frame % POINTER_SIZE, 0);
-    let num_words = env.size_of_wasm_frame / POINTER_SIZE;
-    sb.set("baldrdash_prologue_words", &num_words.to_string())?;
+    // compute frame pointer offsets accurately.
+    //
+    // 1. Return address (whether explicitly pushed on ARM or implicitly on x86).
+    // 2. TLS register.
+    // 3. Previous frame pointer.
+    //
+    sb.set("baldrdash_prologue_words", "3")?;
 
     // Make sure that libcalls use the supplementary VMContext argument.
-    let libcall_call_conv = if env.platform_is_windows {
+    let libcall_call_conv = if env.platformIsWindows {
         "baldrdash_windows"
     } else {
         "baldrdash_system_v"
@@ -160,7 +157,7 @@ fn make_shared_flags(
         sb.enable("use_pinned_reg_as_heap_base")?;
     }
 
-    if env.ref_types_enabled {
+    if env.refTypesEnabled {
         sb.enable("enable_safepoints")?;
     }
 
@@ -171,32 +168,32 @@ fn make_shared_flags(
 fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
     let mut ib = isa::lookup_by_name("x86_64-unknown-unknown").map_err(BasicError::from)?;
 
-    if !env.has_sse2 {
+    if !env.hasSse2 {
         return Err("SSE2 is mandatory for Baldrdash!".into());
     }
 
-    if env.has_sse3 {
+    if env.hasSse3 {
         ib.enable("has_sse3").map_err(BasicError::from)?;
     }
-    if env.has_sse41 {
+    if env.hasSse41 {
         ib.enable("has_sse41").map_err(BasicError::from)?;
     }
-    if env.has_sse42 {
+    if env.hasSse42 {
         ib.enable("has_sse42").map_err(BasicError::from)?;
     }
-    if env.has_popcnt {
+    if env.hasPopcnt {
         ib.enable("has_popcnt").map_err(BasicError::from)?;
     }
-    if env.has_avx {
+    if env.hasAvx {
         ib.enable("has_avx").map_err(BasicError::from)?;
     }
-    if env.has_bmi1 {
+    if env.hasBmi1 {
         ib.enable("has_bmi1").map_err(BasicError::from)?;
     }
-    if env.has_bmi2 {
+    if env.hasBmi2 {
         ib.enable("has_bmi2").map_err(BasicError::from)?;
     }
-    if env.has_lzcnt {
+    if env.hasLzcnt {
         ib.enable("has_lzcnt").map_err(BasicError::from)?;
     }
 
