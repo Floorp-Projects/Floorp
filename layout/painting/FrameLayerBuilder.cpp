@@ -4755,10 +4755,14 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         clipPtr = &clipRectUntyped;
       }
 
+      bool isStickyNotClippedToDisplayPort =
+          itemType == DisplayItemType::TYPE_STICKY_POSITION &&
+          !static_cast<nsDisplayStickyPosition*>(item)
+               ->IsClippedToDisplayPort();
       bool hasScrolledClip =
           layerClipChain && layerClipChain->mClip.HasClip() &&
           (!ActiveScrolledRoot::IsAncestor(layerClipChain->mASR, itemASR) ||
-           itemType == DisplayItemType::TYPE_STICKY_POSITION);
+           isStickyNotClippedToDisplayPort);
 
       if (hasScrolledClip) {
         // If the clip is scrolled, reserve just the area of the clip for

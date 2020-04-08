@@ -3636,6 +3636,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           GetUnsnappedScrolledRectInternal(
               mScrolledFrame->GetScrollableOverflowRect(), mScrollPort.Size()) +
           mScrolledFrame->GetPosition();
+      bool clippedToDisplayPort = false;
       if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
         // Clip the contents to the display port.
         // The dirty rect already acts kind of like a clip, in that
@@ -3654,9 +3655,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // If there is no display port, we don't need this because the clip
         // from the scroll port is still applied.
         scrolledRectClip = scrolledRectClip.Intersect(visibleRect);
+        clippedToDisplayPort = scrolledRectClip.IsEqualEdges(visibleRect);
       }
       scrolledRectClipState.ClipContainingBlockDescendants(
           scrolledRectClip + aBuilder->ToReferenceFrame(mOuter));
+      if (clippedToDisplayPort) {
+        // We have to do this after the ClipContainingBlockDescendants call
+        // above, otherwise that call will clobber the flag set by this call
+        // to SetClippedToDisplayPort.
+        scrolledRectClipState.SetClippedToDisplayPort();
+      }
 
       nsDisplayListBuilder::AutoBuildingDisplayList building(
           aBuilder, mOuter, visibleRect, dirtyRect);

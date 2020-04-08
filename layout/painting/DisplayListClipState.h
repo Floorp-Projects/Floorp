@@ -28,7 +28,11 @@ class DisplayListClipState {
       : mClipChainContentDescendants(nullptr),
         mClipChainContainingBlockDescendants(nullptr),
         mCurrentCombinedClipChain(nullptr),
-        mCurrentCombinedClipChainIsValid(false) {}
+        mCurrentCombinedClipChainIsValid(false),
+        mClippedToDisplayPort(false) {}
+
+  void SetClippedToDisplayPort() { mClippedToDisplayPort = true; }
+  bool IsClippedToDisplayPort() const { return mClippedToDisplayPort; }
 
   /**
    * Returns intersection of mClipChainContainingBlockDescendants and
@@ -64,6 +68,7 @@ class DisplayListClipState {
     mClipChainContainingBlockDescendants = nullptr;
     mCurrentCombinedClipChain = nullptr;
     mCurrentCombinedClipChainIsValid = false;
+    mClippedToDisplayPort = false;
   }
 
   void SetClipChainForContainingBlockDescendants(
@@ -127,6 +132,11 @@ class DisplayListClipState {
    */
   const DisplayItemClipChain* mCurrentCombinedClipChain;
   bool mCurrentCombinedClipChainIsValid;
+  /**
+   * A flag that is used by sticky positioned items to know if the clip applied
+   * to them is just the displayport clip or if there is additional clipping.
+   */
+  bool mClippedToDisplayPort;
 };
 
 /**
@@ -213,6 +223,11 @@ class DisplayListClipState::AutoSaveRestore {
 #endif
     mState.ClipContainingBlockDescendantsToContentBox(aBuilder, aFrame,
                                                       mClipChain, aFlags);
+  }
+
+  void SetClippedToDisplayPort() { mState.SetClippedToDisplayPort(); }
+  bool IsClippedToDisplayPort() const {
+    return mState.IsClippedToDisplayPort();
   }
 
  protected:
