@@ -57,7 +57,6 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   const RefPtr<SharedThreadPool> mThreadPool;
   const RefPtr<TaskQueue> mTaskQueue;
-  const nsCOMPtr<nsIEventTarget> mTaskQueueEventTarget;
   const RefPtr<PEMFactory> mFactory;
   RefPtr<MediaDataEncoder> mEncoder;
   webrtc::EncodedImageCallback* mCallback = nullptr;
