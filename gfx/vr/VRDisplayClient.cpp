@@ -15,6 +15,7 @@
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/XRSession.h"
+#include "mozilla/dom/XRInputSourceArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/WebXRBinding.h"
@@ -140,8 +141,19 @@ void VRDisplayClient::FireEvents() {
     StartFrame();
   }
 
-  // We only call FireGamepadEvents() in WebVR instead of WebXR
-  FireGamepadEvents();
+  // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad attribute
+  // MUST NOT be included in the array returned by navigator.getGamepads().
+  if (!StaticPrefs::dom_vr_webxr_enabled()) { // Checking mWebVR?
+    FireGamepadEvents();
+  } else {
+    // Update controller states into XRInputSourceArray.
+    for (auto& session : mSessions) {
+      dom::XRInputSourceArray* inputs = session->InputSources();
+      if (inputs) {
+        inputs->Update(session);
+      }
+    }
+  }
 }
 
 void VRDisplayClient::GamepadMappingForWebVR(
