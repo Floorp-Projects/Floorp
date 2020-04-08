@@ -145,7 +145,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
     // In debug builds, we'll always have a stack map, even if there are no
     // refs to track.
-    MOZ_ALWAYS_TRUE(functionEntryStackMap);
+    MOZ_ASSERT(functionEntryStackMap);
 
     if (functionEntryStackMap &&
         !stackMaps->add((uint8_t*)(uintptr_t)trapInsnOffset.offset(),
