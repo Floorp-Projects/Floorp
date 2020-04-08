@@ -865,7 +865,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
   // HandleException to call any previous handler or return
   // EXCEPTION_CONTINUE_SEARCH on the exception thread, allowing it to appear
   // as though this handler were not present at all.
-  if (filter_ && !filter_(callback_context_, exinfo, &addr_info, assertion)) {
+  if (filter_ && !filter_(callback_context_, exinfo, assertion)) {
     return false;
   }
 
