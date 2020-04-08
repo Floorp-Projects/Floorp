@@ -43,8 +43,6 @@ add_task(async function() {
     "We shouldn't have added any new expected reflows for window close."
   );
 
-  let dropmarkerRect = gURLBar.dropmarker.getBoundingClientRect();
-
   await withPerfObserver(
     async function() {
       let promiseOrigBrowserFocused = BrowserTestUtils.waitForCondition(() => {
@@ -55,22 +53,6 @@ add_task(async function() {
     },
     {
       expectedReflows: EXPECTED_REFLOWS,
-      frames: {
-        filter: rects =>
-          rects.filter(
-            r =>
-              !(
-                // The dropmarker is visible when the window opens and sometimes hasn't
-                // finished its transition to opacity: 0 by the time waitForFocus resolves.
-                (
-                  r.x1 >= dropmarkerRect.left - 1 &&
-                  r.x2 <= dropmarkerRect.right + 1 &&
-                  r.y1 >= dropmarkerRect.top &&
-                  r.y2 <= dropmarkerRect.bottom
-                )
-              )
-          ),
-      },
     },
     win
   );

@@ -27,7 +27,7 @@ add_task(async function() {
 
   // Prepare the window to avoid flicker and reflow that's unrelated to our
   // tab opening operation.
-  await ensureFocusedUrlbar();
+  gURLBar.focus();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();

@@ -35,13 +35,12 @@ add_task(async function() {
 
   await createTabs(TAB_COUNT_FOR_OVERFLOW);
 
-  await ensureFocusedUrlbar();
+  gURLBar.focus();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let textBoxRect = gURLBar
     .querySelector("moz-input-box")
     .getBoundingClientRect();
-  let urlbarDropmarkerRect = gURLBar.dropmarker.getBoundingClientRect();
 
   let ignoreTabstripRects = {
     filter: rects =>
@@ -72,15 +71,6 @@ add_task(async function() {
           // In the content area
           r.y1 >=
           document.getElementById("appcontent").getBoundingClientRect().top,
-      },
-      {
-        name: "bug 1520032 - the urlbar dropmarker disappears periodically",
-        condition: r =>
-          AppConstants.DEBUG &&
-          r.x1 >= urlbarDropmarkerRect.left &&
-          r.x2 <= urlbarDropmarkerRect.right &&
-          r.y1 >= urlbarDropmarkerRect.top &&
-          r.y2 <= urlbarDropmarkerRect.bottom,
       },
     ],
   };

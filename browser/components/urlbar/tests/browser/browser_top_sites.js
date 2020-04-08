@@ -15,7 +15,6 @@ const EN_US_TOPSITES =
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.update1", true],
       ["browser.urlbar.openViewOnFocus", true],
       ["browser.newtabpage.activity-stream.default.sites", EN_US_TOPSITES],
     ],

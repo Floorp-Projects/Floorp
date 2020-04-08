@@ -2099,15 +2099,9 @@ var gBrowserInit = {
       this._firstBrowserPaintDeferred.resolve = resolve;
     });
 
-    // To prevent flickering of the urlbar-history-dropmarker in the general
-    // case, the urlbar has the 'focused' attribute set by default.
-    // If we are not fully sure the urlbar will be focused in this window,
-    // we should remove the attribute before first paint.
-    let shouldRemoveFocusedAttribute = true;
     this._callWithURIToLoad(uriToLoad => {
       if (isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") {
         gURLBar.select();
-        shouldRemoveFocusedAttribute = false;
         return;
       }
 
@@ -2129,16 +2123,6 @@ var gBrowserInit = {
         gBrowser.selectedBrowser.focus();
       }
     });
-    // Delay removing the attribute using requestAnimationFrame to avoid
-    // invalidating styles multiple times in a row if uriToLoadPromise
-    // resolves before first paint.
-    if (shouldRemoveFocusedAttribute) {
-      window.requestAnimationFrame(() => {
-        if (shouldRemoveFocusedAttribute) {
-          gURLBar.removeAttribute("focused");
-        }
-      });
-    }
   },
 
   _handleURIToLoad() {

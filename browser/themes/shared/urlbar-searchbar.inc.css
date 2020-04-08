@@ -39,8 +39,7 @@
   color: -moz-FieldText;
 }
 
-#urlbar:not(.megabar),
-#urlbar.megabar > #urlbar-background,
+#urlbar-background,
 #searchbar {
   background-color: -moz-Field;
   background-clip: padding-box;
@@ -66,15 +65,13 @@
   padding: 0;
 }
 
-#urlbar:not(.megabar):not([focused="true"]):hover,
-#urlbar.megabar:not([focused="true"]):hover > #urlbar-background,
+#urlbar:not([focused="true"]):hover > #urlbar-background,
 #searchbar:not(:focus-within):hover {
   border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
 }
 
-#urlbar:not(.megabar)[focused="true"],
-#urlbar.megabar[focused="true"] > #urlbar-background,
+#urlbar[focused="true"] > #urlbar-background,
 #searchbar:focus-within {
   border-color: var(--toolbar-field-focus-border-color);
 }
@@ -84,26 +81,22 @@
   color: var(--lwt-toolbar-field-color, black);
 }
 
-#urlbar:not(.megabar):-moz-lwtheme,
-#urlbar.megabar:-moz-lwtheme > #urlbar-background,
+#urlbar:-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
 }
 
-#urlbar:not(.megabar):not([focused="true"]):-moz-lwtheme,
-#urlbar.megabar:not([focused="true"]):-moz-lwtheme > #urlbar-background,
+#urlbar:not([focused="true"]):-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, @fieldBorderColor@);
 }
 
-#urlbar:not(.megabar):not([focused="true"]):-moz-lwtheme:hover,
-#urlbar.megabar:not([focused="true"]):-moz-lwtheme:hover > #urlbar-background,
+#urlbar:not([focused="true"]):-moz-lwtheme:hover > #urlbar-background,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme:hover {
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
-#urlbar:not(.megabar):-moz-lwtheme:hover,
-#urlbar.megabar:-moz-lwtheme:hover > #urlbar-background,
+#urlbar:-moz-lwtheme:hover > #urlbar-background,
 #navigator-toolbox #searchbar:-moz-lwtheme:hover {
   background-color: var(--lwt-toolbar-field-background-color, white);
 }
@@ -113,8 +106,7 @@
   color: var(--lwt-toolbar-field-focus-color);
 }
 
-#urlbar:not(.megabar)[focused="true"]:-moz-lwtheme,
-#urlbar.megabar[focused="true"]:-moz-lwtheme > #urlbar-background,
+#urlbar[focused="true"]:-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-focus);
 }
@@ -149,13 +141,13 @@
  * the bounds of the urlbar.
  */
 
-#urlbar.megabar,
-#urlbar.megabar > #urlbar-input-container,
-#urlbar.megabar > .urlbarView {
+#urlbar,
+#urlbar-input-container,
+.urlbarView {
   position: relative;
 }
 
-#urlbar.megabar > #urlbar-background {
+#urlbar-background {
   display: block;
   position: absolute;
   inset: 0;
@@ -166,7 +158,7 @@
   inset-inline-start: @urlbarSearchButtonWidth@;
 }
 
-#urlbar.megabar > #urlbar-input-container {
+#urlbar-input-container {
   /* Match urlbar-background's border. */
   border: 1px solid transparent;
 }
@@ -191,7 +183,7 @@
 }
 
 #urlbar:not([open]) > .urlbarView,
-#urlbar.megabar:not([breakout]) > .urlbarView {
+#urlbar:not([breakout]) > .urlbarView {
   display: none;
 }
 
@@ -495,19 +487,6 @@
   transform: scaleX(-1);
 }
 
-.urlbar-history-dropmarker {
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
-  transition: opacity 0.15s ease;
-}
-
-#urlbar[switchingtabs] > #urlbar-input-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > #urlbar-input-container > .urlbar-history-dropmarker {
-  opacity: 0;
-}
-
 #pageActionButton,
 .share-more-button {
   list-style-image: url("chrome://global/skin/icons/more.svg");
@@ -789,17 +768,6 @@
 }
 #urlbar[cfr-recommendation-state="expanded"] #cfr-label {
   mask-position-x: 0;
-}
-
-/* Translate the dropmarker to give illusion of increasing width of the recommendation  */
-#urlbar[cfr-recommendation-state] .urlbar-history-dropmarker {
-  transition: transform ease-in-out var(--cfr-animation-duration);
-}
-#urlbar[cfr-recommendation-state="expanded"] .urlbar-history-dropmarker {
-  transform: translateX(calc(var(--cfr-label-width) * -1));
-}
-#urlbar[cfr-recommendation-state="expanded"] .urlbar-history-dropmarker:-moz-locale-dir(rtl) {
-  transform: translateX(calc(var(--cfr-label-width)));
 }
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */

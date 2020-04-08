@@ -31,7 +31,7 @@ add_task(async function() {
 
   await createTabs(TAB_COUNT_FOR_SQUEEZE);
 
-  await ensureFocusedUrlbar();
+  gURLBar.focus();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let textBoxRect = gURLBar

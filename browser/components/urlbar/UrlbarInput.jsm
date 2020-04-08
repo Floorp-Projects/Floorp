@@ -81,15 +81,9 @@ class UrlbarInput {
     );
     this.panel = this.textbox.querySelector(".urlbarView");
 
-    // "Megabar" is the internal codename for the update1 design refresh.
-    this.megabar = UrlbarPrefs.get("update1");
-    if (this.megabar) {
-      this.textbox.classList.add("megabar");
-      this.textbox.parentNode.classList.add("megabar");
-      this.searchButton = UrlbarPrefs.get("update2.searchButton");
-      if (this.searchButton) {
-        this.textbox.classList.add("searchButton");
-      }
+    this.searchButton = UrlbarPrefs.get("update2.searchButton");
+    if (this.searchButton) {
+      this.textbox.classList.add("searchButton");
     }
 
     this.controller = new UrlbarController({
@@ -154,8 +148,6 @@ class UrlbarInput {
     }
 
     this.inputField = this.querySelector("#urlbar-input");
-    this.dropmarker = this.querySelector(".urlbar-history-dropmarker");
-    this.dropmarker.hidden = this.megabar;
     this._inputContainer = this.querySelector("#urlbar-input-container");
     this._identityBox = this.querySelector("#identity-box");
     this._toolbar = this.textbox.closest("toolbar");
@@ -200,7 +192,6 @@ class UrlbarInput {
       this.addEventListener(name, this);
     }
 
-    this.dropmarker.addEventListener("mousedown", this);
     this.window.addEventListener("mousedown", this);
     this.textbox.addEventListener("mousedown", this);
     this._inputContainer.addEventListener("click", this);
@@ -1042,9 +1033,6 @@ class UrlbarInput {
   }
 
   async updateLayoutBreakout() {
-    if (!this.megabar) {
-      return;
-    }
     if (!this._toolbar) {
       // Expanding requires a parent toolbar.
       return;
@@ -1971,22 +1959,6 @@ class UrlbarInput {
           this.search(UrlbarTokenizer.RESTRICT.SEARCH);
         } else {
           this.view.autoOpen({ event });
-        }
-        break;
-      case this.dropmarker:
-        if (event.button != 0) {
-          break;
-        }
-
-        if (this.view.isOpen) {
-          this.view.close();
-        } else {
-          this.focus();
-          this.startQuery({
-            allowAutofill: false,
-            event,
-          });
-          this._maybeSelectAll();
         }
         break;
       case this.window:

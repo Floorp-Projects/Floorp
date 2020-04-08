@@ -244,18 +244,6 @@
 
 %include ../shared/urlbar-searchbar.inc.css
 
-@supports not -moz-bool-pref("browser.urlbar.update1") {
-  :root {
-    --toolbar-field-focus-border-color: -moz-mac-focusring;
-  }
-
-  #searchbar:focus-within,
-  #urlbar:not(.megabar)[focused="true"] {
-    box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
-                0 0 0 1px var(--toolbar-field-focus-border-color);
-  }
-}
-
 #urlbar,
 #searchbar {
   font-size: 1.25em;

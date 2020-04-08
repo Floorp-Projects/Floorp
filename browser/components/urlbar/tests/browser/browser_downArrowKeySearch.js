@@ -73,7 +73,6 @@ add_task(async function empty() {
 });
 
 add_task(async function new_window() {
-  // The megabar works properly in a new window.
   let win = await BrowserTestUtils.openNewBrowserWindow();
   win.gURLBar.focus();
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);

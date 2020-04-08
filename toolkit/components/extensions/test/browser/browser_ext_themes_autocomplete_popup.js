@@ -101,44 +101,11 @@ add_task(async function test_popup_url() {
     "Should get maxResults=" + maxResults + " results"
   );
 
-  let popup = gURLBar.view.panel;
-
-  if (!gURLBar.megabar) {
-    // The urlbar popup supports these colors only with the legacy non-megabar
-    // design. With megabar, the popup visually extends the textbox and use its
-    // colors.
-    let popupCS = window.getComputedStyle(popup);
-
-    Assert.equal(
-      popupCS.backgroundColor,
-      `rgb(${hexToRGB(POPUP_COLOR).join(", ")})`,
-      `Popup background color should be set to ${POPUP_COLOR}`
-    );
-
-    Assert.equal(
-      popupCS.borderBottomColor,
-      `rgb(${hexToRGB(CHROME_CONTENT_SEPARATOR_COLOR).join(", ")})`,
-      `Popup bottom color should be set to ${CHROME_CONTENT_SEPARATOR_COLOR}`
-    );
-
-    Assert.equal(
-      popupCS.color,
-      `rgb(${hexToRGB(POPUP_TEXT_COLOR_DARK).join(", ")})`,
-      `Popup color should be set to ${POPUP_TEXT_COLOR_DARK}`
-    );
-  }
-
   // Set the selected attribute to true to test the highlight popup properties
   UrlbarTestUtils.setSelectedRowIndex(window, 1);
   let actionResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   let urlResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let resultCS;
-  if (gURLBar.megabar) {
-    // The megabar styles the highlight on the urlbarView-row-inner element.
-    resultCS = window.getComputedStyle(urlResult.element.row._content);
-  } else {
-    resultCS = window.getComputedStyle(urlResult.element.row);
-  }
+  let resultCS = window.getComputedStyle(urlResult.element.row._content);
 
   Assert.equal(
     resultCS.backgroundColor,
@@ -211,17 +178,6 @@ add_task(async function test_popup_url() {
   });
 
   await extension.startup();
-
-  if (!gURLBar.megabar) {
-    // The urlbar popup supports this color only with the legacy non-megabar
-    // design. With megabar, the popup visually extends the textbox and use its
-    // colors.
-    Assert.equal(
-      window.getComputedStyle(popup).color,
-      `rgb(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")})`,
-      `Popup color should be set to ${POPUP_TEXT_COLOR_BRIGHT}`
-    );
-  }
 
   Assert.equal(
     window.getComputedStyle(urlResult.element.url).color,
