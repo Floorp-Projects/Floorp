@@ -1150,6 +1150,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else if (uriToLoad && aNavigate && !loadState) {
     loadState = new nsDocShellLoadState(uriToLoad);
 
+    loadState->SetSourceBrowsingContext(parentBC);
+
     if (subjectPrincipal) {
       loadState->SetTriggeringPrincipal(subjectPrincipal);
     }
