@@ -57,6 +57,10 @@ struct APZEventResult {
    */
   ScrollableLayerGuid mTargetGuid;
   /**
+   * Whether or not mTargetGuid refers to the root content APZC
+   */
+  bool mTargetIsRoot;
+  /**
    * If this event started or was added to an input block, the id of that
    * input block, otherwise InputBlockState::NO_BLOCK_ID.
    */
