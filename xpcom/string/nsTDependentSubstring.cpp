@@ -83,6 +83,11 @@ const nsTDependentSubstring<T> Substring(const T* aStart, const T* aEnd) {
   return nsTDependentSubstring<T>(aStart, aEnd);
 }
 
+template nsTDependentSubstring<char> const Substring<char>(char const*,
+                                                           char const*);
+template nsTDependentSubstring<char16_t> const Substring<char16_t>(
+    char16_t const*, char16_t const*);
+
 #if defined(MOZ_USE_CHAR16_WRAPPER)
 const nsTDependentSubstring<char16_t> Substring(char16ptr_t aData,
                                                 uint32_t aLength) {
