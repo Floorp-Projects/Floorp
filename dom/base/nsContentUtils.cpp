@@ -6495,6 +6495,19 @@ Maybe<bool> nsContentUtils::IsPatternMatching(nsAString& aValue,
   // regexp evaluation, not actual script execution.
   JSAutoRealm ar(cx, xpc::UnprivilegedJunkScope());
 
+  // Check if the pattern by itself is valid first, and not that it only becomes
+  // valid once we add ^(?: and )$.
+  {
+    JS::Rooted<JSObject*> testRe(
+        cx, JS::NewUCRegExpObject(
+                cx, static_cast<char16_t*>(aPattern.BeginWriting()),
+                aPattern.Length(), JS::RegExpFlag::Unicode));
+    if (!testRe) {
+      ReportPatternCompileFailure(aPattern, aDocument, cx);
+      return Some(true);
+    }
+  }
+
   // The pattern has to match the entire value.
   aPattern.InsertLiteral(u"^(?:", 0);
   aPattern.AppendLiteral(")$");
@@ -6503,13 +6516,8 @@ Maybe<bool> nsContentUtils::IsPatternMatching(nsAString& aValue,
       cx,
       JS::NewUCRegExpObject(cx, static_cast<char16_t*>(aPattern.BeginWriting()),
                             aPattern.Length(), JS::RegExpFlag::Unicode));
-  if (!re) {
-    // Remove extra patterns added above to report with the original pattern.
-    aPattern.Cut(0, 4);
-    aPattern.Cut(aPattern.Length() - 2, 2);
-    ReportPatternCompileFailure(aPattern, aDocument, cx);
-    return Some(true);
-  }
+  // We checked that the pattern is valid above.
+  MOZ_ASSERT(re, "Adding ^(?: and )$ shouldn't make a valid regexp invalid");
 
   JS::Rooted<JS::Value> rval(cx, JS::NullValue());
   size_t idx = 0;
