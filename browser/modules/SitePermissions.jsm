@@ -769,6 +769,9 @@ var SitePermissions = {
    * Returns the localized label for the given permission state, to be used in
    * a UI for managing permissions.
    *
+   * @param {string} permissionID
+   *        The permission to get the label for.
+   *
    * @param {SitePermissions state} state
    *        The state to get the label for.
    *
@@ -873,6 +876,9 @@ var gPermissionObject = {
    *  - states
    *    Array of permission states to be exposed to the user.
    *    Defaults to ALLOW, BLOCK and the default state (see getDefault).
+   *
+   *  - getMultichoiceStateLabel
+   *    Optional method to overwrite SitePermissions#getMultichoiceStateLabel with custom label logic.
    */
 
   "autoplay-media": {
@@ -920,7 +926,7 @@ var gPermissionObject = {
             "state.multichoice.autoplayallow"
           );
       }
-      throw new Error(`Unkown state: ${state}`);
+      throw new Error(`Unknown state: ${state}`);
     },
   },
 
