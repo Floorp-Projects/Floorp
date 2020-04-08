@@ -150,7 +150,7 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     return this.ensureWorkerList()
       .getList()
       .then(actors => {
-        const pool = new Pool(this.conn);
+        const pool = new Pool(this.conn, "workers");
         for (const actor of actors) {
           pool.manage(actor);
         }

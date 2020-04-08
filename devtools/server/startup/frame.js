@@ -85,7 +85,7 @@ try {
         actor = new FrameTargetActor(conn, docShell);
       }
 
-      const actorPool = new ActorPool(conn);
+      const actorPool = new ActorPool(conn, "frame-script");
       actorPool.addActor(actor);
       conn.addActorPool(actorPool);
 

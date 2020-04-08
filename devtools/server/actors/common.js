@@ -15,7 +15,7 @@ const { method } = require("devtools/shared/protocol");
  */
 function ActorPool(connection, label) {
   this.conn = connection;
-  this._label = label;
+  this.label = label;
   this._actors = {};
 }
 

@@ -490,6 +490,12 @@ function TargetMixin(parentClass) {
       return `Target:${id}`;
     }
 
+    dumpPools() {
+      // NOTE: dumpPools is defined in the Thread actor to avoid
+      // adding it to multiple target specs and actors.
+      return this.threadFront.dumpPools();
+    }
+
     /**
      * Log an error of some kind to the tab's console.
      *
