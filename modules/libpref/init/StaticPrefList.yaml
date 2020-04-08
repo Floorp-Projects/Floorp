@@ -5426,9 +5426,10 @@
 
 # Should stray control characters be rendered visibly?
 - name: layout.css.control-characters.visible
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
+  rust: true
 
 # Is support for GeometryUtils.convert*FromNode enabled?
 - name: layout.css.convertFromNode.enabled
