@@ -330,12 +330,12 @@ class WebConsoleUI {
       this._onTargetAvailable,
       this._onTargetDestroy
     );
-    // TODO: Re-enable as part of Bug 1627167.
-    // const resourceWatcher = this.hud.resourceWatcher;
-    // await resourceWatcher.watch(
-    //   [resourceWatcher.TYPES.CONSOLE_MESSAGES],
-    //   this._onResourceAvailable
-    // );
+
+    const resourceWatcher = this.hud.resourceWatcher;
+    await resourceWatcher.watch(
+      [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+      this._onResourceAvailable
+    );
   }
 
   _onResourceAvailable({ resourceType, targetFront, resource }) {
