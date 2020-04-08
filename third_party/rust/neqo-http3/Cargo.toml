@@ -1,6 +1,6 @@
 [package]
 name = "neqo-http3"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"

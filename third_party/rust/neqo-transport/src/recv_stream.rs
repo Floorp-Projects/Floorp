@@ -373,6 +373,10 @@ impl RecvStream {
                 .clear_max_stream_data(self.stream_id)
         }
 
+        if let RecvStreamState::DataRead = new_state {
+            self.conn_events.recv_stream_complete(self.stream_id);
+        }
+
         self.state = new_state;
     }
 

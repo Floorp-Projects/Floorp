@@ -260,10 +260,10 @@ impl ::std::fmt::Display for AgentIo {
 }
 
 unsafe extern "C" fn agent_close(fd: PrFd) -> PrStatus {
+    (*fd).secret = null_mut();
     if let Some(dtor) = (*fd).dtor {
         dtor(fd);
     }
-    (*fd).secret = null_mut();
     PR_SUCCESS
 }
 

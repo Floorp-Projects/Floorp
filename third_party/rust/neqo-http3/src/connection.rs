@@ -46,7 +46,7 @@ enum Http3RemoteSettingsState {
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 struct LocalSettings {
-    max_table_size: u32,
+    max_table_size: u64,
     max_blocked_streams: u16,
 }
 
@@ -81,7 +81,7 @@ impl<T: Http3Transaction> ::std::fmt::Display for Http3Connection<T> {
 }
 
 impl<T: Http3Transaction> Http3Connection<T> {
-    pub fn new(max_table_size: u32, max_blocked_streams: u16) -> Self {
+    pub fn new(max_table_size: u64, max_blocked_streams: u16) -> Self {
         if max_table_size > (1 << 30) - 1 {
             panic!("Wrong max_table_size");
         }
@@ -117,7 +117,7 @@ impl<T: Http3Transaction> Http3Connection<T> {
             settings: HSettings::new(&[
                 HSetting {
                     setting_type: HSettingType::MaxTableCapacity,
-                    value: self.qpack_decoder.get_max_table_size().into(),
+                    value: self.qpack_decoder.get_max_table_size(),
                 },
                 HSetting {
                     setting_type: HSettingType::BlockedStreams,
@@ -459,7 +459,6 @@ impl<T: Http3Transaction> Http3Connection<T> {
                     .map_err(|_| Error::HttpStreamCreationError)?;
                 Ok(false)
             }
-            // TODO reserved stream types
             _ => {
                 conn.stream_stop_sending(stream_id, Error::HttpStreamCreationError.code())?;
                 Ok(false)
@@ -585,7 +584,7 @@ impl<T: Http3Transaction> Http3Connection<T> {
                     match st {
                         HSettingType::MaxTableCapacity => {
                             if zero_rtt_value != 0 {
-                                return Err(Error::HttpSettingsError);
+                                return Err(Error::QpackError(neqo_qpack::Error::DecoderStream));
                             }
                             qpack_changed = true;
                         }

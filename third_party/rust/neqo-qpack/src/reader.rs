@@ -14,10 +14,16 @@ use std::mem;
 use std::str;
 
 pub trait ReadByte {
+    /// # Errors
+    ///    Return error occurred while reading a byte.
+    ///    The exact error depends on trait implementation.
     fn read_byte(&mut self) -> Res<u8>;
 }
 
 pub trait Reader {
+    /// # Errors
+    ///    Return error occurred while reading date into a buffer.
+    ///    The exact error depends on trait implementation.
     fn read(&mut self, buf: &mut [u8]) -> Res<usize>;
 }
 
@@ -52,9 +58,9 @@ impl<'a> ReceiverConnWrapper<'a> {
     }
 }
 
-/// This is only used by header decoder therefore all errors are DecompressionFailed.
+/// This is only used by header decoder therefore all errors are `DecompressionFailed`.
 /// A header block is read entirely before decoding it, therefore if there is not enough
-/// data in the buffer an error DecompressionFailed will be return.
+/// data in the buffer an error `DecompressionFailed` will be return.
 pub(crate) struct ReceiverBufferWrapper<'a> {
     buf: &'a [u8],
     offset: usize,
@@ -89,11 +95,11 @@ impl<'a> ReceiverBufferWrapper<'a> {
         self.offset == self.buf.len()
     }
 
-    /// The function decodes varint with a prefixed, i.e. ignores prefix_len bits of the first
+    /// The function decodes varint with a prefixed, i.e. ignores `prefix_len` bits of the first
     /// byte.
-    /// ReceiverBufferWrapper is only used for decoding header blocks. The header blocks are read
+    /// `ReceiverBufferWrapper` is only used for decoding header blocks. The header blocks are read
     /// entirely before a decoding starts, therefore any incomplete varint because of reaching the
-    /// end of a buffer will be treated as the DecompressionFailed error.
+    /// end of a buffer will be treated as the `DecompressionFailed` error.
     pub fn read_prefixed_int(&mut self, prefix_len: u8) -> Res<u64> {
         debug_assert!(prefix_len < 8);
 
@@ -105,17 +111,17 @@ impl<'a> ReceiverBufferWrapper<'a> {
         }
     }
 
-    /// Do not use LiteralReader here to avoid copying data.
+    /// Do not use `LiteralReader` here to avoid copying data.
     /// The function decoded a literal with a prefix:
-    ///   1) ignores prefix_len bits of the first byte,
+    ///   1) ignores `prefix_len` bits of the first byte,
     ///   2) reads "huffman bit"
     ///   3) decode varint that is the length of a literal
     ///   4) reads the literal
     ///   5) performs huffman decoding if needed.
     ///
-    /// ReceiverBufferWrapper is only used for decoding header blocks. The header blocks are read
+    /// `ReceiverBufferWrapper` is only used for decoding header blocks. The header blocks are read
     /// entirely before a decoding starts, therefore any incomplete varint or literal because of
-    /// reaching the end of a buffer will be treated as the DecompressionFailed error.
+    /// reaching the end of a buffer will be treated as the `DecompressionFailed` error.
     pub fn read_literal_from_buffer(&mut self, prefix_len: u8) -> Res<String> {
         debug_assert!(prefix_len < 7);
 
@@ -154,8 +160,9 @@ pub struct IntReader {
 }
 
 impl IntReader {
-    /// IntReader is created by suppling the first byte anf prefix length.
+    /// `IntReader` is created by suppling the first byte anf prefix length.
     /// A varint may take only one byte, In that case already the first by has set state to done.
+    #[must_use]
     pub fn new(first_byte: u8, prefix_len: u8) -> Self {
         debug_assert!(prefix_len < 8, "prefix cannot larger than 7.");
         let mask = if prefix_len == 0 {
@@ -172,6 +179,7 @@ impl IntReader {
         }
     }
 
+    #[must_use]
     pub fn make(first_byte: u8, prefixes: &[Prefix]) -> Self {
         for prefix in prefixes {
             if prefix.cmp_prefix(first_byte) {
@@ -183,10 +191,10 @@ impl IntReader {
 
     /// This function reads more bytes until the varint is decoded or until stream/buffer does not
     /// have any more date.
-    /// ### Error
+    /// # Errors
     /// Possible errors are:
-    ///  1) IntegerOverflow
-    ///  2) Any ReadByte's error
+    ///  1) `IntegerOverflow`
+    ///  2) Any `ReadByte`'s error
     /// It returns Some(value) if reading the varint is done or None if it needs more data.
     pub fn read<R: ReadByte>(&mut self, s: &mut R) -> Res<Option<u64>> {
         // If it is not finished yet read more data.
@@ -242,7 +250,7 @@ impl Default for LiteralReaderState {
 }
 
 /// This is decoder of a literal with a prefix:
-///   1) ignores prefix_len bits of the first byte,
+///   1) ignores `prefix_len` bits of the first byte,
 ///   2) reads "huffman bit"
 ///   3) decode varint that is the length of a literal
 ///   4) reads the literal
@@ -255,9 +263,10 @@ pub struct LiteralReader {
 }
 
 impl LiteralReader {
-    /// Creates LiteralReader with the first byte. This constructor is always used
+    /// Creates `LiteralReader` with the first byte. This constructor is always used
     /// when a litreral has a prefix.
     /// For literals without a prefix please use the default constructor.
+    #[must_use]
     pub fn new_with_first_byte(first_byte: u8, prefix_len: u8) -> Self {
         assert!(prefix_len < 8);
         Self {
@@ -271,10 +280,10 @@ impl LiteralReader {
 
     /// This function reads bytes until the literal is decoded or until stream/buffer does not
     /// have any more date ready.
-    /// ### Error
+    /// # Errors
     /// Possible errors are:
-    ///  1) IntegerOverflow
-    ///  2) Any ReadByte's error
+    ///  1) `IntegerOverflow`
+    ///  2) Any `ReadByte`'s error
     /// It returns Some(value) if reading the literal is done or None if it needs more data.
     pub fn read<T: ReadByte + Reader>(&mut self, s: &mut T) -> Res<Option<Vec<u8>>> {
         loop {
@@ -295,7 +304,7 @@ impl LiteralReader {
                 LiteralReaderState::ReadLength { reader } => match reader.read(s)? {
                     Some(v) => {
                         self.literal
-                            .resize(v.try_into().or(Err(Error::DecodingError))?, 0x0);
+                            .resize(v.try_into().or(Err(Error::Decoding))?, 0x0);
                         self.state = LiteralReaderState::ReadLiteral { offset: 0 };
                     }
                     None => break Ok(None),
@@ -322,8 +331,10 @@ impl LiteralReader {
     }
 }
 
-/// This is a helper function used only by ReceiverBufferWrapper, therefore it returns
-/// DecompressionFailed if any error happens.
+/// This is a helper function used only by `ReceiverBufferWrapper`, therefore it returns
+/// `DecompressionFailed` if any error happens.
+/// # Errors
+/// If an parsing error occurred, the function returns `DecompressionFailed`.
 pub fn to_string(v: &[u8]) -> Res<String> {
     match str::from_utf8(v) {
         Ok(s) => Ok(s.to_string()),
@@ -334,7 +345,7 @@ pub fn to_string(v: &[u8]) -> Res<String> {
 #[cfg(test)]
 pub(crate) mod test_receiver {
 
-    use super::*;
+    use super::{Error, ReadByte, Reader, Res};
     use std::collections::VecDeque;
 
     pub struct TestReceiver {
@@ -381,7 +392,10 @@ pub(crate) mod test_receiver {
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use super::{
+        str, test_receiver, to_string, Error, IntReader, LiteralReader, ReadByte,
+        ReceiverBufferWrapper, Res,
+    };
     use test_receiver::TestReceiver;
 
     const TEST_CASES_NUMBERS: [(&[u8], u8, u64); 7] = [
@@ -580,12 +594,15 @@ mod tests {
     }
 
     #[test]
-    fn read_failure_receiver_buffer_wrapper() {
+    fn read_failure_receiver_buffer_wrapper_number() {
         let (buf, prefix_len, _) = &TEST_CASES_NUMBERS[4];
         let mut buffer = ReceiverBufferWrapper::new(&buf[..1]);
         let mut reader = IntReader::new(buffer.read_byte().unwrap(), *prefix_len);
         assert_eq!(reader.read(&mut buffer), Err(Error::DecompressionFailed));
+    }
 
+    #[test]
+    fn read_failure_receiver_buffer_wrapper_literal() {
         let (buf, prefix_len, _) = &TEST_CASES_LITERAL[0];
         let mut buffer = ReceiverBufferWrapper::new(&buf[..6]);
         assert_eq!(

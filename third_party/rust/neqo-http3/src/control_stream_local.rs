@@ -51,7 +51,7 @@ impl ControlStreamLocal {
         qtrace!([self], "Create a control stream.");
         self.stream_id = Some(conn.stream_create(StreamType::UniDi)?);
         let mut enc = Encoder::default();
-        enc.encode_varint(HTTP3_UNI_STREAM_TYPE_CONTROL as u64);
+        enc.encode_varint(HTTP3_UNI_STREAM_TYPE_CONTROL);
         self.buf.append(&mut enc.into());
         Ok(())
     }
