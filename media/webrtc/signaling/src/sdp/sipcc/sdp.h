@@ -474,6 +474,16 @@ typedef enum {
 } sdp_group_attr_e;
 
 typedef enum {
+    SDP_SSRC_GROUP_ATTR_DUP,
+    SDP_SSRC_GROUP_ATTR_FEC,
+    SDP_SSRC_GROUP_ATTR_FECFR,
+    SDP_SSRC_GROUP_ATTR_FID,
+    SDP_SSRC_GROUP_ATTR_SIM,
+    SDP_MAX_SSRC_GROUP_ATTR_VAL,
+    SDP_SSRC_GROUP_ATTR_UNSUPPORTED
+} sdp_ssrc_group_attr_e;
+
+typedef enum {
     SDP_SRC_FILTER_INCL,
     SDP_SRC_FILTER_EXCL,
     SDP_MAX_FILTER_MODE,
@@ -578,6 +588,8 @@ typedef enum sdp_srtp_crypto_suite_t_ {
 #define SDP_MAX_TTL_VALUE  255
 #define SDP_MIN_MCAST_ADDR_HI_BIT_VAL 224
 #define SDP_MAX_MCAST_ADDR_HI_BIT_VAL 239
+
+#define SDP_MAX_SSRC_GROUP_SSRCS 32 /* max number of ssrcs allowed in a ssrc-group */
 
 /* SDP Enum Types */
 
@@ -957,6 +969,12 @@ typedef struct sdp_ssrc {
     char     attribute[SDP_MAX_STRING_LEN + 1];
 } sdp_ssrc_t;
 
+typedef struct sdp_ssrc_group {
+    sdp_ssrc_group_attr_e semantic;
+    uint16_t num_ssrcs;
+    uint32_t ssrcs[SDP_MAX_SSRC_GROUP_SSRCS];
+} sdp_ssrc_group_t;
+
 /*
  * sdp_srtp_crypto_context_t
  *  This type is used to hold cryptographic context information.
@@ -1053,6 +1071,7 @@ typedef struct sdp_attr {
         sdp_connection_type_e connection;
         sdp_extmap_t          extmap;
         sdp_ssrc_t            ssrc;
+        sdp_ssrc_group_t      ssrc_group;
     } attr;
     struct sdp_attr          *next_p;
 } sdp_attr_t;

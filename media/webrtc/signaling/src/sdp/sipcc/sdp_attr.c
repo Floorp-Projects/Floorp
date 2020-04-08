@@ -5124,3 +5124,96 @@ sdp_result_e sdp_build_attr_ssrc(sdp_t *sdp_p,
                         attr_p->attr.ssrc.attribute);
     return SDP_SUCCESS;
 }
+
+
+sdp_result_e sdp_parse_attr_ssrc_group(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                       const char *ptr)
+{
+    sdp_result_e result;
+    char tmp[SDP_MAX_STRING_LEN + 1];
+    int i;
+
+    /* Find the a=ssrc-group:<semantic> <ssrc1> <ssrc2> ... values */
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p,
+                        "%s Warning: No semantic attribute value specified for "
+                        "a=ssrc-group line",
+                        sdp_p->debug_str);
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p->attr.ssrc_group.semantic = SDP_SSRC_GROUP_ATTR_UNSUPPORTED;
+    for (i = 0; i < SDP_MAX_SSRC_GROUP_ATTR_VAL; i++) {
+        if (cpr_strncasecmp(tmp, sdp_ssrc_group_attr_val[i].name,
+                            sdp_ssrc_group_attr_val[i].strlen) == 0) {
+          attr_p->attr.ssrc_group.semantic = (sdp_ssrc_group_attr_e)i;
+          break;
+        }
+    }
+
+    if (attr_p->attr.ssrc_group.semantic == SDP_SSRC_GROUP_ATTR_UNSUPPORTED) {
+        sdp_parse_error(sdp_p,
+            "%s Warning: Ssrc group attribute type unsupported (%s).",
+            sdp_p->debug_str, tmp);
+    }
+
+    for (i = 0; i < SDP_MAX_SSRC_GROUP_SSRCS; ++i) {
+        attr_p->attr.ssrc_group.ssrcs[i] =
+            (uint32_t)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
+
+        if (result != SDP_SUCCESS) {
+          break;
+        }
+
+        attr_p->attr.ssrc_group.num_ssrcs++;
+    }
+
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
+    if (result == SDP_SUCCESS) {
+        sdp_parse_error(sdp_p,
+            "%s Warning: Trailing tokens while parsing ssrc-group (%s).",
+            sdp_p->debug_str, tmp);
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    if (attr_p->attr.ssrc_group.num_ssrcs == 0) {
+        sdp_parse_error(sdp_p,
+            "%s Warning: Ssrc group must contain at least one ssrc (%s).",
+            sdp_p->debug_str, tmp);
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+        SDP_PRINT("%s Parsed a=ssrc-group, semantic %s", sdp_p->debug_str,
+                  sdp_get_ssrc_group_attr_name(attr_p->attr.ssrc_group.semantic));
+        for (i = 0; i < attr_p->attr.ssrc_group.num_ssrcs; ++i) {
+            SDP_PRINT("%s ... ssrc %u", sdp_p->debug_str,
+                      attr_p->attr.ssrc_group.ssrcs[i]);
+        }
+    }
+
+    return (SDP_SUCCESS);
+}
+
+sdp_result_e sdp_build_attr_ssrc_group(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                       flex_string *fs)
+{
+    int i;
+    flex_string_sprintf(
+        fs, "a=ssrc-group:%s",
+        sdp_get_ssrc_group_attr_name(attr_p->attr.ssrc_group.semantic));
+
+    if (attr_p->attr.ssrc_group.num_ssrcs) {
+        return (SDP_FAILURE);
+    }
+
+    for (i = 0; i < attr_p->attr.ssrc_group.num_ssrcs; ++i) {
+        flex_string_sprintf(fs, " %u", attr_p->attr.ssrc_group.ssrcs[i]);
+    }
+    flex_string_sprintf(fs, "\r\n");
+    return (SDP_SUCCESS);
+}
