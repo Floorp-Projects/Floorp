@@ -122,7 +122,7 @@ AbortReasonOr<WarpEnvironment> WarpOracle::createEnvironment(
 
   if (ModuleObject* module = script->module()) {
     JSObject* obj = &module->initialEnvironment();
-    return WarpEnvironment(obj);
+    return WarpEnvironment(ConstantObjectEnvironment(obj));
   }
 
   JSFunction* fun = script->function();
@@ -132,7 +132,7 @@ AbortReasonOr<WarpEnvironment> WarpOracle::createEnvironment(
     MOZ_ASSERT(!script->isForEval());
     MOZ_ASSERT(!script->hasNonSyntacticScope());
     JSObject* obj = &script->global().lexicalEnvironment();
-    return WarpEnvironment(obj);
+    return WarpEnvironment(ConstantObjectEnvironment(obj));
   }
 
   // TODO: Parameter expression-induced extra var environment not
