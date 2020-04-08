@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
+const {
+  prepareMessage,
+  getNaturalOrder,
+} = require("devtools/client/webconsole/utils/messages");
 const {
   IdGenerator,
 } = require("devtools/client/webconsole/utils/id-generator");
@@ -32,6 +35,8 @@ function messagesAdd(packets, idGenerator = null) {
     idGenerator = defaultIdGenerator;
   }
   const messages = packets.map(packet => prepareMessage(packet, idGenerator));
+  // Sort the messages by their timestamps.
+  messages.sort(getNaturalOrder);
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].type === MESSAGE_TYPE.CLEAR) {
       return batchActions([
