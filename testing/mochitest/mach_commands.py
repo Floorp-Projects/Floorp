@@ -332,7 +332,7 @@ class MachCommands(MachCommandBase):
                     handler.formatter.inner.summary_on_shutdown = True
 
         driver = self._spawn(BuildDriver)
-        driver.install_tests(tests)
+        driver.install_tests()
 
         subsuite = kwargs.get('subsuite')
         if subsuite == 'default':

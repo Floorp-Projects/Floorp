@@ -1383,7 +1383,7 @@ class BuildDriver(MozbuildObject):
 
         return status
 
-    def install_tests(self, test_objs):
+    def install_tests(self):
         """Install test files."""
 
         if self.is_clobber_needed():
@@ -1392,7 +1392,7 @@ class BuildDriver(MozbuildObject):
             sys.exit(1)
 
         install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
-                           '_tests', test_objs)
+                           '_tests')
 
     def _clobber_configure(self):
         # This is an optimistic treatment of the CLOBBER file for when we have
