@@ -2436,7 +2436,8 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   if (aChannel) {
     // Note: this code is duplicated in PrototypeDocumentContentSink::Init and
     // nsScriptSecurityManager::GetChannelResultPrincipals.
-    // Note: this should match nsDocShell::OnLoadingSite
+    // Note: this should match the uri used for the OnNewURI call in
+    //       nsDocShell::CreateContentViewer.
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
     nsIScriptSecurityManager* securityManager =

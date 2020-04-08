@@ -713,14 +713,6 @@ class nsDocShell final : public nsDocLoader,
   // In this case it is the caller's responsibility to ensure
   // FireOnLocationChange is called.
   // In all other cases false is returned.
-  bool OnLoadingSite(nsIChannel* aChannel, bool aFireOnLocationChange,
-                     bool aAddToGlobalHistory = true);
-
-  // Returns true if would have called FireOnLocationChange,
-  // but did not because aFireOnLocationChange was false on entry.
-  // In this case it is the caller's responsibility to ensure
-  // FireOnLocationChange is called.
-  // In all other cases false is returned.
   // Either aChannel or aTriggeringPrincipal must be null. If aChannel is
   // present, the owner should be gotten from it.
   // If OnNewURI calls AddToSessionHistory, it will pass its
