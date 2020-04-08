@@ -46,6 +46,7 @@ class SipccSdpAttributeList : public SdpAttributeList {
       const override;
   virtual const SdpSetupAttribute& GetSetup() const override;
   virtual const SdpSsrcAttributeList& GetSsrc() const override;
+  virtual const SdpSsrcGroupAttributeList& GetSsrcGroup() const override;
   virtual const SdpDtlsMessageAttribute& GetDtlsMessage() const override;
 
   // These attributes can appear multiple times, so the returned
@@ -106,6 +107,7 @@ class SipccSdpAttributeList : public SdpAttributeList {
   void LoadCandidate(sdp_t* sdp, uint16_t level);
   void LoadSetup(sdp_t* sdp, uint16_t level);
   void LoadSsrc(sdp_t* sdp, uint16_t level);
+  void LoadSsrcGroup(sdp_t* sdp, uint16_t level);
   bool LoadImageattr(sdp_t* sdp, uint16_t level, InternalResults& results);
   bool LoadSimulcast(sdp_t* sdp, uint16_t level, InternalResults& results);
   bool LoadGroups(sdp_t* sdp, uint16_t level, InternalResults& results);

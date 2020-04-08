@@ -327,6 +327,15 @@ const SdpSsrcAttributeList& RsdparsaSdpAttributeList::GetSsrc() const {
   return *static_cast<const SdpSsrcAttributeList*>(attr);
 }
 
+const SdpSsrcGroupAttributeList& RsdparsaSdpAttributeList::GetSsrcGroup()
+    const {
+  if (!HasAttribute(SdpAttribute::kSsrcGroupAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kSsrcGroupAttribute);
+  return *static_cast<const SdpSsrcGroupAttributeList*>(attr);
+}
+
 void RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList* attributeList,
                                              AttributeType type) {
   if (!mAttributes[type]) {
@@ -423,6 +432,8 @@ void RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList* attributeList,
         LoadCandidate(attributeList);
         return;
       case SdpAttribute::kSsrcGroupAttribute:
+        LoadSsrcGroup(attributeList);
+        return;
       case SdpAttribute::kConnectionAttribute:
       case SdpAttribute::kIceMismatchAttribute:
       case SdpAttribute::kLabelAttribute:
@@ -584,6 +595,45 @@ void RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList) {
     }
   }
   SetAttribute(ssrcs.release());
+}
+
+void RsdparsaSdpAttributeList::LoadSsrcGroup(RustAttributeList* attributeList) {
+  size_t numSsrcGroups = sdp_get_ssrc_group_count(attributeList);
+  if (numSsrcGroups == 0) {
+    return;
+  }
+  auto rustSsrcGroups = MakeUnique<RustSdpAttributeSsrcGroup[]>(numSsrcGroups);
+  sdp_get_ssrc_groups(attributeList, numSsrcGroups, rustSsrcGroups.get());
+  auto ssrcGroups = MakeUnique<SdpSsrcGroupAttributeList>();
+  for (size_t i = 0; i < numSsrcGroups; i++) {
+    RustSdpAttributeSsrcGroup& ssrcGroup = rustSsrcGroups[i];
+    SdpSsrcGroupAttributeList::Semantics semantic;
+    switch (ssrcGroup.semantic) {
+      case RustSdpAttributeSsrcGroupSemantic ::kRustDup:
+        semantic = SdpSsrcGroupAttributeList::kDup;
+        break;
+      case RustSdpAttributeSsrcGroupSemantic ::kRustFec:
+        semantic = SdpSsrcGroupAttributeList::kFec;
+        break;
+      case RustSdpAttributeSsrcGroupSemantic ::kRustFecFr:
+        semantic = SdpSsrcGroupAttributeList::kFecFr;
+        break;
+      case RustSdpAttributeSsrcGroupSemantic ::kRustFid:
+        semantic = SdpSsrcGroupAttributeList::kFid;
+        break;
+      case RustSdpAttributeSsrcGroupSemantic ::kRustSim:
+        semantic = SdpSsrcGroupAttributeList::kSim;
+        break;
+    }
+    std::vector<uint32_t> ssrcs;
+    for (size_t i = 0; i < ssrc_vec_len(ssrcGroup.ssrcs); ++i) {
+      uint32_t ssrc;
+      ssrc_vec_get_id(ssrcGroup.ssrcs, i, &ssrc);
+      ssrcs.push_back(ssrc);
+    }
+    ssrcGroups->PushEntry(semantic, ssrcs);
+  }
+  SetAttribute(ssrcGroups.release());
 }
 
 struct FmtDefaults {

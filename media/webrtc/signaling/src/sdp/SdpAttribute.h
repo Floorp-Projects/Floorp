@@ -1624,7 +1624,8 @@ class SdpSsrcGroupAttributeList : public SdpAttribute {
     kFec,    // RFC5576
     kFid,    // RFC5576
     kFecFr,  // RFC5956
-    kDup     // RFC7104
+    kDup,    // RFC7104
+    kSim     // non-standard, used by hangouts
   };
 
   struct SsrcGroup {
@@ -1658,6 +1659,9 @@ inline std::ostream& operator<<(std::ostream& os,
       break;
     case SdpSsrcGroupAttributeList::kDup:
       os << "DUP";
+      break;
+    case SdpSsrcGroupAttributeList::kSim:
+      os << "SIM";
       break;
     default:
       MOZ_ASSERT(false);
