@@ -6,24 +6,41 @@ package org.mozilla.fenix.settings.logins
 
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import kotlin.random.Random
 
+@RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsInteractorTest {
+    private val controller: SavedLoginsController = mockk(relaxed = true)
+    private val savedLoginClicked: (SavedLoginsItem) -> Unit = mockk(relaxed = true)
+    private val learnMore: () -> Unit = mockk(relaxed = true)
+    private val interactor = SavedLoginsInteractor(
+        controller,
+        savedLoginClicked,
+        learnMore
+    )
 
     @Test
     fun itemClicked() {
-        val savedLoginClicked: (SavedLoginsItem) -> Unit = mockk(relaxed = true)
-        val learnMore: () -> Unit = mockk(relaxed = true)
-        val interactor = SavedLoginsInteractor(
-            savedLoginClicked,
-            learnMore
-        )
-
-        val item = SavedLoginsItem("mozilla.org", "username", "password", "id")
+        val item = SavedLoginsItem("mozilla.org", "username", "password", "id", Random.nextLong())
         interactor.itemClicked(item)
 
         verify {
             savedLoginClicked.invoke(item)
+        }
+    }
+
+    @Test
+    fun `GIVEN a sorting strategy, WHEN sort method is called on the interactor, THEN controller should call handleSort with the same parameter`() {
+        val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically(testContext)
+
+        interactor.sort(sortingStrategy)
+
+        verify {
+            controller.handleSort(sortingStrategy)
         }
     }
 }
