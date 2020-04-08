@@ -7985,15 +7985,6 @@ void CodeGenerator::visitPowD(LPowD* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
-void CodeGenerator::visitPowV(LPowV* ins) {
-  pushArg(ToValue(ins, LPowV::PowerInput));
-  pushArg(ToValue(ins, LPowV::ValueInput));
-
-  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
-                      MutableHandleValue);
-  callVM<Fn, js::PowValues>(ins);
-}
-
 void CodeGenerator::visitSignI(LSignI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
