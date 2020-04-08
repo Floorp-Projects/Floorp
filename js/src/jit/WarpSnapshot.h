@@ -10,6 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Variant.h"
 
+#include "gc/Policy.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
 #include "vm/Printer.h"
@@ -28,6 +29,29 @@ namespace jit {
   _(WarpGetImport)               \
   _(WarpLambda)                  \
   _(WarpRest)
+
+// Wrapper for GC things stored in WarpSnapshot. Asserts the GC pointer is not
+// nursery-allocated. These pointers must be traced using TraceWarpGCPtr.
+template <typename T>
+class WarpGCPtr {
+  // Note: no pre-barrier is needed because this is a constant. No post-barrier
+  // is needed because the value is always tenured.
+  const T ptr_;
+
+ public:
+  explicit WarpGCPtr(const T& ptr) : ptr_(ptr) {
+    MOZ_ASSERT(JS::GCPolicy<T>::isTenured(ptr),
+               "WarpSnapshot pointers must be tenured");
+  }
+  WarpGCPtr(const WarpGCPtr<T>& other) = default;
+
+  operator T() const { return static_cast<T>(ptr_); }
+  T operator->() const { return static_cast<T>(ptr_); }
+
+ private:
+  WarpGCPtr() = delete;
+  void operator=(WarpGCPtr<T>& other) = delete;
+};
 
 // WarpOpSnapshot is the base class for data attached to a single bytecode op by
 // WarpOracle. This is typically data that WarpBuilder can't read off-thread
@@ -77,7 +101,7 @@ using WarpOpSnapshotList = mozilla::LinkedList<WarpOpSnapshot>;
 // Template object for JSOp::Arguments.
 class WarpArguments : public WarpOpSnapshot {
   // Note: this can be nullptr if the realm has no template object yet.
-  ArgumentsObject* templateObj_;
+  WarpGCPtr<ArgumentsObject*> templateObj_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpArguments;
@@ -113,7 +137,7 @@ class WarpRegExp : public WarpOpSnapshot {
 
 // The proto for JSOp::FunctionProto if it exists at compile-time.
 class WarpFunctionProto : public WarpOpSnapshot {
-  JSObject* proto_;
+  WarpGCPtr<JSObject*> proto_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpFunctionProto;
@@ -133,7 +157,7 @@ class WarpFunctionProto : public WarpOpSnapshot {
 
 // The intrinsic for JSOp::GetIntrinsic if it exists at compile-time.
 class WarpGetIntrinsic : public WarpOpSnapshot {
-  Value intrinsic_;
+  WarpGCPtr<Value> intrinsic_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpGetIntrinsic;
@@ -151,7 +175,7 @@ class WarpGetIntrinsic : public WarpOpSnapshot {
 
 // Target module environment and slot information for JSOp::GetImport.
 class WarpGetImport : public WarpOpSnapshot {
-  ModuleEnvironmentObject* targetEnv_;
+  WarpGCPtr<ModuleEnvironmentObject*> targetEnv_;
   uint32_t numFixedSlots_;
   uint32_t slot_;
   bool needsLexicalCheck_;
@@ -181,7 +205,7 @@ class WarpGetImport : public WarpOpSnapshot {
 // JSFunction info we don't want to read off-thread for JSOp::Lambda and
 // JSOp::LambdaArrow.
 class WarpLambda : public WarpOpSnapshot {
-  BaseScript* baseScript_;
+  WarpGCPtr<BaseScript*> baseScript_;
   FunctionFlags flags_;
   uint16_t nargs_;
 
@@ -207,7 +231,7 @@ class WarpLambda : public WarpOpSnapshot {
 
 // Template object for JSOp::Rest.
 class WarpRest : public WarpOpSnapshot {
-  ArrayObject* templateObject_;
+  WarpGCPtr<ArrayObject*> templateObject_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpRest;
@@ -224,9 +248,10 @@ class WarpRest : public WarpOpSnapshot {
 };
 
 struct NoEnvironment {};
+using ConstantObjectEnvironment = WarpGCPtr<JSObject*>;
 struct FunctionEnvironment {
-  CallObject* callObjectTemplate;
-  LexicalEnvironmentObject* namedLambdaTemplate;
+  WarpGCPtr<CallObject*> callObjectTemplate;
+  WarpGCPtr<LexicalEnvironmentObject*> namedLambdaTemplate;
 
  public:
   FunctionEnvironment(CallObject* callObjectTemplate,
@@ -242,25 +267,26 @@ struct FunctionEnvironment {
 // * NoEnvironment: No environment object should be set. Leave the slot
 //   initialized to |undefined|.
 //
-// * JSObject*: Use this object as the environment object.
+// * ConstantObjectEnvironment: Use this JSObject* as environment object.
 //
 // * FunctionEnvironment: Use the callee's environment chain. Optionally
 //   allocate a new NamedLambdaObject and/or CallObject based on
 //   namedLambdaTemplate and callObjectTemplate.
 using WarpEnvironment =
-    mozilla::Variant<NoEnvironment, JSObject*, FunctionEnvironment>;
+    mozilla::Variant<NoEnvironment, ConstantObjectEnvironment,
+                     FunctionEnvironment>;
 
 // Snapshot data for a single JSScript.
 class WarpScriptSnapshot : public TempObject {
-  JSScript* script_;
+  WarpGCPtr<JSScript*> script_;
   WarpEnvironment environment_;
   WarpOpSnapshotList opSnapshots_;
 
   // If the script has a JSOp::ImportMeta op, this is the module to bake in.
-  ModuleObject* moduleObject_;
+  WarpGCPtr<ModuleObject*> moduleObject_;
 
   // Constants pushed by JSOp::Instrumentation* ops in the script.
-  JSObject* instrumentationCallback_;
+  WarpGCPtr<JSObject*> instrumentationCallback_;
   mozilla::Maybe<int32_t> instrumentationScriptId_;
   mozilla::Maybe<bool> instrumentationActive_;
 
@@ -304,8 +330,8 @@ class WarpSnapshot : public TempObject {
 
   // The global lexical environment and its thisValue(). We don't inline
   // cross-realm calls so this can be stored once per snapshot.
-  LexicalEnvironmentObject* globalLexicalEnv_;
-  Value globalLexicalEnvThis_;
+  WarpGCPtr<LexicalEnvironmentObject*> globalLexicalEnv_;
+  WarpGCPtr<Value> globalLexicalEnvThis_;
 
  public:
   explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script);

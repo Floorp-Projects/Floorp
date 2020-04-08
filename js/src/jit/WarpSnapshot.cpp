@@ -61,7 +61,8 @@ void WarpSnapshot::dump(GenericPrinter& out) const {
 
 void WarpScriptSnapshot::dump(GenericPrinter& out) const {
   out.printf("Script: %s:%u:%u (0x%p)\n", script_->filename(),
-             script_->lineno(), script_->column(), script_);
+             script_->lineno(), script_->column(),
+             static_cast<JSScript*>(script_));
   out.printf("  moduleObject: 0x%p\n", moduleObject());
   out.printf("  isArrowFunction: %u\n", isArrowFunction());
 
@@ -72,7 +73,8 @@ void WarpScriptSnapshot::dump(GenericPrinter& out) const {
       [&](const FunctionEnvironment& env) {
         out.printf(
             "Function: callobject template 0x%p, named lambda template: 0x%p\n",
-            env.callObjectTemplate, env.namedLambdaTemplate);
+            static_cast<JSObject*>(env.callObjectTemplate),
+            static_cast<JSObject*>(env.namedLambdaTemplate));
       });
 
   out.printf("\n");
@@ -142,12 +144,11 @@ void WarpRest::dumpData(GenericPrinter& out) const {
 #endif  // JS_JITSPEW
 
 template <typename T>
-static void TraceWarpGCPtr(JSTracer* trc, T& thing, const char* name) {
-#ifdef DEBUG
-  T thingBefore = thing;
-#endif
-  TraceManuallyBarrieredEdge(trc, &thing, name);
-  MOZ_ASSERT(thingBefore == thing, "Unexpected moving GC!");
+static void TraceWarpGCPtr(JSTracer* trc, WarpGCPtr<T>& thing,
+                           const char* name) {
+  T thingRaw = thing;
+  TraceManuallyBarrieredEdge(trc, &thingRaw, name);
+  MOZ_ASSERT(static_cast<T>(thing) == thingRaw, "Unexpected moving GC!");
 }
 
 void WarpSnapshot::trace(JSTracer* trc) {
@@ -161,7 +162,9 @@ void WarpScriptSnapshot::trace(JSTracer* trc) {
 
   environment_.match(
       [](const NoEnvironment&) {},
-      [trc](JSObject* obj) { TraceWarpGCPtr(trc, obj, "warp-env-object"); },
+      [trc](WarpGCPtr<JSObject*>& obj) {
+        TraceWarpGCPtr(trc, obj, "warp-env-object");
+      },
       [trc](FunctionEnvironment& env) {
         if (env.callObjectTemplate) {
           TraceWarpGCPtr(trc, env.callObjectTemplate, "warp-env-callobject");
