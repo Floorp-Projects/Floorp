@@ -89,6 +89,9 @@ VOID NTAPI RtlAcquireSRWLockShared(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockShared(PSRWLOCK aLock);
 
+ULONG NTAPI RtlNtStatusToDosError(NTSTATUS aStatus);
+VOID NTAPI RtlSetLastWin32Error(DWORD aError);
+
 NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
                                    PVOID aBuffer, SIZE_T aNumBytesToRead,
                                    PSIZE_T aNumBytesRead);
@@ -1099,6 +1102,8 @@ inline DWORD RtlGetCurrentThreadId() {
                             0xFFFFFFFFUL);
 }
 
+const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
+
 inline LauncherResult<DWORD> GetParentProcessId() {
   struct PROCESS_BASIC_INFORMATION {
     NTSTATUS ExitStatus;
@@ -1109,7 +1114,6 @@ inline LauncherResult<DWORD> GetParentProcessId() {
     ULONG_PTR InheritedFromUniqueProcessId;
   };
 
-  const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
   ULONG returnLength;
   PROCESS_BASIC_INFORMATION pbi = {};
   NTSTATUS status =
@@ -1120,6 +1124,30 @@ inline LauncherResult<DWORD> GetParentProcessId() {
   }
 
   return static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF);
+}
+
+inline SIZE_T WINAPI VirtualQueryEx(HANDLE aProcess, LPCVOID aAddress,
+                                    PMEMORY_BASIC_INFORMATION aMemInfo,
+                                    SIZE_T aMemInfoLen) {
+#if defined(MOZILLA_INTERNAL_API)
+  return ::VirtualQueryEx(aProcess, aAddress, aMemInfo, aMemInfoLen);
+#else
+  SIZE_T returnedLength;
+  NTSTATUS status = ::NtQueryVirtualMemory(
+      aProcess, const_cast<PVOID>(aAddress), MemoryBasicInformation, aMemInfo,
+      aMemInfoLen, &returnedLength);
+  if (!NT_SUCCESS(status)) {
+    ::RtlSetLastWin32Error(::RtlNtStatusToDosError(status));
+    returnedLength = 0;
+  }
+  return returnedLength;
+#endif  // defined(MOZILLA_INTERNAL_API)
+}
+
+inline SIZE_T WINAPI VirtualQuery(LPCVOID aAddress,
+                                  PMEMORY_BASIC_INFORMATION aMemInfo,
+                                  SIZE_T aMemInfoLen) {
+  return nt::VirtualQueryEx(kCurrentProcess, aAddress, aMemInfo, aMemInfoLen);
 }
 
 struct DataDirectoryEntry : public _IMAGE_DATA_DIRECTORY {
