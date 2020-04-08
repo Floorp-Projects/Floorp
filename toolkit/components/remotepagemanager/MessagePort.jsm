@@ -37,39 +37,6 @@ ChromeUtils.defineModuleGetter(
  */
 let RPMAccessManager = {
   accessMap: {
-    "about:certerror": {
-      getFormatURLPref: ["app.support.baseURL"],
-      getBoolPref: [
-        "security.certerrors.mitm.priming.enabled",
-        "security.certerrors.permanentOverride",
-        "security.enterprise_roots.auto-enabled",
-        "security.certerror.hideAddException",
-        "security.ssl.errorReporting.automatic",
-        "security.ssl.errorReporting.enabled",
-      ],
-      setBoolPref: ["security.ssl.errorReporting.automatic"],
-      getIntPref: [
-        "services.settings.clock_skew_seconds",
-        "services.settings.last_update_seconds",
-      ],
-      getAppBuildID: ["yes"],
-      isWindowPrivate: ["yes"],
-      recordTelemetryEvent: ["yes"],
-      addToHistogram: ["yes"],
-    },
-    "about:neterror": {
-      getFormatURLPref: ["app.support.baseURL"],
-      getBoolPref: [
-        "security.certerror.hideAddException",
-        "security.ssl.errorReporting.automatic",
-        "security.ssl.errorReporting.enabled",
-        "security.tls.version.enable-deprecated",
-        "security.certerrors.tls.version.show-override",
-      ],
-      setBoolPref: ["security.ssl.errorReporting.automatic"],
-      prefIsLocked: ["security.tls.version.min"],
-      addToHistogram: ["yes"],
-    },
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
       getFormatURLPref: ["app.support.baseURL"],
@@ -460,16 +427,6 @@ class MessagePort {
     );
   }
 
-  getAppBuildID() {
-    let doc = this.window.document;
-    if (!RPMAccessManager.checkAllowAccess(doc, "getAppBuildID", "yes")) {
-      throw new Error(
-        "RPMAccessManager does not allow access to getAppBuildID"
-      );
-    }
-    return Services.appinfo.appBuildID;
-  }
-
   getIntPref(aPref, defaultValue) {
     let doc = this.window.document;
     if (!RPMAccessManager.checkAllowAccess(doc, "getIntPref", aPref)) {
@@ -508,14 +465,6 @@ class MessagePort {
 
   setBoolPref(aPref, aVal) {
     return this.wrapPromise(AsyncPrefs.set(aPref, aVal));
-  }
-
-  prefIsLocked(aPref) {
-    let doc = this.window.document;
-    if (!RPMAccessManager.checkAllowAccess(doc, "prefIsLocked", aPref)) {
-      throw new Error("RPMAccessManager does not allow access to prefIsLocked");
-    }
-    return Services.prefs.prefIsLocked(aPref);
   }
 
   getFormatURLPref(aFormatURL) {
@@ -579,16 +528,5 @@ class MessagePort {
       value,
       extra
     );
-  }
-
-  addToHistogram(histID, bin) {
-    let doc = this.window.document;
-    if (!RPMAccessManager.checkAllowAccess(doc, "addToHistogram", "yes")) {
-      throw new Error(
-        "RPMAccessManager does not allow access to addToHistogram"
-      );
-    }
-
-    Services.telemetry.getHistogramById(histID).add(bin);
   }
 }

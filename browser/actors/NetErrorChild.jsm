@@ -5,11 +5,12 @@
 
 var EXPORTED_SYMBOLS = ["NetErrorChild"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { ChildMessagePort } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm"
+const { RemotePageChild } = ChromeUtils.import(
+  "resource://gre/actors/RemotePageChild.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -19,9 +20,16 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsISerializationHelper"
 );
 
-class NetErrorChild extends JSWindowActorChild {
+class NetErrorChild extends RemotePageChild {
   actorCreated() {
-    this.messagePort = new ChildMessagePort(this, this.contentWindow);
+    super.actorCreated();
+
+    const exportableFunctions = [
+      "RPMGetAppBuildID",
+      "RPMPrefIsLocked",
+      "RPMAddToHistogram",
+    ];
+    this.exportFunctions(exportableFunctions);
   }
 
   getSerializedSecurityInfo(docShell) {
@@ -37,10 +45,6 @@ class NetErrorChild extends JSWindowActorChild {
     return gSerializationHelper.serializeToString(securityInfo);
   }
 
-  receiveMessage(aMessage) {
-    this.messagePort.handleMessage(aMessage);
-  }
-
   handleEvent(aEvent) {
     // Documents have a null ownerDocument.
     let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
@@ -49,6 +53,7 @@ class NetErrorChild extends JSWindowActorChild {
       case "click":
         let elem = aEvent.originalTarget;
         if (elem.id == "viewCertificate") {
+          // Call through the superclass to avoid the security check.
           this.sendAsyncMessage("Browser:CertExceptionError", {
             location: doc.location.href,
             elementId: elem.id,
@@ -59,5 +64,17 @@ class NetErrorChild extends JSWindowActorChild {
         }
         break;
     }
+  }
+
+  RPMGetAppBuildID() {
+    return Services.appinfo.appBuildID;
+  }
+
+  RPMPrefIsLocked(aPref) {
+    return Services.prefs.prefIsLocked(aPref);
+  }
+
+  RPMAddToHistogram(histID, bin) {
+    Services.telemetry.getHistogramById(histID).add(bin);
   }
 }
