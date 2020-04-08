@@ -1736,7 +1736,8 @@ void gfxFontGroup::BuildFontList() {
 
   if (mFontMatchingStats) {
     for (const auto& f : fonts) {
-      nsAutoCString key;
+      nsCString key;  // not nsAutoCString, as the assignment to it won't copy
+                      // characters, it'll just share the string buffer
       FontVisibility visibility;
       if (f.mFamily.mIsShared) {
         key = f.mFamily.mShared->Key().AsString(pfl->SharedFontList());
