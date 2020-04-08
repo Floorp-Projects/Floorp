@@ -665,16 +665,17 @@ struct AssertionConditionType {
 
 /*
  * MOZ_ALWAYS_TRUE(expr) and friends always evaluate the provided expression,
- * in debug builds and in release builds both.  Then, in debug builds only, the
- * value of the expression is asserted either true or false using MOZ_ASSERT.
+ * in debug builds and in release builds both.  Then, in debug builds and
+ * Nightly and DevEdition release builds, the value of the expression is
+ * asserted either true or false using MOZ_DIAGNOSTIC_ASSERT.
  */
-#define MOZ_ALWAYS_TRUE(expr)     \
-  do {                            \
-    if (MOZ_LIKELY(expr)) {       \
-      /* Silence MOZ_MUST_USE. */ \
-    } else {                      \
-      MOZ_ASSERT(false, #expr);   \
-    }                             \
+#define MOZ_ALWAYS_TRUE(expr)              \
+  do {                                     \
+    if (MOZ_LIKELY(expr)) {                \
+      /* Silence MOZ_MUST_USE. */          \
+    } else {                               \
+      MOZ_DIAGNOSTIC_ASSERT(false, #expr); \
+    }                                      \
   } while (false)
 
 #define MOZ_ALWAYS_FALSE(expr) MOZ_ALWAYS_TRUE(!(expr))
