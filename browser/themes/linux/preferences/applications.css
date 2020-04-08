@@ -42,7 +42,7 @@ menuitem[appHandlerIcon="plugin"] {
   list-style-image: url("chrome://global/skin/plugins/pluginGeneric.svg");
 }
 
-.actionsMenu .menulist-icon {
+.actionsMenu::part(icon) {
   margin-inline: 1px 8px;
   height: 16px;
   width: 16px;

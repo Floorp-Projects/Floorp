@@ -7,7 +7,7 @@
 }
 
 /**** folder menulist ****/
-.folder-icon > .menulist-label-box > .menulist-icon {
+#editBMPanel_folderMenuList::part(icon) {
   width: 16px;
   height: 16px;
 }

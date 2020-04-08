@@ -20,7 +20,7 @@ xul|tab[visuallyselected] {
 /* Overriding appearance also avoids incorrect selection background color with
    light text. */
 xul|button > xul|*.button-box,
-xul|menulist > xul|*.menulist-label-box,
+xul|menulist::part(label-box),
 xul|*.radio-label-box,
 xul|*.checkbox-label-box {
   -moz-appearance: none;
@@ -38,7 +38,7 @@ xul|menulist {
   font-size: inherit;
 }
 
-xul|*.menulist-dropmarker {
+xul|menulist::part(dropmarker) {
   display: -moz-box;
   margin-block: 6px;
 }
@@ -49,7 +49,7 @@ xul|*.radio-check[selected] {
   fill: -moz-fieldText;
 }
 
-xul|menulist:-moz-focusring > xul|*.menulist-label-box {
+xul|menulist:-moz-focusring::part(label-box) {
   outline: none;
 }
 

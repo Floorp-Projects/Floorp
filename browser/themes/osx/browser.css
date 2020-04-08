@@ -386,7 +386,7 @@
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-#editBMPanel_folderMenuList > .menulist-dropmarker {
+#editBMPanel_folderMenuList::part(dropmarker) {
   -moz-appearance: none;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -684,7 +684,7 @@ menulist.translate-infobar-element {
   min-height: 22px !important;
 }
 
-menulist.translate-infobar-element > .menulist-label-box {
+menulist.translate-infobar-element::part(label-box) {
   padding-top: 1px;
   padding-inline-start: 0.3em;
   margin-block: 0;
@@ -700,7 +700,7 @@ menulist.translate-infobar-element[open="true"] {
                                     rgba(255,255,255,0.6));
 }
 
-menulist.translate-infobar-element > .menulist-dropmarker {
+menulist.translate-infobar-element::part(dropmarker) {
   display: -moz-box;
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
 }

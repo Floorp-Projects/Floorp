@@ -492,7 +492,7 @@ search-textbox {
 
 /********** menulist **********/
 
-menulist[popuponly="true"] {
+menulist[popuponly] {
   -moz-appearance: none !important;
   margin: 0 !important;
   height: 0 !important;
@@ -580,8 +580,6 @@ label, button, image {
   display: -moz-inline-box;
 }
 
-.menulist-highlightable-label:not([highlightable="true"]),
-.menulist-label[highlightable="true"],
 .menu-iconic-highlightable-text:not([highlightable="true"]),
 .menu-iconic-text[highlightable="true"] {
   display: none;
