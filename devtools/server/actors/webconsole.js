@@ -1003,6 +1003,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         let response = this.evaluateJS(request);
         // Wait for any potential returned Promise.
         response = await this._maybeWaitForResponseResult(response);
+        // Set the timestamp only now, so any messages logged in the expression will come
+        // before the result.
+        response.timestamp = Date.now();
         // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
         this.emit("evaluationResult", {
           type: "evaluationResult",
@@ -1069,10 +1072,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       delete response.awaitResult;
     }
 
-    // We need to compute the timestamp again as the one in the response was set before
-    // doing the evaluation, which is now innacurate since we waited for a bit.
-    response.timestamp = Date.now();
-
     return response;
   },
 
@@ -1088,7 +1087,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   // eslint-disable-next-line complexity
   evaluateJS: function(request) {
     const input = request.text;
-    const timestamp = Date.now();
 
     const evalOptions = {
       frameActor: request.frameActor,
@@ -1268,7 +1266,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       input: input,
       result: resultGrip,
       awaitResult,
-      timestamp: timestamp,
       exception: errorGrip,
       exceptionMessage: this._createStringGrip(errorMessage),
       exceptionDocURL: errorDocURL,

@@ -23,7 +23,7 @@ function getDefaultProps(initialized) {
   const store = setupStore(
     Array.from({ length: MESSAGES_NUMBER })
       // Alternate message so we don't trigger the repeat mechanism.
-      .map((_, i) => (i % 2 ? "new Date(0)" : "console.log(NaN)"))
+      .map((_, i) => (i % 2 ? "console.log(null)" : "console.log(NaN)"))
   );
 
   if (initialized) {
