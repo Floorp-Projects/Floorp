@@ -37,21 +37,19 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 );
 
 class MozHandler extends window.MozElements.MozRichlistitem {
-  static get markup() {
-    return `
-    <vbox pack="center">
-      <image height="32" width="32"/>
-    </vbox>
-    <vbox flex="1">
-      <label class="name"/>
-      <label class="description"/>
-    </vbox>
-    `;
-  }
-
   connectedCallback() {
     this.textContent = "";
-    this.appendChild(this.constructor.fragment);
+    this.appendChild(
+      window.MozXULElement.parseXULToFragment(`
+      <vbox pack="center">
+        <image height="32" width="32"/>
+      </vbox>
+      <vbox flex="1">
+        <label class="name"/>
+        <label class="description"/>
+      </vbox>
+    `)
+    );
     this.initializeAttributeInheritance();
   }
 

@@ -25,7 +25,7 @@
       this.setAttribute("consumeoutsideclicks", "never");
 
       this.textContent = "";
-      this.appendChild(this.constructor.fragment);
+      this.appendChild(MozXULElement.parseXULToFragment(this._markup));
 
       /**
        * This is the default number of rows that we give the autocomplete
@@ -108,7 +108,7 @@
       return this._richlistbox;
     }
 
-    static get markup() {
+    get _markup() {
       return `
       <richlistbox class="autocomplete-richlistbox" flex="1"/>
     `;
