@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<title>reference for: position:sticky item that's still visible while the rest of the scrollframe contents are checkerboarded</title>
+
+<style>
+html {
+  scrollbar-width: none;
+}
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+#fixed {
+  position: fixed;
+  top: 0;
+  height: 100px;
+  width: 100%;
+  background-color: green;
+}
+
+</style>
+
+<div id="fixed"></div>
+
+<script>
+document.scrollingElement.scrollTop = 2500;
+</script>
