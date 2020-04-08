@@ -548,7 +548,7 @@ class MOZ_RAII PEHeaders final {
                      IMAGE_DIRECTORY_ENTRY_IMPORT);
   }
 
-  PIMAGE_RESOURCE_DIRECTORY GetResourceTable() {
+  PIMAGE_RESOURCE_DIRECTORY GetResourceTable() const {
     return GetImageDirectoryEntry<PIMAGE_RESOURCE_DIRECTORY>(
         IMAGE_DIRECTORY_ENTRY_RESOURCE);
   }
@@ -578,7 +578,7 @@ class MOZ_RAII PEHeaders final {
     return dirEntry;
   }
 
-  bool GetVersionInfo(uint64_t& aOutVersion) {
+  bool GetVersionInfo(uint64_t& aOutVersion) const {
     // RT_VERSION == 16
     // Version resources require an id of 1
     auto root = FindResourceLeaf<VS_VERSIONINFO_HEADER*>(16, 1);
@@ -596,7 +596,7 @@ class MOZ_RAII PEHeaders final {
     return true;
   }
 
-  bool GetTimeStamp(DWORD& aResult) {
+  bool GetTimeStamp(DWORD& aResult) const {
     if (!(*this)) {
       return false;
     }
@@ -670,7 +670,7 @@ class MOZ_RAII PEHeaders final {
    * If aLangId == 0, we just resolve the first entry regardless of language.
    */
   template <typename T>
-  T FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0) {
+  T FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0) const {
     PIMAGE_RESOURCE_DIRECTORY topLevel = GetResourceTable();
     if (!topLevel) {
       return nullptr;
@@ -768,7 +768,7 @@ class MOZ_RAII PEHeaders final {
   enum class BoundsCheckPolicy { Default, Skip };
 
   template <typename T, BoundsCheckPolicy Policy = BoundsCheckPolicy::Default>
-  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) {
+  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) const {
     PIMAGE_DATA_DIRECTORY dirEntry = GetImageDirectoryEntryPtr(aDirectoryIndex);
     if (!dirEntry) {
       return nullptr;
@@ -797,7 +797,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) {
+  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) const {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. Since this function
     // searches by ID, we need to skip past any named entries before iterating.
@@ -814,7 +814,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel) {
+  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel) const {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. We just return the first
     // entry, regardless of whether it is indexed by name or by id.
@@ -829,7 +829,7 @@ class MOZ_RAII PEHeaders final {
     return dirEnt;
   }
 
-  VS_FIXEDFILEINFO* GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo) {
+  VS_FIXEDFILEINFO* GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo) const {
     WORD length = aVerInfo->wLength;
     if (length < sizeof(VS_VERSIONINFO_HEADER)) {
       return nullptr;
