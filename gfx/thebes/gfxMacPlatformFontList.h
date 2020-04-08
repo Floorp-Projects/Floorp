@@ -43,7 +43,19 @@ class MacOSFontEntry final : public gfxFontEntry {
 
   gfxFontEntry* Clone() const override;
 
+  // Return a non-owning reference to our CGFont; caller must not release it.
+  // This will cause the fontEntry to create & retain a CGFont for the life
+  // of the entry.
+  // Note that in the case of a broken font, this could return null.
   CGFontRef GetFontRef();
+
+  // Return a new reference to our CGFont. Caller is responsible to release
+  // this reference.
+  // (If the entry has a cached CGFont, this just bumps its refcount and
+  // returns it; if not, the instance returned will be owned solely by the
+  // caller.)
+  // Note that in the case of a broken font, this could return null.
+  CGFontRef CreateOrCopyFontRef();
 
   // override gfxFontEntry table access function to bypass table cache,
   // use CGFontRef API to get direct access to system font data
