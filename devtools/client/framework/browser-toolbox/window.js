@@ -135,8 +135,6 @@ function setPrefDefaults() {
     "devtools.command-button-noautohide.enabled",
     true
   );
-  // Bug 1225160 - Using source maps with browser debugging can lead to a crash
-  Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", false);
   Services.prefs.setBoolPref("devtools.performance.new-panel-enabled", false);
   Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
 
