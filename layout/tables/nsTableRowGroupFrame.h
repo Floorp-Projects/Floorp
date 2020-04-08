@@ -214,7 +214,8 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    * @param aLineBounds       - rect of the row
    */
   NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine, nsRect& aLineBounds) override;
+                     int32_t* aNumFramesOnLine,
+                     nsRect& aLineBounds) const override;
 
   /** Given a frame that's a child of the rowgroup, find which line its on.
    * @param aFrame       - frame, should be a row
