@@ -258,7 +258,7 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
   // encrypted sample lengths are zero, and in this case, a zero length
   // IV is allowed.
   assert(aMetadata.mIV.size() == 8 || aMetadata.mIV.size() == 16 ||
-         (aMetadata.mIV.size() == 0 && AllZero(aMetadata.mCipherBytes)));
+         (aMetadata.mIV.empty() && AllZero(aMetadata.mCipherBytes)));
 
   std::vector<uint8_t> iv(aMetadata.mIV);
   iv.insert(iv.end(), CENC_KEY_LEN - aMetadata.mIV.size(), 0);
