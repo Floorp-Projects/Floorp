@@ -58,8 +58,6 @@ class CSSEditUtils final {
     eCSSEditableProperty_width
   };
 
-  enum StyleType { eSpecified, eComputed };
-
   struct CSSEquivTable {
     nsCSSEditableProperty cssProperty;
     nsProcessValueFunc processValueFunctor;
@@ -111,14 +109,14 @@ class CSSEditUtils final {
    * Gets the specified/computed style value of a CSS property for a given
    * node (or its element ancestor if it is not an element).
    *
-   * @param aNode          [IN] A DOM node.
+   * @param aContent       [IN] A DOM node.
    * @param aProperty      [IN] An atom containing the CSS property to get.
    * @param aPropertyValue [OUT] The retrieved value of the property.
    */
-  static nsresult GetSpecifiedProperty(nsINode& aNode, nsAtom& aProperty,
-                                       nsAString& aValue);
-  static nsresult GetComputedProperty(nsINode& aNode, nsAtom& aProperty,
-                                      nsAString& aValue);
+  static nsresult GetSpecifiedProperty(nsIContent& aContent,
+                                       nsAtom& aCSSProperty, nsAString& aValue);
+  static nsresult GetComputedProperty(nsIContent& aContent,
+                                      nsAtom& aCSSProperty, nsAString& aValue);
 
   /**
    * Removes a CSS property from the specified declarations in STYLE attribute
@@ -165,44 +163,53 @@ class CSSEditUtils final {
    * Returns the list of values for the CSS equivalences to
    * the passed HTML style for the passed node.
    *
-   * @param aNode          [IN] A DOM node.
+   * @param aContent       [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] An atom of attribute name or nullptr if
    *                            irrelevant.
    * @param aValueString   [OUT] The list of CSS values.
-   * @param aStyleType     [IN] eSpecified or eComputed.
    */
-  static nsresult GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
-                                                       nsAtom* aHTMLProperty,
-                                                       nsAtom* aAttribute,
-                                                       nsAString& aValueString,
-                                                       StyleType aStyleType);
+  static nsresult GetComputedCSSEquivalentToHTMLInlineStyleSet(
+      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+      nsAString& aValue) {
+    return GetCSSEquivalentToHTMLInlineStyleSetInternal(
+        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Computed);
+  }
+  static nsresult GetSpecifiedCSSEquivalentToHTMLInlineStyleSet(
+      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+      nsAString& aValue) {
+    return GetCSSEquivalentToHTMLInlineStyleSetInternal(
+        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Specified);
+  }
 
   /**
    * Does the node aNode (or his parent if it is not an element node) carries
    * the CSS equivalent styles to the HTML style for this node ?
    *
-   * @param aNode          [IN] A DOM node.
+   * @param aContent       [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] A pointer/atom to an attribute name or nullptr
    *                            if irrelevant.
    * @param aValueString   [IN/OUT] The attribute value (in) the list of CSS
    *                                values (out).
-   * @param aStyleType     [IN] eSpecified or eComputed.
    * @return               A boolean being true if the css properties are
    *                       not same as initial value.
    */
-  static bool IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aContent,
-                                                  nsAtom* aProperty,
-                                                  nsAtom* aAttribute,
-                                                  nsAString& aValue,
-                                                  StyleType aStyleType);
-
-  static bool IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aContent,
-                                                  nsAtom* aProperty,
-                                                  nsAtom* aAttribute,
-                                                  const nsAString& aValue,
-                                                  StyleType aStyleType);
+  static bool IsComputedCSSEquivalentToHTMLInlineStyleSet(nsIContent& aContent,
+                                                          nsAtom* aHTMLProperty,
+                                                          nsAtom* aAttribute,
+                                                          nsAString& aValue) {
+    MOZ_ASSERT(aHTMLProperty || aAttribute);
+    return IsCSSEquivalentToHTMLInlineStyleSetInternal(
+        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Computed);
+  }
+  static bool IsSpecifiedCSSEquivalentToHTMLInlineStyleSet(
+      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+      nsAString& aValue) {
+    MOZ_ASSERT(aHTMLProperty || aAttribute);
+    return IsCSSEquivalentToHTMLInlineStyleSetInternal(
+        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Specified);
+  }
 
   /**
    * This is a kind of IsCSSEquivalentToHTMLInlineStyleSet.
@@ -210,20 +217,30 @@ class CSSEditUtils final {
    * aren't same as initial value.  But this method returns whether the
    * properties aren't set.
    * If node is <span style="font-weight: normal"/>,
-   *  - IsCSSEquivalentToHTMLInlineStyleSet returns false.
-   *  - HaveCSSEquivalentStyles returns true.
+   *  - Is(Computed|Specified)CSSEquivalentToHTMLInlineStyleSet returns false.
+   *  - Have(Computed|Specified)CSSEquivalentStyles returns true.
    *
-   * @param aNode          [IN] A DOM node.
+   * @param aContent       [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] An atom to an attribute name or nullptr
    *                            if irrelevant.
-   * @param aStyleType     [IN] eSpecified or eComputed.
    * @return               A boolean being true if the css properties are
    *                       not set.
    */
-
-  static bool HaveCSSEquivalentStyles(nsINode& aNode, nsAtom* aProperty,
-                                      nsAtom* aAttribute, StyleType aStyleType);
+  static bool HaveComputedCSSEquivalentStyles(nsIContent& aContent,
+                                              nsAtom* aHTMLProperty,
+                                              nsAtom* aAttribute) {
+    MOZ_ASSERT(aHTMLProperty || aAttribute);
+    return HaveCSSEquivalentStylesInternal(aContent, aHTMLProperty, aAttribute,
+                                           StyleType::Computed);
+  }
+  static bool HaveSpecifiedCSSEquivalentStyles(nsIContent& aContent,
+                                               nsAtom* aHTMLProperty,
+                                               nsAtom* aAttribute) {
+    MOZ_ASSERT(aHTMLProperty || aAttribute);
+    return HaveCSSEquivalentStylesInternal(aContent, aHTMLProperty, aAttribute,
+                                           StyleType::Specified);
+  }
 
   /**
    * Adds to the node the CSS inline styles equivalent to the HTML style
@@ -318,6 +335,8 @@ class CSSEditUtils final {
       dom::Element* aElement);
 
  private:
+  enum class StyleType { Specified, Computed };
+
   /**
    * Retrieves the CSS property atom from an enum.
    *
@@ -338,7 +357,7 @@ class CSSEditUtils final {
    * @param aValue             [IN] The HTML style value.
    * @param aGetOrRemoveRequest [IN] A boolean value being true if the call to
    *                                 the current method is made for
-   *                                 GetCSSEquivalentToHTMLInlineStyleSet() or
+   *                                 Get*CSSEquivalentToHTMLInlineStyleSet() or
    *                                 RemoveCSSEquivalentToHTMLInlineStyleSet().
    */
   static void BuildCSSDeclarations(nsTArray<nsAtom*>& aPropertyArray,
@@ -361,7 +380,7 @@ class CSSEditUtils final {
    *                                 above.
    * @param aGetOrRemoveRequest [IN] A boolean value being true if the call to
    *                                 the current method is made for
-   *                                 GetCSSEquivalentToHTMLInlineStyleSet() or
+   *                                 Get*CSSEquivalentToHTMLInlineStyleSet() or
    *                                 RemoveCSSEquivalentToHTMLInlineStyleSet().
    */
   static void GenerateCSSDeclarationsFromHTMLStyle(
@@ -375,11 +394,31 @@ class CSSEditUtils final {
    * @param aNode               [IN] A DOM node.
    * @param aProperty           [IN] A CSS property.
    * @param aValue              [OUT] The retrieved value for this property.
-   * @param aStyleType          [IN] eSpecified or eComputed.
    */
-  static nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsAtom* aProperty,
-                                           nsAString& aValue,
-                                           StyleType aStyleType);
+  static nsresult GetComputedCSSInlinePropertyBase(nsIContent& aContent,
+                                                   nsAtom& aCSSProperty,
+                                                   nsAString& aValue);
+  static nsresult GetSpecifiedCSSInlinePropertyBase(nsIContent& aContent,
+                                                    nsAtom& aCSSProperty,
+                                                    nsAString& aValue);
+
+  /**
+   * Those methods are wrapped with corresponding methods which do not have
+   * "Internal" in their names.  Don't use these methods directly even if
+   * you want to use one of them in this class.
+   */
+  static nsresult GetCSSEquivalentToHTMLInlineStyleSetInternal(
+      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+      nsAString& aValue, StyleType aStyleType);
+  static bool IsCSSEquivalentToHTMLInlineStyleSetInternal(nsIContent& aContent,
+                                                          nsAtom* aHTMLProperty,
+                                                          nsAtom* aAttribute,
+                                                          nsAString& aValue,
+                                                          StyleType aStyleType);
+  static bool HaveCSSEquivalentStylesInternal(nsIContent& aContent,
+                                              nsAtom* aHTMLProperty,
+                                              nsAtom* aAttribute,
+                                              StyleType aStyleType);
 
  private:
   HTMLEditor* mHTMLEditor;
