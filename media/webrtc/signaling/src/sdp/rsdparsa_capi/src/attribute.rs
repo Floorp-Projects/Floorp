@@ -292,6 +292,69 @@ pub unsafe extern "C" fn sdp_get_ssrcs(
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub enum RustSdpSsrcGroupSemantic {
+    Duplication,
+    FlowIdentification,
+    ForwardErrorCorrection,
+    ForwardErrorCorrectionFR,
+    SIM,
+}
+
+impl<'a> From<&'a SdpSsrcGroupSemantic> for RustSdpSsrcGroupSemantic {
+    fn from(other: &SdpSsrcGroupSemantic) -> Self {
+        match *other {
+            SdpSsrcGroupSemantic::Duplication => RustSdpSsrcGroupSemantic::Duplication,
+            SdpSsrcGroupSemantic::FlowIdentification => {
+                RustSdpSsrcGroupSemantic::FlowIdentification
+            }
+            SdpSsrcGroupSemantic::ForwardErrorCorrection => {
+                RustSdpSsrcGroupSemantic::ForwardErrorCorrection
+            }
+            SdpSsrcGroupSemantic::ForwardErrorCorrectionFR => {
+                RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFR
+            }
+            SdpSsrcGroupSemantic::SIM => RustSdpSsrcGroupSemantic::SIM,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpSsrcGroup {
+    pub semantic: RustSdpSsrcGroupSemantic,
+    pub ssrcs: *const Vec<SdpAttributeSsrc>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_ssrc_group_count(attributes: *const Vec<SdpAttribute>) -> size_t {
+    count_attribute((*attributes).as_slice(), SdpAttributeType::SsrcGroup)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_ssrc_groups(
+    attributes: *const Vec<SdpAttribute>,
+    ret_size: size_t,
+    ret_ssrc_groups: *mut RustSdpSsrcGroup,
+) {
+    let attrs: Vec<_> = (*attributes)
+        .iter()
+        .filter_map(|x| {
+            if let SdpAttribute::SsrcGroup(ref semantic, ref ssrcs) = *x {
+                Some(RustSdpSsrcGroup {
+                    semantic: RustSdpSsrcGroupSemantic::from(semantic),
+                    ssrcs: ssrcs,
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
+    let ssrc_groups = slice::from_raw_parts_mut(ret_ssrc_groups, ret_size);
+    ssrc_groups.copy_from_slice(attrs.as_slice());
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct RustSdpAttributeRtpmap {
     pub payload_type: u8,
     pub codec_name: StringView,
