@@ -282,7 +282,8 @@ function transformNavigationMessagePacket(packet) {
     type: MESSAGE_TYPE.NAVIGATION_MARKER,
     level: MESSAGE_LEVEL.LOG,
     messageText: l10n.getFormatStr("webconsole.navigated", [url]),
-    timeStamp: Date.now(),
+    timeStamp: packet.timeStamp,
+    allowRepeating: false,
   });
 }
 
@@ -741,11 +742,42 @@ function getDescriptorValue(descriptor) {
   return descriptor;
 }
 
+function getNaturalOrder(messageA, messageB) {
+  const aFirst = -1;
+  const bFirst = 1;
+
+  // It can happen that messages are emitted in the same microsecond, making their
+  // timestamp similar. In such case, we rely on which message came first through
+  // the console API service, checking their id, except for expression result, which we'll
+  // always insert after because console API messages emitted from the expression need to
+  // be rendered before.
+  if (messageA.timeStamp === messageB.timeStamp) {
+    if (messageA.type === "result") {
+      return bFirst;
+    }
+
+    if (messageB.type === "result") {
+      return aFirst;
+    }
+
+    if (
+      !Number.isNaN(parseInt(messageA.id, 10)) &&
+      !Number.isNaN(parseInt(messageB.id, 10))
+    ) {
+      return parseInt(messageA.id, 10) < parseInt(messageB.id, 10)
+        ? aFirst
+        : bFirst;
+    }
+  }
+  return messageA.timeStamp < messageB.timeStamp ? aFirst : bFirst;
+}
+
 module.exports = {
   createWarningGroupMessage,
   getArrayTypeNames,
   getDescriptorValue,
   getInitialMessageCountForViewport,
+  getNaturalOrder,
   getParentWarningGroupMessageId,
   getWarningGroupType,
   isContentBlockingMessage,

@@ -99,7 +99,7 @@ add_task(async function testContentBlockingMessage() {
   await toggleWarningGroupPreference(hud);
   await waitFor(() => findMessage(hud, `${BLOCKED_URL}?4`));
 
-  // Warning messages are displayed as the expected positions.
+  // Warning messages are displayed at the expected positions.
   checkConsoleOutputForWarningGroup(hud, [
     `${BLOCKED_URL}?1`,
     `simple message 1`,

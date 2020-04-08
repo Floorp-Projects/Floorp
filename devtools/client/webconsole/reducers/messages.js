@@ -59,6 +59,12 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/utils/messages",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "getNaturalOrder",
+  "devtools/client/webconsole/utils/messages",
+  true
+);
 
 const { UPDATE_REQUEST } = require("devtools/client/netmonitor/src/constants");
 
@@ -134,7 +140,6 @@ function cloneState(state) {
 // eslint-disable-next-line complexity
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const { messagesById, groupsById, currentGroup, repeatById } = state;
-
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
     // When the message has a NULL type, we don't add it.
     return state;
@@ -147,6 +152,11 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   }
 
   const lastMessage = messagesById.get(state.lastMessageId);
+  // It can happen that the new message was actually emitted earlier than the last message,
+  // which means we need to insert it at the right position.
+  const isUnsorted =
+    lastMessage && lastMessage.timeStamp > newMessage.timeStamp;
+
   if (lastMessage && newMessage.allowRepeating && messagesById.size > 0) {
     if (
       lastMessage.repeatId === newMessage.repeatId &&
@@ -158,7 +168,9 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   }
 
   // Store the id of the message as being the last one being added.
-  state.lastMessageId = newMessage.id;
+  if (!isUnsorted) {
+    state.lastMessageId = newMessage.id;
+  }
 
   // Add the new message with a reference to the parent group.
   const parentGroups = getParentGroups(currentGroup, groupsById);
@@ -252,7 +264,25 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   }
 
   const addedMessage = Object.freeze(newMessage);
-  state.messagesById.set(newMessage.id, addedMessage);
+
+  // If the new message isn't the "oldest" one, then we need to insert it at the right
+  // position in the message map.
+  if (isUnsorted) {
+    const entries = Array.from(state.messagesById.entries());
+    const newMessageIndex = entries.findIndex(
+      entry => entry[1].timeStamp > addedMessage.timeStamp
+    );
+    // This shouldn't happen as `isUnsorted` would only be true if the last message is
+    // younger than the added message.
+    if (newMessageIndex === -1) {
+      state.messagesById.set(addedMessage.id, addedMessage);
+    } else {
+      entries.splice(newMessageIndex, 0, [addedMessage.id, addedMessage]);
+      state.messagesById = new Map(entries);
+    }
+  } else {
+    state.messagesById.set(addedMessage.id, addedMessage);
+  }
 
   if (newMessage.type === "trace") {
     // We want the stacktrace to be open by default.
@@ -296,6 +326,19 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       }
       // Inserts the new warning message at the wanted location "in" the warning group.
       state.visibleMessages.splice(index + 1, 0, newMessage.id);
+    } else if (isUnsorted) {
+      // If the new message wasn't the "oldest" one, then we need to insert its id at
+      // the right position in the array.
+      const index = state.visibleMessages.findIndex(
+        id => state.messagesById.get(id).timeStamp > newMessage.timeStamp
+      );
+      // If the index wasn't found, it means the new message is the oldest of the visible
+      // messages, so we can directly push it into the array.
+      if (index == -1) {
+        state.visibleMessages.push(newMessage.id);
+      } else {
+        state.visibleMessages.splice(index, 0, newMessage.id);
+      }
     } else {
       state.visibleMessages.push(newMessage.id);
     }
@@ -367,7 +410,7 @@ function messages(
       }
 
       newState = cloneState(state);
-      list.forEach(message => {
+      for (const message of list) {
         newState = addMessage(
           message,
           newState,
@@ -375,7 +418,7 @@ function messages(
           prefsState,
           uiState
         );
-      });
+      }
 
       return limitTopLevelMessageCount(newState, logLimit);
 
@@ -1426,24 +1469,6 @@ function maybeSortVisibleMessages(
   timeStampSort = false
 ) {
   if (state.warningGroupsById.size > 0 && sortWarningGroupMessage) {
-    function getNaturalOrder(messageA, messageB) {
-      const aFirst = -1;
-      const bFirst = 1;
-
-      // It can happen that messages are emitted in the same microsecond, making their
-      // timestamp similar. In such case, we rely on which message came first through
-      // the console API service, checking their id.
-      if (
-        messageA.timeStamp === messageB.timeStamp &&
-        !Number.isNaN(parseInt(messageA.id, 10)) &&
-        !Number.isNaN(parseInt(messageB.id, 10))
-      ) {
-        return parseInt(messageA.id, 10) < parseInt(messageB.id, 10)
-          ? aFirst
-          : bFirst;
-      }
-      return messageA.timeStamp < messageB.timeStamp ? aFirst : bFirst;
-    }
     state.visibleMessages.sort((a, b) => {
       const messageA = state.messagesById.get(a);
       const messageB = state.messagesById.get(b);
@@ -1495,8 +1520,7 @@ function maybeSortVisibleMessages(
     state.visibleMessages.sort((a, b) => {
       const messageA = state.messagesById.get(a);
       const messageB = state.messagesById.get(b);
-
-      return messageA.timeStamp < messageB.timeStamp ? -1 : 1;
+      return getNaturalOrder(messageA, messageB);
     });
   }
 }

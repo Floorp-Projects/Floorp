@@ -122,7 +122,7 @@ function onExpressionEvaluated(response) {
     }
 
     if (!response.helperResult) {
-      dispatch(messagesActions.messagesAdd([response]));
+      webConsoleUI.wrapper.dispatchMessageAdd(response);
       return;
     }
 
