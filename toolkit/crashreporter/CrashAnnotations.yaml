@@ -10,8 +10,6 @@
 #   .extra file instead of the annotation name
 # - ping: A boolean that indicates whether the annotation is whitelisted for
 #   going into the crash ping, if not specified this defaults to false
-# - content: A boolean that indicates whether the field will be included in
-#   subprocess reports, if not specified this defaults to true
 
 A11yHandlerRegistered:
   description: >
@@ -325,14 +323,12 @@ FramePoisonBase:
     Base pointer of the memory area used for the poison value we place in freed
     memory.
   type: string
-  content: false
 
 FramePoisonSize:
   description: >
     Size of the memory area used for the poison value we place in freed
     memory.
   type: integer
-  content: false
 
 GetHGlobalFromStreamFailure:
   description: >
@@ -441,7 +437,6 @@ IndexedDBShutdownTimeout:
     selected object properties. Properties which contain origin strings are
     anonymized.
   type: string
-  content: false
   ping: true
 
 InstallTime:
@@ -596,7 +591,6 @@ LocalStorageShutdownTimeout:
     selected object properties. Properties which contain origin strings are
     anonymized.
   type: string
-  content: false
   ping: true
 
 LowCommitSpaceEvents:
@@ -774,14 +768,12 @@ StartupCrash:
   description: >
     If set to 1 then this crash occurred during startup.
   type: boolean
-  content: false
   ping: true
 
 StartupTime:
   description: >
     The time when Firefox was launched expressed in seconds since the Epoch.
   type: integer
-  content: false
 
 StatFailure:
   description: >
@@ -911,7 +903,6 @@ URL:
   description: >
     URL being loaded.
   type: string
-  content: false
 
 User32BeforeBlocklist:
   description: >

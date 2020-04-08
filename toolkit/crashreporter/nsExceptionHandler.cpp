@@ -2416,24 +2416,15 @@ nsresult RemoveCrashReportAnnotation(Annotation key) {
 void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
     const nsCString& value = aSrc[key];
-    if (value.IsEmpty()) {
-      continue;
+    if (!value.IsEmpty()) {
+      aDst[key] = value;
     }
-
-    aDst[key] = value;
   }
 }
 
 static void MergeContentCrashAnnotations(AnnotationTable& aDst) {
   MutexAutoLock lock(*crashReporterAPILock);
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    const nsCString& value = crashReporterAPIData_Table[key];
-    if (value.IsEmpty() || IsAnnotationBlacklistedForContent(key)) {
-      continue;
-    }
-
-    aDst[key] = value;
-  }
+  MergeCrashAnnotations(aDst, crashReporterAPIData_Table);
 }
 
 // Adds crash time, uptime and memory report annotations
