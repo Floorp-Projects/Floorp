@@ -170,14 +170,53 @@ void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
   ReportBlockingToConsole(windowID, aURI, aRejectedReason);
 }
 
-// This API finishes the remaining work left in NotifyBlockingDecision.
-void NotifyAllowDecision(nsIChannel* aTrackingChannel, nsIURI* aURI) {
+void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
+                            ContentBlockingNotifier::BlockingDecision aDecision,
+                            uint32_t aRejectedReason, nsIURI* aURI) {
+  MOZ_ASSERT(aTrackingChannel);
+
+  // This can be called in either the parent process or the child processes.
+  // When this is called in the child processes, we must have a window.
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(aTrackingChannel, loadContext);
+    if (!loadContext) {
+      return;
+    }
+
+    nsCOMPtr<mozIDOMWindowProxy> window;
+    loadContext->GetAssociatedWindow(getter_AddRefs(window));
+    if (!window) {
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(window);
+    if (!outer) {
+      return;
+    }
+
+    // When this is called in the child processes with system privileges,
+    // the decision should always be ALLOW. We can stop here because both
+    // UI and content blocking log don't care this event.
+    if (nsGlobalWindowOuter::Cast(outer)->GetPrincipal() ==
+        nsContentUtils::GetSystemPrincipal()) {
+      MOZ_DIAGNOSTIC_ASSERT(aDecision ==
+                            ContentBlockingNotifier::BlockingDecision::eAllow);
+      return;
+    }
+  }
+
   nsAutoCString trackingOrigin;
   if (aURI) {
     Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
   }
 
-  // This can be called in either the parent process or the child processes.
+  if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
+    ContentBlockingNotifier::OnEvent(aTrackingChannel, true, aRejectedReason,
+                                     trackingOrigin);
+
+    ReportBlockingToConsole(aTrackingChannel, aURI, aRejectedReason);
+  }
 
   // Now send the generic "cookies loaded" notifications, from the most generic
   // to the most specific.
@@ -207,55 +246,6 @@ void NotifyAllowDecision(nsIChannel* aTrackingChannel, nsIURI* aURI) {
         nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
         trackingOrigin);
   }
-}
-
-void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
-                            ContentBlockingNotifier::BlockingDecision aDecision,
-                            uint32_t aRejectedReason, nsIURI* aURI) {
-  MOZ_ASSERT(aTrackingChannel);
-
-  // When this is called in the content process with system privileges,
-  // the decision should always be ALLOW, and we can also stop processing this
-  // event.
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(aTrackingChannel, loadContext);
-    if (!loadContext) {
-      return;
-    }
-
-    nsCOMPtr<mozIDOMWindowProxy> window;
-    loadContext->GetAssociatedWindow(getter_AddRefs(window));
-    if (!window) {
-      return;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(window);
-    if (!outer) {
-      return;
-    }
-
-    if (nsGlobalWindowOuter::Cast(outer)->GetPrincipal() ==
-        nsContentUtils::GetSystemPrincipal()) {
-      MOZ_DIAGNOSTIC_ASSERT(aDecision ==
-                            ContentBlockingNotifier::BlockingDecision::eAllow);
-      return;
-    }
-  }
-
-  nsAutoCString trackingOrigin;
-  if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
-  }
-
-  if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
-    ContentBlockingNotifier::OnEvent(aTrackingChannel, true, aRejectedReason,
-                                     trackingOrigin);
-
-    ReportBlockingToConsole(aTrackingChannel, aURI, aRejectedReason);
-  }
-
-  NotifyAllowDecision(aTrackingChannel, aURI);
 }
 
 // Send a message to notify OnContentBlockingEvent in the parent, which will
