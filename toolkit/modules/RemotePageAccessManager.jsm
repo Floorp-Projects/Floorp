@@ -29,7 +29,70 @@ let RemotePageAccessManager = {
    * function must match one of the keys. If keys is an array with a
    * single asterisk element ["*"], then all values are permitted.
    */
-  accessMap: {},
+  accessMap: {
+    "about:certerror": {
+      RPMSendAsyncMessage: [
+        "Browser:EnableOnlineMode",
+        "Browser:ResetSSLPreferences",
+        "GetChangedCertPrefs",
+        "ReportTLSError",
+        "Browser:OpenCaptivePortalPage",
+        "Browser:SSLErrorGoBack",
+        "Browser:PrimeMitm",
+        "Browser:ResetEnterpriseRootsPref",
+      ],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
+      RPMGetBoolPref: [
+        "security.certerrors.mitm.priming.enabled",
+        "security.certerrors.permanentOverride",
+        "security.enterprise_roots.auto-enabled",
+        "security.certerror.hideAddException",
+        "security.ssl.errorReporting.automatic",
+        "security.ssl.errorReporting.enabled",
+      ],
+      RPMSetBoolPref: [
+        "security.ssl.errorReporting.automatic",
+        "security.tls.version.enable-deprecated",
+      ],
+      RPMGetIntPref: [
+        "services.settings.clock_skew_seconds",
+        "services.settings.last_update_seconds",
+      ],
+      RPMGetAppBuildID: ["*"],
+      RPMIsWindowPrivate: ["*"],
+      RPMAddToHistogram: ["*"],
+    },
+    "about:neterror": {
+      RPMSendAsyncMessage: [
+        "Browser:EnableOnlineMode",
+        "Browser:ResetSSLPreferences",
+        "GetChangedCertPrefs",
+        "ReportTLSError",
+        "Browser:OpenCaptivePortalPage",
+        "Browser:SSLErrorGoBack",
+        "Browser:PrimeMitm",
+        "Browser:ResetEnterpriseRootsPref",
+      ],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
+      RPMGetBoolPref: [
+        "security.certerror.hideAddException",
+        "security.ssl.errorReporting.automatic",
+        "security.ssl.errorReporting.enabled",
+        "security.tls.version.enable-deprecated",
+        "security.certerrors.tls.version.show-override",
+      ],
+      RPMSetBoolPref: [
+        "security.ssl.errorReporting.automatic",
+        "security.tls.version.enable-deprecated",
+      ],
+      RPMPrefIsLocked: ["security.tls.version.min"],
+      RPMAddToHistogram: ["*"],
+    },
+  },
 
   /**
    * Check if access is allowed to the given feature for a given document.
