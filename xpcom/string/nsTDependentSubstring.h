@@ -130,6 +130,12 @@ inline const nsTDependentSubstring<T> Substring(const T* aData,
 template <typename T>
 const nsTDependentSubstring<T> Substring(const T* aStart, const T* aEnd);
 
+extern template const nsTDependentSubstring<char> Substring(const char* aStart,
+                                                            const char* aEnd);
+
+extern template const nsTDependentSubstring<char16_t> Substring(
+    const char16_t* aStart, const char16_t* aEnd);
+
 #if defined(MOZ_USE_CHAR16_WRAPPER)
 inline const nsTDependentSubstring<char16_t> Substring(char16ptr_t aData,
                                                        uint32_t aLength);

@@ -7,7 +7,7 @@
 #include "nsString.h"
 
 // This file provides concrete instantiations for externed string template
-// classes and functions.
+// classes.
 
 // ================
 // Template classes
@@ -41,60 +41,3 @@ template class nsTSubstringSplitter<char16_t>;
 
 template class nsTDefaultStringComparator<char>;
 template class nsTDefaultStringComparator<char16_t>;
-
-// =============================
-// Templated top-level functions
-// =============================
-
-template int NS_FASTCALL
-Compare<char>(mozilla::detail::nsTStringRepr<char> const&,
-              mozilla::detail::nsTStringRepr<char> const&,
-              nsTStringComparator<char> const&);
-
-template int NS_FASTCALL
-Compare<char16_t>(mozilla::detail::nsTStringRepr<char16_t> const&,
-                  mozilla::detail::nsTStringRepr<char16_t> const&,
-                  nsTStringComparator<char16_t> const&);
-
-template nsTDependentSubstring<char> const Substring<char>(char const*,
-                                                           char const*);
-
-template nsTDependentSubstring<char16_t> const Substring<char16_t>(
-    char16_t const*, char16_t const*);
-
-// =========================================================
-// Templated member functions that are conditionally enabled
-// =========================================================
-
-template int32_t nsTString<char16_t>::Find(const self_type&, int32_t,
-                                           int32_t) const;
-
-template int32_t nsTString<char16_t>::Find(const char_type*, int32_t,
-                                           int32_t) const;
-
-template int32_t nsTString<char16_t>::RFind(const self_type&, int32_t,
-                                            int32_t) const;
-
-template int32_t nsTString<char16_t>::RFind(const char_type*, int32_t,
-                                            int32_t) const;
-
-template int32_t nsTString<char16_t>::FindCharInSet(const char*, int32_t) const;
-
-namespace mozilla {
-namespace detail {
-
-template int32_t nsTStringRepr<char>::Compare(const char_type*, bool,
-                                              int32_t) const;
-
-template bool nsTStringRepr<char16_t>::EqualsIgnoreCase(
-    const incompatible_char_type*, int32_t) const;
-
-}  // namespace detail
-}  // namespace mozilla
-
-template bool nsTString<char16_t>::StripChars(const incompatible_char_type*,
-                                              const fallible_t&);
-
-template void nsTString<char16_t>::StripChars(const incompatible_char_type*);
-
-template void nsTString<char16_t>::ReplaceChar(const char*, char16_t);

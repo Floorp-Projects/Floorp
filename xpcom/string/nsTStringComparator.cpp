@@ -38,6 +38,16 @@ int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
   return result;
 }
 
+template int NS_FASTCALL
+Compare<char>(mozilla::detail::nsTStringRepr<char> const&,
+              mozilla::detail::nsTStringRepr<char> const&,
+              nsTStringComparator<char> const&);
+
+template int NS_FASTCALL
+Compare<char16_t>(mozilla::detail::nsTStringRepr<char16_t> const&,
+                  mozilla::detail::nsTStringRepr<char16_t> const&,
+                  nsTStringComparator<char16_t> const&);
+
 template <typename T>
 int nsTDefaultStringComparator<T>::operator()(const char_type* aLhs,
                                               const char_type* aRhs,
