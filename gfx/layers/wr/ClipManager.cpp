@@ -147,7 +147,16 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayItem* aItem) {
     // purposes we always want to use the ASR that would have been used if it
     // didn't have fixed descendants, which is stored as the "container ASR" on
     // the sticky item.
-    asr = static_cast<nsDisplayStickyPosition*>(aItem)->GetContainerASR();
+    nsDisplayStickyPosition* sticky =
+        static_cast<nsDisplayStickyPosition*>(aItem);
+    asr = sticky->GetContainerASR();
+
+    // If the leafmost clip for the sticky item is just the displayport clip,
+    // then skip it. This allows sticky items to remain visible even if the
+    // rest of the content in the enclosing scrollframe is checkerboarding.
+    if (sticky->IsClippedToDisplayPort() && clip && clip->mASR == asr) {
+      clip = clip->mParent;
+    }
   }
 
   // In most cases we can combine the leaf of the clip chain with the clip rect
