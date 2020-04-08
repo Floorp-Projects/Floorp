@@ -1763,7 +1763,7 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                                   nsIFrame** aFrameFound,
                                   bool* aPosIsBeforeFirstFrame,
-                                  bool* aPosIsAfterLastFrame) {
+                                  bool* aPosIsAfterLastFrame) const {
   nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
 

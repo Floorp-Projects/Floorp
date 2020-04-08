@@ -1652,7 +1652,7 @@ class nsLineIterator final : public nsILineIterator {
                                      int32_t aStartLine = 0) override;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                          nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
-                         bool* aPosIsAfterLastFrame) override;
+                         bool* aPosIsAfterLastFrame) const override;
 
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame,
                                   int32_t aLineNumber) const override;

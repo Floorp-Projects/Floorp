@@ -240,7 +240,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    */
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                          nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
-                         bool* aPosIsAfterLastFrame) override;
+                         bool* aPosIsAfterLastFrame) const override;
 
   /** Check whether visual and logical order of cell frames within a line are
    * identical. As the layout will reorder them this is always the case
