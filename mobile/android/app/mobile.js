@@ -99,7 +99,7 @@ pref("network.http.spdy.push-allowance", 32768);
 pref("network.http.spdy.default-hpack-buffer", 4096); // 4k
 
 // http3
-pref("network.http.http3.default-qpack-table-size", 4096); // 4k
+pref("network.http.http3.default-qpack-table-size", 0);
 
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
