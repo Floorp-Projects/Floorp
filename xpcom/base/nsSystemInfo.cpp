@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "nsAppRunner.h"
 #include "nsSystemInfo.h"
 #include "prsystem.h"
 #include "prio.h"
