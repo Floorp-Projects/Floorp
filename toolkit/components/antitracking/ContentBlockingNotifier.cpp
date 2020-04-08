@@ -171,8 +171,7 @@ void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
 }
 
 // This API finishes the remaining work left in NotifyBlockingDecision.
-void NotifyAllowDecision(nsIChannel* aReportingChannel,
-                         nsIChannel* aTrackingChannel, nsIURI* aURI) {
+void NotifyAllowDecision(nsIChannel* aTrackingChannel, nsIURI* aURI) {
   nsAutoCString trackingOrigin;
   if (aURI) {
     Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
@@ -182,7 +181,7 @@ void NotifyAllowDecision(nsIChannel* aReportingChannel,
 
   // Now send the generic "cookies loaded" notifications, from the most generic
   // to the most specific.
-  ContentBlockingNotifier::OnEvent(aReportingChannel, aTrackingChannel, false,
+  ContentBlockingNotifier::OnEvent(aTrackingChannel, aTrackingChannel, false,
                                    nsIWebProgressListener::STATE_COOKIES_LOADED,
                                    trackingOrigin);
 
@@ -197,31 +196,30 @@ void NotifyAllowDecision(nsIChannel* aReportingChannel,
   if (classificationFlags &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
     ContentBlockingNotifier::OnEvent(
-        aReportingChannel, aTrackingChannel, false,
+        aTrackingChannel, aTrackingChannel, false,
         nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, trackingOrigin);
   }
 
   if (classificationFlags &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
     ContentBlockingNotifier::OnEvent(
-        aReportingChannel, aTrackingChannel, false,
+        aTrackingChannel, aTrackingChannel, false,
         nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
         trackingOrigin);
   }
 }
 
-void NotifyBlockingDecision(nsIChannel* aReportingChannel,
-                            nsIChannel* aTrackingChannel,
+void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
                             ContentBlockingNotifier::BlockingDecision aDecision,
                             uint32_t aRejectedReason, nsIURI* aURI) {
-  MOZ_ASSERT(aReportingChannel);
+  MOZ_ASSERT(aTrackingChannel);
 
   // When this is called in the content process with system privileges,
   // the decision should always be ALLOW, and we can also stop processing this
   // event.
   if (XRE_IsContentProcess()) {
     nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(aReportingChannel, loadContext);
+    NS_QueryNotificationCallbacks(aTrackingChannel, loadContext);
     if (!loadContext) {
       return;
     }
@@ -251,13 +249,13 @@ void NotifyBlockingDecision(nsIChannel* aReportingChannel,
   }
 
   if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
-    ContentBlockingNotifier::OnEvent(aReportingChannel, aTrackingChannel, true,
+    ContentBlockingNotifier::OnEvent(aTrackingChannel, aTrackingChannel, true,
                                      aRejectedReason, trackingOrigin);
 
-    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
+    ReportBlockingToConsole(aTrackingChannel, aURI, aRejectedReason);
   }
 
-  NotifyAllowDecision(aReportingChannel, aTrackingChannel, aURI);
+  NotifyAllowDecision(aTrackingChannel, aURI);
 }
 
 // Send a message to notify OnContentBlockingEvent in the parent, which will
@@ -420,7 +418,7 @@ void ContentBlockingNotifier::OnDecision(nsIChannel* aChannel,
   aChannel->GetURI(getter_AddRefs(uri));
 
   // Can be called in EITHER the parent or child process.
-  NotifyBlockingDecision(aChannel, aChannel, aDecision, aRejectedReason, uri);
+  NotifyBlockingDecision(aChannel, aDecision, aRejectedReason, uri);
 }
 
 /* static */
@@ -443,33 +441,15 @@ void ContentBlockingNotifier::OnDecision(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
              aDecision == BlockingDecision::eAllow);
 
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = AntiTrackingUtils::GetTopWindow(aWindow);
-  if (!pwin) {
-    return;
-  }
-
-  nsPIDOMWindowInner* inner = pwin->GetCurrentInnerWindow();
-  if (!inner) {
-    return;
-  }
-  Document* pwinDoc = inner->GetExtantDoc();
-  if (!pwinDoc) {
-    return;
-  }
-  nsIChannel* channel = pwinDoc->GetChannel();
-  if (!channel) {
-    return;
-  }
-
   Document* document = aWindow->GetExtantDoc();
   if (!document) {
     return;
   }
-  nsIURI* uri = document->GetDocumentURI();
-  nsIChannel* trackingChannel = document->GetChannel();
 
-  NotifyBlockingDecision(channel, trackingChannel, aDecision, aRejectedReason,
-                         uri);
+  nsIChannel* channel = document->GetChannel();
+  nsIURI* uri = document->GetDocumentURI();
+
+  NotifyBlockingDecision(channel, aDecision, aRejectedReason, uri);
 }
 
 /* static */
