@@ -12,6 +12,7 @@ import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
+import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
@@ -105,6 +106,16 @@ private val Event.wrapper: EventWrapper<*>?
                 Events.performedSearch.record(it)
             },
             { Events.performedSearchKeys.valueOf(it) }
+        )
+        is Event.SearchWithAds -> EventWrapper<NoExtraKeys>(
+            {
+                BrowserSearch.withAds[label].add(1)
+            }
+        )
+        is Event.SearchAdClicked -> EventWrapper<NoExtraKeys>(
+            {
+                BrowserSearch.adClicks[label].add(1)
+            }
         )
         is Event.SearchShortcutSelected -> EventWrapper(
             { SearchShortcuts.selected.record(it) },

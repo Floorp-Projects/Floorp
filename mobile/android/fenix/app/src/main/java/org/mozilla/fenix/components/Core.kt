@@ -42,6 +42,8 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ads.AdsTelemetry
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.utils.Mockable
@@ -123,8 +125,12 @@ class Core(private val context: Context) {
      */
     val sessionManager by lazy {
         SessionManager(engine, store).also { sessionManager ->
+
             // Install the "icons" WebExtension to automatically load icons for every visited website.
             icons.install(engine, store)
+
+            // Install the "ads" WebExtension to get the links in an partner page.
+            ads.install(engine, store)
 
             // Show an ongoing notification when recording devices (camera, microphone) are used by web content
             RecordingDevicesNotificationFeature(context, sessionManager)
@@ -167,6 +173,10 @@ class Core(private val context: Context) {
      */
     val icons by lazy {
         BrowserIcons(context, client)
+    }
+
+    val ads by lazy {
+        AdsTelemetry(context.components.analytics.metrics)
     }
 
     /**

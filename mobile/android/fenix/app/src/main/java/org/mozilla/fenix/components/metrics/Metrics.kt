@@ -365,6 +365,16 @@ sealed class Event {
             get() = mapOf(AppTheme.darkThemeSelectedKeys.source to source.name)
     }
 
+    data class SearchWithAds(val providerName: String) : Event() {
+        val label: String
+            get() = providerName
+    }
+
+    data class SearchAdClicked(val providerName: String) : Event() {
+        val label: String
+            get() = providerName
+    }
+
     class ContextMenuItemTapped private constructor(val item: String) : Event() {
         override val extras: Map<ContextMenu.itemTappedKeys, String>?
             get() = mapOf(ContextMenu.itemTappedKeys.named to item)
