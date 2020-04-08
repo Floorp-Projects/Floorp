@@ -295,7 +295,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // moving all the actors to a new Pool. We'll replace the old tab target actor
     // pool with the one we build here, thus retiring any actors that didn't get listed
     // again, and preparing any new actors to receive packets.
-    const newActorPool = new Pool(this.conn);
+    const newActorPool = new Pool(this.conn, "listTabs-tab-descriptors");
     let selected;
 
     const tabDescriptorActors = await tabList.getList();
@@ -339,7 +339,10 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       };
     }
     if (!this._tabDescriptorActorPool) {
-      this._tabDescriptorActorPool = new Pool(this.conn);
+      this._tabDescriptorActorPool = new Pool(
+        this.conn,
+        "getTab-tab-descriptors"
+      );
     }
 
     let descriptorActor;
@@ -378,7 +381,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     }
 
     if (!this._chromeWindowActorPool) {
-      this._chromeWindowActorPool = new Pool(this.conn);
+      this._chromeWindowActorPool = new Pool(this.conn, "chrome-window");
     }
 
     const actor = new ChromeWindowTargetActor(this.conn, window);
@@ -417,7 +420,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     addonList.onListChanged = this._onAddonListChanged;
 
     const addonTargetActors = await addonList.getList();
-    const addonTargetActorPool = new Pool(this.conn);
+    const addonTargetActorPool = new Pool(this.conn, "addon-descriptors");
     for (const addonTargetActor of addonTargetActors) {
       if (option.iconDataURL) {
         await addonTargetActor.loadIconDataURL();
@@ -452,7 +455,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     workerList.onListChanged = this._onWorkerListChanged;
 
     return workerList.getList().then(actors => {
-      const pool = new Pool(this.conn);
+      const pool = new Pool(this.conn, "worker-targets");
       for (const actor of actors) {
         pool.manage(actor);
       }
@@ -489,7 +492,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
 
     return registrationList.getList().then(actors => {
-      const pool = new Pool(this.conn);
+      const pool = new Pool(this.conn, "service-workers-registrations");
       for (const actor of actors) {
         pool.manage(actor);
       }
@@ -523,7 +526,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     }
     processList.onListChanged = this._onProcessListChanged;
     const processes = processList.getList();
-    const pool = new Pool(this.conn);
+    const pool = new Pool(this.conn, "process-descriptors");
     for (const metadata of processes) {
       let processDescriptor = this._getKnownDescriptor(
         metadata.id,
@@ -562,7 +565,8 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       };
     }
     this._processDescriptorActorPool =
-      this._processDescriptorActorPool || new Pool(this.conn);
+      this._processDescriptorActorPool ||
+      new Pool(this.conn, "process-descriptors");
 
     let processDescriptor = this._getKnownDescriptor(
       id,
@@ -628,7 +632,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       return { frames };
     }
 
-    const pool = new Pool(this.conn);
+    const pool = new Pool(this.conn, "frame-descriptors");
     while (contextsToWalk.length) {
       const currentContext = contextsToWalk.pop();
       let frameDescriptor = this._getKnownDescriptor(
@@ -668,7 +672,10 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   _getParentProcessDescriptor() {
     if (!this._processDescriptorActorPool) {
-      this._processDescriptorActorPool = new Pool(this.conn);
+      this._processDescriptorActorPool = new Pool(
+        this.conn,
+        "process-descriptors"
+      );
       const options = { id: 0, parent: true };
       const descriptor = new ProcessDescriptorActor(this.conn, options);
       this._processDescriptorActorPool.manage(descriptor);
@@ -711,7 +718,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     const context = BrowsingContext.get(id);
     const newFrameDescriptor = new FrameDescriptorActor(this.conn, context);
     if (!this._frameDescriptorActorPool) {
-      this._frameDescriptorActorPool = new Pool(this.conn);
+      this._frameDescriptorActorPool = new Pool(this.conn, "frame-descriptors");
     }
     this._frameDescriptorActorPool.manage(newFrameDescriptor);
     return newFrameDescriptor;

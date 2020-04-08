@@ -73,7 +73,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const targetActor = new FrameTargetActor(connection, this.docShell);
 
     // Add the newly created actor to the connection pool.
-    const actorPool = new ActorPool(connection);
+    const actorPool = new ActorPool(connection, "frame-child");
     actorPool.addActor(targetActor);
     connection.addActorPool(actorPool);
 

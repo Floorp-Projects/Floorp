@@ -29,7 +29,7 @@ class Pool extends EventEmitter {
     if (conn) {
       this.conn = conn;
     }
-    this._label = label;
+    this.label = label;
     this.__poolMap = null;
   }
 

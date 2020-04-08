@@ -39,7 +39,7 @@ function DevToolsServerConnection(prefix, transport, socketListener) {
   this._nextID = 1;
   this._socketListener = socketListener;
 
-  this._actorPool = new Pool(this);
+  this._actorPool = new Pool(this, "server-connection");
   this._extraPools = [this._actorPool];
 
   // Responses to a given actor must be returned the the client
@@ -482,36 +482,50 @@ DevToolsServerConnection.prototype = {
     DevToolsServer._connectionClosed(this);
   },
 
-  /*
-   * Debugging helper for inspecting the state of the actor pools.
-   */
-  _dumpPools() {
-    dumpn("/-------------------- dumping pools:");
-    if (this._actorPool) {
-      dumpn(
-        "--------------------- actorPool actors: " +
-          uneval(Object.keys(this._actorPool._actors))
-      );
+  dumpPool(pool, output = [], dumpedPools) {
+    let label;
+    let actorIds = [];
+    let children = [];
+
+    if (dumpedPools.has(pool)) {
+      return;
     }
-    for (const pool of this._extraPools) {
-      if (pool !== this._actorPool) {
-        dumpn(
-          "--------------------- extraPool actors: " +
-            uneval(Object.keys(pool._actors))
-        );
+    dumpedPools.add(pool);
+    // TRUE if the pool is an ActorPool
+    if (pool._actors) {
+      actorIds = Object.keys(pool._actors);
+      children = Object.values(pool._actors);
+      label = pool.label || "";
+    }
+
+    // TRUE if the pool is a Pool
+    else if (pool.__poolMap) {
+      for (const actor of pool.poolChildren()) {
+        children.push(actor);
+        actorIds.push(actor.actorID);
       }
+      label = pool.label || pool.actorID;
+    } else {
+      return;
     }
+
+    output.push([label, actorIds]);
+    dump(`- ${label}: ${JSON.stringify(actorIds)}\n`);
+    children.forEach(childPool =>
+      this.dumpPool(childPool, output, dumpedPools)
+    );
   },
 
   /*
-   * Debugging helper for inspecting the state of an actor pool.
+   * Debugging helper for inspecting the state of the actor pools.
    */
-  _dumpPool(pool) {
-    dumpn("/-------------------- dumping pool:");
-    dumpn(
-      "--------------------- actorPool actors: " +
-        uneval(Object.keys(pool._actors))
-    );
+  dumpPools() {
+    const output = [];
+    const dumpedPools = new Set();
+
+    this._extraPools.forEach(pool => this.dumpPool(pool, output, dumpedPools));
+
+    return output;
   },
 
   /**
