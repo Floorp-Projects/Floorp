@@ -79,7 +79,6 @@ WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
     : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
-      mTaskQueueEventTarget(mTaskQueue->WrapAsEventTarget()),
       mFactory(new PEMFactory()),
       // Use the same lower and upper bound as h264_video_toolbox_encoder which
       // is an encoder from webrtc's upstream codebase.
@@ -158,28 +157,24 @@ bool WebrtcMediaDataEncoder::InitEncoder() {
 
 int32_t WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* aCallback) {
-  mTaskQueueEventTarget->Dispatch(
-      NS_NewRunnableFunction(
-          "WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback",
-          [self = RefPtr<WebrtcMediaDataEncoder>(this), aCallback]() {
-            self->mCallback = aCallback;
-          }),
-      nsISerialEventTarget::DISPATCH_SYNC);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback",
+      [self = RefPtr<WebrtcMediaDataEncoder>(this), aCallback]() {
+        self->mCallback = aCallback;
+      }));
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcMediaDataEncoder::Shutdown() {
   LOG("Release encoder");
-  mTaskQueueEventTarget->Dispatch(
-      NS_NewRunnableFunction(
-          "WebrtcMediaDataEncoder::Shutdown",
-          [self = RefPtr<WebrtcMediaDataEncoder>(this),
-           encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
-            self->mCallback = nullptr;
-            self->mError = NS_OK;
-            encoder->Shutdown();
-          }),
-      nsISerialEventTarget::DISPATCH_SYNC);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "WebrtcMediaDataEncoder::Shutdown",
+      [self = RefPtr<WebrtcMediaDataEncoder>(this),
+       encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
+        self->mCallback = nullptr;
+        self->mError = NS_OK;
+        encoder->Shutdown();
+      }));
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
