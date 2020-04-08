@@ -10,6 +10,7 @@ use std::ffi::{c_void, CStr, CString};
 use std::io;
 use std::net;
 use std::os::raw::c_char;
+use std::panic;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
@@ -614,8 +615,12 @@ pub unsafe extern "C" fn mdns_service_unregister_hostname(
 
 #[no_mangle]
 pub extern "C" fn mdns_service_generate_uuid() -> *const c_char {
-    let uuid = Uuid::new_v4().to_hyphenated().to_string();
-    match CString::new(uuid) {
+    let uuid = match panic::catch_unwind(|| Uuid::new_v4()) {
+        Ok(uuid) => uuid,
+        Err(_) => Uuid::nil(),
+    };
+
+    match CString::new(uuid.to_hyphenated().to_string()) {
         Ok(uuid) => uuid.into_raw(),
         Err(_) => unreachable!(), // UUID should not contain 0 byte
     }
