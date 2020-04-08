@@ -15,7 +15,7 @@ rev = "e3c3388e6632cf55e08d773b32e58b1cab9b2731"
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
-tag = "v0.2.3"
+tag = "v0.2.4"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"

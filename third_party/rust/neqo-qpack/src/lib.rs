@@ -5,7 +5,11 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::use_self)]
+#![warn(clippy::pedantic)]
+// This is because of Encoder and Decoder structs. TODO: think about a better namings for crate and structs.
+#![allow(clippy::module_name_repetitions)]
+// We need this because of TransportError.
+#![allow(clippy::pub_enum_variant_names)]
 
 pub mod decoder;
 mod decoder_instructions;
@@ -39,25 +43,32 @@ impl ::std::fmt::Display for QPackSide {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     DecompressionFailed,
-    EncoderStreamError,
-    DecoderStreamError,
+    EncoderStream,
+    DecoderStream,
     ClosedCriticalStream,
 
     // These are internal errors, they will be transfromed into one of the above.
-    HeaderLookupError,
+    HeaderLookup,
     NoMoreData,
     IntegerOverflow,
     WrongStreamCount,
-    InternalError,
-    DecodingError, // this will be translated into Encoder/DecoderStreamError or DecompressionFailed depending on the caller
+    Internal,
+    Decoding, // this will be translated into Encoder/DecoderStreamError or DecompressionFailed depending on the caller
 
     TransportError(neqo_transport::Error),
 }
 
 impl Error {
+    #[must_use]
     pub fn code(&self) -> neqo_transport::AppError {
-        // TODO(mt): use real codes once QPACK defines some.
-        3
+        match self {
+            Self::DecompressionFailed => 0x200,
+            Self::EncoderStream => 0x201,
+            Self::DecoderStream => 0x202,
+            Self::ClosedCriticalStream => 0x104,
+            // These are all internal errors.
+            _ => 3,
+        }
     }
 }
 

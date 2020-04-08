@@ -27,7 +27,7 @@ impl ::std::fmt::Display for Http3ServerHandler {
 }
 
 impl Http3ServerHandler {
-    pub fn new(max_table_size: u32, max_blocked_streams: u16) -> Self {
+    pub fn new(max_table_size: u64, max_blocked_streams: u16) -> Self {
         Self {
             base_handler: Http3Connection::new(max_table_size, max_blocked_streams),
             events: Http3ServerConnEvents::default(),

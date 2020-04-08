@@ -4,6 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[derive(Copy, Clone)]
 pub struct Prefix {
     prefix: u8,
     len: u8,
@@ -29,15 +30,15 @@ impl Prefix {
         }
     }
 
-    pub fn len(&self) -> u8 {
+    pub fn len(self) -> u8 {
         self.len
     }
 
-    pub fn prefix(&self) -> u8 {
+    pub fn prefix(self) -> u8 {
         self.prefix
     }
 
-    pub fn cmp_prefix(&self, b: u8) -> bool {
+    pub fn cmp_prefix(self, b: u8) -> bool {
         (b & self.mask) == self.prefix
     }
 }

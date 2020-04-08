@@ -22,7 +22,7 @@ type HandlerRef = Rc<RefCell<Http3ServerHandler>>;
 
 pub struct Http3Server {
     server: Server,
-    max_table_size: u32,
+    max_table_size: u64,
     max_blocked_streams: u16,
     http3_handlers: HashMap<ActiveConnectionRef, HandlerRef>,
     events: Http3ServerEvents,
@@ -41,7 +41,7 @@ impl Http3Server {
         protocols: &[impl AsRef<str>],
         anti_replay: AntiReplay,
         cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
-        max_table_size: u32,
+        max_table_size: u64,
         max_blocked_streams: u16,
     ) -> Res<Self> {
         Ok(Self {

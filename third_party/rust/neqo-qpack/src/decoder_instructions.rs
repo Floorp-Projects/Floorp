@@ -99,7 +99,7 @@ impl DecoderInstructionReader {
                     }
                     Err(Error::NoMoreData) => break Ok(None),
                     Err(Error::ClosedCriticalStream) => break Err(Error::ClosedCriticalStream),
-                    _ => break Err(Error::DecoderStreamError),
+                    _ => break Err(Error::DecoderStream),
                 },
                 DecoderInstructionReaderState::ReadInt { reader } => match reader.read(recv) {
                     Ok(Some(val)) => {
@@ -120,7 +120,7 @@ impl DecoderInstructionReader {
                     }
                     Ok(None) => break Ok(None),
                     Err(Error::ClosedCriticalStream) => break Err(Error::ClosedCriticalStream),
-                    Err(_) => break Err(Error::DecoderStreamError),
+                    Err(_) => break Err(Error::DecoderStream),
                 },
             }
         }
@@ -130,7 +130,7 @@ impl DecoderInstructionReader {
 #[cfg(test)]
 mod test {
 
-    use super::*;
+    use super::{DecoderInstruction, DecoderInstructionReader, Error, QPData};
     use crate::reader::test_receiver::TestReceiver;
 
     fn test_encoding_decoding(instruction: DecoderInstruction) {
@@ -203,7 +203,7 @@ mod test {
         let mut decoder = DecoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
-            Err(Error::DecoderStreamError)
+            Err(Error::DecoderStream)
         );
 
         let mut test_receiver: TestReceiver = TestReceiver::default();
@@ -214,7 +214,7 @@ mod test {
         let mut decoder = DecoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
-            Err(Error::DecoderStreamError)
+            Err(Error::DecoderStream)
         );
 
         let mut test_receiver: TestReceiver = TestReceiver::default();
@@ -225,7 +225,7 @@ mod test {
         let mut decoder = DecoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
-            Err(Error::DecoderStreamError)
+            Err(Error::DecoderStream)
         );
     }
 }

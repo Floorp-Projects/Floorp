@@ -108,50 +108,50 @@ impl HeaderTable {
     pub fn set_capacity(&mut self, cap: u64) -> Res<()> {
         qtrace!([self], "set capacity to {}", cap);
         if !self.evict_to(cap) {
-            return Err(Error::InternalError);
+            return Err(Error::Internal);
         }
         self.capacity = cap;
         Ok(())
     }
 
-    pub fn get_static(&self, index: u64) -> Res<&StaticTableEntry> {
-        if index > HEADER_STATIC_TABLE.len() as u64 {
-            return Err(Error::HeaderLookupError);
+    pub fn get_static(index: u64) -> Res<&'static StaticTableEntry> {
+        let inx = usize::try_from(index).or(Err(Error::HeaderLookup))?;
+        if inx > HEADER_STATIC_TABLE.len() {
+            return Err(Error::HeaderLookup);
         }
-        let res = &HEADER_STATIC_TABLE[index as usize];
-        Ok(res)
+        Ok(&HEADER_STATIC_TABLE[inx])
     }
 
     fn get_dynamic_with_abs_index(&mut self, index: u64) -> Res<&mut DynamicTableEntry> {
         if self.base <= index {
             debug_assert!(false, "This is an iternal error");
-            return Err(Error::InternalError);
+            return Err(Error::Internal);
         }
         let inx = self.base - index - 1;
-        let inx = usize::try_from(inx).or(Err(Error::HeaderLookupError))?;
+        let inx = usize::try_from(inx).or(Err(Error::HeaderLookup))?;
         if inx >= self.dynamic.len() {
-            return Err(Error::HeaderLookupError);
+            return Err(Error::HeaderLookup);
         }
         Ok(&mut self.dynamic[inx])
     }
 
     fn get_dynamic_with_relative_index(&self, index: u64) -> Res<&DynamicTableEntry> {
-        let inx = usize::try_from(index).or(Err(Error::HeaderLookupError))?;
+        let inx = usize::try_from(index).or(Err(Error::HeaderLookup))?;
         if inx >= self.dynamic.len() {
-            return Err(Error::HeaderLookupError);
+            return Err(Error::HeaderLookup);
         }
         Ok(&self.dynamic[inx])
     }
 
     pub fn get_dynamic(&self, index: u64, base: u64, post: bool) -> Res<&DynamicTableEntry> {
         if self.base < base {
-            return Err(Error::HeaderLookupError);
+            return Err(Error::HeaderLookup);
         }
         let inx: u64;
         let base_rel = self.base - base;
         if post {
             if base_rel <= index {
-                return Err(Error::HeaderLookupError);
+                return Err(Error::HeaderLookup);
             }
             inx = base_rel - index - 1;
         } else {
@@ -204,7 +204,7 @@ impl HeaderTable {
             }
         }
 
-        for iter in self.dynamic.iter_mut() {
+        for iter in &mut self.dynamic {
             if !can_block && iter.index() >= self.acked_inserts_cnt {
                 continue;
             }
@@ -260,8 +260,8 @@ impl HeaderTable {
         };
         if entry.size() > self.capacity || !self.evict_to(self.capacity - entry.size()) {
             match self.qpack_side {
-                QPackSide::Encoder => return Err(Error::EncoderStreamError),
-                QPackSide::Decoder => return Err(Error::DecoderStreamError),
+                QPackSide::Encoder => return Err(Error::EncoderStream),
+                QPackSide::Decoder => return Err(Error::DecoderStream),
             }
         }
         self.base += 1;
@@ -289,7 +289,7 @@ impl HeaderTable {
             value
         );
         let name = if name_static_table {
-            self.get_static(name_index)?.name().to_vec()
+            HeaderTable::get_static(name_index)?.name().to_vec()
         } else {
             self.get_dynamic(name_index, self.base, false)?
                 .name()
@@ -318,7 +318,7 @@ impl HeaderTable {
         qtrace!([self], "increment acked by {}", increment);
         self.acked_inserts_cnt += increment;
         if self.base < self.acked_inserts_cnt {
-            return Err(Error::InternalError);
+            return Err(Error::Internal);
         }
         Ok(())
     }

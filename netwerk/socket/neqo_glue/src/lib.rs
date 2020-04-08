@@ -36,7 +36,7 @@ impl NeqoHttp3Conn {
         alpn: &nsACString,
         local_addr: &nsACString,
         remote_addr: &nsACString,
-        max_table_size: u32,
+        max_table_size: u64,
         max_blocked_streams: u16,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
@@ -117,7 +117,7 @@ pub extern "C" fn neqo_http3conn_new(
     alpn: &nsACString,
     local_addr: &nsACString,
     remote_addr: &nsACString,
-    max_table_size: u32,
+    max_table_size: u64,
     max_blocked_streams: u16,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
