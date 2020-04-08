@@ -764,6 +764,12 @@ class MOZ_RAII PEHeaders final {
 
   void SetImportDirectoryTampered() { mIsImportDirectoryTampered = true; }
 
+  FARPROC GetEntryPoint() const {
+    // Use the unchecked version because the entrypoint may be tampered.
+    return RVAToPtrUnchecked<FARPROC>(
+        mPeHeader->OptionalHeader.AddressOfEntryPoint);
+  }
+
  private:
   enum class BoundsCheckPolicy { Default, Skip };
 
