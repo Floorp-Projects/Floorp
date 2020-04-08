@@ -257,13 +257,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
 
   // Triggers a load in the process which currently owns this BrowsingContext.
-  // aAccessor is the context which initiated the load, and may be null only for
-  // in-process BrowsingContexts.
-  nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState,
-                   bool aSetNavigating = false);
+  nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
 
-  nsresult InternalLoad(BrowsingContext* aAccessor,
-                        nsDocShellLoadState* aLoadState,
+  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   // If the load state includes a source BrowsingContext has been passed, check
