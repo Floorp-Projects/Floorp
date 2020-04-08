@@ -339,7 +339,7 @@ struct ServiceWorkerManager::RegistrationDataPerPrincipal final {
     }
 
     void RemoveScope(const nsACString& aScope) {
-      MOZ_ALWAYS_TRUE(RemoveElement(aScope));
+      MOZ_DIAGNOSTIC_ALWAYS_TRUE(RemoveElement(aScope));
     }
 
     // Implements most of "Match Service Worker Registration":
