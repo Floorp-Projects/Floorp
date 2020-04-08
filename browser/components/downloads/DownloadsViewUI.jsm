@@ -11,10 +11,6 @@
 
 var EXPORTED_SYMBOLS = ["DownloadsViewUI"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -47,10 +43,7 @@ var gDownloadElementButtons = {
   },
   show: {
     commandName: "downloadsCmd_show",
-    l10nId:
-      AppConstants.platform == "macosx"
-        ? "downloads-cmd-show-mac"
-        : "downloads-cmd-show",
+    l10nId: "downloads-cmd-show-button",
     descriptionL10nId: "downloads-cmd-show-description",
     panelL10nId: "downloads-cmd-show-panel",
     iconClass: "downloadIconShow",
