@@ -391,29 +391,34 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 bool WarpBuilder::buildEnvironmentChain() {
   const WarpEnvironment& env = snapshot_.script()->environment();
 
-  MInstruction* envDef = nullptr;
-  switch (env.kind()) {
-    case WarpEnvironment::Kind::None:
-      // Leave the slot |undefined|, nothing to do.
-      return true;
-    case WarpEnvironment::Kind::ConstantObject:
-      envDef = constant(ObjectValue(*env.constantObject()));
-      break;
-    case WarpEnvironment::Kind::Function: {
-      MDefinition* callee = getCallee();
-      envDef = MFunctionEnvironment::New(alloc(), callee);
-      current->add(envDef);
-      if (LexicalEnvironmentObject* obj = env.maybeNamedLambdaTemplate()) {
-        envDef = buildNamedLambdaEnv(callee, envDef, obj);
-      }
-      if (CallObject* obj = env.maybeCallObjectTemplate()) {
-        envDef = buildCallObject(callee, envDef, obj);
-        if (!envDef) {
-          return false;
+  if (env.is<NoEnvironment>()) {
+    return true;
+  }
+
+  MInstruction* envDef = env.match(
+      [](const NoEnvironment&) -> MInstruction* {
+        MOZ_CRASH("Already handled");
+      },
+      [this](JSObject* obj) -> MInstruction* {
+        return constant(ObjectValue(*obj));
+      },
+      [this](const FunctionEnvironment& env) -> MInstruction* {
+        MDefinition* callee = getCallee();
+        MInstruction* envDef = MFunctionEnvironment::New(alloc(), callee);
+        current->add(envDef);
+        if (LexicalEnvironmentObject* obj = env.namedLambdaTemplate) {
+          envDef = buildNamedLambdaEnv(callee, envDef, obj);
         }
-      }
-      break;
-    }
+        if (CallObject* obj = env.callObjectTemplate) {
+          envDef = buildCallObject(callee, envDef, obj);
+          if (!envDef) {
+            return nullptr;
+          }
+        }
+        return envDef;
+      });
+  if (!envDef) {
+    return false;
   }
 
   // Update the environment slot from UndefinedValue only after the initial
