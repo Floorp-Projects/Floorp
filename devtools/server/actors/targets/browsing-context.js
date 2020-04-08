@@ -698,7 +698,7 @@ const browsingContextTargetPrototype = {
     return this.ensureWorkerTargetActorList()
       .getList()
       .then(actors => {
-        const pool = new Pool(this.conn);
+        const pool = new Pool(this.conn, "worker-targets");
         for (const actor of actors) {
           pool.manage(actor);
         }

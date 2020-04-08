@@ -116,6 +116,10 @@ const threadSpec = generateActorSpec({
       request: {},
       response: RetVal("json"),
     },
+    dumpPools: {
+      request: {},
+      response: RetVal("json"),
+    },
     setBreakpoint: {
       request: {
         location: Arg(0, "json"),
