@@ -124,10 +124,10 @@ class nsWindow final : public nsBaseWidget {
 
   // nsIWidget
   using nsBaseWidget::Create;  // for Create signature not overridden here
-  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
-                                       nsNativeWidget aNativeParent,
-                                       const LayoutDeviceIntRect& aRect,
-                                       nsWidgetInitData* aInitData) override;
+  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
+                                        nsNativeWidget aNativeParent,
+                                        const LayoutDeviceIntRect& aRect,
+                                        nsWidgetInitData* aInitData) override;
   virtual void Destroy() override;
   virtual nsIWidget* GetParent() override;
   virtual float GetDPI() override;
@@ -170,7 +170,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void CaptureMouse(bool aCapture) override;
   virtual void CaptureRollupEvents(nsIRollupListener* aListener,
                                    bool aDoCapture) override;
-  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
+  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override;
   virtual nsresult SetWindowClipRegion(
       const nsTArray<LayoutDeviceIntRect>& aRects,
       bool aIntersectWithExisting) override;
@@ -288,9 +288,9 @@ class nsWindow final : public nsBaseWidget {
 
   static guint32 sLastButtonPressTime;
 
-  virtual MOZ_MUST_USE nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                                int32_t aHorizontal,
-                                                int32_t aVertical) override;
+  [[nodiscard]] virtual nsresult BeginResizeDrag(
+      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
+      int32_t aVertical) override;
 
   MozContainer* GetMozContainer() { return mContainer; }
   LayoutDeviceIntRect GetMozContainerSize();
