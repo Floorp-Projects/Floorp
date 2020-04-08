@@ -74,7 +74,7 @@ class nsILineIterator {
   // appropriately.
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                          nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
-                         bool* aPosIsAfterLastFrame) = 0;
+                         bool* aPosIsAfterLastFrame) const = 0;
 
   // Give the line iterator implementor a chance todo something more complicated
   // than nsIFrame::GetNextSibling()
