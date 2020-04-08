@@ -122,8 +122,8 @@ class HeadlessWidget : public nsBaseWidget {
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 
-  virtual MOZ_MUST_USE nsresult
-  AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) override;
+  [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
+      WidgetKeyboardEvent& aEvent) override;
   virtual bool GetEditCommands(NativeKeyBindingsType aType,
                                const WidgetKeyboardEvent& aEvent,
                                nsTArray<CommandInt>& aCommands) override;
