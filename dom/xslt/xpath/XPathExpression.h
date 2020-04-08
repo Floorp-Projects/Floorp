@@ -21,6 +21,7 @@ class txResultRecycler;
 namespace mozilla {
 namespace dom {
 
+class Document;
 class XPathResult;
 
 /**

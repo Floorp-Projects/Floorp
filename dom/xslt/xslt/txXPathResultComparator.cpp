@@ -7,6 +7,7 @@
 
 #include "txXPathResultComparator.h"
 #include "txExpr.h"
+#include "nsComponentManagerUtils.h"
 #include "txCore.h"
 #include "nsCollationCID.h"
 

@@ -38,6 +38,7 @@
 #include "ReferrerInfo.h"
 
 using namespace mozilla;
+using mozilla::dom::Document;
 using mozilla::dom::ReferrerPolicy;
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -553,7 +554,7 @@ nsresult txSyncCompileObserver::loadURI(const nsAString& aUri,
   if (mProcessor) {
     source = mProcessor->GetSourceContentModel();
   }
-  nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
+  dom::nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
   nsCOMPtr<Document> document;
 
   rv = nsSyncLoadService::LoadDocument(
