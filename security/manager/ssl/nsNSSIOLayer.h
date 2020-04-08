@@ -69,7 +69,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   NS_IMETHOD GetEsniTxt(nsACString& aEsniTxt) override;
   NS_IMETHOD SetEsniTxt(const nsACString& aEsniTxt) override;
   NS_IMETHOD GetPeerId(nsACString& aResult) override;
-  NS_IMETHOD SetResumptionTokenFromExternalCache() override;
 
   PRStatus CloseSocketAndDestroy();
 
@@ -159,6 +158,8 @@ class nsNSSSocketInfo final : public CommonSocketControl {
 #endif
 
   void SetSharedOwningReference(mozilla::psm::SharedSSLState* ref);
+
+  nsresult SetResumptionTokenFromExternalCache();
 
  protected:
   virtual ~nsNSSSocketInfo();

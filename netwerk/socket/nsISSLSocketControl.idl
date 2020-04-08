@@ -71,10 +71,6 @@ interface nsISSLSocketControl : nsISupports {
      */
     boolean isAcceptableForHost(in ACString hostname);
 
-    /* Read the resumption token from SSLTokansCache and set it to the socket.
-     */
-    [noscript] void setResumptionTokenFromExternalCache();
-
     /* The Key Exchange Algorithm is used when determining whether or
        not HTTP/2 can be used.
 

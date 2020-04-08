@@ -737,7 +737,6 @@ nsSocketTransport::nsSocketTransport()
       mFastOpenStatus(TFO_NOT_SET),
       mFirstRetryError(NS_OK),
       mDoNotRetryToConnect(false),
-      mSSLCallbackSet(false),
       mUsingQuic(false) {
   this->mNetAddr.raw.family = 0;
   this->mNetAddr.inet = {};
@@ -1278,36 +1277,6 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
   return rv;
 }
 
-// static
-SECStatus nsSocketTransport::StoreResumptionToken(
-    PRFileDesc* fd, const PRUint8* resumptionToken, unsigned int len,
-    void* ctx) {
-  PRIntn val;
-  if (SSL_OptionGet(fd, SSL_ENABLE_SESSION_TICKETS, &val) != SECSuccess ||
-      val == 0) {
-    return SECFailure;
-  }
-
-  nsCOMPtr<nsISSLSocketControl> secCtrl =
-      do_QueryInterface(static_cast<nsSocketTransport*>(ctx)->mSecInfo);
-  if (!secCtrl) {
-    return SECFailure;
-  }
-  nsAutoCString peerId;
-  secCtrl->GetPeerId(peerId);
-
-  nsCOMPtr<nsITransportSecurityInfo> secInfo = do_QueryInterface(secCtrl);
-  if (!secInfo) {
-    return SECFailure;
-  }
-
-  if (NS_FAILED(SSLTokensCache::Put(peerId, resumptionToken, len, secInfo))) {
-    return SECFailure;
-  }
-
-  return SECSuccess;
-}
-
 nsresult nsSocketTransport::InitiateSocket() {
   SOCKET_LOG(("nsSocketTransport::InitiateSocket [this=%p]\n", this));
 
@@ -1620,19 +1589,6 @@ nsresult nsSocketTransport::InitiateSocket() {
            "started [this=%p]\n",
            this));
     }
-  }
-
-  nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
-  if (usingSSL && secCtrl && SSLTokensCache::IsEnabled()) {
-    rv = secCtrl->SetResumptionTokenFromExternalCache();
-    if (NS_FAILED(rv)) {
-      SOCKET_LOG(("SetResumptionTokenFromExternalCache failed [rv=%" PRIx32
-                  "]\n",
-                  static_cast<uint32_t>(rv)));
-      return rv;
-    }
-    SSL_SetResumptionTokenCallback(fd, &StoreResumptionToken, this);
-    mSSLCallbackSet = true;
   }
 
   bool connectCalled = true;  // This is only needed for telemetry.
@@ -2121,11 +2077,6 @@ void nsSocketTransport::ReleaseFD_Locked(PRFileDesc* fd) {
   NS_ASSERTION(mFD == fd, "wrong fd");
 
   if (--mFDref == 0) {
-    if (mSSLCallbackSet) {
-      SSL_SetResumptionTokenCallback(fd, nullptr, nullptr);
-      mSSLCallbackSet = false;
-    }
-
     if (gIOService->IsNetTearingDown() &&
         ((PR_IntervalNow() - gIOService->NetTearingDownStarted()) >
          gSocketTransportService->MaxTimeForPrClosePref())) {
