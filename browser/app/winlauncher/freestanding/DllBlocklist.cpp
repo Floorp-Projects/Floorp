@@ -158,7 +158,8 @@ enum class BlockAction {
   Deny,
 };
 
-static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
+static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
+                                  const mozilla::nt::PEHeaders& aHeaders,
                                   uint64_t& aVersion) {
   aVersion = DllBlockInfo::ALL_VERSIONS;
 
@@ -195,14 +196,13 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
     return BlockAction::Deny;
   }
 
-  mozilla::nt::PEHeaders headers(aBaseAddress);
-  if (!headers) {
+  if (!aHeaders) {
     return BlockAction::Error;
   }
 
   if (aInfo->mFlags & DllBlockInfo::USE_TIMESTAMP) {
     DWORD timestamp;
-    if (!headers.GetTimeStamp(timestamp)) {
+    if (!aHeaders.GetTimeStamp(timestamp)) {
       return BlockAction::Error;
     }
 
@@ -215,7 +215,7 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
 
   // Else we try to get the file version information. Note that we don't have
   // access to GetFileVersionInfo* APIs.
-  if (!headers.GetVersionInfo(aVersion)) {
+  if (!aHeaders.GetVersionInfo(aVersion)) {
     return BlockAction::Error;
   }
 
@@ -257,8 +257,9 @@ static BlockAction IsDllAllowed(const UNICODE_STRING& aLeafName,
 
   const DllBlockInfo& entry = info[match];
 
+  mozilla::nt::PEHeaders headers(aBaseAddress);
   uint64_t version;
-  BlockAction checkResult = CheckBlockInfo(&entry, aBaseAddress, version);
+  BlockAction checkResult = CheckBlockInfo(&entry, headers, version);
   if (checkResult != BlockAction::Allow) {
     gBlockSet.Add(entry.mName, version);
   }
