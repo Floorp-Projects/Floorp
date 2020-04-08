@@ -101,13 +101,15 @@ add_task(async () => {
   );
 
   // Test multiple tab selections.
-  // First, focus on current tab.
-  evt = waitForMacEvent(
-    "AXFocusedUIElementChanged",
-    iface => iface.getAttributeValue("AXRole") == "AXRadioButton"
-  );
-  gBrowser.selectedTab.focus();
-  await evt;
+  // First, focus on current tab. If it isn't already focused.
+  if (gBrowser.ownerDocument.activeElement != gBrowser.selectedTab) {
+    evt = waitForMacEvent(
+      "AXFocusedUIElementChanged",
+      iface => iface.getAttributeValue("AXRole") == "AXRadioButton"
+    );
+    gBrowser.selectedTab.focus();
+    await evt;
+  }
 
   // Next, move focus left to nearby tab.
   evt = waitForMacEvent(
