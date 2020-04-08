@@ -10,7 +10,6 @@
 #include <functional>
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/ipc/Shmem.h"
 #include "base/process.h"
 #include "nsExceptionHandler.h"
 #include "nsThreadUtils.h"
@@ -20,16 +19,14 @@ namespace mozilla {
 namespace ipc {
 
 // This is the newer replacement for CrashReporterParent. It is created in
-// response to a InitCrashReporter message on a top-level actor, and simply
-// holds the metadata shmem alive until the process ends. When the process
-// terminates abnormally, the top-level should call GenerateCrashReport to
-// automatically integrate metadata.
+// response to a InitCrashReporter message on a top-level actor. When the
+// process terminates abnormally, the top-level should call GenerateCrashReport
+// to automatically integrate metadata.
 class CrashReporterHost {
-  typedef mozilla::ipc::Shmem Shmem;
   typedef CrashReporter::AnnotationTable AnnotationTable;
 
  public:
-  CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem,
+  CrashReporterHost(GeckoProcessType aProcessType,
                     CrashReporter::ThreadId aThreadId);
 
   // Helper function for generating a crash report for a process that probably
@@ -121,7 +118,6 @@ class CrashReporterHost {
 
  private:
   GeckoProcessType mProcessType;
-  Shmem mShmem;
   CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
   AnnotationTable mExtraAnnotations;
