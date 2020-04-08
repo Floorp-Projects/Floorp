@@ -198,19 +198,6 @@
   customElements.define("treechildren", MozTreeChildren);
 
   class MozTreecolPicker extends MozElements.BaseControl {
-    static get entities() {
-      return ["chrome://global/locale/tree.dtd"];
-    }
-
-    static get markup() {
-      return `
-      <image class="tree-columnpicker-icon"></image>
-      <menupopup anonid="popup">
-        <menuseparator anonid="menuseparator"></menuseparator>
-        <menuitem anonid="menuitem" label="&restoreColumnOrder.label;"></menuitem>
-      </menupopup>
-      `;
-    }
     constructor() {
       super();
 
@@ -248,7 +235,18 @@
       }
 
       this.textContent = "";
-      this.appendChild(this.constructor.fragment);
+      this.appendChild(
+        MozXULElement.parseXULToFragment(
+          `
+        <image class="tree-columnpicker-icon"></image>
+        <menupopup anonid="popup">
+          <menuseparator anonid="menuseparator"></menuseparator>
+          <menuitem anonid="menuitem" label="&restoreColumnOrder.label;"></menuitem>
+        </menupopup>
+      `,
+          ["chrome://global/locale/tree.dtd"]
+        )
+      );
     }
 
     buildPopup(aPopup) {
@@ -310,11 +308,11 @@
       };
     }
 
-    static get markup() {
-      return `
+    get content() {
+      return MozXULElement.parseXULToFragment(`
         <label class="treecol-text" flex="1" crop="right"></label>
         <image class="treecol-sortdirection"></image>
-      `;
+    `);
     }
 
     constructor() {
@@ -375,7 +373,7 @@
       }
 
       this.textContent = "";
-      this.appendChild(this.constructor.fragment);
+      this.appendChild(this.content);
       this.initializeAttributeInheritance();
       if (this.hasAttribute("ordinal")) {
         this.style.MozBoxOrdinalGroup = this.getAttribute("ordinal");
@@ -561,12 +559,6 @@
       };
     }
 
-    static get markup() {
-      return `
-      <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
-      `;
-    }
-
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;
@@ -575,7 +567,11 @@
       this.setAttribute("slot", "treecols");
 
       if (!this.querySelector("treecolpicker")) {
-        this.appendChild(this.constructor.fragment);
+        this.appendChild(
+          MozXULElement.parseXULToFragment(`
+          <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
+        `)
+        );
         this.initializeAttributeInheritance();
       }
 
@@ -594,28 +590,6 @@
   class MozTree extends MozElements.BaseControlMixin(
     MozElements.MozElementMixin(XULTreeElement)
   ) {
-    static get markup() {
-      return `
-      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
-      <html:slot name="treecols"></html:slot>
-      <stack class="tree-stack" flex="1">
-        <hbox class="tree-rows" flex="1">
-          <hbox flex="1" class="tree-bodybox">
-            <html:slot name="treechildren"></html:slot>
-          </hbox>
-          <scrollbar height="0" minwidth="0" minheight="0" orient="vertical"
-                     class="hidevscroll-scrollbar scrollbar-topmost"
-                     ></scrollbar>
-        </hbox>
-        <html:input class="tree-input" type="text" hidden="true"/>
-      </stack>
-      <hbox class="hidehscroll-box">
-        <scrollbar orient="horizontal" flex="1" increment="16" class="scrollbar-topmost" ></scrollbar>
-        <scrollcorner class="hidevscroll-scrollcorner"></scrollcorner>
-      </hbox>
-      `;
-    }
-
     constructor() {
       super();
 
@@ -625,9 +599,26 @@
       this.NATURAL_ORDER = 1; // The original order, which is the DOM ordering
 
       this.attachShadow({ mode: "open" });
-      let handledElements = this.constructor.fragment.querySelectorAll(
-        "scrollbar,scrollcorner"
-      );
+      let fragment = MozXULElement.parseXULToFragment(`
+        <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+        <html:slot name="treecols"></html:slot>
+        <stack class="tree-stack" flex="1">
+          <hbox class="tree-rows" flex="1">
+            <hbox flex="1" class="tree-bodybox">
+              <html:slot name="treechildren"></html:slot>
+            </hbox>
+            <scrollbar height="0" minwidth="0" minheight="0" orient="vertical"
+                       class="hidevscroll-scrollbar scrollbar-topmost"
+                       ></scrollbar>
+          </hbox>
+          <html:input class="tree-input" type="text" hidden="true"/>
+        </stack>
+        <hbox class="hidehscroll-box">
+          <scrollbar orient="horizontal" flex="1" increment="16" class="scrollbar-topmost" ></scrollbar>
+          <scrollcorner class="hidevscroll-scrollcorner"></scrollcorner>
+        </hbox>
+      `);
+      let handledElements = fragment.querySelectorAll("scrollbar,scrollcorner");
       let stopAndPrevent = e => {
         e.stopPropagation();
         e.preventDefault();
@@ -639,7 +630,7 @@
         el.addEventListener("dblclick", stopProp);
         el.addEventListener("command", stopProp);
       }
-      this.shadowRoot.appendChild(this.constructor.fragment);
+      this.shadowRoot.appendChild(fragment);
     }
 
     static get inheritedAttributes() {
