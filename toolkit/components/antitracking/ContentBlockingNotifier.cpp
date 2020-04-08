@@ -181,7 +181,7 @@ void NotifyAllowDecision(nsIChannel* aTrackingChannel, nsIURI* aURI) {
 
   // Now send the generic "cookies loaded" notifications, from the most generic
   // to the most specific.
-  ContentBlockingNotifier::OnEvent(aTrackingChannel, aTrackingChannel, false,
+  ContentBlockingNotifier::OnEvent(aTrackingChannel, false,
                                    nsIWebProgressListener::STATE_COOKIES_LOADED,
                                    trackingOrigin);
 
@@ -196,14 +196,14 @@ void NotifyAllowDecision(nsIChannel* aTrackingChannel, nsIURI* aURI) {
   if (classificationFlags &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
     ContentBlockingNotifier::OnEvent(
-        aTrackingChannel, aTrackingChannel, false,
+        aTrackingChannel, false,
         nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, trackingOrigin);
   }
 
   if (classificationFlags &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
     ContentBlockingNotifier::OnEvent(
-        aTrackingChannel, aTrackingChannel, false,
+        aTrackingChannel, false,
         nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
         trackingOrigin);
   }
@@ -249,8 +249,8 @@ void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
   }
 
   if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
-    ContentBlockingNotifier::OnEvent(aTrackingChannel, aTrackingChannel, true,
-                                     aRejectedReason, trackingOrigin);
+    ContentBlockingNotifier::OnEvent(aTrackingChannel, true, aRejectedReason,
+                                     trackingOrigin);
 
     ReportBlockingToConsole(aTrackingChannel, aURI, aRejectedReason);
   }
@@ -261,15 +261,15 @@ void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
 // Send a message to notify OnContentBlockingEvent in the parent, which will
 // update the ContentBlockingLog in the parent.
 void NotifyEventInChild(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel, bool aBlocked,
-    uint32_t aRejectedReason, const nsACString& aTrackingOrigin,
+    nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
+    const nsACString& aTrackingOrigin,
     const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // We don't need to find the top-level window here because the
   // parent will do that for us.
   nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(aReportingChannel, loadContext);
+  NS_QueryNotificationCallbacks(aTrackingChannel, loadContext);
   if (!loadContext) {
     return;
   }
@@ -292,20 +292,20 @@ void NotifyEventInChild(
         trackingFullHashes);
   }
 
-  browserChild->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel,
+  browserChild->NotifyContentBlockingEvent(aRejectedReason, aTrackingChannel,
                                            aBlocked, aTrackingOrigin,
                                            trackingFullHashes, aReason);
 }
 
 // Update the ContentBlockingLog of the top-level WindowGlobalParent of
-// the reporting channel.
+// the tracking channel.
 void NotifyEventInParent(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel, bool aBlocked,
-    uint32_t aRejectedReason, const nsACString& aTrackingOrigin,
+    nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
+    const nsACString& aTrackingOrigin,
     const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aReportingChannel->LoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aTrackingChannel->LoadInfo();
   RefPtr<dom::BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
@@ -327,7 +327,7 @@ void NotifyEventInParent(
         trackingFullHashes);
   }
 
-  wgp->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel, aBlocked,
+  wgp->NotifyContentBlockingEvent(aRejectedReason, aTrackingChannel, aBlocked,
                                   aTrackingOrigin, trackingFullHashes, aReason);
 }
 
@@ -447,38 +447,42 @@ void ContentBlockingNotifier::OnDecision(nsPIDOMWindowInner* aWindow,
   }
 
   nsIChannel* channel = document->GetChannel();
+  if (!channel) {
+    return;
+  }
+
   nsIURI* uri = document->GetDocumentURI();
 
   NotifyBlockingDecision(channel, aDecision, aRejectedReason, uri);
 }
 
 /* static */
-void ContentBlockingNotifier::OnEvent(nsIChannel* aChannel,
+void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
                                       uint32_t aRejectedReason) {
-  MOZ_ASSERT(XRE_IsParentProcess() && aChannel);
+  MOZ_ASSERT(XRE_IsParentProcess() && aTrackingChannel);
 
   nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
+  aTrackingChannel->GetURI(getter_AddRefs(uri));
 
   nsAutoCString trackingOrigin;
   if (uri) {
     Unused << nsContentUtils::GetASCIIOrigin(uri, trackingOrigin);
   }
 
-  return ContentBlockingNotifier::OnEvent(aChannel, aChannel, true,
+  return ContentBlockingNotifier::OnEvent(aTrackingChannel, true,
                                           aRejectedReason, trackingOrigin);
 }
 
 /* static */
 void ContentBlockingNotifier::OnEvent(
-    nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel, bool aBlocked,
-    uint32_t aRejectedReason, const nsACString& aTrackingOrigin,
+    nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
+    const nsACString& aTrackingOrigin,
     const Maybe<StorageAccessGrantedReason>& aReason) {
   if (XRE_IsParentProcess()) {
-    NotifyEventInParent(aReportingChannel, aTrackingChannel, aBlocked,
-                        aRejectedReason, aTrackingOrigin, aReason);
+    NotifyEventInParent(aTrackingChannel, aBlocked, aRejectedReason,
+                        aTrackingOrigin, aReason);
   } else {
-    NotifyEventInChild(aReportingChannel, aTrackingChannel, aBlocked,
-                       aRejectedReason, aTrackingOrigin, aReason);
+    NotifyEventInChild(aTrackingChannel, aBlocked, aRejectedReason,
+                       aTrackingOrigin, aReason);
   }
 }
