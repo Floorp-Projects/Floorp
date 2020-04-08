@@ -7524,13 +7524,6 @@
     "keyed": true,
     "description": "Number of toplevel location changes in tablet and desktop mode (only used on win10 where tablet mode is available)"
   },
-  "FX_TOUCH_USED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "46",
-    "kind": "count",
-    "description": "Windows only. Counts occurrences of touch events"
-  },
   "FX_URLBAR_SELECTED_RESULT_INDEX": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
