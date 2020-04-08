@@ -1409,6 +1409,7 @@ void OculusSession::UpdateControllerInputs(VRSystemState& aState,
 
       MOZ_ASSERT(axisIdx == kNumOculusAxes);
     }
+    SetControllerSelectionAndSqueezeFrameId(controllerState, aState.displayState.lastSubmittedFrameId);
   }
 }
 
