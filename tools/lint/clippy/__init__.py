@@ -5,6 +5,7 @@
 import json
 import os
 import signal
+import six
 import subprocess
 
 from mozfile import which
@@ -34,7 +35,7 @@ def parse_issues(log, config, issues, path, onlyIn):
     for issue in issues:
 
         try:
-            detail = json.loads(issue.decode("utf-8"))
+            detail = json.loads(six.ensure_text(issue))
             if "message" in detail:
                 p = detail['target']['src_path']
                 detail = detail["message"]
