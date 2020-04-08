@@ -72,16 +72,6 @@ def extract_crash_ping_whitelist(annotations):
             in sorted(annotations.items())
             if data.get("ping", False)]
 
-
-def extract_content_process_blacklist(annotations):
-    """Extract an array holding the names of the annotations blacklisted when
-    read from a content process."""
-
-    return [name
-            for (name, data)
-            in sorted(annotations.items())
-            if not data.get("content", True)]
-
 ###############################################################################
 # C++ code generation                                                         #
 ###############################################################################
@@ -124,13 +114,11 @@ def generate_header(template, annotations):
     annotations and return it as a string."""
 
     whitelist = extract_crash_ping_whitelist(annotations)
-    blacklist = extract_content_process_blacklist(annotations)
 
     return template_header + string.Template(template).substitute({
                "enum": generate_enum(annotations),
                "strings": generate_strings(annotations),
                "whitelist": generate_array_initializer(whitelist),
-               "blacklist": generate_array_initializer(blacklist),
            })
 
 

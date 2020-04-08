@@ -35,12 +35,4 @@ bool IsAnnotationWhitelistedForPing(Annotation aAnnotation) {
   return elem != end(kCrashPingWhitelist);
 }
 
-bool IsAnnotationBlacklistedForContent(Annotation aAnnotation) {
-  auto elem = find_if(
-      begin(kContentProcessBlacklist), end(kContentProcessBlacklist),
-      [&aAnnotation](Annotation aElement) { return aElement == aAnnotation; });
-
-  return elem != end(kContentProcessBlacklist);
-}
-
 }  // namespace CrashReporter
