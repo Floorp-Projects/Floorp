@@ -8,6 +8,7 @@
 #define jit_WarpSnapshot_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/Variant.h"
 
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
@@ -222,67 +223,32 @@ class WarpRest : public WarpOpSnapshot {
 #endif
 };
 
-// Snapshot data for the environment object(s) created in the script's prologue.
-class WarpEnvironment {
- public:
-  enum class Kind {
-    // No environment object should be set. Leave the slot initialized to
-    // |undefined|.
-    None,
-
-    // Use constantObject_ as the environment object.
-    ConstantObject,
-
-    // Use the callee's environment chain. Optionally allocate a new
-    // NamedLambdaObject and/or CallObject based on namedLambdaTemplate_ and
-    // callObjectTemplate_.
-    Function,
-  };
-
- private:
-  Kind kind_ = Kind::None;
-
-  union {
-    // For Kind::ConstantObject, the object.
-    JSObject* constantObject_;
-    // For Kind::Function, the template objects for CallObject and NamedLambda
-    // if needed. nullptr if the environment object is not needed.
-    struct {
-      CallObject* callObjectTemplate_;
-      LexicalEnvironmentObject* namedLambdaTemplate_;
-    } fun;
-  };
+struct NoEnvironment {};
+struct FunctionEnvironment {
+  CallObject* callObjectTemplate;
+  LexicalEnvironmentObject* namedLambdaTemplate;
 
  public:
-  void initConstantObject(JSObject* obj) {
-    kind_ = Kind::ConstantObject;
-    MOZ_ASSERT(obj);
-    constantObject_ = obj;
-  }
-  void initFunction(CallObject* callObjectTemplate,
-                    LexicalEnvironmentObject* namedLambdaTemplate) {
-    kind_ = Kind::Function;
-    fun.callObjectTemplate_ = callObjectTemplate;
-    fun.namedLambdaTemplate_ = namedLambdaTemplate;
-  }
-
-  Kind kind() const { return kind_; }
-
-  JSObject* constantObject() const {
-    MOZ_ASSERT(kind_ == Kind::ConstantObject);
-    return constantObject_;
-  }
-  CallObject* maybeCallObjectTemplate() const {
-    MOZ_ASSERT(kind_ == Kind::Function);
-    return fun.callObjectTemplate_;
-  }
-  LexicalEnvironmentObject* maybeNamedLambdaTemplate() const {
-    MOZ_ASSERT(kind_ == Kind::Function);
-    return fun.namedLambdaTemplate_;
-  }
-
-  void trace(JSTracer* trc);
+  FunctionEnvironment(CallObject* callObjectTemplate,
+                      LexicalEnvironmentObject* namedLambdaTemplate)
+      : callObjectTemplate(callObjectTemplate),
+        namedLambdaTemplate(namedLambdaTemplate) {}
 };
+
+// Snapshot data for the environment object(s) created in the script's prologue.
+//
+// One of:
+//
+// * NoEnvironment: No environment object should be set. Leave the slot
+//   initialized to |undefined|.
+//
+// * JSObject*: Use this object as the environment object.
+//
+// * FunctionEnvironment: Use the callee's environment chain. Optionally
+//   allocate a new NamedLambdaObject and/or CallObject based on
+//   namedLambdaTemplate and callObjectTemplate.
+using WarpEnvironment =
+    mozilla::Variant<NoEnvironment, JSObject*, FunctionEnvironment>;
 
 // Snapshot data for a single JSScript.
 class WarpScriptSnapshot : public TempObject {

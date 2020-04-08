@@ -64,21 +64,16 @@ void WarpScriptSnapshot::dump(GenericPrinter& out) const {
              script_->lineno(), script_->column(), script_);
   out.printf("  moduleObject: 0x%p\n", moduleObject());
   out.printf("  isArrowFunction: %u\n", isArrowFunction());
+
   out.printf("  environment: ");
-  switch (environment_.kind()) {
-    case WarpEnvironment::Kind::None:
-      out.printf("None\n");
-      break;
-    case WarpEnvironment::Kind::ConstantObject:
-      out.printf("Object: 0x%p\n", environment_.constantObject());
-      break;
-    case WarpEnvironment::Kind::Function:
-      out.printf(
-          "Function: callobject template 0x%p, named lambda template: 0x%p\n",
-          environment_.maybeCallObjectTemplate(),
-          environment_.maybeNamedLambdaTemplate());
-      break;
-  }
+  environment_.match(
+      [&](const NoEnvironment&) { out.printf("None\n"); },
+      [&](JSObject* obj) { out.printf("Object: 0x%p\n", obj); },
+      [&](const FunctionEnvironment& env) {
+        out.printf(
+            "Function: callobject template 0x%p, named lambda template: 0x%p\n",
+            env.callObjectTemplate, env.namedLambdaTemplate);
+      });
 
   out.printf("\n");
   for (const WarpOpSnapshot* snapshot : opSnapshots()) {
@@ -164,7 +159,17 @@ void WarpSnapshot::trace(JSTracer* trc) {
 void WarpScriptSnapshot::trace(JSTracer* trc) {
   TraceWarpGCPtr(trc, script_, "warp-script");
 
-  environment_.trace(trc);
+  environment_.match(
+      [](const NoEnvironment&) {},
+      [trc](JSObject* obj) { TraceWarpGCPtr(trc, obj, "warp-env-object"); },
+      [trc](FunctionEnvironment& env) {
+        if (env.callObjectTemplate) {
+          TraceWarpGCPtr(trc, env.callObjectTemplate, "warp-env-callobject");
+        }
+        if (env.namedLambdaTemplate) {
+          TraceWarpGCPtr(trc, env.namedLambdaTemplate, "warp-env-namedlambda");
+        }
+      });
 
   for (WarpOpSnapshot* snapshot : opSnapshots_) {
     snapshot->trace(trc);
@@ -175,24 +180,6 @@ void WarpScriptSnapshot::trace(JSTracer* trc) {
   }
   if (instrumentationCallback_) {
     TraceWarpGCPtr(trc, instrumentationCallback_, "warp-instr-callback");
-  }
-}
-
-void WarpEnvironment::trace(JSTracer* trc) {
-  switch (kind()) {
-    case Kind::None:
-      break;
-    case Kind::ConstantObject:
-      TraceWarpGCPtr(trc, constantObject_, "warp-env-object");
-      break;
-    case Kind::Function:
-      if (fun.callObjectTemplate_) {
-        TraceWarpGCPtr(trc, fun.callObjectTemplate_, "warp-env-callobject");
-      }
-      if (fun.namedLambdaTemplate_) {
-        TraceWarpGCPtr(trc, fun.namedLambdaTemplate_, "warp-env-namedlambda");
-      }
-      break;
   }
 }
 
