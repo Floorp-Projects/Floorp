@@ -97,10 +97,6 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data);
 nsresult RemoveCrashReportAnnotation(Annotation key);
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
-// Called after the crash reporter client has been created in a content
-// process, allowing annotations to be processed.
-void NotifyCrashReporterClientCreated();
-
 void AnnotateOOMAllocationSize(size_t size);
 void AnnotateTexturesSize(size_t size);
 nsresult SetGarbageCollecting(bool collecting);

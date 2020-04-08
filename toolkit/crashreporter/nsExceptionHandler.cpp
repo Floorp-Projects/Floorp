@@ -24,13 +24,13 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/ipc/CrashReporterClient.h"
 
 #include "nsThreadUtils.h"
 #include "nsThread.h"
 #include "jsfriendapi.h"
 #include "ThreadAnnotation.h"
 #include "private/pprio.h"
+#include "common/basictypes.h"
 
 #if defined(XP_WIN)
 #  ifdef WIN32_LEAN_AND_MEAN
@@ -122,7 +122,6 @@ using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::PageAllocator;
 #endif
 using namespace mozilla;
-using mozilla::ipc::CrashReporterClient;
 
 namespace CrashReporter {
 
@@ -311,11 +310,6 @@ class ReportInjectedCrash : public Runnable {
   uint32_t mPID;
 };
 #endif  // MOZ_CRASHREPORTER_INJECTOR
-
-// If annotations are attempted before the crash reporter is enabled,
-// they queue up here.
-class DelayedNote;
-nsTArray<UniquePtr<DelayedNote> >* gDelayedAnnotations;
 
 #if defined(XP_WIN)
 // the following are used to prevent other DLLs reverting the last chance
@@ -612,9 +606,13 @@ class PlatformWriter {
   void Flush() {
     if (mPos > 0) {
 #ifdef XP_WIN
-      DWORD nBytes = 0;
-      while (nBytes < mPos) {
-        WriteFile(mFD, mBuffer, mPos, &nBytes, nullptr);
+      char* buffer = mBuffer;
+      size_t length = mPos;
+      while (length > 0) {
+        DWORD nBytes = 0;
+        Unused << WriteFile(mFD, buffer, length, &nBytes, nullptr);
+        buffer += nBytes;
+        length -= nBytes;
       }
 #elif defined(XP_UNIX)
       mozilla::Unused << sys_write(mFD, mBuffer, mPos);
@@ -1330,16 +1328,21 @@ static void WriteMozCrashReason(AnnotationWriter& aWriter) {
   }
 }
 
-static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
-                                                const phc::AddrInfo* addrInfo,
-                                                time_t crashTime) {
-  JSONAnnotationWriter writer(pw);
+static void WriteAnnotations(AnnotationWriter& writer,
+                             const AnnotationTable& aAnnotations) {
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    const nsCString& value = crashReporterAPIData_Table[key];
+    const nsCString& value = aAnnotations[key];
     if (!value.IsEmpty()) {
       writer.Write(key, value.get(), value.Length());
     }
   }
+}
+
+static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
+                                                const phc::AddrInfo* addrInfo,
+                                                time_t crashTime) {
+  JSONAnnotationWriter writer(pw);
+  WriteAnnotations(writer, crashReporterAPIData_Table);
 
   char crashTimeString[32];
   XP_TTOA(crashTime, crashTimeString);
@@ -1706,6 +1709,8 @@ static void PrepareChildExceptionTimeAnnotations(
     }
   };
   GetFlatThreadAnnotation(getThreadAnnotationCB, true);
+
+  WriteAnnotations(writer, crashReporterAPIData_Table);
 }
 
 #ifdef XP_WIN
@@ -1859,6 +1864,29 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
 
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
+static void InitializeAnnotationFacilities() {
+  crashReporterAPILock = new Mutex("crashReporterAPILock");
+  notesFieldLock = new Mutex("notesFieldLock");
+  notesField = new nsCString();
+  InitThreadAnnotation();
+}
+
+static void TeardownAnnotationFacilities() {
+  std::fill(crashReporterAPIData_Table.begin(),
+            crashReporterAPIData_Table.end(), EmptyCString());
+
+  delete crashReporterAPILock;
+  crashReporterAPILock = nullptr;
+
+  delete notesFieldLock;
+  notesFieldLock = nullptr;
+
+  delete notesField;
+  notesField = nullptr;
+
+  ShutdownThreadAnnotation();
+}
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (gExceptionHandler) return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -1878,13 +1906,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // the crash reporter client
   doReport = ShouldReport();
 
-  NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
-  crashReporterAPILock = new Mutex("crashReporterAPILock");
-  NS_ASSERTION(!notesFieldLock, "Shouldn't have a lock yet");
-  notesFieldLock = new Mutex("notesFieldLock");
-
-  notesField = new nsCString();
-  NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
+  InitializeAnnotationFacilities();
 
 #if !defined(MOZ_WIDGET_ANDROID)
   // Locate the crash reporter executable
@@ -2063,8 +2085,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
-
-  InitThreadAnnotation();
 
   return NS_OK;
 }
@@ -2311,19 +2331,7 @@ nsresult UnsetExceptionHandler() {
 
   delete gExceptionHandler;
 
-  // do this here in the unlikely case that we succeeded in allocating
-  // our strings but failed to allocate gExceptionHandler.
-  std::fill(crashReporterAPIData_Table.begin(),
-            crashReporterAPIData_Table.end(), EmptyCString());
-
-  delete crashReporterAPILock;
-  crashReporterAPILock = nullptr;
-
-  delete notesFieldLock;
-  notesFieldLock = nullptr;
-
-  delete notesField;
-  notesField = nullptr;
+  TeardownAnnotationFacilities();
 
   if (pendingDirectory) {
     free(pendingDirectory);
@@ -2352,8 +2360,6 @@ nsresult UnsetExceptionHandler() {
     memoryReportPath = nullptr;
   }
 
-  ShutdownThreadAnnotation();
-
   if (!gExceptionHandler) return NS_ERROR_NOT_INITIALIZED;
 
   gExceptionHandler = nullptr;
@@ -2366,45 +2372,6 @@ nsresult UnsetExceptionHandler() {
   std::set_terminate(oldTerminateHandler);
 
   return NS_OK;
-}
-
-class DelayedNote {
- public:
-  DelayedNote(Annotation aKey, const nsACString& aData)
-      : mKey(aKey), mData(aData), mType(CrashAnnotation) {}
-
-  explicit DelayedNote(const nsACString& aData)
-      : mData(aData), mType(AppNote) {}
-
-  void Run() {
-    if (mType == CrashAnnotation) {
-      AnnotateCrashReport(mKey, mData);
-    } else {
-      AppendAppNotesToCrashReport(mData);
-    }
-  }
-
- private:
-  Annotation mKey;
-  nsCString mData;
-  enum AnnotationType { CrashAnnotation, AppNote } mType;
-};
-
-static void EnqueueDelayedNote(DelayedNote* aNote) {
-  if (!gDelayedAnnotations) {
-    gDelayedAnnotations = new nsTArray<UniquePtr<DelayedNote> >();
-  }
-  gDelayedAnnotations->AppendElement(WrapUnique(aNote));
-}
-
-void NotifyCrashReporterClientCreated() {
-  if (gDelayedAnnotations) {
-    for (const auto& note : *gDelayedAnnotations) {
-      note->Run();
-    }
-    delete gDelayedAnnotations;
-    gDelayedAnnotations = nullptr;
-  }
 }
 
 nsresult AnnotateCrashReport(Annotation key, bool data) {
@@ -2429,21 +2396,6 @@ nsresult AnnotateCrashReport(Annotation key, unsigned int data) {
 nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   if (!GetEnabled()) return NS_ERROR_NOT_INITIALIZED;
 
-  if (!XRE_IsParentProcess()) {
-    // The newer CrashReporterClient can be used from any thread.
-    if (RefPtr<CrashReporterClient> client =
-            CrashReporterClient::GetSingleton()) {
-      client->AnnotateCrashReport(key, data);
-      return NS_OK;
-    }
-
-    // EnqueueDelayedNote() can only be called on the main thread.
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    EnqueueDelayedNote(new DelayedNote(key, data));
-    return NS_OK;
-  }
-
   MutexAutoLock lock(*crashReporterAPILock);
   crashReporterAPIData_Table[key] = data;
 
@@ -2465,10 +2417,10 @@ void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
   }
 }
 
-static void MergeContentCrashAnnotations(AnnotationTable& aDst,
-                                         const AnnotationTable& aSrc) {
+static void MergeContentCrashAnnotations(AnnotationTable& aDst) {
+  MutexAutoLock lock(*crashReporterAPILock);
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    const nsCString& value = aSrc[key];
+    const nsCString& value = crashReporterAPIData_Table[key];
     if (value.IsEmpty() || IsAnnotationBlacklistedForContent(key)) {
       continue;
     }
@@ -2513,20 +2465,6 @@ void SetMinidumpAnalysisAllThreads() {
 
 nsresult AppendAppNotesToCrashReport(const nsACString& data) {
   if (!GetEnabled()) return NS_ERROR_NOT_INITIALIZED;
-
-  if (!XRE_IsParentProcess()) {
-    if (RefPtr<CrashReporterClient> client =
-            CrashReporterClient::GetSingleton()) {
-      client->AppendAppNotes(data);
-      return NS_OK;
-    }
-
-    // EnqueueDelayedNote can only be called on the main thread.
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    EnqueueDelayedNote(new DelayedNote(data));
-    return NS_OK;
-  }
 
   MutexAutoLock lock(*notesFieldLock);
 
@@ -3185,12 +3123,7 @@ static bool WriteExtraFile(PlatformWriter& pw,
   }
 
   JSONAnnotationWriter writer(pw);
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    const nsCString& value = aAnnotations[key];
-    if (!value.IsEmpty()) {
-      writer.Write(key, value.get(), value.Length());
-    }
-  }
+  WriteAnnotations(writer, aAnnotations);
 
   return true;
 }
@@ -3221,19 +3154,14 @@ static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
   if (aPid && processToCrashFd.count(aPid)) {
     PRFileDesc* prFd = processToCrashFd[aPid];
     processToCrashFd.erase(aPid);
-    AnnotationTable exceptionTimeAnnotations;
-    ReadAndValidateExceptionTimeAnnotations(prFd, exceptionTimeAnnotations);
-    MergeCrashAnnotations(aAnnotations, exceptionTimeAnnotations);
+    ReadAndValidateExceptionTimeAnnotations(prFd, aAnnotations);
     PR_Close(prFd);
   }
 }
 
 static void PopulateContentProcessAnnotations(AnnotationTable& aAnnotations,
                                               uint32_t aPid) {
-  {
-    MutexAutoLock lock(*crashReporterAPILock);
-    MergeContentCrashAnnotations(aAnnotations, crashReporterAPIData_Table);
-  }
+  MergeContentCrashAnnotations(aAnnotations);
   AddCommonAnnotations(aAnnotations);
   ReadExceptionTimeAnnotations(aAnnotations, aPid);
 }
@@ -3542,6 +3470,8 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
                                uintptr_t aCrashTimeAnnotationFile) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
 
+  InitializeAnnotationFacilities();
+
 #if defined(XP_WIN)
   gExceptionHandler = new google_breakpad::ExceptionHandler(
       L"", ChildFPEFilter,
@@ -3576,8 +3506,6 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
-
-  InitThreadAnnotation();
 
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
@@ -3852,12 +3780,7 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   DllBlocklist_Shutdown();
 #endif
 
-  {
-    MutexAutoLock lock(*crashReporterAPILock);
-    MergeContentCrashAnnotations(aTargetAnnotations,
-                                 crashReporterAPIData_Table);
-  }
-
+  MergeContentCrashAnnotations(aTargetAnnotations);
   AddCommonAnnotations(aTargetAnnotations);
 
   targetMinidump.forget(aMainDumpOut);
@@ -3911,7 +3834,8 @@ bool UnsetRemoteExceptionHandler() {
   delete gExceptionHandler;
   gExceptionHandler = nullptr;
 #endif
-  ShutdownThreadAnnotation();
+  TeardownAnnotationFacilities();
+
   return true;
 }
 

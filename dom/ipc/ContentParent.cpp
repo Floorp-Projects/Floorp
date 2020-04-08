@@ -3439,9 +3439,9 @@ void ContentParent::FriendlyName(nsAString& aName, bool aAnonymize) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvInitCrashReporter(
-    Shmem&& aShmem, const NativeThreadId& aThreadId) {
-  mCrashReporter = MakeUnique<CrashReporterHost>(GeckoProcessType_Content,
-                                                 aShmem, aThreadId);
+    const NativeThreadId& aThreadId) {
+  mCrashReporter =
+      MakeUnique<CrashReporterHost>(GeckoProcessType_Content, aThreadId);
 
   return IPC_OK();
 }
