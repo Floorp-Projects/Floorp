@@ -2,7 +2,7 @@
 
 # getSystemDefault
 
-`fun getSystemDefault(): `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L75)
+`fun getSystemDefault(): `[`Locale`](https://developer.android.com/reference/java/util/Locale.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L66)
 
 Returns the locale set by the system
 

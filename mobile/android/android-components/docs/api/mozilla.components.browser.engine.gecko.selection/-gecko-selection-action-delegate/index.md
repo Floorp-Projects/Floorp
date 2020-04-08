@@ -2,7 +2,7 @@
 
 # GeckoSelectionActionDelegate
 
-`open class GeckoSelectionActionDelegate : `[`BasicSelectionActionDelegate`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/BasicSelectionActionDelegate.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/selection/GeckoSelectionActionDelegate.kt#L18)
+`open class GeckoSelectionActionDelegate : `[`BasicSelectionActionDelegate`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/BasicSelectionActionDelegate.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/selection/GeckoSelectionActionDelegate.kt#L19)
 
 An adapter between the GV [BasicSelectionActionDelegate](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/BasicSelectionActionDelegate.html) and a generic [SelectionActionDelegate](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md).
 

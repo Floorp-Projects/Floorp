@@ -2,7 +2,7 @@
 
 # Snapshot
 
-`data class Snapshot` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L398)
+`data class Snapshot` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L429)
 
 ### Types
 

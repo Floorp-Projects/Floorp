@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L52)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L51)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -44,8 +44,6 @@ Value type that represents the state of a browser session. Changes can be observ
 | [loading](loading.md) | `var loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Loading state, true if this session's url is currently loading, otherwise false. |
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [progress](progress.md) | `var progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The progress loading the current URL. |
-| [readerMode](reader-mode.md) | `var readerMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Reader mode state, whether or not reader view is enabled, otherwise false. |
-| [readerable](readerable.md) | `var readerable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Readerable state, whether or not the current page can be shown in a reader view. |
 | [recordingDevices](recording-devices.md) | `var recordingDevices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../mozilla.components.concept.engine.media/-recording-device/index.md)`>`<br>List of recording devices (e.g. camera or microphone) currently in use by web content. |
 | [searchTerms](search-terms.md) | `var searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The currently / last used search terms (or an empty string). |
 | [securityInfo](security-info.md) | `var securityInfo: `[`SecurityInfo`](-security-info/index.md)<br>Security information indicating whether or not the current session is for a secure URL, as well as the host and SSL certificate authority, if applicable. |
@@ -74,5 +72,4 @@ Value type that represents the state of a browser session. Changes can be observ
 | [installableManifest](../../mozilla.components.feature.pwa.ext/installable-manifest.md) | `fun `[`Session`](./index.md)`.installableManifest(): `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?`<br>Checks if the current session represents an installable web app. If so, return the web app manifest. Otherwise, return null. |
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
 | [toCustomTabSessionState](../../mozilla.components.browser.session.ext/to-custom-tab-session-state.md) | `fun `[`Session`](./index.md)`.toCustomTabSessionState(): `[`CustomTabSessionState`](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md)<br>Creates a matching [CustomTabSessionState](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) from a custom tab [Session](./index.md). |
-| [toReaderState](../../mozilla.components.browser.session.ext/to-reader-state.md) | `fun `[`Session`](./index.md)`.toReaderState(): `[`ReaderState`](../../mozilla.components.browser.state.state/-reader-state/index.md)<br>Creates a matching [ReaderState](../../mozilla.components.browser.state.state/-reader-state/index.md) from a [Session](./index.md) |
 | [toTabSessionState](../../mozilla.components.browser.session.ext/to-tab-session-state.md) | `fun `[`Session`](./index.md)`.toTabSessionState(): `[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)<br>Create a matching [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) from a [Session](./index.md). |

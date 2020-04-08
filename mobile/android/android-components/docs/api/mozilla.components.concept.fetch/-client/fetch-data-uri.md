@@ -2,9 +2,9 @@
 
 # fetchDataUri
 
-`protected fun fetchDataUri(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L54)
+`protected fun fetchDataUri(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L56)
 
-Generates a [Response](../-response/index.md) by decoding a base64 encoded data URI.
+Generates a [Response](../-response/index.md) based on the provided [Request](../-request/index.md) for a data URI.
 
 ### Parameters
 
