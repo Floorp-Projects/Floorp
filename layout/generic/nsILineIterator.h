@@ -98,7 +98,9 @@ class nsAutoLineIterator {
     if (mRawPtr) mRawPtr->DisposeLineIterator();
   }
 
+  operator const nsILineIterator*() const { return mRawPtr; }
   operator nsILineIterator*() { return mRawPtr; }
+  const nsILineIterator* operator->() const { return mRawPtr; }
   nsILineIterator* operator->() { return mRawPtr; }
 
   nsILineIterator* operator=(nsILineIterator* i) {

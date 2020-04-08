@@ -8393,8 +8393,10 @@ nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   aPos->mAttach = aPos->mDirection == eDirNext ? CARET_ASSOCIATE_AFTER
                                                : CARET_ASSOCIATE_BEFORE;
 
-  nsAutoLineIterator it = aBlockFrame->GetLineIterator();
-  if (!it) return NS_ERROR_FAILURE;
+  const nsAutoLineIterator it = aBlockFrame->GetLineIterator();
+  if (!it) {
+    return NS_ERROR_FAILURE;
+  }
   int32_t searchingLine = aLineStart;
   int32_t countLines = it->GetNumLines();
   if (aOutSideLimit > 0)  // start at end
