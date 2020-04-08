@@ -8,6 +8,8 @@
 
 #include "VRProcessParent.h"
 
+#include "mozilla/ipc/ProtocolUtils.h"
+
 namespace mozilla {
 class MemoryReportingProcess;
 namespace ipc {
