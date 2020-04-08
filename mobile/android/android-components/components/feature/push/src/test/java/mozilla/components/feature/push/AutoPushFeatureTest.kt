@@ -141,7 +141,7 @@ class AutoPushFeatureTest {
         whenever(encryptedMessage.channelId).thenReturn("992a0f0542383f1ea5ef51b7cf4ae6c4")
         whenever(connection.decryptMessage(any(), any(), any(), any(), any()))
             .thenReturn(null) // If we get null, we shouldn't notify observers.
-            .thenReturn("testScope" to "test".toByteArray())
+            .thenReturn(DecryptedMessage("testScope", "test".toByteArray()))
 
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
 
@@ -347,13 +347,11 @@ class AutoPushFeatureTest {
 
         override suspend fun decryptMessage(
             channelId: String,
-            body: String,
+            body: String?,
             encoding: String,
             salt: String,
             cryptoKey: String
-        ): Pair<PushScope, ByteArray>? {
-            TODO("not implemented")
-        }
+        ): DecryptedMessage? = null
 
         override fun isInitialized() = init
 

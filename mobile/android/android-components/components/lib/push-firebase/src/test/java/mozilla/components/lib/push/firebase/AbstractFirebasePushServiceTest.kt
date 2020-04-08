@@ -77,8 +77,8 @@ class AbstractFirebasePushServiceTest {
         val remoteMessage: RemoteMessage = mock()
         val data = mapOf(
             "chid" to "1234",
-            "con" to "encoding",
             "enc" to "salt",
+            "body" to "oo3j532j4",
             "cryptokey" to "dh256"
         )
         val captor = argumentCaptor<PushError>()

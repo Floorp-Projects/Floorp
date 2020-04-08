@@ -85,6 +85,9 @@ permalink: /changelog/
 * **browser-session**
   * ⚠️ **This is a breaking change**: `SessionManager.runWithSessionIdOrSelected` now returns the result from the `block` it executes. This is consistent with `runWithSession`.
 
+* **feature-push**
+  * Allow nullable AutoPush messages to be delivered to observers.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)

@@ -72,11 +72,11 @@ interface PushConnection : Closeable {
      */
     suspend fun decryptMessage(
         channelId: String,
-        body: String,
+        body: String?,
         encoding: String = "",
         salt: String = "",
         cryptoKey: String = ""
-    ): Pair<PushScope, ByteArray>?
+    ): DecryptedMessage?
 
     /**
      * Checks if the native Push API has already been initialized.
@@ -198,11 +198,11 @@ internal class RustPushConnection(
     @GuardedBy("this")
     override suspend fun decryptMessage(
         channelId: String,
-        body: String,
+        body: String?,
         encoding: String,
         salt: String,
         cryptoKey: String
-    ): Pair<PushScope, ByteArray>? = synchronized(this) {
+    ): DecryptedMessage? = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
 
@@ -210,6 +210,11 @@ internal class RustPushConnection(
         val scope = pushApi.dispatchInfoForChid(channelId)?.scope
 
         scope?.let {
+
+            if (body == null) {
+                return DecryptedMessage(scope, null)
+            }
+
             val data = pushApi.decrypt(
                 channelID = channelId,
                 body = body,
@@ -218,7 +223,7 @@ internal class RustPushConnection(
                 dh = cryptoKey
             )
 
-            return Pair(scope, data)
+            return DecryptedMessage(scope, data)
         }
     }
 
@@ -277,3 +282,33 @@ internal fun SubscriptionChanged.toPushSubscriptionChanged() = AutoPushSubscript
     scope = scope,
     channelId = channelID
 )
+
+/**
+ * Represents a decrypted push message for notifying observers of the [scope].
+ */
+data class DecryptedMessage(val scope: PushScope, val message: ByteArray?) {
+
+    // Generated; do not edit.
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DecryptedMessage
+
+        if (scope != other.scope) return false
+        if (message != null) {
+            if (other.message == null) return false
+            if (!message.contentEquals(other.message)) return false
+        } else if (other.message != null) return false
+
+        return true
+    }
+
+    // Generated; do not edit.
+    @Suppress("MagicNumber")
+    override fun hashCode(): Int {
+        var result = scope.hashCode()
+        result = 31 * result + (message?.contentHashCode() ?: 0)
+        return result
+    }
+}
