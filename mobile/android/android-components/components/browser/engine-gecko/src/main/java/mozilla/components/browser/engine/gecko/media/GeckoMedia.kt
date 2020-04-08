@@ -17,6 +17,7 @@ import org.mozilla.geckoview.MediaElement.MEDIA_STATE_SEEKING
 import org.mozilla.geckoview.MediaElement.MEDIA_STATE_STALLED
 import org.mozilla.geckoview.MediaElement.MEDIA_STATE_SUSPEND
 import org.mozilla.geckoview.MediaElement.MEDIA_STATE_WAITING
+import kotlin.properties.Delegates
 
 /**
  * [Media] (`concept-engine`) implementation for GeckoView.
@@ -26,8 +27,15 @@ internal class GeckoMedia(
 ) : Media() {
     override val controller: Controller = GeckoMediaController(mediaElement)
 
-    override var metadata: Metadata = Metadata()
-        internal set
+    override var metadata: Metadata by Delegates.observable(Metadata()) {
+            _, old, new -> notifyObservers(old, new) { onMetadataChanged(this@GeckoMedia, new) }
+    }
+    internal set
+
+    override var volume: Volume by Delegates.observable(Volume()) {
+            _, old, new -> notifyObservers(old, new) { onVolumeChanged(this@GeckoMedia, new) }
+    }
+    internal set
 
     init {
         mediaElement.delegate = MediaDelegate(this)
@@ -70,9 +78,12 @@ private class MediaDelegate(
         media.metadata = Media.Metadata(metaData.duration)
     }
 
+    override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) {
+        media.volume = Media.Volume(muted)
+    }
+
     override fun onReadyStateChange(mediaElement: MediaElement, readyState: Int) = Unit
     override fun onLoadProgress(mediaElement: MediaElement, progressInfo: MediaElement.LoadProgressInfo) = Unit
-    override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) = Unit
     override fun onTimeChange(mediaElement: MediaElement, time: Double) = Unit
     override fun onPlaybackRateChange(mediaElement: MediaElement, rate: Double) = Unit
     override fun onFullscreenChange(mediaElement: MediaElement, fullscreen: Boolean) = Unit

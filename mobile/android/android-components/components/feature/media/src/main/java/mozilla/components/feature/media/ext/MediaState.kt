@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
 package mozilla.components.feature.media.ext
 
 import android.support.v4.media.session.PlaybackStateCompat
@@ -56,6 +57,13 @@ internal fun List<MediaState.Element>.hasMediaWithSufficientLongDuration(): Bool
     }
 
     return false
+}
+
+/**
+ * Does this list contain [Media] that has audible audio?
+ */
+internal fun List<MediaState.Element>.hasMediaWithAudibleAudio(): Boolean {
+    return any { !it.volume.muted }
 }
 
 /**

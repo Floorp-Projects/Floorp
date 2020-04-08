@@ -122,6 +122,52 @@ class GeckoMediaTest {
         delegate.onMetadataChange(mediaElement, MockedGeckoMetadata(duration = -1.0))
         assertEquals(-1.0, media.metadata.duration, 0.0001)
     }
+
+    @Test
+    fun `GeckoMedia exposes Volume`() {
+        val mediaElement: MediaElement = mock()
+
+        val media = GeckoMedia(mediaElement)
+
+        val captor = argumentCaptor<MediaElement.Delegate>()
+        verify(mediaElement).delegate = captor.capture()
+
+        assertEquals(media.volume.muted, false)
+
+        val delegate = captor.value
+
+        delegate.onVolumeChange(mediaElement, 1.0, true)
+        assertEquals(true, media.volume.muted)
+
+        delegate.onVolumeChange(mediaElement, 1.0, false)
+        assertEquals(false, media.volume.muted)
+    }
+
+    @Test
+    fun `GeckoMedia notifies observer when metadata changes`() {
+        val media = GeckoMedia(mock())
+
+        val observer: Media.Observer = mock()
+        media.register(observer)
+
+        val metadata: Media.Metadata = Media.Metadata(duration = 42.0)
+        media.metadata = metadata
+
+        verify(observer).onMetadataChanged(media, metadata)
+    }
+
+    @Test
+    fun `GeckoMedia notifies observer when volume changes`() {
+        val media = GeckoMedia(mock())
+
+        val observer: Media.Observer = mock()
+        media.register(observer)
+
+        val volume: Media.Volume = Media.Volume(muted = true)
+        media.volume = volume
+
+        verify(observer).onVolumeChanged(media, volume)
+    }
 }
 
 private class MockedGeckoMetadata(

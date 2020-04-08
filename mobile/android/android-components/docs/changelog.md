@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-media**
+  * Muted media will not start the media service anymore, causing no media notification to be shown and no audio focus getting requested.
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)

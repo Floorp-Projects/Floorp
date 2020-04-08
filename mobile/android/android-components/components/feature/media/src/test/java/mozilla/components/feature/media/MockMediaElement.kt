@@ -12,13 +12,15 @@ import java.util.UUID
 fun createMockMediaElement(
     id: String = UUID.randomUUID().toString(),
     state: Media.State = Media.State.PLAYING,
-    metadata: Media.Metadata = Media.Metadata()
+    metadata: Media.Metadata = Media.Metadata(),
+    volume: Media.Volume = Media.Volume()
 ): MediaState.Element {
     return MediaState.Element(
         id = id,
         state = state,
         playbackState = Media.PlaybackState.PLAYING,
         controller = mock(),
-        metadata = metadata
+        metadata = metadata,
+        volume = volume
     )
 }

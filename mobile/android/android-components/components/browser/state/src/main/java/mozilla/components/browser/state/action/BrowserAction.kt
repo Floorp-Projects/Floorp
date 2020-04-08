@@ -459,6 +459,16 @@ sealed class MediaAction : BrowserAction() {
     ) : MediaAction()
 
     /**
+     * Updates the [Media.Volume] for the [MediaState.Element] with id [mediaId] owned by the tab
+     * with id [tabId].
+     */
+    data class UpdateMediaVolumeAction(
+        val tabId: String,
+        val mediaId: String,
+        val volume: Media.Volume
+    ) : MediaAction()
+
+    /**
      * Updates [MediaState.Aggregate] in the [MediaState].
      */
     data class UpdateMediaAggregateAction(

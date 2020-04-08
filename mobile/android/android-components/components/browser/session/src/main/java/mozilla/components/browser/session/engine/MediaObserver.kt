@@ -41,4 +41,12 @@ internal class MediaObserver(
             metadata
         ))
     }
+
+    override fun onVolumeChanged(media: Media, volume: Media.Volume) {
+        store.dispatch(MediaAction.UpdateMediaVolumeAction(
+            tabId,
+            element.id,
+            volume
+        ))
+    }
 }

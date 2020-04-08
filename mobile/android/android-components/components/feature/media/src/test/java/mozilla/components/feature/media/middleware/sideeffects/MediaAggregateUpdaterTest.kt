@@ -152,6 +152,30 @@ class MediaAggregateUpdaterTest {
     }
 
     @Test
+    fun `WHEN media is muted THEN does not switch to PLAYING state`() {
+        val store = MockStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+            media = MediaState(
+                elements = mapOf(
+                    "test-tab" to listOf(
+                        createMockMediaElement(
+                            id = "media-id-1",
+                            state = Media.State.PLAYING,
+                            volume = Media.Volume(muted = true)
+                        )
+                    )
+                )
+            )
+        ))
+
+        val aggregator = MediaAggregateUpdater()
+
+        val result = aggregate(store, aggregator)
+
+        assertNull(result)
+    }
+
+    @Test
     fun `WHEN state is PAUSED and media is paused THEN state remains PAUSED`() {
         val store = MockStore(BrowserState(
             tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),

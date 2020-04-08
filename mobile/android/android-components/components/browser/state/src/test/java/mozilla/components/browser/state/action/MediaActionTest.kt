@@ -373,6 +373,54 @@ class MediaActionTest {
     }
 
     @Test
+    fun `UpdateMediaVolumeAction - Updates media volume of element`() {
+        val element1 = createMockMediaElement()
+        val element2 = createMockMediaElement()
+        val element3 = createMockMediaElement()
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab"),
+                createTab("https://www.firefox.com", id = "other-tab")
+            ),
+            media = MediaState(
+                elements = mapOf(
+                    "test-tab" to listOf(element1, element2),
+                    "other-tab" to listOf(element3)
+                )
+            )
+        ))
+
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(0)?.volume?.muted)
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(1)?.volume?.muted)
+        assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.volume?.muted)
+
+        store.dispatch(MediaAction.UpdateMediaVolumeAction(
+            tabId = "test-tab",
+            mediaId = element1.id,
+            volume = Media.Volume(
+                muted = true
+            )
+        )).joinBlocking()
+
+        assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(0)?.volume?.muted)
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(1)?.volume?.muted)
+        assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.volume?.muted)
+
+        store.dispatch(MediaAction.UpdateMediaVolumeAction(
+            tabId = "test-tab",
+            mediaId = element2.id,
+            volume = Media.Volume(
+                muted = true
+            )
+        )).joinBlocking()
+
+        assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(0)?.volume?.muted)
+        assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(1)?.volume?.muted)
+        assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.volume?.muted)
+    }
+
+    @Test
     fun `UpdateMediaAggregateAction - Updates aggregate`() {
         val store = BrowserStore(BrowserState())
 
@@ -422,6 +470,7 @@ private fun createMockMediaElement(): MediaState.Element {
         state = Media.State.PLAYING,
         playbackState = Media.PlaybackState.PLAYING,
         controller = mock(),
-        metadata = Media.Metadata()
+        metadata = Media.Metadata(),
+        volume = Media.Volume()
     )
 }
