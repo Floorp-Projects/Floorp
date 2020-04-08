@@ -459,6 +459,26 @@ add_test(function test_child_mozinfo () {
 });
 '''
 
+HEADLESS_TRUE = '''
+add_task(function headless_true() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  Assert.equal(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
+  Assert.equal(env.get("DISPLAY"), "77", "Check DISPLAY");
+});
+'''
+
+HEADLESS_FALSE = '''
+add_task(function headless_false() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  Assert.notEqual(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
+  Assert.notEqual(env.get("DISPLAY"), "77", "Check DISPLAY");
+});
+'''
+
 
 class XPCShellTestsTests(unittest.TestCase):
     """
@@ -513,7 +533,7 @@ tail =
 
 """ + "\n".join(testlines))
 
-    def assertTestResult(self, expected, shuffle=False, verbose=False):
+    def assertTestResult(self, expected, shuffle=False, verbose=False, headless=False):
         """
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
@@ -525,6 +545,7 @@ tail =
         kwargs['mozInfo'] = mozinfo.info
         kwargs['shuffle'] = shuffle
         kwargs['verbose'] = verbose
+        kwargs['headless'] = headless
         kwargs['sequential'] = True
         kwargs['testingModulesDir'] = os.path.join(objdir, '_tests', 'modules')
         kwargs['utility_path'] = self.utility_path
@@ -1394,6 +1415,38 @@ add_test({
         self.assertEquals(0, self.x.todoCount)
         self.assertInLog(TEST_PASS_STRING)
         self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testNotHeadlessByDefault(self):
+        """
+        Check that the default is not headless.
+        """
+        self.writeFile("test_notHeadlessByDefault.js", HEADLESS_FALSE)
+        self.writeManifest(["test_notHeadlessByDefault.js"])
+        self.assertTestResult(True)
+
+    def testHeadlessWhenHeadlessExplicit(self):
+        """
+        Check that explicitly requesting headless works when the manifest doesn't override.
+        """
+        self.writeFile("test_headlessWhenExplicit.js", HEADLESS_TRUE)
+        self.writeManifest(["test_headlessWhenExplicit.js"])
+        self.assertTestResult(True, headless=True)
+
+    def testHeadlessWhenHeadlessTrueInManifest(self):
+        """
+        Check that enabling headless in the manifest alone works.
+        """
+        self.writeFile("test_headlessWhenTrueInManifest.js", HEADLESS_TRUE)
+        self.writeManifest([("test_headlessWhenTrueInManifest.js", "headless = true")])
+        self.assertTestResult(True)
+
+    def testNotHeadlessWhenHeadlessFalseInManifest(self):
+        """
+        Check that the manifest entry overrides the explicit default.
+        """
+        self.writeFile("test_notHeadlessWhenFalseInManifest.js", HEADLESS_FALSE)
+        self.writeManifest([("test_notHeadlessWhenFalseInManifest.js", "headless = false")])
+        self.assertTestResult(True, headless=True)
 
 
 if __name__ == "__main__":
