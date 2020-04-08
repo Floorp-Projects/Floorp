@@ -480,7 +480,6 @@
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
 | [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
-| [mozilla.components.feature.readerview.OnReaderViewAvailableChange](../mozilla.components.feature.readerview/-on-reader-view-available-change.md) |  |
 | [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |
 | [mozilla.components.ui.autocomplete.OnSearchStateChangeListener](../mozilla.components.ui.autocomplete/-on-search-state-change-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnSelectionChangedListener](../mozilla.components.ui.autocomplete/-on-selection-changed-listener.md) |  |
@@ -548,6 +547,7 @@
 | [mozilla.components.feature.readerview.view.ReaderViewControlsBar](../mozilla.components.feature.readerview.view/-reader-view-controls-bar/index.md) | A customizable ReaderView control bar implementing [ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md). |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md) | An interface for views that can display ReaderView appearance controls (e.g. font size, font type). |
 | [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session, based on a web extension. |
+| [mozilla.components.feature.readerview.ReaderViewMiddleware](../mozilla.components.feature.readerview/-reader-view-middleware/index.md) | [Middleware](../mozilla.components.lib.state/-middleware.md) implementation for translating [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md)s to [ReaderAction](../mozilla.components.browser.state.action/-reader-action/index.md)s (e.g. if the URL is updated a new "readerable" check should be executed.) |
 | [mozilla.components.feature.share.RecentApp](../mozilla.components.feature.share/-recent-app/index.md) | Interface used for adapting recent apps database entities |
 | [mozilla.components.feature.share.RecentAppsStorage](../mozilla.components.feature.share/-recent-apps-storage/index.md) | Class used for storing and retrieving the most recent apps |
 | [mozilla.components.service.glean.private.RecordedExperimentData](../mozilla.components.service.glean.private/-recorded-experiment-data.md) |  |
@@ -830,4 +830,5 @@
 | [mozilla.components.service.fretboard.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.fretboard.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
 | [mozilla.components.service.fxa.sync.WorkManagerSyncWorker](../mozilla.components.service.fxa.sync/-work-manager-sync-worker/index.md) |  |
 | [mozilla.components.feature.downloads.manager.onDownloadStopped](../mozilla.components.feature.downloads.manager/on-download-stopped.md) |  |
+| [mozilla.components.feature.readerview.onReaderViewStatusChange](../mozilla.components.feature.readerview/on-reader-view-status-change.md) |  |
 | [mozilla.components.support.webextensions.onUpdatePermissionRequest](../mozilla.components.support.webextensions/on-update-permission-request.md) | Function to relay the permission request to the app / user. |

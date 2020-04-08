@@ -2,7 +2,7 @@
 
 # fetch
 
-`abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L45)
+`abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L47)
 
 Starts the process of fetching a resource from the network as described by the [Request](../-request/index.md) object. This call is
 synchronous.

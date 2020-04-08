@@ -28,7 +28,7 @@ GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozill
 
 | Name | Summary |
 |---|---|
-| [fetchDataUri](../../mozilla.components.concept.fetch/-client/fetch-data-uri.md) | `fun fetchDataUri(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Generates a [Response](../../mozilla.components.concept.fetch/-response/index.md) by decoding a base64 encoded data URI. |
+| [fetchDataUri](../../mozilla.components.concept.fetch/-client/fetch-data-uri.md) | `fun fetchDataUri(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Generates a [Response](../../mozilla.components.concept.fetch/-response/index.md) based on the provided [Request](../../mozilla.components.concept.fetch/-request/index.md) for a data URI. |
 
 ### Companion Object Properties
 

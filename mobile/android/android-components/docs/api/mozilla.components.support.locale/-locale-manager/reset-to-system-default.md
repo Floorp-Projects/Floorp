@@ -2,7 +2,7 @@
 
 # resetToSystemDefault
 
-`fun resetToSystemDefault(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L63)
+`fun resetToSystemDefault(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L55)
 
 Change the current locale to the system defined one. As a result, [getCurrentLocale](get-current-locale.md) will
 return null.
