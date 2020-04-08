@@ -26,7 +26,7 @@ class HeadlessKeyBindings final {
   void GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                        const WidgetKeyboardEvent& aEvent,
                        nsTArray<CommandInt>& aCommands);
-  MOZ_MUST_USE nsresult AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent);
+  [[nodiscard]] nsresult AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent);
 };
 
 }  // namespace widget
