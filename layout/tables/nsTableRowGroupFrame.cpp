@@ -1702,7 +1702,8 @@ bool nsTableRowGroupFrame::GetDirection() {
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                              int32_t* aNumFramesOnLine, nsRect& aLineBounds) {
+                              int32_t* aNumFramesOnLine,
+                              nsRect& aLineBounds) const {
   NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
 
