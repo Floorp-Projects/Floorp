@@ -906,8 +906,8 @@ MFBT_API void MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
              aFileName, aLineNo);
   } else if (aLibrary && aLibrary[0]) {
     // We have no filename, but we do have a library name. Use it and the
-    // library offset, and print them in a way that scripts like
-    // fix_{linux,macosx}_stacks.py can easily post-process.
+    // library offset, and print them in a way that `fix_stacks.py` can
+    // post-process.
     snprintf(aBuffer, aBufferSize, "#%02u: %s[%s +0x%" PRIxPTR "]",
              aFrameNumber, function, aLibrary,
              static_cast<uintptr_t>(aLOffset));

@@ -2,6 +2,9 @@ This is the Refcount Balancer.  See
 https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Refcount_tracing_and_balancing
 for documentation.
 
+Note that the `fix_stacks.py` script is used in several other places in the
+repository.
+
 Previous CVS history for the perl scripts is available at:
 http://www.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla-org/html/performance/find-leakers.pl&rev=&root=/cvsroot/
 http://www.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla-org/html/performance/make-tree.pl&rev=&root=/cvsroot/
