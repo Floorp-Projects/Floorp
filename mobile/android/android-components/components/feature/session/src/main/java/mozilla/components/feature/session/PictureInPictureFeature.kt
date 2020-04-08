@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.runWithSessionIdOrSelected
 
 /**
  * A simple implementation of Picture-in-picture mode if on a supported platform.
@@ -17,11 +18,13 @@ import mozilla.components.browser.session.SessionManager
  * @param sessionManager Session Manager for observing the selected session's fullscreen mode changes.
  * @param activity the activity with the EngineView for calling PIP mode when required; the AndroidX Fragment
  * doesn't support this.
+ * @param customTabSessionId ID of custom tab session.
  * @param pipChanged a change listener that allows the calling app to perform changes based on PIP mode.
  */
 class PictureInPictureFeature(
     private val sessionManager: SessionManager,
     private val activity: Activity,
+    private val customTabSessionId: String? = null,
     private val pipChanged: ((Boolean) -> Unit?)? = null
 ) {
     private val hasSystemFeature = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
@@ -32,7 +35,10 @@ class PictureInPictureFeature(
             return false
         }
 
-        val fullScreenMode = sessionManager.selectedSession?.fullScreenMode ?: false
+        val fullScreenMode =
+            sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
+                session.fullScreenMode
+            }
         return fullScreenMode && enterPipModeCompat()
     }
 
