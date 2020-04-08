@@ -32,6 +32,7 @@ AddonTestUtils.createAppInfo(
 );
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("browser.search.modernConfig", false);
   await AddonTestUtils.promiseStartupManager();
 });
 
