@@ -13,7 +13,7 @@ object Versions {
     const val osslicenses_library = "17.0.0"
     const val detekt = "1.6.0"
 
-    const val androidx_appcompat = "1.2.0-alpha03"
+    const val androidx_appcompat = "1.2.0-beta01"
     const val androidx_biometric = "1.0.1"
     const val androidx_coordinator_layout = "1.1.0-rc01"
     const val androidx_constraint_layout = "2.0.0-beta4"
