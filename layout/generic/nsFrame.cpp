@@ -8047,6 +8047,28 @@ nsAutoCString nsIFrame::ListTag() const {
   return tag;
 }
 
+std::string nsIFrame::ConvertToString(const LogicalRect& aRect,
+                                      const WritingMode aWM, ListFlags aFlags) {
+  if (aFlags.contains(ListFlag::DisplayInCSSPixels)) {
+    // Abuse CSSRect to store all LogicalRect's dimensions in CSS pixels.
+    return ToString(mozilla::CSSRect(CSSPixel::FromAppUnits(aRect.IStart(aWM)),
+                                     CSSPixel::FromAppUnits(aRect.BStart(aWM)),
+                                     CSSPixel::FromAppUnits(aRect.ISize(aWM)),
+                                     CSSPixel::FromAppUnits(aRect.BSize(aWM))));
+  }
+  return ToString(aRect);
+}
+
+std::string nsIFrame::ConvertToString(const LogicalSize& aSize,
+                                      const WritingMode aWM, ListFlags aFlags) {
+  if (aFlags.contains(ListFlag::DisplayInCSSPixels)) {
+    // Abuse CSSSize to store all LogicalSize's dimensions in CSS pixels.
+    return ToString(CSSSize(CSSPixel::FromAppUnits(aSize.ISize(aWM)),
+                            CSSPixel::FromAppUnits(aSize.BSize(aWM))));
+  }
+  return ToString(aSize);
+}
+
 // Debugging
 void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
                            ListFlags aFlags) const {
@@ -8084,9 +8106,9 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
       aTo += nsPrintfCString(" FFR");
       if (nsFontInflationData* data =
               nsFontInflationData::FindFontInflationDataFor(this)) {
-        aTo += nsPrintfCString(",enabled=%s,UIS=%s",
-                               data->InflationEnabled() ? "yes" : "no",
-                               ToString(data->UsableISize()).c_str());
+        aTo += nsPrintfCString(
+            ",enabled=%s,UIS=%s", data->InflationEnabled() ? "yes" : "no",
+            ConvertToString(data->UsableISize(), aFlags).c_str());
       }
     }
     if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER)) {
@@ -8094,12 +8116,13 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     }
     aTo += nsPrintfCString(" FI=%f", nsLayoutUtils::FontSizeInflationFor(this));
   }
-  aTo += nsPrintfCString(" %s", ToString(mRect).c_str());
+  aTo += nsPrintfCString(" %s", ConvertToString(mRect, aFlags).c_str());
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || wm.IsBidiRTL()) {
-    aTo += nsPrintfCString(" wm=%s logical-size=(%s)", ToString(wm).c_str(),
-                           ToString(GetLogicalSize()).c_str());
+    aTo +=
+        nsPrintfCString(" wm=%s logical-size=(%s)", ToString(wm).c_str(),
+                        ConvertToString(GetLogicalSize(), wm, aFlags).c_str());
   }
 
   nsIFrame* parent = GetParent();
@@ -8108,27 +8131,30 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     if (pWM.IsVertical() || pWM.IsBidiRTL()) {
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
-      aTo += nsPrintfCString(
-          " parent-wm=%s cs=(%s) logical-rect=%s", ToString(pWM).c_str(),
-          ToString(containerSize).c_str(), ToString(lr).c_str());
+      aTo += nsPrintfCString(" parent-wm=%s cs=(%s) logical-rect=%s",
+                             ToString(pWM).c_str(),
+                             ConvertToString(containerSize, aFlags).c_str(),
+                             ConvertToString(lr, pWM, aFlags).c_str());
     }
   }
   nsIFrame* f = const_cast<nsIFrame*>(this);
   if (f->HasOverflowAreas()) {
     nsRect vo = f->GetVisualOverflowRect();
     if (!vo.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" vis-overflow=%s", ToString(vo).c_str());
+      aTo += nsPrintfCString(" vis-overflow=%s",
+                             ConvertToString(vo, aFlags).c_str());
     }
     nsRect so = f->GetScrollableOverflowRect();
     if (!so.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" scr-overflow=%s", ToString(so).c_str());
+      aTo += nsPrintfCString(" scr-overflow=%s",
+                             ConvertToString(so, aFlags).c_str());
     }
   }
   bool hasNormalPosition;
   nsPoint normalPosition = GetNormalPosition(&hasNormalPosition);
   if (hasNormalPosition) {
     aTo += nsPrintfCString(" normal-position=%s",
-                           ToString(normalPosition).c_str());
+                           ConvertToString(normalPosition, aFlags).c_str());
   }
   if (0 != mState) {
     aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);
