@@ -892,11 +892,11 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
     }
   }
 
+  SetEvent(client_info.dump_generated_handle());
+
   if (dump_callback_ && execute_callback) {
     dump_callback_(dump_context_, client_info, dump_path);
   }
-
-  SetEvent(client_info.dump_generated_handle());
 }
 
 void CrashGenerationServer::set_include_context_heap(bool enabled) {
