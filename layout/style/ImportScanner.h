@@ -67,7 +67,7 @@ struct ImportScanner final {
   };
 
   void EmitUrl();
-  MOZ_MUST_USE State Scan(char16_t aChar);
+  [[nodiscard]] State Scan(char16_t aChar);
 
   static constexpr const uint32_t kMaxRuleNameLength = 7;  // (charset, import)
 

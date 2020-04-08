@@ -327,8 +327,8 @@ class nsTextControlFrame : public nsContainerFrame,
 
   void CacheValue(const nsAString& aValue) { mCachedValue.Assign(aValue); }
 
-  MOZ_MUST_USE bool CacheValue(const nsAString& aValue,
-                               const mozilla::fallible_t& aFallible) {
+  [[nodiscard]] bool CacheValue(const nsAString& aValue,
+                                const mozilla::fallible_t& aFallible) {
     if (!mCachedValue.Assign(aValue, aFallible)) {
       ClearCachedValue();
       return false;

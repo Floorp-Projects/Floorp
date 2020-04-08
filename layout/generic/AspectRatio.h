@@ -39,7 +39,7 @@ struct AspectRatio {
   }
 
   // Inverts the ratio, in order to get the height / width ratio.
-  MOZ_MUST_USE AspectRatio Inverted() const {
+  [[nodiscard]] AspectRatio Inverted() const {
     return *this ? AspectRatio(1.0f / mRatio) : *this;
   }
 
