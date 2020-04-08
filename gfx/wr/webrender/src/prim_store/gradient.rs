@@ -19,6 +19,7 @@ use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStor
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
 use std::{hash, ops::{Deref, DerefMut}};
 use crate::util::pack_as_float;
+use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
 
 /// The maximum number of stops a gradient may have to use the fast path.
 pub const GRADIENT_FP_STOPS: usize = 4;
@@ -151,9 +152,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         // gradient in a smaller task, and drawing as an image.
         // TODO(gw): Aim to reduce the constraints on fast path gradients in future,
         //           although this catches the vast majority of gradients on real pages.
-        let supports_caching =
-            // No repeating support in fast path
-            item.extend_mode == ExtendMode::Clamp &&
+        let mut supports_caching =
             // Gradient must cover entire primitive
             item.tile_spacing.w + item.stretch_size.w >= common.prim_size.width &&
             item.tile_spacing.h + item.stretch_size.h >= common.prim_size.height &&
@@ -162,6 +161,31 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
              item.start_point.y.approx_eq(&item.end_point.y)) &&
             // Fast path not supported on segmented (border-image) gradients.
             item.nine_patch.is_none();
+
+        // if we support caching and the gradient uses repeat, we might potentially
+        // emit a lot of quads to cover the primitive. each quad will still cover
+        // the entire gradient along the other axis, so the effect is linear in
+        // display resolution, not quadratic (unlike say a tiny background image
+        // tiling the display). in addition, excessive minification may lead to
+        // texture trashing. so use the minification as a proxy heuristic for both
+        // cases.
+        //
+        // note that the actual number of quads may be further increased due to
+        // hard-stops and/or more than GRADIENT_FP_STOPS stops per gradient.
+        if supports_caching && item.extend_mode == ExtendMode::Repeat {
+            let single_repeat_size =
+                if item.start_point.x.approx_eq(&item.end_point.x) {
+                    item.end_point.y - item.start_point.y
+                } else {
+                    item.end_point.x - item.start_point.x
+                };
+            let downscaling = single_repeat_size as f32 / TEXTURE_REGION_DIMENSIONS as f32;
+            if downscaling < 0.1 {
+                // if a single copy of the gradient is this small relative to its baked
+                // gradient cache, we have bad texture caching and/or too many quads.
+                supports_caching = false;
+            }
+        }
 
         // Convert the stops to more convenient representation
         // for the current gradient builder.

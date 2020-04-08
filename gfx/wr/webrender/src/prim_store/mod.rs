@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, ColorF, ColorU};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation, BorderStyle};
-use api::{PrimitiveKeyKind};
+use api::{PrimitiveKeyKind, ExtendMode};
 use api::units::*;
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
@@ -3267,17 +3267,20 @@ impl PrimitiveStore {
                     // size of the gradient task is the length of a texture cache
                     // region, for maximum accuracy, and a minimal size on the
                     // axis that doesn't matter.
-                    let (size, orientation, start_point, end_point) = if prim_data.start_point.x.approx_eq(&prim_data.end_point.x) {
-                        let start_point = -prim_data.start_point.y / gradient_size.height;
-                        let end_point = (prim_data.common.prim_size.height - prim_data.start_point.y) / gradient_size.height;
-                        let size = DeviceIntSize::new(16, TEXTURE_REGION_DIMENSIONS);
-                        (size, LineOrientation::Vertical, start_point, end_point)
-                    } else {
-                        let start_point = -prim_data.start_point.x / gradient_size.width;
-                        let end_point = (prim_data.common.prim_size.width - prim_data.start_point.x) / gradient_size.width;
-                        let size = DeviceIntSize::new(TEXTURE_REGION_DIMENSIONS, 16);
-                        (size, LineOrientation::Horizontal, start_point, end_point)
-                    };
+                    let (size, orientation, prim_start_offset, prim_end_offset) =
+                        if prim_data.start_point.x.approx_eq(&prim_data.end_point.x) {
+                            let prim_start_offset = -prim_data.start_point.y / gradient_size.height;
+                            let prim_end_offset = (prim_data.common.prim_size.height - prim_data.start_point.y)
+                                                    / gradient_size.height;
+                            let size = DeviceIntSize::new(16, TEXTURE_REGION_DIMENSIONS);
+                            (size, LineOrientation::Vertical, prim_start_offset, prim_end_offset)
+                        } else {
+                            let prim_start_offset = -prim_data.start_point.x / gradient_size.width;
+                            let prim_end_offset = (prim_data.common.prim_size.width - prim_data.start_point.x)
+                                                    / gradient_size.width;
+                            let size = DeviceIntSize::new(TEXTURE_REGION_DIMENSIONS, 16);
+                            (size, LineOrientation::Horizontal, prim_start_offset, prim_end_offset)
+                        };
 
                     // Build the cache key, including information about the stops.
                     let mut stops = vec![GradientStopKey::empty(); prim_data.stops.len()];
@@ -3298,123 +3301,224 @@ impl PrimitiveStore {
                         }
                     }
 
-                    // To support clamping, we need to make sure that quads are emitted for the
-                    // segments before and after the 0.0...1.0 range of offsets.  The loop below
-                    // can handle that by duplicating the first and last point if necessary:
-                    if start_point < 0.0 {
-                        stops.insert(0, GradientStopKey {
-                            offset: start_point,
-                            color : stops[0].color
-                        });
-                    }
-
-                    if end_point > 1.0 {
-                        stops.push( GradientStopKey {
-                            offset: end_point,
-                            color : stops[stops.len()-1].color
-                        });
-                    }
-
                     gradient.cache_segments.clear();
 
-                    let mut first_stop = 0;
-                    // look for an inclusive range of stops [first_stop, last_stop].
-                    // once first_stop points at (or past) the last stop, we're done.
-                    while first_stop < stops.len()-1 {
+                    // emit render task caches and image rectangles to draw a gradient
+                    // with offsets from start_offset to end_offset.
+                    //
+                    // the primitive is covered by a gradient that ranges from
+                    // prim_start_offset to prim_end_offset.
+                    //
+                    // when clamping, these two pairs of offsets will always be the same.
+                    // when repeating, however, we march across the primitive, blitting
+                    // copies of the gradient along the way.  each copy has a range from
+                    // 0.0 to 1.0 (assuming it's fully visible), but where it appears on
+                    // the primitive changes as we go.  this position is also expressed
+                    // as an offset: gradient_offset_base.  that is, in terms of stops,
+                    // we draw a gradient from start_offset to end_offset.  its actual
+                    // location on the primitive is at start_offset + gradient_offset_base.
+                    //
+                    // either way, we need a while-loop to draw the gradient as well
+                    // because it might have more than 4 stops (the maximum of a cached
+                    // segment) and/or hard stops. so we have a walk-within-the-walk from
+                    // start_offset to end_offset caching up to GRADIENT_FP_STOPS stops at a
+                    // time.
+                    fn emit_segments(start_offset: f32, // start and end offset together are
+                                     end_offset: f32,   // always a subrange of 0..1
+                                     gradient_offset_base: f32,
+                                     prim_start_offset: f32, // the offsets of the entire gradient as it
+                                     prim_end_offset: f32,   // covers the entire primitive.
+                                     prim_origin_in: LayoutPoint,
+                                     prim_size_in: LayoutSize,
+                                     task_size: DeviceIntSize,
+                                     is_opaque: bool,
+                                     stops: &[GradientStopKey],
+                                     orientation: LineOrientation,
+                                     frame_state: &mut FrameBuildingState,
+                                     gradient: &mut LinearGradientPrimitive)
+                    {
+                        // these prints are used to generate documentation examples, so
+                        // leaving them in but commented out:
+                        //println!("emit_segments call:");
+                        //println!("\tstart_offset: {}, end_offset: {}", start_offset, end_offset);
+                        //println!("\tprim_start_offset: {}, prim_end_offset: {}", prim_start_offset, prim_end_offset);
+                        //println!("\tgradient_offset_base: {}", gradient_offset_base);
+                        let mut first_stop = 0;
+                        // look for an inclusive range of stops [first_stop, last_stop].
+                        // once first_stop points at (or past) the last stop, we're done.
+                        while first_stop < stops.len()-1 {
 
-                        // if the entire segment starts at an offset that's past the primitive's
-                        // end_point, we're done.
-                        if stops[first_stop].offset > end_point {
-                            break;
-                        }
-
-                        // accumulate stops until we have GRADIENT_FP_STOPS of them, or we hit
-                        // a hard stop:
-                        let mut last_stop = first_stop;
-                        let mut hard_stop = false;   // did we stop on a hard stop?
-                        while last_stop < stops.len()-1 &&
-                              last_stop - first_stop + 1 < GRADIENT_FP_STOPS
-                        {
-                            if stops[last_stop+1].offset == stops[last_stop].offset {
-                                hard_stop = true;
-                                break;
+                            // if the entire sub-gradient starts at an offset that's past the
+                            // segment's end offset, we're done.
+                            if stops[first_stop].offset > end_offset {
+                                return;
                             }
 
-                            last_stop = last_stop + 1;
-                        }
+                            // accumulate stops until we have GRADIENT_FP_STOPS of them, or we hit
+                            // a hard stop:
+                            let mut last_stop = first_stop;
+                            let mut hard_stop = false;   // did we stop on a hard stop?
+                            while last_stop < stops.len()-1 &&
+                                  last_stop - first_stop + 1 < GRADIENT_FP_STOPS
+                            {
+                                if stops[last_stop+1].offset == stops[last_stop].offset {
+                                    hard_stop = true;
+                                    break;
+                                }
 
-                        let num_stops = last_stop - first_stop + 1;
-
-                        // repeated hard stops at the same offset, skip
-                        if num_stops == 0 {
-                            first_stop = last_stop + 1;
-                            continue;
-                        }
-
-                        // if the last stop offset is before start_point, the segment's not visible:
-                        if stops[last_stop].offset < start_point {
-                            first_stop = if hard_stop { last_stop+1 } else { last_stop };
-                            continue;
-                        }
-
-                        let segment_start_point = start_point.max(stops[first_stop].offset);
-                        let segment_end_point   = end_point  .min(stops[last_stop ].offset);
-
-                        let mut segment_stops = [GradientStopKey::empty(); GRADIENT_FP_STOPS];
-                        for i in 0..num_stops {
-                            segment_stops[i] = stops[first_stop + i];
-                        }
-
-                        let cache_key = GradientCacheKey {
-                            orientation,
-                            start_stop_point: VectorKey {
-                                x: segment_start_point,
-                                y: segment_end_point,
-                            },
-                            stops: segment_stops,
-                        };
-
-                        let mut prim_origin = prim_instance.prim_origin;
-                        let mut prim_size   = prim_data.common.prim_size;
-
-                        let inv_length = 1.0 / ( end_point - start_point );
-                        if orientation == LineOrientation::Horizontal {
-                            prim_origin.x    += ( segment_start_point - start_point )       * inv_length * prim_size.width;
-                            prim_size.width  *= ( segment_end_point - segment_start_point ) * inv_length;
-                        } else {
-                            prim_origin.y    += ( segment_start_point - start_point )       * inv_length * prim_size.height;
-                            prim_size.height *= ( segment_end_point - segment_start_point ) * inv_length;
-                        }
-
-                        let local_rect = LayoutRect::new( prim_origin, prim_size );
-
-                        // Request the render task each frame.
-                        gradient.cache_segments.push(
-                            CachedGradientSegment {
-                                handle: frame_state.resource_cache.request_render_task(
-                                    RenderTaskCacheKey {
-                                        size,
-                                        kind: RenderTaskCacheKeyKind::Gradient(cache_key),
-                                    },
-                                    frame_state.gpu_cache,
-                                    frame_state.render_tasks,
-                                    None,
-                                    prim_data.stops_opacity.is_opaque,
-                                    |render_tasks| {
-                                        render_tasks.add().init(RenderTask::new_gradient(
-                                            size,
-                                            segment_stops,
-                                            orientation,
-                                            segment_start_point,
-                                            segment_end_point,
-                                        ))
-                                    }),
-                                local_rect: local_rect,
+                                last_stop = last_stop + 1;
                             }
-                        );
 
-                        // if ending on a hardstop, skip past it for the start of the next run:
-                        first_stop = if hard_stop { last_stop + 1 } else { last_stop };
+                            let num_stops = last_stop - first_stop + 1;
+
+                            // repeated hard stops at the same offset, skip
+                            if num_stops == 0 {
+                                first_stop = last_stop + 1;
+                                continue;
+                            }
+
+                            // if the last_stop offset is before start_offset, the segment's not visible:
+                            if stops[last_stop].offset < start_offset {
+                                first_stop = if hard_stop { last_stop+1 } else { last_stop };
+                                continue;
+                            }
+
+                            let segment_start_point = start_offset.max(stops[first_stop].offset);
+                            let segment_end_point   = end_offset  .min(stops[last_stop ].offset);
+
+                            let mut segment_stops = [GradientStopKey::empty(); GRADIENT_FP_STOPS];
+                            for i in 0..num_stops {
+                                segment_stops[i] = stops[first_stop + i];
+                            }
+
+                            let cache_key = GradientCacheKey {
+                                orientation,
+                                start_stop_point: VectorKey {
+                                    x: segment_start_point,
+                                    y: segment_end_point,
+                                },
+                                stops: segment_stops,
+                            };
+
+                            let mut prim_origin = prim_origin_in;
+                            let mut prim_size   = prim_size_in;
+
+                            // the primitive is covered by a segment from overall_start to
+                            // overall_end; scale and shift based on the length of the actual
+                            // segment that we're drawing:
+                            let inv_length = 1.0 / ( prim_end_offset - prim_start_offset );
+                            if orientation == LineOrientation::Horizontal {
+                                prim_origin.x    += ( segment_start_point + gradient_offset_base - prim_start_offset )
+                                                    * inv_length * prim_size.width;
+                                prim_size.width  *= ( segment_end_point - segment_start_point )
+                                                    * inv_length; // 2 gradient_offset_bases cancel out
+                            } else {
+                                prim_origin.y    += ( segment_start_point + gradient_offset_base - prim_start_offset )
+                                                    * inv_length * prim_size.height;
+                                prim_size.height *= ( segment_end_point - segment_start_point )
+                                                    * inv_length; // 2 gradient_offset_bases cancel out
+                            }
+
+                            // <= 0 can happen if a hardstop lands exactly on an edge
+                            if prim_size.area() > 0.0 {
+                                let local_rect = LayoutRect::new( prim_origin, prim_size );
+
+                                // documentation example traces:
+                                //println!("\t\tcaching from offset {} to {}", segment_start_point, segment_end_point);
+                                //println!("\t\tand blitting to {:?}", local_rect);
+
+                                // Request the render task each frame.
+                                gradient.cache_segments.push(
+                                    CachedGradientSegment {
+                                        handle: frame_state.resource_cache.request_render_task(
+                                            RenderTaskCacheKey {
+                                                size: task_size,
+                                                kind: RenderTaskCacheKeyKind::Gradient(cache_key),
+                                            },
+                                            frame_state.gpu_cache,
+                                            frame_state.render_tasks,
+                                            None,
+                                            is_opaque,
+                                            |render_tasks| {
+                                                render_tasks.add().init(RenderTask::new_gradient(
+                                                    task_size,
+                                                    segment_stops,
+                                                    orientation,
+                                                    segment_start_point,
+                                                    segment_end_point,
+                                                ))
+                                            }),
+                                        local_rect: local_rect,
+                                    }
+                                );
+                            }
+
+                            // if ending on a hardstop, skip past it for the start of the next run:
+                            first_stop = if hard_stop { last_stop + 1 } else { last_stop };
+                        }
+                    }
+
+                    if prim_data.extend_mode == ExtendMode::Clamp ||
+                       ( prim_start_offset >= 0.0 && prim_end_offset <= 1.0 )  // repeat doesn't matter
+                    {
+                        // To support clamping, we need to make sure that quads are emitted for the
+                        // segments before and after the 0.0...1.0 range of offsets.  emit_segments
+                        // can handle that by duplicating the first and last point if necessary:
+                        if prim_start_offset < 0.0 {
+                            stops.insert(0, GradientStopKey {
+                                offset: prim_start_offset,
+                                color : stops[0].color
+                            });
+                        }
+
+                        if prim_end_offset > 1.0 {
+                            stops.push( GradientStopKey {
+                                offset: prim_end_offset,
+                                color : stops[stops.len()-1].color
+                            });
+                        }
+
+                        emit_segments(prim_start_offset, prim_end_offset,
+                                      0.0,
+                                      prim_start_offset, prim_end_offset,
+                                      prim_instance.prim_origin,
+                                      prim_data.common.prim_size,
+                                      size,
+                                      prim_data.stops_opacity.is_opaque,
+                                      &stops,
+                                      orientation,
+                                      frame_state,
+                                      gradient);
+                    }
+                    else
+                    {
+                        let mut segment_start_point = prim_start_offset;
+                        while segment_start_point < prim_end_offset {
+
+                            // gradient stops are expressed in the range 0.0 ... 1.0, so to blit
+                            // a copy of the gradient, snap to the integer just before the offset
+                            // we want ...
+                            let gradient_offset_base = segment_start_point.floor();
+                            // .. and then draw from a start offset in range 0 to 1 ...
+                            let repeat_start = segment_start_point - gradient_offset_base;
+                            // .. up to the next integer, but clamped to the primitive's real
+                            // end offset:
+                            let repeat_end = (gradient_offset_base + 1.0).min(prim_end_offset) - gradient_offset_base;
+
+                            emit_segments(repeat_start, repeat_end,
+                                          gradient_offset_base,
+                                          prim_start_offset, prim_end_offset,
+                                          prim_instance.prim_origin,
+                                          prim_data.common.prim_size,
+                                          size,
+                                          prim_data.stops_opacity.is_opaque,
+                                          &stops,
+                                          orientation,
+                                          frame_state,
+                                          gradient);
+
+                            segment_start_point = repeat_end + gradient_offset_base;
+                        }
                     }
                 }
 
