@@ -67,6 +67,7 @@ android {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".fenix.debug"
+            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             manifestPlaceholders.isRaptorEnabled = "true"
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
@@ -86,6 +87,7 @@ android {
         fenixNightly releaseTemplate >> {
             applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             manifestPlaceholders = ["deepLinkScheme": "fenix-nightly"]
         }
         fenixBeta releaseTemplate >> {
@@ -130,6 +132,7 @@ android {
         }
         fennecNightly releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             applicationIdSuffix ".fennec_aurora"
             manifestPlaceholders = [
                     // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
