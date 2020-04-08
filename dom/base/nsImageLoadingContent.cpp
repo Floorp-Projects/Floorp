@@ -1230,12 +1230,16 @@ uint32_t nsImageLoadingContent::NaturalWidth() {
     mCurrentRequest->GetImage(getter_AddRefs(image));
   }
 
-  int32_t width;
-  if (image && NS_SUCCEEDED(image->GetWidth(&width))) {
-    return width;
+  int32_t size = 0;
+  if (image) {
+    if (image->GetOrientation().SwapsWidthAndHeight() &&
+        StaticPrefs::image_honor_orientation_metadata_natural_size()) {
+      Unused << image->GetHeight(&size);
+    } else {
+      Unused << image->GetWidth(&size);
+    }
   }
-
-  return 0;
+  return size;
 }
 
 uint32_t nsImageLoadingContent::NaturalHeight() {
@@ -1244,12 +1248,16 @@ uint32_t nsImageLoadingContent::NaturalHeight() {
     mCurrentRequest->GetImage(getter_AddRefs(image));
   }
 
-  int32_t height;
-  if (image && NS_SUCCEEDED(image->GetHeight(&height))) {
-    return height;
+  int32_t size = 0;
+  if (image) {
+    if (image->GetOrientation().SwapsWidthAndHeight() &&
+        StaticPrefs::image_honor_orientation_metadata_natural_size()) {
+      Unused << image->GetWidth(&size);
+    } else {
+      Unused << image->GetHeight(&size);
+    }
   }
-
-  return 0;
+  return size;
 }
 
 EventStates nsImageLoadingContent::ImageState() const {
