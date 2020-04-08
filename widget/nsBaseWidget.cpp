@@ -1451,21 +1451,18 @@ void nsBaseWidget::ResizeClient(const DesktopSize& aSize, bool aRepaint) {
 
   LayoutDeviceIntRect bounds = GetBounds();
   LayoutDeviceIntRect clientBounds = GetClientBounds();
+  LayoutDeviceSize layoutDelta(bounds.Size() - clientBounds.Size());
 
   // GetClientBounds and GetBounds are device pixels; scale back to desktop pixels
   // if that's what this widget uses for the Move/Resize APIs
   if (BoundsUseDesktopPixels()) {
-    DesktopSize desktopDelta =
-        (LayoutDeviceIntSize(bounds.Width(), bounds.Height()) -
-         clientBounds.Size()) /
-        GetDesktopToDeviceScale();
-    Resize(aSize.width + desktopDelta.width, aSize.height + desktopDelta.height,
-           aRepaint);
+    DesktopSize desktopDelta = layoutDelta / GetDesktopToDeviceScale();
+    DesktopSize finalSize = aSize + desktopDelta;
+    Resize(finalSize.width, finalSize.height, aRepaint);
   } else {
     LayoutDeviceSize layoutSize = aSize * GetDesktopToDeviceScale();
-    Resize(bounds.Width() + (layoutSize.width - clientBounds.Width()),
-           bounds.Height() + (layoutSize.height - clientBounds.Height()),
-           aRepaint);
+    LayoutDeviceSize finalSize = layoutSize + layoutDelta;
+    Resize(finalSize.width, finalSize.height, aRepaint);
   }
 }
 
@@ -1475,23 +1472,20 @@ void nsBaseWidget::ResizeClient(const DesktopRect& aRect, bool aRepaint) {
 
   LayoutDeviceIntRect bounds = GetBounds();
   LayoutDeviceIntRect clientBounds = GetClientBounds();
+  LayoutDeviceSize layoutDelta(bounds.Size() - clientBounds.Size());
   LayoutDeviceIntPoint clientOffset = GetClientOffset();
   DesktopToLayoutDeviceScale scale = GetDesktopToDeviceScale();
 
   if (BoundsUseDesktopPixels()) {
     DesktopPoint desktopOffset = clientOffset / scale;
-    DesktopSize desktopDelta =
-        (LayoutDeviceIntSize(bounds.Width(), bounds.Height()) -
-         clientBounds.Size()) /
-        scale;
-    Resize(aRect.X() - desktopOffset.x, aRect.Y() - desktopOffset.y,
-           aRect.Width() + desktopDelta.width,
-           aRect.Height() + desktopDelta.height, aRepaint);
+    DesktopSize desktopDelta = layoutDelta / scale;
+    DesktopRect finalRect = aRect - desktopOffset + desktopDelta;
+    Resize(finalRect.X(), finalRect.Y(), finalRect.Width(), finalRect.Height(),
+           aRepaint);
   } else {
     LayoutDeviceRect layoutRect = aRect * scale;
-    Resize(layoutRect.X() - clientOffset.x, layoutRect.Y() - clientOffset.y,
-           layoutRect.Width() + bounds.Width() - clientBounds.Width(),
-           layoutRect.Height() + bounds.Height() - clientBounds.Height(),
+    LayoutDeviceRect finalRect = layoutRect - clientOffset + layoutDelta;
+    Resize(finalRect.X(), finalRect.Y(), finalRect.Width(), finalRect.Height(),
            aRepaint);
   }
 }
