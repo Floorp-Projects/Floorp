@@ -362,6 +362,11 @@ class WindowsDllInterceptor final
     // NB: We intentionally leak mModule
   }
 
+  constexpr static uint32_t GetWorstCaseRequiredBytesToPatch() {
+    return WindowsDllDetourPatcherPrimitive<
+        typename VMPolicy::MMPolicyT>::GetWorstCaseRequiredBytesToPatch();
+  }
+
  private:
   /**
    * Hook/detour the method aName from the DLL we set in Init so that it calls
