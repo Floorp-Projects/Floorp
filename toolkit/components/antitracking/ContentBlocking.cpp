@@ -381,8 +381,8 @@ ContentBlocking::AllowAccessFor(
   }
 
   auto storePermission =
-      [parentInnerWindow, topOuterWindow, topInnerWindow, trackingOrigin,
-       trackingPrincipal, aReason, behavior,
+      [parentInnerWindow, topInnerWindow, trackingOrigin, trackingPrincipal,
+       aReason, behavior,
        topLevelWindowId](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
     AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
@@ -394,11 +394,8 @@ ContentBlocking::AllowAccessFor(
     // Let's inform the parent window.
     nsGlobalWindowInner::Cast(parentInnerWindow)->StorageAccessGranted();
 
-    nsIChannel* channel =
-        topOuterWindow->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
-
     ContentBlockingNotifier::OnEvent(
-        channel, parentInnerWindow->GetExtantDoc()->GetChannel(), false,
+        parentInnerWindow->GetExtantDoc()->GetChannel(), false,
         CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)
             ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
             : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
