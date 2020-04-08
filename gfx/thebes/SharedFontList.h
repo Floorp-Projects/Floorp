@@ -92,9 +92,12 @@ struct String {
 
   const nsCString AsString(FontList* aList) const {
     MOZ_ASSERT(!mPointer.IsNull());
-    nsCString res;
-    res.AssignLiteral(static_cast<const char*>(mPointer.ToPtr(aList)), mLength);
-    return res;
+    // It's tempting to use AssignLiteral here so that we get an nsCString that
+    // simply wraps the character data in the shmem block without needing to
+    // allocate or copy. But that's unsafe because in the event of font-list
+    // reinitalization, that shared memory will be unmapped; then any copy of
+    // the nsCString that may still be around will crash if accessed.
+    return nsCString(static_cast<const char*>(mPointer.ToPtr(aList)), mLength);
   }
 
   void Assign(const nsACString& aString, FontList* aList);
