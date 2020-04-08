@@ -4086,7 +4086,7 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
     return IPC_OK();
   }
 
-  context->LoadURI(nullptr, aLoadState, aSetNavigating);
+  context->LoadURI(aLoadState, aSetNavigating);
 
   nsCOMPtr<nsPIDOMWindowOuter> window = context->GetDOMWindow();
   BrowserChild* bc = BrowserChild::GetFrom(window);
@@ -4123,7 +4123,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
   }
   BrowsingContext* context = aContext.get();
 
-  context->InternalLoad(nullptr, aLoadState, nullptr, nullptr);
+  context->InternalLoad(aLoadState, nullptr, nullptr);
 
   if (aTakeFocus) {
     if (nsCOMPtr<nsPIDOMWindowOuter> domWin = context->GetDOMWindow()) {
