@@ -16,10 +16,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
 
 class nsINode;
 class nsIURI;
+class nsIVariant;
 class txStylesheet;
 class txResultRecycler;
 class txIGlobalParameter;

@@ -373,7 +373,7 @@ const txXPathNode* txExecutionState::retrieveDocument(const nsAString& aUri) {
     return nullptr;
   }
 
-  MOZ_LOG(txLog::xslt, LogLevel::Debug,
+  MOZ_LOG(txLog::xslt, mozilla::LogLevel::Debug,
           ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
 
   // try to get already loaded document
