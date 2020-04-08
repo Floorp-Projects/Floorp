@@ -100,6 +100,21 @@ class WindowsDllDetourPatcherPrimitive {
       const WindowsDllDetourPatcherPrimitive&) = delete;
   WindowsDllDetourPatcherPrimitive& operator=(
       WindowsDllDetourPatcherPrimitive&&) = delete;
+
+  bool AddIrreversibleHook(const MMPolicyT& aMMPolicy, FARPROC aTargetFn,
+                           intptr_t aHookDest) {
+    ReadOnlyTargetFunction<MMPolicyT> targetReadOnly(aMMPolicy, aTargetFn);
+
+    WritableTargetFunction<MMPolicyT> targetWritable(
+        targetReadOnly.Promote(GetWorstCaseRequiredBytesToPatch()));
+    if (!targetWritable) {
+      return false;
+    }
+
+    ApplyDefaultPatch(targetWritable, aHookDest);
+
+    return targetWritable.Commit();
+  }
 };
 
 template <typename VMPolicy>
