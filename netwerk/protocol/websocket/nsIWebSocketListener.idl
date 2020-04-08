@@ -84,7 +84,4 @@ interface nsIWebSocketListener : nsISupports
     [must_use] void onServerClose(in nsISupports aContext,
                                   in unsigned short aCode,
                                   in AUTF8String aReason);
-
 };
-
-

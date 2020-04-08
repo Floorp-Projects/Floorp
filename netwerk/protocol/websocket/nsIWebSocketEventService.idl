@@ -6,6 +6,8 @@
 #include "domstubs.idl"
 #include "nsISupports.idl"
 
+interface nsIWeakReference;
+
 [scriptable, builtinclass, uuid(6714a6be-2265-4f73-a988-d78a12416037)]
 interface nsIWebSocketFrame : nsISupports
 {
@@ -72,6 +74,9 @@ interface nsIWebSocketEventListener : nsISupports
 [scriptable, builtinclass, uuid(b89d1b90-2cf3-4d8f-ac21-5aedfb25c760)]
 interface nsIWebSocketEventService : nsISupports
 {
+  [must_use] void sendMessage(in unsigned long aWebSocketSerialID,
+                                       in AString aMessage);
+
   [must_use] void addListener(in unsigned long long aInnerWindowID,
                               in nsIWebSocketEventListener aListener);
 
