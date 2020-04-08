@@ -406,17 +406,6 @@ impl GpuCacheAddress {
     }
 }
 
-/// The information about an interned primitive that
-/// is stored and available in the scene builder
-/// thread.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
-pub struct PrimitiveSceneData {
-    pub prim_size: LayoutSize,
-    pub flags: PrimitiveFlags,
-}
-
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Debug, Clone, MallocSizeOf, PartialEq)]
@@ -871,7 +860,7 @@ type PrimitiveDataHandle = intern::Handle<PrimitiveKeyKind>;
 impl intern::Internable for PrimitiveKeyKind {
     type Key = PrimitiveKey;
     type StoreData = PrimitiveTemplate;
-    type InternData = PrimitiveSceneData;
+    type InternData = ();
 }
 
 impl InternablePrimitive for PrimitiveKeyKind {
@@ -4467,7 +4456,7 @@ fn update_opacity_binding(
 
 /// Trait for primitives that are directly internable.
 /// see SceneBuilder::add_primitive<P>
-pub trait InternablePrimitive: intern::Internable<InternData = PrimitiveSceneData> + Sized {
+pub trait InternablePrimitive: intern::Internable<InternData = ()> + Sized {
     /// Build a new key from self with `info`.
     fn into_key(
         self,
