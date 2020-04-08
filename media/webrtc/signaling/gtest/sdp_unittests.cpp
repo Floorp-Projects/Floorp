@@ -5704,4 +5704,68 @@ TEST_F(SdpTest, hugeSdp) {
 
   ParseSdp(offer);
 }
+
+TEST_P(NewSdpTest, CheckSsrcGroup) {
+  ParseSdp(kVideoSdp + "a=ssrc-group:\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:BLAH\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 1 2 3 four\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 1\r\n");
+
+  std::array<char, 8192> gigantic = {{0}};
+  gigantic.fill('A');
+  gigantic[gigantic.size() - 1] = 0;
+  ParseSdp(kVideoSdp + "a=ssrc-group:" + gigantic.data() + "\r\n", false);
+
+  ParseSdp(kVideoSdp + "a=ssrc-group:fid 1\r\n");
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID \r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 0\r\n");
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 9999999999\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 99999999999999999999\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 1twothree\r\n", false);
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID -1\r\n", false);
+
+  ParseSdp(kVideoSdp + "a=ssrc-group:FID 3156517279 2673335628\r\n");
+  ASSERT_EQ(1U, Sdp()->GetMediaSectionCount());
+
+  const SdpSsrcGroupAttributeList& group =
+      Sdp()->GetMediaSection(0).GetAttributeList().GetSsrcGroup();
+
+  ASSERT_EQ(1U, group.mSsrcGroups.size());
+  ASSERT_EQ(SdpSsrcGroupAttributeList::Semantics::kFid,
+            group.mSsrcGroups[0].semantics);
+  ASSERT_EQ(2U, group.mSsrcGroups[0].ssrcs.size());
+  ASSERT_EQ(3156517279U, group.mSsrcGroups[0].ssrcs[0]);
+  ASSERT_EQ(2673335628U, group.mSsrcGroups[0].ssrcs[1]);
+}
+
+TEST_P(NewSdpTest, CheckSsrcGroupSerialization) {
+  std::vector ssrcs = {3156517279U, 2673335628U};
+  {
+    SdpSsrcGroupAttributeList list;
+    list.PushEntry(SdpSsrcGroupAttributeList::Semantics::kFec, ssrcs);
+    CheckSerialize("a=ssrc-group:FEC 3156517279 2673335628\r\n", list);
+  }
+  {
+    SdpSsrcGroupAttributeList list;
+    list.PushEntry(SdpSsrcGroupAttributeList::Semantics::kFid, ssrcs);
+    CheckSerialize("a=ssrc-group:FID 3156517279 2673335628\r\n", list);
+  }
+  {
+    SdpSsrcGroupAttributeList list;
+    list.PushEntry(SdpSsrcGroupAttributeList::Semantics::kFecFr, ssrcs);
+    CheckSerialize("a=ssrc-group:FEC-FR 3156517279 2673335628\r\n", list);
+  }
+  {
+    SdpSsrcGroupAttributeList list;
+    list.PushEntry(SdpSsrcGroupAttributeList::Semantics::kDup, ssrcs);
+    CheckSerialize("a=ssrc-group:DUP 3156517279 2673335628\r\n", list);
+  }
+  {
+    SdpSsrcGroupAttributeList list;
+    list.PushEntry(SdpSsrcGroupAttributeList::Semantics::kSim, ssrcs);
+    CheckSerialize("a=ssrc-group:SIM 3156517279 2673335628\r\n", list);
+  }
+}
+
 }  // End namespace test.
