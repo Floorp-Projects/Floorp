@@ -43,8 +43,10 @@
 <!ENTITY ldb.dumpWebShells.accesskey "W">
 <!ENTITY ldb.dumpContent.label "Content">
 <!ENTITY ldb.dumpContent.accesskey "C">
-<!ENTITY ldb.dumpFrames.label "Frames">
+<!ENTITY ldb.dumpFrames.label "Frames (app units)">
 <!ENTITY ldb.dumpFrames.accesskey "F">
+<!ENTITY ldb.dumpFramesInCSSPixels.label "Frames (CSS pixels)">
+<!ENTITY ldb.dumpFramesInCSSPixels.accesskey "P">
 <!ENTITY ldb.dumpViews.label "Views and Widgets">
 <!ENTITY ldb.dumpViews.accesskey "V">
 <!ENTITY ldb.dumpStyleSheets.label "Style Sheets">

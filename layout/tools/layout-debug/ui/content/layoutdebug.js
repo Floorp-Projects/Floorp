@@ -38,6 +38,7 @@ const COMMANDS = [
   "dumpWebShells",
   "dumpContent",
   "dumpFrames",
+  "dumpFramesInCSSPixels",
   "dumpViews",
   "dumpStyleSheets",
   "dumpMatchedRules",
