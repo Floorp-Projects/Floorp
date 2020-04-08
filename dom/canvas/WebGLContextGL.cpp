@@ -817,7 +817,6 @@ void WebGLContext::PixelStorei(GLenum pname, uint32_t param) {
   }
 
   ErrorInvalidEnumInfo("pname", pname);
-  return;
 }
 
 bool WebGLContext::DoReadPixelsAndConvert(
