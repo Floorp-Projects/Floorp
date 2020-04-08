@@ -1656,7 +1656,7 @@ public class GeckoSession implements Parcelable {
                         false, /* hasUserGesture */
                         true /* isDirectNavigation */);
 
-        shouldLoadUri(request).accept(allowOrDeny -> {
+        shouldLoadUri(request).getOrAccept(allowOrDeny -> {
             if (allowOrDeny == AllowOrDeny.DENY) {
                 return;
             }
@@ -1692,7 +1692,7 @@ public class GeckoSession implements Parcelable {
             if (delegateResult == null) {
                 result.complete(AllowOrDeny.ALLOW);
             } else {
-                delegateResult.accept(
+                delegateResult.getOrAccept(
                     allowOrDeny -> result.complete(allowOrDeny),
                     error -> result.completeExceptionally(error)
                 );
