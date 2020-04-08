@@ -15,6 +15,7 @@ NO_PGO = True
 
 UNIFIED_SOURCES += [
     'DllBlocklist.cpp',
+    'FunctionTableResolver.cpp',
     'LoaderPrivateAPI.cpp',
     'ModuleLoadFrame.cpp',
 ]
