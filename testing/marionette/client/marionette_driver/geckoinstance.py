@@ -11,6 +11,7 @@
 
 from __future__ import absolute_import
 
+import codecs
 import os
 import sys
 import tempfile
@@ -23,6 +24,7 @@ import mozversion
 
 from mozprofile import Profile
 from mozrunner import Runner, FennecEmulatorRunner
+import six
 from six import reraise
 
 from . import errors
@@ -311,10 +313,14 @@ class GeckoInstance(object):
     def _get_runner_args(self):
         process_args = {
             "processOutputLine": [NullOutput()],
+            "universal_newlines": True,
         }
 
         if self.gecko_log == "-":
-            process_args["stream"] = sys.stdout
+            if six.PY2:
+                process_args["stream"] = codecs.getwriter('utf-8')(sys.stdout)
+            else:
+                process_args["stream"] = codecs.getwriter('utf-8')(sys.stdout.buffer)
         else:
             process_args["logfile"] = self.gecko_log
 
@@ -459,6 +465,7 @@ class FennecInstance(GeckoInstance):
     def _get_runner_args(self):
         process_args = {
             "processOutputLine": [NullOutput()],
+            "universal_newlines": True,
         }
 
         env = {} if self.env is None else self.env.copy()

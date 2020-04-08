@@ -4,6 +4,7 @@
 
 import os
 import signal
+import six
 import re
 import subprocess
 from collections import namedtuple
@@ -43,7 +44,7 @@ def parse_issues(config, output, paths):
     line_no = 0
     diff = ""
     for line in output:
-        line = line.decode("utf-8")
+        line = six.ensure_text(line)
         match = diff_line.match(line)
         if match:
             if diff:
