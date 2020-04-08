@@ -100,7 +100,6 @@ class ExceptionHandler {
   // Breakpad will immediately report the exception as unhandled without
   // writing a minidump, allowing another handler the opportunity to handle it.
   typedef bool (*FilterCallback)(void* context, EXCEPTION_POINTERS* exinfo,
-                                 const mozilla::phc::AddrInfo* addr_info,
                                  MDRawAssertionInfo* assertion);
 
   // A callback function to run after the minidump has been written.

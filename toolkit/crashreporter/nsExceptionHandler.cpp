@@ -1734,7 +1734,6 @@ static void FreeBreakpadVM() {
  * Also calls FreeBreakpadVM if appropriate.
  */
 static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
-                      const phc::AddrInfo* addrInfo,
                       MDRawAssertionInfo* assertion) {
   if (!exinfo) {
     mozilla::IOInterposer::Disable();
@@ -1767,13 +1766,21 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
 }
 
 static bool ChildFPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
-                           const phc::AddrInfo* addrInfo,
                            MDRawAssertionInfo* assertion) {
-  bool result = FPEFilter(context, exinfo, addrInfo, assertion);
-  if (result) {
-    PrepareChildExceptionTimeAnnotations(context, addrInfo);
+  return FPEFilter(context, exinfo, assertion);
+}
+
+static bool ChildMinidumpCallback(const wchar_t* dump_path,
+                                  const wchar_t* minidump_id, void* context,
+                                  EXCEPTION_POINTERS* exinfo,
+                                  MDRawAssertionInfo* assertion,
+                                  const mozilla::phc::AddrInfo* addr_info,
+                                  bool succeeded) {
+  if (succeeded) {
+    PrepareChildExceptionTimeAnnotations(context, addr_info);
   }
-  return result;
+
+  return true;
 }
 
 static MINIDUMP_TYPE GetMinidumpType() {
@@ -3474,8 +3481,7 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
 
 #if defined(XP_WIN)
   gExceptionHandler = new google_breakpad::ExceptionHandler(
-      L"", ChildFPEFilter,
-      nullptr,  // no minidump callback
+      L"", ChildFPEFilter, ChildMinidumpCallback,
       reinterpret_cast<void*>(aCrashTimeAnnotationFile),
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
       NS_ConvertASCIItoUTF16(aCrashPipe).get(), nullptr);
