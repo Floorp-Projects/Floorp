@@ -33,7 +33,7 @@ class nsILineIterator {
   /**
    * The number of lines in the block
    */
-  virtual int32_t GetNumLines() = 0;
+  virtual int32_t GetNumLines() const = 0;
 
   /**
    * The prevailing direction of lines.

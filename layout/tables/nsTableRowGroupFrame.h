@@ -195,7 +195,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   /** Get the number of rows in a row group
    * @return the number of lines in a row group
    */
-  virtual int32_t GetNumLines() override;
+  virtual int32_t GetNumLines() const override;
 
   /** @see nsILineIterator.h GetDirection
    * @return true if the table is rtl
