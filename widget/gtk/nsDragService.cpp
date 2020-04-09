@@ -45,6 +45,7 @@
 #include "nsArrayUtils.h"
 #ifdef MOZ_WAYLAND
 #  include "nsClipboardWayland.h"
+#  include "gfxPlatformGtk.h"
 #endif
 
 using namespace mozilla;
@@ -59,7 +60,14 @@ using namespace mozilla::gfx;
 // directly) so that this code can be compiled against versions of GTK+ that
 // do not have GtkDragResult.
 // GtkDragResult is available from GTK+ version 2.12.
-enum { MOZ_GTK_DRAG_RESULT_SUCCESS, MOZ_GTK_DRAG_RESULT_NO_TARGET };
+enum {
+  MOZ_GTK_DRAG_RESULT_SUCCESS,
+  MOZ_GTK_DRAG_RESULT_NO_TARGET,
+  MOZ_GTK_DRAG_RESULT_USER_CANCELLED,
+  MOZ_GTK_DRAG_RESULT_TIMEOUT_EXPIRED,
+  MOZ_GTK_DRAG_RESULT_GRAB_BROKEN,
+  MOZ_GTK_DRAG_RESULT_ERROR
+};
 
 static LazyLogModule sDragLm("nsDragService");
 
@@ -74,6 +82,7 @@ static const char gMozUrlType[] = "_NETSCAPE_URL";
 static const char gTextUriListType[] = "text/uri-list";
 static const char gTextPlainUTF8Type[] = "text/plain;charset=utf-8";
 static const char gXdndDirectSaveType[] = "XdndDirectSave0";
+static const char gTabDropType[] = "application/x-moz-tabbrowser-tab";
 
 static void invisibleSourceDragBegin(GtkWidget* aWidget,
                                      GdkDragContext* aContext, gpointer aData);
@@ -346,12 +355,10 @@ nsresult nsDragService::InvokeDragSessionImpl(
       gtk_window_get_group(GetGtkWindow(mSourceDocument));
   gtk_window_group_add_window(window_group, GTK_WINDOW(mHiddenWidget));
 
-#ifdef MOZ_WIDGET_GTK
   // Get device for event source
   GdkDisplay* display = gdk_display_get_default();
   GdkDeviceManager* device_manager = gdk_display_get_device_manager(display);
   event.button.device = gdk_device_manager_get_client_pointer(device_manager);
-#endif
 
   // start our drag.
   GdkDragContext* context =
@@ -1252,6 +1259,9 @@ GtkTargetList* nsDragService::GetSourceList(void) {
 
 void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
                                          gint aResult) {
+  MOZ_LOG(sDragLm, LogLevel::Debug,
+          ("SourceEndDragSession result %d\n", aResult));
+
   // this just releases the list of data items that we provide
   mSourceDataItems = nullptr;
 
@@ -1272,6 +1282,8 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
       gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
       gdk_display_get_pointer(display, nullptr, &x, &y, nullptr);
       SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
+      MOZ_LOG(sDragLm, LogLevel::Debug,
+              ("guess drag end point %d %d\n", x * scale, y * scale));
     }
   }
 
@@ -1307,7 +1319,25 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   } else {
     dropEffect = DRAGDROP_ACTION_NONE;
 
-    if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET) {
+    bool isWaylandTabDrop = false;
+#ifdef MOZ_WAYLAND
+    // Bug 1527976. Wayland protocol does not have any way how to handle
+    // MOZ_GTK_DRAG_RESULT_NO_TARGET drop result so consider all tab
+    // drops as not cancelled on wayland.
+    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() &&
+        aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
+      for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
+           tmp = tmp->next) {
+        GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
+        gchar* name = gdk_atom_name(atom);
+        if (name && (strcmp(name, gTabDropType) == 0)) {
+          isWaylandTabDrop = true;
+          break;
+        }
+      }
+    }
+#endif
+    if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET && !isWaylandTabDrop) {
       mUserCancelled = true;
     }
   }
