@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for multiple extensions trying to filterResponseData on the same request</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const TEST_URL =
+  "http://example.org/tests/toolkit/components/extensions/test/mochitest/file_streamfilter.txt";
+
+add_task(async () => {
+  const firstExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        ({ requestId }) => {
+          const filter = browser.webRequest.filterResponseData(requestId);
+          filter.ondata = event => {
+            filter.write(new TextEncoder().encode("Start "));
+            filter.write(event.data);
+            filter.disconnect();
+          };
+        },
+        {
+          urls: [
+            "http://example.org/*/file_streamfilter.txt",
+          ],
+        },
+        ["blocking"]
+      );
+    },
+  });
+  
+  const secondExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        ({ requestId }) => {
+          const filter = browser.webRequest.filterResponseData(requestId);
+          filter.ondata = event => {
+            filter.write(event.data);
+          };
+          filter.onstop = event => {
+            filter.write(new TextEncoder().encode(" End"));
+            filter.close();
+          };
+        },
+        {
+          urls: [
+            "http://example.org/tests/toolkit/components/extensions/test/mochitest/file_streamfilter.txt",
+          ],
+        },
+        ["blocking"]
+      );
+    },
+  });
+
+  await firstExtension.startup();
+  await secondExtension.startup();
+
+  let iframe = document.createElement("iframe");
+  iframe.src = TEST_URL;
+  document.body.appendChild(iframe);
+  await new Promise(resolve => iframe.addEventListener("load", () => resolve(), {once: true}));
+
+  let content = await SpecialPowers.spawn(iframe, [], async () => {
+    return this.content.document.body.textContent;
+  });
+  SimpleTest.is(content, "Start Middle\n End", "Correctly intercepted page content");
+
+  await firstExtension.unload();
+  await secondExtension.unload();
+});
+
+</script>
+
+</body>
+</html>

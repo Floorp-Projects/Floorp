@@ -15,7 +15,8 @@ void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
                                                    Callback&& aCallback) {
   if (auto args = mChannelArgs.GetAndRemove(aIdentifier)) {
     nsresult rv =
-        aCallback(args->mLoadState, std::move(args->mRedirects), args->mTiming);
+        aCallback(args->mLoadState, std::move(args->mRedirects),
+                  std::move(args->mStreamFilterEndpoints), args->mTiming);
     args->mResolver(rv);
   } else {
     mCallbacks.Put(aIdentifier, std::move(aCallback));
@@ -25,12 +26,15 @@ void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
 void ChildProcessChannelListener::OnChannelReady(
     nsDocShellLoadState* aLoadState, uint64_t aIdentifier,
     nsTArray<net::DocumentChannelRedirect>&& aRedirects,
-    nsDOMNavigationTiming* aTiming, Resolver&& aResolver) {
+    nsTArray<Endpoint>&& aStreamFilterEndpoints, nsDOMNavigationTiming* aTiming,
+    Resolver&& aResolver) {
   if (auto callback = mCallbacks.GetAndRemove(aIdentifier)) {
-    nsresult rv = (*callback)(aLoadState, std::move(aRedirects), aTiming);
+    nsresult rv = (*callback)(aLoadState, std::move(aRedirects),
+                              std::move(aStreamFilterEndpoints), aTiming);
     aResolver(rv);
   } else {
-    mChannelArgs.Put(aIdentifier, {aLoadState, std::move(aRedirects), aTiming,
+    mChannelArgs.Put(aIdentifier, {aLoadState, std::move(aRedirects),
+                                   std::move(aStreamFilterEndpoints), aTiming,
                                    std::move(aResolver)});
   }
 }

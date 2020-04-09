@@ -183,6 +183,7 @@ IPCResult DocumentChannelChild::RecvDeleteSelf() {
 
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     RedirectToRealChannelArgs&& aArgs,
+    nsTArray<Endpoint<extensions::PStreamFilterParent>>&& aEndpoints,
     RedirectToRealChannelResolver&& aResolve) {
   LOG(("DocumentChannelChild RecvRedirectToRealChannel [this=%p, uri=%s]", this,
        aArgs.uri()->GetSpecOrDefault().get()));
@@ -290,6 +291,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     }
   }
   mRedirectChannel = newChannel;
+  mStreamFilterEndpoints = std::move(aEndpoints);
 
   rv = gHttpHandler->AsyncOnChannelRedirect(
       this, newChannel, aArgs.redirectFlags(), GetMainThreadEventTarget());
@@ -329,6 +331,11 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
     }
   } else {
     redirectChannel->SetNotificationCallbacks(nullptr);
+  }
+
+  for (auto& endpoint : mStreamFilterEndpoints) {
+    extensions::StreamFilterParent::Attach(redirectChannel,
+                                           std::move(endpoint));
   }
 
   redirectResolver(rv);
@@ -403,12 +410,6 @@ mozilla::ipc::IPCResult DocumentChannelChild::RecvCSPViolation(
       blockedContentSource, aOriginalURI, aViolatedDirective,
       aViolatedPolicyIndex, aObserverSubject, nsString(), nsString(), 0, 0);
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocumentChannelChild::RecvAttachStreamFilter(
-    Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
-  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
   return IPC_OK();
 }
 
