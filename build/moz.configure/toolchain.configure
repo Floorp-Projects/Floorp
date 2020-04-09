@@ -1809,8 +1809,8 @@ set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
 
 @depends(target, c_compiler, vc_path, check_build_environment, when=code_coverage)
+@imports('os')
 @imports('re')
-@imports('mozpack.path')
 @imports(_from='__builtin__', _import='open')
 def coverage_cflags(target, c_compiler, vc_path, build_env):
     cflags = ['--coverage']
@@ -1826,10 +1826,7 @@ def coverage_cflags(target, c_compiler, vc_path, build_env):
 
         # We need to get the real path of Visual Studio, which can be in a
         # symlinked directory (for example, on automation).
-        vs_path = mozpack.path.readlink(vs_path)
-        # Since the -fprofile-exclude-files option in LLVM is a regex, we need to
-        # have the same path separators.
-        vs_path = vs_path.replace('/', '\\')
+        vs_path = os.path.realpath(vs_path)
 
         cflags += [
             '-fprofile-exclude-files=^{}.*$'.format(re.escape(vs_path)),
