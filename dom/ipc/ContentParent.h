@@ -624,6 +624,19 @@ class ContentParent final
 
   nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
 
+  // This function is called in BrowsingContext immediately before IPC call to
+  // load a URI. If aURI is a BlobURL, this method transmits all BlobURLs for
+  // aPrincipal that were previously not transmitted. This allows for opening a
+  // locally created BlobURL in a new tab.
+  //
+  // The reason all previously untransmitted Blobs are transmitted is that the
+  // current BlobURL could contain html code, referring to another untransmitted
+  // BlobURL.
+  //
+  // Should eventually be made obsolete by broader design changes that only
+  // store BlobURLs in the parent process.
+  void TransmitBlobDataIfBlobURL(nsIURI* aURI, nsIPrincipal* aPrincipal);
+
   void OnCompositorDeviceReset() override;
 
   static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
