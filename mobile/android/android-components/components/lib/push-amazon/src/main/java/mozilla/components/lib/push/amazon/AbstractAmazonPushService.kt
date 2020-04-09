@@ -59,8 +59,8 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
             val message = try {
                 EncryptedPushMessage(
                     channelId = it.getStringWithException("chid"),
-                    body = it.getStringWithException("body"),
                     encoding = it.getStringWithException("con"),
+                    body = it.getString("body"),
                     salt = it.getString("enc"),
                     cryptoKey = it.getString("cryptokey")
                 )

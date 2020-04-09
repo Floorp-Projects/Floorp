@@ -70,7 +70,7 @@ interface PushProcessor {
  */
 data class EncryptedPushMessage(
     val channelId: String,
-    val body: String,
+    val body: String?,
     val encoding: String,
     val salt: String = "",
     val cryptoKey: String = "" // diffie–hellman key
@@ -84,7 +84,7 @@ data class EncryptedPushMessage(
          */
         operator fun invoke(
             channelId: String,
-            body: String,
+            body: String?,
             encoding: String,
             salt: String? = null,
             cryptoKey: String? = null

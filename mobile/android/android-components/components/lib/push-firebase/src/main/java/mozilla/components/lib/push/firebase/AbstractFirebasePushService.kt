@@ -53,8 +53,8 @@ abstract class AbstractFirebasePushService(
             val message = try {
                 EncryptedPushMessage(
                     channelId = it.data.getValue(MESSAGE_KEY_CHANNEL_ID),
-                    body = it.data.getValue(MESSAGE_KEY_BODY),
                     encoding = it.data.getValue(MESSAGE_KEY_ENCODING),
+                    body = it.data[MESSAGE_KEY_BODY],
                     salt = it.data[MESSAGE_KEY_SALT],
                     cryptoKey = it.data[MESSAGE_KEY_CRYPTO_KEY]
                 )

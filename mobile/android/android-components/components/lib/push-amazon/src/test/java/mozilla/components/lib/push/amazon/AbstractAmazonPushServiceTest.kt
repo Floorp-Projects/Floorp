@@ -102,7 +102,7 @@ class AbstractAmazonPushServiceTest {
     fun `malformed message exception handled with the processor`() {
         val messageIntent = Intent()
         val bundleExtra = Bundle()
-        bundleExtra.putString("body", "contents")
+        bundleExtra.putString("con", "qu2to2")
 
         val captor = argumentCaptor<PushError>()
         messageIntent.putExtras(bundleExtra)

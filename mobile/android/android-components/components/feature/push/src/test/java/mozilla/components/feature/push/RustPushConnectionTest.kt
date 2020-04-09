@@ -13,6 +13,7 @@ import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.nullable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -20,7 +21,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
-import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
@@ -83,7 +83,7 @@ class RustPushConnectionTest {
 
         connection.api = api
 
-        `when`(api.subscribe(anyString(), anyString(), nullable(String::class.java))).thenReturn(response)
+        `when`(api.subscribe(anyString(), anyString(), nullable())).thenReturn(response)
 
         runBlocking {
             val sub = connection.subscribe("123")
@@ -94,7 +94,7 @@ class RustPushConnectionTest {
             assertEquals("https://foo", sub.endpoint)
         }
 
-        verify(api).subscribe(anyString(), anyString(), nullable(String::class.java))
+        verify(api).subscribe(anyString(), anyString(), nullable())
     }
 
     @Test(expected = IllegalStateException::class)
@@ -199,6 +199,31 @@ class RustPushConnectionTest {
         }
 
         verify(api).decrypt(anyString(), anyString(), eq("enc"), eq("salt"), eq("key"))
+    }
+
+    @Test
+    fun `empty body decrypts nothing`() {
+        val connection = createConnection()
+        val api: PushAPI = mock()
+        val dispatchInfo: DispatchInfo = mock()
+        connection.api = api
+
+        runBlocking {
+            connection.decryptMessage("123", null)
+        }
+
+        verify(api, never()).decrypt(anyString(), anyString(), eq(""), eq(""), eq(""))
+
+        `when`(api.dispatchInfoForChid(anyString())).thenReturn(dispatchInfo)
+        `when`(dispatchInfo.scope).thenReturn("test")
+
+        runBlocking {
+            val (scope, message) = connection.decryptMessage("123", null)!!
+            assertEquals("test", scope)
+            assertNull(message)
+        }
+
+        verify(api, never()).decrypt(anyString(), nullable(), eq(""), eq(""), eq(""))
     }
 
     @Test(expected = IllegalStateException::class)

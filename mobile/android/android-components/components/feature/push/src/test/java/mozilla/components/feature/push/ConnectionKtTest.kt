@@ -11,6 +11,7 @@ import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConnectionKtTest {
@@ -59,5 +60,41 @@ class ConnectionKtTest {
         val sub = response.toPushSubscriptionChanged()
         assertEquals(response.channelID, sub.channelId)
         assertEquals(response.scope, sub.scope)
+    }
+
+    @Test
+    fun `decrypted message equals`() {
+        val message1 = DecryptedMessage("test", "message1".toByteArray())
+        val message2 = DecryptedMessage("test", "message2".toByteArray())
+
+        assertTrue(message1 != message2)
+
+        val message3 = DecryptedMessage("test", "message".toByteArray())
+        val message4 = DecryptedMessage("test", null)
+
+        assertTrue(message3 != message4)
+
+        val message5 = DecryptedMessage("test", null)
+        val message6 = DecryptedMessage("test", "message".toByteArray())
+
+        assertTrue(message5 != message6)
+
+        val message7 = DecryptedMessage("test", "message".toByteArray())
+        val message8 = DecryptedMessage("test", "message".toByteArray())
+
+        assertTrue(message7 == message8)
+    }
+
+    @Test
+    fun `decrypted message hashcode`() {
+        val message1 = DecryptedMessage("test", "message1".toByteArray())
+        val message2 = DecryptedMessage("test", "message2".toByteArray())
+
+        assertTrue(message1.hashCode() != message2.hashCode())
+
+        val message3 = DecryptedMessage("test", "message".toByteArray())
+        val message4 = DecryptedMessage("test", "message".toByteArray())
+
+        assertTrue(message3.hashCode() == message4.hashCode())
     }
 }
