@@ -88,8 +88,8 @@ const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(this, "yieldState", () => Async.yieldState());
 
-/** Adapts a `Log.jsm` logger to a `mozISyncedBookmarksMirrorLogger`. */
-class MirrorLoggerAdapter {
+/** Adapts a `Log.jsm` logger to a `mozIServicesLogger`. */
+class LogAdapter {
   constructor(log) {
     this.log = log;
   }
@@ -97,18 +97,18 @@ class MirrorLoggerAdapter {
   get maxLevel() {
     let level = this.log.level;
     if (level <= Log.Level.All) {
-      return Ci.mozISyncedBookmarksMirrorLogger.LEVEL_TRACE;
+      return Ci.mozIServicesLogger.LEVEL_TRACE;
     }
     if (level <= Log.Level.Info) {
-      return Ci.mozISyncedBookmarksMirrorLogger.LEVEL_DEBUG;
+      return Ci.mozIServicesLogger.LEVEL_DEBUG;
     }
     if (level <= Log.Level.Warn) {
-      return Ci.mozISyncedBookmarksMirrorLogger.LEVEL_WARN;
+      return Ci.mozIServicesLogger.LEVEL_WARN;
     }
     if (level <= Log.Level.Error) {
-      return Ci.mozISyncedBookmarksMirrorLogger.LEVEL_ERROR;
+      return Ci.mozIServicesLogger.LEVEL_ERROR;
     }
-    return Ci.mozISyncedBookmarksMirrorLogger.LEVEL_OFF;
+    return Ci.mozIServicesLogger.LEVEL_OFF;
   }
 
   trace(message) {
@@ -266,7 +266,7 @@ class SyncedBookmarksMirror {
     this.merger.db = db.unsafeRawConnection.QueryInterface(
       Ci.mozIStorageConnection
     );
-    this.merger.logger = new MirrorLoggerAdapter(MirrorLog);
+    this.merger.logger = new LogAdapter(MirrorLog);
 
     // Automatically close the database connection on shutdown. `progress`
     // tracks state for shutdown hang reporting.

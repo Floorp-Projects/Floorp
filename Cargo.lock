@@ -1804,6 +1804,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "golden_gate"
+version = "0.1.0"
+dependencies = [
+ "atomic_refcell",
+ "cstr",
+ "golden_gate_traits",
+ "log",
+ "moz_task",
+ "nserror",
+ "nsstring",
+ "storage_variant",
+ "thin-vec",
+ "xpcom",
+]
+
+[[package]]
+name = "golden_gate_traits"
+version = "0.1.0"
+
+[[package]]
 name = "guid_win"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
