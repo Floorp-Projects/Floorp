@@ -259,7 +259,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
     (func (export "f"))
     (global nullref (ref.func 0)))`)),
                    WebAssembly.CompileError,
-                   /initializer expression/);
+                   /initializer type and expected type don't match/);
 
 new WebAssembly.Global({ value: "nullref", mutable: true });
 
