@@ -36,6 +36,7 @@ add_task(async function start_issue_server() {
   // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["datareporting.healthreport.uploadEnabled", true],
       [PREF_WC_REPORTER_ENABLED, true],
       [PREF_WC_REPORTER_ENDPOINT, serverLanding],
     ],
@@ -213,6 +214,35 @@ add_task(async function test_opened_page() {
       typeof details["image.mem.shared"] == "boolean",
       "Details has image.mem.shared."
     );
+    if (
+      Services.prefs.getBoolPref("gfx.webrender.all", false) ||
+      Services.prefs.getBoolPref("gfx.webrender.enabled", false)
+    ) {
+      ok(typeof details.GPUs == "object", "Details has GPUs");
+      ok(typeof details.GPUs[0] == "object", "Details has GPUs[0]");
+      ok(
+        typeof details.GPUs[0].active == "boolean",
+        "Details has GPUs[0].active"
+      );
+      ok(
+        typeof details.GPUs[0].description == "string",
+        "Details has GPUs[0].description"
+      );
+      ok(
+        typeof details.GPUs[0].deviceID == "string",
+        "Details has GPUs[0].deviceID"
+      );
+      ok(
+        typeof details.GPUs[0].driverVersion == "string",
+        "Details has GPUs[0].driverVersion"
+      );
+      ok(
+        typeof details.GPUs[0].vendorID == "string",
+        "Details has GPUs[0].vendorID"
+      );
+    } else {
+      ok(!("GPUs" in details), "Details does not have GPUs");
+    }
 
     is(
       preview.innerText,
