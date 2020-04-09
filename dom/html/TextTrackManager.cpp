@@ -496,7 +496,8 @@ class CompareSimpleTextTrackEvents {
     // TimeMarchesOn step 13.1.
     if (aOne->mTime < aTwo->mTime) {
       return true;
-    } else if (aOne->mTime > aTwo->mTime) {
+    }
+    if (aOne->mTime > aTwo->mTime) {
       return false;
     }
 
@@ -514,7 +515,8 @@ class CompareSimpleTextTrackEvents {
       auto index2 = textTracks.IndexOf(t2);
       if (index1 < index2) {
         return true;
-      } else if (index1 > index2) {
+      }
+      if (index1 > index2) {
         return false;
       }
     }
@@ -526,12 +528,14 @@ class CompareSimpleTextTrackEvents {
     if (c1 != c2) {
       if (c1->StartTime() < c2->StartTime()) {
         return true;
-      } else if (c1->StartTime() > c2->StartTime()) {
+      }
+      if (c1->StartTime() > c2->StartTime()) {
         return false;
       }
       if (c1->EndTime() < c2->EndTime()) {
         return true;
-      } else if (c1->EndTime() > c2->EndTime()) {
+      }
+      if (c1->EndTime() > c2->EndTime()) {
         return false;
       }
 
@@ -542,7 +546,8 @@ class CompareSimpleTextTrackEvents {
       auto index2 = cues.IndexOf(c2);
       if (index1 < index2) {
         return true;
-      } else if (index1 > index2) {
+      }
+      if (index1 > index2) {
         return false;
       }
     }
