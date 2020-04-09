@@ -2769,7 +2769,6 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
       }
       break;
   }
-
   obj->initReservedSlot(TYPE_SLOT,
                         Int32Value(int32_t(val.type().bitsUnsafe())));
   obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
@@ -2975,51 +2974,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
   if (!ToWebAssemblyValue(cx, global->type(), args.get(0), &val)) {
     return false;
   }
-
-  Cell* cell = global->cell();
-  switch (global->type().kind()) {
-    case ValType::I32:
-      cell->i32 = val.get().i32();
-      break;
-    case ValType::F32:
-      cell->f32 = val.get().f32();
-      break;
-    case ValType::F64:
-      cell->f64 = val.get().f64();
-      break;
-    case ValType::I64:
-#ifdef ENABLE_WASM_BIGINT
-      MOZ_ASSERT(I64BigIntConversionAvailable(cx),
-                 "expected BigInt support for setting I64 global");
-      cell->i64 = val.get().i64();
-#endif
-      break;
-    case ValType::Ref:
-      switch (global->type().refTypeKind()) {
-        case RefType::Func:
-        case RefType::Any: {
-          AnyRef prevPtr = cell->ref;
-          // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-          // barrier is going to have to be more complicated.
-          ASSERT_ANYREF_IS_JSOBJECT;
-          JSObject::writeBarrierPre(prevPtr.asJSObject());
-          cell->ref = val.get().ref();
-          if (!cell->ref.isNull()) {
-            JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(),
-                                       prevPtr.asJSObject(),
-                                       cell->ref.asJSObject());
-          }
-          break;
-        }
-        case RefType::Null: {
-          break;
-        }
-        case RefType::TypeIndex: {
-          MOZ_CRASH("Ref NYI");
-        }
-      }
-      break;
-  }
+  global->setVal(cx, val);
 
   args.rval().setUndefined();
   return true;
@@ -3049,6 +3004,55 @@ ValType WasmGlobalObject::type() const {
 
 bool WasmGlobalObject::isMutable() const {
   return getReservedSlot(MUTABLE_SLOT).toBoolean();
+}
+
+void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
+  const Val& val = hval.get();
+  Cell* cell = this->cell();
+  MOZ_ASSERT(type() == val.type());
+  switch (type().kind()) {
+    case ValType::I32:
+      cell->i32 = val.i32();
+      break;
+    case ValType::F32:
+      cell->f32 = val.f32();
+      break;
+    case ValType::F64:
+      cell->f64 = val.f64();
+      break;
+    case ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+      MOZ_ASSERT(I64BigIntConversionAvailable(cx),
+                 "expected BigInt support for setting I64 global");
+      cell->i64 = val.i64();
+#endif
+      break;
+    case ValType::Ref:
+      switch (this->type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any: {
+          AnyRef prevPtr = cell->ref;
+          // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+          // barrier is going to have to be more complicated.
+          ASSERT_ANYREF_IS_JSOBJECT;
+          JSObject::writeBarrierPre(prevPtr.asJSObject());
+          cell->ref = val.ref();
+          if (!cell->ref.isNull()) {
+            JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(),
+                                       prevPtr.asJSObject(),
+                                       cell->ref.asJSObject());
+          }
+          break;
+        }
+        case RefType::Null: {
+          break;
+        }
+        case RefType::TypeIndex: {
+          MOZ_CRASH("Ref NYI");
+        }
+      }
+      break;
+  }
 }
 
 void WasmGlobalObject::val(MutableHandleVal outval) const {
