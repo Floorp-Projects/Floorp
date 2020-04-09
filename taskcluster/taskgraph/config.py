@@ -138,10 +138,16 @@ class GraphConfig(object):
         Add the project's taskgraph directory to the python path, and register
         any extensions present.
         """
+        modify_path = os.path.dirname(self.root_dir)
         if GraphConfig._PATH_MODIFIED:
+            if GraphConfig._PATH_MODIFIED == modify_path:
+                # Already modified path with the same root_dir.
+                # We currently need to do this to enable actions to call
+                # taskgraph_decision, e.g. relpro.
+                return
             raise Exception("Can't register multiple directories on python path.")
-        GraphConfig._PATH_MODIFIED = True
-        sys.path.insert(0, os.path.dirname(self.root_dir))
+        GraphConfig._PATH_MODIFIED = modify_path
+        sys.path.insert(0, modify_path)
         register_path = self['taskgraph'].get('register')
         if register_path:
             find_object(register_path)(self)
