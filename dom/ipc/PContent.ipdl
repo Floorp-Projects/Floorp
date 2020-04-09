@@ -818,8 +818,7 @@ child:
     // The returned loadInfo needs to be set on the channel - since the channel
     // moved to a new process it now has different properties.
 
-    async CrossProcessRedirect(RedirectToRealChannelArgs args,
-                               Endpoint<PStreamFilterParent>[] aEndpoint)
+    async CrossProcessRedirect(RedirectToRealChannelArgs args)
         returns (nsresult rv);
 
     /**
