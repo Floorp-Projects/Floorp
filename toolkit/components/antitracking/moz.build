@@ -39,6 +39,7 @@ EXPORTS.mozilla = [
     'ContentBlockingLog.h',
     'ContentBlockingNotifier.h',
     'ContentBlockingUserInteraction.h',
+    'DynamicFpiRedirectHeuristic.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
     'URLDecorationStripper.h',
@@ -52,6 +53,7 @@ UNIFIED_SOURCES += [
     'ContentBlockingLog.cpp',
     'ContentBlockingNotifier.cpp',
     'ContentBlockingUserInteraction.cpp',
+    'DynamicFpiRedirectHeuristic.cpp',
     'SettingsChangeObserver.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
@@ -62,6 +64,7 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '/extensions/permissions',
     '/netwerk/base',
+    '/netwerk/protocol/http',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
