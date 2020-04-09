@@ -71,11 +71,11 @@ nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsStaticAtom* tagName = GetTagName(aCommand);
+  nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsresult rv = ToggleState(MOZ_KnownLive(*tagName), MOZ_KnownLive(*htmlEditor),
+  nsresult rv = ToggleState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor),
                             aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "StateUpdatingCommandBase::ToggleState() failed");
@@ -176,20 +176,24 @@ nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
   return NS_OK;
 }
 
-nsresult StyleUpdatingCommand::ToggleState(nsStaticAtom& aTagName,
-                                           HTMLEditor& aHTMLEditor,
+nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
+                                           HTMLEditor* aHTMLEditor,
                                            nsIPrincipal* aPrincipal) const {
+  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   RefPtr<nsCommandParams> params = new nsCommandParams();
 
   // tags "href" and "name" are special cases in the core editor
   // they are used to remove named anchor/link and shouldn't be used for
   // insertion
   bool doTagRemoval;
-  if (&aTagName == nsGkAtoms::href || &aTagName == nsGkAtoms::name) {
+  if (aTagName == nsGkAtoms::href || aTagName == nsGkAtoms::name) {
     doTagRemoval = true;
   } else {
     // check current selection; set doTagRemoval if formatting should be removed
-    nsresult rv = GetCurrentState(&aTagName, &aHTMLEditor, *params);
+    nsresult rv = GetCurrentState(aTagName, aHTMLEditor, *params);
     if (NS_FAILED(rv)) {
       NS_WARNING("StyleUpdatingCommand::GetCurrentState() failed");
       return rv;
@@ -202,15 +206,15 @@ nsresult StyleUpdatingCommand::ToggleState(nsStaticAtom& aTagName,
   }
 
   if (doTagRemoval) {
-    nsresult rv =
-        aHTMLEditor.RemoveInlinePropertyAsAction(aTagName, nullptr, aPrincipal);
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*aTagName, nullptr,
+                                                            aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::RemoveInlinePropertyAsAction() failed");
     return rv;
   }
 
-  nsresult rv = aHTMLEditor.SetInlinePropertyAsAction(
-      aTagName, nullptr, EmptyString(), aPrincipal);
+  nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
+      *aTagName, nullptr, EmptyString(), aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::SetInlinePropertyAsAction() failed");
   return rv;
@@ -243,11 +247,14 @@ nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
   return NS_OK;
 }
 
-nsresult ListCommand::ToggleState(nsStaticAtom& aTagName,
-                                  HTMLEditor& aHTMLEditor,
+nsresult ListCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
                                   nsIPrincipal* aPrincipal) const {
+  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  nsresult rv = GetCurrentState(&aTagName, &aHTMLEditor, *params);
+  nsresult rv = GetCurrentState(aTagName, aHTMLEditor, *params);
   if (NS_FAILED(rv)) {
     NS_WARNING("ListCommand::GetCurrentState() failed");
     return rv;
@@ -259,16 +266,16 @@ nsresult ListCommand::ToggleState(nsStaticAtom& aTagName,
     return error.StealNSResult();
   }
 
-  nsDependentAtomString listType(&aTagName);
+  nsDependentAtomString listType(aTagName);
   if (inList) {
-    nsresult rv = aHTMLEditor.RemoveListAsAction(listType, aPrincipal);
+    rv = aHTMLEditor->RemoveListAsAction(listType, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::RemoveListAsAction() failed");
     return rv;
   }
 
-  rv = aHTMLEditor.MakeOrChangeListAsAction(
-      aTagName, EmptyString(), HTMLEditor::SelectAllOfCurrentList::No,
+  rv = aHTMLEditor->MakeOrChangeListAsAction(
+      *aTagName, EmptyString(), HTMLEditor::SelectAllOfCurrentList::No,
       aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::MakeOrChangeListAsAction() failed");
@@ -314,12 +321,15 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
   return NS_OK;
 }
 
-nsresult ListItemCommand::ToggleState(nsStaticAtom& aTagName,
-                                      HTMLEditor& aHTMLEditor,
+nsresult ListItemCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
                                       nsIPrincipal* aPrincipal) const {
+  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Need to use aTagName????
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  GetCurrentState(&aTagName, &aHTMLEditor, *params);
+  GetCurrentState(aTagName, aHTMLEditor, *params);
   ErrorResult error;
   bool inList = params->GetBool(STATE_ALL, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -330,7 +340,7 @@ nsresult ListItemCommand::ToggleState(nsStaticAtom& aTagName,
     // To remove a list, first get what kind of list we're in
     bool bMixed;
     nsAutoString localName;
-    nsresult rv = GetListState(&aHTMLEditor, &bMixed, localName);
+    nsresult rv = GetListState(aHTMLEditor, &bMixed, localName);
     if (NS_FAILED(rv)) {
       NS_WARNING("GetListState() failed");
       return rv;
@@ -338,7 +348,7 @@ nsresult ListItemCommand::ToggleState(nsStaticAtom& aTagName,
     if (localName.IsEmpty() || bMixed) {
       return NS_OK;
     }
-    rv = aHTMLEditor.RemoveListAsAction(localName, aPrincipal);
+    rv = aHTMLEditor->RemoveListAsAction(localName, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::RemoveListAsAction() failed");
     return rv;
@@ -348,8 +358,8 @@ nsresult ListItemCommand::ToggleState(nsStaticAtom& aTagName,
   // XXX Note: This actually doesn't work for "LI",
   //    but we currently don't use this for non DL lists anyway.
   // Problem: won't this replace any current block paragraph style?
-  nsresult rv = aHTMLEditor.SetParagraphFormatAsAction(
-      nsDependentAtomString(&aTagName), aPrincipal);
+  nsresult rv = aHTMLEditor->SetParagraphFormatAsAction(
+      nsDependentAtomString(aTagName), aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::SetParagraphFormatAsAction() failed");
   return rv;
@@ -924,12 +934,15 @@ nsresult AbsolutePositioningCommand::GetCurrentState(
 }
 
 nsresult AbsolutePositioningCommand::ToggleState(
-    nsStaticAtom& aTagName, HTMLEditor& aHTMLEditor,
-    nsIPrincipal* aPrincipal) const {
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsIPrincipal* aPrincipal) const {
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   RefPtr<Element> container =
-      aHTMLEditor.GetAbsolutelyPositionedSelectionContainer();
-  nsresult rv = aHTMLEditor.SetSelectionToAbsoluteOrStaticAsAction(!container,
-                                                                   aPrincipal);
+      aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
+  nsresult rv = aHTMLEditor->SetSelectionToAbsoluteOrStaticAsAction(!container,
+                                                                    aPrincipal);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction() failed");
@@ -947,7 +960,7 @@ bool DecreaseZIndexCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  RefPtr<HTMLEditor> htmlEditor = aTextEditor->AsHTMLEditor();
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
   if (!htmlEditor) {
     return false;
   }
