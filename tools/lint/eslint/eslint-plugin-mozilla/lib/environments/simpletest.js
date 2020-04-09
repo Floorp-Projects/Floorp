@@ -14,8 +14,7 @@
 // -----------------------------------------------------------------------------
 
 var path = require("path");
-var helpers = require("../helpers");
-var globals = require("../globals");
+var { getScriptGlobals } = require("./utils");
 
 // When updating this list, be sure to also update the 'support-files' config
 // in `tools/lint/eslint.yml`.
@@ -29,32 +28,7 @@ const simpleTestFiles = [
 ];
 const simpleTestPath = "testing/mochitest/tests/SimpleTest";
 
-function getScriptGlobals() {
-  let fileGlobals = [];
-  let root = helpers.rootDir;
-  for (let file of simpleTestFiles) {
-    let fileName = path.join(root, simpleTestPath, file);
-    try {
-      fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
-    } catch (e) {
-      // The files may not be available in non-m-c repositories.
-      return [];
-    }
-  }
-
-  return fileGlobals;
-}
-
-function mapGlobals(fileGlobals) {
-  var globalObjects = {};
-  for (let global of fileGlobals) {
-    globalObjects[global.name] = global.writable;
-  }
-  return globalObjects;
-}
-
-module.exports = {
-  globals: helpers.isMozillaCentralBased()
-    ? mapGlobals(getScriptGlobals())
-    : helpers.getSavedEnvironmentItems("simpletest").globals,
-};
+module.exports = getScriptGlobals(
+  "simpletest",
+  simpleTestFiles.map(file => path.join(simpleTestPath, file))
+);

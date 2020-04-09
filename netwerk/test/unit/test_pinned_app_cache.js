@@ -29,7 +29,6 @@
  *       by discarding app1 (non-pinned)
  *
  */
-/* global _XPCSHELL_PROCESS */
 "use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
