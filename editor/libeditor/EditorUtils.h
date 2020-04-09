@@ -14,13 +14,12 @@
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
-#include "nsAtom.h"
-#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsRange.h"
-#include "nsString.h"
+#include "nscore.h"
 
+class nsAtom;
 class nsISimpleEnumerator;
 class nsITransferable;
 
@@ -803,13 +802,6 @@ class EditorUtils final {
   static void MaskString(nsString& aString, dom::Text* aText,
                          uint32_t aStartOffsetInString,
                          uint32_t aStartOffsetInText);
-
-  static nsStaticAtom* GetAttributeAtom(const nsAString& aAttribute) {
-    if (aAttribute.IsEmpty()) {
-      return nullptr;  // Don't use nsGkAtoms::_empty for attribute.
-    }
-    return NS_GetStaticAtom(aAttribute);
-  }
 };
 
 }  // namespace mozilla

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLEditor.h"
+#include "mozilla/HTMLEditor.h"
 
 #include <math.h>
 
@@ -78,35 +78,24 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer() const {
     return nullptr;
   }
 
-  AutoTArray<RefPtr<Element>, 24> arrayOfParentElements;
+  nsAutoString positionValue;
   for (Element* element :
        InclusiveAncestorsOfType<Element>(*selectionContainerElement)) {
-    arrayOfParentElements.AppendElement(element);
-  }
-
-  nsAutoString positionValue;
-  for (RefPtr<Element> element = selectionContainerElement; element;
-       element = element->GetParentElement()) {
     if (element->IsHTMLElement(nsGkAtoms::html)) {
       NS_WARNING(
           "HTMLEditor::GetAbsolutelyPositionedSelectionContainer() reached "
           "<html> element");
       return nullptr;
     }
-    nsCOMPtr<nsINode> parentNode = element->GetParentNode();
     nsresult rv = CSSEditUtils::GetComputedProperty(
-        MOZ_KnownLive(*element), *nsGkAtoms::position, positionValue);
+        *element, *nsGkAtoms::position, positionValue);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "CSSEditUtils::GetComputedProperty(nsGkAtoms::position) failed");
       return nullptr;
     }
-    if (NS_WARN_IF(Destroyed()) ||
-        NS_WARN_IF(parentNode != element->GetParentNode())) {
-      return nullptr;
-    }
     if (positionValue.EqualsLiteral("absolute")) {
-      return element.forget();
+      return do_AddRef(element);
     }
   }
   return nullptr;
@@ -134,14 +123,11 @@ nsresult HTMLEditor::RelativeChangeElementZIndex(Element& aElement,
   }
 
   int32_t zIndex = GetZIndex(aElement);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
   zIndex = std::max(zIndex + aChange, 0);
   SetZIndex(aElement, zIndex);
   *aReturn = zIndex;
 
-  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+  return NS_OK;
 }
 
 void HTMLEditor::SetZIndex(Element& aElement, int32_t aZIndex) {
@@ -196,21 +182,16 @@ int32_t HTMLEditor::GetZIndex(Element& aElement) {
     // we have to look at the positioned ancestors
     // cf. CSS 2 spec section 9.9.1
     nsAutoString positionValue;
-    for (RefPtr<Element> element = aElement.GetParentElement(); element;
-         element = element->GetParentElement()) {
+    for (Element* element :
+         InclusiveAncestorsOfType<Element>(*aElement.GetParentElement())) {
       if (element->IsHTMLElement(nsGkAtoms::body)) {
         return 0;
       }
-      nsCOMPtr<nsINode> parentNode = element->GetParentElement();
       nsresult rv = CSSEditUtils::GetComputedProperty(
           *element, *nsGkAtoms::position, positionValue);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "CSSEditUtils::GetComputedProperty(nsGkAtoms::position) failed");
-        return 0;
-      }
-      if (NS_WARN_IF(Destroyed()) ||
-          NS_WARN_IF(parentNode != element->GetParentNode())) {
         return 0;
       }
       if (!positionValue.EqualsLiteral("absolute")) {
@@ -223,10 +204,6 @@ int32_t HTMLEditor::GetZIndex(Element& aElement) {
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "CSSEditUtils::GetComputedProperty(nsGkAtoms::z_index) failed");
-        return 0;
-      }
-      if (NS_WARN_IF(Destroyed()) ||
-          NS_WARN_IF(parentNode != element->GetParentNode())) {
         return 0;
       }
       if (!zIndexValue.EqualsLiteral("auto")) {
@@ -292,10 +269,8 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
   if (!mAbsolutelyPositionedObject) {
     return NS_OK;
   }
-  OwningNonNull<Element> absolutelyPositionedObject =
-      *mAbsolutelyPositionedObject;
   nsresult rv = GetPositionAndDimensions(
-      absolutelyPositionedObject, mPositionedObjectX, mPositionedObjectY,
+      *mAbsolutelyPositionedObject, mPositionedObjectX, mPositionedObjectY,
       mPositionedObjectWidth, mPositionedObjectHeight,
       mPositionedObjectBorderLeft, mPositionedObjectBorderTop,
       mPositionedObjectMarginLeft, mPositionedObjectMarginTop);
@@ -303,20 +278,11 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
     NS_WARNING("HTMLEditor::GetPositionAndDimensions() failed");
     return rv;
   }
-  if (NS_WARN_IF(absolutelyPositionedObject != mAbsolutelyPositionedObject)) {
-    return NS_ERROR_FAILURE;
-  }
 
   RefPtr<Element> grabber = mGrabber.get();
   MOZ_ASSERT(grabber);
   SetAnonymousElementPosition(mPositionedObjectX + 12, mPositionedObjectY - 14,
                               grabber);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_WARN_IF(grabber != mGrabber.get())) {
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
@@ -758,9 +724,6 @@ nsresult HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(
 
   RefPtr<ComputedStyle> style =
       nsComputedDOMStyle::GetComputedStyle(&aElement, nullptr);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
   if (!style) {
     NS_WARNING("nsComputedDOMStyle::GetComputedStyle() failed");
     return NS_ERROR_FAILURE;
