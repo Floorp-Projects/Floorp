@@ -378,26 +378,6 @@ template bool StrictlyEqual<EqualityKind::NotEqual>(JSContext* cx,
                                                     MutableHandleValue rhs,
                                                     bool* res);
 
-bool LessThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
-              bool* res) {
-  return LessThanOperation(cx, lhs, rhs, res);
-}
-
-bool LessThanOrEqual(JSContext* cx, MutableHandleValue lhs,
-                     MutableHandleValue rhs, bool* res) {
-  return LessThanOrEqualOperation(cx, lhs, rhs, res);
-}
-
-bool GreaterThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
-                 bool* res) {
-  return GreaterThanOperation(cx, lhs, rhs, res);
-}
-
-bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
-                        MutableHandleValue rhs, bool* res) {
-  return GreaterThanOrEqualOperation(cx, lhs, rhs, res);
-}
-
 template <EqualityKind Kind>
 bool StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs,
                   bool* res) {
