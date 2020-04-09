@@ -4980,8 +4980,8 @@ void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
                           AutoLockHelperThreadState& lock) {
   if (!CanUseExtraThreads()) {
     AutoUnlockHelperThreadState unlock(lock);
-    gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread();
+    stats().recordParallelPhase(phase, task.duration());
     return;
   }
 
@@ -4997,18 +4997,15 @@ void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
     return;
   }
 
-  // If the task was dispatched but has not yet started then cancel the task and
-  // run it from the main thread. This stops us from blocking here when the
-  // helper threads are busy with other tasks.
   if (task.isDispatched(lock)) {
+    // If the task was dispatched but has not yet started then cancel the task
+    // and run it from the main thread. This stops us from blocking here when
+    // the helper threads are busy with other tasks.
     task.cancelDispatchedTask(lock);
     AutoUnlockHelperThreadState unlock(lock);
-    gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread();
-    return;
-  }
-
-  {
+  } else {
+    // Otherwise wait for the task to complete.
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
     task.joinRunningOrFinishedTask(lock);
   }
