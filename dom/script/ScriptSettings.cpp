@@ -527,8 +527,7 @@ void AutoJSAPI::ReportException() {
       // because it may want to put it in its error events and has no other way
       // to get hold of it.  After we invoke ReportError, clear the exception on
       // cx(), just in case ReportError didn't.
-      JS::SetPendingExceptionAndStack(cx(), exnStack.exception(),
-                                      exnStack.stack());
+      JS::SetPendingExceptionStack(cx(), exnStack);
       ccjscx->ReportError(jsReport.report(), jsReport.toStringResult());
       ClearException();
     }

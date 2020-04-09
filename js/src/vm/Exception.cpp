@@ -8,6 +8,7 @@
 
 #include "jsapi.h"  // AssertHeapIsIdle
 #include "vm/JSContext.h"
+#include "vm/SavedFrame.h"
 
 using namespace js;
 
@@ -38,4 +39,22 @@ bool JS::GetPendingExceptionStack(JSContext* cx,
   RootedObject stack(cx, cx->getPendingExceptionStack());
   exceptionStack->init(exception, stack);
   return true;
+}
+
+void JS::SetPendingExceptionStack(JSContext* cx,
+                                  const JS::ExceptionStack& exceptionStack) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  // We don't check the compartments of `exception` and `stack` here,
+  // because we're not doing anything with them other than storing
+  // them, and stored exception values can be in an abitrary
+  // compartment while stored stack values are always the unwrapped
+  // object anyway.
+
+  RootedSavedFrame nstack(cx);
+  if (exceptionStack.stack()) {
+    nstack = &UncheckedUnwrap(exceptionStack.stack())->as<SavedFrame>();
+  }
+  cx->setPendingException(exceptionStack.exception(), nstack);
 }
