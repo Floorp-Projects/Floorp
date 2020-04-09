@@ -66,8 +66,6 @@ FETCH_SCHEMA = Schema({
         "`public/` the artifact will require scopes to access.",
     ): text_type,
 
-    Optional('attributes'): {basestring: object},
-
     Required('fetch'): {
         Required('type'): text_type,
         Extra: object,
@@ -145,14 +143,10 @@ def make_task(config, jobs):
         env.update({
             'UPLOAD_DIR': '/builds/worker/artifacts'
         })
-        attributes = job.get('attributes', {})
-        attributes['fetch-artifact'] = mozpath.join(artifact_prefix, job['artifact_name'])
-        alias = job.get('fetch-alias')
-        if alias:
-            attributes['fetch-alias'] = alias
-
         task = {
-            'attributes': attributes,
+            'attributes': {
+                'fetch-artifact': mozpath.join(artifact_prefix, job['artifact_name'])
+            },
             'name': name,
             'description': job['description'],
             'expires-after': expires,
@@ -182,6 +176,10 @@ def make_task(config, jobs):
                 }],
             },
         }
+
+        alias = job.get('fetch-alias')
+        if alias:
+            task['attributes']['fetch-alias'] = alias
 
         if not taskgraph.fast:
             cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
