@@ -1862,12 +1862,17 @@ void gfxPlatformFontList::GetFontFamilyNames(
     fontlist::FontList* list = SharedFontList();
     const fontlist::Family* families = list->Families();
     for (uint32_t i = 0, n = list->NumFamilies(); i < n; i++) {
-      aFontFamilyNames.AppendElement(families[i].DisplayName().AsString(list));
+      const fontlist::Family& family = families[i];
+      if (!family.IsHidden()) {
+        aFontFamilyNames.AppendElement(family.DisplayName().AsString(list));
+      }
     }
   } else {
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
       RefPtr<gfxFontFamily>& family = iter.Data();
-      aFontFamilyNames.AppendElement(family->Name());
+      if (!family->IsHidden()) {
+        aFontFamilyNames.AppendElement(family->Name());
+      }
     }
   }
 }
@@ -1937,9 +1942,6 @@ bool gfxPlatformFontList::LoadFontInfo() {
     if (list) {
       fontlist::Family* family = list->FindFamily(key);
       if (!family) {
-        continue;
-      }
-      if (family->IsHidden()) {
         continue;
       }
       ReadFaceNamesForFamily(family, NeedFullnamePostscriptNames());
