@@ -2054,12 +2054,6 @@ class MaskImageData {
   RefPtr<TextureClient> mTextureClient;
 };
 
-static PaintedDisplayItemLayerUserData* GetPaintedDisplayItemLayerUserData(
-    Layer* aLayer) {
-  return static_cast<PaintedDisplayItemLayerUserData*>(
-      aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
-}
-
 /* static */
 void FrameLayerBuilder::Shutdown() {
   if (gMaskLayerImageCache) {
@@ -2171,13 +2165,30 @@ static void InvalidatePreTransformRect(PaintedLayer* aLayer,
   InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation);
 }
 
-static nsIntPoint GetTranslationForPaintedLayer(PaintedLayer* aLayer) {
-  PaintedDisplayItemLayerUserData* data =
-      static_cast<PaintedDisplayItemLayerUserData*>(
-          aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
-  NS_ASSERTION(data, "Must be a tracked painted layer!");
+static PaintedDisplayItemLayerUserData* GetPaintedDisplayItemLayerUserData(
+    Layer* aLayer) {
+  return static_cast<PaintedDisplayItemLayerUserData*>(
+      aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
+}
 
-  return data->mTranslation;
+static nsIntPoint GetTranslationForPaintedLayer(PaintedLayer* aLayer) {
+  PaintedDisplayItemLayerUserData* layerData =
+      GetPaintedDisplayItemLayerUserData(aLayer);
+  NS_ASSERTION(layerData, "Must be a tracked painted layer!");
+
+  return layerData->mTranslation;
+}
+
+/**
+ * Get the translation transform that was in aLayer when we last painted. It's
+ * either the transform saved by ~FrameLayerBuilder(), or else the transform
+ * that's currently in the layer (which must be an integer translation).
+ */
+static nsIntPoint GetLastPaintOffset(PaintedLayer* aLayer) {
+  PaintedDisplayItemLayerUserData* layerData =
+      GetPaintedDisplayItemLayerUserData(aLayer);
+  MOZ_ASSERT(layerData);
+  return layerData->mLastPaintOffset.valueOr(layerData->mTranslation);
 }
 
 /**
@@ -5201,7 +5212,7 @@ void ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #endif
       InvalidatePreTransformRect(
           t, aData->mGeometry->ComputeInvalidationRegion(), aData->mClip,
-          mLayerBuilder->GetLastPaintOffset(t), aData->mTransform);
+          GetLastPaintOffset(t), aData->mTransform);
     }
     // Clear the old geometry so that invalidation thinks the item has been
     // added this paint.
@@ -5576,13 +5587,6 @@ InactiveLayerData::~InactiveLayerData() {
   if (mLayerManager) {
     mLayerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
   }
-}
-
-nsIntPoint FrameLayerBuilder::GetLastPaintOffset(PaintedLayer* aLayer) {
-  PaintedDisplayItemLayerUserData* layerData =
-      GetPaintedDisplayItemLayerUserData(aLayer);
-  MOZ_ASSERT(layerData);
-  return layerData->mLastPaintOffset.valueOr(layerData->mTranslation);
 }
 
 bool FrameLayerBuilder::CheckInLayerTreeCompressionMode() {

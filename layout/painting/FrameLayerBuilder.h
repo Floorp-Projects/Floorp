@@ -623,13 +623,6 @@ class FrameLayerBuilder : public layers::LayerUserData {
                                           DisplayItemData* aItem);
 
   /**
-   * Get the translation transform that was in aLayer when we last painted. It's
-   * either the transform saved by ~FrameLayerBuilder(), or else the transform
-   * that's currently in the layer (which must be an integer translation).
-   */
-  nsIntPoint GetLastPaintOffset(PaintedLayer* aLayer);
-
-  /**
    * Return the resolution at which we expect to render aFrame's contents,
    * assuming they are being painted to retained layers. This takes into account
    * the resolution the contents of the ContainerLayer containing aFrame are
