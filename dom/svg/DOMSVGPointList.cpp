@@ -50,6 +50,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPointList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPointList)
   // No unlinking of mElement, we'd need to null out the value pointer (the
   // object it points to is held by the element) and null-check it everywhere.
+  tmp->RemoveFromTearoffTable();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGPointList)
@@ -112,13 +113,17 @@ DOMSVGPointList* DOMSVGPointList::GetDOMWrapperIfExists(void* aList) {
   return SVGPointListTearoffTable().GetTearoff(aList);
 }
 
-DOMSVGPointList::~DOMSVGPointList() {
+void DOMSVGPointList::RemoveFromTearoffTable() {
+  // Called from Unlink and the destructor.
+  //
   // There are now no longer any references to us held by script or list items.
   // Note we must use GetAnimValKey/GetBaseValKey here, NOT InternalList()!
   void* key = mIsAnimValList ? InternalAList().GetAnimValKey()
                              : InternalAList().GetBaseValKey();
   SVGPointListTearoffTable().RemoveTearoff(key);
 }
+
+DOMSVGPointList::~DOMSVGPointList() { RemoveFromTearoffTable(); }
 
 JSObject* DOMSVGPointList::WrapObject(JSContext* cx,
                                       JS::Handle<JSObject*> aGivenProto) {

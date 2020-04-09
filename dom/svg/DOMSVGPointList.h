@@ -191,6 +191,8 @@ class DOMSVGPointList final : public nsISupports, public nsWrapperCache {
   void MaybeInsertNullInAnimValListAt(uint32_t aIndex);
   void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex);
 
+  void RemoveFromTearoffTable();
+
   // Weak refs to our nsISVGPoint items. The items are friends and take care
   // of clearing our pointer to them when they die.
   FallibleTArray<nsISVGPoint*> mItems;
