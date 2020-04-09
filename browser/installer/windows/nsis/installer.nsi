@@ -708,7 +708,22 @@ Section "-Application" APP_IDX
 
 !ifdef MOZ_DEFAULT_BROWSER_AGENT
   ${If} $RegisterDefaultAgent != "0"
-    Exec '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID'
+    ExecWait '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID' $0
+
+    ${If} $0 == 0x80070534 ; HRESULT_FROM_WIN32(ERROR_NONE_MAPPED)
+      ; The agent sometimes returns this error from trying to register the task
+      ; when we're running out of the MSI. The error is cryptic, but I believe
+      ; the cause is the fact that the MSI service runs us as SYSTEM, so
+      ; proxying the invocation through the shell gets the task registered as
+      ; the interactive user, which is what we want.
+      ; We use ExecInExplorer only as a fallback instead of always, because it
+      ; doesn't work in all environments; see bug 1602726.
+      ExecInExplorer::Exec "$INSTDIR\default-browser-agent.exe" \
+                           /cmdargs "register-task $AppUserModelID"
+      ; We don't need Exec's return value, but don't leave it on the stack.
+      Pop $0
+    ${EndIf}
+
     ${If} $RegisterDefaultAgent == ""
       ; If the variable was unset, force it to a good value.
       StrCpy $RegisterDefaultAgent 1
