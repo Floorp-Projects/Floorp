@@ -126,7 +126,7 @@ class TabsUseCases(
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
                 val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
+                sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
             }
 
             return session
@@ -174,7 +174,7 @@ class TabsUseCases(
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
                 val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
+                sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
             }
 
             return session

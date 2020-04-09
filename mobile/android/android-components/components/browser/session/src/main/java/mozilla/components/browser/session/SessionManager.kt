@@ -52,7 +52,8 @@ class SessionManager(
             session: Session,
             engineSession: EngineSession,
             parentEngineSession: EngineSession?,
-            sessionRestored: Boolean = false
+            sessionRestored: Boolean = false,
+            skipLoading: Boolean = false
         ) {
             unlink(session)
 
@@ -60,7 +61,7 @@ class SessionManager(
                 this.engineSession = engineSession
                 this.engineObserver = EngineObserver(session, store).also { observer ->
                     engineSession.register(observer)
-                    if (!sessionRestored) {
+                    if (!sessionRestored && !skipLoading) {
                         engineSession.loadUrl(session.url, parentEngineSession)
                     }
                 }
@@ -303,8 +304,11 @@ class SessionManager(
     /**
      * Gets the linked engine session for the provided session and creates it if needed.
      */
-    fun getOrCreateEngineSession(session: Session = selectedSessionOrThrow): EngineSession {
-        return delegate.getOrCreateEngineSession(session)
+    fun getOrCreateEngineSession(
+        session: Session = selectedSessionOrThrow,
+        skipLoading: Boolean = false
+    ): EngineSession {
+        return delegate.getOrCreateEngineSession(session, skipLoading)
     }
 
     /**
