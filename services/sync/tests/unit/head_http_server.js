@@ -52,7 +52,7 @@ function return_timestamp(request, response, timestamp) {
   let body = "" + timestamp;
   response.setHeader("X-Weave-Timestamp", body);
   response.setStatusLine(request.httpVersion, 200, "OK");
-  writeBytesToOutputStream(response.bodyOutputStream, body);
+  response.bodyOutputStream.write(body, body.length);
   return timestamp;
 }
 
@@ -85,7 +85,7 @@ function httpd_basic_auth_handler(body, metadata, response) {
     response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   }
-  writeBytesToOutputStream(response.bodyOutputStream, body);
+  response.bodyOutputStream.write(body, body.length);
 }
 
 /*
@@ -168,7 +168,7 @@ ServerWBO.prototype = {
       }
       response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
       response.setStatusLine(request.httpVersion, statusCode, status);
-      writeBytesToOutputStream(response.bodyOutputStream, body);
+      response.bodyOutputStream.write(body, body.length);
     };
   },
 
@@ -523,7 +523,7 @@ ServerCollection.prototype = {
         if (!options.ids) {
           response.setStatusLine(request.httpVersion, "400", "Bad Request");
           body = "Bad Request";
-          writeBytesToOutputStream(response.bodyOutputStream, body);
+          response.bodyOutputStream.write(body, body.length);
           return;
         }
         options.ids = options.ids.split(",");
@@ -587,7 +587,7 @@ ServerCollection.prototype = {
       response.setHeader("X-Last-Modified", "" + self.timestamp, false);
 
       response.setStatusLine(request.httpVersion, statusCode, status);
-      writeBytesToOutputStream(response.bodyOutputStream, body);
+      response.bodyOutputStream.write(body, body.length);
     };
   },
 };
@@ -659,7 +659,7 @@ function track_collections_helper() {
     response.setHeader("Content-Type", "application/json");
     response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
     response.setStatusLine(request.httpVersion, 200, "OK");
-    writeBytesToOutputStream(response.bodyOutputStream, body);
+    response.bodyOutputStream.write(body, body.length);
   }
 
   return {
@@ -956,7 +956,7 @@ SyncServer.prototype = {
       resp.setHeader(header, value);
     }
     resp.setHeader("X-Weave-Timestamp", "" + this.timestamp(), false);
-    writeBytesToOutputStream(body, resp.bodyOutputStream);
+    resp.bodyOutputStream.write(body, body.length);
   },
 
   /**
