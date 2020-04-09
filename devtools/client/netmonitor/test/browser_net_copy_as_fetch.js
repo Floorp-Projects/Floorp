@@ -79,6 +79,7 @@ add_task(async function() {
         if (typeof result !== "string") {
           return false;
         }
+
         return expectedResult === result;
       }
     );

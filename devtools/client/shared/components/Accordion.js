@@ -95,8 +95,7 @@ class Accordion extends Component {
     const updatedItems = this.props.items.filter(item => {
       const notExist = typeof this.state.opened[item.id] !== "boolean";
       if (typeof item.shouldOpen == "function") {
-        const currentState = this.state.opened[item.id];
-        return notExist || currentState !== item.shouldOpen(item, currentState);
+        return notExist || this.state.opened[item.id] !== item.shouldOpen(item);
       }
       return notExist;
     });
@@ -107,7 +106,7 @@ class Accordion extends Component {
       for (const item of updatedItems) {
         let itemOpen = item.opened;
         if (typeof item.shouldOpen == "function") {
-          itemOpen = item.shouldOpen(item, itemOpen);
+          itemOpen = item.shouldOpen(item);
         }
         everOpened[item.id] = itemOpen;
         opened[item.id] = itemOpen;

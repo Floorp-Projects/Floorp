@@ -72,13 +72,9 @@
   height: 100%;
 }
 
-.network-monitor .accordion-item:last-child .accordion-header {
-  position: relative;
-}
-
 .network-monitor .accordion-item:last-child .accordion-content {
-  position: relative;
-  top: 0;
+  position: absolute;
+  top: calc(var(--theme-toolbar-height) + 1px);
   bottom: 0;
   left: 0;
   right: 0;
