@@ -75,7 +75,6 @@ enum ThreadType {
 struct RunnableTask {
   virtual ThreadType threadType() = 0;
   virtual void runTask() = 0;
-  virtual ~RunnableTask() = default;
 };
 
 namespace oom {

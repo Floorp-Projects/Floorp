@@ -71,7 +71,7 @@ Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
 JS::FilenameValidationCallback js::gFilenameValidationCallback = nullptr;
 
 namespace js {
-void (*HelperThreadTaskCallback)(UniquePtr<RunnableTask>);
+void (*HelperThreadTaskCallback)(js::RunnableTask*);
 
 bool gCanUseExtraThreads = true;
 }  // namespace js
