@@ -15,8 +15,9 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
 #include "nsAtom.h"
-#include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "nscore.h"
 #include "nsDebug.h"
 #include "nsRange.h"
 #include "nsString.h"
@@ -803,6 +804,15 @@ class EditorUtils final {
   static void MaskString(nsString& aString, dom::Text* aText,
                          uint32_t aStartOffsetInString,
                          uint32_t aStartOffsetInText);
+
+  static nsStaticAtom* GetTagNameAtom(const nsAString& aTagName) {
+    if (aTagName.IsEmpty()) {
+      return nullptr;
+    }
+    nsAutoString lowerTagName;
+    nsContentUtils::ASCIIToLower(aTagName, lowerTagName);
+    return NS_GetStaticAtom(lowerTagName);
+  }
 
   static nsStaticAtom* GetAttributeAtom(const nsAString& aAttribute) {
     if (aAttribute.IsEmpty()) {

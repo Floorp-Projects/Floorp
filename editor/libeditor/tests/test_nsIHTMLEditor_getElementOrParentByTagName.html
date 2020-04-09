@@ -1,0 +1,449 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsIHTMLEditor.getElementOrParentByTagName()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<section>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+</section>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  let section = document.querySelector("section");
+  let editor = document.querySelector("[contenteditable]");
+  let selection = window.getSelection();
+  let element;
+
+  // Make sure that each test can run without previous tests for making each test
+  // debuggable with commenting out the unrelated tests.
+
+  try {
+    editor.focus();
+    element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("", null));
+    ok(false, "nsIHTMLEditor.getElementOrParentByTagName(\"\", null) should throw an exception");
+  } catch {
+    ok(true, "nsIHTMLEditor.getElementOrParentByTagName(\"\", null) should throw an exception");
+  }
+
+  try {
+    editor.focus();
+    element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName(null, null));
+    ok(false, "nsIHTMLEditor.getElementOrParentByTagName(null, null) should throw an exception");
+  } catch {
+    ok(true, "nsIHTMLEditor.getElementOrParentByTagName(null, null) should throw an exception");
+  }
+
+  try {
+    editor.focus();
+    element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName(undefined, null));
+    ok(false, "nsIHTMLEditor.getElementOrParentByTagName(undefined, null) should throw an exception");
+  } catch {
+    ok(true, "nsIHTMLEditor.getElementOrParentByTagName(undefined, null) should throw an exception");
+  }
+
+  editor.focus();
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("undefinedtagname", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"undefinedtagname\", null) should return null");
+
+  editor.blur();
+  selection.collapse(document.getElementById("display"), 0);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("section", null));
+  is(element, section,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"section\", null) should return the <section> when selection is in the it (HTML editor does not have focus)");
+
+  editor.focus();
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("section", null));
+  is(element, section,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"section\", null) should return the <section> when selection is in the it (HTML editor has focus)");
+
+  editor.focus();
+  selection.removeAllRanges();
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("section", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"section\", null) should return null when there is no selection");
+
+  editor.blur();
+  selection.collapse(document.getElementById("display"), 0);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("body", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"body\", null) should return null when it reaches the <body>");
+
+  editor.blur();
+  selection.collapse(document.getElementById("display"), 0);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("div", editor));
+  is(element, editor,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"div\", editor) should return editor even when selection is outside of it");
+
+  editor.innerHTML = "<p>first</p><p>second</p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild.firstChild, 0, editor.firstChild.nextSibling.firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("p", null));
+  is(element, editor.firstChild,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"p\", null) should return first <p> element when selection anchor is in it");
+
+  editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
+  editor.focus();
+  selection.collapse(editor.querySelector("td").firstChild, 2);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("td", null));
+  is(element, editor.querySelector("td"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"td\", null) should return the <td> when selection is collapsed in it");
+
+  editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
+  editor.focus();
+  selection.collapse(editor.querySelector("td").firstChild, 2);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("th", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"th\", null) should return null when selection is collapsed in <td>");
+
+  editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("td", null));
+  is(element, editor.querySelector("td"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"td\", null) should return the <td> when it's selected");
+
+  editor.innerHTML = "<table><tr><th>cell</th></tr></table>";
+  editor.focus();
+  selection.collapse(editor.querySelector("th").firstChild, 2);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("td", null));
+  is(element, editor.querySelector("th"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"td\", null) should return the <th> when selection is collapsed in it");
+
+  editor.innerHTML = "<table><tr><th>cell</th></tr></table>";
+  editor.focus();
+  selection.collapse(editor.querySelector("th").firstChild, 2);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("th", null));
+  is(element, editor.querySelector("th"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"th\", null) should return the <th> when selection is collapsed in it");
+
+  editor.innerHTML = "<table><tr><th>cell</th></tr></table>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("td", null));
+  is(element, editor.querySelector("th"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"td\", null) should return the <th> when it's selected");
+
+  editor.innerHTML = "<table><tr><th>cell</th></tr></table>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("th", null));
+  is(element, editor.querySelector("th"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"th\", null) should return the <th> when it's selected");
+
+  editor.innerHTML = "<ul><li>listitem</li></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ul", null));
+  is(element, editor.querySelector("ul"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ul\", null) should return the <ul> when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ul><li>listitem</li></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("ul"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <ul> when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ul><li>listitem</li></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ol", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ol\", null) should return null when selection is collapsed in <ul>");
+
+  editor.innerHTML = "<ol><li>listitem</li></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ol", null));
+  is(element, editor.querySelector("ol"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ol\", null) should return the <ol> when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ol><li>listitem</li></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("ol"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <ol> when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ol><li>listitem</li></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ul", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ol\", null) should return null when selection is collapsed in <ol>");
+
+  editor.innerHTML = "<dl><dt>listitem</dt></dl>";
+  editor.focus();
+  selection.collapse(editor.querySelector("dt").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("dl", null));
+  is(element, editor.querySelector("dl"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"dl\", null) should return the <dl> when selection is collapsed in its <dt>");
+
+  editor.innerHTML = "<dl><dt>listitem</dt></dl>";
+  editor.focus();
+  selection.collapse(editor.querySelector("dt").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("dl"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <dl> when selection is collapsed in its <dt>");
+
+  editor.innerHTML = "<dl><dd>listitem</dd></dl>";
+  editor.focus();
+  selection.collapse(editor.querySelector("dd").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("dl", null));
+  is(element, editor.querySelector("dl"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"dl\", null) should return the <dl> when selection is collapsed in its <dd>");
+
+  editor.innerHTML = "<dl><dd>listitem</dd></dl>";
+  editor.focus();
+  selection.collapse(editor.querySelector("dd").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("dl"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <dl> when selection is collapsed in its <dd>");
+
+  editor.innerHTML = "<ul><ol><li>listitem</li></ol></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("ol"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <ol> (sublist) when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ul><ol><li>listitem</li></ol></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ol", null));
+  is(element, editor.querySelector("ol"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ol\", null) should return the <ol> (sublist) when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ul><ol><li>listitem</li></ol></ul>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ul", null));
+  is(element, editor.querySelector("ul"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ul\", null) should return the <ul> when selection is collapsed in its sublist's <li>");
+
+  editor.innerHTML = "<ol><ul><li>listitem</li></ul></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("list", null));
+  is(element, editor.querySelector("ul"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"list\", null) should return the <ul> (sublist) when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ol><ul><li>listitem</li></ul></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ul", null));
+  is(element, editor.querySelector("ul"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ul\", null) should return the <ul> (sublist) when selection is collapsed in its <li>");
+
+  editor.innerHTML = "<ol><ul><li>listitem</li></ul></ol>";
+  editor.focus();
+  selection.collapse(editor.querySelector("li").firstChild, 4);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("ol", null));
+  is(element, editor.querySelector("ol"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"ol\", null) should return the <ol> when selection is collapsed in its sublist's <li>");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a href=\"about:config\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a href=\"about:config\"> when it's selected");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return the <a href=\"about:config\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return the <a href=\"about:config\"> when it's selected");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return null when selection is collapsed in the <a href=\"about:config\">");
+
+  editor.innerHTML = "<p><a href=\"about:config\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return null when the <a href=\"about:config\"> is selected");
+
+  editor.innerHTML = "<p><a href=\"\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a href=\"\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a href=\"\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a href=\"\"> when it's selected");
+
+  editor.innerHTML = "<p><a href=\"\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return the <a href=\"\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a href=\"\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return the <a href=\"\"> when it's selected");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a name=\"foo\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a name=\"foo\"> when it's selected");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return null when selection is collapsed in the <a name=\"foo\">");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return null when the <a name=\"foo\"> is selected");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return the <a name=\"foo\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a name=\"foo\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return the <a name=\"foo\"> when it's selected");
+
+  editor.innerHTML = "<p><a name=\"\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a name=\"\"> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a name=\"\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a name=\"\"> when it's selected");
+
+  editor.innerHTML = "<p><a name=\"\">anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return null when selection is collapsed in the <a name=\"\">");
+
+  editor.innerHTML = "<p><a name=\"\">anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return null when the <a name=\"\"> is selected");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a> when selection is collapsed in it");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return null when selection is collapsed in the <a>");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.collapse(editor.querySelector("a").firstChild, 3);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return null when selection is collapsed in the <a>");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("a", null));
+  is(element, editor.querySelector("a"),
+     "nsIHTMLEditor.getElementOrParentByTagName(\"a\", null) should return the <a> when it's selected");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("href", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"href\", null) should return null when the <a> is selected");
+
+  editor.innerHTML = "<p><a>anchor</a></p>";
+  editor.focus();
+  selection.setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  element = SpecialPowers.unwrap(getHTMLEditor().getElementOrParentByTagName("anchor", null));
+  is(element, null,
+     "nsIHTMLEditor.getElementOrParentByTagName(\"anchor\", null) should return the <a> is selected");
+
+  SimpleTest.finish();
+});
+
+function getHTMLEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsIHTMLEditor);
+}
+
+</script>
+</body>
+
+</html>
