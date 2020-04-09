@@ -231,6 +231,16 @@ void AnimationSurfaceProvider::Run() {
       continue;
     }
 
+    // If there is output available we want to change the entry in the surface
+    // cache from a placeholder to an actual surface now before NotifyProgress
+    // call below so that when consumers get the frame complete notification
+    // from the NotifyProgress they can actually get a surface from the surface
+    // cache.
+    bool checkForNewFrameAtYieldResult = false;
+    if (result == LexerResult(Yield::OUTPUT_AVAILABLE)) {
+      checkForNewFrameAtYieldResult = CheckForNewFrameAtYield();
+    }
+
     // Notify for the progress we've made so far.
     if (mImage && mDecoder->HasProgress()) {
       NotifyProgress(WrapNotNull(mImage), WrapNotNull(mDecoder));
@@ -249,7 +259,7 @@ void AnimationSurfaceProvider::Run() {
     // animation may advance even during shutdown, which keeps us decoding, and
     // thus blocking the decode pool during teardown.
     MOZ_ASSERT(result == LexerResult(Yield::OUTPUT_AVAILABLE));
-    if (!CheckForNewFrameAtYield() ||
+    if (!checkForNewFrameAtYieldResult ||
         DecodePool::Singleton()->IsShuttingDown()) {
       return;
     }
