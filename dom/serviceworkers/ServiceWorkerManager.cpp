@@ -53,12 +53,12 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
-#include "nsPermissionManager.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsTArray.h"
@@ -2287,8 +2287,7 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
   // wait for them if they have not.
   nsCOMPtr<nsIRunnable> permissionsRunnable = NS_NewRunnableFunction(
       "dom::ServiceWorkerManager::DispatchFetchEvent", [=]() {
-        RefPtr<nsPermissionManager> permMgr =
-            nsPermissionManager::GetInstance();
+        RefPtr<PermissionManager> permMgr = PermissionManager::GetInstance();
         if (permMgr) {
           permMgr->WhenPermissionsAvailable(serviceWorker->Principal(),
                                             continueRunnable);

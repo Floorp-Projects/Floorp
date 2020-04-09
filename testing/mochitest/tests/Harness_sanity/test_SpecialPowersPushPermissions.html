@@ -22,7 +22,7 @@ const EXPIRE_TIME = SpecialPowers.Ci.nsIPermissionManager.EXPIRE_TIME;
 //       <------------------------>
 //                 PERIOD
 var start;
-// PR_Now() that called in nsPermissionManager to get the system time
+// PR_Now() that called in PermissionManager to get the system time
 // is sometimes 100ms~600s more than Date.now() on Android 4.3 API11.
 // Thus, the PERIOD should be larger than 600ms in this test.
 const PERIOD = 900;
@@ -210,7 +210,7 @@ function getPlatformInfo() {
   var version = SpecialPowers.Services.sysinfo.getProperty('version');
   version = parseFloat(version);
 
-  // PR_Now() that called in nsPermissionManager to get the system time and
+  // PR_Now() that called in PermissionManager to get the system time and
   // Date.now() are out of sync on win32 platform(XP/win7). The PR_Now() is
   // 15~20ms less than Date.now(). Unfortunately, this time skew can't be
   // avoided, so it needs to add a time buffer to compensate.
