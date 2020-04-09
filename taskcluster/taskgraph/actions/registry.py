@@ -305,6 +305,7 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
     the action callback in testing mode, without actually creating tasks.
     """
     graph_config = load_graph_config(root)
+    graph_config.register()
     callbacks = _get_callbacks(graph_config)
     cb = callbacks.get(callback, None)
     if not cb:
