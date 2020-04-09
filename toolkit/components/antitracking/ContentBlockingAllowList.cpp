@@ -45,28 +45,6 @@ using namespace mozilla;
   return aCookieJarSettings->GetIsOnContentBlockingAllowList();
 }
 
-// TODO: We'll update the implementation here to use CookiejarSetting in
-//       WindowContext (See 1612378).
-/* static */ nsresult ContentBlockingAllowList::Check(
-    BrowsingContext* aParentContext, bool& aIsAllowListed) {
-  MOZ_ASSERT(aParentContext);
-
-  nsCOMPtr<nsPIDOMWindowOuter> outer = aParentContext->GetDOMWindow();
-  if (!outer) {
-    LOG(("No outer window found for our parent window context"));
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
-  if (!inner) {
-    LOG(("No inner window found for our parent outer window"));
-    return NS_ERROR_FAILURE;
-  }
-
-  aIsAllowListed = ContentBlockingAllowList::Check(inner);
-  return NS_OK;
-}
-
 /* static */ bool ContentBlockingAllowList::Check(nsPIDOMWindowInner* aWindow) {
   // TODO: this is a quick fix to ensure that we allow storage permission for
   // a chrome window. We should check if there is a better way to do this in
