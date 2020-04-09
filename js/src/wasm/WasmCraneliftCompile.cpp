@@ -47,7 +47,7 @@ bool wasm::CraneliftPlatformSupport() {
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {
     case BD_SymbolicAddress::RefFunc:
-      return SymbolicAddress::FuncRef;
+      return SymbolicAddress::RefFunc;
     case BD_SymbolicAddress::MemoryGrow:
       return SymbolicAddress::MemoryGrow;
     case BD_SymbolicAddress::MemorySize:

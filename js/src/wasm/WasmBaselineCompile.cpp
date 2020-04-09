@@ -10527,7 +10527,7 @@ bool BaseCompiler::emitRefFunc() {
   }
 
   pushI32(funcIndex);
-  return emitInstanceCall(lineOrBytecode, SASigFuncRef);
+  return emitInstanceCall(lineOrBytecode, SASigRefFunc);
 }
 
 bool BaseCompiler::emitRefNull() {

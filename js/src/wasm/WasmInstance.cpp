@@ -1033,7 +1033,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       table.setNull(dstOffset + i);
     } else if (!table.isFunction()) {
       // Note, fnref must be rooted if we do anything more than just store it.
-      void* fnref = Instance::funcRef(this, funcIndex);
+      void* fnref = Instance::refFunc(this, funcIndex);
       if (fnref == AnyRef::invalid().forCompiledCode()) {
         return false;  // OOM, which has already been reported.
       }
@@ -1231,8 +1231,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return table.length();
 }
 
-/* static */ void* Instance::funcRef(Instance* instance, uint32_t funcIndex) {
-  MOZ_ASSERT(SASigFuncRef.failureMode == FailureMode::FailOnInvalidRef);
+/* static */ void* Instance::refFunc(Instance* instance, uint32_t funcIndex) {
+  MOZ_ASSERT(SASigRefFunc.failureMode == FailureMode::FailOnInvalidRef);
   JSContext* cx = TlsContext.get();
 
   Tier tier = instance->code().bestTier();
