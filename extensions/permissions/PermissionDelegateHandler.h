@@ -23,15 +23,12 @@
  * prompt using of the top-level origin.
  */
 
-#ifndef mozilla_PermissionDelegateHandler_h
-#define mozilla_PermissionDelegateHandler_h
+#ifndef PermissionDelegateHandler_h__
+#define PermissionDelegateHandler_h__
 
-#include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsIPermissionDelegateHandler.h"
-#include "nsCOMPtr.h"
 
-class nsIPermissionManager;
 class nsIPrincipal;
 class nsIContentPermissionRequest;
 
@@ -39,6 +36,7 @@ namespace mozilla {
 namespace dom {
 class Document;
 }
+}  // namespace mozilla
 
 class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
  public:
@@ -164,6 +162,4 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
   RefPtr<nsIPermissionManager> mPermissionManager;
 };
 
-}  // namespace mozilla
-
-#endif  // mozilla_PermissionDelegateHandler_h
+#endif  // PermissionDelegateHandler_h__

@@ -322,6 +322,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
+    '/extensions/permissions',
     '/netwerk/protocol/http',
     '/netwerk/socket',
     '/netwerk/url-classifier',

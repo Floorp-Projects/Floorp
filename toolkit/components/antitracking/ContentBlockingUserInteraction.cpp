@@ -9,8 +9,8 @@
 #include "AntiTrackingUtils.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/PermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsPermissionManager.h"
 #include "nsXULAppAPI.h"
 #include "prtime.h"
 
@@ -26,7 +26,7 @@ void ContentBlockingUserInteraction::Observe(nsIPrincipal* aPrincipal) {
   if (XRE_IsParentProcess()) {
     LOG_PRIN(("Saving the userInteraction for %s", _spec), aPrincipal);
 
-    PermissionManager* permManager = PermissionManager::GetInstance();
+    nsPermissionManager* permManager = nsPermissionManager::GetInstance();
     if (NS_WARN_IF(!permManager)) {
       LOG(("Permission manager is null, bailing out early"));
       return;
@@ -65,7 +65,7 @@ void ContentBlockingUserInteraction::Observe(nsIPrincipal* aPrincipal) {
 
 /* static */
 bool ContentBlockingUserInteraction::Exists(nsIPrincipal* aPrincipal) {
-  PermissionManager* permManager = PermissionManager::GetInstance();
+  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     return false;
   }
