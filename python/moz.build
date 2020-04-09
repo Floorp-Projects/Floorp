@@ -14,6 +14,9 @@ with Files('devtools/**'):
 with Files('gdbpp/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('lldbutils/**'):
+    BUG_COMPONENT = ('Core', 'General')
+
 with Files('mach/**'):
     BUG_COMPONENT = ('Firefox Build System', 'Mach Core')
 

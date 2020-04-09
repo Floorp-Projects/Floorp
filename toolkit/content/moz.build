@@ -59,13 +59,7 @@ with Files('aboutwebrtc/*'):
 with Files('gmp-sources/*'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files('tests/browser/browser_audio*'):
-    BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
-
 with Files('tests/browser/browser_*autoplay*'):
-    BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
-
-with Files('tests/browser/*block*'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
 with Files('tests/browser/*silent*'):
@@ -128,9 +122,6 @@ with Files('tests/chrome/*drop*'):
 with Files('tests/chrome/*1048178*'):
     BUG_COMPONENT = ('Core', 'XUL')
 
-with Files('tests/chrome/*253481*'):
-    BUG_COMPONENT = ('Core', 'DOM: Editor')
-
 with Files('tests/chrome/*263683*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -168,9 +159,6 @@ with Files('tests/chrome/*557987*'):
 with Files('tests/chrome/*562554*'):
     BUG_COMPONENT = ('Firefox', 'Menus')
 
-with Files('tests/chrome/*570192*'):
-    BUG_COMPONENT = ('Firefox', 'Session Restore')
-
 with Files('tests/chrome/*findbar*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -182,9 +170,6 @@ with Files('tests/mochitest/*autocomplete*'):
 
 with Files('tests/mochitest/*mousecapture*'):
     BUG_COMPONENT = ('Core', 'DOM: UI Events & Focus Handling')
-
-with Files('tests/reftests/*multiline*'):
-    BUG_COMPONENT = ('Core', 'XBL')
 
 with Files('tests/reftests/*videocontrols*'):
     BUG_COMPONENT = ('Toolkit', 'Video/Audio Controls')

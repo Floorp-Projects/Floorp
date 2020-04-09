@@ -58,10 +58,6 @@ with Files('chrome/*690056*'):
 with Files('chrome/*92598*'):
     BUG_COMPONENT = ('Core', 'Networking: HTTP')
 
-with Files('chrome/*private_hidden_window*'):
-    BUG_COMPONENT = ('Firefox', 'Private Browsing')
-
-
 with Files('iframesandbox/**'):
     BUG_COMPONENT = ('Core', 'Security')
 
