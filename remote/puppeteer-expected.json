@@ -1168,7 +1168,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.Events.Console should not throw when there are console messages in detached iframes": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.Events.DOMContentLoaded should fire when expected": [
     "PASS"
