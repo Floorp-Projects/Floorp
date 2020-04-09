@@ -1277,14 +1277,15 @@ class HTMLEditor final : public TextEditor,
    * values of CSS properties.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  GetInlineStyles(nsINode& aNode, AutoStyleCacheArray& aStyleCacheArray);
+  GetInlineStyles(nsIContent& aContent, AutoStyleCacheArray& aStyleCacheArray);
 
   /**
-   * CacheInlineStyles() caches style of aNode into mCachedInlineStyles of
+   * CacheInlineStyles() caches style of aContent into mCachedInlineStyles of
    * TopLevelEditSubAction.  This may cause flushing layout at retrieving
    * computed value of CSS properties.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CacheInlineStyles(nsINode& aNode);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  CacheInlineStyles(nsIContent& aContent);
 
   /**
    * ReapplyCachedStyles() restores some styles which are disappeared during
