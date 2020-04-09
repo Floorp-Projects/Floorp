@@ -3816,8 +3816,10 @@ static bool CopyErrorReportToObject(JSContext* cx, JSErrorReport* report,
 static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  // We don't have a stack here, so just initialize with null.
+  JS::ExceptionStack exnStack(cx, args.get(0), nullptr);
   js::ErrorReport report(cx);
-  if (!report.init(cx, args.get(0), js::ErrorReport::WithSideEffects)) {
+  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
     return false;
   }
 

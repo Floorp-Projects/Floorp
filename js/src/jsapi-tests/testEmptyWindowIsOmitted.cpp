@@ -12,6 +12,7 @@
 
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
+#include "js/Exception.h"
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
@@ -109,12 +110,11 @@ bool testOmittedWindow(const CharT (&chars)[N], unsigned expectedErrorNumber,
   JS::Rooted<JSScript*> script(cx, compile(chars, N - 1));
   CHECK(!script);
 
-  JS::RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   const auto* errorReport = report.report();
 

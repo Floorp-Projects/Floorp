@@ -5,6 +5,7 @@
 #include "jsfriendapi.h"
 
 #include "js/CompilationAndEvaluation.h"
+#include "js/Exception.h"
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
@@ -54,12 +55,11 @@ bool testLineOfContextHasNoLineTerminator(const char16_t (&chars)[N],
   JS::RootedValue rval(cx);
   CHECK(!eval(chars, N - 1, &rval));
 
-  JS::RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   const auto* errorReport = report.report();
 

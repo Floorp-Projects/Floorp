@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Exception.h"
 #include "jsapi-tests/tests.h"
 
 using JS::CreateError;
@@ -30,13 +31,13 @@ BEGIN_TEST(testUncaughtSymbol) {
 }
 
 static SymbolExceptionType GetSymbolExceptionType(JSContext* cx) {
-  JS::RootedValue exn(cx);
-  MOZ_RELEASE_ASSERT(JS_GetPendingException(cx, &exn));
-  MOZ_RELEASE_ASSERT(exn.isSymbol());
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  MOZ_RELEASE_ASSERT(JS::StealPendingExceptionStack(cx, &exnStack));
+  MOZ_RELEASE_ASSERT(exnStack.exception().isSymbol());
 
   js::ErrorReport report(cx);
-  MOZ_RELEASE_ASSERT(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  MOZ_RELEASE_ASSERT(
+      report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   if (strcmp(report.toStringResult().c_str(),
              "uncaught exception: Symbol(Symbol.iterator)") == 0) {
