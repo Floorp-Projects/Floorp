@@ -10,7 +10,6 @@ with Files('moz.build'):
 DIRS += [
     'common',
     'crypto',
-    'interfaces',
     'settings',
 ]
 

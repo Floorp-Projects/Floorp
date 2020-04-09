@@ -278,7 +278,7 @@ function get_sync_test_telemetry() {
   let ns = {};
   ChromeUtils.import("resource://services-sync/telemetry.js", ns);
   ns.SyncTelemetry.tryRefreshDevices = function() {};
-  let testEngines = ["rotary", "steam", "sterling", "catapult", "nineties"];
+  let testEngines = ["rotary", "steam", "sterling", "catapult"];
   for (let engineName of testEngines) {
     ns.SyncTelemetry.allowedEngines.add(engineName);
   }

@@ -43,7 +43,6 @@ EXTRA_JS_MODULES['services-sync'] += [
 EXTRA_JS_MODULES['services-sync'].engines += [
     'modules/engines/addons.js',
     'modules/engines/bookmarks.js',
-    'modules/engines/bridged.js',
     'modules/engines/clients.js',
     'modules/engines/extension-storage.js',
     'modules/engines/forms.js',
