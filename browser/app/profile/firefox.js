@@ -2138,7 +2138,11 @@ pref("devtools.webconsole.filter.netxhr", false);
 
 // Webconsole autocomplete preference
 pref("devtools.webconsole.input.autocomplete",true);
+
+// Show context selector in console input, in the browser toolbox
 pref("devtools.webconsole.input.context", false);
+// Show context selector in console input, in the content toolbox
+pref("devtools.contenttoolbox.webconsole.input.context", false);
 
 // Set to true to eagerly show the results of webconsole terminal evaluations
 // when they don't have side effects.
