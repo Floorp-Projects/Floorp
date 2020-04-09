@@ -71,7 +71,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mReferrerInfo = aLoadState.ReferrerInfo();
   mURI = aLoadState.URI();
   mOriginalURI = aLoadState.OriginalURI();
-  mSourceBrowsingContext = aLoadState.SourceBrowsingContext();
   mBaseURI = aLoadState.BaseURI();
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
@@ -442,9 +441,12 @@ void nsDocShellLoadState::SetSrcdocData(const nsAString& aSrcdocData) {
   mSrcdocData = aSrcdocData;
 }
 
-void nsDocShellLoadState::SetSourceBrowsingContext(
-    BrowsingContext* aSourceBrowsingContext) {
-  mSourceBrowsingContext = aSourceBrowsingContext;
+nsIDocShell* nsDocShellLoadState::SourceDocShell() const {
+  return mSourceDocShell;
+}
+
+void nsDocShellLoadState::SetSourceDocShell(nsIDocShell* aSourceDocShell) {
+  mSourceDocShell = aSourceDocShell;
 }
 
 nsIURI* nsDocShellLoadState::BaseURI() const { return mBaseURI; }
@@ -668,7 +670,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
       mIsFromProcessingFrameAttributes;
   loadState.URI() = mURI;
   loadState.OriginalURI() = mOriginalURI;
-  loadState.SourceBrowsingContext() = mSourceBrowsingContext;
   loadState.BaseURI() = mBaseURI;
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;

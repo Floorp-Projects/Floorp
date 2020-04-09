@@ -266,8 +266,6 @@ struct DocShellLoadStateInit
   // encounters a server side redirect.
   nsIContentSecurityPolicy Csp;
 
-  MaybeDiscardedBrowsingContext SourceBrowsingContext;
-
   nsCString? OriginalURIString;
   int32_t? CancelContentJSEpoch;
 
