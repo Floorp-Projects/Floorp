@@ -87,7 +87,7 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(addprefix $(TOPOBJDIR)/
 	@# The overhead is not that big, and this avoids waiting for proper
 	@# support for defines tracking in process_install_manifest.
 	@touch install_$(subst /,_,$*)
-	$(PYTHON) -m mozbuild.action.process_install_manifest \
+	$(PYTHON3) -m mozbuild.action.process_install_manifest \
 		--track install_$(subst /,_,$*).track \
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
