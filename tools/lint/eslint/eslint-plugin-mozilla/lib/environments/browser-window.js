@@ -14,11 +14,8 @@
 // -----------------------------------------------------------------------------
 
 var fs = require("fs");
-var path = require("path");
 var helpers = require("../helpers");
-var globals = require("../globals");
-
-const rootDir = helpers.rootDir;
+var { getScriptGlobals } = require("./utils");
 
 // When updating EXTRA_SCRIPTS or MAPPINGS, be sure to also update the
 // 'support-files' config in `tools/lint/eslint.yml`.
@@ -101,44 +98,11 @@ function getGlobalScripts() {
   return results;
 }
 
-function getScriptGlobals() {
-  let fileGlobals = [];
-  let scripts = getGlobalScripts();
-  if (!scripts) {
-    return [];
-  }
-
-  for (let script of scripts.concat(EXTRA_SCRIPTS)) {
-    let fileName = path.join(rootDir, script);
-    try {
-      fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
-    } catch (e) {
-      console.error(`Could not load globals from file ${fileName}: ${e}`);
-      console.error(
-        `You may need to update the mappings in ${module.filename}`
-      );
-      throw new Error(`Could not load globals from file ${fileName}: ${e}`);
-    }
-  }
-
-  return fileGlobals.concat(extraDefinitions);
-}
-
-function mapGlobals(fileGlobals) {
-  let globalObjects = {};
-  for (let global of fileGlobals) {
-    globalObjects[global.name] = global.writable;
-  }
-  return globalObjects;
-}
-
-function getMozillaCentralItems() {
-  return {
-    globals: mapGlobals(getScriptGlobals()),
+module.exports = getScriptGlobals(
+  "browser-window",
+  getGlobalScripts().concat(EXTRA_SCRIPTS),
+  extraDefinitions,
+  {
     browserjsScripts: getGlobalScripts().concat(EXTRA_SCRIPTS),
-  };
-}
-
-module.exports = helpers.isMozillaCentralBased()
-  ? getMozillaCentralItems()
-  : helpers.getSavedEnvironmentItems("browser-window");
+  }
+);

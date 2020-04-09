@@ -26,6 +26,7 @@ module.exports = {
     jsm: require("../lib/environments/jsm.js"),
     simpletest: require("../lib/environments/simpletest.js"),
     privileged: require("../lib/environments/privileged.js"),
+    xpcshell: require("../lib/environments/xpcshell.js"),
   },
   processors: {
     ".xul": require("../lib/processors/xul"),

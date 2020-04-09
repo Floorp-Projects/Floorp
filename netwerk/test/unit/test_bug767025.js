@@ -1,5 +1,4 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* global _XPCSHELL_PROCESS */
 
 "use strict";
 
