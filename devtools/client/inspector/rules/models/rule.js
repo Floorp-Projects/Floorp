@@ -855,13 +855,19 @@ class Rule {
 
   /**
    * Return a string representation of the rule.
+   *
+   * @param {TextProperty} filterTextProps
+   *        An optional array of TextProperty instances to filter by.
    */
-  stringifyRule() {
+  stringifyRule(filterTextProps = []) {
     const selectorText = this.selectorText;
     let cssText = "";
     const terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
 
     for (const textProp of this.textProps) {
+      if (filterTextProps.length && !filterTextProps.includes(textProp)) {
+        continue;
+      }
       if (!textProp.invisible) {
         cssText += "\t" + textProp.stringifyProperty() + terminator;
       }

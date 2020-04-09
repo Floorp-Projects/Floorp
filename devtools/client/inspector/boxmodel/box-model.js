@@ -4,12 +4,17 @@
 
 "use strict";
 
+const Services = require("Services");
 const boxModelReducer = require("devtools/client/inspector/boxmodel/reducers/box-model");
 const {
   updateGeometryEditorEnabled,
   updateLayout,
   updateOffsetParent,
 } = require("devtools/client/inspector/boxmodel/actions/box-model");
+
+const HIGHLIGHT_RULE_PREF = Services.prefs.getBoolPref(
+  "devtools.layout.boxmodel.highlightProperty"
+);
 
 loader.lazyRequireGetter(
   this,
@@ -309,14 +314,16 @@ BoxModel.prototype = {
    *         The name of the property.
    */
   onShowRulePreviewTooltip(target, property) {
-    const { highlightProperty } = this.inspector.getPanel("ruleview").view;
-    const isHighlighted = highlightProperty(property);
+    const { getApplicableTextProperty } = this.inspector.getPanel(
+      "ruleview"
+    ).view;
+    const textProp = getApplicableTextProperty(property);
 
-    // Only show the tooltip if the property is not highlighted.
-    // TODO: In the future, use an associated ruleId for toggling the tooltip instead of
-    // the Boolean returned from highlightProperty.
-    if (!isHighlighted) {
-      this.rulePreviewTooltip.show(target);
+    // Only show the tooltip if there is a corresponding TextProperty
+    if (textProp) {
+      // Get the specific declaration from the CSS rule's text content
+      const rule = textProp.rule.stringifyRule([textProp]);
+      this.rulePreviewTooltip.show(target, rule);
     }
   },
 
@@ -332,6 +339,12 @@ BoxModel.prototype = {
    *         The name of the property.
    */
   onShowBoxModelEditor(element, event, property) {
+    if (HIGHLIGHT_RULE_PREF && event.shiftKey) {
+      const { highlightProperty } = this.inspector.getPanel("ruleview").view;
+      highlightProperty(property);
+      return;
+    }
+
     const session = new EditingSession({
       inspector: this.inspector,
       doc: this.document,
