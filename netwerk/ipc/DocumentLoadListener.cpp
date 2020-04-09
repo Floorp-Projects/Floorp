@@ -1309,6 +1309,23 @@ DocumentLoadListener::GetCachedCrossOriginOpenerPolicy(
   return httpChannel->GetCrossOriginOpenerPolicy(aPolicy);
 }
 
+auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)
+    -> RefPtr<ChildEndpointPromise> {
+  if (!mDocumentChannelBridge) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+  mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
+  mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
+  nsresult rv = extensions::PStreamFilter::CreateEndpoints(
+      OtherPid(), aChildProcessId, &parent, &child);
+  if (NS_FAILED(rv)) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  mDocumentChannelBridge->AttachStreamFilter(std::move(parent));
+  return ChildEndpointPromise::CreateAndResolve(std::move(child), __func__);
+}
+
 }  // namespace net
 }  // namespace mozilla
 
