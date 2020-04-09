@@ -1741,7 +1741,7 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
     y0 = min(max(skip->y, 0), t.height);
     y1 = min(max(skip->y + skip->height, y0), t.height);
     skip_start = min(max(skip->x, 0), t.width);
-    skip_end = min(max(skip->x + skip->width, y0), t.width);
+    skip_end = min(max(skip->x + skip->width, skip_start), t.width);
     if (skip_start <= 0 && skip_end >= t.width && y0 <= 0 && y1 >= t.height) {
       t.disable_delayed_clear();
       return;
