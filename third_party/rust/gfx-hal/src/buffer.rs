@@ -35,6 +35,24 @@ impl From<device::OutOfMemory> for CreationError {
     }
 }
 
+impl std::fmt::Display for CreationError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create buffer: {}", err),
+            CreationError::UnsupportedUsage { usage } => write!(fmt, "Failed to create buffer: Unsupported usage: {:?}", usage),
+        }
+    }
+}
+
+impl std::error::Error for CreationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            CreationError::OutOfMemory(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
 /// Error creating a buffer view.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ViewCreationError {
@@ -51,6 +69,25 @@ pub enum ViewCreationError {
 impl From<device::OutOfMemory> for ViewCreationError {
     fn from(error: device::OutOfMemory) -> Self {
         ViewCreationError::OutOfMemory(error)
+    }
+}
+
+impl std::fmt::Display for ViewCreationError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ViewCreationError::OutOfMemory(err) => write!(fmt, "Failed to create buffer view: {}", err),
+            ViewCreationError::UnsupportedFormat { format: Some(format) } => write!(fmt, "Failed to create buffer view: Unsupported format {:?}", format),
+            ViewCreationError::UnsupportedFormat { format: None } => write!(fmt, "Failed to create buffer view: Unspecified format"),
+        }
+    }
+}
+
+impl std::error::Error for ViewCreationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ViewCreationError::OutOfMemory(err) => Some(err),
+            _ => None,
+        }
     }
 }
 

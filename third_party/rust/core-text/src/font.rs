@@ -88,6 +88,9 @@ declare_TCFType! {
 impl_TCFType!(CTFont, CTFontRef, CTFontGetTypeID);
 impl_CFTypeDescription!(CTFont);
 
+unsafe impl Send for CTFont {}
+unsafe impl Sync for CTFont {}
+
 pub fn new_from_CGFont(cgfont: &CGFont, pt_size: f64) -> CTFont {
     unsafe {
         let font_ref = CTFontCreateWithGraphicsFont(cgfont.as_ptr() as *mut _,
@@ -297,6 +300,13 @@ impl CTFont {
         }
     }
 
+    pub fn get_glyph_with_name(&self, glyph_name: &str) -> CGGlyph {
+        let glyph_name = CFString::new(glyph_name);
+        unsafe {
+            CTFontGetGlyphWithName(self.0, glyph_name.as_concrete_TypeRef())
+        }
+    }
+
     pub unsafe fn get_glyphs_for_characters(&self,
                                             characters: *const UniChar,
                                             glyphs: *mut CGGlyph,
@@ -339,6 +349,17 @@ impl CTFont {
         }
     }
 
+    pub fn get_available_font_tables(&self) -> Option<CFArray<CTFontTableTag>> {
+        unsafe {
+            let result = CTFontCopyAvailableTables(self.0, kCTFontTableOptionsExcludeSynthetic);
+            if result.is_null() {
+                None
+            } else {
+                Some(TCFType::wrap_under_create_rule(result))
+            }
+        }
+    }
+
     pub fn get_bounding_rects_for_glyphs(&self, orientation: CTFontOrientation, glyphs: &[CGGlyph])
                                          -> CGRect {
         unsafe {
@@ -351,7 +372,7 @@ impl CTFont {
     }
 
     pub fn draw_glyphs(&self, glyphs: &[CGGlyph], positions: &[CGPoint], context: CGContext) {
-        assert!(glyphs.len() == positions.len());
+        assert_eq!(glyphs.len(), positions.len());
         unsafe {
             CTFontDrawGlyphs(self.as_concrete_TypeRef(),
                              glyphs.as_ptr(),
@@ -558,7 +579,7 @@ extern {
     /* Getting Glyph Data */
     fn CTFontCreatePathForGlyph(font: CTFontRef, glyph: CGGlyph, matrix: *const CGAffineTransform)
                                 -> CGPathRef;
-    //fn CTFontGetGlyphWithName
+    fn CTFontGetGlyphWithName(font: CTFontRef, glyphName: CFStringRef) -> CGGlyph;
     fn CTFontGetBoundingRectsForGlyphs(font: CTFontRef,
                                        orientation: CTFontOrientation,
                                        glyphs: *const CGGlyph,
@@ -605,7 +626,7 @@ extern {
     //fn CTFontCreateWithQuickdrawInstance
 
     /* Getting Font Table Data */
-    //fn CTFontCopyAvailableTables(font: CTFontRef, options: CTFontTableOptions) -> CFArrayRef;
+    fn CTFontCopyAvailableTables(font: CTFontRef, options: CTFontTableOptions) -> CFArrayRef;
     fn CTFontCopyTable(font: CTFontRef, table: CTFontTableTag, options: CTFontTableOptions) -> CFDataRef;
 
     fn CTFontGetTypeID() -> CFTypeID;

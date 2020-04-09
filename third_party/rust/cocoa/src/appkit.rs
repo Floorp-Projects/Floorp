@@ -549,7 +549,7 @@ pub trait NSPasteboard: Sized {
 
 impl NSPasteboard for id {
     unsafe fn releaseGlobally(self) {
-        msg_send![self, releaseGlobally];
+        msg_send![self, releaseGlobally]
     }
 
     unsafe fn clearContents(self) -> NSInteger {
@@ -821,6 +821,7 @@ pub trait NSMenuItem: Sized {
     unsafe fn initWithTitle_action_keyEquivalent_(self, title: id, action: SEL, key: id) -> id;
     unsafe fn setKeyEquivalentModifierMask_(self, mask: NSEventModifierFlags);
     unsafe fn setSubmenu_(self, submenu: id);
+    unsafe fn setTarget_(self, target: id);
 }
 
 impl NSMenuItem for id {
@@ -834,6 +835,10 @@ impl NSMenuItem for id {
 
     unsafe fn setSubmenu_(self, submenu: id) {
         msg_send![self, setSubmenu:submenu]
+    }
+
+    unsafe fn setTarget_(self, target: id) {
+        msg_send![self, setTarget:target]
     }
 }
 
@@ -1542,11 +1547,11 @@ impl NSWindow for id {
     }
 
     unsafe fn setTabbingMode_(self, tabbingMode: NSWindowTabbingMode) {
-        msg_send![self, setTabbingMode: tabbingMode];
+        msg_send![self, setTabbingMode: tabbingMode]
     }
 
     unsafe fn addTabbedWindow_ordered_(self, window: id, ordering_mode: NSWindowOrderingMode) {
-        msg_send![self, addTabbedWindow:window ordered: ordering_mode];
+        msg_send![self, addTabbedWindow:window ordered: ordering_mode]
     }
 
     unsafe fn toggleTabBar_(self, sender: id) {
@@ -2938,6 +2943,23 @@ impl NSControl for id {
     }
 }
 
+pub trait NSImageView: Sized {
+     unsafe fn alloc(_: Self) -> id {
+         msg_send![class!(NSImageView), alloc]
+     }
+     unsafe fn initWithFrame_(self, frameRect: NSRect) -> id;
+     unsafe fn setImage_(self, img: id /* (NSImage *) */);
+}
+
+impl NSImageView for id {
+    unsafe fn initWithFrame_(self, frameRect: NSRect) -> id {
+        msg_send![self, initWithFrame:frameRect]
+    }
+    unsafe fn setImage_(self, img: id /* (NSImage *) */) {
+        msg_send![self, setImage:img]
+    }
+}
+
 pub trait NSButton: Sized {
      unsafe fn setImage_(self, img: id /* (NSImage *) */);
      unsafe fn setBezelStyle_(self, style: NSBezelStyle);
@@ -2946,6 +2968,8 @@ pub trait NSButton: Sized {
          msg_send![class!(NSButton), alloc]
      }
      unsafe fn initWithFrame_(self, frameRect: NSRect) -> id;
+     unsafe fn setTarget_(self, target: id /* Instance */); 
+     unsafe fn setAction_(self, selector: objc::runtime::Sel /* (Instance *) */);
 }
 
 impl NSButton for id {
@@ -2953,13 +2977,20 @@ impl NSButton for id {
         msg_send![self, initWithFrame:frameRect]
     }
     unsafe fn setBezelStyle_(self, style: NSBezelStyle) {
-        msg_send![self, setBezelStyle:style];
+        msg_send![self, setBezelStyle:style]
     }
     unsafe fn setTitle_(self, title: id /* (NSString*) */) {
         msg_send![self, setTitle:title]
     }
     unsafe fn setImage_(self, img: id /* (NSImage *) */) {
         msg_send![self, setImage:img]
+    }
+    unsafe fn setTarget_(self, target: id /* (Instance *) */) {
+        msg_send![self, setTarget:target]
+    }
+
+    unsafe fn setAction_(self, selector: objc::runtime::Sel /* (Instance method *) */) {
+        msg_send![self, setAction:selector]
     }
 }
 
@@ -3558,10 +3589,10 @@ impl NSTextField for id {
         msg_send![self, initWithFrame:frameRect]
     }
     unsafe fn setEditable_(self, editable: BOOL) {
-        msg_send![self, setEditable:editable];
+        msg_send![self, setEditable:editable]
     }
     unsafe fn setStringValue_(self, label: id) {
-        msg_send![self, setStringValue:label];
+        msg_send![self, setStringValue:label]
     }
 }
 

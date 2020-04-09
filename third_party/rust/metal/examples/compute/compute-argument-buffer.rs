@@ -55,8 +55,8 @@ fn main() {
         MTLResourceOptions::empty(),
     );
     argument_encoder.set_argument_buffer(&arg_buffer, 0);
-    argument_encoder.set_buffer(&buffer, 0, 0);
-    argument_encoder.set_buffer(&sum, 0, 1);
+    argument_encoder.set_buffer(0, &buffer, 0);
+    argument_encoder.set_buffer(1, &sum, 0);
 
     let pipeline_state_descriptor = ComputePipelineDescriptor::new();
     pipeline_state_descriptor.set_compute_function(Some(&kernel));

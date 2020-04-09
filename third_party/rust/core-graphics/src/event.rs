@@ -8,9 +8,9 @@ use libc;
 
 use foreign_types::ForeignType;
 
-pub type CGEventField = libc::uint32_t;
-pub type CGKeyCode = libc::uint16_t;
-pub type CGScrollEventUnit = libc::uint32_t;
+pub type CGEventField = u32;
+pub type CGKeyCode = u16;
+pub type CGScrollEventUnit = u32;
 
 /// Flags for events
 ///
@@ -105,7 +105,7 @@ impl ScrollEventUnit {
 /// Constants that specify the different types of input events.
 ///
 /// [Ref](http://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-700/IOHIDSystem/IOKit/hidsystem/IOLLEvent.h)
-#[repr(C)]
+#[repr(u32)]
 #[derive(Clone, Copy, Debug)]
 pub enum CGEventType {
     Null = 0,
@@ -589,10 +589,10 @@ extern {
     fn CGEventCreateScrollWheelEvent2(
         source: ::sys::CGEventSourceRef,
         units: CGScrollEventUnit,
-        wheelCount: libc::uint32_t,
-        wheel1: libc::int32_t,
-        wheel2: libc::int32_t,
-        wheel3: libc::int32_t,
+        wheelCount: u32,
+        wheel1: i32,
+        wheel2: i32,
+        wheel3: i32,
     ) -> ::sys::CGEventRef;
 
     /// Post an event into the event stream at a specified location.
