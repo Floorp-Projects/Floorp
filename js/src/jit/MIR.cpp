@@ -2786,9 +2786,9 @@ MDefinition* MRsh::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
-  MOZ_ASSERT(IsNumberType(specialization_));
+  MOZ_ASSERT(IsNumberType(type()));
 
-  if (specialization_ == MIRType::Int64) {
+  if (type() == MIRType::Int64) {
     return this;
   }
 
@@ -2811,7 +2811,7 @@ MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
   }
 
   // 0 + -0 = 0. So we can't remove addition
-  if (isAdd() && specialization_ != MIRType::Int32) {
+  if (isAdd() && type() != MIRType::Int32) {
     return this;
   }
 
@@ -2868,10 +2868,10 @@ bool MFilterTypeSet::canConsumeFloat32(MUse* operand) const {
 }
 
 void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
-  MOZ_ASSERT(IsNumberType(specialization_));
+  MOZ_ASSERT(IsNumberType(type()));
 
   // Do not use Float32 if we can use int32.
-  if (specialization_ == MIRType::Int32) {
+  if (type() == MIRType::Int32) {
     return;
   }
 
@@ -2889,12 +2889,11 @@ void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
     return;
   }
 
-  specialization_ = MIRType::Float32;
   setResultType(MIRType::Float32);
 }
 
 void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int32) {
+  if (type() == MIRType::Int32) {
     return;
   }
 
@@ -2914,7 +2913,6 @@ void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
     return;
   }
 
-  specialization_ = MIRType::Float32;
   setResultType(MIRType::Float32);
 }
 
@@ -3086,13 +3084,12 @@ void MAbs::trySpecializeFloat32(TempAllocator& alloc) {
   }
 
   setResultType(MIRType::Float32);
-  specialization_ = MIRType::Float32;
 }
 
 MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
-  MOZ_ASSERT(IsNumberType(specialization_));
+  MOZ_ASSERT(IsNumberType(type()));
 
-  if (specialization_ == MIRType::Int64) {
+  if (type() == MIRType::Int64) {
     return this;
   }
 
@@ -3109,7 +3106,7 @@ MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
 
 void MDiv::analyzeEdgeCasesForward() {
   // This is only meaningful when doing integer division.
-  if (specialization_ != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return;
   }
 
@@ -3154,9 +3151,9 @@ void MDiv::analyzeEdgeCasesBackward() {
 bool MDiv::fallible() const { return !isTruncated(); }
 
 MDefinition* MMod::foldsTo(TempAllocator& alloc) {
-  MOZ_ASSERT(IsNumberType(specialization_));
+  MOZ_ASSERT(IsNumberType(type()));
 
-  if (specialization_ == MIRType::Int64) {
+  if (type() == MIRType::Int64) {
     return this;
   }
 
@@ -3169,7 +3166,7 @@ MDefinition* MMod::foldsTo(TempAllocator& alloc) {
 
 void MMod::analyzeEdgeCasesForward() {
   // These optimizations make sense only for integer division
-  if (specialization_ != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return;
   }
 
@@ -3244,7 +3241,7 @@ MDefinition* MMul::foldsTo(TempAllocator& alloc) {
     return out;
   }
 
-  if (specialization() != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return this;
   }
 
@@ -3258,7 +3255,7 @@ MDefinition* MMul::foldsTo(TempAllocator& alloc) {
 void MMul::analyzeEdgeCasesForward() {
   // Try to remove the check for negative zero
   // This only makes sense when using the integer multiplication
-  if (specialization() != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return;
   }
 
