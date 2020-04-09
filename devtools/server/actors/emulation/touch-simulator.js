@@ -430,41 +430,21 @@ TouchSimulator.prototype = {
       return;
     }
 
-    const point = new win.Touch({
-      identifier: 0,
-      target,
-      pageX: evt.pageX,
-      pageY: evt.pageY,
-      screenX: evt.screenX,
-      screenY: evt.screenY,
-      clientX: evt.clientX,
-      clientY: evt.clientY,
-      radiusX: 1,
-      radiusY: 1,
-      rotationAngle: 0,
-      force: 1,
-    });
-
-    let touches = [point];
-    let targetTouches = touches;
-    let changedTouches = touches;
-
-    if (name === "touchend" || name === "touchcancel") {
-      // "touchend" and "touchcancel" events should not have the removed touch
-      // neither in touches nor in targetTouches
-      touches = targetTouches = changedTouches = [];
-    }
-
-    // Initialize TouchEvent and dispatch.
-    const touchEvent = new win.TouchEvent(name, {
-      touches,
-      targetTouches,
-      changedTouches,
-      bubbles: true,
-      cancelable: true,
-      view: win,
-    });
-    target.dispatchEvent(touchEvent);
+    // To avoid duplicating logic for creating and dispatching touch events on the JS
+    // side, we should use what's already implemented for WindowUtils.sendTouchEvent.
+    const utils = win.windowUtils;
+    utils.sendTouchEvent(
+      name,
+      [0],
+      [evt.clientX],
+      [evt.clientY],
+      [1],
+      [1],
+      [0],
+      [1],
+      0,
+      false
+    );
   },
 
   getContent(target) {
