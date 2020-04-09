@@ -162,6 +162,12 @@ UrlClassifierSkipListService.prototype = {
     }
     this.features[feature].removeObserver(observer);
   },
+
+  clear() {
+    this.features = {};
+    this._initialized = false;
+    this.entries = null;
+  },
 };
 
 var EXPORTED_SYMBOLS = ["UrlClassifierSkipListService"];
