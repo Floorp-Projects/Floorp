@@ -562,7 +562,6 @@ void nsIOService::CallOrWaitForSocketProcess(
     aFunc();
   } else {
     mPendingEvents.AppendElement(aFunc);  // infallible
-    LaunchSocketProcess();
   }
 }
 
