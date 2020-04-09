@@ -62,15 +62,17 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
 }
 
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
-DocumentChannelParent::RedirectToRealChannel(uint32_t aRedirectFlags,
-                                             uint32_t aLoadFlags) {
+DocumentChannelParent::RedirectToRealChannel(
+    nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
+        aStreamFilterEndpoints,
+    uint32_t aRedirectFlags, uint32_t aLoadFlags) {
   if (!CanSend()) {
     return PDocumentChannelParent::RedirectToRealChannelPromise::
         CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
   }
   RedirectToRealChannelArgs args;
   mParent->SerializeRedirectData(args, false, aRedirectFlags, aLoadFlags);
-  return SendRedirectToRealChannel(args);
+  return SendRedirectToRealChannel(args, std::move(aStreamFilterEndpoints));
 }
 
 void DocumentChannelParent::CSPViolation(

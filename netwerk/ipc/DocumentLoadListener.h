@@ -33,6 +33,34 @@
 
 namespace mozilla {
 namespace net {
+using ChildEndpointPromise =
+    MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
+
+// If we've been asked to attach a stream filter to our channel,
+// then we return this promise and defer until we know the final
+// content process. At that point we setup Endpoints between
+// mStramFilterProcessId and the new content process, and send
+// the parent Endpoint to the new process.
+// Once we have confirmation of that being bound in the content
+// process, we resolve the promise the child Endpoint.
+struct StreamFilterRequest {
+  StreamFilterRequest() = default;
+  StreamFilterRequest(StreamFilterRequest&&) = default;
+  ~StreamFilterRequest() {
+    if (mPromise) {
+      mPromise->Reject(false, __func__);
+    }
+  }
+  RefPtr<ChildEndpointPromise::Private> mPromise;
+  base::ProcessId mChildProcessId;
+  ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
+};
+}  // namespace net
+}  // namespace mozilla
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::net::StreamFilterRequest)
+
+namespace mozilla {
+namespace net {
 
 class LoadInfo;
 
@@ -141,10 +169,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     return 0;
   }
 
-  using ChildEndpointPromise =
-      MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
   MOZ_MUST_USE RefPtr<ChildEndpointPromise> AttachStreamFilter(
       base::ProcessId aChildProcessId);
+
+  using ParentEndpoint = ipc::Endpoint<extensions::PStreamFilterParent>;
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.
@@ -182,7 +210,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // a single promise to wait on.
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
-                        const Maybe<uint64_t>& aDestinationProcess);
+                        const Maybe<uint64_t>& aDestinationProcess,
+                        nsTArray<ParentEndpoint>&& aStreamFilterEndpoints);
 
   // Construct a LoadInfo object to use for the internal channel.
   // TODO: This currently only supports creating top window TYPE_DOCUMENT
@@ -310,6 +339,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RefPtr<nsDOMNavigationTiming> mTiming;
 
   nsTArray<DocumentChannelRedirect> mRedirects;
+
+  nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
