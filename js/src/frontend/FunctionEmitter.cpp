@@ -102,9 +102,7 @@ bool FunctionEmitter::emitLazy() {
   }
 
   funbox_->setEnclosingScopeForInnerLazyFunction(bce_->innermostScope());
-  if (bce_->emittingRunOnceLambda) {
-    // NOTE: The 'funbox' is only partially initialized so we defer checking
-    // the shouldSuppressRunOnce condition until delazification.
+  if (bce_->emittingRunOnceLambda && !funbox_->shouldSuppressRunOnce()) {
     funbox_->setTreatAsRunOnce();
   }
 
