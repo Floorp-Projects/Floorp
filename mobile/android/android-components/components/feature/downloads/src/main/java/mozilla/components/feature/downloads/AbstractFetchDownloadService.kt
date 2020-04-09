@@ -87,7 +87,8 @@ abstract class AbstractFetchDownloadService : Service() {
         var foregroundServiceId: Int = 0,
         var downloadDeleted: Boolean = false,
         var notifiedStopped: Boolean = false,
-        var lastNotificationUpdate: Long = 0L
+        var lastNotificationUpdate: Long = 0L,
+        var createdTime: Long = System.currentTimeMillis()
     ) {
         internal fun canUpdateNotification(): Boolean {
             return isUnderNotificationUpdateLimit() && !notifiedStopped
@@ -252,21 +253,20 @@ abstract class AbstractFetchDownloadService : Service() {
                 DownloadJobStatus.ACTIVE -> {
                     DownloadNotification.createOngoingDownloadNotification(
                         context,
-                        download.state,
-                        download.currentBytesCopied
+                        download
                     )
                 }
 
                 DownloadJobStatus.PAUSED -> {
-                    DownloadNotification.createPausedDownloadNotification(context, download.state)
+                    DownloadNotification.createPausedDownloadNotification(context, download)
                 }
 
                 DownloadJobStatus.COMPLETED -> {
-                    DownloadNotification.createDownloadCompletedNotification(context, download.state)
+                    DownloadNotification.createDownloadCompletedNotification(context, download)
                 }
 
                 DownloadJobStatus.FAILED -> {
-                    DownloadNotification.createDownloadFailedNotification(context, download.state)
+                    DownloadNotification.createDownloadFailedNotification(context, download)
                 }
 
                 DownloadJobStatus.CANCELLED -> {
