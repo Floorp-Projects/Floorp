@@ -218,7 +218,7 @@ define(function(require, exports, module) {
         columns: ensureDefaultColumn(props.columns),
         selected: props.selected,
         active: props.active,
-        lastSelectedIndex: 0,
+        lastSelectedIndex: null,
       };
 
       this.treeRef = createRef();
@@ -263,10 +263,14 @@ define(function(require, exports, module) {
         return;
       }
 
-      this.selectRow(
-        rows[Math.min(this.state.lastSelectedIndex, rows.length - 1)],
-        { alignTo: "top" }
-      );
+      // Only select a row if there is a previous lastSelected Index
+      // This mostly happens when the treeview is loaded the first time
+      if (this.state.lastSelectedIndex !== null) {
+        this.selectRow(
+          rows[Math.min(this.state.lastSelectedIndex, rows.length - 1)],
+          { alignTo: "top" }
+        );
+      }
     }
 
     /**
@@ -465,8 +469,7 @@ define(function(require, exports, module) {
     getSelectedRowIndex() {
       const row = this.getSelectedRow();
       if (!row) {
-        // If selected row is not found, return index of the first row.
-        return 0;
+        return null;
       }
 
       return this.visibleRows.indexOf(row);
