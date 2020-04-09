@@ -497,23 +497,7 @@ async function updateDoorhangerInputValues(
 
 // End popup notification (doorhanger) functions //
 
-async function waitForPasswordManagerDialog(openingFunc) {
-  let win;
-  await openingFunc();
-  await TestUtils.waitForCondition(() => {
-    win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
-    return win && win.document.getElementById("filter");
-  }, "Waiting for the password manager dialog to open");
-
-  return {
-    filterValue: win.document.getElementById("filter").value,
-    async close() {
-      await BrowserTestUtils.closeWindow(win);
-    },
-  };
-}
-
-async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
+async function openPasswordManager(openingFunc, waitForFilter) {
   info("waiting for new tab to open");
   let tabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
@@ -541,12 +525,6 @@ async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
       BrowserTestUtils.removeTab(tab);
     },
   };
-}
-
-function openPasswordManager(openingFunc, waitForFilter) {
-  return Services.prefs.getCharPref("signon.management.overrideURI")
-    ? waitForPasswordManagerTab(openingFunc, waitForFilter)
-    : waitForPasswordManagerDialog(openingFunc);
 }
 
 // Autocomplete popup related functions //
