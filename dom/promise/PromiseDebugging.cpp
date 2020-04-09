@@ -41,8 +41,10 @@ class FlushRejections : public CancelableRunnable {
       return;
     }
     sDispatched.set(true);
-    SchedulerGroup::Dispatch(TaskCategory::Other,
-                             do_AddRef(new FlushRejections()));
+
+    // Dispatch the runnable to the current thread where
+    // the Promise was rejected, e.g. workers or worklets.
+    NS_DispatchToCurrentThread(new FlushRejections());
   }
 
   static void FlushSync() {
