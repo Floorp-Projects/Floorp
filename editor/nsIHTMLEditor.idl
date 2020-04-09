@@ -66,6 +66,7 @@ interface nsIHTMLEditor : nsISupports
    * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
    *                          selection have the property
    */
+  [can_run_script]
   void getInlineProperty(in AString aProperty,
                          in AString aAttribute,
                          in AString aValue,
@@ -73,6 +74,7 @@ interface nsIHTMLEditor : nsISupports
                          out boolean aAny,
                          out boolean aAll);
 
+  [can_run_script]
   AString getInlinePropertyWithAttrValue(in AString aProperty,
                                          in AString aAttribute,
                                          in AString aValue,
@@ -196,6 +198,7 @@ interface nsIHTMLEditor : nsISupports
    * @return          Name of face.  Note: "tt" is returned for
    *                  tt tag.  "" is returned for none.
    */
+  [can_run_script]
   AString getFontFaceState(out boolean aMixed);
 
   /**
@@ -203,6 +206,7 @@ interface nsIHTMLEditor : nsISupports
    * @param aMixed     True if there is more than one font color
    * @return           Color string. "" is returned for none.
    */
+  [can_run_script]
   AString getHighlightColorState(out boolean aMixed);
 
   /**
@@ -237,6 +241,7 @@ interface nsIHTMLEditor : nsISupports
    * @param aAlign    enum value for first encountered alignment
    *                  (left/center/right)
    */
+  [can_run_script]
   void getAlignment(out boolean aMixed, out short aAlign);
 
   /**

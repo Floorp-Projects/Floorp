@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/HTMLEditor.h"
+#include "HTMLEditor.h"
 
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/ContentIterator.h"
@@ -2049,13 +2049,13 @@ nsresult HTMLEditor::GetBackgroundColorState(bool* aMixed,
     nsresult rv = GetCSSBackgroundColorState(aMixed, aOutColor, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::GetCSSBackgroundColorState() failed");
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   // in HTML mode, we look only at page's background
   nsresult rv = GetHTMLBackgroundColorState(aMixed, aOutColor);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetCSSBackgroundColorState() failed");
-  return rv;
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 NS_IMETHODIMP HTMLEditor::GetHighlightColorState(bool* aMixed,
@@ -2108,7 +2108,7 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   }
 
   // is the selection collapsed?
-  nsCOMPtr<nsIContent> contentToExamine;
+  nsIContent* contentToExamine;
   if (SelectionRefPtr()->IsCollapsed() || IsTextNode(startContainer)) {
     // we want to look at the startContainer and ancestors
     contentToExamine = startContainer->AsContent();
@@ -2126,20 +2126,33 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   if (aBlockLevel) {
     // we are querying the block background (and not the text background), let's
     // climb to the block container
-    nsCOMPtr<Element> blockParent = GetBlock(*contentToExamine);
+    Element* blockParent = GetBlock(*contentToExamine);
     if (NS_WARN_IF(!blockParent)) {
       return NS_OK;
     }
 
-    // Make sure to not walk off onto the Document node
-    do {
+    for (RefPtr<Element> element = blockParent; element;
+         element = element->GetParentElement()) {
+      nsCOMPtr<nsINode> parentNode = element->GetParentNode();
       // retrieve the computed style of background-color for blockParent
-      CSSEditUtils::GetComputedProperty(*blockParent,
-                                        *nsGkAtoms::backgroundColor, aOutColor);
-      blockParent = blockParent->GetParentElement();
+      DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetComputedProperty(
+          *element, *nsGkAtoms::backgroundColor, aOutColor);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(parentNode != element->GetParentNode())) {
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "CSSEditUtils::GetComputedProperty(nsGkAtoms::"
+                           "backgroundColor) failed, but ignored");
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while (aOutColor.EqualsLiteral("transparent") && blockParent);
+      if (!aOutColor.EqualsLiteral("transparent")) {
+        break;
+      }
+    }
+
     if (aOutColor.EqualsLiteral("transparent")) {
       // we have hit the root of the document and the color is still transparent
       // ! Grumble... Let's look at the default background color because that's
@@ -2156,24 +2169,36 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
     if (!contentToExamine) {
       return NS_OK;
     }
-    do {
+
+    for (RefPtr<Element> element =
+             contentToExamine->GetAsElementOrParentElement();
+         element; element = element->GetParentElement()) {
       // is the node to examine a block ?
-      if (HTMLEditor::NodeIsBlockStatic(*contentToExamine)) {
+      if (HTMLEditor::NodeIsBlockStatic(*element)) {
         // yes it is a block; in that case, the text background color is
         // transparent
         aOutColor.AssignLiteral("transparent");
         break;
-      } else {
-        // no, it's not; let's retrieve the computed style of background-color
-        // for the node to examine
-        CSSEditUtils::GetComputedProperty(
-            *contentToExamine, *nsGkAtoms::backgroundColor, aOutColor);
-        if (!aOutColor.EqualsLiteral("transparent")) {
-          break;
-        }
       }
-      contentToExamine = contentToExamine->GetParent();
-    } while (aOutColor.EqualsLiteral("transparent") && contentToExamine);
+
+      // no, it's not; let's retrieve the computed style of background-color
+      // for the node to examine
+      nsCOMPtr<nsINode> parentNode = element->GetParentNode();
+      DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetComputedProperty(
+          *element, *nsGkAtoms::backgroundColor, aOutColor);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(parentNode != element->GetParentNode())) {
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "CSSEditUtils::GetComputedProperty(nsGkAtoms::"
+                           "backgroundColor) failed, but ignored");
+      if (!aOutColor.EqualsLiteral("transparent")) {
+        break;
+      }
+    }
   }
   return NS_OK;
 }
