@@ -3,7 +3,7 @@
 
 "use strict";
 
-const DOC = toDataURL("<div id='content'><span>foo</span></div><div>bar</div>");
+const DOC = toDataURL("<div id='content'><p>foo</p><p>bar</p></div>");
 
 add_task(async function objectIdInvalidTypes({ client }) {
   const { DOM } = client;
@@ -78,12 +78,33 @@ add_task(async function objectIdAllProperties({ client }) {
   is(node.localName, "div", "Found expected local name");
   is(node.nodeType, 1, "Found expected node type");
   is(node.nodeValue, "", "Found expected node value");
-  is(node.childNodeCount, 1, "Expected number of child nodes found");
+  is(node.childNodeCount, 2, "Expected number of child nodes found");
+  is(node.attributes.length, 2, "Found expected attribute's name and value");
+  is(node.attributes[0], "id", "Found expected attribute name");
+  is(node.attributes[1], "content", "Found expected attribute value");
   is(node.frameId, frameId, "Found expected frame id");
 });
 
-add_task(async function objectIdDiffersForDifferentNodes({ client }) {
+add_task(async function objectIdNoAttributes({ client }) {
   const { DOM, Runtime } = client;
+
+  await Runtime.enable();
+  const { result } = await Runtime.evaluate({
+    expression: "document",
+  });
+  const { node } = await DOM.describeNode({
+    objectId: result.objectId,
+  });
+
+  is(node.attributes, undefined, "No attributes returned");
+});
+
+add_task(async function objectIdDiffersForDifferentNodes({ client }) {
+  const { DOM, Page, Runtime } = client;
+
+  await Page.enable();
+  await Page.navigate({ url: DOC });
+  await Page.loadEventFired();
 
   await Runtime.enable();
   const { result: doc } = await Runtime.evaluate({
@@ -94,7 +115,7 @@ add_task(async function objectIdDiffersForDifferentNodes({ client }) {
   });
 
   const { result: body } = await Runtime.evaluate({
-    expression: `document.body`,
+    expression: `document.getElementById('content')`,
   });
   const { node: node2 } = await DOM.describeNode({
     objectId: body.objectId,
