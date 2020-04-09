@@ -1862,6 +1862,8 @@ FrameLayerBuilder::FrameLayerBuilder()
 FrameLayerBuilder::~FrameLayerBuilder() {
   GetMaskLayerImageCache()->Sweep();
   for (PaintedDisplayItemLayerUserData* userData : mPaintedLayerItems) {
+    userData->mLastPaintOffset = userData->mTranslation;
+    userData->mHasExplicitLastPaintOffset = true;
     userData->mItems.clear();
     userData->mContainerLayerFrame = nullptr;
   }
@@ -2722,9 +2724,6 @@ void ContainerState::PreparePaintedLayerForUse(
   aData->mAnimatedGeometryRootOrigin = aTopLeft;
   aData->mAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
   aLayer->SetAllowResidualTranslation(mParameters.AllowResidualTranslation());
-
-  aData->mLastPaintOffset = GetTranslationForPaintedLayer(aLayer);
-  aData->mHasExplicitLastPaintOffset = true;
 
   // Set up transform so that 0,0 in the PaintedLayer corresponds to the
   // (pixel-snapped) top-left of the aAnimatedGeometryRoot.

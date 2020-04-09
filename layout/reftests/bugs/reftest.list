@@ -2072,6 +2072,8 @@ fuzzy-if(!webrender,0-6,0-34) fuzzy-if(Android,9-14,44-60) fails-if(webrender) =
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml
 skip-if(!asyncPan) == 1544895.html 1544895-ref.html
+== 1546856-1.html 1546856-ref.html
+== 1546856-2.html 1546856-ref.html
 == 1547759-1.html 1547759-1-ref.html
 == 1548809.html 1548809-ref.html
 != 1552789-1.html 1552789-ref-1.html
