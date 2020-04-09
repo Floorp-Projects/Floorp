@@ -1478,7 +1478,12 @@ pref("network.http.spdy.websockets", true);
 pref("network.http.spdy.enable-hpack-dump", false);
 
 // Http3 parameters
-pref("network.http.http3.enabled", false);
+#ifdef NIGHTLY_BUILD
+  pref("network.http.http3.enabled", true);
+#else
+  pref("network.http.http3.enabled", false);
+#endif
+
 // Http3 qpack table size.
 pref("network.http.http3.default-qpack-table-size", 0);
 // Maximal number of streams that can be blocked on waiting for qpack
