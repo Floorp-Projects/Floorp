@@ -1973,7 +1973,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (!d.readVarS32(&i32)) {
         return d.fail("failed to read initializer i32 expression");
       }
-      *init = InitExpr(LitVal(uint32_t(i32)));
+      *init = InitExpr::fromConstant(LitVal(uint32_t(i32)));
       break;
     }
     case uint16_t(Op::I64Const): {
@@ -1981,7 +1981,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (!d.readVarS64(&i64)) {
         return d.fail("failed to read initializer i64 expression");
       }
-      *init = InitExpr(LitVal(uint64_t(i64)));
+      *init = InitExpr::fromConstant(LitVal(uint64_t(i64)));
       break;
     }
     case uint16_t(Op::F32Const): {
@@ -1989,7 +1989,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (!d.readFixedF32(&f32)) {
         return d.fail("failed to read initializer f32 expression");
       }
-      *init = InitExpr(LitVal(f32));
+      *init = InitExpr::fromConstant(LitVal(f32));
       break;
     }
     case uint16_t(Op::F64Const): {
@@ -1997,7 +1997,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (!d.readFixedF64(&f64)) {
         return d.fail("failed to read initializer f64 expression");
       }
-      *init = InitExpr(LitVal(f64));
+      *init = InitExpr::fromConstant(LitVal(f64));
       break;
     }
     case uint16_t(Op::RefNull): {
@@ -2006,7 +2006,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
             "type mismatch: initializer type and expected type don't match");
       }
       MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
-      *init = InitExpr(LitVal(expected, AnyRef::null()));
+      *init = InitExpr::fromConstant(LitVal(expected, AnyRef::null()));
       break;
     }
     case uint16_t(Op::RefFunc): {
@@ -2019,7 +2019,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "failed to read ref.func index in initializer expression");
       }
-      *init = InitExpr(i);
+      *init = InitExpr::fromRefFunc(i);
       break;
     }
     case uint16_t(Op::GetGlobal): {
@@ -2051,9 +2051,9 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
           return d.fail(
               "type mismatch: initializer type and expected type don't match");
         }
-        *init = InitExpr(i, expected);
+        *init = InitExpr::fromGetGlobal(i, expected);
       } else {
-        *init = InitExpr(i, globals[i].type());
+        *init = InitExpr::fromGetGlobal(i, globals[i].type());
       }
       break;
     }
