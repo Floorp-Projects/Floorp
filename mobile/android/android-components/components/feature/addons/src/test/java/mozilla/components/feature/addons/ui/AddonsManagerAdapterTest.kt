@@ -7,6 +7,7 @@ package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -116,6 +117,7 @@ class AddonsManagerAdapterTest {
     @Test
     fun `bind add-on`() {
         Locale.setDefault(Locale.ENGLISH)
+        val iconContainer: CardView = mock()
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val ratingAccessibleView: TextView = mock()
@@ -125,6 +127,7 @@ class AddonsManagerAdapterTest {
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
+            iconContainer = iconContainer,
             iconView = mock(),
             titleView = titleView,
             summaryView = summaryView,
@@ -150,11 +153,13 @@ class AddonsManagerAdapterTest {
 
         whenever(titleView.context).thenReturn(testContext)
         whenever(summaryView.context).thenReturn(testContext)
+        whenever(iconContainer.context).thenReturn(testContext)
 
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
             addonNameTextColor = android.R.color.transparent,
-            addonSummaryTextColor = android.R.color.white
+            addonSummaryTextColor = android.R.color.white,
+            addonBackgroundIconColor = android.R.color.darker_gray
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList(), style)
 
@@ -165,6 +170,7 @@ class AddonsManagerAdapterTest {
         verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.addonNameTextColor!!))
         verify(summaryView).setText("summary")
         verify(summaryView).setTextColor(ContextCompat.getColor(testContext, style.addonSummaryTextColor!!))
+        verify(iconContainer).setCardBackgroundColor(ContextCompat.getColor(testContext, style.addonBackgroundIconColor!!))
         assertNotNull(addonViewHolder.itemView.tag)
 
         addonViewHolder.itemView.performClick()
@@ -181,13 +187,15 @@ class AddonsManagerAdapterTest {
         whenever(titleView.context).thenReturn(testContext)
 
         val style = AddonsManagerAdapter.Style(
-                sectionsTextColor = android.R.color.black
+            sectionsTextColor = android.R.color.black,
+            sectionsTypeFace = mock()
         )
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
 
         adapter.bindSection(addonViewHolder, Section(R.string.mozac_feature_addons_disabled_section))
 
         verify(titleView).setText(R.string.mozac_feature_addons_disabled_section)
+        verify(titleView).typeface = style.sectionsTypeFace
         verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.sectionsTextColor!!))
     }
 
@@ -200,6 +208,7 @@ class AddonsManagerAdapterTest {
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
+            iconContainer = CardView(testContext),
             iconView = mock(),
             titleView = titleView,
             summaryView = summaryView,

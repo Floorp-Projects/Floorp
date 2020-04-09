@@ -10,6 +10,8 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         tools:text="Recommended"
         android:textStyle="bold" />

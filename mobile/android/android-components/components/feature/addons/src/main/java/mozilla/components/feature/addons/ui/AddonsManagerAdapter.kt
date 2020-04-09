@@ -5,6 +5,7 @@
 package mozilla.components.feature.addons.ui
 
 import android.graphics.Bitmap
+import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.TransitionDrawable
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -45,7 +47,7 @@ private const val VIEW_HOLDER_TYPE_ADDON = 2
  *
  * @property addonCollectionProvider Provider of AMO collection API.
  * @property addonsManagerDelegate Delegate that will provides method for handling the add-on items.
- * @property addons The list of add-on based on the AMO store.
+ * @param addons The list of add-on based on the AMO store.
  * @property style Indicates how items should look like.
  */
 @Suppress("TooManyFunctions", "LargeClass")
@@ -99,6 +101,7 @@ class AddonsManagerAdapter(
         val context = parent.context
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.mozac_feature_addons_item, parent, false)
+        val iconContainer = view.findViewById<CardView>(R.id.icon_container)
         val iconView = view.findViewById<ImageView>(R.id.add_on_icon)
         val titleView = view.findViewById<TextView>(R.id.add_on_name)
         val summaryView = view.findViewById<TextView>(R.id.add_on_description)
@@ -108,6 +111,7 @@ class AddonsManagerAdapter(
         val addButton = view.findViewById<ImageView>(R.id.add_button)
         return AddonViewHolder(
             view,
+            iconContainer,
             iconView,
             titleView,
             summaryView,
@@ -145,7 +149,8 @@ class AddonsManagerAdapter(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun bindSection(holder: SectionViewHolder, section: Section) {
         holder.titleView.setText(section.title)
-        style?.maybeSetStatusTextColor(holder.titleView)
+        style?.maybeSetSectionsTextColor(holder.titleView)
+        style?.maybeSetSectionsTypeFace(holder.titleView)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -213,6 +218,10 @@ class AddonsManagerAdapter(
             }
         }
 
+        style?.addonBackgroundIconColor?.let {
+            val backgroundColor = ContextCompat.getColor(holder.iconContainer.context, it)
+            holder.iconContainer.setCardBackgroundColor(backgroundColor)
+        }
         fetchIcon(addon, holder.iconView)
         style?.maybeSetAddonNameTextColor(holder.titleView)
         style?.maybeSetAddonSummaryTextColor(holder.summaryView)
@@ -298,12 +307,21 @@ class AddonsManagerAdapter(
         @ColorRes
         val addonNameTextColor: Int? = null,
         @ColorRes
-        val addonSummaryTextColor: Int? = null
+        val addonSummaryTextColor: Int? = null,
+        val sectionsTypeFace: Typeface? = null,
+        @ColorRes
+        val addonBackgroundIconColor: Int? = null
     ) {
-        internal fun maybeSetStatusTextColor(textView: TextView) {
+        internal fun maybeSetSectionsTextColor(textView: TextView) {
             sectionsTextColor?.let {
                 val color = ContextCompat.getColor(textView.context, it)
                 textView.setTextColor(color)
+            }
+        }
+
+        internal fun maybeSetSectionsTypeFace(textView: TextView) {
+            sectionsTypeFace?.let {
+                textView.typeface = it
             }
         }
 
