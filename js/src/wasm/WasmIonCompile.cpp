@@ -3801,7 +3801,7 @@ static bool EmitRefFunc(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigFuncRef;
+  const SymbolicAddressSignature& callee = SASigRefFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
