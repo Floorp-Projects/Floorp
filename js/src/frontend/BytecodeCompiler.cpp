@@ -939,27 +939,11 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
       uint32_t(BaseScript::ImmutableFlags::FunctionHasExtraBodyVarScope) |
       uint32_t(BaseScript::ImmutableFlags::NeedsFunctionEnvironmentObjects);
 
-  // These flags are computed for lazy scripts and may have a different
-  // definition for non-lazy scripts.
-  //
-  //  TreatAsRunOnce:     Some conditions depend on parent context and are
-  //                      computed during lazy parsing, while other conditions
-  //                      need to full parse.
-  constexpr uint32_t CustomFlagsMask =
-      uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce);
-
   // These flags are expected to match between lazy and full parsing.
-  constexpr uint32_t MatchedFlagsMask = ~(NonLazyFlagsMask | CustomFlagsMask);
+  constexpr uint32_t MatchedFlagsMask = ~NonLazyFlagsMask;
 
   MOZ_ASSERT((lazy & NonLazyFlagsMask) == 0);
   MOZ_ASSERT((lazy & MatchedFlagsMask) == (nonLazy & MatchedFlagsMask));
-
-  // The TreatAsRunOnce conditions are stricter for compiled scripts than for
-  // lazy scripts. A compiled script should only have set it if the lazy script
-  // had it. As a result, during relazification we can inherit the compiled
-  // value as the new lazy value.
-  MOZ_ASSERT_IF(nonLazy & uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce),
-                lazy & uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce));
 #endif  // DEBUG
 }
 
