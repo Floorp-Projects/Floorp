@@ -3597,11 +3597,9 @@ impl PrimitiveStore {
                 // TODO(gw): Consider whether it's worth doing segment building
                 //           for gradient primitives.
             }
-            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, data_handle, .. } => {
+            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-
-                data_stores.picture[*data_handle].common.may_need_repetition = false;
 
                 if pic.prepare_for_render(
                     frame_context,
@@ -3886,9 +3884,9 @@ impl PrimitiveInstance {
 
         // Usually, the primitive rect can be found from information
         // in the instance and primitive template.
-        let mut prim_local_rect = LayoutRect::new(
-            self.prim_origin,
-            data_stores.as_common_data(self).prim_size,
+        let prim_local_rect = data_stores.get_local_prim_rect(
+            self,
+            prim_store,
         );
 
         let segment_instance_index = match self.kind {
@@ -3924,10 +3922,6 @@ impl PrimitiveInstance {
                         *segment_instance_index = SegmentInstanceIndex::INVALID;
                         pic.segments_are_valid = true;
                     }
-
-                    // Override the prim local rect with the dynamically calculated
-                    // local rect for the picture.
-                    prim_local_rect = pic.precise_local_rect;
 
                     segment_instance_index
                 } else {

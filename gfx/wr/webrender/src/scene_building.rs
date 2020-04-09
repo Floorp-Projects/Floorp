@@ -2053,7 +2053,6 @@ impl<'a> SceneBuilder<'a> {
         let mut cur_instance = create_prim_instance(
             leaf_pic_index,
             leaf_composite_mode.into(),
-            stacking_context.prim_flags,
             ClipChainId::NONE,
             &mut self.interners,
         );
@@ -2105,7 +2104,6 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 PictureCompositeKey::Identity,
-                stacking_context.prim_flags,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -2169,7 +2167,6 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 blend_pic_index,
                 composite_mode.into(),
-                stacking_context.prim_flags,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -2591,8 +2588,6 @@ impl<'a> SceneBuilder<'a> {
                         );
 
                         let shadow_pic_key = PictureKey::new(
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                            LayoutSize::zero(),
                             Picture { composite_mode_key },
                         );
 
@@ -3339,7 +3334,6 @@ impl<'a> SceneBuilder<'a> {
             instance = create_prim_instance(
                 backdrop_pic_index,
                 composite_mode.into(),
-                prim_flags,
                 clip_chain_id,
                 &mut self.interners,
             );
@@ -3526,7 +3520,6 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 composite_mode.into(),
-                flags,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -3597,7 +3590,6 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 Some(composite_mode).into(),
-                flags,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -3913,7 +3905,6 @@ impl FlattenedStackingContext {
         let prim_instance = create_prim_instance(
             pic_index,
             composite_mode.into(),
-            self.prim_flags,
             self.clip_chain_id,
             interners,
         );
@@ -3981,13 +3972,10 @@ impl From<PendingPrimitive<TextRun>> for ShadowItem {
 fn create_prim_instance(
     pic_index: PictureIndex,
     composite_mode_key: PictureCompositeKey,
-    flags: PrimitiveFlags,
     clip_chain_id: ClipChainId,
     interners: &mut Interners,
 ) -> PrimitiveInstance {
     let pic_key = PictureKey::new(
-        flags,
-        LayoutSize::zero(),
         Picture { composite_mode_key },
     );
 
@@ -4112,8 +4100,6 @@ fn create_tile_cache(
     // Now, create a picture with tile caching enabled that will hold all
     // of the primitives selected as belonging to the main scroll root.
     let pic_key = PictureKey::new(
-        PrimitiveFlags::IS_BACKFACE_VISIBLE,
-        LayoutSize::zero(),
         Picture {
             composite_mode_key: PictureCompositeKey::Identity,
         },
