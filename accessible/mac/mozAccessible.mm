@@ -1209,7 +1209,7 @@ struct RoleDescrComparator {
   return [self stateWithMask:states::UNAVAILABLE] == 0;
 }
 
-- (void)firePlatformEvent:(uint32_t)eventType {
+- (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:
       [self postNotification:NSAccessibilityFocusedUIElementChangedNotification];

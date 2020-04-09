@@ -126,7 +126,7 @@ static const uintptr_t IS_PROXY = 1;
 
 // Given a gecko accessibility event type, post the relevant
 // system accessibility notification.
-- (void)firePlatformEvent:(uint32_t)eventType;
+- (void)handleAccessibleEvent:(uint32_t)eventType;
 
 // Post the given accessibility system notification
 - (void)postNotification:(NSString*)notification;
