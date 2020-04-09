@@ -6,8 +6,8 @@
 
 #include "TemporaryAccessGrantObserver.h"
 
-#include "mozilla/PermissionManager.h"
 #include "nsIObserverService.h"
+#include "nsPermissionManager.h"
 #include "nsTHashtable.h"
 #include "nsXULAppAPI.h"
 
@@ -17,7 +17,7 @@ UniquePtr<TemporaryAccessGrantObserver::ObserversTable>
     TemporaryAccessGrantObserver::sObservers;
 
 TemporaryAccessGrantObserver::TemporaryAccessGrantObserver(
-    PermissionManager* aPM, nsIPrincipal* aPrincipal, const nsACString& aType)
+    nsPermissionManager* aPM, nsIPrincipal* aPrincipal, const nsACString& aType)
     : mPM(aPM), mPrincipal(aPrincipal), mType(aType) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Enforcing temporary access grant lifetimes can only be done in "
@@ -27,7 +27,7 @@ TemporaryAccessGrantObserver::TemporaryAccessGrantObserver(
 NS_IMPL_ISUPPORTS(TemporaryAccessGrantObserver, nsIObserver)
 
 // static
-void TemporaryAccessGrantObserver::Create(PermissionManager* aPM,
+void TemporaryAccessGrantObserver::Create(nsPermissionManager* aPM,
                                           nsIPrincipal* aPrincipal,
                                           const nsACString& aType) {
   MOZ_ASSERT(XRE_IsParentProcess());

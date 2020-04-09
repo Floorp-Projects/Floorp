@@ -7,7 +7,7 @@ const TEST_PERMISSION2 = "test/oastrip2";
 const TEST_PERMISSION3 = "test/oastrip3";
 
 // List of permissions which are not isolated by private browsing or user context
-// as per array kStripOAPermissions in PermissionManager.cpp
+// as per array kStripOAPermissions in nsPermissionManager.cpp
 const STRIPPED_PERMS = ["cookie"];
 
 let principal = Services.scriptSecurityManager.createContentPrincipal(

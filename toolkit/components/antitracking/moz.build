@@ -62,6 +62,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/extensions/permissions',
     '/netwerk/base',
     '/netwerk/protocol/http',
 ]

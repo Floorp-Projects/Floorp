@@ -91,7 +91,7 @@
 #include "nsINSSErrorsService.h"
 #include "nsISocketProvider.h"
 #include "nsISiteSecurityService.h"
-#include "mozilla/PermissionDelegateHandler.h"
+#include "PermissionDelegateHandler.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
@@ -174,9 +174,9 @@
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 
-#include "mozilla/PermissionManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermission.h"
+#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "ExpandedPrincipal.h"
@@ -6823,8 +6823,7 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
     if (!window) {
       return;
     }
-    BrowsingContextGroup* browsingContextGroup =
-        window->GetBrowsingContextGroup();
+    BrowsingContextGroup* browsingContextGroup = window->GetBrowsingContextGroup();
 
     // We should already have the principal, and now that we have been added
     // to a window, we should be able to join a DocGroup!
@@ -15893,7 +15892,7 @@ bool Document::AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
   AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 
-  PermissionManager* permManager = PermissionManager::GetInstance();
+  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     return false;
   }
