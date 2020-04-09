@@ -53,7 +53,7 @@ class NotYetSupportedAddonFragment :
 
     override fun onResume() {
         super.onResume()
-        showToolbar(getString(R.string.mozac_feature_addons_unsupported_section))
+        showToolbar(getString(R.string.mozac_feature_addons_unavailable_section))
     }
 
     override fun onUninstallError(addonId: String, throwable: Throwable) {
