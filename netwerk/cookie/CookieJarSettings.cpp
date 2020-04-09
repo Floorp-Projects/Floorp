@@ -20,6 +20,7 @@
 #  include "nsIProtocolHandler.h"
 #endif
 #include "nsICookieService.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
