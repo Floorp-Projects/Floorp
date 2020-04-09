@@ -15,6 +15,13 @@ server.registerPathHandler("/redirect", (request, response) => {
   response.setHeader("Access-Control-Allow-Origin", "*");
 });
 
+server.registerPathHandler("/redirect301", (request, response) => {
+  let params = new URLSearchParams(request.queryString);
+  response.setStatusLine(request.httpVersion, 301, "Moved Permanently");
+  response.setHeader("Location", params.get("redirect_uri"));
+  response.setHeader("Access-Control-Allow-Origin", "*");
+});
+
 server.registerPathHandler("/dummy", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Access-Control-Allow-Origin", "*");
@@ -195,7 +202,7 @@ add_task(async function test_xml_document_loadgroup_blocking() {
   await extension.unload();
 });
 
-add_task(async function() {
+add_task(async function test_filter_content_fetch() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let pending = [];
@@ -287,5 +294,52 @@ add_task(async function() {
 
   extension.sendMessage("done");
   await extension.awaitFinish("stream-filter");
+  await extension.unload();
+});
+
+add_task(async function test_filter_301() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.webRequest.onHeadersReceived.addListener(
+        data => {
+          if (data.statusCode !== 200) {
+            return;
+          }
+          let filter = browser.webRequest.filterResponseData(data.requestId);
+
+          filter.onstop = () => {
+            filter.close();
+            browser.test.notifyPass("stream-filter");
+          };
+          filter.onerror = () => {
+            browser.test.fail(`unexpected ${filter.error}`);
+          };
+        },
+        {
+          urls: ["<all_urls>"],
+        },
+        ["blocking"]
+      );
+    },
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://example.com/",
+        "http://example.org/",
+      ],
+    },
+  });
+
+  await extension.startup();
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/redirect301?redirect_uri=http://example.org/dummy"
+  );
+
+  await extension.awaitFinish("stream-filter");
+
+  await contentPage.close();
   await extension.unload();
 });
