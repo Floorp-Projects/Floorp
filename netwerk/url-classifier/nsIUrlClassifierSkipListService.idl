@@ -63,4 +63,9 @@ interface nsIUrlClassifierSkipListService : nsISupports
   void unregisterSkipListObserver(in ACString aFeature,
                                   in nsIUrlClassifierSkipListObserver aObserver);
 
+  /**
+   *  Clear all data in the service.
+   *  This API is for testing only.
+   */
+  void clear();
 };

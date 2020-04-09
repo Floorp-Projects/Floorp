@@ -14,8 +14,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const COLLECTION_NAME = "url-classifier-skip-urls";
-const FEATURE_NAME = "tracking-annotation-test";
-const FEATURE_PREF_NAME = "urlclassifier.tracking-annotation-test";
+const FEATURE_TRACKING_NAME = "tracking-annotation-test";
+const FEATURE_TRACKING_PREF_NAME = "urlclassifier.tracking-annotation-test";
+const FEATURE_SOCIAL_NAME = "socialtracking-annotation-test";
+const FEATURE_SOCIAL_PREF_NAME = "urlclassifier.socialtracking-annotation-test";
+const FEATURE_FINGERPRINTING_NAME = "fingerprinting-annotation-test";
+const FEATURE_FINGERPRINTING_PREF_NAME =
+  "urlclassifier.fingerprinting-annotation-test";
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["EventTarget"]);
 
@@ -34,7 +39,7 @@ add_task(async function test_list_changes() {
   ].getService(Ci.nsIUrlClassifierSkipListService);
 
   // Make sure we have a pref initially, since the skip list service requires it.
-  Services.prefs.setStringPref(FEATURE_PREF_NAME, "");
+  Services.prefs.setStringPref(FEATURE_TRACKING_PREF_NAME, "");
 
   let updateEvent = new UpdateEvent();
   let obs = data => {
@@ -46,7 +51,7 @@ add_task(async function test_list_changes() {
     {
       id: "1",
       last_modified: 100000000000000000001,
-      feature: FEATURE_NAME,
+      feature: FEATURE_TRACKING_NAME,
       pattern: "example.com",
     },
   ];
@@ -59,8 +64,8 @@ add_task(async function test_list_changes() {
   let promise = waitForEvent(updateEvent, "update");
 
   skipListService.registerAndRunSkipListObserver(
-    FEATURE_NAME,
-    FEATURE_PREF_NAME,
+    FEATURE_TRACKING_NAME,
+    FEATURE_TRACKING_PREF_NAME,
     obs
   );
 
@@ -72,7 +77,7 @@ add_task(async function test_list_changes() {
     {
       id: "2",
       last_modified: 100000000000000000002,
-      feature: FEATURE_NAME,
+      feature: FEATURE_TRACKING_NAME,
       pattern: "MOZILLA.ORG",
     },
     {
@@ -83,7 +88,7 @@ add_task(async function test_list_changes() {
     },
     {
       last_modified: 100000000000000000004,
-      feature: FEATURE_NAME,
+      feature: FEATURE_TRACKING_NAME,
       pattern: "*.example.org",
     }
   );
@@ -104,7 +109,7 @@ add_task(async function test_list_changes() {
 
   promise = waitForEvent(updateEvent, "update");
 
-  Services.prefs.setStringPref(FEATURE_PREF_NAME, "test.com");
+  Services.prefs.setStringPref(FEATURE_TRACKING_PREF_NAME, "test.com");
 
   list = await promise;
 
@@ -117,7 +122,7 @@ add_task(async function test_list_changes() {
   promise = waitForEvent(updateEvent, "update");
 
   Services.prefs.setStringPref(
-    FEATURE_PREF_NAME,
+    FEATURE_TRACKING_PREF_NAME,
     "test.com,whatever.com,*.abc.com"
   );
 
@@ -129,7 +134,145 @@ add_task(async function test_list_changes() {
     "Has several items in the list"
   );
 
-  skipListService.unregisterSkipListObserver(FEATURE_NAME, obs);
+  skipListService.unregisterSkipListObserver(FEATURE_TRACKING_NAME, obs);
+  skipListService.clear();
+
+  await db.clear();
+});
+
+/**
+ * This test make sure when a feature registers itself to skiplist service,
+ * it can get the correct initial data.
+ */
+add_task(async function test_list_init_data() {
+  let skipListService = Cc[
+    "@mozilla.org/url-classifier/skip-list-service;1"
+  ].getService(Ci.nsIUrlClassifierSkipListService);
+
+  // Make sure we have a pref initially, since the skip list service requires it.
+  Services.prefs.setStringPref(FEATURE_TRACKING_PREF_NAME, "");
+
+  let updateEvent = new UpdateEvent();
+
+  let records = [
+    {
+      id: "1",
+      last_modified: 100000000000000000001,
+      feature: FEATURE_TRACKING_NAME,
+      pattern: "tracking.example.com",
+    },
+    {
+      id: "2",
+      last_modified: 100000000000000000002,
+      feature: FEATURE_SOCIAL_NAME,
+      pattern: "social.example.com",
+    },
+    {
+      id: "3",
+      last_modified: 100000000000000000003,
+      feature: FEATURE_TRACKING_NAME,
+      pattern: "*.tracking.org",
+    },
+    {
+      id: "4",
+      last_modified: 100000000000000000004,
+      feature: FEATURE_SOCIAL_NAME,
+      pattern: "MOZILLA.ORG",
+    },
+  ];
+
+  // Add some initial data.
+  let db = await RemoteSettings(COLLECTION_NAME).db;
+  for (const record of records) {
+    await db.create(record);
+  }
+  await db.saveLastModified(42);
+
+  // The first registered feature make SkipListService get the initial data
+  // from remote setting.
+  let promise = waitForEvent(updateEvent, "update");
+
+  let obs = data => {
+    let event = new CustomEvent("update", { detail: data });
+    updateEvent.dispatchEvent(event);
+  };
+  skipListService.registerAndRunSkipListObserver(
+    FEATURE_TRACKING_NAME,
+    FEATURE_TRACKING_PREF_NAME,
+    obs
+  );
+
+  let list = await promise;
+
+  Assert.equal(
+    list,
+    "tracking.example.com,*.tracking.org",
+    "Has several items in the list"
+  );
+
+  // Register another feature after SkipListService got the initial data.
+  promise = waitForEvent(updateEvent, "update");
+
+  skipListService.registerAndRunSkipListObserver(
+    FEATURE_SOCIAL_NAME,
+    FEATURE_SOCIAL_PREF_NAME,
+    obs
+  );
+
+  list = await promise;
+
+  Assert.equal(
+    list,
+    "social.example.com,mozilla.org",
+    "Has several items in the list"
+  );
+
+  // Test registering a feature after SkipListService recieved the synced data.
+  records.push(
+    {
+      id: "5",
+      last_modified: 100000000000000000002,
+      feature: FEATURE_FINGERPRINTING_NAME,
+      pattern: "fingerprinting.example.com",
+    },
+    {
+      id: "6",
+      last_modified: 100000000000000000002,
+      feature: "other-fature",
+      pattern: "not-a-fingerprinting.example.com",
+    },
+    {
+      id: "7",
+      last_modified: 100000000000000000002,
+      feature: FEATURE_FINGERPRINTING_NAME,
+      pattern: "*.fingerprinting.org",
+    }
+  );
+
+  await RemoteSettings(COLLECTION_NAME).emit("sync", {
+    data: { current: records },
+  });
+
+  promise = waitForEvent(updateEvent, "update");
+
+  skipListService.registerAndRunSkipListObserver(
+    FEATURE_FINGERPRINTING_NAME,
+    FEATURE_FINGERPRINTING_PREF_NAME,
+    obs
+  );
+
+  list = await promise;
+
+  Assert.equal(
+    list,
+    "fingerprinting.example.com,*.fingerprinting.org",
+    "Has several items in the list"
+  );
+
+  skipListService.unregisterSkipListObserver(FEATURE_TRACKING_NAME, obs);
+  skipListService.unregisterSkipListObserver(FEATURE_SOCIAL_NAME, obs);
+  skipListService.unregisterSkipListObserver(FEATURE_FINGERPRINTING_NAME, obs);
+  skipListService.clear();
 
   await db.clear();
 });
