@@ -73,7 +73,7 @@
 #include "WidgetUtils.h"
 #include "nsIScriptError.h"
 #include "ReferrerInfo.h"
-#include "PermissionDelegateHandler.h"
+#include "mozilla/PermissionDelegateHandler.h"
 
 #include "nsIExternalProtocolHandler.h"
 #include "BrowserChild.h"
