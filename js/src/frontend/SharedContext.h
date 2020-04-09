@@ -636,7 +636,12 @@ class FunctionBox : public SharedContext {
     return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
   }
 
-  void setTreatAsRunOnce() { function()->baseScript()->setTreatAsRunOnce(); }
+  bool treatAsRunOnce() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::TreatAsRunOnce);
+  }
+  void setTreatAsRunOnce(bool flag) {
+    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, flag);
+  }
 
   void setInferredName(JSAtom* atom) { function()->setInferredName(atom); }
 

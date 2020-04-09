@@ -101,10 +101,13 @@ bool FunctionEmitter::emitLazy() {
     return false;
   }
 
+  bool isRunOnceLambda = bce_->emittingRunOnceLambda &&
+                         !funbox_->shouldSuppressRunOnce();
+
+  // Prepare to update the inner lazy script now that it's parent is fully
+  // compiled. These updates will be applied in FunctionBox::finish().
   funbox_->setEnclosingScopeForInnerLazyFunction(bce_->innermostScope());
-  if (bce_->emittingRunOnceLambda && !funbox_->shouldSuppressRunOnce()) {
-    funbox_->setTreatAsRunOnce();
-  }
+  funbox_->setTreatAsRunOnce(isRunOnceLambda);
 
   if (!emitFunction()) {
     //              [stack] FUN?
