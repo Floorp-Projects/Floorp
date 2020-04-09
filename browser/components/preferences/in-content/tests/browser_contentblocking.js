@@ -17,6 +17,8 @@ const PREF_TEST_NOTIFICATIONS =
   "browser.safebrowsing.test-notifications.enabled";
 const STRICT_PREF = "browser.contentblocking.features.strict";
 const PRIVACY_PAGE = "about:preferences#privacy";
+const ISOLATE_UI_PREF =
+  "browser.contentblocking.reject-and-isolate-cookies.preferences.ui.enabled";
 
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
   "resource://testing-common/EnterprisePolicyTesting.jsm",
@@ -69,6 +71,7 @@ add_task(async function testContentBlockingMainCategory() {
     [TP_PBM_PREF, true],
     [STP_PREF, false],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+    [ISOLATE_UI_PREF, true],
   ];
 
   for (let pref of prefs) {
@@ -162,6 +165,83 @@ add_task(async function testContentBlockingMainCategory() {
     );
     ok(!always.selected, "The Always item should no longer be selected");
   }
+
+  let cookieMenu = doc.querySelector("#blockCookiesMenu");
+  let cookieMenuTrackers = cookieMenu.querySelector(
+    "menupopup > menuitem[value=trackers]"
+  );
+  let cookieMenuTrackersPlusIsolate = cookieMenu.querySelector(
+    "menupopup > menuitem[value=trackers-plus-isolate]"
+  );
+  let cookieMenuUnvisited = cookieMenu.querySelector(
+    "menupopup > menuitem[value=unvisited]"
+  );
+  let cookieMenuAllThirdParties = doc.querySelector(
+    "menupopup > menuitem[value=all-third-parties]"
+  );
+  let cookieMenuAll = cookieMenu.querySelector(
+    "menupopup > menuitem[value=always]"
+  );
+  // Select block trackers
+  cookieMenuTrackers.click();
+  ok(cookieMenuTrackers.selected, "The trackers item should be selected");
+  is(
+    Services.prefs.getIntPref(NCB_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+    `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`
+  );
+  // Select block trackers and isolate
+  cookieMenuTrackersPlusIsolate.click();
+  ok(
+    cookieMenuTrackersPlusIsolate.selected,
+    "The trackers plus isolate item should be selected"
+  );
+  is(
+    Services.prefs.getIntPref(NCB_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
+  );
+  // Select block unvisited
+  cookieMenuUnvisited.click();
+  ok(cookieMenuUnvisited.selected, "The unvisited item should be selected");
+  is(
+    Services.prefs.getIntPref(NCB_PREF),
+    Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
+    `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN}`
+  );
+  // Select block all third party
+  cookieMenuAllThirdParties.click();
+  ok(
+    cookieMenuAllThirdParties.selected,
+    "The all-third-parties item should be selected"
+  );
+  is(
+    Services.prefs.getIntPref(NCB_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`
+  );
+  // Select block all third party
+  cookieMenuAll.click();
+  ok(cookieMenuAll.selected, "The all cookies item should be selected");
+  is(
+    Services.prefs.getIntPref(NCB_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT,
+    `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT}`
+  );
+
+  gBrowser.removeCurrentTab();
+
+  // Ensure the block-trackers-plus-isolate option only shows in the dropdown if the UI pref is set.
+  Services.prefs.setBoolPref(ISOLATE_UI_PREF, false);
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  doc = gBrowser.contentDocument;
+  cookieMenuTrackersPlusIsolate = doc.querySelector(
+    "#blockCookiesMenu menupopup > menuitem[value=trackers-plus-isolate]"
+  );
+  ok(
+    cookieMenuTrackersPlusIsolate.hidden,
+    "Trackers plus isolate option is hidden from the dropdown if the ui pref is not set."
+  );
 
   gBrowser.removeCurrentTab();
 

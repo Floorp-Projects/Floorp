@@ -323,6 +323,10 @@
   margin-inline: 4px 8px;
 }
 
+#blockCookiesMenu {
+  width: 450px;
+}
+
 #blockCookiesMenu,
 #trackingProtectionMenu {
   margin: 0;

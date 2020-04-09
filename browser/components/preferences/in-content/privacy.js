@@ -61,6 +61,7 @@ const PREF_NORMANDY_ENABLED = "app.normandy.enabled";
 const PREF_ADDON_RECOMMENDATIONS_ENABLED = "browser.discovery.enabled";
 
 const PREF_PASSWORD_GENERATION_AVAILABLE = "signon.generation.available";
+const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
@@ -754,12 +755,18 @@ var gPrivacyPane = {
     let fingerprintersOption = document.getElementById(
       "contentBlockingFingerprintersOption"
     );
-
+    let trackingAndIsolateOption = document.querySelector(
+      "#blockCookiesMenu menuitem[value='trackers-plus-isolate']"
+    );
     cryptoMinersOption.hidden = !Services.prefs.getBoolPref(
       "browser.contentblocking.cryptomining.preferences.ui.enabled"
     );
     fingerprintersOption.hidden = !Services.prefs.getBoolPref(
       "browser.contentblocking.fingerprinting.preferences.ui.enabled"
+    );
+    trackingAndIsolateOption.hidden = !Services.prefs.getBoolPref(
+      "browser.contentblocking.reject-and-isolate-cookies.preferences.ui.enabled",
+      false
     );
 
     Preferences.get("browser.contentblocking.features.strict").on(
@@ -825,6 +832,9 @@ var gPrivacyPane = {
             break;
           case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
             rulesArray.push("cookieBehavior4");
+            break;
+          case BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+            rulesArray.push("cookieBehavior5");
             break;
         }
         rulesArray.push(
@@ -954,7 +964,9 @@ var gPrivacyPane = {
             ).hidden = false;
             break;
           case "cookieBehavior5":
-            // No UI support for this cookie policy yet
+            document.querySelector(
+              selector + " .third-party-tracking-cookies-plus-isolate-option"
+            ).hidden = false;
             break;
         }
       }
@@ -1050,7 +1062,6 @@ var gPrivacyPane = {
     let blockCookiesMenu = document.getElementById("blockCookiesMenu");
     let deleteOnCloseCheckbox = document.getElementById("deleteOnClose");
     let deleteOnCloseNote = document.getElementById("deleteOnCloseNote");
-
     let blockCookies = behavior != Ci.nsICookieService.BEHAVIOR_ACCEPT;
     let cookieBehaviorLocked = Services.prefs.prefIsLocked(
       "network.cookie.cookieBehavior"
@@ -1083,6 +1094,9 @@ var gPrivacyPane = {
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
         blockCookiesMenu.value = "trackers";
+        break;
+      case BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+        blockCookiesMenu.value = "trackers-plus-isolate";
         break;
     }
   },
@@ -1553,6 +1567,8 @@ var gPrivacyPane = {
         return "unvisited";
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
         return "trackers";
+      case BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+        return "trackers-plus-isolate";
       default:
         return undefined;
     }
@@ -1569,6 +1585,9 @@ var gPrivacyPane = {
         return Ci.nsICookieService.BEHAVIOR_REJECT;
       case "all-third-parties":
         return Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
+      case "trackers-plus-isolate":
+        return Ci.nsICookieService
+          .BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
       default:
         return undefined;
     }
