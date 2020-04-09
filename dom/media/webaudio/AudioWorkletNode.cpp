@@ -214,8 +214,7 @@ void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
       SendErrorToMainThread(aTrack, details);
       // Set the exception and stack back to have it in the console with a stack
       // trace.
-      JS::SetPendingExceptionAndStack(aCx, exnStack.exception(),
-                                      exnStack.stack());
+      JS::SetPendingExceptionStack(aCx, exnStack);
       return;
     }
 
@@ -234,8 +233,7 @@ void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
 
     // Set the exception and stack back to have it in the console with a stack
     // trace.
-    JS::SetPendingExceptionAndStack(aCx, exnStack.exception(),
-                                    exnStack.stack());
+    JS::SetPendingExceptionStack(aCx, exnStack);
   } else {
     NS_WARNING("No exception, but processor errored out?");
   }
