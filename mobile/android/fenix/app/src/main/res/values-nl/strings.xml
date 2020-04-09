@@ -121,7 +121,7 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Niet in staat te verbinden. Onherkenbaar URL-schema.</string>
+    <string name="unknown_scheme_error_message">Kan niet verbinden. Onherkenbaar URL-schema.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->

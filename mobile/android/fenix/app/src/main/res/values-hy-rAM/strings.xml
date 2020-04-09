@@ -46,6 +46,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Նոր գաղտնի ներդիր</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Լավագույն կայքեր</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Բաց ներդիրներ</string>
@@ -1107,8 +1110,13 @@
     <string name="add_to_homescreen_cancel">Չեղարկել</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Ավելացնել</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Շարունակել կայքում</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Դյուրանցման անունը</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթային մատչելու և արագ դիտարկելու համար:</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Մուտքանուններ և գաղտնաբառեր</string>

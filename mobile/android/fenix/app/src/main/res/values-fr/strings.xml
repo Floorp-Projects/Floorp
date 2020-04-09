@@ -111,6 +111,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Apparence</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Impossible de se connecter. Schéma d’URL inconnu.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Langue sélectionnée</string>
@@ -152,6 +156,9 @@
     <string name="search_widget_text_short">Rechercher</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Rechercher sur le Web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Recherche vocale</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -206,6 +213,8 @@
     <string name="preferences_override_fxa_server">Serveur de compte Firefox personnalisé</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Serveur de synchronisation personnalisé</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Serveur de synchronisation/de compte Firefox modifié. Fermeture de l’application pour appliquer les modifications…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Compte</string>
     <!-- Preference shown on banner to sign into account -->
@@ -1137,8 +1146,13 @@
     <string name="add_to_homescreen_cancel">Annuler</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Ajouter</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Continuer vers le site web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nom du raccourci</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Vous pouvez facilement ajouter ce site à l’écran d’accueil de votre téléphone pour y avoir accès directement et naviguer plus rapidement, comme si vous utilisiez une application.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Identifiants et mots de passe</string>

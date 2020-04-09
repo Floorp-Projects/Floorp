@@ -206,9 +206,9 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pristupačnost</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Prilagođeni Firefox Account poslužitelj</string>
+    <string name="preferences_override_fxa_server">Prilagođeni poslužitelj Firefox računa</string>
     <!-- Preference to override the Sync token server -->
-    <string name="preferences_override_sync_tokenserver">Prilagođeni Sync poslužitelj</string>
+    <string name="preferences_override_sync_tokenserver">Prilagođeni poslužitelj za sinkronizaciju</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync poslužitelj je izmijenjen. Izlaskom iz aplikacije će se primijeniti izmjene…</string>
     <!-- Preference category for account information -->

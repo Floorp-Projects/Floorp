@@ -45,6 +45,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nov zasebni zavihek</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Glavne strani</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Odprti zavihki</string>
@@ -529,6 +532,8 @@
     <string name="phone_feature_go_to_settings">Odpri nastavitve</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Priporočeno</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Upravljanje dovoljenj strani</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Počisti dovoljenja</string>
     <!-- Button label for clearing a site permission-->
@@ -567,6 +572,11 @@
     <string name="create_collection_select_all">Izberi vse</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Počisti izbiro</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Izberite zavihke, ki jih želite shraniti</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d izbran zavihek</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Zavihki shranjeni!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -752,6 +762,8 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaša zasebnost</string>
 
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Preberite naše obvestilo o zasebnosti</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Zapri</string>
 
@@ -804,6 +816,8 @@
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Strogo (privzeto)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Močnejša zaščita pred sledenjem in hitrejše delovanje, nekatere strani morda ne bodo delovale pravilno.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Strogo (priporočljivo)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -829,6 +843,8 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">V vseh zavihkih</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Le v zasebnih zavihkih</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Le v zavihkih po meri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptorudarje</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

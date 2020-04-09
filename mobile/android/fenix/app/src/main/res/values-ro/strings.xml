@@ -44,6 +44,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Filă privată nouă</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Site-uri de top</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">File deschise</string>
@@ -106,6 +109,10 @@
     <string name="browser_menu_open_app_link">Deschide în aplicație</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aspect</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Imposibil de conectat. Schemă URL nerecunoscută.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1100,8 +1107,13 @@
     <string name="add_to_homescreen_cancel">Renunță</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Adaugă</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Continuă către site-ul web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Denumire comandă rapidă</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Poți adăuga cu ușurință acest site web în ecranul de pornire al telefonului pentru acces instant și o navigare mai rapidă, ca și cum ai fi într-o aplicație.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Date de autentificare și parole</string>

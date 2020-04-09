@@ -46,6 +46,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat fane</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Mest besøkte nettsteder</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Åpne faner</string>

@@ -128,7 +128,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">搜索</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">跟随设备语言</string>
+    <string name="default_locale_text">依照设备语言显示</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">搜索语言</string>
 
@@ -155,7 +155,7 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">要允许在隐私窗口中显示搜索建议吗？</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s 会将您在地址栏中输入的所有内容共享至默认搜索引擎。</string>
+    <string name="search_suggestions_onboarding_text">%s 会将您在地址栏中输入的所有内容向默认搜索引擎分享。</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">详细了解</string>
 
@@ -240,7 +240,7 @@
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">重新连接以恢复同步</string>
     <!-- Preference for language -->
-    <string name="preferences_language">语言(地区)</string>
+    <string name="preferences_language">语言</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">数据反馈</string>
     <!-- Preference for data collection -->
@@ -429,7 +429,7 @@
     <!-- Settings Page Title -->
     <string name="settings_title">设置</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">历史项目菜单</string>
+    <string name="content_description_history_menu">历史记录菜单</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">关闭</string>
 
@@ -1298,9 +1298,9 @@
     <string name="search_delete_search_engine_success_message">已删除 %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">欢迎使用焕然一新的 ％s</string>
+    <string name="migration_title">欢迎使用焕然一新的 %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">完全重新设计的浏览器闪亮登场，性能与功能皆有改善，遨游网络更能得心应手。\n\n请稍候，我们正在更新 %s 的</string>
+    <string name="migration_description">这是我们完全重新打造的浏览器，操作跟手，功能俱全，助您在线上做好更多事。\n\n稍等片刻，我们正在更新 %s 的</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">正在更新 %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
