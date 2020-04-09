@@ -3,8 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    platform: linux64/opt
-    require-build: true
+    platform: linux64-shippable/opt
+    require-build:
+        linux64.*: build-linux64-shippable/opt
     worker-type:
         by-platform:
             linux64.*: t-linux-talos

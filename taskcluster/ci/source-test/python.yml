@@ -84,8 +84,11 @@ mochitest-harness:
         - linux1804-64/opt
         - linux1804-64/debug
         - linux1804-64-asan/opt
-    require-build: true
     always-target: false
+    require-build:
+        linux1804-64-asan/opt: build-linux64-asan/opt
+        linux1804-64/debug: build-linux64/debug
+        linux1804-64/opt: build-linux64-shippable/opt
     treeherder:
         symbol: py2(mch)
     worker:
@@ -120,6 +123,7 @@ mochitest-harness:
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
             - 'testing/profiles/**'
+
 
 mozbase:
     description: testing/mozbase unit tests
@@ -243,7 +247,10 @@ reftest-harness:
         - linux1804-64/opt
         - linux1804-64/debug
         - linux1804-64-asan/opt
-    require-build: true
+    require-build:
+        linux1804-64-asan/opt: build-linux64-asan/opt
+        linux1804-64/debug: build-linux64/debug
+        linux1804-64/opt: build-linux64-shippable/opt
     always-target: false
     treeherder:
         symbol: py2(ref)
@@ -371,7 +378,8 @@ telemetry-integration-tests:
             linux1804-64.*:
                 docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
-    require-build: true
+    require-build:
+        linux1804-64/opt: build-linux64-shippable/opt
     treeherder:
         symbol: tt(i)
         tier: 3
