@@ -209,6 +209,27 @@ linux64-clang-9-win-cross:
             - artifact: clang.tar.bz2
               extract: false
 
+
+linux64-clang-10:
+    description: "Clang 10 toolchain build"
+    treeherder:
+        symbol: TL(clang10)
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-10-linux64.json'
+        resources:
+            - 'build/build-clang/clang-10-linux64.json'
+        toolchain-artifact: public/build/clang.tar.xz
+    fetches:
+        fetch:
+            - clang-10
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
+            - wasi-sysroot
+
 macosx64-clang:
     description: "Clang toolchain build"
     treeherder:
