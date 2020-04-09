@@ -147,7 +147,6 @@ function Inspector(toolbox) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
-  this._target = toolbox.target;
   this.panelDoc = window.document;
   this.panelWin = window;
   this.panelWin.inspector = this;
@@ -1648,8 +1647,8 @@ Inspector.prototype = {
     }
     this._destroyed = true;
 
-    this._target.threadFront.off("paused", this.handleThreadPaused);
-    this._target.threadFront.off("resumed", this.handleThreadResumed);
+    this.currentTarget.threadFront.off("paused", this.handleThreadPaused);
+    this.currentTarget.threadFront.off("resumed", this.handleThreadResumed);
 
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
@@ -1713,7 +1712,6 @@ Inspector.prototype = {
     this._is3PaneModeEnabled = null;
     this._markupBox = null;
     this._markupFrame = null;
-    this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
     this.panelDoc = null;
