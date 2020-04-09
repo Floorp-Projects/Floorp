@@ -27,7 +27,20 @@ SVGStringListTearoffTable() {
   return sSVGStringListTearoffTable;
 }
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGStringList, mElement)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGStringList)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGStringList)
+  // No unlinking of mElement, we'd need to null out the value pointer (the
+  // object it points to is held by the element) and null-check it everywhere.
+  tmp->RemoveFromTearoffTable();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGStringList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGStringList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGStringList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGStringList)
@@ -80,10 +93,12 @@ already_AddRefed<DOMSVGStringList> DOMSVGStringList::GetDOMWrapper(
   return wrapper.forget();
 }
 
-DOMSVGStringList::~DOMSVGStringList() {
+void DOMSVGStringList::RemoveFromTearoffTable() {
   // Script no longer has any references to us.
   SVGStringListTearoffTable().RemoveTearoff(&InternalList());
 }
+
+DOMSVGStringList::~DOMSVGStringList() { RemoveFromTearoffTable(); }
 
 /* virtual */
 JSObject* DOMSVGStringList::WrapObject(JSContext* aCx,

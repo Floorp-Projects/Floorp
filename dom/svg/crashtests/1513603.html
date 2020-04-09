@@ -1,0 +1,20 @@
+<script>
+function go() {
+  b.addEventListener("DOMSubtreeModified", eh)
+  b.max = 0.44
+  b.value = 0.94
+}
+function eh() {
+  SpecialPowers.gc()
+  SpecialPowers.forceCC()
+  polygon.animatedPoints.z = 1;
+  path.animatedPathSegList.z = 1;
+  svg.requiredExtensions.z = 1;
+}
+</script>
+<body onload=go()>
+<svg id="svg">
+<polygon id="polygon"/>
+<path id="path"/>
+<dl>
+<meter id="b">

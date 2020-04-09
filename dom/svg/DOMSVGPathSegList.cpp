@@ -33,6 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPathSegList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPathSegList)
   // No unlinking of mElement, we'd need to null out the value pointer (the
   // object it points to is held by the element) and null-check it everywhere.
+  tmp->RemoveFromTearoffTable();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGPathSegList)
@@ -95,13 +96,15 @@ DOMSVGPathSegList* DOMSVGPathSegList::GetDOMWrapperIfExists(void* aList) {
   return SVGPathSegListTearoffTable().GetTearoff(aList);
 }
 
-DOMSVGPathSegList::~DOMSVGPathSegList() {
+void DOMSVGPathSegList::RemoveFromTearoffTable() {
   // There are now no longer any references to us held by script or list items.
   // Note we must use GetAnimValKey/GetBaseValKey here, NOT InternalList()!
   void* key = mIsAnimValList ? InternalAList().GetAnimValKey()
                              : InternalAList().GetBaseValKey();
   SVGPathSegListTearoffTable().RemoveTearoff(key);
 }
+
+DOMSVGPathSegList::~DOMSVGPathSegList() { RemoveFromTearoffTable(); }
 
 JSObject* DOMSVGPathSegList::WrapObject(JSContext* cx,
                                         JS::Handle<JSObject*> aGivenProto) {
