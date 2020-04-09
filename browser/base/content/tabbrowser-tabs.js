@@ -67,6 +67,11 @@
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
 
+      this.newTabButton.setAttribute(
+        "aria-label",
+        GetDynamicShortcutTooltipText("tabs-newtab-button")
+      );
+
       window.addEventListener("resize", this);
 
       this.boundObserve = (...args) => this.observe(...args);
