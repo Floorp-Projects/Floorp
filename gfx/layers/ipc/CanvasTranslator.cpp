@@ -168,8 +168,20 @@ void CanvasTranslator::FinishShutdown() {
   // mTranslationTaskQueue has shutdown we can safely drop the ring buffer to
   // break the cycle caused by RingBufferReaderServices.
   mStream = nullptr;
+
+  // CanvasTranslators has a MOZ_ASSERT(CanvasThreadHolder::IsInCanvasThread())
+  // to ensure it is only called on the Canvas Thread. This takes a lock on
+  // CanvasThreadHolder::sCanvasThreadHolder, which is also locked in
+  // CanvasThreadHolder::StaticRelease on the compositor thread from
+  // ReleaseOnCompositorThread below. If that lock wins the race with the one in
+  // IsInCanvasThread and it is the last CanvasThreadHolder reference then it
+  // shuts down the canvas thread waiting for it to finish. However
+  // IsInCanvasThread is waiting for the lock on the canvas thread and we
+  // deadlock. So, we need to call CanvasTranslators before
+  // ReleaseOnCompositorThread.
+  CanvasTranslatorSet& canvasTranslators = CanvasTranslators();
   CanvasThreadHolder::ReleaseOnCompositorThread(mCanvasThreadHolder.forget());
-  CanvasTranslators().RemoveEntry(this);
+  canvasTranslators.RemoveEntry(this);
 }
 
 bool CanvasTranslator::TranslateRecording() {
