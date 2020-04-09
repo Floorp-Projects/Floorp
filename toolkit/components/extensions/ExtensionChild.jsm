@@ -286,9 +286,11 @@ class NativeMessenger {
 
   recvPortConnect({ portId, name, sender }) {
     let ex = sender.id === this.context.extension.id;
-    let port = new Port(this.context, portId, name, false, sender);
     let event = ex ? this.onConnect : this.onConnectEx;
-    return event.emit(port.api).length;
+    if (this.context.active && event.fires.size) {
+      let port = new Port(this.context, portId, name, false, sender);
+      return event.emit(port.api).length;
+    }
   }
 }
 
