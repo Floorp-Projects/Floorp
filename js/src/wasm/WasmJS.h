@@ -253,6 +253,7 @@ class WasmGlobalObject : public NativeObject {
   bool isNewborn() { return getReservedSlot(CELL_SLOT).isUndefined(); }
 
   wasm::ValType type() const;
+  void setVal(JSContext* cx, wasm::HandleVal value);
   void val(wasm::MutableHandleVal outval) const;
   bool isMutable() const;
   bool value(JSContext* cx, MutableHandleValue out);

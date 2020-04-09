@@ -852,44 +852,29 @@ bool Module::instantiateTables(JSContext* cx,
   return true;
 }
 
-static void ExtractGlobalValue(const ValVector& globalImportValues,
-                               uint32_t globalIndex, const GlobalDesc& global,
-                               MutableHandleVal result) {
-  switch (global.kind()) {
-    case GlobalKind::Import: {
-      result.set(Val(globalImportValues[globalIndex]));
-      return;
-    }
-    case GlobalKind::Variable: {
-      const InitExpr& init = global.initExpr();
-      switch (init.kind()) {
-        case InitExpr::Kind::Constant:
-          result.set(Val(init.val()));
-          return;
-        case InitExpr::Kind::GetGlobal:
-          result.set(Val(globalImportValues[init.globalIndex()]));
-          return;
-      }
-      break;
-    }
-    case GlobalKind::Constant: {
-      result.set(Val(global.constantValue()));
-      return;
-    }
-  }
-  MOZ_CRASH("Not a global value");
-}
-
-static bool EnsureGlobalObject(JSContext* cx,
-                               const ValVector& globalImportValues,
-                               size_t globalIndex, const GlobalDesc& global,
-                               WasmGlobalObjectVector& globalObjs) {
+static bool EnsureExportedGlobalObject(JSContext* cx,
+                                       const ValVector& globalImportValues,
+                                       size_t globalIndex,
+                                       const GlobalDesc& global,
+                                       WasmGlobalObjectVector& globalObjs) {
   if (globalIndex < globalObjs.length() && globalObjs[globalIndex]) {
     return true;
   }
 
   RootedVal val(cx);
-  ExtractGlobalValue(globalImportValues, globalIndex, global, &val);
+  if (global.kind() == GlobalKind::Import) {
+    // If this is an import, then this must be a constant global that was
+    // provided without a global object. We must initialize it with the
+    // provided value while we still can differentiate this case.
+    MOZ_ASSERT(!global.isMutable());
+    val.set(Val(globalImportValues[globalIndex]));
+  } else {
+    // If this is not an import, then the initial value will be set by
+    // Instance::init() for indirect globals or else by CreateExportObject().
+    // In either case, we initialize with a default value here.
+    val.set(Val(global.type()));
+  }
+
   RootedWasmGlobalObject go(
       cx, WasmGlobalObject::create(cx, val, global.isMutable()));
   if (!go) {
@@ -923,8 +908,8 @@ bool Module::instantiateGlobals(JSContext* cx,
     }
     unsigned globalIndex = exp.globalIndex();
     const GlobalDesc& global = globals[globalIndex];
-    if (!EnsureGlobalObject(cx, globalImportValues, globalIndex, global,
-                            globalObjs)) {
+    if (!EnsureExportedGlobalObject(cx, globalImportValues, globalIndex, global,
+                                    globalObjs)) {
       return false;
     }
   }
@@ -1028,15 +1013,66 @@ static bool GetFunctionExport(JSContext* cx,
   return true;
 }
 
-static bool CreateExportObject(JSContext* cx,
-                               HandleWasmInstanceObject instanceObj,
-                               const JSFunctionVector& funcImports,
-                               const WasmTableObjectVector& tableObjs,
-                               HandleWasmMemoryObject memoryObj,
-                               const WasmGlobalObjectVector& globalObjs,
-                               const ExportVector& exports) {
+static void GetGlobalExport(JSContext* cx, const GlobalDesc& global,
+                            uint32_t globalIndex,
+                            const ValVector& globalImportValues,
+                            const WasmGlobalObjectVector& globalObjs,
+                            MutableHandleValue val) {
+  // A global object for this index is guaranteed to exist by
+  // instantiateGlobals.
+  RootedWasmGlobalObject globalObj(cx, globalObjs[globalIndex]);
+  val.setObject(*globalObj);
+
+  // We are responsible to set the initial value of the global object here if
+  // it's not imported or indirect. Imported global objects have their initial
+  // value set by their defining module, or are set by
+  // EnsureExportedGlobalObject when a constant value is provided as an import.
+  // Indirect exported globals that are not imported, are initialized in
+  // Instance::init.
+  if (global.isIndirect() || global.isImport()) {
+    return;
+  }
+
+  // This must be an exported immutable global defined in this module. The
+  // instance either has compiled the value into the code or has its own copy
+  // in its global data area. Either way, we must initialize the global object
+  // with the same initial value.
+  MOZ_ASSERT(!global.isMutable());
+  MOZ_ASSERT(!global.isImport());
+  RootedVal globalVal(cx);
+  switch (global.kind()) {
+    case GlobalKind::Variable: {
+      const InitExpr& init = global.initExpr();
+      switch (init.kind()) {
+        case InitExpr::Kind::Constant:
+          globalVal.set(Val(init.val()));
+          break;
+        case InitExpr::Kind::GetGlobal:
+          globalVal.set(Val(globalImportValues[init.globalIndex()]));
+          break;
+      }
+      break;
+    }
+    case GlobalKind::Constant: {
+      globalVal.set(Val(global.constantValue()));
+      break;
+    }
+    case GlobalKind::Import: {
+      MOZ_CRASH();
+    }
+  }
+
+  globalObj->setVal(cx, globalVal);
+}
+
+static bool CreateExportObject(
+    JSContext* cx, HandleWasmInstanceObject instanceObj,
+    const JSFunctionVector& funcImports, const WasmTableObjectVector& tableObjs,
+    HandleWasmMemoryObject memoryObj, const ValVector& globalImportValues,
+    const WasmGlobalObjectVector& globalObjs, const ExportVector& exports) {
   const Instance& instance = instanceObj->instance();
   const Metadata& metadata = instance.metadata();
+  const GlobalDescVector& globals = metadata.globals;
 
   if (metadata.isAsmJS() && exports.length() == 1 &&
       strlen(exports[0].fieldName()) == 0) {
@@ -1080,7 +1116,9 @@ static bool CreateExportObject(JSContext* cx,
         val = ObjectValue(*memoryObj);
         break;
       case DefinitionKind::Global:
-        val.setObject(*globalObjs[exp.globalIndex()]);
+        const GlobalDesc& global = globals[exp.globalIndex()];
+        GetGlobalExport(cx, global, exp.globalIndex(), globalImportValues,
+                        globalObjs, &val);
         break;
     }
 
@@ -1335,7 +1373,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   }
 
   if (!CreateExportObject(cx, instance, imports.funcs, tableObjs.get(), memory,
-                          imports.globalObjs, exports_)) {
+                          imports.globalValues, imports.globalObjs, exports_)) {
     return false;
   }
 

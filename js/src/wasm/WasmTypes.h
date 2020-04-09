@@ -949,6 +949,33 @@ class LitVal {
  public:
   LitVal() : type_(), u{} {}
 
+  explicit LitVal(ValType type) : type_(type) {
+    switch (type.kind()) {
+      case ValType::Kind::I32: {
+        u.i32_ = 0;
+        break;
+      }
+      case ValType::Kind::I64: {
+        u.i64_ = 0;
+        break;
+      }
+      case ValType::Kind::F32: {
+        u.f32_ = 0;
+        break;
+      }
+      case ValType::Kind::F64: {
+        u.f64_ = 0;
+        break;
+      }
+      case ValType::Kind::Ref: {
+        u.ref_ = AnyRef::null();
+        break;
+      }
+      default:
+        MOZ_CRASH();
+    }
+  }
+
   explicit LitVal(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
   explicit LitVal(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
 
@@ -995,6 +1022,7 @@ class LitVal {
 class MOZ_NON_PARAM Val : public LitVal {
  public:
   Val() : LitVal() {}
+  explicit Val(ValType type) : LitVal(type) {}
   explicit Val(const LitVal& val);
   explicit Val(uint32_t i32) : LitVal(i32) {}
   explicit Val(uint64_t i64) : LitVal(i64) {}
