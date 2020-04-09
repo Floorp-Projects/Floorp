@@ -654,10 +654,10 @@ class CellHeaderWithLengthAndFlags {
 // The low bits of the word (see CellFlagBitsReservedForGC) are reserved for GC.
 template <class PtrT>
 class CellHeaderWithNonGCPointer : public CellHeader {
-  static_assert(!std::is_pointer<PtrT>::value,
+  static_assert(!std::is_pointer_v<PtrT>,
                 "PtrT should be the type of the referent, not of the pointer");
   static_assert(
-      !std::is_base_of<Cell, PtrT>::value,
+      !std::is_base_of_v<Cell, PtrT>,
       "Don't use CellHeaderWithNonGCPointer for pointers to GC things");
 
  public:
@@ -704,10 +704,10 @@ class CellHeaderWithTenuredGCPointer : public CellHeader {
     // These static asserts are not in class scope because the PtrT may not be
     // defined when this class template is instantiated.
     static_assert(
-        !std::is_pointer<PtrT>::value,
+        !std::is_pointer_v<PtrT>,
         "PtrT should be the type of the referent, not of the pointer");
     static_assert(
-        std::is_base_of<Cell, PtrT>::value,
+        std::is_base_of_v<Cell, PtrT>,
         "Only use CellHeaderWithTenuredGCPointer for pointers to GC things");
   }
 
