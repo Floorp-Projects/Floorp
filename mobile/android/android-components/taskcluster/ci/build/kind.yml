@@ -13,17 +13,15 @@ transforms:
 not-for-components:
     - samples-browser   # Their configs are too different, so they're handled in a specific kind
 
+kind-dependencies:
+    - toolchain
+
+
 job-defaults:
     artifact-template:
         type: file
         name: public/build/{artifact_file_name}
         path: '/builds/worker/checkouts/src/{component_path}/build/maven/org/mozilla/components/{component}/{version_with_snapshot}/{artifact_file_name}'
-    expose-artifacts:
-        by-build-type:
-            release: true
-            snapshot: true
-            nightly: true
-            default: false
     attributes:
         code-review:
             by-build-type:
@@ -32,6 +30,15 @@ job-defaults:
                 nightly: false
                 default: true
     description: Execute Gradle tasks for component "{component}"
+    expose-artifacts:
+        by-build-type:
+            release: true
+            snapshot: true
+            nightly: true
+            default: false
+    fetches:
+        toolchain:
+            - android-sdk-linux
     include-coverage:
         by-build-type:
             release: false

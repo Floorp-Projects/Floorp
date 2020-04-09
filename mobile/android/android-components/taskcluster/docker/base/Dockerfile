@@ -19,13 +19,9 @@ WORKDIR /builds/worker/
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV ANDROID_SDK_VERSION='3859397' \
-    ANDROID_SDK_ROOT='/builds/worker/android-sdk-linux' \
-    CURL='curl --location --retry 5' \
-    GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
+ENV GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
     LANG='en_US.UTF-8' \
-    TERM='dumb' \
-    SDK_ZIP_LOCATION="$HOME/sdk-tools-linux.zip"
+    TERM='dumb'
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- System ------------------------------------------------------------------------------------------------------------
@@ -51,12 +47,6 @@ RUN pip install --upgrade pip
 RUN pip install taskcluster
 
 RUN locale-gen "$LANG"
-
-RUN $CURL --output "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
-    && unzip -d "$ANDROID_SDK_ROOT" "$SDK_ZIP_LOCATION" \
-    && rm "$SDK_ZIP_LOCATION" \
-    && yes | "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" --licenses \
-    && chown -R worker:worker "$ANDROID_SDK_ROOT"
 
 
 # %include-run-task

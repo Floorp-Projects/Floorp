@@ -7,7 +7,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: a9a010487bf10fca6dc34ba53f40d34a8ab51fc0
+              revision: f949fb56d96b9509b071ba55853f2d60e8dbbf57
           trustDomain: mobile
       in:
           $let:
@@ -249,7 +249,7 @@ tasks:
                                     else: >
                                         PIP_IGNORE_INSTALLED=0 pip install --user /builds/worker/checkouts/taskgraph &&
                                         PIP_IGNORE_INSTALLED=0 pip install --user arrow taskcluster pyyaml &&
-                                        taskcluster/scripts/install-sdk.sh &&
+                                        taskcluster/scripts/decision-install-sdk.sh &&
                                         ln -s /builds/worker/artifacts artifacts &&
                                         ~/.local/bin/taskgraph decision
                                         --pushlog-id='0'
