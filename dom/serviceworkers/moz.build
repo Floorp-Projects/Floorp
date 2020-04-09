@@ -107,7 +107,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/extensions/permissions',
     '/js/xpconnect/loader',
 ]
 

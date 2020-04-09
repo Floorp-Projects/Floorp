@@ -212,7 +212,7 @@ add_task(function test() {
   // This will force the permission-manager to reload the data.
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
-  // Force initialization of the nsPermissionManager
+  // Force initialization of the PermissionManager
   for (let permission of Services.perms.all) {
     let isExpected = false;
 

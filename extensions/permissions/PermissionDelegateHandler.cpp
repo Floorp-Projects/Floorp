@@ -8,7 +8,6 @@
 
 #include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
-#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsContentPermissionHelper.h"
 
@@ -16,6 +15,7 @@
 #include "mozilla/StaticPrefs_permissions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
+#include "mozilla/PermissionManager.h"
 
 using namespace mozilla::dom;
 
@@ -135,7 +135,7 @@ nsresult PermissionDelegateHandler::GetDelegatePrincipal(
 bool PermissionDelegateHandler::Initialize() {
   MOZ_ASSERT(mDocument);
 
-  mPermissionManager = nsPermissionManager::GetInstance();
+  mPermissionManager = PermissionManager::GetInstance();
   if (!mPermissionManager) {
     return false;
   }
