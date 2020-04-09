@@ -9,10 +9,10 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsPermissionManager.h"
 
 using namespace mozilla;
 
@@ -97,7 +97,7 @@ nsresult ContentBlockingAllowList::Check(
             _spec),
            aContentBlockingAllowListPrincipal);
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
+  PermissionManager* permManager = PermissionManager::GetInstance();
   NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
 
   // Check both the normal mode and private browsing mode user override

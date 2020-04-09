@@ -17,10 +17,11 @@
 template <class, class>
 class nsDataHashtable;
 class nsITimer;
-class nsPermissionManager;
 class TemporaryAccessGrantCacheKey;
 
 namespace mozilla {
+
+class PermissionManager;
 
 class TemporaryAccessGrantCacheKey : public PLDHashEntryHdr {
  public:
@@ -62,14 +63,13 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static void Create(nsPermissionManager* aPM, nsIPrincipal* aPrincipal,
+  static void Create(PermissionManager* aPM, nsIPrincipal* aPrincipal,
                      const nsACString& aType);
 
   void SetTimer(nsITimer* aTimer);
 
  private:
-  TemporaryAccessGrantObserver(nsPermissionManager* aPM,
-                               nsIPrincipal* aPrincipal,
+  TemporaryAccessGrantObserver(PermissionManager* aPM, nsIPrincipal* aPrincipal,
                                const nsACString& aType);
   ~TemporaryAccessGrantObserver() = default;
 
@@ -78,7 +78,7 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
       ObserversTable;
   static UniquePtr<ObserversTable> sObservers;
   nsCOMPtr<nsITimer> mTimer;
-  RefPtr<nsPermissionManager> mPM;
+  RefPtr<PermissionManager> mPM;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mType;
 };

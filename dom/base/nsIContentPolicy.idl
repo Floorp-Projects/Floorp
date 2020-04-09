@@ -398,7 +398,7 @@ interface nsIContentPolicy : nsISupports
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the
    * static_assert in dom/cache/DBSchema.cpp, ChannelWrapper.webidl,
-   * ChannelWrapper.cpp, nsPermissionManager.cpp, and other things that are not
+   * ChannelWrapper.cpp, PermissionManager.cpp, and other things that are not
    * listed here that are related to nsIContentPolicy. */
 
   //////////////////////////////////////////////////////////////////////

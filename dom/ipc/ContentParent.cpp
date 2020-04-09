@@ -251,7 +251,7 @@
 #  include "gfxAndroidPlatform.h"
 #endif
 
-#include "nsPermissionManager.h"
+#include "mozilla/PermissionManager.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
@@ -5456,7 +5456,7 @@ nsresult ContentParent::TransmitPermissionsForPrincipal(
     nsIPrincipal* aPrincipal) {
   // Create the key, and send it down to the content process.
   nsTArray<std::pair<nsCString, nsCString>> pairs =
-      nsPermissionManager::GetAllKeysForPrincipal(aPrincipal);
+      PermissionManager::GetAllKeysForPrincipal(aPrincipal);
   MOZ_ASSERT(pairs.Length() >= 1);
   for (auto& pair : pairs) {
     EnsurePermissionsByKey(pair.first, pair.second);
@@ -5506,7 +5506,7 @@ void ContentParent::EnsurePermissionsByKey(const nsCString& aKey,
   // by this call to GetPermissionManager, and we've added the key to
   // mActivePermissionKeys, then the permission manager will send down a
   // SendAddPermission before receiving the SendSetPermissionsWithKey message.
-  RefPtr<nsPermissionManager> permManager = nsPermissionManager::GetInstance();
+  RefPtr<PermissionManager> permManager = PermissionManager::GetInstance();
   if (!permManager) {
     return;
   }
