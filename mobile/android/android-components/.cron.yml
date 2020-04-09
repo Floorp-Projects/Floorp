@@ -10,8 +10,9 @@ jobs:
           treeherder-symbol: snapshot-D
           target-tasks-method: snapshot
       when:
-          - {hour: 13, minute: 0}
-          - {hour: 19, minute: 0}
+          - {weekday: 'Monday', hour: 13, minute: 0}
+          - {weekday: 'Wednesday', hour: 13, minute: 0}
+          - {weekday: 'Friday', hour: 13, minute: 0}
     - name: nightly
       job:
           type: decision-task
