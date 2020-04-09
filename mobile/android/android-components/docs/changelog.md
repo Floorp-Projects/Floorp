@@ -77,13 +77,16 @@ permalink: /changelog/
  * Will expose a new `layout` parameter which allows consumers to change the tabs tray layout.
 
 * **service-glean**
-  * Glean was updated to v26.0.0
+  * Glean was updated to v27.1.0
     * **Breaking change:** The regular expression used to validate labels is stricter and more correct.
+    * BUGFIX: baseline pings sent at startup with the `dirty_startup` reason will now include application lifetime metrics ([#810](https://github.com/mozilla/glean/pull/810))
     * Add more information about pings to markdown documentation:
       * State whether the ping includes client id;
       * Add list of data review links;
       * Add list of related bugs links.
     * `gradlew clean` will no longer remove the Miniconda installation in `~/.gradle/glean`. Therefore `clean` can be used without reinstalling Miniconda afterward every time.
+    * Glean will now detect when the upload enabled flag changes outside of the application, for example due to a change in a config file. This means that if upload is disabled while the application wasn't running (e.g. between the runs of a Python command using the Glean SDK), the database is correctly cleared and a deletion request ping is sent. See [#791](https://github.com/mozilla/glean/pull/791).
+    * The `events` ping now includes a reason code: `startup`, `background` or `max_capacity`.
 
 # 37.0.0
 
