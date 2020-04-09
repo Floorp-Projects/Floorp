@@ -5,10 +5,7 @@
 
 "use strict";
 
-let TEST_BASE_URL = "example.com/";
-if (UrlbarPrefs.get("update1.view.stripHttps")) {
-  TEST_BASE_URL = "http://" + TEST_BASE_URL;
-}
+let TEST_BASE_URL = "http://example.com/";
 
 add_task(async function init() {
   await PlacesUtils.history.clear();

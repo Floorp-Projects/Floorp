@@ -225,16 +225,12 @@ class UrlbarResult {
       payloadInfo.displayUrl = [...payloadInfo.url];
       let url = payloadInfo.displayUrl[0];
       if (url && UrlbarPrefs.get("trimURLs")) {
-        if (UrlbarPrefs.get("update1.view.stripHttps")) {
-          url = BrowserUtils.removeSingleTrailingSlashFromURL(url);
-          if (url.startsWith("https://")) {
-            url = url.substring(8);
-            if (url.startsWith("www.")) {
-              url = url.substring(4);
-            }
+        url = BrowserUtils.removeSingleTrailingSlashFromURL(url);
+        if (url.startsWith("https://")) {
+          url = url.substring(8);
+          if (url.startsWith("www.")) {
+            url = url.substring(4);
           }
-        } else {
-          url = BrowserUtils.trimURL(url);
         }
       }
       payloadInfo.displayUrl[0] = Services.textToSubURI.unEscapeURIForUI(url);

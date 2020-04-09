@@ -313,9 +313,7 @@ add_task(async function test_onProviderResultsRequested() {
       payload: {
         title: "Test remote_tab-tabs result",
         url: "http://example.com/remote_tab-tabs",
-        displayUrl:
-          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
-          "example.com/remote_tab-tabs",
+        displayUrl: "http://example.com/remote_tab-tabs",
         device: "device",
       },
     },
@@ -327,9 +325,7 @@ add_task(async function test_onProviderResultsRequested() {
       payload: {
         title: "Test tab-tabs result",
         url: "http://example.com/tab-tabs",
-        displayUrl:
-          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
-          "example.com/tab-tabs",
+        displayUrl: "http://example.com/tab-tabs",
       },
     },
     {
@@ -353,9 +349,7 @@ add_task(async function test_onProviderResultsRequested() {
       payload: {
         title: "Test url-history result",
         url: "http://example.com/url-history",
-        displayUrl:
-          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
-          "example.com/url-history",
+        displayUrl: "http://example.com/url-history",
       },
     },
   ];
