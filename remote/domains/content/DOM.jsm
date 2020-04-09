@@ -69,6 +69,15 @@ class DOM extends ContentProcessDomain {
     }
 
     const unsafeObj = debuggerObj.unsafeDereference();
+
+    const attributes = [];
+    if (unsafeObj.attributes) {
+      // Flatten the list of attributes for name and value
+      for (const attribute of unsafeObj.attributes) {
+        attributes.push(attribute.name, attribute.value);
+      }
+    }
+
     const node = {
       nodeId: debuggerObj.nodeId,
       backendNodeId: debuggerObj.nodeId,
@@ -77,6 +86,7 @@ class DOM extends ContentProcessDomain {
       localName: unsafeObj.localName,
       nodeValue: unsafeObj.nodeValue ? unsafeObj.nodeValue.toString() : "",
       childNodeCount: unsafeObj.childElementCount,
+      attributes: attributes.length > 0 ? attributes : undefined,
       frameId: this.docShell.browsingContext.id.toString(),
     };
 
