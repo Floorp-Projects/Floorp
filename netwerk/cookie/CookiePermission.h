@@ -6,7 +6,7 @@
 #define mozilla_net_CookiePermission_h
 
 #include "nsICookiePermission.h"
-#include "mozilla/PermissionManager.h"
+#include "nsPermissionManager.h"
 
 namespace mozilla {
 namespace net {
@@ -26,7 +26,7 @@ class CookiePermission final : public nsICookiePermission {
 
   bool EnsureInitialized() { return (mPermMgr != nullptr) || Init(); };
 
-  RefPtr<mozilla::PermissionManager> mPermMgr;
+  RefPtr<nsPermissionManager> mPermMgr;
 };
 
 }  // namespace net
