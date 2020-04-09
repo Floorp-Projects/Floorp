@@ -213,3 +213,40 @@ checkPassiveElemSegment("end", /failed to read end of initializer expression/);
     assertEq(typeof ins.exports.t.get(9), "function");
 }
 
+// Test ref.func in global initializer expressions
+
+for (let mutable of [true, false]) {
+  for (let imported of [true, false]) {
+    for (let exported of [true, false]) {
+      let globalType = mutable ? `(mut funcref)` : `funcref`;
+
+      let imports = {};
+
+      if (imported) {
+        imports = wasmEvalText(`
+          (module
+            (global $g (export "g") ${globalType} (ref.func $f))
+            (func $f (export "f") (result i32) i32.const 42)
+          )
+        `).exports;
+      }
+
+      let exports = wasmEvalText(`
+        (module
+          (global $g ${exported ? `(export "g")` : ``} ${imported ? `(import "" "g")` : ``} ${globalType} ${imported ? `` : `(ref.func $f)`})
+          ${exported ? `` : `(func (export "get_g") (result funcref) global.get $g)`}
+          (func $f (export "f") (result i32) i32.const 42)
+        )
+      `, { "": imports }).exports;
+
+      let targetFunc = imported ? imports.f : exports.f;
+      let globalVal = exported ? exports.g.value : exports.get_g();
+      assertEq(targetFunc(), 42);
+      assertEq(globalVal(), 42);
+      assertEq(targetFunc, globalVal);
+      if (imported && exported) {
+        assertEq(imports.g, exports.g);
+      }
+    }
+  }
+}
