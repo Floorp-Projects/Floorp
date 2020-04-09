@@ -19,7 +19,7 @@ static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
 profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
-cubeb-coreaudio = { git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs", rev = "ea9e5aa3e6014f219cf5fa0690bc4b06916f0b09", optional = true }
+cubeb-coreaudio = { git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs", rev = "27cf89ef920d1968c06e45f2a7903725d6b635cd", optional = true }
 cubeb-pulse = { git = "https://github.com/djg/cubeb-pulse-rs", rev="72f813a03cefbdf8e2c58c7410f3556c79429a06", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.6", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }

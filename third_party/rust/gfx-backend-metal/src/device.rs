@@ -1442,7 +1442,7 @@ impl hal::device::Device<Backend> for Device {
         {
             let desc = pipeline
                 .color_attachments()
-                .object_at(i)
+                .object_at(i as NSUInteger)
                 .expect("too many color attachments");
 
             desc.set_pixel_format(mtl_format);
@@ -1523,7 +1523,7 @@ impl hal::device::Device<Backend> for Device {
             // pass the refined data to Metal
             let mtl_attribute_desc = vertex_descriptor
                 .attributes()
-                .object_at(location as usize)
+                .object_at(location as NSUInteger)
                 .expect("too many vertex attributes");
             let mtl_vertex_format =
                 conv::map_vertex_format(element.format).expect("unsupported vertex format");
@@ -1535,7 +1535,7 @@ impl hal::device::Device<Backend> for Device {
         for (i, (vb, _)) in vertex_buffers.iter().enumerate() {
             let mtl_buffer_desc = vertex_descriptor
                 .layouts()
-                .object_at(self.shared.private_caps.max_buffers_per_stage as usize - 1 - i)
+                .object_at(self.shared.private_caps.max_buffers_per_stage as NSUInteger - 1 - i as NSUInteger)
                 .expect("too many vertex descriptor layouts");
             if vb.stride % STRIDE_GRANULARITY != 0 {
                 error!(
@@ -2125,12 +2125,12 @@ impl hal::device::Device<Backend> for Device {
                                 debug_assert!(!bindings[&write.binding]
                                     .content
                                     .contains(n::DescriptorContent::IMMUTABLE_SAMPLER));
-                                encoder.set_sampler_state(sampler.raw.as_ref().unwrap(), arg_index);
+                                encoder.set_sampler_state(arg_index, sampler.raw.as_ref().unwrap());
                                 arg_index += 1;
                             }
                             pso::Descriptor::Image(image, _layout) => {
                                 let tex_ref = image.texture.as_ref();
-                                encoder.set_texture(tex_ref, arg_index);
+                                encoder.set_texture(arg_index, tex_ref);
                                 data.ptr = (&**tex_ref).as_ptr();
                                 arg_index += 1;
                             }
@@ -2149,26 +2149,26 @@ impl hal::device::Device<Backend> for Device {
                                                 + (binding.count as NSUInteger)
                                     );
                                     encoder.set_sampler_state(
-                                        sampler.raw.as_ref().unwrap(),
                                         arg_index + binding.count as NSUInteger,
+                                        sampler.raw.as_ref().unwrap(),
                                     );
                                 }
                                 let tex_ref = image.texture.as_ref();
-                                encoder.set_texture(tex_ref, arg_index);
+                                encoder.set_texture(arg_index, tex_ref);
                                 data.ptr = (&**tex_ref).as_ptr();
                             }
                             pso::Descriptor::UniformTexelBuffer(view)
                             | pso::Descriptor::StorageTexelBuffer(view) => {
-                                encoder.set_texture(&view.raw, arg_index);
+                                encoder.set_texture(arg_index, &view.raw);
                                 data.ptr = (&**view.raw).as_ptr();
                                 arg_index += 1;
                             }
                             pso::Descriptor::Buffer(buffer, ref desc_range) => {
                                 let (buf_raw, buf_range) = buffer.as_bound();
                                 encoder.set_buffer(
+                                    arg_index,
                                     buf_raw,
                                     buf_range.start + desc_range.start.unwrap_or(0),
-                                    arg_index,
                                 );
                                 data.ptr = (&**buf_raw).as_ptr();
                                 arg_index += 1;

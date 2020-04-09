@@ -5,21 +5,26 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#[macro_use]
 extern crate objc;
 
-use cocoa::appkit::{NSView, NSWindow};
-use cocoa::base::id as cocoa_id;
-use cocoa::foundation::{NSAutoreleasePool, NSRange};
+use cocoa::{
+    appkit::{NSView},
+    base::id as cocoa_id,
+    foundation::{NSRange},
+};
+
 use core_graphics::geometry::CGSize;
-
 use objc::runtime::YES;
-
 use metal::*;
-
-use winit::os::macos::WindowExt;
-
+use winit::platform::macos::WindowExtMacOS;
 use std::mem;
+
+use winit::{
+    event::{
+        Event, WindowEvent,
+    },
+    event_loop::ControlFlow
+};
 
 fn prepare_pipeline_state<'a>(device: &DeviceRef, library: &LibraryRef) -> RenderPipelineState {
     let vert = library.get_function("triangle_vertex", None).unwrap();
@@ -51,14 +56,15 @@ fn prepare_render_pass_descriptor(descriptor: &RenderPassDescriptorRef, texture:
 }
 
 fn main() {
-    let mut events_loop = winit::EventsLoop::new();
-    let glutin_window = winit::WindowBuilder::new()
-        .with_dimensions((800, 600).into())
+    let events_loop = winit::event_loop::EventLoop::new();
+    let size = winit::dpi::LogicalSize::new(800, 600);
+
+    let window = winit::window::WindowBuilder::new()
+        .with_inner_size(size)
         .with_title("Metal".to_string())
         .build(&events_loop)
         .unwrap();
 
-    let window: cocoa_id = unsafe { mem::transmute(glutin_window.get_nswindow()) };
     let device = Device::system_default().expect("no device found");
 
     let layer = CoreAnimationLayer::new();
@@ -67,17 +73,16 @@ fn main() {
     layer.set_presents_with_transaction(false);
 
     unsafe {
-        let view = window.contentView();
-        view.setWantsBestResolutionOpenGLSurface_(YES);
+        let view = window.ns_view() as cocoa_id;
         view.setWantsLayer(YES);
         view.setLayer(mem::transmute(layer.as_ref()));
     }
 
-    let draw_size = glutin_window.get_inner_size().unwrap();
+    let draw_size = window.inner_size();
     layer.set_drawable_size(CGSize::new(draw_size.width as f64, draw_size.height as f64));
 
     let library = device
-        .new_library_with_file("examples/window/default.metallib")
+        .new_library_with_file("examples/window/shaders.metallib")
         .unwrap();
     let pipeline_state = prepare_pipeline_state(&device, &library);
     let command_queue = device.new_command_queue();
@@ -89,51 +94,53 @@ fn main() {
         ];
 
         device.new_buffer_with_data(
-            unsafe { mem::transmute(vertex_data.as_ptr()) },
+            vertex_data.as_ptr() as *const _,
             (vertex_data.len() * mem::size_of::<f32>()) as u64,
-            MTLResourceOptions::CPUCacheModeDefaultCache,
+            MTLResourceOptions::CPUCacheModeDefaultCache | MTLResourceOptions::StorageModeManaged,
         )
     };
 
-    let mut pool = unsafe { NSAutoreleasePool::new(cocoa::base::nil) };
     let mut r = 0.0f32;
-    let mut running = true;
 
-    while running {
-        events_loop.poll_events(|event| match event {
-            winit::Event::WindowEvent {
-                event: winit::WindowEvent::CloseRequested,
-                ..
-            } => running = false,
-            _ => (),
-        });
+    events_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Poll;
 
-        if let Some(drawable) = layer.next_drawable() {
-            let render_pass_descriptor = RenderPassDescriptor::new();
-            let _a = prepare_render_pass_descriptor(&render_pass_descriptor, drawable.texture());
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                WindowEvent::Resized(size) => {
+                    layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
+                }
+                _ => ()
+            }
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+            Event::RedrawRequested(_) => {
+                let drawable = match layer.next_drawable() {
+                    Some(drawable) => drawable,
+                    None => return,
+                };
 
-            let command_buffer = command_queue.new_command_buffer();
-            let parallel_encoder =
-                command_buffer.new_parallel_render_command_encoder(&render_pass_descriptor);
-            let encoder = parallel_encoder.render_command_encoder();
-            encoder.set_render_pipeline_state(&pipeline_state);
-            encoder.set_vertex_buffer(0, Some(&vbuf), 0);
-            encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
-            encoder.end_encoding();
-            parallel_encoder.end_encoding();
+                let render_pass_descriptor = RenderPassDescriptor::new();
+                let _a = prepare_render_pass_descriptor(&render_pass_descriptor, drawable.texture());
 
-            render_pass_descriptor
-                .color_attachments()
-                .object_at(0)
-                .unwrap()
-                .set_load_action(MTLLoadAction::DontCare);
+                let command_buffer = command_queue.new_command_buffer();
+                let encoder = command_buffer.new_render_command_encoder(&render_pass_descriptor);
+                encoder.set_render_pipeline_state(&pipeline_state);
+                encoder.set_vertex_buffer(0, Some(&vbuf), 0);
+                encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
+                encoder.end_encoding();
 
-            let parallel_encoder =
-                command_buffer.new_parallel_render_command_encoder(&render_pass_descriptor);
-            let encoder = parallel_encoder.render_command_encoder();
-            let p = vbuf.contents();
-            let vertex_data: &[u8; 60] = unsafe {
-                mem::transmute(&[
+                render_pass_descriptor
+                    .color_attachments()
+                    .object_at(0)
+                    .unwrap()
+                    .set_load_action(MTLLoadAction::DontCare);
+
+                let encoder = command_buffer.new_render_command_encoder(&render_pass_descriptor);
+                let p = vbuf.contents();
+                let vertex_data = [
                     0.0f32,
                     0.5,
                     1.0,
@@ -149,37 +156,31 @@ fn main() {
                     0.0,
                     0.0,
                     1.0 + r,
-                ])
-            };
-            use std::ptr;
+                ];
 
-            unsafe {
-                ptr::copy(
-                    vertex_data.as_ptr(),
-                    p as *mut u8,
-                    (vertex_data.len() * mem::size_of::<f32>()) as usize,
-                );
-            }
-            vbuf.did_modify_range(NSRange::new(
-                0 as u64,
-                (vertex_data.len() * mem::size_of::<f32>()) as u64,
-            ));
+                unsafe {
+                    std::ptr::copy(
+                        vertex_data.as_ptr(),
+                        p as *mut f32,
+                        (vertex_data.len() * mem::size_of::<f32>()) as usize,
+                    );
+                }
+                vbuf.did_modify_range(NSRange::new(
+                    0 as u64,
+                    (vertex_data.len() * mem::size_of::<f32>()) as u64,
+                ));
 
-            encoder.set_render_pipeline_state(&pipeline_state);
-            encoder.set_vertex_buffer(0, Some(&vbuf), 0);
-            encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
-            encoder.end_encoding();
-            parallel_encoder.end_encoding();
+                encoder.set_render_pipeline_state(&pipeline_state);
+                encoder.set_vertex_buffer(0, Some(&vbuf), 0);
+                encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
+                encoder.end_encoding();
 
-            command_buffer.present_drawable(&drawable);
-            command_buffer.commit();
+                command_buffer.present_drawable(&drawable);
+                command_buffer.commit();
 
-            r += 0.01f32;
-            //let _: () = msg_send![command_queue.0, _submitAvailableCommandBuffers];
-            unsafe {
-                let () = msg_send![pool, release];
-                pool = NSAutoreleasePool::new(cocoa::base::nil);
-            }
+                r += 0.01f32;
+            },
+            _ => {}
         }
-    }
+    });
 }

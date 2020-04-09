@@ -606,7 +606,10 @@ extern "C" fn audiounit_output_callback(
                 cubeb_log!("Dropping {} frames in input buffer.", popped_samples);
             }
 
-            if input_frames_needed > buffered_input_frames {
+            if input_frames_needed > buffered_input_frames
+                && (stm.switching_device.load(Ordering::SeqCst)
+                    || stm.frames_read.load(Ordering::SeqCst) == 0)
+            {
                 let silent_frames_to_push = input_frames_needed - buffered_input_frames;
                 let silent_samples_to_push = silent_frames_to_push * input_channels;
                 input_buffer_manager.push_silent_data(silent_samples_to_push);
@@ -617,19 +620,18 @@ extern "C" fn audiounit_output_callback(
                     stm.core_stream_data.stm_ptr,
                     if stm.frames_read.load(Ordering::SeqCst) == 0 {
                         "input hasn't started,"
-                    } else if stm.switching_device.load(Ordering::SeqCst) {
-                        "device switching,"
                     } else {
-                        "drop out,"
+                        assert!(stm.switching_device.load(Ordering::SeqCst));
+                        "device switching,"
                     },
                     silent_frames_to_push
                 );
             }
 
-            let input_samples_needed = input_frames_needed * input_channels;
+            let input_samples_needed = buffered_input_frames * input_channels;
             (
                 input_buffer_manager.get_linear_data(input_samples_needed),
-                input_frames_needed as i64,
+                buffered_input_frames as i64,
             )
         } else {
             (ptr::null_mut::<c_void>(), 0)
