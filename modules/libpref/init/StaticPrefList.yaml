@@ -8018,6 +8018,24 @@
   value: 1800   # 30 minutes (in seconds)
   mirror: always
 
+# Enable the heuristic to allow storage access for recent visited pages
+- name: privacy.restrict3rdpartystorage.heuristic.recently_visited
+  type: bool
+  value: true
+  mirror: always
+
+# Valid time gap since last visit
+- name: privacy.restrict3rdpartystorage.heuristic.recently_visited_time
+  type: uint32_t
+  value: 600    # 10 minutes
+  mirror: always
+
+# Recent visited pages redirection permission expiration.
+- name: privacy.restrict3rdpartystorage.expiration_visited
+  type: uint32_t
+  value: 2592000   # 30 days (in seconds)
+  mirror: always
+
 # Maximum client-side cookie life-time cap. Measured in seconds, set to 0 to
 # disable.
 - name: privacy.documentCookies.maxage
