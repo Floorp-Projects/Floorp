@@ -15,7 +15,7 @@ using namespace js;
 using namespace jit;
 
 static void AnalyzeLsh(TempAllocator& alloc, MLsh* lsh) {
-  if (lsh->specialization() != MIRType::Int32) {
+  if (lsh->type() != MIRType::Int32) {
     return;
   }
 
