@@ -1120,7 +1120,6 @@ void LIRGenerator::lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
   MOZ_ASSERT(IsIntType(ins->type()));
-  MOZ_ASSERT(ins->type() == ins->specialization());
 
   if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
@@ -1223,7 +1222,6 @@ void LIRGenerator::visitBitXor(MBitXor* ins) { lowerBitOp(JSOp::BitXor, ins); }
 void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
-  MOZ_ASSERT(ins->type() == ins->specialization());
 
   if (op == JSOp::Ursh && ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);

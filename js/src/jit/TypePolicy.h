@@ -100,7 +100,7 @@ class AllDoublePolicy final : public TypePolicy {
 class BitwisePolicy final : public TypePolicy {
  public:
   constexpr BitwisePolicy() = default;
-  SPECIALIZATION_DATA_;
+  EMPTY_DATA_;
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
                                  MInstruction* def) const override;
 };
