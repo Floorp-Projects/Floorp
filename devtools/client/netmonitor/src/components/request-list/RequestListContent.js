@@ -80,7 +80,6 @@ class RequestListContent extends Component {
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
-      onCauseBadgeMouseDown: PropTypes.func.isRequired,
       onInitiatorBadgeMouseDown: PropTypes.func.isRequired,
       onItemRightMouseButtonDown: PropTypes.func.isRequired,
       onItemMouseDown: PropTypes.func.isRequired,
@@ -360,7 +359,6 @@ class RequestListContent extends Component {
       columns,
       displayedRequests,
       firstRequestStartedMs,
-      onCauseBadgeMouseDown,
       onInitiatorBadgeMouseDown,
       onSecurityIconMouseDown,
       onWaterfallMouseDown,
@@ -408,7 +406,6 @@ class RequestListContent extends Component {
                 onDoubleClick: () => this.onDoubleClick(item),
                 onMouseDown: evt =>
                   this.onMouseDown(evt, item.id, item.channelId),
-                onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
                 onInitiatorBadgeMouseDown: () =>
                   onInitiatorBadgeMouseDown(item.cause),
                 onSecurityIconMouseDown: () =>
@@ -460,11 +457,6 @@ module.exports = connect(
     /**
      * A handler that opens the stack trace tab when a stack trace is available
      */
-    onCauseBadgeMouseDown: cause => {
-      if (cause.stacktrace && cause.stacktrace.length > 0) {
-        dispatch(Actions.selectDetailsPanelTab("stack-trace"));
-      }
-    },
     onInitiatorBadgeMouseDown: cause => {
       if (cause.lastFrame) {
         dispatch(Actions.selectDetailsPanelTab("stack-trace"));

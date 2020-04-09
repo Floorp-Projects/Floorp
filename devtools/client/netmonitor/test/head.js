@@ -146,7 +146,7 @@ const gDefaultFilters = Services.prefs.getCharPref(
 // Reveal many columns for test
 Services.prefs.setCharPref(
   "devtools.netmonitor.visibleColumns",
-  '["cause","initiator","contentSize","cookies","domain","duration",' +
+  '["initiator","contentSize","cookies","domain","duration",' +
     '"endTime","file","url","latency","method","protocol",' +
     '"remoteip","responseTime","scheme","setCookies",' +
     '"startTime","status","transferred","type","waterfall"]'
@@ -159,11 +159,11 @@ Services.prefs.setCharPref(
     '{"name":"domain","minWidth":30,"width":10},' +
     '{"name":"file","minWidth":30,"width":25},' +
     '{"name":"url","minWidth":30,"width":25},' +
-    '{"name":"cause","minWidth":30,"width":10},' +
+    '{"name":"initiator","minWidth":30,"width":20},' +
     '{"name":"type","minWidth":30,"width":5},' +
     '{"name":"transferred","minWidth":30,"width":10},' +
     '{"name":"contentSize","minWidth":30,"width":5},' +
-    '{"name":"waterfall","minWidth":150,"width":25}]'
+    '{"name":"waterfall","minWidth":150,"width":15}]'
 );
 
 // Increase UI limit for responses rendered using CodeMirror in tests.
@@ -673,15 +673,18 @@ function verifyRequestItemTarget(
   }
   if (cause !== undefined) {
     const value = Array.from(
-      target.querySelector(".requests-list-cause").childNodes
-    ).filter(node => node.nodeType === Node.TEXT_NODE)[0].textContent;
+      target.querySelector(".requests-list-initiator").childNodes
+    )
+      .filter(node => node.nodeType === Node.ELEMENT_NODE)
+      .map(({ textContent }) => textContent)
+      .join("");
     const tooltip = target
-      .querySelector(".requests-list-cause")
+      .querySelector(".requests-list-initiator")
       .getAttribute("title");
     info("Displayed cause: " + value);
     info("Tooltip cause: " + tooltip);
-    is(value, cause.type, "The displayed cause is correct.");
-    is(tooltip, cause.type, "The tooltip cause is correct.");
+    ok(value.includes(cause.type), "The displayed cause is correct.");
+    ok(tooltip.includes(cause.type), "The tooltip cause is correct.");
   }
   if (type !== undefined) {
     const value = target.querySelector(".requests-list-type").textContent;
@@ -1198,4 +1201,24 @@ async function toggleBlockedUrl(element, monitor, store, action = "block") {
 
 function clickElement(element, monitor) {
   EventUtils.synthesizeMouseAtCenter(element, {}, monitor.panelWin);
+}
+
+/**
+ * Predicates used when sorting items.
+ *
+ * @param object first
+ *        The first item used in the comparison.
+ * @param object second
+ *        The second item used in the comparison.
+ * @return number
+ *         <0 to sort first to a lower index than second
+ *         =0 to leave first and second unchanged with respect to each other
+ *         >0 to sort second to a lower index than first
+ */
+
+function compareValues(first, second) {
+  if (first === second) {
+    return 0;
+  }
+  return first > second ? 1 : -1;
 }

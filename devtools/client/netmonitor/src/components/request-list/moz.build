@@ -4,7 +4,6 @@
 
 DevToolsModules(
     'RequestList.js',
-    'RequestListColumnCause.js',
     'RequestListColumnContentSize.js',
     'RequestListColumnCookies.js',
     'RequestListColumnDomain.js',
