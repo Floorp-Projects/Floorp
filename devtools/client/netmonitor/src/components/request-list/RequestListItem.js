@@ -21,7 +21,6 @@ const {
 // Components
 /* global
   RequestListColumnInitiator,
-  RequestListColumnCause,
   RequestListColumnContentSize,
   RequestListColumnCookies,
   RequestListColumnDomain,
@@ -42,11 +41,6 @@ const {
 loader.lazyGetter(this, "RequestListColumnInitiator", function() {
   return createFactory(
     require("devtools/client/netmonitor/src/components/request-list/RequestListColumnInitiator")
-  );
-});
-loader.lazyGetter(this, "RequestListColumnCause", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/request-list/RequestListColumnCause")
   );
 });
 loader.lazyGetter(this, "RequestListColumnContentSize", function() {
@@ -192,11 +186,6 @@ const COLUMN_COMPONENTS = [
   { column: "scheme", ColumnComponent: RequestListColumnScheme },
   { column: "remoteip", ColumnComponent: RequestListColumnRemoteIP },
   {
-    column: "cause",
-    ColumnComponent: RequestListColumnCause,
-    props: ["onCauseBadgeMouseDown"],
-  },
-  {
     column: "initiator",
     ColumnComponent: RequestListColumnInitiator,
     props: ["onInitiatorBadgeMouseDown"],
@@ -257,7 +246,7 @@ class RequestListItem extends Component {
       firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
       networkDetailsOpen: PropTypes.bool,
-      onCauseBadgeMouseDown: PropTypes.func.isRequired,
+      onInitiatorBadgeMouseDown: PropTypes.func.isRequired,
       onDoubleClick: PropTypes.func.isRequired,
       onContextMenu: PropTypes.func.isRequired,
       onFocusedNodeChange: PropTypes.func,

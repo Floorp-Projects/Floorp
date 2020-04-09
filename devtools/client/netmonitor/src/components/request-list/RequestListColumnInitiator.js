@@ -31,22 +31,31 @@ class RequestListColumnInitiator extends Component {
 
     let initiator = "";
     let lineNumber = "";
-    if (cause?.lastFrame) {
+
+    const lastFrameExists = cause && cause.lastFrame;
+    if (lastFrameExists) {
       const { filename, lineNumber: _lineNumber } = cause.lastFrame;
       initiator = getUrlBaseName(filename);
       lineNumber = ":" + _lineNumber;
     }
 
+    // Legacy server might send a numeric value. Display it as "unknown"
+    const causeType = typeof cause.type === "string" ? cause.type : "unknown";
+    const causeStr = lastFrameExists ? " (" + causeType + ")" : causeType;
     return dom.td(
       {
         className: "requests-list-column requests-list-initiator",
-        onMouseDown: onInitiatorBadgeMouseDown,
+        title: initiator + lineNumber + causeStr,
       },
       dom.div(
-        { className: "requests-list-initiator-lastframe" },
+        {
+          className: "requests-list-initiator-lastframe",
+          onMouseDown: onInitiatorBadgeMouseDown,
+        },
         dom.span({ className: "requests-list-initiator-filename" }, initiator),
         dom.span({ className: "requests-list-initiator-line" }, lineNumber)
-      )
+      ),
+      dom.div({ className: "requests-list-initiator-cause" }, causeStr)
     );
   }
 }
