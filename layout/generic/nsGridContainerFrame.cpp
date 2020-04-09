@@ -8361,6 +8361,13 @@ void nsGridContainerFrame::CalculateBaselines(
 nsresult nsGridContainerFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("GridContainer"), aResult);
 }
+
+void nsGridContainerFrame::ExtraContainerFrameInfo(nsACString& aTo) const {
+  if (const void* const subgrid = GetProperty(Subgrid::Prop())) {
+    aTo += nsPrintfCString(" [subgrid=%p]", subgrid);
+  }
+}
+
 #endif
 
 void nsGridContainerFrame::NoteNewChildren(ChildListID aListID,
