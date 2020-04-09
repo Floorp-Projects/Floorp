@@ -5,7 +5,6 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 

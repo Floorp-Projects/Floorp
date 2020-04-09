@@ -1,0 +1,17 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Sync')
+
+# Services interfaces are shared with other components (like Places and
+# WebExtension storage), so we keep them in a separate folder and build them for
+# all configurations, regardless of whether we build Sync.
+
+XPIDL_MODULE = 'services'
+
+XPIDL_SOURCES += [
+    'mozIBridgedSyncEngine.idl',
+    'mozIServicesLogger.idl',
+]
