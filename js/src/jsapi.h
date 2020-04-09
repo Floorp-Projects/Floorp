@@ -2651,18 +2651,6 @@ class JS_PUBLIC_API AutoSaveExceptionState {
 // must be a SavedFrame.
 JS_PUBLIC_API void SetPendingExceptionAndStack(JSContext* cx, HandleValue value,
                                                HandleObject stack);
-
-/**
- * Get the SavedFrame stack object captured when the pending exception was set
- * on the JSContext. This fuzzily correlates with a `throw` statement in JS,
- * although arbitrary JSAPI consumers or VM code may also set pending exceptions
- * via `JS_SetPendingException`.
- *
- * This is not the same stack as `e.stack` when `e` is an `Error` object. (That
- * would be JS::ExceptionStackOrNull).
- */
-MOZ_MUST_USE JS_PUBLIC_API JSObject* GetPendingExceptionStack(JSContext* cx);
-
 } /* namespace JS */
 
 /**

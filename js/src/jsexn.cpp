@@ -28,6 +28,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
+#include "js/Exception.h"  // JS::ExceptionStack
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
@@ -466,6 +467,11 @@ static JSString* ErrorReportToString(JSContext* cx, HandleObject exn,
 ErrorReport::ErrorReport(JSContext* cx) : reportp(nullptr), exnObject(cx) {}
 
 ErrorReport::~ErrorReport() = default;
+
+bool ErrorReport::init(JSContext* cx, const JS::ExceptionStack& exnStack,
+                       SniffingBehavior sniffingBehavior) {
+  return init(cx, exnStack.exception(), sniffingBehavior, exnStack.stack());
+}
 
 bool ErrorReport::init(JSContext* cx, HandleValue exn,
                        SniffingBehavior sniffingBehavior,

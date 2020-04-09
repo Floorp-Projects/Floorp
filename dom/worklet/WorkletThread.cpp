@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
+#include "js/Exception.h"
 
 namespace mozilla {
 namespace dom {
@@ -186,16 +187,17 @@ void WorkletJSContext::ReportError(JSErrorReport* aReport,
   RefPtr<AsyncErrorReporter> reporter = new AsyncErrorReporter(xpcReport);
 
   JSContext* cx = Context();
-  JS::Rooted<JS::Value> exn(cx);
-  if (JS_GetPendingException(cx, &exn)) {
-    JS::Rooted<JSObject*> exnStack(cx, JS::GetPendingExceptionStack(cx));
-    JS_ClearPendingException(cx);
-    JS::Rooted<JSObject*> stack(cx);
-    JS::Rooted<JSObject*> stackGlobal(cx);
-    xpc::FindExceptionStackForConsoleReport(nullptr, exn, exnStack, &stack,
-                                            &stackGlobal);
-    if (stack) {
-      reporter->SerializeStack(cx, stack);
+  if (JS_IsExceptionPending(cx)) {
+    JS::ExceptionStack exnStack(cx);
+    if (JS::StealPendingExceptionStack(cx, &exnStack)) {
+      JS::Rooted<JSObject*> stack(cx);
+      JS::Rooted<JSObject*> stackGlobal(cx);
+      xpc::FindExceptionStackForConsoleReport(nullptr, exnStack.exception(),
+                                              exnStack.stack(), &stack,
+                                              &stackGlobal);
+      if (stack) {
+        reporter->SerializeStack(cx, stack);
+      }
     }
   }
 

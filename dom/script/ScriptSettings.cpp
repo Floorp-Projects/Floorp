@@ -556,8 +556,13 @@ bool AutoJSAPI::StealExceptionAndStack(JS::MutableHandle<JS::Value> aVal,
   if (!PeekException(aVal)) {
     return false;
   }
-  aStack.set(JS::GetPendingExceptionStack(cx()));
-  JS_ClearPendingException(cx());
+
+  JS::ExceptionStack exnStack(cx());
+  if (!JS::StealPendingExceptionStack(cx(), &exnStack)) {
+    return false;
+  }
+
+  aStack.set(exnStack.stack());
   return true;
 }
 
