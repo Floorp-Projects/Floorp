@@ -722,13 +722,9 @@ function cleanUpForContext(extension, context) {
  * @param {Extension} extension
  *                    The extension whose collection needs to
  *                    be opened.
- * @param {Context} context
- *                  The context for this extension. The Collection
- *                  will shut down automatically when all contexts
- *                  close.
  * @returns {Promise<Collection>}
  */
-const openCollection = async function(cryptoCollection, extension, context) {
+const openCollection = async function(cryptoCollection, extension) {
   let collectionId = extension.id;
   const { kinto } = await storageSyncInit();
   const remoteTransformers = [
@@ -1215,7 +1211,7 @@ class ExtensionStorageSync {
       });
     }
     this.registerInUse(extension, context);
-    return openCollection(this.cryptoCollection, extension, context);
+    return openCollection(this.cryptoCollection, extension);
   }
 
   async set(extension, items, context) {
