@@ -114,23 +114,23 @@ static void BlockedContentSourceToString(
 NS_IMETHODIMP
 nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsICSPEventListener* aCSPEventListener,
-                         nsIURI* aContentLocation,
+                         nsIURI* aContentLocation, nsISupports* aRequestContext,
                          const nsACString& aMimeTypeGuess,
                          nsIURI* aOriginalURIIfRedirect,
                          bool aSendViolationReports, const nsAString& aNonce,
-                         bool aParserCreated, int16_t* outDecision) {
+                         int16_t* outDecision) {
   return ShouldLoad(AsyncReportViolationCallback(AsyncReportViolation),
                     aContentType, aCSPEventListener, aContentLocation,
-                    aMimeTypeGuess, aOriginalURIIfRedirect,
-                    aSendViolationReports, aNonce, aParserCreated, outDecision);
+                    aRequestContext, aMimeTypeGuess, aOriginalURIIfRedirect,
+                    aSendViolationReports, aNonce, outDecision);
 }
 
 nsresult nsCSPContext::ShouldLoad(
     const AsyncReportViolationCallback& aCallback,
     nsContentPolicyType aContentType, nsICSPEventListener* aCSPEventListener,
-    nsIURI* aContentLocation, const nsACString& aMimeTypeGuess,
-    nsIURI* aOriginalURIIfRedirect, bool aSendViolationReports,
-    const nsAString& aNonce, bool aParserCreated, int16_t* outDecision) {
+    nsIURI* aContentLocation, nsISupports* aRequestContext,
+    const nsACString& aMimeTypeGuess, nsIURI* aOriginalURIIfRedirect,
+    bool aSendViolationReports, const nsAString& aNonce, int16_t* outDecision) {
   if (CSPCONTEXTLOGENABLED()) {
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s",
                    aContentLocation->GetSpecOrDefault().get()));
@@ -164,6 +164,14 @@ nsresult nsCSPContext::ShouldLoad(
     return NS_OK;
   }
 
+  bool parserCreated = false;
+  if (!isPreload) {
+    nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aRequestContext);
+    if (script && script->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER) {
+      parserCreated = true;
+    }
+  }
+
   bool permitted =
       permitsInternal(aCallback, dir,
                       nullptr,  // aTriggeringElement
@@ -172,7 +180,7 @@ nsresult nsCSPContext::ShouldLoad(
                       false,  // allow fallback to default-src
                       aSendViolationReports,
                       true,  // send blocked URI in violation reports
-                      aParserCreated);
+                      parserCreated);
 
   *outDecision =
       permitted ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_SERVER;

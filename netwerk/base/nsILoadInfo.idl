@@ -464,12 +464,6 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean allowDeprecatedSystemRequests;
 
   /**
-   * Only ever returns true if the loadinfo is of TYPE_SCRIPT and
-   * the script was created by the HTML parser.
-   */
-  [infallible] attribute boolean parserCreatedScript;
-
-  /**
    * True if this request is embedded in a context that can't be third-party
    * (i.e. an iframe embedded in a cross-origin parent window). If this is
    * false, then this request may be third-party if it's a third-party to
