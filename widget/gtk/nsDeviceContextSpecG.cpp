@@ -129,6 +129,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
                              getter_AddRefs(mSpoolFile));
   if (NS_FAILED(rv)) {
     unlink(buf);
+    g_free(buf);
     return nullptr;
   }
 
