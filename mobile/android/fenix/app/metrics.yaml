@@ -841,6 +841,28 @@ sync_auth:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-09-01"
+  use_email:
+    type: event
+    description: >
+      A user chose to use their email to sign in instead of scanning a QR code, counterpart to "scan_pairing"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  use_email_problem:
+    type: event
+    description: >
+      A user chose to use their email to sign in after an account problem
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
   sign_in:
     type: event
     description: >

@@ -75,6 +75,8 @@ sealed class Event {
     object SyncAuthSignIn : Event()
     object SyncAuthSignOut : Event()
     object SyncAuthScanPairing : Event()
+    object SyncAuthUseEmail : Event()
+    object SyncAuthUseEmailProblem : Event()
     object SyncAuthPaired : Event()
     object SyncAuthRecovered : Event()
     object SyncAuthOtherExternal : Event()

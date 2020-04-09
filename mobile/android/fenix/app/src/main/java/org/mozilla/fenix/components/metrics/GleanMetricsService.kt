@@ -217,6 +217,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAuthClosed -> EventWrapper<NoExtraKeys>(
             { SyncAuth.closed.record(it) }
         )
+        is Event.SyncAuthUseEmail -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.useEmail.record(it) }
+        )
+        is Event.SyncAuthUseEmailProblem -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.useEmailProblem.record(it) }
+        )
         is Event.SyncAuthSignIn -> EventWrapper<NoExtraKeys>(
             { SyncAuth.signIn.record(it) }
         )
