@@ -1161,7 +1161,6 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (!param) {
         blockAboutPage(manager, "about:logins", true);
-        gBlockedChromePages.push("passwordManager.xhtml");
         setAndLockPref("pref.privacy.disable_button.view_passwords", true);
       }
       setAndLockPref("signon.rememberSignons", param);

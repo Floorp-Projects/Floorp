@@ -1964,15 +1964,10 @@ var gPrivacyPane = {
    * information.
    */
   showPasswords() {
-    if (LoginHelper.managementURI) {
-      let loginManager = window.windowGlobalChild.getActor("LoginManager");
-      loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
-        entryPoint: "preferences",
-      });
-      return;
-    }
-    Services.telemetry.recordEvent("pwmgr", "open_management", "preferences");
-    gSubDialog.open("chrome://passwordmgr/content/passwordManager.xhtml");
+    let loginManager = window.windowGlobalChild.getActor("LoginManager");
+    loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
+      entryPoint: "preferences",
+    });
   },
 
   /**

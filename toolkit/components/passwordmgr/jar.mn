@@ -4,6 +4,4 @@
 
 toolkit.jar:
 %   content passwordmgr %content/passwordmgr/
-*   content/passwordmgr/passwordManager.xhtml            (content/passwordManager.xhtml)
-    content/passwordmgr/passwordManager.js             (content/passwordManager.js)
     content/passwordmgr/recipes.json                   (content/recipes.json)

@@ -12262,65 +12262,6 @@
     "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)",
     "record_into_store": ["main", "pre-account"]
   },
-  "PWMGR_MANAGE_COPIED_PASSWORD": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of passwords copied from the password management interface",
-    "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
-    "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
-  },
-  "PWMGR_MANAGE_COPIED_USERNAME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of usernames copied from the password management interface",
-    "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
-    "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
-  },
-  "PWMGR_MANAGE_DELETED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of passwords deleted from the password management interface (including via Remove All)",
-    "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
-    "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
-  },
-  "PWMGR_MANAGE_DELETED_ALL": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of times that Remove All was used from the password management interface"
-  },
-  "PWMGR_MANAGE_SORTED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "keyed": true,
-    "kind": "count",
-    "description": "Reports the column that logins are sorted by"
-  },
-  "PWMGR_MANAGE_VISIBILITY_TOGGLED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether the visibility of passwords was toggled (0=Hide, 1=Show)",
-    "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
-    "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
-  },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],

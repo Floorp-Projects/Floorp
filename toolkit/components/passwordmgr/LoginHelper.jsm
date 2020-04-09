@@ -34,7 +34,6 @@ this.LoginHelper = {
   generationEnabled: null,
   includeOtherSubdomainsInLookup: null,
   insecureAutofill: null,
-  managementURI: null,
   privateBrowsingCaptureEnabled: null,
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
@@ -75,10 +74,6 @@ this.LoginHelper = {
     );
     this.includeOtherSubdomainsInLookup = Services.prefs.getBoolPref(
       "signon.includeOtherSubdomainsInLookup"
-    );
-    this.managementURI = Services.prefs.getStringPref(
-      "signon.management.overrideURI",
-      null
     );
     this.privateBrowsingCaptureEnabled = Services.prefs.getBoolPref(
       "signon.privateBrowsingCapture.enabled"
@@ -810,31 +805,15 @@ this.LoginHelper = {
    *                 The name of the entry point, used for telemetry
    */
   openPasswordManager(window, { filterString = "", entryPoint = "" } = {}) {
-    if (this.managementURI && window.openTrustedLinkIn) {
-      let managementURL = this.managementURI.replace(
-        "%DOMAIN%",
-        window.encodeURIComponent(filterString)
-      );
-      // We assume that managementURL has a '?' already
-      window.openTrustedLinkIn(
-        managementURL + `&entryPoint=${entryPoint}`,
-        "tab"
-      );
-      return;
-    }
-    Services.telemetry.recordEvent("pwmgr", "open_management", entryPoint);
-    let win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
-    if (win) {
-      win.setFilter(filterString);
-      win.focus();
-    } else {
-      window.openDialog(
-        "chrome://passwordmgr/content/passwordManager.xhtml",
-        "Toolkit:PasswordManager",
-        "",
-        { filterString }
-      );
-    }
+    const params = new URLSearchParams({
+      ...(filterString && { filter: filterString }),
+      ...(entryPoint && { entryPoint }),
+    });
+    const separator = params.toString() ? "?" : "";
+    const destination = `about:logins${separator}${params}`;
+
+    // We assume that managementURL has a '?' already
+    window.openTrustedLinkIn(destination, "tab");
   },
 
   /**
