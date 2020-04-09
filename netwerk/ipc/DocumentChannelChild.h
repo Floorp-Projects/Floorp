@@ -44,8 +44,10 @@ class DocumentChannelChild final : public DocumentChannel,
 
   mozilla::ipc::IPCResult RecvRedirectToRealChannel(
       RedirectToRealChannelArgs&& aArgs,
-      nsTArray<Endpoint<extensions::PStreamFilterParent>>&& aEndpoints,
       RedirectToRealChannelResolver&& aResolve);
+
+  mozilla::ipc::IPCResult RecvAttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvCSPViolation(
       const CSPInfo& aCSP, bool aIsCspToInherit, nsIURI* aBlockedURI,
@@ -61,7 +63,6 @@ class DocumentChannelChild final : public DocumentChannel,
   nsCOMPtr<nsIChannel> mRedirectChannel;
 
   RedirectToRealChannelResolver mRedirectResolver;
-  nsTArray<Endpoint<extensions::PStreamFilterParent>> mStreamFilterEndpoints;
 };
 
 }  // namespace net

@@ -491,13 +491,6 @@ void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
     mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
   }
   DocumentChannelBridgeDisconnected();
-
-  // If we're not going to send anything else to the content process, and
-  // we haven't yet consumed a stream filter promise, then we're never going
-  // to.
-  // TODO: This might be because we retargeted the stream to the download
-  // handler or similar. Do we need to attach a stream filter to that?
-  mStreamFilterRequests.Clear();
 }
 
 void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
@@ -858,10 +851,8 @@ void DocumentLoadListener::TriggerCrossProcessSwitch() {
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
 DocumentLoadListener::RedirectToRealChannel(
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
-    const Maybe<uint64_t>& aDestinationProcess,
-    nsTArray<ParentEndpoint>&& aStreamFilterEndpoints) {
+    const Maybe<uint64_t>& aDestinationProcess) {
   LOG(("DocumentLoadListener RedirectToRealChannel [this=%p]", this));
-
   if (aDestinationProcess) {
     dom::ContentParent* cp =
         dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
@@ -879,12 +870,11 @@ DocumentLoadListener::RedirectToRealChannel(
       args.timing() = Some(std::move(mTiming));
     }
 
-    return cp->SendCrossProcessRedirect(args,
-                                        std::move(aStreamFilterEndpoints));
+    return cp->SendCrossProcessRedirect(args);
   }
   MOZ_ASSERT(mDocumentChannelBridge);
-  return mDocumentChannelBridge->RedirectToRealChannel(
-      std::move(aStreamFilterEndpoints), aRedirectFlags, aLoadFlags);
+  return mDocumentChannelBridge->RedirectToRealChannel(aRedirectFlags,
+                                                       aLoadFlags);
 }
 
 void DocumentLoadListener::TriggerRedirectToRealChannel(
@@ -899,32 +889,6 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   // (for both in-process and process switch cases), where we cleanup
   // the registrar and copy across any needed state to the replacing
   // IPDL parent object.
-
-  nsTArray<ParentEndpoint> parentEndpoints(mStreamFilterRequests.Length());
-  if (!mStreamFilterRequests.IsEmpty()) {
-    base::ProcessId pid = OtherPid();
-    if (aDestinationProcess) {
-      dom::ContentParent* cp =
-          dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
-              ContentParentId(*aDestinationProcess));
-      if (cp) {
-        pid = cp->OtherPid();
-      }
-    }
-
-    for (StreamFilterRequest& request : mStreamFilterRequests) {
-      ParentEndpoint parent;
-      nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-          pid, request.mChildProcessId, &parent, &request.mChildEndpoint);
-
-      if (NS_FAILED(rv)) {
-        request.mPromise->Reject(false, __func__);
-        request.mPromise = nullptr;
-      } else {
-        parentEndpoints.AppendElement(std::move(parent));
-      }
-    }
-  }
 
   // If we didn't have any redirects, then we pass the REDIRECT_INTERNAL flag
   // for this channel switch so that it isn't recorded in session history etc.
@@ -942,19 +906,10 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   }
 
   RefPtr<DocumentLoadListener> self = this;
-  RedirectToRealChannel(redirectFlags, newLoadFlags, aDestinationProcess,
-                        std::move(parentEndpoints))
+  RedirectToRealChannel(redirectFlags, newLoadFlags, aDestinationProcess)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
-          [self, requests = std::move(mStreamFilterRequests)](
-              const nsresult& aResponse) mutable {
-            for (StreamFilterRequest& request : requests) {
-              if (request.mPromise) {
-                request.mPromise->Resolve(std::move(request.mChildEndpoint),
-                                          __func__);
-                request.mPromise = nullptr;
-              }
-            }
+          [self](const nsresult& aResponse) {
             self->RedirectToRealChannelFinished(aResponse);
           },
           [self](const mozilla::ipc::ResponseRejectReason) {
@@ -1063,9 +1018,6 @@ DocumentLoadListener::OnStopRequest(nsIRequest* aRequest,
   if (!multiPartChannel) {
     mIsFinished = true;
   }
-
-  mStreamFilterRequests.Clear();
-
   return NS_OK;
 }
 
@@ -1355,16 +1307,6 @@ DocumentLoadListener::GetCachedCrossOriginOpenerPolicy(
   }
 
   return httpChannel->GetCrossOriginOpenerPolicy(aPolicy);
-}
-
-auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)
-    -> RefPtr<ChildEndpointPromise> {
-  LOG(("DocumentLoadListener AttachStreamFilter [this=%p]", this));
-
-  StreamFilterRequest* request = mStreamFilterRequests.AppendElement();
-  request->mPromise = new ChildEndpointPromise::Private(__func__);
-  request->mChildProcessId = aChildProcessId;
-  return request->mPromise;
 }
 
 }  // namespace net

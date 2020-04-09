@@ -3600,15 +3600,11 @@ already_AddRefed<embedding::PrintingParent> ContentParent::GetPrintingParent() {
 mozilla::ipc::IPCResult ContentParent::RecvInitStreamFilter(
     const uint64_t& aChannelId, const nsString& aAddonId,
     InitStreamFilterResolver&& aResolver) {
-  extensions::StreamFilterParent::Create(this, aChannelId, aAddonId)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [aResolver](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
-            aResolver(std::move(aEndpoint));
-          },
-          [aResolver](bool aDummy) {
-            aResolver(mozilla::ipc::Endpoint<PStreamFilterChild>());
-          });
+  Endpoint<PStreamFilterChild> endpoint;
+  Unused << extensions::StreamFilterParent::Create(this, aChannelId, aAddonId,
+                                                   &endpoint);
+
+  aResolver(std::move(endpoint));
 
   return IPC_OK();
 }
