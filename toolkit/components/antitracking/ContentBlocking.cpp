@@ -238,13 +238,7 @@ ContentBlocking::AllowAccessFor(
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
   // No need to continue when we are already in the allow list.
-  bool isInAllowList = false;
-  if (NS_FAILED(
-          ContentBlockingAllowList::Check(aParentContext, isInAllowList))) {
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
-  if (isInAllowList) {
+  if (cookieJarSetting->isOnContentBlockingAllowList()) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
