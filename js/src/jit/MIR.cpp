@@ -2464,7 +2464,7 @@ static inline bool IsConstant(MDefinition* def, double v) {
 }
 
 MDefinition* MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
-  if (specialization_ != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return this;
   }
 
@@ -2476,7 +2476,7 @@ MDefinition* MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MBinaryBitwiseInstruction::foldUnnecessaryBitop() {
-  if (specialization_ != MIRType::Int32) {
+  if (type() != MIRType::Int32) {
     return this;
   }
 
@@ -3498,7 +3498,7 @@ void MCompare::cacheOperandMightEmulateUndefined(
 }
 
 MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
-  MOZ_ASSERT(specialization_ == MIRType::Int32);
+  MOZ_ASSERT(type() == MIRType::Int32);
 
   MDefinition* input = getOperand(0);
 
@@ -3508,7 +3508,7 @@ MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
   }
 
   if (input->isBitNot()) {
-    MOZ_ASSERT(input->toBitNot()->specialization_ == MIRType::Int32);
+    MOZ_ASSERT(input->toBitNot()->type() == MIRType::Int32);
     MOZ_ASSERT(input->toBitNot()->getOperand(0)->type() == MIRType::Int32);
     return MTruncateToInt32::New(alloc,
                                  input->toBitNot()->input());  // ~~x => x | 0

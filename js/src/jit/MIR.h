@@ -4340,7 +4340,6 @@ class MToObjectOrNull : public MUnaryInstruction, public BoxInputsPolicy::Data {
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
  protected:
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
-    specialization_ = MIRType::Int32;
     setResultType(MIRType::Int32);
     setMovable();
   }
@@ -4447,7 +4446,6 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
         maskMatchesRightRange(false) {
     MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64 ||
                (isUrsh() && type == MIRType::Double));
-    specialization_ = type;
     setResultType(type);
     setMovable();
   }
@@ -4874,7 +4872,6 @@ class MClz : public MUnaryInstruction, public BitwisePolicy::Data {
       : MUnaryInstruction(classOpcode, num), operandIsNeverZero_(false) {
     MOZ_ASSERT(IsIntType(type));
     MOZ_ASSERT(IsNumberType(num->type()));
-    specialization_ = type;
     setResultType(type);
     setMovable();
   }
@@ -4904,7 +4901,6 @@ class MCtz : public MUnaryInstruction, public BitwisePolicy::Data {
       : MUnaryInstruction(classOpcode, num), operandIsNeverZero_(false) {
     MOZ_ASSERT(IsIntType(type));
     MOZ_ASSERT(IsNumberType(num->type()));
-    specialization_ = type;
     setResultType(type);
     setMovable();
   }
@@ -4932,7 +4928,6 @@ class MPopcnt : public MUnaryInstruction, public BitwisePolicy::Data {
       : MUnaryInstruction(classOpcode, num) {
     MOZ_ASSERT(IsNumberType(num->type()));
     MOZ_ASSERT(IsIntType(type));
-    specialization_ = type;
     setResultType(type);
     setMovable();
   }
