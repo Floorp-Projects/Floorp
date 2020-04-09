@@ -26,7 +26,7 @@ taskgraph:
         mobile:
             name: "Fenix"
     cached-task-prefix: project.mobile.fenix
-    decision-parameters: 'fenix_taskgraph:get_decision_parameters'
+    decision-parameters: 'fenix_taskgraph.parameters:get_decision_parameters'
 
 workers:
     aliases:
@@ -71,3 +71,9 @@ workers:
 
 scriptworker:
     scope-prefix: project:mobile:fenix:releng
+
+
+release-promotion:
+    flavors:
+        ship:
+            target-tasks-method: release
