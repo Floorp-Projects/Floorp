@@ -299,6 +299,15 @@ var PerformanceView = {
   },
 
   /**
+   * Reset the displayed buffer status.
+   * Called for every target-switching.
+   */
+  resetBufferStatus() {
+    this._bufferStatusSupported = false;
+    $("#details-pane-container").removeAttribute("buffer-status");
+  },
+
+  /**
    * Updates the displayed buffer status.
    */
   updateBufferStatus: function() {
