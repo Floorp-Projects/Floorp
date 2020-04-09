@@ -1,3 +1,5 @@
+#include <utility>
+
 #define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 
 template <typename T>
@@ -13,6 +15,17 @@ public:
   RefPtr();
   MOZ_IMPLICIT RefPtr(T* aIn);
   MOZ_IMPLICIT RefPtr(already_AddRefed<T> aIn);
+
+  RefPtr(const RefPtr<T>& aOther) = default;
+  RefPtr& operator=(const RefPtr<T>&)  = default;
+
+  // We must define non-defaulted move operations as in the real RefPtr to make
+  // the type non-trivially-copyable.
+  RefPtr(RefPtr<T>&&);
+  RefPtr& operator=(RefPtr<T>&&);
+
+  void swap(RefPtr<T>& aOther);
+
   ~RefPtr();
   T* mPtr;
 };
@@ -71,6 +84,26 @@ public:
   }
 
   Type *p;
+};
+
+struct Type2 {
+  void f() {
+    mWeakRef->f(nullptr, nullptr);
+  }
+
+  void g() {
+    RefPtr<Type> kfdg;
+    kfdg.swap(mStrongRef);
+    f();
+  }
+
+  void h() {
+    RefPtr<Type> kfdg = std::move(mStrongRef);
+    f();
+  }
+
+  RefPtr<Type> mStrongRef;
+  Type* mWeakRef;
 };
 
 void f(nsCOMPtr<Type> ignoredArgument, Type *param) {

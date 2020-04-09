@@ -47,6 +47,12 @@ void KungFuDeathGripChecker::check(const MatchFinder::MatchResult &Result) {
     E = IgnoreTrivials(CE->getArg(0));
   }
 
+  // If the argument expression is an xvalue, we are not taking a copy of
+  // anything.
+  if (E->isXValue()) {
+    return;
+  }
+
   // It is possible that the QualType doesn't point to a type yet so we are
   // not interested.
   if (E->getType().isNull()) {
