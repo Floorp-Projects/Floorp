@@ -567,7 +567,6 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetHttpsOnlyStatus(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
-      aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
       aLoadInfo->GetHasStoragePermission()));
@@ -768,8 +767,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
       loadInfoArgs.httpsOnlyStatus(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
-      loadInfoArgs.parserCreatedScript(), loadInfoArgs.hasStoragePermission(),
-      loadInfoArgs.requestBlockingReason(), loadingContext);
+      loadInfoArgs.hasStoragePermission(), loadInfoArgs.requestBlockingReason(),
+      loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -808,7 +807,6 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetBypassCORSChecks(), ipcController, tainting,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
-      aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -849,9 +847,6 @@ nsresult MergeParentLoadInfoForwarder(
 
   rv = aLoadInfo->SetAllowDeprecatedSystemRequests(
       aForwarderArgs.allowDeprecatedSystemRequests());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aLoadInfo->SetParserCreatedScript(aForwarderArgs.parserCreatedScript());
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(

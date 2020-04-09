@@ -28,7 +28,6 @@
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIScriptElement.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsIXPConnect.h"
@@ -105,7 +104,6 @@ LoadInfo::LoadInfo(
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mAllowDeprecatedSystemRequests(false),
-      mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   MOZ_ASSERT(mLoadingPrincipal);
@@ -321,15 +319,6 @@ LoadInfo::LoadInfo(
       }
     }
   }
-
-  // in case this is a loadinfo for a parser generated script, then we store
-  // that bit of information so CSP strict-dynamic can query it.
-  if (!nsContentUtils::IsPreloadType(mInternalContentPolicyType)) {
-    nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aLoadingContext);
-    if (script && script->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER) {
-      mParserCreatedScript = true;
-    }
-  }
 }
 
 /* Constructor takes an outer window, but no loadingNode or loadingPrincipal.
@@ -380,7 +369,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mAllowDeprecatedSystemRequests(false),
-      mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
@@ -484,7 +472,6 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mAllowDeprecatedSystemRequests(false),
-      mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
@@ -588,7 +575,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
-      mParserCreatedScript(rhs.mParserCreatedScript),
       mHasStoragePermission(rhs.mHasStoragePermission),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
 
@@ -628,8 +614,8 @@ LoadInfo::LoadInfo(
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
     uint32_t aHttpsOnlyStatus, bool aAllowDeprecatedSystemRequests,
-    bool aParserCreatedScript, bool aHasStoragePermission,
-    uint32_t aRequestBlockingReason, nsINode* aLoadingContext)
+    bool aHasStoragePermission, uint32_t aRequestBlockingReason,
+    nsINode* aLoadingContext)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -687,7 +673,6 @@ LoadInfo::LoadInfo(
       mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
-      mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
       mIsFromProcessingFrameAttributes(false) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
@@ -1531,18 +1516,6 @@ NS_IMETHODIMP
 LoadInfo::SetAllowDeprecatedSystemRequests(
     bool aAllowDeprecatedSystemRequests) {
   mAllowDeprecatedSystemRequests = aAllowDeprecatedSystemRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetParserCreatedScript(bool* aParserCreatedScript) {
-  *aParserCreatedScript = mParserCreatedScript;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetParserCreatedScript(bool aParserCreatedScript) {
-  mParserCreatedScript = aParserCreatedScript;
   return NS_OK;
 }
 
