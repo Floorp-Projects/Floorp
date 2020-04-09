@@ -43,6 +43,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
   explicit XRSession(
       nsPIDOMWindowInner* aWindow, XRSystem* aXRSystem,
       nsRefreshDriver* aRefreshDriver, gfx::VRDisplayClient* aClient,
+      uint32_t aPresentationGroup,
       const nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes);
 
  public:
@@ -51,7 +52,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
       const nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes);
   static already_AddRefed<XRSession> CreateImmersiveSession(
       nsPIDOMWindowInner* aWindow, XRSystem* aXRSystem,
-      gfx::VRDisplayClient* aClient,
+      gfx::VRDisplayClient* aClient, uint32_t aPresentationGroup,
       const nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes);
 
   // WebIDL Boilerplate

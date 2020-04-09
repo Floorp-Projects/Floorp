@@ -78,24 +78,27 @@ already_AddRefed<XRSession> XRSession::CreateInlineSession(
     return nullptr;
   }
 
-  RefPtr<XRSession> session = new XRSession(aWindow, aXRSystem, driver, nullptr,
-                                            aEnabledReferenceSpaceTypes);
+  RefPtr<XRSession> session =
+      new XRSession(aWindow, aXRSystem, driver, nullptr, gfx::kVRGroupContent,
+                    aEnabledReferenceSpaceTypes);
   driver->AddRefreshObserver(session, FlushType::Display);
   return session.forget();
 }
 
 already_AddRefed<XRSession> XRSession::CreateImmersiveSession(
     nsPIDOMWindowInner* aWindow, XRSystem* aXRSystem,
-    gfx::VRDisplayClient* aClient,
+    gfx::VRDisplayClient* aClient, uint32_t aPresentationGroup,
     const nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes) {
-  RefPtr<XRSession> session = new XRSession(
-      aWindow, aXRSystem, nullptr, aClient, aEnabledReferenceSpaceTypes);
+  RefPtr<XRSession> session =
+      new XRSession(aWindow, aXRSystem, nullptr, aClient, aPresentationGroup,
+                    aEnabledReferenceSpaceTypes);
   return session.forget();
 }
 
 XRSession::XRSession(
     nsPIDOMWindowInner* aWindow, XRSystem* aXRSystem,
     nsRefreshDriver* aRefreshDriver, gfx::VRDisplayClient* aClient,
+    uint32_t aPresentationGroup,
     const nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes)
     : DOMEventTargetHelper(aWindow),
       mXRSystem(aXRSystem),
@@ -112,7 +115,7 @@ XRSession::XRSession(
   mStartTimeStamp = TimeStamp::Now();
   if (IsImmersive()) {
     mDisplayPresentation =
-        mDisplayClient->BeginPresentation({}, gfx::kVRGroupContent);
+        mDisplayClient->BeginPresentation({}, aPresentationGroup);
   }
   if (mDisplayClient) {
     mDisplayClient->SetXRAPIMode(gfx::VRAPIMode::WebXR);
@@ -249,8 +252,7 @@ void XRSession::ApplyPendingRenderState() {
   if (baseLayer) {
     if (!IsImmersive() && baseLayer->mCompositionDisabled) {
       mActiveRenderState->SetCompositionDisabled(true);
-      mActiveRenderState->SetOutputCanvas(
-          baseLayer->GetCanvas());
+      mActiveRenderState->SetOutputCanvas(baseLayer->GetCanvas());
     } else {
       mActiveRenderState->SetCompositionDisabled(false);
       mActiveRenderState->SetOutputCanvas(nullptr);

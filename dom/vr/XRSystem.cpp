@@ -220,8 +220,12 @@ already_AddRefed<Promise> XRSystem::RequestSession(
     mPendingImmersiveSession = true;
   }
 
+  bool isChromeSession = aCallerType == CallerType::System;
+  uint32_t presentationGroup =
+      isChromeSession ? gfx::kVRGroupChrome : gfx::kVRGroupContent;
   RefPtr<RequestSessionRequest> request = new RequestSessionRequest(
-      aMode, promise, requiredReferenceSpaceTypes, optionalReferenceSpaceTypes);
+      aMode, presentationGroup, promise, requiredReferenceSpaceTypes,
+      optionalReferenceSpaceTypes);
   if (request->WantsHardware()) {
     QueueSessionRequestWithEnumeration(request);
   } else {
@@ -353,7 +357,8 @@ void XRSystem::ResolveSessionRequests(
       if (request->ResolveSupport(display, enabledReferenceSpaceTypes)) {
         if (request->IsImmersive()) {
           session = XRSession::CreateImmersiveSession(
-              GetOwner(), this, display, enabledReferenceSpaceTypes);
+              GetOwner(), this, display, request->GetPresentationGroup(),
+              enabledReferenceSpaceTypes);
           mActiveImmersiveSession = session;
         } else {
           session = XRSession::CreateInlineSession(GetOwner(), this,
@@ -492,11 +497,12 @@ void XRSystem::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
 bool XRSystem::GetStopActivityStatus() const { return true; }
 
 RequestSessionRequest::RequestSessionRequest(
-    XRSessionMode aSessionMode, Promise* aPromise,
+    XRSessionMode aSessionMode, uint32_t aPresentationGroup, Promise* aPromise,
     const nsTArray<XRReferenceSpaceType>& aRequiredReferenceSpaceTypes,
     const nsTArray<XRReferenceSpaceType>& aOptionalReferenceSpaceTypes)
     : mPromise(aPromise),
       mSessionMode(aSessionMode),
+      mPresentationGroup(aPresentationGroup),
       mRequiredReferenceSpaceTypes(aRequiredReferenceSpaceTypes),
       mOptionalReferenceSpaceTypes(aOptionalReferenceSpaceTypes) {}
 
@@ -505,6 +511,10 @@ bool RequestSessionRequest::ResolveSupport(
     nsTArray<XRReferenceSpaceType>& aEnabledReferenceSpaceTypes) const {
   if (aDisplay) {
     if (!aDisplay->GetIsConnected()) {
+      return false;
+    }
+    if ((aDisplay->GetDisplayInfo().GetPresentingGroups() &
+         mPresentationGroup) != 0) {
       return false;
     }
 
@@ -596,6 +606,10 @@ bool RequestSessionRequest::NeedsHardware() const {
 
 XRSessionMode RequestSessionRequest::GetSessionMode() const {
   return mSessionMode;
+}
+
+uint32_t RequestSessionRequest::GetPresentationGroup() const {
+  return mPresentationGroup;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
