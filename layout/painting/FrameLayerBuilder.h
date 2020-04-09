@@ -624,7 +624,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
 
   /**
    * Get the translation transform that was in aLayer when we last painted. It's
-   * either the transform saved by SaveLastPaintTransform, or else the transform
+   * either the transform saved by ~FrameLayerBuilder(), or else the transform
    * that's currently in the layer (which must be an integer translation).
    */
   nsIntPoint GetLastPaintOffset(PaintedLayer* aLayer);
@@ -712,7 +712,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
  public:
   /**
    * Add the PaintedDisplayItemLayerUserData object as being used in this
-   * transaction so that we clean it up afterwards.
+   * transaction so that we do some end-of-paint maintenance on it.
    */
   void AddPaintedLayerItemsEntry(PaintedDisplayItemLayerUserData* aData);
 

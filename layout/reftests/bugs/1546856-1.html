@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="reftest-wait"
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="1500">
+<meta charset="utf-8">
+<title>Test for bug 1546856: When the first painted item in a layer is removed, invalidation takes the wrong last paint offset because it hasn't initialized the last paint offset for that layer yet for this paint</title>
+<style>
+html {
+  background: linear-gradient(white, white) 0 0 / 100vw 100vh no-repeat fixed;
+}
+
+body {
+  height: 4000px;
+  padding: 200px 0;
+}
+
+div {
+  width: 600px;
+  height: 200px;
+  box-sizing: border-box;
+  margin-bottom: -200px;
+}
+
+#main.fill {
+  background-color: rgba(255, 0, 0, 0.9);
+}
+
+#main.ownLayer {
+  will-change: opacity;
+}
+
+#layerBoundsMaintainer {
+  position: relative;
+  border: 1px solid black;
+}
+
+</style>
+
+<div id="main"></div>
+<div id="layerBoundsMaintainer"></div>
+
+<script>
+
+const mainElement = document.querySelector('#main');
+
+document.scrollingElement.scrollTop = 0;
+document.addEventListener('MozReftestInvalidate', () => {
+  requestAnimationFrame(() => {
+    document.scrollingElement.scrollTop = 200;
+    mainElement.className = 'fill';
+    requestAnimationFrame(() => {
+      mainElement.className = 'fill ownLayer';
+      requestAnimationFrame(() => {
+        mainElement.className = '';
+        document.documentElement.className = '';
+      });
+    });
+  });
+});
+
+</script>
