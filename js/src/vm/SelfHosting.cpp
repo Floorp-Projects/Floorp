@@ -49,6 +49,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Date.h"
+#include "js/Exception.h"
 #include "js/Modules.h"  // JS::GetModulePrivate
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
@@ -2584,15 +2585,14 @@ static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
 
   AutoClearPendingException acpe(cx);
 
-  RootedValue exn(cx);
-  if (!cx->getPendingException(&exn)) {
+  JS::ExceptionStack exnStack(cx);
+  if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
     fprintf(file, "error getting pending exception\n");
     return;
   }
-  cx->clearPendingException();
 
   ErrorReport report(cx);
-  if (!report.init(cx, exn, js::ErrorReport::WithSideEffects)) {
+  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
     fprintf(file, "out of memory initializing ErrorReport\n");
     return;
   }

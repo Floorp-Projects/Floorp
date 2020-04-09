@@ -8,6 +8,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Exception.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testErrorCopying_columnCopied) {
@@ -18,12 +19,11 @@ BEGIN_TEST(testErrorCopying_columnCopied) {
   JS::RootedValue rval(cx);
   CHECK(!JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                              &rval));
-  JS::RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   CHECK_EQUAL(report.report()->column, 28u);
   return true;

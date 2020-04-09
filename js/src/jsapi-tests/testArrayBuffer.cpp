@@ -7,6 +7,7 @@
 #include "builtin/TestingFunctions.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject,NewArrayBuffer{,WithContents},StealArrayBufferContents}
+#include "js/Exception.h"
 #include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 
@@ -273,12 +274,11 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
   CHECK(!JS::Call(cx, JS::UndefinedHandleValue, serializeValue,
                   JS::HandleValueArray(args), &v));
 
-  JS::RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::NoSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::NoSideEffects));
 
   CHECK_EQUAL(report.report()->errorNumber,
               static_cast<unsigned int>(JSMSG_SC_NOT_TRANSFERABLE));

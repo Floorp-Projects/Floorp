@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "js/Array.h"  // JS::IsArrayObject
+#include "js/Exception.h"
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
 #include "js/Printf.h"
@@ -297,12 +298,11 @@ inline bool Error(JSContext* cx, const char (&input)[N], uint32_t expectedLine,
   bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
   CHECK(!ok);
 
-  RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
   CHECK(report.report()->errorNumber == JSMSG_JSON_BAD_PARSE);
 
   UniqueChars lineAndColumnASCII =
