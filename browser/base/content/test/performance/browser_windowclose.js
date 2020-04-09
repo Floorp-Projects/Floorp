@@ -45,7 +45,7 @@ add_task(async function() {
 
   await withPerfObserver(
     async function() {
-      let promiseOrigBrowserFocused = BrowserTestUtils.waitForCondition(() => {
+      let promiseOrigBrowserFocused = TestUtils.waitForCondition(() => {
         return Services.focus.activeWindow == window;
       });
       await BrowserTestUtils.closeWindow(win);
