@@ -1597,6 +1597,24 @@ void PresShell::SelectionWillLoseFocus() {
   // Do nothing, the main selection is the default focused selection.
 }
 
+// Selection repainting code relies on selection offsets being properly
+// adjusted (see bug 1626291), so we need to wait until the DOM is finished
+// notifying.
+static void RepaintNormalSelectionWhenSafe(nsFrameSelection& aFrameSelection) {
+  if (nsContentUtils::IsSafeToRunScript()) {
+    aFrameSelection.RepaintSelection(SelectionType::eNormal);
+    return;
+  }
+
+  // Note that importantly we don't defer changing the DisplaySelection. That'd
+  // be potentially racy with other code that may change it.
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "RepaintNormalSelectionWhenSafe",
+      [sel = RefPtr<nsFrameSelection>(&aFrameSelection)] {
+        sel->RepaintSelection(SelectionType::eNormal);
+      }));
+}
+
 void PresShell::FrameSelectionWillLoseFocus(nsFrameSelection& aFrameSelection) {
   if (mFocusedFrameSelection != &aFrameSelection) {
     return;
@@ -1612,7 +1630,7 @@ void PresShell::FrameSelectionWillLoseFocus(nsFrameSelection& aFrameSelection) {
 
   if (old->GetDisplaySelection() != nsISelectionController::SELECTION_HIDDEN) {
     old->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
-    old->RepaintSelection(SelectionType::eNormal);
+    RepaintNormalSelectionWhenSafe(*old);
   }
 
   if (mSelection) {
@@ -1627,7 +1645,7 @@ void PresShell::FrameSelectionWillTakeFocus(nsFrameSelection& aFrameSelection) {
     // document's focused selection doesn't change, and this is currently done
     // from RepaintSelection. Maybe we should move part of the global selection
     // handling here, or something of that sort, unclear.
-    aFrameSelection.RepaintSelection(SelectionType::eNormal);
+    RepaintNormalSelectionWhenSafe(aFrameSelection);
 #endif
     return;
   }
@@ -1638,13 +1656,13 @@ void PresShell::FrameSelectionWillTakeFocus(nsFrameSelection& aFrameSelection) {
   if (old &&
       old->GetDisplaySelection() != nsISelectionController::SELECTION_HIDDEN) {
     old->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
-    old->RepaintSelection(SelectionType::eNormal);
+    RepaintNormalSelectionWhenSafe(*old);
   }
 
   if (aFrameSelection.GetDisplaySelection() !=
       nsISelectionController::SELECTION_ON) {
     aFrameSelection.SetDisplaySelection(nsISelectionController::SELECTION_ON);
-    aFrameSelection.RepaintSelection(SelectionType::eNormal);
+    RepaintNormalSelectionWhenSafe(aFrameSelection);
   }
 }
 
