@@ -91,6 +91,7 @@ load 1477853.html
 load 1486488.html
 load 1493447.html
 skip-if(Android) load 1507961-1.html  # times out on Android due to the test size
+load 1513603.html
 load 1531578-1.html
 load test_nested_svg.html
 load 1555795.html
