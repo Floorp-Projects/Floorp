@@ -10445,9 +10445,11 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
             &functionEntryStackMap)) {
       return false;
     }
+
     // In debug builds, we'll always have a stack map, even if there are no
     // refs to track.
-    MOZ_ALWAYS_TRUE(functionEntryStackMap);
+    MOZ_ASSERT(functionEntryStackMap);
+
     if (functionEntryStackMap &&
         !stackMaps->add((uint8_t*)(uintptr_t)trapInsnOffset.offset(),
                         functionEntryStackMap)) {
@@ -10501,11 +10503,13 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
                                       nInboundStackArgBytes, &stackMap)) {
       return false;
     }
+
     // In debug builds, we'll always have a stack map.
-    MOZ_ALWAYS_TRUE(stackMap);
+    MOZ_ASSERT(stackMap);
     if (!stackMap) {
       continue;
     }
+
     if (!stackMaps->add((uint8_t*)(uintptr_t)index.displacement(), stackMap)) {
       stackMap->destroy();
       return false;
