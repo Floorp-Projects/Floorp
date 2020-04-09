@@ -40,7 +40,7 @@ static void markNodesAsRecoveredOnBailout(MDefinition* def) {
 
 // Fold AddIs with one variable and two or more constants into one AddI.
 static void AnalyzeAdd(TempAllocator& alloc, MAdd* add) {
-  if (add->specialization() != MIRType::Int32 || add->isRecoveredOnBailout()) {
+  if (add->type() != MIRType::Int32 || add->isRecoveredOnBailout()) {
     return;
   }
 

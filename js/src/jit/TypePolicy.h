@@ -80,7 +80,7 @@ class BoxInputsPolicy final : public TypePolicy {
 class ArithPolicy final : public TypePolicy {
  public:
   constexpr ArithPolicy() = default;
-  SPECIALIZATION_DATA_;
+  EMPTY_DATA_;
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
                                  MInstruction* def) const override;
 };

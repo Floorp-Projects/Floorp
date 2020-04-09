@@ -63,7 +63,7 @@ bool BoxInputsPolicy::staticAdjustInputs(TempAllocator& alloc,
 }
 
 bool ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
-  MOZ_ASSERT(IsNumberType(ins->typePolicySpecialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
   MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Int32 ||
              ins->type() == MIRType::Float32);
 
