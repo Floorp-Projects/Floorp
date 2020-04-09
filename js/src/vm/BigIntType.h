@@ -70,7 +70,7 @@ class BigInt final : public js::gc::Cell {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
-  const js::gc::CellHeader& cellHeader() const { return header_; }
+  const js::gc::CellHeader& cellHeader() const { return header_.cellHeader(); }
 
   JS::Zone* zone() const {
     if (isTenured()) {

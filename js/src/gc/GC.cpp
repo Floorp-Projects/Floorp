@@ -313,6 +313,17 @@ static_assert(mozilla::ArrayLength(slotsToThingKind) ==
 FOR_EACH_ALLOCKIND(CHECK_THING_SIZE);
 #undef CHECK_THING_SIZE
 
+// GC things must be standard-layout classes so we can access the cell header by
+// casting the thing pointer to a CellHeader*. This checks the property for the
+// least derived thing type.
+#define CHECK_THING_LAYOUT(_1, traceKind, _2, _3, _4, _5, _6)         \
+  static_assert(                                                      \
+      std::is_standard_layout<                                        \
+          MapTraceKindToType<JS::TraceKind::traceKind>::Type>::value, \
+      "The class for " #traceKind " must by a standard layout type.");
+FOR_EACH_ALLOCKIND(CHECK_THING_LAYOUT)
+#undef CHECK_THING_LAYOUT
+
 template <typename T>
 struct ArenaLayout {
   static constexpr size_t thingSize() { return sizeof(T); }
