@@ -19,6 +19,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -189,7 +190,7 @@ class SessionUseCasesTest {
         var sessionCreatedForUrl: String? = null
 
         whenever(sessionManager.selectedSession).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(mock())
 
         val loadUseCase = SessionUseCases.DefaultLoadUrlUseCase(sessionManager) { url ->
             sessionCreatedForUrl = url
@@ -211,7 +212,7 @@ class SessionUseCasesTest {
         val engineSession: EngineSession = mock()
 
         whenever(sessionManager.selectedSession).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
         val loadUseCase = SessionUseCases.LoadDataUseCase(sessionManager) { url ->
             sessionCreatedForUrl = url

@@ -270,7 +270,10 @@ class LegacySessionManager(
     /**
      * Gets the linked engine session for the provided session and creates it if needed.
      */
-    fun getOrCreateEngineSession(session: Session = selectedSessionOrThrow): EngineSession {
+    fun getOrCreateEngineSession(
+        session: Session = selectedSessionOrThrow,
+        skipLoading: Boolean = false
+    ): EngineSession {
         getEngineSession(session)?.let { return it }
 
         return engine.createSession(session.private, session.contextId).apply {
@@ -280,15 +283,20 @@ class LegacySessionManager(
                 session.engineSessionHolder.engineSessionState = null
             }
 
-            link(session, this, restored)
+            link(session, this, restored, skipLoading)
         }
     }
 
-    private fun link(session: Session, engineSession: EngineSession, restored: Boolean = false) {
+    private fun link(
+        session: Session,
+        engineSession: EngineSession,
+        restored: Boolean = false,
+        skipLoading: Boolean = false
+    ) {
         val parent = values.find { it.id == session.parentId }?.let {
             this.getEngineSession(it)
         }
-        engineSessionLinker.link(session, engineSession, parent, restored)
+        engineSessionLinker.link(session, engineSession, parent, restored, skipLoading)
 
         if (session == selectedSession) {
             engineSession.markActiveForWebExtensions(true)

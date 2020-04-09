@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -66,7 +67,7 @@ class SearchUseCasesTest {
         val engineSession = mock<EngineSession>()
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
         useCases.newTabSearch(searchTerms, Session.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
@@ -78,7 +79,7 @@ class SearchUseCasesTest {
 
         whenever(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(mock())
 
         var sessionCreatedForUrl: String? = null
 
@@ -102,7 +103,7 @@ class SearchUseCasesTest {
         val engineSession = mock<EngineSession>()
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
         useCases.newPrivateTabSearch.invoke(searchTerms)
 

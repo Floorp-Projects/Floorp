@@ -115,7 +115,7 @@ class FxaWebChannelFeatureTest {
         whenever(ext.getConnectedPort(any(), any())).thenReturn(port)
 
         whenever(controller.portConnected(any(), any())).thenReturn(true)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(sessionManager.selectedSession).thenReturn(session)
         val webchannelFeature = spy(FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager, serverConfig))
         webchannelFeature.extensionController = controller
@@ -150,7 +150,7 @@ class FxaWebChannelFeatureTest {
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         val webchannelFeature = spy(FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager, serverConfig))
         webchannelFeature.extensionController = controller
 
@@ -172,7 +172,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://bar.foo/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -217,7 +217,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -262,7 +262,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -314,7 +314,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -375,7 +375,7 @@ class FxaWebChannelFeatureTest {
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -439,7 +439,7 @@ class FxaWebChannelFeatureTest {
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -499,7 +499,7 @@ class FxaWebChannelFeatureTest {
 
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -554,7 +554,7 @@ class FxaWebChannelFeatureTest {
 
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -606,7 +606,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -653,7 +653,7 @@ class FxaWebChannelFeatureTest {
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
         whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
 
@@ -692,7 +692,7 @@ class FxaWebChannelFeatureTest {
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
         whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
 
@@ -734,7 +734,7 @@ class FxaWebChannelFeatureTest {
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
@@ -796,7 +796,7 @@ class FxaWebChannelFeatureTest {
         whenever(ext.getConnectedPort(eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID), any())).thenReturn(port)
         whenever(sessionManager.selectedSession).thenReturn(session)
         whenever(sessionManager.getEngineSession(session)).thenReturn(engineSession)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 

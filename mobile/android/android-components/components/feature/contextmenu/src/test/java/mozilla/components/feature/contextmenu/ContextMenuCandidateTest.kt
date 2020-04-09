@@ -59,7 +59,7 @@ class ContextMenuCandidateTest {
     @Test
     fun `Candidate "Open Link in New Tab" showFor displayed in correct cases`() {
         val sessionManager = spy(SessionManager(mock()))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
@@ -90,7 +90,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in New Tab" action properly executes for session with a contextId`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -112,7 +112,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in New Tab" action properly executes and shows snackbar`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -135,7 +135,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in New Tab" snackbar action works`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -159,7 +159,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in New Tab" action properly handles link with an image`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -181,7 +181,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in Private Tab" showFor displayed in correct cases`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -214,7 +214,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in Private Tab" action properly executes and shows snackbar`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -237,7 +237,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in Private Tab" snackbar action works`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -260,7 +260,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Link in Private Tab" action properly handles link with an image`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -279,7 +279,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Image in New Tab"`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -338,7 +338,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Image in New Tab" opens in private tab if session is private`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -362,7 +362,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Open Image in New Tab" opens with the session's contextId`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
 
         val tabsUseCases = TabsUseCases(sessionManager)
@@ -387,7 +387,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Save image"`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
@@ -439,7 +439,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "Save video and audio"`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
@@ -494,7 +494,7 @@ class ContextMenuCandidateTest {
     fun `Candidate "download link"`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
@@ -639,7 +639,7 @@ class ContextMenuCandidateTest {
 
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         shareLink.action.invoke(
@@ -682,7 +682,7 @@ class ContextMenuCandidateTest {
 
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         copyLink.action.invoke(
@@ -731,7 +731,7 @@ class ContextMenuCandidateTest {
 
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
-        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
         copyImageLocation.action.invoke(

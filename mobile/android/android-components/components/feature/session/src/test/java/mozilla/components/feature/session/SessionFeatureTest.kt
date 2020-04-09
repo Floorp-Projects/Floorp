@@ -36,7 +36,7 @@ class SessionFeatureTest {
         whenever(sessionManager.selectedSessionOrThrow).thenReturn(session)
 
         val engineSession = mock<EngineSession>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
 
@@ -58,7 +58,7 @@ class SessionFeatureTest {
         whenever(sessionManager.selectedSession).thenReturn(sessionAlt)
         whenever(sessionManager.selectedSessionOrThrow).thenReturn(sessionAlt)
         whenever(sessionManager.findSessionById(sessionId)).thenReturn(session)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
         session.canGoBack = true
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView, sessionId)
@@ -76,7 +76,7 @@ class SessionFeatureTest {
         whenever(sessionManager.selectedSessionOrThrow).thenReturn(session)
 
         val engineSession = mock<EngineSession>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(session, false)).thenReturn(engineSession)
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
 

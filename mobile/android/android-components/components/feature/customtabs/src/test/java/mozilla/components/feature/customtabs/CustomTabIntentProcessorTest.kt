@@ -31,6 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
@@ -53,7 +54,7 @@ class CustomTabIntentProcessorTest {
     fun processCustomTabIntentWithDefaultHandlers() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
         val useCases = SessionUseCases(sessionManager)
 
         val handler =
@@ -82,7 +83,7 @@ class CustomTabIntentProcessorTest {
     fun processCustomTabIntentWithAdditionalHeaders() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
         val useCases = SessionUseCases(sessionManager)
 
         val handler =
@@ -117,7 +118,7 @@ class CustomTabIntentProcessorTest {
     fun processPrivateCustomTabIntentWithDefaultHandlers() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
         val useCases = SessionUseCases(sessionManager)
 
         val handler =

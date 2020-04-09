@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -30,6 +31,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -49,7 +51,7 @@ class TabIntentProcessorTest {
     @Before
     fun setup() {
         whenever(sessionManager.selectedSession).thenReturn(session)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(eq(session), anyBoolean())).thenReturn(engineSession)
     }
 
     @Test
@@ -63,7 +65,7 @@ class TabIntentProcessorTest {
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
 
         val engineSession = mock<EngineSession>()
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         whenever(intent.dataString).thenReturn("")
         handler.process(intent)
@@ -98,7 +100,7 @@ class TabIntentProcessorTest {
     @Test
     fun processViewIntentHavingNoSelectedSession() = runBlockingTest {
         whenever(sessionManager.selectedSession).thenReturn(null)
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val handler = TabIntentProcessor(
             sessionManager,
@@ -125,7 +127,7 @@ class TabIntentProcessorTest {
         whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
 
         val engineSession = mock<EngineSession>()
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         whenever(intent.dataString).thenReturn("")
         handler.process(intent)
@@ -160,7 +162,7 @@ class TabIntentProcessorTest {
     @Test
     fun processNfcIntentHavingNoSelectedSession() = runBlockingTest {
         whenever(sessionManager.selectedSession).thenReturn(null)
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val handler = TabIntentProcessor(
             sessionManager,
@@ -178,7 +180,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `load URL on ACTION_SEND if text contains URL`() = runBlockingTest {
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
@@ -210,7 +212,7 @@ class TabIntentProcessorTest {
     fun `perform search on ACTION_SEND if text (no URL) provided`() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
         val sessionUseCases = SessionUseCases(sessionManager)
@@ -260,7 +262,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `load URL on ACTION_SEARCH if text is an URL`() = runBlockingTest {
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
@@ -276,7 +278,7 @@ class TabIntentProcessorTest {
     fun `perform search on ACTION_SEARCH if text (no URL) provided`() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
         val sessionUseCases = SessionUseCases(sessionManager)
@@ -314,7 +316,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `load URL on ACTION_WEB_SEARCH if text is an URL`() = runBlockingTest {
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
@@ -330,7 +332,7 @@ class TabIntentProcessorTest {
     fun `perform search on ACTION_WEB_SEARCH if text (no URL) provided`() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
 
         val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
         val sessionUseCases = SessionUseCases(sessionManager)

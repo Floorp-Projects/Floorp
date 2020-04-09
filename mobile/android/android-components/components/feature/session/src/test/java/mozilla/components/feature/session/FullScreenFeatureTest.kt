@@ -80,7 +80,7 @@ class FullScreenFeatureTest {
         val engineSession: EngineSession = mock()
         val fullscreenFeature = spy(FullScreenFeatureTest(sessionManager, useCases) {})
 
-        whenever(sessionManager.getOrCreateEngineSession(activeSession)).thenReturn(engineSession)
+        whenever(sessionManager.getOrCreateEngineSession(activeSession, false)).thenReturn(engineSession)
         whenever(fullscreenFeature.activeSession).thenReturn(activeSession)
         whenever(activeSession.fullScreenMode).thenReturn(true)
         whenever(useCases.exitFullscreen).thenReturn(mock())
