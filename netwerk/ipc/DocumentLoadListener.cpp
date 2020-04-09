@@ -394,7 +394,8 @@ bool DocumentLoadListener::Open(
       nsCOMPtr<nsIPrincipal> topWindowPrincipal =
           topWindow->DocumentPrincipal();
       if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
-        topWindowPrincipal->GetURI(getter_AddRefs(topWindowURI));
+        auto* basePrin = BasePrincipal::Cast(topWindowPrincipal);
+        basePrin->GetURI(getter_AddRefs(topWindowURI));
       }
     }
     httpBaseChannel->SetTopWindowURI(topWindowURI);
