@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1628605: Test Sec-Fetch-* header for websockets</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var script = SpecialPowers.loadChromeScript(() => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  Services.obs.addObserver(function onExamResp(subject, topic, data) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (!channel.URI.spec.startsWith("https://example.com/tests/dom/security/test/general/file_sec_fetch_websocket")) {
+      return;
+    }
+
+    // Sec-Fetch-* Headers should be present for Dest, Mode, Site
+    try {
+      let secFetchDest = channel.getRequestHeader("Sec-Fetch-Dest");
+      is(secFetchDest, "websocket", "testing sec-fetch-dest");
+
+      let secFetchMode = channel.getRequestHeader("Sec-Fetch-Mode");
+      is(secFetchMode, "websocket", "testing sec-fetch-mode");
+
+      let secFetchSite = channel.getRequestHeader("Sec-Fetch-Site");
+      is(secFetchSite, "cross-site", "testing sec-fetch-site");
+    }
+    catch (e) {
+      ok(false, "testing sec-fetch-*");
+    }
+
+    // Sec-Fetch-User should not be present
+    try {
+      let secFetchSite = channel.getRequestHeader("Sec-Fetch-User");
+      ok(false, "testing sec-fetch-user");
+    }
+    catch (e) {
+      ok(true, "testing sec-fetch-user");
+    }
+    Services.obs.removeObserver(onExamResp, "http-on-stop-request");
+
+    sendAsyncMessage("test-end");
+  }, "http-on-stop-request");
+});
+
+script.addMessageListener("test-end", () => {
+  SimpleTest.finish();
+});
+
+function test_sec_fetch_websocket() {
+  var wssSocket = new WebSocket("wss://example.com/tests/dom/security/test/general/file_sec_fetch_websocket");
+  wssSocket.onopen = function(e) {
+    ok(true, "sanity: wssSocket onopen");
+  };
+  wssSocket.onerror = function(e) {
+    ok(false, "fanity: wssSocket onerror");
+  };
+}
+
+SpecialPowers.pushPrefEnv({
+  set: [["dom.security.secFetch.enabled", true]]
+}, test_sec_fetch_websocket);
+
+</script>
+</body>
+</html>
