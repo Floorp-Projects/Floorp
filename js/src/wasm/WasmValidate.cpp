@@ -2009,6 +2009,19 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       *init = InitExpr(LitVal(expected, AnyRef::null()));
       break;
     }
+    case uint16_t(Op::RefFunc): {
+      if (!expected.isReference() || expected.refType() != RefType::func()) {
+        return d.fail(
+            "type mismatch: initializer type and expected type don't match");
+      }
+      uint32_t i;
+      if (!d.readVarU32(&i)) {
+        return d.fail(
+            "failed to read ref.func index in initializer expression");
+      }
+      *init = InitExpr(i);
+      break;
+    }
     case uint16_t(Op::GetGlobal): {
       uint32_t i;
       const GlobalDescVector& globals = env->globals;

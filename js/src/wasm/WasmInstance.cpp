@@ -1567,6 +1567,22 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
             }
             break;
           }
+          case InitExpr::Kind::RefFunc: {
+            void* fnref = Instance::refFunc(this, init.refFuncIndex());
+            if (fnref == AnyRef::invalid().forCompiledCode()) {
+              return false;  // OOM, which has already been reported.
+            }
+            RootedVal val(cx, Val(ValType(RefType::func()),
+                                  FuncRef::fromCompiledCode(fnref)));
+            if (global.isIndirect()) {
+              void* address = globalObjs[i]->cell();
+              *(void**)globalAddr = address;
+              CopyValPostBarriered((uint8_t*)address, val.get());
+            } else {
+              CopyValPostBarriered(globalAddr, val.get());
+            }
+            break;
+          }
         }
         break;
       }
