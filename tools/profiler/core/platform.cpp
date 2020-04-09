@@ -218,6 +218,7 @@ static uint32_t AvailableFeatures() {
 #endif
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   if (getenv("XPCOM_MEM_BLOAT_LOG")) {
+    NS_WARNING("XPCOM_MEM_BLOAT_LOG is set, disabling native allocations.");
     // The memory hooks are available, but the bloat log is enabled, which is
     // not compatible with the native allocations tracking. See the comment in
     // enable_native_allocations() (tools/profiler/core/memory_hooks.cpp) for
