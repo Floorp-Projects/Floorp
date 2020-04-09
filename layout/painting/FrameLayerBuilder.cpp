@@ -1761,7 +1761,6 @@ class PaintedDisplayItemLayerUserData : public LayerUserData {
         mAnimatedGeometryRootPosition(0, 0),
         mLastItemCount(0),
         mContainerLayerFrame(nullptr),
-        mHasExplicitLastPaintOffset(false),
         mDisabledAlpha(false) {}
 
   NS_INLINE_DECL_REFCOUNTING(PaintedDisplayItemLayerUserData);
@@ -1827,17 +1826,16 @@ class PaintedDisplayItemLayerUserData : public LayerUserData {
   // The number of items assigned to this layer on the previous paint.
   size_t mLastItemCount;
 
-  // The translation set on this PaintedLayer before we started updating the
-  // layer tree.
-  nsIntPoint mLastPaintOffset;
+  // The translation set on this PaintedLayer during the previous paint. This
+  // is needed when invalidating based on a display item's geometry information
+  // from the previous paint.
+  Maybe<nsIntPoint> mLastPaintOffset;
 
   // Temporary state only valid during the FrameLayerBuilder's lifetime.
   // FLB's mPaintedLayerItems is responsible for cleaning these up when
   // we finish painting to avoid dangling pointers.
   std::vector<AssignedDisplayItem> mItems;
   nsIFrame* mContainerLayerFrame;
-
-  bool mHasExplicitLastPaintOffset;
 
   /**
    * This is set when the painted layer has no component alpha.
@@ -1862,8 +1860,7 @@ FrameLayerBuilder::FrameLayerBuilder()
 FrameLayerBuilder::~FrameLayerBuilder() {
   GetMaskLayerImageCache()->Sweep();
   for (PaintedDisplayItemLayerUserData* userData : mPaintedLayerItems) {
-    userData->mLastPaintOffset = userData->mTranslation;
-    userData->mHasExplicitLastPaintOffset = true;
+    userData->mLastPaintOffset = Some(userData->mTranslation);
     userData->mItems.clear();
     userData->mContainerLayerFrame = nullptr;
   }
@@ -5585,10 +5582,7 @@ nsIntPoint FrameLayerBuilder::GetLastPaintOffset(PaintedLayer* aLayer) {
   PaintedDisplayItemLayerUserData* layerData =
       GetPaintedDisplayItemLayerUserData(aLayer);
   MOZ_ASSERT(layerData);
-  if (layerData->mHasExplicitLastPaintOffset) {
-    return layerData->mLastPaintOffset;
-  }
-  return GetTranslationForPaintedLayer(aLayer);
+  return layerData->mLastPaintOffset.valueOr(layerData->mTranslation);
 }
 
 bool FrameLayerBuilder::CheckInLayerTreeCompressionMode() {
