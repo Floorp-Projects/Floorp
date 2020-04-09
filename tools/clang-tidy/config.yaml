@@ -19,7 +19,7 @@ platforms:
 # Minimum clang-tidy version that is required for all the following checkers
 # to work properly.
 # This is also used by 'mach clang-format'
-package_version: "9.0.1"
+package_version: "10.0"
 clang_checkers:
   - name: -*
     publish: !!bool no

@@ -1,1 +1,1 @@
-[["warning", "'push_back' is called inside a loop; consider pre-allocating the vector capacity before the loop", "performance-inefficient-vector-operation"], {"reliability": "high"}]
+[["warning", "'push_back' is called inside a loop; consider pre-allocating the container capacity before the loop", "performance-inefficient-vector-operation"], {"reliability": "high"}]

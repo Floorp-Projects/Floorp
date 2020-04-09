@@ -24,7 +24,7 @@ job-defaults:
         - try
     fetches:
         fetch:
-            - clang-9
+            - clang-10
 
 linux64-clang-tidy:
     index:
@@ -63,8 +63,8 @@ macosx64-clang-tidy:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port
-            - linux64-clang-9
+            - linux64-cctools-clang-10-port
+            - linux64-clang-10
             - linux64-gcc-7
             - linux64-node
 
