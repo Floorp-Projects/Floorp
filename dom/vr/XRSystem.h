@@ -37,7 +37,8 @@ class IsSessionSupportedRequest {
 class RequestSessionRequest {
  public:
   RequestSessionRequest(
-      XRSessionMode aSessionMode, Promise* aPromise,
+      XRSessionMode aSessionMode, uint32_t aPresentationGroup,
+      Promise* aPromise,
       const nsTArray<XRReferenceSpaceType>& aRequiredReferenceSpaceTypes,
       const nsTArray<XRReferenceSpaceType>& aOptionalReferenceSpaceTypes);
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RequestSessionRequest)
@@ -51,10 +52,12 @@ class RequestSessionRequest {
   bool WantsHardware() const;
   bool NeedsHardware() const;
   XRSessionMode GetSessionMode() const;
+  uint32_t GetPresentationGroup() const;
 
  private:
   ~RequestSessionRequest() = default;
   XRSessionMode mSessionMode;
+  uint32_t mPresentationGroup;
   nsTArray<XRReferenceSpaceType> mRequiredReferenceSpaceTypes;
   nsTArray<XRReferenceSpaceType> mOptionalReferenceSpaceTypes;
 };
