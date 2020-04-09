@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Permission.h"
-#include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsNetCID.h"
