@@ -20,9 +20,6 @@ with Files('blessings/**'):
 with Files('compare-locales/**'):
     BUG_COMPONENT = ('Localization Infrastructure and Tools', 'compare-locales')
 
-with Files('configobj/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
 with Files('dlmanager/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
@@ -34,9 +31,6 @@ with Files('futures/**'):
 
 with Files('jsmin/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
-
-with Files('lldbutils/**'):
-    BUG_COMPONENT = ('Core', 'General')
 
 with Files('mock-1.0.0/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
@@ -97,6 +91,3 @@ with Files('virtualenv/**'):
 
 with Files('voluptuous/**'):
     BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
-
-with Files('which/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')

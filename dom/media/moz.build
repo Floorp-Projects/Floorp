@@ -24,8 +24,6 @@ with Files('IdpSandbox.jsm'):
     BUG_COMPONENT = component_signaling
 with Files('PeerConnection*'):
     BUG_COMPONENT = component_signaling
-with Files('RTC*'):
-    BUG_COMPONENT = component_signaling
 
 component_av = ('Core', 'WebRTC: Audio/Video')
 with Files('GetUserMedia*'):

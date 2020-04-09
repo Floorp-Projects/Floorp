@@ -104,5 +104,5 @@ FINAL_TARGET_PP_FILES += [
     'data/xpcshellConstantsPP.js',
 ]
 
-with Files("browser/browser_telemetry_updatePing_ready.js"):
+with Files("browser/browser_telemetry_updatePing_*_ready.js"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
