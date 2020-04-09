@@ -663,23 +663,22 @@ this.CryptoCollection = CryptoCollection;
  * @param {string} extensionId The extension ID for which to find a key.
  */
 let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTransformer {
-  constructor(cryptoCollection, extensionId) {
+  constructor(cryptoCollection, keyring, extensionId) {
     super();
     this.cryptoCollection = cryptoCollection;
+    this.keyring = keyring;
     this.extensionId = extensionId;
   }
 
   async getKeys() {
-    // FIXME: cache the crypto record for the duration of a sync cycle?
-    const collectionKeys = await this.cryptoCollection.getKeyRing();
-    if (!collectionKeys.hasKeysFor([this.extensionId])) {
+    if (!this.keyring.hasKeysFor([this.extensionId])) {
       // This should never happen. Keys should be created (and
       // synced) at the beginning of the sync cycle.
       throw new Error(
         `tried to encrypt records for ${this.extensionId}, but key is not present`
       );
     }
-    return collectionKeys.keyForCollection(this.extensionId);
+    return this.keyring.keyForCollection(this.extensionId);
   }
 
   getEncodedRecordId(record) {
@@ -789,10 +788,12 @@ class ExtensionStorageSync {
     }
     await this.ensureCanSync(extIds);
     await this.checkSyncKeyRing();
+    const keyring = await this.cryptoCollection.getKeyRing();
     const promises = Array.from(extensions, extension => {
       const remoteTransformers = [
         new CollectionKeyEncryptionRemoteTransformer(
           this.cryptoCollection,
+          keyring,
           extension.id
         ),
       ];
