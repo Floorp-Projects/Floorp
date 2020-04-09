@@ -7,7 +7,7 @@
   fill: currentColor;
   fill-opacity: 0.4;
 
-  background-image: url("chrome://global/skin/icons/search.svg");
+  background-image: url("chrome://browser/skin/search-glass.svg");
   background-position: 8px center;
   background-repeat: no-repeat;
   background-size: 16px;
