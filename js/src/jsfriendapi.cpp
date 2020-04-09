@@ -1465,8 +1465,6 @@ bool js::AddListFormatConstructor(JSContext* cx, JS::HandleObject intl) {
 
 #endif  // !JS_HAS_INTL_API
 
-#ifdef DEBUG
 JS_FRIEND_API JS::Zone* js::GetObjectZoneFromAnyThread(JSObject* obj) {
   return MaybeForwarded(obj)->zoneFromAnyThread();
 }
-#endif
