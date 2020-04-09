@@ -26,7 +26,7 @@ addRDMTask(
     const { ui } = await openRDM(tab);
     await waitForDeviceAndViewportState(ui);
 
-    await navigateToNewDomain(TEST_URL, ui);
+    await load(browser, TEST_URL);
     ok(true, "Test URL navigated successfully");
 
     await closeRDM(tab);
