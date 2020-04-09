@@ -62,40 +62,20 @@ add_clang_library(clangTidyMozillaModule
   )""" % {'names': "\n".join(names)})
 
 
-def add_item_to_cmake_section(cmake_path, section, library):
+def add_moz_module(cmake_path):
     with open(cmake_path, 'r') as f:
         lines = f.readlines()
     f.close()
 
-    libs = []
-    seen_target_libs = False
-    for line in lines:
-        if line.find(section) > -1:
-            seen_target_libs = True
-        elif seen_target_libs:
-            if line.find(')') > -1:
-                break
-            else:
-                libs.append(line.strip())
-    libs.append(library)
-    libs = sorted(libs, key=lambda s: s.lower())
+    try:
+        idx = lines.index('set(ALL_CLANG_TIDY_CHECKS\n')
+        lines.insert(idx + 1, '  clangTidyMozillaModule\n')
 
-    with open(cmake_path, 'w') as f:
-        seen_target_libs = False
-        for line in lines:
-            if line.find(section) > -1:
-                seen_target_libs = True
+        with open(cmake_path, 'w') as f:
+            for line in lines:
                 f.write(line)
-                f.writelines(['  ' + p + '\n' for p in libs])
-                continue
-            elif seen_target_libs:
-                if line.find(')') > -1:
-                    seen_target_libs = False
-                else:
-                    continue
-            f.write(line)
-
-    f.close()
+    except ValueError:
+        raise Exception('Unable to find ALL_CLANG_TIDY_CHECKS in {}'.format(cmake_path))
 
 
 def write_third_party_paths(mozilla_path, module_path):
@@ -131,14 +111,11 @@ def do_import(mozilla_path, clang_tidy_path, import_alpha):
     write_third_party_paths(mozilla_path, module_path)
     generate_thread_allows(mozilla_path, module_path)
     write_cmake(module_path, import_alpha)
-    add_item_to_cmake_section(os.path.join(module_path, '..', 'plugin',
-                                           'CMakeLists.txt'),
-                              'LINK_LIBS', 'clangTidyMozillaModule')
-    add_item_to_cmake_section(os.path.join(module_path, '..', 'tool',
-                                           'CMakeLists.txt'),
-                              'PRIVATE', 'clangTidyMozillaModule')
+    add_moz_module(os.path.join(module_path, '..', 'CMakeLists.txt'))
     with open(os.path.join(module_path, '..', 'CMakeLists.txt'), 'a') as f:
         f.write('add_subdirectory(%s)\n' % module)
+    # A better place for this would be in `ClangTidyForceLinker.h` but `ClangTidyMain.cpp`
+    # is also OK.
     with open(os.path.join(module_path, '..', 'tool', 'ClangTidyMain.cpp'), 'a') as f:
         f.write('''
 // This anchor is used to force the linker to link the MozillaModule.
