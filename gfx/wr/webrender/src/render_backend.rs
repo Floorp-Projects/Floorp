@@ -1841,8 +1841,10 @@ impl RenderBackend {
                 config.serialize(&rendered_document.frame, file_name);
                 let file_name = format!("spatial-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_tree(&doc.scene.spatial_tree, file_name);
-                let file_name = format!("builder-{}-{}", id.namespace_id.0, id.id);
-                config.serialize(&doc.frame_builder, file_name);
+                let file_name = format!("built-primitives-{}-{}", id.namespace_id.0, id.id);
+                config.serialize(&doc.scene.prim_store, file_name);
+                let file_name = format!("built-clips-{}-{}", id.namespace_id.0, id.id);
+                config.serialize(&doc.scene.clip_store, file_name);
                 let file_name = format!("scratch-{}-{}", id.namespace_id.0, id.id);
                 config.serialize(&doc.scratch, file_name);
                 let file_name = format!("properties-{}-{}", id.namespace_id.0, id.id);
