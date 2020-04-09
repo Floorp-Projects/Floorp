@@ -1908,7 +1908,7 @@ JS_PUBLIC_API void JS::AssertObjectBelongsToCurrentThread(JSObject* obj) {
 }
 
 JS_PUBLIC_API void SetHelperThreadTaskCallback(
-    void (*callback)(js::UniquePtr<js::RunnableTask>)) {
+    void (*callback)(js::RunnableTask*)) {
   HelperThreadTaskCallback = callback;
 }
 
