@@ -32,6 +32,13 @@
         "async": true
       },
       {
+        "name": "getGPUInfo",
+        "type": "function",
+        "description": "Gets basic info on GPUs #1 and #2 (if webrender is on and telemetry is not disabled)",
+        "parameters": [],
+        "async": true
+      },
+      {
         "name": "getPlatform",
         "type": "function",
         "description": "Gets the platform",
