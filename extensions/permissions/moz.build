@@ -10,12 +10,9 @@ TESTING_JS_MODULES += [
     'test/PermissionTestUtils.jsm',
 ]
 
-EXPORTS += [
-    'PermissionDelegateHandler.h',
-]
-
 EXPORTS.mozilla += [
     'Permission.h',
+    'PermissionDelegateHandler.h',
 ]
 
 UNIFIED_SOURCES += [
