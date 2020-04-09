@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "HTMLEditor.h"
+
 #include <algorithm>
 #include <utility>
 
 #include "HTMLEditUtils.h"
-#include "HTMLEditor.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CSSEditUtils.h"
@@ -948,7 +949,8 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     editTargetContent = arrayOfContents[0];
   }
 
-  Element* blockElementAtEditTarget = HTMLEditor::GetBlock(*editTargetContent);
+  RefPtr<Element> blockElementAtEditTarget =
+      HTMLEditor::GetBlock(*editTargetContent);
   if (NS_WARN_IF(!blockElementAtEditTarget)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -963,6 +965,10 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     DebugOnly<nsresult> rvIgnored =
         CSSEditUtils::GetComputedCSSEquivalentToHTMLInlineStyleSet(
             *blockElementAtEditTarget, nullptr, nsGkAtoms::align, value);
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+      aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+      return;
+    }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "CSSEditUtils::GetComputedCSSEquivalentToHTMLInlineStyleSet(nsGkAtoms::"
@@ -1057,7 +1063,8 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   }
 }
 
-static nsStaticAtom& MarginPropertyAtomForIndent(nsIContent& aContent) {
+MOZ_CAN_RUN_SCRIPT static nsStaticAtom& MarginPropertyAtomForIndent(
+    nsIContent& aContent) {
   nsAutoString direction;
   DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetComputedProperty(
       aContent, *nsGkAtoms::direction, direction);
@@ -5995,7 +6002,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
   RefPtr<Element> indentedParentElement;
   nsCOMPtr<nsIContent> firstContentToBeOutdented, lastContentToBeOutdented;
   BlockIndentedWith indentedParentIndentedWith = BlockIndentedWith::HTML;
-  for (auto& content : arrayOfContents) {
+  for (OwningNonNull<nsIContent>& content : arrayOfContents) {
     // Here's where we actually figure out what to do
     EditorDOMPoint atContent(content);
     if (!atContent.IsSet()) {
@@ -6038,7 +6045,11 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
     // If we're using CSS and the node is a block element, check its start
     // margin whether it's indented with CSS.
     if (useCSS && HTMLEditor::NodeIsBlockStatic(content)) {
-      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(content);
+      nsStaticAtom& marginProperty =
+          MarginPropertyAtomForIndent(MOZ_KnownLive(content));
+      if (NS_WARN_IF(Destroyed())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored =
           CSSEditUtils::GetSpecifiedProperty(content, marginProperty, value);
@@ -6149,7 +6160,15 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
         continue;
       }
 
-      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(content);
+      nsCOMPtr<nsINode> grandParentNode = parentContent->GetParentNode();
+      nsStaticAtom& marginProperty =
+          MarginPropertyAtomForIndent(MOZ_KnownLive(content));
+      if (NS_WARN_IF(Destroyed())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(grandParentNode != parentContent->GetParentNode())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
           *parentContent, marginProperty, value);
@@ -9862,7 +9881,7 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
                                          &value);
     } else {
       isSet = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-          aContent, tag, attribute, value);
+          aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute), value);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9918,8 +9937,8 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     if (useCSS) {
       // check computed style first in css case
       isAny = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-          *startContainerContent, styleCacheBeforeEdit.Tag(),
-          styleCacheBeforeEdit.GetAttribute(), currentValue);
+          *startContainerContent, MOZ_KnownLive(styleCacheBeforeEdit.Tag()),
+          MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9927,12 +9946,10 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     if (!isAny) {
       // then check typeinstate and html style
       nsresult rv = GetInlinePropertyBase(
-          *styleCacheBeforeEdit.Tag(), styleCacheBeforeEdit.GetAttribute(),
+          MOZ_KnownLive(*styleCacheBeforeEdit.Tag()),
+          MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()),
           &styleCacheBeforeEdit.Value(), &isFirst, &isAny, &isAll,
           &currentValue);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::GetInlinePropertyBase() failed");
         return rv;
@@ -11065,6 +11082,9 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   nsAutoString value;
   DebugOnly<nsresult> rvIgnored =
       CSSEditUtils::GetSpecifiedProperty(aElement, marginProperty, value);
@@ -11580,6 +11600,9 @@ EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
 
   RefPtr<Element> element = GetAbsolutelyPositionedSelectionContainer();
   if (!element) {
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
     NS_WARNING(
         "HTMLEditor::GetAbsolutelyPositionedSelectionContainer() returned "
         "nullptr");
@@ -11658,6 +11681,9 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
   RefPtr<Element> absolutelyPositionedElement =
       GetAbsolutelyPositionedSelectionContainer();
   if (!absolutelyPositionedElement) {
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
     NS_WARNING(
         "HTMLEditor::GetAbsolutelyPositionedSelectionContainer() returned "
         "nullptr");
@@ -11670,9 +11696,6 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
     int32_t zIndex;
     nsresult rv = RelativeChangeElementZIndex(*absolutelyPositionedElement,
                                               aChange, &zIndex);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RelativeChangeElementZIndex() failed");
       return EditActionHandled(rv);
