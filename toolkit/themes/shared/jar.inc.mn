@@ -33,7 +33,6 @@ toolkit.jar:
   skin/classic/global/icons/check.svg                      (../../shared/icons/check.svg)
   skin/classic/global/icons/check-partial.svg              (../../shared/icons/check-partial.svg)
   skin/classic/global/icons/close.svg                      (../../shared/icons/close.svg)
-  skin/classic/global/icons/search.svg                     (../../shared/icons/search.svg)
   skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
