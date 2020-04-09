@@ -19,9 +19,6 @@ with Files("TestAppShellSteadyState.cpp"):
 with Files("TestChromeMargin.cpp"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
-with Files("*1151186*"):
-    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
-
 with Files("*413277*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
