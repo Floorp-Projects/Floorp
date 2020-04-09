@@ -13,11 +13,11 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/PermissionManager.h"
 #include "nsIChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsPermissionManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
@@ -138,7 +138,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
                                                bool aIsInPrivateBrowsing,
                                                uint32_t* aRejectedReason,
                                                uint32_t aBlockedReason) {
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
+  PermissionManager* permManager = PermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     LOG(("Failed to obtain the permission manager"));
     return false;

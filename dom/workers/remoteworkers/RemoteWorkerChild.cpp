@@ -15,7 +15,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
-#include "nsPermissionManager.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -47,6 +46,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/PermissionManager.h"
 
 namespace mozilla {
 
@@ -465,8 +465,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
           }
         });
 
-    RefPtr<nsPermissionManager> permissionManager =
-        nsPermissionManager::GetInstance();
+    RefPtr<PermissionManager> permissionManager =
+        PermissionManager::GetInstance();
     if (!permissionManager) {
       return NS_ERROR_FAILURE;
     }

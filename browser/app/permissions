@@ -4,7 +4,7 @@
 # * "origin" should be used for matchtype, "host" is supported for legacy reasons
 # * type is a string that identifies the type of permission (e.g. "cookie")
 # * permission is an integer between 1 and 15
-# See nsPermissionManager.cpp for more...
+# See PermissionManager.cpp for more...
 
 # UITour
 # Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.jsm

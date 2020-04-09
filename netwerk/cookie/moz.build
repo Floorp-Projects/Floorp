@@ -61,7 +61,6 @@ IPDL_SOURCES = [
 
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/extensions/permissions',
     '/intl/uconv',
     '/netwerk/base',
     '/netwerk/protocol/http',
