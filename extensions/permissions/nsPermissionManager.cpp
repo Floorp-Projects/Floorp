@@ -10,9 +10,9 @@
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Permission.h"
 #include "mozilla/Services.h"
 #include "nsPermissionManager.h"
-#include "nsPermission.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
@@ -2338,7 +2338,7 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PermissionEntry& perm = entry->GetPermissions()[idx];
-  nsCOMPtr<nsIPermission> r = nsPermission::Create(
+  nsCOMPtr<nsIPermission> r = Permission::Create(
       principal, mTypeArray[perm.mType], perm.mPermission, perm.mExpireType,
       perm.mExpireTime, perm.mModificationTime);
   if (NS_WARN_IF(!r)) {
@@ -2567,7 +2567,7 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
         continue;
       }
 
-      RefPtr<nsIPermission> permission = nsPermission::Create(
+      RefPtr<nsIPermission> permission = Permission::Create(
           principal, mTypeArray[permEntry.mType], permEntry.mPermission,
           permEntry.mExpireType, permEntry.mExpireTime,
           permEntry.mModificationTime);
@@ -2663,7 +2663,7 @@ nsPermissionManager::GetAllForPrincipal(
         index++;
       }
 
-      RefPtr<nsIPermission> permission = nsPermission::Create(
+      RefPtr<nsIPermission> permission = Permission::Create(
           aPrincipal, mTypeArray[perm.mType], perm.mPermission,
           perm.mExpireType, perm.mExpireTime, perm.mModificationTime);
       if (NS_WARN_IF(!permission)) {
@@ -2674,7 +2674,7 @@ nsPermissionManager::GetAllForPrincipal(
   }
 
   for (const auto& perm : strippedPerms) {
-    RefPtr<nsIPermission> permission = nsPermission::Create(
+    RefPtr<nsIPermission> permission = Permission::Create(
         aPrincipal, mTypeArray[perm.mType], perm.mPermission, perm.mExpireType,
         perm.mExpireTime, perm.mModificationTime);
     if (NS_WARN_IF(!permission)) {
@@ -2795,8 +2795,8 @@ void nsPermissionManager::NotifyObserversWithPermission(
     uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime,
     const char16_t* aData) {
   nsCOMPtr<nsIPermission> permission =
-      nsPermission::Create(aPrincipal, aType, aPermission, aExpireType,
-                           aExpireTime, aModificationTime);
+      Permission::Create(aPrincipal, aType, aPermission, aExpireType,
+                         aExpireTime, aModificationTime);
   if (permission) NotifyObservers(permission, aData);
 }
 
