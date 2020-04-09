@@ -85,7 +85,7 @@ class CompileDBBackend(CommonBackend):
 
         db = []
 
-        for (directory, filename, unified), cmd in self._db.iteritems():
+        for (directory, filename, unified), cmd in self._db.items():
             env = self._envs[directory]
             cmd = list(cmd)
             if unified is None:
