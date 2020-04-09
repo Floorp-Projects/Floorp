@@ -1540,10 +1540,13 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         const InitExpr& init = global.initExpr();
         switch (init.kind()) {
           case InitExpr::Kind::Constant: {
+            RootedVal dest(cx, Val(init.val()));
             if (global.isIndirect()) {
-              *(void**)globalAddr = globalObjs[i]->cell();
+              void* address = globalObjs[i]->cell();
+              *(void**)globalAddr = address;
+              CopyValPostBarriered((uint8_t*)address, dest.get());
             } else {
-              CopyValPostBarriered(globalAddr, Val(init.val()));
+              CopyValPostBarriered(globalAddr, dest.get());
             }
             break;
           }
