@@ -24,7 +24,7 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   // Wait for all tree view updated by react
-  let wait = waitForDOM(document, "#headers-panel .tree-section .treeLabel", 3);
+  let wait = waitForDOM(document, "#headers-panel .accordion-item", 3);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
@@ -34,13 +34,14 @@ add_task(async function() {
 
   let tabpanel = document.querySelector("#headers-panel");
   is(
-    tabpanel.querySelectorAll(".tree-section .treeLabel").length,
+    tabpanel.querySelectorAll(".accordion-item").length,
     3,
     "There should be 3 header sections displayed in this tabpanel."
   );
 
   is(
-    tabpanel.querySelectorAll(".tree-section .treeLabel")[2].textContent,
+    tabpanel.querySelectorAll(".accordion-item .accordion-header-label")[2]
+      .textContent,
     L10N.getStr("requestHeadersFromUpload") +
       " (" +
       L10N.getFormatStr("networkMenu.sizeB", 74) +
@@ -48,12 +49,8 @@ add_task(async function() {
     "The request headers from upload section doesn't have the correct title."
   );
 
-  let labels = tabpanel.querySelectorAll(
-    ".properties-view tr:not(.tree-section) .treeLabelCell .treeLabel"
-  );
-  let values = tabpanel.querySelectorAll(
-    ".properties-view tr:not(.tree-section) .treeValueCell .objectBox"
-  );
+  let labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+  let values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
   is(
     labels[labels.length - 2].textContent,
@@ -62,7 +59,7 @@ add_task(async function() {
   );
   is(
     values[values.length - 2].textContent,
-    "application/x-www-form-urlencoded",
+    '"application/x-www-form-urlencoded"',
     "The first request header value was incorrect."
   );
   is(
@@ -72,7 +69,7 @@ add_task(async function() {
   );
   is(
     values[values.length - 1].textContent,
-    "hello world!",
+    '"hello world!"',
     "The second request header value was incorrect."
   );
 
