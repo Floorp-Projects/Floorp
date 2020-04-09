@@ -887,7 +887,8 @@ nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
 
   // otherwise we get from the doc's principal
   if (!baseURI) {
-    nsresult rv = mPrincipal->GetURI(getter_AddRefs(baseURI));
+    auto* basePrin = BasePrincipal::Cast(mPrincipal);
+    nsresult rv = basePrin->GetURI(getter_AddRefs(baseURI));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
