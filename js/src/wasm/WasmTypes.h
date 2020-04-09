@@ -1309,7 +1309,7 @@ typedef Vector<StructType, 0, SystemAllocPolicy> StructTypeVector;
 
 class InitExpr {
  public:
-  enum class Kind { Constant, GetGlobal };
+  enum class Kind { Constant, GetGlobal, RefFunc };
 
  private:
   // Note: all this private data is currently (de)serialized via memcpy().
@@ -1320,6 +1320,7 @@ class InitExpr {
       uint32_t index_;
       ValType type_;
     } global;
+    uint32_t refFuncIndex_;
     U() : global{} {}
   } u;
 
@@ -1332,6 +1333,10 @@ class InitExpr {
       : kind_(Kind::GetGlobal) {
     u.global.index_ = globalIndex;
     u.global.type_ = type;
+  }
+
+  explicit InitExpr(uint32_t refFuncIndex) : kind_(Kind::RefFunc) {
+    u.refFuncIndex_ = refFuncIndex;
   }
 
   Kind kind() const { return kind_; }
@@ -1347,12 +1352,19 @@ class InitExpr {
     return u.global.index_;
   }
 
+  uint32_t refFuncIndex() const {
+    MOZ_ASSERT(kind() == Kind::RefFunc);
+    return u.refFuncIndex_;
+  }
+
   ValType type() const {
     switch (kind()) {
       case Kind::Constant:
         return u.val_.type();
       case Kind::GetGlobal:
         return u.global.type_;
+      case Kind::RefFunc:
+        return ValType(RefType::func());
     }
     MOZ_CRASH("unexpected initExpr type");
   }
