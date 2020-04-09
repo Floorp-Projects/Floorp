@@ -77,3 +77,9 @@ impl CFMutableAttributedString {
         }
     }
 }
+
+impl Default for CFMutableAttributedString {
+    fn default() -> Self {
+        Self::new()
+    }
+}

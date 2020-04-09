@@ -757,7 +757,9 @@ impl PrivateCapabilities {
             os_is_mac,
             os_version: (major as u32, minor as u32),
             msl_version: if os_is_mac {
-                if Self::version_at_least(major, minor, 10, 14) {
+                if Self::version_at_least(major, minor, 10, 15) {
+                    MTLLanguageVersion::V2_2
+                } else if Self::version_at_least(major, minor, 10, 14) {
                     MTLLanguageVersion::V2_1
                 } else if Self::version_at_least(major, minor, 10, 13) {
                     MTLLanguageVersion::V2_0
@@ -768,6 +770,8 @@ impl PrivateCapabilities {
                 } else {
                     MTLLanguageVersion::V1_0
                 }
+            } else if Self::version_at_least(major, minor, 13, 0) {
+                MTLLanguageVersion::V2_2
             } else if Self::version_at_least(major, minor, 12, 0) {
                 MTLLanguageVersion::V2_1
             } else if Self::version_at_least(major, minor, 11, 0) {

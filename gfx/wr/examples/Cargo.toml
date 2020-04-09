@@ -68,4 +68,4 @@ webrender = { path = "../webrender" }
 winit = "0.19"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.6.4"
+core-foundation = "0.7"

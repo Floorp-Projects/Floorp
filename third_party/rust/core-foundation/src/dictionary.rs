@@ -44,8 +44,8 @@ impl<K, V> CFDictionary<K, V> {
 
         unsafe {
             let dictionary_ref = CFDictionaryCreate(kCFAllocatorDefault,
-                                                    mem::transmute(keys.as_ptr()),
-                                                    mem::transmute(values.as_ptr()),
+                                                    keys.as_ptr(),
+                                                    values.as_ptr(),
                                                     keys.len().to_CFIndex(),
                                                     &kCFTypeDictionaryKeyCallBacks,
                                                     &kCFTypeDictionaryValueCallBacks);
@@ -56,6 +56,13 @@ impl<K, V> CFDictionary<K, V> {
     #[inline]
     pub fn to_untyped(&self) -> CFDictionary {
         unsafe { CFDictionary::wrap_under_get_rule(self.0) }
+    }
+
+    /// Returns a `CFMutableDictionary` pointing to the same underlying dictionary as this immutable one.
+    /// This should only be used when the underlying dictionary is mutable.
+    #[inline]
+    pub unsafe fn to_mutable(&self) -> CFMutableDictionary<K, V> {
+        CFMutableDictionary::wrap_under_get_rule(self.0 as CFMutableDictionaryRef)
     }
 
     /// Returns the same dictionary, but with the types reset to void pointers.
@@ -103,7 +110,7 @@ impl<K, V> CFDictionary<K, V> {
     #[inline]
     pub fn get<'a, T: ToVoid<K>>(&'a self, key: T) -> ItemRef<'a, V> where V: FromVoid, K: ToVoid<K> {
         let ptr = key.to_void();
-        self.find(key).expect(&format!("No entry found for key {:p}", ptr))
+        self.find(key).unwrap_or_else(|| panic!("No entry found for key {:p}", ptr))
     }
 
     pub fn get_keys_and_values(&self) -> (Vec<*const c_void>, Vec<*const c_void>) {
@@ -223,7 +230,7 @@ impl<K, V> CFMutableDictionary<K, V> {
     #[inline]
     pub fn get<'a>(&'a self, key: &K) -> ItemRef<'a, V> where V: FromVoid, K: ToVoid<K> {
         let ptr = key.to_void();
-        self.find(&key).expect(&format!("No entry found for key {:p}", ptr))
+        self.find(&key).unwrap_or_else(|| panic!("No entry found for key {:p}", ptr))
     }
 
     pub fn get_keys_and_values(&self) -> (Vec<*const c_void>, Vec<*const c_void>) {
@@ -272,6 +279,12 @@ impl<K, V> CFMutableDictionary<K, V> {
     }
 }
 
+impl<K, V> Default for CFMutableDictionary<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a, K, V> From<&'a CFDictionary<K, V>> for CFMutableDictionary<K, V> {
     /// Creates a new mutable dictionary with the key-value pairs from another dictionary.
     /// The capacity of the new mutable dictionary is not limited.
@@ -309,8 +322,8 @@ pub mod test {
         ]);
 
         let (v1, v2) = d.get_keys_and_values();
-        assert!(v1 == &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
-        assert!(v2 == &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
+        assert_eq!(v1, &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
+        assert_eq!(v2, &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
     }
 
     #[test]
@@ -329,15 +342,15 @@ pub mod test {
         assert_eq!(d.len(), 3);
 
         let (v1, v2) = d.get_keys_and_values();
-        assert!(v1 == &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
-        assert!(v2 == &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
+        assert_eq!(v1, &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
+        assert_eq!(v2, &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
 
         d.remove(baz);
         assert_eq!(d.len(), 2);
 
         let (v1, v2) = d.get_keys_and_values();
-        assert!(v1 == &[bar.as_CFTypeRef(), foo.as_CFTypeRef()]);
-        assert!(v2 == &[boo.as_CFTypeRef(), n42.as_CFTypeRef()]);
+        assert_eq!(v1, &[bar.as_CFTypeRef(), foo.as_CFTypeRef()]);
+        assert_eq!(v2, &[boo.as_CFTypeRef(), n42.as_CFTypeRef()]);
 
         d.remove_all();
         assert_eq!(d.len(), 0)

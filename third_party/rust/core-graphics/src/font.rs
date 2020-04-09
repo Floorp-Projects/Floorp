@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ptr;
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID, TCFType};
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::data::{CFData, CFDataRef};
@@ -117,7 +116,7 @@ impl CGFont {
 
     pub fn copy_table_for_tag(&self, tag: u32) -> Option<CFData> {
         let data_ref = unsafe { CGFontCopyTableForTag(self.as_ptr(), tag) };
-        if data_ref != ptr::null() {
+        if !data_ref.is_null() {
             Some(unsafe { TCFType::wrap_under_create_rule(data_ref) })
         } else {
             None

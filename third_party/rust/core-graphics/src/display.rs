@@ -21,13 +21,13 @@ use core_foundation::base::{CFRetain, TCFType};
 use image::CGImage;
 use foreign_types::ForeignType;
 
-pub type CGDirectDisplayID = libc::uint32_t;
-pub type CGWindowID        = libc::uint32_t;
+pub type CGDirectDisplayID = u32;
+pub type CGWindowID        = u32;
 
 pub const kCGNullWindowID: CGWindowID = 0 as CGWindowID;
+pub const kCGNullDirectDisplayID: CGDirectDisplayID = 0 as CGDirectDisplayID;
 
-
-pub type CGWindowListOption = libc::uint32_t;
+pub type CGWindowListOption = u32;
 
 pub const kCGWindowListOptionAll:              CGWindowListOption    = 0;
 pub const kCGWindowListOptionOnScreenOnly:     CGWindowListOption    = 1 << 0;
@@ -36,7 +36,7 @@ pub const kCGWindowListOptionOnScreenBelowWindow: CGWindowListOption = 1 << 2;
 pub const kCGWindowListOptionIncludingWindow:  CGWindowListOption    = 1 << 3;
 pub const kCGWindowListExcludeDesktopElements: CGWindowListOption    = 1 << 4;
 
-pub type CGWindowImageOption = libc::uint32_t;
+pub type CGWindowImageOption = u32;
 
 pub const kCGWindowImageDefault: CGWindowImageOption = 0;
 pub const kCGWindowImageBoundsIgnoreFraming: CGWindowImageOption = 1 << 0;
@@ -123,6 +123,11 @@ impl CGDisplay {
         CGDisplay::new(unsafe { CGMainDisplayID() })
     }
 
+    /// A value that will never correspond to actual hardware.
+    pub fn null_display() -> CGDisplay {
+        CGDisplay::new(kCGNullDirectDisplayID)
+    }
+
     /// Returns the bounds of a display in the global display coordinate space.
     #[inline]
     pub fn bounds(&self) -> CGRect {
@@ -200,6 +205,37 @@ impl CGDisplay {
         }
     }
 
+    /// Configures the origin of a display in the global display coordinate space.
+    pub fn configure_display_origin(
+        &self,
+        config_ref: &CGDisplayConfigRef,
+        x: i32,
+        y: i32,
+    ) -> Result<(), CGError> {
+        let result = unsafe { CGConfigureDisplayOrigin(*config_ref, self.id, x, y) };
+
+        if result == 0 {
+            Ok(())
+        } else {
+            Err(result)
+        }
+    }
+
+    /// Changes the configuration of a mirroring set.
+    pub fn configure_display_mirror_of_display(
+        &self,
+        config_ref: &CGDisplayConfigRef,
+        master: &CGDisplay,
+    ) -> Result<(), CGError> {
+        let result = unsafe { CGConfigureDisplayMirrorOfDisplay(*config_ref, self.id, master.id) };
+
+        if result == 0 {
+            Ok(())
+        } else {
+            Err(result)
+        }
+    }
+
     /// Returns an image containing the contents of the specified display.
     #[inline]
     pub fn image(&self) -> Option<CGImage> {
@@ -261,7 +297,7 @@ impl CGDisplay {
     ) -> Option<CFArray> {
         let relative_to_window = relative_to_window.unwrap_or(kCGNullWindowID);
         let array_ref = unsafe { CGWindowListCopyWindowInfo(option, relative_to_window) };
-        if array_ref != ptr::null() {
+        if !array_ref.is_null() {
             Some(unsafe { TCFType::wrap_under_create_rule(array_ref) })
         } else {
             None
@@ -398,7 +434,7 @@ impl CGDisplay {
     /// Provides a list of displays that are active (or drawable).
     #[inline]
     pub fn active_displays() -> Result<Vec<CGDirectDisplayID>, CGError> {
-        let count = try!(CGDisplay::active_display_count());
+        let count = CGDisplay::active_display_count()?;
         let mut buf: Vec<CGDirectDisplayID> = vec![0; count as usize];
         let result =
             unsafe { CGGetActiveDisplayList(count as u32, buf.as_mut_ptr(), ptr::null_mut()) };
@@ -412,7 +448,7 @@ impl CGDisplay {
     /// Provides count of displays that are active (or drawable).
     #[inline]
     pub fn active_display_count() -> Result<u32, CGError> {
-        let mut count: libc::uint32_t = 0;
+        let mut count: u32 = 0;
         let result = unsafe { CGGetActiveDisplayList(0, ptr::null_mut(), &mut count) };
         if result == 0 {
             Ok(count as u32)
@@ -488,7 +524,7 @@ impl CGDisplayMode {
     ) -> Option<Vec<CGDisplayMode>> {
         let array_opt: Option<CFArray> = unsafe {
             let array_ref = CGDisplayCopyAllDisplayModes(display_id, options);
-            if array_ref != ptr::null() {
+            if !array_ref.is_null() {
                 Some(CFArray::wrap_under_create_rule(array_ref))
             } else {
                 None
@@ -597,28 +633,28 @@ extern "C" {
     pub fn CGDisplayPrimaryDisplay(display: CGDirectDisplayID) -> CGDirectDisplayID;
     pub fn CGDisplayRotation(display: CGDirectDisplayID) -> libc::c_double;
     pub fn CGDisplayScreenSize(display: CGDirectDisplayID) -> CGSize;
-    pub fn CGDisplaySerialNumber(display: CGDirectDisplayID) -> libc::uint32_t;
-    pub fn CGDisplayUnitNumber(display: CGDirectDisplayID) -> libc::uint32_t;
+    pub fn CGDisplaySerialNumber(display: CGDirectDisplayID) -> u32;
+    pub fn CGDisplayUnitNumber(display: CGDirectDisplayID) -> u32;
     pub fn CGDisplayUsesOpenGLAcceleration(display: CGDirectDisplayID) -> boolean_t;
-    pub fn CGDisplayVendorNumber(display: CGDirectDisplayID) -> libc::uint32_t;
+    pub fn CGDisplayVendorNumber(display: CGDirectDisplayID) -> u32;
     pub fn CGGetActiveDisplayList(
-        max_displays: libc::uint32_t,
+        max_displays: u32,
         active_displays: *mut CGDirectDisplayID,
-        display_count: *mut libc::uint32_t,
+        display_count: *mut u32,
     ) -> CGError;
     pub fn CGGetDisplaysWithRect(
         rect: CGRect,
-        max_displays: libc::uint32_t,
+        max_displays: u32,
         displays: *mut CGDirectDisplayID,
-        matching_display_count: *mut libc::uint32_t,
+        matching_display_count: *mut u32,
     ) -> CGError;
-    pub fn CGDisplayModelNumber(display: CGDirectDisplayID) -> libc::uint32_t;
+    pub fn CGDisplayModelNumber(display: CGDirectDisplayID) -> u32;
     pub fn CGDisplayPixelsHigh(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayPixelsWide(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayBounds(display: CGDirectDisplayID) -> CGRect;
     pub fn CGDisplayCreateImage(display: CGDirectDisplayID) -> ::sys::CGImageRef;
 
-    pub fn CGBeginDisplayConfiguration(config: *const CGDisplayConfigRef) -> CGError;
+    pub fn CGBeginDisplayConfiguration(config: *mut CGDisplayConfigRef) -> CGError;
     pub fn CGCancelDisplayConfiguration(config: CGDisplayConfigRef) -> CGError;
     pub fn CGCompleteDisplayConfiguration(
         config: CGDisplayConfigRef,
@@ -630,6 +666,17 @@ extern "C" {
         mode: ::sys::CGDisplayModeRef,
         options: CFDictionaryRef,
     ) -> CGError;
+    pub fn CGConfigureDisplayMirrorOfDisplay(
+        config: CGDisplayConfigRef,
+        display: CGDirectDisplayID,
+        master: CGDirectDisplayID,
+    ) -> CGError;
+    pub fn CGConfigureDisplayOrigin(
+        config: CGDisplayConfigRef,
+        display: CGDirectDisplayID,
+        x: i32,
+        y: i32,
+    ) -> CGError;
 
     pub fn CGDisplayCopyDisplayMode(display: CGDirectDisplayID) -> ::sys::CGDisplayModeRef;
     pub fn CGDisplayModeGetHeight(mode: ::sys::CGDisplayModeRef) -> libc::size_t;
@@ -637,7 +684,7 @@ extern "C" {
     pub fn CGDisplayModeGetPixelHeight(mode: ::sys::CGDisplayModeRef) -> libc::size_t;
     pub fn CGDisplayModeGetPixelWidth(mode: ::sys::CGDisplayModeRef) -> libc::size_t;
     pub fn CGDisplayModeGetRefreshRate(mode: ::sys::CGDisplayModeRef) -> libc::c_double;
-    pub fn CGDisplayModeGetIOFlags(mode: ::sys::CGDisplayModeRef) -> libc::uint32_t;
+    pub fn CGDisplayModeGetIOFlags(mode: ::sys::CGDisplayModeRef) -> u32;
     pub fn CGDisplayModeCopyPixelEncoding(mode: ::sys::CGDisplayModeRef) -> CFStringRef;
 
     pub fn CGDisplayCopyAllDisplayModes(

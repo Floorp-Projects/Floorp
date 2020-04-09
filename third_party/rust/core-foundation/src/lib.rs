@@ -6,7 +6,14 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 #![allow(non_snake_case)]
+
+//! This crate provides wrappers around the underlying CoreFoundation
+//! types and functions that are available on Apple's operating systems.
+//!
+//! It also provides a framework for other crates to use when wrapping
+//! other frameworks that use the CoreFoundation framework.
 
 extern crate core_foundation_sys;
 extern crate libc;
@@ -18,6 +25,34 @@ use base::TCFType;
 
 pub unsafe trait ConcreteCFType: TCFType {}
 
+/// Declare a Rust type that wraps an underlying CoreFoundation type.
+///
+/// This will provide an implementation of `Drop` using [`CFRelease`].
+/// The type must have an implementation of the [`TCFType`] trait, usually
+/// provided using the [`impl_TCFType`] macro.
+///
+/// ```
+/// #[macro_use] extern crate core_foundation;
+/// // Make sure that the `TCFType` trait is in scope.
+/// use core_foundation::base::{CFTypeID, TCFType};
+///
+/// extern "C" {
+///     // We need a function that returns the `CFTypeID`.
+///     pub fn ShrubberyGetTypeID() -> CFTypeID;
+/// }
+///
+/// pub struct __Shrubbery {}
+/// // The ref type must be a pointer to the underlying struct.
+/// pub type ShrubberyRef = *const __Shrubbery;
+///
+/// declare_TCFType!(Shrubbery, ShrubberyRef);
+/// impl_TCFType!(Shrubbery, ShrubberyRef, ShrubberyGetTypeID);
+/// # fn main() {}
+/// ```
+///
+/// [`CFRelease`]: https://developer.apple.com/documentation/corefoundation/1521153-cfrelease
+/// [`TCFType`]: base/trait.TCFType.html
+/// [`impl_TCFType`]: macro.impl_TCFType.html
 #[macro_export]
 macro_rules! declare_TCFType {
     (
@@ -35,6 +70,13 @@ macro_rules! declare_TCFType {
     }
 }
 
+/// Provide an implementation of the [`TCFType`] trait for the Rust
+/// wrapper type around an underlying CoreFoundation type.
+///
+/// See [`declare_TCFType`] for details.
+///
+/// [`declare_TCFType`]: macro.declare_TCFType.html
+/// [`TCFType`]: base/trait.TCFType.html
 #[macro_export]
 macro_rules! impl_TCFType {
     ($ty:ident, $ty_ref:ident, $ty_id:ident) => {
@@ -122,6 +164,18 @@ macro_rules! impl_TCFType {
 }
 
 
+/// Implement `std::fmt::Debug` for the given type.
+///
+/// This will invoke the implementation of `Debug` for [`CFType`]
+/// which invokes [`CFCopyDescription`].
+///
+/// The type must have an implementation of the [`TCFType`] trait, usually
+/// provided using the [`impl_TCFType`] macro.
+///
+/// [`CFType`]: base/struct.CFType.html#impl-Debug
+/// [`CFCopyDescription`]: https://developer.apple.com/documentation/corefoundation/1521252-cfcopydescription?language=objc
+/// [`TCFType`]: base/trait.TCFType.html
+/// [`impl_TCFType`]: macro.impl_TCFType.html
 #[macro_export]
 macro_rules! impl_CFTypeDescription {
     ($ty:ident) => {
@@ -162,6 +216,7 @@ pub mod array;
 pub mod attributed_string;
 pub mod base;
 pub mod boolean;
+pub mod characterset;
 pub mod data;
 pub mod date;
 pub mod dictionary;
