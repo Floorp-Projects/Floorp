@@ -20,7 +20,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/addonutils.js',
     'modules/bookmark_repair.js',
     'modules/bookmark_validator.js',
-    'modules/bridged_engine.js',
     'modules/browserid_identity.js',
     'modules/collection_repair.js',
     'modules/collection_validator.js',
