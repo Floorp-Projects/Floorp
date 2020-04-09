@@ -15,6 +15,16 @@ This means you might have to go searching through the dependency tree to get a f
 A ping sent after a Fennec->Fenix migration was completed.
 
 
+This ping includes the [client id](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section).
+
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/issues/5888>
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
