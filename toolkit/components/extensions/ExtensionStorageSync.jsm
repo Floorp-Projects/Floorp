@@ -718,24 +718,19 @@ function cleanUpForContext(extension, context) {
 /**
  * Generate a promise that produces the Collection for an extension.
  *
- * @param {CryptoCollection} cryptoCollection
  * @param {Extension} extension
  *                    The extension whose collection needs to
  *                    be opened.
+ * @param {Object} options
+ *                 Options to be passed to the call to `.collection()`.
  * @returns {Promise<Collection>}
  */
-const openCollection = async function(cryptoCollection, extension) {
+const openCollection = async function(extension, options = {}) {
   let collectionId = extension.id;
   const { kinto } = await storageSyncInit();
-  const remoteTransformers = [
-    new CollectionKeyEncryptionRemoteTransformer(
-      cryptoCollection,
-      extension.id
-    ),
-  ];
   const coll = kinto.collection(collectionId, {
+    ...options,
     idSchema: storageSyncIdSchema,
-    remoteTransformers,
   });
   return coll;
 };
@@ -795,7 +790,13 @@ class ExtensionStorageSync {
     await this.ensureCanSync(extIds);
     await this.checkSyncKeyRing();
     const promises = Array.from(extensions, extension => {
-      return openCollection(this.cryptoCollection, extension).then(coll => {
+      const remoteTransformers = [
+        new CollectionKeyEncryptionRemoteTransformer(
+          this.cryptoCollection,
+          extension.id
+        ),
+      ];
+      return openCollection(extension, { remoteTransformers }).then(coll => {
         return this.sync(extension, coll);
       });
     });
@@ -1211,7 +1212,7 @@ class ExtensionStorageSync {
       });
     }
     this.registerInUse(extension, context);
-    return openCollection(this.cryptoCollection, extension);
+    return openCollection(extension);
   }
 
   async set(extension, items, context) {
@@ -1277,7 +1278,7 @@ class ExtensionStorageSync {
     log.debug(`Clearing extension data for ${JSON.stringify(extIds)}`);
     if (extIds.length) {
       const promises = Array.from(extensions, extension => {
-        return openCollection(this.cryptoCollection, extension).then(coll => {
+        return openCollection(extension).then(coll => {
           return coll.clear();
         });
       });
