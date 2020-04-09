@@ -156,11 +156,11 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   nsresult ShouldLoad(const AsyncReportViolationCallback& aCallback,
                       nsContentPolicyType aContentType,
                       nsICSPEventListener* aCSPEventListener,
-                      nsIURI* aContentLocation,
+                      nsIURI* aContentLocation, nsISupports* aRequestContext,
                       const nsACString& aMimeTypeGuess,
                       nsIURI* aOriginalURIIfRedirect,
                       bool aSendViolationReports, const nsAString& aNonce,
-                      bool aParserCreated, int16_t* outDecision);
+                      int16_t* outDecision);
 
  private:
   void EnsureIPCPoliciesRead();
