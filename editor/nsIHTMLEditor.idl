@@ -262,8 +262,9 @@ interface nsIHTMLEditor : nsISupports
   void removeList(in AString aListType);
 
   /**
-   * GetElementOrParentByTagName() looks for an element node whose name matches
-   * aTagName from aNode or anchor node of Selection to <body> element.
+   * GetElementOrParentByTagName() returns an inclusive ancestor element whose
+   * name matches aTagName from aNode or anchor node of Selection to <body>
+   * element or null if there is no element matching with aTagName.
    *
    * @param aTagName        The tag name which you want to look for.
    *                        Must not be empty string.

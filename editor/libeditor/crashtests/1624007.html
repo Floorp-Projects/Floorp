@@ -1,0 +1,19 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const element = document.createElement('t')
+        document.documentElement.appendChild(element)
+        document.documentElement.contentEditable = true
+        const selection = self.getSelection()
+        const range_1 = new Range()
+        range_1.setStart(element, (1715865858 % element.childNodes))
+        document.execCommand('enableObjectResizing', false, true)
+        const range_2 = new Range()
+        selection.addRange(range_2)
+        selection.addRange(range_1)
+        document.execCommand('bold', false, null)
+      })
+    </script>
+</head>
+</html>
