@@ -66,6 +66,7 @@ class nsContainerFrame : public nsSplittableFrame {
             ListFlags aFlags = ListFlags()) const override;
   void ListWithMatchedRules(FILE* out = stderr,
                             const char* aPrefix = "") const override;
+  virtual void ExtraContainerFrameInfo(nsACString& aTo) const;
 #endif
 
   // nsContainerFrame methods
