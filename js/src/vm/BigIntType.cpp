@@ -3546,7 +3546,8 @@ static inline BigInt* ParseStringBigIntLiteral(JSContext* cx,
       start++;
       return BigInt::parseLiteralDigits(cx, Range<const CharT>(start, end), 10,
                                         isNegative, haveParseError);
-    } else if (start[0] == '-') {
+    }
+    if (start[0] == '-') {
       bool isNegative = true;
       start++;
       return BigInt::parseLiteralDigits(cx, Range<const CharT>(start, end), 10,
