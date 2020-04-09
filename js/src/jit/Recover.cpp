@@ -307,17 +307,18 @@ RSignExtendInt32::RSignExtendInt32(CompactBufferReader& reader) {
 bool RSignExtendInt32::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue operand(cx, iter.read());
 
+  int32_t i;
+  if (!ToInt32(cx, operand, &i)) {
+    return false;
+  }
+
   int32_t result;
   switch (MSignExtendInt32::Mode(mode_)) {
     case MSignExtendInt32::Byte:
-      if (!js::SignExtendOperation<int8_t>(cx, operand, &result)) {
-        return false;
-      }
+      result = static_cast<int8_t>(i);
       break;
     case MSignExtendInt32::Half:
-      if (!js::SignExtendOperation<int16_t>(cx, operand, &result)) {
-        return false;
-      }
+      result = static_cast<int16_t>(i);
       break;
   }
 
