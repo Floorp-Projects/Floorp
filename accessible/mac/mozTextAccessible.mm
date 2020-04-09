@@ -524,7 +524,7 @@ inline NSString* ToNSString(id aValue) {
       valueWithRange:NSMakeRange(0, textAcc ? textAcc->CharacterCount() : proxy->CharacterCount())];
 }
 
-- (void)firePlatformEvent:(uint32_t)eventType {
+- (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
@@ -535,7 +535,7 @@ inline NSString* ToNSString(id aValue) {
       [self postNotification:NSAccessibilitySelectedTextChangedNotification];
       break;
     default:
-      [super firePlatformEvent:eventType];
+      [super handleAccessibleEvent:eventType];
       break;
   }
 }
