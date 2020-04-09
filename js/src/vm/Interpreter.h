@@ -547,6 +547,23 @@ bool ModValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
 bool PowValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
                MutableHandleValue res);
 
+bool BitNot(JSContext* cx, MutableHandleValue in, MutableHandleValue res);
+
+bool BitXor(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+            MutableHandleValue res);
+
+bool BitOr(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+           MutableHandleValue res);
+
+bool BitAnd(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+            MutableHandleValue res);
+
+bool BitLsh(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+            MutableHandleValue res);
+
+bool BitRsh(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+            MutableHandleValue res);
+
 bool UrshValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
                 MutableHandleValue res);
 
