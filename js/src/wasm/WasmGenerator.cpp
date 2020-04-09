@@ -379,11 +379,17 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
         seg->active() && env_->tables[seg->tableIndex].kind == TableKind::AsmJS;
     if (!isAsmJS) {
       for (uint32_t funcIndex : seg->elemFuncIndices) {
-        if (funcIndex == NullFuncIndex) {
-          continue;
+        if (funcIndex != NullFuncIndex) {
+          addOrMerge(ExportedFunc(funcIndex, false));
         }
-        addOrMerge(ExportedFunc(funcIndex, false));
       }
+    }
+  }
+
+  for (const GlobalDesc& global : env_->globals) {
+    if (global.isVariable() &&
+        global.initExpr().kind() == InitExpr::Kind::RefFunc) {
+      addOrMerge(ExportedFunc(global.initExpr().refFuncIndex(), false));
     }
   }
 

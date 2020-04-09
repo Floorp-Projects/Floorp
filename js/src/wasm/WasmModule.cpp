@@ -487,13 +487,15 @@ bool Module::extractCode(JSContext* cx, Tier tier,
   return true;
 }
 
-static uint32_t EvaluateInitExpr(const ValVector& globalImportValues,
-                                 InitExpr initExpr) {
+static uint32_t EvaluateOffsetInitExpr(const ValVector& globalImportValues,
+                                       InitExpr initExpr) {
   switch (initExpr.kind()) {
     case InitExpr::Kind::Constant:
       return initExpr.val().i32();
     case InitExpr::Kind::GetGlobal:
       return globalImportValues[initExpr.globalIndex()].i32();
+    case InitExpr::Kind::RefFunc:
+      break;
   }
 
   MOZ_CRASH("bad initializer expression");
@@ -540,7 +542,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
       }
 
       uint32_t tableLength = tables[seg->tableIndex]->length();
-      uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
+      uint32_t offset =
+          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
 
       if (offset > tableLength || tableLength - offset < seg->length()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -556,7 +559,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
           continue;
         }
 
-        uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
+        uint32_t offset =
+            EvaluateOffsetInitExpr(globalImportValues, seg->offset());
 
         if (offset > memoryLength ||
             memoryLength - offset < seg->bytes.length()) {
@@ -572,7 +576,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
   for (const ElemSegment* seg : elemSegments_) {
     if (seg->active()) {
-      uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
+      uint32_t offset =
+          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->length();
 
       if (!eagerBoundsCheck) {
@@ -600,7 +605,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         continue;
       }
 
-      uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
+      uint32_t offset =
+          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->bytes.length();
 
       if (!eagerBoundsCheck) {
@@ -996,25 +1002,19 @@ SharedCode Module::getDebugEnabledCode() const {
 static bool GetFunctionExport(JSContext* cx,
                               HandleWasmInstanceObject instanceObj,
                               const JSFunctionVector& funcImports,
-                              const Export& exp, MutableHandleValue val) {
-  if (exp.funcIndex() < funcImports.length() &&
-      IsWasmExportedFunction(funcImports[exp.funcIndex()])) {
-    val.setObject(*funcImports[exp.funcIndex()]);
+                              uint32_t funcIndex, MutableHandleFunction func) {
+  if (funcIndex < funcImports.length() &&
+      IsWasmExportedFunction(funcImports[funcIndex])) {
+    func.set(funcImports[funcIndex]);
     return true;
   }
 
-  RootedFunction fun(cx);
-  if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcIndex(),
-                                        &fun)) {
-    return false;
-  }
-
-  val.setObject(*fun);
-  return true;
+  return instanceObj->getExportedFunction(cx, instanceObj, funcIndex, func);
 }
 
-static void GetGlobalExport(JSContext* cx, const GlobalDesc& global,
-                            uint32_t globalIndex,
+static bool GetGlobalExport(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                            const JSFunctionVector& funcImports,
+                            const GlobalDesc& global, uint32_t globalIndex,
                             const ValVector& globalImportValues,
                             const WasmGlobalObjectVector& globalObjs,
                             MutableHandleValue val) {
@@ -1030,7 +1030,7 @@ static void GetGlobalExport(JSContext* cx, const GlobalDesc& global,
   // Indirect exported globals that are not imported, are initialized in
   // Instance::init.
   if (global.isIndirect() || global.isImport()) {
-    return;
+    return true;
   }
 
   // This must be an exported immutable global defined in this module. The
@@ -1050,6 +1050,14 @@ static void GetGlobalExport(JSContext* cx, const GlobalDesc& global,
         case InitExpr::Kind::GetGlobal:
           globalVal.set(Val(globalImportValues[init.globalIndex()]));
           break;
+        case InitExpr::Kind::RefFunc:
+          RootedFunction func(cx);
+          if (!GetFunctionExport(cx, instanceObj, funcImports,
+                                 init.refFuncIndex(), &func)) {
+            return false;
+          }
+          globalVal.set(
+              Val(ValType(RefType::func()), FuncRef::fromJSFunction(func)));
       }
       break;
     }
@@ -1063,6 +1071,7 @@ static void GetGlobalExport(JSContext* cx, const GlobalDesc& global,
   }
 
   globalObj->setVal(cx, globalVal);
+  return true;
 }
 
 static bool CreateExportObject(
@@ -1076,11 +1085,12 @@ static bool CreateExportObject(
 
   if (metadata.isAsmJS() && exports.length() == 1 &&
       strlen(exports[0].fieldName()) == 0) {
-    RootedValue val(cx);
-    if (!GetFunctionExport(cx, instanceObj, funcImports, exports[0], &val)) {
+    RootedFunction func(cx);
+    if (!GetFunctionExport(cx, instanceObj, funcImports, exports[0].funcIndex(),
+                           &func)) {
       return false;
     }
-    instanceObj->initExportsObj(val.toObject());
+    instanceObj->initExportsObj(*func.get());
     return true;
   }
 
@@ -1104,22 +1114,32 @@ static bool CreateExportObject(
     RootedId id(cx, AtomToId(atom));
     RootedValue val(cx);
     switch (exp.kind()) {
-      case DefinitionKind::Function:
-        if (!GetFunctionExport(cx, instanceObj, funcImports, exp, &val)) {
+      case DefinitionKind::Function: {
+        RootedFunction func(cx);
+        if (!GetFunctionExport(cx, instanceObj, funcImports, exp.funcIndex(),
+                               &func)) {
+          return false;
+        }
+        val = ObjectValue(*func);
+        break;
+      }
+      case DefinitionKind::Table: {
+        val = ObjectValue(*tableObjs[exp.tableIndex()]);
+        break;
+      }
+      case DefinitionKind::Memory: {
+        val = ObjectValue(*memoryObj);
+        break;
+      }
+      case DefinitionKind::Global: {
+        const GlobalDesc& global = globals[exp.globalIndex()];
+        if (!GetGlobalExport(cx, instanceObj, funcImports, global,
+                             exp.globalIndex(), globalImportValues, globalObjs,
+                             &val)) {
           return false;
         }
         break;
-      case DefinitionKind::Table:
-        val = ObjectValue(*tableObjs[exp.tableIndex()]);
-        break;
-      case DefinitionKind::Memory:
-        val = ObjectValue(*memoryObj);
-        break;
-      case DefinitionKind::Global:
-        const GlobalDesc& global = globals[exp.globalIndex()];
-        GetGlobalExport(cx, global, exp.globalIndex(), globalImportValues,
-                        globalObjs, &val);
-        break;
+      }
     }
 
     if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE)) {
