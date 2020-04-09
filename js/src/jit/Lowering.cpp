@@ -1375,7 +1375,7 @@ void LIRGenerator::visitMinMax(MMinMax* ins) {
   ReorderCommutative(&first, &second, ins);
 
   LMinMaxBase* lir;
-  switch (ins->specialization()) {
+  switch (ins->type()) {
     case MIRType::Int32:
       lir = new (alloc())
           LMinMaxI(useRegisterAtStart(first), useRegisterOrConstant(second));
@@ -1620,9 +1620,9 @@ void LIRGenerator::visitAdd(MAdd* ins) {
   MDefinition* rhs = ins->getOperand(1);
 
   MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(ins->specialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
 
-  if (ins->specialization() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
     ReorderCommutative(&lhs, &rhs, ins);
     LAddI* lir = new (alloc()) LAddI;
@@ -1636,7 +1636,7 @@ void LIRGenerator::visitAdd(MAdd* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(lhs->type() == MIRType::Int64);
     ReorderCommutative(&lhs, &rhs, ins);
     LAddI64* lir = new (alloc()) LAddI64;
@@ -1644,14 +1644,14 @@ void LIRGenerator::visitAdd(MAdd* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Double) {
+  if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     ReorderCommutative(&lhs, &rhs, ins);
     lowerForFPU(new (alloc()) LMathD(JSOp::Add), ins, lhs, rhs);
     return;
   }
 
-  if (ins->specialization() == MIRType::Float32) {
+  if (ins->type() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
     ReorderCommutative(&lhs, &rhs, ins);
     lowerForFPU(new (alloc()) LMathF(JSOp::Add), ins, lhs, rhs);
@@ -1666,9 +1666,9 @@ void LIRGenerator::visitSub(MSub* ins) {
   MDefinition* rhs = ins->rhs();
 
   MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(ins->specialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
 
-  if (ins->specialization() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
 
     LSubI* lir = new (alloc()) LSubI;
@@ -1681,20 +1681,20 @@ void LIRGenerator::visitSub(MSub* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(lhs->type() == MIRType::Int64);
     LSubI64* lir = new (alloc()) LSubI64;
     lowerForALUInt64(lir, ins, lhs, rhs);
     return;
   }
 
-  if (ins->specialization() == MIRType::Double) {
+  if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     lowerForFPU(new (alloc()) LMathD(JSOp::Sub), ins, lhs, rhs);
     return;
   }
 
-  if (ins->specialization() == MIRType::Float32) {
+  if (ins->type() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
     lowerForFPU(new (alloc()) LMathF(JSOp::Sub), ins, lhs, rhs);
     return;
@@ -1707,9 +1707,9 @@ void LIRGenerator::visitMul(MMul* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
   MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(ins->specialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
 
-  if (ins->specialization() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
     ReorderCommutative(&lhs, &rhs, ins);
 
@@ -1724,7 +1724,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(lhs->type() == MIRType::Int64);
     ReorderCommutative(&lhs, &rhs, ins);
     LMulI64* lir = new (alloc()) LMulI64;
@@ -1732,7 +1732,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Double) {
+  if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     ReorderCommutative(&lhs, &rhs, ins);
 
@@ -1746,7 +1746,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     return;
   }
 
-  if (ins->specialization() == MIRType::Float32) {
+  if (ins->type() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
     ReorderCommutative(&lhs, &rhs, ins);
 
@@ -1767,27 +1767,27 @@ void LIRGenerator::visitDiv(MDiv* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
   MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(ins->specialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
 
-  if (ins->specialization() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
     lowerDivI(ins);
     return;
   }
 
-  if (ins->specialization() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(lhs->type() == MIRType::Int64);
     lowerDivI64(ins);
     return;
   }
 
-  if (ins->specialization() == MIRType::Double) {
+  if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     lowerForFPU(new (alloc()) LMathD(JSOp::Div), ins, lhs, rhs);
     return;
   }
 
-  if (ins->specialization() == MIRType::Float32) {
+  if (ins->type() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
     lowerForFPU(new (alloc()) LMathF(JSOp::Div), ins, lhs, rhs);
     return;
@@ -1798,23 +1798,23 @@ void LIRGenerator::visitDiv(MDiv* ins) {
 
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
-  MOZ_ASSERT(IsNumberType(ins->specialization()));
+  MOZ_ASSERT(IsNumberType(ins->type()));
 
-  if (ins->specialization() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(ins->type() == MIRType::Int32);
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Int32);
     lowerModI(ins);
     return;
   }
 
-  if (ins->specialization() == MIRType::Int64) {
+  if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(ins->type() == MIRType::Int64);
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Int64);
     lowerModI64(ins);
     return;
   }
 
-  if (ins->specialization() == MIRType::Double) {
+  if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(ins->type() == MIRType::Double);
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Double);
     MOZ_ASSERT(ins->rhs()->type() == MIRType::Double);

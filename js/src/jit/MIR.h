@@ -4743,7 +4743,6 @@ class MBinaryArithInstruction : public MBinaryInstruction,
         implicitTruncate_(NoTruncate),
         mustPreserveNaN_(false) {
     MOZ_ASSERT(IsNumberType(type));
-    specialization_ = type;
     setResultType(type);
     setMovable();
   }
@@ -4766,7 +4765,6 @@ class MBinaryArithInstruction : public MBinaryInstruction,
 
   void setSpecialization(MIRType type) {
     MOZ_ASSERT(IsNumberType(type));
-    specialization_ = type;
     setResultType(type);
   }
 
@@ -4796,7 +4794,6 @@ class MMinMax : public MBinaryInstruction, public ArithPolicy::Data {
     MOZ_ASSERT(IsNumberType(type));
     setResultType(type);
     setMovable();
-    specialization_ = type;
   }
 
  public:
@@ -4839,7 +4836,6 @@ class MAbs : public MUnaryInstruction, public ArithPolicy::Data {
     MOZ_ASSERT(IsNumberType(type));
     setResultType(type);
     setMovable();
-    specialization_ = type;
   }
 
  public:
@@ -5628,20 +5624,18 @@ class MMod : public MBinaryArithInstruction {
   double getIdentity() override { MOZ_CRASH("not used"); }
 
   bool canBeNegativeDividend() const {
-    MOZ_ASSERT(specialization_ == MIRType::Int32 ||
-               specialization_ == MIRType::Int64);
+    MOZ_ASSERT(type() == MIRType::Int32 || type() == MIRType::Int64);
     MOZ_ASSERT(!unsigned_);
     return canBeNegativeDividend_;
   }
 
   bool canBeDivideByZero() const {
-    MOZ_ASSERT(specialization_ == MIRType::Int32 ||
-               specialization_ == MIRType::Int64);
+    MOZ_ASSERT(type() == MIRType::Int32 || type() == MIRType::Int64);
     return canBeDivideByZero_;
   }
 
   bool canBePowerOfTwoDivisor() const {
-    MOZ_ASSERT(specialization_ == MIRType::Int32);
+    MOZ_ASSERT(type() == MIRType::Int32);
     return canBePowerOfTwoDivisor_;
   }
 

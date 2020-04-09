@@ -1434,7 +1434,7 @@ void MUrsh::computeRange(TempAllocator& alloc) {
 }
 
 void MAbs::computeRange(TempAllocator& alloc) {
-  if (specialization_ != MIRType::Int32 && specialization_ != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
 
@@ -1478,7 +1478,7 @@ void MPopcnt::computeRange(TempAllocator& alloc) {
 }
 
 void MMinMax::computeRange(TempAllocator& alloc) {
-  if (specialization_ != MIRType::Int32 && specialization_ != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
 
@@ -1489,8 +1489,7 @@ void MMinMax::computeRange(TempAllocator& alloc) {
 }
 
 void MAdd::computeRange(TempAllocator& alloc) {
-  if (specialization() != MIRType::Int32 &&
-      specialization() != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
   Range left(getOperand(0));
@@ -1503,8 +1502,7 @@ void MAdd::computeRange(TempAllocator& alloc) {
 }
 
 void MSub::computeRange(TempAllocator& alloc) {
-  if (specialization() != MIRType::Int32 &&
-      specialization() != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
   Range left(getOperand(0));
@@ -1517,8 +1515,7 @@ void MSub::computeRange(TempAllocator& alloc) {
 }
 
 void MMul::computeRange(TempAllocator& alloc) {
-  if (specialization() != MIRType::Int32 &&
-      specialization() != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
   Range left(getOperand(0));
@@ -1538,8 +1535,7 @@ void MMul::computeRange(TempAllocator& alloc) {
 }
 
 void MMod::computeRange(TempAllocator& alloc) {
-  if (specialization() != MIRType::Int32 &&
-      specialization() != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
   Range lhs(getOperand(0));
@@ -1558,7 +1554,7 @@ void MMod::computeRange(TempAllocator& alloc) {
 
   // If both operands are non-negative integers, we can optimize this to an
   // unsigned mod.
-  if (specialization() == MIRType::Int32 && rhs.lower() > 0) {
+  if (type() == MIRType::Int32 && rhs.lower() > 0) {
     bool hasDoubles = lhs.lower() < 0 || lhs.canHaveFractionalPart() ||
                       rhs.canHaveFractionalPart();
     // It is not possible to check that lhs.lower() >= 0, since the range
@@ -1649,8 +1645,7 @@ void MMod::computeRange(TempAllocator& alloc) {
 }
 
 void MDiv::computeRange(TempAllocator& alloc) {
-  if (specialization() != MIRType::Int32 &&
-      specialization() != MIRType::Double) {
+  if (type() != MIRType::Int32 && type() != MIRType::Double) {
     return;
   }
   Range lhs(getOperand(0));
@@ -2988,8 +2983,7 @@ static MDefinition::TruncateKind ComputeTruncateKind(MDefinition* candidate,
   // Special case integer division and modulo: a/b can be infinite, and a%b
   // can be NaN but cannot actually have rounding errors induced by truncation.
   if ((candidate->isDiv() || candidate->isMod()) &&
-      static_cast<const MBinaryArithInstruction*>(candidate)
-              ->specialization() == MIRType::Int32) {
+      candidate->type() == MIRType::Int32) {
     canHaveRoundingErrors = false;
   }
 

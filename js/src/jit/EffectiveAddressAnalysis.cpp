@@ -53,7 +53,7 @@ static void AnalyzeLsh(TempAllocator& alloc, MLsh* lsh) {
     }
 
     MAdd* add = use->consumer()->toDefinition()->toAdd();
-    if (add->specialization() != MIRType::Int32 || !add->isTruncated()) {
+    if (add->type() != MIRType::Int32 || !add->isTruncated()) {
       break;
     }
 
@@ -147,7 +147,7 @@ static void AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load) {
 
   MAdd* add = load->getOperand(1)->toAdd();
 
-  if (add->specialization() != MIRType::Int32 || !add->hasUses() ||
+  if (add->type() != MIRType::Int32 || !add->hasUses() ||
       add->truncateKind() != MDefinition::TruncateKind::Truncate) {
     return;
   }
