@@ -1,6 +1,6 @@
 # %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
-MAINTAINER Robert Bartlensky <rbartlensky@mozilla.com>
+LABEL maintainer="Andi-Bogdan Postelnicu <andi@mozilla.com>"
 
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
