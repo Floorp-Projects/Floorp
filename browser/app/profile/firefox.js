@@ -316,9 +316,6 @@ pref("browser.urlbar.update1.interventions", true);
 // encouraging them to use the Urlbar.
 pref("browser.urlbar.update1.searchTips", true);
 
-// Whether the urlbar should strip https from urls in the view.
-pref("browser.urlbar.update1.view.stripHttps", true);
-
 pref("browser.urlbar.openViewOnFocus", true);
 
 // Whether we expand the font size when when the urlbar is
