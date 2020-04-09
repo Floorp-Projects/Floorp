@@ -10,7 +10,7 @@ Feature implementation for handling fullscreen mode (exiting and back button pre
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FullScreenFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionUseCases: `[`SessionUseCases`](../-session-use-cases/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fullScreenChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Feature implementation for handling fullscreen mode (exiting and back button presses). |
+| [&lt;init&gt;](-init-.md) | `FullScreenFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionUseCases: `[`SessionUseCases`](../-session-use-cases/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, viewportFitChanged: (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}, fullScreenChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Feature implementation for handling fullscreen mode (exiting and back button presses). |
 
 ### Inherited Properties
 
@@ -24,6 +24,7 @@ Feature implementation for handling fullscreen mode (exiting and back button pre
 |---|---|
 | [onBackPressed](on-back-pressed.md) | `open fun onBackPressed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>To be called when the back button is pressed, so that only fullscreen mode closes. |
 | [onFullScreenChanged](on-full-screen-changed.md) | `open fun onFullScreenChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onMetaViewportFitChanged](on-meta-viewport-fit-changed.md) | `open fun onMetaViewportFitChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, layoutInDisplayCutoutMode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [start](start.md) | `open fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the feature and a observer to listen for fullscreen changes. |
 
 ### Inherited Functions

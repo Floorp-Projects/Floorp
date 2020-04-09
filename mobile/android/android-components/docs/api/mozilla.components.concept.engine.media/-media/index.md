@@ -15,6 +15,7 @@ Value type that represents a media element that is present on the currently disp
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe a media element. |
 | [PlaybackState](-playback-state/index.md) | `enum class PlaybackState` |
 | [State](-state/index.md) | `enum class State`<br>A simplified media state deprived from the [playbackState](playback-state.md) events. |
+| [Volume](-volume/index.md) | `data class Volume`<br>Volume associated with [Media](./index.md). |
 
 ### Constructors
 
@@ -30,11 +31,13 @@ Value type that represents a media element that is present on the currently disp
 | [metadata](metadata.md) | `abstract val metadata: `[`Metadata`](-metadata/index.md)<br>The [Metadata](-metadata/index.md) for this media element. |
 | [playbackState](playback-state.md) | `var playbackState: `[`PlaybackState`](-playback-state/index.md)<br>The current [PlaybackState](-playback-state/index.md) of this media element. |
 | [state](state.md) | `var state: `[`State`](-state/index.md)<br>The current simplified [State](-state/index.md) of this media element (derived from [playbackState](playback-state.md) events). |
+| [volume](volume.md) | `abstract val volume: `[`Volume`](-volume/index.md)<br>The [Volume](-volume/index.md) for this media element. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
+| [notifyObservers](notify-observers.md) | `fun notifyObservers(old: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, new: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, block: `[`Observer`](-observer/index.md)`.() -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Helper method to notify observers. |
 | [toString](to-string.md) | `open fun toString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions

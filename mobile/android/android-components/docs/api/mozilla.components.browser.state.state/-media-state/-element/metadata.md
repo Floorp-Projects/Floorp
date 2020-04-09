@@ -2,10 +2,10 @@
 
 # metadata
 
-`val metadata: `[`Metadata`](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L46)
+`val metadata: `[`Metadata`](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L47)
 
-The [Metadata](#) for this media element.
+The [Media.Metadata](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) for this media element.
 
 ### Property
 
-`metadata` - The [Metadata](#) for this media element.
+`metadata` - The [Media.Metadata](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) for this media element.

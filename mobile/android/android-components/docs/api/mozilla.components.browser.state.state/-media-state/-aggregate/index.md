@@ -2,7 +2,7 @@
 
 # Aggregate
 
-`data class Aggregate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L58)
+`data class Aggregate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L60)
 
 Value type representing the aggregated "global" media state.
 
