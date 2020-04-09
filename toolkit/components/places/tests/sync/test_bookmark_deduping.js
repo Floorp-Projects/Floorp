@@ -1207,3 +1207,84 @@ add_task(async function test_duping_mobile_bookmarks() {
   });
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_duping_invalid() {
+  // To check if invalid items are prevented from deduping
+
+  info("Set up empty mirror");
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [
+      {
+        guid: "bookmarkAAA1",
+        title: "A",
+        url: "http://example.com/a",
+      },
+    ],
+  });
+
+  let buf = await openMirror("duping_invalid");
+  await storeRecords(buf, [
+    {
+      id: "menu",
+      parentid: "places",
+      type: "folder",
+      children: ["bookmarkAAA2"],
+    },
+    {
+      id: "bookmarkAAA2",
+      parentid: "menu",
+      type: "bookmark",
+      title: "A",
+      bmkUri: "http://example.com/a",
+    },
+  ]);
+
+  // Invalidate bookmarkAAA2 so that it does not dedupe to bookmarkAAA1
+  await buf.db.execute(
+    `UPDATE items SET
+       validity = :validity
+     WHERE guid = :guid`,
+    {
+      validity: Ci.mozISyncedBookmarksMerger.VALIDITY_REPLACE,
+      guid: "bookmarkAAA2",
+    }
+  );
+
+  let changesToUpload = await buf.apply();
+  deepEqual(
+    changesToUpload.menu.cleartext.children,
+    ["bookmarkAAA1"],
+    "Should upload A1 in menu"
+  );
+  ok(
+    !changesToUpload.bookmarkAAA1.tombstone,
+    "Should not upload tombstone for A1"
+  );
+  ok(changesToUpload.bookmarkAAA2.tombstone, "Should upload tombstone for A2");
+  await assertLocalTree(
+    PlacesUtils.bookmarks.menuGuid,
+    {
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [
+        {
+          guid: "bookmarkAAA1",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 0,
+          title: "A",
+          url: "http://example.com/a",
+        },
+      ],
+    },
+    "No deduping of invalid items"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
