@@ -11,6 +11,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
+#include "js/Exception.h"
 #include "js/SavedFrameAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
@@ -297,7 +298,7 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames) {
 }
 END_TEST(testSavedStacks_selfHostedFrames)
 
-BEGIN_TEST(test_JS_GetPendingExceptionStack) {
+BEGIN_TEST(test_GetPendingExceptionStack) {
   CHECK(js::DefineTestingFunctions(cx, global, false, false));
 
   JSPrincipals* principals = cx->realm()->principals();
@@ -327,14 +328,15 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack) {
   CHECK(JS_IsExceptionPending(cx));
   CHECK(val.isUndefined());
 
-  JS::RootedObject stack(cx, JS::GetPendingExceptionStack(cx));
-  CHECK(stack);
-  CHECK(stack->is<js::SavedFrame>());
-  JS::Rooted<js::SavedFrame*> savedFrameStack(cx, &stack->as<js::SavedFrame>());
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::GetPendingExceptionStack(cx, &exnStack));
+  CHECK(exnStack.stack());
+  CHECK(exnStack.stack()->is<js::SavedFrame>());
+  JS::Rooted<js::SavedFrame*> savedFrameStack(
+      cx, &exnStack.stack()->as<js::SavedFrame>());
 
-  JS_GetPendingException(cx, &val);
-  CHECK(val.isInt32());
-  CHECK(val.toInt32() == 5);
+  CHECK(exnStack.exception().isInt32());
+  CHECK(exnStack.exception().toInt32() == 5);
 
   struct {
     uint32_t line;
@@ -392,4 +394,4 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack) {
 
   return true;
 }
-END_TEST(test_JS_GetPendingExceptionStack)
+END_TEST(test_GetPendingExceptionStack)

@@ -20,6 +20,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
+#include "js/Exception.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -44,6 +45,8 @@ struct JSJitInfo;
 namespace JS {
 template <class T>
 class Heap;
+
+class ExceptionStack;
 } /* namespace JS */
 
 namespace js {
@@ -1333,6 +1336,9 @@ struct MOZ_STACK_CLASS JS_FRIEND_API ErrorReport {
   bool init(JSContext* cx, JS::HandleValue exn,
             SniffingBehavior sniffingBehavior,
             JS::HandleObject fallbackStack = nullptr);
+
+  bool init(JSContext* cx, const JS::ExceptionStack& exnStack,
+            SniffingBehavior sniffingBehavior);
 
   JSErrorReport* report() { return reportp; }
 

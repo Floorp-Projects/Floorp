@@ -10,6 +10,7 @@
 
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"
+#include "js/Exception.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"
@@ -4404,27 +4405,30 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                    data->mErrorHandlerRecursionCount == 1,
                "Bad recursion logic!");
 
-  JS::Rooted<JS::Value> exn(aCx);
-  if (!JS_GetPendingException(aCx, &exn)) {
-    // Probably shouldn't actually happen?  But let's go ahead and just use null
-    // for lack of anything better.
-    exn.setNull();
-  }
-  JS::RootedObject exnStack(aCx, JS::GetPendingExceptionStack(aCx));
-  JS_ClearPendingException(aCx);
-
   UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>();
   if (aReport) {
     report->AssignErrorReport(aReport);
   }
 
-  JS::RootedObject stack(aCx), stackGlobal(aCx);
-  xpc::FindExceptionStackForConsoleReport(nullptr, exn, exnStack, &stack,
-                                          &stackGlobal);
+  JS::ExceptionStack exnStack(aCx);
+  if (JS_IsExceptionPending(aCx)) {
+    if (!JS::StealPendingExceptionStack(aCx, &exnStack)) {
+      JS_ClearPendingException(aCx);
+      return;
+    }
 
-  if (stack) {
-    JSAutoRealm ar(aCx, stackGlobal);
-    report->SerializeWorkerStack(aCx, this, stack);
+    JS::RootedObject stack(aCx), stackGlobal(aCx);
+    xpc::FindExceptionStackForConsoleReport(
+        nullptr, exnStack.exception(), exnStack.stack(), &stack, &stackGlobal);
+
+    if (stack) {
+      JSAutoRealm ar(aCx, stackGlobal);
+      report->SerializeWorkerStack(aCx, this, stack);
+    }
+  } else {
+    // ReportError is also used for reporting warnings,
+    // so there won't be a pending exception.
+    MOZ_ASSERT(aReport->isWarning());
   }
 
   if (report->mMessage.IsEmpty() && aToStringResult) {
@@ -4453,7 +4457,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                      JS::CurrentGlobalOrNull(aCx);
 
   WorkerErrorReport::ReportError(aCx, this, fireAtScope, nullptr,
-                                 std::move(report), 0, exn);
+                                 std::move(report), 0, exnStack.exception());
 
   data->mErrorHandlerRecursionCount--;
 }

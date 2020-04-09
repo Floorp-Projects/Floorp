@@ -4956,12 +4956,6 @@ JS_PUBLIC_API void JS::SetPendingExceptionAndStack(JSContext* cx,
   cx->setPendingException(value, nstack);
 }
 
-JS_PUBLIC_API JSObject* JS::GetPendingExceptionStack(JSContext* cx) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  return cx->getPendingExceptionStack();
-}
-
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext* cx)
     : context(cx),
       wasPropagatingForcedReturn(cx->propagatingForcedReturn_),
