@@ -1,17 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /* ===== global.css =====================================================
   == Styles that apply everywhere.
   ======================================================================= */
-
-/* all localizable skin settings shall live here */
-@import url("chrome://global/locale/intl.css");
-@import url("chrome://global/content/widgets.css");
-
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../../shared/global.inc.css
 
