@@ -13,9 +13,9 @@ quality.
 -  **Task** refactoring, removal, replacement, enabling or disabling of
    functionality and any other engineering task
 
-All bug types need triage decisions. Engineering `triages defects and
-tasks <triage-bugzilla>`__. Product management `triages
-enhancements <new-feature-triage>`__.
+All bug types need triage decisions. Engineering :ref:`triages defects and
+tasks <Triage for Bugzilla>`. Product management :ref:`triages
+enhancements <New Feature Triage>`.
 
 It’s important to distinguish an enhancement from other types because
 they use different triage queues.
