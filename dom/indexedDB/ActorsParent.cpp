@@ -6874,15 +6874,6 @@ class FactoryOp
   bool mFileHandleDisabled;
 
  public:
-  void NoteDatabaseBlocked(Database* aDatabase);
-
-  void NoteDatabaseClosed(Database* aDatabase, bool aActorDestroyed);
-  virtual void NoteDatabaseClosed(Database* aDatabase) = 0;
-
-#ifdef DEBUG
-  bool HasBlockedDatabases() const { return !mMaybeBlockedDatabases.IsEmpty(); }
-#endif
-
   const nsCString& Origin() const {
     AssertIsOnOwningThread();
 
@@ -6901,6 +6892,14 @@ class FactoryOp
 
     return mDatabaseFilePath;
   }
+
+  void NoteDatabaseBlocked(Database* aDatabase);
+
+  void NoteDatabaseClosed(Database* aDatabase);
+
+#ifdef DEBUG
+  bool HasBlockedDatabases() const { return !mMaybeBlockedDatabases.IsEmpty(); }
+#endif
 
   void StringifyState(nsACString& aResult) const;
 
@@ -6946,6 +6945,8 @@ class FactoryOp
   virtual nsresult DoDatabaseWork() = 0;
 
   virtual nsresult BeginVersionChange() = 0;
+
+  virtual bool AreActorsAlive() = 0;
 
   virtual nsresult DispatchToWorkThread() = 0;
 
@@ -7047,7 +7048,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
   nsresult BeginVersionChange() override;
 
-  void NoteDatabaseClosed(Database* aDatabase) override;
+  bool AreActorsAlive() override;
 
   void SendBlockedNotification() override;
 
@@ -7118,7 +7119,7 @@ class DeleteDatabaseOp final : public FactoryOp {
 
   nsresult BeginVersionChange() override;
 
-  void NoteDatabaseClosed(Database* aDatabase) override;
+  bool AreActorsAlive() override;
 
   void SendBlockedNotification() override;
 
@@ -20509,6 +20510,76 @@ FactoryOp::FactoryOp(RefPtr<Factory> aFactory,
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 }
 
+void FactoryOp::NoteDatabaseBlocked(Database* aDatabase) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
+  MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
+  MOZ_ASSERT(mMaybeBlockedDatabases.Contains(aDatabase));
+
+  // Only send the blocked event if all databases have reported back. If the
+  // database was closed then it will have been removed from the array.
+  // Otherwise if it was blocked its |mBlocked| flag will be true.
+  bool sendBlockedEvent = true;
+
+  for (auto& info : mMaybeBlockedDatabases) {
+    if (info == aDatabase) {
+      // This database was blocked, mark accordingly.
+      info.mBlocked = true;
+    } else if (!info.mBlocked) {
+      // A database has not yet reported back yet, don't send the event yet.
+      sendBlockedEvent = false;
+    }
+  }
+
+  if (sendBlockedEvent) {
+    SendBlockedNotification();
+  }
+}
+
+void FactoryOp::NoteDatabaseClosed(Database* const aDatabase) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
+  MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
+  MOZ_ASSERT(mMaybeBlockedDatabases.Contains(aDatabase));
+
+  mMaybeBlockedDatabases.RemoveElement(aDatabase);
+
+  if (!mMaybeBlockedDatabases.IsEmpty()) {
+    return;
+  }
+
+  DatabaseActorInfo* info;
+  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
+  MOZ_ASSERT(info->mWaitingFactoryOp == this);
+
+  if (AreActorsAlive()) {
+    // The IPDL strong reference has not yet been released, so we can clear
+    // mWaitingFactoryOp immediately.
+    info->mWaitingFactoryOp = nullptr;
+
+    WaitForTransactions();
+    return;
+  }
+
+  // The IPDL strong reference has been released, mWaitingFactoryOp holds the
+  // last strong reference to us, so we need to move it to a stack variable
+  // instead of clearing it immediately (We could clear it immediately if only
+  // the other actor is destroyed, but we don't need to optimize for that, and
+  // move it anyway).
+  const RefPtr<FactoryOp> waitingFactoryOp = std::move(info->mWaitingFactoryOp);
+
+  IDB_REPORT_INTERNAL_ERR();
+  SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  // We hold a strong ref in waitingFactoryOp, so it's safe to call Run()
+  // directly.
+
+  mState = State::SendingResults;
+  MOZ_ALWAYS_SUCCEEDS(Run());
+}
+
 void FactoryOp::StringifyState(nsACString& aResult) const {
   AssertIsOnOwningThread();
 
@@ -21130,32 +21201,6 @@ bool FactoryOp::MustWaitFor(const FactoryOp& aExistingOp) {
              mCommonParams.metadata().persistenceType() &&
          aExistingOp.mOrigin == mOrigin &&
          aExistingOp.mDatabaseId == mDatabaseId;
-}
-
-void FactoryOp::NoteDatabaseBlocked(Database* aDatabase) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
-  MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
-  MOZ_ASSERT(mMaybeBlockedDatabases.Contains(aDatabase));
-
-  // Only send the blocked event if all databases have reported back. If the
-  // database was closed then it will have been removed from the array.
-  // Otherwise if it was blocked its |mBlocked| flag will be true.
-  bool sendBlockedEvent = true;
-
-  for (auto& info : mMaybeBlockedDatabases) {
-    if (info == aDatabase) {
-      // This database was blocked, mark accordingly.
-      info.mBlocked = true;
-    } else if (!info.mBlocked) {
-      // A database has not yet reported back yet, don't send the event yet.
-      sendBlockedEvent = false;
-    }
-  }
-
-  if (sendBlockedEvent) {
-    SendBlockedNotification();
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(FactoryOp, DatabaseOperationBase)
@@ -22045,68 +22090,19 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
     return NS_OK;
   }
 
+  // If the actor gets destroyed, mWaitingFactoryOp will hold the last strong
+  // reference to us.
   info->mWaitingFactoryOp = this;
 
   mState = State::WaitingForOtherDatabasesToClose;
   return NS_OK;
 }
 
-void FactoryOp::NoteDatabaseClosed(Database* const aDatabase,
-                                   const bool aActorDestroyed) {
+bool OpenDatabaseOp::AreActorsAlive() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mDatabase);
 
-  const bool lastMaybeBlockedDatabaseRemoved =
-      mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
-      mMaybeBlockedDatabases.IsEmpty();
-
-  if (lastMaybeBlockedDatabaseRemoved && !aActorDestroyed) {
-    WaitForTransactions();
-    return;
-  }
-
-  if (aActorDestroyed) {
-    // We are being called with an assumption that mWaitingFactoryOp holds
-    // a strong reference to us.
-    DatabaseActorInfo* info;
-    MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
-    MOZ_ASSERT(info->mWaitingFactoryOp == this);
-    RefPtr<OpenDatabaseOp> kungFuDeathGrip =
-        static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
-
-    if (lastMaybeBlockedDatabaseRemoved) {
-      info->mWaitingFactoryOp = nullptr;
-    }
-
-    IDB_REPORT_INTERNAL_ERR();
-    SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
-    // directly.
-
-    mState = State::SendingResults;
-    MOZ_ALWAYS_SUCCEEDS(Run());
-  }
-}
-
-void OpenDatabaseOp::NoteDatabaseClosed(Database* const aDatabase) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose ||
-             mState == State::WaitingForTransactionsToComplete ||
-             mState == State::DatabaseWorkVersionChange);
-
-  if (mState != State::WaitingForOtherDatabasesToClose) {
-    MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
-    MOZ_ASSERT(
-        mRequestedVersion > aDatabase->Metadata().mCommonMetadata.version(),
-        "Must only be closing databases for a previous version!");
-    return;
-  }
-
-  MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
-
-  FactoryOp::NoteDatabaseClosed(
-      aDatabase, IsActorDestroyed() || mDatabase->IsActorDestroyed());
+  return !(IsActorDestroyed() || mDatabase->IsActorDestroyed());
 }
 
 void OpenDatabaseOp::SendBlockedNotification() {
@@ -22204,22 +22200,13 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
 void OpenDatabaseOp::SendResults() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
-  MOZ_ASSERT_IF(!HasFailed(), mMaybeBlockedDatabases.IsEmpty());
+  MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
   MOZ_ASSERT_IF(!HasFailed(), !mVersionChangeTransaction);
 
-  mMaybeBlockedDatabases.Clear();
-
-  DatabaseActorInfo* info;
-  if (gLiveDatabaseHashtable &&
-      gLiveDatabaseHashtable->Get(mDatabaseId, &info) &&
-      info->mWaitingFactoryOp) {
-    MOZ_ASSERT(info->mWaitingFactoryOp == this);
-    // SendResults() should only be called by Run() and Run() should only be
-    // called if there's a strong reference to the object that can't be cleared
-    // here, so it's safe to clear mWaitingFactoryOp without adding additional
-    // strong reference.
-    info->mWaitingFactoryOp = nullptr;
-  }
+  DebugOnly<DatabaseActorInfo*> info = nullptr;
+  MOZ_ASSERT_IF(
+      gLiveDatabaseHashtable && gLiveDatabaseHashtable->Get(mDatabaseId, &info),
+      !info->mWaitingFactoryOp);
 
   if (mVersionChangeTransaction) {
     MOZ_ASSERT(HasFailed());
@@ -22794,6 +22781,8 @@ nsresult DeleteDatabaseOp::BeginVersionChange() {
     }
 
     if (!mMaybeBlockedDatabases.IsEmpty()) {
+      // If the actor gets destroyed, mWaitingFactoryOp will hold the last
+      // strong reference to us.
       info->mWaitingFactoryOp = this;
 
       mState = State::WaitingForOtherDatabasesToClose;
@@ -22805,6 +22794,12 @@ nsresult DeleteDatabaseOp::BeginVersionChange() {
   // transactions are complete.
   WaitForTransactions();
   return NS_OK;
+}
+
+bool DeleteDatabaseOp::AreActorsAlive() {
+  AssertIsOnOwningThread();
+
+  return !IsActorDestroyed();
 }
 
 nsresult DeleteDatabaseOp::DispatchToWorkThread() {
@@ -22835,14 +22830,6 @@ nsresult DeleteDatabaseOp::DispatchToWorkThread() {
   return NS_OK;
 }
 
-void DeleteDatabaseOp::NoteDatabaseClosed(Database* const aDatabase) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
-  MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
-
-  FactoryOp::NoteDatabaseClosed(aDatabase, IsActorDestroyed());
-}
-
 void DeleteDatabaseOp::SendBlockedNotification() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
@@ -22855,6 +22842,12 @@ void DeleteDatabaseOp::SendBlockedNotification() {
 void DeleteDatabaseOp::SendResults() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
+
+  DebugOnly<DatabaseActorInfo*> info = nullptr;
+  MOZ_ASSERT_IF(
+      gLiveDatabaseHashtable && gLiveDatabaseHashtable->Get(mDatabaseId, &info),
+      !info->mWaitingFactoryOp);
 
   if (!IsActorDestroyed()) {
     FactoryRequestResponse response;
@@ -22928,46 +22921,40 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
   if (deleteOp->IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     deleteOp->SetFailureCode(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  } else if (HasFailed()) {
+    deleteOp->SetFailureCodeIfUnset(ResultCode());
   } else {
     DatabaseActorInfo* info;
-    if (gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId, &info) &&
-        info->mWaitingFactoryOp) {
-      MOZ_ASSERT(info->mWaitingFactoryOp == deleteOp);
-      info->mWaitingFactoryOp = nullptr;
-    }
 
-    if (HasFailed()) {
-      deleteOp->SetFailureCodeIfUnset(ResultCode());
-    } else {
-      // Inform all the other databases that they are now invalidated. That
-      // should remove the previous metadata from our table.
-      if (info) {
-        MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
+    // Inform all the other databases that they are now invalidated. That
+    // should remove the previous metadata from our table.
+    if (gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId, &info)) {
+      MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
+      MOZ_ASSERT(!info->mWaitingFactoryOp);
 
-        nsTArray<SafeRefPtr<Database>> liveDatabases;
-        if (NS_WARN_IF(!liveDatabases.SetCapacity(info->mLiveDatabases.Length(),
-                                                  fallible))) {
-          deleteOp->SetFailureCode(NS_ERROR_OUT_OF_MEMORY);
-        } else {
-          std::transform(info->mLiveDatabases.cbegin(),
-                         info->mLiveDatabases.cend(),
-                         MakeBackInserter(liveDatabases),
-                         [](const auto& aDatabase) -> SafeRefPtr<Database> {
-                           return {aDatabase, AcquireStrongRefFromRawPtr{}};
-                         });
+      nsTArray<SafeRefPtr<Database>> liveDatabases;
+      if (NS_WARN_IF(!liveDatabases.SetCapacity(info->mLiveDatabases.Length(),
+                                                fallible))) {
+        deleteOp->SetFailureCode(NS_ERROR_OUT_OF_MEMORY);
+      } else {
+        std::transform(info->mLiveDatabases.cbegin(),
+                       info->mLiveDatabases.cend(),
+                       MakeBackInserter(liveDatabases),
+                       [](const auto& aDatabase) -> SafeRefPtr<Database> {
+                         return {aDatabase, AcquireStrongRefFromRawPtr{}};
+                       });
 
 #ifdef DEBUG
-          // The code below should result in the deletion of |info|. Set to null
-          // here to make sure we find invalid uses later.
-          info = nullptr;
+        // The code below should result in the deletion of |info|. Set to null
+        // here to make sure we find invalid uses later.
+        info = nullptr;
 #endif
 
-          for (const auto& database : liveDatabases) {
-            database->Invalidate();
-          }
-
-          MOZ_ASSERT(!gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId));
+        for (const auto& database : liveDatabases) {
+          database->Invalidate();
         }
+
+        MOZ_ASSERT(!gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId));
       }
     }
   }
