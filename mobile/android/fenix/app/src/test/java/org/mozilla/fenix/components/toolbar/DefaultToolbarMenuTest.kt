@@ -75,7 +75,7 @@ class DefaultToolbarMenuTest {
 
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
-        assertEquals(ToolbarMenu.Item.AddToHomeScreen, list[0])
+        assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
         assertEquals(ToolbarMenu.Item.ReaderMode(false), list[1])
         assertEquals(ToolbarMenu.Item.OpenInApp, list[2])
     }
@@ -115,7 +115,7 @@ class DefaultToolbarMenuTest {
 
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
-        assertEquals(ToolbarMenu.Item.AddToHomeScreen, list[0])
+        assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
         assertEquals(ToolbarMenu.Item.OpenInApp, list[1])
     }
 
@@ -134,7 +134,7 @@ class DefaultToolbarMenuTest {
 
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
-        assertEquals(ToolbarMenu.Item.AddToHomeScreen, list[0])
+        assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
         assertEquals(ToolbarMenu.Item.ReaderMode(false), list[1])
     }
 }

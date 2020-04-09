@@ -22,6 +22,7 @@ interface ToolbarMenu {
         object OpenInFenix : Item()
         object SaveToCollection : Item()
         object AddToTopSites : Item()
+        object InstallToHomeScreen : Item()
         object AddToHomeScreen : Item()
         object AddonsManager : Item()
         object Quit : Item()

@@ -137,8 +137,8 @@ class DefaultToolbarMenu(
 
     internal fun getLowPrioHighlightItems(): List<ToolbarMenu.Item> {
         val lowPrioHighlightItems: MutableList<ToolbarMenu.Item> = mutableListOf()
-        if (shouldShowAddToHomescreen() && addToHomescreen.isHighlighted()) {
-            lowPrioHighlightItems.add(ToolbarMenu.Item.AddToHomeScreen)
+        if (canInstall() && installToHomescreen.isHighlighted()) {
+            lowPrioHighlightItems.add(ToolbarMenu.Item.InstallToHomeScreen)
         }
         if (shouldShowReaderMode() && readerMode.isHighlighted()) {
             lowPrioHighlightItems.add(ToolbarMenu.Item.ReaderMode(false))
@@ -150,8 +150,13 @@ class DefaultToolbarMenu(
     }
 
     // Predicates that need to be repeatedly called as the session changes
-    private fun shouldShowAddToHomescreen(): Boolean =
-        session != null && context.components.useCases.webAppUseCases.isPinningSupported()
+    private fun canAddToHomescreen(): Boolean =
+        session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
+                !context.components.useCases.webAppUseCases.isInstallable()
+
+    private fun canInstall(): Boolean =
+        session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
+                context.components.useCases.webAppUseCases.isInstallable()
 
     private fun shouldShowReaderMode(): Boolean = session?.let {
         store.state.findTab(it.id)?.readerState?.readerable
@@ -187,7 +192,8 @@ class DefaultToolbarMenu(
             if (shouldShowWebcompatReporter) reportIssue else null,
             findInPage,
             addToTopSites,
-            addToHomescreen.apply { visible = ::shouldShowAddToHomescreen },
+            addToHomescreen.apply { visible = ::canAddToHomescreen },
+            installToHomescreen.apply { visible = ::canInstall },
             if (shouldShowSaveToCollection) saveToCollection else null,
             desktopMode,
             openInApp.apply { visible = ::shouldShowOpenInApp },
@@ -253,8 +259,16 @@ class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.AddToTopSites)
     }
 
-    private val addToHomescreen = BrowserMenuHighlightableItem(
+    private val addToHomescreen = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_add_to_homescreen),
+        imageResource = R.drawable.ic_add_to_homescreen,
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+    }
+
+    private val installToHomescreen = BrowserMenuHighlightableItem(
+        label = context.getString(R.string.browser_menu_install_on_homescreen),
         startImageResource = R.drawable.ic_add_to_homescreen,
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
@@ -262,13 +276,10 @@ class DefaultToolbarMenu(
             notificationTint = getColor(context, R.color.whats_new_notification_color)
         ),
         isHighlighted = {
-            val webAppUseCases = context.components.useCases.webAppUseCases
-            webAppUseCases.isPinningSupported() &&
-                    webAppUseCases.isInstallable() &&
-                    !context.settings().installPwaOpened
+            !context.settings().installPwaOpened
         }
     ) {
-        onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+        onItemTapped.invoke(ToolbarMenu.Item.InstallToHomeScreen)
     }
 
     private val findInPage = BrowserMenuImageText(
