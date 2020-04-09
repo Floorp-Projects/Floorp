@@ -145,7 +145,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   }
 
   if (nativeAcc) {
-    [nativeAcc firePlatformEvent:eventType];
+    [nativeAcc handleAccessibleEvent:eventType];
   }
 
   return NS_OK;
