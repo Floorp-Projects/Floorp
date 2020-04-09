@@ -1,16 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
+add_task(async function test() {
   // setup a profile directory
   var dir = do_get_profile();
 
-  // initialize the permission manager service
+  // We need to execute a pm method to be sure that the DB is fully
+  // initialized.
   var pm = Services.perms;
+  Assert.ok(pm.all.length === 0);
+
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   // get the db file
   var file = dir.clone();
   file.append("permissions.sqlite");
+
   Assert.ok(file.exists());
 
   // corrupt the file
@@ -35,4 +40,4 @@ function run_test() {
 
   // remove all should not throw
   pm.removeAll();
-}
+});
