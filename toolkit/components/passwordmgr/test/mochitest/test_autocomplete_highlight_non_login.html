@@ -98,13 +98,8 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_footer() {
 
   runInParent(function cleanUpWindow() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    if (Services.prefs.getCharPref("signon.management.overrideURI")) {
-      let window = Services.wm.getMostRecentWindow("navigator:browser");
-      window.gBrowser.removeTab(window.gBrowser.selectedTab);
-    } else {
-      let window = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
-      window.close();
-    }
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    window.gBrowser.removeTab(window.gBrowser.selectedTab);
   });
 
   // Press tab on the footer and check.

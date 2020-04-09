@@ -2,10 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["signon.management.overrideURI", "about:logins?filter=%DOMAIN%"]],
-  });
-
   let storageChangedPromised = TestUtils.topicObserved(
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
