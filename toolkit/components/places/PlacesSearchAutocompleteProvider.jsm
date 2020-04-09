@@ -49,7 +49,8 @@ const SearchAutocompleteProviderInternal = {
     }
 
     // The initial loading of the search engines must succeed.
-    await this._refresh();
+    this._refreshedPromise = this._refresh();
+    await this._refreshedPromise;
 
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, true);
 
@@ -64,7 +65,7 @@ const SearchAutocompleteProviderInternal = {
       case "engine-changed":
       case "engine-removed":
       case "engine-default":
-        this._refresh();
+        this._refreshedPromise = this._refresh();
     }
   },
 
@@ -209,14 +210,17 @@ var gInitializationPromise = null;
 var PlacesSearchAutocompleteProvider = Object.freeze({
   /**
    * Starts initializing the component and returns a promise that is resolved or
-   * rejected when initialization finished.  The same promise is returned if
-   * this function is called multiple times.
+   * rejected when initialization and updates are finished.
    */
-  ensureInitialized() {
+  ensureReady() {
     if (!gInitializationPromise) {
       gInitializationPromise = SearchAutocompleteProviderInternal.initialize();
     }
-    return gInitializationPromise;
+
+    return Promise.all([
+      gInitializationPromise,
+      SearchAutocompleteProviderInternal._refreshedPromise,
+    ]);
   },
 
   /**
@@ -227,7 +231,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    * @returns {nsISearchEngine} The matching engine or null if there isn't one.
    */
   async engineForDomainPrefix(prefix) {
-    await this.ensureInitialized();
+    await this.ensureReady();
 
     // Match at the beginning for now.  In the future, an "options" argument may
     // allow the matching behavior to be tuned.
@@ -248,7 +252,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    * @returns {nsISearchEngine} The matching engine or null if there isn't one.
    */
   async engineForAlias(alias) {
-    await this.ensureInitialized();
+    await this.ensureReady();
 
     return (
       SearchAutocompleteProviderInternal.enginesByAlias.get(
@@ -264,7 +268,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    *          Array of objects { engine, tokenAliases } for token alias engines.
    */
   async tokenAliasEngines() {
-    await this.ensureInitialized();
+    await this.ensureReady();
 
     return SearchAutocompleteProviderInternal.tokenAliasEngines.slice();
   },
@@ -278,7 +282,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    * @returns {nsISearchEngine} The current search engine.
    */
   async currentEngine(inPrivateWindow) {
-    await this.ensureInitialized();
+    await this.ensureReady();
 
     return inPrivateWindow
       ? Services.search.defaultPrivateEngine

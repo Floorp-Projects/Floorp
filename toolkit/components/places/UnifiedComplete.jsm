@@ -1009,7 +1009,7 @@ Search.prototype = {
       // _maybeRestyleSearchMatch, because it calls the synchronous
       // parseSubmissionURL that can't wait for async initialization of
       // PlacesSearchAutocompleteProvider.
-      await PlacesSearchAutocompleteProvider.ensureInitialized();
+      await PlacesSearchAutocompleteProvider.ensureReady();
       if (!this.pending) {
         return;
       }
