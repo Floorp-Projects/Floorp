@@ -7022,21 +7022,32 @@ base::ProcessId nsHttpChannel::ProcessId() {
   return base::GetCurrentProcId();
 }
 
-bool nsHttpChannel::AttachStreamFilter(
-    mozilla::ipc::Endpoint<extensions::PStreamFilterParent>&& aEndpoint)
-
-{
+auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
+    -> RefPtr<ChildEndpointPromise> {
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
-    return httpParent->SendAttachStreamFilter(std::move(aEndpoint));
-  }
+
   if (RefPtr<DocumentLoadListener> docParent = do_QueryObject(parentChannel)) {
-    return docParent->AttachStreamFilter(std::move(aEndpoint));
+    return docParent->AttachStreamFilter(aChildProcessId);
   }
 
-  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
-  return true;
+  mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
+  mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
+  nsresult rv = extensions::PStreamFilter::CreateEndpoints(
+      ProcessId(), aChildProcessId, &parent, &child);
+  if (NS_FAILED(rv)) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
+    if (httpParent->SendAttachStreamFilter(std::move(parent))) {
+      return ChildEndpointPromise::CreateAndResolve(std::move(child), __func__);
+    }
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  extensions::StreamFilterParent::Attach(this, std::move(parent));
+  return ChildEndpointPromise::CreateAndResolve(std::move(child), __func__);
 }
 
 NS_IMETHODIMP

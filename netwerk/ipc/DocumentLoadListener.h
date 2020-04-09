@@ -141,13 +141,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     return 0;
   }
 
-  bool AttachStreamFilter(
-      ipc::Endpoint<mozilla::extensions::PStreamFilterParent>&& aEndpoint) {
-    if (mDocumentChannelBridge) {
-      return mDocumentChannelBridge->AttachStreamFilter(std::move(aEndpoint));
-    }
-    return false;
-  }
+  using ChildEndpointPromise =
+      MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
+  MOZ_MUST_USE RefPtr<ChildEndpointPromise> AttachStreamFilter(
+      base::ProcessId aChildProcessId);
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.
