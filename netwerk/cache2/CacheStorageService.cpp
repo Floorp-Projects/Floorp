@@ -2270,13 +2270,12 @@ CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
         }
       }
 
-      // These key names are not privacy-sensitive.
       aHandleReport->Callback(
           EmptyCString(),
           nsPrintfCString(
               "explicit/network/cache2/%s-storage(%s)",
               table->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
-              iter1.Key().BeginReading()),
+              aAnonymize ? "<anonymized>" : iter1.Key().BeginReading()),
           nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES, size,
           NS_LITERAL_CSTRING("Memory used by the cache storage."), aData);
     }
