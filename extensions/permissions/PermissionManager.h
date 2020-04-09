@@ -177,22 +177,11 @@ class PermissionManager final : public nsIPermissionManager,
 
   enum NotifyOperationType { eDontNotify, eNotify };
 
-  // A special value for a permission ID that indicates the ID was loaded as
-  // a default value.  These will never be written to the database, but may
-  // be overridden with an explicit permission (including UNKNOWN_ACTION)
-  static const int64_t cIDPermissionIsDefault = -1;
-
   // Similar to TestPermissionFromPrincipal, except that it is used only for
   // permissions which can never have default values.
   nsresult TestPermissionWithoutDefaultsFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const nsACString& aType,
-                                                      uint32_t* aPermission) {
-    MOZ_ASSERT(!HasDefaultPref(aType));
-
-    return CommonTestPermission(aPrincipal, -1, aType, aPermission,
-                                nsIPermissionManager::UNKNOWN_ACTION, true,
-                                false, true);
-  }
+                                                      uint32_t* aPermission);
 
   nsresult LegacyTestPermissionFromURI(
       nsIURI* aURI, const OriginAttributes* aOriginAttributes,
@@ -370,51 +359,22 @@ class PermissionManager final : public nsIPermissionManager,
   nsresult GetStripPermsForPrincipal(nsIPrincipal* aPrincipal,
                                      nsTArray<PermissionEntry>& aResult);
 
-  // NOTE: nullptr can be passed as aType - if it is this function will return
-  // "false" unconditionally.
-  static bool HasDefaultPref(const nsACString& aType) {
-    // A list of permissions that can have a fallback default permission
-    // set under the permissions.default.* pref.
-    static const nsLiteralCString kPermissionsWithDefaults[] = {
-        NS_LITERAL_CSTRING("camera"), NS_LITERAL_CSTRING("microphone"),
-        NS_LITERAL_CSTRING("geo"), NS_LITERAL_CSTRING("desktop-notification"),
-        NS_LITERAL_CSTRING("shortcuts")};
-
-    if (!aType.IsEmpty()) {
-      for (const auto& perm : kPermissionsWithDefaults) {
-        if (perm.Equals(aType)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
   // Returns -1 on failure
-  int32_t GetTypeIndex(const nsACString& aType, bool aAdd) {
-    for (uint32_t i = 0; i < mTypeArray.length(); ++i) {
-      if (mTypeArray[i].Equals(aType)) {
-        return i;
-      }
-    }
+  int32_t GetTypeIndex(const nsACString& aType, bool aAdd);
 
-    if (!aAdd) {
-      // Not found, but that is ok - we were just looking.
-      return -1;
-    }
-
-    // This type was not registered before.
-    // append it to the array, without copy-constructing the string
-    if (!mTypeArray.emplaceBack(aType)) {
-      return -1;
-    }
-
-    return mTypeArray.length() - 1;
-  }
-
+  // Returns PermissionHashKey for a given { host, isInBrowserElement } tuple.
+  // This is not simply using PermissionKey because we will walk-up domains in
+  // case of |host| contains sub-domains. Returns null if nothing found. Also
+  // accepts host on the format "<foo>". This will perform an exact match lookup
+  // as the string doesn't contain any dots.
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
+
+  // Returns PermissionHashKey for a given { host, isInBrowserElement } tuple.
+  // This is not simply using PermissionKey because we will walk-up domains in
+  // case of |host| contains sub-domains. Returns null if nothing found. Also
+  // accepts host on the format "<foo>". This will perform an exact match lookup
+  // as the string doesn't contain any dots.
   PermissionHashKey* GetPermissionHashKey(
       nsIURI* aURI, const OriginAttributes* aOriginAttributes, uint32_t aType,
       bool aExactHostMatch);
@@ -433,53 +393,23 @@ class PermissionManager final : public nsIPermissionManager,
                                 const nsACString& aType, uint32_t* aPermission,
                                 uint32_t aDefaultPermission,
                                 bool aDefaultPermissionIsValid,
-                                bool aExactHostMatch, bool aIncludingSession) {
-    auto preparationResult = CommonPrepareToTestPermission(
-        aPrincipal, aTypeIndex, aType, aPermission, aDefaultPermission,
-        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
-    if (preparationResult.is<nsresult>()) {
-      return preparationResult.as<nsresult>();
-    }
+                                bool aExactHostMatch, bool aIncludingSession);
 
-    return CommonTestPermissionInternal(
-        aPrincipal, nullptr, nullptr, preparationResult.as<int32_t>(), aType,
-        aPermission, aExactHostMatch, aIncludingSession);
-  }
   // If aTypeIndex is passed -1, we try to inder the type index from aType.
   nsresult CommonTestPermission(nsIURI* aURI, int32_t aTypeIndex,
                                 const nsACString& aType, uint32_t* aPermission,
                                 uint32_t aDefaultPermission,
                                 bool aDefaultPermissionIsValid,
-                                bool aExactHostMatch, bool aIncludingSession) {
-    auto preparationResult = CommonPrepareToTestPermission(
-        nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
-        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
-    if (preparationResult.is<nsresult>()) {
-      return preparationResult.as<nsresult>();
-    }
+                                bool aExactHostMatch, bool aIncludingSession);
 
-    return CommonTestPermissionInternal(
-        nullptr, aURI, nullptr, preparationResult.as<int32_t>(), aType,
-        aPermission, aExactHostMatch, aIncludingSession);
-  }
   nsresult CommonTestPermission(nsIURI* aURI,
                                 const OriginAttributes* aOriginAttributes,
                                 int32_t aTypeIndex, const nsACString& aType,
                                 uint32_t* aPermission,
                                 uint32_t aDefaultPermission,
                                 bool aDefaultPermissionIsValid,
-                                bool aExactHostMatch, bool aIncludingSession) {
-    auto preparationResult = CommonPrepareToTestPermission(
-        nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
-        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
-    if (preparationResult.is<nsresult>()) {
-      return preparationResult.as<nsresult>();
-    }
+                                bool aExactHostMatch, bool aIncludingSession);
 
-    return CommonTestPermissionInternal(
-        nullptr, aURI, aOriginAttributes, preparationResult.as<int32_t>(),
-        aType, aPermission, aExactHostMatch, aIncludingSession);
-  }
   // Only one of aPrincipal or aURI is allowed to be passed in.
   nsresult CommonTestPermissionInternal(
       nsIPrincipal* aPrincipal, nsIURI* aURI,
