@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.addons
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -105,14 +107,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                             requireContext().components.addonCollectionProvider,
                             this@AddonsManagementFragment,
                             addons,
-                            style = AddonsManagerAdapter.Style(
-                                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext()),
-                                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext()),
-                                ThemeManager.resolveAttribute(
-                                    R.attr.secondaryText,
-                                    requireContext()
-                                )
-                            )
+                            style = createAddonStyle(requireContext())
                         )
                         isInstallationInProgress = false
                         view.add_ons_progress_bar.isVisible = false
@@ -132,6 +127,16 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                 }
             }
         }
+    }
+
+    private fun createAddonStyle(context: Context): AddonsManagerAdapter.Style {
+        return AddonsManagerAdapter.Style(
+            sectionsTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            addonNameTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            addonSummaryTextColor = ThemeManager.resolveAttribute(R.attr.secondaryText, context),
+            sectionsTypeFace = ResourcesCompat.getFont(context, R.font.metropolis_semibold),
+            addonBackgroundIconColor = ThemeManager.resolveAttribute(R.attr.inset, requireContext())
+        )
     }
 
     private fun showInstalledAddonDetailsFragment(addon: Addon) {
