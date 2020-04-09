@@ -567,6 +567,18 @@ bool BitRsh(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
 bool UrshValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
                 MutableHandleValue res);
 
+bool LessThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+              bool* res);
+
+bool LessThanOrEqual(JSContext* cx, MutableHandleValue lhs,
+                     MutableHandleValue rhs, bool* res);
+
+bool GreaterThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
+                 bool* res);
+
+bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
+                        MutableHandleValue rhs, bool* res);
+
 bool AtomicIsLockFree(JSContext* cx, HandleValue in, int* out);
 
 template <bool strict>
