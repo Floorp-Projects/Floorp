@@ -1538,16 +1538,11 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       }
       case GlobalKind::Variable: {
         const InitExpr& init = global.initExpr();
+
+        RootedVal val(cx);
         switch (init.kind()) {
           case InitExpr::Kind::Constant: {
-            RootedVal dest(cx, Val(init.val()));
-            if (global.isIndirect()) {
-              void* address = globalObjs[i]->cell();
-              *(void**)globalAddr = address;
-              CopyValPostBarriered((uint8_t*)address, dest.get());
-            } else {
-              CopyValPostBarriered(globalAddr, dest.get());
-            }
+            val = Val(init.val());
             break;
           }
           case InitExpr::Kind::GetGlobal: {
@@ -1557,14 +1552,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
             // the source global should never be indirect.
             MOZ_ASSERT(!imported.isIndirect());
 
-            RootedVal dest(cx, globalImportValues[imported.importIndex()]);
-            if (global.isIndirect()) {
-              void* address = globalObjs[i]->cell();
-              *(void**)globalAddr = address;
-              CopyValPostBarriered((uint8_t*)address, dest.get());
-            } else {
-              CopyValPostBarriered(globalAddr, dest.get());
-            }
+            val = globalImportValues[imported.importIndex()];
             break;
           }
           case InitExpr::Kind::RefFunc: {
@@ -1572,17 +1560,18 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
             if (fnref == AnyRef::invalid().forCompiledCode()) {
               return false;  // OOM, which has already been reported.
             }
-            RootedVal val(cx, Val(ValType(RefType::func()),
-                                  FuncRef::fromCompiledCode(fnref)));
-            if (global.isIndirect()) {
-              void* address = globalObjs[i]->cell();
-              *(void**)globalAddr = address;
-              CopyValPostBarriered((uint8_t*)address, val.get());
-            } else {
-              CopyValPostBarriered(globalAddr, val.get());
-            }
+            val =
+                Val(ValType(RefType::func()), FuncRef::fromCompiledCode(fnref));
             break;
           }
+        }
+
+        if (global.isIndirect()) {
+          void* address = globalObjs[i]->cell();
+          *(void**)globalAddr = address;
+          CopyValPostBarriered((uint8_t*)address, val.get());
+        } else {
+          CopyValPostBarriered(globalAddr, val.get());
         }
         break;
       }
