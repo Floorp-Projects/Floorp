@@ -9,16 +9,6 @@ from telemetry_harness.ping_filters import ANY_PING, DELETION_REQUEST_PING, MAIN
 class TestDeletionRequestPing(TelemetryTestCase):
     """Tests for "deletion-request" ping."""
 
-    def disable_telemetry(self):
-        self.marionette.instance.profile.set_persistent_preferences(
-            {"datareporting.healthreport.uploadEnabled": False})
-        self.marionette.set_pref("datareporting.healthreport.uploadEnabled", False)
-
-    def enable_telemetry(self):
-        self.marionette.instance.profile.set_persistent_preferences(
-            {"datareporting.healthreport.uploadEnabled": True})
-        self.marionette.set_pref("datareporting.healthreport.uploadEnabled", True)
-
     def test_optout_ping_across_sessions(self):
         """Test the "deletion-request" ping behaviour across sessions."""
 
@@ -34,12 +24,12 @@ class TestDeletionRequestPing(TelemetryTestCase):
         self.assertNotIn("environment", ping["payload"])
 
         # Close Firefox cleanly.
-        self.marionette.quit(in_app=True)
+        self.quit_browser()
 
         # TODO: Check pending pings aren't persisted
 
         # Start Firefox.
-        self.marionette.start_session()
+        self.start_browser()
 
         # Trigger an environment change, which isn't allowed to send a ping.
         self.install_addon()
