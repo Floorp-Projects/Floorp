@@ -15,12 +15,13 @@ addRDMTask(
       userContextId: 2,
     });
     is(tab.userContextId, 2, "Tab's container ID is correct");
+    const browser = tab.linkedBrowser;
 
     // Open RDM and try to navigate
     const { ui } = await openRDM(tab);
     await waitForDeviceAndViewportState(ui);
 
-    await navigateToNewDomain(TEST_URL, ui);
+    await load(browser, TEST_URL);
     ok(true, "Test URL navigated successfully");
 
     await closeRDM(tab);
