@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLEditor.h"
+#include "mozilla/HTMLEditor.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/PresShell.h"
@@ -361,9 +361,6 @@ nsresult HTMLEditor::RefreshEditingUI() {
     // Absolute Positioning support is enabled, is the selection contained
     // in an absolutely positioned element ?
     absPosElement = GetAbsolutelyPositionedSelectionContainer();
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
   }
 
   RefPtr<Element> cellElement;
@@ -508,9 +505,6 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
     nsAutoString positionValue;
     DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetComputedProperty(
         aElement, *nsGkAtoms::position, positionValue);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "CSSEditUtils::GetComputedProperty(nsGkAtoms::"
                          "position) failed, but ignored");
