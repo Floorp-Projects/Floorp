@@ -96,9 +96,7 @@ add_task(async function test_resultsDisplayDecoded() {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
     result.displayed.url,
-    UrlbarPrefs.get("update1.view.stripHttps")
-      ? "http://example.com/\u9875"
-      : "example.com/\u9875",
+    "http://example.com/\u9875",
     "Should be displayed the correctly unescaped URL"
   );
 });
