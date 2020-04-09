@@ -134,6 +134,7 @@ flatpak build-finish build                                      \
         --share=ipc --socket=x11                                \
         --share=network                                         \
         --socket=pulseaudio                                     \
+        --socket=pcsc                                           \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
         --device=all                                            \
