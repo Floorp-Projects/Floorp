@@ -90,13 +90,17 @@ OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
   rv = InnerImage()->GetHeight(&size.height);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
+  RefPtr<SourceSurface> innerSurface =
+      InnerImage()->GetFrame(aWhichFrame, aFlags);
+  NS_ENSURE_TRUE(innerSurface, nullptr);
+
+  // Create our drawable.
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(innerSurface, size);
+
   // Determine an appropriate format for the surface.
-  gfx::SurfaceFormat surfaceFormat;
-  if (InnerImage()->WillDrawOpaqueNow()) {
-    surfaceFormat = gfx::SurfaceFormat::OS_RGBX;
-  } else {
-    surfaceFormat = gfx::SurfaceFormat::OS_RGBA;
-  }
+  gfx::SurfaceFormat surfaceFormat = IsOpaque(innerSurface->GetFormat())
+                                         ? gfx::SurfaceFormat::OS_RGBX
+                                         : gfx::SurfaceFormat::OS_RGBA;
 
   // Create a surface to draw into.
   RefPtr<DrawTarget> target =
@@ -106,12 +110,6 @@ OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
     NS_ERROR("Could not create a DrawTarget");
     return nullptr;
   }
-
-  // Create our drawable.
-  RefPtr<SourceSurface> innerSurface =
-      InnerImage()->GetFrame(aWhichFrame, aFlags);
-  NS_ENSURE_TRUE(innerSurface, nullptr);
-  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(innerSurface, size);
 
   // Draw.
   RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
