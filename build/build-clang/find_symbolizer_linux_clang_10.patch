@@ -1,0 +1,58 @@
+We currently need this patch because ASan only searches PATH to find the
+llvm-symbolizer binary to symbolize ASan traces. On testing machines, this
+can be installed in PATH easily. However, for e.g. the ASan Nightly Project,
+where we ship an ASan build, including llvm-symbolizer, to the user, we
+cannot expect llvm-symbolizer to be on PATH. Instead, we should try to look
+it up next to the binary. This patch implements the functionality for Linux
+only until there is similar functionality provided upstream.
+
+diff --git a/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp b/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
+index 79930d79425..cfb4f90c0d5 100644
+--- a/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
++++ b/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
+@@ -20,6 +20,10 @@
+ #include "sanitizer_common.h"
+ #include "sanitizer_file.h"
+ 
++#if SANITIZER_LINUX
++#include "sanitizer_posix.h"
++#endif
++
+ namespace __sanitizer {
+ 
+ void CatastrophicErrorWrite(const char *buffer, uptr length) {
+@@ -194,6 +198,34 @@ char *FindPathToBinary(const char *name) {
+     if (*end == '\0') break;
+     beg = end + 1;
+   }
++
++#if SANITIZER_LINUX
++  // If we cannot find the requested binary in PATH, we should try to locate
++  // it next to the binary, in case it is shipped with the build itself
++  // (e.g. llvm-symbolizer shipped with sanitizer build to symbolize on client.
++  if (internal_readlink("/proc/self/exe", buffer.data(), kMaxPathLength) < 0)
++    return nullptr;
++
++  uptr buf_len = internal_strlen(buffer.data());
++
++  /* Avoid using dirname() here */
++  while (buf_len > 0) {
++    if (buffer[buf_len - 1] == '/')
++      break;
++    buf_len--;
++  }
++
++  if (!buf_len)
++    return nullptr;
++
++  if (buf_len + name_len + 1 <= kMaxPathLength) {
++    internal_memcpy(&buffer[buf_len], name, name_len);
++    buffer[buf_len + name_len] = '\0';
++    if (FileExists(buffer.data()))
++      return internal_strdup(buffer.data());
++  }
++#endif
++
+   return nullptr;
+ }
+ 
