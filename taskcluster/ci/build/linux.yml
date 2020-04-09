@@ -1444,6 +1444,10 @@ linux-gcp/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux-gcp/opt:
     description: "Linux32 Opt - built on GCP"
@@ -1526,6 +1530,10 @@ linux64-gcp/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
 
 linux64-gcp/opt:
     description: "Linux64 Opt - built on GCP"
