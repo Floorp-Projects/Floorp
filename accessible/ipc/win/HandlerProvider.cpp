@@ -175,7 +175,7 @@ void HandlerProvider::BuildStaticIA2Data(
 
   // Include interfaces the client is likely to request.
   // This is cheap here and saves multiple cross-process calls later.
-  // These interfaces must be released in CleanupStaticIA2Data!
+  // These interfaces must be released in ReleaseStaticIA2DataInterfaces!
 
   // If the target is already an IAccessible2, this pointer is redundant.
   // However, the target might be an IAccessibleHyperlink, etc., in which
@@ -359,13 +359,6 @@ void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
   // as its presence is used to determine whether the rest of this data
   // retrieval was successful.
   hr = target->get_uniqueID(&aOutIA2Data->mUniqueId);
-}
-
-void HandlerProvider::CleanupStaticIA2Data(StaticIA2Data& aData) {
-  // When CoMarshalInterface writes interfaces out to a stream, it AddRefs.
-  // Therefore, we must release our references after this.
-  ReleaseStaticIA2DataInterfaces(aData);
-  ZeroMemory(&aData, sizeof(StaticIA2Data));
 }
 
 void HandlerProvider::BuildInitialIA2Data(

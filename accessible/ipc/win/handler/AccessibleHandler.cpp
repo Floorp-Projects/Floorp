@@ -103,8 +103,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
 }
 
 AccessibleHandler::~AccessibleHandler() {
-  // No need to zero memory, since we're being destroyed anyway.
-  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
+  CleanupDynamicIA2Data(mCachedData.mDynamicData);
   if (mCachedData.mGeckoBackChannel) {
     mCachedData.mGeckoBackChannel->Release();
   }
@@ -467,8 +466,7 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid) {
     return E_FAIL;
   }
   // Clean up the old data.
-  // No need to zero memory, since we're about to completely replace this.
-  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
+  CleanupDynamicIA2Data(mCachedData.mDynamicData);
   mCachedData = newData;
 
   // These interfaces have been aggregated into the proxy manager.
