@@ -10,7 +10,6 @@
 #include "nsIDNSByTypeRecord.h"
 #include "nsICancelable.h"
 #include "nsIPrefBranch.h"
-#include "nsIOService.h"
 #include "nsIXPConnect.h"
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
@@ -546,18 +545,6 @@ NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
 static StaticRefPtr<nsDNSService> gDNSService;
 
 already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
-  if (nsIOService::UseSocketProcess()) {
-    if (XRE_IsSocketProcess()) {
-      return GetSingleton();
-    }
-
-    if (XRE_IsContentProcess() || XRE_IsParentProcess()) {
-      return ChildDNSService::GetSingleton();
-    }
-
-    return nullptr;
-  }
-
   if (XRE_IsParentProcess()) {
     return GetSingleton();
   }
@@ -570,8 +557,7 @@ already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
 }
 
 already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
-  MOZ_ASSERT_IF(nsIOService::UseSocketProcess(), XRE_IsSocketProcess());
-  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), XRE_IsParentProcess());
+  NS_ASSERTION(XRE_IsParentProcess(), "not a parent process");
 
   if (!gDNSService) {
     gDNSService = new nsDNSService();

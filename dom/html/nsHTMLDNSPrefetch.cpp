@@ -62,6 +62,11 @@ nsresult nsHTMLDNSPrefetch::Initialize() {
 
   sEsniEnabled = Preferences::GetBool("network.security.esni.enabled", false);
 
+  NS_IF_RELEASE(sDNSService);
+  nsresult rv;
+  rv = CallGetService(kDNSServiceCID, &sDNSService);
+  if (NS_FAILED(rv)) return rv;
+
   if (IsNeckoChild()) NeckoChild::InitNeckoChild();
 
   sInitialized = true;
@@ -81,21 +86,6 @@ nsresult nsHTMLDNSPrefetch::Shutdown() {
   return NS_OK;
 }
 
-static bool EnsureDNSService() {
-  if (sDNSService) {
-    return true;
-  }
-
-  NS_IF_RELEASE(sDNSService);
-  nsresult rv;
-  rv = CallGetService(kDNSServiceCID, &sDNSService);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return !!sDNSService;
-}
-
 bool nsHTMLDNSPrefetch::IsAllowed(Document* aDocument) {
   // There is no need to do prefetch on non UI scenarios such as XMLHttpRequest.
   return aDocument->IsDNSPrefetchAllowed() && aDocument->GetWindow();
@@ -112,7 +102,7 @@ static uint32_t GetDNSFlagsFromLink(Link* aElement) {
 }
 
 nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, uint32_t flags) {
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   flags |= GetDNSFlagsFromLink(aElement);
@@ -148,7 +138,7 @@ nsresult nsHTMLDNSPrefetch::Prefetch(const nsAString& hostname, bool isHttps,
     return NS_OK;
   }
 
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sDNSService && sPrefetches && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
@@ -198,7 +188,7 @@ nsresult nsHTMLDNSPrefetch::PrefetchHigh(
 
 nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, uint32_t flags,
                                            nsresult aReason) {
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   nsAutoString hostname;
@@ -237,7 +227,7 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
     return NS_OK;
   }
 
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sDNSService && sPrefetches && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   // Forward cancellation to DNS service
@@ -351,9 +341,7 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
   NS_ASSERTION(NS_IsMainThread(),
                "nsDeferrals::SubmitQueue must be on main thread");
   nsCString hostName;
-  if (!EnsureDNSService()) {
-    return;
-  }
+  if (!sDNSService) return;
 
   while (mHead != mTail) {
     nsCOMPtr<Link> link = mEntries[mTail].mElement;

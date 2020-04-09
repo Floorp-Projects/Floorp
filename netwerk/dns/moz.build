@@ -39,7 +39,6 @@ EXPORTS.mozilla.net += [
     'ChildDNSService.h',
     'DNS.h',
     'DNSListenerProxy.h',
-    'DNSRequestBase.h',
     'DNSRequestChild.h',
     'DNSRequestParent.h',
     'IDNBlocklistUtils.h',

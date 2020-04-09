@@ -7,27 +7,22 @@
 #ifndef mozilla_net_DNSRequestParent_h
 #define mozilla_net_DNSRequestParent_h
 
-#include "mozilla/net/DNSRequestBase.h"
 #include "mozilla/net/PDNSRequestParent.h"
 #include "nsIDNSListener.h"
 
 namespace mozilla {
 namespace net {
 
-class DNSRequestParent : public DNSRequestActor, public PDNSRequestParent {
+class DNSRequestParent : public PDNSRequestParent, public nsIDNSListener {
  public:
-  friend class PDNSRequestParent;
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(DNSRequestParent, DNSRequestActor)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDNSLISTENER
 
-  explicit DNSRequestParent(DNSRequestBase* aRequest)
-      : DNSRequestActor(aRequest) {}
+  DNSRequestParent();
 
-  bool CanSend() const override { return PDNSRequestParent::CanSend(); }
-  DNSRequestChild* AsDNSRequestChild() override { return nullptr; }
-  DNSRequestParent* AsDNSRequestParent() override { return this; }
-
- private:
-  virtual ~DNSRequestParent() = default;
+  void DoAsyncResolve(const nsACString& hostname, const nsACString& trrServer,
+                      uint16_t type, const OriginAttributes& originAttributes,
+                      uint32_t flags);
 
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
@@ -35,8 +30,11 @@ class DNSRequestParent : public DNSRequestActor, public PDNSRequestParent {
       const nsCString& hostName, const nsCString& trrServer,
       const uint16_t& type, const OriginAttributes& originAttributes,
       const uint32_t& flags, const nsresult& reason);
-  mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply);
-  void ActorDestroy(ActorDestroyReason) override;
+
+ private:
+  virtual ~DNSRequestParent() = default;
+
+  uint32_t mFlags;
 };
 
 }  // namespace net

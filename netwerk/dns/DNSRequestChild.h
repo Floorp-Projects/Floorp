@@ -7,33 +7,50 @@
 #ifndef mozilla_net_DNSRequestChild_h
 #define mozilla_net_DNSRequestChild_h
 
-#include "mozilla/net/DNSRequestBase.h"
 #include "mozilla/net/PDNSRequestChild.h"
+#include "nsICancelable.h"
+#include "nsIDNSRecord.h"
+#include "nsIDNSListener.h"
+#include "nsIDNSByTypeRecord.h"
+#include "nsIEventTarget.h"
 
 namespace mozilla {
 namespace net {
 
-class DNSRequestChild final : public DNSRequestActor, public PDNSRequestChild {
- public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(DNSRequestChild, DNSRequestActor)
+class DNSRequestChild final : public PDNSRequestChild, public nsICancelable {
   friend class PDNSRequestChild;
 
-  explicit DNSRequestChild(DNSRequestBase* aRequest)
-      : DNSRequestActor(aRequest) {}
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICANCELABLE
 
-  bool CanSend() const override { return PDNSRequestChild::CanSend(); }
-  DNSRequestChild* AsDNSRequestChild() override { return this; }
-  DNSRequestParent* AsDNSRequestParent() override { return nullptr; }
+  DNSRequestChild(const nsACString& aHost, const nsACString& aTrrServer,
+                  const uint16_t& aType,
+                  const OriginAttributes& aOriginAttributes,
+                  const uint32_t& aFlags, nsIDNSListener* aListener,
+                  nsIEventTarget* target);
 
- private:
+  // Sends IPDL request to parent
+  void StartRequest();
+  void CallOnLookupComplete();
+
+ protected:
+  friend class CancelDNSRequestEvent;
+  friend class ChildDNSService;
   virtual ~DNSRequestChild() = default;
 
-  mozilla::ipc::IPCResult RecvCancelDNSRequest(
-      const nsCString& hostName, const nsCString& trrServer,
-      const uint16_t& type, const OriginAttributes& originAttributes,
-      const uint32_t& flags, const nsresult& reason);
   mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply);
   virtual void ActorDestroy(ActorDestroyReason why) override;
+
+  nsCOMPtr<nsIDNSListener> mListener;
+  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsIDNSRecord> mResultRecord;
+  nsresult mResultStatus;
+  nsCString mHost;
+  nsCString mTrrServer;
+  uint16_t mType;
+  const OriginAttributes mOriginAttributes;
+  uint16_t mFlags;
 };
 
 }  // namespace net
