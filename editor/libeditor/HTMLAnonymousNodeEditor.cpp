@@ -370,7 +370,7 @@ nsresult HTMLEditor::RefreshEditingUI() {
   if (IsObjectResizerEnabled() || IsInlineTableEditorEnabled()) {
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
-    cellElement = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
+    cellElement = GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td);
   }
 
   if (IsObjectResizerEnabled() && cellElement) {

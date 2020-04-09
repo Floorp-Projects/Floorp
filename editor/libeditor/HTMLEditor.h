@@ -581,8 +581,8 @@ class HTMLEditor final : public TextEditor,
   DoInlineTableEditingAction(const Element& aUIAnonymousElement);
 
   /**
-   * GetElementOrParentByTagName() looks for an element node whose name matches
-   * aTagName from aNode or anchor node of Selection to <body> element.
+   * GetInclusiveAncestorByTagName() looks for an element node whose name
+   * matches aTagName from aNode or anchor node of Selection to <body> element.
    *
    * @param aTagName        The tag name which you want to look for.
    *                        Must not be nsGkAtoms::_empty.
@@ -593,14 +593,12 @@ class HTMLEditor final : public TextEditor,
    *                        which has "href" attribute with non-empty value.
    *                        If nsGkAtoms::anchor, the result may be <a> which
    *                        has "name" attribute with non-empty value.
-   * @param aNode           If non-nullptr, this starts to look for the result
-   *                        from it.  Otherwise, i.e., nullptr, starts from
-   *                        anchor node of Selection.
+   * @param aContent        Start node to look for the result.
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetElementOrParentByTagName(const nsAtom& aTagName,
-                                       nsINode* aNode) const;
+  Element* GetInclusiveAncestorByTagName(const nsStaticAtom& aTagName,
+                                         nsIContent& aContent) const;
 
   /**
    * Get an active editor's editing host in DOM window.  If this editor isn't
@@ -2890,7 +2888,7 @@ class HTMLEditor final : public TextEditor,
   CollapseSelectionAfter(Element& aElement);
 
   /**
-   * GetElementOrParentByTagNameAtSelection() looks for an element node whose
+   * GetInclusiveAncestorByTagNameAtSelection() looks for an element node whose
    * name matches aTagName from anchor node of Selection to <body> element.
    *
    * @param aTagName        The tag name which you want to look for.
@@ -2905,10 +2903,11 @@ class HTMLEditor final : public TextEditor,
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetElementOrParentByTagNameAtSelection(const nsAtom& aTagName) const;
+  Element* GetInclusiveAncestorByTagNameAtSelection(
+      const nsStaticAtom& aTagName) const;
 
   /**
-   * GetElementOrParentByTagNameInternal() looks for an element node whose
+   * GetInclusiveAncestorByTagNameInternal() looks for an element node whose
    * name matches aTagName from aNode to <body> element.
    *
    * @param aTagName        The tag name which you want to look for.
@@ -2920,12 +2919,13 @@ class HTMLEditor final : public TextEditor,
    *                        which has "href" attribute with non-empty value.
    *                        If nsGkAtoms::anchor, the result may be <a> which
    *                        has "name" attribute with non-empty value.
-   * @param aNode           Start node to look for the element.
+   * @param aContent        Start node to look for the element.  This should
+   *                        not be an orphan node.
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
-                                               nsINode& aNode) const;
+  Element* GetInclusiveAncestorByTagNameInternal(const nsStaticAtom& aTagName,
+                                                 nsIContent& aContent) const;
 
   /**
    * GetSelectedElement() returns a "selected" element node.  "selected" means:
@@ -2943,8 +2943,8 @@ class HTMLEditor final : public TextEditor,
    * another method for avoiding breakage of comm-central apps.
    *
    * @param aTagName    The atom of tag name in lower case.  Set this to
-   *                    result  of GetLowerCaseNameAtom() if you have a tag
-   *                    name with nsString.
+   *                    result  of EditorUtils::GetTagNameAtom() if you have a
+   *                    tag name with nsString.
    *                    If nullptr, this returns any element node or nullptr.
    *                    If nsGkAtoms::href, this returns an <a> element which
    *                    has non-empty "href" attribute or nullptr.

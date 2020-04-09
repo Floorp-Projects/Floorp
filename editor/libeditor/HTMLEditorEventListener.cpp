@@ -354,8 +354,8 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
                                "Selection::Collapse() failed, but ignored");
         } else {
           // Get enclosing link if in text so we can select the link
-          Element* linkElement = htmlEditor->GetElementOrParentByTagName(
-              *nsGkAtoms::href, originalEventTargetContent);
+          Element* linkElement = htmlEditor->GetInclusiveAncestorByTagName(
+              *nsGkAtoms::href, *originalEventTargetContent);
           if (linkElement) {
             element = linkElement;
           }
