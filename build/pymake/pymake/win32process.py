@@ -1,5 +1,5 @@
-from ctypes import windll, POINTER, byref, WinError
-from ctypes.wintypes import WINFUNCTYPE, HANDLE, DWORD, BOOL
+from ctypes import windll, POINTER, byref, WinError, WINFUNCTYPE
+from ctypes.wintypes import HANDLE, DWORD, BOOL
 
 INFINITE = -1
 WAIT_FAILED = 0xFFFFFFFF
