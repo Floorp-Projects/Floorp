@@ -22,7 +22,7 @@ clang-dist-toolchain:
         toolchain-artifact: public/build/clang-dist-toolchain.tar.xz
     fetches:
         toolchain:
-            - linux64-clang-9-cross
+            - linux64-clang-9
             - linux64-sccache
 
 rustc-dist-toolchain:
