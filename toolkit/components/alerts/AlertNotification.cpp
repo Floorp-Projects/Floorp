@@ -121,7 +121,8 @@ AlertNotification::GetURI(nsIURI** aURI) {
     *aURI = nullptr;
     return NS_OK;
   }
-  return mPrincipal->GetURI(aURI);
+  auto* basePrin = BasePrincipal::Cast(mPrincipal);
+  return basePrin->GetURI(aURI);
 }
 
 NS_IMETHODIMP
