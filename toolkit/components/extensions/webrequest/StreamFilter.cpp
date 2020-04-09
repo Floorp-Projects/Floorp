@@ -74,29 +74,25 @@ void StreamFilter::Connect() {
   mAddonId->ToString(addonId);
 
   ContentChild* cc = ContentChild::GetSingleton();
+  RefPtr<StreamFilter> self(this);
   if (cc) {
-    RefPtr<StreamFilter> self(this);
-
     cc->SendInitStreamFilter(mChannelId, addonId)
         ->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
-            [=](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
+            [self](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
               self->FinishConnect(std::move(aEndpoint));
             },
-            [=](mozilla::ipc::ResponseRejectReason&& aReason) {
+            [self](mozilla::ipc::ResponseRejectReason&& aReason) {
               self->mActor->RecvInitialized(false);
             });
   } else {
-    mozilla::ipc::Endpoint<PStreamFilterChild> endpoint;
-    Unused << StreamFilterParent::Create(nullptr, mChannelId, addonId,
-                                         &endpoint);
-
-    // Always dispatch asynchronously so JS callers have a chance to attach
-    // event listeners before we dispatch events.
-    NS_DispatchToCurrentThread(
-        NewRunnableMethod<mozilla::ipc::Endpoint<PStreamFilterChild>&&>(
-            "StreamFilter::FinishConnect", this, &StreamFilter::FinishConnect,
-            std::move(endpoint)));
+    StreamFilterParent::Create(nullptr, mChannelId, addonId)
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [self](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
+              self->FinishConnect(std::move(aEndpoint));
+            },
+            [self](bool aDummy) { self->mActor->RecvInitialized(false); });
   }
 }
 

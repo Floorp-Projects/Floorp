@@ -108,9 +108,9 @@ StreamFilterParent::~StreamFilterParent() {
   NS_ReleaseOnMainThread("StreamFilterParent::mContext", mContext.forget());
 }
 
-bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
-                                uint64_t aChannelId, const nsAString& aAddonId,
-                                Endpoint<PStreamFilterChild>* aEndpoint) {
+auto StreamFilterParent::Create(dom::ContentParent* aContentParent,
+                                uint64_t aChannelId, const nsAString& aAddonId)
+    -> RefPtr<ChildEndpointPromise> {
   AssertIsMainThread();
 
   auto& webreq = WebRequestService::GetSingleton();
@@ -120,25 +120,12 @@ bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
       webreq.GetTraceableChannel(aChannelId, addonId, aContentParent);
 
   RefPtr<mozilla::net::nsHttpChannel> chan = do_QueryObject(channel);
-  NS_ENSURE_TRUE(chan, false);
-
-  auto channelPid = chan->ProcessId();
-  NS_ENSURE_TRUE(channelPid, false);
-
-  Endpoint<PStreamFilterParent> parent;
-  Endpoint<PStreamFilterChild> child;
-  nsresult rv = PStreamFilter::CreateEndpoints(
-      channelPid,
-      aContentParent ? aContentParent->OtherPid() : base::GetCurrentProcId(),
-      &parent, &child);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!chan->AttachStreamFilter(std::move(parent))) {
-    return false;
+  if (!chan) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
   }
 
-  *aEndpoint = std::move(child);
-  return true;
+  return chan->AttachStreamFilter(aContentParent ? aContentParent->OtherPid()
+                                                 : base::GetCurrentProcId());
 }
 
 /* static */
