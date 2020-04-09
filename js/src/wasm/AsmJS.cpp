@@ -1725,7 +1725,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
       return false;
     }
     seg->tableIndex = tableIndex;
-    seg->offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
+    seg->offsetIfActive = Some(InitExpr::fromConstant(LitVal(uint32_t(0))));
     seg->elemFuncIndices = std::move(elems);
     return env_.elemSegments.append(std::move(seg));
   }

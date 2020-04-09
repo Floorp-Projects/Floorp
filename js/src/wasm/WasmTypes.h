@@ -1327,16 +1327,26 @@ class InitExpr {
  public:
   InitExpr() = default;
 
-  explicit InitExpr(LitVal val) : kind_(Kind::Constant) { u.val_ = val; }
-
-  explicit InitExpr(uint32_t globalIndex, ValType type)
-      : kind_(Kind::GetGlobal) {
-    u.global.index_ = globalIndex;
-    u.global.type_ = type;
+  static InitExpr fromConstant(LitVal val) {
+    InitExpr expr;
+    expr.kind_ = Kind::Constant;
+    expr.u.val_ = val;
+    return expr;
   }
 
-  explicit InitExpr(uint32_t refFuncIndex) : kind_(Kind::RefFunc) {
-    u.refFuncIndex_ = refFuncIndex;
+  static InitExpr fromGetGlobal(uint32_t globalIndex, ValType type) {
+    InitExpr expr;
+    expr.kind_ = Kind::GetGlobal;
+    expr.u.global.index_ = globalIndex;
+    expr.u.global.type_ = type;
+    return expr;
+  }
+
+  static InitExpr fromRefFunc(uint32_t refFuncIndex) {
+    InitExpr expr;
+    expr.kind_ = Kind::RefFunc;
+    expr.u.refFuncIndex_ = refFuncIndex;
+    return expr;
   }
 
   Kind kind() const { return kind_; }
