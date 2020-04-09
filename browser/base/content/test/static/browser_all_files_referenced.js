@@ -269,6 +269,8 @@ for (let entry of ignorableWhitelist) {
 if (!isDevtools) {
   // services/sync/modules/main.js
   whitelist.add("resource://services-sync/service.js");
+  // services/sync/modules/bridged_engine.js
+  whitelist.add("resource://services-sync/bridged_engine.js");
   // services/sync/modules/service.js
   for (let module of [
     "addons.js",
