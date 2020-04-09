@@ -12,6 +12,8 @@ from tryselect.cli import BaseTryParser
 from tryselect.tasks import generate_tasks
 from tryselect.push import check_working_directory, push_to_try, generate_try_task_config
 
+from ...tasks import filter_tasks_by_blacklist
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -40,6 +42,13 @@ def run(update=False, query=None, try_config=None, full=False, parameters=None,
     check_working_directory(push)
 
     tg = generate_tasks(parameters, full)
+
+    # Remove tasks that are not to be shown unless `--full` is specified.
+    if not full:
+        blacklisted_tasks = [label for label in tg.tasks.keys() if not filter_tasks_by_blacklist(label)]
+        for task in blacklisted_tasks:
+            tg.tasks.pop(task)
+
     app = create_application(tg)
 
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
