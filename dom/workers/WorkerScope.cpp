@@ -37,6 +37,7 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/StorageAccess.h"
+#include "GeckoProfiler.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -286,8 +287,25 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
     stack = GetCurrentStackForNetMonitor(aCx);
   }
 
-  workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
-                        WorkerScript, aRv);
+  {
+#ifdef MOZ_GECKO_PROFILER
+    nsCString urls;
+    if (profiler_can_accept_markers()) {
+      const uint32_t urlCount = aScriptURLs.Length();
+      if (urlCount) {
+        urls = NS_ConvertUTF16toUTF8(aScriptURLs[0]);
+        for (uint32_t index = 1; index < urlCount; index++) {
+          urls.AppendLiteral(",");
+          urls.Append(NS_ConvertUTF16toUTF8(aScriptURLs[index]));
+        }
+      }
+    }
+    AUTO_PROFILER_TEXT_MARKER_CAUSE("ImportScripts", urls, JS, Nothing(),
+                                    profiler_get_backtrace());
+#endif
+    workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
+                          WorkerScript, aRv);
+  }
 }
 
 int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, Function& aHandler,
