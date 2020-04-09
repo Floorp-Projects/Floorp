@@ -537,6 +537,12 @@ StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   RunOnActorThread(FUNC, [=] {
     if (self->IPCActive()) {
       self->CheckResult(self->SendStopRequest(aStatusCode));
+    } else {
+      RunOnMainThread(FUNC, [=] {
+        if (!self->mSentStop) {
+          self->EmitStopRequest(aStatusCode);
+        }
+      });
     }
   });
   return NS_OK;
