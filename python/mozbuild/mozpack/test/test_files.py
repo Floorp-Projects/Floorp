@@ -59,6 +59,7 @@ import unittest
 import mozfile
 import mozunit
 import os
+import platform
 import random
 import six
 import sys
@@ -75,7 +76,8 @@ class TestWithTmpDir(unittest.TestCase):
         self.symlink_supported = False
         self.hardlink_supported = False
 
-        if hasattr(os, 'symlink'):
+        # See comment in mozpack.files.AbsoluteSymlinkFile
+        if hasattr(os, 'symlink') and platform.system() != 'Windows':
             dummy_path = self.tmppath('dummy_file')
             with open(dummy_path, 'a'):
                 pass

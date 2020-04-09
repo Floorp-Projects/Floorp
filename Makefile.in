@@ -98,7 +98,7 @@ ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	@# same directory, because that would blow up
 	$(if $(wildcard _build_manifests/install/$(subst /,_,$*)),$(if $(wildcard faster/install_$(subst /,_,$*)*),$(error FasterMake and RecursiveMake ends of the hybrid build system want to handle $*)))
 endif
-	$(addprefix $(call py_action,process_install_manifest,--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
+	$(addprefix $(call py3_action,process_install_manifest,--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
 $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
@@ -108,7 +108,7 @@ install-tests: install-test-files
 
 .PHONY: install-test-files
 install-test-files:
-	$(call py_action,process_install_manifest,--track install__test_files.track _tests _build_manifests/install/_test_files)
+	$(call py3_action,process_install_manifest,--track install__test_files.track _tests _build_manifests/install/_test_files)
 
 include $(topsrcdir)/build/moz-automation.mk
 
