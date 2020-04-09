@@ -31,7 +31,7 @@
  *   |  |                       v          |        v             |          |
  *   |  |  +--------------------+------+   |   +----+-----+       |          |
  *   |  |  |       Finalization-       |   |   |  Target  |       |          |
- *   |  |  |     RecordVectorObject    |   |   | JSObject |       |          |
+ *   |  |  |    RegistrationsObject    |   |   | JSObject |       |          |
  *   |  |  +-------------+-------------+   |   +----------+       |          |
  *   |  |  |       RecordVector        |   |                      |          |
  *   |  |  +-------------+-------------+   |                      |          |
@@ -54,7 +54,7 @@
  *
  * When a target is registered an unregister token may be supplied. If so, this
  * is also recorded by the registry and is stored in a weak map of
- * registrations. The values of this map are FinalizationRecordVectorObject
+ * registrations. The values of this map are FinalizationRegistrationsObject
  * objects. It's necessary to have another JSObject here because our weak map
  * implementation only supports JS types as values.
  *
@@ -131,24 +131,25 @@ class FinalizationRecordObject : public NativeObject {
   FinalizationRegistryObject* registryUnbarriered() const;
 };
 
-// A vector of FinalizationRecordObjects.
-using FinalizationRecordVector =
-    GCVector<HeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
+// A vector of weakly-held FinalizationRecordObjects.
+using WeakFinalizationRecordVector =
+    GCVector<WeakHeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
 
-// A JS object containing a vector of FinalizationRecordObjects, which holds the
-// records corresponding to the registrations for a particular registration
-// token. These are used as the values in the registration weakmap. The contents
-// of the vector are weak references and are not traced.
-class FinalizationRecordVectorObject : public NativeObject {
+// A JS object containing a vector of weakly-held FinalizationRecordObjects,
+// which holds the records corresponding to the registrations for a particular
+// registration token. These are used as the values in the registration
+// weakmap. Since the contents of the vector are weak references they are not
+// traced.
+class FinalizationRegistrationsObject : public NativeObject {
   enum { RecordsSlot = 0, SlotCount };
 
  public:
   static const JSClass class_;
 
-  static FinalizationRecordVectorObject* create(JSContext* cx);
+  static FinalizationRegistrationsObject* create(JSContext* cx);
 
-  FinalizationRecordVector* records();
-  const FinalizationRecordVector* records() const;
+  WeakFinalizationRecordVector* records();
+  const WeakFinalizationRecordVector* records() const;
 
   bool isEmpty() const;
 
@@ -165,6 +166,9 @@ class FinalizationRecordVectorObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
+
+using FinalizationRecordVector =
+    GCVector<HeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
 
 using FinalizationRecordSet =
     GCHashSet<HeapPtrObject, MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
