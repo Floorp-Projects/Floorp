@@ -27,13 +27,8 @@ that this is a lightweight and reversible action that keeps your tab where you
 can reach it easily. -->
 <!ENTITY  pinTab.label                       "Pin Tab">
 <!ENTITY  unpinTab.label                     "Unpin Tab">
-<!ENTITY  undoCloseTab.label                 "Undo Close Tab">
-<!ENTITY  hiddenTabs.label                   "Hidden Tabs">
 
 <!ENTITY  listAllTabs.label      "List all tabs">
-<!-- LOCALIZATION NOTE (allTabsMenu.searchTabs.label): "Search" is a verb, as
-in "Search through tabs". -->
-<!ENTITY  allTabsMenu.searchTabs.label       "Search Tabs">
 
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY openFileCmd.label "Open File…">
@@ -152,9 +147,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY webDeveloperMenu.label       "Web Developer">
 
-<!ENTITY newUserContext.label             "New Container Tab">
-<!ENTITY manageUserContext.label          "Manage Containers">
-<!ENTITY manageUserContext.accesskey      "O">
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newPrivateWindow.label     "New Private Window">
 
