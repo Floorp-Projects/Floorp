@@ -8298,19 +8298,19 @@ void CodeGenerator::visitCompareVM(LCompareVM* lir) {
       break;
 
     case JSOp::Lt:
-      callVM<Fn, jit::LessThan>(lir);
+      callVM<Fn, js::LessThan>(lir);
       break;
 
     case JSOp::Le:
-      callVM<Fn, jit::LessThanOrEqual>(lir);
+      callVM<Fn, js::LessThanOrEqual>(lir);
       break;
 
     case JSOp::Gt:
-      callVM<Fn, jit::GreaterThan>(lir);
+      callVM<Fn, js::GreaterThan>(lir);
       break;
 
     case JSOp::Ge:
-      callVM<Fn, jit::GreaterThanOrEqual>(lir);
+      callVM<Fn, js::GreaterThanOrEqual>(lir);
       break;
 
     default:

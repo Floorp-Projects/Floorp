@@ -135,8 +135,8 @@ namespace jit {
   _(GetSparseElementHelper, js::GetSparseElementHelper)                        \
   _(GetValueProperty, js::GetValueProperty)                                    \
   _(GlobalNameConflictsCheckFromIon, js::jit::GlobalNameConflictsCheckFromIon) \
-  _(GreaterThan, js::jit::GreaterThan)                                         \
-  _(GreaterThanOrEqual, js::jit::GreaterThanOrEqual)                           \
+  _(GreaterThan, js::GreaterThan)                                              \
+  _(GreaterThanOrEqual, js::GreaterThanOrEqual)                                \
   _(HandleDebugTrap, js::jit::HandleDebugTrap)                                 \
   _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
   _(ImportMetaOperation, js::ImportMetaOperation)                              \
@@ -177,8 +177,8 @@ namespace jit {
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
-  _(LessThan, js::jit::LessThan)                                               \
-  _(LessThanOrEqual, js::jit::LessThanOrEqual)                                 \
+  _(LessThan, js::LessThan)                                                    \
+  _(LessThanOrEqual, js::LessThanOrEqual)                                      \
   _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
   _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
   _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
