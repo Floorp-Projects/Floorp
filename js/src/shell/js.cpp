@@ -98,6 +98,7 @@
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Debug.h"
 #include "js/Equality.h"                 // JS::SameValue
+#include "js/Exception.h"                // JS::StealPendingExceptionStack
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/GCVector.h"
 #include "js/Initialization.h"
@@ -9579,15 +9580,12 @@ js::shell::AutoReportException::~AutoReportException() {
   }
 
   // Get exception object and stack before printing and clearing exception.
-  RootedValue exn(cx);
-  (void)JS_GetPendingException(cx, &exn);
-  RootedObject stack(cx, GetPendingExceptionStack(cx));
-
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  JS::StealPendingExceptionStack(cx, &exnStack);
 
   ShellContext* sc = GetShellContext(cx);
   js::ErrorReport report(cx);
-  if (!report.init(cx, exn, js::ErrorReport::WithSideEffects, stack)) {
+  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
     fprintf(stderr, "out of memory initializing ErrorReport\n");
     fflush(stderr);
     JS_ClearPendingException(cx);
@@ -9600,7 +9598,7 @@ js::shell::AutoReportException::~AutoReportException() {
   PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
   JS_ClearPendingException(cx);
 
-  if (!PrintStackTrace(cx, stack)) {
+  if (!PrintStackTrace(cx, exnStack.stack())) {
     fputs("(Unable to print stack trace)\n", fp);
     JS_ClearPendingException(cx);
   }
