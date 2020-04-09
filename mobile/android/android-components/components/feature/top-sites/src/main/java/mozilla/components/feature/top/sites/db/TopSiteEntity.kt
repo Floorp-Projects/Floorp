@@ -23,6 +23,9 @@ internal data class TopSiteEntity(
     @ColumnInfo(name = "url")
     var url: String,
 
+    @ColumnInfo(name = "is_default")
+    var isDefault: Boolean = false,
+
     @ColumnInfo(name = "created_at")
     var createdAt: Long = System.currentTimeMillis()
 )

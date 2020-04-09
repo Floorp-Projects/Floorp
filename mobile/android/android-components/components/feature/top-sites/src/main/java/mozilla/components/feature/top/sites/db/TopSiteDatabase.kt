@@ -8,16 +8,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Internal database for storing top sites.
  */
-@Database(entities = [TopSiteEntity::class], version = 1)
+@Database(entities = [TopSiteEntity::class], version = 2)
 internal abstract class TopSiteDatabase : RoomDatabase() {
     abstract fun topSiteDao(): TopSiteDao
 
     companion object {
-        @Volatile private var instance: TopSiteDatabase? = null
+        @Volatile
+        private var instance: TopSiteDatabase? = null
 
         @Synchronized
         fun get(context: Context): TopSiteDatabase {
@@ -27,9 +30,33 @@ internal abstract class TopSiteDatabase : RoomDatabase() {
                 context,
                 TopSiteDatabase::class.java,
                 "top_sites"
+            ).addMigrations(
+                Migrations.migration_1_2
             ).build().also {
                 instance = it
             }
+        }
+    }
+}
+
+internal object Migrations {
+    val migration_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add the new isDefault column and set isDefault to 0 (false) for every entry.
+            database.execSQL(
+                "ALTER TABLE top_sites ADD COLUMN isDefault INTEGER NOT NULL DEFAULT 0"
+            )
+
+            // Prior to version 2, pocket top sites, wikipedia and youtube were added as default
+            // sites in Fenix. Look for these entries and set isDefault to 1 (true).
+            database.execSQL(
+                "UPDATE top_sites " +
+                    "SET isDefault = 1 " +
+                    "WHERE url IN " +
+                    "('https://getpocket.com/fenix-top-articles', " +
+                    "'https://www.wikipedia.org/', " +
+                    "'https://www.youtube.com/')"
+            )
         }
     }
 }

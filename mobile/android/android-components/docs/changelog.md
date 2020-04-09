@@ -38,7 +38,7 @@ permalink: /changelog/
 
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
-  
+
   * **feature-qr**
     * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
@@ -55,6 +55,9 @@ permalink: /changelog/
 
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
+
+* **feature-top-sites**
+  * Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
 
 # 38.0.0
 
