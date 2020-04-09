@@ -40,7 +40,19 @@ class TabViewHolderTest {
         holder.bind(session, isSelected = false, observable = mock())
 
         assertEquals("https://www.mozilla.org", titleView.text)
-        assertEquals("https://www.mozilla.org", urlView.text)
+        assertEquals("www.mozilla.org", urlView.text)
+    }
+
+    @Test
+    fun `URL text is set to tab URL when exception is thrown`() {
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
+        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val session = Tab("a", "about:home")
+
+        holder.bind(session, isSelected = false, observable = mock())
+
+        assertEquals("about:home", urlView.text)
     }
 
     @Test
@@ -96,7 +108,7 @@ class TabViewHolderTest {
         holder.bind(session, isSelected = true, observable = registry)
 
         assertEquals(session.url, titleView.text)
-        assertEquals(session.url, urlView.text)
+        assertEquals("www.mozilla.org", urlView.text)
     }
 
     @Test
@@ -116,7 +128,7 @@ class TabViewHolderTest {
         holder.bind(session, isSelected = true, observable = registry)
 
         assertEquals("Mozilla Firefox", titleView.text)
-        assertEquals("https://www.mozilla.org", urlView.text)
+        assertEquals("www.mozilla.org", urlView.text)
     }
 
     @Test

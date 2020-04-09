@@ -99,6 +99,7 @@ permalink: /changelog/
  * Added ability to let consumers pass a custom layout of `TabViewHolder` in order to control layout inflation and view binding.
  * Added an optional URL view to the `TabViewHolder` to display the URL.
  * Will expose a new `layout` parameter which allows consumers to change the tabs tray layout.
+ * Will only display a URL's hostname instead of the entire URL
 
 * **browser-session**
   * ⚠️ **This is a breaking change**: `SessionManager.runWithSessionIdOrSelected` now returns the result from the `block` it executes. This is consistent with `runWithSession`.

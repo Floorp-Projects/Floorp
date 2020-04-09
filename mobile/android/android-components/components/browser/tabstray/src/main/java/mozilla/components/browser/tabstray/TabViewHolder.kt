@@ -14,6 +14,7 @@ import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -43,7 +44,7 @@ class TabViewHolder(
         }
 
         titleView.text = title
-        urlView?.text = tab.url
+        urlView?.text = tab.url.tryGetHostFromUrl()
 
         itemView.setOnClickListener {
             observable.notifyObservers { onTabSelected(tab) }

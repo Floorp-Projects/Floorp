@@ -31,6 +31,7 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':ui-colors')
     implementation project(':support-base')
+    implementation project(':support-ktx')
 
     implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_cardview
