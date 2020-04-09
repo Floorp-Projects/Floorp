@@ -11,8 +11,6 @@
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "patches": [
         "clang-tidy-ci.patch",
-        "clang-tidy-no-errors.patch",
-        "bug-1605181-isConstexpr.patch",
-        "bug-1606630-if_constexpr.patch"
+        "clang-tidy-no-errors.patch"
     ]
 }
