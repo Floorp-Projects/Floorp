@@ -1,1 +1,1 @@
-[["warning", "Null pointer passed as 1st argument to string length function", "clang-analyzer-unix.cstring.NullArg"], {"reliability": "high"}]
+[["warning", "Null pointer argument in call to string length function", "clang-analyzer-unix.cstring.NullArg"], {"reliability": "high"}]
