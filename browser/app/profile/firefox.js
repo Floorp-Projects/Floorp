@@ -2140,7 +2140,12 @@ pref("devtools.webconsole.filter.netxhr", false);
 pref("devtools.webconsole.input.autocomplete",true);
 
 // Show context selector in console input, in the browser toolbox
-pref("devtools.webconsole.input.context", false);
+#if defined(NIGHTLY_BUILD)
+  pref("devtools.webconsole.input.context", true);
+#else
+  pref("devtools.webconsole.input.context", false);
+#endif
+
 // Show context selector in console input, in the content toolbox
 pref("devtools.contenttoolbox.webconsole.input.context", false);
 
