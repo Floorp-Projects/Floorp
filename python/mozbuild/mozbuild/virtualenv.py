@@ -222,6 +222,7 @@ class VirtualenvManager(object):
         called out to), the path to create the virtualenv in, and a handle to
         write output to.
         """
+        existed = os.path.exists(self.virtualenv_root)
 
         args = [python, self.virtualenv_script_path,
                 # Without this, virtualenv.py may attempt to contact the outside
@@ -232,6 +233,11 @@ class VirtualenvManager(object):
                 self.virtualenv_root]
 
         result = self._log_process_output(args)
+
+        if result and existed:
+            # Try again after removing the previous env, see bug 1628644.
+            shutil.rmtree(self.virtualenv_root)
+            result = self._log_process_output(args)
 
         if result:
             raise Exception(
