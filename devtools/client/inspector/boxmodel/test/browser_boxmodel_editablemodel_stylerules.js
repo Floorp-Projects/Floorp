@@ -39,7 +39,11 @@ async function testUnits(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 3, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -92,7 +96,11 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 16, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -134,7 +142,11 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 32, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );

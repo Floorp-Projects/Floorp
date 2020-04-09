@@ -50,7 +50,11 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -95,7 +99,11 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 10, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -163,7 +171,11 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 20, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -204,7 +216,11 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 15, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );
@@ -241,7 +257,11 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
   );
   is(span.textContent, 1, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    span,
+    boxmodel.document.defaultView
+  );
   const editor = boxmodel.document.querySelector(
     ".styleinspector-propertyeditor"
   );

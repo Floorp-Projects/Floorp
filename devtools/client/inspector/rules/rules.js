@@ -161,6 +161,7 @@ function CssRuleView(inspector, document, store) {
   this._onTogglePrintSimulation = this._onTogglePrintSimulation.bind(this);
   this.highlightElementRule = this.highlightElementRule.bind(this);
   this.highlightProperty = this.highlightProperty.bind(this);
+  this.getApplicableTextProperty = this.getApplicableTextProperty.bind(this);
   this.refreshPanel = this.refreshPanel.bind(this);
 
   const doc = this.styleDocument;
@@ -1747,46 +1748,74 @@ CssRuleView.prototype = {
    *
    * @param  {String} name
    *         The property name to scroll to and highlight.
-   * @return {Boolean} true if the TextProperty name is found, and false otherwise.
+   * @return {Boolean} true if the TextProperty name was highlighted, and false otherwise.
    */
   highlightProperty: function(name) {
+    const textProp = this.getApplicableTextProperty(name);
+    if (!textProp) {
+      return false;
+    }
+
+    const rule = textProp.rule;
+    const {
+      editor: { selectorText },
+    } = rule;
+    let scrollBehavior = "smooth";
+
+    // If using 2-Pane mode, then switch to the Rules tab first.
+    if (!this.inspector.is3PaneModeEnabled) {
+      this.inspector.sidebar.select("ruleview");
+    }
+
+    // If the property is being applied by a pseudo element rule, expand the pseudo
+    // element list container.
+    if (rule.pseudoElement.length && !this.showPseudoElements) {
+      // Set the scroll behavior to "auto" to avoid timing issues between toggling
+      // the pseudo element container and scrolling smoothly to the rule.
+      scrollBehavior = "auto";
+      this._togglePseudoElementRuleContainer();
+    }
+
+    // Assume we scroll to the container of the CSS declaration (aka TextProperty)
+    let element = textProp.editor.element;
+    // If the returned applied TextProperty's value is not the same as the input property, then it
+    // is likely a shorthand notation and one of its sub-properties applies.
+    if (name !== textProp.name) {
+      const subProperty = textProp.computed.find(
+        subProp => subProp.name === name
+      );
+
+      // Expand the computed list.
+      textProp.editor.expandForFilter();
+      // Ensure we scroll to the container of the sub-property
+      element = subProperty.element;
+    }
+
+    // Scroll to the top of the property's rule so that both the property and its
+    // rule are visible.
+    this._scrollToElement(selectorText, element, scrollBehavior);
+    this._flashElement(element);
+
+    return true;
+  },
+
+  /**
+   * Finds the specified CSS property name in the rule view and returns the corresponding
+   * TextProperty instance for that CSS property which currently applies (overwritten and
+   * disabled ones are skipped).
+   *
+   * @param  {String} name
+   *         The property name to find.
+   * @return {TextProperty|null} textProp if the TextProperty name was found, and null otherwise.
+   */
+  getApplicableTextProperty: function(name) {
     for (const rule of this.rules) {
       for (const textProp of rule.textProps) {
         if (textProp.overridden || textProp.invisible || !textProp.enabled) {
           continue;
         }
-
-        const {
-          editor: { selectorText },
-        } = rule;
-        let scrollBehavior = "smooth";
-
-        // First, search for a matching authored property.
         if (textProp.name === name) {
-          // If using 2-Pane mode, then switch to the Rules tab first.
-          if (!this.inspector.is3PaneModeEnabled) {
-            this.inspector.sidebar.select("ruleview");
-          }
-
-          // If the property is being applied by a pseudo element rule, expand the pseudo
-          // element list container.
-          if (rule.pseudoElement.length && !this.showPseudoElements) {
-            // Set the scroll behavior to "auto" to avoid timing issues between toggling
-            // the pseudo element container and scrolling smoothly to the rule.
-            scrollBehavior = "auto";
-            this._togglePseudoElementRuleContainer();
-          }
-
-          // Scroll to the top of the property's rule so that both the property and its
-          // rule are visible.
-          this._scrollToElement(
-            selectorText,
-            textProp.editor.element,
-            scrollBehavior
-          );
-          this._flashElement(textProp.editor.element);
-
-          return true;
+          return textProp;
         }
 
         // If there is no matching property, then look in computed properties.
@@ -1796,35 +1825,12 @@ CssRuleView.prototype = {
           }
 
           if (computed.name === name) {
-            if (!this.inspector.is3PaneModeEnabled) {
-              this.inspector.sidebar.select("ruleview");
-            }
-
-            if (
-              textProp.rule.pseudoElement.length &&
-              !this.showPseudoElements
-            ) {
-              scrollBehavior = "auto";
-              this._togglePseudoElementRuleContainer();
-            }
-
-            // Expand the computed list.
-            textProp.editor.expandForFilter();
-
-            this._scrollToElement(
-              selectorText,
-              computed.element,
-              scrollBehavior
-            );
-            this._flashElement(computed.element);
-
-            return true;
+            return textProp;
           }
         }
       }
     }
-
-    return false;
+    return null;
   },
 };
 
