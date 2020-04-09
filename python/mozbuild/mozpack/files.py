@@ -375,7 +375,10 @@ class AbsoluteSymlinkFile(File):
 
         # Handle the simple case where symlinks are definitely not supported by
         # falling back to file copy.
-        if not hasattr(os, 'symlink'):
+        # Python 3 supports symlinks on Windows, but for some reason, this has
+        # weird consequences on automation (but not in a local build). Exclude
+        # Windows for now until we figure out what the cause is.
+        if not hasattr(os, 'symlink') or platform.system() == 'Windows':
             return File.copy(self, dest, skip_if_older=skip_if_older)
 
         # Always verify the symlink target path exists.
@@ -577,7 +580,8 @@ class PreprocessedFile(BaseFile):
         # destination is not a symlink, we leave it alone, since we're going to
         # overwrite its contents anyway.
         # If symlinks aren't supported at all, we can skip this step.
-        if hasattr(os, 'symlink'):
+        # See comment in AbsoluteSymlinkFile about Windows.
+        if hasattr(os, 'symlink') and platform.system() != 'Windows':
             if os.path.islink(dest.path):
                 os.remove(dest.path)
 
