@@ -79,7 +79,6 @@ class HandlerProvider final : public IGeckoBackChannel,
   void BuildInitialIA2Data(NotNull<mscom::IInterceptor*> aInterceptor,
                            StaticIA2Data* aOutStaticData,
                            DynamicIA2Data* aOutDynamicData);
-  static void CleanupStaticIA2Data(StaticIA2Data& aData);
   bool IsTargetInterfaceCacheable();
 
   /**
@@ -116,9 +115,10 @@ class HandlerProvider final : public IGeckoBackChannel,
 
   struct IA2PayloadDeleter {
     void operator()(IA2Payload* aPayload) {
-      CleanupStaticIA2Data(aPayload->mStaticData);
-      // No need to zero memory, since aPayload is being deleted.
-      CleanupDynamicIA2Data(aPayload->mDynamicData, false);
+      // When CoMarshalInterface writes interfaces out to a stream, it AddRefs.
+      // Therefore, we must release our references after this.
+      ReleaseStaticIA2DataInterfaces(aPayload->mStaticData);
+      CleanupDynamicIA2Data(aPayload->mDynamicData);
       delete aPayload;
     }
   };
