@@ -209,7 +209,7 @@
 #  include "signaling/src/peerconnection/WebrtcGlobalChild.h"
 #endif
 
-#include "nsPermission.h"
+#include "mozilla/Permission.h"
 #include "nsPermissionManager.h"
 
 #include "PermissionMessageUtils.h"

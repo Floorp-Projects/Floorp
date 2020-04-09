@@ -3,22 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPermission_h__
-#define nsPermission_h__
+#ifndef mozilla_Permission_h
+#define mozilla_Permission_h
 
 #include "nsIPermission.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+namespace mozilla {
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPermission : public nsIPermission {
+class Permission : public nsIPermission {
  public:
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERMISSION
 
-  static already_AddRefed<nsPermission> Create(
+  static already_AddRefed<Permission> Create(
       nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aCapability,
       uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime);
 
@@ -28,11 +30,11 @@ class nsPermission : public nsIPermission {
       nsIPrincipal* aPrincipal);
 
  protected:
-  nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
-               uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime,
-               int64_t aModificationTime);
+  Permission(nsIPrincipal* aPrincipal, const nsACString& aType,
+             uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime,
+             int64_t aModificationTime);
 
-  virtual ~nsPermission(){};
+  virtual ~Permission() = default;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mType;
@@ -42,4 +44,6 @@ class nsPermission : public nsIPermission {
   int64_t mModificationTime;
 };
 
-#endif  // nsPermission_h__
+}  // namespace mozilla
+
+#endif  // mozilla_Permission_h
