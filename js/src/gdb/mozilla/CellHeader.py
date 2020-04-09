@@ -15,7 +15,8 @@ def get_header_length_and_flags(value):
     # Return the contents of a CellHeaderWithLengthAndFlags.
     assert value.type.strip_typedefs().tag == \
         'js::gc::CellHeaderWithLengthAndFlags'
-    flags = value['header_']
+    header = value['header_']
+    flags = header['header_']
     try:
         length = value['length_']
     except gdb.error:
