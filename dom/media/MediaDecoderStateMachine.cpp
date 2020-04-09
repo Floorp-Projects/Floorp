@@ -3582,12 +3582,15 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
   mAudioCompleted = false;
   mVideoCompleted = false;
 
-  // Stop and shut down the existing sink.
-  StopMediaSink();
-  mMediaSink->Shutdown();
+  // Don't create a new media sink if we're still suspending media sink.
+  if (!mIsMediaSinkSuspended) {
+    // Stop and shut down the existing sink.
+    StopMediaSink();
+    mMediaSink->Shutdown();
 
-  // Create a new sink according to whether output is captured.
-  mMediaSink = CreateMediaSink();
+    // Create a new sink according to whether output is captured.
+    mMediaSink = CreateMediaSink();
+  }
 
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
