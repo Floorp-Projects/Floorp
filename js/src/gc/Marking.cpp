@@ -199,9 +199,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   // Check that CellHeader is the first field in the cell.
   static_assert(
-      std::is_base_of<CellHeader,
-                      typename std::remove_const<typename std::remove_reference<
-                          decltype(thing->cellHeader())>::type>::type>::value,
+      std::is_base_of_v<CellHeader, std::remove_const_t<std::remove_reference_t<
+                                        decltype(thing->cellHeader())>>>,
       "GC things must provide a cellHeader() method that returns a reference "
       "to the cell header");
   MOZ_ASSERT(static_cast<const void*>(&thing->cellHeader()) ==
@@ -3082,8 +3081,8 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
 
 template <typename T>
 void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
-  static_assert(std::is_base_of<Cell, T>::value, "T must be a Cell type");
-  static_assert(!std::is_base_of<TenuredCell, T>::value,
+  static_assert(std::is_base_of_v<Cell, T>, "T must be a Cell type");
+  static_assert(!std::is_base_of_v<TenuredCell, T>,
                 "T must not be a tenured Cell type");
 
   if (!*edge) {
@@ -3574,9 +3573,9 @@ static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
 
 template <typename T>
 struct MightBeNurseryAllocated {
-  static const bool value = std::is_base_of<JSObject, T>::value ||
-                            std::is_base_of<JSString, T>::value ||
-                            std::is_base_of<JS::BigInt, T>::value;
+  static const bool value = std::is_base_of_v<JSObject, T> ||
+                            std::is_base_of_v<JSString, T> ||
+                            std::is_base_of_v<JS::BigInt, T>;
 };
 
 template <typename T>

@@ -22,8 +22,7 @@ template <typename T>
 struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
   using Type = std::remove_pointer_t<T>;
 
-#define IS_BASE_OF_OR(_1, BaseType, _2, _3) \
-  std::is_base_of<BaseType, Type>::value ||
+#define IS_BASE_OF_OR(_1, BaseType, _2, _3) std::is_base_of_v<BaseType, Type> ||
   static_assert(
       JS_FOR_EACH_TRACEKIND(IS_BASE_OF_OR) false,
       "InternalGCPointerPolicy must only be used for GC thing pointers");
