@@ -103,7 +103,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   }
 
   uint32_t contentType = aLoadInfo->InternalContentPolicyType();
-  nsCOMPtr<nsISupports> requestContext = aLoadInfo->GetLoadingContext();
+  bool parserCreatedScript = aLoadInfo->GetParserCreatedScript();
 
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   nsresult rv =
@@ -141,10 +141,10 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     if (preloadCsp) {
       // obtain the enforcement decision
       rv = preloadCsp->ShouldLoad(
-          contentType, cspEventListener, aContentLocation, requestContext,
-          aMimeTypeGuess,
+          contentType, cspEventListener, aContentLocation, aMimeTypeGuess,
           nullptr,  // no redirect, aOriginal URL is null.
-          aLoadInfo->GetSendCSPViolationEvents(), cspNonce, aDecision);
+          aLoadInfo->GetSendCSPViolationEvents(), cspNonce, parserCreatedScript,
+          aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // if the preload policy already denied the load, then there
@@ -167,10 +167,10 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   if (csp) {
     // obtain the enforcement decision
     rv = csp->ShouldLoad(contentType, cspEventListener, aContentLocation,
-                         requestContext, aMimeTypeGuess,
+                         aMimeTypeGuess,
                          nullptr,  // no redirect, aOriginal URL is null.
                          aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
-                         aDecision);
+                         parserCreatedScript, aDecision);
 
     if (NS_CP_REJECTED(*aDecision)) {
       NS_SetRequestBlockingReason(
@@ -335,7 +335,8 @@ nsresult CSPService::ConsultCSPForRedirect(
       nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(policyType);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  nsCOMPtr<nsISupports> requestContext = aLoadInfo->GetLoadingContext();
+  bool parserCreatedScript = aLoadInfo->GetParserCreatedScript();
+
   // 1) Apply speculative CSP for preloads
   if (isPreload) {
     nsCOMPtr<nsIContentSecurityPolicy> preloadCsp = aLoadInfo->GetPreloadCsp();
@@ -346,12 +347,11 @@ nsresult CSPService::ConsultCSPForRedirect(
                        policyType,  // load type per nsIContentPolicy (uint32_t)
                        cspEventListener,
                        aNewURI,         // nsIURI
-                       requestContext,  // nsISupports
                        EmptyCString(),  // ACString - MIME guess
                        aOriginalURI,    // Original nsIURI
                        true,            // aSendViolationReports
                        cspNonce,        // nonce
-                       &decision);
+                       parserCreatedScript, &decision);
 
       // if the preload policy already denied the load, then there
       // is no point in checking the real policy
@@ -371,12 +371,11 @@ nsresult CSPService::ConsultCSPForRedirect(
         policyType,  // load type per nsIContentPolicy (uint32_t)
         cspEventListener,
         aNewURI,         // nsIURI
-        requestContext,  // nsISupports
         EmptyCString(),  // ACString - MIME guess
         aOriginalURI,    // Original nsIURI
         true,            // aSendViolationReports
         cspNonce,        // nonce
-        &decision);
+        parserCreatedScript, &decision);
     if (NS_CP_REJECTED(decision)) {
       aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
       return NS_BINDING_FAILED;
