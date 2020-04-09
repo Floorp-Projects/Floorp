@@ -38,7 +38,7 @@ feature.shutdown()
 
 // To receive the subscription info for all the subscription changes.
 feature.register(object : AutoPushFeature.Observer {
-  override fun onSubscriptionChanged(subscription: AutoPushSubscription) {
+  override fun onSubscriptionChanged(scope: PushScope) {
     // Handle subscription info here.
   }
 })
