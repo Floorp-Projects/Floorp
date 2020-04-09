@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import, print_function
 
+from io import StringIO
 import os
 import unittest
 import shutil
-from StringIO import StringIO
 import json
 from tempfile import NamedTemporaryFile
 
@@ -112,7 +112,7 @@ end_of_record
 
 class TempFile():
     def __init__(self, content):
-        self.file = NamedTemporaryFile(delete=False)
+        self.file = NamedTemporaryFile(mode='w', delete=False, encoding='utf-8')
         self.file.write(content)
         self.file.close()
 
