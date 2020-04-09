@@ -423,13 +423,6 @@ clang-9:
         repo: https://github.com/llvm/llvm-project
         revision: c1a0a213378a458fbea1a5c77b315c7dce08fd05
 
-clang-10:
-    description: clang 10.0.0 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d32170dbd5b0d54436537b6b75beaf44324e0c28
-
 wasi-sdk:
     description: wasi-sdk source code
     fetch:
