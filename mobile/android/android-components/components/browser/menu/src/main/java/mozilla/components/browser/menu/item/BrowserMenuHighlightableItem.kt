@@ -122,6 +122,7 @@ class BrowserMenuHighlightableItem(
                     highlightedTextView.visibility = View.VISIBLE
                     notificationDotView.imageTintList = ColorStateList.valueOf(highlight.notificationTint)
                     notificationDotView.visibility = View.VISIBLE
+                    view.contentDescription = "${notificationDotView.contentDescription}, ${textView.text}"
                 }
                 is BrowserMenuHighlight.ClassicHighlight -> {
                     view.setBackgroundResource(highlight.backgroundResource)

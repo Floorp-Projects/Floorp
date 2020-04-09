@@ -35,7 +35,7 @@
         android:translationX="@dimen/mozac_browser_menu_highlightable_notification_translate_x"
         android:translationY="@dimen/mozac_browser_menu_highlightable_notification_translate_y"
         android:background="@android:color/transparent"
-        android:importantForAccessibility="no"
+        android:contentDescription="@string/mozac_browser_menu_highlighted"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/image"
         app:layout_constraintEnd_toEndOf="@id/image"
