@@ -329,11 +329,11 @@ interface nsIContentSecurityPolicy : nsISerializable
   short shouldLoad(in nsContentPolicyType aContentType,
                    in nsICSPEventListener aCSPEventListener,
                    in nsIURI          aContentLocation,
-                   in nsISupports     aContext,
                    in ACString        aMimeTypeGuess,
                    in nsIURI          aOriginalURIIfRedirect,
                    in bool            aSendViolationReports,
-                   in AString         aNonce);
+                   in AString         aNonce,
+                   in boolean         aParserCreated);
 
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.

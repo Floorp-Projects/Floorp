@@ -147,6 +147,7 @@ struct LoadInfoArgs
   bool                        skipContentSniffing;
   uint32_t                    httpsOnlyStatus;
   bool                        allowDeprecatedSystemRequests;
+  bool                        parserCreatedScript;
   bool                        isFromProcessingFrameAttributes;
   CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
@@ -192,6 +193,10 @@ struct ParentLoadInfoForwarderArgs
   // and all requests will be cancelled. Setting this flag to true prevents
   // the request from being cancelled.
   bool allowDeprecatedSystemRequests;
+
+  // Only ever returns true if the loadinfo is of TYPE_SCRIPT and
+  // the script was created by the HTML parser.
+  bool parserCreatedScript;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.
