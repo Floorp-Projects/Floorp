@@ -21,7 +21,7 @@ var HeadersProvider = {
   ...ObjectProvider,
 
   getChildren(object) {
-    if (object && object.value instanceof HeaderList) {
+    if (object.value instanceof HeaderList) {
       return object.value.headers.map(
         (header, index) => new Header(header.name, header.value, index)
       );

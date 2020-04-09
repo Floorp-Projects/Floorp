@@ -24,7 +24,7 @@ const CookiesPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/CookiesPanel")
 );
 const HeadersPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/HeadersPanel")
+  require("devtools/client/netmonitor/src/components/HeadersPanel")
 );
 const WebSocketsPanel = createFactory(
   require("devtools/client/netmonitor/src/components/websockets/WebSocketsPanel")
