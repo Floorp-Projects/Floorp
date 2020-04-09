@@ -70,11 +70,13 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
   virtual ProcessId OtherPid() const override { return IProtocol::OtherPid(); }
 
+  virtual bool AttachStreamFilter(
+      Endpoint<mozilla::extensions::PStreamFilterParent>&& aEndpoint) override {
+    return SendAttachStreamFilter(std::move(aEndpoint));
+  }
+
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
-  RedirectToRealChannel(
-      nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
-          aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
+  RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
 
   ~DocumentChannelParent();
 

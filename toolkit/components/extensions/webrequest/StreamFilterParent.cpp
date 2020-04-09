@@ -108,9 +108,9 @@ StreamFilterParent::~StreamFilterParent() {
   NS_ReleaseOnMainThread("StreamFilterParent::mContext", mContext.forget());
 }
 
-auto StreamFilterParent::Create(dom::ContentParent* aContentParent,
-                                uint64_t aChannelId, const nsAString& aAddonId)
-    -> RefPtr<ChildEndpointPromise> {
+bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
+                                uint64_t aChannelId, const nsAString& aAddonId,
+                                Endpoint<PStreamFilterChild>* aEndpoint) {
   AssertIsMainThread();
 
   auto& webreq = WebRequestService::GetSingleton();
@@ -120,12 +120,25 @@ auto StreamFilterParent::Create(dom::ContentParent* aContentParent,
       webreq.GetTraceableChannel(aChannelId, addonId, aContentParent);
 
   RefPtr<mozilla::net::nsHttpChannel> chan = do_QueryObject(channel);
-  if (!chan) {
-    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  NS_ENSURE_TRUE(chan, false);
+
+  auto channelPid = chan->ProcessId();
+  NS_ENSURE_TRUE(channelPid, false);
+
+  Endpoint<PStreamFilterParent> parent;
+  Endpoint<PStreamFilterChild> child;
+  nsresult rv = PStreamFilter::CreateEndpoints(
+      channelPid,
+      aContentParent ? aContentParent->OtherPid() : base::GetCurrentProcId(),
+      &parent, &child);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!chan->AttachStreamFilter(std::move(parent))) {
+    return false;
   }
 
-  return chan->AttachStreamFilter(aContentParent ? aContentParent->OtherPid()
-                                                 : base::GetCurrentProcId());
+  *aEndpoint = std::move(child);
+  return true;
 }
 
 /* static */
@@ -537,12 +550,6 @@ StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   RunOnActorThread(FUNC, [=] {
     if (self->IPCActive()) {
       self->CheckResult(self->SendStopRequest(aStatusCode));
-    } else {
-      RunOnMainThread(FUNC, [=] {
-        if (!self->mSentStop) {
-          self->EmitStopRequest(aStatusCode);
-        }
-      });
     }
   });
   return NS_OK;

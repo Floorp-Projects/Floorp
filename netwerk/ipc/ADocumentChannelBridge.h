@@ -53,13 +53,14 @@ class ADocumentChannelBridge {
   // Initate a switch from the DocumentChannel to the protocol-specific
   // real channel.
   virtual RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
-  RedirectToRealChannel(
-      nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
-          aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags) = 0;
+  RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags) = 0;
 
   // Returns the process id that this bridge is connected to.
   virtual base::ProcessId OtherPid() const = 0;
+
+  // Attach a StreamFilterParent to the remote-side nsIChannel of this bridge.
+  virtual bool AttachStreamFilter(
+      ipc::Endpoint<mozilla::extensions::PStreamFilterParent>&& aEndpoint) = 0;
 
  protected:
   virtual ~ADocumentChannelBridge() = default;
