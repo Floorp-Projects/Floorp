@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import re
+import six
 
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
@@ -29,7 +30,7 @@ _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
 
 
 def generate_pp_info(path, topsrcdir):
-    with open(path) as fh:
+    with open(path, encoding='utf-8') as fh:
         # (start, end) -> (included_source, start)
         section_info = dict()
 
@@ -143,7 +144,7 @@ class ChromeMapBackend(CommonBackend):
             chrome_mapping = self.manifest_handler.chrome_mapping
             overrides = self.manifest_handler.overrides
             json.dump([
-                {k: list(v) for k, v in chrome_mapping.iteritems()},
+                {k: list(v) for k, v in six.iteritems(chrome_mapping)},
                 overrides,
                 self._install_mapping,
                 {
