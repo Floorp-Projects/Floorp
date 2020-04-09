@@ -82,9 +82,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // The JSScript we're ultimately producing.
   JS::Rooted<JSScript*> script;
 
-  // The lazy script if mode is LazyFunction, nullptr otherwise.
-  JS::Rooted<BaseScript*> lazyScript;
-
  private:
   BytecodeSection bytecodeSection_;
 
@@ -186,8 +183,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Internal constructor, for delegation use only.
   BytecodeEmitter(
       BytecodeEmitter* parent, SharedContext* sc, JS::Handle<JSScript*> script,
-      JS::Handle<BaseScript*> lazyScript, uint32_t line, uint32_t column,
-      CompilationInfo& compilationInfo, EmitterMode emitterMode,
+      uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
+      EmitterMode emitterMode,
       FieldInitializers fieldInitializers = FieldInitializers::Invalid());
 
   void initFromBodyPosition(TokenPos bodyPosition);
@@ -204,28 +201,25 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
  public:
   BytecodeEmitter(
       BytecodeEmitter* parent, BCEParserHandle* parser, SharedContext* sc,
-      JS::Handle<JSScript*> script, JS::Handle<BaseScript*> lazyScript,
-      uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
-      EmitterMode emitterMode = Normal,
+      JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
+      CompilationInfo& compilationInfo, EmitterMode emitterMode = Normal,
       FieldInitializers fieldInitializers = FieldInitializers::Invalid());
 
   BytecodeEmitter(
       BytecodeEmitter* parent, const EitherParser& parser, SharedContext* sc,
-      JS::Handle<JSScript*> script, JS::Handle<BaseScript*> lazyScript,
-      uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
-      EmitterMode emitterMode = Normal,
+      JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
+      CompilationInfo& compilationInfo, EmitterMode emitterMode = Normal,
       FieldInitializers fieldInitializers = FieldInitializers::Invalid());
 
   template <typename Unit>
   BytecodeEmitter(
       BytecodeEmitter* parent, Parser<FullParseHandler, Unit>* parser,
-      SharedContext* sc, JS::Handle<JSScript*> script,
-      JS::Handle<BaseScript*> lazyScript, uint32_t line, uint32_t column,
-      CompilationInfo& compilationInfo, EmitterMode emitterMode = Normal,
+      SharedContext* sc, JS::Handle<JSScript*> script, uint32_t line,
+      uint32_t column, CompilationInfo& compilationInfo,
+      EmitterMode emitterMode = Normal,
       FieldInitializers fieldInitializers = FieldInitializers::Invalid())
-      : BytecodeEmitter(parent, EitherParser(parser), sc, script, lazyScript,
-                        line, column, compilationInfo, emitterMode,
-                        fieldInitializers) {}
+      : BytecodeEmitter(parent, EitherParser(parser), sc, script, line, column,
+                        compilationInfo, emitterMode, fieldInitializers) {}
 
   MOZ_MUST_USE bool init();
   MOZ_MUST_USE bool init(TokenPos bodyPosition);
