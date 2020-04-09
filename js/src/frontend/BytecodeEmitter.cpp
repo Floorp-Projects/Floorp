@@ -101,14 +101,13 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
-    Handle<BaseScript*> lazyScript, uint32_t line, uint32_t column,
-    CompilationInfo& compilationInfo, EmitterMode emitterMode,
+    uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
+    EmitterMode emitterMode,
     FieldInitializers fieldInitializers /* = FieldInitializers::Invalid() */)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
       script(cx, script),
-      lazyScript(cx, lazyScript),
       bytecodeSection_(cx, line),
       perScriptData_(cx, compilationInfo),
       fieldInitializers_(fieldInitializers),
@@ -116,32 +115,34 @@ BytecodeEmitter::BytecodeEmitter(
       firstLine(line),
       firstColumn(column),
       emitterMode(emitterMode) {
-  MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
-
   if (IsTypeInferenceEnabled() && sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
     bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
   }
 }
 
-BytecodeEmitter::BytecodeEmitter(
-    BytecodeEmitter* parent, BCEParserHandle* handle, SharedContext* sc,
-    HandleScript script, Handle<BaseScript*> lazyScript, uint32_t line,
-    uint32_t column, CompilationInfo& compilationInfo, EmitterMode emitterMode,
-    FieldInitializers fieldInitializers)
-    : BytecodeEmitter(parent, sc, script, lazyScript, line, column,
-                      compilationInfo, emitterMode, fieldInitializers) {
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
+                                 BCEParserHandle* handle, SharedContext* sc,
+                                 HandleScript script, uint32_t line,
+                                 uint32_t column,
+                                 CompilationInfo& compilationInfo,
+                                 EmitterMode emitterMode,
+                                 FieldInitializers fieldInitializers)
+    : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
+                      emitterMode, fieldInitializers) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
 
-BytecodeEmitter::BytecodeEmitter(
-    BytecodeEmitter* parent, const EitherParser& parser, SharedContext* sc,
-    HandleScript script, Handle<BaseScript*> lazyScript, uint32_t line,
-    uint32_t column, CompilationInfo& compilationInfo, EmitterMode emitterMode,
-    FieldInitializers fieldInitializers)
-    : BytecodeEmitter(parent, sc, script, lazyScript, line, column,
-                      compilationInfo, emitterMode, fieldInitializers) {
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
+                                 const EitherParser& parser, SharedContext* sc,
+                                 HandleScript script, uint32_t line,
+                                 uint32_t column,
+                                 CompilationInfo& compilationInfo,
+                                 EmitterMode emitterMode,
+                                 FieldInitializers fieldInitializers)
+    : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
+                      emitterMode, fieldInitializers) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -5509,7 +5510,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     EmitterMode nestedMode = emitterMode;
     if (nestedMode == BytecodeEmitter::LazyFunction) {
-      MOZ_ASSERT(lazyScript->isBinAST());
+      MOZ_ASSERT(script->isBinAST());
       nestedMode = BytecodeEmitter::Normal;
     }
 
@@ -5527,9 +5528,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     }
 
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
-                         /* lazyScript = */ nullptr, funbox->extent.lineno,
-                         funbox->extent.column, compilationInfo, nestedMode,
-                         *fieldInitializers);
+                         funbox->extent.lineno, funbox->extent.column,
+                         compilationInfo, nestedMode, *fieldInitializers);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
