@@ -254,7 +254,7 @@ def main(log, args):
             if returncode != 0:
                 log.error(
                     "Failed to run visualmetrics.py",
-                    video_location=job.video_location,
+                    video_path=job.video_path,
                     error=res,
                 )
                 failed_runs += 1
