@@ -7,8 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Firefox Accounts')
 
-DIRS += ['interfaces']
-
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
