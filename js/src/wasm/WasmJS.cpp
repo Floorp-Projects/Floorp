@@ -1593,8 +1593,7 @@ WasmInstanceObject* WasmInstanceObject::create(
   // Root the Instance via WasmInstanceObject before any possible GC.
   auto* instance = cx->new_<Instance>(
       cx, obj, code, std::move(tlsData), memory, std::move(tables),
-      std::move(structTypeDescrs), funcImports, globalImportValues, globalObjs,
-      std::move(maybeDebug));
+      std::move(structTypeDescrs), std::move(maybeDebug));
   if (!instance) {
     return nullptr;
   }
@@ -1603,7 +1602,8 @@ WasmInstanceObject* WasmInstanceObject::create(
                    MemoryUse::WasmInstanceInstance);
   MOZ_ASSERT(!obj->isNewborn());
 
-  if (!instance->init(cx, dataSegments, elemSegments)) {
+  if (!instance->init(cx, funcImports, globalImportValues, globalObjs,
+                      dataSegments, elemSegments)) {
     return nullptr;
   }
 
