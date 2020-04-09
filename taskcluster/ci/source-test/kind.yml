@@ -36,14 +36,3 @@ jobs-from:
 job-defaults:
     attributes:
         retrigger: true
-
-# This is used by run-task based tasks to lookup which build task it
-# should depend on based on its own platform.
-dependent-build-platforms:
-    linux64-asan/opt: build-linux64-asan/opt
-    linux64/debug: build-linux64/debug
-    linux64.*: build-linux64-shippable/opt
-    linux1804-64/opt: build-linux64/opt
-    linux1804-64/debug: build-linux64/debug
-    linux1804-64-asan/opt: build-linux64-asan/opt
-    linux1804-64-shippable.*: build-linux64-shippable/opt
