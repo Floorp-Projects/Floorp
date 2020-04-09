@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/DNSRequestParent.h"
-#include "mozilla/net/DNSRequestChild.h"
 #include "nsIDNSService.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
@@ -19,28 +18,13 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-DNSRequestHandler::DNSRequestHandler() : mFlags(0) {}
+DNSRequestParent::DNSRequestParent() : mFlags(0) {}
 
-//-----------------------------------------------------------------------------
-// DNSRequestHandler::nsISupports
-//-----------------------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS(DNSRequestHandler, nsIDNSListener)
-
-static void SendLookupCompletedHelper(DNSRequestActor* aActor,
-                                      const DNSRequestResponse& aReply) {
-  if (DNSRequestParent* parent = aActor->AsDNSRequestParent()) {
-    Unused << parent->SendLookupCompleted(aReply);
-  } else if (DNSRequestChild* child = aActor->AsDNSRequestChild()) {
-    Unused << child->SendLookupCompleted(aReply);
-  }
-}
-
-void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
-                                       const nsACString& trrServer,
-                                       uint16_t type,
-                                       const OriginAttributes& originAttributes,
-                                       uint32_t flags) {
+void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
+                                      const nsACString& trrServer,
+                                      uint16_t type,
+                                      const OriginAttributes& originAttributes,
+                                      uint32_t flags) {
   nsresult rv;
   mFlags = flags;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
@@ -61,12 +45,12 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
     }
   }
 
-  if (NS_FAILED(rv) && mIPCActor->CanSend()) {
-    SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(rv));
+  if (NS_FAILED(rv) && CanSend()) {
+    Unused << SendLookupCompleted(DNSRequestResponse(rv));
   }
 }
 
-void DNSRequestHandler::OnRecvCancelDNSRequest(
+mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
     const nsCString& hostName, const nsCString& aTrrServer,
     const uint16_t& type, const OriginAttributes& originAttributes,
     const uint32_t& flags, const nsresult& reason) {
@@ -84,20 +68,23 @@ void DNSRequestHandler::OnRecvCancelDNSRequest(
           hostName, aTrrServer, flags, this, reason, originAttributes);
     }
   }
+  return IPC_OK();
 }
 
-bool DNSRequestHandler::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
-  return true;
-}
+//-----------------------------------------------------------------------------
+// DNSRequestParent::nsISupports
+//-----------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(DNSRequestParent, nsIDNSListener)
 
 //-----------------------------------------------------------------------------
 // nsIDNSListener functions
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
-                                    nsresult status) {
-  if (!mIPCActor || !mIPCActor->CanSend()) {
+DNSRequestParent::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
+                                   nsresult status) {
+  if (!CanSend()) {
     // nothing to do: child probably crashed
     return NS_OK;
   }
@@ -109,7 +96,7 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     if (txtRec) {
       nsTArray<nsCString> rec;
       txtRec->GetRecords(rec);
-      SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(rec));
+      Unused << SendLookupCompleted(DNSRequestResponse(rec));
       return NS_OK;
     }
 
@@ -125,39 +112,12 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
       array.AppendElement(addr);
     }
 
-    SendLookupCompletedHelper(mIPCActor,
-                              DNSRequestResponse(DNSRecord(cname, array)));
+    Unused << SendLookupCompleted(DNSRequestResponse(DNSRecord(cname, array)));
   } else {
-    SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(status));
+    Unused << SendLookupCompleted(DNSRequestResponse(status));
   }
 
   return NS_OK;
-}
-
-void DNSRequestHandler::OnIPCActorDestroy() { mIPCActor = nullptr; }
-
-//-----------------------------------------------------------------------------
-// DNSRequestParent functions
-//-----------------------------------------------------------------------------
-
-mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
-    const nsCString& hostName, const nsCString& trrServer, const uint16_t& type,
-    const OriginAttributes& originAttributes, const uint32_t& flags,
-    const nsresult& reason) {
-  mDNSRequest->OnRecvCancelDNSRequest(hostName, trrServer, type,
-                                      originAttributes, flags, reason);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DNSRequestParent::RecvLookupCompleted(
-    const DNSRequestResponse& reply) {
-  return mDNSRequest->OnRecvLookupCompleted(reply) ? IPC_OK()
-                                                   : IPC_FAIL_NO_REASON(this);
-}
-
-void DNSRequestParent::ActorDestroy(ActorDestroyReason) {
-  mDNSRequest->OnIPCActorDestroy();
-  mDNSRequest = nullptr;
 }
 
 }  // namespace net
