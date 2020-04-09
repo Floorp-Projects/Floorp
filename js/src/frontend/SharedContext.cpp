@@ -281,9 +281,9 @@ void FunctionBox::setAsmJSModule(JSFunction* function) {
 
 void FunctionBox::finish() {
   if (!emitBytecode) {
-    // Lazy inner functions need to record their enclosing scope for when they
-    // eventually are compiled.
+    // Apply updates from FunctionEmitter::emitLazy().
     function()->setEnclosingScope(enclosingScope_.getExistingScope());
+    function()->baseScript()->setTreatAsRunOnce(treatAsRunOnce());
   } else {
     // Non-lazy inner functions don't use the enclosingScope_ field.
     MOZ_ASSERT(!enclosingScope_);
