@@ -9,6 +9,9 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   getFormattedIPAndPort,
@@ -29,17 +32,12 @@ const {
   HeaderList,
 } = require("devtools/client/netmonitor/src/utils/headers-provider");
 const {
-  FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
+  setTargetSearchResult,
+} = require("devtools/client/netmonitor/src/actions/search");
+
 // Components
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
-);
-const SearchBox = createFactory(
-  require("devtools/client/shared/components/SearchBox")
-);
-const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
+  require("devtools/client/netmonitor/src/components/PropertiesView")
 );
 const StatusCode = createFactory(
   require("devtools/client/netmonitor/src/components/StatusCode")
@@ -96,6 +94,7 @@ class HeadersPanel extends Component {
       request: PropTypes.object.isRequired,
       renderValue: PropTypes.func,
       openLink: PropTypes.func,
+      resetTargetSearchResult: PropTypes.func,
       targetSearchResult: PropTypes.object,
     };
   }
@@ -107,19 +106,15 @@ class HeadersPanel extends Component {
       rawRequestHeadersOpened: false,
       rawResponseHeadersOpened: false,
       rawUploadHeadersOpened: false,
-      lastToggledRawHeader: "",
-      filterText: null,
     };
 
     this.getProperties = this.getProperties.bind(this);
-    this.getTargetHeaderPath = this.getTargetHeaderPath.bind(this);
     this.toggleRawResponseHeaders = this.toggleRawResponseHeaders.bind(this);
     this.toggleRawRequestHeaders = this.toggleRawRequestHeaders.bind(this);
     this.toggleRawUploadHeaders = this.toggleRawUploadHeaders.bind(this);
     this.renderSummary = this.renderSummary.bind(this);
     this.renderRow = this.renderRow.bind(this);
     this.renderValue = this.renderValue.bind(this);
-    this.renderRawHeadersBtn = this.renderRawHeadersBtn.bind(this);
   }
 
   componentDidMount() {
@@ -154,9 +149,11 @@ class HeadersPanel extends Component {
 
     if (headers?.headers.length) {
       const headerKey = this.getHeadersTitle(headers, title);
+
       propertiesResult = {
         [headerKey]: new HeaderList(headers.headers),
       };
+
       if (
         (title === RESPONSE_HEADERS && this.state.rawResponseHeadersOpened) ||
         (title === REQUEST_HEADERS && this.state.rawRequestHeadersOpened) ||
@@ -174,21 +171,18 @@ class HeadersPanel extends Component {
   toggleRawResponseHeaders() {
     this.setState({
       rawResponseHeadersOpened: !this.state.rawResponseHeadersOpened,
-      lastToggledRawHeader: "response",
     });
   }
 
   toggleRawRequestHeaders() {
     this.setState({
       rawRequestHeadersOpened: !this.state.rawRequestHeadersOpened,
-      lastToggledRawHeader: "request",
     });
   }
 
   toggleRawUploadHeaders() {
     this.setState({
       rawUploadHeadersOpened: !this.state.rawUploadHeadersOpened,
-      lastToggledRawHeader: "upload",
     });
   }
 
@@ -204,32 +198,6 @@ class HeadersPanel extends Component {
       return "UPLOAD";
     }
     return "REQUEST";
-  }
-
-  /**
-   * Renders the top part of the headers detail panel - Summary.
-   */
-  renderSummary(summaryLabel, value) {
-    return div(
-      {
-        key: summaryLabel,
-        className: "tabpanel-summary-container headers-summary",
-      },
-      div(
-        { className: "tabpanel-summary-labelvalue" },
-        span(
-          { className: "tabpanel-summary-label headers-summary-label" },
-          summaryLabel
-        ),
-        span(
-          {
-            className:
-              "tabpanel-summary-value textbox-input devtools-monospace",
-          },
-          value
-        )
-      )
-    );
   }
 
   /**
@@ -280,6 +248,46 @@ class HeadersPanel extends Component {
   }
 
   /**
+   * Ensure that the selected target header is visible to the user.
+   */
+  scrollToHeader() {
+    const { targetSearchResult, resetTargetSearchResult } = this.props;
+    const path = this.getTargetHeaderPath(targetSearchResult);
+    const element = document.getElementById(path);
+    if (element) {
+      element.scrollIntoView({ block: "center" });
+    }
+
+    resetTargetSearchResult();
+  }
+
+  /**
+   * Renders the top part of the headers detail panel - Summary.
+   */
+  renderSummary(summaryLabel, value) {
+    return div(
+      {
+        key: summaryLabel,
+        className: "tabpanel-summary-container headers-summary",
+      },
+      div(
+        { className: "tabpanel-summary-labelvalue" },
+        span(
+          { className: "tabpanel-summary-label headers-summary-label" },
+          summaryLabel
+        ),
+        span(
+          {
+            className:
+              "tabpanel-summary-value textbox-input devtools-monospace",
+          },
+          value
+        )
+      )
+    );
+  }
+
+  /**
    * Custom rendering method passed to PropertiesView. It's responsible
    * for rendering <textarea> element with raw headers data.
    */
@@ -299,7 +307,7 @@ class HeadersPanel extends Component {
 
     let value;
 
-    if (path.includes("RAW_HEADERS_ID")) {
+    if (level === 1 && path.includes("RAW_HEADERS_ID")) {
       const rawHeaderType = this.getRawHeaderType(path);
       switch (rawHeaderType) {
         case "REQUEST":
@@ -342,38 +350,71 @@ class HeadersPanel extends Component {
       );
     }
 
-    if (level !== 1) {
-      return null;
-    }
-
     return TreeRow(props);
   }
 
-  renderRawHeadersBtn(key, checked, onChange) {
-    return [
-      label(
-        { key: `${key}RawHeadersBtn`, className: "raw-headers-toggle" },
-        span({ className: "headers-summary-label" }, RAW_HEADERS),
-        div(
-          { className: "raw-headers-toggle-input" },
-          input({
-            checked,
-            className: "devtools-checkbox-toggle",
-            onClick: event => {
-              // stop the header click event
-              event.stopPropagation();
-            },
-            onChange,
-            type: "checkbox",
-          })
-        )
-      ),
-    ];
+  /**
+   * Rendering toggle buttons for switching between formated and raw
+   * headers data.
+   */
+  renderInput(onChange, checked) {
+    return input({
+      checked,
+      className: "devtools-checkbox-toggle",
+      onChange,
+      type: "checkbox",
+    });
+  }
+
+  renderToggleRawHeadersBtn(path) {
+    let inputElement;
+
+    const rawHeaderType = this.getRawHeaderType(path);
+    switch (rawHeaderType) {
+      case "REQUEST":
+        // Render toggle button for REQUEST header
+        inputElement = this.renderInput(
+          this.toggleRawRequestHeaders,
+          this.state.rawRequestHeadersOpened
+        );
+        break;
+      case "RESPONSE":
+        // Render toggle button for RESPONSE header
+        inputElement = this.renderInput(
+          this.toggleRawResponseHeaders,
+          this.state.rawResponseHeadersOpened
+        );
+        break;
+      case "UPLOAD":
+        // Render toggle button for UPLOAD header
+        inputElement = this.renderInput(
+          this.toggleRawUploadHeaders,
+          this.state.rawUploadHeadersOpened
+        );
+        break;
+    }
+
+    return label(
+      { className: "raw-headers-toggle" },
+      span({ className: "headers-summary-label" }, RAW_HEADERS),
+      div({ className: "raw-headers-toggle-input" }, inputElement)
+    );
   }
 
   renderValue(props) {
     const member = props.member;
     const value = props.value;
+    const path = member.path;
+    let toggleRawHeadersBtn;
+
+    // When member.level === 0, it is a section label
+    // Request/Response header
+    if (member.level === 0) {
+      toggleRawHeadersBtn = this.renderToggleRawHeadersBtn(path);
+
+      // Return label and toggle button
+      return toggleRawHeadersBtn;
+    }
 
     if (typeof value !== "string") {
       return null;
@@ -393,29 +434,17 @@ class HeadersPanel extends Component {
           noGrip: true,
         })
       ),
-      headerDocURL ? MDNLink({ url: headerDocURL }) : null
+      headerDocURL
+        ? MDNLink({
+            url: headerDocURL,
+          })
+        : null
     );
-  }
-
-  getShouldOpen(rawHeader, filterText, targetSearchResult) {
-    return (item, opened) => {
-      // If closed, open panel for these reasons
-      //  1.The raw header is switched on or off
-      //  2.The filter text is set
-      //  3.The search text is set
-      if (
-        (!opened && this.state.lastToggledRawHeader === rawHeader) ||
-        (!opened && filterText) ||
-        (!opened && targetSearchResult)
-      ) {
-        return true;
-      }
-      return !!opened;
-    };
   }
 
   render() {
     const {
+      openLink,
       cloneSelectedRequest,
       targetSearchResult,
       request: {
@@ -435,12 +464,6 @@ class HeadersPanel extends Component {
         isThirdPartyTrackingResource,
       },
     } = this.props;
-    const {
-      rawResponseHeadersOpened,
-      rawRequestHeadersOpened,
-      rawUploadHeadersOpened,
-      filterText,
-    } = this.state;
     const item = { fromCache, fromServiceWorker, status, statusText };
 
     if (
@@ -451,92 +474,12 @@ class HeadersPanel extends Component {
       return div({ className: "empty-notice" }, HEADERS_EMPTY_TEXT);
     }
 
-    const items = [
-      {
-        component: PropertiesView,
-        componentProps: {
-          object: this.getProperties(responseHeaders, RESPONSE_HEADERS),
-          filterText,
-          targetSearchResult,
-          renderRow: this.renderRow,
-          renderValue: this.renderValue,
-          provider: HeadersProvider,
-          selectPath: this.getTargetHeaderPath,
-        },
-        header: this.getHeadersTitle(responseHeaders, RESPONSE_HEADERS),
-        buttons: this.renderRawHeadersBtn(
-          "response",
-          rawResponseHeadersOpened,
-          this.toggleRawResponseHeaders
-        ),
-        id: "responseHeaders",
-        opened: true,
-        shouldOpen: this.getShouldOpen(
-          "response",
-          filterText,
-          targetSearchResult
-        ),
-      },
-      {
-        component: PropertiesView,
-        componentProps: {
-          object: this.getProperties(requestHeaders, REQUEST_HEADERS),
-          filterText,
-          targetSearchResult,
-          renderRow: this.renderRow,
-          renderValue: this.renderValue,
-          provider: HeadersProvider,
-          selectPath: this.getTargetHeaderPath,
-        },
-        header: this.getHeadersTitle(requestHeaders, REQUEST_HEADERS),
-        buttons: this.renderRawHeadersBtn(
-          "request",
-          rawRequestHeadersOpened,
-          this.toggleRawRequestHeaders
-        ),
-        id: "requestHeaders",
-        opened: true,
-        shouldOpen: this.getShouldOpen(
-          "request",
-          filterText,
-          targetSearchResult
-        ),
-      },
-    ];
-
-    if (uploadHeaders?.headers.length) {
-      items.push({
-        component: PropertiesView,
-        componentProps: {
-          object: this.getProperties(
-            uploadHeaders,
-            REQUEST_HEADERS_FROM_UPLOAD
-          ),
-          filterText,
-          targetSearchResult,
-          renderRow: this.renderRow,
-          renderValue: this.renderValue,
-          provider: HeadersProvider,
-          selectPath: this.getTargetHeaderPath,
-        },
-        header: this.getHeadersTitle(
-          uploadHeaders,
-          REQUEST_HEADERS_FROM_UPLOAD
-        ),
-        buttons: this.renderRawHeadersBtn(
-          "upload",
-          rawUploadHeadersOpened,
-          this.toggleRawUploadHeaders
-        ),
-        id: "uploadHeaders",
-        opened: true,
-        shouldOpen: this.getShouldOpen(
-          "upload",
-          filterText,
-          targetSearchResult
-        ),
-      });
-    }
+    const object = Object.assign(
+      {},
+      this.getProperties(responseHeaders, RESPONSE_HEADERS),
+      this.getProperties(requestHeaders, REQUEST_HEADERS),
+      this.getProperties(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD)
+    );
 
     // not showing #hash in url
     const summaryUrl = urlDetails.url
@@ -655,18 +598,22 @@ class HeadersPanel extends Component {
         summaryItems,
         summaryEditAndResendBtn
       ),
-      div(
-        { className: "devtools-toolbar devtools-input-toolbar" },
-        SearchBox({
-          delay: FILTER_SEARCH_DELAY,
-          type: "filter",
-          onChange: text => this.setState({ filterText: text }),
-          placeholder: HEADERS_FILTER_TEXT,
-        })
-      ),
-      Accordion({ items })
+      PropertiesView({
+        object,
+        ref: () => this.scrollToHeader(),
+        selected: this.getTargetHeaderPath(targetSearchResult),
+        provider: HeadersProvider,
+        filterPlaceHolder: HEADERS_FILTER_TEXT,
+        sectionNames: Object.keys(object),
+        renderRow: this.renderRow,
+        renderValue: this.renderValue,
+        openLink,
+        targetSearchResult,
+      })
     );
   }
 }
 
-module.exports = HeadersPanel;
+module.exports = connect(null, dispatch => ({
+  resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+}))(HeadersPanel);
