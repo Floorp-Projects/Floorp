@@ -1,0 +1,6 @@
+[package]
+name = "golden_gate_traits"
+description = "Traits used in Golden Gate and Application Services"
+version = "0.1.0"
+authors = ["The Firefox Sync Developers <sync-team@mozilla.com>"]
+edition = "2018"
