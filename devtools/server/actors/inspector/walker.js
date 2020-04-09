@@ -386,10 +386,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {
-        // Firefox 71: getNodeActorFromContentDomReference is available.
-        retrieveNodeFromContentDomReference: true,
-      },
+      traits: {},
     };
   },
 

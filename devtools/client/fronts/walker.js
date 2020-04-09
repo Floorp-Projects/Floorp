@@ -149,13 +149,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 
   async getNodeActorFromContentDomReference(contentDomReference) {
-    if (!this.traits.retrieveNodeFromContentDomReference) {
-      console.error(
-        "The server is too old to retrieve a node from a contentDomReference"
-      );
-      return null;
-    }
-
     const response = await super.getNodeActorFromContentDomReference(
       contentDomReference
     );
