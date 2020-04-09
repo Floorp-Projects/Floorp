@@ -177,9 +177,9 @@ class InstalledAddonDetailsFragment : Fragment() {
                             ?: false
 
                     if (shouldCreatePrivateSession) {
-                        components.tabsUseCases.addPrivateTab(settingUrl)
+                        components.useCases.tabsUseCases.addPrivateTab(settingUrl)
                     } else {
-                        components.tabsUseCases.addTab(settingUrl)
+                        components.useCases.tabsUseCases.addTab(settingUrl)
                     }
 
                     InstalledAddonDetailsFragmentDirections

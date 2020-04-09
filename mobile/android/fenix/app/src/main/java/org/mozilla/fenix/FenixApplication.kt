@@ -348,16 +348,16 @@ open class FenixApplication : LocaleAwareApplication() {
                         session.id
                 },
                 onCloseTabOverride = {
-                    _, sessionId -> components.tabsUseCases.removeTab(sessionId)
+                    _, sessionId -> components.useCases.tabsUseCases.removeTab(sessionId)
                 },
                 onSelectTabOverride = {
                     _, sessionId ->
                         val selected = components.core.sessionManager.findSessionById(sessionId)
-                        selected?.let { components.tabsUseCases.selectTab(it) }
+                        selected?.let { components.useCases.tabsUseCases.selectTab(it) }
                 },
                 onExtensionsLoaded = { extensions ->
                     components.addonUpdater.registerForFutureUpdates(extensions)
-                    components.supportedAddChecker.registerForChecks()
+                    components.supportedAddonsChecker.registerForChecks()
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
             )

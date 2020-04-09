@@ -14,7 +14,6 @@ import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.addons.migration.SupportedAddonsChecker
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
@@ -86,7 +85,7 @@ class Components(private val context: Context) {
     }
 
     @Suppress("MagicNumber")
-    val supportedAddChecker by lazy {
+    val supportedAddonsChecker by lazy {
         DefaultSupportedAddonsChecker(context, SupportedAddonsChecker.Frequency(16, TimeUnit.MINUTES),
             onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
@@ -99,8 +98,6 @@ class Components(private val context: Context) {
     val addonManager by lazy {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
     }
-
-    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(core.sessionManager) }
 
     val analytics by lazy { Analytics(context) }
     val publicSuffixList by lazy { PublicSuffixList(context) }
