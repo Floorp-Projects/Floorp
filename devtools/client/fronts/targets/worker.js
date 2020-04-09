@@ -91,7 +91,7 @@ class WorkerTargetFront extends TargetMixin(
     try {
       response = await super.detach();
     } catch (e) {
-      console.warn("Error while detaching the worker target front:", e);
+      this.logDetachError(e, "worker");
     }
 
     if (this.registration) {
