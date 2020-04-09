@@ -129,9 +129,9 @@ class CellHeader {
   bool isString() const { return header_ & JSSTRING_BIT; }
   bool isBigInt() const { return header_ & BIGINT_BIT; }
 
- protected:
   uintptr_t flags() const { return header_ & RESERVED_MASK; }
 
+ protected:
   // NOTE: This word can also be used for temporary storage, see
   // setTemporaryGCUnsafeData.
   uintptr_t header_;
