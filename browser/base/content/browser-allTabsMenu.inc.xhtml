@@ -15,24 +15,24 @@
       <vbox class="panel-subview-body">
         <toolbarbutton id="allTabsMenu-undoCloseTab"
                        class="subviewbutton subviewbutton-iconic"
-                       label="&undoCloseTab.label;"
+                       data-l10n-id="all-tabs-menu-undo-close-tab"
                        key="key_undoCloseTab"
                        command="History:UndoCloseTab"/>
         <toolbarbutton id="allTabsMenu-searchTabs"
                        class="subviewbutton subviewbutton-iconic"
                        oncommand="gTabsPanel.searchTabs();"
-                       label="&allTabsMenu.searchTabs.label;"/>
+                       data-l10n-id="all-tabs-menu-search-tabs"/>
         <toolbarbutton id="allTabsMenu-containerTabsButton"
                        class="subviewbutton subviewbutton-nav"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('allTabsMenu-containerTabsView', this);"
-                       label="&newUserContext.label;"/>
+                       data-l10n-id="all-tabs-menu-new-user-context"/>
         <toolbarseparator id="allTabsMenu-hiddenTabsSeparator"/>
         <toolbarbutton id="allTabsMenu-hiddenTabsButton"
                        class="subviewbutton subviewbutton-nav"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('allTabsMenu-hiddenTabsView', this);"
-                       label="&hiddenTabs.label;" />
+                       data-l10n-id="all-tabs-menu-hidden-tabs"/>
         <toolbarseparator id="allTabsMenu-tabsSeparator"/>
         <vbox id="allTabsMenu-allTabsViewTabs" class="panel-subview-body"/>
       </vbox>
@@ -46,8 +46,7 @@
       <vbox class="panel-subview-body">
         <toolbarseparator class="container-tabs-submenu-separator"/>
         <toolbarbutton class="subviewbutton"
-                       label="&manageUserContext.label;"
-                       accesskey="&manageUserContext.accesskey;"
+                       data-l10n-id="all-tabs-menu-manage-user-context"
                        command="Browser:OpenAboutContainers"/>
       </vbox>
     </panelview>
