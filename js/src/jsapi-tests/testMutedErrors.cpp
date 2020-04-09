@@ -4,6 +4,7 @@
 
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/Exception.h"
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 
@@ -86,12 +87,11 @@ bool testError(const char* asciiChars) {
   JS::RootedValue rval(cx);
   CHECK(!eval(asciiChars, true, &rval));
 
-  JS::RootedValue exn(cx);
-  CHECK(JS_GetPendingException(cx, &exn));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   js::ErrorReport report(cx);
-  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
   CHECK(report.report()->isMuted == true);
   return true;
 }

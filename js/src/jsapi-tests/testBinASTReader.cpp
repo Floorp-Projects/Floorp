@@ -26,6 +26,7 @@
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/Parser.h"
+#include "js/Exception.h"
 #include "js/Vector.h"
 
 #include "jsapi-tests/tests.h"
@@ -297,10 +298,11 @@ void runTestFromPath(JSContext* cx, const char* path) {
     auto txtParsed =
         txtParser
             .parse();  // Will be deallocated once `parser` goes out of scope.
-    RootedValue txtExn(cx);
+
+    ExceptionStack txtExn(cx);
     if (!txtParsed) {
       // Save exception for more detailed error message, if necessary.
-      if (!js::GetAndClearException(cx, &txtExn)) {
+      if (!StealPendingExceptionStack(cx, &txtExn)) {
         MOZ_CRASH("Couldn't clear exception");
       }
     }
@@ -339,10 +341,10 @@ void runTestFromPath(JSContext* cx, const char* path) {
     auto binParsed = binParser.parse(
         &globalsc,
         binSource);  // Will be deallocated once `reader` goes out of scope.
-    RootedValue binExn(cx);
+    ExceptionStack binExn(cx);
     if (binParsed.isErr()) {
       // Save exception for more detailed error message, if necessary.
-      if (!js::GetAndClearException(cx, &binExn)) {
+      if (!StealPendingExceptionStack(cx, &binExn)) {
         MOZ_CRASH("Couldn't clear binExn");
       }
     }
