@@ -1433,9 +1433,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,
                    HandleWasmMemoryObject memory, SharedTableVector&& tables,
                    StructTypeDescrVector&& structTypeDescrs,
-                   const JSFunctionVector& funcImports,
-                   const ValVector& globalImportValues,
-                   const WasmGlobalObjectVector& globalObjs,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       object_(object),
@@ -1450,7 +1447,13 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       memory_(memory),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
-      structTypeDescrs_(std::move(structTypeDescrs)) {
+      structTypeDescrs_(std::move(structTypeDescrs)) {}
+
+bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
+                    const ValVector& globalImportValues,
+                    const WasmGlobalObjectVector& globalObjs,
+                    const DataSegmentVector& dataSegments,
+                    const ElemSegmentVector& elemSegments) {
   MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
   MOZ_ASSERT(structTypeDescrs_.length() == structTypes().length());
 
@@ -1462,8 +1465,8 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
   MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
   tlsData()->memoryBase =
-      memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
-  tlsData()->boundsCheckLimit = memory ? memory->boundsCheckLimit() : 0;
+      memory_ ? memory_->buffer().dataPointerEither().unwrap() : nullptr;
+  tlsData()->boundsCheckLimit = memory_ ? memory_->boundsCheckLimit() : 0;
   tlsData()->instance = this;
   tlsData()->realm = realm_;
   tlsData()->cx = cx;
@@ -1473,6 +1476,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
   tlsData()->addressOfNeedsIncrementalBarrier =
       (uint8_t*)cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
+  // Initialize function imports in the tls data
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
@@ -1504,6 +1508,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
     }
   }
 
+  // Initialize tables in the tls data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
     TableTls& table = tableTls(td);
@@ -1511,6 +1516,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
     table.functionBase = tables_[i]->functionBase();
   }
 
+  // Initialize globals in the tls data
   for (size_t i = 0; i < metadata().globals.length(); i++) {
     const GlobalDesc& global = metadata().globals[i];
 
@@ -1566,21 +1572,21 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       }
     }
   }
-}
 
-bool Instance::init(JSContext* cx, const DataSegmentVector& dataSegments,
-                    const ElemSegmentVector& elemSegments) {
+  // Add observer if our memory base may grow
   if (memory_ && memory_->movingGrowable() &&
       !memory_->addMovingGrowObserver(cx, object_)) {
     return false;
   }
 
+  // Add observers if our tables may grow
   for (const SharedTable& table : tables_) {
     if (table->movingGrowable() && !table->addMovingGrowObserver(cx, object_)) {
       return false;
     }
   }
 
+  // Allocate in the global function type set for structural signature checks
   if (!metadata().funcTypeIds.empty()) {
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
@@ -1595,6 +1601,7 @@ bool Instance::init(JSContext* cx, const DataSegmentVector& dataSegments,
     }
   }
 
+  // Take references to the passive data segments
   if (!passiveDataSegments_.resize(dataSegments.length())) {
     return false;
   }
@@ -1604,6 +1611,7 @@ bool Instance::init(JSContext* cx, const DataSegmentVector& dataSegments,
     }
   }
 
+  // Take references to the passive element segments
   if (!passiveElemSegments_.resize(elemSegments.length())) {
     return false;
   }

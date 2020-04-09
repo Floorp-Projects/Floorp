@@ -74,12 +74,12 @@ class Instance {
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
            SharedTableVector&& tables, StructTypeDescrVector&& structTypeDescrs,
-           const JSFunctionVector& funcImports,
-           const ValVector& globalImportValues,
-           const WasmGlobalObjectVector& globalObjs,
            UniqueDebugState maybeDebug);
   ~Instance();
-  bool init(JSContext* cx, const DataSegmentVector& dataSegments,
+  bool init(JSContext* cx, const JSFunctionVector& funcImports,
+            const ValVector& globalImportValues,
+            const WasmGlobalObjectVector& globalObjs,
+            const DataSegmentVector& dataSegments,
             const ElemSegmentVector& elemSegments);
   void trace(JSTracer* trc);
 
