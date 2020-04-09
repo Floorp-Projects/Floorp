@@ -368,7 +368,7 @@ async function getOriginalSourceText(
   const { urlsById, map } = data;
 
   const url = urlsById.get(originalSourceId);
-  let text = map.sourceContentFor(url);
+  let text = map.sourceContentFor(url, true);
   if (!text) {
     try {
       const response = await networkRequest(url, {

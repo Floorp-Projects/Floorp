@@ -1786,7 +1786,7 @@ async function getOriginalSourceText(originalSourceId) {
     map
   } = data;
   const url = urlsById.get(originalSourceId);
-  let text = map.sourceContentFor(url);
+  let text = map.sourceContentFor(url, true);
 
   if (!text) {
     try {
