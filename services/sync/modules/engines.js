@@ -2130,6 +2130,11 @@ SyncEngine.prototype = {
     await this._toFetchStorage.finalize();
     await this._previousFailedStorage.finalize();
   },
+
+  // Returns a new watchdog. Exposed for tests.
+  _newWatchdog() {
+    return Async.watchdog();
+  },
 };
 
 /**
