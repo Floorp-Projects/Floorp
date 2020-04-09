@@ -27,6 +27,8 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkletImpl.h"
+#include "mozilla/dom/WorkletGlobalScope.h"
 
 #include "jsfriendapi.h"
 #include "js/StructuredClone.h"
@@ -513,13 +515,26 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   JS::Rooted<JS::Value> result(aCx, JS::GetPromiseResult(aPromise));
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
-  bool isChrome =
-      isMainThread
-          ? nsContentUtils::ObjectPrincipal(aPromise)->IsSystemPrincipal()
-          : IsCurrentThreadRunningChromeWorker();
-  nsGlobalWindowInner* win =
-      isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
+
+  bool isChrome = false;
+  nsGlobalWindowInner* win = nullptr;
+  uint64_t innerWindowID = 0;
+  if (MOZ_LIKELY(NS_IsMainThread())) {
+    isChrome = nsContentUtils::ObjectPrincipal(aPromise)->IsSystemPrincipal();
+    win = xpc::WindowGlobalOrNull(aPromise);
+    innerWindowID = win ? win->WindowID() : 0;
+  } else if (const WorkerPrivate* wp = GetCurrentThreadWorkerPrivate()) {
+    isChrome = wp->UsesSystemPrincipal();
+    innerWindowID = wp->WindowID();
+  } else if (nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(aPromise)) {
+    if (nsCOMPtr<WorkletGlobalScope> workletGlobal =
+            do_QueryInterface(global)) {
+      WorkletImpl* impl = workletGlobal->Impl();
+      isChrome = impl->PrincipalInfo().type() ==
+                 mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo;
+      innerWindowID = impl->LoadInfo().InnerWindowID();
+    }
+  }
 
   // We're inspecting the rejection value only to report it to the console, and
   // we do so without side-effects, so we can safely unwrap it without regard to
@@ -537,10 +552,10 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   if (result.isObject() &&
       (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
        NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
-    xpcReport->Init(aCx, exn, isChrome, win ? win->WindowID() : 0);
+    xpcReport->Init(aCx, exn, isChrome, innerWindowID);
   } else if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
     xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
-                    win ? win->WindowID() : 0);
+                    innerWindowID);
   } else {
     JS_ClearPendingException(aCx);
     return;
