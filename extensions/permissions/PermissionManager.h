@@ -11,31 +11,25 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsIInputStream.h"
 #include "nsTHashtable.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsIPrefBranch.h"
 #include "nsHashKeys.h"
-#include "nsCOMArray.h"
-#include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/ExpandedPrincipal.h"
-#include "mozilla/Permission.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ThreadBound.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
 #include <utility>
 
-class nsIPermission;
 class mozIStorageConnection;
 class mozIStorageStatement;
+class nsIInputStream;
+class nsIPermission;
+class nsIPrefBranch;
 
 namespace IPC {
 struct Permission;
