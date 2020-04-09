@@ -4,9 +4,9 @@
 
 use api::{
     ColorU, MixBlendMode, FilterPrimitiveInput, FilterPrimitiveKind, ColorSpace,
-    PropertyBinding, PropertyBindingId, CompositeOperator, PrimitiveFlags,
+    PropertyBinding, PropertyBindingId, CompositeOperator,
 };
-use api::units::{Au, LayoutSize, LayoutVector2D};
+use api::units::{Au, LayoutVector2D};
 use crate::scene_building::IsVisible;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -14,7 +14,6 @@ use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use crate::picture::PictureCompositeMode;
 use crate::prim_store::{
-    PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveInstanceKind, PrimitiveStore, VectorKey,
     InternablePrimitive,
 };
@@ -235,21 +234,19 @@ pub struct Picture {
     pub composite_mode_key: PictureCompositeKey,
 }
 
-pub type PictureKey = PrimKey<Picture>;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+pub struct PictureKey {
+    pub composite_mode_key: PictureCompositeKey,
+}
 
 impl PictureKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
         pic: Picture,
     ) -> Self {
-
         PictureKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
-            kind: pic,
+            composite_mode_key: pic.composite_mode_key,
         }
     }
 }
@@ -261,16 +258,14 @@ impl InternDebug for PictureKey {}
 #[derive(MallocSizeOf)]
 pub struct PictureData;
 
-pub type PictureTemplate = PrimTemplate<PictureData>;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
+pub struct PictureTemplate;
 
 impl From<PictureKey> for PictureTemplate {
-    fn from(key: PictureKey) -> Self {
-        let common = PrimTemplateCommonData::with_key_common(key.common);
-
-        PictureTemplate {
-            common,
-            kind: PictureData,
-        }
+    fn from(_: PictureKey) -> Self {
+        PictureTemplate
     }
 }
 
@@ -285,13 +280,9 @@ impl Internable for Picture {
 impl InternablePrimitive for Picture {
     fn into_key(
         self,
-        info: &LayoutPrimitiveInfo,
+        _: &LayoutPrimitiveInfo,
     ) -> PictureKey {
-        PictureKey::new(
-            info.flags,
-            info.rect.size,
-            self,
-        )
+        PictureKey::new(self)
     }
 
     fn make_instance_kind(
@@ -323,6 +314,6 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<Picture>(), 88, "Picture size changed");
-    assert_eq!(mem::size_of::<PictureTemplate>(), 20, "PictureTemplate size changed");
-    assert_eq!(mem::size_of::<PictureKey>(), 104, "PictureKey size changed");
+    assert_eq!(mem::size_of::<PictureTemplate>(), 0, "PictureTemplate size changed");
+    assert_eq!(mem::size_of::<PictureKey>(), 88, "PictureKey size changed");
 }

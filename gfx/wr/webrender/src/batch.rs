@@ -778,14 +778,13 @@ impl BatchBuilder {
 
         let z_id = z_generator.next();
 
-        let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
-        let prim_rect = LayoutRect::new(
-            prim_instance.prim_origin,
-            prim_common_data.prim_size
+        let prim_rect = ctx.data_stores.get_local_prim_rect(
+            prim_instance,
+            ctx.prim_store,
         );
 
         let mut batch_features = BatchFeatures::empty();
-        if prim_common_data.may_need_repetition {
+        if ctx.data_stores.prim_may_need_repetition(prim_instance) {
             batch_features |= BatchFeatures::REPETITION;
         }
 
@@ -2037,6 +2036,7 @@ impl BatchBuilder {
                 );
 
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
+                let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
 
                 let non_segmented_blend_mode = if !prim_common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||

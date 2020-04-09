@@ -33,7 +33,7 @@ use crate::internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocum
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::picture::{RetainedTiles, TileCacheLogger};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
-use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
+use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::interned::*;
 use crate::profiler::{BackendProfileCounters, ResourceProfileCounters};
 use crate::record::ApiRecordingReceiver;
@@ -271,6 +271,53 @@ macro_rules! declare_data_stores {
 enumerate_interners!(declare_data_stores);
 
 impl DataStores {
+    /// Returns the local rect for a primitive. For most primitives, this is
+    /// stored in the template. For pictures, this is stored inside the picture
+    /// primitive instance itself, since this is determined during frame building.
+    pub fn get_local_prim_rect(
+        &self,
+        prim_instance: &PrimitiveInstance,
+        prim_store: &PrimitiveStore,
+    ) -> LayoutRect {
+        match prim_instance.kind {
+            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+                let pic = &prim_store.pictures[pic_index.0];
+                pic.precise_local_rect
+            }
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {
+                unreachable!();
+            }
+            _ => {
+                LayoutRect::new(
+                    prim_instance.prim_origin,
+                    self.as_common_data(prim_instance).prim_size,
+                )
+            }
+        }
+    }
+
+    /// Returns true if this primitive might need repition.
+    // TODO(gw): This seems like the wrong place for this - maybe this flag should
+    //           not be in the common prim template data?
+    pub fn prim_may_need_repetition(
+        &self,
+        prim_instance: &PrimitiveInstance,
+    ) -> bool {
+        match prim_instance.kind {
+            PrimitiveInstanceKind::Picture { .. } => {
+                false
+            }
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {
+                unreachable!();
+            }
+            _ => {
+                self.as_common_data(prim_instance).may_need_repetition
+            }
+        }
+    }
+
     pub fn as_common_data(
         &self,
         prim_inst: &PrimitiveInstance
@@ -301,9 +348,8 @@ impl DataStores {
                 let prim_data = &self.normal_border[data_handle];
                 &prim_data.common
             }
-            PrimitiveInstanceKind::Picture { data_handle, .. } => {
-                let prim_data = &self.picture[data_handle];
-                &prim_data.common
+            PrimitiveInstanceKind::Picture { .. } => {
+                panic!("BUG: picture prims don't have common data!");
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
                 let prim_data = &self.radial_grad[data_handle];
