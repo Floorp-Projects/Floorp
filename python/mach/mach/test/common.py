@@ -9,6 +9,8 @@ import os
 import sys
 import unittest
 
+import six
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -24,13 +26,18 @@ class TestBase(unittest.TestCase):
     provider_dir = os.path.join(here, 'providers')
 
     @classmethod
-    def get_mach(cls, provider_file=None, entry_point=None, context_handler=None):
+    def get_mach(cls, provider_files=None, entry_point=None, context_handler=None):
         m = Mach(os.getcwd())
         m.define_category('testing', 'Mach unittest', 'Testing for mach core', 10)
+        m.define_category('misc', 'Mach misc', 'Testing for mach core', 20)
         m.populate_context_handler = context_handler
 
-        if provider_file:
-            m.load_commands_from_file(os.path.join(cls.provider_dir, provider_file))
+        if provider_files:
+            if isinstance(provider_files, six.string_types):
+                provider_files = [provider_files]
+
+            for path in provider_files:
+                m.load_commands_from_file(os.path.join(cls.provider_dir, path))
 
         if entry_point:
             m.load_commands_from_entry_point(entry_point)
