@@ -68,7 +68,7 @@ template <typename T>
 struct BaseGCType {
   using type =
       typename MapTraceKindToType<JS::MapTypeToTraceKind<T>::kind>::Type;
-  static_assert(std::is_base_of<type, T>::value, "Failed to find base type");
+  static_assert(std::is_base_of_v<type, T>, "Failed to find base type");
 };
 
 // Our barrier templates are parameterized on the pointer types so that we can

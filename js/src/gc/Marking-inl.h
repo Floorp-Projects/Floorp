@@ -35,7 +35,7 @@ struct TaggedPtr<JS::Value> {
   static JS::Value wrap(JS::BigInt* bi) { return JS::BigIntValue(bi); }
   template <typename T>
   static JS::Value wrap(T* priv) {
-    static_assert(std::is_base_of<Cell, T>::value,
+    static_assert(std::is_base_of_v<Cell, T>,
                   "Type must be a GC thing derived from js::gc::Cell");
     return JS::PrivateGCThingValue(priv);
   }
@@ -59,18 +59,16 @@ struct TaggedPtr<TaggedProto> {
 
 template <typename T>
 struct MightBeForwarded {
-  static_assert(std::is_base_of<Cell, T>::value, "T must derive from Cell");
+  static_assert(std::is_base_of_v<Cell, T>, "T must derive from Cell");
   static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>,
                 "T must not be Cell or TenuredCell");
 
-  static const bool value = std::is_base_of<JSObject, T>::value ||
-                            std::is_base_of<Shape, T>::value ||
-                            std::is_base_of<BaseShape, T>::value ||
-                            std::is_base_of<JSString, T>::value ||
-                            std::is_base_of<JS::BigInt, T>::value ||
-                            std::is_base_of<js::BaseScript, T>::value ||
-                            std::is_base_of<js::Scope, T>::value ||
-                            std::is_base_of<js::RegExpShared, T>::value;
+  static const bool value =
+      std::is_base_of_v<JSObject, T> || std::is_base_of_v<Shape, T> ||
+      std::is_base_of_v<BaseShape, T> || std::is_base_of_v<JSString, T> ||
+      std::is_base_of_v<JS::BigInt, T> ||
+      std::is_base_of_v<js::BaseScript, T> || std::is_base_of_v<js::Scope, T> ||
+      std::is_base_of_v<js::RegExpShared, T>;
 };
 
 template <typename T>

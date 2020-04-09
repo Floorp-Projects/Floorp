@@ -230,15 +230,15 @@ inline T SafelyInitialized() {
 
   // That presumption holds for pointers, where value initialization produces
   // a null pointer.
-  constexpr bool IsPointer = std::is_pointer<T>::value;
+  constexpr bool IsPointer = std::is_pointer_v<T>;
 
   // For classes and unions we *assume* that if |T|'s default constructor is
   // non-trivial it'll initialize correctly. (This is unideal, but C++
   // doesn't offer a type trait indicating whether a class's constructor is
   // user-defined, which better approximates our desired semantics.)
   constexpr bool IsNonTriviallyDefaultConstructibleClassOrUnion =
-      (std::is_class<T>::value || std::is_union<T>::value) &&
-      !std::is_trivially_default_constructible<T>::value;
+      (std::is_class_v<T> ||
+       std::is_union_v<T>)&&!std::is_trivially_default_constructible_v<T>;
 
   static_assert(IsPointer || IsNonTriviallyDefaultConstructibleClassOrUnion,
                 "T() must evaluate to a safely-initialized T");
@@ -1087,9 +1087,9 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
 
   // If T can be constructed with a cx, then define another constructor for it
   // that will be preferred.
-  template <typename RootingContext,
-            typename = typename std::enable_if<
-                std::is_constructible<T, RootingContext>::value>::type>
+  template <
+      typename RootingContext,
+      typename = std::enable_if_t<std::is_constructible_v<T, RootingContext>>>
   Rooted(const RootingContext& cx, CtorDispatcher, detail::PreferredOverload)
       : Rooted(cx, T(cx)) {}
 
