@@ -2,7 +2,7 @@
 
 # state
 
-`val state: `[`State`](../-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L59)
+`val state: `[`State`](../-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L61)
 
 The aggregated [State](../-state/index.md) for all tabs and media combined.
 

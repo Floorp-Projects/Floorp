@@ -2,7 +2,7 @@
 
 # start
 
-`open fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/FullScreenFeature.kt#L26)
+`open fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/FullScreenFeature.kt#L27)
 
 Overrides [LifecycleAwareFeature.start](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/start.md)
 

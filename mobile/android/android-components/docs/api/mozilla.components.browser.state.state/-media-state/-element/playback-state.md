@@ -2,10 +2,10 @@
 
 # playbackState
 
-`val playbackState: `[`PlaybackState`](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L44)
+`val playbackState: `[`PlaybackState`](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L45)
 
-The current [PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) of this media element.
+The current [Media.PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) of this media element.
 
 ### Property
 
-`playbackState` - The current [PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) of this media element.
+`playbackState` - The current [Media.PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) of this media element.

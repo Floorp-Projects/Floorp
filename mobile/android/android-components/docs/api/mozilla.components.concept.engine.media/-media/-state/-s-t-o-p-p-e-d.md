@@ -2,7 +2,7 @@
 
 # STOPPED
 
-`STOPPED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L101)
+`STOPPED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L111)
 
 Playback of this [Media](../index.md) has stopped (either completed or aborted).
 

@@ -2,10 +2,10 @@
 
 # controller
 
-`val controller: `[`Controller`](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L45)
+`val controller: `[`Controller`](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L46)
 
-The [Controller](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) for controlling playback of this media element.
+The [Media.Controller](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) for controlling playback of this media element.
 
 ### Property
 
-`controller` - The [Controller](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) for controlling playback of this media element.
+`controller` - The [Media.Controller](../../../mozilla.components.concept.engine.media/-media/-controller/index.md) for controlling playback of this media element.

@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L78)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L80)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -21,6 +21,7 @@ Interface to be implemented by classes that want to observe a session.
 | [onLoadRequest](on-load-request.md) | `open fun onLoadRequest(session: `[`Session`](../index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, triggeredByRedirect: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, triggeredByWebContent: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLoadingStateChanged](on-loading-state-changed.md) | `open fun onLoadingStateChanged(session: `[`Session`](../index.md)`, loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLongPress](on-long-press.md) | `open fun onLongPress(session: `[`Session`](../index.md)`, hitResult: `[`HitResult`](../../../mozilla.components.concept.engine/-hit-result/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [onMetaViewportFitChanged](on-meta-viewport-fit-changed.md) | `open fun onMetaViewportFitChanged(session: `[`Session`](../index.md)`, layoutInDisplayCutoutMode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onNavigationStateChanged](on-navigation-state-changed.md) | `open fun onNavigationStateChanged(session: `[`Session`](../index.md)`, canGoBack: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onProgress](on-progress.md) | `open fun onProgress(session: `[`Session`](../index.md)`, progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onRecordingDevicesChanged](on-recording-devices-changed.md) | `open fun onRecordingDevicesChanged(session: `[`Session`](../index.md)`, devices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../../mozilla.components.concept.engine.media/-recording-device/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

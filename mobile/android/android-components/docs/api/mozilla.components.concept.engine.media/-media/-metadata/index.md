@@ -2,7 +2,7 @@
 
 # Metadata
 
-`data class Metadata` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L180)
+`data class Metadata` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L199)
 
 Metadata associated with [Media](../index.md).
 
