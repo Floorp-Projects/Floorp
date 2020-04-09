@@ -2647,10 +2647,6 @@ class JS_PUBLIC_API AutoSaveExceptionState {
   void restore();
 };
 
-// Set both the exception and its associated stack on the context. The stack
-// must be a SavedFrame.
-JS_PUBLIC_API void SetPendingExceptionAndStack(JSContext* cx, HandleValue value,
-                                               HandleObject stack);
 } /* namespace JS */
 
 /**
