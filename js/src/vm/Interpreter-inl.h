@@ -822,19 +822,6 @@ static MOZ_ALWAYS_INLINE bool GreaterThanOrEqualOperation(
   return true;
 }
 
-template <typename T>
-static MOZ_ALWAYS_INLINE bool SignExtendOperation(JSContext* cx, HandleValue in,
-                                                  int* out) {
-  int32_t i;
-  if (!ToInt32(cx, in, &i)) {
-    return false;
-  }
-  *out = (T)i;
-  return true;
-}
-
-#undef RELATIONAL_OP
-
 inline JSFunction* ReportIfNotFunction(
     JSContext* cx, HandleValue v, MaybeConstruct construct = NO_CONSTRUCT) {
   if (v.isObject() && v.toObject().is<JSFunction>()) {
