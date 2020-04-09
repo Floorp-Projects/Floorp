@@ -38,10 +38,9 @@ const PerformanceController = {
    * Listen for events emitted by the current tab target and
    * main UI events.
    */
-  async initialize(toolbox, target, front) {
-    this.toolbox = toolbox;
-    this.target = target;
-    this.front = front;
+  async initialize(targetFront, performanceFront) {
+    this.target = targetFront;
+    this.front = performanceFront;
 
     this._telemetry = new PerformanceTelemetry(this);
     this.startRecording = this.startRecording.bind(this);
@@ -122,6 +121,12 @@ const PerformanceController = {
     this._prefObserver.destroy();
 
     this._telemetry.destroy();
+  },
+
+  updateFronts(targetFront, performanceFront) {
+    this.target = targetFront;
+    this.front = performanceFront;
+    this.enableFrontEventListeners();
   },
 
   /**
@@ -246,7 +251,17 @@ const PerformanceController = {
    */
   async stopRecording() {
     const recording = this.getLatestManualRecording();
-    await this.front.stopRecording(recording);
+
+    // What the actorID is null means this actor was already destroyed.
+    if (this.front.actorID) {
+      await this.front.stopRecording(recording);
+    } else {
+      // As the front was destroyed, we do stop sequence manually without the actor.
+      recording._recording = false;
+      recording._completed = true;
+      await this._onRecordingStopped(recording);
+    }
+
     this.emit(EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
   },
 
