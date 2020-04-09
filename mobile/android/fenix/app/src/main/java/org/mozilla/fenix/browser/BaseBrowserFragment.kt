@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -436,6 +437,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     sessionManager,
                     SessionUseCases(sessionManager),
                     customTabSessionId,
+                    ::viewportFitChange,
                     ::fullScreenChanged
                 ),
                 owner = this,
@@ -815,6 +817,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     final override fun onPictureInPictureModeChanged(enabled: Boolean) {
         pipFeature?.onPictureInPictureModeChanged(enabled)
+    }
+
+    private fun viewportFitChange(layoutInDisplayCutoutMode: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val layoutParams = activity?.window?.attributes
+            layoutParams?.layoutInDisplayCutoutMode = layoutInDisplayCutoutMode
+            activity?.window?.attributes = layoutParams
+        }
     }
 
     private fun fullScreenChanged(inFullScreen: Boolean) {
