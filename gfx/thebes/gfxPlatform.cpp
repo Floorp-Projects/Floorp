@@ -3120,6 +3120,11 @@ void gfxPlatform::InitWebRenderConfig() {
 void gfxPlatform::InitWebGPUConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
   feature.SetDefaultFromPref("dom.webgpu.enabled", true, false);
+#ifndef NIGHTLY_BUILD
+  feature.ForceDisable(FeatureStatus::Blocked,
+                       "WebGPU can only be enabled in nightly",
+                       NS_LITERAL_STRING("WEBGPU_DISABLE_NON_NIGHTLY"));
+#endif
 }
 
 void gfxPlatform::InitOMTPConfig() {
