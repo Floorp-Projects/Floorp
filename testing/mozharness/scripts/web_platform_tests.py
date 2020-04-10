@@ -226,7 +226,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                          "wpt_instruments.txt")]
 
-        if self.is_android or "wdspec" in test_types:
+        if (self.is_android or
+            "wdspec" in test_types or
+            "fission.autostart=true" in c['extra_prefs']):
             processes = 1
         else:
             processes = 2
