@@ -77,14 +77,14 @@ impl CGDataProvider {
     ///
     /// This is double-boxed because the Core Text API requires that the userdata be a single
     /// pointer.
-    pub unsafe fn from_custom_data(custom_data: Box<Box<dyn CustomData>>) -> Self {
+    pub unsafe fn from_custom_data(custom_data: Box<Box<CustomData>>) -> Self {
         let (ptr, len) = (custom_data.ptr() as *const c_void, custom_data.len());
-        let userdata = mem::transmute::<Box<Box<dyn CustomData>>, &mut c_void>(custom_data);
+        let userdata = mem::transmute::<Box<Box<CustomData>>, &mut c_void>(custom_data);
         let data_provider = CGDataProviderCreateWithData(userdata, ptr, len, Some(release));
         return CGDataProvider::from_ptr(data_provider);
 
         unsafe extern "C" fn release(info: *mut c_void, _: *const c_void, _: size_t) {
-            drop(mem::transmute::<*mut c_void, Box<Box<dyn CustomData>>>(info))
+            drop(mem::transmute::<*mut c_void, Box<Box<CustomData>>>(info))
         }
     }
 }

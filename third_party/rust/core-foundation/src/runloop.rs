@@ -165,13 +165,14 @@ mod test {
             start_time: now,
             elapsed_tx,
         };
-        let mut context = CFRunLoopTimerContext {
+        let mut context = unsafe { CFRunLoopTimerContext {
             version: 0,
             info: &mut info as *mut _ as *mut c_void,
-            retain: None,
-            release: None,
-            copyDescription: None,
-        };
+            retain: mem::zeroed(),
+            release: mem::zeroed(),
+            copyDescription: mem::zeroed(),
+        } };
+
 
         let run_loop_timer = CFRunLoopTimer::new(now + 0.20f64, 0f64, 0, 0, timer_popped, &mut context);
         unsafe {

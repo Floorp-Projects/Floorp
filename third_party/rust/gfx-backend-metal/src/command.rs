@@ -378,12 +378,11 @@ impl State {
         }
     }
 
-    fn make_viewport_and_scissor_commands(
-        &self
-    ) -> (
-        Option<soft::RenderCommand<&soft::Ref>>,
-        Option<soft::RenderCommand<&soft::Ref>>,    
-    ) {
+    fn make_render_commands(
+        &self,
+        aspects: Aspects,
+    ) -> impl Iterator<Item = soft::RenderCommand<&soft::Ref>> {
+        // Apply previously bound values for this command buffer
         let com_vp = self
             .viewport
             .as_ref()
@@ -391,14 +390,6 @@ impl State {
         let com_scissor = self
             .scissors
             .map(|sr| soft::RenderCommand::SetScissor(Self::clamp_scissor(sr, self.target_extent)));
-        (com_vp, com_scissor)
-    }
-
-    fn make_render_commands(
-        &self,
-        aspects: Aspects,
-    ) -> impl Iterator<Item = soft::RenderCommand<&soft::Ref>> {
-        // Apply previously bound values for this command buffer
         let com_blend = if aspects.contains(Aspects::COLOR) {
             self.blend_color.map(soft::RenderCommand::SetBlendColor)
         } else {
@@ -418,7 +409,6 @@ impl State {
         } else {
             None
         };
-        let (com_vp, com_scissor) = self.make_viewport_and_scissor_commands();
         let (com_pso, com_rast) = self.make_pso_commands();
 
         let render_resources = iter::once(&self.resources_vs).chain(iter::once(&self.resources_ps));
@@ -2986,7 +2976,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         }
 
         // reset all the affected states
-        let (com_viewport, com_scissor) = self.state.make_viewport_and_scissor_commands();
         let (com_pso, com_rast) = self.state.make_pso_commands();
 
         let device_lock = &self.shared.device;
@@ -3026,8 +3015,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         let commands = com_pso
             .into_iter()
             .chain(com_rast)
-            .chain(com_viewport)
-            .chain(com_scissor)
             .chain(com_ds)
             .chain(com_vs)
             .chain(com_ps);

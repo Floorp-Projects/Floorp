@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "metal"
-version = "0.18.0"
+version = "0.17.0"
 authors = ["GFX Developers"]
 description = "Rust bindings for Metal"
 homepage = "https://github.com/gfx-rs/metal-rs"
@@ -61,10 +61,10 @@ version = "1"
 version = "0.1.5"
 
 [dependencies.cocoa]
-version = "0.20"
+version = "0.19"
 
 [dependencies.core-graphics]
-version = "0.19"
+version = "0.17.3"
 
 [dependencies.foreign-types]
 version = "0.3"
@@ -79,7 +79,7 @@ features = ["objc_exception"]
 version = "0.1.4"
 
 [dev-dependencies.winit]
-version = "0.22"
+version = "0.17"
 
 [features]
 default = []

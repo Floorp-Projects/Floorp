@@ -13,6 +13,22 @@ use objc::runtime::{NO, YES};
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum MTLMutability {
+    Default = 0,
+    Mutable = 1,
+    Immutable = 2,
+}
+
+impl Default for MTLMutability {
+    #[inline]
+    fn default() -> Self {
+        MTLMutability::Default
+    }
+}
+
+#[repr(u64)]
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLIndexType {
     UInt16 = 0,
     UInt32 = 1,
@@ -206,6 +222,42 @@ impl ComputePipelineStateRef {
     }
 }
 
+pub enum MTLPipelineBufferDescriptorArray {}
+
+foreign_obj_type! {
+    type CType = MTLPipelineBufferDescriptorArray;
+    pub struct PipelineBufferDescriptorArray;
+    pub struct PipelineBufferDescriptorArrayRef;
+}
+
+impl PipelineBufferDescriptorArrayRef {
+    pub fn object_at(&self, index: usize) -> Option<&PipelineBufferDescriptorRef> {
+        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
+    }
+
+    pub fn set_object_at(&self, index: usize, buffer_desc: Option<&PipelineBufferDescriptorRef>) {
+        unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
+    }
+}
+
+pub enum MTLPipelineBufferDescriptor {}
+
+foreign_obj_type! {
+    type CType = MTLPipelineBufferDescriptor;
+    pub struct PipelineBufferDescriptor;
+    pub struct PipelineBufferDescriptorRef;
+}
+
+impl PipelineBufferDescriptorRef {
+    pub fn mutability(&self) -> MTLMutability {
+        unsafe { msg_send![self, mutability] }
+    }
+
+    pub fn set_mutability(&self, new_mutability: MTLMutability) {
+        unsafe { msg_send![self, setMutability: new_mutability] }
+    }
+}
+
 pub enum MTLStageInputOutputDescriptor {}
 
 foreign_obj_type! {
@@ -262,11 +314,11 @@ foreign_obj_type! {
 }
 
 impl AttributeDescriptorArrayRef {
-    pub fn object_at(&self, index: NSUInteger) -> Option<&AttributeDescriptorRef> {
+    pub fn object_at(&self, index: usize) -> Option<&AttributeDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: NSUInteger, buffer_desc: Option<&AttributeDescriptorRef>) {
+    pub fn set_object_at(&self, index: usize, buffer_desc: Option<&AttributeDescriptorRef>) {
         unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
     }
 }
@@ -314,11 +366,11 @@ foreign_obj_type! {
 }
 
 impl BufferLayoutDescriptorArrayRef {
-    pub fn object_at(&self, index: NSUInteger) -> Option<&BufferLayoutDescriptorRef> {
+    pub fn object_at(&self, index: usize) -> Option<&BufferLayoutDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: NSUInteger, buffer_desc: Option<&BufferLayoutDescriptorRef>) {
+    pub fn set_object_at(&self, index: usize, buffer_desc: Option<&BufferLayoutDescriptorRef>) {
         unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
     }
 }

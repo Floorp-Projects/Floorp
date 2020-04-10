@@ -2124,7 +2124,6 @@ impl d::Device<B> for Device {
         let swapchain = w::Swapchain {
             raw: swapchain_raw,
             functor,
-            vendor_id: self.vendor_id,
         };
 
         let images = backbuffer_images

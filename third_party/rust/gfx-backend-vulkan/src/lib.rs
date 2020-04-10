@@ -293,7 +293,7 @@ unsafe extern "system" fn debug_utils_messenger_callback(
             message
         );
 
-        for (info_label, info) in additional_info.iter() {
+        for (info_label, info) in additional_info.into_iter() {
             match info {
                 Some(data) => {
                     msg = format!("{}\n{}: {}", msg, info_label, data);
@@ -567,10 +567,11 @@ impl hal::Instance<Backend> for Instance {
             RawWindowHandle::Xcb(handle) if self.extensions.contains(&extensions::khr::XcbSurface::name()) => {
                 Ok(self.create_surface_from_xcb(handle.connection as *mut _, handle.window))
             }
-            #[cfg(target_os = "android")]
-            RawWindowHandle::Android(handle) => {
-                Ok(self.create_surface_android(handle.a_native_window))
-            }
+            // #[cfg(target_os = "android")]
+            // RawWindowHandle::ANativeWindowHandle(handle) => {
+            //     let native_window = unimplemented!();
+            //     self.create_surface_android(native_window)
+            //}
             #[cfg(windows)]
             RawWindowHandle::Windows(handle) => {
                 use winapi::um::libloaderapi::GetModuleHandleW;
@@ -691,7 +692,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
         let device = Device {
             raw: Arc::new(RawDevice(device_raw, requested_features, self.instance.clone())),
-            vendor_id: self.properties.vendor_id,
         };
 
         let device_arc = device.raw.clone();
@@ -1390,7 +1390,6 @@ impl queue::CommandQueue<Backend> for CommandQueue {
 #[derive(Debug)]
 pub struct Device {
     raw: Arc<RawDevice>,
-    vendor_id: u32,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]

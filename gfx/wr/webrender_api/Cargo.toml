@@ -28,5 +28,5 @@ malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "
 peek-poke = { version = "0.2", path = "../peek-poke", features = ["extras"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.7"
-core-graphics = "0.19"
+core-foundation = "0.6"
+core-graphics = "0.17.1"
