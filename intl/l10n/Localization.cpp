@@ -45,36 +45,42 @@ NS_INTERFACE_MAP_END
 Localization::Localization(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal), mIsSync(false) {}
 
-void Localization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
-  nsCOMPtr<mozILocalizationJSM> jsm =
-      do_ImportModule("resource://gre/modules/Localization.jsm");
-  MOZ_RELEASE_ASSERT(jsm);
-
-  Unused << jsm->GetLocalization(aResourceIds, mIsSync,
-                                 getter_AddRefs(mLocalization));
-  MOZ_RELEASE_ASSERT(mLocalization);
-
-  RegisterObservers();
-}
-
-void Localization::Init(nsTArray<nsString>& aResourceIds,
-                        JS::Handle<JS::Value> aGenerateMessages,
+void Localization::Init(const Sequence<nsString>& aResourceIds,
+                        const bool aSync,
+                        const BundleGenerator& aBundleGenerator,
                         ErrorResult& aRv) {
   nsCOMPtr<mozILocalizationJSM> jsm =
       do_ImportModule("resource://gre/modules/Localization.jsm");
   MOZ_RELEASE_ASSERT(jsm);
 
-  Unused << jsm->GetLocalizationWithCustomGenerateMessages(
-      aResourceIds, aGenerateMessages, getter_AddRefs(mLocalization));
+  Unused << jsm->GetLocalization(aResourceIds, getter_AddRefs(mLocalization));
   MOZ_RELEASE_ASSERT(mLocalization);
+  mLocalization->SetIsSync(aSync);
+
+  AutoJSContext cx;
+  if (aBundleGenerator.mGenerateBundles.WasPassed()) {
+    GenerateBundles& generateBundles =
+        aBundleGenerator.mGenerateBundles.Value();
+    JS::Rooted<JS::Value> generateBundlesJS(
+        cx, JS::ObjectValue(*generateBundles.CallbackOrNull()));
+    mLocalization->SetGenerateBundles(generateBundlesJS);
+  }
+  if (aBundleGenerator.mGenerateBundlesSync.WasPassed()) {
+    GenerateBundlesSync& generateBundlesSync =
+        aBundleGenerator.mGenerateBundlesSync.Value();
+    JS::Rooted<JS::Value> generateBundlesSyncJS(
+        cx, JS::ObjectValue(*generateBundlesSync.CallbackOrNull()));
+    mLocalization->SetGenerateBundlesSync(generateBundlesSyncJS);
+  }
+
+  mLocalization->Init(true);
 
   RegisterObservers();
 }
 
 already_AddRefed<Localization> Localization::Constructor(
-    const GlobalObject& aGlobal,
-    const Optional<Sequence<nsString>>& aResourceIds,
-    const Optional<OwningNonNull<GenerateMessages>>& aGenerateMessages,
+    const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
+    const bool aSync, const BundleGenerator& aBundleGenerator,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
@@ -83,20 +89,8 @@ already_AddRefed<Localization> Localization::Constructor(
   }
 
   RefPtr<Localization> loc = new Localization(global);
-  nsTArray<nsString> resourceIds;
 
-  if (aResourceIds.WasPassed()) {
-    resourceIds = aResourceIds.Value();
-  }
-
-  if (aGenerateMessages.WasPassed()) {
-    GenerateMessages& generateMessages = aGenerateMessages.Value();
-    JS::Rooted<JS::Value> generateMessagesJS(
-        aGlobal.Context(), JS::ObjectValue(*generateMessages.CallbackOrNull()));
-    loc->Init(resourceIds, generateMessagesJS, aRv);
-  } else {
-    loc->Init(resourceIds, aRv);
-  }
+  loc->Init(aResourceIds, aSync, aBundleGenerator, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -152,7 +146,7 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
 
 void Localization::OnChange() {
   if (mLocalization) {
-    mLocalization->OnChange();
+    mLocalization->OnChange(false);
   }
 }
 
@@ -203,6 +197,10 @@ already_AddRefed<Promise> Localization::FormatValue(
   return MaybeWrapPromise(promise);
 }
 
+void Localization::SetIsSync(const bool aIsSync) {
+  mLocalization->SetIsSync(aIsSync);
+}
+
 already_AddRefed<Promise> Localization::FormatValues(
     JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
   nsTArray<JS::Value> jsKeys;
@@ -245,6 +243,81 @@ already_AddRefed<Promise> Localization::FormatMessages(
   }
 
   return MaybeWrapPromise(promise);
+}
+
+void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
+                                   const Optional<L10nArgs>& aArgs,
+                                   nsACString& aRetVal, ErrorResult& aRv) {
+  JS::Rooted<JS::Value> args(aCx);
+
+  if (aArgs.WasPassed()) {
+    ConvertL10nArgsToJSValue(aCx, aArgs.Value(), &args, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  } else {
+    args = JS::UndefinedValue();
+  }
+
+  aRv = mLocalization->FormatValueSync(aId, args, aRetVal);
+}
+
+void Localization::FormatValuesSync(JSContext* aCx,
+                                    const Sequence<L10nKey>& aKeys,
+                                    nsTArray<nsCString>& aRetVal,
+                                    ErrorResult& aRv) {
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    jsKeys.AppendElement(jsKey);
+  }
+
+  aRv = mLocalization->FormatValuesSync(jsKeys, aRetVal);
+}
+
+void Localization::FormatMessagesSync(JSContext* aCx,
+                                      const Sequence<L10nKey>& aKeys,
+                                      nsTArray<Nullable<L10nMessage>>& aRetVal,
+                                      ErrorResult& aRv) {
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    jsKeys.AppendElement(jsKey);
+  }
+
+  nsTArray<JS::Value> messages;
+  SequenceRooter<JS::Value> messagesRooter(aCx, &messages);
+  aRv = mLocalization->FormatMessagesSync(jsKeys, messages);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  for (auto& msg : messages) {
+    JS::Rooted<JS::Value> rootedMsg(aCx);
+    rootedMsg.set(msg);
+    Nullable<L10nMessage>* slotPtr = aRetVal.AppendElement(mozilla::fallible);
+    if (!slotPtr) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    if (!msg.isNull()) {
+      if (!slotPtr->SetValue().Init(aCx, rootedMsg)) {
+        aRv.NoteJSContextException(aCx);
+        return;
+      }
+    }
+  }
 }
 
 /**
