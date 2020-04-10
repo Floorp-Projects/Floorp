@@ -108,7 +108,6 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mChildren release];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -295,6 +294,24 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (void)invalidateState {
   mCachedState = 0;
+}
+
+- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute {
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy) return 0;
+
+  // By default this calls -[[mozAccessible children] count].
+  // Since we don't cache mChildren. This is faster.
+  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
+    if (accWrap) return accWrap->ChildCount();
+
+    return proxy->ChildrenCount();
+  }
+
+  id array = [self accessibilityAttributeValue:attribute];
+
+  return [array isKindOfClass:[NSArray class]] ? [array count] : 0;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
@@ -745,21 +762,17 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 }
 
 // gets our native children lazily.
-// returns nil when there are no children.
 - (NSArray*)children {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (mChildren) return mChildren;
-
-  // get the array of children.
-  mChildren = [[NSMutableArray alloc] init];
+  NSMutableArray* children = [NSMutableArray new];
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   if (accWrap) {
     uint32_t childCount = accWrap->ChildCount();
     for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
       mozAccessible* nativeChild = GetNativeFromGeckoAccessible(accWrap->GetChildAt(childIdx));
-      if (nativeChild) [mChildren addObject:nativeChild];
+      if (nativeChild) [children addObject:nativeChild];
     }
 
     // children from child if this is an outerdoc
@@ -767,7 +780,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     if (docOwner) {
       if (ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc()) {
         mozAccessible* nativeRemoteChild = GetNativeFromProxy(proxyDoc);
-        [mChildren insertObject:nativeRemoteChild atIndex:0];
+        [children insertObject:nativeRemoteChild atIndex:0];
         NSAssert1(nativeRemoteChild, @"%@ found a child remote doc missing a native\n", self);
       }
     }
@@ -775,11 +788,11 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     uint32_t childCount = proxy->ChildrenCount();
     for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
       mozAccessible* nativeChild = GetNativeFromProxy(proxy->ChildAt(childIdx));
-      if (nativeChild) [mChildren addObject:nativeChild];
+      if (nativeChild) [children addObject:nativeChild];
     }
   }
 
-  return mChildren;
+  return children;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -1267,34 +1280,12 @@ struct RoleDescrComparator {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)invalidateChildren {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // make room for new children
-  if (mChildren) {
-    [mChildren release];
-    mChildren = nil;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)appendChild:(Accessible*)aAccessible {
-  // if mChildren is nil, then we don't even need to bother
-  if (!mChildren) return;
-
-  mozAccessible* curNative = GetNativeFromGeckoAccessible(aAccessible);
-  if (curNative) [mChildren addObject:curNative];
-}
-
 - (BOOL)accessibilityNotifiesWhenDestroyed {
   return YES;
 }
 
 - (void)expire {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [self invalidateChildren];
 
   [self invalidateState];
 
