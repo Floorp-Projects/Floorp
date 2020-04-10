@@ -17,6 +17,24 @@ tabmodalprompt {
   -moz-user-focus: normal;
 }
 
+/*
+  Adjustments for chrome level tab-prompts to make them
+  overlap with the upper chrome UI and move them in
+  front of content prompts.
+*/
+tabmodalprompt.tab-prompt {
+  overflow: visible;
+  z-index: 1;
+}
+
+tabmodalprompt.tab-prompt .spacer-top {
+  display: none;
+}
+
+tabmodalprompt.tab-prompt *.tabmodalprompt-mainContainer {
+  margin-top: -5px;
+}
+
 .infoTitle {
   margin-bottom: 1em !important;
   font-weight: bold;

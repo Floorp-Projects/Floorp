@@ -25,7 +25,7 @@ var TabModalPrompt = class {
     newPrompt.appendChild(
       win.MozXULElement.parseXULToFragment(
         `
-      <spacer flex="1"/>
+      <spacer class="spacer-top" flex="1"/>
         <hbox pack="center">
           <vbox class="tabmodalprompt-mainContainer">
             <grid class="tabmodalprompt-topContainer" flex="1">
@@ -215,6 +215,13 @@ var TabModalPrompt = class {
       throw new Error(
         "BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts"
       );
+    }
+
+    // Apply styling depending on modalType (content or tab prompt)
+    if (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+      this.element.classList.add("tab-prompt");
+    } else {
+      this.element.classList.add("content-prompt");
     }
 
     // We need to remove the prompt when the tab or browser window is closed or
