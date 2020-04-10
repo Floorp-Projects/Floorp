@@ -1646,6 +1646,8 @@ class CategoryButton extends HTMLButtonElement {
     // Make sure the aria-selected attribute is set correctly.
     this.selected = this.hasAttribute("selected");
 
+    document.l10n.setAttributes(this, `addon-category-${this.name}-title`);
+
     let text = document.createElement("span");
     text.classList.add("category-name");
     document.l10n.setAttributes(text, `addon-category-${this.name}`);
@@ -1924,6 +1926,7 @@ class SidebarFooter extends HTMLElement {
     prefsLink.classList.add("sidebar-footer-link", "preferences-icon");
     prefsLink.id = "preferencesButton";
     prefsLink.href = "about:preferences";
+    document.l10n.setAttributes(prefsLink, "sidebar-preferences-button-title");
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     prefsLink.addEventListener("click", e => {
       e.preventDefault();
@@ -1948,6 +1951,7 @@ class SidebarFooter extends HTMLElement {
     let supportItem = document.createElement("li");
     supportItem.classList.add("sidebar-footer-item");
     let supportLink = document.createElement("a", { is: "support-link" });
+    document.l10n.setAttributes(supportLink, "sidebar-help-button-title");
     supportLink.classList.add("sidebar-footer-link", "help-icon");
     supportLink.id = "help-button";
     supportLink.setAttribute("support-page", "addons-help");
