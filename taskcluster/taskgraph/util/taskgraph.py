@@ -19,10 +19,11 @@ from taskgraph.util.taskcluster import (
 def find_decision_task(parameters, graph_config):
     """Given the parameters for this action, find the taskId of the decision
     task"""
-    return find_task_id('{}.v2.{}.pushlog-id.{}.decision'.format(
+    head_rev_param = '{}head_rev'.format(graph_config['project-repo-param-prefix'])
+    return find_task_id('{}.v2.{}.revision.{}.taskgraph.decision'.format(
         graph_config['trust-domain'],
         parameters['project'],
-        parameters['pushlog_id']))
+        parameters[head_rev_param]))
 
 
 def find_existing_tasks(previous_graph_ids):
