@@ -1506,12 +1506,14 @@ void* wasm::SymbolicAddressTarget(SymbolicAddress sym) {
 static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
     const FuncType& funcType) {
   const ValTypeVector& args = funcType.args();
-  if (!funcType.ret()) {
+  const ValTypeVector& results = funcType.results();
+
+  if (results.length() != 1) {
     return Nothing();
   }
 
   uint32_t abiType;
-  switch (funcType.ret().ref().kind()) {
+  switch (results[0].kind()) {
     case ValType::F32:
       abiType = ArgType_Float32 << RetType_Shift;
       break;

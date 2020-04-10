@@ -4033,6 +4033,13 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
+  // If there are too many results, don't inline as we don't currently
+  // add MWasmStackResults.
+  static constexpr size_t MaxNumInlinedResults = 1;
+  if (sig.results().length() > MaxNumInlinedResults) {
+    return InliningStatus_NotInlined;
+  }
+
   auto* call = MIonToWasmCall::New(alloc(), inst.object(), funcExport);
   if (!call) {
     return abort(AbortReason::Alloc);
