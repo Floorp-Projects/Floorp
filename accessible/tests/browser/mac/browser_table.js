@@ -141,7 +141,10 @@ addAccessibleTask(
 
     cols = table.getAttributeValue("AXColumns");
     is(cols.length, 4, "Table has col list of correct length");
-    is(cols[cols.length - 1].getAttributeValue("AXChildren").length, 1,
-      "Last column has single child")
+    is(
+      cols[cols.length - 1].getAttributeValue("AXChildren").length,
+      1,
+      "Last column has single child"
+    );
   }
 );
