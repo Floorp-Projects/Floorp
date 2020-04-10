@@ -194,6 +194,7 @@ bool nsCSPContext::permitsInternal(
     const nsAString& aNonce, bool aIsPreload, bool aSpecific,
     bool aSendViolationReports, bool aSendContentLocationInViolationReports,
     bool aParserCreated) {
+  EnsureIPCPoliciesRead();
   bool permits = true;
 
   nsAutoString violatedDirective;
