@@ -2033,17 +2033,31 @@ void CopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 } // extern "C"
 
 template <typename P>
-static void scale_row(P* dst, int dstWidth, const P* src, int srcWidth) {
-    int frac = 0;
-    for (int x = 0; x < dstWidth; x++) {
-        *dst = *src;
-        dst++;
-        frac += srcWidth;
-        while (frac >= dstWidth) {
-            frac -= dstWidth;
-            src++;
-        }
+static void scale_row(Texture& dsttex, P* dst, int dstX, int dstWidth,
+                      Texture& srctex, const P* src, int srcX, int srcWidth) {
+  int frac = 0;
+  // limit to valid dest region
+  int x0 = max(-dstX, 0);
+  int x1 = min(dsttex.width - dstX, dstWidth);
+  // limit to valid source region
+  if (srcX < 0) {
+    x0 = max(x0, (-srcX * dstWidth + srcWidth - 1) / srcWidth);
+  }
+  if (srcX + srcWidth > srctex.width) {
+    x1 = min(x1, ((srctex.width - srcX) * dstWidth) / srcWidth);
+  }
+  // skip to clamped start
+  if (x0 > 0) {
+    dst += x0;
+    src += (x0 * srcWidth) / dstWidth;
+  }
+  for (P* end = dst + (x1 - x0); dst < end; dst++) {
+    *dst = *src;
+    // Step source according to width ratio.
+    for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
+      src++;
     }
+  }
 }
 
 static void scale_blit(GLuint srcName, GLint srcX, GLint srcY, GLint srcZ,
@@ -2058,11 +2072,8 @@ static void scale_blit(GLuint srcName, GLint srcX, GLint srcY, GLint srcZ,
   IntRect skip = {dstX, dstY, dstWidth, abs(dstHeight)};
   prepare_texture(dsttex, &skip);
   assert(srctex.internal_format == dsttex.internal_format);
-  assert(srcX + srcWidth <= srctex.width);
-  assert(srcY + srcHeight <= srctex.height);
+  assert(srcHeight >= 0);
   assert(srcZ < max(srctex.depth, 1));
-  assert(dstX + dstWidth <= dsttex.width);
-  assert(max(dstY, dstY + dstHeight) <= dsttex.height);
   assert(dstZ < max(dsttex.depth, 1));
   int bpp = srctex.bpp();
   int srcStride = srctex.stride(bpp);
@@ -2077,20 +2088,57 @@ static void scale_blit(GLuint srcName, GLint srcX, GLint srcY, GLint srcZ,
     dstHeight = -dstHeight;
   }
   int frac = 0;
-  for (int y = 0; y < dstHeight; y++) {
+  int y0 = 0;
+  int y1 = dstHeight;
+  // limit rows to within valid dest region
+  if (destStride < 0) {
+    y0 = max(y0, dstY - dsttex.height);
+    y1 = min(y1, dstY);
+  } else {
+    y0 = max(y0, -dstY);
+    y1 = min(y1, dsttex.height - dstY);
+  }
+  // limit rows to valid source region
+  if (srcY < 0) {
+    y0 = max(y0, (-srcY * dstHeight + srcHeight - 1) / srcHeight);
+  }
+  if (srcY + srcHeight > srctex.height) {
+    y1 = min(y1, ((srctex.height - srcY) * dstHeight) / srcHeight);
+  }
+  // skip to clamped start
+  if (y0 > 0) {
+    dest += y0 * destStride;
+    src += ((y0 * srcHeight) / dstHeight) * srcStride;
+  }
+  for (int y = y0; y < y1; y++) {
     if (srcWidth == dstWidth) {
-      memcpy(dest, src, srcWidth * bpp);
+      // No scaling, so just do a fast copy.
+      // clamp to valid dest and source regions
+      int x0 = max(max(-srcX, -dstX), 0);
+      int x1 = min(min(srctex.width - srcX, dsttex.width - dstX), srcWidth);
+      if (x0 < x1) {
+        memcpy(dest + x0 * bpp, src + x0 * bpp, (x1 - x0) * bpp);
+      }
     } else {
+      // Do scaling with different source and dest widths.
       switch (bpp) {
-        case 1: scale_row((uint8_t*)dest, dstWidth, (uint8_t*)src, srcWidth); break;
-        case 2: scale_row((uint16_t*)dest, dstWidth, (uint16_t*)src, srcWidth); break;
-        case 4: scale_row((uint32_t*)dest, dstWidth, (uint32_t*)src, srcWidth); break;
+        case 1:
+          scale_row(dsttex, (uint8_t*)dest, dstX, dstWidth,
+                    srctex, (uint8_t*)src, srcX, srcWidth);
+          break;
+        case 2:
+          scale_row(dsttex, (uint16_t*)dest, dstX, dstWidth,
+                    srctex, (uint16_t*)src, srcX, srcWidth);
+          break;
+        case 4:
+          scale_row(dsttex, (uint32_t*)dest, dstX, dstWidth,
+                    srctex, (uint32_t*)src, srcX, srcWidth);
+          break;
       }
     }
     dest += destStride;
-    frac += srcHeight;
-    while (frac >= dstHeight) {
-      frac -= dstHeight;
+    // Step source according to height ratio.
+    for (frac += srcHeight; frac >= dstHeight; frac -= dstHeight) {
       src += srcStride;
     }
   }
