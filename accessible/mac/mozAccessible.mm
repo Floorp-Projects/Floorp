@@ -246,7 +246,8 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 static const uint64_t kCachedStates = states::CHECKED | states::PRESSED | states::MIXED |
-                                      states::EXPANDED | states::CURRENT | states::SELECTED;
+                                      states::EXPANDED | states::CURRENT | states::SELECTED |
+                                      states::TRAVERSED;
 static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (uint64_t)state {

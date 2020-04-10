@@ -56,6 +56,7 @@
   if (!attributes) {
     attributes = [[super accessibilityAttributeNames] mutableCopy];
     [attributes addObject:NSAccessibilityURLAttribute];
+    [attributes addObject:@"AXVisited"];
   }
 
   return attributes;
@@ -63,6 +64,9 @@
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
   if ([attribute isEqualToString:NSAccessibilityURLAttribute]) return [self url];
+  if ([attribute isEqualToString:@"AXVisited"]) {
+    return [NSNumber numberWithBool:[self stateWithMask:states::TRAVERSED] != 0];
+  }
 
   return [super accessibilityAttributeValue:attribute];
 }
