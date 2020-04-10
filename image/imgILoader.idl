@@ -18,8 +18,6 @@ interface nsIReferrerInfo;
 
 interface nsISimpleEnumerator;
 
-webidl Document;
-
 #include "nsIRequest.idl" // for nsLoadFlags
 #include "nsIContentPolicy.idl" // for nsContentPolicyType
 
@@ -47,7 +45,7 @@ interface imgILoader : nsISupports
    * @param aLoadingPrincipal the principal of the loading document
    * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer (may be null)
-   * @param aLoadingDocument loading document
+   * @param aCX some random data
    * @param aLoadFlags Load flags for the request
    * @param aCacheKey cache key to use for a load if the original
    *                  image came from a request that had post data
@@ -67,7 +65,7 @@ interface imgILoader : nsISupports
                              in nsIPrincipal aLoadingPrincipal,
                              in nsILoadGroup aLoadGroup,
                              in imgINotificationObserver aObserver,
-                             in Document aLoadingDocument,
+                             in nsISupports aCX,
                              in nsLoadFlags aLoadFlags,
                              in nsISupports cacheKey,
                              [optional]
@@ -79,7 +77,7 @@ interface imgILoader : nsISupports
    *                 already be opened before this method is called, and there
    *                 must have been no OnDataAvailable calls for it yet.
    * @param aObserver the observer (may be null)
-   * @param aLoadingDocument loading document
+   * @param cx some random data
    * @param aListener [out]
    *        A listener that you must send the channel's notifications and data
    *        to.  Can be null, in which case imagelib has found a cached image
@@ -92,6 +90,6 @@ interface imgILoader : nsISupports
    */
   imgIRequest loadImageWithChannelXPCOM(in nsIChannel aChannel,
                                         in imgINotificationObserver aObserver,
-                                        in Document aLoadingDocument,
+                                        in nsISupports cx,
                                         out nsIStreamListener aListener);
 };
