@@ -397,7 +397,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 let vmctx = self.get_vmctx_gv(pos.func);
                 let gv = pos.func.create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
-                    offset: imm64(self.static_env.instanceTlsOffset),
+                    offset: imm64(self.static_env.instance_tls_offset),
                     global_type: POINTER_TYPE,
                 });
                 self.instance_gv = gv.into();
@@ -417,7 +417,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 let vmctx = self.get_vmctx_gv(pos.func);
                 let gv = pos.func.create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
-                    offset: imm64(self.static_env.interruptTlsOffset),
+                    offset: imm64(self.static_env.interrupt_tls_offset),
                     global_type: POINTER_TYPE,
                 });
                 self.interrupt_gv = gv.into();
@@ -463,7 +463,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 .func
                 .create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
-                    offset: imm64(self.static_env.cxTlsOffset),
+                    offset: imm64(self.static_env.cx_tls_offset),
                     global_type: POINTER_TYPE,
                 })
                 .into();
@@ -475,7 +475,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 .func
                 .create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
-                    offset: imm64(self.static_env.realmTlsOffset),
+                    offset: imm64(self.static_env.realm_tls_offset),
                     global_type: POINTER_TYPE,
                 })
                 .into();
@@ -488,7 +488,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let realm_addr_val = pos.ins().global_value(ptr, self.realm_addr.unwrap());
         let realm = pos.ins().load(ptr, flags, realm_addr_val, 0);
         pos.ins()
-            .store(flags, realm, cx, offset32(self.static_env.realmCxOffset));
+            .store(flags, realm, cx, offset32(self.static_env.realm_cx_offset));
     }
 
     /// Update the JSContext's realm value in preparation for making an indirect call through
@@ -498,12 +498,15 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let flags = ir::MemFlags::trusted();
         let cx = pos
             .ins()
-            .load(ptr, flags, vmctx, offset32(self.static_env.cxTlsOffset));
-        let realm = pos
-            .ins()
-            .load(ptr, flags, vmctx, offset32(self.static_env.realmTlsOffset));
+            .load(ptr, flags, vmctx, offset32(self.static_env.cx_tls_offset));
+        let realm = pos.ins().load(
+            ptr,
+            flags,
+            vmctx,
+            offset32(self.static_env.realm_tls_offset),
+        );
         pos.ins()
-            .store(flags, realm, cx, offset32(self.static_env.realmCxOffset));
+            .store(flags, realm, cx, offset32(self.static_env.realm_cx_offset));
     }
 
     /// Update the JSContext's realm value in preparation for making a call to an imported
@@ -518,15 +521,15 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let flags = ir::MemFlags::trusted();
         let cx = pos
             .ins()
-            .load(ptr, flags, vmctx, offset32(self.static_env.cxTlsOffset));
+            .load(ptr, flags, vmctx, offset32(self.static_env.cx_tls_offset));
         let realm = pos.ins().load(
             ptr,
             flags,
             gv_addr,
-            offset32(self.static_env.realmFuncImportTlsOffset),
+            offset32(self.static_env.realm_func_import_tls_offset),
         );
         pos.ins()
-            .store(flags, realm, cx, offset32(self.static_env.realmCxOffset));
+            .store(flags, realm, cx, offset32(self.static_env.realm_cx_offset));
     }
 
     fn load_pinned_reg(&self, pos: &mut FuncCursor, vmctx: ir::Value) {
@@ -535,7 +538,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 POINTER_TYPE,
                 ir::MemFlags::trusted(),
                 vmctx,
-                self.static_env.memoryBaseTlsOffset as i32,
+                self.static_env.memory_base_tls_offset as i32,
             );
             pos.ins().set_pinned_reg(heap_base);
         }
@@ -699,7 +702,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
 
         let vcmtx = self.get_vmctx_gv(func);
 
-        let bound = self.static_env.staticMemoryBound as u64;
+        let bound = self.static_env.static_memory_bound as u64;
         let is_static = bound > 0;
 
         // Get the `TlsData::memoryBase` field.
@@ -726,7 +729,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         };
 
         let min_size = (self.env.min_memory_length() as u64).into();
-        let offset_guard_size = (self.static_env.memoryGuardSize as u64).into();
+        let offset_guard_size = (self.static_env.memory_guard_size as u64).into();
 
         Ok(func.create_heap(ir::HeapData {
             base,

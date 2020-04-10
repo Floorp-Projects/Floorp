@@ -119,11 +119,12 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
   // Omit the check when framePushed is small and we know there's no
   // recursion.
-  if (func.framePushed < MAX_UNCHECKED_LEAF_FRAME_SIZE && !func.containsCalls) {
-    masm.reserveStack(func.framePushed);
+  if (func.frame_pushed < MAX_UNCHECKED_LEAF_FRAME_SIZE &&
+      !func.contains_calls) {
+    masm.reserveStack(func.frame_pushed);
   } else {
     std::pair<CodeOffset, uint32_t> pair = masm.wasmReserveStackChecked(
-        func.framePushed, BytecodeOffset(lineOrBytecode));
+        func.frame_pushed, BytecodeOffset(lineOrBytecode));
     CodeOffset trapInsnOffset = pair.first;
     size_t nBytesReservedBeforeTrap = pair.second;
 
@@ -153,36 +154,36 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
       return false;
     }
   }
-  MOZ_ASSERT(masm.framePushed() == func.framePushed);
+  MOZ_ASSERT(masm.framePushed() == func.frame_pushed);
 
   // Copy the machine code; handle jump tables and other read-only data below.
   uint32_t funcBase = masm.currentOffset();
-  if (!masm.appendRawCode(func.code, func.codeSize)) {
+  if (!masm.appendRawCode(func.code, func.code_size)) {
     return false;
   }
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   uint32_t codeEnd = masm.currentOffset();
 #endif
 
-  wasm::GenerateFunctionEpilogue(masm, func.framePushed, offsets);
+  wasm::GenerateFunctionEpilogue(masm, func.frame_pushed, offsets);
 
-  if (func.numRodataRelocs > 0) {
+  if (func.num_rodata_relocs > 0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     constexpr size_t jumptableElementSize = 4;
 
-    MOZ_ASSERT(func.jumptablesSize % jumptableElementSize == 0);
+    MOZ_ASSERT(func.jumptables_size % jumptableElementSize == 0);
 
     // Align the jump tables properly.
     masm.haltingAlign(jumptableElementSize);
 
     // Copy over the tables and read-only data.
     uint32_t rodataBase = masm.currentOffset();
-    if (!masm.appendRawCode(func.code + func.codeSize,
-                            func.totalSize - func.codeSize)) {
+    if (!masm.appendRawCode(func.code + func.code_size,
+                            func.total_size - func.code_size)) {
       return false;
     }
 
-    uint32_t numElem = func.jumptablesSize / jumptableElementSize;
+    uint32_t numElem = func.jumptables_size / jumptableElementSize;
     uint32_t bias = rodataBase - codeEnd;
 
     // Bias the jump table(s).  The table values are negative values
@@ -197,9 +198,9 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
     // Patch up the code locations.  These represent forward distances that also
     // become greater, so we add a positive value.
-    for (uint32_t i = 0; i < func.numRodataRelocs; i++) {
-      MOZ_ASSERT(func.rodataRelocs[i] < func.codeSize);
-      masm.addToPCRel4(funcBase + func.rodataRelocs[i], bias);
+    for (uint32_t i = 0; i < func.num_rodata_relocs; i++) {
+      MOZ_ASSERT(func.rodata_relocs[i] < func.code_size);
+      masm.addToPCRel4(funcBase + func.rodata_relocs[i], bias);
     }
 #else
     MOZ_CRASH("No jump table support on this platform");
@@ -217,11 +218,11 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     maplet->offsetBy(funcBase);
   }
 
-  for (size_t i = 0; i < func.numMetadata; i++) {
+  for (size_t i = 0; i < func.num_metadata; i++) {
     const CraneliftMetadataEntry& metadata = func.metadatas[i];
 
     CheckedInt<size_t> offset = funcBase;
-    offset += metadata.codeOffset;
+    offset += metadata.code_offset;
     if (!offset.isValid()) {
       return false;
     }
@@ -230,16 +231,16 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     // Check code offsets.
     MOZ_ASSERT(offset.value() >= offsets->normalEntry);
     MOZ_ASSERT(offset.value() < offsets->ret);
-    MOZ_ASSERT(metadata.moduleBytecodeOffset != 0);
+    MOZ_ASSERT(metadata.module_bytecode_offset != 0);
 
     // Check bytecode offsets.
     if (lineOrBytecode > 0) {
-      MOZ_ASSERT(metadata.moduleBytecodeOffset >= lineOrBytecode);
-      MOZ_ASSERT(metadata.moduleBytecodeOffset <
+      MOZ_ASSERT(metadata.module_bytecode_offset >= lineOrBytecode);
+      MOZ_ASSERT(metadata.module_bytecode_offset <
                  lineOrBytecode + funcBytecodeSize);
     }
 #endif
-    uint32_t bytecodeOffset = metadata.moduleBytecodeOffset;
+    uint32_t bytecodeOffset = metadata.module_bytecode_offset;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
@@ -290,15 +291,15 @@ class AutoCranelift {
  public:
   explicit AutoCranelift(const ModuleEnvironment& env)
       : env_(env), compiler_(nullptr) {
-    staticEnv_.refTypesEnabled = env.refTypesEnabled();
+    staticEnv_.ref_types_enabled = env.refTypesEnabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
     if (env.hugeMemoryEnabled()) {
       // In the huge memory configuration, we always reserve the full 4 GB
       // index space for a heap.
-      staticEnv_.staticMemoryBound = HugeIndexRange;
-      staticEnv_.memoryGuardSize = HugeOffsetGuardLimit;
+      staticEnv_.static_memory_bound = HugeIndexRange;
+      staticEnv_.memory_guard_size = HugeOffsetGuardLimit;
     } else {
-      staticEnv_.memoryGuardSize = OffsetGuardLimit;
+      staticEnv_.memory_guard_size = OffsetGuardLimit;
     }
 #endif
     // Otherwise, heap bounds are stored in the `boundsCheckLimit` field
@@ -319,7 +320,7 @@ class AutoCranelift {
 CraneliftFuncCompileInput::CraneliftFuncCompileInput(
     const FuncCompileInput& func)
     : bytecode(func.begin),
-      bytecodeSize(func.end - func.begin),
+      bytecode_size(func.end - func.begin),
       index(func.index),
       offset_in_module(func.lineOrBytecode) {}
 
@@ -329,41 +330,41 @@ static_assert(offsetof(TlsData, boundsCheckLimit) == sizeof(size_t),
 CraneliftStaticEnvironment::CraneliftStaticEnvironment()
     :
 #ifdef JS_CODEGEN_X64
-      hasSse2(Assembler::HasSSE2()),
-      hasSse3(Assembler::HasSSE3()),
-      hasSse41(Assembler::HasSSE41()),
-      hasSse42(Assembler::HasSSE42()),
-      hasPopcnt(Assembler::HasPOPCNT()),
-      hasAvx(Assembler::HasAVX()),
-      hasBmi1(Assembler::HasBMI1()),
-      hasBmi2(Assembler::HasBMI2()),
-      hasLzcnt(Assembler::HasLZCNT()),
+      has_sse2(Assembler::HasSSE2()),
+      has_sse3(Assembler::HasSSE3()),
+      has_sse41(Assembler::HasSSE41()),
+      has_sse42(Assembler::HasSSE42()),
+      has_popcnt(Assembler::HasPOPCNT()),
+      has_avx(Assembler::HasAVX()),
+      has_bmi1(Assembler::HasBMI1()),
+      has_bmi2(Assembler::HasBMI2()),
+      has_lzcnt(Assembler::HasLZCNT()),
 #else
-      hasSse2(false),
-      hasSse3(false),
-      hasSse41(false),
-      hasSse42(false),
-      hasPopcnt(false),
-      hasAvx(false),
-      hasBmi1(false),
-      hasBmi2(false),
-      hasLzcnt(false),
+      has_sse2(false),
+      has_sse3(false),
+      has_sse41(false),
+      has_sse42(false),
+      has_popcnt(false),
+      has_avx(false),
+      has_bmi1(false),
+      has_bmi2(false),
+      has_lzcnt(false),
 #endif
 #if defined(XP_WIN)
-      platformIsWindows(true),
+      platform_is_windows(true),
 #else
-      platformIsWindows(false),
+      platform_is_windows(false),
 #endif
-      refTypesEnabled(false),
-      staticMemoryBound(0),
-      memoryGuardSize(0),
-      memoryBaseTlsOffset(offsetof(TlsData, memoryBase)),
-      instanceTlsOffset(offsetof(TlsData, instance)),
-      interruptTlsOffset(offsetof(TlsData, interrupt)),
-      cxTlsOffset(offsetof(TlsData, cx)),
-      realmCxOffset(JSContext::offsetOfRealm()),
-      realmTlsOffset(offsetof(TlsData, realm)),
-      realmFuncImportTlsOffset(offsetof(FuncImportTls, realm)) {
+      ref_types_enabled(false),
+      static_memory_bound(0),
+      memory_guard_size(0),
+      memory_base_tls_offset(offsetof(TlsData, memoryBase)),
+      instance_tls_offset(offsetof(TlsData, instance)),
+      interrupt_tls_offset(offsetof(TlsData, interrupt)),
+      cx_tls_offset(offsetof(TlsData, cx)),
+      realm_cx_offset(JSContext::offsetOfRealm()),
+      realm_tls_offset(offsetof(TlsData, realm)),
+      realm_func_import_tls_offset(offsetof(FuncImportTls, realm)) {
 }
 
 // Most of BaldrMonkey's data structures refer to a "global offset" which is a
