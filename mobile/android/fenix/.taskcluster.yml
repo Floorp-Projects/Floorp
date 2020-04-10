@@ -17,15 +17,17 @@ tasks:
                   $if: 'tasks_for in ["cron", "action"]'
                   then: '${tasks_for}@noreply.mozilla.org'
                   else:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.pusher.email}'
-                      # Assume Pull Request
+                      $if: 'event.sender.login == "bors[bot]"'
+                      then: 'skaspari+mozlando@mozilla.com'   # It must match what's in bors.toml
                       else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.user.login}@users.noreply.github.com'
+                          $if: 'tasks_for == "github-push"'
+                          then: '${event.pusher.email}'
                           else:
-                              $if: 'tasks_for == "github-release"'
-                              then: '${event.sender.login}@users.noreply.github.com'
+                              $if: 'tasks_for == "github-pull-request"'
+                              then: '${event.pull_request.user.login}@users.noreply.github.com'
+                              else:
+                                  $if: 'tasks_for == "github-release"'
+                                  then: '${event.sender.login}@users.noreply.github.com'
               baseRepoUrl:
                   $if: 'tasks_for in ["github-push", "github-release"]'
                   then: '${event.repository.html_url}'
@@ -101,7 +103,7 @@ tasks:
               $if: >
                 tasks_for in ["action", "cron"]
                 || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "edited", "synchronize"])
-                || (tasks_for == "github-push" && head_branch[:10] != "refs/tags/")
+                || (tasks_for == "github-push" && head_branch[:10] != "refs/tags/") && (head_branch != "staging.tmp") && (head_branch != "trying.tmp")
                 || (tasks_for == "github-release" && releaseAction == "published")
               then:
                   $let:
