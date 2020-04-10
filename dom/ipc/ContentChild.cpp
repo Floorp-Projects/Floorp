@@ -209,8 +209,8 @@
 #  include "signaling/src/peerconnection/WebrtcGlobalChild.h"
 #endif
 
-#include "mozilla/Permission.h"
-#include "mozilla/PermissionManager.h"
+#include "nsPermission.h"
+#include "nsPermissionManager.h"
 
 #include "PermissionMessageUtils.h"
 
@@ -2469,8 +2469,8 @@ mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
     const IPC::Permission& permission) {
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
       services::GetPermissionManager();
-  PermissionManager* permissionManager =
-      static_cast<PermissionManager*>(permissionManagerIface.get());
+  nsPermissionManager* permissionManager =
+      static_cast<nsPermissionManager*>(permissionManagerIface.get());
   MOZ_ASSERT(permissionManager,
              "We have no permissionManager in the Content process !");
 
@@ -2494,7 +2494,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
   permissionManager->AddInternal(
       principal, nsCString(permission.type), permission.capability, 0,
       permission.expireType, permission.expireTime, modificationTime,
-      PermissionManager::eNotify, PermissionManager::eNoDBOperation);
+      nsPermissionManager::eNotify, nsPermissionManager::eNoDBOperation);
 
   return IPC_OK();
 }
@@ -2502,8 +2502,8 @@ mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
 mozilla::ipc::IPCResult ContentChild::RecvRemoveAllPermissions() {
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
       services::GetPermissionManager();
-  PermissionManager* permissionManager =
-      static_cast<PermissionManager*>(permissionManagerIface.get());
+  nsPermissionManager* permissionManager =
+      static_cast<nsPermissionManager*>(permissionManagerIface.get());
   MOZ_ASSERT(permissionManager,
              "We have no permissionManager in the Content process !");
 
@@ -3346,7 +3346,7 @@ nsresult ContentChild::AsyncOpenAnonymousTemporaryFile(
 
 mozilla::ipc::IPCResult ContentChild::RecvSetPermissionsWithKey(
     const nsCString& aPermissionKey, nsTArray<IPC::Permission>&& aPerms) {
-  RefPtr<PermissionManager> permManager = PermissionManager::GetInstance();
+  RefPtr<nsPermissionManager> permManager = nsPermissionManager::GetInstance();
   if (permManager) {
     permManager->SetPermissionsWithKey(aPermissionKey, aPerms);
   }

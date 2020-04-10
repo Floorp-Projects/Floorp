@@ -223,9 +223,6 @@ function run_test() {
   // Initialize the permission manager service
   var pm = Services.perms;
 
-  // Let's do something in order to be sure the DB is read.
-  Assert.greater(pm.all.length, 0);
-
   // The schema should be upgraded to 11, and a 'modificationTime' column should
   // exist with all records having a value of 0.
   Assert.equal(connection.schemaVersion, 11);
@@ -236,10 +233,7 @@ function run_test() {
   let numMigrated = 0;
   while (select.executeStep()) {
     let thisModTime = select.getInt64(0);
-    Assert.ok(
-      thisModTime > 0,
-      "new modifiedTime field is correct (but it's not 0!)"
-    );
+    Assert.ok(thisModTime == 0, "new modifiedTime field is correct");
     numMigrated += 1;
   }
   // check we found at least 1 record that was migrated.
