@@ -2064,42 +2064,6 @@ CookieService::RemoveAllSince(int64_t aSinceWhen, JSContext* aCx,
   return runMe->Run();
 }
 
-namespace {
-
-class CompareCookiesCreationTime {
- public:
-  static bool Equals(const nsICookie* aCookie1, const nsICookie* aCookie2) {
-    return static_cast<const Cookie*>(aCookie1)->CreationTime() ==
-           static_cast<const Cookie*>(aCookie2)->CreationTime();
-  }
-
-  static bool LessThan(const nsICookie* aCookie1, const nsICookie* aCookie2) {
-    return static_cast<const Cookie*>(aCookie1)->CreationTime() <
-           static_cast<const Cookie*>(aCookie2)->CreationTime();
-  }
-};
-
-}  // namespace
-
-NS_IMETHODIMP
-CookieService::GetCookiesSince(int64_t aSinceWhen,
-                               nsTArray<RefPtr<nsICookie>>& aResult) {
-  mPersistentStorage->EnsureReadComplete();
-
-  // We expose only non-private cookies.
-  nsTArray<RefPtr<nsICookie>> cookieList;
-  mPersistentStorage->GetAll(cookieList);
-
-  for (RefPtr<nsICookie>& cookie : cookieList) {
-    if (static_cast<Cookie*>(cookie.get())->CreationTime() >= aSinceWhen) {
-      aResult.AppendElement(cookie);
-    }
-  }
-
-  aResult.Sort(CompareCookiesCreationTime());
-  return NS_OK;
-}
-
 size_t CookieService::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
