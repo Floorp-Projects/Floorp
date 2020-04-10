@@ -23,7 +23,7 @@ const {
   ruleset,
   score,
   type,
-  utils: { identity, isVisible, min },
+  utils: { identity, isVisible, min, setDefault },
   clusters: { euclidean },
 } = fathom;
 
@@ -31,7 +31,7 @@ const {
  * ----- Start of model -----
  *
  * Everything below this comment up to the "End of model" comment is copied from:
- * https://github.com/mozilla-services/fathom-login-forms/blob/4a2349963df5d3c428847565f44d3d4ec65ae38b/new-password/rulesets.js#L6-L271
+ * https://github.com/mozilla-services/fathom-login-forms/blob/96d83b26e06587e28baecf404c1058132d5e5ec7/new-password/rulesets.js#L14-L498
  * Deviations from that file:
  *   - Remove import statements, instead using ``ChromeUtils.defineModuleGetter`` and destructuring assignments above.
  *   - Set ``DEVELOPMENT`` constant to ``false``.
@@ -109,8 +109,21 @@ const registerFormAttrRegex = /signup|join|register|regform|registration|new_use
 const rememberMeAttrRegex = /remember|auto_login|auto-login|save_mail|save-mail|ricordami|manter|mantenha|savelogin|auto login/i;
 const rememberMeStringRegex = /remember me|keep me logged in|keep me signed in|save email address|save id|stay signed in|ricordami|次回からログオンIDの入力を省略する|メールアドレスを保存する|を保存|아이디저장|아이디 저장|로그인 상태 유지|lembrar|manter conectado|mantenha-me conectado|Запомни меня|запомнить меня|Запомните меня|Не спрашивать в следующий раз|下次自动登录|记住我/i;
 const newsletterStringRegex = /newsletter|ニュースレター/i;
+const passwordStringAndAttrRegex = new RegExp(
+  passwordStringRegex.source + "|" + passwordAttrRegex.source,
+  "i"
+);
 
 function makeRuleset(coeffs, biases) {
+  // HTMLElement => (selector => Array<HTMLElement>) nested map to cache querySelectorAll calls.
+  let elementToSelectors;
+  // We want to clear the cache each time the model is executed to get the latest DOM snapshot
+  // for each classification.
+  function clearCache() {
+    // WeakMaps do not have a clear method
+    elementToSelectors = new WeakMap();
+  }
+
   function hasLabelMatchingRegex(element, regex) {
     // Check element.labels
     const labels = element.labels;
@@ -248,16 +261,33 @@ function makeRuleset(coeffs, biases) {
     return fnode.element.autocomplete === "current-password";
   }
 
+  // Check cache before calling querySelectorAll on element
+  function getElementDescendants(element, selector) {
+    // Use the element to look up the selector map:
+    const selectorToDescendants = setDefault(
+      elementToSelectors,
+      element,
+      () => new Map()
+    );
+
+    // Use the selector to grab the descendants:
+    return setDefault(
+      selectorToDescendants, // eslint-disable-line prettier/prettier
+      selector,
+      () => Array.from(element.querySelectorAll(selector))
+    );
+  }
+
   function hasSomeMatchingPredicateForSelectorWithinElement(
     element,
     selector,
     matchingPredicate
   ) {
-    if (element !== null) {
-      const selectorArray = Array.from(element.querySelectorAll(selector));
-      return selectorArray.some(matchingPredicate);
+    if (element === null) {
+      return false;
     }
-    return false;
+    const elements = getElementDescendants(element, selector);
+    return elements.some(matchingPredicate);
   }
 
   function textContentMatchesRegexes(element, ...regexes) {
@@ -302,6 +332,17 @@ function makeRuleset(coeffs, biases) {
     return false;
   }
 
+  /**
+   * Let us compactly represent a collection of rules that all take a single
+   * type with no .when() clause and have only a score() call on the right-hand
+   * side.
+   */
+  function* simpleScoringRulesTakingType(inType, ruleMap) {
+    for (const [name, scoringCallback] of Object.entries(ruleMap)) {
+      yield rule(type(inType), score(scoringCallback), { name });
+    }
+  }
+
   return ruleset(
     [
       rule(
@@ -310,152 +351,67 @@ function makeRuleset(coeffs, biases) {
               "input[type=password]:not([disabled]):not([aria-hidden=true]"
             ).when(isVisible)
           : element("input"),
-        type("new")
+        type("new").note(clearCache)
       ),
-      rule(
-        type("new"),
-        score(fnode => hasLabelMatchingRegex(fnode.element, newStringRegex)),
-        { name: "hasNewLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasLabelMatchingRegex(fnode.element, confirmStringRegex)
-        ),
-        { name: "hasConfirmLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasLabelMatchingRegex(fnode.element, currentAttrAndStringRegex)
-        ),
-        { name: "hasCurrentLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => closestLabelMatchesRegex(fnode.element, newStringRegex)),
-        { name: "closestLabelMatchesNew" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          closestLabelMatchesRegex(fnode.element, confirmStringRegex)
-        ),
-        { name: "closestLabelMatchesConfirm" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          closestLabelMatchesRegex(fnode.element, currentAttrAndStringRegex)
-        ),
-        { name: "closestLabelMatchesCurrent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasAriaLabelMatchingRegex(fnode.element, newStringRegex)
-        ),
-        { name: "hasNewAriaLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasAriaLabelMatchingRegex(fnode.element, confirmStringRegex)
-        ),
-        { name: "hasConfirmAriaLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasAriaLabelMatchingRegex(fnode.element, currentAttrAndStringRegex)
-        ),
-        { name: "hasCurrentAriaLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasPlaceholderMatchingRegex(fnode.element, newStringRegex)
-        ),
-        { name: "hasNewPlaceholder" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasPlaceholderMatchingRegex(fnode.element, confirmStringRegex)
-        ),
-        { name: "hasConfirmPlaceholder" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          hasPlaceholderMatchingRegex(fnode.element, currentAttrAndStringRegex)
-        ),
-        { name: "hasCurrentPlaceholder" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+      ...simpleScoringRulesTakingType("new", {
+        hasNewLabel: fnode =>
+          hasLabelMatchingRegex(fnode.element, newStringRegex),
+        hasConfirmLabel: fnode =>
+          hasLabelMatchingRegex(fnode.element, confirmStringRegex),
+        hasCurrentLabel: fnode =>
+          hasLabelMatchingRegex(fnode.element, currentAttrAndStringRegex),
+        closestLabelMatchesNew: fnode =>
+          closestLabelMatchesRegex(fnode.element, newStringRegex),
+        closestLabelMatchesConfirm: fnode =>
+          closestLabelMatchesRegex(fnode.element, confirmStringRegex),
+        closestLabelMatchesCurrent: fnode =>
+          closestLabelMatchesRegex(fnode.element, currentAttrAndStringRegex),
+        hasNewAriaLabel: fnode =>
+          hasAriaLabelMatchingRegex(fnode.element, newStringRegex),
+        hasConfirmAriaLabel: fnode =>
+          hasAriaLabelMatchingRegex(fnode.element, confirmStringRegex),
+        hasCurrentAriaLabel: fnode =>
+          hasAriaLabelMatchingRegex(fnode.element, currentAttrAndStringRegex),
+        hasNewPlaceholder: fnode =>
+          hasPlaceholderMatchingRegex(fnode.element, newStringRegex),
+        hasConfirmPlaceholder: fnode =>
+          hasPlaceholderMatchingRegex(fnode.element, confirmStringRegex),
+        hasCurrentPlaceholder: fnode =>
+          hasPlaceholderMatchingRegex(fnode.element, currentAttrAndStringRegex),
+        forgotPasswordInFormLinkTextContent: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "textContent",
             fnode.element.form,
             passwordStringRegex,
             forgotStringRegex
-          )
-        ),
-        { name: "forgotPasswordInFormLinkTextContent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordInFormLinkHref: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "href",
             fnode.element.form,
-            new RegExp(
-              passwordStringRegex.source + "|" + passwordAttrRegex.source,
-              "i"
-            ),
+            passwordStringAndAttrRegex,
             forgotHrefRegex
-          )
-        ),
-        { name: "forgotPasswordInFormLinkHref" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordInFormLinkTitle: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "title",
             fnode.element.form,
             passwordStringRegex,
             forgotStringRegex
-          )
-        ),
-        { name: "forgotPasswordInFormLinkTitle" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotInFormLinkTextContent: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "textContent",
             fnode.element.form,
             forgotStringRegex
-          )
-        ),
-        { name: "forgotInFormLinkTextContent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotInFormLinkHref: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "href",
             fnode.element.form,
             forgotHrefRegex
-          )
-        ),
-        { name: "forgotInFormLinkHref" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordInFormButtonTextContent: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.form,
             "button",
@@ -465,52 +421,29 @@ function makeRuleset(coeffs, biases) {
                 passwordStringRegex,
                 forgotStringRegex
               )
-          )
-        ),
-        { name: "forgotPasswordInFormButtonTextContent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordOnPageLinkTextContent: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "textContent",
             fnode.element.ownerDocument,
             passwordStringRegex,
             forgotStringRegex
-          )
-        ),
-        { name: "forgotPasswordOnPageLinkTextContent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordOnPageLinkHref: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "href",
             fnode.element.ownerDocument,
-            new RegExp(
-              passwordStringRegex.source + "|" + passwordAttrRegex.source,
-              "i"
-            ),
+            passwordStringAndAttrRegex,
             forgotHrefRegex
-          )
-        ),
-        { name: "forgotPasswordOnPageLinkHref" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordOnPageLinkTitle: fnode =>
           testRegexesAgainstAnchorPropertyWithinElement(
             "title",
             fnode.element.ownerDocument,
             passwordStringRegex,
             forgotStringRegex
-          )
-        ),
-        { name: "forgotPasswordOnPageLinkTitle" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        forgotPasswordOnPageButtonTextContent: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.ownerDocument,
             "button",
@@ -520,151 +453,69 @@ function makeRuleset(coeffs, biases) {
                 passwordStringRegex,
                 forgotStringRegex
               )
-          )
-        ),
-        { name: "forgotPasswordOnPageButtonTextContent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => elementAttrsMatchRegex(fnode.element, newAttrRegex)),
-        { name: "elementAttrsMatchNew" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => elementAttrsMatchRegex(fnode.element, confirmAttrRegex)),
-        { name: "elementAttrsMatchConfirm" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          elementAttrsMatchRegex(fnode.element, currentAttrAndStringRegex)
-        ),
-        { name: "elementAttrsMatchCurrent" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => elementAttrsMatchRegex(fnode.element, password1Regex)),
-        { name: "elementAttrsMatchPassword1" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => elementAttrsMatchRegex(fnode.element, password2Regex)),
-        { name: "elementAttrsMatchPassword2" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => elementAttrsMatchRegex(fnode.element, loginRegex)),
-        { name: "elementAttrsMatchLogin" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          elementAttrsMatchRegex(fnode.element.form, registerFormAttrRegex)
-        ),
-        { name: "formAttrsMatchRegister" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        elementAttrsMatchNew: fnode =>
+          elementAttrsMatchRegex(fnode.element, newAttrRegex),
+        elementAttrsMatchConfirm: fnode =>
+          elementAttrsMatchRegex(fnode.element, confirmAttrRegex),
+        elementAttrsMatchCurrent: fnode =>
+          elementAttrsMatchRegex(fnode.element, currentAttrAndStringRegex),
+        elementAttrsMatchPassword1: fnode =>
+          elementAttrsMatchRegex(fnode.element, password1Regex),
+        elementAttrsMatchPassword2: fnode =>
+          elementAttrsMatchRegex(fnode.element, password2Regex),
+        elementAttrsMatchLogin: fnode =>
+          elementAttrsMatchRegex(fnode.element, loginRegex),
+        formAttrsMatchRegister: fnode =>
+          elementAttrsMatchRegex(fnode.element.form, registerFormAttrRegex),
+        formHasRegisterAction: fnode =>
           containsRegex(
             registerActionRegex,
             fnode.element.form,
             form => form.action
-          )
-        ),
-        { name: "formHasRegisterAction" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          testFormButtonsAgainst(fnode.element, registerStringRegex)
-        ),
-        { name: "formButtonIsRegister" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          elementAttrsMatchRegex(fnode.element.form, loginFormAttrRegex)
-        ),
-        { name: "formAttrsMatchLogin" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          containsRegex(loginRegex, fnode.element.form, form => form.action)
-        ),
-        { name: "formHasLoginAction" }
-      ),
-      rule(
-        type("new"),
-        score(fnode => testFormButtonsAgainst(fnode.element, loginRegex)),
-        { name: "formButtonIsLogin" }
-      ),
-      rule(type("new"), score(hasAutocompleteCurrentPassword), {
-        name: "hasAutocompleteCurrentPassword",
-      }),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        formButtonIsRegister: fnode =>
+          testFormButtonsAgainst(fnode.element, registerStringRegex),
+        formAttrsMatchLogin: fnode =>
+          elementAttrsMatchRegex(fnode.element.form, loginFormAttrRegex),
+        formHasLoginAction: fnode =>
+          containsRegex(loginRegex, fnode.element.form, form => form.action),
+        formButtonIsLogin: fnode =>
+          testFormButtonsAgainst(fnode.element, loginRegex),
+        hasAutocompleteCurrentPassword,
+        formHasRememberMeCheckbox: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.form,
             "input[type=checkbox]",
             checkbox =>
               rememberMeAttrRegex.test(checkbox.id) ||
               rememberMeAttrRegex.test(checkbox.name)
-          )
-        ),
-        { name: "formHasRememberMeCheckbox" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        formHasRememberMeLabel: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.form,
             "label",
             label => rememberMeStringRegex.test(label.textContent)
-          )
-        ),
-        { name: "formHasRememberMeLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        formHasNewsletterCheckbox: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.form,
             "input[type=checkbox]",
             checkbox =>
               checkbox.id.includes("newsletter") ||
               checkbox.name.includes("newsletter")
-          )
-        ),
-        { name: "formHasNewsletterCheckbox" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
+          ),
+        formHasNewsletterLabel: fnode =>
           hasSomeMatchingPredicateForSelectorWithinElement(
             fnode.element.form,
             "label",
             label => newsletterStringRegex.test(label.textContent)
-          )
-        ),
-        { name: "formHasNewsletterLabel" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          closestHeaderAboveMatchesRegex(fnode.element, loginRegex)
-        ),
-        { name: "closestHeaderAboveIsLoginy" }
-      ),
-      rule(
-        type("new"),
-        score(fnode =>
-          closestHeaderAboveMatchesRegex(fnode.element, registerStringRegex)
-        ),
-        { name: "closestHeaderAboveIsRegistery" }
-      ),
+          ),
+        closestHeaderAboveIsLoginy: fnode =>
+          closestHeaderAboveMatchesRegex(fnode.element, loginRegex),
+        closestHeaderAboveIsRegistery: fnode =>
+          closestHeaderAboveMatchesRegex(fnode.element, registerStringRegex),
+      }),
       rule(type("new"), out("new")),
     ],
     coeffs,
