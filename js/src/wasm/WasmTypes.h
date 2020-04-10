@@ -1078,15 +1078,6 @@ class FuncType {
   ValType result(unsigned i) const { return results_[i]; }
   const ValTypeVector& results() const { return results_; }
 
-  // Transitional method, to be removed after multi-values (1401675).
-  Maybe<ValType> ret() const {
-    if (results_.length() == 0) {
-      return Nothing();
-    }
-    MOZ_ASSERT(results_.length() == 1);
-    return Some(result(0));
-  }
-
   HashNumber hash() const {
     HashNumber hn = 0;
     for (const ValType& vt : args_) {
