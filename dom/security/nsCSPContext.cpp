@@ -53,6 +53,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 static LogModule* GetCspContextLog() {
   static LazyLogModule gCspContextPRLog("CSPContext");
@@ -1890,7 +1891,19 @@ nsCSPContext::Write(nsIObjectOutputStream* aStream) {
   return NS_OK;
 }
 
-void nsCSPContext::AddIPCPolicy(
-    const mozilla::ipc::ContentSecurityPolicy& aPolicy) {
+void nsCSPContext::AddIPCPolicy(const ContentSecurityPolicy& aPolicy) {
   mIPCPolicies.AppendElement(aPolicy);
+}
+
+void nsCSPContext::SerializePolicies(
+    nsTArray<ContentSecurityPolicy>& aPolicies) {
+  for (auto* policy : mPolicies) {
+    nsAutoString policyString;
+    policy->toString(policyString);
+    aPolicies.AppendElement(
+        ContentSecurityPolicy(policyString, policy->getReportOnlyFlag(),
+                              policy->getDeliveredViaMetaTagFlag()));
+  }
+
+  aPolicies.AppendElements(mIPCPolicies);
 }

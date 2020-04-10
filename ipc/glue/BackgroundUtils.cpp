@@ -221,16 +221,11 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t count = 0;
-  nsresult rv = aCSP->GetPolicyCount(&count);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsCOMPtr<nsIPrincipal> requestPrincipal = aCSP->GetRequestPrincipal();
 
   PrincipalInfo requestingPrincipalInfo;
-  rv = PrincipalToPrincipalInfo(requestPrincipal, &requestingPrincipalInfo);
+  nsresult rv =
+      PrincipalToPrincipalInfo(requestPrincipal, &requestingPrincipalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -247,20 +242,11 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
   uint64_t windowID = aCSP->GetInnerWindowID();
   bool skipAllowInlineStyleCheck = aCSP->GetSkipAllowInlineStyleCheck();
 
-  nsTArray<ContentSecurityPolicy> policyInfos;
-  for (uint32_t i = 0; i < count; ++i) {
-    const nsCSPPolicy* policy = aCSP->GetPolicy(i);
-    MOZ_ASSERT(policy);
+  nsTArray<ContentSecurityPolicy> policies;
+  static_cast<nsCSPContext*>(aCSP)->SerializePolicies(policies);
 
-    nsAutoString policyString;
-    policy->toString(policyString);
-    policyInfos.AppendElement(
-        ContentSecurityPolicy(policyString, policy->getReportOnlyFlag(),
-                              policy->getDeliveredViaMetaTagFlag()));
-  }
-  *aCSPInfo =
-      CSPInfo(std::move(policyInfos), requestingPrincipalInfo, selfURISpec,
-              referrer, windowID, skipAllowInlineStyleCheck);
+  *aCSPInfo = CSPInfo(std::move(policies), requestingPrincipalInfo, selfURISpec,
+                      referrer, windowID, skipAllowInlineStyleCheck);
   return NS_OK;
 }
 
