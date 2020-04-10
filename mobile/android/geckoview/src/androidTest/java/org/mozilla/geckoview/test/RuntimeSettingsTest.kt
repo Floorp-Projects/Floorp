@@ -10,6 +10,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Log
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -149,6 +150,8 @@ class RuntimeSettingsTest : BaseSessionTest() {
 
     @Test
     fun aboutConfig() {
+        // This is broken in automation with browser.tabs.documentchannel == true
+        assumeThat(sessionRule.env.isAutomation, equalTo(false))
         val settings = sessionRule.runtime.settings
 
         assertThat("about:config should be disabled by default",

@@ -1062,13 +1062,6 @@ class nsDocShell final : public nsDocLoader,
   // this docshell.
   uint32_t DetermineContentType();
 
-  // In cases where we have a LoadURIDelegate (loading external links via
-  // GeckoView), a load may need to be handled through the delegate. aWindowType
-  // is either nsIBrowserDOMWindow::OPEN_CURRENTWINDOW or
-  // nsIBrowserDOMWindow::OPEN_NEWWINDOW.
-  nsresult MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
-                                   uint32_t aWindowType, bool* aDidHandleLoad);
-
   struct SameDocumentNavigationState {
     nsAutoCString mCurrentHash;
     nsAutoCString mNewHash;
