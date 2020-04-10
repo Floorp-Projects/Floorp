@@ -206,6 +206,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_private_browsing_options">Tunigin tusligt</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Ldi iseɣwan deg iccer uslig</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Sireg tuṭṭfa n ugdil deg tunigin tusligt</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Rnu anegzum i tunigin tusligin</string>
     <!-- Preference for accessibility -->

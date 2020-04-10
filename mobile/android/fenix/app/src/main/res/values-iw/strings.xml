@@ -190,6 +190,8 @@
     <string name="preferences_private_browsing_options">גלישה פרטית</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">פתיחת קישורים בלשונית פרטית</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">לאפשר צילומי מסך בגלישה פרטית</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">הוספת קיצור דרך לגלישה פרטית</string>
     <!-- Preference for accessibility -->

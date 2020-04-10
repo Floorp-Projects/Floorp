@@ -928,6 +928,8 @@
     <string name="preferences_passwords_saved_logins_search">Iskanje prijav</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Po abecedi</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Stran</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Uporabniško ime</string>
     <!-- The header for the password for a login -->

@@ -213,6 +213,8 @@
     <string name="preferences_private_browsing_options">Yksityinen selaus</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Avaa linkit yksityisessä välilehdessä</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Salli kuvakaappaukset yksityisen selauksen tilassa</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
     <!-- Preference for accessibility -->

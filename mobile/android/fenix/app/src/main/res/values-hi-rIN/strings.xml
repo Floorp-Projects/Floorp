@@ -40,6 +40,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">नई निजी टैब</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">शीर्ष साइटें</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">खुले टैब</string>
@@ -56,7 +59,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">बुकमार्क संपादित करें</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">ऐड-ऑन प्रबंधक</string>
+    <string name="browser_menu_add_ons">ऐड-ऑन्स</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">यहां कोई ऐड-ऑन नहीं है</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -66,7 +69,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">सेटिंग</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">आपकी लाइब्रेरी</string>
+    <string name="browser_menu_library">लाइब्रे‌री</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">डेस्कटॉप साइट</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -81,7 +84,7 @@
     <string name="browser_menu_new_tab">नया टैब</string>
 
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">संग्रहण में सहेजें</string>
+    <string name="browser_menu_save_to_collection_2">संग्रहण में सहेजें</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">साइट समस्या की रिपोर्ट करें</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -105,6 +108,10 @@
     <string name="browser_menu_open_app_link">ऐप में खोलें</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">उपस्थिति</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">कनेक्ट होने में अक्षम। अनजान URL प्रकार।</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -148,6 +155,9 @@
 
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">वेब खोजें</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">आवाज़ द्वारा खोज</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -193,10 +203,18 @@
     <string name="preferences_private_browsing_options">निजी ब्राउज़िंग</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">एक निजी टैब में लिंक खोलें</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">निजी ब्राउज़िंग में स्क्रीनशॉट की अनुमति दें</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">निजी ब्राउज़िंग शॉर्टकट जोड़ें</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">अभिगम्यता</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">अनुकूलित Firefox Account सर्वर</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">अनुकूलित सिंक सर्वर</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox Account/सिंक सर्वर संसोधित किया गया। परिवर्तन लागू करने के लिए एप्लीकेशन बंद हो रहा है…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">खाता</string>
     <!-- Preference shown on banner to sign into account -->
@@ -601,18 +619,12 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">बंद करें</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">वीडियो और ऑडियो ब्लॉक किया गया</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">वीडियो और ऑडियो की अनुमति हैं</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ऑडियो और वीडियो की अनुमति दें</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">केवल Wi-Fi पर ही ऑडियो और वीडियो की अनुमति दें</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">ऑडियो ब्लॉक करें</string>
+    <string name="preference_option_autoplay_block_audio2">सिर्फ ऑडियो को ब्लॉक करें</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">ऑडियो और वीडियो ब्लॉक करें</string>
+    <string name="preference_option_autoplay_blocked3">ऑडियो और वीडियो ब्लॉक करें</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">चालू करें</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -673,6 +685,8 @@
     <string name="share_link_subheader">लिंक साझा करें</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">उपकरण को भेजें</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">सभी क्रियाएं</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">हाल ही में उपयोग किया गया</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -854,6 +868,10 @@
     <string name="onboarding_tracking_protection_standard_button_description">कुछ ट्रैकर्स को ब्लॉक करता है लेकिन पृष्ठों को अक्सर लोड करने की अनुमति देता है</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">सख़्त (अनुशंसित)</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">कोई पक्ष लें</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">निजी तौर पर ब्राउज़ करें</string>
     <!-- text for the private browsing onboarding card description
@@ -948,6 +966,8 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">केवल निजी टैब में</string>
 
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">सिर्फ कस्टम टैबों में</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">क्रिप्टोमाइनर</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

@@ -205,6 +205,8 @@
     <string name="preferences_private_browsing_options">Priwatny modus</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Wótkaze w priwatnem rejtarku wócyniś</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Fota wobrazowki w priwatnem modusu dowóliś</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Skrotconku za priwatny modus pśidaś</string>
     <!-- Preference for accessibility -->

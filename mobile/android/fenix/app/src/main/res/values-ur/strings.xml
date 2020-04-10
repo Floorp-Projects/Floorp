@@ -40,6 +40,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">نیا نجی ٹیب</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">سر فہرست سائٹین</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">ٹیب کھولیں</string>
@@ -146,6 +149,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ويب پر تلاش کريں</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">آواز سے تلاش</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">سیٹنگز</string>
@@ -194,6 +200,8 @@
     <string name="preferences_add_private_browsing_shortcut">نجی براؤزنگ شارٹکٹ شامل کریں</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">رسائی پزیری</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">مخصوص Firefox Account سرور</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">اکائونٹ</string>
     <!-- Preference shown on banner to sign into account -->
@@ -454,6 +462,14 @@
     <string name="history_delete_all_dialog">کیا آپ کو یقین ہے کہ آپ اپنے سابقات صاف کرنا چاہتے ہیں؟</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">صاف کریں</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">نقل کریں</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">شیئر کریں</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">نئے ٹیب میں کھولیں</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">نجی ٹیب میں کھولیں</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">مٹائیں</string>
 
@@ -875,6 +891,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ہماری رازداری نوٹس پڑھیں</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">بند کریں</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">براؤزنگ شروع کریں</string>
 
@@ -992,6 +1011,11 @@
     <string name="etp_panel_on">اس سائٹ کیلئے تحفظات جاری ہیں</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">اس سائٹ کیلئے تحفظات بند ہیں</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">ان ویب سائٹوں کے لیے توسیع شدہ سراغ کاری تحفظ بند ہے</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">واپس جائیں</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">آپ کے حقوق</string>
 
@@ -1018,6 +1042,8 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">لائبریریاں جو ہم استعمال کرتے ہیں</string>
 
+    <string name="about_debug_menu_toast_done">ڈیبگ مینو فعال کیا گیا</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ٹیب</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1041,6 +1067,8 @@
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">شامل کریں</string>
 
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ویب سائٹ پر جاری رکھیں</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">شارٹکٹ کے نام</string>
 
@@ -1102,6 +1130,8 @@
     <string name="logins_password_copied">پاس ورڈ نقل شدہ پر نقل ہو گیا</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">صارف کا نام نقل شدہ پر نقل ہو گیا</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">سائٹ کو کلپ بورڈ میں کاپی کیا گیا</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">پاس ورڈ نقل کریں</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
@@ -1125,6 +1155,9 @@
 
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">اپنے آلے کو ان لاک کریں</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">تمام ویب سائٹوں پر زوم کریں</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
@@ -1185,6 +1218,8 @@
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Android کی ترتیبات پر جائیں</string>
 
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>اجازتوں</b> پر دبایں]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> کو چالو کرنے کے لئے ٹو گل کریں]]></string>
 
@@ -1198,6 +1233,8 @@
     <string name="confirm_clear_permissions_site">کیا آپ واقعی اس سائٹ کیلئے تمام اجازتیں ختم کرنا چاہتے ہیں؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">کیا آپ واقعی اس سائٹ کے لئے اس اجازت کو ختم کرنا چاہتے ہیں؟</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">کوئی سائٹ استثنات نہیں ہے</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">سرفہرست مضامین</string>
     <!-- Bookmark deletion confirmation -->

@@ -213,6 +213,8 @@
     <string name="preferences_private_browsing_options">隐私浏览</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">新建隐私标签页打开链接</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">允许在隐私浏览中截屏</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for accessibility -->

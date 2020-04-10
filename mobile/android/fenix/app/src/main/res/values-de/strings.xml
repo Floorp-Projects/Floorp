@@ -210,6 +210,8 @@
     <string name="preferences_private_browsing_options">Privater Modus</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Links in privatem Tab öffnen</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Bildschirmfotos im privaten Modus zulassen</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Verknüpfung zum privaten Modus hinzufügen</string>
     <!-- Preference for accessibility -->

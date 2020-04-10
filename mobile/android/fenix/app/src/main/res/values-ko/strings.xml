@@ -213,6 +213,8 @@
     <string name="preferences_private_browsing_options">사생활 보호 모드</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">사생활 보호 탭에 링크 열기</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">사생활 보호 모드에서 스크린샷 허용</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
     <!-- Preference for accessibility -->
