@@ -162,6 +162,8 @@ class nsCSPContext : public nsIContentSecurityPolicy {
                       bool aSendViolationReports, const nsAString& aNonce,
                       bool aParserCreated, int16_t* outDecision);
 
+  void AddIPCPolicy(const mozilla::ipc::ContentSecurityPolicy& aPolicy);
+
  private:
   void EnsureIPCPoliciesRead();
 
