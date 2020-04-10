@@ -460,7 +460,7 @@ Section "Uninstall"
 
   ; Uninstall the default browser agent scheduled task.
   ; This also removes the registry entries it creates.
-  Exec '"$INSTDIR\default-browser-agent.exe" unregister-task $AppUserModelID'
+  ExecWait '"$INSTDIR\default-browser-agent.exe" unregister-task $AppUserModelID'
 
   ${un.RemovePrecompleteEntries} "false"
 
