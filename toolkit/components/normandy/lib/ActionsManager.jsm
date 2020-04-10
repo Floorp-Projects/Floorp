@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
+  MessagingExperimentAction:
+    "resource://normandy/actions/MessagingExperimentAction.jsm",
   PreferenceExperimentAction:
     "resource://normandy/actions/PreferenceExperimentAction.jsm",
   PreferenceRollbackAction:
@@ -35,6 +37,7 @@ const actionConstructors = {
   "addon-rollout": AddonRolloutAction,
   "branched-addon-study": BranchedAddonStudyAction,
   "console-log": ConsoleLogAction,
+  "messsaging-experiment": MessagingExperimentAction,
   "multi-preference-experiment": PreferenceExperimentAction,
   "preference-rollback": PreferenceRollbackAction,
   "preference-rollout": PreferenceRolloutAction,
