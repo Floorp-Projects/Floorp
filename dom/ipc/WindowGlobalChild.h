@@ -133,6 +133,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
                                            const uint32_t& aFlags,
                                            DrawSnapshotResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvDispatchSecurityPolicyViolation(
+      const nsString& aViolationEventJSON);
+
   mozilla::ipc::IPCResult RecvGetSecurityInfo(
       GetSecurityInfoResolver&& aResolve);
 

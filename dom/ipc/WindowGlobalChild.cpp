@@ -15,6 +15,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
@@ -388,6 +389,30 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
   }
 
   aResolve(result);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
+    const nsString& aViolationEventJSON) {
+  nsGlobalWindowInner* window = GetWindowGlobal();
+  if (!window) {
+    return IPC_OK();
+  }
+
+  Document* doc = window->GetDocument();
+  if (!doc) {
+    return IPC_OK();
+  }
+
+  SecurityPolicyViolationEventInit violationEvent;
+  if (!violationEvent.Init(aViolationEventJSON)) {
+    return IPC_OK();
+  }
+
+  RefPtr<Event> event = SecurityPolicyViolationEvent::Constructor(
+      doc, NS_LITERAL_STRING("securitypolicyviolation"), violationEvent);
+  event->SetTrusted(true);
+  doc->DispatchEvent(*event, IgnoreErrors());
   return IPC_OK();
 }
 
