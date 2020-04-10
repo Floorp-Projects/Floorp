@@ -6,8 +6,11 @@
 
 #include "mozilla/dom/CSPMessageUtils.h"
 #include "nsSerializationHelper.h"
+#include "BackgroundUtils.h"
 
 namespace IPC {
+
+using namespace mozilla::ipc;
 
 void ParamTraits<nsIContentSecurityPolicy*>::Write(
     Message* aMsg, nsIContentSecurityPolicy* aParam) {
@@ -17,14 +20,9 @@ void ParamTraits<nsIContentSecurityPolicy*>::Write(
     return;
   }
 
-  nsCString cspString;
-  nsresult rv = NS_SerializeToString(aParam, cspString);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Unable to serialize csp.");
-    return;
-  }
-
-  WriteParam(aMsg, cspString);
+  CSPInfo csp;
+  Unused << NS_WARN_IF(NS_FAILED(CSPToCSPInfo(aParam, &csp)));
+  IPDLParamTraits<CSPInfo>::Write(aMsg, nullptr, csp);
 }
 
 bool ParamTraits<nsIContentSecurityPolicy*>::Read(
@@ -40,20 +38,13 @@ bool ParamTraits<nsIContentSecurityPolicy*>::Read(
     return true;
   }
 
-  nsCString cspString;
-  if (!ReadParam(aMsg, aIter, &cspString)) {
+  CSPInfo csp;
+  if (!IPDLParamTraits<CSPInfo>::Read(aMsg, aIter, nullptr, &csp)) {
     return false;
   }
 
-  nsCOMPtr<nsISupports> iSupports;
-  nsresult rv = NS_DeserializeObject(cspString, getter_AddRefs(iSupports));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(iSupports);
-  NS_ENSURE_TRUE(csp, false);
-
-  *aResult = ToRefPtr(std::move(csp));
-  return true;
+  *aResult = CSPInfoToCSP(csp, nullptr, nullptr);
+  return *aResult;
 }
 
 }  // namespace IPC
