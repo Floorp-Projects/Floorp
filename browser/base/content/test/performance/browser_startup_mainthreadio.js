@@ -253,29 +253,6 @@ const startupPhases = {
       stat: 2,
     },
     {
-      // bug 975996
-      path: "ProfD:permissions.sqlite",
-      condition: WIN || MAC,
-      fsync: 8,
-      read: 2,
-      stat: 1,
-      write: 10,
-    },
-    {
-      // bug 975996
-      path: "ProfD:permissions.sqlite-journal",
-      condition: WIN || MAC,
-      fsync: 8,
-      stat: 28,
-      write: 40,
-    },
-    {
-      // bug 975996
-      path: "ProfD:permissions.sqlite-wal",
-      condition: WIN,
-      stat: 20,
-    },
-    {
       // Seems done by OS X and outside of our control.
       path: "*.savedState/restorecount.plist",
       condition: MAC,
