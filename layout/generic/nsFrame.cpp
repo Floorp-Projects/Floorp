@@ -4686,6 +4686,13 @@ bool nsIFrame::IsSelectable(StyleUserSelect* aSelectStyle) const {
   return style != StyleUserSelect::None;
 }
 
+bool nsIFrame::ShouldHaveLineIfEmpty() const {
+  if (Style()->IsPseudoOrAnonBox()) {
+    return false;
+  }
+  return IsEditingHost(this);
+}
+
 /**
  * Handles the Mouse Press Event for the frame
  */
