@@ -11516,11 +11516,12 @@ nsresult nsDocShell::ConfirmRepost(bool* aRepost) {
     return rv;
   }
 
-  // Make the repost prompt tab modal to prevent malicious pages from locking
-  // up the browser, see bug 1412559 for an example.
+  // Make the repost prompt content modal to prevent malicious pages from
+  // locking up the browser, see bug 1412559 for an example.
   if (nsCOMPtr<nsIWritablePropertyBag2> promptBag =
           do_QueryInterface(prompter)) {
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
+    promptBag->SetPropertyAsUint32(NS_LITERAL_STRING("modalType"),
+                                   nsIPrompt::MODAL_TYPE_CONTENT);
   }
 
   int32_t buttonPressed;
