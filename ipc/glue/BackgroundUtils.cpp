@@ -176,7 +176,7 @@ already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
   nsresult stackResult;
   nsresult& rv = aOptionalResult ? *aOptionalResult : stackResult;
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = new nsCSPContext();
+  RefPtr<nsCSPContext> csp = new nsCSPContext();
 
   if (aRequestingDoc) {
     rv = csp->SetRequestContextWithDocument(aRequestingDoc);
@@ -207,13 +207,7 @@ already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
   csp->SetSkipAllowInlineStyleCheck(aCSPInfo.skipAllowInlineStyleCheck());
 
   for (uint32_t i = 0; i < aCSPInfo.policyInfos().Length(); i++) {
-    const PolicyInfo& policyInfo = aCSPInfo.policyInfos()[i];
-    rv = csp->AppendPolicy(NS_ConvertUTF8toUTF16(policyInfo.policy()),
-                           policyInfo.reportOnly(),
-                           policyInfo.deliveredViaMetaTag());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    csp->AddIPCPolicy(aCSPInfo.policyInfos()[i]);
   }
   return csp.forget();
 }
@@ -253,16 +247,16 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
   uint64_t windowID = aCSP->GetInnerWindowID();
   bool skipAllowInlineStyleCheck = aCSP->GetSkipAllowInlineStyleCheck();
 
-  nsTArray<PolicyInfo> policyInfos;
+  nsTArray<ContentSecurityPolicy> policyInfos;
   for (uint32_t i = 0; i < count; ++i) {
     const nsCSPPolicy* policy = aCSP->GetPolicy(i);
     MOZ_ASSERT(policy);
 
     nsAutoString policyString;
     policy->toString(policyString);
-    policyInfos.AppendElement(PolicyInfo(NS_ConvertUTF16toUTF8(policyString),
-                                         policy->getReportOnlyFlag(),
-                                         policy->getDeliveredViaMetaTagFlag()));
+    policyInfos.AppendElement(
+        ContentSecurityPolicy(policyString, policy->getReportOnlyFlag(),
+                              policy->getDeliveredViaMetaTagFlag()));
   }
   *aCSPInfo =
       CSPInfo(std::move(policyInfos), requestingPrincipalInfo, selfURISpec,

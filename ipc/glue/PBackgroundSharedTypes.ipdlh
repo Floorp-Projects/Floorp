@@ -59,16 +59,9 @@ union PrincipalInfo
   ExpandedPrincipalInfo;
 };
 
-struct PolicyInfo
-{
-  nsCString policy;
-  bool reportOnly;
-  bool deliveredViaMetaTag;
-};
-
 struct CSPInfo
 {
-  PolicyInfo[] policyInfos;
+  ContentSecurityPolicy[] policyInfos;
   PrincipalInfo requestPrincipalInfo;
   nsCString selfURISpec;
   nsString referrer;
