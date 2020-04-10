@@ -156,22 +156,27 @@
 
 @implementation mozTableAccessible
 
-- (void)invalidateChildren {
+- (void)invalidateColumns {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   if (mColContainers) {
     [mColContainers release];
     mColContainers = nil;
   }
-
-  [super invalidateChildren];
-
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)handleAccessibleEvent:(uint32_t)eventType {
+  if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
+    [self invalidateColumns];
+  }
+
+  [super handleAccessibleEvent:eventType];
 }
 
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [self invalidateChildren];
+  [self invalidateColumns];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -280,6 +285,17 @@
 @end
 
 @implementation mozTableRowAccessible
+- (void)handleAccessibleEvent:(uint32_t)eventType {
+  if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
+    id parent = [self parent];
+    if ([parent isKindOfClass:[mozTableAccessible class]]) {
+      [parent invalidateColumns];
+    }
+  }
+
+  [super handleAccessibleEvent:eventType];
+}
+
 - (NSArray*)additionalAccessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 

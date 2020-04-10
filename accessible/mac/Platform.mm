@@ -122,7 +122,8 @@ void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
-      aEventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
+      aEventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED &&
+      aEventType != nsIAccessibleEvent::EVENT_REORDER)
     return;
 
   mozAccessible* wrapper = GetNativeFromProxy(aProxy);

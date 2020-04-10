@@ -38,12 +38,14 @@
 - (NSArray*)children;
 - (NSArray*)additionalAccessibilityAttributeNames;
 - (id)accessibilityAttributeValue:(NSString*)attribute;
-- (void)invalidateChildren;
+- (void)invalidateColumns;
+- (void)handleAccessibleEvent:(uint32_t)eventType;
 - (void)dealloc;
 @end
 
 @interface mozTableRowAccessible : mozTablePartAccessible
 - (NSArray*)additionalAccessibilityAttributeNames;
+- (void)handleAccessibleEvent:(uint32_t)eventType;
 - (id)accessibilityAttributeValue:(NSString*)attribute;
 @end
 
