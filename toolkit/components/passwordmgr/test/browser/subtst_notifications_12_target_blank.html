@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>target="_blank" subtest for Login Manager notifications</title>
+</head>
+<body>
+<h2>Subtest 12 - target="_blank"</h2>
+<form id="form" action="formsubmit.sjs" target="_blank">
+  <input id="user" name="user">
+  <input id="pass" name="pass" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  // Get the password from the query string (exclude '?').
+  let [username, password] = window.location.search.substring(1).split("|");
+  SpecialPowers.wrap(userField).setUserInput(username);
+  SpecialPowers.wrap(passField).setUserInput(password);
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var userField = document.getElementById("user");
+var passField = document.getElementById("pass");
+
+</script>
+</body>
+</html>
