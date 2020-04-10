@@ -19,7 +19,8 @@ UNIFIED_SOURCES += [
     'js.cpp',
     'jsoptparse.cpp',
     'jsshell.cpp',
-    'OSObject.cpp'
+    'OSObject.cpp',
+    'WasmTesting.cpp'
 ]
 
 if CONFIG['FUZZING_INTERFACES']:

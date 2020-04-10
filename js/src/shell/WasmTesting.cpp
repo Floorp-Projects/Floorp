@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmTesting.h"
+#include "shell/WasmTesting.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

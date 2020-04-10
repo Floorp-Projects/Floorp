@@ -2152,6 +2152,8 @@ version = "0.1.0"
 dependencies = [
  "jsrust_shared",
  "mozglue-static",
+ "wasmparser 0.48.2",
+ "wat",
 ]
 
 [[package]]
@@ -2164,7 +2166,6 @@ dependencies = [
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "smoosh",
- "wasm-rust",
 ]
 
 [[package]]
@@ -4894,14 +4895,6 @@ dependencies = [
  "tokio-io",
  "tokio-threadpool",
  "urlencoding",
-]
-
-[[package]]
-name = "wasm-rust"
-version = "0.1.0"
-dependencies = [
- "wasmparser 0.48.2",
- "wat",
 ]
 
 [[package]]

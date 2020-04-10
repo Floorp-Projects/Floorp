@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_testing_h
-#define wasm_testing_h
+#ifndef shell_wasm_h
+#define shell_wasm_h
 
 #include "wasm/WasmTypes.h"
 
@@ -43,4 +43,4 @@ extern void CodeOffsets(const uint8_t* bytes, size_t bytesLen,
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_testing_h
+#endif  // shell_wasm_h
