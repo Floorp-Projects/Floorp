@@ -9,6 +9,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/WarpCacheIRTranspiler.h"
 #include "jit/WarpSnapshot.h"
 #include "vm/Opcodes.h"
 
@@ -1747,6 +1748,10 @@ MConstant* WarpBuilder::globalLexicalEnvConstant() {
 }
 
 bool WarpBuilder::buildGetNameOp(BytecodeLocation loc, MDefinition* env) {
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, env);
+  }
+
   MGetNameCache* ins = MGetNameCache::New(alloc(), env);
   current->add(ins);
   current->push(ins);
@@ -2777,5 +2782,23 @@ bool WarpBuilder::build_ThrowSetConst(BytecodeLocation loc) {
   // Terminate the block.
   current->end(MUnreachable::New(alloc()));
   setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::buildCacheIR(BytecodeLocation loc,
+                               const WarpCacheIR* snapshot,
+                               MDefinition* input) {
+  MDefinitionStackVector inputs;
+  MOZ_ALWAYS_TRUE(inputs.append(input));  // Can't fail due to inline capacity.
+
+  TranspilerOutput output;
+  if (!TranspileCacheIRToMIR(mirGen_, current, snapshot, inputs, output)) {
+    return false;
+  }
+
+  if (output.result) {
+    current->push(output.result);
+  }
+
   return true;
 }
