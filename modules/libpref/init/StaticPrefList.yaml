@@ -3912,7 +3912,7 @@
 
 - name: gfx.omta.background-color
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 - name: gfx.partialpresent.force
