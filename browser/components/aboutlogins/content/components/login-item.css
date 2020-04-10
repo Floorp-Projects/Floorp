@@ -334,6 +334,7 @@ input[name="password"] {
 .alert-link:visited,
 .alert-link {
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .breach-alert > .alert-link:visited,
