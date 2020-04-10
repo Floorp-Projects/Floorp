@@ -1165,12 +1165,14 @@ class SearchOneOffs {
             "error_duplicate_engine_msg",
             [brandName, target.getAttribute("uri")]
           );
-          Services.prompt.alertBC(
-            gBrowser.selectedBrowser.browsingContext,
-            Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-            title,
-            text
+          Services.prompt.QueryInterface(Ci.nsIPromptFactory);
+          let prompt = Services.prompt.getPrompt(
+            gBrowser.contentWindow,
+            Ci.nsIPrompt
           );
+          prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+          prompt.setPropertyAsBool("allowTabModal", true);
+          prompt.alert(title, text);
         });
     }
 

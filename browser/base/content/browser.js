@@ -8874,14 +8874,13 @@ const SafeBrowsingNotificationBox = {
 function TabModalPromptBox(browser) {
   this._weakBrowserRef = Cu.getWeakReference(browser);
   /*
-   * These WeakMaps holds the TabModalPrompt instances, key to the <tabmodalprompt> prompt
+   * This WeakMap holds the TabModalPrompt instances, key to the <tabmodalprompt> prompt
    * in the DOM. We don't want to hold the instances directly to avoid leaking.
    *
    * WeakMap also prevents us from reading back its insertion order.
    * Order of the elements in the DOM should be the only order to consider.
    */
-  this._contentPrompts = new WeakMap();
-  this._tabPrompts = new WeakMap();
+  this.prompts = new WeakMap();
 }
 
 TabModalPromptBox.prototype = {
@@ -8905,24 +8904,10 @@ TabModalPromptBox.prototype = {
     onCloseCallback.apply(this, args);
   },
 
-  getPrompt(promptEl) {
-    if (promptEl.classList.contains("tab-prompt")) {
-      return this._tabPrompts.get(promptEl);
-    }
-    return this._contentPrompts.get(promptEl);
-  },
-
   appendPrompt(args, onCloseCallback) {
     let browser = this.browser;
     let newPrompt = new TabModalPrompt(browser.ownerGlobal);
-
-    if (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
-      newPrompt.element.classList.add("tab-prompt");
-      this._tabPrompts.set(newPrompt.element, newPrompt);
-    } else {
-      newPrompt.element.classList.add("content-prompt");
-      this._contentPrompts.set(newPrompt.element, newPrompt);
-    }
+    this.prompts.set(newPrompt.element, newPrompt);
 
     browser.parentNode.insertBefore(
       newPrompt.element,
@@ -8930,7 +8915,7 @@ TabModalPromptBox.prototype = {
     );
     browser.setAttribute("tabmodalPromptShowing", true);
 
-    let prompts = this.listPrompts(args.modalType);
+    let prompts = this.listPrompts();
     if (prompts.length > 1) {
       // Let's hide ourself behind the current prompt.
       newPrompt.element.hidden = true;
@@ -8972,16 +8957,11 @@ TabModalPromptBox.prototype = {
   },
 
   removePrompt(aPrompt) {
-    if (aPrompt.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
-      this._tabPrompts.delete(aPrompt.element);
-    } else {
-      this._contentPrompts.delete(aPrompt.element);
-    }
-
+    this.prompts.delete(aPrompt.element);
     let browser = this.browser;
     aPrompt.element.remove();
 
-    let prompts = this.listPrompts(aPrompt.modalType);
+    let prompts = this.listPrompts();
     if (prompts.length) {
       let prompt = prompts[prompts.length - 1];
       prompt.element.hidden = false;
@@ -8993,29 +8973,15 @@ TabModalPromptBox.prototype = {
     }
   },
 
-  listPrompts(aModalType = null) {
+  listPrompts(aPrompt) {
     // Get the nodelist, then return the TabModalPrompt instances as an array
-    let selector = "tabmodalprompt";
-    let promptMap;
-
-    if (aModalType != null) {
-      if (aModalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
-        selector += ".tab-prompt";
-        promptMap = this._tabPrompts;
-      } else {
-        selector += ".content-prompt";
-        promptMap = this._contentPrompts;
-      }
-    }
-
-    let elements = this.browser.parentNode.querySelectorAll(selector);
-
-    if (promptMap) {
-      return [...elements].map(el => promptMap.get(el));
-    }
-    return [...elements].map(
-      el => this._contentPrompts.get(el) || this._tabPrompts.get(el)
+    const XUL_NS =
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    let els = this.browser.parentNode.getElementsByTagNameNS(
+      XUL_NS,
+      "tabmodalprompt"
     );
+    return Array.from(els).map(el => this.prompts.get(el));
   },
 
   onNextPromptShowAllowFocusCheckboxFor(principal) {

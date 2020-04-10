@@ -61,12 +61,6 @@ interface nsIPrompt : nsISupports
     const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_NO * BUTTON_POS_1);
 
-
-    // Indicates whether a prompt should be shown in-content, on tab level or as a separate window
-    const unsigned long MODAL_TYPE_CONTENT = 1;
-    const unsigned long MODAL_TYPE_TAB = 2;
-    const unsigned long MODAL_TYPE_WINDOW = 3;
-
     int32_t confirmEx(in wstring dialogTitle,
                    in wstring text,
                    in unsigned long buttonFlags,

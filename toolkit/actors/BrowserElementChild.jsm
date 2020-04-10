@@ -41,12 +41,6 @@ class BrowserElementChild extends JSWindowActorChild {
       }
 
       case "LeaveModalState": {
-        if (
-          !message.data.forceLeave &&
-          !this.contentWindow.windowUtils.isInModalState()
-        ) {
-          break;
-        }
         this.contentWindow.windowUtils.leaveModalState();
         break;
       }
