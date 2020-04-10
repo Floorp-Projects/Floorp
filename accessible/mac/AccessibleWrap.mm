@@ -154,21 +154,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-bool AccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aAccessible) {
-  bool inserted = Accessible::InsertChildAt(aIdx, aAccessible);
-  if (inserted && mNativeObject) [mNativeObject appendChild:aAccessible];
-
-  return inserted;
-}
-
-bool AccessibleWrap::RemoveChild(Accessible* aAccessible) {
-  bool removed = Accessible::RemoveChild(aAccessible);
-
-  if (removed && mNativeObject) [mNativeObject invalidateChildren];
-
-  return removed;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap protected
 
