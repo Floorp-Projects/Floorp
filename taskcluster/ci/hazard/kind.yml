@@ -45,7 +45,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
-                - linux64-gcc-8
+                - linux64-gcc-9
                 - linux64-gcc-sixgill
                 - linux64-rust
                 - linux64-cbindgen
@@ -67,7 +67,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
-                - linux64-gcc-8
+                - linux64-gcc-9
                 - linux64-gcc-sixgill
                 - linux64-rust
                 - linux64-cbindgen
