@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         app:drawableStartCompat="@drawable/ic_info"
-        android:text="@string/sign_out_confirmation_message"
+        android:text="@string/sign_out_confirmation_message_2"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

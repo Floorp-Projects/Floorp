@@ -76,7 +76,7 @@ class SessionNotificationService : Service() {
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_pbm_notification)
-            .setContentTitle(getString(R.string.app_name_private_3))
+            .setContentTitle(getString(R.string.app_name_private_4, getString(R.string.app_name)))
             .setContentText(getString(R.string.notification_pbm_delete_text_2))
             .setContentIntent(createNotificationIntent())
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)

@@ -56,7 +56,7 @@ class BackgroundServices(
 
     fun defaultDeviceName(context: Context): String =
         context.getString(
-            R.string.default_device_name,
+            R.string.default_device_name_2,
             context.getString(R.string.app_name),
             Build.MANUFACTURER,
             Build.MODEL
