@@ -7,10 +7,8 @@
 #ifndef mozilla_JSThreadPool_h
 #define mozilla_JSThreadPool_h
 
-#include "mozilla/Unused.h"
 #include "nsIThreadPool.h"
 #include "js/Utility.h"
-#include "js/UniquePtr.h"
 
 namespace mozilla {
 /*
@@ -22,15 +20,15 @@ class HelperThreadTaskHandler : public Runnable {
  public:
   NS_IMETHOD Run() override {
     mOffThreadTask->runTask();
-    Unused << mOffThreadTask.release();
+    mOffThreadTask = nullptr;
     return NS_OK;
   }
-  explicit HelperThreadTaskHandler(js::UniquePtr<RunnableTask> task)
-      : Runnable("HelperThreadTaskHandler"), mOffThreadTask(std::move(task)) {}
+  explicit HelperThreadTaskHandler(RunnableTask* task)
+      : Runnable("HelperThreadTaskHandler"), mOffThreadTask(task) {}
 
  private:
   ~HelperThreadTaskHandler() = default;
-  js::UniquePtr<RunnableTask> mOffThreadTask;
+  RunnableTask* mOffThreadTask;
 };
 
 /*
