@@ -14,6 +14,7 @@
 #include "EventDispatcher.h"
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextRange.h"
@@ -58,6 +59,9 @@ class nsWindow final : public nsBaseWidget {
   static void InitNatives();
   void SetScreenId(uint32_t aScreenId) { mScreenId = aScreenId; }
   void OnGeckoViewReady();
+  RefPtr<mozilla::MozPromise<bool, bool, false>> OnLoadRequest(
+      nsIURI* aUri, int32_t aWindowType, int32_t aFlags,
+      nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture);
 
  private:
   uint32_t mScreenId;

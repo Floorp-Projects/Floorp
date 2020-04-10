@@ -354,6 +354,10 @@ class nsWindow::GeckoViewSupport final
                            jni::Object::Param aSessionAccessibility);
 
   void OnReady(jni::Object::Param aQueue = nullptr);
+
+  auto OnLoadRequest(mozilla::jni::String::Param aUri, int32_t aWindowType,
+                     int32_t aFlags, mozilla::jni::String::Param aTriggeringUri,
+                     bool aHasUserGesture) const -> java::GeckoResult::LocalRef;
 };
 
 /**
@@ -1692,6 +1696,38 @@ void nsWindow::SetParent(nsIWidget* aNewParent) {
 
 nsIWidget* nsWindow::GetParent() { return mParent; }
 
+RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
+    nsIURI* aUri, int32_t aWindowType, int32_t aFlags,
+    nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture) {
+  if (!mGeckoViewSupport) {
+    return MozPromise<bool, bool, false>::CreateAndResolve(false, __func__);
+  }
+  nsAutoCString spec, triggeringSpec;
+  if (aUri) {
+    aUri->GetDisplaySpec(spec);
+  }
+
+  bool isNullPrincipal = false;
+  if (aTriggeringPrincipal) {
+    aTriggeringPrincipal->GetIsNullPrincipal(&isNullPrincipal);
+
+    if (!isNullPrincipal) {
+      nsCOMPtr<nsIURI> triggeringUri;
+      aTriggeringPrincipal->GetURI(getter_AddRefs(triggeringUri));
+      if (triggeringUri) {
+        triggeringUri->GetDisplaySpec(triggeringSpec);
+      }
+    }
+  }
+
+  auto geckoResult = mGeckoViewSupport->OnLoadRequest(
+      spec.get(), aWindowType, aFlags,
+      isNullPrincipal ? nullptr : triggeringSpec.get(), aHasUserGesture);
+  return geckoResult
+             ? MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
+             : nullptr;
+}
+
 float nsWindow::GetDPI() {
   float dpi = 160.0f;
 
@@ -2408,6 +2444,18 @@ void nsWindow::UpdateSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
   if (mAttachedWidgetListener) {
     mAttachedWidgetListener->SafeAreaInsetsChanged(aSafeAreaInsets);
   }
+}
+
+auto nsWindow::GeckoViewSupport::OnLoadRequest(
+    mozilla::jni::String::Param aUri, int32_t aWindowType, int32_t aFlags,
+    mozilla::jni::String::Param aTriggeringUri, bool aHasUserGesture) const
+    -> java::GeckoResult::LocalRef {
+  GeckoSession::Window::LocalRef window(mGeckoViewWindow);
+  if (!window) {
+    return nullptr;
+  }
+  return window->OnLoadRequest(aUri, aWindowType, aFlags, aTriggeringUri,
+                               aHasUserGesture);
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {

@@ -100,7 +100,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             nsLoadFlags aLoadFlags, uint32_t aCacheKey,
             const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
             nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-            uint64_t aOuterWindowId, nsresult* aRv);
+            uint64_t aOuterWindowId, bool aHasGesture, nsresult* aRv);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

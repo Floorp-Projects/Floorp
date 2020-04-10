@@ -112,6 +112,11 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     return NS_ERROR_FAILURE;
   }
 
+  args.hasValidTransientUserAction() =
+      GetDocShell()
+          ->GetBrowsingContext()
+          ->HasValidTransientUserGestureActivation();
+
   gNeckoChild->SendPDocumentChannelConstructor(
       this, browserChild, GetDocShell()->GetBrowsingContext(),
       IPC::SerializedLoadContext(this), args);
