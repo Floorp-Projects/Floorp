@@ -296,14 +296,15 @@ void Localization::FormatMessagesSync(JSContext* aCx,
   }
 
   nsTArray<JS::Value> messages;
+
   SequenceRooter<JS::Value> messagesRooter(aCx, &messages);
   aRv = mLocalization->FormatMessagesSync(jsKeys, messages);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
+  JS::Rooted<JS::Value> rootedMsg(aCx);
   for (auto& msg : messages) {
-    JS::Rooted<JS::Value> rootedMsg(aCx);
     rootedMsg.set(msg);
     Nullable<L10nMessage>* slotPtr = aRetVal.AppendElement(mozilla::fallible);
     if (!slotPtr) {
@@ -311,7 +312,10 @@ void Localization::FormatMessagesSync(JSContext* aCx,
       return;
     }
 
-    if (!msg.isNull()) {
+    if (rootedMsg.isNull()) {
+      slotPtr->SetNull();
+    } else {
+      JS_WrapValue(aCx, &rootedMsg);
       if (!slotPtr->SetValue().Init(aCx, rootedMsg)) {
         aRv.NoteJSContextException(aCx);
         return;

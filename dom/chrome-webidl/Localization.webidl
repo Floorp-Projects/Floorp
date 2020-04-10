@@ -113,7 +113,7 @@ interface Localization {
    *    let value = await document.l10n.formatValue("unread-emails", {count: 5});
    *    assert.equal(value, "You have 5 unread emails");
    */
-  [NewObject] Promise<UTF8String> formatValue(UTF8String aId, optional L10nArgs aArgs);
+  [NewObject] Promise<UTF8String?> formatValue(UTF8String aId, optional L10nArgs aArgs);
 
   /**
    * Formats values of a list of messages with given ids.
@@ -128,7 +128,7 @@ interface Localization {
    *      "You have 5 unread emails"
    *    ]);
    */
-  [NewObject] Promise<sequence<UTF8String>> formatValues(sequence<L10nKey> aKeys);
+  [NewObject] Promise<sequence<UTF8String?>> formatValues(sequence<L10nKey> aKeys);
 
   /**
    * Formats values and attributes of a list of messages with given ids.
@@ -151,7 +151,7 @@ interface Localization {
    *      }
    *    ]);
    */
-  [NewObject] Promise<sequence<L10nMessage>> formatMessages(sequence<L10nKey> aKeys);
+  [NewObject] Promise<sequence<L10nMessage?>> formatMessages(sequence<L10nKey> aKeys);
 
   void setIsSync(boolean aIsSync);
 

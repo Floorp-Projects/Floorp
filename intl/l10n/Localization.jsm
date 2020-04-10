@@ -271,11 +271,11 @@ class Localization {
    *
    * @param   {Array<Object>}         keys    - Translation keys to format.
    * @param   {Function}              method  - Formatting function.
-   * @returns {Promise<Array<string|Object>>}
+   * @returns {Promise<Array<string?|Object?>>}
    * @private
    */
   async formatWithFallback(keys, method) {
-    const translations = new Array(keys.length);
+    const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
     for await (const bundle of this.bundles) {
@@ -314,7 +314,7 @@ class Localization {
     if (!this.isSync) {
       throw new Error("Can't use sync formatWithFallback when state is async.");
     }
-    const translations = new Array(keys.length);
+    const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
     for (const bundle of this.bundles) {
@@ -361,7 +361,7 @@ class Localization {
    * Returns a Promise resolving to an array of the translation messages.
    *
    * @param   {Array<Object>} keys
-   * @returns {Promise<Array<{value: string, attributes: Object}>>}
+   * @returns {Promise<Array<{value: string, attributes: Object}?>>}
    * @private
    */
   formatMessages(keys) {
@@ -374,7 +374,7 @@ class Localization {
    * Returns an array of the translation messages.
    *
    * @param   {Array<Object>} keys
-   * @returns {Array<{value: string, attributes: Object}>}
+   * @returns {Array<{value: string, attributes: Object}?>}
    * @private
    */
   formatMessagesSync(keys) {
@@ -398,7 +398,7 @@ class Localization {
    * Returns a Promise resolving to an array of the translation strings.
    *
    * @param   {Array<Object>} keys
-   * @returns {Promise<Array<string>>}
+   * @returns {Promise<Array<string?>>}
    */
   formatValues(keys) {
     return this.formatWithFallback(keys, valueFromBundle);
@@ -410,7 +410,7 @@ class Localization {
    * Returns an array of the translation strings.
    *
    * @param   {Array<Object>} keys
-   * @returns {Array<string>}
+   * @returns {Array<string?>}
    * @private
    */
   formatValuesSync(keys) {
@@ -437,7 +437,7 @@ class Localization {
    *
    * @param   {string}  id     - Identifier of the translation to format
    * @param   {Object}  [args] - Optional external arguments
-   * @returns {Promise<string>}
+   * @returns {Promise<string?>}
    */
   async formatValue(id, args) {
     const [val] = await this.formatValues([{id, args}]);
@@ -450,7 +450,7 @@ class Localization {
    * Returns a translation string.
    *
    * @param   {Array<Object>} keys
-   * @returns {string>}
+   * @returns {string?}
    * @private
    */
   formatValueSync(id, args) {
@@ -528,7 +528,7 @@ Localization.prototype.QueryInterface = ChromeUtils.generateQI([
  * @param   {Array<Error>} errors
  * @param   {Object} message
  * @param   {Object} args
- * @returns {string|null}
+ * @returns {string?}
  * @private
  */
 function valueFromBundle(bundle, errors, message, args) {
@@ -614,7 +614,7 @@ function keysFromBundle(method, bundle, keys, translations) {
   const missingIds = new Set();
 
   keys.forEach(({id, args}, i) => {
-    if (translations[i] !== undefined) {
+    if (translations[i] !== null) {
       return;
     }
 
