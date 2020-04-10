@@ -875,7 +875,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // When the log is written successfully, the dirty flag in index file is
   // cleared.
   nsresult GetFile(const nsACString& aName, nsIFile** _retval);
-  nsresult RemoveFile(const nsACString& aName);
+  void RemoveFile(const nsACString& aName);
   void RemoveAllIndexFiles();
   void RemoveJournalAndTempFile();
   // Writes journal to the disk and clears dirty flag in index header.
