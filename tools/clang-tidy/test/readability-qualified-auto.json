@@ -1,0 +1,1 @@
+[["warning", "'auto TdNakedPtr' can be declared as 'auto *TdNakedPtr'", "readability-qualified-auto"], {"reliability": "high"}]
