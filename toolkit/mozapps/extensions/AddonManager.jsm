@@ -112,9 +112,6 @@ var formatter = new Log.BasicFormatter();
 // Set parent logger (and its children) to append to
 // the Javascript section of the Browser Console
 parentLogger.addAppender(new Log.ConsoleAppender(formatter));
-// Set parent logger (and its children) to
-// also append to standard out
-parentLogger.addAppender(new Log.DumpAppender(formatter));
 
 // Create a new logger (child of 'addons' logger)
 // for use by the Addons Manager
