@@ -46,6 +46,9 @@
       };
 
       this.check = function showAlert_finalCheck(aEvent) {
+        if(aEvent.type === EVENT_HIDE) {
+          return;
+        }
         var dialog = aEvent.accessible.DOMNode;
         var info = dialog.querySelector(".tabmodalprompt-infoBody");
         testRelation(info, RELATION_DESCRIPTION_FOR, dialog);
@@ -57,14 +60,34 @@
       };
     }
 
+    function closeAlert() {
+      this.eventSeq = [
+        {
+          type: EVENT_HIDE,
+          match(aEvent) {
+            return aEvent.accessible.role == ROLE_DIALOG;
+          },
+        },
+      ];
+
+      this.invoke = function showAlert_invoke() {
+        synthesizeKey("VK_RETURN", {}, browserWindow());
+      };
+
+      this.getID = function showAlert_getID() {
+        return "cleanup alert";
+      };
+    }
+
+
     // gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
     function doTests() {
       gQueue = new eventQueue();
       gQueue.push(new showAlert());
+      gQueue.push(new closeAlert());
       gQueue.onFinish = function() {
-        synthesizeKey("VK_RETURN", {}, browserWindow());
         closeBrowserWindow();
       };
       gQueue.invoke(); // will call SimpleTest.finish()
