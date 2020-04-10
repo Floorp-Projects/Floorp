@@ -1479,11 +1479,7 @@ pref("network.http.spdy.websockets", true);
 pref("network.http.spdy.enable-hpack-dump", false);
 
 // Http3 parameters
-#ifdef NIGHTLY_BUILD
-  pref("network.http.http3.enabled", true);
-#else
-  pref("network.http.http3.enabled", false);
-#endif
+pref("network.http.http3.enabled", false);
 
 // Http3 qpack table size.
 pref("network.http.http3.default-qpack-table-size", 0);
