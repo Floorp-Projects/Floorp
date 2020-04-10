@@ -2,60 +2,92 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ErrorSection } from "./error-section.js";
+/* eslint-env mozilla/frame-script */
+
 import { InfoGroupContainer } from "./info-group-container.js";
 import { CertificateTabsSection } from "./certificate-tabs-section.js";
 
-class CertificateSection extends HTMLElement {
-  constructor(certs, error) {
+const TYPE_UNKNOWN = 0;
+const TYPE_CA = 1;
+const TYPE_USER = 2;
+const TYPE_EMAIL = 4;
+const TYPE_SERVER = 8;
+
+export class AboutCertificateSection extends HTMLElement {
+  constructor(certs) {
     super();
     this.certs = certs;
-    this.error = error;
   }
 
   connectedCallback() {
-    let template = document.getElementById("certificate-section-template");
+    let template = document.getElementById("about-certificate-template");
     let templateHtml = template.content.cloneNode(true);
 
     this.attachShadow({ mode: "open" }).appendChild(templateHtml);
 
     document.l10n.connectRoot(this.shadowRoot);
-    document.l10n.translateFragment(this.shadowRoot);
 
-    this.certificateTabsSection = new CertificateTabsSection();
+    this.certificateTabsSection = new CertificateTabsSection(true);
     this.shadowRoot.appendChild(this.certificateTabsSection.tabsElement);
-    this.infoGroupsContainers = new InfoGroupContainer();
+    this.infoGroupsContainers = new InfoGroupContainer(true);
+
+    this.certData = {
+      [TYPE_UNKNOWN]: {
+        name: "certificate-viewer-tab-unkonwn",
+        data: null,
+      },
+      [TYPE_CA]: {
+        name: "certificate-viewer-tab-ca",
+        data: null,
+      },
+      [TYPE_USER]: {
+        name: "certificate-viewer-tab-mine",
+        data: null,
+      },
+      [TYPE_EMAIL]: {
+        name: "certificate-viewer-tab-people",
+        data: null,
+      },
+      [TYPE_SERVER]: {
+        name: "certificate-viewer-tab-servers",
+        data: null,
+      },
+    };
 
     this.render();
   }
 
   render() {
+    RPMAddMessageListener("certificates", this.filterCerts.bind(this));
+    RPMSendAsyncMessage("getCertificates");
+
     let title = this.shadowRoot.querySelector(".title");
     title.setAttribute(
       "data-l10n-id",
       "certificate-viewer-certificate-section-title"
     );
+  }
 
-    if (this.error) {
-      title.classList.add("error");
-      this.certificateTabsSection.appendChild(new ErrorSection());
-      return;
-    }
+  filterCerts(message) {
+    this.certData[TYPE_UNKNOWN].data = message.data.certs[TYPE_UNKNOWN];
+    this.certData[TYPE_CA].data = message.data.certs[TYPE_CA];
+    this.certData[TYPE_USER].data = message.data.certs[TYPE_USER];
+    this.certData[TYPE_EMAIL].data = message.data.certs[TYPE_EMAIL];
+    this.certData[TYPE_SERVER].data = message.data.certs[TYPE_SERVER];
+
     let final = false;
-    for (let i = 0; i < this.certs.length; i++) {
+    let i = 0;
+    for (let data of Object.values(this.certData)) {
       if (i === this.certs.length - 1) {
         final = true;
       }
-      this.infoGroupsContainers.createInfoGroupsContainers(
-        this.certs[i].certItems,
-        i,
-        final
-      );
+      this.infoGroupsContainers.createInfoGroupsContainers({}, i, final, data);
       this.shadowRoot.appendChild(
         this.infoGroupsContainers.infoGroupsContainers[i]
       );
-      this.certificateTabsSection.createTabSection(this.certs[i].tabName, i);
+      this.certificateTabsSection.createTabSection(data.name, i);
       this.infoGroupsContainers.addClass("selected", 0);
+      i++;
     }
     this.setAccessibilityEventListeners();
     this.addClassForPadding();
@@ -88,4 +120,4 @@ class CertificateSection extends HTMLElement {
     this.infoGroupsContainers.updateCertificateSource(index);
   }
 }
-customElements.define("certificate-section", CertificateSection);
+customElements.define("about-certificate-section", AboutCertificateSection);
