@@ -236,6 +236,35 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
       }));
 }
 
+void MediaEngineWebRTCMicrophoneSource::UpdateHPFSettings(bool aEnable) {
+  AssertIsOnOwningThread();
+
+  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [that, track = mTrack, aEnable] {
+        class Message : public ControlMessage {
+         public:
+          Message(AudioInputProcessing* aInputProcessing, bool aEnable)
+              : ControlMessage(nullptr),
+                mInputProcessing(aInputProcessing),
+                mEnable(aEnable) {}
+
+          void Run() override { mInputProcessing->UpdateHPFSettings(mEnable); }
+
+         protected:
+          RefPtr<AudioInputProcessing> mInputProcessing;
+          bool mEnable;
+        };
+
+        if (track->IsDestroyed()) {
+          return;
+        }
+
+        track->GraphImpl()->AppendMessage(
+            MakeUnique<Message>(that->mInputProcessing, aEnable));
+      }));
+}
+
 void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
     bool aEnable, webrtc::NoiseSuppression::Level aLevel) {
   AssertIsOnOwningThread();
@@ -324,6 +353,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
     UpdateAECSettings(
         aPrefs.mAecOn, aPrefs.mUseAecMobile,
         static_cast<webrtc::EchoCancellation::SuppressionLevel>(aPrefs.mAec));
+    UpdateHPFSettings(aPrefs.mHPFOn);
 
     UpdateAPMExtraOptions(mExtendedFilter, mDelayAgnostic);
   }
@@ -357,6 +387,8 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
           uint32_t mRequestedInputChannelCount;
         };
 
+        // The high-pass filter is not taken into account when activating the
+        // pass through, since it's not controllable from content.
         bool passThrough = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
         if (track->IsDestroyed()) {
           return;
@@ -688,6 +720,10 @@ void AudioInputProcessing::UpdateAGCSettings(bool aEnable,
 #endif
   HANDLE_APM_ERROR(mAudioProcessing->gain_control()->set_mode(aMode));
   HANDLE_APM_ERROR(mAudioProcessing->gain_control()->Enable(aEnable));
+}
+
+void AudioInputProcessing::UpdateHPFSettings(bool aEnable) {
+  HANDLE_APM_ERROR(mAudioProcessing->high_pass_filter()->Enable(aEnable));
 }
 
 void AudioInputProcessing::UpdateNSSettings(
