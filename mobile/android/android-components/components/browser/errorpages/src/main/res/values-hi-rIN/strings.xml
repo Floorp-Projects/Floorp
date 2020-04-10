@@ -159,10 +159,10 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_host_title">पता नहीं पाया गया</string>
+    <string name="mozac_browser_errorpages_unknown_host_title">पता नहीं मिला</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट कनेक्शन नही</string>
+    <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट कनेक्शन नही है</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">अपना नेटवर्क कनेक्शन जांचें या पेज कुछ ही क्षणों में पुनः लोड करने का प्रयास करें।</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
@@ -183,7 +183,7 @@
     <string name="mozac_browser_errorpages_unknown_protocol_title">अज्ञात प्रोटोकॉल</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_not_found_title">फ़ाइल नहीं पाया गया</string>
+    <string name="mozac_browser_errorpages_file_not_found_title">फ़ाइल नहीं मिला</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रॉक्सी सर्वर का कनेक्शन अस्वीकार किया गया</string>
@@ -203,7 +203,7 @@
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s पर साइट को एक अवांछित सॉफ्टवेयर की सेवा के रूप में रिपोट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_title">हानिकारक साइट मुद्दा</string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">हानिकारक साइट समस्या</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s पर साइट एक संभावित हानिकारक साइट के रूप में रिपोर्ट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
