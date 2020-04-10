@@ -11,7 +11,6 @@ import os
 
 from .registry import register_callback_action
 
-from taskgraph.util.hg import find_hg_revision_push_info
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from taskgraph.util.partials import populate_release_history
@@ -107,9 +106,8 @@ def get_flavors(graph_config, param):
                 'type': 'string',
                 'title': 'Optional: revision to promote',
                 'description': ('Optional: the revision to promote. If specified, '
-                                'and if neither `pushlog_id` nor `previous_graph_kinds` '
-                                'is specified, find the `pushlog_id using the '
-                                'revision.'),
+                                'and `previous_graph_kinds is not specified, find the '
+                                'push graph to promote based on the revision.'),
             },
             'release_promotion_flavor': {
                 'type': 'string',
@@ -275,19 +273,20 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
         'do_not_optimize', promotion_config.get('do-not-optimize', [])
     )
 
-    # make parameters read-write
-    parameters = dict(parameters)
-    # Build previous_graph_ids from ``previous_graph_ids``, ``pushlog_id``,
-    # or ``revision``.
+    # Build previous_graph_ids from ``previous_graph_ids``, ``revision``,
+    # or the action parameters.
     previous_graph_ids = input.get('previous_graph_ids')
     if not previous_graph_ids:
         revision = input.get('revision')
-        if not parameters['pushlog_id']:
-            repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
-            push_info = find_hg_revision_push_info(
-                repository=parameters[repo_param], revision=revision)
-            parameters['pushlog_id'] = push_info['pushid']
-        previous_graph_ids = [find_decision_task(parameters, graph_config)]
+        if revision:
+            head_rev_param = '{}head_rev'.format(graph_config['project-repo-param-prefix'])
+            push_parameters = {
+                head_rev_param: revision,
+                'project': parameters['project'],
+            }
+        else:
+            push_parameters = parameters
+        previous_graph_ids = [find_decision_task(push_parameters, graph_config)]
 
     # Download parameters from the first decision task
     parameters = get_artifact(previous_graph_ids[0], "public/parameters.yml")
