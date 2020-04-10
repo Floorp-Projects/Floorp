@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "rusqlite"
-version = "0.22.0-beta.0"
+version = "0.22.0"
 authors = ["John Gallagher <jgallagher@bignerdranch.com>"]
 description = "Ergonomic wrapper for SQLite"
 documentation = "http://docs.rs/rusqlite/"
@@ -30,7 +30,7 @@ no-default-features = true
 
 [package.metadata.playground]
 all-features = false
-features = ["array", "backup", "blob", "bundled", "chrono", "collation", "csvtab", "extra_check", "functions", "hooks", "i128_blob", "limits", "load_extension", "modern_sqlite", "serde_json", "series", "trace", "url", "vtab_v3", "vtab", "window"]
+features = ["bundled-full"]
 
 [lib]
 name = "rusqlite"
@@ -44,6 +44,10 @@ name = "deny_single_threaded_sqlite_config"
 
 [[test]]
 name = "vtab"
+
+[[bench]]
+name = "cache"
+harness = false
 [dependencies.bitflags]
 version = "1.0"
 
@@ -71,7 +75,7 @@ version = "1.0"
 optional = true
 
 [dependencies.libsqlite3-sys]
-version = "0.17.2"
+version = "0.17.3"
 
 [dependencies.lru-cache]
 version = "0.1"
@@ -93,6 +97,9 @@ optional = true
 [dependencies.uuid]
 version = "0.8"
 optional = true
+[dev-dependencies.bencher]
+version = "0.1"
+
 [dev-dependencies.doc-comment]
 version = "0.3"
 
@@ -118,6 +125,8 @@ backup = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
 blob = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
 buildtime_bindgen = ["libsqlite3-sys/buildtime_bindgen"]
 bundled = ["libsqlite3-sys/bundled", "modern_sqlite"]
+bundled-full = ["array", "backup", "blob", "bundled", "chrono", "collation", "csvtab", "extra_check", "functions", "hooks", "i128_blob", "limits", "load_extension", "serde_json", "series", "trace", "unlock_notify", "url", "uuid", "vtab", "window"]
+bundled-windows = ["libsqlite3-sys/bundled-windows"]
 collation = []
 csvtab = ["csv", "vtab"]
 extra_check = []
@@ -133,9 +142,7 @@ session = ["libsqlite3-sys/session", "hooks"]
 sqlcipher = ["libsqlite3-sys/sqlcipher"]
 trace = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
 unlock_notify = ["libsqlite3-sys/unlock_notify"]
-unstable = []
 vtab = ["libsqlite3-sys/min_sqlite_version_3_7_7", "lazy_static"]
-vtab_v3 = ["vtab"]
 window = ["functions"]
 [badges.appveyor]
 repository = "jgallagher/rusqlite"
