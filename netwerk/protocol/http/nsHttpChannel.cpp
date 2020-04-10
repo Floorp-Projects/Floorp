@@ -7031,6 +7031,10 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
     return docParent->AttachStreamFilter(aChildProcessId);
   }
 
+  if (!ProcessId()) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
   mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
   nsresult rv = extensions::PStreamFilter::CreateEndpoints(
