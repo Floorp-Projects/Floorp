@@ -14,7 +14,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 addAccessibleTask(
   `<table id="customers">
     <tbody>
-      <tr><th>Company</th><th>Contact</th><th>Country</th></tr>
+      <tr id="firstrow"><th>Company</th><th>Contact</th><th>Country</th></tr>
       <tr><td>Alfreds Futterkiste</td><td>Maria Anders</td><td>Germany</td></tr>
       <tr><td>Centro comercial Moctezuma</td><td>Francisco Chang</td><td>Mexico</td></tr>
       <tr><td>Ernst Handel</td><td>Roland Mendel</td><td>Austria</td></tr>
@@ -92,5 +92,56 @@ addAccessibleTask(
         );
       }
     }
+
+    const rowText = [
+      "Madrigal Electromotive GmbH",
+      "Lydia Rodarte-Quayle",
+      "Germany",
+    ];
+    let reorder = waitForEvent(EVENT_REORDER, "customers");
+    await SpecialPowers.spawn(browser, [rowText], _rowText => {
+      let tr = content.document.createElement("tr");
+      for (let t of _rowText) {
+        let td = content.document.createElement("td");
+        td.textContent = t;
+        tr.appendChild(td);
+      }
+      content.document.getElementById("customers").appendChild(tr);
+    });
+    await reorder;
+
+    cols = table.getAttributeValue("AXColumns");
+    is(cols.length, 3, "Table has col list of correct length");
+    for (let i = 0; i < cols.length; i++) {
+      let currCol = cols[i];
+      let currChildren = currCol.getAttributeValue("AXChildren");
+      is(currChildren.length, 5, "Column has correct number of cells");
+      let lastCell = currChildren[currChildren.length - 1];
+      let cellChildren = lastCell.getAttributeValue("AXChildren");
+      is(cellChildren.length, 1, "Cell has a single text child");
+      is(
+        cellChildren[0].getAttributeValue("AXRole"),
+        "AXStaticText",
+        "Correct role for cell child"
+      );
+      is(
+        cellChildren[0].getAttributeValue("AXValue"),
+        rowText[i],
+        "Correct text for cell"
+      );
+    }
+
+    reorder = waitForEvent(EVENT_REORDER, "firstrow");
+    await SpecialPowers.spawn(browser, [], () => {
+      let td = content.document.createElement("td");
+      td.textContent = "Ticker";
+      content.document.getElementById("firstrow").appendChild(td);
+    });
+    await reorder;
+
+    cols = table.getAttributeValue("AXColumns");
+    is(cols.length, 4, "Table has col list of correct length");
+    is(cols[cols.length - 1].getAttributeValue("AXChildren").length, 1,
+      "Last column has single child")
   }
 );

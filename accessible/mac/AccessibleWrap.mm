@@ -107,6 +107,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+    case nsIAccessibleEvent::EVENT_REORDER:
       if (Accessible* accessible = aEvent->GetAccessible()) {
         accessible->GetNativeInterface((void**)&nativeAcc);
         if (!nativeAcc) {
