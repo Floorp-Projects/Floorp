@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Permission.h"
+#include "nsPermission.h"
+#include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsNetCID.h"
@@ -11,16 +12,14 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_permissions.h"
 
-namespace mozilla {
+// nsPermission Implementation
 
-// Permission Implementation
+NS_IMPL_CLASSINFO(nsPermission, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(nsPermission, nsIPermission)
 
-NS_IMPL_CLASSINFO(Permission, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(Permission, nsIPermission)
-
-Permission::Permission(nsIPrincipal* aPrincipal, const nsACString& aType,
-                       uint32_t aCapability, uint32_t aExpireType,
-                       int64_t aExpireTime, int64_t aModificationTime)
+nsPermission::nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
+                           uint32_t aCapability, uint32_t aExpireType,
+                           int64_t aExpireTime, int64_t aModificationTime)
     : mPrincipal(aPrincipal),
       mType(aType),
       mCapability(aCapability),
@@ -28,7 +27,7 @@ Permission::Permission(nsIPrincipal* aPrincipal, const nsACString& aType,
       mExpireTime(aExpireTime),
       mModificationTime(aModificationTime) {}
 
-already_AddRefed<nsIPrincipal> Permission::ClonePrincipalForPermission(
+already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 
@@ -48,67 +47,68 @@ already_AddRefed<nsIPrincipal> Permission::ClonePrincipalForPermission(
   return mozilla::BasePrincipal::CreateContentPrincipal(uri, attrs);
 }
 
-already_AddRefed<Permission> Permission::Create(
+already_AddRefed<nsPermission> nsPermission::Create(
     nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aCapability,
     uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime) {
   NS_ENSURE_TRUE(aPrincipal, nullptr);
 
   nsCOMPtr<nsIPrincipal> principal =
-      Permission::ClonePrincipalForPermission(aPrincipal);
+      nsPermission::ClonePrincipalForPermission(aPrincipal);
   NS_ENSURE_TRUE(principal, nullptr);
 
-  RefPtr<Permission> permission =
-      new Permission(principal, aType, aCapability, aExpireType, aExpireTime,
-                     aModificationTime);
+  RefPtr<nsPermission> permission =
+      new nsPermission(principal, aType, aCapability, aExpireType, aExpireTime,
+                       aModificationTime);
   return permission.forget();
 }
 
 NS_IMETHODIMP
-Permission::GetPrincipal(nsIPrincipal** aPrincipal) {
+nsPermission::GetPrincipal(nsIPrincipal** aPrincipal) {
   nsCOMPtr<nsIPrincipal> copy = mPrincipal;
   copy.forget(aPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::GetType(nsACString& aType) {
+nsPermission::GetType(nsACString& aType) {
   aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::GetCapability(uint32_t* aCapability) {
+nsPermission::GetCapability(uint32_t* aCapability) {
   *aCapability = mCapability;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::GetExpireType(uint32_t* aExpireType) {
+nsPermission::GetExpireType(uint32_t* aExpireType) {
   *aExpireType = mExpireType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::GetExpireTime(int64_t* aExpireTime) {
+nsPermission::GetExpireTime(int64_t* aExpireTime) {
   *aExpireTime = mExpireTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::GetModificationTime(int64_t* aModificationTime) {
+nsPermission::GetModificationTime(int64_t* aModificationTime) {
   *aModificationTime = mModificationTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Permission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches) {
+nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost,
+                      bool* aMatches) {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aMatches);
 
   *aMatches = false;
 
   nsCOMPtr<nsIPrincipal> principal =
-      Permission::ClonePrincipalForPermission(aPrincipal);
+      nsPermission::ClonePrincipalForPermission(aPrincipal);
   if (!principal) {
     *aMatches = false;
     return NS_OK;
@@ -118,8 +118,8 @@ Permission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches) {
 }
 
 NS_IMETHODIMP
-Permission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
-                                          bool aExactHost, bool* aMatches) {
+nsPermission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
+                                            bool aExactHost, bool* aMatches) {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aMatches);
 
@@ -207,8 +207,9 @@ Permission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
         return NS_OK;
+      } else {
+        return rv;
       }
-      return rv;
     }
   }
 
@@ -217,7 +218,7 @@ Permission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-Permission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches) {
+nsPermission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   mozilla::OriginAttributes attrs;
@@ -227,5 +228,3 @@ Permission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches) {
 
   return Matches(principal, aExactHost, aMatches);
 }
-
-}  // namespace mozilla

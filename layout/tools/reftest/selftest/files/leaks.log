@@ -58,7 +58,7 @@
 1192 |nsMainThreadPtrHolder<T>              |       20       80|    2253        4|
 1222 |nsNodeWeakReference                   |       16       16|     919        1|
 1223 |nsNotifyAddrListener                  |      112      112|       1        1|
-1241 |PermissionManager                     |      136      136|       1        1|
+1241 |nsPermissionManager                   |      136      136|       1        1|
 1248 |nsPrefBranch                          |       76       76|      63        1|
 1257 |nsProxyInfo                           |       72       72|    1098        1|
 1265 |nsRedirectHistoryEntry                |       32       32|      69        1|

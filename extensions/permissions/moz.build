@@ -10,16 +10,14 @@ TESTING_JS_MODULES += [
     'test/PermissionTestUtils.jsm',
 ]
 
-EXPORTS.mozilla += [
-    'Permission.h',
+EXPORTS += [
     'PermissionDelegateHandler.h',
-    'PermissionManager.h',
 ]
 
 UNIFIED_SOURCES += [
-    'Permission.cpp',
+    'nsPermission.cpp',
+    'nsPermissionManager.cpp',
     'PermissionDelegateHandler.cpp',
-    'PermissionManager.cpp',
 ]
 
 XPCOM_MANIFESTS += [
