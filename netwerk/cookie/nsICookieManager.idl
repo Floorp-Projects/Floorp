@@ -247,9 +247,4 @@ interface nsICookieManager : nsISupports
    */
   [implicit_jscontext]
   Promise removeAllSince(in int64_t aSinceWhen);
-
-  /**
-   * Retrieves all the cookies that were created on or after aSinceWhen, order
-   * by creation time */
-  Array<nsICookie> getCookiesSince(in int64_t aSinceWhen);
 };
