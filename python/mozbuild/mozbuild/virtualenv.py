@@ -222,7 +222,27 @@ class VirtualenvManager(object):
         called out to), the path to create the virtualenv in, and a handle to
         write output to.
         """
-        existed = os.path.exists(self.virtualenv_root)
+
+        # Corner-case: in some cases, we call this function even though there's
+        # already a virtualenv in place in `self.virtualenv_root`. That is not a
+        # problem in itself, except when not using the same `python`. For example:
+        # - the old virtualenv was created with `/usr/bin/pythonx.y`
+        # - as such, in contains `pythonx.y` as a file, and `python` and `pythonx`
+        #   as symbolic links to `pythonx.y`
+        # - the new virtualenv is being created with `/usr/bin/pythonx`
+        # - the virtualenv script uses shutil.copyfile to copy `/usr/bin/pythonx`
+        #   to `pythonx` in the virtualenv. As that is an existing symbolic link,
+        #   the copy ends up writing the file into `pythonx.y`.
+        # - the virtualenv script then creates `python` and `pythonx.y` symbolic
+        #   links to `pythonx`. `pythonx` is still a symbolic link to `pythonx.y`,
+        #   and now `pythonx.y` is a symbolic link to `pythonx`, so we end with a
+        #   symbolic link loop, and no real python executable around.
+        # So if the file with the same name as the python executable used to create
+        # the new virtualenv is a symbolic link, remove it before invoking
+        # virtualenv.
+        venv_python = os.path.join(self.bin_path, os.path.basename(python))
+        if os.path.islink(venv_python):
+            os.remove(venv_python)
 
         args = [python, self.virtualenv_script_path,
                 # Without this, virtualenv.py may attempt to contact the outside
@@ -233,11 +253,6 @@ class VirtualenvManager(object):
                 self.virtualenv_root]
 
         result = self._log_process_output(args)
-
-        if result and existed:
-            # Try again after removing the previous env, see bug 1628644.
-            shutil.rmtree(self.virtualenv_root)
-            result = self._log_process_output(args)
 
         if result:
             raise Exception(
