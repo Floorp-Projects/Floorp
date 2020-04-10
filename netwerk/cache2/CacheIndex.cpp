@@ -1887,32 +1887,22 @@ nsresult CacheIndex::GetFile(const nsACString& aName, nsIFile** _retval) {
   return NS_OK;
 }
 
-nsresult CacheIndex::RemoveFile(const nsACString& aName) {
+void CacheIndex::RemoveFile(const nsACString& aName) {
   MOZ_ASSERT(mState == SHUTDOWN);
 
   nsresult rv;
 
   nsCOMPtr<nsIFile> file;
   rv = GetFile(aName, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  bool exists;
-  rv = file->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    rv = file->Remove(false);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("CacheIndex::RemoveFile() - Cannot remove old entry file from disk."
-           "[name=%s]",
-           PromiseFlatCString(aName).get()));
-      NS_WARNING("Cannot remove old entry file from the disk");
-      return rv;
-    }
+  rv = file->Remove(false);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
+    LOG(
+        ("CacheIndex::RemoveFile() - Cannot remove old entry file from disk "
+         "[rv=0x%08" PRIx32 ", name=%s]",
+         static_cast<uint32_t>(rv), PromiseFlatCString(aName).get()));
   }
-
-  return NS_OK;
 }
 
 void CacheIndex::RemoveAllIndexFiles() {
