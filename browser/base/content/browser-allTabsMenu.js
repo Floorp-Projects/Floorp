@@ -135,10 +135,14 @@ var gTabsPanel = {
     return isElementVisible(this.allTabsButton);
   },
 
-  showAllTabsPanel() {
+  showAllTabsPanel(event) {
     this.init();
     if (this.canOpen) {
-      PanelUI.showSubView(this.kElements.allTabsView, this.allTabsButton);
+      PanelUI.showSubView(
+        this.kElements.allTabsView,
+        this.allTabsButton,
+        event
+      );
     }
   },
 
@@ -147,7 +151,7 @@ var gTabsPanel = {
     PanelMultiView.hidePopup(this.allTabsView.closest("panel"));
   },
 
-  showHiddenTabsPanel() {
+  showHiddenTabsPanel(event) {
     this.init();
     if (!this.canOpen) {
       return;
@@ -162,7 +166,7 @@ var gTabsPanel = {
       },
       { once: true }
     );
-    this.showAllTabsPanel();
+    this.showAllTabsPanel(event);
   },
 
   searchTabs() {

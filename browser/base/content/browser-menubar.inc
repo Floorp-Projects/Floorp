@@ -266,7 +266,7 @@
                 <menuitem id="historyRestoreLastSession"
                           command="Browser:RestoreLastSession" data-l10n-id="menu-history-restore-last-session"/>
                 <menuitem id="hiddenTabsMenu"
-                          oncommand="gTabsPanel.showHiddenTabsPanel();"
+                          oncommand="gTabsPanel.showHiddenTabsPanel(event);"
                           hidden="true" data-l10n-id="menu-history-hidden-tabs"/>
                 <menu id="historyUndoMenu"
                       disabled="true" data-l10n-id="menu-history-undo-menu">
