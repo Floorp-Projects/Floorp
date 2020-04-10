@@ -47,9 +47,6 @@ class AccessibleWrap : public Accessible {
 
   virtual void Shutdown() override;
 
-  virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
-  virtual bool RemoveChild(Accessible* aAccessible) override;
-
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
  protected:

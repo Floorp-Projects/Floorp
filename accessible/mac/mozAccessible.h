@@ -49,16 +49,6 @@ static const uintptr_t IS_PROXY = 1;
   uintptr_t mGeckoAccessible;
 
   /**
-   * Strong ref to array of children
-   */
-  NSMutableArray* mChildren;
-
-  /**
-   * Weak reference to the parent
-   */
-  mozAccessible* mParent;
-
-  /**
    * The role of our gecko accessible.
    */
   mozilla::a11y::role mRole;
@@ -148,14 +138,6 @@ static const uintptr_t IS_PROXY = 1;
 
 #pragma mark -
 
-// invalidates and removes all our children from our cached array.
-- (void)invalidateChildren;
-
-/**
- * Append a child if they are already cached.
- */
-- (void)appendChild:(mozilla::a11y::Accessible*)aAccessible;
-
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.
 - (void)expire;
@@ -187,6 +169,11 @@ static const uintptr_t IS_PROXY = 1;
 
 // value for the specified attribute
 - (id)accessibilityAttributeValue:(NSString*)attribute;
+
+// gets the array length of specified attribute values. Added
+// here to have a lighter way to get the child count instead
+// of constructing a full array.
+- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute;
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute;
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;
