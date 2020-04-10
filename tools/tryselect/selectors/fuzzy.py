@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import platform
+import re
 import subprocess
 import sys
 from distutils.spawn import find_executable
@@ -17,7 +18,7 @@ from mozboot.util import get_state_dir
 from mozterm import Terminal
 
 from ..cli import BaseTryParser
-from ..tasks import generate_tasks, filter_tasks_by_paths, filter_tasks_by_blacklist
+from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, generate_try_task_config
 from ..util.manage_estimates import download_task_history_data, make_trimmed_taskgraph_cache
 
@@ -27,6 +28,21 @@ here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
 PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/selectors/preview.py')
+
+# Some tasks show up in the target task set, but are either special cases
+# or uncommon enough that they should only be selectable with --full.
+TARGET_TASK_FILTERS = (
+    '-ccov/',
+    'windows10-aarch64/opt',
+    'win64-aarch64-laptop',
+    'windows10-64-ref-hw-2017',
+    'android-hw',
+    'android-geckoview-docs',
+    'linux1804-32',   # hide linux32 tests - bug 1599197
+    r'linux-',  # hide all linux32 tasks by default - bug 1599197
+    r'linux.*web-platform-tests.*-fis-',  # hide wpt linux fission tests - bug 1610879
+)
+
 
 FZF_NOT_FOUND = """
 Could not find the `fzf` binary.
@@ -280,6 +296,10 @@ def run_fzf(cmd, tasks):
     return query, selected
 
 
+def filter_target_task(task):
+    return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
+
+
 def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
         parameters=None, save_query=False, push=True, message='{msg}',
         test_paths=None, exact=False, closed_tree=False, show_estimates=False,
@@ -310,7 +330,7 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=target_set)
 
     if not full and not disable_target_task_filter:
-        all_tasks = filter(filter_tasks_by_blacklist, all_tasks)
+        all_tasks = filter(filter_target_task, all_tasks)
 
     if test_paths:
         all_tasks = filter_tasks_by_paths(all_tasks, test_paths)
