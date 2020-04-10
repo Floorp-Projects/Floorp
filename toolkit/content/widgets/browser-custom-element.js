@@ -2017,7 +2017,25 @@
     }
 
     leaveModalState() {
-      this.sendMessageToActor("LeaveModalState", {}, "BrowserElement", "roots");
+      this.sendMessageToActor(
+        "LeaveModalState",
+        { forceLeave: true },
+        "BrowserElement",
+        "roots"
+      );
+    }
+
+    /**
+     * Can be called for a window with or without modal state.
+     * If the window is not in modal state, this is a no-op.
+     */
+    maybeLeaveModalState() {
+      this.sendMessageToActor(
+        "LeaveModalState",
+        { forceLeave: false },
+        "BrowserElement",
+        "roots"
+      );
     }
 
     getDevicePermissionOrigins(key) {
