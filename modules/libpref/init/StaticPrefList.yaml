@@ -3651,7 +3651,7 @@
 # See eCMSMode in gfx/thebes/gfxPlatform.h.
 - name: gfx.color_management.mode
   type: RelaxedAtomicInt32
-  value: 2
+  value: 1
   mirror: always
 
 # The zero default here should match QCMS_INTENT_DEFAULT from qcms.h

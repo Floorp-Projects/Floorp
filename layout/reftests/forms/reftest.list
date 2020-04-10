@@ -4,7 +4,7 @@ fuzzy-if(cocoaWidget,0-18,0-68) fuzzy-if(Android,0-52,0-64) fuzzy-if(winWidget,0
 == display-block-baselines-3.html display-block-baselines-3-ref.html
 == display-block-baselines-4.html display-block-baselines-4-ref.html
 fuzzy-if(Android,0-4,0-8) fuzzy-if(skiaContent,0-7,0-2) == display-block-baselines-5.html display-block-baselines-5-ref.html
-fails-if(cocoaWidget) fuzzy-if(!nativeThemePref,0-1,0-3) == overflow.html overflow-ref.html # bug 1620120 for cocoa
+fuzzy(0-1,0-3) fails-if(cocoaWidget) == overflow.html overflow-ref.html # bug 1620120 for cocoa
 
 # button element
 include button/reftest.list
