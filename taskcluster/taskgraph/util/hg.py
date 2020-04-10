@@ -11,7 +11,7 @@ import six
 import subprocess
 from redo import retry
 
-PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1'
+PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1'
 
 
 def find_hg_revision_push_info(repository, revision):
