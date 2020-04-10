@@ -1602,7 +1602,7 @@ this.XPIDatabase = {
    */
   syncLoadDB(aRebuildOnError) {
     let err = new Error("Synchronously loading the add-ons database");
-    logger.debug(err);
+    logger.debug(err.message);
     AddonManagerPrivate.recordSimpleMeasure(
       "XPIDB_sync_stack",
       Log.stackTrace(err)
