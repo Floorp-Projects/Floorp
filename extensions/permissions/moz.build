@@ -14,9 +14,13 @@ EXPORTS += [
     'PermissionDelegateHandler.h',
 ]
 
+EXPORTS.mozilla += [
+    'Permission.h',
+]
+
 UNIFIED_SOURCES += [
-    'nsPermission.cpp',
     'nsPermissionManager.cpp',
+    'Permission.cpp',
     'PermissionDelegateHandler.cpp',
 ]
 
