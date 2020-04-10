@@ -1296,39 +1296,9 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   rv = aNewChannel->GetURI(getter_AddRefs(newUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<ADocumentChannelBridge> bridge = mDocumentChannelBridge;
-  auto callback =
-      [bridge, loadInfo](
-          nsCSPContext* aContext, mozilla::dom::Element* aTriggeringElement,
-          nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
-          nsCSPContext::BlockedContentSource aBlockedContentSource,
-          nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
-          uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject,
-          const nsAString& aSourceFile, const nsAString& aScriptSample,
-          uint32_t aLineNum, uint32_t aColumnNum) -> nsresult {
-    MOZ_ASSERT(!aTriggeringElement);
-    MOZ_ASSERT(!aCSPEventListener);
-    MOZ_ASSERT(aSourceFile.IsVoid() || aSourceFile.IsEmpty());
-    MOZ_ASSERT(aScriptSample.IsVoid() || aScriptSample.IsEmpty());
-    nsCOMPtr<nsIContentSecurityPolicy> cspToInherit =
-        loadInfo->GetCspToInherit();
-
-    // The CSPContext normally contains the loading Document (used
-    // for targeting events), but this gets lost when serializing across
-    // IPDL. We need to know which CSPContext we're serializing, so that
-    // we can find the right loading Document on the content process
-    // side.
-    bool isCspToInherit = (aContext == cspToInherit);
-    bridge->CSPViolation(aContext, isCspToInherit, aBlockedURI,
-                         aBlockedContentSource, aOriginalURI,
-                         aViolatedDirective, aViolatedPolicyIndex,
-                         aObserverSubject);
-    return NS_OK;
-  };
-
   Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(callback, originalUri, newUri,
-                                         loadInfo, cancelCode);
+  rv = CSPService::ConsultCSPForRedirect(originalUri, newUri, loadInfo,
+                                         cancelCode);
 
   if (cancelCode) {
     aOldChannel->Cancel(*cancelCode);
