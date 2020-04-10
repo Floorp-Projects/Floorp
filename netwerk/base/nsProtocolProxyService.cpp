@@ -1832,12 +1832,16 @@ void nsProtocolProxyService::LoadHostFilters(const nsACString& aFilters) {
         t.Record();
         parsingPort = true;
         continue;
-      } else if (token.Equals(mozilla::Tokenizer::Token::Char('/'))) {
+      }
+
+      if (token.Equals(mozilla::Tokenizer::Token::Char('/'))) {
         t.Claim(hostStr);
         t.Record();
         parsingMask = true;
         continue;
-      } else if (token.Equals(mozilla::Tokenizer::Token::Char(']'))) {
+      }
+
+      if (token.Equals(mozilla::Tokenizer::Token::Char(']'))) {
         parsingIPv6 = false;
         continue;
       }
