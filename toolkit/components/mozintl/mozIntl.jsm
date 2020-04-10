@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Localization } = ChromeUtils.import(
-  "resource://gre/modules/Localization.jsm",
-  null
-);
 
 const mozIntlHelper = Cc["@mozilla.org/mozintlhelper;1"].getService(
   Ci.mozIMozIntlHelper
