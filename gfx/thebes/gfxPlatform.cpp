@@ -439,6 +439,12 @@ SRGBOverrideObserver::Observe(nsISupports* aSubject, const char* aTopic,
   ShutdownCMS();
   // Update current cms profile.
   gfxPlatform::CreateCMSOutputProfile();
+  // FIXME(aosmond): This is also racy for the transforms but the pref is only
+  // used for dev purposes. It can be made a static pref in a followup once the
+  // dependency on it is removed from the gtest suite (see bug 1620600).
+  gfxPlatform::GetCMSRGBTransform();
+  gfxPlatform::GetCMSRGBATransform();
+  gfxPlatform::GetCMSBGRATransform();
   return NS_OK;
 }
 
@@ -1090,6 +1096,12 @@ void gfxPlatform::Init() {
                                        "gfx.2d.recording");
 
   CreateCMSOutputProfile();
+
+  // Create the sRGB to output display profile transforms. They can be accessed
+  // off the main thread so we want to avoid a race condition.
+  GetCMSRGBTransform();
+  GetCMSRGBATransform();
+  GetCMSBGRATransform();
 
   // Listen to memory pressure event so we can purge DrawTarget caches
   gPlatform->mMemoryPressureObserver =

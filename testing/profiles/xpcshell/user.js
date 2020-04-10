@@ -30,3 +30,6 @@ user_pref("idle.lastDailyNotification", -1);
 user_pref("toolkit.telemetry.eventping.enabled", true);
 // XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by default"
 user_pref("network.cookie.sameSite.laxByDefault", false);
+// Bug 455077 - Ensure we use sRGB as the output profile for test consistency.
+user_pref("gfx.color_management.force_srgb", true);
+user_pref("gfx.color_management.mode", 1);
