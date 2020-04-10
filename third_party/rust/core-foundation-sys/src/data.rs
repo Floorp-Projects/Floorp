@@ -9,7 +9,7 @@
 
 use std::os::raw::c_void;
 
-use base::{CFAllocatorRef, CFTypeID, CFIndex, CFRange};
+use base::{CFAllocatorRef, CFTypeID, CFIndex};
 
 #[repr(C)]
 pub struct __CFData(c_void);
@@ -25,7 +25,6 @@ extern {
                         bytes: *const u8, length: CFIndex) -> CFDataRef;
     //fn CFDataFind
     pub fn CFDataGetBytePtr(theData: CFDataRef) -> *const u8;
-    pub fn CFDataGetBytes(theData: CFDataRef, range: CFRange, buffer: *mut u8);
     pub fn CFDataGetLength(theData: CFDataRef) -> CFIndex;
 
     pub fn CFDataGetTypeID() -> CFTypeID;

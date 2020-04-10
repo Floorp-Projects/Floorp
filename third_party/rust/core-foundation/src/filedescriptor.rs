@@ -15,7 +15,7 @@ use core_foundation_sys::base::{kCFAllocatorDefault, CFOptionFlags};
 use base::TCFType;
 use runloop::CFRunLoopSource;
 
-use std::mem::MaybeUninit;
+use std::mem;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::ptr;
 
@@ -46,9 +46,9 @@ impl CFFileDescriptor {
 
     pub fn context(&self) -> CFFileDescriptorContext {
         unsafe {
-            let mut context = MaybeUninit::<CFFileDescriptorContext>::uninit();
-            CFFileDescriptorGetContext(self.0, context.as_mut_ptr());
-            context.assume_init()
+            let mut context: CFFileDescriptorContext = mem::uninitialized();
+            CFFileDescriptorGetContext(self.0, &mut context);
+            context
         }
     }
 

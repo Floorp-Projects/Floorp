@@ -66,7 +66,7 @@ impl<T> CFArray<T> {
     pub fn from_copyable(elems: &[T]) -> CFArray<T> where T: Copy {
         unsafe {
             let array_ref = CFArrayCreate(kCFAllocatorDefault,
-                                          elems.as_ptr() as *const *const c_void,
+                                          mem::transmute(elems.as_ptr()),
                                           elems.len().to_CFIndex(),
                                           ptr::null());
             TCFType::wrap_under_create_rule(array_ref)
@@ -78,7 +78,7 @@ impl<T> CFArray<T> {
         unsafe {
             let elems: Vec<CFTypeRef> = elems.iter().map(|elem| elem.as_CFTypeRef()).collect();
             let array_ref = CFArrayCreate(kCFAllocatorDefault,
-                                          elems.as_ptr(),
+                                          mem::transmute(elems.as_ptr()),
                                           elems.len().to_CFIndex(),
                                           &kCFTypeArrayCallBacks);
             TCFType::wrap_under_create_rule(array_ref)
@@ -250,17 +250,12 @@ mod tests {
             n5.as_CFType(),
         ]);
 
-        assert_eq!(
-            arr.get_all_values(),
-            &[
-                n0.as_CFTypeRef(),
-                n1.as_CFTypeRef(),
-                n2.as_CFTypeRef(),
-                n3.as_CFTypeRef(),
-                n4.as_CFTypeRef(),
-                n5.as_CFTypeRef()
-            ]
-        );
+        assert!(arr.get_all_values() == &[n0.as_CFTypeRef(),
+                                        n1.as_CFTypeRef(),
+                                        n2.as_CFTypeRef(),
+                                        n3.as_CFTypeRef(),
+                                        n4.as_CFTypeRef(),
+                                        n5.as_CFTypeRef()]);
 
         let mut sum = 0;
 
@@ -274,13 +269,13 @@ mod tests {
             sum += number.to_i64().unwrap()
         }
 
-        assert_eq!(sum, 15);
+        assert!(sum == 15);
 
         for elem in arr.iter() {
             let number: CFNumber = elem.downcast::<CFNumber>().unwrap();
             sum += number.to_i64().unwrap()
         }
 
-        assert_eq!(sum, 30);
+        assert!(sum == 30);
     }
 }

@@ -128,32 +128,9 @@ impl From<device::OutOfMemory> for CreationError {
     }
 }
 
-impl std::fmt::Display for CreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create image: {}", err),
-            CreationError::Format(format) => write!(fmt, "Failed to create image: Unsupported format: {:?}", format),
-            CreationError::Kind => write!(fmt, "Failed to create image: Specified kind doesn't support particular operation"), // Room for improvement.
-            CreationError::Samples(samples) => write!(fmt, "Failed to create image: Specified format doesn't support specified sampling {}", samples),
-            CreationError::Size(size) => write!(fmt, "Failed to create image: Unsupported size in one of the dimensions {}", size),
-            CreationError::Data(data) => write!(fmt, "Failed to create image: The given data has a different size {{{}}} than the target image slice", data), // Actually nothing emits this.
-            CreationError::Usage(usage) => write!(fmt, "Failed to create image: Unsupported usage: {:?}", usage),
-        }
-    }
-}
-
-impl std::error::Error for CreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            CreationError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
 /// Error creating an `ImageView`.
 #[derive(Clone, Debug, PartialEq)]
-pub enum ViewError { // TODO: Rename this or `buffer::ViewCreationError`
+pub enum ViewError {
     /// The required usage flag is not present in the image.
     Usage(Usage),
     /// Selected mip level doesn't exist.
@@ -176,29 +153,6 @@ impl From<device::OutOfMemory> for ViewError {
     }
 }
 
-impl std::fmt::Display for ViewError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ViewError::Usage(usage) => write!(fmt, "Failed to create image view: Specified usage flags are not present in the image {:?}", usage),
-            ViewError::Level(level) => write!(fmt, "Failed to create image view: Selected level doesn't exist in the image {}", level),
-            ViewError::Layer(err) => write!(fmt, "Failed to create image view: {}", err),
-            ViewError::BadFormat(format) => write!(fmt, "Failed to create image view: Incompatible format {:?}", format),
-            ViewError::BadKind(kind) => write!(fmt, "Failed to create image view: Incompatible kind {:?}", kind),
-            ViewError::OutOfMemory(err) => write!(fmt, "Failed to create image view: {}", err),
-            ViewError::Unsupported => write!(fmt, "Failed to create image view: Implementation specific error occurred"),
-        }
-    }
-}
-
-impl std::error::Error for ViewError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            ViewError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
 /// An error associated with selected image layer.
 #[derive(Clone, Debug, PartialEq)]
 pub enum LayerError {
@@ -206,15 +160,6 @@ pub enum LayerError {
     NotExpected(Kind),
     /// Selected layers are outside of the provided range.
     OutOfBounds(Range<Layer>),
-}
-
-impl std::fmt::Display for LayerError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LayerError::NotExpected(kind) => write!(fmt, "Kind {{{:?}}} does not support arrays", kind),
-            LayerError::OutOfBounds(layers) => write!(fmt, "Out of bounds layers {} .. {}", layers.start, layers.end),
-        }
-    }
 }
 
 /// How to [filter](https://en.wikipedia.org/wiki/Texture_filtering) the

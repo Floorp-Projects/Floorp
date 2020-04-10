@@ -889,7 +889,7 @@ impl CALayer {
     #[inline]
     pub fn set_should_rasterize(&self, flag: bool) {
         unsafe {
-            msg_send![self.id(), setShouldRasterize:(flag as BOOL)]
+            msg_send![self.id(), setShouldRasterize:(flag as BOOL)];
         }
     }
 
@@ -1459,7 +1459,7 @@ impl CARenderer {
                 Some(ref layer) => layer.id(),
                 None => nil,
             };
-            msg_send![self.id(), setLayer:layer]
+            msg_send![self.id(), setLayer:layer];
         }
     }
 

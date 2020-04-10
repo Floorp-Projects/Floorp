@@ -16,7 +16,7 @@ pkcs11 = "0.4"
 sha2 = "0.8"
 
 [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
-version = "0.7"
+version = "0.6"
 
 [target."cfg(target_os = \"macos\")".dependencies.libloading]
 version = "0.5"

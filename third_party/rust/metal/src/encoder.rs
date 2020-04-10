@@ -132,33 +132,13 @@ impl CommandEncoderRef {
     pub fn set_label(&self, label: &str) {
         unsafe {
             let nslabel = crate::nsstring_from_str(label);
-            msg_send![self, setLabel: nslabel]
+            let () = msg_send![self, setLabel: nslabel];
         }
     }
 
     pub fn end_encoding(&self) {
         unsafe {
             msg_send![self, endEncoding]
-        }
-    }
-
-    pub fn insert_debug_signpost(&self, name: &str) {
-        unsafe {
-            let nslabel = crate::nsstring_from_str(name);
-            msg_send![self, insertDebugSignpost: nslabel]
-        }
-    }
-
-    pub fn push_debug_group(&self, name: &str) {
-        unsafe {
-            let nslabel = crate::nsstring_from_str(name);
-            msg_send![self, pushDebugGroup: nslabel]
-        }
-    }
-
-    pub fn pop_debug_group(&self) {
-        unsafe {
-            msg_send![self, popDebugGroup]
         }
     }
 }
@@ -287,19 +267,6 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_vertex_buffer_offset(
-        &self,
-        index: NSUInteger,
-        offset: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                setVertexBufferOffset:offset
-                atIndex:index
-            ]
-        }
-    }
-
     pub fn set_vertex_buffers(
         &self,
         start_index: NSUInteger,
@@ -319,7 +286,7 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_vertex_texture(&self, index: NSUInteger, texture: Option<&TextureRef>) {
+    pub fn set_vertex_texture(&self, index: u64, texture: Option<&TextureRef>) {
         unsafe {
             msg_send![self,
                 setVertexTexture:texture
@@ -340,7 +307,7 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_vertex_sampler_state(&self, index: NSUInteger, sampler: Option<&SamplerStateRef>) {
+    pub fn set_vertex_sampler_state(&self, index: u64, sampler: Option<&SamplerStateRef>) {
         unsafe {
             msg_send![self,
                 setVertexSamplerState:sampler
@@ -408,19 +375,6 @@ impl RenderCommandEncoderRef {
             msg_send![self,
                 setFragmentBuffer:buffer
                 offset:offset
-                atIndex:index
-            ]
-        }
-    }
-
-    pub fn set_fragment_buffer_offset(
-        &self,
-        index: NSUInteger,
-        offset: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                setFragmentBufferOffset:offset
                 atIndex:index
             ]
         }
@@ -1018,9 +972,9 @@ impl ArgumentEncoderRef {
 
     pub fn set_argument_buffer_to_element(
         &self,
-        array_element: NSUInteger,
         buffer: &BufferRef,
         offset: NSUInteger,
+        array_element: NSUInteger,
     ) {
         unsafe {
             msg_send![self,
@@ -1031,12 +985,7 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_buffer(
-        &self,
-        at_index: NSUInteger,
-        buffer: &BufferRef,
-        offset: NSUInteger,
-    ) {
+    pub fn set_buffer(&self, buffer: &BufferRef, offset: NSUInteger, at_index: NSUInteger) {
         unsafe {
             msg_send![self,
                 setBuffer: buffer
@@ -1048,9 +997,9 @@ impl ArgumentEncoderRef {
 
     pub fn set_buffers(
         &self,
-        start_index: NSUInteger,
         data: &[&BufferRef],
         offsets: &[NSUInteger],
+        start_index: NSUInteger,
     ) {
         assert_eq!(offsets.len(), data.len());
         unsafe {
@@ -1065,7 +1014,7 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_texture(&self, at_index: NSUInteger, texture: &TextureRef) {
+    pub fn set_texture(&self, texture: &TextureRef, at_index: NSUInteger) {
         unsafe {
             msg_send![self,
                 setTexture: texture
@@ -1074,7 +1023,7 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_textures(&self, start_index: NSUInteger, data: &[&TextureRef]) {
+    pub fn set_textures(&self, data: &[&TextureRef], start_index: NSUInteger) {
         unsafe {
             msg_send![self,
                 setTextures: data.as_ptr()
@@ -1086,7 +1035,7 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_sampler_state(&self, at_index: NSUInteger, sampler_state: &SamplerStateRef) {
+    pub fn set_sampler_state(&self, sampler_state: &SamplerStateRef, at_index: NSUInteger) {
         unsafe {
             msg_send![self,
                 setSamplerState: sampler_state
@@ -1095,7 +1044,7 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_sampler_states(&self, start_index: NSUInteger, data: &[&SamplerStateRef]) {
+    pub fn set_sampler_states(&self, data: &[&SamplerStateRef], start_index: NSUInteger) {
         unsafe {
             msg_send![self,
                 setSamplerStates: data.as_ptr()

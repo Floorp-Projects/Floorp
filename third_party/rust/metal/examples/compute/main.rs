@@ -40,18 +40,10 @@ fn main() {
     };
 
     let command_buffer = command_queue.new_command_buffer();
-
-    command_buffer.set_label("label");
-    let block = block::ConcreteBlock::new(move |buffer: &metal::CommandBufferRef| {
-        println!("{}", buffer.label());
-    }).copy();
-
-    command_buffer.add_completed_handler(&block);
-
     let encoder = command_buffer.new_compute_command_encoder();
 
     let library = device
-        .new_library_with_file("examples/compute/shaders.metallib")
+        .new_library_with_file("examples/compute/default.metallib")
         .unwrap();
     let kernel = library.get_function("sum", None).unwrap();
 

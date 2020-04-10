@@ -50,13 +50,13 @@ pub const kCFRunLoopAllActivities: CFOptionFlags = 0x0FFFFFFF;
 pub struct CFRunLoopSourceContext {
     pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: Option<extern "C" fn (info: *const c_void) -> *const c_void>,
-    pub release: Option<extern "C" fn (info: *const c_void)>,
-    pub copyDescription: Option<extern "C" fn (info: *const c_void) -> CFStringRef>,
-    pub equal: Option<extern "C" fn (info1: *const c_void, info2: *const c_void) -> Boolean>,
-    pub hash: Option<extern "C" fn (info: *const c_void) -> CFHashCode>,
-    pub schedule: Option<extern "C" fn (info: *const c_void, rl: CFRunLoopRef, mode: CFStringRef)>,
-    pub cancel: Option<extern "C" fn (info: *const c_void, rl: CFRunLoopRef, mode: CFStringRef)>,
+    pub retain: extern "C" fn (info: *const c_void) -> *const c_void,
+    pub release: extern "C" fn (info: *const c_void),
+    pub copyDescription: extern "C" fn (info: *const c_void) -> CFStringRef,
+    pub equal: extern "C" fn (info1: *const c_void, info2: *const c_void) -> Boolean,
+    pub hash: extern "C" fn (info: *const c_void) -> CFHashCode,
+    pub schedule: extern "C" fn (info: *const c_void, rl: CFRunLoopRef, mode: CFStringRef),
+    pub cancel: extern "C" fn (info: *const c_void, rl: CFRunLoopRef, mode: CFStringRef),
     pub perform: extern "C" fn (info: *const c_void),
 }
 
@@ -64,12 +64,12 @@ pub struct CFRunLoopSourceContext {
 pub struct CFRunLoopSourceContext1 {
     pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: Option<extern "C" fn (info: *const c_void) -> *const c_void>,
-    pub release: Option<extern "C" fn (info: *const c_void)>,
-    pub copyDescription: Option<extern "C" fn (info: *const c_void) -> CFStringRef>,
-    pub equal: Option<extern "C" fn (info1: *const c_void, info2: *const c_void) -> Boolean>,
-    pub hash: Option<extern "C" fn (info: *const c_void) -> CFHashCode>,
-    // note that the following two fields are platform dependent in the C header, the ones here are for macOS
+    pub retain: extern "C" fn (info: *const c_void) -> *const c_void,
+    pub release: extern "C" fn (info: *const c_void),
+    pub copyDescription: extern "C" fn (info: *const c_void) -> CFStringRef,
+    pub equal: extern "C" fn (info1: *const c_void, info2: *const c_void) -> Boolean,
+    pub hash: extern "C" fn (info: *const c_void) -> CFHashCode,
+    // note that the following two fields are platform dependent in the C header, the ones here are for OS X
     pub getPort: extern "C" fn (info: *mut c_void) -> mach_port_t,
     pub perform: extern "C" fn (msg: *mut c_void, size: CFIndex, allocator: CFAllocatorRef, info: *mut c_void) -> *mut c_void,
 }
@@ -78,9 +78,9 @@ pub struct CFRunLoopSourceContext1 {
 pub struct CFRunLoopObserverContext {
     pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: Option<extern "C" fn (info: *const c_void) -> *const c_void>,
-    pub release: Option<extern "C" fn (info: *const c_void)>,
-    pub copyDescription: Option<extern "C" fn (info: *const c_void) -> CFStringRef>,
+    pub retain: extern "C" fn (info: *const c_void) -> *const c_void,
+    pub release: extern "C" fn (info: *const c_void),
+    pub copyDescription: extern "C" fn (info: *const c_void) -> CFStringRef,
 }
 
 pub type CFRunLoopObserverCallBack = extern "C" fn (observer: CFRunLoopObserverRef, activity: CFRunLoopActivity, info: *mut c_void);
@@ -89,15 +89,15 @@ pub type CFRunLoopObserverCallBack = extern "C" fn (observer: CFRunLoopObserverR
 pub struct CFRunLoopTimerContext {
     pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: Option<extern "C" fn (info: *const c_void) -> *const c_void>,
-    pub release: Option<extern "C" fn (info: *const c_void)>,
-    pub copyDescription: Option<extern "C" fn (info: *const c_void) -> CFStringRef>,
+    pub retain: extern "C" fn (info: *const c_void) -> *const c_void,
+    pub release: extern "C" fn (info: *const c_void),
+    pub copyDescription: extern "C" fn (info: *const c_void) -> CFStringRef,
 }
 
 pub type CFRunLoopTimerCallBack = extern "C" fn (timer: CFRunLoopTimerRef, info: *mut c_void);
 
 #[repr(C)]
-pub struct __CFRunLoopTimer(c_void);
+pub struct __CFRunLoopTimer;
 
 pub type CFRunLoopTimerRef = *mut __CFRunLoopTimer;
 
