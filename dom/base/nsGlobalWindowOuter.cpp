@@ -4923,10 +4923,9 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
     return false;
   }
 
-  // Always allow content modal prompts for alert and confirm.
+  // Always allow tab modal prompts for alert and confirm.
   if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
-    promptBag->SetPropertyAsUint32(NS_LITERAL_STRING("modalType"),
-                                   nsIPrompt::MODAL_TYPE_CONTENT);
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
   }
 
   bool result = false;
@@ -5013,10 +5012,9 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
     return;
   }
 
-  // Always allow content modal prompts for prompt.
+  // Always allow tab modal prompts for prompt.
   if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
-    promptBag->SetPropertyAsUint32(NS_LITERAL_STRING("modalType"),
-                                   nsIPrompt::MODAL_TYPE_CONTENT);
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
   }
 
   // Pass in the default value, if any.

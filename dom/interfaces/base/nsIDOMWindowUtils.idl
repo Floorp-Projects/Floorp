@@ -1297,7 +1297,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Is the window is in a modal state? [See enterModalState()]
    */
-  boolean isInModalState();
+  [noscript] boolean isInModalState();
 
   /**
    * Request set internal desktopMode flag change.
