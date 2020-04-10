@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* mockGenerateMessages(resourceIds) {
+  async function* generateBundles(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!`));
     yield bundle;
@@ -18,7 +18,8 @@
 
     const domLoc = new DOMLocalization(
       [],
-      mockGenerateMessages
+      false,
+      { generateBundles },
     );
 
     await domLoc.translateFragment(document.body);

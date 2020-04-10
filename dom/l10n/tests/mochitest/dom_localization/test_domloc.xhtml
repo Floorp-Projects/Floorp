@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  async function * generateMessages(resourceIds) {
+  async function* generateBundles(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
 file-menu =
@@ -29,7 +29,8 @@ container = Some text with an <image data-l10n-name="foo"> inside it.
 
   const domLoc = new DOMLocalization(
     [],
-    generateMessages
+    false,
+    { generateBundles },
   );
 
   async function foo() {
