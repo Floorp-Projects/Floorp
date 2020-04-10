@@ -89,6 +89,7 @@ UNIFIED_SOURCES += [
     'ValueNumbering.cpp',
     'VMFunctions.cpp',
     'WarpBuilder.cpp',
+    'WarpCacheIRTranspiler.cpp',
     'WarpOracle.cpp',
     'WarpSnapshot.cpp',
     'WasmBCE.cpp',

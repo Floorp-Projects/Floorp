@@ -1261,14 +1261,15 @@ class CacheIRStubInfo {
                               const CacheIRWriter& writer);
 
   template <class Stub, class T>
-  js::GCPtr<T>& getStubField(Stub* stub, uint32_t field) const;
+  js::GCPtr<T>& getStubField(Stub* stub, uint32_t offset) const;
 
   template <class T>
-  js::GCPtr<T>& getStubField(ICStub* stub, uint32_t field) const {
-    return getStubField<ICStub, T>(stub, field);
+  js::GCPtr<T>& getStubField(ICStub* stub, uint32_t offset) const {
+    return getStubField<ICStub, T>(stub, offset);
   }
 
-  uintptr_t getStubRawWord(ICStub* stub, uint32_t field) const;
+  uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
+  uintptr_t getStubRawWord(ICStub* stub, uint32_t offset) const;
 };
 
 template <typename T>

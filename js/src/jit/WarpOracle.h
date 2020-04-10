@@ -31,6 +31,9 @@ class MOZ_STACK_CLASS WarpOracle {
   AbortReasonOr<WarpEnvironment> createEnvironment(HandleScript script);
   AbortReasonOr<WarpScriptSnapshot*> createScriptSnapshot(HandleScript script);
 
+  AbortReasonOr<Ok> maybeInlineIC(WarpOpSnapshotList& snapshots,
+                                  HandleScript script, BytecodeLocation loc);
+
  public:
   WarpOracle(JSContext* cx, MIRGenerator& mirGen, HandleScript script);
 

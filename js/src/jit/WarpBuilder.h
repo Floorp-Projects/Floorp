@@ -140,6 +140,10 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
+  MOZ_MUST_USE bool buildCacheIR(BytecodeLocation loc,
+                                 const WarpCacheIR* snapshot,
+                                 MDefinition* input);
+
   MOZ_MUST_USE bool buildEnvironmentChain();
   MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,
                                     LexicalEnvironmentObject* templateObj);

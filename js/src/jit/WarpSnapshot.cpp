@@ -141,6 +141,13 @@ void WarpLambda::dumpData(GenericPrinter& out) const {
 void WarpRest::dumpData(GenericPrinter& out) const {
   out.printf("    template: 0x%p\n", templateObject());
 }
+
+void WarpCacheIR::dumpData(GenericPrinter& out) const {
+  out.printf("    stubCode: 0x%p\n", static_cast<JitCode*>(stubCode_));
+  out.printf("    stubInfo: 0x%p\n", stubInfo_);
+  out.printf("    stubData: 0x%p\n", stubData_);
+  // TODO: print CacheIR
+}
 #endif  // JS_JITSPEW
 
 template <typename T>
@@ -226,4 +233,9 @@ void WarpLambda::traceData(JSTracer* trc) {
 
 void WarpRest::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, templateObject_, "warp-rest-template");
+}
+
+void WarpCacheIR::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, stubCode_, "warp-stub-code");
+  // TODO: trace pointers in stub data.
 }
