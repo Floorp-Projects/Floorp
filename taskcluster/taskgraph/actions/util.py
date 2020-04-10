@@ -64,10 +64,12 @@ def fetch_graph_and_labels(parameters, graph_config):
                     raise
                 logger.debug('No label-to-taskid.json found for {}: {}'.format(task_id, e))
 
-        namespace = '{}.v2.{}.pushlog-id.{}.actions'.format(
+        head_rev_param = '{}head_rev'.format(graph_config['project-repo-param-prefix'])
+
+        namespace = '{}.v2.{}.revision.{}.taskgraph.actions'.format(
             graph_config['trust-domain'],
             parameters['project'],
-            parameters['pushlog_id'])
+            parameters[head_rev_param])
         for task_id in list_tasks(namespace):
             fetches.append(e.submit(fetch_action, task_id))
 
@@ -85,7 +87,7 @@ def fetch_graph_and_labels(parameters, graph_config):
         namespace = '{}.v2.{}.revision.{}.cron'.format(
             graph_config['trust-domain'],
             parameters['project'],
-            parameters['head_rev'])
+            parameters[head_rev_param])
         for task_id in list_tasks(namespace):
             fetches.append(e.submit(fetch_cron, task_id))
 

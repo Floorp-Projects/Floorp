@@ -135,6 +135,7 @@ tasks:
               else:
                 $if: 'tasks_for == "action"'
                 then:
+                - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.actions.${ownTaskId}"
                 - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
                 else:  # cron
                 - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
