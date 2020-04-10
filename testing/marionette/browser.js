@@ -295,7 +295,7 @@ browser.Context = class {
       "tabmodalprompt"
     );
 
-    return br.tabModalPromptBox.getPrompt(modalElements[0]);
+    return br.tabModalPromptBox.prompts.get(modalElements[0]);
   }
 
   /**

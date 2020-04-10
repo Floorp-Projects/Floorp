@@ -1256,10 +1256,6 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 // Allow using tab-modal prompts when possible.
 pref("prompts.tab_modal.enabled", true);
 
-// Whether prompts should be content modal (1) tab modal (2) or window modal(3) by default
-// This is a fallback value for when prompt callers do not specify a modalType.
-pref("prompts.defaultModalType", 3);
-
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 

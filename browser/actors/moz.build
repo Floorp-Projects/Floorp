@@ -49,7 +49,6 @@ FINAL_TARGET_FILES.actors += [
     'PageStyleParent.jsm',
     'PluginChild.jsm',
     'PluginParent.jsm',
-    'PromptChild.jsm',
     'PromptParent.jsm',
     'RFPHelperChild.jsm',
     'RFPHelperParent.jsm',

@@ -95,7 +95,7 @@ function waitForOnBeforeUnloadDialog(browser, callback) {
       const stack = browser.parentNode;
       const dialogs = stack.getElementsByTagName("tabmodalprompt");
       await waitUntil(() => dialogs[0]);
-      const { button0, button1 } = browser.tabModalPromptBox.getPrompt(
+      const { button0, button1 } = browser.tabModalPromptBox.prompts.get(
         dialogs[0]
       ).ui;
       callback(button0, button1);
