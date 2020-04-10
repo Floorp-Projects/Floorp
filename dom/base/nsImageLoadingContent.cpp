@@ -970,8 +970,8 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   // Do the load.
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
-  nsresult rv = loader->LoadImageWithChannel(aChannel, this, doc, aListener,
-                                             getter_AddRefs(req));
+  nsresult rv = loader->LoadImageWithChannel(aChannel, this, ToSupports(doc),
+                                             aListener, getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     CloneScriptedRequests(req);
     TrackImage(req);
