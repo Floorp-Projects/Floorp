@@ -136,9 +136,9 @@
         let actual0 = buffer.getChannelData(2);
         let actual1 = buffer.getChannelData(3);
 
-        should(expected0, 'Expected output channel 0')
+        should(expected0, `Panner: ${options.param}: Expected output channel 0`)
             .notBeConstantValueOf(expected0[0]);
-        should(expected1, 'Expected output channel 1')
+        should(expected1, `${options.param}: Expected output channel 1`)
             .notBeConstantValueOf(expected1[0]);
 
         // Verify output is a stair step because positionX is k-rate,
@@ -147,23 +147,23 @@
         for (let k = 0; k < testFrames; k += RENDER_QUANTUM_FRAMES) {
           should(
               actual0.slice(k, k + RENDER_QUANTUM_FRAMES),
-              `Channel 0 output[${k}, ${k + RENDER_QUANTUM_FRAMES - 1}]`)
+              `Panner: ${options.param}: Channel 0 output[${k}, ${
+                  k + RENDER_QUANTUM_FRAMES - 1}]`)
               .beConstantValueOf(actual0[k]);
         }
 
         for (let k = 0; k < testFrames; k += RENDER_QUANTUM_FRAMES) {
           should(
               actual1.slice(k, k + RENDER_QUANTUM_FRAMES),
-              `Channel 1 output[${k}, ${k + RENDER_QUANTUM_FRAMES - 1}]`)
+              `Panner: ${options.param}: Channel 1 output[${k}, ${
+                  k + RENDER_QUANTUM_FRAMES - 1}]`)
               .beConstantValueOf(actual1[k]);
         }
 
-        should(actual0, 'Actual output channel 0').beCloseToArray(expected0, {
-          absoluteThreshold: 0
-        });
-        should(actual1, 'Actual output channel 1').beCloseToArray(expected1, {
-          absoluteThreshold: 0
-        });
+        should(actual0, `Panner: ${options.param}: Actual output channel 0`)
+            .beCloseToArray(expected0, {absoluteThreshold: 0});
+        should(actual1, `Panner: ${options.param}: Actual output channel 1`)
+            .beCloseToArray(expected1, {absoluteThreshold: 0});
       }
 
       async function testListenerParams(should, options) {
@@ -220,14 +220,16 @@
         for (let k = 0; k < testFrames; k += RENDER_QUANTUM_FRAMES) {
           should(
               c0.slice(k, k + RENDER_QUANTUM_FRAMES),
-              `Channel 0 output[${k}, ${k + RENDER_QUANTUM_FRAMES - 1}]`)
+              `Listener: ${options.param}: Channel 0 output[${k}, ${
+                  k + RENDER_QUANTUM_FRAMES - 1}]`)
               .beConstantValueOf(c0[k]);
         }
 
         for (let k = 0; k < testFrames; k += RENDER_QUANTUM_FRAMES) {
           should(
               c1.slice(k, k + RENDER_QUANTUM_FRAMES),
-              `Channel 1 output[${k}, ${k + RENDER_QUANTUM_FRAMES - 1}]`)
+              `Listener: ${options.param}: Channel 1 output[${k}, ${
+                  k + RENDER_QUANTUM_FRAMES - 1}]`)
               .beConstantValueOf(c1[k]);
         }
       }
