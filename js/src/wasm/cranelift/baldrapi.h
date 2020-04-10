@@ -77,6 +77,7 @@ struct CraneliftStaticEnvironment {
   size_t realm_cx_offset;
   size_t realm_tls_offset;
   size_t realm_func_import_tls_offset;
+  size_t size_of_wasm_frame;
 
   // Not bindgen'd because it's inlined.
   inline CraneliftStaticEnvironment();
