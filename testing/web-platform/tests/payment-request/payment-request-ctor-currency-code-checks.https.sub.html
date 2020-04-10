@@ -7,7 +7,7 @@
 <script>
 const defaultMethods = [
   Object.freeze({
-    supportedMethods: "https://wpt.fyi",
+    supportedMethods: "https://{{domains[nonexistent]}}",
   }),
 ];
 const defaultAmount = Object.freeze({
@@ -240,7 +240,7 @@ test(() => {
   assert_throws_js(RANGE_ERROR, smokeTest, "Expected smoke test to throw.");
   for (const validCurrency of wellFormedCurrencyCodes) {
     const modifier = {
-      supportedMethods: "https://wpt.fyi",
+      supportedMethods: "https://{{domains[nonexistent]}}",
       total: {
         label: "Total due",
         amount: { currency: validCurrency, value: "68.00" },
@@ -264,7 +264,7 @@ test(() => {
   assert_throws_js(RANGE_ERROR, smokeTest, "Expected smoke test to throw.");
   for (const invalidCurrency of invalidCurrencyCodes) {
     const modifier = {
-      supportedMethods: "https://wpt.fyi",
+      supportedMethods: "https://{{domains[nonexistent]}}",
       total: {
         label: "Total due",
         amount: { currency: invalidCurrency, value: "68.00" },
@@ -293,7 +293,7 @@ test(() => {
       amount: { currency: validCurrency, value: "3.00" },
     };
     const modifier = {
-      supportedMethods: "https://wpt.fyi",
+      supportedMethods: "https://{{domains[nonexistent]}}",
       total: defaultTotal,
       additionalDisplayItems: [additionalItem],
     };
@@ -319,7 +319,7 @@ test(() => {
       amount: { currency: invalidCurrency, value: "3.00" },
     };
     const modifier = {
-      supportedMethods: "https://wpt.fyi",
+      supportedMethods: "https://{{domains[nonexistent]}}",
       total: defaultTotal,
       additionalDisplayItems: [additionalItem],
     };

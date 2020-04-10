@@ -8,7 +8,7 @@
 <script>
 "use strict";
 const testMethod = Object.freeze({
-  supportedMethods: "https://wpt.fyi/payment-request",
+  supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
 });
 const defaultMethods = Object.freeze([testMethod]);
 const defaultAmount = Object.freeze({
@@ -118,7 +118,7 @@ test(() => {
     try {
       const methods = [
         {
-          supportedMethods: "https://wpt.fyi/payment-request",
+          supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
           data,
         },
       ];
@@ -140,7 +140,7 @@ test(() => {
   assert_throws_js(TypeError, () => {
     const methods = [
       {
-        supportedMethods: "https://wpt.fyi/payment-request",
+        supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         data: recursiveDictionary,
       },
     ];
@@ -149,7 +149,7 @@ test(() => {
   assert_throws_js(TypeError, () => {
     const methods = [
       {
-        supportedMethods: "https://wpt.fyi/payment-request",
+        supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         data: "a string",
       },
     ];
@@ -160,7 +160,7 @@ test(() => {
     () => {
       const methods = [
         {
-          supportedMethods: "https://wpt.fyi/payment-request",
+          supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
           data: null,
         },
       ];
@@ -282,7 +282,7 @@ test(() => {
     new PaymentRequest(
       [
         {
-          supportedMethods: "https://wpt.fyi/payment-request",
+          supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         },
       ],
       {
@@ -533,7 +533,7 @@ test(() => {
   smokeTest();
   for (const invalidTotal of invalidTotalAmounts) {
     const invalidModifier = {
-      supportedMethods: "https://wpt.fyi/payment-request",
+      supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
       total: {
         label: "",
         amount: {
@@ -559,7 +559,7 @@ test(() => {
   smokeTest();
   for (const invalidAmount of invalidAmounts) {
     const invalidModifier = {
-      supportedMethods: "https://wpt.fyi/payment-request",
+      supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
       total: defaultTotal,
       additionalDisplayItems: [
         {
@@ -589,7 +589,7 @@ test(() => {
   const modifiedDetails = Object.assign({}, defaultDetails, {
     modifiers: [
       {
-        supportedMethods: "https://wpt.fyi/payment-request",
+        supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         data: ["some-data"],
       },
     ],
@@ -608,7 +608,7 @@ test(() => {
   const modifiedDetails = Object.assign({}, defaultDetails, {
     modifiers: [
       {
-        supportedMethods: "https://wpt.fyi/payment-request",
+        supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         data: {
           some: "data",
         },
@@ -631,7 +631,7 @@ test(() => {
   const modifiedDetails = Object.assign({}, defaultDetails, {
     modifiers: [
       {
-        supportedMethods: "https://wpt.fyi/payment-request",
+        supportedMethods: "https://{{domains[nonexistent]}}/payment-request",
         data: recursiveDictionary,
       },
     ],
