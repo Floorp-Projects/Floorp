@@ -5,9 +5,9 @@ const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_presence() {
-  equal(typeof Localization.prototype.formatValues, "function");
-  equal(typeof Localization.prototype.formatMessages, "function");
-  equal(typeof Localization.prototype.formatValue, "function");
+  strictEqual(typeof Localization.prototype.formatValues, "function");
+  strictEqual(typeof Localization.prototype.formatMessages, "function");
+  strictEqual(typeof Localization.prototype.formatValue, "function");
 });
 
 add_task(async function test_methods_calling() {
@@ -15,8 +15,15 @@ add_task(async function test_methods_calling() {
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
-    "/localization/de/browser/menu.ftl": "key = [de] Value2",
-    "/localization/en-US/browser/menu.ftl": "key = [en] Value2\nkey2 = [en] Value3",
+    "/localization/de/browser/menu.ftl": `
+key-value1 = [de] Value2
+`,
+    "/localization/en-US/browser/menu.ftl": `
+key-value1 = [en] Value2
+key-value2 = [en] Value3
+key-attr =
+    .label = [en] Label 3
+`,
   };
   const originalLoad = L10nRegistry.load;
   const originalRequested = Services.locale.requestedLocales;
@@ -36,10 +43,40 @@ add_task(async function test_methods_calling() {
     "/browser/menu.ftl",
   ], false, { generateBundles });
 
-  let values = await l10n.formatValues([{id: "key"}, {id: "key2"}]);
+  {
+    let values = await l10n.formatValues([
+      {id: "key-value1"},
+      {id: "key-value2"},
+      {id: "key-missing"},
+      {id: "key-attr"}
+    ]);
 
-  equal(values[0], "[de] Value2");
-  equal(values[1], "[en] Value3");
+    strictEqual(values[0], "[de] Value2");
+    strictEqual(values[1], "[en] Value3");
+    strictEqual(values[2], null);
+    strictEqual(values[3], null);
+  }
+
+  {
+    strictEqual(await l10n.formatValue("key-missing"), null);
+    strictEqual(await l10n.formatValue("key-value1"), "[de] Value2");
+    strictEqual(await l10n.formatValue("key-value2"), "[en] Value3");
+    strictEqual(await l10n.formatValue("key-attr"), null);
+  }
+
+  {
+    let messages = await l10n.formatMessages([
+      {id: "key-value1"},
+      {id: "key-missing"},
+      {id: "key-value2"},
+      {id: "key-attr"},
+    ]);
+
+    strictEqual(messages[0].value, "[de] Value2");
+    strictEqual(messages[1], null);
+    strictEqual(messages[2].value, "[en] Value3");
+    strictEqual(messages[3].value, null);
+  }
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
@@ -117,22 +154,22 @@ add_task(async function test_add_remove_resourceIds() {
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], "Value1");
-  equal(values[1], undefined);
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], null);
 
   l10n.addResourceIds(["/toolkit/menu.ftl"]);
 
   values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], "Value1");
-  equal(values[1], "Value2");
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], "Value2");
 
   l10n.removeResourceIds(["/browser/menu.ftl"]);
 
   values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], undefined);
-  equal(values[1], "Value2");
+  strictEqual(values[0], null);
+  strictEqual(values[1], "Value2");
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
@@ -179,10 +216,10 @@ add_task(async function test_switch_to_async() {
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], "Value1");
-  equal(values[1], undefined);
-  equal(syncLoads, 0);
-  equal(asyncLoads, 1);
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], null);
+  strictEqual(syncLoads, 0);
+  strictEqual(asyncLoads, 1);
 
   l10n.setIsSync(true);
 
@@ -190,26 +227,26 @@ add_task(async function test_switch_to_async() {
 
   // Nothing happens when we switch, because
   // the next load is lazy.
-  equal(syncLoads, 0);
-  equal(asyncLoads, 1);
+  strictEqual(syncLoads, 0);
+  strictEqual(asyncLoads, 1);
 
   values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
   let values2 = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
   deepEqual(values, values2);
-  equal(values[0], "Value1");
-  equal(values[1], "Value2");
-  equal(syncLoads, 1);
-  equal(asyncLoads, 1);
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], "Value2");
+  strictEqual(syncLoads, 1);
+  strictEqual(asyncLoads, 1);
 
   l10n.removeResourceIds(["/browser/menu.ftl"]);
 
   values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], undefined);
-  equal(values[1], "Value2");
-  equal(syncLoads, 1);
-  equal(asyncLoads, 1);
+  strictEqual(values[0], null);
+  strictEqual(values[1], "Value2");
+  strictEqual(syncLoads, 1);
+  strictEqual(asyncLoads, 1);
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;

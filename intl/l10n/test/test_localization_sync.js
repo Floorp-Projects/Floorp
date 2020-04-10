@@ -9,8 +9,15 @@ add_task(function test_methods_calling() {
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
-    "/localization/de/browser/menu.ftl": "key = [de] Value2",
-    "/localization/en-US/browser/menu.ftl": "key = [en] Value2\nkey2 = [en] Value3",
+    "/localization/de/browser/menu.ftl": `
+key-value1 = [de] Value2
+`,
+    "/localization/en-US/browser/menu.ftl": `
+key-value1 = [en] Value2
+key-value2 = [en] Value3
+key-attr =
+    .label = [en] Label 3
+`,
   };
   const originalLoadSync = L10nRegistry.loadSync;
   const originalRequested = Services.locale.requestedLocales;
@@ -30,10 +37,41 @@ add_task(function test_methods_calling() {
     "/browser/menu.ftl",
   ], true, { generateBundlesSync });
 
-  let values = l10n.formatValuesSync([{id: "key"}, {id: "key2"}]);
 
-  equal(values[0], "[de] Value2");
-  equal(values[1], "[en] Value3");
+  {
+    let values = l10n.formatValuesSync([
+      {id: "key-value1"},
+      {id: "key-value2"},
+      {id: "key-missing"},
+      {id: "key-attr"}
+    ]);
+
+    strictEqual(values[0], "[de] Value2");
+    strictEqual(values[1], "[en] Value3");
+    strictEqual(values[2], null);
+    strictEqual(values[3], null);
+  }
+
+  {
+    strictEqual(l10n.formatValueSync("key-missing"), null);
+    strictEqual(l10n.formatValueSync("key-value1"), "[de] Value2");
+    strictEqual(l10n.formatValueSync("key-value2"), "[en] Value3");
+    strictEqual(l10n.formatValueSync("key-attr"), null);
+  }
+
+  {
+    let messages = l10n.formatMessagesSync([
+      {id: "key-value1"},
+      {id: "key-missing"},
+      {id: "key-value2"},
+      {id: "key-attr"},
+    ]);
+
+    strictEqual(messages[0].value, "[de] Value2");
+    strictEqual(messages[1], null);
+    strictEqual(messages[2].value, "[en] Value3");
+    strictEqual(messages[3].value, null);
+  }
 
   L10nRegistry.sources.clear();
   L10nRegistry.loadSync = originalLoadSync;
@@ -111,22 +149,22 @@ add_task(function test_add_remove_resourceIds() {
 
   let values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], "Value1");
-  equal(values[1], undefined);
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], null);
 
   l10n.addResourceIds(["/toolkit/menu.ftl"]);
 
   values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], "Value1");
-  equal(values[1], "Value2");
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], "Value2");
 
   l10n.removeResourceIds(["/browser/menu.ftl"]);
 
   values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
-  equal(values[0], undefined);
-  equal(values[1], "Value2");
+  strictEqual(values[0], null);
+  strictEqual(values[1], "Value2");
 
   L10nRegistry.sources.clear();
   L10nRegistry.loadSync = originalLoadSync;
