@@ -278,6 +278,7 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
       return Err(NS_ERROR_UNEXPECTED);
     }
     auto cleanup = MakeScopeExit([&]() {
+      WaitOnPrefetchThread();
       mTable.clear();
       mCacheData.reset();
     });
@@ -566,6 +567,7 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
 
 void StartupCache::InvalidateCache(bool memoryOnly) {
   WaitOnWriteThread();
+  WaitOnPrefetchThread();
   mWrittenOnce = false;
   if (memoryOnly) {
     auto writeResult = WriteToDisk();
