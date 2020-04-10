@@ -54,6 +54,15 @@ class XRInputSource final : public nsWrapperCache {
   nsCOMPtr<nsISupports> mParent;
 
  private:
+  enum class ActionState : uint8_t {
+    ActionState_Pressing = 0,
+    ActionState_Pressed = 1,
+    ActionState_Releasing = 2,
+    ActionState_Released = 3
+  };
+
+  void DispatchEvent(const nsAString& aEvent, XRSession* aSession);
+
   nsTArray<nsString> mProfiles;
   XRHandedness mHandedness;
   XRTargetRayMode mTargetRayMode;
@@ -62,6 +71,8 @@ class XRInputSource final : public nsWrapperCache {
   RefPtr<XRSpace> mGripSpace;
   RefPtr<Gamepad> mGamepad;
   int32_t mIndex;
+  ActionState mSelectAction;
+  ActionState mSqueezeAction;
 };
 
 }  // namespace dom
