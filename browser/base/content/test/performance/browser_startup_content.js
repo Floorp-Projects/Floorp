@@ -43,6 +43,7 @@ const whitelist = {
     "resource:///actors/BrowserTabChild.jsm",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/SearchTelemetryChild.jsm",
+    "resource:///actors/PromptChild.jsm",
     "resource://gre/actors/AutoCompleteChild.jsm",
     "resource://gre/modules/ActorChild.jsm",
     "resource://gre/modules/ActorManagerChild.jsm",
