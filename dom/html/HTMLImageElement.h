@@ -197,6 +197,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
     return mLazyLoading || mPendingImageLoadTask;
   }
 
+  bool IsLazyLoading() const { return mLazyLoading; }
+
   Loading LoadingState() const;
 
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
