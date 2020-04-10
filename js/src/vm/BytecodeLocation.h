@@ -178,6 +178,7 @@ class BytecodeLocation {
     return IsBackedgeForLoopHead(rawBytecode_, loopHead.rawBytecode_);
   }
 
+  bool opHasIC() const { return BytecodeOpHasIC(getOp()); }
   bool opHasTypeSet() const { return BytecodeOpHasTypeSet(getOp()); }
 
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }

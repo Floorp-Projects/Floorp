@@ -963,10 +963,15 @@ static GCPtr<T>* AsGCPtr(uintptr_t* ptr) {
   return reinterpret_cast<GCPtr<T>*>(ptr);
 }
 
+uintptr_t CacheIRStubInfo::getStubRawWord(const uint8_t* stubData,
+                                          uint32_t offset) const {
+  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+  return *reinterpret_cast<const uintptr_t*>(stubData + offset);
+}
+
 uintptr_t CacheIRStubInfo::getStubRawWord(ICStub* stub, uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
-  return *(uintptr_t*)(stubData + offset);
+  return getStubRawWord(stubData, offset);
 }
 
 template <class Stub, class T>
