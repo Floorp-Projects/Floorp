@@ -715,7 +715,7 @@ class MozIntl {
       let lcLangCode = langCode.toLowerCase();
       if (availableLocaleDisplayNames.language.has(lcLangCode)) {
         const value = loc.formatValueSync(`language-name-${lcLangCode}`);
-        if (value !== undefined) {
+        if (value !== null) {
           return value;
         }
       }
@@ -742,7 +742,7 @@ class MozIntl {
       let lcRegionCode = regionCode.toLowerCase();
       if (availableLocaleDisplayNames.region.has(lcRegionCode)) {
         const value = loc.formatValueSync(`region-name-${lcRegionCode}`);
-        if (value !== undefined) {
+        if (value !== null) {
           return value;
         }
       }
