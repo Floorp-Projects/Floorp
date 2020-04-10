@@ -65,7 +65,7 @@ class imgRequest final : public nsIStreamListener,
       [[nodiscard]] nsresult
       Init(nsIURI* aURI, nsIURI* aFinalURI, bool aHadInsecureRedirect,
            nsIRequest* aRequest, nsIChannel* aChannel,
-           imgCacheEntry* aCacheEntry, nsISupports* aCX,
+           imgCacheEntry* aCacheEntry, mozilla::dom::Document* aLoadingDocument,
            nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
            nsIReferrerInfo* aReferrerInfo);
 
