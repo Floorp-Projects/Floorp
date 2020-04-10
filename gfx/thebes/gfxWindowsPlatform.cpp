@@ -1621,7 +1621,8 @@ class D3DVsyncSource final : public VsyncSource {
     D3DVsyncDisplay()
         : mPrevVsync(TimeStamp::Now()),
           mVsyncEnabledLock("D3DVsyncEnabledLock"),
-          mVsyncEnabled(false) {
+          mVsyncEnabled(false),
+          mWaitVBlankMonitor(NULL) {
       mVsyncThread = new base::Thread("WindowsVsyncThread");
       MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
                          "GFX: Could not start Windows vsync thread");
@@ -1796,9 +1797,16 @@ class D3DVsyncSource final : public VsyncSource {
           return;
         }
 
-        // Using WaitForVBlank, the whole system dies because WaitForVBlank
-        // only works if it's run on the same thread as the Present();
-        HRESULT hr = DwmFlush();
+        HRESULT hr = E_FAIL;
+        if (StaticPrefs::gfx_vsync_use_waitforvblank()) {
+          UpdateVBlankOutput();
+          if (mWaitVBlankOutput) {
+            hr = mWaitVBlankOutput->WaitForVBlank();
+          }
+        }
+        if (!SUCCEEDED(hr)) {
+          hr = DwmFlush();
+        }
         if (!SUCCEEDED(hr)) {
           // DWMFlush isn't working, fallback to software vsync.
           ScheduleSoftwareVsync(TimeStamp::Now());
@@ -1846,11 +1854,35 @@ class D3DVsyncSource final : public VsyncSource {
       return mVsyncThread->thread_id() == PlatformThread::CurrentId();
     }
 
+    void UpdateVBlankOutput() {
+      HMONITOR primary_monitor =
+          MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
+      if (primary_monitor == mWaitVBlankMonitor && mWaitVBlankOutput) {
+        return;
+      }
+
+      mWaitVBlankMonitor = primary_monitor;
+
+      RefPtr<IDXGIOutput> output = nullptr;
+      if (DeviceManagerDx* dx = DeviceManagerDx::Get()) {
+        if (dx->GetOutputFromMonitor(mWaitVBlankMonitor, &output)) {
+          mWaitVBlankOutput = output;
+          return;
+        }
+      }
+
+      // failed to convert a monitor to an output so keep trying
+      mWaitVBlankOutput = nullptr;
+    }
+
     TimeStamp mPrevVsync;
     Monitor mVsyncEnabledLock;
     base::Thread* mVsyncThread;
     TimeDuration mVsyncRate;
     bool mVsyncEnabled;
+
+    HMONITOR mWaitVBlankMonitor;
+    RefPtr<IDXGIOutput> mWaitVBlankOutput;
   };  // end d3dvsyncdisplay
 
   D3DVsyncSource() { mPrimaryDisplay = new D3DVsyncDisplay(); }
