@@ -83,11 +83,8 @@ const prefs = {
       EDITOR_WIDTH: "input.editorWidth",
       // Show the Editor onboarding UI
       EDITOR_ONBOARDING: "devtools.webconsole.input.editorOnboarding",
-      // Show the Input Context the selector in the browser toolbox
-      CONTEXT_SELECTOR_BROWSER_TOOLBOX: "devtools.webconsole.input.context",
-      // Show the Input Context the selector in the content toolbox
-      CONTEXT_SELECTOR_CONTENT_TOOLBOX:
-        "devtools.contenttoolbox.webconsole.input.context",
+      // Show the Input Context the selector
+      CONTEXT_SELECTOR: "devtools.webconsole.input.context",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.
