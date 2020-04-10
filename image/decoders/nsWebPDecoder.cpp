@@ -289,13 +289,8 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   MOZ_ASSERT(!mGotColorProfile);
   mGotColorProfile = true;
 
-  if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
-    return;
-  }
-
-  auto mode = gfxPlatform::GetCMSMode();
-  if (mode == eCMSMode_Off || (mode == eCMSMode_TaggedOnly && !aProfile) ||
-      !gfxPlatform::GetCMSOutputProfile()) {
+  if (mCMSMode == eCMSMode_Off || !GetCMSOutputProfile() ||
+      (mCMSMode == eCMSMode_TaggedOnly && !aProfile)) {
     return;
   }
 
@@ -304,7 +299,7 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
             ("[this=%p] nsWebPDecoder::ApplyColorProfile -- not tagged, use "
              "sRGB transform\n",
              this));
-    mTransform = gfxPlatform::GetCMSBGRATransform();
+    mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBA);
     return;
   }
 
@@ -335,9 +330,8 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
 
   // Create the color management transform.
   qcms_data_type type = gfxPlatform::GetCMSOSRGBAType();
-  mTransform = qcms_transform_create(mInProfile, type,
-                                     gfxPlatform::GetCMSOutputProfile(), type,
-                                     (qcms_intent)intent);
+  mTransform = qcms_transform_create(mInProfile, type, GetCMSOutputProfile(),
+                                     type, (qcms_intent)intent);
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::ApplyColorProfile -- use tagged "
            "transform\n",

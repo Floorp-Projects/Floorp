@@ -76,8 +76,10 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
 
   *(out++) = width;
   *(out++) = height;
-  *(out++) = uint8_t(mozilla::gfx::SurfaceFormat::OS_RGBA);
-  *(out++) = 0;
+  *(out++) = uint8_t(mozilla::gfx::SurfaceFormat::R8G8B8A8);
+
+  // Set all bits to ensure in nsIconDecoder we color manage and premultiply.
+  *(out++) = 0xFF;
 
   nsresult rv;
   if (XRE_IsParentProcess()) {
@@ -86,12 +88,6 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
     rv = CallRemoteGetIconForExtension(aFileExt, aIconSize, out);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Encode the RGBA data
-  int32_t stride = 4 * width;
-  gfx::PremultiplyData(out, stride, gfx::SurfaceFormat::R8G8B8A8, out, stride,
-                       gfx::SurfaceFormat::OS_RGBA,
-                       gfx::IntSize(width, height));
 
   nsCOMPtr<nsIStringInputStream> stream =
       do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
