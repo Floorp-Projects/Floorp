@@ -38,18 +38,6 @@ class ADocumentChannelBridge {
   // Delete the bridge, and drop any refs to the DocumentLoadListener
   virtual void Delete() = 0;
 
-  // Report a CSP violation event in the originating process, using
-  // nsCSPContext::AsyncReportViolation.
-  // aIsCspToInherit is true if aContext is the CSP to inherit (from
-  // the nsDocShellLoadState), which is used to determine the right
-  // loading Document when deserializing aContext. This should no longer be
-  // necessary after bug 1625366.
-  virtual void CSPViolation(
-      nsCSPContext* aContext, bool aIsCspToInherit, nsIURI* aBlockedURI,
-      nsCSPContext::BlockedContentSource aBlockedContentSource,
-      nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
-      uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject) = 0;
-
   // Initate a switch from the DocumentChannel to the protocol-specific
   // real channel.
   virtual RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>

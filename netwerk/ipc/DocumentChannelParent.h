@@ -61,13 +61,6 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
     }
   }
 
-  void CSPViolation(nsCSPContext* aContext, bool aIsCspToInherit,
-                    nsIURI* aBlockedURI,
-                    nsCSPContext::BlockedContentSource aBlockedContentSource,
-                    nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
-                    uint32_t aViolatedPolicyIndex,
-                    const nsAString& aObserverSubject) override;
-
   virtual ProcessId OtherPid() const override { return IProtocol::OtherPid(); }
 
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
