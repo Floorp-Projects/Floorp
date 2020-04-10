@@ -254,21 +254,6 @@ async function ensureNoPreloadedBrowser(win = window) {
   });
 }
 
-// Onboarding puts a badge on the fxa toolbar button a while after startup
-// which confuses tests that look at repaints in the toolbar.  Use this
-// function to cancel the badge update.
-function disableFxaBadge() {
-  let { ToolbarBadgeHub } = ChromeUtils.import(
-    "resource://activity-stream/lib/ToolbarBadgeHub.jsm"
-  );
-  ToolbarBadgeHub._clearBadgeTimeout();
-
-  // Also prevent a new timer from being set
-  return SpecialPowers.pushPrefEnv({
-    set: [["identity.fxaccounts.toolbar.accessed", true]],
-  });
-}
-
 async function prepareSettledWindow() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await ensureNoPreloadedBrowser(win);

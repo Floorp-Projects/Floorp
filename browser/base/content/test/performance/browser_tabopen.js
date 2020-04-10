@@ -24,7 +24,6 @@ const EXPECTED_REFLOWS = [
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
-  await disableFxaBadge();
 
   // Prepare the window to avoid flicker and reflow that's unrelated to our
   // tab opening operation.
@@ -35,6 +34,9 @@ add_task(async function() {
   let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
   let textBoxRect = gURLBar
     .querySelector("moz-input-box")
+    .getBoundingClientRect();
+  let fxaAccountsButton = document
+    .getElementById("fxa-toolbar-menu-button")
     .getBoundingClientRect();
 
   let inRange = (val, min, max) => min <= val && val <= max;
@@ -121,6 +123,15 @@ add_task(async function() {
               r.x2 <= firstTabLabelRect.right &&
               r.y1 >= firstTabLabelRect.y &&
               r.y2 <= firstTabLabelRect.bottom,
+          },
+          {
+            name:
+              "FxA accounts button is intentionally badged 10s after startup",
+            condition: r =>
+              r.x1 >= fxaAccountsButton.left &&
+              r.x2 <= fxaAccountsButton.right &&
+              r.y1 >= fxaAccountsButton.top &&
+              r.y2 <= fxaAccountsButton.bottom,
           },
         ],
       },
