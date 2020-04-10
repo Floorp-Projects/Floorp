@@ -47,12 +47,6 @@ class DocumentChannelChild final : public DocumentChannel,
       nsTArray<Endpoint<extensions::PStreamFilterParent>>&& aEndpoints,
       RedirectToRealChannelResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvCSPViolation(
-      const CSPInfo& aCSP, bool aIsCspToInherit, nsIURI* aBlockedURI,
-      uint32_t aBlockedContentSource, nsIURI* aOriginalURI,
-      const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
-      const nsAString& aObserverSubject);
-
  private:
   void ShutdownListeners(nsresult aStatusCode);
 
