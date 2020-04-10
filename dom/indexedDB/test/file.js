@@ -76,14 +76,6 @@ function getNullFile(name, size) {
   return getFile(name, "binary/null", getView(size));
 }
 
-// This needs to be async to make it available on workers too.
-function getWasmBinary(text) {
-  let binary = getWasmBinarySync(text);
-  SimpleTest.executeSoon(function() {
-    testGenerator.next(binary);
-  });
-}
-
 function getWasmModule(binary) {
   let module = new WebAssembly.Module(binary);
   return module;
