@@ -147,6 +147,22 @@ export default class LoginList extends HTMLElement {
         this._list.setAttribute("aria-activedescendant", visibleListItem.id);
       }
     }
+
+    if (
+      this._sortSelect.namedItem("alerts").hidden &&
+      ((this._breachesByLoginGUID &&
+        this._loginGuidsSortedOrder.some(loginGuid =>
+          this._breachesByLoginGUID.has(loginGuid)
+        )) ||
+        (this._vulnerableLoginsByLoginGUID &&
+          this._loginGuidsSortedOrder.some(loginGuid =>
+            this._vulnerableLoginsByLoginGUID.has(loginGuid)
+          )))
+    ) {
+      // Make available the "alerts" option but don't change the
+      // selected sort so the user's current task isn't interrupted.
+      this._sortSelect.namedItem("alerts").hidden = false;
+    }
   }
 
   handleEvent(event) {
