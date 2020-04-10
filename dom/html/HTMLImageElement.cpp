@@ -86,7 +86,15 @@ class ImageLoadTask final : public MicroTaskRunnable {
     if (mElement->mPendingImageLoadTask == this) {
       mElement->mPendingImageLoadTask = nullptr;
       mElement->mUseUrgentStartForChannel = mUseUrgentStartForChannel;
-      mElement->LoadSelectedImage(true, true, mAlwaysLoad);
+      // Defer loading this image if loading="lazy" was set after this microtask
+      // was queued.
+      // NOTE: Using ShouldLoadImage() will violate the HTML standard spec
+      // because ShouldLoadImage() checks the document active state which should
+      // have done just once before this queue is created as per the spec, so
+      // we just check the lazy loading state here.
+      if (!mElement->IsLazyLoading()) {
+        mElement->LoadSelectedImage(true, true, mAlwaysLoad);
+      }
     }
     mDocument->UnblockOnload(false);
   }
