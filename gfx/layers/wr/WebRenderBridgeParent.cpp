@@ -1979,7 +1979,6 @@ void WebRenderBridgeParent::RemovePipelineIdForCompositable(
   mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, aTxn);
   aTxn.RemovePipeline(aPipelineId);
   asyncCompositables.erase(wr::AsUint64(aPipelineId));
-  return;
 }
 
 void WebRenderBridgeParent::DeleteImage(const ImageKey& aKey,
