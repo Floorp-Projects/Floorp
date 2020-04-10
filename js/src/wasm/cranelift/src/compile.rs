@@ -196,7 +196,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             self.current_func.metadata.append(&mut traps.metadata);
         }
 
-        if self.static_environ.refTypesEnabled {
+        if self.static_environ.ref_types_enabled {
             self.emit_stackmaps(stackmaps);
         }
 
