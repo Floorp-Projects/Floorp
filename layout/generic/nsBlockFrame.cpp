@@ -3055,8 +3055,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
           marker->SetRect(marker->GetRect() + nsPoint(0, offset));
         }
       }
-    } else if (!Style()->IsPseudoOrAnonBox() &&
-               StyleUI()->mUserModify != StyleUserModify::ReadOnly) {
+    } else if (ShouldHaveLineIfEmpty()) {
       aState.mBCoord += aState.mMinLineHeight;
     }
   }
