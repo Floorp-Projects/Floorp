@@ -20,6 +20,11 @@ add_task(async function test() {
   let profile = do_get_profile();
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
 
+  // We need to execute a pm method to be sure that the DB is fully
+  // initialized.
+  var pm = Services.perms;
+  pm.removeAll();
+
   let db = Services.storage.openDatabase(GetPermissionsFile(profile));
   db.schemaVersion = 4;
   db.executeSimpleSQL("DROP TABLE moz_perms");

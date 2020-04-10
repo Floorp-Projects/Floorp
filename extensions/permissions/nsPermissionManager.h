@@ -20,10 +20,13 @@
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/Permission.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ThreadBound.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -36,17 +39,24 @@ struct Permission;
 
 namespace mozilla {
 class OriginAttributesPattern;
+
+namespace dom {
+class ContentChild;
 }
+
+}  // namespace mozilla
 
 class nsIPermission;
 class mozIStorageConnection;
-class mozIStorageAsyncStatement;
+class mozIStorageStatement;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsPermissionManager final : public nsIPermissionManager,
                                   public nsIObserver,
                                   public nsSupportsWeakReference {
+  friend class mozilla::dom::ContentChild;
+
  public:
   class PermissionEntry {
    public:
@@ -153,7 +163,7 @@ class nsPermissionManager final : public nsIPermissionManager,
   };
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPERMISSIONMANAGER
   NS_DECL_NSIOBSERVER
 
@@ -179,14 +189,6 @@ class nsPermissionManager final : public nsIPermissionManager,
   // a default value.  These will never be written to the database, but may
   // be overridden with an explicit permission (including UNKNOWN_ACTION)
   static const int64_t cIDPermissionIsDefault = -1;
-
-  nsresult AddInternal(nsIPrincipal* aPrincipal, const nsACString& aType,
-                       uint32_t aPermission, int64_t aID, uint32_t aExpireType,
-                       int64_t aExpireTime, int64_t aModificationTime,
-                       NotifyOperationType aNotifyOperation,
-                       DBOperationType aDBOperation,
-                       const bool aIgnoreSessionPermissions = false,
-                       const nsACString* aOriginString = nullptr);
 
   // Similar to TestPermissionFromPrincipal, except that it is used only for
   // permissions which can never have default values.
@@ -429,93 +431,11 @@ class nsPermissionManager final : public nsIPermissionManager,
   // The int32_t is the type index, the nsresult is an early bail-out return
   // code.
   typedef mozilla::Variant<int32_t, nsresult> TestPreparationResult;
-  /**
-   * Perform the early steps of a permission check and determine whether we need
-   * to call CommonTestPermissionInternal() for the actual permission check.
-   *
-   * @param aPrincipal optional principal argument to check the permission for,
-   *                   can be nullptr if we aren't performing a principal-based
-   *                   check.
-   * @param aTypeIndex if the caller isn't sure what the index of the permission
-   *                   type to check for is in the mTypeArray member variable,
-   *                   it should pass -1, otherwise this would be the index of
-   *                   the type inside mTypeArray.  This would only be something
-   *                   other than -1 in recursive invocations of this function.
-   * @param aType      the permission type to test.
-   * @param aPermission out argument which will be a permission type that we
-   *                    will return from this function once the function is
-   *                    done.
-   * @param aDefaultPermission the default permission to be used if we can't
-   *                           determine the result of the permission check.
-   * @param aDefaultPermissionIsValid whether the previous argument contains a
-   *                                  valid value.
-   * @param aExactHostMatch whether to look for the exact host name or also for
-   *                        subdomains that can have the same permission.
-   * @param aIncludingSession whether to include session permissions when
-   *                          testing for the permission.
-   */
   TestPreparationResult CommonPrepareToTestPermission(
       nsIPrincipal* aPrincipal, int32_t aTypeIndex, const nsACString& aType,
       uint32_t* aPermission, uint32_t aDefaultPermission,
       bool aDefaultPermissionIsValid, bool aExactHostMatch,
-      bool aIncludingSession) {
-    using mozilla::AsVariant;
-
-    auto* basePrin = mozilla::BasePrincipal::Cast(aPrincipal);
-    if (basePrin && basePrin->IsSystemPrincipal()) {
-      *aPermission = ALLOW_ACTION;
-      return AsVariant(NS_OK);
-    }
-
-    // For some permissions, query the default from a pref. We want to avoid
-    // doing this for all permissions so that permissions can opt into having
-    // the pref lookup overhead on each call.
-    int32_t defaultPermission =
-        aDefaultPermissionIsValid ? aDefaultPermission : UNKNOWN_ACTION;
-    if (!aDefaultPermissionIsValid && HasDefaultPref(aType)) {
-      mozilla::Unused << mDefaultPrefBranch->GetIntPref(
-          PromiseFlatCString(aType).get(), &defaultPermission);
-    }
-
-    // Set the default.
-    *aPermission = defaultPermission;
-
-    int32_t typeIndex =
-        aTypeIndex == -1 ? GetTypeIndex(aType, false) : aTypeIndex;
-
-    // For expanded principals, we want to iterate over the allowlist and see
-    // if the permission is granted for any of them.
-    if (basePrin && basePrin->Is<ExpandedPrincipal>()) {
-      auto ep = basePrin->As<ExpandedPrincipal>();
-      for (auto& prin : ep->AllowList()) {
-        uint32_t perm;
-        nsresult rv = CommonTestPermission(prin, typeIndex, aType, &perm,
-                                           defaultPermission, true,
-                                           aExactHostMatch, aIncludingSession);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return AsVariant(rv);
-        }
-
-        if (perm == nsIPermissionManager::ALLOW_ACTION) {
-          *aPermission = perm;
-          return AsVariant(NS_OK);
-        }
-        if (perm == nsIPermissionManager::PROMPT_ACTION) {
-          // Store it, but keep going to see if we can do better.
-          *aPermission = perm;
-        }
-      }
-
-      return AsVariant(NS_OK);
-    }
-
-    // If type == -1, the type isn't known, just signal that we are done.
-    if (typeIndex == -1) {
-      return AsVariant(NS_OK);
-    }
-
-    return AsVariant(typeIndex);
-  }
+      bool aIncludingSession);
 
   // If aTypeIndex is passed -1, we try to inder the type index from aType.
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal, int32_t aTypeIndex,
@@ -575,15 +495,20 @@ class nsPermissionManager final : public nsIPermissionManager,
       bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
-  nsresult InitDB(bool aRemoveFile);
+
+  void InitDB(bool aRemoveFile);
+  nsresult TryInitDB(bool aRemoveFile, nsIInputStream* aDefaultsInputStream);
+
   void AddIdleDailyMaintenanceJob();
   void RemoveIdleDailyMaintenanceJob();
   void PerformIdleDailyMaintenance();
 
+  nsresult ImportLatestDefaults();
+  already_AddRefed<nsIInputStream> GetDefaultsInputStream();
+  void ConsumeDefaultsInputStream(nsIInputStream* aDefaultsInputStream,
+                                  const mozilla::MonitorAutoLock& aProofOfLock);
+
   nsresult CreateTable();
-  nsresult ImportDefaults();
-  nsresult _DoImport(nsIInputStream* inputStream, mozIStorageConnection* aConn);
-  nsresult Read();
   void NotifyObserversWithPermission(nsIPrincipal* aPrincipal,
                                      const nsACString& aType,
                                      uint32_t aPermission, uint32_t aExpireType,
@@ -598,11 +523,11 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   nsresult RemoveAllInternal(bool aNotifyObservers);
   nsresult RemoveAllFromMemory();
-  static void UpdateDB(OperationType aOp, mozIStorageAsyncStatement* aStmt,
-                       int64_t aID, const nsACString& aOrigin,
-                       const nsACString& aType, uint32_t aPermission,
-                       uint32_t aExpireType, int64_t aExpireTime,
-                       int64_t aModificationTime);
+
+  void UpdateDB(OperationType aOp, int64_t aID, const nsACString& aOrigin,
+                const nsACString& aType, uint32_t aPermission,
+                uint32_t aExpireType, int64_t aExpireTime,
+                int64_t aModificationTime);
 
   /**
    * This method removes all permissions modified after the specified time.
@@ -612,14 +537,136 @@ class nsPermissionManager final : public nsIPermissionManager,
   template <class T>
   nsresult RemovePermissionEntries(T aCondition);
 
+  // This method must be called before doing any operation to be sure that the
+  // DB reading has been completed. This method is also in charge to complete
+  // the migrations if needed.
+  void EnsureReadCompleted();
+
+  nsresult AddInternal(nsIPrincipal* aPrincipal, const nsACString& aType,
+                       uint32_t aPermission, int64_t aID, uint32_t aExpireType,
+                       int64_t aExpireTime, int64_t aModificationTime,
+                       NotifyOperationType aNotifyOperation,
+                       DBOperationType aDBOperation,
+                       const bool aIgnoreSessionPermissions = false,
+                       const nsACString* aOriginString = nullptr);
+
+  void MaybeAddReadEntryFromMigration(const nsACString& aOrigin,
+                                      const nsCString& aType,
+                                      uint32_t aPermission,
+                                      uint32_t aExpireType, int64_t aExpireTime,
+                                      int64_t aModificationTime, int64_t aId);
+
   nsRefPtrHashtable<nsCStringHashKey,
                     mozilla::GenericNonExclusivePromise::Private>
       mPermissionKeyPromiseMap;
 
-  nsCOMPtr<mozIStorageConnection> mDBConn;
-  nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
-  nsCOMPtr<mozIStorageAsyncStatement> mStmtDelete;
-  nsCOMPtr<mozIStorageAsyncStatement> mStmtUpdate;
+  nsCOMPtr<nsIFile> mPermissionsFile;
+
+  // This monitor is used to ensure the database reading before any other
+  // operation. The reading of the database happens OMT. See |State| to know the
+  // steps of the database reading.
+  mozilla::Monitor mMonitor;
+
+  enum State {
+    // Initial state. The database has not been read yet.
+    // |TryInitDB| is called at startup time to read the database OMT.
+    // During the reading, |mReadEntries| will be populated with all the
+    // existing permissions.
+    eInitializing,
+
+    // At the end of the database reading, we are in this state. A runnable is
+    // executed to call |EnsureReadCompleted| on the main thread.
+    // |EnsureReadCompleted| processes |mReadEntries| and goes to the next
+    // state.
+    eDBInitialized,
+
+    // The permissions are fully read and any pending operation can proceed.
+    eReady,
+
+    // The permission manager has been terminated. No extra database operations
+    // will be allowed.
+    eClosed,
+  };
+  mozilla::Atomic<State> mState;
+
+  // A single entry, from the database.
+  struct ReadEntry {
+    ReadEntry()
+        : mId(0),
+          mPermission(0),
+          mExpireType(0),
+          mExpireTime(0),
+          mModificationTime(0) {}
+
+    nsCString mOrigin;
+    nsCString mType;
+    int64_t mId;
+    uint32_t mPermission;
+    uint32_t mExpireType;
+    int64_t mExpireTime;
+    int64_t mModificationTime;
+
+    // true if this entry is the result of a migration.
+    bool mFromMigration;
+  };
+
+  // List of entries read from the database. It will be populated OMT and
+  // consumed on the main-thread.
+  // This array is protected by the monitor.
+  nsTArray<ReadEntry> mReadEntries;
+
+  // A single entry, from the database.
+  struct MigrationEntry {
+    MigrationEntry()
+        : mId(0),
+          mPermission(0),
+          mExpireType(0),
+          mExpireTime(0),
+          mModificationTime(0),
+          mIsInBrowserElement(false) {}
+
+    nsCString mHost;
+    nsCString mType;
+    int64_t mId;
+    uint32_t mPermission;
+    uint32_t mExpireType;
+    int64_t mExpireTime;
+    int64_t mModificationTime;
+
+    // Legacy, for migration.
+    bool mIsInBrowserElement;
+  };
+
+  // List of entries read from the database. It will be populated OMT and
+  // consumed on the main-thread. The migration entries will be converted to
+  // ReadEntry in |CompleteMigrations|.
+  // This array is protected by the monitor.
+  nsTArray<MigrationEntry> mMigrationEntries;
+
+  // A single entry from the defaults URL.
+  struct DefaultEntry {
+    DefaultEntry() : mOp(eImportMatchTypeHost), mPermission(0) {}
+
+    enum Op {
+      eImportMatchTypeHost,
+      eImportMatchTypeOrigin,
+    };
+
+    Op mOp;
+
+    nsCString mHostOrOrigin;
+    nsCString mType;
+    uint32_t mPermission;
+  };
+
+  // List of entries read from the default settings.
+  // This array is protected by the monitor.
+  nsTArray<DefaultEntry> mDefaultEntries;
+
+  nsresult Read(const mozilla::MonitorAutoLock& aProofOfLock);
+  void CompleteRead();
+
+  void CompleteMigrations();
 
   bool mMemoryOnlyDB;
 
@@ -632,6 +679,17 @@ class nsPermissionManager final : public nsIPermissionManager,
   // NOTE: Ensure this is the last member since it has a large inline buffer.
   // An array to store the strings identifying the different types.
   mozilla::Vector<nsCString, 512> mTypeArray;
+
+  nsCOMPtr<nsIThread> mThread;
+
+  struct ThreadBoundData {
+    nsCOMPtr<mozIStorageConnection> mDBConn;
+
+    nsCOMPtr<mozIStorageStatement> mStmtInsert;
+    nsCOMPtr<mozIStorageStatement> mStmtDelete;
+    nsCOMPtr<mozIStorageStatement> mStmtUpdate;
+  };
+  mozilla::ThreadBound<ThreadBoundData> mThreadBoundData;
 
   friend class DeleteFromMozHostListener;
   friend class CloseDatabaseListener;
