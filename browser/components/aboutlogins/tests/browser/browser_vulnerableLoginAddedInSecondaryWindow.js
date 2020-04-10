@@ -21,6 +21,15 @@ add_task(async function setup() {
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
 
+  let breaches = await LoginBreaches.getPotentialBreachesByLoginGUID([
+    TEST_LOGIN3,
+  ]);
+  ok(breaches.size, "TEST_LOGIN3 should be marked as breached");
+
+  // Remove the breached login so the 'alerts' option
+  // is hidden when opening about:logins.
+  Services.logins.removeLogin(TEST_LOGIN3);
+
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -41,6 +50,14 @@ add_task(async function setup() {
 
 add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
   const ORIGIN_FOR_NEW_VULNERABLE_LOGIN = "https://vulnerable";
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    ok(
+      loginList.shadowRoot.querySelector("#login-sort").namedItem("alerts")
+        .hidden,
+      "The 'alerts' option should be hidden before adding a vulnerable login to the list"
+    );
+  });
 
   await SpecialPowers.spawn(
     tabInSecondWindow.linkedBrowser,
@@ -51,8 +68,14 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       await ContentTaskUtils.waitForCondition(
         () =>
           loginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]")
-            .length == 3,
-        "waiting for all three initials logins to get added to login-list"
+            .length == 2,
+        "waiting for all two initials logins to get added to login-list"
+      );
+
+      let loginSort = loginList.shadowRoot.querySelector("#login-sort");
+      ok(
+        loginSort.namedItem("alerts").hidden,
+        "The 'alerts' option should be hidden when there are no breached or vulnerable logins in the list"
       );
 
       let createButton = loginList.shadowRoot.querySelector(
@@ -83,7 +106,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       await ContentTaskUtils.waitForCondition(
         () =>
           loginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]")
-            .length == 4,
+            .length == 3,
         "waiting for new login to get added to login-list"
       );
 
@@ -101,24 +124,42 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         "vulnerable alert on login-item should be visible"
       );
 
-      is(
-        Cu.waiveXrays(loginList)._sortSelect.value,
-        "alerts",
-        "The login list should be sorted by Alerts"
+      ok(
+        !loginSort.namedItem("alerts").hidden,
+        "The 'alerts' option should be visible after adding a vulnerable login to the list"
       );
-      let loginListItems = loginList.shadowRoot.querySelectorAll(
-        ".login-list-item[data-guid]"
-      );
-      for (let i = 1; i < loginListItems.length; i++) {
-        if (loginListItems[i].matches(".vulnerable, .breached")) {
-          ok(
-            loginListItems[i - 1].matches(".vulnerable, .breached"),
-            `The previous login-list-item must be vulnerable or breached if the current one is (second window, i=${i})`
-          );
-        }
-      }
     }
   );
+
+  tabInSecondWindow.linkedBrowser.reload();
+  await BrowserTestUtils.browserLoaded(
+    tabInSecondWindow.linkedBrowser,
+    false,
+    "about:logins"
+  );
+
+  await SpecialPowers.spawn(tabInSecondWindow.linkedBrowser, [], async () => {
+    let loginList = content.document.querySelector("login-list");
+    let loginSort = loginList.shadowRoot.querySelector("#login-sort");
+
+    await ContentTaskUtils.waitForCondition(
+      () => loginSort.value == "alerts",
+      "waiting for sort to get updated to 'alerts'"
+    );
+
+    is(loginSort.value, "alerts", "The login list should be sorted by Alerts");
+    let loginListItems = loginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]"
+    );
+    for (let i = 1; i < loginListItems.length; i++) {
+      if (loginListItems[i].matches(".vulnerable, .breached")) {
+        ok(
+          loginListItems[i - 1].matches(".vulnerable, .breached"),
+          `The previous login-list-item must be vulnerable or breached if the current one is (second window, i=${i})`
+        );
+      }
+    }
+  });
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -141,17 +182,36 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         "vulnerable login list item should be marked as such"
       );
 
-      let loginListItems = loginList.shadowRoot.querySelectorAll(
-        ".login-list-item[data-guid]"
+      ok(
+        !loginList.shadowRoot.querySelector("#login-sort").namedItem("alerts")
+          .hidden,
+        "The 'alerts' option should be visible after adding a vulnerable login to the list"
       );
-      for (let i = 1; i < loginListItems.length; i++) {
-        if (loginListItems[i].matches(".vulnerable, .breached")) {
-          ok(
-            loginListItems[i - 1].matches(".vulnerable, .breached"),
-            `The previous login-list-item must be vulnerable or breached if the current one is (first window, i=${i})`
-          );
-        }
-      }
     }
   );
+  gBrowser.selectedBrowser.reload();
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    "about:logins"
+  );
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    await ContentTaskUtils.waitForCondition(
+      () => loginList.shadowRoot.querySelector("#login-sort").value == "alerts",
+      "waiting for sort to get updated to 'alerts'"
+    );
+    let loginListItems = loginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]"
+    );
+    for (let i = 1; i < loginListItems.length; i++) {
+      if (loginListItems[i].matches(".vulnerable, .breached")) {
+        ok(
+          loginListItems[i - 1].matches(".vulnerable, .breached"),
+          `The previous login-list-item must be vulnerable or breached if the current one is (first window, i=${i})`
+        );
+      }
+    }
+  });
 });
