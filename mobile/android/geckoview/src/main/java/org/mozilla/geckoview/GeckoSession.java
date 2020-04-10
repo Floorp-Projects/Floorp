@@ -61,6 +61,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 import android.support.annotation.UiThread;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -1173,6 +1174,53 @@ public class GeckoSession implements Parcelable {
         protected void finalize() throws Throwable {
             close();
             disposeNative();
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private GeckoResult<Boolean> onLoadRequest(final @NonNull String uri, final int windowType,
+                                                   final int flags, final @Nullable String triggeringUri,
+                                                   final boolean hasUserGesture) {
+            final GeckoSession session = (mOwner == null) ? null : mOwner.get();
+            if (session == null) {
+                // Don't handle any load request if we can't get the session for some reason.
+                return GeckoResult.fromValue(false);
+            }
+            GeckoResult<Boolean> res = new GeckoResult<>();
+
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final NavigationDelegate delegate = session.getNavigationDelegate();
+
+                    if (delegate == null) {
+                        res.complete(false);
+                        return;
+                    }
+
+                    final String trigger = TextUtils.isEmpty(triggeringUri) ? null : triggeringUri;
+                    final NavigationDelegate.LoadRequest req = new NavigationDelegate.LoadRequest(uri,
+                            trigger, windowType, flags, hasUserGesture, false /* isDirectNavigation */);
+                    final GeckoResult<AllowOrDeny> reqResponse = delegate.onLoadRequest(session, req);
+
+                    if (reqResponse == null) {
+                        res.complete(false);
+                        return;
+                    }
+
+                    reqResponse.accept(value -> {
+                        if (value == AllowOrDeny.DENY) {
+                            res.complete(true);
+                        } else {
+                            res.complete(false);
+                        }
+                    }, ex -> {
+                        // This is incredibly ugly and unreadable because checkstyle sucks.
+                            res.complete(false);
+                        });
+                }
+            });
+
+            return res;
         }
     }
 

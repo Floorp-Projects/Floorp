@@ -54,7 +54,8 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   if (!mParent->Open(loadState, loadInfo, aArgs.loadFlags(), aArgs.cacheKey(),
                      aArgs.channelId(), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     aArgs.outerWindowId(), &rv)) {
+                     aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
+                     &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 

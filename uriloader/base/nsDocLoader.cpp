@@ -37,7 +37,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "nsPresContext.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsILoadURIDelegate.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -1442,43 +1441,6 @@ int64_t nsDocLoader::CalculateMaxProgress() {
 NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* cb) {
-  if (aFlags & (nsIChannelEventSink::REDIRECT_TEMPORARY |
-                nsIChannelEventSink::REDIRECT_PERMANENT)) {
-    nsCOMPtr<nsIDocShell> docShell =
-        do_QueryInterface(static_cast<nsIRequestObserver*>(this));
-
-    nsCOMPtr<nsILoadURIDelegate> delegate;
-    if (docShell) {
-      docShell->GetLoadURIDelegate(getter_AddRefs(delegate));
-    }
-
-    nsCOMPtr<nsIURI> newURI;
-    nsCOMPtr<nsILoadInfo> info = nullptr;
-    if (delegate) {
-      // No point in getting the URI if we don't have a LoadURIDelegate.
-      aNewChannel->GetURI(getter_AddRefs(newURI));
-      info = aNewChannel->LoadInfo();
-    }
-
-    RefPtr<Document> loadingDoc;
-    if (info) {
-      info->GetLoadingDocument(getter_AddRefs(loadingDoc));
-    }
-
-    if (newURI && info && !loadingDoc) {
-      const int where = nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
-      bool loadURIHandled = false;
-      nsresult rv = delegate->LoadURI(
-          newURI, where, nsIWebNavigation::LOAD_FLAGS_IS_REDIRECT,
-          /* triggering principal */ nullptr, &loadURIHandled);
-      if (NS_SUCCEEDED(rv) && loadURIHandled) {
-        aOldChannel->Cancel(NS_ERROR_ABORT);
-        cb->OnRedirectVerifyCallback(NS_ERROR_ABORT);
-        return NS_OK;
-      }
-    }
-  }
-
   if (aOldChannel) {
     nsLoadFlags loadFlags = 0;
     int32_t stateFlags = nsIWebProgressListener::STATE_REDIRECTING |

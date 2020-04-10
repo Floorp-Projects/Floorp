@@ -12,6 +12,7 @@ import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
@@ -1068,6 +1069,7 @@ class WebExtensionTest : BaseSessionTest() {
         testIframeTopLevel()
     }
 
+    @Ignore // Broken with browser.tabs.documentchannel == true
     @Test
     fun loadWebExtensionPage() {
         val result = GeckoResult<String>()
