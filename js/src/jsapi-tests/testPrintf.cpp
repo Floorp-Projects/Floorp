@@ -25,7 +25,11 @@ static bool MOZ_FORMAT_PRINTF(2, 3)
   return output && !strcmp(output.get(), expect);
 }
 
-static const char* zero() { return nullptr; }
+static const char* zero() {
+  // gcc 9 is altogether too clever about detecting that this will always
+  // return nullptr. Do not replace 0x10 with 0x1; it will no longer work.
+  return uintptr_t(&zero) == 0x10 ? "never happens" : nullptr;
+}
 
 BEGIN_TEST(testPrintf) {
   CHECK(print_one("23", "%d", 23));
