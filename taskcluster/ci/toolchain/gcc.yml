@@ -69,10 +69,10 @@ linux64-gcc-sixgill:
     fetches:
         fetch:
             - binutils-2.31.1
-            - gcc-9.1.0
+            - gcc-8.3.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
             - mpfr-3.1.4
         toolchain:
-            - linux64-gcc-9
+            - linux64-gcc-8

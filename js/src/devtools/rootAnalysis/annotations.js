@@ -359,7 +359,7 @@ function ignoreGCFunction(mangled)
     // TODO: modify refillFreeList<NoGC> to not need data flow analysis to
     // understand it cannot GC. As of gcc 6, the same problem occurs with
     // tryNewTenuredThing, tryNewNurseryObject, and others.
-    if (/refillFreeList|tryNew/.test(fun) && /= js::NoGC/.test(fun))
+    if (/refillFreeList|tryNew/.test(fun) && /\(js::AllowGC\)0/.test(fun))
         return true;
 
     return false;

@@ -805,28 +805,17 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   auto workletImpl = static_cast<AudioWorkletImpl*>(worklet->Impl());
   audioWorkletNode->mTrack->SendRunnable(NS_NewRunnableFunction(
       "WorkletNodeEngine::ConstructProcessor",
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
-  // See bug 1535398.
-  //
-  // Note that clang and gcc have mutually incompatible rules about whether
-  // attributes should come before or after the `mutable` keyword here, so
-  // use a compatibility hack until we can switch to the standardized
-  // [[attr]] syntax (bug 1627007).
-#ifdef __clang__
-#  define AND_MUTABLE(macro) macro mutable
-#else
-#  define AND_MUTABLE(macro) mutable macro
-#endif
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
+      // See bug 1535398.
       [track = audioWorkletNode->mTrack,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
        name = nsString(aName), options = std::move(serializedOptions),
        portId = std::move(processorPortId)]()
-          AND_MUTABLE(MOZ_CAN_RUN_SCRIPT_BOUNDARY) {
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY mutable {
             auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
             engine->ConstructProcessor(
                 workletImpl, name, WrapNotNull(options.get()), portId, track);
           }));
-#undef AND_MUTABLE
 
   // [[active source]] is initially true and so at least the first process()
   // call will not be skipped when there are no active inputs.
