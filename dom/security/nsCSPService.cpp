@@ -275,15 +275,6 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
                                            nsIURI* aNewURI,
                                            nsILoadInfo* aLoadInfo,
                                            Maybe<nsresult>& aCancelCode) {
-  return ConsultCSPForRedirect(nsCSPContext::AsyncReportViolationCallback(
-                                   nsCSPContext::AsyncReportViolation),
-                               aOriginalURI, aNewURI, aLoadInfo, aCancelCode);
-}
-
-nsresult CSPService::ConsultCSPForRedirect(
-    const nsCSPContext::AsyncReportViolationCallback& aCallback,
-    nsIURI* aOriginalURI, nsIURI* aNewURI, nsILoadInfo* aLoadInfo,
-    Maybe<nsresult>& aCancelCode) {
   // Check CSP navigate-to
   // We need to enforce the CSP of the document that initiated the load,
   // which is the CSP to inherit.
@@ -291,12 +282,10 @@ nsresult CSPService::ConsultCSPForRedirect(
       aLoadInfo->GetCspToInherit();
   if (cspToInherit) {
     bool allowsNavigateTo = false;
-    nsresult rv = static_cast<nsCSPContext*>(cspToInherit.get())
-                      ->GetAllowsNavigateTo(aCallback, aNewURI,
-                                            aLoadInfo->GetIsFormSubmission(),
-                                            true,  /* aWasRedirected */
-                                            false, /* aEnforceWhitelist */
-                                            &allowsNavigateTo);
+    nsresult rv = cspToInherit->GetAllowsNavigateTo(
+        aNewURI, aLoadInfo->GetIsFormSubmission(), true, /* aWasRedirected */
+        false,                                           /* aEnforceWhitelist */
+        &allowsNavigateTo);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!allowsNavigateTo) {
@@ -342,15 +331,14 @@ nsresult CSPService::ConsultCSPForRedirect(
     nsCOMPtr<nsIContentSecurityPolicy> preloadCsp = aLoadInfo->GetPreloadCsp();
     if (preloadCsp) {
       // Pass  originalURI to indicate the redirect
-      static_cast<nsCSPContext*>(preloadCsp.get())
-          ->ShouldLoad(aCallback,
-                       policyType,  // load type per nsIContentPolicy (uint32_t)
-                       cspEventListener,
-                       aNewURI,         // nsIURI
-                       EmptyCString(),  // ACString - MIME guess
-                       aOriginalURI,    // Original nsIURI
-                       true,            // aSendViolationReports
-                       cspNonce,        // nonce
+      preloadCsp->ShouldLoad(
+          policyType,  // load type per nsIContentPolicy (uint32_t)
+          cspEventListener,
+          aNewURI,         // nsIURI
+          EmptyCString(),  // ACString - MIME guess
+          aOriginalURI,    // Original nsIURI
+          true,            // aSendViolationReports
+          cspNonce,        // nonce
                        parserCreatedScript, &decision);
 
       // if the preload policy already denied the load, then there
@@ -366,15 +354,13 @@ nsresult CSPService::ConsultCSPForRedirect(
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
   if (csp) {
     // Pass  originalURI to indicate the redirect
-    static_cast<nsCSPContext*>(csp.get())->ShouldLoad(
-        aCallback,
-        policyType,  // load type per nsIContentPolicy (uint32_t)
-        cspEventListener,
-        aNewURI,         // nsIURI
-        EmptyCString(),  // ACString - MIME guess
-        aOriginalURI,    // Original nsIURI
-        true,            // aSendViolationReports
-        cspNonce,        // nonce
+    csp->ShouldLoad(policyType,  // load type per nsIContentPolicy (uint32_t)
+                    cspEventListener,
+                    aNewURI,         // nsIURI
+                    EmptyCString(),  // ACString - MIME guess
+                    aOriginalURI,    // Original nsIURI
+                    true,            // aSendViolationReports
+                    cspNonce,        // nonce
         parserCreatedScript, &decision);
     if (NS_CP_REJECTED(decision)) {
       aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
