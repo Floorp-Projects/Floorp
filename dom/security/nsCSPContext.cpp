@@ -1853,8 +1853,8 @@ nsCSPContext::Read(nsIObjectInputStream* aStream) {
     bool deliveredViaMetaTag = false;
     rv = aStream->ReadBoolean(&deliveredViaMetaTag);
     NS_ENSURE_SUCCESS(rv, rv);
-    mIPCPolicies.AppendElement(mozilla::ipc::ContentSecurityPolicy(
-        policyString, reportOnly, deliveredViaMetaTag));
+    AddIPCPolicy(mozilla::ipc::ContentSecurityPolicy(policyString, reportOnly,
+                                                     deliveredViaMetaTag));
   }
 
   return NS_OK;
@@ -1888,4 +1888,9 @@ nsCSPContext::Write(nsIObjectOutputStream* aStream) {
     aStream->WriteBoolean(policy.deliveredViaMetaTagFlag());
   }
   return NS_OK;
+}
+
+void nsCSPContext::AddIPCPolicy(
+    const mozilla::ipc::ContentSecurityPolicy& aPolicy) {
+  mIPCPolicies.AppendElement(aPolicy);
 }
