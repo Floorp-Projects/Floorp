@@ -485,7 +485,6 @@ impl SpatialNode {
                 sticky_offset.y = top_viewport_edge - sticky_rect.min_y();
                 sticky_offset.y = sticky_offset.y.max(-info.previously_applied_offset.y);
             }
-            debug_assert!(sticky_offset.y + info.previously_applied_offset.y >= 0.0);
         }
 
         // If we don't have a sticky-top offset (sticky_offset.y + info.previously_applied_offset.y
@@ -505,7 +504,6 @@ impl SpatialNode {
                     sticky_offset.y = bottom_viewport_edge - sticky_rect.max_y();
                     sticky_offset.y = sticky_offset.y.min(-info.previously_applied_offset.y);
                 }
-                debug_assert!(sticky_offset.y + info.previously_applied_offset.y <= 0.0);
             }
         }
 
@@ -519,7 +517,6 @@ impl SpatialNode {
                 sticky_offset.x = left_viewport_edge - sticky_rect.min_x();
                 sticky_offset.x = sticky_offset.x.max(-info.previously_applied_offset.x);
             }
-            debug_assert!(sticky_offset.x + info.previously_applied_offset.x >= 0.0);
         }
 
         if sticky_offset.x + info.previously_applied_offset.x <= 0.0 {
@@ -532,7 +529,6 @@ impl SpatialNode {
                     sticky_offset.x = right_viewport_edge - sticky_rect.max_x();
                     sticky_offset.x = sticky_offset.x.min(-info.previously_applied_offset.x);
                 }
-                debug_assert!(sticky_offset.x + info.previously_applied_offset.x <= 0.0);
             }
         }
 
