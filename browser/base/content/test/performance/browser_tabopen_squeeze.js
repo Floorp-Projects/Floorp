@@ -22,7 +22,6 @@ const EXPECTED_REFLOWS = [
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
-  await disableFxaBadge();
 
   // Compute the number of tabs we can put into the strip without
   // overflowing, and remove one, so that we can create
