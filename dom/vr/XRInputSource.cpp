@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XRInputSource.h"
+#include "mozilla/dom/XRInputSourceEvent.h"
 #include "XRNativeOriginViewer.h"
 #include "XRNativeOriginTracker.h"
 
@@ -18,12 +19,13 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRInputSource, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRInputSource, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRInputSource, Release)
 
-// Follow the controller profile ids from https://github.com/immersive-web/webxr-input-profiles.
+// Follow the controller profile ids from
+// https://github.com/immersive-web/webxr-input-profiles.
 nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
   nsTArray<nsString> profile;
   nsString id;
 
-  switch(aType) {
+  switch (aType) {
     case VRControllerType::HTCVive:
       id.AssignLiteral("htc-vive");
       profile.AppendElement(id);
@@ -106,9 +108,11 @@ nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
 }
 
 XRInputSource::XRInputSource(nsISupports* aParent)
- : mParent(aParent),
-   mGamepad(nullptr),
-   mIndex(-1) {}
+    : mParent(aParent),
+      mGamepad(nullptr),
+      mIndex(-1),
+      mSelectAction(ActionState::ActionState_Released),
+      mSqueezeAction(ActionState::ActionState_Released) {}
 
 XRInputSource::~XRInputSource() {
   mTargetRaySpace = nullptr;
@@ -122,29 +126,19 @@ JSObject* XRInputSource::WrapObject(JSContext* aCx,
   return XRInputSource_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-XRHandedness XRInputSource::Handedness() {
-  return mHandedness;
-}
+XRHandedness XRInputSource::Handedness() { return mHandedness; }
 
-XRTargetRayMode XRInputSource::TargetRayMode() {
-  return mTargetRayMode;
-}
+XRTargetRayMode XRInputSource::TargetRayMode() { return mTargetRayMode; }
 
-XRSpace* XRInputSource::TargetRaySpace() {
-  return mTargetRaySpace;
-}
+XRSpace* XRInputSource::TargetRaySpace() { return mTargetRaySpace; }
 
-XRSpace* XRInputSource::GetGripSpace() {
-  return mGripSpace;
-}
+XRSpace* XRInputSource::GetGripSpace() { return mGripSpace; }
 
 void XRInputSource::GetProfiles(nsTArray<nsString>& aResult) {
   aResult = mProfiles;
 }
 
-Gamepad* XRInputSource::GetGamepad() {
-  return mGamepad;
-}
+Gamepad* XRInputSource::GetGamepad() { return mGamepad; }
 
 void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   MOZ_ASSERT(aSession);
@@ -154,12 +148,13 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
     return;
   }
   const gfx::VRDisplayInfo& displayInfo = displayClient->GetDisplayInfo();
-  const gfx::VRControllerState& controllerState = displayInfo.mControllerState[aIndex];
+  const gfx::VRControllerState& controllerState =
+      displayInfo.mControllerState[aIndex];
   MOZ_ASSERT(controllerState.controllerName[0] != '\0');
 
   mProfiles = GetInputSourceProfile(controllerState.type);
   mHandedness = XRHandedness::None;
-  switch(controllerState.hand) {
+  switch (controllerState.hand) {
     case GamepadHand::_empty:
       mHandedness = XRHandedness::None;
       break;
@@ -177,7 +172,7 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   RefPtr<XRNativeOrigin> nativeOriginTargetRay = nullptr;
   RefPtr<XRNativeOrigin> nativeOriginGrip = nullptr;
   mTargetRayMode = XRTargetRayMode::Tracked_pointer;
-  switch(controllerState.targetRayMode) {
+  switch (controllerState.targetRayMode) {
     case gfx::TargetRayMode::Gaze:
       mTargetRayMode = XRTargetRayMode::Gaze;
       nativeOriginTargetRay = new XRNativeOriginViewer(displayClient);
@@ -185,8 +180,10 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
       break;
     case gfx::TargetRayMode::TrackedPointer:
       mTargetRayMode = XRTargetRayMode::Tracked_pointer;
-      // We use weak pointers of poses in XRNativeOriginTracker to sync their data internally.
-      nativeOriginTargetRay = new XRNativeOriginTracker(&controllerState.targetRayPose);
+      // We use weak pointers of poses in XRNativeOriginTracker to sync their
+      // data internally.
+      nativeOriginTargetRay =
+          new XRNativeOriginTracker(&controllerState.targetRayPose);
       nativeOriginGrip = new XRNativeOriginTracker(&controllerState.pose);
       break;
     case gfx::TargetRayMode::Screen:
@@ -196,13 +193,19 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
       MOZ_ASSERT(false && "Undefined TargetRayMode type.");
       break;
   }
-  mTargetRaySpace = new XRSpace(aSession->GetParentObject(), aSession, nativeOriginTargetRay);
-  mGripSpace = new XRSpace(aSession->GetParentObject(), aSession, nativeOriginGrip);
-  const uint32_t gamepadId = displayInfo.mDisplayID * kVRControllerMaxCount + aIndex;
-  const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(gamepadId, GamepadServiceType::VR);
-  mGamepad = new Gamepad(mParent, NS_ConvertASCIItoUTF16(""), -1, hashKey, GamepadMappingType::Xr_standard,
-    controllerState.hand, displayInfo.mDisplayID, controllerState.numButtons, controllerState.numAxes,
-    controllerState.numHaptics, 0, 0);
+  mTargetRaySpace =
+      new XRSpace(aSession->GetParentObject(), aSession, nativeOriginTargetRay);
+  mGripSpace =
+      new XRSpace(aSession->GetParentObject(), aSession, nativeOriginGrip);
+  const uint32_t gamepadId =
+      displayInfo.mDisplayID * kVRControllerMaxCount + aIndex;
+  const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(
+      gamepadId, GamepadServiceType::VR);
+  mGamepad =
+      new Gamepad(mParent, NS_ConvertASCIItoUTF16(""), -1, hashKey,
+                  GamepadMappingType::Xr_standard, controllerState.hand,
+                  displayInfo.mDisplayID, controllerState.numButtons,
+                  controllerState.numAxes, controllerState.numHaptics, 0, 0);
   mIndex = aIndex;
 }
 
@@ -219,7 +222,8 @@ void XRInputSource::Update(XRSession* aSession) {
     return;
   }
   const gfx::VRDisplayInfo& displayInfo = displayClient->GetDisplayInfo();
-  const gfx::VRControllerState& controllerState = displayInfo.mControllerState[mIndex];
+  const gfx::VRControllerState& controllerState =
+      displayInfo.mControllerState[mIndex];
   MOZ_ASSERT(controllerState.controllerName[0] != '\0');
 
   // Update button values.
@@ -230,7 +234,7 @@ void XRInputSource::Update(XRSession* aSession) {
     const bool touched = controllerState.buttonTouched & (1ULL << i);
 
     if (buttons[i]->Pressed() != pressed || buttons[i]->Touched() != touched ||
-      buttons[i]->Value() != controllerState.triggerValue[i]) {
+        buttons[i]->Value() != controllerState.triggerValue[i]) {
       mGamepad->SetButton(i, pressed, touched, controllerState.triggerValue[i]);
     }
   }
@@ -242,10 +246,84 @@ void XRInputSource::Update(XRSession* aSession) {
       mGamepad->SetAxis(i, controllerState.axisValue[i]);
     }
   }
+
+  // We define 0.85f and 0.15f based on our current finding
+  // for better experience, we can adjust these values if we need.
+  const float completeThreshold = 0.90f;
+  const float startThreshold = 0.85f;
+  const float endThreshold = 0.15f;
+  const uint32_t selectIndex = 0;
+  const uint32_t squeezeIndex = 1;
+
+  // Checking selectstart, select, selectend
+  if (controllerState.selectActionStartFrameId >
+      controllerState.selectActionStopFrameId) {
+    if (mSelectAction == ActionState::ActionState_Released &&
+        controllerState.triggerValue[selectIndex] > endThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("selectstart"), aSession);
+      mSelectAction = ActionState::ActionState_Pressing;
+    } else if (mSelectAction == ActionState::ActionState_Pressing &&
+               controllerState.triggerValue[selectIndex] > completeThreshold) {
+      mSelectAction = ActionState::ActionState_Pressed;
+    } else if (mSelectAction == ActionState::ActionState_Pressed &&
+               controllerState.triggerValue[selectIndex] < startThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+      mSelectAction = ActionState::ActionState_Releasing;
+    } else if (mSelectAction <= ActionState::ActionState_Releasing &&
+               controllerState.triggerValue[selectIndex] < endThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+      mSelectAction = ActionState::ActionState_Released;
+    }
+  } else if (mSelectAction <= ActionState::ActionState_Releasing) {
+    DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+    mSelectAction = ActionState::ActionState_Released;
+  }
+
+  // Checking squeezestart, squeeze, squeezeend
+  if (controllerState.squeezeActionStartFrameId >
+      controllerState.squeezeActionStopFrameId) {
+    if (mSqueezeAction == ActionState::ActionState_Released &&
+        controllerState.triggerValue[squeezeIndex] > endThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("squeezestart"), aSession);
+      mSqueezeAction = ActionState::ActionState_Pressing;
+    } else if (mSqueezeAction == ActionState::ActionState_Pressing &&
+               controllerState.triggerValue[squeezeIndex] > completeThreshold) {
+      mSqueezeAction = ActionState::ActionState_Pressed;
+    } else if (mSqueezeAction == ActionState::ActionState_Pressed &&
+               controllerState.triggerValue[squeezeIndex] < startThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+      mSqueezeAction = ActionState::ActionState_Releasing;
+    } else if (mSqueezeAction <= ActionState::ActionState_Releasing &&
+               controllerState.triggerValue[squeezeIndex] < endThreshold) {
+      DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+      mSqueezeAction = ActionState::ActionState_Released;
+    }
+  } else if (mSqueezeAction <= ActionState::ActionState_Releasing) {
+    DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+    mSqueezeAction = ActionState::ActionState_Released;
+  }
 }
 
-int32_t XRInputSource::GetIndex() {
-  return mIndex;
+int32_t XRInputSource::GetIndex() { return mIndex; }
+
+void XRInputSource::DispatchEvent(const nsAString& aEvent,
+                                  XRSession* aSession) {
+  // Create a XRFrame for its callbacks
+  RefPtr<XRFrame> frame = new XRFrame(GetParentObject(), aSession);
+  frame->StartInputSourceEvent();
+
+  XRInputSourceEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mFrame = frame;
+  init.mInputSource = this;
+
+  RefPtr<XRInputSourceEvent> event =
+      XRInputSourceEvent::Constructor(aSession, aEvent, init);
+
+  event->SetTrusted(true);
+  aSession->DispatchEvent(*event);
+  frame->EndInputSourceEvent();
 }
 
 }  // namespace dom

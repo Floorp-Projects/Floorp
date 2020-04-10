@@ -165,18 +165,21 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
 
-  const gfx::PointDouble3D& originPosition = aBaseSpace.GetEffectiveOriginPosition();
+  const gfx::PointDouble3D& originPosition =
+      aBaseSpace.GetEffectiveOriginPosition();
   gfx::PointDouble3D position = aSpace.GetEffectiveOriginPosition();
   gfx::QuaternionDouble orientation = aSpace.GetEffectiveOriginOrientation();
 
-  gfx::QuaternionDouble invOriginOrientation(aBaseSpace.GetEffectiveOriginOrientation());
+  gfx::QuaternionDouble invOriginOrientation(
+      aBaseSpace.GetEffectiveOriginOrientation());
   invOriginOrientation.Invert();
 
   position = invOriginOrientation.RotatePoint(position);
   position -= originPosition;
   orientation *= invOriginOrientation;
 
-  RefPtr<XRRigidTransform> transform = new XRRigidTransform(mParent, position, orientation);
+  RefPtr<XRRigidTransform> transform =
+      new XRRigidTransform(mParent, position, orientation);
   RefPtr<XRPose> pose = new XRPose(mParent, transform, false);
 
   return pose;
@@ -188,6 +191,10 @@ void XRFrame::StartAnimationFrame() {
 }
 
 void XRFrame::EndAnimationFrame() { mActive = false; }
+
+void XRFrame::StartInputSourceEvent() { mActive = true; }
+
+void XRFrame::EndInputSourceEvent() { mActive = false; }
 
 gfx::Matrix4x4 XRFrame::ConstructInlineProjection(float aFov, float aAspect,
                                                   float aNear, float aFar) {

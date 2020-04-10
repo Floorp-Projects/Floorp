@@ -33,6 +33,8 @@ class XRFrame final : public nsWrapperCache {
 
   void StartAnimationFrame();
   void EndAnimationFrame();
+  void StartInputSourceEvent();
+  void EndInputSourceEvent();
 
   // WebIDL Boilerplate
   nsISupports* GetParentObject() const { return mParent; }
