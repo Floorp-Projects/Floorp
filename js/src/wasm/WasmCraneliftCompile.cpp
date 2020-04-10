@@ -364,14 +364,16 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       cx_tls_offset(offsetof(TlsData, cx)),
       realm_cx_offset(JSContext::offsetOfRealm()),
       realm_tls_offset(offsetof(TlsData, realm)),
-      realm_func_import_tls_offset(offsetof(FuncImportTls, realm)) {
+      realm_func_import_tls_offset(offsetof(FuncImportTls, realm)),
+      size_of_wasm_frame(sizeof(wasm::Frame)) {
 }
 
 // Most of BaldrMonkey's data structures refer to a "global offset" which is a
 // byte offset into the `globalArea` field of the  `TlsData` struct.
 //
 // Cranelift represents global variables with their byte offset from the "VM
-// context pointer" which is the `WasmTlsReg` pointing to the `TlsData` struct.
+// context pointer" which is the `WasmTlsReg` pointing to the `TlsData`
+// struct.
 //
 // This function translates between the two.
 
@@ -514,8 +516,8 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
       const CodeRangeVector& codeRanges = code->codeRanges;
       MOZ_ASSERT(codeRanges.length() >= inputs.length());
 
-      // Within the current batch, functions' code ranges have been added in the
-      // same order as the inputs.
+      // Within the current batch, functions' code ranges have been added in
+      // the same order as the inputs.
       size_t firstCodeRangeIndex = codeRanges.length() - inputs.length();
 
       for (size_t i = 0; i < inputs.length(); i++) {
