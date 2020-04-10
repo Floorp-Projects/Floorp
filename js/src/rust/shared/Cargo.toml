@@ -13,7 +13,6 @@ baldrdash = { path = "../../wasm/cranelift", optional = true }
 encoding_c = "0.9.5"
 encoding_c_mem = "0.2.4"
 smoosh = { path = "../../frontend/smoosh", optional = true }
-wasm-rust = { path = "../../wasm/rust" }
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 mozglue-static = { path = "../../../../mozglue/static/rust" }
 

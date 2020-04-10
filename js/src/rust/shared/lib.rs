@@ -21,5 +21,3 @@ extern crate mozglue_static;
 
 #[cfg(feature = "smoosh")]
 extern crate smoosh;
-
-extern crate wasm_rust;

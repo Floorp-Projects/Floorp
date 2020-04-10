@@ -118,6 +118,7 @@
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
+#include "shell/WasmTesting.h"
 #include "threading/ConditionVariable.h"
 #include "threading/ExclusiveData.h"
 #include "threading/LockGuard.h"
@@ -8221,6 +8222,90 @@ static bool SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "wasmTextToBinary", 1)) {
+    return false;
+  }
+
+  if (!args[0].isString()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be a String");
+    return false;
+  }
+
+  size_t textLen = args[0].toString()->length();
+
+  AutoStableStringChars twoByteChars(cx);
+  if (!twoByteChars.initTwoByte(cx, args[0].toString())) {
+    return false;
+  }
+
+  wasm::Bytes bytes;
+  UniqueChars error;
+  if (!wasm::TextToBinary(twoByteChars.twoByteChars(), textLen, &bytes,
+                          &error)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                             error.get() ? error.get() : "out of memory");
+    return false;
+  }
+
+  RootedObject binary(cx, JS_NewUint8Array(cx, bytes.length()));
+  if (!binary) {
+    return false;
+  }
+
+  memcpy(binary->as<TypedArrayObject>().dataPointerUnshared(), bytes.begin(),
+         bytes.length());
+
+  args.rval().setObject(*binary);
+  return true;
+}
+
+static bool WasmCodeOffsets(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "wasmCodeOffsets", 1)) {
+    return false;
+  }
+
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorASCII(cx, "argument is not an object");
+    return false;
+  }
+
+  SharedMem<uint8_t*> bytes;
+  size_t byteLength;
+
+  JSObject* bufferObject = &args[0].toObject();
+  JSObject* unwrappedBufferObject = CheckedUnwrapStatic(bufferObject);
+  if (!unwrappedBufferObject ||
+      !IsBufferSource(unwrappedBufferObject, &bytes, &byteLength)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_BUF_ARG);
+    return false;
+  }
+
+  wasm::Uint32Vector offsets;
+  wasm::CodeOffsets(bytes.unwrap(), byteLength, &offsets);
+
+  RootedObject jsOffsets(cx, JS::NewArrayObject(cx, offsets.length()));
+  if (!jsOffsets) {
+    return false;
+  }
+  for (size_t i = 0; i < offsets.length(); i++) {
+    uint32_t offset = offsets[i];
+    RootedValue offsetVal(cx, NumberValue(offset));
+    if (!JS_SetElement(cx, jsOffsets, i, offsetVal)) {
+      return false;
+    }
+  }
+  args.rval().setObject(*jsOffsets);
+  return true;
+}
+
 #ifndef __AFL_HAVE_MANUAL_CONTROL
 #  define __AFL_LOOP(x) true
 #endif
@@ -9224,6 +9309,15 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "  Compile the given buffer in a separate process, serialize the resulting\n"
 "  wasm::Module into bytes, and deserialize those bytes in the current\n"
 "  process, returning the resulting WebAssembly.Module."),
+
+    JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
+"wasmTextToBinary(str)",
+"  Translates the given text wasm module into its binary encoding."),
+
+    JS_FN_HELP("wasmCodeOffsets", WasmCodeOffsets, 1, 0,
+"wasmCodeOffsets(binary)",
+"  Decodes the given wasm binary to find the offsets of every instruction in the"
+"  code section."),
 
     JS_FN_HELP("transplantableObject", TransplantableObject, 0, 0,
 "transplantableObject([options])",
