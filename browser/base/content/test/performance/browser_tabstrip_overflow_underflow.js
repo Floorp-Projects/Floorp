@@ -36,7 +36,6 @@ add_task(async function() {
   await createTabs(TAB_COUNT_FOR_OVERFLOW);
 
   gURLBar.focus();
-  await disableFxaBadge();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let textBoxRect = gURLBar
