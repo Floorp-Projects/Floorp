@@ -64,6 +64,8 @@ child:
    */
   async GetSecurityInfo() returns(nsCString? serializedSecInfo);
 
+  async DispatchSecurityPolicyViolation(nsString aViolationEventJSON);
+
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData,
                    ClonedMessageData aStack);

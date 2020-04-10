@@ -42,6 +42,7 @@
 #include "mozilla/dom/CSPReportBinding.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "nsINetworkInterceptController.h"
 #include "nsSandboxFlags.h"
 #include "nsIScriptElement.h"
@@ -1326,6 +1327,17 @@ nsresult nsCSPContext::FireViolationEvent(
   if (!eventTarget) {
     // If target is a Window, set target to target’s associated Document.
     eventTarget = doc;
+  }
+
+  if (!eventTarget && mInnerWindowID && XRE_IsParentProcess()) {
+    if (RefPtr<WindowGlobalParent> parent =
+            WindowGlobalParent::GetByInnerWindowId(mInnerWindowID)) {
+      nsAutoString json;
+      if (aViolationEventInit.ToJSON(json)) {
+        Unused << parent->SendDispatchSecurityPolicyViolation(json);
+      }
+    }
+    return NS_OK;
   }
 
   if (!eventTarget) {
