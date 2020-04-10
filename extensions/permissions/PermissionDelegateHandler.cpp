@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/PermissionDelegateHandler.h"
-
 #include "nsGlobalWindowInner.h"
+#include "PermissionDelegateHandler.h"
 #include "nsPIDOMWindow.h"
+#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsContentPermissionHelper.h"
 
@@ -15,12 +15,9 @@
 #include "mozilla/StaticPrefs_permissions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
-#include "mozilla/PermissionManager.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-
-namespace mozilla {
-
 typedef PermissionDelegateHandler::PermissionDelegatePolicy DelegatePolicy;
 typedef PermissionDelegateHandler::PermissionDelegateInfo DelegateInfo;
 
@@ -135,7 +132,7 @@ nsresult PermissionDelegateHandler::GetDelegatePrincipal(
 bool PermissionDelegateHandler::Initialize() {
   MOZ_ASSERT(mDocument);
 
-  mPermissionManager = PermissionManager::GetInstance();
+  mPermissionManager = nsPermissionManager::GetInstance();
   if (!mPermissionManager) {
     return false;
   }
@@ -245,5 +242,3 @@ nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
     const nsACString& aType, uint32_t* aPermission) {
   return GetPermission(aType, aPermission, false);
 }
-
-}  // namespace mozilla

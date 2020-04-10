@@ -19,6 +19,10 @@ UNIFIED_SOURCES += [
     'PermissionUtils.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/extensions/permissions',
+]
+
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 FINAL_LIBRARY = 'xul'

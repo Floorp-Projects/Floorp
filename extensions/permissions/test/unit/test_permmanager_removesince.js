@@ -40,7 +40,7 @@ function* do_run_test() {
 
   let since = Number(Date.now());
 
-  // *sob* - on Windows at least, the now recorded by PermissionManager.cpp
+  // *sob* - on Windows at least, the now recorded by nsPermissionManager.cpp
   // might be a couple of ms *earlier* than what JS sees.  So another sleep
   // to ensure our |since| is greater than the time of the permissions we
   // are now adding.  Sadly this means we'll never be able to test when since

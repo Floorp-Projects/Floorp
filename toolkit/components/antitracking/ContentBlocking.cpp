@@ -16,7 +16,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "mozilla/PermissionManager.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -29,6 +28,7 @@
 #include "nsIURI.h"
 #include "nsIOService.h"
 #include "nsIWebProgressListener.h"
+#include "nsPermissionManager.h"
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {
@@ -500,7 +500,7 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
     return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  PermissionManager* permManager = PermissionManager::GetInstance();
+  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     LOG(("Permission manager is null, bailing out early"));
     return ParentAccessGrantPromise::CreateAndReject(false, __func__);
@@ -1028,7 +1028,7 @@ bool ContentBlocking::ShouldAllowAccessFor(
 
   uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
   if (aPrincipal->GetIsContentPrincipal()) {
-    PermissionManager* permManager = PermissionManager::GetInstance();
+    nsPermissionManager* permManager = nsPermissionManager::GetInstance();
     if (permManager) {
       Unused << NS_WARN_IF(NS_FAILED(permManager->TestPermissionFromPrincipal(
           aPrincipal, NS_LITERAL_CSTRING("cookie"), &access)));
