@@ -35,7 +35,7 @@ class DocumentL10n final : public DOMLocalization {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, DOMLocalization)
 
   explicit DocumentL10n(Document* aDocument);
-  void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
+  void Init(Sequence<nsString>& aResourceIds, ErrorResult& aRv);
 
  protected:
   virtual ~DocumentL10n() = default;
