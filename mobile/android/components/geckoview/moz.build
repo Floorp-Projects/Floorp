@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+SOURCES += ['GeckoViewExternalAppService.cpp']
+EXPORTS += ['GeckoViewExternalAppService.h']
+
 if CONFIG['MOZ_ANDROID_HISTORY']:
     EXPORTS += [
         'GeckoViewHistory.h',
@@ -18,7 +21,6 @@ if CONFIG['MOZ_ANDROID_HISTORY']:
 
 EXTRA_COMPONENTS += [
     'GeckoView.manifest',
-    'GeckoViewExternalAppService.js',
     'GeckoViewPermission.js',
     'GeckoViewPrompt.js',
     'GeckoViewPush.js',
