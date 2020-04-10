@@ -19,7 +19,7 @@ use std::ptr;
 
 #[allow(non_camel_case_types)]
 #[repr(u64)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug)]
 pub enum MTLFeatureSet {
     iOS_GPUFamily1_v1 = 0,
     iOS_GPUFamily2_v1 = 1,
@@ -66,7 +66,7 @@ bitflags! {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum OS {
     iOS,
     tvOS,
@@ -1327,7 +1327,7 @@ impl MTLFeatureSet {
 
 #[allow(non_camel_case_types)]
 #[repr(u64)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug)]
 pub enum MTLArgumentBuffersTier {
     tier1 = 0,
     tier2 = 1,

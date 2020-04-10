@@ -10,9 +10,6 @@
 use std::os::raw::c_void;
 
 use base::{CFOptionFlags, CFIndex, CFAllocatorRef, Boolean, CFTypeID, CFTypeRef, SInt32};
-use data::CFDataRef;
-use array::CFArrayRef;
-use dictionary::CFDictionaryRef;
 use string::{CFStringRef, CFStringEncoding};
 use error::CFErrorRef;
 
@@ -22,8 +19,6 @@ pub struct __CFURL(c_void);
 pub type CFURLRef = *const __CFURL;
 
 pub type CFURLBookmarkCreationOptions = CFOptionFlags;
-pub type CFURLBookmarkResolutionOptions = CFOptionFlags;
-pub type CFURLBookmarkFileCreationOptions = CFOptionFlags;
 
 pub type CFURLPathStyle = CFIndex;
 
@@ -32,16 +27,16 @@ pub const kCFURLPOSIXPathStyle: CFURLPathStyle   = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle     = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
 
-pub static kCFURLBookmarkCreationPreferFileIDResolutionMask: CFURLBookmarkCreationOptions =
-    (1u32 << 8) as usize;
-pub static kCFURLBookmarkCreationMinimalBookmarkMask: CFURLBookmarkCreationOptions =
-    (1u32 << 9) as usize;
-pub static kCFURLBookmarkCreationSuitableForBookmarkFile: CFURLBookmarkCreationOptions =
-    (1u32 << 10) as usize;
-pub static kCFURLBookmarkCreationWithSecurityScope: CFURLBookmarkCreationOptions =
-    (1u32 << 11) as usize;
-pub static kCFURLBookmarkCreationSecurityScopeAllowOnlyReadAccess: CFURLBookmarkCreationOptions =
-    (1u32 << 12) as usize;
+// static kCFURLBookmarkCreationPreferFileIDResolutionMask: CFURLBookmarkCreationOptions =
+//     (1 << 8) as u32;
+// static kCFURLBookmarkCreationMinimalBookmarkMask: CFURLBookmarkCreationOptions =
+//     (1 << 9) as u32;
+// static kCFURLBookmarkCreationSuitableForBookmarkFile: CFURLBookmarkCreationOptions =
+//     (1 << 10) as u32;
+// static kCFURLBookmarkCreationWithSecurityScope: CFURLBookmarkCreationOptions =
+//     (1 << 11) as u32;
+// static kCFURLBookmarkCreationSecurityScopeAllowOnlyReadAccess: CFURLBookmarkCreationOptions =
+//     (1 << 12) as u32;
 
 // TODO: there are a lot of missing keys and constants. Add if you are bored or need them.
 
@@ -88,8 +83,8 @@ extern {
 
     /* Creating a CFURL */
     pub fn CFURLCopyAbsoluteURL(anURL: CFURLRef) -> CFURLRef;
-    pub fn CFURLCreateAbsoluteURLWithBytes(allocator: CFAllocatorRef, relativeURLBytes: *const u8, length: CFIndex, encoding: CFStringEncoding, baseURL: CFURLRef, useCompatibilityMode: Boolean) -> CFURLRef;
-    pub fn CFURLCreateByResolvingBookmarkData(allocator: CFAllocatorRef, bookmark: CFDataRef, options: CFURLBookmarkResolutionOptions, relativeToURL: CFURLRef, resourcePropertiesToInclude: CFArrayRef, isStale: *mut Boolean, error: *mut CFErrorRef) -> CFURLRef;
+    //fn CFURLCreateAbsoluteURLWithBytes
+    //fn CFURLCreateByResolvingBookmarkData
     //fn CFURLCreateCopyAppendingPathComponent
     //fn CFURLCreateCopyAppendingPathExtension
     //fn CFURLCreateCopyDeletingLastPathComponent
@@ -147,19 +142,19 @@ extern {
     //fn CFURLClearResourcePropertyCacheForKey
     //fn CFURLCopyResourcePropertiesForKeys
     //fn CFURLCopyResourcePropertyForKey
-    pub fn CFURLCreateResourcePropertiesForKeysFromBookmarkData(allocator: CFAllocatorRef, resourcePropertiesToReturn: CFArrayRef, bookmark: CFDataRef) -> CFDictionaryRef;
-    pub fn CFURLCreateResourcePropertyForKeyFromBookmarkData(allocator: CFAllocatorRef, resourcePropertyKey: CFStringRef, bookmark: CFDataRef) -> CFTypeRef;
+    //fn CFURLCreateResourcePropertiesForKeysFromBookmarkData
+    //fn CFURLCreateResourcePropertyForKeyFromBookmarkData
     //fn CFURLSetResourcePropertiesForKeys
     pub fn CFURLSetResourcePropertyForKey(url: CFURLRef, key: CFStringRef, value: CFTypeRef, error: *mut CFErrorRef) -> Boolean;
     //fn CFURLSetTemporaryResourcePropertyForKey
 
     /* Working with Bookmark Data */
-    pub fn CFURLCreateBookmarkData(allocator: CFAllocatorRef, url: CFURLRef, options: CFURLBookmarkCreationOptions, resourcePropertiesToInclude: CFArrayRef, relativeToURL: CFURLRef, error: *mut CFErrorRef) -> CFDataRef;
-    pub fn CFURLCreateBookmarkDataFromAliasRecord(allocator: CFAllocatorRef, aliasRecordDataRef: CFDataRef) -> CFDataRef;
-    pub fn CFURLCreateBookmarkDataFromFile(allocator: CFAllocatorRef, fileURL: CFURLRef, errorRef: *mut CFErrorRef) -> CFDataRef;
-    pub fn CFURLWriteBookmarkDataToFile(bookmarkRef: CFDataRef, fileURL: CFURLRef, options: CFURLBookmarkFileCreationOptions, errorRef: *mut CFErrorRef) -> Boolean;
-    pub fn CFURLStartAccessingSecurityScopedResource(url: CFURLRef) -> Boolean;
-    pub fn CFURLStopAccessingSecurityScopedResource(url: CFURLRef);
+    //fn CFURLCreateBookmarkData
+    //fn CFURLCreateBookmarkDataFromAliasRecord
+    //fn CFURLCreateBookmarkDataFromFile
+    //fn CFURLWriteBookmarkDataToFile
+    //fn CFURLStartAccessingSecurityScopedResource
+    //fn CFURLStopAccessingSecurityScopedResource
 }
 
 #[test]

@@ -89,17 +89,6 @@ impl CFBundle {
             }
         }
     }
-
-    pub fn shared_support_url(&self) -> Option<CFURL> {
-        unsafe {
-            let fw_url = CFBundleCopySharedSupportURL(self.0);
-            if fw_url.is_null() {
-                None
-            } else {
-                Some(TCFType::wrap_under_create_rule(fw_url))
-            }
-        }
-    }
 }
 
 

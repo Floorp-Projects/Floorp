@@ -76,7 +76,7 @@ fn main() {
 
         // create Window
         let display = CGDisplay::main();
-        let size = NSSize::new(display.pixels_wide() as _, display.pixels_high() as _);
+        let size = NSSize::new(display.pixels_wide() as f64, display.pixels_high() as f64);
         let window = NSWindow::alloc(nil)
             .initWithContentRect_styleMask_backing_defer_(NSRect::new(NSPoint::new(0., 0.), size),
                                                           NSWindowStyleMask::NSTitledWindowMask,

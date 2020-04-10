@@ -33,7 +33,7 @@ pub const CG_AFFINE_TRANSFORM_IDENTITY: CGAffineTransform = CGAffineTransform {
 };
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CGSize {
     pub width: CGFloat,
     pub height: CGFloat,
@@ -57,7 +57,7 @@ impl CGSize {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CGPoint {
     pub x: CGFloat,
     pub y: CGFloat,
@@ -181,15 +181,6 @@ impl CGAffineTransform {
     }
 }
 
-impl PartialEq for CGAffineTransform {
-    #[inline]
-    fn eq(&self, other: &CGAffineTransform) -> bool {
-        unsafe {
-            ffi::CGAffineTransformEqualToTransform(*self, *other) != 0
-        }
-    }
-}
-
 mod ffi {
     use base::{CGFloat, boolean_t};
     use geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
@@ -205,8 +196,6 @@ mod ffi {
         pub fn CGRectEqualToRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
 
         pub fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform;
-        pub fn CGAffineTransformEqualToTransform(t1: CGAffineTransform,
-                                                 t2: CGAffineTransform) -> boolean_t;
 
         pub fn CGPointApplyAffineTransform(point: CGPoint, t: CGAffineTransform) -> CGPoint;
         pub fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;

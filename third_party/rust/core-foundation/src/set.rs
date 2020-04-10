@@ -14,6 +14,7 @@ use core_foundation_sys::base::{CFTypeRef, CFRelease, kCFAllocatorDefault};
 
 use base::{CFIndexConvertible, TCFType};
 
+use std::mem;
 use std::os::raw::c_void;
 use std::marker::PhantomData;
 
@@ -35,7 +36,7 @@ impl CFSet {
         unsafe {
             let elems: Vec<CFTypeRef> = elems.iter().map(|elem| elem.as_CFTypeRef()).collect();
             let set_ref = CFSetCreate(kCFAllocatorDefault,
-                                      elems.as_ptr(),
+                                      mem::transmute(elems.as_ptr()),
                                       elems.len().to_CFIndex(),
                                       &kCFTypeSetCallBacks);
             TCFType::wrap_under_create_rule(set_ref)

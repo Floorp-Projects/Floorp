@@ -12,7 +12,7 @@
 
 [package]
 name = "cocoa"
-version = "0.20.0"
+version = "0.19.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Cocoa for macOS"
 homepage = "https://github.com/servo/core-foundation-rs"
@@ -29,10 +29,10 @@ version = "1.0"
 version = "0.1"
 
 [dependencies.core-foundation]
-version = "0.7"
+version = "0.6"
 
 [dependencies.core-graphics]
-version = "0.19"
+version = "0.17"
 
 [dependencies.foreign-types]
 version = "0.3"

@@ -99,28 +99,6 @@ impl From<device::WindowInUse> for CreationError {
     }
 }
 
-impl std::fmt::Display for CreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create or configure swapchain: {}", err),
-            CreationError::DeviceLost(err) => write!(fmt, "Failed to create or configure swapchain: {}", err),
-            CreationError::SurfaceLost(err) => write!(fmt, "Failed to create or configure swapchain: {}", err),
-            CreationError::WindowInUse(err) => write!(fmt, "Failed to create or configure swapchain: {}", err),
-        }
-    }
-}
-
-impl std::error::Error for CreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            CreationError::OutOfMemory(err) => Some(err),
-            CreationError::DeviceLost(err) => Some(err),
-            CreationError::SurfaceLost(err) => Some(err),
-            CreationError::WindowInUse(err) => Some(err),
-        }
-    }
-}
-
 /// An extent describes the size of a rectangle, such as
 /// a window or texture. It is not used for referring to a
 /// sub-rectangle; for that see `command::Rect`.
@@ -463,30 +441,6 @@ pub enum AcquireError {
     DeviceLost(device::DeviceLost),
 }
 
-impl std::fmt::Display for AcquireError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AcquireError::OutOfMemory(err) => write!(fmt, "Failed to acqure image: {}", err),
-            AcquireError::NotReady => write!(fmt, "Failed to acqure image: No image ready (timeout wasn't specified)"),
-            AcquireError::Timeout => write!(fmt, "Failed to acqure image: No image ready (timeout)"),
-            AcquireError::OutOfDate => write!(fmt, "Failed to acqure image: Swapchain is out of date and needs to be re-created"),
-            AcquireError::SurfaceLost(err) => write!(fmt, "Failed to acqure image: {}", err),
-            AcquireError::DeviceLost(err) => write!(fmt, "Failed to acqure image: {}", err),
-        }
-    }
-}
-
-impl std::error::Error for AcquireError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            AcquireError::OutOfMemory(err) => Some(err),
-            AcquireError::SurfaceLost(err) => Some(err),
-            AcquireError::DeviceLost(err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
 /// Error on acquiring the next image from a swapchain.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PresentError {
@@ -498,28 +452,6 @@ pub enum PresentError {
     SurfaceLost(device::SurfaceLost),
     /// Device is lost
     DeviceLost(device::DeviceLost),
-}
-
-impl std::fmt::Display for PresentError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PresentError::OutOfMemory(err) => write!(fmt, "Failed to present image: {}", err),
-            PresentError::OutOfDate => write!(fmt, "Failed to present image: Swapchain is out of date and needs to be re-created"),
-            PresentError::SurfaceLost(err) => write!(fmt, "Failed to present image: {}", err),
-            PresentError::DeviceLost(err) => write!(fmt, "Failed to present image: {}", err),
-        }
-    }
-}
-
-impl std::error::Error for PresentError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            PresentError::OutOfMemory(err) => Some(err),
-            PresentError::SurfaceLost(err) => Some(err),
-            PresentError::DeviceLost(err) => Some(err),
-            _ => None,
-        }
-    }
 }
 
 /// The `Swapchain` is the backend representation of the surface.
@@ -592,14 +524,3 @@ pub enum InitError {
     /// Window handle is not supported by the backend.
     UnsupportedWindowHandle,
 }
-
-
-impl std::fmt::Display for InitError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InitError::UnsupportedWindowHandle => write!(fmt, "Failed to create surface: Specified window handle is unsupported"),
-        }
-    }
-}
-
-impl std::error::Error for InitError {}

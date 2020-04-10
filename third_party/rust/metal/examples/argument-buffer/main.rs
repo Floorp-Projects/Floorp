@@ -34,7 +34,7 @@ fn main() {
         descriptor.set_support_argument_buffers(true);
         device.new_sampler(&descriptor)
     };
-    encoder.set_sampler_state(1, &sampler);
+    encoder.set_sampler_state(&sampler, 1);
     println!("{:?}", sampler);
 
     unsafe {

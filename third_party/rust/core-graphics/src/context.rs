@@ -69,32 +69,6 @@ pub enum CGTextDrawingMode {
     CGTextClip
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub enum CGLineCap {
-    CGLineCapButt,
-    CGLineCapRound,
-    CGLineCapSquare,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub enum CGLineJoin {
-    CGLineJoinMiter,
-    CGLineJoinRound,
-    CGLineJoinBevel,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub enum CGPathDrawingMode {
-    CGPathFill,
-    CGPathEOFill,
-    CGPathStroke,
-    CGPathFillStroke,
-    CGPathEOFillStroke,
-}
-
 foreign_type! {
     #[doc(hidden)]
     type CType = ::sys::CGContext;
@@ -166,12 +140,6 @@ impl CGContextRef {
         }
     }
 
-    pub fn clip_bounding_box(&self) -> CGRect {
-        unsafe {
-            CGContextGetClipBoundingBox(self.as_ptr())
-        }
-    }
-
     pub fn set_fill_color(&self, color: &CGColor) {
         unsafe {
             CGContextSetFillColorWithColor(self.as_ptr(), color.to_void());
@@ -181,12 +149,6 @@ impl CGContextRef {
     pub fn set_rgb_fill_color(&self, red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
         unsafe {
             CGContextSetRGBFillColor(self.as_ptr(), red, green, blue, alpha)
-        }
-    }
-
-    pub fn set_rgb_stroke_color(&self, red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
-        unsafe {
-            CGContextSetRGBStrokeColor(self.as_ptr(), red, green, blue, alpha)
         }
     }
 
@@ -262,78 +224,9 @@ impl CGContextRef {
         }
     }
 
-    pub fn set_line_cap(&self, cap: CGLineCap) {
-        unsafe {
-            CGContextSetLineCap(self.as_ptr(), cap)
-        }
-    }
-
-    pub fn set_line_dash(&self, phase: CGFloat, lengths: &[CGFloat]) {
-        unsafe {
-            CGContextSetLineDash(self.as_ptr(), phase, lengths.as_ptr(), lengths.len())
-        }
-    }
-
-    pub fn set_line_join(&self, join: CGLineJoin) {
-        unsafe {
-            CGContextSetLineJoin(self.as_ptr(), join)
-        }
-    }
-
-    pub fn set_line_width(&self, width: CGFloat) {
-        unsafe {
-            CGContextSetLineWidth(self.as_ptr(), width)
-        }
-    }
-
-    pub fn set_miter_limit(&self, limit: CGFloat) {
-        unsafe {
-            CGContextSetMiterLimit(self.as_ptr(), limit)
-        }
-    }
-
     pub fn add_path(&self, path: &CGPathRef) {
         unsafe {
             CGContextAddPath(self.as_ptr(), path.as_ptr());
-        }
-    }
-
-    pub fn add_curve_to_point(&self,
-                              cp1x: CGFloat,
-                              cp1y: CGFloat,
-                              cp2x: CGFloat,
-                              cp2y: CGFloat,
-                              x: CGFloat,
-                              y: CGFloat) {
-        unsafe {
-            CGContextAddCurveToPoint(self.as_ptr(),
-                                     cp1x, cp1y,
-                                     cp2x, cp2y,
-                                     x, y);
-        }
-    }
-
-    pub fn add_quad_curve_to_point(&self,
-                                   cpx: CGFloat,
-                                   cpy: CGFloat,
-                                   x: CGFloat,
-                                   y: CGFloat) {
-        unsafe {
-            CGContextAddQuadCurveToPoint(self.as_ptr(),
-                                         cpx, cpy,
-                                         x, y);
-        }
-    }
-
-    pub fn add_line_to_point(&self, x: CGFloat, y: CGFloat) {
-        unsafe {
-            CGContextAddLineToPoint(self.as_ptr(), x, y);
-        }
-    }
-
-    pub fn begin_path(&self) {
-         unsafe {
-            CGContextBeginPath(self.as_ptr());
         }
     }
 
@@ -343,111 +236,15 @@ impl CGContextRef {
         }
     }
 
-    pub fn move_to_point(&self, x: CGFloat, y: CGFloat) {
-        unsafe {
-            CGContextMoveToPoint(self.as_ptr(), x, y);
-        }
-    }
-
-    pub fn clip(&self) {
-        unsafe {
-            CGContextClip(self.as_ptr());
-        }
-    }
-
-    pub fn eo_clip(&self) {
-        unsafe {
-            CGContextEOClip(self.as_ptr());
-        }
-    }
-
-    pub fn draw_path(&self, mode: CGPathDrawingMode) {
-        unsafe {
-            CGContextDrawPath(self.as_ptr(), mode);
-        }
-    }
-
     pub fn fill_path(&self) {
         unsafe {
             CGContextFillPath(self.as_ptr());
         }
     }
 
-    pub fn eo_fill_path(&self) {
-        unsafe {
-            CGContextEOFillPath(self.as_ptr());
-        }
-    }
-
-    pub fn stroke_path(&self) {
-        unsafe {
-            CGContextStrokePath(self.as_ptr());
-        }
-    }
-
     pub fn fill_rect(&self, rect: CGRect) {
         unsafe {
             CGContextFillRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn fill_rects(&self, rects: &[CGRect]) {
-        unsafe {
-            CGContextFillRects(self.as_ptr(), rects.as_ptr(), rects.len())
-        }
-    }
-
-    pub fn clear_rect(&self, rect: CGRect) {
-        unsafe {
-            CGContextClearRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn stroke_rect(&self, rect: CGRect) {
-        unsafe {
-            CGContextStrokeRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn stroke_rect_with_width(&self, rect: CGRect, width: CGFloat) {
-        unsafe {
-            CGContextStrokeRectWithWidth(self.as_ptr(), rect, width)
-        }
-    }
-
-    pub fn clip_to_rect(&self, rect: CGRect) {
-        unsafe {
-            CGContextClipToRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn clip_to_rects(&self, rects: &[CGRect]) {
-        unsafe {
-            CGContextClipToRects(self.as_ptr(), rects.as_ptr(), rects.len())
-        }
-    }
-
-    pub fn replace_path_with_stroked_path(&self) {
-        unsafe {
-            CGContextReplacePathWithStrokedPath(self.as_ptr())
-        }
-    }
-
-    pub fn fill_ellipse_in_rect(&self, rect: CGRect) {
-        unsafe {
-            CGContextFillEllipseInRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn stroke_ellipse_in_rect(&self, rect: CGRect) {
-        unsafe {
-            CGContextStrokeEllipseInRect(self.as_ptr(), rect)
-        }
-    }
-
-    pub fn stroke_line_segments(&self, points: &[CGPoint]) {
-        unsafe {
-            CGContextStrokeLineSegments(self.as_ptr(), points.as_ptr(), points.len())
         }
     }
 
@@ -517,24 +314,6 @@ impl CGContextRef {
             CGContextScaleCTM(self.as_ptr(), sx, sy);
         }
     }
-
-    pub fn rotate(&self, angle: CGFloat) {
-        unsafe {
-            CGContextRotateCTM(self.as_ptr(), angle);
-        }
-    }
-
-    pub fn get_ctm(&self) -> CGAffineTransform {
-        unsafe {
-            CGContextGetCTM(self.as_ptr())
-        }
-    }
-
-    pub fn concat_ctm(&self, transform: CGAffineTransform) {
-        unsafe {
-            CGContextConcatCTM(self.as_ptr(), transform)
-        }
-    }
 }
 
 #[test]
@@ -548,7 +327,6 @@ fn create_bitmap_context_test() {
                                 &cs,
                                 ::base::kCGImageAlphaPremultipliedLast);
     ctx.set_rgb_fill_color(1.,0.,1.,1.);
-    ctx.set_miter_limit(4.);
     ctx.fill_rect(CGRect::new(&CGPoint::new(0.,0.), &CGSize::new(8.,8.)));
     let img = ctx.create_image().unwrap();
     assert_eq!(16, img.width());
@@ -578,7 +356,6 @@ extern {
     fn CGBitmapContextGetBytesPerRow(context: ::sys::CGContextRef) -> size_t;
     fn CGBitmapContextCreateImage(context: ::sys::CGContextRef) -> ::sys::CGImageRef;
     fn CGContextGetTypeID() -> CFTypeID;
-    fn CGContextGetClipBoundingBox(c: ::sys::CGContextRef) -> CGRect;
     fn CGContextFlush(c: ::sys::CGContextRef);
     fn CGContextSetBlendMode(c: ::sys::CGContextRef, blendMode: CGBlendMode);
     fn CGContextSetAllowsFontSmoothing(c: ::sys::CGContextRef, allowsFontSmoothing: bool);
@@ -596,75 +373,17 @@ extern {
                                                shouldSubpixelPositionFonts: bool);
     fn CGContextSetTextDrawingMode(c: ::sys::CGContextRef, mode: CGTextDrawingMode);
     fn CGContextSetFillColorWithColor(c: ::sys::CGContextRef, color: *const c_void);
-    fn CGContextSetLineCap(c: ::sys::CGContextRef, cap: CGLineCap);
-    fn CGContextSetLineDash(c: ::sys::CGContextRef, phase: CGFloat, lengths: *const CGFloat, count: size_t);
-    fn CGContextSetLineJoin(c: ::sys::CGContextRef, join: CGLineJoin);
-    fn CGContextSetLineWidth(c: ::sys::CGContextRef, width: CGFloat);
-    fn CGContextSetMiterLimit(c: ::sys::CGContextRef, limit: CGFloat);
-
     fn CGContextAddPath(c: ::sys::CGContextRef, path: ::sys::CGPathRef);
-    fn CGContextAddCurveToPoint(c: ::sys::CGContextRef,
-                                cp1x: CGFloat,
-                                cp1y: CGFloat,
-                                cp2x: CGFloat,
-                                cp2y: CGFloat,
-                                x: CGFloat,
-                                y: CGFloat);
-    fn CGContextAddQuadCurveToPoint(c: ::sys::CGContextRef,
-                                    cpx: CGFloat,
-                                    cpy: CGFloat,
-                                    x: CGFloat,
-                                    y: CGFloat);
-    fn CGContextAddLineToPoint(c: ::sys::CGContextRef,
-                               x: CGFloat,
-                               y: CGFloat);
-    fn CGContextBeginPath(c: ::sys::CGContextRef);
     fn CGContextClosePath(c: ::sys::CGContextRef);
-    fn CGContextMoveToPoint(c: ::sys::CGContextRef,
-                            x: CGFloat,
-                            y: CGFloat);
-    fn CGContextDrawPath(c: ::sys::CGContextRef, mode: CGPathDrawingMode);
     fn CGContextFillPath(c: ::sys::CGContextRef);
-    fn CGContextEOFillPath(c: ::sys::CGContextRef);
-    fn CGContextClip(c: ::sys::CGContextRef);
-    fn CGContextEOClip(c: ::sys::CGContextRef);
-    fn CGContextStrokePath(c: ::sys::CGContextRef);
     fn CGContextSetRGBFillColor(context: ::sys::CGContextRef,
                                 red: CGFloat,
                                 green: CGFloat,
                                 blue: CGFloat,
                                 alpha: CGFloat);
-    fn CGContextSetRGBStrokeColor(context: ::sys::CGContextRef,
-                                  red: CGFloat,
-                                  green: CGFloat,
-                                  blue: CGFloat,
-                                  alpha: CGFloat);
     fn CGContextSetGrayFillColor(context: ::sys::CGContextRef, gray: CGFloat, alpha: CGFloat);
-    fn CGContextClearRect(context: ::sys::CGContextRef,
-                          rect: CGRect);
     fn CGContextFillRect(context: ::sys::CGContextRef,
                          rect: CGRect);
-    fn CGContextFillRects(context: ::sys::CGContextRef,
-                          rects: *const CGRect,
-                          count: size_t);
-    fn CGContextStrokeRect(context: ::sys::CGContextRef,
-                           rect: CGRect);
-    fn CGContextStrokeRectWithWidth(context: ::sys::CGContextRef,
-                                    rect: CGRect,
-                                    width: CGFloat);
-    fn CGContextClipToRect(context: ::sys::CGContextRef,
-                           rect: CGRect);
-    fn CGContextClipToRects(context: ::sys::CGContextRef,
-                            rects: *const CGRect,
-                            count: size_t);
-    fn CGContextReplacePathWithStrokedPath(context: ::sys::CGContextRef);
-    fn CGContextFillEllipseInRect(context: ::sys::CGContextRef,
-                                  rect: CGRect);
-    fn CGContextStrokeEllipseInRect(context: ::sys::CGContextRef,
-                                    rect: CGRect);
-    fn CGContextStrokeLineSegments(context: ::sys::CGContextRef,
-                                    points: *const CGPoint,
-                                    count: size_t);
     fn CGContextDrawImage(c: ::sys::CGContextRef, rect: CGRect, image: ::sys::CGImageRef);
     fn CGContextSetFont(c: ::sys::CGContextRef, font: ::sys::CGFontRef);
     fn CGContextSetFontSize(c: ::sys::CGContextRef, size: CGFloat);
@@ -678,8 +397,5 @@ extern {
     fn CGContextRestoreGState(c: ::sys::CGContextRef);
     fn CGContextTranslateCTM(c: ::sys::CGContextRef, tx: CGFloat, ty: CGFloat);
     fn CGContextScaleCTM(c: ::sys::CGContextRef, sx: CGFloat, sy: CGFloat);
-    fn CGContextRotateCTM(c: ::sys::CGContextRef, angle: CGFloat);
-    fn CGContextGetCTM(c: ::sys::CGContextRef) -> CGAffineTransform;
-    fn CGContextConcatCTM(c: ::sys::CGContextRef, transform: CGAffineTransform);
 }
 

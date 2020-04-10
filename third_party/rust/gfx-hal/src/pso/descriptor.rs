@@ -125,20 +125,6 @@ pub enum AllocationError {
     IncompatibleLayout,
 }
 
-impl std::fmt::Display for AllocationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AllocationError::Host => write!(fmt, "Failed to allocate descriptor set: Out of host memory"),
-            AllocationError::Device => write!(fmt, "Failed to allocate descriptor set: Out of device memory"),
-            AllocationError::OutOfPoolMemory => write!(fmt, "Failed to allocate descriptor set: Out of pool memory"),
-            AllocationError::FragmentedPool => write!(fmt, "Failed to allocate descriptor set: Pool is fragmented"),
-            AllocationError::IncompatibleLayout => write!(fmt, "Failed to allocate descriptor set: Incompatible layout"),
-        }
-    }
-}
-
-impl std::error::Error for AllocationError {}
-
 /// A descriptor pool is a collection of memory from which descriptor sets are allocated.
 pub trait DescriptorPool<B: Backend>: Send + Sync + fmt::Debug {
     /// Allocate a descriptor set from the pool.

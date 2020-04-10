@@ -38,12 +38,6 @@ impl CFUUID {
     }
 }
 
-impl Default for CFUUID {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(feature = "with-uuid")]
 impl Into<Uuid> for CFUUID {
     fn into(self) -> Uuid {
@@ -113,6 +107,6 @@ mod test {
         let cf_uuid = CFUUID::new();
         let uuid: Uuid = cf_uuid.clone().into();
         let converted = CFUUID::from(uuid);
-        assert_eq!(cf_uuid, converted);
+        assert!(cf_uuid == converted);
     }
 }

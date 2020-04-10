@@ -12,7 +12,7 @@ use ash::{extensions::khr, version::DeviceV1_0 as _, vk};
 use hal::{format::Format, window as w};
 use smallvec::SmallVec;
 
-use crate::{conv, info, native};
+use crate::{conv, native};
 use crate::{
     Backend,
     Device,
@@ -550,7 +550,6 @@ impl w::PresentationSurface<Backend> for Surface {
 pub struct Swapchain {
     pub(crate) raw: vk::SwapchainKHR,
     pub(crate) functor: khr::Swapchain,
-    pub(crate) vendor_id: u32,
 }
 
 impl fmt::Debug for Swapchain {
@@ -575,8 +574,6 @@ impl w::Swapchain<Backend> for Swapchain {
             .acquire_next_image(self.raw, timeout_ns, semaphore, fence);
 
         match index {
-            // special case for Intel Vulkan returning bizzare values (ugh)
-            Ok((i, _)) if self.vendor_id == info::intel::VENDOR && i > 0x100 => Err(w::AcquireError::OutOfDate),
             Ok((i, true)) => Ok((i, Some(w::Suboptimal))),
             Ok((i, false)) => Ok((i, None)),
             Err(vk::Result::NOT_READY) => Err(w::AcquireError::NotReady),
