@@ -83,11 +83,7 @@ function configureStore(webConsoleUI, options = {}) {
       editorWidth: getIntPref(PREFS.UI.EDITOR_WIDTH),
       showEditorOnboarding: getBoolPref(PREFS.UI.EDITOR_ONBOARDING),
       timestampsVisible: getBoolPref(PREFS.UI.MESSAGE_TIMESTAMP),
-      showEvaluationContextSelector: getBoolPref(
-        webConsoleUI.isBrowserToolboxConsole
-          ? PREFS.UI.CONTEXT_SELECTOR_BROWSER_TOOLBOX
-          : PREFS.UI.CONTEXT_SELECTOR_CONTENT_TOOLBOX
-      ),
+      showEvaluationContextSelector: getBoolPref(PREFS.UI.CONTEXT_SELECTOR),
     }),
   };
 
