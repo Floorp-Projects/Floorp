@@ -11,6 +11,7 @@
 #include "mozilla/IOBuffers.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MemUtils.h"
+#include "mozilla/MmapFaultHandler.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/ScopeExit.h"
@@ -33,6 +34,10 @@
 #include "nsXULAppAPI.h"
 #include "nsIProtocolHandler.h"
 #include "GeckoProfiler.h"
+
+#if defined(XP_WIN)
+#  include <windows.h>
+#endif
 
 #ifdef IS_BIG_ENDIAN
 #  define SC_ENDIAN "big"
@@ -256,6 +261,8 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
   auto data = mCacheData.get<uint8_t>();
   auto end = data + size;
 
+  MMAP_FAULT_HANDLER_BEGIN_BUFFER(data.get(), size)
+
   if (memcmp(MAGIC, data.get(), sizeof(MAGIC))) {
     return Err(NS_ERROR_UNEXPECTED);
   }
@@ -329,6 +336,8 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
     cleanup.release();
   }
 
+  MMAP_FAULT_HANDLER_CATCH(Err(NS_ERROR_UNEXPECTED))
+
   return Ok();
 }
 
@@ -375,6 +384,8 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
     value.mData = MakeUnique<char[]>(value.mUncompressedSize);
     Span<char> uncompressed =
         MakeSpan(value.mData.get(), value.mUncompressedSize);
+    MMAP_FAULT_HANDLER_BEGIN_BUFFER(uncompressed.Elements(),
+                                    uncompressed.Length())
     bool finished = false;
     while (!finished) {
       auto result = mDecompressionContext->Decompress(
@@ -389,6 +400,8 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
       totalWritten += decompressionResult.mSizeWritten;
       finished = decompressionResult.mFinished;
     }
+
+    MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
 
     label = Telemetry::LABELS_STARTUP_CACHE_REQUESTS::HitDisk;
   }
@@ -644,8 +657,11 @@ void StartupCache::ThreadedPrefetch(void* aClosure) {
   NS_SetCurrentThreadName("StartupCache");
   mozilla::IOInterposer::RegisterCurrentThread();
   StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
-  PrefetchMemory(startupCacheObj->mCacheData.get<uint8_t>().get(),
-                 startupCacheObj->mCacheData.size());
+  uint8_t* buf = startupCacheObj->mCacheData.get<uint8_t>().get();
+  size_t size = startupCacheObj->mCacheData.size();
+  MMAP_FAULT_HANDLER_BEGIN_BUFFER(buf, size)
+  PrefetchMemory(buf, size);
+  MMAP_FAULT_HANDLER_CATCH()
   mozilla::IOInterposer::UnregisterCurrentThread();
 }
 
