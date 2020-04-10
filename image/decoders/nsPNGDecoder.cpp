@@ -109,7 +109,6 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
       mCMSLine(nullptr),
       interlacebuf(nullptr),
       mFormat(SurfaceFormat::UNKNOWN),
-      mCMSMode(0),
       mChannels(0),
       mPass(0),
       mFrameIsHidden(false),
@@ -270,10 +269,6 @@ void nsPNGDecoder::EndImageFrame() {
 }
 
 nsresult nsPNGDecoder::InitInternal() {
-  mCMSMode = gfxPlatform::GetCMSMode();
-  if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
-    mCMSMode = eCMSMode_Off;
-  }
   mDisablePremultipliedAlpha =
       bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
 
@@ -598,7 +593,7 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
         intent = pIntent;
       }
     }
-    if (!decoder->mInProfile || !gfxPlatform::GetCMSOutputProfile()) {
+    if (!decoder->mInProfile || !decoder->GetCMSOutputProfile()) {
       png_set_gray_to_rgb(png_ptr);
 
       // only do gamma correction if CMS isn't entirely disabled
@@ -659,7 +654,7 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
     return decoder->DoTerminate(png_ptr, TerminalState::SUCCESS);
   }
 
-  if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
+  if (decoder->mInProfile && decoder->GetCMSOutputProfile()) {
     qcms_data_type inType;
     qcms_data_type outType;
 
@@ -687,19 +682,21 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
       }
     }
 
-    decoder->mTransform = qcms_transform_create(
-        decoder->mInProfile, inType, gfxPlatform::GetCMSOutputProfile(),
-        outType, (qcms_intent)intent);
+    decoder->mTransform = qcms_transform_create(decoder->mInProfile, inType,
+                                                decoder->GetCMSOutputProfile(),
+                                                outType, (qcms_intent)intent);
   } else if ((sRGBTag && decoder->mCMSMode == eCMSMode_TaggedOnly) ||
              decoder->mCMSMode == eCMSMode_All) {
     // If the transform happens with SurfacePipe, it will be in RGBA if we
     // have an alpha channel, because the swizzle and premultiplication
-    // happens after color management. Otherwise it will be in BGRA because
+    // happens after color management. Otherwise it will be in OS_RGBA because
     // the swizzle happens at the start.
     if (transparency == TransparencyType::eAlpha) {
-      decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
+      decoder->mTransform =
+          decoder->GetCMSsRGBTransform(SurfaceFormat::R8G8B8A8);
     } else {
-      decoder->mTransform = gfxPlatform::GetCMSBGRATransform();
+      decoder->mTransform =
+          decoder->GetCMSsRGBTransform(SurfaceFormat::OS_RGBA);
     }
     decoder->mUsePipeTransform = true;
   }
