@@ -45,7 +45,6 @@ DIRS += [
     'kvstore',
     'lz4',
     'mediasniffer',
-    'messaging-system',
     'mozintl',
     'mozprotocol',
     'osfile',
