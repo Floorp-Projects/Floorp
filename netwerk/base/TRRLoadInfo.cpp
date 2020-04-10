@@ -624,5 +624,15 @@ TRRLoadInfo::SetAllowDeprecatedSystemRequests(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+TRRLoadInfo::GetParserCreatedScript(bool* aParserCreatedScript) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetParserCreatedScript(bool aParserCreatedScript) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla
