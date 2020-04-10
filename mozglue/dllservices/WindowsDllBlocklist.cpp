@@ -457,6 +457,12 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
       printf_stderr("LdrLoadDll: info->mName: '%s'\n", info->mName);
 #endif
 
+      if (info->mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) {
+        printf_stderr(
+            "LdrLoadDll: "
+            "Ignoring the REDIRECT_TO_NOOP_ENTRYPOINT flag\n");
+      }
+
       if ((info->mFlags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
           !IsWin8OrLater()) {
         goto continue_loading;

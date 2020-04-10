@@ -79,8 +79,16 @@ TEST(TestDllBlocklist, NoOpEntryPoint)
 
   nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
 
+#if defined(MOZ_ASAN)
+  // With ASAN, the test uses mozglue's blocklist where
+  // REDIRECT_TO_NOOP_ENTRYPOINT is ignored.  So LoadLibraryW
+  // is expected to fail.
+  EXPECT_TRUE(!hDll);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
+#else
   EXPECT_TRUE(!!hDll);
   EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
+#endif
 }
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
