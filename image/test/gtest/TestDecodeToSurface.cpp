@@ -65,8 +65,7 @@ class DecodeToSurfaceRunnable : public Runnable {
       EXPECT_EQ(mTestCase.mSize, mSurface->GetSize());
     }
 
-    EXPECT_TRUE(IsSolidColor(mSurface, BGRAColor::Green(),
-                             mTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
+    EXPECT_TRUE(IsSolidColor(mSurface, mTestCase.Color(), mTestCase.Fuzz()));
   }
 
  private:

@@ -100,7 +100,7 @@ static void CheckMetadata(const ImageTestCase& aTestCase,
   // Create a full decoder, so we can compare the result.
   decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, Nothing(), DecoderFlags::FIRST_FRAME_ONLY,
-      DefaultSurfaceFlags());
+      aTestCase.mSurfaceFlags);
   ASSERT_TRUE(decoder != nullptr);
   task =
       new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
@@ -236,7 +236,7 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode) {
   // Ensure that we decoded both frames of the image.
   LookupResult result =
       SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                           RasterSurfaceKey(imageSize, testCase.mSurfaceFlags,
                                             PlaybackType::eAnimated),
                            /* aMarkUsed = */ true);
   ASSERT_EQ(MatchType::EXACT, result.Type());

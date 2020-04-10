@@ -109,8 +109,6 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
   mBackBuffer = nullptr;
   mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
 
-  mCMSMode = 0;
-
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
           ("nsJPEGDecoder::nsJPEGDecoder: Creating JPEG decoder %p", this));
 }
@@ -134,11 +132,6 @@ Maybe<Telemetry::HistogramID> nsJPEGDecoder::SpeedHistogram() const {
 }
 
 nsresult nsJPEGDecoder::InitInternal() {
-  mCMSMode = gfxPlatform::GetCMSMode();
-  if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
-    mCMSMode = eCMSMode_Off;
-  }
-
   // We set up the normal JPEG error routines, then override error_exit.
   mInfo.err = jpeg_std_error(&mErr.pub);
   //   mInfo.err = jpeg_std_error(&mErr.pub);
@@ -292,7 +285,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
 
       if (mCMSMode != eCMSMode_Off) {
         if ((mInProfile = GetICCProfile(mInfo)) != nullptr &&
-            gfxPlatform::GetCMSOutputProfile()) {
+            GetCMSOutputProfile()) {
           uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
 
           qcms_data_type outputType = gfxPlatform::GetCMSOSRGBAType();
@@ -329,12 +322,12 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
             }
 
             // Create the color management transform.
-            mTransform = qcms_transform_create(
-                mInProfile, *inputType, gfxPlatform::GetCMSOutputProfile(),
-                outputType, (qcms_intent)intent);
+            mTransform = qcms_transform_create(mInProfile, *inputType,
+                                               GetCMSOutputProfile(),
+                                               outputType, (qcms_intent)intent);
           }
         } else if (mCMSMode == eCMSMode_All) {
-          mTransform = gfxPlatform::GetCMSOSRGBATransform();
+          mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBX);
         }
       }
 

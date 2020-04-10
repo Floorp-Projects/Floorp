@@ -301,7 +301,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   fileBuf[0] = uint8_t(width);
   fileBuf[1] = uint8_t(height);
   fileBuf[2] = uint8_t(mozilla::gfx::SurfaceFormat::B8G8R8A8);
+
+  // Clear all bits to ensure in nsIconDecoder we assume we are already color
+  // managed and premultiplied.
   fileBuf[3] = 0;
+
   uint8_t* imageBuf = &fileBuf[4];
 
   // Create a CGBitmapContext around imageBuf and draw iconImage to it.

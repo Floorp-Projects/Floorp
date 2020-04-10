@@ -227,6 +227,9 @@ interface imgIContainer : nsISupports
    * FLAG_AVOID_REDECODE_FOR_SIZE: If there is already a raster surface
    * available for this image, but it is not the same size as requested, skip
    * starting a new decode for said size.
+   *
+   * FLAG_DECODE_TO_SRGB_COLORSPACE: Instead of converting the colorspace to
+   * the display's colorspace, use sRGB.
    */
   const unsigned long FLAG_NONE                            = 0x0;
   const unsigned long FLAG_SYNC_DECODE                     = 0x1;
@@ -241,12 +244,20 @@ interface imgIContainer : nsISupports
   const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x200;
   const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x400;
   const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x800;
+  const unsigned long FLAG_DECODE_TO_SRGB_COLORSPACE       = 0x1000;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default
    * values for FLAG_DECODE_*).
    */
   const unsigned long DECODE_FLAGS_DEFAULT = 0;
+
+  /**
+   * A constant specifying the decode flags recommended to be used when
+   * re-encoding an image, or with the clipboard.
+   */
+  const unsigned long DECODE_FLAGS_FOR_REENCODE =
+      FLAG_DECODE_NO_PREMULTIPLY_ALPHA | FLAG_DECODE_TO_SRGB_COLORSPACE;
 
   /**
     * Constants for specifying various "special" frames.
