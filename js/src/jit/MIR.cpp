@@ -6263,12 +6263,14 @@ bool jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {
-  Maybe<wasm::ValType> retType = funcExport.funcType().ret();
+  const wasm::ValTypeVector& results = funcExport.funcType().results();
   MIRType resultType = MIRType::Value;
   // At the JS boundary some wasm types must be represented as a Value, and in
   // addition a void return requires an Undefined value.
-  if (retType && !retType->isEncodedAsJSValueOnEscape()) {
-    resultType = ToMIRType(retType.ref());
+  if (results.length() > 0 && !results[0].isEncodedAsJSValueOnEscape()) {
+    MOZ_ASSERT(results.length() == 1,
+               "multiple returns not implemented for inlined Wasm calls");
+    resultType = ToMIRType(results[0]);
   }
 
   auto* ins = new (alloc) MIonToWasmCall(instanceObj, resultType, funcExport);
