@@ -250,7 +250,7 @@ class imgLoader final : public imgILoader,
 
   [[nodiscard]] nsresult LoadImageWithChannel(
       nsIChannel* channel, imgINotificationObserver* aObserver,
-      nsISupports* aCX, nsIStreamListener** listener,
+      mozilla::dom::Document* aLoadingDocument, nsIStreamListener** listener,
       imgRequestProxy** _retval);
 
   static nsresult GetMimeTypeFromContent(const char* aContents,
@@ -346,7 +346,7 @@ class imgLoader final : public imgILoader,
   bool ValidateEntry(imgCacheEntry* aEntry, nsIURI* aKey,
                      nsIURI* aInitialDocumentURI,
                      nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
-                     imgINotificationObserver* aObserver, nsISupports* aCX,
+                     imgINotificationObserver* aObserver,
                      mozilla::dom::Document* aLoadingDocument,
                      nsLoadFlags aLoadFlags,
                      nsContentPolicyType aContentPolicyType,
@@ -357,7 +357,7 @@ class imgLoader final : public imgILoader,
   bool ValidateRequestWithNewChannel(
       imgRequest* request, nsIURI* aURI, nsIURI* aInitialDocumentURI,
       nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
-      imgINotificationObserver* aObserver, nsISupports* aCX,
+      imgINotificationObserver* aObserver,
       mozilla::dom::Document* aLoadingDocument, uint64_t aInnerWindowId,
       nsLoadFlags aLoadFlags, nsContentPolicyType aContentPolicyType,
       imgRequestProxy** aProxyRequest, nsIPrincipal* aLoadingPrincipal,
@@ -472,7 +472,7 @@ class imgCacheValidator : public nsIStreamListener,
                           public nsIAsyncVerifyRedirectCallback {
  public:
   imgCacheValidator(nsProgressNotificationProxy* progress, imgLoader* loader,
-                    imgRequest* aRequest, nsISupports* aContext,
+                    imgRequest* aRequest, mozilla::dom::Document* aDocument,
                     uint64_t aInnerWindowId,
                     bool forcePrincipalCheckForCacheEntry);
 
@@ -502,7 +502,7 @@ class imgCacheValidator : public nsIStreamListener,
   RefPtr<imgRequest> mNewRequest;
   RefPtr<imgCacheEntry> mNewEntry;
 
-  nsCOMPtr<nsISupports> mContext;
+  RefPtr<mozilla::dom::Document> mDocument;
   uint64_t mInnerWindowId;
 
   imgLoader* mImgLoader;
