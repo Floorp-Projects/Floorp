@@ -264,7 +264,7 @@ impl CompiledFunc {
 }
 
 impl MetadataEntry {
-    pub fn direct_call(code_offset: CodeOffset, func_index: FuncIndex, srcloc: SourceLoc) -> Self {
+    pub fn direct_call(code_offset: CodeOffset, srcloc: SourceLoc, func_index: FuncIndex) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_DirectCall,
             codeOffset: code_offset,
@@ -272,16 +272,14 @@ impl MetadataEntry {
             extra: func_index.index(),
         }
     }
-
-    pub fn indirect_call(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
+    pub fn indirect_call(ret_addr: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_IndirectCall,
-            codeOffset: code_offset,
+            codeOffset: ret_addr,
             moduleBytecodeOffset: srcloc.bits(),
             extra: 0,
         }
     }
-
     pub fn trap(code_offset: CodeOffset, srcloc: SourceLoc, which: Trap) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_Trap,
@@ -290,21 +288,15 @@ impl MetadataEntry {
             extra: which as usize,
         }
     }
-
-    pub fn memory_access(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
-        Self {
-            which: CraneliftMetadataEntry_Which_MemoryAccess,
-            codeOffset: code_offset,
-            moduleBytecodeOffset: srcloc.bits(),
-            extra: 0,
-        }
-    }
-
-    pub fn symbolic_access(code_offset: CodeOffset, sym: SymbolicAddress) -> Self {
+    pub fn symbolic_access(
+        code_offset: CodeOffset,
+        srcloc: SourceLoc,
+        sym: SymbolicAddress,
+    ) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_SymbolicAccess,
             codeOffset: code_offset,
-            moduleBytecodeOffset: 0,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: sym as usize,
         }
     }
