@@ -3406,6 +3406,12 @@ class nsIFrame : public nsQueryFrame {
   bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
 
   /**
+   * Returns whether this frame should have the content-block-size of a line,
+   * even if empty.
+   */
+  bool ShouldHaveLineIfEmpty() const;
+
+  /**
    * Called to retrieve the SelectionController associated with the frame.
    *
    * @param aSelCon will contain the selection controller associated with
