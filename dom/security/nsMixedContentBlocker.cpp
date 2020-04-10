@@ -14,6 +14,7 @@
 #include "nsDocShell.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIChannel.h"
 #include "nsIParentChannel.h"
@@ -85,21 +86,18 @@ class nsMixedContentEvent : public Runnable {
     if (!docShell) {
       return NS_OK;
     }
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    NS_ASSERTION(
-        sameTypeRoot,
-        "No document shell root tree item from document shell tree item!");
+
+    nsCOMPtr<nsIDocShell> rootShell = docShell->GetBrowsingContext()->Top()->GetDocShell();
+    if (!rootShell) {
+      return NS_OK;
+    }
 
     // now get the document from sameTypeRoot
-    nsCOMPtr<Document> rootDoc = sameTypeRoot->GetDocument();
+    nsCOMPtr<Document> rootDoc = rootShell->GetDocument();
     NS_ASSERTION(rootDoc,
                  "No root document from document shell root tree item.");
 
     nsDocShell* nativeDocShell = nsDocShell::Cast(docShell);
-    nsCOMPtr<nsIDocShell> rootShell = do_GetInterface(sameTypeRoot);
-    NS_ASSERTION(rootShell,
-                 "No root docshell from document shell root tree item.");
     uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
     nsCOMPtr<nsISecureBrowserUI> securityUI;
     rootShell->GetSecurityUI(getter_AddRefs(securityUI));
