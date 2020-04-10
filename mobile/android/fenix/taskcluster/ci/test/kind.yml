@@ -31,7 +31,6 @@ job-defaults:
     worker:
         docker-image: {in-tree: base}
         max-run-time: 7200
-        retry-exit-status: [1]
 
 jobs:
     debug:
