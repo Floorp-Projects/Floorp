@@ -537,7 +537,11 @@ StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   RunOnActorThread(FUNC, [=] {
     if (self->IPCActive()) {
       self->CheckResult(self->SendStopRequest(aStatusCode));
-    } else {
+    } else if (self->mState != State::Disconnecting) {
+      // If we're currently disconnecting, then we'll emit a stop
+      // request at the end of that process. Otherwise we need to
+      // manually emit one here, since we won't be getting a response
+      // from the child.
       RunOnMainThread(FUNC, [=] {
         if (!self->mSentStop) {
           self->EmitStopRequest(aStatusCode);
