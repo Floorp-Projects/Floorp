@@ -963,11 +963,7 @@
 # If set, use DocumentChannel with nsDocShell in place of HttpChannel.
 - name: browser.tabs.documentchannel
   type: bool
-#if defined(ANDROID)
-  value: false  # See bug 1589982.
-#else
   value: true
-#endif
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior
