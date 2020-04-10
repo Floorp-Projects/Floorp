@@ -406,19 +406,6 @@ function isWasmSupported() {
   return testingFunctions.wasmIsSupported();
 }
 
-function getWasmBinarySync(text) {
-  let testingFunctions = Cu.getJSTestingFunctions();
-  let binary = testingFunctions.wasmTextToBinary(text);
-  return binary;
-}
-
-function getWasmBinary(text) {
-  let binary = getWasmBinarySync(text);
-  executeSoon(function() {
-    testGenerator.next(binary);
-  });
-}
-
 function getWasmModule(binary) {
   let module = new WebAssembly.Module(binary);
   return module;
