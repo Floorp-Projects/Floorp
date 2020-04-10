@@ -247,6 +247,8 @@ clang_checkers:
     reliability: high
   - name: readability-non-const-parameter
     reliability: high
+  - name: readability-qualified-auto
+    reliability: high
   - name: readability-redundant-control-flow
     reliability: high
   - name: readability-redundant-preprocessor
