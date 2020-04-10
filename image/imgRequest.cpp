@@ -84,8 +84,9 @@ imgRequest::~imgRequest() {
 nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
                           bool aHadInsecureRedirect, nsIRequest* aRequest,
                           nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
-                          nsISupports* aCX, nsIPrincipal* aTriggeringPrincipal,
-                          int32_t aCORSMode, nsIReferrerInfo* aReferrerInfo) {
+                          Document* aLoadingDocument,
+                          nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
+                          nsIReferrerInfo* aReferrerInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 
   LOG_FUNC(gImgLog, "imgRequest::Init");
@@ -134,12 +135,11 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
   mCacheEntry = aCacheEntry;
   mCacheEntry->UpdateLoadTime();
 
-  SetLoadId(aCX);
+  SetLoadId(aLoadingDocument);
 
   // Grab the inner window ID of the loading document, if possible.
-  nsCOMPtr<dom::Document> doc = do_QueryInterface(aCX);
-  if (doc) {
-    mInnerWindowId = doc->InnerWindowID();
+  if (aLoadingDocument) {
+    mInnerWindowId = aLoadingDocument->InnerWindowID();
   }
 
   return NS_OK;
