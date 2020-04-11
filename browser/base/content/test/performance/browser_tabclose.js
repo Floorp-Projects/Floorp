@@ -21,6 +21,7 @@ const EXPECTED_REFLOWS = [
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
+  await disableFxaBadge();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await TestUtils.waitForCondition(() => tab._fullyOpen);
