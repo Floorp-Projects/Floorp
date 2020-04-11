@@ -116,7 +116,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         def next_popen(*args, **kwargs):
             m = mock.MagicMock()
             # Get the iterators over whatever output was provided.
-            stdout_ = next(stdout_iter)
+            stdout_ = stdout_iter.next()
             # Eager evaluation for communicate(), below.
             stdout_ = list(stdout_)
             # stdout is really an iterator, so back to iterators we go.
@@ -362,7 +362,7 @@ class TestInstallManifest(HelperMixin, unittest.TestCase):
         self.assertEqual(dest, self.objdir)
 
         file_mapping = symbolstore.make_file_mapping(ret)
-        for obj, src in self.canonical_mapping.items():
+        for obj, src in self.canonical_mapping.iteritems():
             self.assertTrue(obj in file_mapping)
             self.assertEqual(file_mapping[obj], src)
 
@@ -387,7 +387,7 @@ class TestInstallManifest(HelperMixin, unittest.TestCase):
         Test that a bad manifest file give errors.
         '''
         bad_manifest = os.path.join(self.test_dir, 'bad-manifest')
-        with open(bad_manifest, 'w') as f:
+        with open(bad_manifest, 'wb') as f:
             f.write('junk\n')
         arg = '%s,%s' % (bad_manifest, self.objdir)
         with self.assertRaises(IOError) as e:
@@ -450,7 +450,7 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
         d = symbolstore.Dumper('dump_syms', self.symboldir,
                                file_mapping=file_mapping)
         f = os.path.join(self.objdir, 'somefile')
-        open(f, 'w').write('blah')
+        open(f, 'wb').write('blah')
         d.Process(f)
         expected_output = ''.join(mk_output(expected_files))
         symbol_file = os.path.join(self.symboldir,
@@ -514,10 +514,9 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                           self.dump_syms,
                                           self.test_dir,
                                           self.target_bin],
-                                         universal_newlines=True,
                                          stderr=None,
                                          cwd=browser_app)
-        lines = [l for l in output.splitlines() if l.strip()]
+        lines = filter(lambda x: x.strip(), output.splitlines())
         self.assertEqual(1, len(lines),
                          'should have one filename in the output; got %s' % repr(output))
         symbol_file = os.path.join(self.test_dir, lines[0])
