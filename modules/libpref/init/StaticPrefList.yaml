@@ -7703,12 +7703,12 @@
   mirror: always
 
 - name: permissions.isolateBy.userContext
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
 - name: permissions.isolateBy.privateBrowsing
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
