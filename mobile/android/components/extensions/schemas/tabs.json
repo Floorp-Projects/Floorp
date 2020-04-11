@@ -7,11 +7,19 @@
     "namespace": "manifest",
     "types": [
       {
+        "$extend": "OptionalPermissionNoPrompt",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "activeTab"
+          ]
+        }]
+      },
+      {
         "$extend": "OptionalPermission",
         "choices": [{
           "type": "string",
           "enum": [
-            "activeTab",
             "tabs"
           ]
         }]
