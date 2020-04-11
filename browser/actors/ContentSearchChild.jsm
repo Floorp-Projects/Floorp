@@ -6,24 +6,19 @@
 
 var EXPORTED_SYMBOLS = ["ContentSearchChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
-class ContentSearchChild extends ActorChild {
+class ContentSearchChild extends JSWindowActorChild {
   handleEvent(event) {
-    this._sendMsg(event.detail.type, event.detail.data);
+    // The event gets translated into a message that
+    // is then sent to the parent.
+    if (event.type == "ContentSearchClient") {
+      this.sendAsyncMessage(event.detail.type, event.detail.data);
+    }
   }
 
   receiveMessage(msg) {
-    this._fireEvent(msg.data.type, msg.data.data);
-  }
-
-  _sendMsg(type, data = null) {
-    this.mm.sendAsyncMessage("ContentSearch", {
-      type,
-      data,
-    });
+    // The message gets translated into an event that
+    // is then sent to the content.
+    this._fireEvent(msg.name, msg.data);
   }
 
   _fireEvent(type, data = null) {
@@ -34,10 +29,10 @@ class ContentSearchChild extends ActorChild {
           data,
         },
       },
-      this.content
+      this.contentWindow
     );
-    this.content.dispatchEvent(
-      new this.content.CustomEvent("ContentSearchService", event)
+    this.contentWindow.dispatchEvent(
+      new this.contentWindow.CustomEvent("ContentSearchService", event)
     );
   }
 }

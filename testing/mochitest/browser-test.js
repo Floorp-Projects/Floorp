@@ -18,11 +18,6 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContentSearch",
-  "resource:///modules/ContentSearch.jsm"
-);
 
 const SIMPLETEST_OVERRIDES = [
   "ok",
