@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Worker/Worklet promise error</title>
+</head>
+<body>
+<script>
+"use strict";
+
+// Promise rejection in Worker (via async function)
+const workerScript = `
+self.onmessage = async () => {
+  throw "worker-error"
+}
+`;
+const workerScriptUrl = URL.createObjectURL(new Blob([workerScript]));
+const worker = new Worker(workerScriptUrl);
+worker.postMessage({});
+
+// Promise rejection in Worklet (via async function)
+const workletScript = `
+async function throw_process() {
+  throw "worklet-error";
+}
+
+class ErrorProcessor extends AudioWorkletProcessor {
+  process() {
+    throw_process();
+  }
+}
+registerProcessor("error", ErrorProcessor);
+`;
+const workletScriptUrl = URL.createObjectURL(new Blob([workletScript]));
+const context = new AudioContext();
+context.audioWorklet.addModule(workletScriptUrl).then(() => {
+  const workletNode = new AudioWorkletNode(context, "error");
+  const oscillator = new OscillatorNode(context);
+  oscillator.connect(workletNode);
+  oscillator.start();
+  oscillator.stop();
+});
+</script>
+</body>
+</html>
