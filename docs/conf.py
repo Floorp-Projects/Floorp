@@ -64,7 +64,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
-project = u'Mozilla Source Tree Docs'
+project = u'Firefox Source Tree Docs'
 year = datetime.now().year
 
 # Grab the version from the source tree's milestone.
