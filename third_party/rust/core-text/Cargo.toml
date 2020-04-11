@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,16 +12,16 @@
 
 [package]
 name = "core-text"
-version = "13.0.0"
+version = "15.0.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to the Core Text framework."
 license = "MIT/Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
 [dependencies.core-foundation]
-version = "0.6"
+version = "0.7"
 
 [dependencies.core-graphics]
-version = "0.17"
+version = "0.19"
 
 [dependencies.foreign-types]
 version = "0.3"

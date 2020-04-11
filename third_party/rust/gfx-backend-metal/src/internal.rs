@@ -299,7 +299,7 @@ impl ImageClearPipes {
             for (i, &format) in key.color_formats.iter().enumerate() {
                 pipeline
                     .color_attachments()
-                    .object_at(i)
+                    .object_at(i as u64)
                     .unwrap()
                     .set_pixel_format(format);
             }
@@ -330,7 +330,7 @@ impl ImageClearPipes {
         for i in 0 .. 1 {
             let mtl_attribute_desc = vertex_descriptor
                 .attributes()
-                .object_at(i)
+                .object_at(i as u64)
                 .expect("too many vertex attributes");
             mtl_attribute_desc.set_buffer_index(0);
             mtl_attribute_desc.set_offset((i * mem::size_of::<[f32; 4]>()) as _);
@@ -426,7 +426,7 @@ impl ImageBlitPipes {
         for i in 0 .. 2 {
             let mtl_attribute_desc = vertex_descriptor
                 .attributes()
-                .object_at(i)
+                .object_at(i as u64)
                 .expect("too many vertex attributes");
             mtl_attribute_desc.set_buffer_index(0);
             mtl_attribute_desc.set_offset((i * mem::size_of::<[f32; 4]>()) as _);
@@ -451,7 +451,11 @@ pub struct ServicePipes {
 
 impl ServicePipes {
     pub fn new(device: &metal::DeviceRef) -> Self {
-        let data = include_bytes!("./../shaders/gfx_shaders.metallib");
+        let data = if cfg!(target_os = "macos") {
+            &include_bytes!("./../shaders/gfx-shaders-macos.metallib")[..]
+        } else {
+            &include_bytes!("./../shaders/gfx-shaders-ios.metallib")[..]
+        };
         let library = device.new_library_with_data(data).unwrap();
 
         let copy_buffer = Self::create_copy_buffer(&library, device);

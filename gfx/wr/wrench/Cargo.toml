@@ -12,7 +12,7 @@ bincode = "1.0"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }
 euclid = "0.20"
-gleam = "0.10.0"
+gleam = "0.10"
 glutin = "0.21"
 app_units = "0.7"
 clap = { version = "2", features = ["yaml"] }
@@ -38,8 +38,8 @@ default-features = false
 features = ["png"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.17.1"
-core-foundation = "0.6.4"
+core-graphics = "0.19"
+core-foundation = "0.7"
 
 [features]
 default = [ "env_logger" ]
@@ -51,7 +51,7 @@ dwrote = "0.9"
 mozangle = {version = "0.3.1", features = ["egl"]}
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
-font-loader = "0.7"
+font-loader = "0.9"
 
 # Configuration information used when building wrench as an APK.
 [package.metadata.android]

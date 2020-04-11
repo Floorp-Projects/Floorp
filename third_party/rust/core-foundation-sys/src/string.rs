@@ -28,7 +28,7 @@ pub type CFStringCompareFlags = CFOptionFlags;
 
 pub type CFStringEncoding = u32;
 
-// OS X built-in encodings.
+// macOS built-in encodings.
 
 //static kCFStringEncodingMacRoman: CFStringEncoding = 0;
 //static kCFStringEncodingWindowsLatin1: CFStringEncoding = 0x0500;
