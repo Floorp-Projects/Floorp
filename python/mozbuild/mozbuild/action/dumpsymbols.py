@@ -69,7 +69,7 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     if objcopy:
         os.environ['OBJCOPY'] = objcopy
 
-    args = ([sys.executable,
+    args = ([buildconfig.substs['PYTHON'],
              os.path.join(buildconfig.topsrcdir, 'toolkit',
                           'crashreporter', 'tools', 'symbolstore.py')] +
             sym_store_args +
