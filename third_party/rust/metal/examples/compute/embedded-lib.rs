@@ -13,7 +13,7 @@ use metal::*;
 use cocoa::foundation::NSAutoreleasePool;
 
 fn main() {
-    let library_data = include_bytes!("default.metallib");
+    let library_data = include_bytes!("shaders.metallib");
 
     let pool = unsafe { NSAutoreleasePool::new(cocoa::base::nil) };
     let device = Device::system_default().expect("no device found");

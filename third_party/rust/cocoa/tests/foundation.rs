@@ -100,7 +100,7 @@ mod foundation {
                 let mut_components: id = msg_send![components, mutableCopy];
                 let mut iter = mut_components.iter();
                 iter.next();
-                msg_send![mut_components, removeObjectAtIndex:1];
+                let () = msg_send![mut_components, removeObjectAtIndex:1];
                 iter.next();
             }
         }
@@ -148,14 +148,20 @@ mod foundation {
                 // sorted iterators to ensure that each item is the same as its counterpart in
                 // the vector.
 
+                fn compare_function(s0: &id, s1: &id) -> Ordering {
+                    unsafe {
+                        let (bytes0, len0) = (s0.UTF8String() as *const u8, s0.len());
+                        let (bytes1, len1) = (s1.UTF8String() as *const u8, s1.len());
+                        let (s0, s1) = (str::from_utf8(slice::from_raw_parts(bytes0, len0)).unwrap(),
+                                        str::from_utf8(slice::from_raw_parts(bytes1, len1)).unwrap());
+                        let (c0, c1) = (s0.chars().next().unwrap(), s1.chars().next().unwrap());
+                        c0.cmp(&c1)
+                    }
+                }
+
                 // First test cocoa sorting...
                 let mut comparator = ConcreteBlock::new(|s0: id, s1: id| {
-                    let (bytes0, len0) = (s0.UTF8String() as *const u8, s0.len());
-                    let (bytes1, len1) = (s1.UTF8String() as *const u8, s1.len());
-                    let (s0, s1) = (str::from_utf8(slice::from_raw_parts(bytes0, len0)).unwrap(),
-                                    str::from_utf8(slice::from_raw_parts(bytes1, len1)).unwrap());
-                    let (c0, c1) = (s0.chars().next().unwrap(), s1.chars().next().unwrap());
-                    match c0.cmp(&c1) {
+                    match compare_function(&s0, &s1) {
                         Ordering::Less => NSComparisonResult::NSOrderedAscending,
                         Ordering::Equal => NSComparisonResult::NSOrderedSame,
                         Ordering::Greater => NSComparisonResult::NSOrderedDescending,
@@ -173,13 +179,13 @@ mod foundation {
 
                 // Then use rust sorting
                 let mut keys_arr = dict.allKeys().iter().collect::<Vec<_>>();
-                keys_arr.sort();
+                keys_arr.sort_by(compare_function);
                 for (k0, k1) in keys_arr.into_iter().zip(keys.iter()) {
                     assert!(k0.isEqualToString(k1));
                 }
 
                 let mut objects_arr = dict.allValues().iter().collect::<Vec<_>>();
-                objects_arr.sort();
+                objects_arr.sort_by(compare_function);
                 for (v0, v1) in objects_arr.into_iter().zip(objects.iter()) {
                     assert!(v0.isEqualToString(v1));
                 }

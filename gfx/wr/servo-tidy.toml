@@ -6,22 +6,22 @@ check-alphabetical-order = false
 [ignore]
 # Ignored packages with duplicated versions
 packages = [
-    "autocfg",
+    "core-foundation",
+    "core-foundation-sys",
     "core-graphics",
-    "core-text",
     "gl_generator",
-    "percent-encoding",
+    "gleam",
     "rand",
     "rand_core",
+    # https://github.com/trimental/andrew/issues/5
+    "rusttype",
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1615148
+    "smallvec",
     "winapi",
     "yaml-rust",
-    # old versions of cgl depends on an old version of gleam
-    "gleam",
-
     # These are tracked in bug 1587468, see there for pending work.
     "proc-macro2",
     "quote",
-    "syn",
     "unicode-xid",
 ]
 

@@ -15,11 +15,10 @@ use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::set::CFSetRef;
 use core_foundation::string::{CFString, CFStringRef};
-use core_foundation::url::CFURL;
+use core_foundation::url::{CFURL, CFURLRef};
 use core_graphics::base::CGFloat;
 
 use std::os::raw::c_void;
-use std::mem;
 use std::path::PathBuf;
 
 /*
@@ -206,7 +205,7 @@ impl CTFontDescriptor {
 
             let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFString>());
-            let s = CFString::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
+            let s = CFString::wrap_under_get_rule(value.as_CFTypeRef() as CFStringRef);
             Some(s.to_string())
         }
     }
@@ -242,6 +241,20 @@ impl CTFontDescriptor {
         }
     }
 
+    pub fn font_format(&self) -> Option<CTFontFormat> {
+        unsafe {
+            let value = CTFontDescriptorCopyAttribute(self.0, kCTFontFormatAttribute);
+            if value.is_null() {
+                return None;
+            }
+
+            let value = CFType::wrap_under_create_rule(value);
+            assert!(value.instance_of::<CFNumber>());
+            let format = CFNumber::wrap_under_get_rule(value.as_CFTypeRef() as CFNumberRef);
+            format.to_i32().map(|x| x as CTFontFormat)
+        }
+    }
+
     pub fn font_path(&self) -> Option<PathBuf> {
         unsafe {
             let value = CTFontDescriptorCopyAttribute(self.0, kCTFontURLAttribute);
@@ -251,7 +264,7 @@ impl CTFontDescriptor {
 
             let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFURL>());
-            let url = CFURL::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
+            let url = CFURL::wrap_under_get_rule(value.as_CFTypeRef() as CFURLRef);
             url.to_path()
         }
     }
@@ -262,7 +275,7 @@ impl CTFontDescriptor {
             assert!(!value.is_null());
             let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFDictionary>());
-            CFDictionary::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()))
+            CFDictionary::wrap_under_get_rule(value.as_CFTypeRef() as CFDictionaryRef)
         }
     }
 }

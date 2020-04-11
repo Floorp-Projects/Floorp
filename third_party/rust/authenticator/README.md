@@ -24,7 +24,7 @@ RUST_LOG=debug cargo run --example main
 ```
 
 Proper usage should be to call into this library from something else - e.g., Firefox. There are
-some [C headers exposed for the purpose](authenticator/blob/master/src/u2fhid-capi.h).
+some [C headers exposed for the purpose](./src/u2fhid-capi.h).
 
 ## Tests
 

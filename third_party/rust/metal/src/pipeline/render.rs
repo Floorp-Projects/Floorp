@@ -357,6 +357,18 @@ impl RenderPipelineDescriptorRef {
     pub fn set_support_indirect_command_buffers(&self, support: bool) {
         unsafe { msg_send![self, setSupportIndirectCommandBuffers: support] }
     }
+
+    pub fn vertex_buffers(&self) -> Option<&PipelineBufferDescriptorArrayRef> {
+        unsafe { msg_send![self, vertexBuffers] }
+    }
+
+    pub fn fragment_buffers(&self) -> Option<&PipelineBufferDescriptorArrayRef> {
+        unsafe { msg_send![self, fragmentBuffers] }
+    }
+
+    pub fn reset(&self) {
+        unsafe { msg_send![self, reset] }
+    }
 }
 
 pub enum MTLRenderPipelineState {}
@@ -392,13 +404,13 @@ foreign_obj_type! {
 }
 
 impl RenderPipelineColorAttachmentDescriptorArrayRef {
-    pub fn object_at(&self, index: usize) -> Option<&RenderPipelineColorAttachmentDescriptorRef> {
+    pub fn object_at(&self, index: NSUInteger) -> Option<&RenderPipelineColorAttachmentDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
     pub fn set_object_at(
         &self,
-        index: usize,
+        index: NSUInteger,
         attachment: Option<&RenderPipelineColorAttachmentDescriptorRef>,
     ) {
         unsafe {
