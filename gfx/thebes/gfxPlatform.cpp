@@ -3135,7 +3135,7 @@ void gfxPlatform::InitWebGPUConfig() {
 #ifndef NIGHTLY_BUILD
   feature.ForceDisable(FeatureStatus::Blocked,
                        "WebGPU can only be enabled in nightly",
-                       NS_LITERAL_STRING("WEBGPU_DISABLE_NON_NIGHTLY"));
+                       NS_LITERAL_CSTRING("WEBGPU_DISABLE_NON_NIGHTLY"));
 #endif
 }
 
