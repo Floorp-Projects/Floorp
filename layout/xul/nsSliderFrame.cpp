@@ -573,7 +573,9 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     // return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
-  } else if (ShouldScrollToClickForEvent(aEvent)) {
+  }
+
+  if (ShouldScrollToClickForEvent(aEvent)) {
     nsPoint eventPoint;
     if (!GetEventPoint(aEvent, eventPoint)) {
       return NS_OK;
