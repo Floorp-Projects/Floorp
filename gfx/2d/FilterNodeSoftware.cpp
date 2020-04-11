@@ -904,7 +904,7 @@ FilterNodeSoftware::FilterNodeSoftware()
 
 FilterNodeSoftware::~FilterNodeSoftware() {
   MOZ_ASSERT(
-      !mInvalidationListeners.size(),
+      mInvalidationListeners.empty(),
       "All invalidation listeners should have unsubscribed themselves by now!");
 
   for (std::vector<RefPtr<FilterNodeSoftware> >::iterator it =
