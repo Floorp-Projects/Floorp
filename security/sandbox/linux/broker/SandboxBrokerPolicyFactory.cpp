@@ -293,6 +293,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
   policy->AddDir(rdonly, "/nix/store");
   policy->AddDir(rdonly, "/run/host/fonts");
   policy->AddDir(rdonly, "/run/host/user-fonts");
+  policy->AddDir(rdonly, "/var/cache/fontconfig");
 
   AddMesaSysfsPaths(policy);
   AddLdconfigPaths(policy);
@@ -326,12 +327,13 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
     policy->AddDir(rdonly, PromiseFlatCString(fontPath).get());
   }
 
-  // Extra configuration dirs in the homedir that we want to allow read
+  // Extra configuration/cache dirs in the homedir that we want to allow read
   // access to.
-  mozilla::Array<const char*, 3> extraConfDirs = {
+  mozilla::Array<const char*, 4> extraConfDirs = {
       ".config",  // Fallback if XDG_CONFIG_PATH isn't set
       ".themes",
       ".fonts",
+      ".cache/fontconfig",
   };
 
   nsCOMPtr<nsIFile> homeDir;
