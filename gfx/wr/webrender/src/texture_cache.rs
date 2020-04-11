@@ -1754,7 +1754,7 @@ impl TextureArray {
     }
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
-        for unit in self.units.drain() {
+        for unit in self.units.drain(..) {
             updates.push_free(unit.texture_id);
         }
     }

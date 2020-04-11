@@ -48,7 +48,7 @@ impl VertexAttributeRef {
 }
 
 #[repr(u64)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLFunctionType {
     Vertex = 1,
     Fragment = 2,
@@ -182,6 +182,7 @@ impl CompileOptionsRef {
 
 #[repr(u64)]
 #[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLLibraryError {
     Unsupported = 1,
     Internal = 2,

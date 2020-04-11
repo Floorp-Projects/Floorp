@@ -66,6 +66,7 @@ pub enum MTLVertexFormat {
 }
 
 #[repr(u64)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLVertexStepFunction {
     Constant = 0,
     PerVertex = 1,
@@ -126,11 +127,11 @@ foreign_obj_type! {
 }
 
 impl VertexBufferLayoutDescriptorArrayRef {
-    pub fn object_at(&self, index: usize) -> Option<&VertexBufferLayoutDescriptorRef> {
+    pub fn object_at(&self, index: NSUInteger) -> Option<&VertexBufferLayoutDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: usize, layout: Option<&VertexBufferLayoutDescriptorRef>) {
+    pub fn set_object_at(&self, index: NSUInteger, layout: Option<&VertexBufferLayoutDescriptorRef>) {
         unsafe {
             msg_send![self, setObject:layout
                    atIndexedSubscript:index]
@@ -190,11 +191,11 @@ foreign_obj_type! {
 }
 
 impl VertexAttributeDescriptorArrayRef {
-    pub fn object_at(&self, index: usize) -> Option<&VertexAttributeDescriptorRef> {
+    pub fn object_at(&self, index: NSUInteger) -> Option<&VertexAttributeDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: usize, attribute: Option<&VertexAttributeDescriptorRef>) {
+    pub fn set_object_at(&self, index: NSUInteger, attribute: Option<&VertexAttributeDescriptorRef>) {
         unsafe {
             msg_send![self, setObject:attribute
                    atIndexedSubscript:index]

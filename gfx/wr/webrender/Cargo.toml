@@ -39,12 +39,12 @@ log = "0.4"
 malloc_size_of_derive = "0.1"
 num-traits = "0.2"
 plane-split = "0.15"
-png = { optional = true, version = "0.15" }
+png = { optional = true, version = "0.16" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 serde_json = { optional = true, version = "1.0" }
-smallvec = "0.6"
+smallvec = "1"
 time = "0.1"
 api = { version = "0.61.0", path = "../webrender_api", package = "webrender_api" }
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
@@ -65,6 +65,6 @@ libc = "0.2"
 dwrote = "0.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.6"
-core-graphics = "0.17.1"
-core-text = { version = "13", default-features = false }
+core-foundation = "0.7"
+core-graphics = "0.19"
+core-text = { version = "15", default-features = false }

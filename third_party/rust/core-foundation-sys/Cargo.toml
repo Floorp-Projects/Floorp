@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,10 +12,10 @@
 
 [package]
 name = "core-foundation-sys"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
-description = "Bindings to Core Foundation for OS X"
+description = "Bindings to Core Foundation for macOS"
 homepage = "https://github.com/servo/core-foundation-rs"
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"

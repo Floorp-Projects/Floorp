@@ -3784,7 +3784,7 @@ impl<'a> PixelBuffer<'a> {
     }
 
     fn flush_chunks(&mut self, target: &mut UploadTarget) {
-        for chunk in self.chunks.drain() {
+        for chunk in self.chunks.drain(..) {
             target.update_impl(chunk);
         }
         self.size_used = 0;

@@ -12,7 +12,7 @@ use objc::runtime::{NO, YES};
 
 #[repr(u64)]
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLDataType {
     None = 0,
 
@@ -111,6 +111,7 @@ pub enum MTLDataType {
 
 #[repr(u32)]
 #[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLArgumentType {
     Buffer = 0,
     ThreadgroupMemory = 1,
@@ -122,6 +123,7 @@ pub enum MTLArgumentType {
 
 #[repr(u32)]
 #[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLArgumentAccess {
     ReadOnly = 0,
     ReadWrite = 1,
