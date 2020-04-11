@@ -237,7 +237,7 @@ class Permissions(object):
         cursor = permDB.cursor()
 
         # SQL copied from
-        # http://dxr.mozilla.org/mozilla-central/source/extensions/cookie/nsPermissionManager.cpp
+        # http://dxr.mozilla.org/mozilla-central/source/extensions/permissions/PermissionManager.cpp
         cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
               id INTEGER PRIMARY KEY
              ,origin TEXT
