@@ -7,7 +7,7 @@
     "namespace": "manifest",
     "types": [
       {
-        "$extend": "Permission",
+        "$extend": "PermissionNoPrompt",
         "choices": [{
           "type": "string",
           "enum": [
@@ -16,7 +16,7 @@
           ]
         }]
       }, {
-        "$extend": "OptionalPermission",
+        "$extend": "OptionalPermissionNoPrompt",
         "choices": [{
           "type": "string",
           "enum": [
