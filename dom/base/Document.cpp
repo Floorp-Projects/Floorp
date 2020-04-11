@@ -174,9 +174,9 @@
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 
+#include "mozilla/PermissionManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermission.h"
-#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "ExpandedPrincipal.h"
@@ -15899,7 +15899,7 @@ bool Document::AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
   AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
+  PermissionManager* permManager = PermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     return false;
   }

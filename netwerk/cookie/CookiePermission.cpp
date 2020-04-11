@@ -48,11 +48,11 @@ already_AddRefed<nsICookiePermission> CookiePermission::GetOrCreate() {
 }
 
 bool CookiePermission::Init() {
-  // Initialize nsPermissionManager and fetch relevant prefs. This is only
+  // Initialize PermissionManager and fetch relevant prefs. This is only
   // required for some methods on nsICookiePermission, so it should be done
   // lazily.
 
-  mPermMgr = nsPermissionManager::GetInstance();
+  mPermMgr = PermissionManager::GetInstance();
   return mPermMgr != nullptr;
 }
 

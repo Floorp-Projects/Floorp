@@ -189,7 +189,6 @@ LOCAL_INCLUDES += [
     '/dom/media/webspeech/synth/ipc',
     '/dom/security',
     '/dom/storage',
-    '/extensions/permissions',
     '/extensions/spellcheck/src',
     '/gfx/2d',
     '/hal/sandbox',

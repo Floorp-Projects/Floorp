@@ -11,6 +11,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Permission.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
@@ -18,7 +19,6 @@
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsIProtocolHandler.h"
 #endif
-#include "nsPermissionManager.h"
 #include "nsICookieService.h"
 
 namespace mozilla {
@@ -207,7 +207,7 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
   }
 
   // Let's ask the permission manager.
-  nsPermissionManager* pm = nsPermissionManager::GetInstance();
+  PermissionManager* pm = PermissionManager::GetInstance();
   if (NS_WARN_IF(!pm)) {
     return NS_ERROR_FAILURE;
   }
@@ -220,7 +220,7 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
   rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
                            &hasFlags);
   if (NS_FAILED(rv) || hasFlags) {
-    *aCookiePermission = nsPermissionManager::DENY_ACTION;
+    *aCookiePermission = PermissionManager::DENY_ACTION;
     rv = NS_OK;  // Reset, so it's not caught as a bad status after the `else`.
   } else         // Note the tricky `else` which controls the call below.
 #endif
