@@ -684,7 +684,7 @@ var gDidInitialSetUp = false;
 async function setUp(aNoEngine) {
   if (!gDidInitialSetUp) {
     var { ContentSearch } = ChromeUtils.import(
-      "resource:///modules/ContentSearch.jsm"
+      "resource:///actors/ContentSearchParent.jsm"
     );
     let originalOnMessageSearch = ContentSearch._onMessageSearch;
     let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
