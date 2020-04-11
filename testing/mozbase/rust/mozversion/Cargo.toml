@@ -9,6 +9,6 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-regex = "1"
+regex = { version = "1", default-features = false, features = ["perf", "std"] }
 rust-ini = "0.10"
 semver = "0.9"
