@@ -112,6 +112,8 @@ fn main() {
         }));
     }
 
+    shaders.sort();
+
     for shader in &shaders {
         translate_shader(shader, &shader_dir);
     }
