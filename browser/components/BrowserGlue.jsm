@@ -154,6 +154,25 @@ let ACTORS = {
     },
   },
 
+  ContentSearch: {
+    parent: {
+      moduleURI: "resource:///actors/ContentSearchParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/ContentSearchChild.jsm",
+      matches: [
+        "about:home",
+        "about:newtab",
+        "about:welcome",
+        "about:privatebrowsing",
+        "chrome://mochitests/content/*",
+      ],
+      events: {
+        ContentSearchClient: { capture: true, wantUntrusted: true },
+      },
+    },
+  },
+
   ContextMenu: {
     parent: {
       moduleURI: "resource:///actors/ContextMenuParent.jsm",
@@ -396,24 +415,6 @@ let LEGACY_ACTORS = {
     },
   },
 
-  ContentSearch: {
-    child: {
-      module: "resource:///actors/ContentSearchChild.jsm",
-      group: "browsers",
-      matches: [
-        "about:home",
-        "about:newtab",
-        "about:welcome",
-        "about:privatebrowsing",
-        "chrome://mochitests/content/*",
-      ],
-      events: {
-        ContentSearchClient: { capture: true, wantUntrusted: true },
-      },
-      messages: ["ContentSearch"],
-    },
-  },
-
   URIFixup: {
     child: {
       module: "resource:///actors/URIFixupChild.jsm",
@@ -644,7 +645,6 @@ let initializedModules = {};
     "resource://gre/modules/ContentPrefServiceParent.jsm",
     "alwaysInit",
   ],
-  ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
 ].forEach(([name, resource, init]) => {
   XPCOMUtils.defineLazyGetter(this, name, () => {
@@ -723,7 +723,6 @@ const listeners = {
     "AboutLogins:TestOnlyResetOSAuth": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     "AboutLogins:VulnerableLogins": ["AboutLoginsParent"],
-    ContentSearch: ["ContentSearch"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
   },
