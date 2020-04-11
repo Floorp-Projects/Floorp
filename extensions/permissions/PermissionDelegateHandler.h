@@ -26,9 +26,12 @@
 #ifndef mozilla_PermissionDelegateHandler_h
 #define mozilla_PermissionDelegateHandler_h
 
+#include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsIPermissionDelegateHandler.h"
+#include "nsCOMPtr.h"
 
+class nsIPermissionManager;
 class nsIPrincipal;
 class nsIContentPermissionRequest;
 
