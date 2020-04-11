@@ -487,6 +487,24 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
+  // Check if alterate cached data is being sent, if so we receive un-decoded
+  // data and we must disconnect the filter and send an error to the extension.
+  if (!mDisconnected) {
+    RefPtr<net::HttpBaseChannel> chan = do_QueryObject(aRequest);
+    if (chan && chan->IsDeliveringAltData()) {
+      mDisconnected = true;
+
+      RefPtr<StreamFilterParent> self(this);
+      RunOnActorThread(FUNC, [=] {
+        if (self->IPCActive()) {
+          self->mState = State::Disconnected;
+          CheckResult(self->SendError(
+              NS_LITERAL_CSTRING("Channel is delivering cached alt-data")));
+        }
+      });
+    }
+  }
+
   if (!mDisconnected) {
     Unused << mChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
     if (mLoadGroup) {
