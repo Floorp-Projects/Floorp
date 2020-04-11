@@ -42,21 +42,21 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+#define PERMISSIONS_FILE_NAME "permissions.sqlite"
+#define HOSTS_SCHEMA_VERSION 11
+
+// Default permissions are read from a URL - this is the preference we read
+// to find that URL. If not set, don't use any default permissions.
+constexpr char kDefaultsUrlPrefName[] = "permissions.manager.defaultsUrl";
+
+constexpr char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
+
+// A special value for a permission ID that indicates the ID was loaded as
+// a default value.  These will never be written to the database, but may
+// be overridden with an explicit permission (including UNKNOWN_ACTION)
+constexpr int64_t cIDPermissionIsDefault = -1;
+
 static StaticRefPtr<PermissionManager> gPermissionManager;
-
-static bool IsChildProcess() { return XRE_IsContentProcess(); }
-
-static void LogToConsole(const nsAString& aMsg) {
-  nsCOMPtr<nsIConsoleService> console(
-      do_GetService("@mozilla.org/consoleservice;1"));
-  if (!console) {
-    NS_WARNING("Failed to log message to console.");
-    return;
-  }
-
-  nsAutoString msg(aMsg);
-  console->LogStringMessage(msg.get());
-}
 
 #define ENSURE_NOT_CHILD_PROCESS_(onError)                 \
   PR_BEGIN_MACRO                                           \
@@ -76,6 +76,41 @@ static void LogToConsole(const nsAString& aMsg) {
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
+
+bool IsChildProcess() { return XRE_IsContentProcess(); }
+
+void LogToConsole(const nsAString& aMsg) {
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService("@mozilla.org/consoleservice;1"));
+  if (!console) {
+    NS_WARNING("Failed to log message to console.");
+    return;
+  }
+
+  nsAutoString msg(aMsg);
+  console->LogStringMessage(msg.get());
+}
+
+// NOTE: an empty string can be passed as aType - if it is this function will
+// return "false" unconditionally.
+bool HasDefaultPref(const nsACString& aType) {
+  // A list of permissions that can have a fallback default permission
+  // set under the permissions.default.* pref.
+  static const nsLiteralCString kPermissionsWithDefaults[] = {
+      NS_LITERAL_CSTRING("camera"), NS_LITERAL_CSTRING("microphone"),
+      NS_LITERAL_CSTRING("geo"), NS_LITERAL_CSTRING("desktop-notification"),
+      NS_LITERAL_CSTRING("shortcuts")};
+
+  if (!aType.IsEmpty()) {
+    for (const auto& perm : kPermissionsWithDefaults) {
+      if (perm.Equals(aType)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 // These permissions are special permissions which must be transmitted to the
 // content process before documents with their principals have loaded within
@@ -546,14 +581,14 @@ nsresult UpgradeHostToOriginAndInsert(
   return NS_OK;
 }
 
-static bool IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
+bool IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
   return !!ep;
 }
 
 // We only want to persist permissions which don't have session or policy
 // expiration.
-static bool IsPersistentExpire(uint32_t aExpire, const nsACString& aType) {
+bool IsPersistentExpire(uint32_t aExpire, const nsACString& aType) {
   bool res = (aExpire != nsIPermissionManager::EXPIRE_SESSION &&
               aExpire != nsIPermissionManager::EXPIRE_POLICY);
 #ifdef ANDROID
@@ -615,15 +650,6 @@ void PermissionManager::Startup() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // PermissionManager Implementation
-
-#define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 11
-
-// Default permissions are read from a URL - this is the preference we read
-// to find that URL. If not set, don't use any default permissions.
-static const char kDefaultsUrlPrefName[] = "permissions.manager.defaultsUrl";
-
-static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
 NS_IMPL_ISUPPORTS(PermissionManager, nsIPermissionManager, nsIObserver,
                   nsISupportsWeakReference)
@@ -2216,144 +2242,6 @@ nsresult PermissionManager::CommonTestPermissionInternal(
   return NS_OK;
 }
 
-// Returns PermissionHashKey for a given { host, isInBrowserElement }
-// tuple. This is not simply using PermissionKey because we will walk-up domains
-// in case of |host| contains sub-domains. Returns null if nothing found. Also
-// accepts host on the format "<foo>". This will perform an exact match lookup
-// as the string doesn't contain any dots.
-PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
-    nsIPrincipal* aPrincipal, uint32_t aType, bool aExactHostMatch) {
-  EnsureReadCompleted();
-
-  MOZ_ASSERT(PermissionAvailable(aPrincipal, mTypeArray[aType]));
-
-  nsresult rv;
-  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(
-      aPrincipal, IsOAForceStripPermission(mTypeArray[aType]), rv);
-  if (!key) {
-    return nullptr;
-  }
-
-  PermissionHashKey* entry = mPermissionTable.GetEntry(key);
-
-  if (entry) {
-    PermissionEntry permEntry = entry->GetPermission(aType);
-
-    // if the entry is expired, remove and keep looking for others.
-    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
-    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
-         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
-          permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= EXPIRY_NOW) {
-      entry = nullptr;
-      RemoveFromPrincipal(aPrincipal, mTypeArray[aType]);
-    } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-      entry = nullptr;
-    }
-  }
-
-  if (entry) {
-    return entry;
-  }
-
-  // If aExactHostMatch wasn't true, we can check if the base domain has a
-  // permission entry.
-  if (!aExactHostMatch) {
-    nsCOMPtr<nsIPrincipal> principal = GetNextSubDomainPrincipal(aPrincipal);
-    if (principal) {
-      return GetPermissionHashKey(principal, aType, aExactHostMatch);
-    }
-  }
-
-  // No entry, really...
-  return nullptr;
-}
-
-// Returns PermissionHashKey for a given { host, isInBrowserElement }
-// tuple. This is not simply using PermissionKey because we will walk-up domains
-// in case of |host| contains sub-domains. Returns null if nothing found. Also
-// accepts host on the format "<foo>". This will perform an exact match lookup
-// as the string doesn't contain any dots.
-PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
-    nsIURI* aURI, const OriginAttributes* aOriginAttributes, uint32_t aType,
-    bool aExactHostMatch) {
-  MOZ_ASSERT(aURI);
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = NS_OK;
-    if (aURI) {
-      rv = GetPrincipal(aURI, getter_AddRefs(principal));
-    }
-    MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
-                  PermissionAvailable(principal, mTypeArray[aType]));
-  }
-#endif
-
-  nsresult rv;
-  RefPtr<PermissionKey> key;
-
-  if (aOriginAttributes) {
-    key = PermissionKey::CreateFromURIAndOriginAttributes(
-        aURI, aOriginAttributes, IsOAForceStripPermission(mTypeArray[aType]),
-        rv);
-  } else {
-    key = PermissionKey::CreateFromURI(aURI, rv);
-  }
-
-  if (!key) {
-    return nullptr;
-  }
-
-  PermissionHashKey* entry = mPermissionTable.GetEntry(key);
-
-  if (entry) {
-    PermissionEntry permEntry = entry->GetPermission(aType);
-
-    // if the entry is expired, remove and keep looking for others.
-    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
-    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
-         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
-          permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= EXPIRY_NOW) {
-      entry = nullptr;
-      // If we need to remove a permission we mint a principal.  This is a bit
-      // inefficient, but hopefully this code path isn't super common.
-      nsCOMPtr<nsIPrincipal> principal;
-      if (aURI) {
-        nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return nullptr;
-        }
-      }
-      RemoveFromPrincipal(principal, mTypeArray[aType]);
-    } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-      entry = nullptr;
-    }
-  }
-
-  if (entry) {
-    return entry;
-  }
-
-  // If aExactHostMatch wasn't true, we can check if the base domain has a
-  // permission entry.
-  if (!aExactHostMatch) {
-    nsCOMPtr<nsIURI> uri;
-    if (aURI) {
-      uri = GetNextSubDomainURI(aURI);
-    }
-    if (uri) {
-      return GetPermissionHashKey(uri, aOriginAttributes, aType,
-                                  aExactHostMatch);
-    }
-  }
-
-  // No entry, really...
-  return nullptr;
-}
-
 NS_IMETHODIMP PermissionManager::GetAll(
     nsTArray<RefPtr<nsIPermission>>& aResult) {
   return GetAllWithTypePrefix(NS_LITERAL_CSTRING(""), aResult);
@@ -2404,45 +2292,6 @@ NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
       }
       aResult.AppendElement(std::move(permission));
     }
-  }
-
-  return NS_OK;
-}
-
-nsresult PermissionManager::GetStripPermsForPrincipal(
-    nsIPrincipal* aPrincipal, nsTArray<PermissionEntry>& aResult) {
-  aResult.Clear();
-  aResult.SetCapacity(kStripOAPermissions.size());
-
-  // No special strip permissions
-  if (kStripOAPermissions.empty()) {
-    return NS_OK;
-  }
-
-  nsresult rv;
-  // Create a key for the principal, but strip any origin attributes
-  RefPtr<PermissionKey> key =
-      PermissionKey::CreateFromPrincipal(aPrincipal, true, rv);
-  if (!key) {
-    MOZ_ASSERT(NS_FAILED(rv));
-    return rv;
-  }
-
-  PermissionHashKey* hashKey = mPermissionTable.GetEntry(key);
-  if (!hashKey) {
-    return NS_OK;
-  }
-
-  for (const auto& permType : kStripOAPermissions) {
-    int32_t index = GetTypeIndex(permType, false);
-    if (index == -1) {
-      continue;
-    }
-    PermissionEntry perm = hashKey->GetPermission(index);
-    if (perm.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-      continue;
-    }
-    aResult.AppendElement(perm);
   }
 
   return NS_OK;
@@ -2601,9 +2450,193 @@ nsresult PermissionManager::RemovePermissionsWithAttributes(
   return NS_OK;
 }
 
-//*****************************************************************************
-//*** PermissionManager private methods
-//*****************************************************************************
+nsresult PermissionManager::GetStripPermsForPrincipal(
+    nsIPrincipal* aPrincipal, nsTArray<PermissionEntry>& aResult) {
+  aResult.Clear();
+  aResult.SetCapacity(kStripOAPermissions.size());
+
+  // No special strip permissions
+  if (kStripOAPermissions.empty()) {
+    return NS_OK;
+  }
+
+  nsresult rv;
+  // Create a key for the principal, but strip any origin attributes
+  RefPtr<PermissionKey> key =
+      PermissionKey::CreateFromPrincipal(aPrincipal, true, rv);
+  if (!key) {
+    MOZ_ASSERT(NS_FAILED(rv));
+    return rv;
+  }
+
+  PermissionHashKey* hashKey = mPermissionTable.GetEntry(key);
+  if (!hashKey) {
+    return NS_OK;
+  }
+
+  for (const auto& permType : kStripOAPermissions) {
+    int32_t index = GetTypeIndex(permType, false);
+    if (index == -1) {
+      continue;
+    }
+    PermissionEntry perm = hashKey->GetPermission(index);
+    if (perm.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+      continue;
+    }
+    aResult.AppendElement(perm);
+  }
+
+  return NS_OK;
+}
+
+int32_t PermissionManager::GetTypeIndex(const nsACString& aType, bool aAdd) {
+  for (uint32_t i = 0; i < mTypeArray.length(); ++i) {
+    if (mTypeArray[i].Equals(aType)) {
+      return i;
+    }
+  }
+
+  if (!aAdd) {
+    // Not found, but that is ok - we were just looking.
+    return -1;
+  }
+
+  // This type was not registered before.
+  // append it to the array, without copy-constructing the string
+  if (!mTypeArray.emplaceBack(aType)) {
+    return -1;
+  }
+
+  return mTypeArray.length() - 1;
+}
+
+PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
+    nsIPrincipal* aPrincipal, uint32_t aType, bool aExactHostMatch) {
+  EnsureReadCompleted();
+
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, mTypeArray[aType]));
+
+  nsresult rv;
+  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(
+      aPrincipal, IsOAForceStripPermission(mTypeArray[aType]), rv);
+  if (!key) {
+    return nullptr;
+  }
+
+  PermissionHashKey* entry = mPermissionTable.GetEntry(key);
+
+  if (entry) {
+    PermissionEntry permEntry = entry->GetPermission(aType);
+
+    // if the entry is expired, remove and keep looking for others.
+    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
+    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
+         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
+          permEntry.mExpireTime != 0)) &&
+        permEntry.mExpireTime <= EXPIRY_NOW) {
+      entry = nullptr;
+      RemoveFromPrincipal(aPrincipal, mTypeArray[aType]);
+    } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+      entry = nullptr;
+    }
+  }
+
+  if (entry) {
+    return entry;
+  }
+
+  // If aExactHostMatch wasn't true, we can check if the base domain has a
+  // permission entry.
+  if (!aExactHostMatch) {
+    nsCOMPtr<nsIPrincipal> principal = GetNextSubDomainPrincipal(aPrincipal);
+    if (principal) {
+      return GetPermissionHashKey(principal, aType, aExactHostMatch);
+    }
+  }
+
+  // No entry, really...
+  return nullptr;
+}
+
+PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
+    nsIURI* aURI, const OriginAttributes* aOriginAttributes, uint32_t aType,
+    bool aExactHostMatch) {
+  MOZ_ASSERT(aURI);
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = NS_OK;
+    if (aURI) {
+      rv = GetPrincipal(aURI, getter_AddRefs(principal));
+    }
+    MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
+                  PermissionAvailable(principal, mTypeArray[aType]));
+  }
+#endif
+
+  nsresult rv;
+  RefPtr<PermissionKey> key;
+
+  if (aOriginAttributes) {
+    key = PermissionKey::CreateFromURIAndOriginAttributes(
+        aURI, aOriginAttributes, IsOAForceStripPermission(mTypeArray[aType]),
+        rv);
+  } else {
+    key = PermissionKey::CreateFromURI(aURI, rv);
+  }
+
+  if (!key) {
+    return nullptr;
+  }
+
+  PermissionHashKey* entry = mPermissionTable.GetEntry(key);
+
+  if (entry) {
+    PermissionEntry permEntry = entry->GetPermission(aType);
+
+    // if the entry is expired, remove and keep looking for others.
+    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
+    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
+         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
+          permEntry.mExpireTime != 0)) &&
+        permEntry.mExpireTime <= EXPIRY_NOW) {
+      entry = nullptr;
+      // If we need to remove a permission we mint a principal.  This is a bit
+      // inefficient, but hopefully this code path isn't super common.
+      nsCOMPtr<nsIPrincipal> principal;
+      if (aURI) {
+        nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return nullptr;
+        }
+      }
+      RemoveFromPrincipal(principal, mTypeArray[aType]);
+    } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+      entry = nullptr;
+    }
+  }
+
+  if (entry) {
+    return entry;
+  }
+
+  // If aExactHostMatch wasn't true, we can check if the base domain has a
+  // permission entry.
+  if (!aExactHostMatch) {
+    nsCOMPtr<nsIURI> uri;
+    if (aURI) {
+      uri = GetNextSubDomainURI(aURI);
+    }
+    if (uri) {
+      return GetPermissionHashKey(uri, aOriginAttributes, aType,
+                                  aExactHostMatch);
+    }
+  }
+
+  // No entry, really...
+  return nullptr;
+}
 
 nsresult PermissionManager::RemoveAllFromMemory() {
   mLargestID = 0;
@@ -2791,9 +2824,6 @@ void PermissionManager::MaybeAddReadEntryFromMigration(
 
   mReadEntries.AppendElement(entry);
 }
-
-static const char kMatchTypeHost[] = "host";
-static const char kMatchTypeOrigin[] = "origin";
 
 void PermissionManager::UpdateDB(OperationType aOp, int64_t aID,
                                  const nsACString& aOrigin,
@@ -3249,6 +3279,9 @@ void PermissionManager::ConsumeDefaultsInputStream(
     nsIInputStream* aInputStream, const MonitorAutoLock& aProofOfLock) {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  constexpr char kMatchTypeHost[] = "host";
+  constexpr char kMatchTypeOrigin[] = "origin";
+
   mDefaultEntries.Clear();
 
   if (!aInputStream) {
@@ -3342,9 +3375,9 @@ nsresult PermissionManager::ImportLatestDefaults() {
             NS_ENSURE_SUCCESS(rv, rv);
 
             return AddInternal(
-                principal, aType, aPermission,
-                PermissionManager::cIDPermissionIsDefault, aExpireType,
-                aExpireTime, aModificationTime, PermissionManager::eDontNotify,
+                principal, aType, aPermission, cIDPermissionIsDefault,
+                aExpireType, aExpireTime, aModificationTime,
+                PermissionManager::eDontNotify,
                 PermissionManager::eNoDBOperation, false, &aOrigin);
           });
 
@@ -3467,6 +3500,68 @@ PermissionManager::CommonPrepareToTestPermission(
   }
 
   return AsVariant(typeIndex);
+}
+
+// If aTypeIndex is passed -1, we try to inder the type index from aType.
+nsresult PermissionManager::CommonTestPermission(
+    nsIPrincipal* aPrincipal, int32_t aTypeIndex, const nsACString& aType,
+    uint32_t* aPermission, uint32_t aDefaultPermission,
+    bool aDefaultPermissionIsValid, bool aExactHostMatch,
+    bool aIncludingSession) {
+  auto preparationResult = CommonPrepareToTestPermission(
+      aPrincipal, aTypeIndex, aType, aPermission, aDefaultPermission,
+      aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+  if (preparationResult.is<nsresult>()) {
+    return preparationResult.as<nsresult>();
+  }
+
+  return CommonTestPermissionInternal(
+      aPrincipal, nullptr, nullptr, preparationResult.as<int32_t>(), aType,
+      aPermission, aExactHostMatch, aIncludingSession);
+}
+
+// If aTypeIndex is passed -1, we try to inder the type index from aType.
+nsresult PermissionManager::CommonTestPermission(
+    nsIURI* aURI, int32_t aTypeIndex, const nsACString& aType,
+    uint32_t* aPermission, uint32_t aDefaultPermission,
+    bool aDefaultPermissionIsValid, bool aExactHostMatch,
+    bool aIncludingSession) {
+  auto preparationResult = CommonPrepareToTestPermission(
+      nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
+      aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+  if (preparationResult.is<nsresult>()) {
+    return preparationResult.as<nsresult>();
+  }
+
+  return CommonTestPermissionInternal(
+      nullptr, aURI, nullptr, preparationResult.as<int32_t>(), aType,
+      aPermission, aExactHostMatch, aIncludingSession);
+}
+
+nsresult PermissionManager::CommonTestPermission(
+    nsIURI* aURI, const OriginAttributes* aOriginAttributes, int32_t aTypeIndex,
+    const nsACString& aType, uint32_t* aPermission, uint32_t aDefaultPermission,
+    bool aDefaultPermissionIsValid, bool aExactHostMatch,
+    bool aIncludingSession) {
+  auto preparationResult = CommonPrepareToTestPermission(
+      nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
+      aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+  if (preparationResult.is<nsresult>()) {
+    return preparationResult.as<nsresult>();
+  }
+
+  return CommonTestPermissionInternal(
+      nullptr, aURI, aOriginAttributes, preparationResult.as<int32_t>(), aType,
+      aPermission, aExactHostMatch, aIncludingSession);
+}
+
+nsresult PermissionManager::TestPermissionWithoutDefaultsFromPrincipal(
+    nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t* aPermission) {
+  MOZ_ASSERT(!HasDefaultPref(aType));
+
+  return CommonTestPermission(aPrincipal, -1, aType, aPermission,
+                              nsIPermissionManager::UNKNOWN_ACTION, true, false,
+                              true);
 }
 
 }  // namespace mozilla
