@@ -72,7 +72,6 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
 
   MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
           ("   %s", NS_ConvertUTF16toUTF8(srcString).get()));
-  return;
 }
 
 }  // namespace dom
