@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNetUtil.h"
-#include "nsPermissionManager.h"
 #include "mozilla/OriginAttributes.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 #include "gtest/gtest.h"
@@ -14,13 +14,13 @@
 
 using namespace mozilla;
 
-class PermissionManager : public ::testing::Test {
+class PermissionManagerTester : public ::testing::Test {
  protected:
-  PermissionManager()
+  PermissionManagerTester()
       : mNonExistentType(
             NS_LITERAL_CSTRING("permissionTypeThatIsGuaranteedToNeverExist")) {}
   void SetUp() override {
-    mPermissionManager = nsPermissionManager::GetInstance();
+    mPermissionManager = PermissionManager::GetInstance();
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(
         getter_AddRefs(uri),
@@ -38,12 +38,12 @@ class PermissionManager : public ::testing::Test {
   static const unsigned kNumIterations = 100000;
 
   nsLiteralCString mNonExistentType;
-  RefPtr<nsPermissionManager> mPermissionManager;
+  RefPtr<PermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-MOZ_GTEST_BENCH_F(PermissionManager, TestNonExistentPermissionFromPrincipal,
-                  [this] {
+MOZ_GTEST_BENCH_F(PermissionManagerTester,
+                  TestNonExistentPermissionFromPrincipal, [this] {
                     for (unsigned i = 0; i < kNumIterations; ++i) {
                       uint32_t result = 0;
                       Unused << mPermissionManager->TestPermissionFromPrincipal(
