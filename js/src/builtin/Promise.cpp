@@ -1674,14 +1674,12 @@ static MOZ_MUST_USE bool AsyncGeneratorPromiseReactionJob(
     JSContext* cx, Handle<PromiseReactionRecord*> reaction) {
   MOZ_ASSERT(reaction->isAsyncGenerator());
 
-  int32_t handler = reaction->handler().toInt32();
   RootedValue argument(cx, reaction->handlerArg());
   Rooted<AsyncGeneratorObject*> asyncGenObj(cx, reaction->asyncGenerator());
 
   // Await's handlers don't return a value, nor throw any exceptions.
   // They fail only on OOM.
-
-  switch (handler) {
+  switch (int32_t handler = reaction->handler().toInt32(); handler) {
     // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
     // 6.2.3.1.1 Await Fulfilled Functions
     case PromiseHandlerAsyncGeneratorAwaitedFulfilled: {
