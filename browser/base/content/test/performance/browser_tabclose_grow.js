@@ -22,6 +22,7 @@ const EXPECTED_REFLOWS = [
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
+  await disableFxaBadge();
 
   // At the time of writing, there are no reflows on tab closing with
   // tab growth. Mochitest will fail if we have no assertions, so we
