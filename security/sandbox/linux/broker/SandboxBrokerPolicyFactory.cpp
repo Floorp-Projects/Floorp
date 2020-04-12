@@ -86,10 +86,12 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
             // broker.  To match this, allow the canonical paths.
             UniqueFreePtr<char[]> realSysPath(realpath(sysPath.get(), nullptr));
             if (realSysPath) {
-              static const Array<const char*, 7> kMesaAttrSuffixes = {
-                  "revision",         "vendor", "device", "subsystem_vendor",
-                  "subsystem_device", "uevent", "config"};
-              for (const auto attrSuffix : kMesaAttrSuffixes) {
+              constexpr const char* kMesaAttrSuffixes[] = {
+                  "config",    "device",           "revision",
+                  "subsystem", "subsystem_device", "subsystem_vendor",
+                  "uevent",    "vendor",
+              };
+              for (const auto& attrSuffix : kMesaAttrSuffixes) {
                 nsPrintfCString attrPath("%s/%s", realSysPath.get(),
                                          attrSuffix);
                 aPolicy->AddPath(rdonly, attrPath.get());
