@@ -34,7 +34,7 @@ in the Rust standard library:
    parallelism.
 2. Since they consist of just a single atomic variable, have constant
    initializers and don't need destructors, these primitives can be used as
-    `static` global variables. The standard library primitives require
+   `static` global variables. The standard library primitives require
    dynamic initialization and thus need to be lazily initialized with
    `lazy_static!`.
 3. Uncontended lock acquisition and release is done through fast inline
@@ -87,9 +87,9 @@ lock.
 
 There are a few restrictions when using this library on stable Rust:
 
-- `Mutex` and `Once` will use 1 word of space instead of 1 byte.
-- You will have to use `lazy_static!` to statically initialize `Mutex`,
-  `Condvar` and `RwLock` types instead of `const fn`.
+- You will have to use the `const_*` functions (e.g. `const_mutex(val)`) to
+  statically initialize the locking primitives. Using e.g. `Mutex::new(val)`
+  does not work on stable Rust yet.
 - `RwLock` will not be able to take advantage of hardware lock elision for
   readers, which improves performance when there are multiple readers.
 
@@ -102,20 +102,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.9"
-```
-
-and this to your crate root:
-
-```rust
-extern crate parking_lot;
+parking_lot = "0.10"
 ```
 
 To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = {version = "0.9", features = ["nightly"]}
+parking_lot = { version = "0.10", features = ["nightly"] }
 ```
 
 The experimental deadlock detector can be enabled with the
@@ -127,7 +121,7 @@ changes to the core API do not cause breaking changes for users of `parking_lot`
 
 ## Minimum Rust version
 
-The current minimum required Rust version is 1.32. Any change to this is
+The current minimum required Rust version is 1.36. Any change to this is
 considered a breaking change and will require a major version bump.
 
 ## License

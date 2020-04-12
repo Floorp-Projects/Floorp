@@ -6,25 +6,16 @@
 // copied, modified, or distributed except according to those terms.
 
 use crate::util::UncheckedOptionExt;
-#[cfg(has_sized_atomics)]
-use core::sync::atomic::AtomicU8;
-#[cfg(not(has_sized_atomics))]
-use core::sync::atomic::AtomicUsize as AtomicU8;
 use core::{
     fmt, mem,
-    sync::atomic::{fence, Ordering},
+    sync::atomic::{fence, AtomicU8, Ordering},
 };
 use parking_lot_core::{self, SpinWait, DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
 
-#[cfg(has_sized_atomics)]
-type U8 = u8;
-#[cfg(not(has_sized_atomics))]
-type U8 = usize;
-
-const DONE_BIT: U8 = 1;
-const POISON_BIT: U8 = 2;
-const LOCKED_BIT: U8 = 4;
-const PARKED_BIT: U8 = 8;
+const DONE_BIT: u8 = 1;
+const POISON_BIT: u8 = 2;
+const LOCKED_BIT: u8 = 4;
+const PARKED_BIT: u8 = 8;
 
 /// Current state of a `Once`.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -48,8 +39,8 @@ impl OnceState {
     /// Once an initialization routine for a `Once` has panicked it will forever
     /// indicate to future forced initialization routines that it is poisoned.
     #[inline]
-    pub fn poisoned(&self) -> bool {
-        match *self {
+    pub fn poisoned(self) -> bool {
+        match self {
             OnceState::Poisoned => true,
             _ => false,
         }
@@ -58,8 +49,8 @@ impl OnceState {
     /// Returns whether the associated `Once` has successfully executed a
     /// closure.
     #[inline]
-    pub fn done(&self) -> bool {
-        match *self {
+    pub fn done(self) -> bool {
+        match self {
             OnceState::Done => true,
             _ => false,
         }
@@ -194,7 +185,9 @@ impl Once {
         }
 
         let mut f = Some(f);
-        self.call_once_slow(true, &mut |state| unsafe { f.take().unchecked_unwrap()(state) });
+        self.call_once_slow(true, &mut |state| unsafe {
+            f.take().unchecked_unwrap()(state)
+        });
     }
 
     // This is a non-generic function to reduce the monomorphization cost of
@@ -303,7 +296,11 @@ impl Once {
         // At this point we have the lock, so run the closure. Make sure we
         // properly clean up if the closure panicks.
         let guard = PanicGuard(self);
-        let once_state = if state & POISON_BIT != 0 { OnceState::Poisoned } else { OnceState::New };
+        let once_state = if state & POISON_BIT != 0 {
+            OnceState::Poisoned
+        } else {
+            OnceState::New
+        };
         f(once_state);
         mem::forget(guard);
 
@@ -327,7 +324,9 @@ impl Default for Once {
 
 impl fmt::Debug for Once {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Once").field("state", &self.state()).finish()
+        f.debug_struct("Once")
+            .field("state", &self.state())
+            .finish()
     }
 }
 

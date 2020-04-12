@@ -5,10 +5,10 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use crate::raw_mutex::RawMutex;
+use crate::raw_fair_mutex::RawFairMutex;
 use lock_api;
 
-/// A mutual exclusion primitive useful for protecting shared data
+/// A mutual exclusive primitive that is always fair, useful for protecting shared data
 ///
 /// This mutex will block threads waiting for the lock to become available. The
 /// mutex can also be statically initialized or created via a `new`
@@ -17,43 +17,37 @@ use lock_api;
 /// returned from `lock` and `try_lock`, which guarantees that the data is only
 /// ever accessed when the mutex is locked.
 ///
-/// # Fairness
+/// The regular mutex provided by `parking_lot` uses eventual locking fairness
+/// (after some time it will default to the fair algorithm), but eventual
+/// fairness does not provide the same garantees a always fair method would.
+/// Fair mutexes are generally slower, but sometimes needed. This wrapper was
+/// created to avoid using a unfair protocol when it's forbidden by mistake.
 ///
-/// A typical unfair lock can often end up in a situation where a single thread
-/// quickly acquires and releases the same mutex in succession, which can starve
-/// other threads waiting to acquire the mutex. While this improves performance
-/// because it doesn't force a context switch when a thread tries to re-acquire
-/// a mutex it has just released, this can starve other threads.
+/// In a fair mutex the lock is provided to whichever thread asked first,
+/// they form a queue and always follow the first-in first-out order. This
+/// means some thread in the queue won't be able to steal the lock and use it fast
+/// to increase throughput, at the cost of latency. Since the response time will grow
+/// for some threads that are waiting for the lock and losing to faster but later ones,
+/// but it may make sending more responses possible.
 ///
-/// This mutex uses [eventual fairness](https://trac.webkit.org/changeset/203350)
-/// to ensure that the lock will be fair on average without sacrificing
-/// performance. This is done by forcing a fair unlock on average every 0.5ms,
-/// which will force the lock to go to the next thread waiting for the mutex.
-///
-/// Additionally, any critical section longer than 1ms will always use a fair
-/// unlock, which has a negligible performance impact compared to the length of
-/// the critical section.
-///
-/// You can also force a fair unlock by calling `MutexGuard::unlock_fair` when
-/// unlocking a mutex instead of simply dropping the `MutexGuard`.
+/// A fair mutex may not be interesting if threads have different priorities (this is known as
+/// priority inversion).
 ///
 /// # Differences from the standard library `Mutex`
 ///
 /// - No poisoning, the lock is released normally on panic.
 /// - Only requires 1 byte of space, whereas the standard library boxes the
-///   `Mutex` due to platform limitations.
+///   `FairMutex` due to platform limitations.
 /// - Can be statically constructed (requires the `const_fn` nightly feature).
 /// - Does not require any drop glue when dropped.
 /// - Inline fast path for the uncontended case.
 /// - Efficient handling of micro-contention using adaptive spinning.
 /// - Allows raw locking & unlocking without a guard.
-/// - Supports eventual fairness so that the mutex is fair on average.
-/// - Optionally allows making the mutex fair by calling `MutexGuard::unlock_fair`.
 ///
 /// # Examples
 ///
 /// ```
-/// use parking_lot::Mutex;
+/// use parking_lot::FairMutex;
 /// use std::sync::{Arc, mpsc::channel};
 /// use std::thread;
 ///
@@ -64,7 +58,7 @@ use lock_api;
 /// //
 /// // Here we're using an Arc to share memory among threads, and the data inside
 /// // the Arc is protected with a mutex.
-/// let data = Arc::new(Mutex::new(0));
+/// let data = Arc::new(FairMutex::new(0));
 ///
 /// let (tx, rx) = channel();
 /// for _ in 0..10 {
@@ -84,13 +78,13 @@ use lock_api;
 ///
 /// rx.recv().unwrap();
 /// ```
-pub type Mutex<T> = lock_api::Mutex<RawMutex, T>;
+pub type FairMutex<T> = lock_api::Mutex<RawFairMutex, T>;
 
-/// Creates a new mutex in an unlocked state ready for use.
+/// Creates a new fair mutex in an unlocked state ready for use.
 ///
-/// This allows creating a mutex in a constant context on stable Rust.
-pub const fn const_mutex<T>(val: T) -> Mutex<T> {
-    Mutex::const_new(<RawMutex as lock_api::RawMutex>::INIT, val)
+/// This allows creating a fair mutex in a constant context on stable Rust.
+pub const fn const_fair_mutex<T>(val: T) -> FairMutex<T> {
+    FairMutex::const_new(<RawFairMutex as lock_api::RawMutex>::INIT, val)
 }
 
 /// An RAII implementation of a "scoped lock" of a mutex. When this structure is
@@ -98,20 +92,20 @@ pub const fn const_mutex<T>(val: T) -> Mutex<T> {
 ///
 /// The data protected by the mutex can be accessed through this guard via its
 /// `Deref` and `DerefMut` implementations.
-pub type MutexGuard<'a, T> = lock_api::MutexGuard<'a, RawMutex, T>;
+pub type FairMutexGuard<'a, T> = lock_api::MutexGuard<'a, RawFairMutex, T>;
 
-/// An RAII mutex guard returned by `MutexGuard::map`, which can point to a
+/// An RAII mutex guard returned by `FairMutexGuard::map`, which can point to a
 /// subfield of the protected data.
 ///
-/// The main difference between `MappedMutexGuard` and `MutexGuard` is that the
+/// The main difference between `MappedFairMutexGuard` and `FairMutexGuard` is that the
 /// former doesn't support temporarily unlocking and re-locking, since that
 /// could introduce soundness issues if the locked object is modified by another
 /// thread.
-pub type MappedMutexGuard<'a, T> = lock_api::MappedMutexGuard<'a, RawMutex, T>;
+pub type MappedFairMutexGuard<'a, T> = lock_api::MappedMutexGuard<'a, RawFairMutex, T>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Condvar, Mutex};
+    use crate::FairMutex;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::mpsc::channel;
     use std::sync::Arc;
@@ -120,17 +114,12 @@ mod tests {
     #[cfg(feature = "serde")]
     use bincode::{deserialize, serialize};
 
-    struct Packet<T>(Arc<(Mutex<T>, Condvar)>);
-
     #[derive(Eq, PartialEq, Debug)]
     struct NonCopy(i32);
 
-    unsafe impl<T: Send> Send for Packet<T> {}
-    unsafe impl<T> Sync for Packet<T> {}
-
     #[test]
     fn smoke() {
-        let m = Mutex::new(());
+        let m = FairMutex::new(());
         drop(m.lock());
         drop(m.lock());
     }
@@ -140,9 +129,9 @@ mod tests {
         const J: u32 = 1000;
         const K: u32 = 3;
 
-        let m = Arc::new(Mutex::new(0));
+        let m = Arc::new(FairMutex::new(0));
 
-        fn inc(m: &Mutex<u32>) {
+        fn inc(m: &FairMutex<u32>) {
             for _ in 0..J {
                 *m.lock() += 1;
             }
@@ -173,13 +162,13 @@ mod tests {
 
     #[test]
     fn try_lock() {
-        let m = Mutex::new(());
+        let m = FairMutex::new(());
         *m.try_lock().unwrap() = ();
     }
 
     #[test]
     fn test_into_inner() {
-        let m = Mutex::new(NonCopy(10));
+        let m = FairMutex::new(NonCopy(10));
         assert_eq!(m.into_inner(), NonCopy(10));
     }
 
@@ -192,7 +181,7 @@ mod tests {
             }
         }
         let num_drops = Arc::new(AtomicUsize::new(0));
-        let m = Mutex::new(Foo(num_drops.clone()));
+        let m = FairMutex::new(Foo(num_drops.clone()));
         assert_eq!(num_drops.load(Ordering::SeqCst), 0);
         {
             let _inner = m.into_inner();
@@ -203,40 +192,17 @@ mod tests {
 
     #[test]
     fn test_get_mut() {
-        let mut m = Mutex::new(NonCopy(10));
+        let mut m = FairMutex::new(NonCopy(10));
         *m.get_mut() = NonCopy(20);
         assert_eq!(m.into_inner(), NonCopy(20));
-    }
-
-    #[test]
-    fn test_mutex_arc_condvar() {
-        let packet = Packet(Arc::new((Mutex::new(false), Condvar::new())));
-        let packet2 = Packet(packet.0.clone());
-        let (tx, rx) = channel();
-        let _t = thread::spawn(move || {
-            // wait until parent gets in
-            rx.recv().unwrap();
-            let &(ref lock, ref cvar) = &*packet2.0;
-            let mut lock = lock.lock();
-            *lock = true;
-            cvar.notify_one();
-        });
-
-        let &(ref lock, ref cvar) = &*packet.0;
-        let mut lock = lock.lock();
-        tx.send(()).unwrap();
-        assert!(!*lock);
-        while !*lock {
-            cvar.wait(&mut lock);
-        }
     }
 
     #[test]
     fn test_mutex_arc_nested() {
         // Tests nested mutexes and access
         // to underlying data.
-        let arc = Arc::new(Mutex::new(1));
-        let arc2 = Arc::new(Mutex::new(arc));
+        let arc = Arc::new(FairMutex::new(1));
+        let arc2 = Arc::new(FairMutex::new(arc));
         let (tx, rx) = channel();
         let _t = thread::spawn(move || {
             let lock = arc2.lock();
@@ -249,11 +215,11 @@ mod tests {
 
     #[test]
     fn test_mutex_arc_access_in_unwind() {
-        let arc = Arc::new(Mutex::new(1));
+        let arc = Arc::new(FairMutex::new(1));
         let arc2 = arc.clone();
         let _ = thread::spawn(move || {
             struct Unwinder {
-                i: Arc<Mutex<i32>>,
+                i: Arc<FairMutex<i32>>,
             }
             impl Drop for Unwinder {
                 fn drop(&mut self) {
@@ -270,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_mutex_unsized() {
-        let mutex: &Mutex<[i32]> = &Mutex::new([1, 2, 3]);
+        let mutex: &FairMutex<[i32]> = &FairMutex::new([1, 2, 3]);
         {
             let b = &mut *mutex.lock();
             b[0] = 4;
@@ -284,13 +250,13 @@ mod tests {
     fn test_mutexguard_sync() {
         fn sync<T: Sync>(_: T) {}
 
-        let mutex = Mutex::new(());
+        let mutex = FairMutex::new(());
         sync(mutex.lock());
     }
 
     #[test]
     fn test_mutex_debug() {
-        let mutex = Mutex::new(vec![0u8, 10]);
+        let mutex = FairMutex::new(vec![0u8, 10]);
 
         assert_eq!(format!("{:?}", mutex), "Mutex { data: [0, 10] }");
         let _lock = mutex.lock();
@@ -301,10 +267,10 @@ mod tests {
     #[test]
     fn test_serde() {
         let contents: Vec<u8> = vec![0, 1, 2];
-        let mutex = Mutex::new(contents.clone());
+        let mutex = FairMutex::new(contents.clone());
 
         let serialized = serialize(&mutex).unwrap();
-        let deserialized: Mutex<Vec<u8>> = deserialize(&serialized).unwrap();
+        let deserialized: FairMutex<Vec<u8>> = deserialize(&serialized).unwrap();
 
         assert_eq!(*(mutex.lock()), *(deserialized.lock()));
         assert_eq!(contents, *(deserialized.lock()));

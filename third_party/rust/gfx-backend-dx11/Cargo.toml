@@ -12,7 +12,7 @@
 
 [package]
 name = "gfx-backend-dx11"
-version = "0.4.2"
+version = "0.4.6"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-11 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -43,7 +43,7 @@ version = "0.5"
 version = "0.4"
 
 [dependencies.parking_lot]
-version = "0.9"
+version = "0.10"
 
 [dependencies.range-alloc]
 version = "0.1"
