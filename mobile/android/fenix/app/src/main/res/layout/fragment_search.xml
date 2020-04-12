@@ -137,7 +137,7 @@
                 android:visibility="gone"
                 android:text="@string/search_shortcuts_search_with_2"
                 app:layout_constraintStart_toStartOf="@id/scrollable_area"
-                app:layout_constraintTop_toBottomOf="@id/divider_line"
+                app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
                 tools:text="This time, search with:" />
 
             <androidx.constraintlayout.widget.Barrier

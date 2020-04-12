@@ -12,7 +12,7 @@
     android:fadingEdgeLength="40dp"
     android:nestedScrollingEnabled="false"
     android:requiresFadingEdge="vertical"
-    app:layout_constraintTop_toTopOf="@id/awesomeBar_barrier"
+    app:layout_constraintTop_toBottomOf="@id/search_with_shortcuts"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     mozac:awesomeBarDescriptionTextColor="?secondaryText"
