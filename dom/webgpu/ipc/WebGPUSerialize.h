@@ -107,7 +107,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::webgpu::SerialProgrammableStageDescriptor, mModule, mEntryPoint);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::webgpu::SerialVertexBufferLayoutDescriptor, mArrayStride,
-    mStepMode, mAttributeSet);
+    mStepMode, mAttributes);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::SerialVertexStateDescriptor,
                                   mIndexFormat, mVertexBuffers);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
