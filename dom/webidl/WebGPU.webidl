@@ -612,7 +612,7 @@ dictionary GPUVertexAttributeDescriptor {
 dictionary GPUVertexBufferLayoutDescriptor {
     required u64 arrayStride;
     GPUInputStepMode stepMode = "vertex";
-    required sequence<GPUVertexAttributeDescriptor> attributeSet;
+    required sequence<GPUVertexAttributeDescriptor> attributes;
 };
 
 dictionary GPUVertexStateDescriptor {

@@ -58,7 +58,7 @@ struct SerialComputePipelineDescriptor {
 struct SerialVertexBufferLayoutDescriptor {
   ffi::WGPUBufferAddress mArrayStride;
   ffi::WGPUInputStepMode mStepMode;
-  nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributeSet;
+  nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributes;
 };
 
 struct SerialVertexStateDescriptor {
