@@ -104,7 +104,7 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo);
  * Return true if this PrincipalInfo is a content principal and it has
  * a privateBrowsing id in its OriginAttributes
  */
-bool IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
+bool IsPrincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
 
 /**
  * Convert an RedirectHistoryEntryInfo to a nsIRedirectHistoryEntry.
