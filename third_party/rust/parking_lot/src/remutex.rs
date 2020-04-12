@@ -17,8 +17,9 @@ unsafe impl GetThreadId for RawThreadId {
 
     fn nonzero_thread_id(&self) -> NonZeroUsize {
         // The address of a thread-local variable is guaranteed to be unique to the
-        // current thread, and is also guaranteed to be non-zero.
-        thread_local!(static KEY: u8 = unsafe { ::std::mem::uninitialized() });
+        // current thread, and is also guaranteed to be non-zero. The variable has to have a
+        // non-zero size to guarantee it has a unique address for each thread.
+        thread_local!(static KEY: u8 = 0);
         KEY.with(|x| {
             NonZeroUsize::new(x as *const _ as usize)
                 .expect("thread-local variable address is null")
@@ -35,9 +36,20 @@ unsafe impl GetThreadId for RawThreadId {
 /// - `ReentrantMutexGuard` does not give mutable references to the locked data.
 ///   Use a `RefCell` if you need this.
 ///
-/// See [`Mutex`](struct.Mutex.html) for more details about the underlying mutex
+/// See [`Mutex`](type.Mutex.html) for more details about the underlying mutex
 /// primitive.
 pub type ReentrantMutex<T> = lock_api::ReentrantMutex<RawMutex, RawThreadId, T>;
+
+/// Creates a new reentrant mutex in an unlocked state ready for use.
+///
+/// This allows creating a reentrant mutex in a constant context on stable Rust.
+pub const fn const_reentrant_mutex<T>(val: T) -> ReentrantMutex<T> {
+    ReentrantMutex::const_new(
+        <RawMutex as lock_api::RawMutex>::INIT,
+        <RawThreadId as lock_api::GetThreadId>::INIT,
+        val,
+    )
+}
 
 /// An RAII implementation of a "scoped lock" of a reentrant mutex. When this structure
 /// is dropped (falls out of scope), the lock will be unlocked.
@@ -68,18 +80,18 @@ mod tests {
 
     #[test]
     fn smoke() {
-        let m = ReentrantMutex::new(());
+        let m = ReentrantMutex::new(2);
         {
             let a = m.lock();
             {
                 let b = m.lock();
                 {
                     let c = m.lock();
-                    assert_eq!(*c, ());
+                    assert_eq!(*c, 2);
                 }
-                assert_eq!(*b, ());
+                assert_eq!(*b, 2);
             }
-            assert_eq!(*a, ());
+            assert_eq!(*a, 2);
         }
     }
 

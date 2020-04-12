@@ -30,6 +30,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// exists.
 pub unsafe trait RawRwLock {
     /// Initial value for an unlocked `RwLock`.
+    // A “non-constant” const item is a legacy way to supply an initialized value to downstream
+    // static items. Can hopefully be replaced with `const fn new() -> Self` at some point.
+    #[allow(clippy::declare_interior_mutable_const)]
     const INIT: Self;
 
     /// Marker type which determines whether a lock guard should be `Send`. Use
@@ -228,7 +231,7 @@ pub unsafe trait RawRwLockUpgradeTimed: RawRwLockUpgrade + RawRwLockTimed {
 /// allow concurrent access through readers. The RAII guards returned from the
 /// locking methods implement `Deref` (and `DerefMut` for the `write` methods)
 /// to allow access to the contained of the lock.
-pub struct RwLock<R: RawRwLock, T: ?Sized> {
+pub struct RwLock<R, T: ?Sized> {
     raw: R,
     data: UnsafeCell<T>,
 }
@@ -270,14 +273,20 @@ impl<R: RawRwLock, T> RwLock<R, T> {
     #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new(val: T) -> RwLock<R, T> {
-        RwLock { data: UnsafeCell::new(val), raw: R::INIT }
+        RwLock {
+            data: UnsafeCell::new(val),
+            raw: R::INIT,
+        }
     }
 
     /// Creates a new instance of an `RwLock<T>` which is unlocked.
     #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn new(val: T) -> RwLock<R, T> {
-        RwLock { data: UnsafeCell::new(val), raw: R::INIT }
+        RwLock {
+            data: UnsafeCell::new(val),
+            raw: R::INIT,
+        }
     }
 
     /// Consumes this `RwLock`, returning the underlying data.
@@ -288,13 +297,31 @@ impl<R: RawRwLock, T> RwLock<R, T> {
     }
 }
 
+impl<R, T> RwLock<R, T> {
+    /// Creates a new new instance of an `RwLock<T>` based on a pre-existing
+    /// `RawRwLock<T>`.
+    ///
+    /// This allows creating a `RwLock<T>` in a constant context on stable
+    /// Rust.
+    #[inline]
+    pub const fn const_new(raw_rwlock: R, val: T) -> RwLock<R, T> {
+        RwLock {
+            data: UnsafeCell::new(val),
+            raw: raw_rwlock,
+        }
+    }
+}
+
 impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     /// # Safety
     ///
     /// The lock must be held when calling this method.
     #[inline]
     unsafe fn read_guard(&self) -> RwLockReadGuard<'_, R, T> {
-        RwLockReadGuard { rwlock: self, marker: PhantomData }
+        RwLockReadGuard {
+            rwlock: self,
+            marker: PhantomData,
+        }
     }
 
     /// # Safety
@@ -302,7 +329,10 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     /// The lock must be held when calling this method.
     #[inline]
     unsafe fn write_guard(&self) -> RwLockWriteGuard<'_, R, T> {
-        RwLockWriteGuard { rwlock: self, marker: PhantomData }
+        RwLockWriteGuard {
+            rwlock: self,
+            marker: PhantomData,
+        }
     }
 
     /// Locks this `RwLock` with shared read access, blocking the current thread
@@ -623,7 +653,10 @@ impl<R: RawRwLockUpgrade, T: ?Sized> RwLock<R, T> {
     /// The lock must be held when calling this method.
     #[inline]
     unsafe fn upgradable_guard(&self) -> RwLockUpgradableReadGuard<'_, R, T> {
-        RwLockUpgradableReadGuard { rwlock: self, marker: PhantomData }
+        RwLockUpgradableReadGuard {
+            rwlock: self,
+            marker: PhantomData,
+        }
     }
 
     /// Locks this `RwLock` with upgradable read access, blocking the current thread
@@ -726,7 +759,9 @@ impl<R: RawRwLock, T: ?Sized + fmt::Debug> fmt::Debug for RwLock<R, T> {
                     }
                 }
 
-                f.debug_struct("RwLock").field("data", &LockedPlaceholder).finish()
+                f.debug_struct("RwLock")
+                    .field("data", &LockedPlaceholder)
+                    .finish()
             }
         }
     }
@@ -764,7 +799,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> RwLockReadGuard<'a, R, T> {
         let raw = &s.rwlock.raw;
         let data = f(unsafe { &*s.rwlock.data.get() });
         mem::forget(s);
-        MappedRwLockReadGuard { raw, data, marker: PhantomData }
+        MappedRwLockReadGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedRwLockReadGuard` for a component of the
@@ -787,7 +826,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> RwLockReadGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedRwLockReadGuard { raw, data, marker: PhantomData })
+        Ok(MappedRwLockReadGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 
     /// Temporarily unlocks the `RwLock` to execute the given function.
@@ -917,7 +960,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> RwLockWriteGuard<'a, R, T> {
         let raw = &s.rwlock.raw;
         let data = f(unsafe { &mut *s.rwlock.data.get() });
         mem::forget(s);
-        MappedRwLockWriteGuard { raw, data, marker: PhantomData }
+        MappedRwLockWriteGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedRwLockWriteGuard` for a component of the
@@ -940,7 +987,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> RwLockWriteGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedRwLockWriteGuard { raw, data, marker: PhantomData })
+        Ok(MappedRwLockWriteGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 
     /// Temporarily unlocks the `RwLock` to execute the given function.
@@ -969,7 +1020,10 @@ impl<'a, R: RawRwLockDowngrade + 'a, T: ?Sized + 'a> RwLockWriteGuard<'a, R, T> 
         s.rwlock.raw.downgrade();
         let rwlock = s.rwlock;
         mem::forget(s);
-        RwLockReadGuard { rwlock, marker: PhantomData }
+        RwLockReadGuard {
+            rwlock,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -984,7 +1038,10 @@ impl<'a, R: RawRwLockUpgradeDowngrade + 'a, T: ?Sized + 'a> RwLockWriteGuard<'a,
         s.rwlock.raw.downgrade_to_upgradable();
         let rwlock = s.rwlock;
         mem::forget(s);
-        RwLockUpgradableReadGuard { rwlock, marker: PhantomData }
+        RwLockUpgradableReadGuard {
+            rwlock,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -1112,7 +1169,10 @@ impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> RwLockUpgradableReadGuard<'a,
         s.rwlock.raw.upgrade();
         let rwlock = s.rwlock;
         mem::forget(s);
-        RwLockWriteGuard { rwlock, marker: PhantomData }
+        RwLockWriteGuard {
+            rwlock,
+            marker: PhantomData,
+        }
     }
 
     /// Tries to atomically upgrade an upgradable read lock into a exclusive write lock.
@@ -1122,7 +1182,10 @@ impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> RwLockUpgradableReadGuard<'a,
         if s.rwlock.raw.try_upgrade() {
             let rwlock = s.rwlock;
             mem::forget(s);
-            Ok(RwLockWriteGuard { rwlock, marker: PhantomData })
+            Ok(RwLockWriteGuard {
+                rwlock,
+                marker: PhantomData,
+            })
         } else {
             Err(s)
         }
@@ -1187,7 +1250,10 @@ impl<'a, R: RawRwLockUpgradeDowngrade + 'a, T: ?Sized + 'a> RwLockUpgradableRead
         s.rwlock.raw.downgrade_upgradable();
         let rwlock = s.rwlock;
         mem::forget(s);
-        RwLockReadGuard { rwlock, marker: PhantomData }
+        RwLockReadGuard {
+            rwlock,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -1204,7 +1270,10 @@ impl<'a, R: RawRwLockUpgradeTimed + 'a, T: ?Sized + 'a> RwLockUpgradableReadGuar
         if s.rwlock.raw.try_upgrade_for(timeout) {
             let rwlock = s.rwlock;
             mem::forget(s);
-            Ok(RwLockWriteGuard { rwlock, marker: PhantomData })
+            Ok(RwLockWriteGuard {
+                rwlock,
+                marker: PhantomData,
+            })
         } else {
             Err(s)
         }
@@ -1223,7 +1292,10 @@ impl<'a, R: RawRwLockUpgradeTimed + 'a, T: ?Sized + 'a> RwLockUpgradableReadGuar
         if s.rwlock.raw.try_upgrade_until(timeout) {
             let rwlock = s.rwlock;
             mem::forget(s);
-            Ok(RwLockWriteGuard { rwlock, marker: PhantomData })
+            Ok(RwLockWriteGuard {
+                rwlock,
+                marker: PhantomData,
+            })
         } else {
             Err(s)
         }
@@ -1304,7 +1376,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockReadGuard<'a, R, T> {
         let raw = s.raw;
         let data = f(unsafe { &*s.data });
         mem::forget(s);
-        MappedRwLockReadGuard { raw, data, marker: PhantomData }
+        MappedRwLockReadGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedRwLockReadGuard` for a component of the
@@ -1327,7 +1403,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockReadGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedRwLockReadGuard { raw, data, marker: PhantomData })
+        Ok(MappedRwLockReadGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 }
 
@@ -1428,7 +1508,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockWriteGuard<'a, R, T> {
         let raw = s.raw;
         let data = f(unsafe { &mut *s.data });
         mem::forget(s);
-        MappedRwLockWriteGuard { raw, data, marker: PhantomData }
+        MappedRwLockWriteGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedRwLockWriteGuard` for a component of the
@@ -1451,7 +1535,11 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockWriteGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedRwLockWriteGuard { raw, data, marker: PhantomData })
+        Ok(MappedRwLockWriteGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 }
 
@@ -1462,12 +1550,20 @@ impl<'a, R: RawRwLockDowngrade + 'a, T: ?Sized + 'a> MappedRwLockWriteGuard<'a, 
     /// Note that if there are any writers currently waiting to take the lock
     /// then other readers may not be able to acquire the lock even if it was
     /// downgraded.
+    #[deprecated(
+        since = "0.3.3",
+        note = "This function is unsound and will be removed in the future, see issue #198"
+    )]
     pub fn downgrade(s: Self) -> MappedRwLockReadGuard<'a, R, T> {
         s.raw.downgrade();
         let raw = s.raw;
         let data = s.data;
         mem::forget(s);
-        MappedRwLockReadGuard { raw, data, marker: PhantomData }
+        MappedRwLockReadGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 }
 

@@ -25,19 +25,19 @@ environment:
   - TARGET: x86_64-pc-windows-msvc
     MSYSTEM: MINGW64
     CPU: x86_64
-    TOOLCHAIN: 1.32.0
+    TOOLCHAIN: 1.36.0
   - TARGET: i686-pc-windows-msvc
     MSYSTEM: MINGW32
     CPU: i686
-    TOOLCHAIN: 1.32.0
+    TOOLCHAIN: 1.36.0
   - TARGET: x86_64-pc-windows-gnu
     MSYSTEM: MINGW64
     CPU: x86_64
-    TOOLCHAIN: 1.32.0
+    TOOLCHAIN: 1.36.0
   - TARGET: i686-pc-windows-gnu
     MSYSTEM: MINGW32
     CPU: i686
-    TOOLCHAIN: 1.32.0
+    TOOLCHAIN: 1.36.0
 
 install:
   - set PATH=C:\msys64\%MSYSTEM%\bin;c:\msys64\usr\bin;%PATH%
