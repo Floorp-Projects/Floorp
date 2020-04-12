@@ -23,7 +23,7 @@ log = {version = "0.4", features = ["release_max_level_info"]}
 malloc_size_of = {path = "../../components/malloc_size_of"}
 nsstring = {path = "../../../xpcom/rust/nsstring/"}
 num-traits = "0.2"
-parking_lot = "0.10"
+parking_lot = "0.9"
 selectors = {path = "../../components/selectors"}
 servo_arc = {path = "../../components/servo_arc"}
 smallvec = "1.0"

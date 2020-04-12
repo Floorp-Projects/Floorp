@@ -39,10 +39,9 @@ pub(crate) fn compile_spirv_entrypoint(
     let mut ast = parse_spirv(raw_data)?;
     spirv_cross_specialize_ast(&mut ast, &source.specialization)?;
 
-    patch_spirv_resources(&mut ast, stage, layout)?;
+    patch_spirv_resources(&mut ast, layout)?;
     let shader_model = hlsl::ShaderModel::V5_0;
     let shader_code = translate_spirv(&mut ast, shader_model, layout, stage)?;
-    log::debug!("Generated {:?} shader:\n{:?}", stage, shader_code.replace("\n", "\r\n"));
 
     let real_name = ast
         .get_cleansed_entry_point_name(source.entry, conv::map_stage(stage))
@@ -72,7 +71,7 @@ pub(crate) fn compile_hlsl_shader(
     entry: &str,
     code: &[u8],
 ) -> Result<*mut d3dcommon::ID3DBlob, device::ShaderError> {
-    let stage_str = {
+    let stage_to_str = |stage, shader_model| {
         let stage = match stage {
             pso::Stage::Vertex => "vs",
             pso::Stage::Fragment => "ps",
@@ -103,7 +102,7 @@ pub(crate) fn compile_hlsl_shader(
             ptr::null(),
             ptr::null_mut(),
             entry.as_ptr() as *const _,
-            stage_str.as_ptr() as *const i8,
+            stage_to_str(stage, shader_model).as_ptr() as *const i8,
             1,
             0,
             &mut blob as *mut *mut _,
@@ -140,7 +139,6 @@ fn parse_spirv(raw_data: &[u32]) -> Result<spirv::Ast<hlsl::Target>, device::Sha
 
 fn patch_spirv_resources(
     ast: &mut spirv::Ast<hlsl::Target>,
-    stage: pso::Stage,
     layout: &PipelineLayout,
 ) -> Result<(), device::ShaderError> {
     // we remap all `layout(binding = n, set = n)` to a flat space which we get from our
@@ -154,13 +152,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             image.id,
             spirv::Decoration::Binding,
-            res_index.t as u32,
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -172,13 +173,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(uniform_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             uniform_buffer.id,
             spirv::Decoration::Binding,
-            res_index.c as u32,
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -190,13 +194,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(storage_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             storage_buffer.id,
             spirv::Decoration::Binding,
-            res_index.u as u32, //TODO: also decorate `res_index.t`
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -208,13 +215,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             image.id,
             spirv::Decoration::Binding,
-            res_index.u as u32, //TODO: also decorate `res_index.t`
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -226,13 +236,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(sampler.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             sampler.id,
             spirv::Decoration::Binding,
-            res_index.s as u32,
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -244,13 +257,16 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let mapping = layout.set_remapping[set]
+            .mapping
+            .iter()
+            .find(|&mapping| binding == mapping.spirv_binding)
+            .unwrap();
 
         ast.set_decoration(
             image.id,
             spirv::Decoration::Binding,
-            res_index.t as u32,
+            mapping.hlsl_register as u32,
         )
         .map_err(gen_unexpected_error)?;
     }
