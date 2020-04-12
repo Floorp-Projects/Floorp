@@ -11,14 +11,12 @@
 
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
-#![cfg_attr(feature = "nightly", feature(llvm_asm))]
+#![cfg_attr(feature = "nightly", feature(asm))]
 
 mod condvar;
 mod elision;
-mod fair_mutex;
 mod mutex;
 mod once;
-mod raw_fair_mutex;
 mod raw_mutex;
 mod raw_rwlock;
 mod remutex;
@@ -30,19 +28,16 @@ pub mod deadlock;
 #[cfg(not(feature = "deadlock_detection"))]
 mod deadlock;
 
+pub use ::lock_api as lock_api;
 pub use self::condvar::{Condvar, WaitTimeoutResult};
-pub use self::fair_mutex::{const_fair_mutex, FairMutex, FairMutexGuard, MappedFairMutexGuard};
-pub use self::mutex::{const_mutex, MappedMutexGuard, Mutex, MutexGuard};
+pub use self::mutex::{MappedMutexGuard, Mutex, MutexGuard};
 pub use self::once::{Once, OnceState};
-pub use self::raw_fair_mutex::RawFairMutex;
 pub use self::raw_mutex::RawMutex;
 pub use self::raw_rwlock::RawRwLock;
 pub use self::remutex::{
-    const_reentrant_mutex, MappedReentrantMutexGuard, RawThreadId, ReentrantMutex,
-    ReentrantMutexGuard,
+    MappedReentrantMutexGuard, RawThreadId, ReentrantMutex, ReentrantMutexGuard,
 };
 pub use self::rwlock::{
-    const_rwlock, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard,
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard,
     RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
-pub use ::lock_api;

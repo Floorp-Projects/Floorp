@@ -1,18 +1,9 @@
 use hal::adapter::{AdapterInfo, DeviceType};
 
-use winapi::{
-    shared::{
-        dxgi,
-        dxgi1_2,
-        dxgi1_3,
-        dxgi1_4,
-        dxgi1_5,
-        guiddef::{GUID, REFIID},
-        winerror,
-    },
-    um::unknwnbase::IUnknown,
-    Interface,
-};
+use winapi::shared::guiddef::{GUID, REFIID};
+use winapi::shared::{dxgi, dxgi1_2, dxgi1_3, dxgi1_4, dxgi1_5, winerror};
+use winapi::um::unknwnbase::IUnknown;
+use winapi::Interface;
 
 use wio::com::ComPtr;
 
@@ -76,16 +67,14 @@ pub(crate) enum DxgiVersion {
     Dxgi1_5,
 }
 
-type DxgiFun =
-    unsafe extern "system" fn(REFIID, *mut *mut winapi::ctypes::c_void) -> winerror::HRESULT;
+type DxgiFun = extern "system" fn(REFIID, *mut *mut winapi::ctypes::c_void) -> winerror::HRESULT;
 
 fn create_dxgi_factory1(
-    func: &DxgiFun,
-    guid: &GUID,
+    func: &DxgiFun, guid: &GUID
 ) -> Result<ComPtr<dxgi::IDXGIFactory>, winerror::HRESULT> {
     let mut factory: *mut IUnknown = ptr::null_mut();
 
-    let hr = unsafe { func(guid, &mut factory as *mut *mut _ as *mut *mut _) };
+    let hr = func(guid, &mut factory as *mut *mut _ as *mut *mut _);
 
     if winerror::SUCCEEDED(hr) {
         Ok(unsafe { ComPtr::from_raw(factory as *mut _) })
@@ -95,36 +84,37 @@ fn create_dxgi_factory1(
 }
 
 pub(crate) fn get_dxgi_factory(
-) -> Result<(libloading::Library, ComPtr<dxgi::IDXGIFactory>, DxgiVersion), winerror::HRESULT> {
-    // The returned Com-pointer is only safe to use for the lifetime of the Library.
-    let library = libloading::Library::new("dxgi.dll").map_err(|_| -1)?;
-    let func: libloading::Symbol<DxgiFun> =
-        unsafe { library.get(b"CreateDXGIFactory1") }.map_err(|_| -1)?;
+) -> Result<(ComPtr<dxgi::IDXGIFactory>, DxgiVersion), winerror::HRESULT> {
+    let library = libloading::Library::new("dxgi.dll")
+        .map_err(|_| -1)?;
+    let func: libloading::Symbol<DxgiFun> = unsafe {
+        library.get(b"CreateDXGIFactory1")
+    }.map_err(|_| -1)?;
 
     // TODO: do we even need `create_dxgi_factory2`?
     if let Ok(factory) = create_dxgi_factory1(&func, &dxgi1_5::IDXGIFactory5::uuidof()) {
-        return Ok((library, factory, DxgiVersion::Dxgi1_5));
+        return Ok((factory, DxgiVersion::Dxgi1_5));
     }
 
     if let Ok(factory) = create_dxgi_factory1(&func, &dxgi1_4::IDXGIFactory4::uuidof()) {
-        return Ok((library, factory, DxgiVersion::Dxgi1_4));
+        return Ok((factory, DxgiVersion::Dxgi1_4));
     }
 
     if let Ok(factory) = create_dxgi_factory1(&func, &dxgi1_3::IDXGIFactory3::uuidof()) {
-        return Ok((library, factory, DxgiVersion::Dxgi1_3));
+        return Ok((factory, DxgiVersion::Dxgi1_3));
     }
 
     if let Ok(factory) = create_dxgi_factory1(&func, &dxgi1_2::IDXGIFactory2::uuidof()) {
-        return Ok((library, factory, DxgiVersion::Dxgi1_2));
+        return Ok((factory, DxgiVersion::Dxgi1_2));
     }
 
     if let Ok(factory) = create_dxgi_factory1(&func, &dxgi::IDXGIFactory1::uuidof()) {
-        return Ok((library, factory, DxgiVersion::Dxgi1_0));
+        return Ok((factory, DxgiVersion::Dxgi1_0));
     }
 
     // TODO: any reason why above would fail and this wouldnt?
     match create_dxgi_factory1(&func, &dxgi::IDXGIFactory::uuidof()) {
-        Ok(factory) => Ok((library, factory, DxgiVersion::Dxgi1_0)),
+        Ok(factory) => Ok((factory, DxgiVersion::Dxgi1_0)),
         Err(hr) => Err(hr),
     }
 }

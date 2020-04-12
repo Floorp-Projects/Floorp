@@ -1,23 +1,7 @@
-/*!
-# DX11 backend internals.
-
-## Pipeline Layout
-
-In D3D11 there are tables of CBVs, SRVs, UAVs, and samplers.
-
-Each descriptor type can take 1 or two of those entry points.
-
-The descriptor pool is just and array of handles, belonging to descriptor set 1, descriptor set 2, etc.
-Each range of descriptors in a descriptor set area of the pool is split into shader stages,
-which in turn is split into CBS/SRV/UAV/Sampler parts. That allows binding a descriptor set as a list
-of continuous descriptor ranges (per type, per shader stage).
-
-!*/
-
 //#[deny(missing_docs)]
 
-extern crate auxil;
 extern crate gfx_hal as hal;
+extern crate auxil;
 extern crate range_alloc;
 #[macro_use]
 extern crate bitflags;
@@ -55,17 +39,13 @@ use hal::{
 
 use range_alloc::RangeAllocator;
 
-use winapi::{
-    shared::{
-        dxgi::{IDXGIAdapter, IDXGIFactory, IDXGISwapChain},
-        dxgiformat,
-        minwindef::{FALSE, HMODULE, UINT},
-        windef::{HWND, RECT},
-        winerror,
-    },
-    um::{d3d11, d3dcommon, winuser::GetClientRect},
-    Interface as _,
-};
+use winapi::shared::dxgi::{IDXGIAdapter, IDXGIFactory, IDXGISwapChain};
+use winapi::shared::minwindef::{FALSE, UINT, HMODULE};
+use winapi::shared::windef::{HWND, RECT};
+use winapi::shared::{dxgiformat, winerror};
+use winapi::um::winuser::GetClientRect;
+use winapi::um::{d3d11, d3dcommon};
+use winapi::Interface as _;
 
 use wio::com::ComPtr;
 
@@ -117,7 +97,7 @@ mod dxgi;
 mod internal;
 mod shader;
 
-type CreateFun = unsafe extern "system" fn(
+type CreateFun = extern "system" fn(
     *mut IDXGIAdapter,
     UINT,
     HMODULE,
@@ -150,8 +130,7 @@ impl fmt::Debug for ViewInfo {
 pub struct Instance {
     pub(crate) factory: ComPtr<IDXGIFactory>,
     pub(crate) dxgi_version: dxgi::DxgiVersion,
-    library_d3d11: Arc<libloading::Library>,
-    library_dxgi: libloading::Library,
+    library: Arc<libloading::Library>,
 }
 
 unsafe impl Send for Instance {}
@@ -290,16 +269,16 @@ impl hal::Instance<Backend> for Instance {
         // TODO: get the latest factory we can find
 
         match dxgi::get_dxgi_factory() {
-            Ok((library_dxgi, factory, dxgi_version)) => {
+            Ok((factory, dxgi_version)) => {
                 info!("DXGI version: {:?}", dxgi_version);
-                let library_d3d11 = Arc::new(
-                    libloading::Library::new("d3d11.dll").map_err(|_| hal::UnsupportedBackend)?,
+                let library = Arc::new(
+                    libloading::Library::new("d3d11.dll")
+                        .map_err(|_| hal::UnsupportedBackend)?
                 );
                 Ok(Instance {
                     factory,
                     dxgi_version,
-                    library_d3d11,
-                    library_dxgi,
+                    library,
                 })
             }
             Err(hr) => {
@@ -313,14 +292,15 @@ impl hal::Instance<Backend> for Instance {
         let mut adapters = Vec::new();
         let mut idx = 0;
 
-        let func: libloading::Symbol<CreateFun> =
-            match unsafe { self.library_d3d11.get(b"D3D11CreateDevice") } {
-                Ok(func) => func,
-                Err(e) => {
-                    error!("Unable to get device creation function: {:?}", e);
-                    return Vec::new();
-                }
-            };
+        let func: libloading::Symbol<CreateFun> = match unsafe {
+            self.library.get(b"D3D11CreateDevice")
+        } {
+            Ok(func) => func,
+            Err(e) => {
+                error!("Unable to get device creation function: {:?}", e);
+                return Vec::new();
+            }
+        };
 
         while let Ok((adapter, info)) =
             dxgi::get_adapter(idx, self.factory.as_raw(), self.dxgi_version)
@@ -334,20 +314,18 @@ impl hal::Instance<Backend> for Instance {
                 let feature_level = get_feature_level(&func, adapter.as_raw());
 
                 let mut device = ptr::null_mut();
-                let hr = unsafe {
-                    func(
-                        adapter.as_raw() as *mut _,
-                        d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
-                        ptr::null_mut(),
-                        0,
-                        [feature_level].as_ptr(),
-                        1,
-                        d3d11::D3D11_SDK_VERSION,
-                        &mut device as *mut *mut _ as *mut *mut _,
-                        ptr::null_mut(),
-                        ptr::null_mut(),
-                    )
-                };
+                let hr = func(
+                    adapter.as_raw() as *mut _,
+                    d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
+                    ptr::null_mut(),
+                    0,
+                    [feature_level].as_ptr(),
+                    1,
+                    d3d11::D3D11_SDK_VERSION,
+                    &mut device as *mut *mut _ as *mut *mut _,
+                    ptr::null_mut(),
+                    ptr::null_mut(),
+                );
 
                 if !winerror::SUCCEEDED(hr) {
                     continue;
@@ -434,7 +412,7 @@ impl hal::Instance<Backend> for Instance {
 
             let physical_device = PhysicalDevice {
                 adapter,
-                library_d3d11: Arc::clone(&self.library_d3d11),
+                library: Arc::clone(&self.library),
                 features,
                 limits,
                 memory_properties,
@@ -472,7 +450,7 @@ impl hal::Instance<Backend> for Instance {
 
 pub struct PhysicalDevice {
     adapter: ComPtr<IDXGIAdapter>,
-    library_d3d11: Arc<libloading::Library>,
+    library: Arc<libloading::Library>,
     features: hal::Features,
     limits: hal::Limits,
     memory_properties: adapter::MemoryProperties,
@@ -501,40 +479,36 @@ fn get_feature_level(func: &CreateFun, adapter: *mut IDXGIAdapter) -> d3dcommon:
     ];
 
     let mut feature_level = d3dcommon::D3D_FEATURE_LEVEL_9_1;
-    let hr = unsafe {
-        func(
-            adapter,
-            d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
-            ptr::null_mut(),
-            0,
-            requested_feature_levels[..].as_ptr(),
-            requested_feature_levels.len() as _,
-            d3d11::D3D11_SDK_VERSION,
-            ptr::null_mut(),
-            &mut feature_level as *mut _,
-            ptr::null_mut(),
-        )
-    };
+    let hr = func(
+        adapter,
+        d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
+        ptr::null_mut(),
+        0,
+        requested_feature_levels[..].as_ptr(),
+        requested_feature_levels.len() as _,
+        d3d11::D3D11_SDK_VERSION,
+        ptr::null_mut(),
+        &mut feature_level as *mut _,
+        ptr::null_mut(),
+    );
 
     if !winerror::SUCCEEDED(hr) {
         // if there is no 11.1 runtime installed, requesting
         // `D3D_FEATURE_LEVEL_11_1` will return E_INVALIDARG so we just retry
         // without that
         if hr == winerror::E_INVALIDARG {
-            let hr = unsafe {
-                func(
-                    adapter,
-                    d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
-                    ptr::null_mut(),
-                    0,
-                    requested_feature_levels[1 ..].as_ptr(),
-                    (requested_feature_levels.len() - 1) as _,
-                    d3d11::D3D11_SDK_VERSION,
-                    ptr::null_mut(),
-                    &mut feature_level as *mut _,
-                    ptr::null_mut(),
-                )
-            };
+            let hr = func(
+                adapter,
+                d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
+                ptr::null_mut(),
+                0,
+                requested_feature_levels[1 ..].as_ptr(),
+                (requested_feature_levels.len() - 1) as _,
+                d3d11::D3D11_SDK_VERSION,
+                ptr::null_mut(),
+                &mut feature_level as *mut _,
+                ptr::null_mut(),
+            );
 
             if !winerror::SUCCEEDED(hr) {
                 // TODO: device might not support any feature levels?
@@ -553,8 +527,9 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         families: &[(&QueueFamily, &[queue::QueuePriority])],
         requested_features: hal::Features,
     ) -> Result<adapter::Gpu<Backend>, hal::device::CreationError> {
-        let func: libloading::Symbol<CreateFun> =
-            self.library_d3d11.get(b"D3D11CreateDevice").unwrap();
+        let func: libloading::Symbol<CreateFun> = self.library
+            .get(b"D3D11CreateDevice")
+            .unwrap();
 
         let (device, cxt) = {
             if !self.features().contains(requested_features) {
@@ -785,7 +760,7 @@ impl window::Surface<Backend> for Surface {
         window::SurfaceCapabilities {
             present_modes: window::PresentMode::FIFO, //TODO
             composite_alpha_modes: window::CompositeAlphaMode::OPAQUE, //TODO
-            image_count: 1 ..= 16,                    // TODO:
+            image_count: 1 ..= 16, // TODO:
             current_extent,
             extents: window::Extent2D {
                 width: 16,
@@ -800,7 +775,7 @@ impl window::Surface<Backend> for Surface {
     }
 
     fn supported_formats(&self, _physical_device: &PhysicalDevice) -> Option<Vec<format::Format>> {
-        Some(vec![
+         Some(vec![
             format::Format::Bgra8Srgb,
             format::Format::Bgra8Unorm,
             format::Format::Rgba8Srgb,
@@ -1471,6 +1446,131 @@ impl CommandBuffer {
         }
     }
 
+    unsafe fn bind_vertex_descriptor(
+        &self,
+        context: &ComPtr<d3d11::ID3D11DeviceContext>,
+        binding: &PipelineBinding,
+        handles: *mut Descriptor,
+    ) {
+        use pso::DescriptorType::*;
+
+        let handles = handles.offset(binding.handle_offset as isize);
+        let start = binding.binding_range.start as UINT;
+        let len = binding.binding_range.end as UINT - start;
+
+        match binding.ty {
+            Sampler => context.VSSetSamplers(start, len, handles as *const *mut _ as *const *mut _),
+            SampledImage | InputAttachment => {
+                context.VSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            CombinedImageSampler => {
+                context.VSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _);
+                context.VSSetSamplers(
+                    start,
+                    len,
+                    handles.offset(1) as *const *mut _ as *const *mut _,
+                );
+            }
+            UniformBuffer | UniformBufferDynamic => {
+                context.VSSetConstantBuffers(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            _ => {}
+        }
+    }
+
+    unsafe fn bind_fragment_descriptor(
+        &self,
+        context: &ComPtr<d3d11::ID3D11DeviceContext>,
+        binding: &PipelineBinding,
+        handles: *mut Descriptor,
+    ) {
+        use pso::DescriptorType::*;
+
+        let handles = handles.offset(binding.handle_offset as isize);
+        let start = binding.binding_range.start as UINT;
+        let len = binding.binding_range.end as UINT - start;
+
+        match binding.ty {
+            Sampler => context.PSSetSamplers(start, len, handles as *const *mut _ as *const *mut _),
+            SampledImage | InputAttachment => {
+                context.PSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            CombinedImageSampler => {
+                context.PSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _);
+                context.PSSetSamplers(
+                    start,
+                    len,
+                    handles.offset(1) as *const *mut _ as *const *mut _,
+                );
+            }
+            UniformBuffer | UniformBufferDynamic => {
+                context.PSSetConstantBuffers(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            _ => {}
+        }
+    }
+
+    unsafe fn bind_compute_descriptor(
+        &self,
+        context: &ComPtr<d3d11::ID3D11DeviceContext>,
+        binding: &PipelineBinding,
+        handles: *mut Descriptor,
+    ) {
+        use pso::DescriptorType::*;
+
+        let handles = handles.offset(binding.handle_offset as isize);
+        let start = binding.binding_range.start as UINT;
+        let len = binding.binding_range.end as UINT - start;
+
+        match binding.ty {
+            Sampler => context.CSSetSamplers(start, len, handles as *const *mut _ as *const *mut _),
+            SampledImage | InputAttachment => {
+                context.CSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            CombinedImageSampler => {
+                context.CSSetShaderResources(start, len, handles as *const *mut _ as *const *mut _);
+                context.CSSetSamplers(
+                    start,
+                    len,
+                    handles.offset(1) as *const *mut _ as *const *mut _,
+                );
+            }
+            UniformBuffer | UniformBufferDynamic => {
+                context.CSSetConstantBuffers(start, len, handles as *const *mut _ as *const *mut _)
+            }
+            StorageImage | StorageBuffer => context.CSSetUnorderedAccessViews(
+                start,
+                len,
+                handles as *const *mut _ as *const *mut _,
+                ptr::null_mut(),
+            ),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn bind_descriptor(
+        &self,
+        context: &ComPtr<d3d11::ID3D11DeviceContext>,
+        binding: &PipelineBinding,
+        handles: *mut Descriptor,
+    ) {
+        //use pso::ShaderStageFlags::*;
+
+        unsafe {
+            if binding.stage.contains(pso::ShaderStageFlags::VERTEX) {
+                self.bind_vertex_descriptor(context, binding, handles);
+            }
+
+            if binding.stage.contains(pso::ShaderStageFlags::FRAGMENT) {
+                self.bind_fragment_descriptor(context, binding, handles);
+            }
+
+            if binding.stage.contains(pso::ShaderStageFlags::COMPUTE) {
+                self.bind_compute_descriptor(context, binding, handles);
+            }
+        }
+    }
+
     fn defer_coherent_flush(&mut self, buffer: &Buffer) {
         if !self
             .flush_coherent_memory
@@ -1787,7 +1887,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             let idx = i + first_binding as usize;
             let buf = buf.borrow();
 
-            if buf.properties.contains(memory::Properties::COHERENT) {
+            if buf.ty == MemoryHeapFlags::HOST_COHERENT {
                 self.defer_coherent_flush(buf);
             }
 
@@ -1893,10 +1993,11 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
 
         //let offsets: Vec<command::DescriptorSetOffset> = offsets.into_iter().map(|o| *o.borrow()).collect();
 
-        for (set, info) in sets
+        let iter = sets
             .into_iter()
-            .zip(&layout.sets[first_set ..])
-        {
+            .zip(layout.set_bindings.iter().skip(first_set));
+
+        for (set, bindings) in iter {
             let set = set.borrow();
 
             {
@@ -1934,49 +2035,8 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             }
 
             // TODO: offsets
-
-            if let Some(rd) = info.registers.vs.c.as_some() {
-                self.context.VSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.vs.t.as_some() {
-                self.context.VSSetShaderResources(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.vs.s.as_some() {
-                self.context.VSSetSamplers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-
-            if let Some(rd) = info.registers.ps.c.as_some() {
-                self.context.PSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.ps.t.as_some() {
-                self.context.PSSetShaderResources(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.ps.s.as_some() {
-                self.context.PSSetSamplers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
+            for binding in bindings.iter() {
+                self.bind_descriptor(&self.context, binding, set.handles);
             }
         }
     }
@@ -2006,10 +2066,11 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             [ptr::null_mut(); 16].as_ptr(),
             ptr::null_mut(),
         );
-        for (set, info) in sets
+        let iter = sets
             .into_iter()
-            .zip(&layout.sets[first_set ..])
-        {
+            .zip(layout.set_bindings.iter().skip(first_set));
+
+        for (set, bindings) in iter {
             let set = set.borrow();
 
             {
@@ -2046,35 +2107,8 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             }
 
             // TODO: offsets
-
-            if let Some(rd) = info.registers.cs.c.as_some() {
-                self.context.CSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.cs.t.as_some() {
-                self.context.CSSetShaderResources(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
-            }
-            if let Some(rd) = info.registers.cs.u.as_some() {
-                self.context.CSSetUnorderedAccessViews(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                    ptr::null_mut(),
-                );
-            }
-            if let Some(rd) = info.registers.cs.s.as_some() {
-                self.context.CSSetSamplers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
+            for binding in bindings.iter() {
+                self.bind_descriptor(&self.context, binding, set.handles);
             }
         }
     }
@@ -2103,7 +2137,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferCopy>,
     {
-        if src.properties.contains(memory::Properties::COHERENT) {
+        if src.ty == MemoryHeapFlags::HOST_COHERENT {
             self.defer_coherent_flush(src);
         }
 
@@ -2169,7 +2203,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferImageCopy>,
     {
-        if buffer.properties.contains(memory::Properties::COHERENT) {
+        if buffer.ty == MemoryHeapFlags::HOST_COHERENT {
             self.defer_coherent_flush(buffer);
         }
 
@@ -2187,7 +2221,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferImageCopy>,
     {
-        if buffer.properties.contains(memory::Properties::COHERENT) {
+        if buffer.ty == MemoryHeapFlags::HOST_COHERENT {
             self.defer_coherent_invalidate(buffer);
         }
 
@@ -2313,6 +2347,14 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     }
 }
 
+bitflags! {
+    struct MemoryHeapFlags: u64 {
+        const DEVICE_LOCAL = 0x1;
+        const HOST_VISIBLE = 0x2 | 0x4;
+        const HOST_COHERENT = 0x2;
+    }
+}
+
 #[derive(Clone, Debug)]
 enum SyncRange {
     Whole,
@@ -2357,16 +2399,17 @@ impl MemoryFlush {
         let src = self.host_memory;
 
         debug_marker!(context, "Flush({:?})", self.sync_range);
-        let region = match self.sync_range {
-            SyncRange::Partial(ref range) if range.start < range.end => Some(d3d11::D3D11_BOX {
-                left: range.start as u32,
+        let region = if let SyncRange::Partial(range) = &self.sync_range {
+            Some(d3d11::D3D11_BOX {
+                left: range.start as _,
                 top: 0,
                 front: 0,
-                right: range.end as u32,
+                right: range.end as _,
                 bottom: 1,
                 back: 1,
-            }),
-            _ => None,
+            })
+        } else {
+            None
         };
 
         unsafe {
@@ -2474,6 +2517,7 @@ impl MemoryInvalidate {
 // abstraction acts as a "cache" since the "staging buffer" vec is disjoint
 // from all the dx11 resources we store in the struct.
 pub struct Memory {
+    ty: MemoryHeapFlags,
     properties: memory::Properties,
     size: u64,
 
@@ -2486,7 +2530,7 @@ pub struct Memory {
     local_buffers: RefCell<Vec<(Range<u64>, InternalBuffer)>>,
 
     // list of all images bound to this memory
-    _local_images: RefCell<Vec<(Range<u64>, InternalImage)>>,
+    local_images: RefCell<Vec<(Range<u64>, InternalImage)>>,
 }
 
 impl fmt::Debug for Memory {
@@ -2674,7 +2718,7 @@ pub struct InternalBuffer {
 
 pub struct Buffer {
     internal: InternalBuffer,
-    properties: memory::Properties, // empty if unbound
+    ty: MemoryHeapFlags,     // empty if unbound
     host_ptr: *mut u8,       // null if unbound
     bound_range: Range<u64>, // 0 if unbound
     requirements: memory::Requirements,
@@ -2701,6 +2745,7 @@ pub struct Image {
     decomposed_format: conv::DecomposedDxgiFormat,
     mip_levels: image::Level,
     internal: InternalImage,
+    tiling: image::Tiling,
     bind: d3d11::D3D11_BIND_FLAG,
     requirements: memory::Requirements,
 }
@@ -2850,255 +2895,37 @@ impl fmt::Debug for GraphicsPipeline {
 unsafe impl Send for GraphicsPipeline {}
 unsafe impl Sync for GraphicsPipeline {}
 
-type ResourceIndex = u8;
-type DescriptorIndex = u16;
-
-#[derive(Clone, Debug, Default)]
-struct RegisterData<T> {
-    // CBV
-    c: T,
-    // SRV
-    t: T,
-    // UAV
-    u: T,
-    // Sampler
-    s: T,
-}
-
-impl<T> RegisterData<T> {
-    fn map<U, F: Fn(&T) -> U>(
-        &self,
-        fun: F,
-    ) -> RegisterData<U> {
-        RegisterData {
-            c: fun(&self.c),
-            t: fun(&self.t),
-            u: fun(&self.u),
-            s: fun(&self.s),
-        }
-    }
-}
-
-impl RegisterData<DescriptorIndex> {
-    fn add_content_many(&mut self, content: DescriptorContent, many: DescriptorIndex) {
-        if content.contains(DescriptorContent::CBV) {
-            self.c += many;
-        }
-        if content.contains(DescriptorContent::SRV) {
-            self.t += many;
-        }
-        if content.contains(DescriptorContent::UAV) {
-            self.u += many;
-        }
-        if content.contains(DescriptorContent::SAMPLER) {
-            self.s += many;
-        }
-    }
-
-    fn add_content(&mut self, content: DescriptorContent) {
-        self.add_content_many(content, 1)
-    }
-
-    fn sum(&self) -> DescriptorIndex {
-        self.c + self.t + self.u + self.s
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-struct MultiStageData<T> {
-    vs: T,
-    ps: T,
-    cs: T,
-}
-
-impl<T> MultiStageData<T> {
-    fn select(self, stage: pso::Stage) -> T {
-        match stage {
-            pso::Stage::Vertex => self.vs,
-            pso::Stage::Fragment => self.ps,
-            pso::Stage::Compute => self.cs,
-            _ => panic!("Unsupported stage {:?}", stage)
-        }
-    }
-}
-
-impl<T> MultiStageData<RegisterData<T>> {
-    fn map_register<U, F: Fn(&T) -> U>(
-        &self,
-        fun: F,
-    ) -> MultiStageData<RegisterData<U>> {
-        MultiStageData {
-            vs: self.vs.map(&fun),
-            ps: self.ps.map(&fun),
-            cs: self.cs.map(&fun),
-        }
-    }
-
-    fn map_other<U, F: Fn(&RegisterData<T>) -> U>(
-        &self,
-        fun: F,
-    ) -> MultiStageData<U> {
-        MultiStageData {
-            vs: fun(&self.vs),
-            ps: fun(&self.ps),
-            cs: fun(&self.cs),
-        }
-    }
-}
-
-impl MultiStageData<RegisterData<DescriptorIndex>> {
-    fn add_content(&mut self, content: DescriptorContent, stages: pso::ShaderStageFlags) {
-        if stages.contains(pso::ShaderStageFlags::VERTEX) {
-            self.vs.add_content(content);
-        }
-        if stages.contains(pso::ShaderStageFlags::FRAGMENT) {
-            self.ps.add_content(content);
-        }
-        if stages.contains(pso::ShaderStageFlags::COMPUTE) {
-            self.cs.add_content(content);
-        }
-    }
-
-    fn sum(&self) -> DescriptorIndex {
-        self.vs.sum() + self.ps.sum() + self.cs.sum()
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-struct RegisterPoolMapping {
-    offset: DescriptorIndex,
-    count: ResourceIndex,
-}
-
-#[derive(Clone, Debug, Default)]
-struct RegisterInfo {
-    res_index: ResourceIndex,
-    pool_offset: DescriptorIndex,
-    count: ResourceIndex,
-}
-
-impl RegisterInfo {
-    fn as_some(&self) -> Option<&Self> {
-        if self.count == 0 {
-            None
-        } else {
-            Some(self)
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-struct RegisterAccumulator {
-    res_index: ResourceIndex,
-}
-
-impl RegisterAccumulator {
-    fn to_mapping(
-        &self,
-        cur_offset: &mut DescriptorIndex,
-    ) -> RegisterPoolMapping {
-        let offset = *cur_offset;
-        *cur_offset += self.res_index as DescriptorIndex;
-
-        RegisterPoolMapping {
-            offset,
-            count: self.res_index,
-        }
-    }
-
-    fn advance(
-        &mut self,
-        mapping: &RegisterPoolMapping,
-    ) -> RegisterInfo {
-        let res_index = self.res_index;
-        self.res_index += mapping.count;
-        RegisterInfo {
-            res_index,
-            pool_offset: mapping.offset,
-            count: mapping.count,
-        }
-    }
-}
-
-impl RegisterData<RegisterAccumulator> {
-    fn to_mapping(
-        &self,
-        pool_offset: &mut DescriptorIndex,
-    ) -> RegisterData<RegisterPoolMapping> {
-        RegisterData {
-            c: self.c.to_mapping(pool_offset),
-            t: self.t.to_mapping(pool_offset),
-            u: self.u.to_mapping(pool_offset),
-            s: self.s.to_mapping(pool_offset),
-        }
-    }
-
-    fn advance(
-        &mut self,
-        mapping: &RegisterData<RegisterPoolMapping>,
-    ) -> RegisterData<RegisterInfo> {
-        RegisterData {
-            c: self.c.advance(&mapping.c),
-            t: self.t.advance(&mapping.t),
-            u: self.u.advance(&mapping.u),
-            s: self.s.advance(&mapping.s),
-        }
-    }
-}
-
-impl MultiStageData<RegisterData<RegisterAccumulator>> {
-    fn to_mapping(&self) -> MultiStageData<RegisterData<RegisterPoolMapping>> {
-        let mut pool_offset = 0;
-        MultiStageData {
-            vs: self.vs.to_mapping(&mut pool_offset),
-            ps: self.ps.to_mapping(&mut pool_offset),
-            cs: self.cs.to_mapping(&mut pool_offset),
-        }
-    }
-
-    fn advance(
-        &mut self,
-        mapping: &MultiStageData<RegisterData<RegisterPoolMapping>>,
-    ) -> MultiStageData<RegisterData<RegisterInfo>> {
-        MultiStageData {
-            vs: self.vs.advance(&mapping.vs),
-            ps: self.ps.advance(&mapping.ps),
-            cs: self.cs.advance(&mapping.cs),
-        }
-    }
+#[derive(Clone, Debug)]
+struct PipelineBinding {
+    stage: pso::ShaderStageFlags,
+    ty: pso::DescriptorType,
+    binding_range: Range<u32>,
+    handle_offset: u32,
 }
 
 #[derive(Clone, Debug)]
-struct DescriptorSetInfo {
-    bindings: Arc<Vec<pso::DescriptorSetLayoutBinding>>,
-    registers: MultiStageData<RegisterData<RegisterInfo>>,
+struct RegisterMapping {
+    ty: pso::DescriptorType,
+    spirv_binding: u32,
+    hlsl_register: u8,
+    combined: bool,
 }
 
-impl DescriptorSetInfo {
-    fn find_register(
-        &self,
-        stage: pso::Stage,
-        binding_index: pso::DescriptorBinding,
-    ) -> (DescriptorContent, RegisterData<ResourceIndex>) {
-        let mut res_offsets = self.registers
-            .map_register(|info| info.res_index as DescriptorIndex)
-            .select(stage);
-        for binding in self.bindings.iter() {
-            let content = DescriptorContent::from(binding.ty);
-            if binding.binding == binding_index {
-                return (content, res_offsets.map(|offset| *offset as ResourceIndex))
-            }
-            res_offsets.add_content(content);
-        }
-        panic!("Unable to find binding {:?}", binding_index);
-    }
+#[derive(Clone, Debug)]
+struct RegisterRemapping {
+    mapping: Vec<RegisterMapping>,
+    num_t: u8,
+    num_s: u8,
+    num_c: u8,
+    num_u: u8,
 }
 
 /// The pipeline layout holds optimized (less api calls) ranges of objects for all descriptor sets
 /// belonging to the pipeline object.
 #[derive(Debug)]
 pub struct PipelineLayout {
-    sets: Vec<DescriptorSetInfo>,
+    set_bindings: Vec<Vec<PipelineBinding>>,
+    set_remapping: Vec<RegisterRemapping>,
 }
 
 /// The descriptor set layout contains mappings from a given binding to the offset in our
@@ -3106,8 +2933,9 @@ pub struct PipelineLayout {
 /// handles).
 #[derive(Debug)]
 pub struct DescriptorSetLayout {
-    bindings: Arc<Vec<pso::DescriptorSetLayoutBinding>>,
-    pool_mapping: MultiStageData<RegisterData<RegisterPoolMapping>>,
+    bindings: Vec<PipelineBinding>,
+    handle_count: u32,
+    register_remap: RegisterRemapping,
 }
 
 #[derive(Debug)]
@@ -3133,7 +2961,7 @@ struct CoherentBuffers {
 }
 
 impl CoherentBuffers {
-    fn _add_flush(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
+    fn add_flush(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
         let new = buffer.internal.raw;
 
         if old != new {
@@ -3173,7 +3001,7 @@ impl CoherentBuffers {
         }
     }
 
-    fn _add_invalidate(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
+    fn add_invalidate(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
         let new = buffer.internal.raw;
 
         if old != new {
@@ -3201,48 +3029,12 @@ impl CoherentBuffers {
 #[repr(C)]
 struct Descriptor(*mut d3d11::ID3D11DeviceChild);
 
-bitflags! {
-    /// A set of D3D11 descriptor types that need to be associated
-    /// with a single gfx-hal `DescriptorType`.
-    #[derive(Default)]
-    pub struct DescriptorContent: u8 {
-        const CBV = 0x1;
-        const SRV = 0x2;
-        const UAV = 0x4;
-        const SAMPLER = 0x8;
-        /// Indicates if the descriptor is a dynamic uniform/storage buffer.
-        /// Important as dynamic buffers are implemented as root descriptors.
-        const DYNAMIC = 0x10;
-    }
-}
-
-impl From<pso::DescriptorType> for DescriptorContent {
-    fn from(ty: pso::DescriptorType) -> Self {
-        use hal::pso::DescriptorType as Dt;
-        match ty {
-            Dt::Sampler => DescriptorContent::SAMPLER,
-            Dt::CombinedImageSampler => DescriptorContent::SRV | DescriptorContent::SAMPLER,
-            Dt::SampledImage | Dt::InputAttachment | Dt::UniformTexelBuffer => {
-                DescriptorContent::SRV
-            }
-            Dt::StorageImage | Dt::StorageBuffer | Dt::StorageTexelBuffer => {
-                DescriptorContent::SRV | DescriptorContent::UAV
-            }
-            Dt::StorageBufferDynamic => {
-                DescriptorContent::SRV | DescriptorContent::UAV | DescriptorContent::DYNAMIC
-            }
-            Dt::UniformBuffer => DescriptorContent::CBV,
-            Dt::UniformBufferDynamic => DescriptorContent::CBV | DescriptorContent::DYNAMIC,
-        }
-    }
-}
-
 pub struct DescriptorSet {
-    offset: DescriptorIndex,
-    len: DescriptorIndex,
+    offset: usize,
+    len: usize,
     handles: *mut Descriptor,
+    register_remap: RegisterRemapping,
     coherent_buffers: Mutex<CoherentBuffers>,
-    layout: DescriptorSetLayout,
 }
 
 impl fmt::Debug for DescriptorSet {
@@ -3255,40 +3047,68 @@ unsafe impl Send for DescriptorSet {}
 unsafe impl Sync for DescriptorSet {}
 
 impl DescriptorSet {
-    fn _add_flush(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
+    fn get_handle_offset(&self, target_binding: u32) -> (pso::DescriptorType, u8, u8) {
+        use pso::DescriptorType::*;
+
+        let mapping = self
+            .register_remap
+            .mapping
+            .iter()
+            .find(|&mapping| target_binding == mapping.spirv_binding)
+            .unwrap();
+
+        let (ty, register) = (mapping.ty, mapping.hlsl_register);
+
+        match ty {
+            Sampler => {
+                let (ty, t_reg) = if mapping.combined {
+                    let combined_mapping = self
+                        .register_remap
+                        .mapping
+                        .iter()
+                        .find(|&mapping| {
+                            mapping.ty == SampledImage && target_binding == mapping.spirv_binding
+                        })
+                        .unwrap();
+                    (CombinedImageSampler, combined_mapping.hlsl_register)
+                } else {
+                    (ty, 0)
+                };
+
+                (ty, register, self.register_remap.num_s + t_reg)
+            }
+            SampledImage | UniformTexelBuffer => (ty, self.register_remap.num_s + register, 0),
+            UniformBuffer | UniformBufferDynamic => (
+                ty,
+                self.register_remap.num_s + self.register_remap.num_t + register,
+                0,
+            ),
+            StorageTexelBuffer | StorageBuffer | InputAttachment | StorageBufferDynamic
+            | StorageImage => (
+                ty,
+                self.register_remap.num_s
+                    + self.register_remap.num_t
+                    + self.register_remap.num_c
+                    + register,
+                0,
+            ),
+            CombinedImageSampler => unreachable!(),
+        }
+    }
+
+    fn add_flush(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
         let new = buffer.internal.raw;
 
         if old != new {
-            self.coherent_buffers.lock()._add_flush(old, buffer);
+            self.coherent_buffers.lock().add_flush(old, buffer);
         }
     }
 
-    fn _add_invalidate(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
+    fn add_invalidate(&self, old: *mut d3d11::ID3D11Buffer, buffer: &Buffer) {
         let new = buffer.internal.raw;
 
         if old != new {
-            self.coherent_buffers.lock()._add_invalidate(old, buffer);
-        }
-    }
-
-    unsafe fn assign(&self, offset: DescriptorIndex, value: *mut d3d11::ID3D11DeviceChild) {
-        *self.handles.offset(offset as isize) = Descriptor(value);
-    }
-
-    unsafe fn assign_stages(
-        &self,
-        offsets: &MultiStageData<DescriptorIndex>,
-        stages: pso::ShaderStageFlags,
-        value: *mut d3d11::ID3D11DeviceChild,
-    ) {
-        if stages.contains(pso::ShaderStageFlags::VERTEX) {
-            self.assign(offsets.vs, value);
-        }
-        if stages.contains(pso::ShaderStageFlags::FRAGMENT) {
-            self.assign(offsets.ps, value);
-        }
-        if stages.contains(pso::ShaderStageFlags::COMPUTE) {
-            self.assign(offsets.cs, value);
+            self.coherent_buffers.lock().add_invalidate(old, buffer);
         }
     }
 }
@@ -3296,16 +3116,16 @@ impl DescriptorSet {
 #[derive(Debug)]
 pub struct DescriptorPool {
     handles: Vec<Descriptor>,
-    allocator: RangeAllocator<DescriptorIndex>,
+    allocator: RangeAllocator<usize>,
 }
 
 unsafe impl Send for DescriptorPool {}
 unsafe impl Sync for DescriptorPool {}
 
 impl DescriptorPool {
-    fn with_capacity(size: DescriptorIndex) -> Self {
+    pub fn with_capacity(size: usize) -> Self {
         DescriptorPool {
-            handles: vec![Descriptor(ptr::null_mut()); size as usize],
+            handles: vec![Descriptor(ptr::null_mut()); size],
             allocator: RangeAllocator::new(0 .. size),
         }
     }
@@ -3316,15 +3136,14 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         &mut self,
         layout: &DescriptorSetLayout,
     ) -> Result<DescriptorSet, pso::AllocationError> {
-        let len = layout.pool_mapping
-            .map_register(|mapping| mapping.count as DescriptorIndex)
-            .sum()
-            .max(1);
+        // TODO: make sure this doesn't contradict vulkan semantics
+        // if layout has 0 bindings, allocate 1 handle anyway
+        let len = layout.handle_count.max(1) as _;
 
         self.allocator
             .allocate_range(len)
             .map(|range| {
-                for handle in &mut self.handles[range.start as usize .. range.end as usize] {
+                for handle in &mut self.handles[range.clone()] {
                     *handle = Descriptor(ptr::null_mut());
                 }
 
@@ -3332,14 +3151,11 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
                     offset: range.start,
                     len,
                     handles: self.handles.as_mut_ptr().offset(range.start as _),
+                    register_remap: layout.register_remap.clone(),
                     coherent_buffers: Mutex::new(CoherentBuffers {
                         flush_coherent_buffers: RefCell::new(Vec::new()),
                         invalidate_coherent_buffers: RefCell::new(Vec::new()),
                     }),
-                    layout: DescriptorSetLayout {
-                        bindings: Arc::clone(&layout.bindings),
-                        pool_mapping: layout.pool_mapping.clone(),
-                    },
                 }
             })
             .map_err(|_| pso::AllocationError::OutOfPoolMemory)

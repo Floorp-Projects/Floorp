@@ -33,11 +33,9 @@ use {
     CommandBuffer,
     CommandPool,
     ComputePipeline,
-    DescriptorContent,
-    DescriptorIndex,
+    Descriptor,
     DescriptorPool,
     DescriptorSet,
-    DescriptorSetInfo,
     DescriptorSetLayout,
     Fence,
     Framebuffer,
@@ -47,14 +45,14 @@ use {
     InternalBuffer,
     InternalImage,
     Memory,
-    MultiStageData,
+    MemoryHeapFlags,
+    PipelineBinding,
     PipelineLayout,
     QueryPool,
     RawFence,
-    RegisterData,
-    RegisterAccumulator,
+    RegisterMapping,
+    RegisterRemapping,
     RenderPass,
-    ResourceIndex,
     Sampler,
     Semaphore,
     ShaderModule,
@@ -65,10 +63,6 @@ use {
 };
 
 use {conv, internal, shader};
-
-
-//TODO: expose coherent type 0x2 when it's properly supported
-const BUFFER_TYPE_MASK: u64 = 0x1 | 0x4;
 
 struct InputLayout {
     raw: ComPtr<d3d11::ID3D11InputLayout>,
@@ -82,6 +76,7 @@ pub struct Device {
     raw: ComPtr<d3d11::ID3D11Device>,
     pub(crate) context: ComPtr<d3d11::ID3D11DeviceContext>,
     memory_properties: MemoryProperties,
+    memory_heap_flags: [MemoryHeapFlags; 3],
     pub(crate) internal: internal::Internal,
 }
 
@@ -118,6 +113,11 @@ impl Device {
             raw: device.clone(),
             context,
             memory_properties,
+            memory_heap_flags: [
+                MemoryHeapFlags::DEVICE_LOCAL,
+                MemoryHeapFlags::HOST_COHERENT,
+                MemoryHeapFlags::HOST_VISIBLE,
+            ],
             internal: internal::Internal::new(&device),
         }
     }
@@ -770,12 +770,13 @@ impl device::Device<Backend> for Device {
     ) -> Result<Memory, device::AllocationError> {
         let vec = Vec::with_capacity(size as usize);
         Ok(Memory {
+            ty: self.memory_heap_flags[mem_type.0],
             properties: self.memory_properties.memory_types[mem_type.0].properties,
             size,
             mapped_ptr: vec.as_ptr() as *mut _,
             host_visible: Some(RefCell::new(vec)),
             local_buffers: RefCell::new(Vec::new()),
-            _local_images: RefCell::new(Vec::new()),
+            local_images: RefCell::new(Vec::new()),
         })
     }
 
@@ -852,20 +853,170 @@ impl device::Device<Backend> for Device {
         IR: IntoIterator,
         IR::Item: Borrow<(pso::ShaderStageFlags, Range<u32>)>,
     {
-        let mut res_offsets = MultiStageData::<RegisterData<RegisterAccumulator>>::default();
-        let mut sets = Vec::new();
-        for set_layout in set_layouts {
-            let layout = set_layout.borrow();
-            sets.push(DescriptorSetInfo {
-                bindings: Arc::clone(&layout.bindings),
-                registers: res_offsets.advance(&layout.pool_mapping),
-            });
-        };
+        use pso::DescriptorType::*;
 
-        //TODO: assert that res_offsets are within supported range
+        let mut set_bindings = Vec::new();
+        let mut set_remapping = Vec::new();
+
+        // since we remapped the bindings in our descriptor set layouts to their own local space
+        // (starting from register 0), we need to combine all the registers when creating our
+        // pipeline layout. we do this by simply offsetting all the registers by the amount of
+        // registers in the previous descriptor set layout
+        let mut s_offset = 0;
+        let mut t_offset = 0;
+        let mut c_offset = 0;
+        let mut u_offset = 0;
+
+        fn get_descriptor_offset(ty: pso::DescriptorType, s: u32, t: u32, c: u32, u: u32) -> u32 {
+            match ty {
+                Sampler => s,
+                SampledImage | UniformTexelBuffer => t,
+                UniformBuffer | UniformBufferDynamic => c,
+                StorageTexelBuffer | StorageBuffer | InputAttachment | StorageBufferDynamic
+                | StorageImage => u,
+                CombinedImageSampler => unreachable!(),
+            }
+        }
+
+        for layout in set_layouts {
+            let layout = layout.borrow();
+
+            let bindings = &layout.bindings;
+
+            let stages = [
+                pso::ShaderStageFlags::VERTEX,
+                pso::ShaderStageFlags::HULL,
+                pso::ShaderStageFlags::DOMAIN,
+                pso::ShaderStageFlags::GEOMETRY,
+                pso::ShaderStageFlags::FRAGMENT,
+                pso::ShaderStageFlags::COMPUTE,
+            ];
+
+            let mut optimized_bindings = Vec::new();
+
+            // for every shader stage we get a range of descriptor handles that can be bound with
+            // PS/VS/CSSetXX()
+            for &stage in &stages {
+                let mut state = None;
+
+                for binding in bindings {
+                    if !binding.stage.contains(stage) {
+                        continue;
+                    }
+
+                    state = match state {
+                        None => {
+                            if binding.stage.contains(stage) {
+                                let offset = binding.handle_offset;
+
+                                Some((
+                                    binding.ty,
+                                    binding.binding_range.start,
+                                    binding.binding_range.end,
+                                    offset,
+                                    offset,
+                                ))
+                            } else {
+                                None
+                            }
+                        }
+                        Some((
+                            mut ty,
+                            mut start,
+                            mut end,
+                            mut start_offset,
+                            mut current_offset,
+                        )) => {
+                            // if we encounter another type or the binding/handle
+                            // range is broken, push our current descriptor range
+                            // and begin a new one.
+                            if ty != binding.ty
+                                || end != binding.binding_range.start
+                                || current_offset + 1 != binding.handle_offset
+                            {
+                                let register_offset = get_descriptor_offset(
+                                    ty, s_offset, t_offset, c_offset, u_offset,
+                                );
+
+                                optimized_bindings.push(PipelineBinding {
+                                    stage,
+                                    ty,
+                                    binding_range: (register_offset + start)
+                                        .. (register_offset + end),
+                                    handle_offset: start_offset,
+                                });
+
+                                if binding.stage.contains(stage) {
+                                    ty = binding.ty;
+                                    start = binding.binding_range.start;
+                                    end = binding.binding_range.end;
+
+                                    start_offset = binding.handle_offset;
+                                    current_offset = binding.handle_offset;
+
+                                    Some((ty, start, end, start_offset, current_offset))
+                                } else {
+                                    None
+                                }
+                            } else {
+                                end += 1;
+                                current_offset += 1;
+
+                                Some((ty, start, end, start_offset, current_offset))
+                            }
+                        }
+                    }
+                }
+
+                // catch trailing descriptors
+                if let Some((ty, start, end, start_offset, _)) = state {
+                    let register_offset =
+                        get_descriptor_offset(ty, s_offset, t_offset, c_offset, u_offset);
+
+                    optimized_bindings.push(PipelineBinding {
+                        stage,
+                        ty,
+                        binding_range: (register_offset + start) .. (register_offset + end),
+                        handle_offset: start_offset,
+                    });
+                }
+            }
+
+            let offset_mappings = layout
+                .register_remap
+                .mapping
+                .iter()
+                .map(|register| {
+                    let register_offset =
+                        get_descriptor_offset(register.ty, s_offset, t_offset, c_offset, u_offset);
+
+                    RegisterMapping {
+                        ty: register.ty,
+                        spirv_binding: register.spirv_binding,
+                        hlsl_register: register.hlsl_register + register_offset as u8,
+                        combined: register.combined,
+                    }
+                })
+                .collect();
+
+            set_bindings.push(optimized_bindings);
+            set_remapping.push(RegisterRemapping {
+                mapping: offset_mappings,
+                num_s: layout.register_remap.num_s,
+                num_t: layout.register_remap.num_t,
+                num_c: layout.register_remap.num_c,
+                num_u: layout.register_remap.num_u,
+            });
+
+            s_offset += layout.register_remap.num_s as u32;
+            t_offset += layout.register_remap.num_t as u32;
+            c_offset += layout.register_remap.num_c as u32;
+            u_offset += layout.register_remap.num_u as u32;
+        }
 
         Ok(PipelineLayout {
-            sets,
+            set_bindings,
+            set_remapping,
         })
     }
 
@@ -876,7 +1027,7 @@ impl device::Device<Backend> for Device {
         Ok(())
     }
 
-    unsafe fn get_pipeline_cache_data(&self, _cache: &()) -> Result<Vec<u8>, device::OutOfMemory> {
+    unsafe fn get_pipeline_cache_data(&self, cache: &()) -> Result<Vec<u8>, device::OutOfMemory> {
         //empty
         Ok(Vec::new())
     }
@@ -1072,14 +1223,14 @@ impl device::Device<Backend> for Device {
                 uav: None,
                 usage,
             },
-            properties: memory::Properties::empty(),
+            ty: MemoryHeapFlags::empty(),
             bound_range: 0 .. 0,
             host_ptr: ptr::null_mut(),
             bind,
             requirements: memory::Requirements {
                 size,
                 alignment: 1,
-                type_mask: BUFFER_TYPE_MASK,
+                type_mask: MemoryHeapFlags::all().bits(),
             },
         })
     }
@@ -1118,76 +1269,80 @@ impl device::Device<Backend> for Device {
                 SysMemSlicePitch: 0,
             });
 
-        let raw = if memory.properties.contains(memory::Properties::DEVICE_LOCAL) {
-            // device local memory
-            let desc = d3d11::D3D11_BUFFER_DESC {
-                ByteWidth: buffer.requirements.size as _,
-                Usage: d3d11::D3D11_USAGE_DEFAULT,
-                BindFlags: buffer.bind,
-                CPUAccessFlags: 0,
-                MiscFlags,
-                StructureByteStride: if buffer
-                    .internal
-                    .usage
-                    .contains(buffer::Usage::TRANSFER_SRC)
-                {
-                    4
-                } else {
-                    0
-                },
-            };
+        let raw = match memory.ty {
+            MemoryHeapFlags::DEVICE_LOCAL => {
+                // device local memory
+                let desc = d3d11::D3D11_BUFFER_DESC {
+                    ByteWidth: buffer.requirements.size as _,
+                    Usage: d3d11::D3D11_USAGE_DEFAULT,
+                    BindFlags: buffer.bind,
+                    CPUAccessFlags: 0,
+                    MiscFlags,
+                    StructureByteStride: if buffer
+                        .internal
+                        .usage
+                        .contains(buffer::Usage::TRANSFER_SRC)
+                    {
+                        4
+                    } else {
+                        0
+                    },
+                };
 
-            let mut buffer: *mut d3d11::ID3D11Buffer = ptr::null_mut();
-            let hr = self.raw.CreateBuffer(
-                &desc,
-                if let Some(data) = initial_data {
-                    &data
-                } else {
-                    ptr::null_mut()
-                },
-                &mut buffer as *mut *mut _ as *mut *mut _,
-            );
+                let mut buffer: *mut d3d11::ID3D11Buffer = ptr::null_mut();
+                let hr = self.raw.CreateBuffer(
+                    &desc,
+                    if let Some(data) = initial_data {
+                        &data
+                    } else {
+                        ptr::null_mut()
+                    },
+                    &mut buffer as *mut *mut _ as *mut *mut _,
+                );
 
-            if !winerror::SUCCEEDED(hr) {
-                return Err(device::BindError::WrongMemory);
+                if !winerror::SUCCEEDED(hr) {
+                    return Err(device::BindError::WrongMemory);
+                }
+
+                ComPtr::from_raw(buffer)
             }
+            MemoryHeapFlags::HOST_VISIBLE | MemoryHeapFlags::HOST_COHERENT => {
+                let desc = d3d11::D3D11_BUFFER_DESC {
+                    ByteWidth: buffer.requirements.size as _,
+                    // TODO: dynamic?
+                    Usage: d3d11::D3D11_USAGE_DEFAULT,
+                    BindFlags: buffer.bind,
+                    CPUAccessFlags: 0,
+                    MiscFlags,
+                    StructureByteStride: if buffer
+                        .internal
+                        .usage
+                        .contains(buffer::Usage::TRANSFER_SRC)
+                    {
+                        4
+                    } else {
+                        0
+                    },
+                };
 
-            ComPtr::from_raw(buffer)
-        } else {
-            let desc = d3d11::D3D11_BUFFER_DESC {
-                ByteWidth: buffer.requirements.size as _,
-                // TODO: dynamic?
-                Usage: d3d11::D3D11_USAGE_DEFAULT,
-                BindFlags: buffer.bind,
-                CPUAccessFlags: 0,
-                MiscFlags,
-                StructureByteStride: if buffer
-                    .internal
-                    .usage
-                    .contains(buffer::Usage::TRANSFER_SRC)
-                {
-                    4
-                } else {
-                    0
-                },
-            };
+                let mut buffer: *mut d3d11::ID3D11Buffer = ptr::null_mut();
+                let hr = self.raw.CreateBuffer(
+                    &desc,
+                    if let Some(data) = initial_data {
+                        &data
+                    } else {
+                        ptr::null_mut()
+                    },
+                    &mut buffer as *mut *mut _ as *mut *mut _,
+                );
 
-            let mut buffer: *mut d3d11::ID3D11Buffer = ptr::null_mut();
-            let hr = self.raw.CreateBuffer(
-                &desc,
-                if let Some(data) = initial_data {
-                    &data
-                } else {
-                    ptr::null_mut()
-                },
-                &mut buffer as *mut *mut _ as *mut *mut _,
-            );
+                if !winerror::SUCCEEDED(hr) {
+                    return Err(device::BindError::WrongMemory);
+                }
 
-            if !winerror::SUCCEEDED(hr) {
-                return Err(device::BindError::WrongMemory);
+                ComPtr::from_raw(buffer)
             }
-
-            ComPtr::from_raw(buffer)
+            _ => unimplemented!(),
         };
 
         let disjoint_cb = if buffer.internal.disjoint_cb.is_some() {
@@ -1284,7 +1439,7 @@ impl device::Device<Backend> for Device {
             uav,
             usage: buffer.internal.usage,
         };
-        let range = offset .. offset + buffer.requirements.size;
+        let range = offset .. buffer.requirements.size;
 
         memory.bind_buffer(range.clone(), internal.clone());
 
@@ -1295,7 +1450,7 @@ impl device::Device<Backend> for Device {
         };
 
         buffer.internal = internal;
-        buffer.properties = memory.properties;
+        buffer.ty = memory.ty;
         buffer.host_ptr = host_ptr;
         buffer.bound_range = range;
 
@@ -1316,7 +1471,7 @@ impl device::Device<Backend> for Device {
         kind: image::Kind,
         mip_levels: image::Level,
         format: format::Format,
-        _tiling: image::Tiling,
+        tiling: image::Tiling,
         usage: image::Usage,
         view_caps: image::ViewCapabilities,
     ) -> Result<Image, image::CreationError> {
@@ -1368,12 +1523,13 @@ impl device::Device<Backend> for Device {
             mip_levels,
             format,
             usage,
+            tiling,
             view_caps,
             bind,
             requirements: memory::Requirements {
                 size: size,
                 alignment: 1,
-                type_mask: 0x1, // device-local only
+                type_mask: MemoryHeapFlags::DEVICE_LOCAL.bits(),
             },
         })
     }
@@ -1808,6 +1964,7 @@ impl device::Device<Backend> for Device {
         })
     }
 
+    // TODO: make use of `max_sets`
     unsafe fn create_descriptor_pool<I>(
         &self,
         _max_sets: usize,
@@ -1818,15 +1975,19 @@ impl device::Device<Backend> for Device {
         I: IntoIterator,
         I::Item: Borrow<pso::DescriptorRangeDesc>,
     {
-        let mut total = RegisterData::default();
-        for range in ranges {
-            let r = range.borrow();
-            let content = DescriptorContent::from(r.ty);
-            total.add_content_many(content, r.count as DescriptorIndex);
-        }
+        let count = ranges
+            .into_iter()
+            .map(|r| {
+                let r = r.borrow();
 
-        let max_stages = 6;
-        let count = total.sum() * max_stages;
+                r.count
+                    * match r.ty {
+                        pso::DescriptorType::CombinedImageSampler => 2,
+                        _ => 1,
+                    }
+            })
+            .sum::<usize>();
+
         Ok(DescriptorPool::with_capacity(count))
     }
 
@@ -1841,26 +2002,155 @@ impl device::Device<Backend> for Device {
         J: IntoIterator,
         J::Item: Borrow<Sampler>,
     {
-        let mut total = MultiStageData::<RegisterData<_>>::default();
-        let mut bindings = layout_bindings
-            .into_iter()
-            .map(|b| b.borrow().clone())
-            .collect::<Vec<_>>();
+        use pso::DescriptorType::*;
 
-        for binding in bindings.iter() {
-            let content = DescriptorContent::from(binding.ty);
-            total.add_content(content, binding.stage_flags);
+        let mut bindings = Vec::new();
+
+        let mut mapping = Vec::new();
+        let mut num_t = 0;
+        let mut num_s = 0;
+        let mut num_c = 0;
+        let mut num_u = 0;
+
+        // we check how many hlsl registers we should use
+        for binding in layout_bindings {
+            let binding = binding.borrow();
+
+            let hlsl_reg = match binding.ty {
+                Sampler => {
+                    num_s += 1;
+                    num_s
+                }
+                CombinedImageSampler => {
+                    num_t += 1;
+                    num_s += 1;
+                    num_t
+                }
+                SampledImage | UniformTexelBuffer => {
+                    num_t += 1;
+                    num_t
+                }
+                UniformBuffer | UniformBufferDynamic => {
+                    num_c += 1;
+                    num_c
+                }
+                StorageTexelBuffer | StorageBuffer | InputAttachment | StorageBufferDynamic
+                | StorageImage => {
+                    num_u += 1;
+                    num_u
+                }
+            } - 1;
+
+            // we decompose combined image samplers into a separate sampler and image internally
+            if binding.ty == pso::DescriptorType::CombinedImageSampler {
+                // TODO: for now we have to make combined image samplers share registers since
+                //       spirv-cross doesn't support setting the register of the sampler/texture
+                //       pair to separate values (only one `DescriptorSet` decorator)
+                let shared_reg = num_s.max(num_t);
+
+                num_s = shared_reg;
+                num_t = shared_reg;
+
+                let sampler_reg = num_s - 1;
+                let image_reg = num_t - 1;
+
+                mapping.push(RegisterMapping {
+                    ty: pso::DescriptorType::Sampler,
+                    spirv_binding: binding.binding,
+                    hlsl_register: sampler_reg as u8,
+                    combined: true,
+                });
+                mapping.push(RegisterMapping {
+                    ty: pso::DescriptorType::SampledImage,
+                    spirv_binding: binding.binding,
+                    hlsl_register: image_reg as u8,
+                    combined: true,
+                });
+
+                bindings.push(PipelineBinding {
+                    stage: binding.stage_flags,
+                    ty: pso::DescriptorType::Sampler,
+                    binding_range: sampler_reg .. (sampler_reg + 1),
+                    handle_offset: 0,
+                });
+                bindings.push(PipelineBinding {
+                    stage: binding.stage_flags,
+                    ty: pso::DescriptorType::SampledImage,
+                    binding_range: image_reg .. (image_reg + 1),
+                    handle_offset: 0,
+                });
+            } else {
+                mapping.push(RegisterMapping {
+                    ty: binding.ty,
+                    spirv_binding: binding.binding,
+                    hlsl_register: hlsl_reg as u8,
+                    combined: false,
+                });
+
+                bindings.push(PipelineBinding {
+                    stage: binding.stage_flags,
+                    ty: binding.ty,
+                    binding_range: hlsl_reg .. (hlsl_reg + 1),
+                    handle_offset: 0,
+                });
+            }
         }
 
-        bindings.sort_by_key(|a| a.binding);
-
-        let accum = total.map_register(|count| RegisterAccumulator {
-            res_index: *count as ResourceIndex,
+        // we sort the internal descriptor's handle (the actual dx interface) by some categories to
+        // make it easier to group api calls together
+        bindings.sort_unstable_by(|a, b| {
+            (b.ty as u32)
+                .cmp(&(a.ty as u32))
+                .then(a.binding_range.start.cmp(&b.binding_range.start))
+                .then(a.stage.cmp(&b.stage))
         });
 
+        // we assign the handle (interface ptr) offset according to what register type the
+        // descriptor is. the final layout of the handles should look like this:
+        //
+        //       0..num_s     num_s..num_t  num_t..num_c  num_c..handle_len
+        //   +----------+----------------+-------------+------------------+
+        //   |          |                |             |                  |
+        //   +----------+----------------+-------------+------------------+
+        //   0                                                   handle_len
+        //
+        let mut s = 0;
+        let mut t = 0;
+        let mut c = 0;
+        let mut u = 0;
+        for mut binding in bindings.iter_mut() {
+            match binding.ty {
+                Sampler => {
+                    binding.handle_offset = s;
+                    s += 1;
+                }
+                SampledImage | UniformTexelBuffer => {
+                    binding.handle_offset = num_s + t;
+                    t += 1;
+                }
+                UniformBuffer | UniformBufferDynamic => {
+                    binding.handle_offset = num_s + num_t + c;
+                    c += 1;
+                }
+                StorageTexelBuffer | StorageBuffer | InputAttachment | StorageBufferDynamic
+                | StorageImage => {
+                    binding.handle_offset = num_s + num_t + num_c + u;
+                    u += 1;
+                }
+                CombinedImageSampler => unreachable!(),
+            }
+        }
+
         Ok(DescriptorSetLayout {
-            bindings: Arc::new(bindings),
-            pool_mapping: accum.to_mapping(),
+            bindings,
+            handle_count: num_s + num_t + num_c + num_u,
+            register_remap: RegisterRemapping {
+                mapping,
+                num_s: num_s as _,
+                num_t: num_t as _,
+                num_c: num_c as _,
+                num_u: num_u as _,
+            },
         })
     }
 
@@ -1871,72 +2161,72 @@ impl device::Device<Backend> for Device {
         J::Item: Borrow<pso::Descriptor<'a, Backend>>,
     {
         for write in write_iter {
-            let mut mapping = write.set.layout.pool_mapping
-                .map_register(|mapping| mapping.offset);
-            let binding_start = write.set.layout.bindings
-                .iter()
-                .position(|binding| binding.binding == write.binding)
-                .unwrap();
-            for binding in &write.set.layout.bindings[.. binding_start] {
-                let content = DescriptorContent::from(binding.ty);
-                mapping.add_content(content, binding.stage_flags);
-            }
+            //println!("WriteDescriptorSets({:?})", write.set.handles);
+            let target_binding = write.binding;
+            let (ty, first_offset, second_offset) = write.set.get_handle_offset(target_binding);
+            assert!((first_offset as usize) < write.set.len);
+            assert!((second_offset as usize) < write.set.len);
 
-            for (binding, descriptor) in write.set.layout.bindings[binding_start ..]
-                .iter()
-                .zip(write.descriptors)
-            {
-                let handles = match *descriptor.borrow() {
-                    pso::Descriptor::Buffer(buffer, ref _range) => RegisterData {
-                        c: match buffer.internal.disjoint_cb {
-                            Some(dj_buf) => dj_buf as *mut _,
-                            None => buffer.internal.raw as *mut _,
-                        },
-                        t: buffer.internal.srv.map_or(ptr::null_mut(), |p| p as *mut _),
-                        u: buffer.internal.uav.map_or(ptr::null_mut(), |p| p as *mut _),
-                        s: ptr::null_mut(),
-                    },
-                    pso::Descriptor::Image(image, _layout) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: image.srv_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        u: image.uav_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        s: ptr::null_mut(),
-                    },
-                    pso::Descriptor::Sampler(sampler) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: ptr::null_mut(),
-                        u: ptr::null_mut(),
-                        s: sampler.sampler_handle.as_raw() as *mut _,
-                    },
-                    pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: image.srv_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        u: image.uav_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        s: sampler.sampler_handle.as_raw() as *mut _,
-                    },
-                    pso::Descriptor::UniformTexelBuffer(_buffer_view) => unimplemented!(),
-                    pso::Descriptor::StorageTexelBuffer(_buffer_view) => unimplemented!(),
-                };
+            for descriptor in write.descriptors {
+                let handle = write.set.handles.offset(first_offset as isize);
+                let second_handle = write.set.handles.offset(second_offset as isize);
 
-                let content = DescriptorContent::from(binding.ty);
-                if content.contains(DescriptorContent::CBV) {
-                    let offsets = mapping.map_other(|map| map.c);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.c);
-                };
-                if content.contains(DescriptorContent::SRV) {
-                    let offsets = mapping.map_other(|map| map.t);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.t);
-                };
-                if content.contains(DescriptorContent::UAV) {
-                    let offsets = mapping.map_other(|map| map.u);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.u);
-                };
-                if content.contains(DescriptorContent::SAMPLER) {
-                    let offsets = mapping.map_other(|map| map.s);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.s);
-                };
+                //println!("  Write(offset={}, handle={:?}) <= {:?}", first_offset, handle, ty);
 
-                mapping.add_content(content, binding.stage_flags);
+                match *descriptor.borrow() {
+                    pso::Descriptor::Buffer(buffer, ref _range) => match ty {
+                        pso::DescriptorType::UniformBuffer
+                        | pso::DescriptorType::UniformBufferDynamic => {
+                            if buffer.ty == MemoryHeapFlags::HOST_COHERENT {
+                                let old_buffer = (*handle).0 as *mut _;
+
+                                write.set.add_flush(old_buffer, buffer);
+                            }
+
+                            *handle = if let Some(buffer) = buffer.internal.disjoint_cb {
+                                Descriptor(buffer as *mut _)
+                            } else {
+                                Descriptor(buffer.internal.raw as *mut _)
+                            };
+                        }
+                        pso::DescriptorType::StorageBuffer => {
+                            if buffer.ty == MemoryHeapFlags::HOST_COHERENT {
+                                let old_buffer = (*handle).0 as *mut _;
+
+                                write.set.add_flush(old_buffer, buffer);
+                                write.set.add_invalidate(old_buffer, buffer);
+                            }
+
+                            *handle = Descriptor(buffer.internal.uav.unwrap() as *mut _);
+                        }
+                        _ => unreachable!(),
+                    },
+                    pso::Descriptor::Image(image, _layout) => match ty {
+                        pso::DescriptorType::SampledImage => {
+                            *handle =
+                                Descriptor(image.srv_handle.clone().unwrap().as_raw() as *mut _);
+                        }
+                        pso::DescriptorType::StorageImage => {
+                            *handle =
+                                Descriptor(image.uav_handle.clone().unwrap().as_raw() as *mut _);
+                        }
+                        pso::DescriptorType::InputAttachment => {
+                            *handle =
+                                Descriptor(image.srv_handle.clone().unwrap().as_raw() as *mut _);
+                        }
+                        _ => unreachable!(),
+                    },
+                    pso::Descriptor::Sampler(sampler) => {
+                        *handle = Descriptor(sampler.sampler_handle.as_raw() as *mut _);
+                    }
+                    pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => {
+                        *handle = Descriptor(sampler.sampler_handle.as_raw() as *mut _);
+                        *second_handle =
+                            Descriptor(image.srv_handle.clone().unwrap().as_raw() as *mut _);
+                    }
+                    pso::Descriptor::UniformTexelBuffer(_buffer_view) => {}
+                    pso::Descriptor::StorageTexelBuffer(_buffer_view) => {}
+                }
             }
         }
     }
@@ -1947,9 +2237,8 @@ impl device::Device<Backend> for Device {
         I::Item: Borrow<pso::DescriptorSetCopy<'a, Backend>>,
     {
         for copy in copy_iter {
-            let _copy = copy.borrow();
-            //TODO
-            /*
+            let copy = copy.borrow();
+
             for offset in 0 .. copy.count {
                 let (dst_ty, dst_handle_offset, dst_second_handle_offset) = copy
                     .dst_set
@@ -1978,7 +2267,7 @@ impl device::Device<Backend> for Device {
                     }
                     _ => *dst_handle = *src_handle,
                 }
-            }*/
+            }
         }
     }
 
@@ -2108,15 +2397,15 @@ impl device::Device<Backend> for Device {
         unimplemented!()
     }
 
-    unsafe fn get_event_status(&self, _event: &()) -> Result<bool, device::OomOrDeviceLost> {
+    unsafe fn get_event_status(&self, event: &()) -> Result<bool, device::OomOrDeviceLost> {
         unimplemented!()
     }
 
-    unsafe fn set_event(&self, _event: &()) -> Result<(), device::OutOfMemory> {
+    unsafe fn set_event(&self, event: &()) -> Result<(), device::OutOfMemory> {
         unimplemented!()
     }
 
-    unsafe fn reset_event(&self, _event: &()) -> Result<(), device::OutOfMemory> {
+    unsafe fn reset_event(&self, event: &()) -> Result<(), device::OutOfMemory> {
         unimplemented!()
     }
 
@@ -2276,10 +2565,11 @@ impl device::Device<Backend> for Device {
                     bind: 0, // TODO: ?
                     requirements: memory::Requirements {
                         // values don't really matter
-                        size: 0,
-                        alignment: 0,
-                        type_mask: 0,
+                        size: 1,
+                        alignment: 1,
+                        type_mask: MemoryHeapFlags::DEVICE_LOCAL.bits(),
                     },
+                    tiling: image::Tiling::Optimal,
                 }
             })
             .collect();

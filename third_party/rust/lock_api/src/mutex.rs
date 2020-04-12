@@ -28,9 +28,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// exclusive: a lock can't be acquired while the mutex is already locked.
 pub unsafe trait RawMutex {
     /// Initial value for an unlocked mutex.
-    // A “non-constant” const item is a legacy way to supply an initialized value to downstream
-    // static items. Can hopefully be replaced with `const fn new() -> Self` at some point.
-    #[allow(clippy::declare_interior_mutable_const)]
     const INIT: Self;
 
     /// Marker type which determines whether a lock guard should be `Send`. Use
@@ -40,8 +37,7 @@ pub unsafe trait RawMutex {
     /// Acquires this mutex, blocking the current thread until it is able to do so.
     fn lock(&self);
 
-    /// Attempts to acquire this mutex without blocking. Returns `true`
-    /// if the lock was successfully acquired and `false` otherwise.
+    /// Attempts to acquire this mutex without blocking.
     fn try_lock(&self) -> bool;
 
     /// Unlocks this mutex.
@@ -95,9 +91,38 @@ pub unsafe trait RawMutexTimed: RawMutex {
 /// it is protecting. The data can only be accessed through the RAII guards
 /// returned from `lock` and `try_lock`, which guarantees that the data is only
 /// ever accessed when the mutex is locked.
-pub struct Mutex<R, T: ?Sized> {
+pub struct Mutex<R: RawMutex, T: ?Sized> {
     raw: R,
     data: UnsafeCell<T>,
+}
+
+// Copied and modified from serde
+#[cfg(feature = "serde")]
+impl<R, T> Serialize for Mutex<R, T>
+where
+    R: RawMutex,
+    T: Serialize + ?Sized,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.lock().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, R, T> Deserialize<'de> for Mutex<R, T>
+where
+    R: RawMutex,
+    T: Deserialize<'de> + ?Sized,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(Mutex::new)
+    }
 }
 
 unsafe impl<R: RawMutex + Send, T: ?Sized + Send> Send for Mutex<R, T> {}
@@ -108,39 +133,21 @@ impl<R: RawMutex, T> Mutex<R, T> {
     #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new(val: T) -> Mutex<R, T> {
-        Mutex {
-            raw: R::INIT,
-            data: UnsafeCell::new(val),
-        }
+        Mutex { data: UnsafeCell::new(val), raw: R::INIT }
     }
 
     /// Creates a new mutex in an unlocked state ready for use.
     #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn new(val: T) -> Mutex<R, T> {
-        Mutex {
-            raw: R::INIT,
-            data: UnsafeCell::new(val),
-        }
+        Mutex { data: UnsafeCell::new(val), raw: R::INIT }
     }
 
     /// Consumes this mutex, returning the underlying data.
     #[inline]
+    #[allow(unused_unsafe)]
     pub fn into_inner(self) -> T {
-        self.data.into_inner()
-    }
-}
-
-impl<R, T> Mutex<R, T> {
-    /// Creates a new mutex based on a pre-existing raw mutex.
-    ///
-    /// This allows creating a mutex in a constant context on stable Rust.
-    #[inline]
-    pub const fn const_new(raw_mutex: R, val: T) -> Mutex<R, T> {
-        Mutex {
-            raw: raw_mutex,
-            data: UnsafeCell::new(val),
-        }
+        unsafe { self.data.into_inner() }
     }
 }
 
@@ -150,10 +157,7 @@ impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
     /// The lock must be held when calling this method.
     #[inline]
     unsafe fn guard(&self) -> MutexGuard<'_, R, T> {
-        MutexGuard {
-            mutex: self,
-            marker: PhantomData,
-        }
+        MutexGuard { mutex: self, marker: PhantomData }
     }
 
     /// Acquires a mutex, blocking the current thread until it is able to do so.
@@ -305,40 +309,9 @@ impl<R: RawMutex, T: ?Sized + fmt::Debug> fmt::Debug for Mutex<R, T> {
                     }
                 }
 
-                f.debug_struct("Mutex")
-                    .field("data", &LockedPlaceholder)
-                    .finish()
+                f.debug_struct("Mutex").field("data", &LockedPlaceholder).finish()
             }
         }
-    }
-}
-
-// Copied and modified from serde
-#[cfg(feature = "serde")]
-impl<R, T> Serialize for Mutex<R, T>
-where
-    R: RawMutex,
-    T: Serialize + ?Sized,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.lock().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, R, T> Deserialize<'de> for Mutex<R, T>
-where
-    R: RawMutex,
-    T: Deserialize<'de> + ?Sized,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Deserialize::deserialize(deserializer).map(Mutex::new)
     }
 }
 
@@ -377,21 +350,17 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
         let raw = &s.mutex.raw;
         let data = f(unsafe { &mut *s.mutex.data.get() });
         mem::forget(s);
-        MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        }
+        MappedMutexGuard { raw, data, marker: PhantomData }
     }
 
-    /// Attempts to make a new `MappedMutexGuard` for a component of the
-    /// locked data. The original guard is returned if the closure returns `None`.
+    /// Attempts to make  a new `MappedMutexGuard` for a component of the
+    /// locked data. The original guard is return if the closure returns `None`.
     ///
     /// This operation cannot fail as the `MutexGuard` passed
     /// in already locked the mutex.
     ///
     /// This is an associated function that needs to be
-    /// used as `MutexGuard::try_map(...)`. A method would interfere with methods of
+    /// used as `MutexGuard::map(...)`. A method would interfere with methods of
     /// the same name on the contents of the locked data.
     #[inline]
     pub fn try_map<U: ?Sized, F>(s: Self, f: F) -> Result<MappedMutexGuard<'a, R, U>, Self>
@@ -404,11 +373,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        })
+        Ok(MappedMutexGuard { raw, data, marker: PhantomData })
     }
 
     /// Temporarily unlocks the mutex to execute the given function.
@@ -447,7 +412,7 @@ impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
 
     /// Temporarily unlocks the mutex to execute the given function.
     ///
-    /// The mutex is unlocked using a fair unlock protocol.
+    /// The mutex is unlocked a fair unlock protocol.
     ///
     /// This is safe because `&mut` guarantees that there exist no other
     /// references to the data protected by the mutex.
@@ -549,21 +514,17 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MappedMutexGuard<'a, R, T> {
         let raw = s.raw;
         let data = f(unsafe { &mut *s.data });
         mem::forget(s);
-        MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        }
+        MappedMutexGuard { raw, data, marker: PhantomData }
     }
 
-    /// Attempts to make a new `MappedMutexGuard` for a component of the
-    /// locked data. The original guard is returned if the closure returns `None`.
+    /// Attempts to make  a new `MappedMutexGuard` for a component of the
+    /// locked data. The original guard is return if the closure returns `None`.
     ///
     /// This operation cannot fail as the `MappedMutexGuard` passed
     /// in already locked the mutex.
     ///
     /// This is an associated function that needs to be
-    /// used as `MappedMutexGuard::try_map(...)`. A method would interfere with methods of
+    /// used as `MappedMutexGuard::map(...)`. A method would interfere with methods of
     /// the same name on the contents of the locked data.
     #[inline]
     pub fn try_map<U: ?Sized, F>(s: Self, f: F) -> Result<MappedMutexGuard<'a, R, U>, Self>
@@ -576,11 +537,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MappedMutexGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        })
+        Ok(MappedMutexGuard { raw, data, marker: PhantomData })
     }
 }
 
