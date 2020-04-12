@@ -341,7 +341,7 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-bool IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo) {
+bool IsPrincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo) {
   if (aPrincipalInfo.type() != ipc::PrincipalInfo::TContentPrincipalInfo) {
     return false;
   }

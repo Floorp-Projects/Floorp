@@ -440,7 +440,7 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
 
         nsresult rv;
         nsAutoCString result;
-        if (IsPincipalInfoPrivate(aPrincipalInfo)) {
+        if (IsPrincipalInfoPrivate(aPrincipalInfo)) {
           rv = sOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(
               aPrincipalInfo, result);
         } else {
