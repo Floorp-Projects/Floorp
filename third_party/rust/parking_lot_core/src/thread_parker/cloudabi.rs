@@ -8,7 +8,7 @@
 use cloudabi as abi;
 use core::{
     cell::Cell,
-    mem,
+    mem::{self, MaybeUninit},
     sync::atomic::{AtomicU32, Ordering},
 };
 use std::{convert::TryFrom, thread, time::Instant};
@@ -70,11 +70,11 @@ impl Lock {
                 },
                 ..mem::zeroed()
             };
-            let mut event: abi::event = mem::uninitialized();
-            let mut nevents: usize = mem::uninitialized();
-            let ret = abi::poll(&subscription, &mut event, 1, &mut nevents);
+            let mut event = MaybeUninit::<abi::event>::uninit();
+            let mut nevents: usize = 0;
+            let ret = abi::poll(&subscription, event.as_mut_ptr(), 1, &mut nevents);
             debug_assert_eq!(ret, abi::errno::SUCCESS);
-            debug_assert_eq!(event.error, abi::errno::SUCCESS);
+            debug_assert_eq!(event.assume_init().error, abi::errno::SUCCESS);
 
             LockGuard { lock: &self.lock }
         })
@@ -146,12 +146,12 @@ impl Condvar {
                 },
                 ..mem::zeroed()
             };
-            let mut event: abi::event = mem::uninitialized();
-            let mut nevents: usize = mem::uninitialized();
+            let mut event = MaybeUninit::<abi::event>::uninit();
+            let mut nevents: usize = 0;
 
-            let ret = abi::poll(&subscription, &mut event, 1, &mut nevents);
+            let ret = abi::poll(&subscription, event.as_mut_ptr(), 1, &mut nevents);
             debug_assert_eq!(ret, abi::errno::SUCCESS);
-            debug_assert_eq!(event.error, abi::errno::SUCCESS);
+            debug_assert_eq!(event.assume_init().error, abi::errno::SUCCESS);
         }
     }
 
@@ -184,11 +184,17 @@ impl Condvar {
                     ..mem::zeroed()
                 },
             ];
-            let mut events: [abi::event; 2] = mem::uninitialized();
-            let mut nevents: usize = mem::uninitialized();
+            let mut events = MaybeUninit::<[abi::event; 2]>::uninit();
+            let mut nevents: usize = 0;
 
-            let ret = abi::poll(subscriptions.as_ptr(), events.as_mut_ptr(), 2, &mut nevents);
+            let ret = abi::poll(
+                subscriptions.as_ptr(),
+                events.as_mut_ptr() as *mut _,
+                2,
+                &mut nevents,
+            );
             debug_assert_eq!(ret, abi::errno::SUCCESS);
+            let events = events.assume_init();
             for i in 0..nevents {
                 debug_assert_eq!(events[i].error, abi::errno::SUCCESS);
                 if events[i].type_ == abi::eventtype::CONDVAR {

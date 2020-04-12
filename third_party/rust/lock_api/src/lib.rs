@@ -47,7 +47,9 @@
 //!     }
 //!
 //!     fn try_lock(&self) -> bool {
-//!         self.0.swap(true, Ordering::Acquire)
+//!         self.0
+//!             .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+//!             .is_ok()
 //!     }
 //!
 //!     fn unlock(&self) {

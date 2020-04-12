@@ -9,7 +9,7 @@
 use core::ptr;
 use core::{
     cell::{Cell, UnsafeCell},
-    mem,
+    mem::MaybeUninit,
 };
 use libc;
 use std::{
@@ -137,14 +137,14 @@ impl ThreadParker {
     #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
     #[inline]
     unsafe fn init(&self) {
-        let mut attr: libc::pthread_condattr_t = mem::uninitialized();
-        let r = libc::pthread_condattr_init(&mut attr);
+        let mut attr = MaybeUninit::<libc::pthread_condattr_t>::uninit();
+        let r = libc::pthread_condattr_init(attr.as_mut_ptr());
         debug_assert_eq!(r, 0);
-        let r = libc::pthread_condattr_setclock(&mut attr, libc::CLOCK_MONOTONIC);
+        let r = libc::pthread_condattr_setclock(attr.as_mut_ptr(), libc::CLOCK_MONOTONIC);
         debug_assert_eq!(r, 0);
-        let r = libc::pthread_cond_init(self.condvar.get(), &attr);
+        let r = libc::pthread_cond_init(self.condvar.get(), attr.as_ptr());
         debug_assert_eq!(r, 0);
-        let r = libc::pthread_condattr_destroy(&mut attr);
+        let r = libc::pthread_condattr_destroy(attr.as_mut_ptr());
         debug_assert_eq!(r, 0);
     }
 }
@@ -196,9 +196,11 @@ impl super::UnparkHandleT for UnparkHandle {
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 #[inline]
 fn timespec_now() -> libc::timespec {
-    let mut now: libc::timeval = unsafe { mem::uninitialized() };
-    let r = unsafe { libc::gettimeofday(&mut now, ptr::null_mut()) };
+    let mut now = MaybeUninit::<libc::timeval>::uninit();
+    let r = unsafe { libc::gettimeofday(now.as_mut_ptr(), ptr::null_mut()) };
     debug_assert_eq!(r, 0);
+    // SAFETY: We know `libc::gettimeofday` has initialized the value.
+    let now = unsafe { now.assume_init() };
     libc::timespec {
         tv_sec: now.tv_sec,
         tv_nsec: now.tv_usec as tv_nsec_t * 1000,
@@ -207,7 +209,7 @@ fn timespec_now() -> libc::timespec {
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
 #[inline]
 fn timespec_now() -> libc::timespec {
-    let mut now: libc::timespec = unsafe { mem::uninitialized() };
+    let mut now = MaybeUninit::<libc::timespec>::uninit();
     let clock = if cfg!(target_os = "android") {
         // Android doesn't support pthread_condattr_setclock, so we need to
         // specify the timeout in CLOCK_REALTIME.
@@ -215,9 +217,10 @@ fn timespec_now() -> libc::timespec {
     } else {
         libc::CLOCK_MONOTONIC
     };
-    let r = unsafe { libc::clock_gettime(clock, &mut now) };
+    let r = unsafe { libc::clock_gettime(clock, now.as_mut_ptr()) };
     debug_assert_eq!(r, 0);
-    now
+    // SAFETY: We know `libc::clock_gettime` has initialized the value.
+    unsafe { now.assume_init() }
 }
 
 // Converts a relative timeout into an absolute timeout in the clock used by

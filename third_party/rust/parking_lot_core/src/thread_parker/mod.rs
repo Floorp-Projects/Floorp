@@ -47,12 +47,11 @@ pub trait UnparkHandleT {
     ///
     /// This method is unsafe for the same reason as the unsafe methods in
     /// `ThreadParkerT`.
-    #[inline]
     unsafe fn unpark(self);
 }
 
 cfg_if! {
-    if #[cfg(all(has_sized_atomics, any(target_os = "linux", target_os = "android")))] {
+    if #[cfg(any(target_os = "linux", target_os = "android"))] {
         #[path = "linux.rs"]
         mod imp;
     } else if #[cfg(unix)] {
@@ -61,7 +60,7 @@ cfg_if! {
     } else if #[cfg(windows)] {
         #[path = "windows/mod.rs"]
         mod imp;
-    } else if #[cfg(all(has_sized_atomics, target_os = "redox"))] {
+    } else if #[cfg(target_os = "redox")] {
         #[path = "redox.rs"]
         mod imp;
     } else if #[cfg(all(target_env = "sgx", target_vendor = "fortanix"))] {
