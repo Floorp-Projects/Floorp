@@ -62,6 +62,11 @@ class nsStringStats {
       return;
     }
 
+    // Only print the stats if we detect a leak.
+    if (mAllocCount <= mFreeCount && mAdoptCount <= mAdoptFreeCount) {
+      return;
+    }
+
     printf("nsStringStats\n");
     printf(" => mAllocCount:     % 10d\n", int(mAllocCount));
     printf(" => mReallocCount:   % 10d\n", int(mReallocCount));
