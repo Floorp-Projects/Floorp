@@ -25,7 +25,10 @@ pub trait AtomicElisionExt {
 // Indicates whether the target architecture supports lock elision
 #[inline]
 pub fn have_elision() -> bool {
-    cfg!(all(feature = "nightly", any(target_arch = "x86", target_arch = "x86_64"),))
+    cfg!(all(
+        feature = "nightly",
+        any(target_arch = "x86", target_arch = "x86_64"),
+    ))
 }
 
 // This implementation is never actually called because it is guarded by
@@ -54,12 +57,16 @@ impl AtomicElisionExt for AtomicUsize {
     fn elision_compare_exchange_acquire(&self, current: usize, new: usize) -> Result<usize, usize> {
         unsafe {
             let prev: usize;
-            asm!("xacquire; lock; cmpxchgl $2, $1"
-                 : "={eax}" (prev), "+*m" (self)
-                 : "r" (new), "{eax}" (current)
-                 : "memory"
-                 : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            llvm_asm!("xacquire; lock; cmpxchgl $2, $1"
+                      : "={eax}" (prev), "+*m" (self)
+                      : "r" (new), "{eax}" (current)
+                      : "memory"
+                      : "volatile");
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
     #[cfg(target_pointer_width = "64")]
@@ -67,12 +74,16 @@ impl AtomicElisionExt for AtomicUsize {
     fn elision_compare_exchange_acquire(&self, current: usize, new: usize) -> Result<usize, usize> {
         unsafe {
             let prev: usize;
-            asm!("xacquire; lock; cmpxchgq $2, $1"
-                 : "={rax}" (prev), "+*m" (self)
-                 : "r" (new), "{rax}" (current)
-                 : "memory"
-                 : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            llvm_asm!("xacquire; lock; cmpxchgq $2, $1"
+                      : "={rax}" (prev), "+*m" (self)
+                      : "r" (new), "{rax}" (current)
+                      : "memory"
+                      : "volatile");
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
 
@@ -81,11 +92,11 @@ impl AtomicElisionExt for AtomicUsize {
     fn elision_fetch_sub_release(&self, val: usize) -> usize {
         unsafe {
             let prev: usize;
-            asm!("xrelease; lock; xaddl $2, $1"
-                 : "=r" (prev), "+*m" (self)
-                 : "0" (val.wrapping_neg())
-                 : "memory"
-                 : "volatile");
+            llvm_asm!("xrelease; lock; xaddl $2, $1"
+                      : "=r" (prev), "+*m" (self)
+                      : "0" (val.wrapping_neg())
+                      : "memory"
+                      : "volatile");
             prev
         }
     }
@@ -94,11 +105,11 @@ impl AtomicElisionExt for AtomicUsize {
     fn elision_fetch_sub_release(&self, val: usize) -> usize {
         unsafe {
             let prev: usize;
-            asm!("xrelease; lock; xaddq $2, $1"
-                 : "=r" (prev), "+*m" (self)
-                 : "0" (val.wrapping_neg())
-                 : "memory"
-                 : "volatile");
+            llvm_asm!("xrelease; lock; xaddq $2, $1"
+                      : "=r" (prev), "+*m" (self)
+                      : "0" (val.wrapping_neg())
+                      : "memory"
+                      : "volatile");
             prev
         }
     }

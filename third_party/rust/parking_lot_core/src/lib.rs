@@ -49,11 +49,11 @@
         target_arch = "wasm32",
         target_feature = "atomics"
     ),
-    feature(checked_duration_since, stdsimd)
+    feature(stdsimd)
 )]
 #![cfg_attr(
     all(feature = "nightly", target_os = "cloudabi",),
-    feature(thread_local, checked_duration_since)
+    feature(thread_local)
 )]
 
 mod parking_lot;

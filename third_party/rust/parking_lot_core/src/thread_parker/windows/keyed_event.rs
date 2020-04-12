@@ -5,7 +5,10 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use core::{mem, ptr};
+use core::{
+    mem::{self, MaybeUninit},
+    ptr,
+};
 use std::{
     sync::atomic::{AtomicUsize, Ordering},
     time::Instant,
@@ -88,9 +91,9 @@ impl KeyedEvent {
                 ObjectAttributes: PVOID,
                 Flags: ULONG,
             ) -> NTSTATUS = mem::transmute(NtCreateKeyedEvent);
-            let mut handle = mem::uninitialized();
+            let mut handle = MaybeUninit::uninit();
             let status = NtCreateKeyedEvent(
-                &mut handle,
+                handle.as_mut_ptr(),
                 GENERIC_READ | GENERIC_WRITE,
                 ptr::null_mut(),
                 0,
@@ -100,7 +103,7 @@ impl KeyedEvent {
             }
 
             Some(KeyedEvent {
-                handle,
+                handle: handle.assume_init(),
                 NtReleaseKeyedEvent: mem::transmute(NtReleaseKeyedEvent),
                 NtWaitForKeyedEvent: mem::transmute(NtWaitForKeyedEvent),
             })
