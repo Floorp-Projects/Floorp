@@ -465,7 +465,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateRenderPipeline(
       aDesc.mFragmentStage.mEntryPoint);
   size_t totalAttributes = 0;
   for (const auto& vertexBuffer : aDesc.mVertexState.mVertexBuffers) {
-    totalAttributes += vertexBuffer.mAttributeSet.Length();
+    totalAttributes += vertexBuffer.mAttributes.Length();
   }
   nsTArray<ffi::WGPUVertexBufferLayoutDescriptor> vertexBuffers(
       aDesc.mVertexState.mVertexBuffers.Length());
@@ -497,8 +497,8 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateRenderPipeline(
     vb.array_stride = vertexBuffer.mArrayStride;
     vb.step_mode = vertexBuffer.mStepMode;
     vb.attributes = vertexAttributes.Elements() + totalAttributes;
-    vb.attributes_length = vertexBuffer.mAttributeSet.Length();
-    for (const auto& attribute : vertexBuffer.mAttributeSet) {
+    vb.attributes_length = vertexBuffer.mAttributes.Length();
+    for (const auto& attribute : vertexBuffer.mAttributes) {
       vertexAttributes.AppendElement(attribute);
     }
     vertexBuffers.AppendElement(vb);

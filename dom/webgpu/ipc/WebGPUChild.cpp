@@ -369,8 +369,8 @@ static SerialVertexBufferLayoutDescriptor ConvertVertexBufferLayoutDescriptor(
   SerialVertexBufferLayoutDescriptor desc = {};
   desc.mArrayStride = aDesc.mArrayStride;
   desc.mStepMode = ffi::WGPUInputStepMode(aDesc.mStepMode);
-  for (const auto& vat : aDesc.mAttributeSet) {
-    desc.mAttributeSet.AppendElement(ConvertVertexAttributeDescriptor(vat));
+  for (const auto& vat : aDesc.mAttributes) {
+    desc.mAttributes.AppendElement(ConvertVertexAttributeDescriptor(vat));
   }
   return desc;
 }
