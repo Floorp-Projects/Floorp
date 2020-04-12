@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "lock_api"
-version = "0.3.1"
+version = "0.3.4"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "Wrappers to create fully-featured Mutex and RwLock types. Compatible with no_std."
 keywords = ["mutex", "rwlock", "lock", "no_std"]

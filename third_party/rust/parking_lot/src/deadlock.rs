@@ -46,9 +46,7 @@ mod tests {
     use std::time::Duration;
 
     // We need to serialize these tests since deadlock detection uses global state
-    lazy_static::lazy_static! {
-        static ref DEADLOCK_DETECTION_LOCK: Mutex<()> = Mutex::new(());
-    }
+    static DEADLOCK_DETECTION_LOCK: Mutex<()> = crate::const_mutex(());
 
     fn check_deadlock() -> bool {
         use parking_lot_core::deadlock::check_deadlock;

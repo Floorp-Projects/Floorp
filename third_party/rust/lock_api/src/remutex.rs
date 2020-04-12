@@ -37,6 +37,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// re-used since that thread is no longer active.
 pub unsafe trait GetThreadId {
     /// Initial value.
+    // A “non-constant” const item is a legacy way to supply an initialized value to downstream
+    // static items. Can hopefully be replaced with `const fn new() -> Self` at some point.
+    #[allow(clippy::declare_interior_mutable_const)]
     const INIT: Self;
 
     /// Returns a non-zero thread ID which identifies the current thread of
@@ -44,7 +47,7 @@ pub unsafe trait GetThreadId {
     fn nonzero_thread_id(&self) -> NonZeroUsize;
 }
 
-struct RawReentrantMutex<R: RawMutex, G: GetThreadId> {
+struct RawReentrantMutex<R, G> {
     owner: AtomicUsize,
     lock_count: Cell<usize>,
     mutex: R,
@@ -57,7 +60,10 @@ impl<R: RawMutex, G: GetThreadId> RawReentrantMutex<R, G> {
         let id = self.get_thread_id.nonzero_thread_id().get();
         if self.owner.load(Ordering::Relaxed) == id {
             self.lock_count.set(
-                self.lock_count.get().checked_add(1).expect("ReentrantMutex lock count overflow"),
+                self.lock_count
+                    .get()
+                    .checked_add(1)
+                    .expect("ReentrantMutex lock count overflow"),
             );
         } else {
             if !try_lock() {
@@ -139,40 +145,9 @@ impl<R: RawMutexTimed, G: GetThreadId> RawReentrantMutex<R, G> {
 ///
 /// See [`Mutex`](struct.Mutex.html) for more details about the underlying mutex
 /// primitive.
-pub struct ReentrantMutex<R: RawMutex, G: GetThreadId, T: ?Sized> {
+pub struct ReentrantMutex<R, G, T: ?Sized> {
     raw: RawReentrantMutex<R, G>,
     data: UnsafeCell<T>,
-}
-
-// Copied and modified from serde
-#[cfg(feature = "serde")]
-impl<R, G, T> Serialize for ReentrantMutex<R, G, T>
-where
-    R: RawMutex,
-    G: GetThreadId,
-    T: Serialize + ?Sized,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.lock().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, R, G, T> Deserialize<'de> for ReentrantMutex<R, G, T>
-where
-    R: RawMutex,
-    G: GetThreadId,
-    T: Deserialize<'de> + ?Sized,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Deserialize::deserialize(deserializer).map(ReentrantMutex::new)
-    }
 }
 
 unsafe impl<R: RawMutex + Send, G: GetThreadId + Send, T: ?Sized + Send> Send
@@ -217,9 +192,28 @@ impl<R: RawMutex, G: GetThreadId, T> ReentrantMutex<R, G, T> {
 
     /// Consumes this mutex, returning the underlying data.
     #[inline]
-    #[allow(unused_unsafe)]
     pub fn into_inner(self) -> T {
-        unsafe { self.data.into_inner() }
+        self.data.into_inner()
+    }
+}
+
+impl<R, G, T> ReentrantMutex<R, G, T> {
+    /// Creates a new reentrant mutex based on a pre-existing raw mutex and a
+    /// helper to get the thread ID.
+    ///
+    /// This allows creating a reentrant mutex in a constant context on stable
+    /// Rust.
+    #[inline]
+    pub const fn const_new(raw_mutex: R, get_thread_id: G, val: T) -> ReentrantMutex<R, G, T> {
+        ReentrantMutex {
+            data: UnsafeCell::new(val),
+            raw: RawReentrantMutex {
+                owner: AtomicUsize::new(0),
+                lock_count: Cell::new(0),
+                mutex: raw_mutex,
+                get_thread_id,
+            },
+        }
     }
 }
 
@@ -229,7 +223,10 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     /// The lock must be held when calling this method.
     #[inline]
     unsafe fn guard(&self) -> ReentrantMutexGuard<'_, R, G, T> {
-        ReentrantMutexGuard { remutex: &self, marker: PhantomData }
+        ReentrantMutexGuard {
+            remutex: &self,
+            marker: PhantomData,
+        }
     }
 
     /// Acquires a reentrant mutex, blocking the current thread until it is able
@@ -373,7 +370,10 @@ impl<R: RawMutex, G: GetThreadId, T> From<T> for ReentrantMutex<R, G, T> {
 impl<R: RawMutex, G: GetThreadId, T: ?Sized + fmt::Debug> fmt::Debug for ReentrantMutex<R, G, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.try_lock() {
-            Some(guard) => f.debug_struct("ReentrantMutex").field("data", &&*guard).finish(),
+            Some(guard) => f
+                .debug_struct("ReentrantMutex")
+                .field("data", &&*guard)
+                .finish(),
             None => {
                 struct LockedPlaceholder;
                 impl fmt::Debug for LockedPlaceholder {
@@ -382,9 +382,42 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized + fmt::Debug> fmt::Debug for Reentra
                     }
                 }
 
-                f.debug_struct("ReentrantMutex").field("data", &LockedPlaceholder).finish()
+                f.debug_struct("ReentrantMutex")
+                    .field("data", &LockedPlaceholder)
+                    .finish()
             }
         }
+    }
+}
+
+// Copied and modified from serde
+#[cfg(feature = "serde")]
+impl<R, G, T> Serialize for ReentrantMutex<R, G, T>
+where
+    R: RawMutex,
+    G: GetThreadId,
+    T: Serialize + ?Sized,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.lock().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, R, G, T> Deserialize<'de> for ReentrantMutex<R, G, T>
+where
+    R: RawMutex,
+    G: GetThreadId,
+    T: Deserialize<'de> + ?Sized,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(ReentrantMutex::new)
     }
 }
 
@@ -426,7 +459,11 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a> ReentrantMutexGu
         let raw = &s.remutex.raw;
         let data = f(unsafe { &*s.remutex.data.get() });
         mem::forget(s);
-        MappedReentrantMutexGuard { raw, data, marker: PhantomData }
+        MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedReentrantMutexGuard` for a component of the
@@ -452,7 +489,11 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a> ReentrantMutexGu
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedReentrantMutexGuard { raw, data, marker: PhantomData })
+        Ok(MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 
     /// Temporarily unlocks the mutex to execute the given function.
@@ -597,7 +638,11 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a>
         let raw = s.raw;
         let data = f(unsafe { &*s.data });
         mem::forget(s);
-        MappedReentrantMutexGuard { raw, data, marker: PhantomData }
+        MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 
     /// Attempts to make  a new `MappedReentrantMutexGuard` for a component of the
@@ -623,7 +668,11 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a>
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedReentrantMutexGuard { raw, data, marker: PhantomData })
+        Ok(MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 }
 
