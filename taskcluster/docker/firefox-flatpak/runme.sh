@@ -131,7 +131,10 @@ install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"
 
 flatpak build-finish build                                      \
-        --share=ipc --socket=x11                                \
+        --share=ipc                                             \
+        --socket=wayland                                        \
+        --socket=fallback-x11                                   \
+        --require-version=1.0.0                                 \
         --share=network                                         \
         --socket=pulseaudio                                     \
         --socket=pcsc                                           \
