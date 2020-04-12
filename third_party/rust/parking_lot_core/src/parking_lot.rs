@@ -17,13 +17,6 @@ use smallvec::SmallVec;
 use std::time::{Duration, Instant};
 
 static NUM_THREADS: AtomicUsize = AtomicUsize::new(0);
-
-/// Holds the pointer to the currently active `HashTable`.
-///
-/// # Safety
-///
-/// Except for the initial value of null, it must always point to a valid `HashTable` instance.
-/// Any `HashTable` this global static has ever pointed to must never be freed.
 static HASHTABLE: AtomicPtr<HashTable> = AtomicPtr::new(ptr::null_mut());
 
 // Even with 3x more buckets than threads, the memory overhead per thread is
@@ -79,7 +72,7 @@ impl Bucket {
     #[inline]
     pub fn new(timeout: Instant, seed: u32) -> Self {
         Self {
-            mutex: WordLock::new(),
+            mutex: WordLock::INIT,
             queue_head: Cell::new(ptr::null()),
             queue_tail: Cell::new(ptr::null()),
             fair_timeout: UnsafeCell::new(FairTimeout::new(timeout, seed)),
@@ -153,7 +146,9 @@ impl ThreadData {
         // Keep track of the total number of live ThreadData objects and resize
         // the hash table accordingly.
         let num_threads = NUM_THREADS.fetch_add(1, Ordering::Relaxed) + 1;
-        grow_hashtable(num_threads);
+        unsafe {
+            grow_hashtable(num_threads);
+        }
 
         ThreadData {
             parker: ThreadParker::new(),
@@ -189,92 +184,116 @@ impl Drop for ThreadData {
     }
 }
 
-/// Returns a reference to the latest hash table, creating one if it doesn't exist yet.
-/// The reference is valid forever. However, the `HashTable` it references might become stale
-/// at any point. Meaning it still exists, but it is not the instance in active use.
+// Get a pointer to the latest hash table, creating one if it doesn't exist yet.
 #[inline]
-fn get_hashtable() -> &'static HashTable {
+fn get_hashtable() -> *mut HashTable {
     let table = HASHTABLE.load(Ordering::Acquire);
 
     // If there is no table, create one
     if table.is_null() {
         create_hashtable()
     } else {
-        // SAFETY: when not null, `HASHTABLE` always points to a `HashTable` that is never freed.
-        unsafe { &*table }
+        table
     }
 }
 
-/// Returns a reference to the latest hash table, creating one if it doesn't exist yet.
-/// The reference is valid forever. However, the `HashTable` it references might become stale
-/// at any point. Meaning it still exists, but it is not the instance in active use.
+// Get a pointer to the latest hash table, creating one if it doesn't exist yet.
 #[cold]
-fn create_hashtable() -> &'static HashTable {
+fn create_hashtable() -> *mut HashTable {
     let new_table = Box::into_raw(HashTable::new(LOAD_FACTOR, ptr::null()));
 
-    // If this fails then it means some other thread created the hash table first.
-    let table = match HASHTABLE.compare_exchange(
+    // If this fails then it means some other thread created the hash
+    // table first.
+    match HASHTABLE.compare_exchange(
         ptr::null_mut(),
         new_table,
-        Ordering::AcqRel,
-        Ordering::Acquire,
+        Ordering::Release,
+        Ordering::Relaxed,
     ) {
         Ok(_) => new_table,
         Err(old_table) => {
             // Free the table we created
-            // SAFETY: `new_table` is created from `Box::into_raw` above and only freed here.
             unsafe {
                 Box::from_raw(new_table);
             }
             old_table
         }
-    };
-    // SAFETY: The `HashTable` behind `table` is never freed. It is either the table pointer we
-    // created here, or it is one loaded from `HASHTABLE`.
-    unsafe { &*table }
+    }
 }
 
 // Grow the hash table so that it is big enough for the given number of threads.
 // This isn't performance-critical since it is only done when a ThreadData is
 // created, which only happens once per thread.
-fn grow_hashtable(num_threads: usize) {
-    // Lock all buckets in the existing table and get a reference to it
-    let old_table = loop {
-        let table = get_hashtable();
+unsafe fn grow_hashtable(num_threads: usize) {
+    // If there is no table, create one
+    if HASHTABLE.load(Ordering::Relaxed).is_null() {
+        let new_table = Box::into_raw(HashTable::new(num_threads, ptr::null()));
+
+        // If this fails then it means some other thread created the hash
+        // table first.
+        if HASHTABLE
+            .compare_exchange(
+                ptr::null_mut(),
+                new_table,
+                Ordering::Release,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            return;
+        }
+
+        // Free the table we created
+        Box::from_raw(new_table);
+    }
+
+    let mut old_table;
+    loop {
+        old_table = HASHTABLE.load(Ordering::Acquire);
 
         // Check if we need to resize the existing table
-        if table.entries.len() >= LOAD_FACTOR * num_threads {
+        if (*old_table).entries.len() >= LOAD_FACTOR * num_threads {
             return;
         }
 
         // Lock all buckets in the old table
-        for bucket in &table.entries[..] {
-            bucket.mutex.lock();
+        for b in &(*old_table).entries[..] {
+            b.mutex.lock();
         }
 
         // Now check if our table is still the latest one. Another thread could
         // have grown the hash table between us reading HASHTABLE and locking
         // the buckets.
-        if HASHTABLE.load(Ordering::Relaxed) == table as *const _ as *mut _ {
-            break table;
+        if HASHTABLE.load(Ordering::Relaxed) == old_table {
+            break;
         }
 
         // Unlock buckets and try again
-        for bucket in &table.entries[..] {
-            // SAFETY: We hold the lock here, as required
-            unsafe { bucket.mutex.unlock() };
+        for b in &(*old_table).entries[..] {
+            b.mutex.unlock();
         }
-    };
+    }
 
     // Create the new table
-    let mut new_table = HashTable::new(num_threads, old_table);
+    let new_table = HashTable::new(num_threads, old_table);
 
     // Move the entries from the old table to the new one
-    for bucket in &old_table.entries[..] {
-        // SAFETY: The park, unpark* and check_wait_graph_fast functions create only correct linked
-        // lists. All `ThreadData` instances in these lists will remain valid as long as they are
-        // present in the lists, meaning as long as their threads are parked.
-        unsafe { rehash_bucket_into(bucket, &mut new_table) };
+    for b in &(*old_table).entries[..] {
+        let mut current = b.queue_head.get();
+        while !current.is_null() {
+            let next = (*current).next_in_queue.get();
+            let hash = hash((*current).key.load(Ordering::Relaxed), new_table.hash_bits);
+            if new_table.entries[hash].queue_tail.get().is_null() {
+                new_table.entries[hash].queue_head.set(current);
+            } else {
+                (*new_table.entries[hash].queue_tail.get())
+                    .next_in_queue
+                    .set(current);
+            }
+            new_table.entries[hash].queue_tail.set(current);
+            (*current).next_in_queue.set(ptr::null());
+            current = next;
+        }
     }
 
     // Publish the new table. No races are possible at this point because
@@ -283,36 +302,8 @@ fn grow_hashtable(num_threads: usize) {
     HASHTABLE.store(Box::into_raw(new_table), Ordering::Release);
 
     // Unlock all buckets in the old table
-    for bucket in &old_table.entries[..] {
-        // SAFETY: We hold the lock here, as required
-        unsafe { bucket.mutex.unlock() };
-    }
-}
-
-/// Iterate through all `ThreadData` objects in the bucket and insert them into the given table
-/// in the bucket their key correspond to for this table.
-///
-/// # Safety
-///
-/// The given `bucket` must have a correctly constructed linked list under `queue_head`, containing
-/// `ThreadData` instances that must stay valid at least as long as the given `table` is in use.
-///
-/// The given `table` must only contain buckets with correctly constructed linked lists.
-unsafe fn rehash_bucket_into(bucket: &'static Bucket, table: &mut HashTable) {
-    let mut current: *const ThreadData = bucket.queue_head.get();
-    while !current.is_null() {
-        let next = (*current).next_in_queue.get();
-        let hash = hash((*current).key.load(Ordering::Relaxed), table.hash_bits);
-        if table.entries[hash].queue_tail.get().is_null() {
-            table.entries[hash].queue_head.set(current);
-        } else {
-            (*table.entries[hash].queue_tail.get())
-                .next_in_queue
-                .set(current);
-        }
-        table.entries[hash].queue_tail.set(current);
-        (*current).next_in_queue.set(ptr::null());
-        current = next;
+    for b in &(*old_table).entries[..] {
+        b.mutex.unlock();
     }
 }
 
@@ -328,42 +319,41 @@ fn hash(key: usize, bits: u32) -> usize {
     key.wrapping_mul(0x9E3779B97F4A7C15) >> (64 - bits)
 }
 
-/// Locks the bucket for the given key and returns a reference to it.
-/// The returned bucket must be unlocked again in order to not cause deadlocks.
+// Lock the bucket for the given key
 #[inline]
-fn lock_bucket(key: usize) -> &'static Bucket {
+unsafe fn lock_bucket<'a>(key: usize) -> &'a Bucket {
+    let mut bucket;
     loop {
         let hashtable = get_hashtable();
 
-        let hash = hash(key, hashtable.hash_bits);
-        let bucket = &hashtable.entries[hash];
+        let hash = hash(key, (*hashtable).hash_bits);
+        bucket = &(*hashtable).entries[hash];
 
         // Lock the bucket
         bucket.mutex.lock();
 
         // If no other thread has rehashed the table before we grabbed the lock
         // then we are good to go! The lock we grabbed prevents any rehashes.
-        if HASHTABLE.load(Ordering::Relaxed) == hashtable as *const _ as *mut _ {
+        if HASHTABLE.load(Ordering::Relaxed) == hashtable {
             return bucket;
         }
 
         // Unlock the bucket and try again
-        // SAFETY: We hold the lock here, as required
-        unsafe { bucket.mutex.unlock() };
+        bucket.mutex.unlock();
     }
 }
 
-/// Locks the bucket for the given key and returns a reference to it. But checks that the key
-/// hasn't been changed in the meantime due to a requeue.
-/// The returned bucket must be unlocked again in order to not cause deadlocks.
+// Lock the bucket for the given key, but check that the key hasn't been changed
+// in the meantime due to a requeue.
 #[inline]
-fn lock_bucket_checked(key: &AtomicUsize) -> (usize, &'static Bucket) {
+unsafe fn lock_bucket_checked<'a>(key: &AtomicUsize) -> (usize, &'a Bucket) {
+    let mut bucket;
     loop {
         let hashtable = get_hashtable();
         let current_key = key.load(Ordering::Relaxed);
 
-        let hash = hash(current_key, hashtable.hash_bits);
-        let bucket = &hashtable.entries[hash];
+        let hash = hash(current_key, (*hashtable).hash_bits);
+        bucket = &(*hashtable).entries[hash];
 
         // Lock the bucket
         bucket.mutex.lock();
@@ -371,69 +361,59 @@ fn lock_bucket_checked(key: &AtomicUsize) -> (usize, &'static Bucket) {
         // Check that both the hash table and key are correct while the bucket
         // is locked. Note that the key can't change once we locked the proper
         // bucket for it, so we just keep trying until we have the correct key.
-        if HASHTABLE.load(Ordering::Relaxed) == hashtable as *const _ as *mut _
+        if HASHTABLE.load(Ordering::Relaxed) == hashtable
             && key.load(Ordering::Relaxed) == current_key
         {
             return (current_key, bucket);
         }
 
         // Unlock the bucket and try again
-        // SAFETY: We hold the lock here, as required
-        unsafe { bucket.mutex.unlock() };
+        bucket.mutex.unlock();
     }
 }
 
-/// Locks the two buckets for the given pair of keys and returns references to them.
-/// The returned buckets must be unlocked again in order to not cause deadlocks.
-///
-/// If both keys hash to the same value, both returned references will be to the same bucket. Be
-/// careful to only unlock it once in this case, always use `unlock_bucket_pair`.
+// Lock the two buckets for the given pair of keys
 #[inline]
-fn lock_bucket_pair(key1: usize, key2: usize) -> (&'static Bucket, &'static Bucket) {
+unsafe fn lock_bucket_pair<'a>(key1: usize, key2: usize) -> (&'a Bucket, &'a Bucket) {
+    let mut bucket1;
     loop {
         let hashtable = get_hashtable();
 
-        let hash1 = hash(key1, hashtable.hash_bits);
-        let hash2 = hash(key2, hashtable.hash_bits);
-
-        // Get the bucket at the lowest hash/index first
-        let bucket1 = if hash1 <= hash2 {
-            &hashtable.entries[hash1]
+        // Get the lowest bucket first
+        let hash1 = hash(key1, (*hashtable).hash_bits);
+        let hash2 = hash(key2, (*hashtable).hash_bits);
+        if hash1 <= hash2 {
+            bucket1 = &(*hashtable).entries[hash1];
         } else {
-            &hashtable.entries[hash2]
-        };
+            bucket1 = &(*hashtable).entries[hash2];
+        }
 
         // Lock the first bucket
         bucket1.mutex.lock();
 
         // If no other thread has rehashed the table before we grabbed the lock
         // then we are good to go! The lock we grabbed prevents any rehashes.
-        if HASHTABLE.load(Ordering::Relaxed) == hashtable as *const _ as *mut _ {
+        if HASHTABLE.load(Ordering::Relaxed) == hashtable {
             // Now lock the second bucket and return the two buckets
             if hash1 == hash2 {
                 return (bucket1, bucket1);
             } else if hash1 < hash2 {
-                let bucket2 = &hashtable.entries[hash2];
+                let bucket2 = &(*hashtable).entries[hash2];
                 bucket2.mutex.lock();
                 return (bucket1, bucket2);
             } else {
-                let bucket2 = &hashtable.entries[hash1];
+                let bucket2 = &(*hashtable).entries[hash1];
                 bucket2.mutex.lock();
                 return (bucket2, bucket1);
             }
         }
 
         // Unlock the bucket and try again
-        // SAFETY: We hold the lock here, as required
-        unsafe { bucket1.mutex.unlock() };
+        bucket1.mutex.unlock();
     }
 }
 
-/// Unlock a pair of buckets
-///
-/// # Safety
-///
-/// Both buckets must be locked
+// Unlock a pair of buckets
 #[inline]
 unsafe fn unlock_bucket_pair(bucket1: &Bucket, bucket2: &Bucket) {
     bucket1.mutex.unlock();
@@ -579,7 +559,6 @@ pub unsafe fn park(
 
         // If the validation function fails, just return
         if !validate() {
-            // SAFETY: We hold the lock here, as required
             bucket.mutex.unlock();
             return ParkResult::Invalid;
         }
@@ -596,7 +575,6 @@ pub unsafe fn park(
             bucket.queue_head.set(thread_data);
         }
         bucket.queue_tail.set(thread_data);
-        // SAFETY: We hold the lock here, as required
         bucket.mutex.unlock();
 
         // Invoke the pre-sleep callback
@@ -627,7 +605,6 @@ pub unsafe fn park(
         // Now we need to check again if we were unparked or timed out. Unlike the
         // last check this is precise because we hold the bucket lock.
         if !thread_data.parker.timed_out() {
-            // SAFETY: We hold the lock here, as required
             bucket.mutex.unlock();
             return ParkResult::Unparked(thread_data.unpark_token.get());
         }
@@ -675,7 +652,6 @@ pub unsafe fn park(
         debug_assert!(!current.is_null());
 
         // Unlock the bucket, we are done
-        // SAFETY: We hold the lock here, as required
         bucket.mutex.unlock();
         ParkResult::TimedOut
     })
@@ -747,7 +723,6 @@ pub unsafe fn unpark_one(
             // the queue locked while we perform a system call. Finally we wake
             // up the parked thread.
             let handle = (*current).parker.unpark_lock();
-            // SAFETY: We hold the lock here, as required
             bucket.mutex.unlock();
             handle.unpark();
 
@@ -761,7 +736,6 @@ pub unsafe fn unpark_one(
 
     // No threads with a matching key were found in the bucket
     callback(result);
-    // SAFETY: We hold the lock here, as required
     bucket.mutex.unlock();
     result
 }
@@ -812,7 +786,6 @@ pub unsafe fn unpark_all(key: usize, unpark_token: UnparkToken) -> usize {
     }
 
     // Unlock the bucket
-    // SAFETY: We hold the lock here, as required
     bucket.mutex.unlock();
 
     // Now that we are outside the lock, wake up all the threads that we removed
@@ -866,7 +839,6 @@ pub unsafe fn unpark_requeue(
     let mut result = UnparkResult::default();
     let op = validate();
     if op == RequeueOp::Abort {
-        // SAFETY: Both buckets are locked, as required.
         unlock_bucket_pair(bucket_from, bucket_to);
         return result;
     }
@@ -947,11 +919,9 @@ pub unsafe fn unpark_requeue(
     if let Some(wakeup_thread) = wakeup_thread {
         (*wakeup_thread).unpark_token.set(token);
         let handle = (*wakeup_thread).parker.unpark_lock();
-        // SAFETY: Both buckets are locked, as required.
         unlock_bucket_pair(bucket_from, bucket_to);
         handle.unpark();
     } else {
-        // SAFETY: Both buckets are locked, as required.
         unlock_bucket_pair(bucket_from, bucket_to);
     }
 
@@ -1048,7 +1018,6 @@ pub unsafe fn unpark_filter(
         t.1 = Some((*t.0).parker.unpark_lock());
     }
 
-    // SAFETY: We hold the lock here, as required
     bucket.mutex.unlock();
 
     // Now that we are outside the lock, wake up all the threads that we removed
@@ -1072,10 +1041,7 @@ pub mod deadlock {
 
     /// Acquire a resource identified by key in the deadlock detector
     /// Noop if deadlock_detection feature isn't enabled.
-    ///
-    /// # Safety
-    ///
-    /// Call after the resource is acquired
+    /// Note: Call after the resource is acquired
     #[inline]
     pub unsafe fn acquire_resource(_key: usize) {
         #[cfg(feature = "deadlock_detection")]
@@ -1084,14 +1050,9 @@ pub mod deadlock {
 
     /// Release a resource identified by key in the deadlock detector.
     /// Noop if deadlock_detection feature isn't enabled.
-    ///
+    /// Note: Call before the resource is released
     /// # Panics
-    ///
     /// Panics if the resource was already released or wasn't acquired in this thread.
-    ///
-    /// # Safety
-    ///
-    /// Call before the resource is released
     #[inline]
     pub unsafe fn release_resource(_key: usize) {
         #[cfg(feature = "deadlock_detection")]
@@ -1198,14 +1159,10 @@ mod deadlock_impl {
     pub unsafe fn release_resource(key: usize) {
         with_thread_data(|thread_data| {
             let resources = &mut (*thread_data.deadlock_data.resources.get());
-
-            // There is only one situation where we can fail to find the
-            // resource: we are currently running TLS destructors and our
-            // ThreadData has already been freed. There isn't much we can do
-            // about it at this point, so just ignore it.
-            if let Some(p) = resources.iter().rposition(|x| *x == key) {
-                resources.swap_remove(p);
-            }
+            match resources.iter().rposition(|x| *x == key) {
+                Some(p) => resources.swap_remove(p),
+                None => panic!("key {} not found in thread resources", key),
+            };
         });
     }
 
@@ -1245,7 +1202,6 @@ mod deadlock_impl {
                 }
                 current = (*current).next_in_queue.get();
             }
-            // SAFETY: We hold the lock here, as required
             b.mutex.unlock();
         }
 
@@ -1264,26 +1220,25 @@ mod deadlock_impl {
     // Returns all detected thread wait cycles.
     // Note that once a cycle is reported it's never reported again.
     unsafe fn check_wait_graph_slow() -> Vec<Vec<DeadlockedThread>> {
-        static DEADLOCK_DETECTION_LOCK: WordLock = WordLock::new();
+        static DEADLOCK_DETECTION_LOCK: WordLock = WordLock::INIT;
         DEADLOCK_DETECTION_LOCK.lock();
 
         let mut table = get_hashtable();
         loop {
             // Lock all buckets in the old table
-            for b in &table.entries[..] {
+            for b in &(*table).entries[..] {
                 b.mutex.lock();
             }
 
             // Now check if our table is still the latest one. Another thread could
             // have grown the hash table between us getting and locking the hash table.
             let new_table = get_hashtable();
-            if new_table as *const _ == table as *const _ {
+            if new_table == table {
                 break;
             }
 
             // Unlock buckets and try again
-            for b in &table.entries[..] {
-                // SAFETY: We hold the lock here, as required
+            for b in &(*table).entries[..] {
                 b.mutex.unlock();
             }
 
@@ -1294,7 +1249,7 @@ mod deadlock_impl {
         let mut graph =
             DiGraphMap::<WaitGraphNode, ()>::with_capacity(thread_count * 2, thread_count * 2);
 
-        for b in &table.entries[..] {
+        for b in &(*table).entries[..] {
             let mut current = b.queue_head.get();
             while !current.is_null() {
                 if !(*current).parked_with_timeout.get()
@@ -1315,8 +1270,7 @@ mod deadlock_impl {
             }
         }
 
-        for b in &table.entries[..] {
-            // SAFETY: We hold the lock here, as required
+        for b in &(*table).entries[..] {
             b.mutex.unlock();
         }
 
@@ -1332,7 +1286,6 @@ mod deadlock_impl {
                 (*td).deadlock_data.deadlocked.set(true);
                 *(*td).deadlock_data.backtrace_sender.get() = Some(sender.clone());
                 let handle = (*td).parker.unpark_lock();
-                // SAFETY: We hold the lock here, as required
                 bucket.mutex.unlock();
                 // unpark the deadlocked thread!
                 // on unpark it'll notice the deadlocked flag and report back
@@ -1391,278 +1344,5 @@ mod deadlock_impl {
         });
 
         cycles.iter().cloned().collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{ThreadData, DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
-    use std::{
-        ptr,
-        sync::{
-            atomic::{AtomicIsize, AtomicPtr, AtomicUsize, Ordering},
-            Arc,
-        },
-        thread,
-        time::Duration,
-    };
-
-    /// Calls a closure for every `ThreadData` currently parked on a given key
-    fn for_each(key: usize, mut f: impl FnMut(&ThreadData)) {
-        let bucket = super::lock_bucket(key);
-
-        let mut current: *const ThreadData = bucket.queue_head.get();
-        while !current.is_null() {
-            let current_ref = unsafe { &*current };
-            if current_ref.key.load(Ordering::Relaxed) == key {
-                f(current_ref);
-            }
-            current = current_ref.next_in_queue.get();
-        }
-
-        // SAFETY: We hold the lock here, as required
-        unsafe { bucket.mutex.unlock() };
-    }
-
-    macro_rules! test {
-        ( $( $name:ident(
-            repeats: $repeats:expr,
-            latches: $latches:expr,
-            delay: $delay:expr,
-            threads: $threads:expr,
-            single_unparks: $single_unparks:expr);
-        )* ) => {
-            $(#[test]
-            fn $name() {
-                let delay = Duration::from_micros($delay);
-                for _ in 0..$repeats {
-                    run_parking_test($latches, delay, $threads, $single_unparks);
-                }
-            })*
-        };
-    }
-
-    test! {
-        unpark_all_one_fast(
-            repeats: 10000, latches: 1, delay: 0, threads: 1, single_unparks: 0
-        );
-        unpark_all_hundred_fast(
-            repeats: 100, latches: 1, delay: 0, threads: 100, single_unparks: 0
-        );
-        unpark_one_one_fast(
-            repeats: 1000, latches: 1, delay: 0, threads: 1, single_unparks: 1
-        );
-        unpark_one_hundred_fast(
-            repeats: 20, latches: 1, delay: 0, threads: 100, single_unparks: 100
-        );
-        unpark_one_fifty_then_fifty_all_fast(
-            repeats: 50, latches: 1, delay: 0, threads: 100, single_unparks: 50
-        );
-        unpark_all_one(
-            repeats: 100, latches: 1, delay: 10000, threads: 1, single_unparks: 0
-        );
-        unpark_all_hundred(
-            repeats: 100, latches: 1, delay: 10000, threads: 100, single_unparks: 0
-        );
-        unpark_one_one(
-            repeats: 10, latches: 1, delay: 10000, threads: 1, single_unparks: 1
-        );
-        unpark_one_fifty(
-            repeats: 1, latches: 1, delay: 10000, threads: 50, single_unparks: 50
-        );
-        unpark_one_fifty_then_fifty_all(
-            repeats: 2, latches: 1, delay: 10000, threads: 100, single_unparks: 50
-        );
-        hundred_unpark_all_one_fast(
-            repeats: 100, latches: 100, delay: 0, threads: 1, single_unparks: 0
-        );
-        hundred_unpark_all_one(
-            repeats: 1, latches: 100, delay: 10000, threads: 1, single_unparks: 0
-        );
-    }
-
-    fn run_parking_test(
-        num_latches: usize,
-        delay: Duration,
-        num_threads: usize,
-        num_single_unparks: usize,
-    ) {
-        let mut tests = Vec::with_capacity(num_latches);
-
-        for _ in 0..num_latches {
-            let test = Arc::new(SingleLatchTest::new(num_threads));
-            let mut threads = Vec::with_capacity(num_threads);
-            for _ in 0..num_threads {
-                let test = test.clone();
-                threads.push(thread::spawn(move || test.run()));
-            }
-            tests.push((test, threads));
-        }
-
-        for unpark_index in 0..num_single_unparks {
-            thread::sleep(delay);
-            for (test, _) in &tests {
-                test.unpark_one(unpark_index);
-            }
-        }
-
-        for (test, threads) in tests {
-            test.finish(num_single_unparks);
-            for thread in threads {
-                thread.join().expect("Test thread panic");
-            }
-        }
-    }
-
-    struct SingleLatchTest {
-        semaphore: AtomicIsize,
-        num_awake: AtomicUsize,
-        /// Holds the pointer to the last *unprocessed* woken up thread.
-        last_awoken: AtomicPtr<ThreadData>,
-        /// Total number of threads participating in this test.
-        num_threads: usize,
-    }
-
-    impl SingleLatchTest {
-        pub fn new(num_threads: usize) -> Self {
-            Self {
-                // This implements a fair (FIFO) semaphore, and it starts out unavailable.
-                semaphore: AtomicIsize::new(0),
-                num_awake: AtomicUsize::new(0),
-                last_awoken: AtomicPtr::new(ptr::null_mut()),
-                num_threads,
-            }
-        }
-
-        pub fn run(&self) {
-            // Get one slot from the semaphore
-            self.down();
-
-            // Report back to the test verification code that this thread woke up
-            let this_thread_ptr = super::with_thread_data(|t| t as *const _ as *mut _);
-            self.last_awoken.store(this_thread_ptr, Ordering::SeqCst);
-            self.num_awake.fetch_add(1, Ordering::SeqCst);
-        }
-
-        pub fn unpark_one(&self, single_unpark_index: usize) {
-            // last_awoken should be null at all times except between self.up() and at the bottom
-            // of this method where it's reset to null again
-            assert!(self.last_awoken.load(Ordering::SeqCst).is_null());
-
-            let mut queue: Vec<*mut ThreadData> = Vec::with_capacity(self.num_threads);
-            for_each(self.semaphore_addr(), |thread_data| {
-                queue.push(thread_data as *const _ as *mut _);
-            });
-            assert!(queue.len() <= self.num_threads - single_unpark_index);
-
-            let num_awake_before_up = self.num_awake.load(Ordering::SeqCst);
-
-            self.up();
-
-            // Wait for a parked thread to wake up and update num_awake + last_awoken.
-            while self.num_awake.load(Ordering::SeqCst) != num_awake_before_up + 1 {
-                thread::yield_now();
-            }
-
-            // At this point the other thread should have set last_awoken inside the run() method
-            let last_awoken = self.last_awoken.load(Ordering::SeqCst);
-            assert!(!last_awoken.is_null());
-            if !queue.is_empty() && queue[0] != last_awoken {
-                panic!(
-                    "Woke up wrong thread:\n\tqueue: {:?}\n\tlast awoken: {:?}",
-                    queue, last_awoken
-                );
-            }
-            self.last_awoken.store(ptr::null_mut(), Ordering::SeqCst);
-        }
-
-        pub fn finish(&self, num_single_unparks: usize) {
-            // The amount of threads not unparked via unpark_one
-            let mut num_threads_left = self.num_threads.checked_sub(num_single_unparks).unwrap();
-
-            // Wake remaining threads up with unpark_all. Has to be in a loop, because there might
-            // still be threads that has not yet parked.
-            while num_threads_left > 0 {
-                let mut num_waiting_on_address = 0;
-                for_each(self.semaphore_addr(), |_thread_data| {
-                    num_waiting_on_address += 1;
-                });
-                assert!(num_waiting_on_address <= num_threads_left);
-
-                let num_awake_before_unpark = self.num_awake.load(Ordering::SeqCst);
-
-                let num_unparked =
-                    unsafe { super::unpark_all(self.semaphore_addr(), DEFAULT_UNPARK_TOKEN) };
-                assert!(num_unparked >= num_waiting_on_address);
-                assert!(num_unparked <= num_threads_left);
-
-                // Wait for all unparked threads to wake up and update num_awake + last_awoken.
-                while self.num_awake.load(Ordering::SeqCst)
-                    != num_awake_before_unpark + num_unparked
-                {
-                    thread::yield_now()
-                }
-
-                num_threads_left = num_threads_left.checked_sub(num_unparked).unwrap();
-            }
-            // By now, all threads should have been woken up
-            assert_eq!(self.num_awake.load(Ordering::SeqCst), self.num_threads);
-
-            // Make sure no thread is parked on our semaphore address
-            let mut num_waiting_on_address = 0;
-            for_each(self.semaphore_addr(), |_thread_data| {
-                num_waiting_on_address += 1;
-            });
-            assert_eq!(num_waiting_on_address, 0);
-        }
-
-        pub fn down(&self) {
-            let old_semaphore_value = self.semaphore.fetch_sub(1, Ordering::SeqCst);
-
-            if old_semaphore_value > 0 {
-                // We acquired the semaphore. Done.
-                return;
-            }
-
-            // We need to wait.
-            let validate = || true;
-            let before_sleep = || {};
-            let timed_out = |_, _| {};
-            unsafe {
-                super::park(
-                    self.semaphore_addr(),
-                    validate,
-                    before_sleep,
-                    timed_out,
-                    DEFAULT_PARK_TOKEN,
-                    None,
-                );
-            }
-        }
-
-        pub fn up(&self) {
-            let old_semaphore_value = self.semaphore.fetch_add(1, Ordering::SeqCst);
-
-            // Check if anyone was waiting on the semaphore. If they were, then pass ownership to them.
-            if old_semaphore_value < 0 {
-                // We need to continue until we have actually unparked someone. It might be that
-                // the thread we want to pass ownership to has decremented the semaphore counter,
-                // but not yet parked.
-                loop {
-                    match unsafe {
-                        super::unpark_one(self.semaphore_addr(), |_| DEFAULT_UNPARK_TOKEN)
-                            .unparked_threads
-                    } {
-                        1 => break,
-                        0 => (),
-                        i => panic!("Should not wake up {} threads", i),
-                    }
-                }
-            }
-        }
-
-        fn semaphore_addr(&self) -> usize {
-            &self.semaphore as *const _ as usize
-        }
     }
 }

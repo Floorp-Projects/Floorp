@@ -1536,9 +1536,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx11"
-version = "0.4.6"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7527cfcd7d1eec6b99f81891293bdd2a41d044ace009717264e5f3b10ce5b86"
+checksum = "c66c77836ff26cf9916e5c8745715a22eae1fc61d994ffa0bea8a7dbd708ece2"
 dependencies = [
  "bitflags",
  "gfx-auxil",
@@ -1584,9 +1584,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-metal"
-version = "0.4.5"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05b6130b9a72129ebb5c91d3d75a142a7fa54dcc112603231582e3fdc0b84247"
+checksum = "b19262dc17be65f2c5b5c72fe5199ab2017faf51f9e0e353c4a68b63a88f933b"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -2324,9 +2324,9 @@ dependencies = [
 
 [[package]]
 name = "lock_api"
-version = "0.3.4"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
+checksum = "f8912e782533a93a167888781b836336a6ca5da6175c05944c86cf28c31104dc"
 dependencies = [
  "scopeguard",
 ]
@@ -3111,25 +3111,27 @@ checksum = "ddfc878dac00da22f8f61e7af3157988424567ab01d9920b962ef7dcbd7cd865"
 
 [[package]]
 name = "parking_lot"
-version = "0.10.2"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3a704eb390aafdc107b0e392f56a82b668e3a71366993b5340f5833fd62505e"
+checksum = "f842b1982eb6c2fe34036a4fbfb06dd185a3f5c8edfaacdf7d1ea10b07de6252"
 dependencies = [
  "lock_api",
  "parking_lot_core",
+ "rustc_version",
 ]
 
 [[package]]
 name = "parking_lot_core"
-version = "0.7.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e136c1904604defe99ce5fd71a28d473fa60a12255d511aa78a9ddf11237aeb"
+checksum = "b876b1b9e7ac6e1a74a6da34d25c42e17e8862aa409cbbbdcfc8d86c6f3bc62b"
 dependencies = [
  "cfg-if",
  "cloudabi",
  "libc",
  "redox_syscall",
- "smallvec 1.2.0",
+ "rustc_version",
+ "smallvec 0.6.10",
  "winapi 0.3.7",
 ]
 
