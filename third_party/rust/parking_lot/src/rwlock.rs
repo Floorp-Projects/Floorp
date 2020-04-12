@@ -88,6 +88,13 @@ use lock_api;
 /// ```
 pub type RwLock<T> = lock_api::RwLock<RawRwLock, T>;
 
+/// Creates a new instance of an `RwLock<T>` which is unlocked.
+///
+/// This allows creating a `RwLock<T>` in a constant context on stable Rust.
+pub const fn const_rwlock<T>(val: T) -> RwLock<T> {
+    RwLock::const_new(<RawRwLock as lock_api::RawRwLock>::INIT, val)
+}
+
 /// RAII structure used to release the shared read access of a lock when
 /// dropped.
 pub type RwLockReadGuard<'a, T> = lock_api::RwLockReadGuard<'a, RawRwLock, T>;
@@ -322,7 +329,7 @@ mod tests {
     fn test_rw_arc_access_in_unwind() {
         let arc = Arc::new(RwLock::new(1));
         let arc2 = arc.clone();
-        let _ = thread::spawn(move || -> () {
+        let _ = thread::spawn(move || {
             struct Unwinder {
                 i: Arc<RwLock<isize>>,
             }
@@ -359,7 +366,10 @@ mod tests {
             let read_guard = lock.read();
 
             let read_result = lock.try_read();
-            assert!(read_result.is_some(), "try_read should succeed while read_guard is in scope");
+            assert!(
+                read_result.is_some(),
+                "try_read should succeed while read_guard is in scope"
+            );
 
             drop(read_guard);
         }
@@ -378,7 +388,10 @@ mod tests {
             let write_guard = lock.write();
 
             let read_result = lock.try_read();
-            assert!(read_result.is_none(), "try_read should fail while write_guard is in scope");
+            assert!(
+                read_result.is_none(),
+                "try_read should fail while write_guard is in scope"
+            );
 
             drop(write_guard);
         }
@@ -391,7 +404,10 @@ mod tests {
             let read_guard = lock.read();
 
             let write_result = lock.try_write();
-            assert!(write_result.is_none(), "try_write should fail while read_guard is in scope");
+            assert!(
+                write_result.is_none(),
+                "try_write should fail while read_guard is in scope"
+            );
 
             drop(read_guard);
         }
@@ -410,7 +426,10 @@ mod tests {
             let write_guard = lock.write();
 
             let write_result = lock.try_write();
-            assert!(write_result.is_none(), "try_write should fail while write_guard is in scope");
+            assert!(
+                write_result.is_none(),
+                "try_write should fail while write_guard is in scope"
+            );
 
             drop(write_guard);
         }
@@ -566,5 +585,29 @@ mod tests {
 
         assert_eq!(*(mutex.read()), *(deserialized.read()));
         assert_eq!(contents, *(deserialized.read()));
+    }
+
+    #[test]
+    fn test_issue_203() {
+        struct Bar(RwLock<()>);
+
+        impl Drop for Bar {
+            fn drop(&mut self) {
+                let _n = self.0.write();
+            }
+        }
+
+        thread_local! {
+            static B: Bar = Bar(RwLock::new(()));
+        }
+
+        thread::spawn(|| {
+            B.with(|_| ());
+
+            let a = RwLock::new(());
+            let _a = a.read();
+        })
+        .join()
+        .unwrap();
     }
 }

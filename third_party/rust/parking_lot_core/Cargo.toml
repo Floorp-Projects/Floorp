@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "parking_lot_core"
-version = "0.6.2"
+version = "0.7.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "An advanced API for creating custom synchronization primitives."
 keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
@@ -28,17 +28,15 @@ optional = true
 version = "0.1.5"
 
 [dependencies.petgraph]
-version = "0.4.5"
+version = "0.5"
 optional = true
 
 [dependencies.smallvec]
-version = "0.6"
+version = "1.0"
 
 [dependencies.thread-id]
 version = "3.2.0"
 optional = true
-[build-dependencies.rustc_version]
-version = "0.2"
 
 [features]
 deadlock_detection = ["petgraph", "thread-id", "backtrace"]

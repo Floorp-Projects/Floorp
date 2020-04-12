@@ -6,19 +6,13 @@
 // copied, modified, or distributed except according to those terms.
 
 use crate::{deadlock, util};
-#[cfg(has_sized_atomics)]
-use core::sync::atomic::AtomicU8;
-#[cfg(not(has_sized_atomics))]
-use core::sync::atomic::AtomicUsize as AtomicU8;
-use core::{sync::atomic::Ordering, time::Duration};
-use lock_api::{GuardNoSend, RawMutex as RawMutexTrait, RawMutexFair, RawMutexTimed};
+use core::{
+    sync::atomic::{AtomicU8, Ordering},
+    time::Duration,
+};
+use lock_api::{GuardNoSend, RawMutex as RawMutex_};
 use parking_lot_core::{self, ParkResult, SpinWait, UnparkResult, UnparkToken, DEFAULT_PARK_TOKEN};
 use std::time::Instant;
-
-#[cfg(has_sized_atomics)]
-type U8 = u8;
-#[cfg(not(has_sized_atomics))]
-type U8 = usize;
 
 // UnparkToken used to indicate that that the target thread should attempt to
 // lock the mutex again as soon as it is unparked.
@@ -28,16 +22,43 @@ pub(crate) const TOKEN_NORMAL: UnparkToken = UnparkToken(0);
 // thread directly without unlocking it.
 pub(crate) const TOKEN_HANDOFF: UnparkToken = UnparkToken(1);
 
-const LOCKED_BIT: U8 = 1;
-const PARKED_BIT: U8 = 2;
+/// This bit is set in the `state` of a `RawMutex` when that mutex is locked by some thread.
+const LOCKED_BIT: u8 = 0b01;
+/// This bit is set in the `state` of a `RawMutex` just before parking a thread. A thread is being
+/// parked if it wants to lock the mutex, but it is currently being held by some other thread.
+const PARKED_BIT: u8 = 0b10;
 
 /// Raw mutex type backed by the parking lot.
 pub struct RawMutex {
+    /// This atomic integer holds the current state of the mutex instance. Only the two lowest bits
+    /// are used. See `LOCKED_BIT` and `PARKED_BIT` for the bitmask for these bits.
+    ///
+    /// # State table:
+    ///
+    /// PARKED_BIT | LOCKED_BIT | Description
+    ///     0      |     0      | The mutex is not locked, nor is anyone waiting for it.
+    /// -----------+------------+------------------------------------------------------------------
+    ///     0      |     1      | The mutex is locked by exactly one thread. No other thread is
+    ///            |            | waiting for it.
+    /// -----------+------------+------------------------------------------------------------------
+    ///     1      |     0      | The mutex is not locked. One or more thread is parked or about to
+    ///            |            | park. At least one of the parked threads are just about to be
+    ///            |            | unparked, or a thread heading for parking might abort the park.
+    /// -----------+------------+------------------------------------------------------------------
+    ///     1      |     1      | The mutex is locked by exactly one thread. One or more thread is
+    ///            |            | parked or about to park, waiting for the lock to become available.
+    ///            |            | In this state, PARKED_BIT is only ever cleared when a bucket lock
+    ///            |            | is held (i.e. in a parking_lot_core callback). This ensures that
+    ///            |            | we never end up in a situation where there are parked threads but
+    ///            |            | PARKED_BIT is not set (which would result in those threads
+    ///            |            | potentially never getting woken up).
     state: AtomicU8,
 }
 
-unsafe impl RawMutexTrait for RawMutex {
-    const INIT: RawMutex = RawMutex { state: AtomicU8::new(0) };
+unsafe impl lock_api::RawMutex for RawMutex {
+    const INIT: RawMutex = RawMutex {
+        state: AtomicU8::new(0),
+    };
 
     type GuardMarker = GuardNoSend;
 
@@ -78,7 +99,10 @@ unsafe impl RawMutexTrait for RawMutex {
     #[inline]
     fn unlock(&self) {
         unsafe { deadlock::release_resource(self as *const _ as usize) };
-        if self.state.compare_exchange(LOCKED_BIT, 0, Ordering::Release, Ordering::Relaxed).is_ok()
+        if self
+            .state
+            .compare_exchange(LOCKED_BIT, 0, Ordering::Release, Ordering::Relaxed)
+            .is_ok()
         {
             return;
         }
@@ -86,11 +110,14 @@ unsafe impl RawMutexTrait for RawMutex {
     }
 }
 
-unsafe impl RawMutexFair for RawMutex {
+unsafe impl lock_api::RawMutexFair for RawMutex {
     #[inline]
     fn unlock_fair(&self) {
         unsafe { deadlock::release_resource(self as *const _ as usize) };
-        if self.state.compare_exchange(LOCKED_BIT, 0, Ordering::Release, Ordering::Relaxed).is_ok()
+        if self
+            .state
+            .compare_exchange(LOCKED_BIT, 0, Ordering::Release, Ordering::Relaxed)
+            .is_ok()
         {
             return;
         }
@@ -105,7 +132,7 @@ unsafe impl RawMutexFair for RawMutex {
     }
 }
 
-unsafe impl RawMutexTimed for RawMutex {
+unsafe impl lock_api::RawMutexTimed for RawMutex {
     type Duration = Duration;
     type Instant = Instant;
 
@@ -212,37 +239,41 @@ impl RawMutex {
             }
 
             // Park our thread until we are woken up by an unlock
-            unsafe {
-                let addr = self as *const _ as usize;
-                let validate = || self.state.load(Ordering::Relaxed) == LOCKED_BIT | PARKED_BIT;
-                let before_sleep = || {};
-                let timed_out = |_, was_last_thread| {
-                    // Clear the parked bit if we were the last parked thread
-                    if was_last_thread {
-                        self.state.fetch_and(!PARKED_BIT, Ordering::Relaxed);
-                    }
-                };
-                match parking_lot_core::park(
+            let addr = self as *const _ as usize;
+            let validate = || self.state.load(Ordering::Relaxed) == LOCKED_BIT | PARKED_BIT;
+            let before_sleep = || {};
+            let timed_out = |_, was_last_thread| {
+                // Clear the parked bit if we were the last parked thread
+                if was_last_thread {
+                    self.state.fetch_and(!PARKED_BIT, Ordering::Relaxed);
+                }
+            };
+            // SAFETY:
+            //   * `addr` is an address we control.
+            //   * `validate`/`timed_out` does not panic or call into any function of `parking_lot`.
+            //   * `before_sleep` does not call `park`, nor does it panic.
+            match unsafe {
+                parking_lot_core::park(
                     addr,
                     validate,
                     before_sleep,
                     timed_out,
                     DEFAULT_PARK_TOKEN,
                     timeout,
-                ) {
-                    // The thread that unparked us passed the lock on to us
-                    // directly without unlocking it.
-                    ParkResult::Unparked(TOKEN_HANDOFF) => return true,
+                )
+            } {
+                // The thread that unparked us passed the lock on to us
+                // directly without unlocking it.
+                ParkResult::Unparked(TOKEN_HANDOFF) => return true,
 
-                    // We were unparked normally, try acquiring the lock again
-                    ParkResult::Unparked(_) => (),
+                // We were unparked normally, try acquiring the lock again
+                ParkResult::Unparked(_) => (),
 
-                    // The validation function failed, try locking again
-                    ParkResult::Invalid => (),
+                // The validation function failed, try locking again
+                ParkResult::Invalid => (),
 
-                    // Timeout expired
-                    ParkResult::TimedOut => return false,
-                }
+                // Timeout expired
+                ParkResult::TimedOut => return false,
             }
 
             // Loop back and try locking again
@@ -255,29 +286,32 @@ impl RawMutex {
     fn unlock_slow(&self, force_fair: bool) {
         // Unpark one thread and leave the parked bit set if there might
         // still be parked threads on this address.
-        unsafe {
-            let addr = self as *const _ as usize;
-            let callback = |result: UnparkResult| {
-                // If we are using a fair unlock then we should keep the
-                // mutex locked and hand it off to the unparked thread.
-                if result.unparked_threads != 0 && (force_fair || result.be_fair) {
-                    // Clear the parked bit if there are no more parked
-                    // threads.
-                    if !result.have_more_threads {
-                        self.state.store(LOCKED_BIT, Ordering::Relaxed);
-                    }
-                    return TOKEN_HANDOFF;
+        let addr = self as *const _ as usize;
+        let callback = |result: UnparkResult| {
+            // If we are using a fair unlock then we should keep the
+            // mutex locked and hand it off to the unparked thread.
+            if result.unparked_threads != 0 && (force_fair || result.be_fair) {
+                // Clear the parked bit if there are no more parked
+                // threads.
+                if !result.have_more_threads {
+                    self.state.store(LOCKED_BIT, Ordering::Relaxed);
                 }
+                return TOKEN_HANDOFF;
+            }
 
-                // Clear the locked bit, and the parked bit as well if there
-                // are no more parked threads.
-                if result.have_more_threads {
-                    self.state.store(PARKED_BIT, Ordering::Release);
-                } else {
-                    self.state.store(0, Ordering::Release);
-                }
-                TOKEN_NORMAL
-            };
+            // Clear the locked bit, and the parked bit as well if there
+            // are no more parked threads.
+            if result.have_more_threads {
+                self.state.store(PARKED_BIT, Ordering::Release);
+            } else {
+                self.state.store(0, Ordering::Release);
+            }
+            TOKEN_NORMAL
+        };
+        // SAFETY:
+        //   * `addr` is an address we control.
+        //   * `callback` does not panic or call into any function of `parking_lot`.
+        unsafe {
             parking_lot_core::unpark_one(addr, callback);
         }
     }
