@@ -21,8 +21,6 @@
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
 #                    generate relative filenames.
 
-from __future__ import print_function
-
 import buildconfig
 import errno
 import sys
@@ -35,7 +33,6 @@ import fnmatch
 import subprocess
 import time
 import ctypes
-import urlparse
 import concurrent.futures
 import multiprocessing
 
@@ -137,7 +134,8 @@ class VCSFileInfo:
 rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
 
 def read_output(*args):
-    (stdout, _) = subprocess.Popen(args=args, stdout=subprocess.PIPE).communicate()
+    (stdout, _) = subprocess.Popen(
+        args=args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
     return stdout.rstrip()
 
 class HGRepoInfo:
@@ -266,8 +264,6 @@ if platform.system() == 'Windows':
         result = path
 
         ctypes.windll.kernel32.SetErrorMode(ctypes.c_uint(1))
-        if not isinstance(path, unicode):
-            path = unicode(path, sys.getfilesystemencoding())
         handle = ctypes.windll.kernel32.CreateFileW(path,
                                                     # GENERIC_READ
                                                     0x80000000,
@@ -293,7 +289,7 @@ if platform.system() == 'Windows':
                                                                 0) > 0:
                 # The return value of GetFinalPathNameByHandleW uses the
                 # '\\?\' prefix.
-                result = buf.value.encode(sys.getfilesystemencoding())[4:]
+                result = buf.value[4:]
             ctypes.windll.kernel32.CloseHandle(handle)
         return result
 else:
@@ -358,7 +354,7 @@ def validate_install_manifests(install_manifest_args):
         if len(bits) != 2:
             raise ValueError('Invalid format for --install-manifest: '
                              'specify manifest,target_dir')
-        manifest_file, destination = map(os.path.abspath, bits)
+        manifest_file, destination = [os.path.abspath(b) for b in bits]
         if not os.path.isfile(manifest_file):
             raise IOError(errno.ENOENT, 'Manifest file not found',
                           manifest_file)
@@ -524,9 +520,9 @@ class Dumper:
         try:
             cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
             print(' '.join(cmd), file=sys.stderr)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+            proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE,
                                     stderr=open(os.devnull, 'wb'))
-            module_line = proc.stdout.next()
+            module_line = next(proc.stdout)
             if module_line.startswith("MODULE"):
                 # MODULE os cpu guid debug_file
                 (guid, debug_file) = (module_line.split())[3:5]
@@ -852,8 +848,8 @@ class Dumper_Mac(Dumper):
                [file])
         print(' '.join(cmd), file=sys.stderr)
 
-        dsymutil_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
+        dsymutil_proc = subprocess.Popen(cmd, universal_newlines=True,
+                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         dsymout, dsymerr = dsymutil_proc.communicate()
         if dsymutil_proc.returncode != 0:
             raise RuntimeError('Error running dsymutil: %s' % dsymerr)
@@ -889,7 +885,8 @@ class Dumper_Mac(Dumper):
 
         otool_out = subprocess.check_output([buildconfig.substs['OTOOL'],
                                              '-l',
-                                             os.path.join(contents_dir, files[0])])
+                                             os.path.join(contents_dir, files[0])],
+                                            universal_newlines=True)
         if 'sectname __debug_info' not in otool_out:
             print("No symbols in .dSYM bundle %s" % (dsymbundle,),
                   file=sys.stderr)
