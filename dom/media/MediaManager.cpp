@@ -1324,7 +1324,7 @@ class GetUserMediaStreamRunnable : public Runnable {
                  }
                });
 
-    if (!IsPincipalInfoPrivate(mPrincipalInfo)) {
+    if (!IsPrincipalInfoPrivate(mPrincipalInfo)) {
       // Call GetPrincipalKey again, this time w/persist = true, to promote
       // deviceIds to persistent, in case they're not already. Fire'n'forget.
       media::GetPrincipalKey(mPrincipalInfo, true)
