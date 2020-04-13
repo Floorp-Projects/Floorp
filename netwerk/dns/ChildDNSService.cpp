@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/ChildDNSService.h"
-#include "nsDNSPrefetch.h"
 #include "nsIDNSListener.h"
-#include "nsIOService.h"
 #include "nsThreadUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIProtocolProxyService.h"
@@ -27,10 +25,7 @@ static StaticRefPtr<ChildDNSService> gChildDNSService;
 static const char kPrefNameDisablePrefetch[] = "network.dns.disablePrefetch";
 
 already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
-  MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
-                XRE_IsContentProcess() || XRE_IsParentProcess());
-  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(),
-                XRE_IsContentProcess() || XRE_IsSocketProcess());
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsSocketProcess());
 
   if (!gChildDNSService) {
     gChildDNSService = new ChildDNSService();
@@ -46,13 +41,7 @@ ChildDNSService::ChildDNSService()
     : mFirstTime(true),
       mDisablePrefetch(false),
       mPendingRequestsLock("DNSPendingRequestsLock") {
-  MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
-                XRE_IsContentProcess() || XRE_IsParentProcess());
-  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(),
-                XRE_IsContentProcess() || XRE_IsSocketProcess());
-  if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
-    nsDNSPrefetch::Initialize(this);
-  }
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsSocketProcess());
 }
 
 void ChildDNSService::GetDNSRecordHashKey(
@@ -79,11 +68,6 @@ nsresult ChildDNSService::AsyncResolveInternal(
     NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
   }
 
-  bool resolveDNSInSocketProcess = false;
-  if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
-    resolveDNSInSocketProcess = true;
-  }
-
   if (mDisablePrefetch && (flags & RESOLVE_SPECULATE)) {
     return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
   }
@@ -103,14 +87,8 @@ nsresult ChildDNSService::AsyncResolveInternal(
     listener = new DNSListenerProxy(listener, target);
   }
 
-  RefPtr<DNSRequestSender> sender = new DNSRequestSender(
+  RefPtr<DNSRequestChild> childReq = new DNSRequestChild(
       hostname, aTrrServer, type, aOriginAttributes, flags, listener, target);
-  RefPtr<DNSRequestActor> dnsReq;
-  if (resolveDNSInSocketProcess) {
-    dnsReq = new DNSRequestParent(sender);
-  } else {
-    dnsReq = new DNSRequestChild(sender);
-  }
 
   {
     MutexAutoLock lock(mPendingRequestsLock);
@@ -119,19 +97,19 @@ nsresult ChildDNSService::AsyncResolveInternal(
                         originalListener, key);
     auto entry = mPendingRequests.LookupForAdd(key);
     if (entry) {
-      entry.Data()->AppendElement(sender);
+      entry.Data()->AppendElement(childReq);
     } else {
       entry.OrInsert([&]() {
-        auto* hashEntry = new nsTArray<RefPtr<DNSRequestSender>>();
-        hashEntry->AppendElement(sender);
+        auto* hashEntry = new nsTArray<RefPtr<DNSRequestChild>>();
+        hashEntry->AppendElement(childReq);
         return hashEntry;
       });
     }
   }
 
-  sender->StartRequest();
+  childReq->StartRequest();
 
-  sender.forget(result);
+  childReq.forget(result);
   return NS_OK;
 }
 
@@ -144,7 +122,7 @@ nsresult ChildDNSService::CancelAsyncResolveInternal(
   }
 
   MutexAutoLock lock(mPendingRequestsLock);
-  nsTArray<RefPtr<DNSRequestSender>>* hashEntry;
+  nsTArray<RefPtr<DNSRequestChild>>* hashEntry;
   nsCString key;
   GetDNSRecordHashKey(aHostname, aTrrServer, aType, aOriginAttributes, aFlags,
                       aListener, key);
@@ -369,7 +347,7 @@ ChildDNSService::GetMyHostName(nsACString& result) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
+void ChildDNSService::NotifyRequestDone(DNSRequestChild* aDnsRequest) {
   // We need the original flags and listener for the pending requests hash.
   uint32_t originalFlags = aDnsRequest->mFlags & ~RESOLVE_OFFLINE;
   nsCOMPtr<nsIDNSListener> originalListener = aDnsRequest->mListener;
@@ -389,11 +367,11 @@ void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
                       aDnsRequest->mType, aDnsRequest->mOriginAttributes,
                       originalFlags, originalListener, key);
 
-  nsTArray<RefPtr<DNSRequestSender>>* hashEntry;
+  nsTArray<RefPtr<DNSRequestChild>>* hashEntry;
 
   if (mPendingRequests.Get(key, &hashEntry)) {
     auto idx = hashEntry->IndexOf(aDnsRequest);
-    if (idx != nsTArray<RefPtr<DNSRequestSender>>::NoIndex) {
+    if (idx != nsTArray<RefPtr<DNSRequestChild>>::NoIndex) {
       hashEntry->RemoveElementAt(idx);
       if (hashEntry->IsEmpty()) {
         mPendingRequests.Remove(key);
