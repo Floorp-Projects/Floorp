@@ -150,7 +150,7 @@ fuzzy(0-1,0-2203) == rgba16-5551.bmp rgba16-5551.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "My attempt to make a BMP file with an embedded color profile."
-fuzzy(1-1,28-28) == rgb24prof.bmp rgb24.png
+fuzzy(1-1,28-73) == rgb24prof.bmp rgb24.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "This image tries to test whether color profiles are fully supported. It has
