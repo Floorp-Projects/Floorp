@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "DNSRequestChild.h"
-#include "DNSRequestParent.h"
 #include "nsHashKeys.h"
 #include "nsClassHashtable.h"
 
@@ -31,7 +30,7 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
 
   static already_AddRefed<ChildDNSService> GetSingleton();
 
-  void NotifyRequestDone(DNSRequestSender* aDnsRequest);
+  void NotifyRequestDone(DNSRequestChild* aDnsRequest);
 
  private:
   virtual ~ChildDNSService() = default;
@@ -55,7 +54,7 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
   bool mDisablePrefetch;
 
   // We need to remember pending dns requests to be able to cancel them.
-  nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestSender>>>
+  nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestChild>>>
       mPendingRequests;
   Mutex mPendingRequestsLock;
 };

@@ -19,14 +19,10 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/DNSRequestChild.h"
-#include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 #include "nsDebugImpl.h"
-#include "nsHttpConnectionInfo.h"
-#include "nsHttpHandler.h"
 #include "nsIDNSService.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsThreadManager.h"
@@ -354,25 +350,6 @@ SocketProcessChild::AllocPAltSvcTransactionChild(
   RefPtr<AltSvcTransactionChild> child =
       new AltSvcTransactionChild(cinfo, aCaps);
   return child.forget();
-}
-
-already_AddRefed<PDNSRequestChild> SocketProcessChild::AllocPDNSRequestChild(
-    const nsCString& aHost, const nsCString& aTrrServer, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
-  RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
-  RefPtr<DNSRequestChild> actor = new DNSRequestChild(handler);
-  return actor.forget();
-}
-
-mozilla::ipc::IPCResult SocketProcessChild::RecvPDNSRequestConstructor(
-    PDNSRequestChild* aActor, const nsCString& aHost,
-    const nsCString& aTrrServer, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
-  RefPtr<DNSRequestChild> actor = static_cast<DNSRequestChild*>(aActor);
-  RefPtr<DNSRequestHandler> handler =
-      actor->GetDNSRequest()->AsDNSRequestHandler();
-  handler->DoAsyncResolve(aHost, aTrrServer, aType, aOriginAttributes, aFlags);
-  return IPC_OK();
 }
 
 }  // namespace net

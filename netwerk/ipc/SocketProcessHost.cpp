@@ -7,7 +7,6 @@
 
 #include "nsAppRunner.h"
 #include "nsIObserverService.h"
-#include "nsIOService.h"
 #include "SocketProcessParent.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
