@@ -1302,16 +1302,19 @@ class nsContextMenu {
 
     this.actor.saveVideoFrameAsImage(this.targetIdentifier).then(dataURL => {
       // FIXME can we switch this to a blob URL?
-      saveImageURL(
+      internalSave(
         dataURL,
-        name,
-        "SaveImageTitle",
-        true, // bypass cache
-        false, // don't skip prompt for where to save
-        referrerInfo, // referrer info
         null, // document
-        "image/jpeg", // content type - keep in sync with ContextMenuChild!
+        name,
         null, // content disposition
+        "image/jpeg", // content type - keep in sync with ContextMenuChild!
+        true, // bypass cache
+        "SaveImageTitle",
+        null, // chosen data
+        referrerInfo,
+        null, // initiating doc
+        false, // don't skip prompt for where to save
+        null, // cache key
         isPrivate,
         this.principal
       );
@@ -1610,32 +1613,38 @@ class nsContextMenu {
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
       this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
-        saveImageURL(
+        internalSave(
           blobURL,
+          null, // document
           "canvas.png",
-          "SaveImageTitle",
-          true,
-          false,
-          referrerInfo,
-          null,
+          null, // content disposition
           "image/png", // _canvasToBlobURL uses image/png by default.
-          null,
+          true, // bypass cache
+          "SaveImageTitle",
+          null, // chosen data
+          referrerInfo,
+          null, // initiating doc
+          false, // don't skip prompt for where to save
+          null, // cache key
           isPrivate,
           document.nodePrincipal /* system, because blob: */
         );
       }, Cu.reportError);
     } else if (this.onImage) {
       urlSecurityCheck(this.mediaURL, this.principal);
-      saveImageURL(
+      internalSave(
         this.mediaURL,
-        null,
-        "SaveImageTitle",
-        false,
-        false,
-        referrerInfo,
-        null,
-        this.contentData.contentType,
+        null, // document
+        null, // file name; we'll take it from the URL
         this.contentData.contentDisposition,
+        this.contentData.contentType,
+        false, // do not bypass the cache
+        "SaveImageTitle",
+        null, // chosen data
+        referrerInfo,
+        null, // initiating doc
+        false, // don't skip prompt for where to save
+        null, // cache key
         isPrivate,
         this.principal
       );
