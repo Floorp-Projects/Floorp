@@ -102,6 +102,8 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 for f in SOURCES:
     if f.endswith('.c'):
+        if 'mmx.c' in f:
+            SOURCES[f].flags += ['-mmmx']
         if 'sse2.c' in f:
             SOURCES[f].flags += CONFIG['SSE2_FLAGS']
         if 'ssse3.c' in f:
