@@ -14,6 +14,8 @@
 
 namespace mozilla {
 
+const char* GetStaticErrorName(nsresult rv) { return GetErrorNameInternal(rv); }
+
 void GetErrorName(nsresult rv, nsACString& name) {
   if (const char* errorName = GetErrorNameInternal(rv)) {
     name.AssignASCII(errorName);

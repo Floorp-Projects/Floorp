@@ -19,6 +19,11 @@ namespace mozilla {
 // "NS_ERROR_GENERATE_FAILURE(<module>, <code>)".
 void GetErrorName(nsresult rv, nsACString& name);
 
+// Same as GetErrorName, except that only nsresult values with statically
+// known symbolic names are handled. For all other values, nullptr is
+// returned.
+const char* GetStaticErrorName(nsresult rv);
+
 }  // namespace mozilla
 
 #endif  // mozilla_ErrorNames_h

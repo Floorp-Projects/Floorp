@@ -17,6 +17,7 @@
 #include <stdarg.h>
 
 #ifdef DEBUG
+#  include "mozilla/ErrorNames.h"
 #  include "mozilla/IntegerPrintfMacros.h"
 #  include "mozilla/Printf.h"
 #endif
@@ -247,18 +248,22 @@ inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 
 #if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
-#  define NS_ENSURE_SUCCESS_BODY(res, ret)            \
-    mozilla::SmprintfPointer msg = mozilla::Smprintf( \
-        "NS_ENSURE_SUCCESS(%s, %s) failed with "      \
-        "result 0x%" PRIX32,                          \
-        #res, #ret, static_cast<uint32_t>(__rv));     \
+#  define NS_ENSURE_SUCCESS_BODY(res, ret)                         \
+    const char* name = mozilla::GetStaticErrorName(__rv);          \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf(              \
+        "NS_ENSURE_SUCCESS(%s, %s) failed with "                   \
+        "result 0x%" PRIX32 "%s%s%s",                              \
+        #res, #ret, static_cast<uint32_t>(__rv), name ? " (" : "", \
+        name ? name : "", name ? ")" : "");                        \
     NS_WARNING(msg.get());
 
-#  define NS_ENSURE_SUCCESS_BODY_VOID(res)            \
-    mozilla::SmprintfPointer msg = mozilla::Smprintf( \
-        "NS_ENSURE_SUCCESS_VOID(%s) failed with "     \
-        "result 0x%" PRIX32,                          \
-        #res, static_cast<uint32_t>(__rv));           \
+#  define NS_ENSURE_SUCCESS_BODY_VOID(res)                                     \
+    const char* name = mozilla::GetStaticErrorName(__rv);                      \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf(                          \
+        "NS_ENSURE_SUCCESS_VOID(%s) failed with "                              \
+        "result 0x%" PRIX32 "%s%s%s",                                          \
+        #res, static_cast<uint32_t>(__rv), name ? " (" : "", name ? name : "", \
+        name ? ")" : "");                                                      \
     NS_WARNING(msg.get());
 
 #else
