@@ -433,6 +433,7 @@ mochitest-webgpu:
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
+    run-on-projects: ["trunk", "try"]
     tier: default
     max-run-time:
         by-test-platform:
