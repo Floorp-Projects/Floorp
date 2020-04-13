@@ -242,6 +242,11 @@ The landing procedure will automatically close the review and the bug.
 `More
 information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/How_to_Submit_a_Patch#Submitting_the_patch>`__
 
+Contributing to GeckoView
+-------------------------
+
+GeckoView information and contribution docs live in `geckoview.dev <https://geckoview.dev>`__.
+
 More documentation about contribution
 -------------------------------------
 
