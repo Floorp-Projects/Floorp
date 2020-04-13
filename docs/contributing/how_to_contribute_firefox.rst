@@ -67,6 +67,13 @@ Once all the dependencies have been installed, run:
 which will check for dependencies and start the build.
 This will take a while; a few minutes to a few hours depending on your hardware.
 
+.. note::
+
+    The default build is a compiled build with optimizations. Check out the
+    `mozconfig file documentation <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`__
+    to see other build options. If you don't plan to change C++ or Rust code,
+    an :ref:`artifact build <Artifact builds>` will be faster.
+
 To run it:
 
 .. code-block:: shell
