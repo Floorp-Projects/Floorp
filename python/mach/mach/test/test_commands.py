@@ -51,6 +51,25 @@ class TestCommands(TestBase):
         assert result == 0
         assert stdout == self.format(['help', '--arg'])
 
+    def test_print_command(self):
+        result, stdout, stderr = self._run_mach(['--print-command', 'cmd_foo', '-flag'])
+        assert result == 0
+        assert stdout == 'cmd_foo\n'
+
+        result, stdout, stderr = self._run_mach(['--print-command', '-v', 'cmd_foo', '-flag'])
+        assert result == 0
+        assert stdout == 'cmd_foo\n'
+
+        result, stdout, stderr = self._run_mach(
+            ['--print-command', 'mach-completion', 'mach', 'cmd_foo', '-flag'])
+        assert result == 0
+        assert stdout == 'cmd_foo\n'
+
+        result, stdout, stderr = self._run_mach(
+            ['--print-command', 'mach-completion', 'mach', '-v', 'cmd_foo', '-flag'])
+        assert result == 0
+        assert stdout == 'cmd_foo\n'
+
 
 if __name__ == '__main__':
     main()
