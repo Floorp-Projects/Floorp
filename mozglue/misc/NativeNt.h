@@ -1382,7 +1382,7 @@ class RtlAllocPolicy {
 
   void reportAllocOverflow() const {}
 
-  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
+  [[nodiscard]] bool checkSimulatedOOM() const { return true; }
 };
 
 }  // namespace nt
