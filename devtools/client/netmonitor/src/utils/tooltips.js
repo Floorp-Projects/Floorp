@@ -5,12 +5,12 @@
 "use strict";
 
 /**
- * Returns first 1024 characters of value for use as a tooltip.
+ * Returns first 128 characters of value for use as a tooltip.
  * @param object
  * @returns {*}
  */
 function limitTooltipLength(object) {
-  return object.length > 1024 ? object.substring(0, 1024) + "…" : object;
+  return object.length > 128 ? object.substring(0, 128) + "…" : object;
 }
 
 module.exports = {
