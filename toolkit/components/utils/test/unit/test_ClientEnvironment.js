@@ -15,11 +15,8 @@ const { AppConstants } = ChromeUtils.import(
 
 // OS Data
 add_task(async () => {
-  const os = await ClientEnvironmentBase.os;
-  ok(
-    ClientEnvironmentBase.os !== undefined,
-    "OS data should be available in the context"
-  );
+  const os = ClientEnvironmentBase.os;
+  ok(os !== undefined, "OS data should be available in the context");
 
   let osCount = 0;
   if (os.isWindows) {
