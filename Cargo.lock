@@ -54,11 +54,11 @@ checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 
 [[package]]
 name = "ash"
-version = "0.29.0"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "003d1fb2eb12eb06d4a03dbe02eea67a9fac910fa97932ab9e3a75b96a1ea5e5"
+checksum = "69daec0742947f33a85931fa3cb0ce5f07929159dcbd1f0cbb5b2912e2978509"
 dependencies = [
- "shared_library",
+ "libloading",
 ]
 
 [[package]]
@@ -201,7 +201,7 @@ dependencies = [
  "cranelift-wasm",
  "env_logger",
  "log",
- "smallvec 1.2.0",
+ "smallvec",
 ]
 
 [[package]]
@@ -596,12 +596,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "colorful"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bca1619ff57dd7a56b58a8e25ef4199f123e78e503fe1653410350a1b98ae65"
-
-[[package]]
 name = "comedy"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -728,7 +722,7 @@ dependencies = [
  "cranelift-codegen-shared",
  "cranelift-entity 0.62.0",
  "log",
- "smallvec 1.2.0",
+ "smallvec",
  "target-lexicon 0.10.0",
  "thiserror",
 ]
@@ -764,7 +758,7 @@ source = "git+https://github.com/bytecodealliance/wasmtime?rev=6a68130d5b0296379
 dependencies = [
  "cranelift-codegen",
  "log",
- "smallvec 1.2.0",
+ "smallvec",
  "target-lexicon 0.10.0",
 ]
 
@@ -857,7 +851,7 @@ dependencies = [
  "phf",
  "proc-macro2",
  "quote",
- "smallvec 1.2.0",
+ "smallvec",
  "syn",
 ]
 
@@ -1232,7 +1226,7 @@ name = "fallible"
 version = "0.0.1"
 dependencies = [
  "hashglobe",
- "smallvec 1.2.0",
+ "smallvec",
 ]
 
 [[package]]
@@ -1310,7 +1304,7 @@ dependencies = [
  "intl-memoizer",
  "intl_pluralrules",
  "rental",
- "smallvec 1.2.0",
+ "smallvec",
  "unic-langid",
 ]
 
@@ -1496,7 +1490,7 @@ dependencies = [
  "parking_lot",
  "selectors",
  "servo_arc",
- "smallvec 1.2.0",
+ "smallvec",
  "style",
  "style_traits",
  "to_shmem",
@@ -1525,9 +1519,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-auxil"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "572eee952a9a23c99cfe3e4fd95d277784058a89ac3c77ff6fa3d80a4e321919"
+checksum = "3b46e6f0031330a0be08d17820f2dcaaa91cb36710a97a9500cb4f1c36e785c8"
 dependencies = [
  "fxhash",
  "gfx-hal",
@@ -1536,9 +1530,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx11"
-version = "0.4.6"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7527cfcd7d1eec6b99f81891293bdd2a41d044ace009717264e5f3b10ce5b86"
+checksum = "b148219292624126f78245e50a9720d95ea149a415ce8ce73ab7014205301b88"
 dependencies = [
  "bitflags",
  "gfx-auxil",
@@ -1548,7 +1542,7 @@ dependencies = [
  "parking_lot",
  "range-alloc",
  "raw-window-handle",
- "smallvec 0.6.10",
+ "smallvec",
  "spirv_cross",
  "winapi 0.3.7",
  "wio",
@@ -1556,9 +1550,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx12"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6e913cc800fb12eaba2c420091a02aca9aafbefd672600dfc5b52654343d341"
+checksum = "a0e526746379e974501551b08958947e67a81b5ea8cdc717a000cdd72577da05"
 dependencies = [
  "bitflags",
  "d3d12",
@@ -1567,16 +1561,16 @@ dependencies = [
  "log",
  "range-alloc",
  "raw-window-handle",
- "smallvec 0.6.10",
+ "smallvec",
  "spirv_cross",
  "winapi 0.3.7",
 ]
 
 [[package]]
 name = "gfx-backend-empty"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d383e6bc48867cb37d298a20139fd1eec298f8f6d594690cd1c50ef25470cc7"
+checksum = "b67bd2d7bc022b257ddbdabc5fa3b10c29c292372c3409f2b6a6e3f4e11cdb85"
 dependencies = [
  "gfx-hal",
  "raw-window-handle",
@@ -1584,9 +1578,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-metal"
-version = "0.4.5"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05b6130b9a72129ebb5c91d3d75a142a7fa54dcc112603231582e3fdc0b84247"
+checksum = "cfe128c29675b5afc8acdda1dfe096d6abd5e3528059ab0b98bda8215d8beed9"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -1604,16 +1598,16 @@ dependencies = [
  "parking_lot",
  "range-alloc",
  "raw-window-handle",
- "smallvec 0.6.10",
+ "smallvec",
  "spirv_cross",
  "storage-map",
 ]
 
 [[package]]
 name = "gfx-backend-vulkan"
-version = "0.4.3"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1b8d901941d1734d307dacd8e5f00c89ee8fb8e78b4dab3edd91248150b26b4"
+checksum = "ebd1dee09bd8d8f1ba52c5ba22d1f70c7ffa990c5eb245eb3ef2d0206f631673"
 dependencies = [
  "arrayvec",
  "ash",
@@ -1624,20 +1618,43 @@ dependencies = [
  "log",
  "objc",
  "raw-window-handle",
- "smallvec 0.6.10",
+ "smallvec",
  "winapi 0.3.7",
  "x11",
 ]
 
 [[package]]
-name = "gfx-hal"
-version = "0.4.1"
+name = "gfx-descriptor"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c88981665c780447bb08eb099e1ded330754a7246719bab927ee4a949c0ba7f"
+checksum = "1bf35f5d66d1bc56e63e68d7528441453f25992bd954b84309d23c659df2c5da"
+dependencies = [
+ "fxhash",
+ "gfx-hal",
+ "log",
+]
+
+[[package]]
+name = "gfx-hal"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc96180204064c9493e0fe4a9efeb721e0ac59fe8e1906d0c659142a93114fb1"
 dependencies = [
  "bitflags",
  "raw-window-handle",
- "smallvec 0.6.10",
+]
+
+[[package]]
+name = "gfx-memory"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2eed6cda674d9cd4d92229102dbd544292124533d236904f987e9afab456137"
+dependencies = [
+ "fxhash",
+ "gfx-hal",
+ "hibitset",
+ "log",
+ "slab",
 ]
 
 [[package]]
@@ -2236,9 +2253,9 @@ dependencies = [
 
 [[package]]
 name = "libloading"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3ad660d7cb8c5822cd83d10897b0f1f1526792737a179e73896152f85b88c2"
+checksum = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
 dependencies = [
  "cc",
  "winapi 0.3.7",
@@ -2446,7 +2463,7 @@ dependencies = [
  "selectors",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.2.0",
+ "smallvec",
  "thin-slice",
  "void",
 ]
@@ -2826,7 +2843,7 @@ dependencies = [
  "neqo-qpack",
  "neqo-transport",
  "num-traits",
- "smallvec 1.2.0",
+ "smallvec",
 ]
 
 [[package]]
@@ -2851,7 +2868,7 @@ dependencies = [
  "log",
  "neqo-common",
  "neqo-crypto",
- "smallvec 1.2.0",
+ "smallvec",
 ]
 
 [[package]]
@@ -3129,16 +3146,8 @@ dependencies = [
  "cloudabi",
  "libc",
  "redox_syscall",
- "smallvec 1.2.0",
+ "smallvec",
  "winapi 0.3.7",
-]
-
-[[package]]
-name = "peek-poke"
-version = "0.2.0"
-source = "git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075#969bd7fe2be1a83f87916dc8b388c63cfd457075"
-dependencies = [
- "peek-poke-derive 0.2.0",
 ]
 
 [[package]]
@@ -3150,18 +3159,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "peek-poke-derive"
+name = "peek-poke"
 version = "0.2.0"
-source = "git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075#969bd7fe2be1a83f87916dc8b388c63cfd457075"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d93fd6a575ebf1ac2668d08443c97a22872cfb463fd8b7ddd141e9f6be59af2f"
 dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "peek-poke-derive 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "peek-poke-derive"
 version = "0.2.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "synstructure",
+ "unicode-xid",
+]
+
+[[package]]
+name = "peek-poke-derive"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fb44a25c5bba983be0fc8592dfaf3e6d0935ce8be0c6b15b2a39507af34a926"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3534,16 +3555,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 
 [[package]]
-name = "relevant"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbc232e13d37f4547f5b9b42a5efc380cabe5dbc1807f8b893580640b2ab0308"
-dependencies = [
- "cfg-if",
- "log",
-]
-
-[[package]]
 name = "remote"
 version = "0.1.0"
 dependencies = [
@@ -3563,33 +3574,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a83fa3702a688b9359eccba92d153ac33fd2e8462f9e0e3fdf155239ea7792e"
 dependencies = [
  "winapi 0.3.7",
-]
-
-[[package]]
-name = "rendy-descriptor"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f475bcc0505946e998590f1f0545c52ef4b559174a1b353a7ce6638def8b621e"
-dependencies = [
- "gfx-hal",
- "log",
- "relevant",
- "smallvec 0.6.10",
-]
-
-[[package]]
-name = "rendy-memory"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f99de535d9e48d9cfab780b521702cc0d7183d354872d223967b75abae1199"
-dependencies = [
- "colorful",
- "gfx-hal",
- "hibitset",
- "log",
- "relevant",
- "slab",
- "smallvec 0.6.10",
 ]
 
 [[package]]
@@ -3833,7 +3817,7 @@ dependencies = [
  "phf_codegen",
  "precomputed-hash",
  "servo_arc",
- "smallvec 1.2.0",
+ "smallvec",
  "thin-slice",
  "to_shmem",
  "to_shmem_derive",
@@ -3962,16 +3946,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shared_library"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a9e7e0f2bfae24d8a5b5a66c5b257a83c7412304311512a0c054cd5e619da11"
-dependencies = [
- "lazy_static",
- "libc",
-]
-
-[[package]]
 name = "shift_or_euc"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4021,15 +3995,9 @@ checksum = "1764fe2b30ee783bfe3b9b37b2649d8d590b3148bb12e0079715d4d5c673562e"
 
 [[package]]
 name = "smallvec"
-version = "0.6.10"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab606a9c5e214920bb66c458cd7be8ef094f813f20fe77a54cc7dbfff220d4b7"
-
-[[package]]
-name = "smallvec"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c2fb2ec9bcd216a5b0d0ccf31ab17b5ed1d627960edff65bbe95d3ce221cefc"
+checksum = "05720e22615919e4734f6a99ceae50d00226c3c5aca406e102ebc33298214e0a"
 dependencies = [
  "serde",
 ]
@@ -4059,15 +4027,15 @@ dependencies = [
 [[package]]
 name = "spirv-cross-internal"
 version = "0.1.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu#9cb4de489bf80b2b23efffe5a79afb7db6247ba4"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f0c322e8a17d4957fbb5b7cd3b56d520ad72fbf2"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "spirv_cross"
-version = "0.16.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu#9cb4de489bf80b2b23efffe5a79afb7db6247ba4"
+version = "0.18.0"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f0c322e8a17d4957fbb5b7cd3b56d520ad72fbf2"
 dependencies = [
  "spirv-cross-internal",
 ]
@@ -4169,7 +4137,7 @@ dependencies = [
  "serde",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.2.0",
+ "smallvec",
  "static_prefs",
  "style_derive",
  "style_traits",
@@ -4230,7 +4198,7 @@ dependencies = [
  "num-traits",
  "selectors",
  "size_of_test",
- "smallvec 1.2.0",
+ "smallvec",
  "style",
  "style_traits",
  "to_shmem",
@@ -4438,7 +4406,7 @@ dependencies = [
  "cssparser",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.2.0",
+ "smallvec",
  "thin-slice",
 ]
 
@@ -4968,7 +4936,7 @@ dependencies = [
  "ron",
  "serde",
  "serde_json",
- "smallvec 1.2.0",
+ "smallvec",
  "svg_fmt",
  "time",
  "tracy-rs",
@@ -5064,14 +5032,14 @@ dependencies = [
  "gfx-backend-empty",
  "gfx-backend-metal",
  "gfx-backend-vulkan",
+ "gfx-descriptor",
  "gfx-hal",
+ "gfx-memory",
  "log",
  "parking_lot",
- "peek-poke 0.2.0 (git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075)",
- "rendy-descriptor",
- "rendy-memory",
+ "peek-poke 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
- "smallvec 1.2.0",
+ "smallvec",
  "vec_map",
  "wgpu-types",
 ]
@@ -5091,7 +5059,7 @@ name = "wgpu-types"
 version = "0.1.0"
 dependencies = [
  "bitflags",
- "peek-poke 0.2.0 (git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075)",
+ "peek-poke 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
 ]
 

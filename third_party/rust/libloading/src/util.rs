@@ -33,7 +33,7 @@ impl ::std::fmt::Display for NullError {
     }
 }
 
-/// Checks for last byte and avoids alocatting if its zero.
+/// Checks for last byte and avoids allocating if it is zero.
 ///
 /// Non-last null bytes still result in an error.
 pub fn cstr_cow_from_bytes<'a>(slice: &'a [u8]) -> Result<Cow<'a, CStr>, NullError> {

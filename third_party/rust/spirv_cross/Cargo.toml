@@ -1,6 +1,6 @@
 [package]
 name = "spirv_cross"
-version = "0.16.0"
+version = "0.18.0"
 license = "MIT/Apache-2.0"
 edition = "2018"
 

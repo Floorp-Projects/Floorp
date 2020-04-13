@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-auxil"
-version = "0.1.0"
+version = "0.3.0"
 authors = ["The Gfx-rs Developers"]
 description = "Implementation details shared between gfx-rs backends"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -28,8 +28,9 @@ name = "gfx_auxil"
 version = "0.2.1"
 
 [dependencies.hal]
-version = "0.4"
+version = "0.5"
 package = "gfx-hal"
 
 [dependencies.spirv_cross]
-version = "0.16"
+version = "0.18"
+optional = true

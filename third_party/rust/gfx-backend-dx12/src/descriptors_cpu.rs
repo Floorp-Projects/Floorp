@@ -18,7 +18,8 @@ impl fmt::Debug for HeapLinear {
 
 impl HeapLinear {
     pub fn new(device: native::Device, ty: DescriptorHeapType, size: usize) -> Self {
-        let (heap, _hr) = device.create_descriptor_heap(size as _, ty, DescriptorHeapFlags::empty(), 0);
+        let (heap, _hr) =
+            device.create_descriptor_heap(size as _, ty, DescriptorHeapFlags::empty(), 0);
 
         HeapLinear {
             handle_size: device.get_descriptor_increment_size(ty) as _,
@@ -75,8 +76,12 @@ impl fmt::Debug for Heap {
 
 impl Heap {
     pub fn new(device: native::Device, ty: DescriptorHeapType) -> Self {
-        let (heap, _hr) =
-            device.create_descriptor_heap(HEAP_SIZE_FIXED as _, ty, DescriptorHeapFlags::empty(), 0);
+        let (heap, _hr) = device.create_descriptor_heap(
+            HEAP_SIZE_FIXED as _,
+            ty,
+            DescriptorHeapFlags::empty(),
+            0,
+        );
 
         Heap {
             handle_size: device.get_descriptor_increment_size(ty) as _,

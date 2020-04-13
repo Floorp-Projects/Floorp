@@ -6,10 +6,9 @@ use ash::vk::Handle;
 use smallvec::SmallVec;
 
 use hal::{
-    memory::Requirements,
+    memory::{Requirements, Segment},
     pool::CommandPoolCreateFlags,
     pso::VertexInputRate,
-    range::RangeArg,
     window::SwapchainConfig,
     {buffer, device as d, format, image, pass, pso, query, queue},
     {Features, MemoryTypeId},
@@ -23,7 +22,7 @@ use std::sync::Arc;
 use std::{mem, ptr};
 
 use crate::pool::RawCommandPool;
-use crate::{conv, native as n, window as w, command as cmd};
+use crate::{command as cmd, conv, native as n, window as w};
 use crate::{Backend as B, DebugMessenger, Device};
 
 #[derive(Debug, Default)]
@@ -55,7 +54,11 @@ struct GraphicsPipelineInfoBuf {
     scissor: vk::Rect2D,
 }
 impl GraphicsPipelineInfoBuf {
-    unsafe fn add_stage<'a>(&mut self, stage: vk::ShaderStageFlags, source: &pso::EntryPoint<'a, B>) {
+    unsafe fn add_stage<'a>(
+        &mut self,
+        stage: vk::ShaderStageFlags,
+        source: &pso::EntryPoint<'a, B>,
+    ) {
         let string = CString::new(source.entry).unwrap();
         let p_name = string.as_ptr();
         self.c_strings.push(string);
@@ -173,19 +176,18 @@ impl GraphicsPipelineInfoBuf {
             None => pso::DepthBias::default(),
         };
 
-        let (polygon_mode, line_width) = match desc.rasterizer.polygon_mode {
-            pso::PolygonMode::Point => (vk::PolygonMode::POINT, 1.0),
-            pso::PolygonMode::Line(width) => (
-                vk::PolygonMode::LINE,
-                match width {
-                    pso::State::Static(w) => w,
-                    pso::State::Dynamic => {
-                        this.dynamic_states.push(vk::DynamicState::LINE_WIDTH);
-                        1.0
-                    }
-                },
-            ),
-            pso::PolygonMode::Fill => (vk::PolygonMode::FILL, 1.0),
+        let polygon_mode = match desc.rasterizer.polygon_mode {
+            pso::PolygonMode::Point => vk::PolygonMode::POINT,
+            pso::PolygonMode::Line => vk::PolygonMode::LINE,
+            pso::PolygonMode::Fill => vk::PolygonMode::FILL,
+        };
+
+        let line_width = match desc.rasterizer.line_width {
+            pso::State::Static(w) => w,
+            pso::State::Dynamic => {
+                this.dynamic_states.push(vk::DynamicState::LINE_WIDTH);
+                1.0
+            }
         };
 
         this.rasterization_state = vk::PipelineRasterizationStateCreateInfo {
@@ -193,7 +195,7 @@ impl GraphicsPipelineInfoBuf {
             p_next: ptr::null(),
             flags: vk::PipelineRasterizationStateCreateFlags::empty(),
             depth_clamp_enable: if desc.rasterizer.depth_clamping {
-                if device.raw.1.contains(Features::DEPTH_CLAMP) {
+                if device.shared.features.contains(Features::DEPTH_CLAMP) {
                     vk::TRUE
                 } else {
                     warn!("Depth clamping was requested on a device with disabled feature");
@@ -225,7 +227,8 @@ impl GraphicsPipelineInfoBuf {
         };
 
         this.tessellation_state = {
-            if let pso::Primitive::PatchList(patch_control_points) = desc.input_assembler.primitive {
+            if let pso::Primitive::PatchList(patch_control_points) = desc.input_assembler.primitive
+            {
                 Some(vk::PipelineTessellationStateCreateInfo {
                     s_type: vk::StructureType::PIPELINE_TESSELLATION_STATE_CREATE_INFO,
                     p_next: ptr::null(),
@@ -255,7 +258,7 @@ impl GraphicsPipelineInfoBuf {
             viewport_count: 1, // TODO
             p_viewports: match desc.baked_states.viewport {
                 Some(ref vp) => {
-                    this.viewport = conv::map_viewport(vp);
+                    this.viewport = device.shared.map_viewport(vp);
                     &this.viewport
                 }
                 None => {
@@ -430,10 +433,7 @@ struct ComputePipelineInfoBuf {
     entries: SmallVec<[vk::SpecializationMapEntry; 4]>,
 }
 impl ComputePipelineInfoBuf {
-    unsafe fn initialize<'a>(
-        this: &mut Pin<&mut Self>,
-        desc: &pso::ComputePipelineDesc<'a, B>,
-    ) {
+    unsafe fn initialize<'a>(this: &mut Pin<&mut Self>, desc: &pso::ComputePipelineDesc<'a, B>) {
         let mut this = Pin::get_mut(this.as_mut()); // use into_inner when it gets stable
 
         this.c_string = CString::new(desc.shader.entry).unwrap();
@@ -470,7 +470,7 @@ impl d::Device<B> for Device {
             memory_type_index: mem_type.0 as _,
         };
 
-        let result = self.raw.0.allocate_memory(&info, None);
+        let result = self.shared.raw.allocate_memory(&info, None);
 
         match result {
             Ok(memory) => Ok(n::Memory { raw: memory }),
@@ -501,12 +501,12 @@ impl d::Device<B> for Device {
             queue_family_index: family.0 as _,
         };
 
-        let result = self.raw.0.create_command_pool(&info, None);
+        let result = self.shared.raw.create_command_pool(&info, None);
 
         match result {
             Ok(pool) => Ok(RawCommandPool {
                 raw: pool,
-                device: self.raw.clone(),
+                device: self.shared.clone(),
             }),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host),
             Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(d::OutOfMemory::Device),
@@ -515,7 +515,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn destroy_command_pool(&self, pool: RawCommandPool) {
-        self.raw.0.destroy_command_pool(pool.raw, None);
+        self.shared.raw.destroy_command_pool(pool.raw, None);
     }
 
     unsafe fn create_render_pass<'a, IA, IS, ID>(
@@ -532,11 +532,6 @@ impl d::Device<B> for Device {
         ID: IntoIterator,
         ID::Item: Borrow<pass::SubpassDependency>,
     {
-        let map_subpass_ref = |pass: pass::SubpassRef| match pass {
-            pass::SubpassRef::External => vk::SUBPASS_EXTERNAL,
-            pass::SubpassRef::Pass(id) => id as u32,
-        };
-
         let attachments = attachments
             .into_iter()
             .map(|attachment| {
@@ -628,8 +623,11 @@ impl d::Device<B> for Device {
                 let sdep = subpass_dep.borrow();
                 // TODO: checks
                 vk::SubpassDependency {
-                    src_subpass: map_subpass_ref(sdep.passes.start),
-                    dst_subpass: map_subpass_ref(sdep.passes.end),
+                    src_subpass: sdep
+                        .passes
+                        .start
+                        .map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
+                    dst_subpass: sdep.passes.end.map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
                     src_stage_mask: conv::map_pipeline_stage(sdep.stages.start),
                     dst_stage_mask: conv::map_pipeline_stage(sdep.stages.end),
                     src_access_mask: conv::map_image_access(sdep.accesses.start),
@@ -651,7 +649,7 @@ impl d::Device<B> for Device {
             p_dependencies: dependencies.as_ptr(),
         };
 
-        let result = self.raw.0.create_render_pass(&info, None);
+        let result = self.shared.raw.create_render_pass(&info, None);
 
         match result {
             Ok(renderpass) => Ok(n::RenderPass {
@@ -704,7 +702,7 @@ impl d::Device<B> for Device {
             p_push_constant_ranges: push_constant_ranges.as_ptr(),
         };
 
-        let result = self.raw.0.create_pipeline_layout(&info, None);
+        let result = self.shared.raw.create_pipeline_layout(&info, None);
 
         match result {
             Ok(raw) => Ok(n::PipelineLayout { raw }),
@@ -732,7 +730,7 @@ impl d::Device<B> for Device {
             p_initial_data: data as _,
         };
 
-        let result = self.raw.0.create_pipeline_cache(&info, None);
+        let result = self.shared.raw.create_pipeline_cache(&info, None);
 
         match result {
             Ok(raw) => Ok(n::PipelineCache { raw }),
@@ -746,7 +744,7 @@ impl d::Device<B> for Device {
         &self,
         cache: &n::PipelineCache,
     ) -> Result<Vec<u8>, d::OutOfMemory> {
-        let result = self.raw.0.get_pipeline_cache_data(cache.raw);
+        let result = self.shared.raw.get_pipeline_cache_data(cache.raw);
 
         match result {
             Ok(data) => Ok(data),
@@ -757,7 +755,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn destroy_pipeline_cache(&self, cache: n::PipelineCache) {
-        self.raw.0.destroy_pipeline_cache(cache.raw, None);
+        self.shared.raw.destroy_pipeline_cache(cache.raw, None);
     }
 
     unsafe fn merge_pipeline_caches<I>(
@@ -773,8 +771,8 @@ impl d::Device<B> for Device {
             .into_iter()
             .map(|s| s.borrow().raw)
             .collect::<Vec<_>>();
-        let result = self.raw.0.fp_v1_0().merge_pipeline_caches(
-            self.raw.0.handle(),
+        let result = self.shared.raw.fp_v1_0().merge_pipeline_caches(
+            self.shared.raw.handle(),
             target.raw,
             caches.len() as u32,
             caches.as_ptr(),
@@ -854,8 +852,8 @@ impl d::Device<B> for Device {
 
         let mut pipeline = vk::Pipeline::null();
 
-        match self.raw.0.fp_v1_0().create_graphics_pipelines(
-            self.raw.0.handle(),
+        match self.shared.raw.fp_v1_0().create_graphics_pipelines(
+            self.shared.raw.handle(),
             cache.map_or(vk::PipelineCache::null(), |cache| cache.raw),
             1,
             &info,
@@ -954,7 +952,7 @@ impl d::Device<B> for Device {
         let (pipelines, error) = if infos.is_empty() {
             (Vec::new(), None)
         } else {
-            match self.raw.0.create_graphics_pipelines(
+            match self.shared.raw.create_graphics_pipelines(
                 cache.map_or(vk::PipelineCache::null(), |cache| cache.raw),
                 &infos,
                 None,
@@ -1043,8 +1041,8 @@ impl d::Device<B> for Device {
 
         let mut pipeline = vk::Pipeline::null();
 
-        match self.raw.0.fp_v1_0().create_compute_pipelines(
-            self.raw.0.handle(),
+        match self.shared.raw.fp_v1_0().create_compute_pipelines(
+            self.shared.raw.handle(),
             cache.map_or(vk::PipelineCache::null(), |cache| cache.raw),
             1,
             &info,
@@ -1134,7 +1132,7 @@ impl d::Device<B> for Device {
         let (pipelines, error) = if infos.is_empty() {
             (Vec::new(), None)
         } else {
-            match self.raw.0.create_compute_pipelines(
+            match self.shared.raw.create_compute_pipelines(
                 cache.map_or(vk::PipelineCache::null(), |cache| cache.raw),
                 &infos,
                 None,
@@ -1199,7 +1197,7 @@ impl d::Device<B> for Device {
             layers: extent.depth,
         };
 
-        let result = self.raw.0.create_framebuffer(&info, None);
+        let result = self.shared.raw.create_framebuffer(&info, None);
 
         match result {
             Ok(raw) => Ok(n::Framebuffer {
@@ -1230,7 +1228,7 @@ impl d::Device<B> for Device {
             p_code: spirv_data.as_ptr(),
         };
 
-        let module = self.raw.0.create_shader_module(&info, None);
+        let module = self.shared.raw.create_shader_module(&info, None);
 
         match module {
             Ok(raw) => Ok(n::ShaderModule { raw }),
@@ -1248,10 +1246,9 @@ impl d::Device<B> for Device {
     ) -> Result<n::Sampler, d::AllocationError> {
         use hal::pso::Comparison;
 
-        let (anisotropy_enable, max_anisotropy) = match desc.anisotropic {
-            image::Anisotropic::Off => (vk::FALSE, 1.0),
-            image::Anisotropic::On(aniso) => {
-                if self.raw.1.contains(Features::SAMPLER_ANISOTROPY) {
+        let (anisotropy_enable, max_anisotropy) =
+            desc.anisotropy_clamp.map_or((vk::FALSE, 1.0), |aniso| {
+                if self.shared.features.contains(Features::SAMPLER_ANISOTROPY) {
                     (vk::TRUE, aniso as f32)
                 } else {
                     warn!(
@@ -1260,8 +1257,7 @@ impl d::Device<B> for Device {
                     );
                     (vk::FALSE, 1.0)
                 }
-            }
-        };
+            });
         let info = vk::SamplerCreateInfo {
             s_type: vk::StructureType::SAMPLER_CREATE_INFO,
             p_next: ptr::null(),
@@ -1290,14 +1286,10 @@ impl d::Device<B> for Device {
                     vk::BorderColor::FLOAT_TRANSPARENT_BLACK
                 }
             },
-            unnormalized_coordinates: if desc.normalized {
-                vk::FALSE
-            } else {
-                vk::TRUE
-            },
+            unnormalized_coordinates: if desc.normalized { vk::FALSE } else { vk::TRUE },
         };
 
-        let result = self.raw.0.create_sampler(&info, None);
+        let result = self.shared.raw.create_sampler(&info, None);
 
         match result {
             Ok(sampler) => Ok(n::Sampler(sampler)),
@@ -1325,7 +1317,7 @@ impl d::Device<B> for Device {
             p_queue_family_indices: ptr::null(),
         };
 
-        let result = self.raw.0.create_buffer(&info, None);
+        let result = self.shared.raw.create_buffer(&info, None);
 
         match result {
             Ok(raw) => Ok(n::Buffer { raw }),
@@ -1336,7 +1328,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn get_buffer_requirements(&self, buffer: &n::Buffer) -> Requirements {
-        let req = self.raw.0.get_buffer_memory_requirements(buffer.raw);
+        let req = self.shared.raw.get_buffer_memory_requirements(buffer.raw);
 
         Requirements {
             size: req.size,
@@ -1352,8 +1344,8 @@ impl d::Device<B> for Device {
         buffer: &mut n::Buffer,
     ) -> Result<(), d::BindError> {
         let result = self
+            .shared
             .raw
-            .0
             .bind_buffer_memory(buffer.raw, memory.raw, offset);
 
         match result {
@@ -1364,24 +1356,23 @@ impl d::Device<B> for Device {
         }
     }
 
-    unsafe fn create_buffer_view<R: RangeArg<u64>>(
+    unsafe fn create_buffer_view(
         &self,
         buffer: &n::Buffer,
         format: Option<format::Format>,
-        range: R,
+        range: buffer::SubRange,
     ) -> Result<n::BufferView, buffer::ViewCreationError> {
-        let (offset, size) = conv::map_range_arg(&range);
         let info = vk::BufferViewCreateInfo {
             s_type: vk::StructureType::BUFFER_VIEW_CREATE_INFO,
             p_next: ptr::null(),
             flags: vk::BufferViewCreateFlags::empty(),
             buffer: buffer.raw,
             format: format.map_or(vk::Format::UNDEFINED, conv::map_format),
-            offset,
-            range: size,
+            offset: range.offset,
+            range: range.size.unwrap_or(vk::WHOLE_SIZE),
         };
 
-        let result = self.raw.0.create_buffer_view(&info, None);
+        let result = self.shared.raw.create_buffer_view(&info, None);
 
         match result {
             Ok(raw) => Ok(n::BufferView { raw }),
@@ -1428,7 +1419,7 @@ impl d::Device<B> for Device {
             initial_layout: vk::ImageLayout::UNDEFINED,
         };
 
-        let result = self.raw.0.create_image(&info, None);
+        let result = self.shared.raw.create_image(&info, None);
 
         match result {
             Ok(raw) => Ok(n::Image {
@@ -1444,7 +1435,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn get_image_requirements(&self, image: &n::Image) -> Requirements {
-        let req = self.raw.0.get_image_memory_requirements(image.raw);
+        let req = self.shared.raw.get_image_memory_requirements(image.raw);
 
         Requirements {
             size: req.size,
@@ -1459,7 +1450,7 @@ impl d::Device<B> for Device {
         subresource: image::Subresource,
     ) -> image::SubresourceFootprint {
         let sub = conv::map_subresource(&subresource);
-        let layout = self.raw.0.get_image_subresource_layout(image.raw, sub);
+        let layout = self.shared.raw.get_image_subresource_layout(image.raw, sub);
 
         image::SubresourceFootprint {
             slice: layout.offset .. layout.offset + layout.size,
@@ -1477,7 +1468,7 @@ impl d::Device<B> for Device {
     ) -> Result<(), d::BindError> {
         // TODO: error handling
         // TODO: check required type
-        let result = self.raw.0.bind_image_memory(image.raw, memory.raw, offset);
+        let result = self.shared.raw.bind_image_memory(image.raw, memory.raw, offset);
 
         match result {
             Ok(()) => Ok(()),
@@ -1494,7 +1485,7 @@ impl d::Device<B> for Device {
         format: format::Format,
         swizzle: format::Swizzle,
         range: image::SubresourceRange,
-    ) -> Result<n::ImageView, image::ViewError> {
+    ) -> Result<n::ImageView, image::ViewCreationError> {
         let is_cube = image
             .flags
             .intersects(vk::ImageCreateFlags::CUBE_COMPATIBLE);
@@ -1505,14 +1496,14 @@ impl d::Device<B> for Device {
             image: image.raw,
             view_type: match conv::map_view_kind(kind, image.ty, is_cube) {
                 Some(ty) => ty,
-                None => return Err(image::ViewError::BadKind(kind)),
+                None => return Err(image::ViewCreationError::BadKind(kind)),
             },
             format: conv::map_format(format),
             components: conv::map_swizzle(swizzle),
             subresource_range: conv::map_subresource_range(&range),
         };
 
-        let result = self.raw.0.create_image_view(&info, None);
+        let result = self.shared.raw.create_image_view(&info, None);
 
         match result {
             Ok(view) => Ok(n::ImageView {
@@ -1557,12 +1548,12 @@ impl d::Device<B> for Device {
             p_pool_sizes: pools.as_ptr(),
         };
 
-        let result = self.raw.0.create_descriptor_pool(&info, None);
+        let result = self.shared.raw.create_descriptor_pool(&info, None);
 
         match result {
             Ok(pool) => Ok(n::DescriptorPool {
                 raw: pool,
-                device: self.raw.clone(),
+                device: self.shared.clone(),
                 set_free_vec: Vec::new(),
             }),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
@@ -1622,7 +1613,7 @@ impl d::Device<B> for Device {
             p_bindings: raw_bindings.as_ptr(),
         };
 
-        let result = self.raw.0.create_descriptor_set_layout(&info, None);
+        let result = self.shared.raw.create_descriptor_set_layout(&info, None);
 
         match result {
             Ok(layout) => Ok(n::DescriptorSetLayout {
@@ -1690,19 +1681,14 @@ impl d::Device<B> for Device {
                             image_layout: conv::map_image_layout(layout),
                         });
                     }
-                    pso::Descriptor::Buffer(buffer, ref range) => {
-                        let offset = range.start.unwrap_or(0);
+                    pso::Descriptor::Buffer(buffer, ref sub) => {
                         buffer_infos.push(vk::DescriptorBufferInfo {
                             buffer: buffer.raw,
-                            offset,
-                            range: match range.end {
-                                Some(end) => end - offset,
-                                None => vk::WHOLE_SIZE,
-                            },
+                            offset: sub.offset,
+                            range: sub.size.unwrap_or(vk::WHOLE_SIZE),
                         });
                     }
-                    pso::Descriptor::UniformTexelBuffer(view)
-                    | pso::Descriptor::StorageTexelBuffer(view) => {
+                    pso::Descriptor::TexelBuffer(view) => {
                         texel_buffer_views.push(view.raw);
                     }
                 }
@@ -1747,7 +1733,7 @@ impl d::Device<B> for Device {
             }
         }
 
-        self.raw.0.update_descriptor_sets(&raw_writes, &[]);
+        self.shared.raw.update_descriptor_sets(&raw_writes, &[]);
     }
 
     unsafe fn copy_descriptor_sets<'a, I>(&self, copies: I)
@@ -1773,18 +1759,20 @@ impl d::Device<B> for Device {
             })
             .collect::<Vec<_>>();
 
-        self.raw.0.update_descriptor_sets(&[], &copies);
+        self.shared.raw.update_descriptor_sets(&[], &copies);
     }
 
-    unsafe fn map_memory<R>(&self, memory: &n::Memory, range: R) -> Result<*mut u8, d::MapError>
-    where
-        R: RangeArg<u64>,
-    {
-        let (offset, size) = conv::map_range_arg(&range);
-        let result = self
-            .raw
-            .0
-            .map_memory(memory.raw, offset, size, vk::MemoryMapFlags::empty());
+    unsafe fn map_memory(
+        &self,
+        memory: &n::Memory,
+        segment: Segment,
+    ) -> Result<*mut u8, d::MapError> {
+        let result = self.shared.raw.map_memory(
+            memory.raw,
+            segment.offset,
+            segment.size.unwrap_or(vk::WHOLE_SIZE),
+            vk::MemoryMapFlags::empty(),
+        );
 
         match result {
             Ok(ptr) => Ok(ptr as *mut _),
@@ -1796,17 +1784,16 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn unmap_memory(&self, memory: &n::Memory) {
-        self.raw.0.unmap_memory(memory.raw)
+        self.shared.raw.unmap_memory(memory.raw)
     }
 
-    unsafe fn flush_mapped_memory_ranges<'a, I, R>(&self, ranges: I) -> Result<(), d::OutOfMemory>
+    unsafe fn flush_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), d::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a n::Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a n::Memory, Segment)>,
     {
         let ranges = conv::map_memory_ranges(ranges);
-        let result = self.raw.0.flush_mapped_memory_ranges(&ranges);
+        let result = self.shared.raw.flush_mapped_memory_ranges(&ranges);
 
         match result {
             Ok(()) => Ok(()),
@@ -1816,17 +1803,13 @@ impl d::Device<B> for Device {
         }
     }
 
-    unsafe fn invalidate_mapped_memory_ranges<'a, I, R>(
-        &self,
-        ranges: I,
-    ) -> Result<(), d::OutOfMemory>
+    unsafe fn invalidate_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), d::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a n::Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a n::Memory, Segment)>,
     {
         let ranges = conv::map_memory_ranges(ranges);
-        let result = self.raw.0.invalidate_mapped_memory_ranges(&ranges);
+        let result = self.shared.raw.invalidate_mapped_memory_ranges(&ranges);
 
         match result {
             Ok(()) => Ok(()),
@@ -1843,7 +1826,7 @@ impl d::Device<B> for Device {
             flags: vk::SemaphoreCreateFlags::empty(),
         };
 
-        let result = unsafe { self.raw.0.create_semaphore(&info, None) };
+        let result = unsafe { self.shared.raw.create_semaphore(&info, None) };
 
         match result {
             Ok(semaphore) => Ok(n::Semaphore(semaphore)),
@@ -1864,7 +1847,7 @@ impl d::Device<B> for Device {
             },
         };
 
-        let result = unsafe { self.raw.0.create_fence(&info, None) };
+        let result = unsafe { self.shared.raw.create_fence(&info, None) };
 
         match result {
             Ok(fence) => Ok(n::Fence(fence)),
@@ -1883,7 +1866,7 @@ impl d::Device<B> for Device {
             .into_iter()
             .map(|fence| fence.borrow().0)
             .collect::<Vec<_>>();
-        let result = self.raw.0.reset_fences(&fences);
+        let result = self.shared.raw.reset_fences(&fences);
 
         match result {
             Ok(()) => Ok(()),
@@ -1911,7 +1894,7 @@ impl d::Device<B> for Device {
             d::WaitFor::Any => false,
             d::WaitFor::All => true,
         };
-        let result = self.raw.0.wait_for_fences(&fences, all, timeout_ns);
+        let result = self.shared.raw.wait_for_fences(&fences, all, timeout_ns);
         match result {
             Ok(()) => Ok(true),
             Err(vk::Result::TIMEOUT) => Ok(false),
@@ -1923,10 +1906,10 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn get_fence_status(&self, fence: &n::Fence) -> Result<bool, d::DeviceLost> {
-        let result = self.raw.0.get_fence_status(fence.0);
+        let result = self.shared.raw.get_fence_status(fence.0);
         match result {
-            Ok(()) => Ok(true),
-            Err(vk::Result::NOT_READY) => Ok(false),
+            Ok(ok) => Ok(ok),
+            Err(vk::Result::NOT_READY) => Ok(false), //TODO: shouldn't be needed
             Err(vk::Result::ERROR_DEVICE_LOST) => Err(d::DeviceLost),
             _ => unreachable!(),
         }
@@ -1939,7 +1922,7 @@ impl d::Device<B> for Device {
             flags: vk::EventCreateFlags::empty(),
         };
 
-        let result = unsafe { self.raw.0.create_event(&info, None) };
+        let result = unsafe { self.shared.raw.create_event(&info, None) };
         match result {
             Ok(e) => Ok(n::Event(e)),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
@@ -1949,7 +1932,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn get_event_status(&self, event: &n::Event) -> Result<bool, d::OomOrDeviceLost> {
-        let result = self.raw.0.get_event_status(event.0);
+        let result = self.shared.raw.get_event_status(event.0);
         match result {
             Ok(b) => Ok(b),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
@@ -1960,7 +1943,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn set_event(&self, event: &n::Event) -> Result<(), d::OutOfMemory> {
-        let result = self.raw.0.set_event(event.0);
+        let result = self.shared.raw.set_event(event.0);
         match result {
             Ok(()) => Ok(()),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
@@ -1970,7 +1953,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn reset_event(&self, event: &n::Event) -> Result<(), d::OutOfMemory> {
-        let result = self.raw.0.reset_event(event.0);
+        let result = self.shared.raw.reset_event(event.0);
         match result {
             Ok(()) => Ok(()),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
@@ -1980,7 +1963,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn free_memory(&self, memory: n::Memory) {
-        self.raw.0.free_memory(memory.raw, None);
+        self.shared.raw.free_memory(memory.raw, None);
     }
 
     unsafe fn create_query_pool(
@@ -2012,7 +1995,7 @@ impl d::Device<B> for Device {
             pipeline_statistics,
         };
 
-        let result = self.raw.0.create_query_pool(&info, None);
+        let result = self.shared.raw.create_query_pool(&info, None);
 
         match result {
             Ok(pool) => Ok(n::QueryPool(pool)),
@@ -2030,8 +2013,8 @@ impl d::Device<B> for Device {
         stride: buffer::Offset,
         flags: query::ResultFlags,
     ) -> Result<bool, d::OomOrDeviceLost> {
-        let result = self.raw.0.fp_v1_0().get_query_pool_results(
-            self.raw.0.handle(),
+        let result = self.shared.raw.fp_v1_0().get_query_pool_results(
+            self.shared.raw.handle(),
             pool.0,
             queries.start,
             queries.end - queries.start,
@@ -2057,7 +2040,7 @@ impl d::Device<B> for Device {
         config: SwapchainConfig,
         provided_old_swapchain: Option<w::Swapchain>,
     ) -> Result<(w::Swapchain, Vec<n::Image>), hal::window::CreationError> {
-        let functor = khr::Swapchain::new(&surface.raw.instance.0, &self.raw.0);
+        let functor = khr::Swapchain::new(&surface.raw.instance.0, &self.shared.raw);
 
         let old_swapchain = match provided_old_swapchain {
             Some(osc) => osc.raw,
@@ -2149,51 +2132,51 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn destroy_query_pool(&self, pool: n::QueryPool) {
-        self.raw.0.destroy_query_pool(pool.0, None);
+        self.shared.raw.destroy_query_pool(pool.0, None);
     }
 
     unsafe fn destroy_shader_module(&self, module: n::ShaderModule) {
-        self.raw.0.destroy_shader_module(module.raw, None);
+        self.shared.raw.destroy_shader_module(module.raw, None);
     }
 
     unsafe fn destroy_render_pass(&self, rp: n::RenderPass) {
-        self.raw.0.destroy_render_pass(rp.raw, None);
+        self.shared.raw.destroy_render_pass(rp.raw, None);
     }
 
     unsafe fn destroy_pipeline_layout(&self, pl: n::PipelineLayout) {
-        self.raw.0.destroy_pipeline_layout(pl.raw, None);
+        self.shared.raw.destroy_pipeline_layout(pl.raw, None);
     }
 
     unsafe fn destroy_graphics_pipeline(&self, pipeline: n::GraphicsPipeline) {
-        self.raw.0.destroy_pipeline(pipeline.0, None);
+        self.shared.raw.destroy_pipeline(pipeline.0, None);
     }
 
     unsafe fn destroy_compute_pipeline(&self, pipeline: n::ComputePipeline) {
-        self.raw.0.destroy_pipeline(pipeline.0, None);
+        self.shared.raw.destroy_pipeline(pipeline.0, None);
     }
 
     unsafe fn destroy_framebuffer(&self, fb: n::Framebuffer) {
         if fb.owned {
-            self.raw.0.destroy_framebuffer(fb.raw, None);
+            self.shared.raw.destroy_framebuffer(fb.raw, None);
         }
     }
 
     unsafe fn destroy_buffer(&self, buffer: n::Buffer) {
-        self.raw.0.destroy_buffer(buffer.raw, None);
+        self.shared.raw.destroy_buffer(buffer.raw, None);
     }
 
     unsafe fn destroy_buffer_view(&self, view: n::BufferView) {
-        self.raw.0.destroy_buffer_view(view.raw, None);
+        self.shared.raw.destroy_buffer_view(view.raw, None);
     }
 
     unsafe fn destroy_image(&self, image: n::Image) {
-        self.raw.0.destroy_image(image.raw, None);
+        self.shared.raw.destroy_image(image.raw, None);
     }
 
     unsafe fn destroy_image_view(&self, view: n::ImageView) {
         match view.owner {
             n::ImageViewOwner::User => {
-                self.raw.0.destroy_image_view(view.view, None);
+                self.shared.raw.destroy_image_view(view.view, None);
             }
             n::ImageViewOwner::Surface(_fbo_cache) => {
                 //TODO: mark as deleted?
@@ -2202,31 +2185,31 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn destroy_sampler(&self, sampler: n::Sampler) {
-        self.raw.0.destroy_sampler(sampler.0, None);
+        self.shared.raw.destroy_sampler(sampler.0, None);
     }
 
     unsafe fn destroy_descriptor_pool(&self, pool: n::DescriptorPool) {
-        self.raw.0.destroy_descriptor_pool(pool.raw, None);
+        self.shared.raw.destroy_descriptor_pool(pool.raw, None);
     }
 
     unsafe fn destroy_descriptor_set_layout(&self, layout: n::DescriptorSetLayout) {
-        self.raw.0.destroy_descriptor_set_layout(layout.raw, None);
+        self.shared.raw.destroy_descriptor_set_layout(layout.raw, None);
     }
 
     unsafe fn destroy_fence(&self, fence: n::Fence) {
-        self.raw.0.destroy_fence(fence.0, None);
+        self.shared.raw.destroy_fence(fence.0, None);
     }
 
     unsafe fn destroy_semaphore(&self, semaphore: n::Semaphore) {
-        self.raw.0.destroy_semaphore(semaphore.0, None);
+        self.shared.raw.destroy_semaphore(semaphore.0, None);
     }
 
     unsafe fn destroy_event(&self, event: n::Event) {
-        self.raw.0.destroy_event(event.0, None);
+        self.shared.raw.destroy_event(event.0, None);
     }
 
     fn wait_idle(&self) -> Result<(), d::OutOfMemory> {
-        match unsafe { self.raw.0.device_wait_idle() } {
+        match unsafe { self.shared.raw.device_wait_idle() } {
             Ok(()) => Ok(()),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host),
             Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(d::OutOfMemory::Device),
@@ -2242,12 +2225,12 @@ impl d::Device<B> for Device {
         self.set_object_name(vk::ObjectType::BUFFER, buffer.raw.as_raw(), name)
     }
 
-    unsafe fn set_command_buffer_name(
-        &self,
-        command_buffer: &mut cmd::CommandBuffer,
-        name: &str
-    ) {
-        self.set_object_name(vk::ObjectType::COMMAND_BUFFER, command_buffer.raw.as_raw(), name)
+    unsafe fn set_command_buffer_name(&self, command_buffer: &mut cmd::CommandBuffer, name: &str) {
+        self.set_object_name(
+            vk::ObjectType::COMMAND_BUFFER,
+            command_buffer.raw.as_raw(),
+            name,
+        )
     }
 
     unsafe fn set_semaphore_name(&self, semaphore: &mut n::Semaphore, name: &str) {
@@ -2267,35 +2250,47 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn set_descriptor_set_name(&self, descriptor_set: &mut n::DescriptorSet, name: &str) {
-        self.set_object_name(vk::ObjectType::DESCRIPTOR_SET, descriptor_set.raw.as_raw(), name)
+        self.set_object_name(
+            vk::ObjectType::DESCRIPTOR_SET,
+            descriptor_set.raw.as_raw(),
+            name,
+        )
     }
 
-    unsafe fn set_descriptor_set_layout_name(&self, descriptor_set_layout: &mut n::DescriptorSetLayout, name: &str) {
-        self.set_object_name(vk::ObjectType::DESCRIPTOR_SET_LAYOUT, descriptor_set_layout.raw.as_raw(), name)
+    unsafe fn set_descriptor_set_layout_name(
+        &self,
+        descriptor_set_layout: &mut n::DescriptorSetLayout,
+        name: &str,
+    ) {
+        self.set_object_name(
+            vk::ObjectType::DESCRIPTOR_SET_LAYOUT,
+            descriptor_set_layout.raw.as_raw(),
+            name,
+        )
     }
 }
 
 impl Device {
     unsafe fn set_object_name(&self, object_type: vk::ObjectType, object_handle: u64, name: &str) {
-        let instance = &self.raw.2;
+        let instance = &self.shared.instance;
         if let Some(DebugMessenger::Utils(ref debug_utils_ext, _)) = instance.1 {
             // Append a null terminator to the string while avoiding allocating memory
             static mut NAME_BUF: [u8; 64] = [0u8; 64];
             std::ptr::copy_nonoverlapping(
                 name.as_ptr(),
                 &mut NAME_BUF[0],
-                name.len().min(NAME_BUF.len())
+                name.len().min(NAME_BUF.len()),
             );
             NAME_BUF[name.len()] = 0;
             let _result = debug_utils_ext.debug_utils_set_object_name(
-                self.raw.0.handle(),
+                self.shared.raw.handle(),
                 &vk::DebugUtilsObjectNameInfoEXT {
                     s_type: vk::StructureType::DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
                     p_next: std::ptr::null_mut(),
                     object_type,
                     object_handle,
                     p_object_name: NAME_BUF.as_ptr() as *mut _,
-                }
+                },
             );
         }
     }

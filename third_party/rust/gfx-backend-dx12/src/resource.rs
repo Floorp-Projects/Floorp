@@ -1,16 +1,14 @@
-use winapi::shared::dxgiformat::DXGI_FORMAT;
-use winapi::shared::minwindef::UINT;
-use winapi::um::d3d12;
+use winapi::{
+    shared::{dxgiformat::DXGI_FORMAT, minwindef::UINT},
+    um::d3d12,
+};
 
 use hal::{buffer, format, image, memory, pass, pso};
 use range_alloc::RangeAllocator;
 
 use crate::{root_constants::RootConstant, Backend, MAX_VERTEX_BUFFERS};
 
-use std::collections::BTreeMap;
-use std::fmt;
-use std::ops::Range;
-use std::cell::UnsafeCell;
+use std::{cell::UnsafeCell, collections::BTreeMap, fmt, ops::Range};
 
 // ShaderModule is either a precompiled if the source comes from HLSL or
 // the SPIR-V module doesn't contain specialization constants or push constants
@@ -143,13 +141,14 @@ pub struct RootDescriptor {
     pub offset: RootSignatureOffset,
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug)]
 pub struct RootElement {
     pub table: RootTable,
     pub descriptors: Vec<RootDescriptor>,
+    pub mutable_bindings: auxil::FastHashSet<pso::DescriptorBinding>,
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug)]
 pub struct PipelineLayout {
     pub(crate) raw: native::RootSignature,
     // Disjunct, sorted vector of root constant ranges.
@@ -458,21 +457,55 @@ impl DescriptorContent {
 
 impl From<pso::DescriptorType> for DescriptorContent {
     fn from(ty: pso::DescriptorType) -> Self {
-        use hal::pso::DescriptorType as Dt;
+        use hal::pso::{
+            BufferDescriptorFormat as Bdf,
+            BufferDescriptorType as Bdt,
+            DescriptorType as Dt,
+            ImageDescriptorType as Idt,
+        };
+
+        use DescriptorContent as Dc;
+
         match ty {
-            Dt::Sampler => DescriptorContent::SAMPLER,
-            Dt::CombinedImageSampler => DescriptorContent::SRV | DescriptorContent::SAMPLER,
-            Dt::SampledImage | Dt::InputAttachment | Dt::UniformTexelBuffer => {
-                DescriptorContent::SRV
-            }
-            Dt::StorageImage | Dt::StorageBuffer | Dt::StorageTexelBuffer => {
-                DescriptorContent::SRV | DescriptorContent::UAV
-            }
-            Dt::StorageBufferDynamic => {
-                DescriptorContent::SRV | DescriptorContent::UAV | DescriptorContent::DYNAMIC
-            }
-            Dt::UniformBuffer => DescriptorContent::CBV,
-            Dt::UniformBufferDynamic => DescriptorContent::CBV | DescriptorContent::DYNAMIC,
+            Dt::Sampler => Dc::SAMPLER,
+            Dt::Image { ty } => match ty {
+                Idt::Storage { read_only: true } => Dc::SRV,
+                Idt::Storage { read_only: false } => Dc::SRV | Dc::UAV,
+                Idt::Sampled { with_sampler } => match with_sampler {
+                    true => Dc::SRV | Dc::SAMPLER,
+                    false => Dc::SRV,
+                },
+            },
+            Dt::Buffer { ty, format } => match ty {
+                Bdt::Storage { read_only: true } => match format {
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    } => Dc::SRV | Dc::DYNAMIC,
+                    Bdf::Structured {
+                        dynamic_offset: false,
+                    }
+                    | Bdf::Texel => Dc::SRV,
+                },
+                Bdt::Storage { read_only: false } => match format {
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    } => Dc::SRV | Dc::UAV | Dc::DYNAMIC,
+                    Bdf::Structured {
+                        dynamic_offset: false,
+                    }
+                    | Bdf::Texel => Dc::SRV | Dc::UAV,
+                },
+                Bdt::Uniform => match format {
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    } => Dc::CBV | Dc::DYNAMIC,
+                    Bdf::Structured {
+                        dynamic_offset: false,
+                    } => Dc::CBV,
+                    Bdf::Texel => Dc::SRV,
+                },
+            },
+            Dt::InputAttachment => Dc::SRV,
         }
     }
 }
@@ -682,25 +715,26 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
                     None
                 };
 
-                let sampler_range = if content.intersects(DescriptorContent::SAMPLER) && !content.is_dynamic() {
-                    let count = binding.count as u64;
-                    debug!("\tsampler handles: {}", count);
-                    let handle = self
-                        .heap_sampler
-                        .alloc_handles(count)
-                        .ok_or(pso::AllocationError::OutOfPoolMemory)?;
-                    if first_gpu_sampler.is_none() {
-                        first_gpu_sampler = Some(handle.gpu);
-                    }
-                    Some(DescriptorRange {
-                        handle,
-                        ty: binding.ty,
-                        count,
-                        handle_size: self.heap_sampler.handle_size,
-                    })
-                } else {
-                    None
-                };
+                let sampler_range =
+                    if content.intersects(DescriptorContent::SAMPLER) && !content.is_dynamic() {
+                        let count = binding.count as u64;
+                        debug!("\tsampler handles: {}", count);
+                        let handle = self
+                            .heap_sampler
+                            .alloc_handles(count)
+                            .ok_or(pso::AllocationError::OutOfPoolMemory)?;
+                        if first_gpu_sampler.is_none() {
+                            first_gpu_sampler = Some(handle.gpu);
+                        }
+                        Some(DescriptorRange {
+                            handle,
+                            ty: binding.ty,
+                            count,
+                            handle_size: self.heap_sampler.handle_size,
+                        })
+                    } else {
+                        None
+                    };
 
                 (view_range, sampler_range, Vec::new())
             };

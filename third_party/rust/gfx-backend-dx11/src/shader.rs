@@ -2,14 +2,16 @@ use std::{ffi, ptr, slice};
 
 use spirv_cross::{hlsl, spirv, ErrorCode as SpirvErrorCode};
 
-use winapi::shared::winerror;
-use winapi::um::{d3dcommon, d3dcompiler};
+use winapi::{
+    shared::winerror,
+    um::{d3dcommon, d3dcompiler},
+};
 use wio::com::ComPtr;
 
 use auxil::spirv_cross_specialize_ast;
 use hal::{device, pso};
 
-use {conv, Backend, PipelineLayout};
+use crate::{conv, Backend, PipelineLayout};
 
 /// Emit error during shader module creation. Used if we don't expect an error
 /// but might panic due to an exception in SPIRV-Cross.
@@ -35,14 +37,19 @@ pub(crate) fn compile_spirv_entrypoint(
     stage: pso::Stage,
     source: &pso::EntryPoint<Backend>,
     layout: &PipelineLayout,
+    features: &hal::Features,
 ) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, device::ShaderError> {
     let mut ast = parse_spirv(raw_data)?;
     spirv_cross_specialize_ast(&mut ast, &source.specialization)?;
 
     patch_spirv_resources(&mut ast, stage, layout)?;
     let shader_model = hlsl::ShaderModel::V5_0;
-    let shader_code = translate_spirv(&mut ast, shader_model, layout, stage)?;
-    log::debug!("Generated {:?} shader:\n{:?}", stage, shader_code.replace("\n", "\r\n"));
+    let shader_code = translate_spirv(&mut ast, shader_model, layout, stage, features)?;
+    log::debug!(
+        "Generated {:?} shader:\n{:?}",
+        stage,
+        shader_code.replace("\n", "\r\n")
+    );
 
     let real_name = ast
         .get_cleansed_entry_point_name(source.entry, conv::map_stage(stage))
@@ -154,15 +161,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
-        ast.set_decoration(
-            image.id,
-            spirv::Decoration::Binding,
-            res_index.t as u32,
-        )
-        .map_err(gen_unexpected_error)?;
+        ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     for uniform_buffer in &shader_resources.uniform_buffers {
@@ -172,8 +174,7 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(uniform_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
         ast.set_decoration(
             uniform_buffer.id,
@@ -190,8 +191,7 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(storage_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
         ast.set_decoration(
             storage_buffer.id,
@@ -208,8 +208,7 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
         ast.set_decoration(
             image.id,
@@ -226,15 +225,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(sampler.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
-        ast.set_decoration(
-            sampler.id,
-            spirv::Decoration::Binding,
-            res_index.s as u32,
-        )
-        .map_err(gen_unexpected_error)?;
+        ast.set_decoration(sampler.id, spirv::Decoration::Binding, res_index.s as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     for image in &shader_resources.sampled_images {
@@ -244,15 +238,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set]
-            .find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
 
-        ast.set_decoration(
-            image.id,
-            spirv::Decoration::Binding,
-            res_index.t as u32,
-        )
-        .map_err(gen_unexpected_error)?;
+        ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     Ok(())
@@ -263,10 +252,11 @@ fn translate_spirv(
     shader_model: hlsl::ShaderModel,
     _layout: &PipelineLayout,
     _stage: pso::Stage,
+    features: &hal::Features,
 ) -> Result<String, device::ShaderError> {
     let mut compile_options = hlsl::CompilerOptions::default();
     compile_options.shader_model = shader_model;
-    compile_options.vertex.invert_y = true;
+    compile_options.vertex.invert_y = !features.contains(hal::Features::NDC_Y_UP);
 
     //let stage_flag = stage.into();
 

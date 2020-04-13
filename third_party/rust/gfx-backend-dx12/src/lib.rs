@@ -1,14 +1,7 @@
-extern crate gfx_hal as hal;
-extern crate auxil;
-extern crate range_alloc;
 #[macro_use]
 extern crate bitflags;
-extern crate d3d12 as native;
 #[macro_use]
 extern crate log;
-extern crate smallvec;
-extern crate spirv_cross;
-extern crate winapi;
 
 mod command;
 mod conv;
@@ -20,21 +13,34 @@ mod resource;
 mod root_constants;
 mod window;
 
-use hal::pso::PipelineStage;
-use hal::{adapter, format as f, image, memory, queue as q, Features, Limits};
+use hal::{
+    adapter,
+    format as f,
+    image,
+    memory,
+    pso::PipelineStage,
+    queue as q,
+    Features,
+    Hints,
+    Limits,
+};
 
-use winapi::shared::minwindef::TRUE;
-use winapi::shared::{dxgi, dxgi1_2, dxgi1_4, dxgi1_6, winerror};
-use winapi::um::{d3d12, d3d12sdklayers, handleapi, synchapi, winbase};
-use winapi::Interface;
+use winapi::{
+    shared::{dxgi, dxgi1_2, dxgi1_4, dxgi1_6, minwindef::TRUE, winerror},
+    um::{d3d12, d3d12sdklayers, handleapi, synchapi, winbase},
+    Interface,
+};
 
-use std::borrow::Borrow;
-use std::ffi::OsString;
-use std::os::windows::ffi::OsStringExt;
-use std::sync::{Arc, Mutex};
-use std::{fmt, mem};
+use std::{
+    borrow::Borrow,
+    ffi::OsString,
+    fmt,
+    mem,
+    os::windows::ffi::OsStringExt,
+    sync::{Arc, Mutex},
+};
 
-use descriptors_cpu::DescriptorCpuPool;
+use self::descriptors_cpu::DescriptorCpuPool;
 
 #[derive(Debug)]
 pub(crate) struct HeapProperties {
@@ -177,6 +183,7 @@ pub struct PhysicalDevice {
     library: Arc<native::D3D12Lib>,
     adapter: native::WeakPtr<dxgi1_2::IDXGIAdapter2>,
     features: Features,
+    hints: Hints,
     limits: Limits,
     format_properties: Arc<FormatProperties>,
     private_caps: Capabilities,
@@ -212,10 +219,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             return Err(hal::device::CreationError::MissingFeature);
         }
 
-        let device_raw = match self.library.create_device(
-            self.adapter,
-            native::FeatureLevel::L11_0,
-        ) {
+        let device_raw = match self
+            .library
+            .create_device(self.adapter, native::FeatureLevel::L11_0)
+        {
             Ok((device, hr)) if winerror::SUCCEEDED(hr) => device,
             Ok((_, hr)) => {
                 error!("error on device creation: {:x}", hr);
@@ -236,6 +243,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         }
 
         let mut device = Device::new(device_raw, &self, present_queue);
+        device.features = requested_features;
 
         let queue_groups = families
             .into_iter()
@@ -405,6 +413,11 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
     fn features(&self) -> Features {
         self.features
     }
+
+    fn hints(&self) -> Hints {
+        self.hints
+    }
+
     fn limits(&self) -> Limits {
         self.limits
     }
@@ -555,6 +568,7 @@ pub struct Device {
     raw: native::Device,
     library: Arc<native::D3D12Lib>,
     private_caps: Capabilities,
+    features: Features,
     format_properties: Arc<FormatProperties>,
     heap_properties: &'static [HeapProperties],
     // CPU only pools
@@ -606,8 +620,12 @@ impl Device {
             1_000_000, // maximum number of CBV/SRV/UAV descriptors in heap for Tier 1
         );
 
-        let heap_sampler =
-            Self::create_descriptor_heap_impl(device, native::DescriptorHeapType::Sampler, true, 2_048);
+        let heap_sampler = Self::create_descriptor_heap_impl(
+            device,
+            native::DescriptorHeapType::Sampler,
+            true,
+            2_048,
+        );
 
         let draw_signature = Self::create_command_signature(device, device::CommandSignature::Draw);
         let draw_indexed_signature =
@@ -620,10 +638,8 @@ impl Device {
             draw_indexed: draw_indexed_signature,
             dispatch: dispatch_signature,
         };
-        let service_pipes = internal::ServicePipes::new(
-            device,
-            Arc::clone(&physical_device.library),
-        );
+        let service_pipes =
+            internal::ServicePipes::new(device, Arc::clone(&physical_device.library));
         let shared = Shared {
             signatures,
             service_pipes,
@@ -633,6 +649,7 @@ impl Device {
             raw: device,
             library: Arc::clone(&physical_device.library),
             private_caps: physical_device.private_caps,
+            features: Features::empty(),
             format_properties: physical_device.format_properties.clone(),
             heap_properties: physical_device.heap_properties,
             rtv_pool: Mutex::new(rtv_pool),
@@ -699,6 +716,7 @@ impl Drop for Device {
 pub struct Instance {
     pub(crate) factory: native::Factory4,
     library: Arc<native::D3D12Lib>,
+    lib_dxgi: native::DxgiLib,
 }
 
 impl Drop for Instance {
@@ -725,7 +743,9 @@ impl hal::Instance<Backend> for Instance {
             match lib_main.get_debug_interface() {
                 Ok((debug_controller, hr)) if winerror::SUCCEEDED(hr) => {
                     debug_controller.enable_layer();
-                    unsafe { debug_controller.Release() };
+                    unsafe {
+                        debug_controller.Release();
+                    }
                 }
                 _ => {
                     warn!("Unable to get D3D12 debug interface");
@@ -751,7 +771,7 @@ impl hal::Instance<Backend> for Instance {
             Ok((factory, hr)) if winerror::SUCCEEDED(hr) => factory,
             Ok((_, hr)) => {
                 info!("Failed on dxgi factory creation: {:?}", hr);
-                return Err(hal::UnsupportedBackend)
+                return Err(hal::UnsupportedBackend);
             }
             Err(_) => return Err(hal::UnsupportedBackend),
         };
@@ -759,6 +779,7 @@ impl hal::Instance<Backend> for Instance {
         Ok(Instance {
             factory,
             library: Arc::new(lib_main),
+            lib_dxgi,
         })
     }
 
@@ -825,7 +846,10 @@ impl hal::Instance<Backend> for Instance {
 
             // Check for D3D12 support
             // Create temporary device to get physical device information
-            let device = match self.library.create_device(adapter, native::FeatureLevel::L11_0) {
+            let device = match self
+                .library
+                .create_device(adapter, native::FeatureLevel::L11_0)
+            {
                 Ok((device, hr)) if winerror::SUCCEEDED(hr) => device,
                 _ => continue,
             };
@@ -1024,10 +1048,10 @@ impl hal::Instance<Backend> for Instance {
                 };
 
                 let query_memory = |segment: dxgi1_4::DXGI_MEMORY_SEGMENT_GROUP| unsafe {
-                    let mut mem_info: dxgi1_4::DXGI_QUERY_VIDEO_MEMORY_INFO = mem::uninitialized();
+                    let mut mem_info: dxgi1_4::DXGI_QUERY_VIDEO_MEMORY_INFO = mem::zeroed();
                     assert_eq!(
                         winerror::S_OK,
-                        adapter.QueryVideoMemoryInfo(0, segment, &mut mem_info,)
+                        adapter.QueryVideoMemoryInfo(0, segment, &mut mem_info)
                     );
                     mem_info.Budget
                 };
@@ -1061,7 +1085,11 @@ impl hal::Instance<Backend> for Instance {
                     Features::FORMAT_BC |
                     Features::INSTANCE_RATE |
                     Features::SAMPLER_MIP_LOD_BIAS |
-                    Features::SAMPLER_ANISOTROPY,
+                    Features::SAMPLER_ANISOTROPY |
+                    Features::SAMPLER_MIRROR_CLAMP_EDGE |
+                    Features::NDC_Y_UP,
+                hints:
+                    Hints::BASE_VERTEX_INSTANCE_DRAWING,
                 limits: Limits { // TODO
                     max_image_1d_size: d3d12::D3D12_REQ_TEXTURE1D_U_DIMENSION as _,
                     max_image_2d_size: d3d12::D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION as _,

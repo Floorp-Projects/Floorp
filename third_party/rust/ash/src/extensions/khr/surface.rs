@@ -1,11 +1,11 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{EntryV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
 use std::ptr;
-use version::{EntryV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct Surface {
@@ -20,7 +20,7 @@ impl Surface {
         });
         Surface {
             handle: instance.handle(),
-            surface_fn: surface_fn,
+            surface_fn,
         }
     }
 
@@ -28,24 +28,28 @@ impl Surface {
         vk::KhrSurfaceFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>"]
     pub unsafe fn get_physical_device_surface_support(
         &self,
         physical_device: vk::PhysicalDevice,
         queue_index: u32,
         surface: vk::SurfaceKHR,
-    ) -> bool {
-        let mut b = mem::uninitialized();
-        self.surface_fn.get_physical_device_surface_support_khr(
+    ) -> VkResult<bool> {
+        let mut b = mem::zeroed();
+        let err_code = self.surface_fn.get_physical_device_surface_support_khr(
             physical_device,
             queue_index,
             surface,
             &mut b,
         );
-        b > 0
+
+        match err_code {
+            vk::Result::SUCCESS => Ok(b > 0),
+            _ => Err(err_code),
+        }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>"]
     pub unsafe fn get_physical_device_surface_present_modes(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -75,13 +79,13 @@ impl Surface {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>"]
     pub unsafe fn get_physical_device_surface_capabilities(
         &self,
         physical_device: vk::PhysicalDevice,
         surface: vk::SurfaceKHR,
     ) -> VkResult<vk::SurfaceCapabilitiesKHR> {
-        let mut surface_capabilities = mem::uninitialized();
+        let mut surface_capabilities = mem::zeroed();
         let err_code = self
             .surface_fn
             .get_physical_device_surface_capabilities_khr(
@@ -95,7 +99,7 @@ impl Surface {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>"]
     pub unsafe fn get_physical_device_surface_formats(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -122,7 +126,7 @@ impl Surface {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkDestroySurfaceKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySurfaceKHR.html>"]
     pub unsafe fn destroy_surface(
         &self,
         surface: vk::SurfaceKHR,
@@ -133,5 +137,13 @@ impl Surface {
             surface,
             allocation_callbacks.as_raw_ptr(),
         );
+    }
+
+    pub fn fp(&self) -> &vk::KhrSurfaceFn {
+        &self.surface_fn
+    }
+
+    pub fn instance(&self) -> vk::Instance {
+        self.handle
     }
 }

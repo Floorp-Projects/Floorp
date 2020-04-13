@@ -62,6 +62,14 @@ extern "C" {
     fn _sc_internal_compiler_get_entry_points(compiler: u32, entry_points: u32, size: u32) -> u32;
 
     #[wasm_bindgen(js_namespace = sc_internal)]
+    fn _sc_internal_compiler_get_active_buffer_ranges(
+        compiler: u32,
+        id: u32,
+        active_buffer_ranges: u32,
+        size: u32,
+    ) -> u32;
+
+    #[wasm_bindgen(js_namespace = sc_internal)]
     fn _sc_internal_compiler_get_cleansed_entry_point_name(
         compiler: u32,
         original_entry_point_name: u32,
@@ -353,6 +361,35 @@ pub fn sc_internal_compiler_get_entry_points(
 
         module.free(size_ptr);
         module.free(entry_points_ptr_to_ptr);
+
+        result
+    }
+}
+
+pub fn sc_internal_compiler_get_active_buffer_ranges(
+    compiler: *const bindings::ScInternalCompilerBase,
+    id: u32,
+    active_buffer_ranges: *mut *mut bindings::ScBufferRange,
+    size: *mut usize,
+) -> bindings::ScInternalResult {
+    let module = emscripten::get_module();
+    unsafe {
+        let active_buffer_ranges_ptr_to_ptr = module.allocate(U32_SIZE);
+        let size_ptr = module.allocate(U32_SIZE);
+
+        let result = map_internal_result(_sc_internal_compiler_get_active_buffer_ranges(
+            compiler as u32,
+            id,
+            active_buffer_ranges_ptr_to_ptr.as_offset(),
+            size_ptr.as_offset(),
+        ));
+
+        *active_buffer_ranges =
+            module.get_u32(active_buffer_ranges_ptr_to_ptr) as *mut bindings::ScBufferRange;
+        *size = module.get_u32(size_ptr) as usize;
+
+        module.free(size_ptr);
+        module.free(active_buffer_ranges_ptr_to_ptr);
 
         result
     }

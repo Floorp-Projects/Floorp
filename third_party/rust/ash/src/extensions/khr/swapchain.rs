@@ -1,11 +1,11 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{DeviceV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
 use std::ptr;
-use version::{DeviceV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct Swapchain {
@@ -20,7 +20,7 @@ impl Swapchain {
         });
         Swapchain {
             handle: device.handle(),
-            swapchain_fn: swapchain_fn,
+            swapchain_fn,
         }
     }
 
@@ -28,7 +28,7 @@ impl Swapchain {
         vk::KhrSwapchainFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkDestroySwapchainKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySwapchainKHR.html>"]
     pub unsafe fn destroy_swapchain(
         &self,
         swapchain: vk::SwapchainKHR,
@@ -42,7 +42,7 @@ impl Swapchain {
     }
 
     /// On success, returns the next image's index and whether the swapchain is suboptimal for the surface.
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkAcquireNextImageKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImageKHR.html>"]
     pub unsafe fn acquire_next_image(
         &self,
         swapchain: vk::SwapchainKHR,
@@ -50,7 +50,7 @@ impl Swapchain {
         semaphore: vk::Semaphore,
         fence: vk::Fence,
     ) -> VkResult<(u32, bool)> {
-        let mut index = mem::uninitialized();
+        let mut index = mem::zeroed();
         let err_code = self.swapchain_fn.acquire_next_image_khr(
             self.handle,
             swapchain,
@@ -66,13 +66,13 @@ impl Swapchain {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCreateSwapchainKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSwapchainKHR.html>"]
     pub unsafe fn create_swapchain(
         &self,
         create_info: &vk::SwapchainCreateInfoKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SwapchainKHR> {
-        let mut swapchain = mem::uninitialized();
+        let mut swapchain = mem::zeroed();
         let err_code = self.swapchain_fn.create_swapchain_khr(
             self.handle,
             create_info,
@@ -86,7 +86,7 @@ impl Swapchain {
     }
 
     /// On success, returns whether the swapchain is suboptimal for the surface.
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkQueuePresentKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueuePresentKHR.html>"]
     pub unsafe fn queue_present(
         &self,
         queue: vk::Queue,
@@ -100,7 +100,7 @@ impl Swapchain {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetSwapchainImagesKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainImagesKHR.html>"]
     pub unsafe fn get_swapchain_images(
         &self,
         swapchain: vk::SwapchainKHR,
@@ -125,5 +125,13 @@ impl Swapchain {
             vk::Result::SUCCESS => Ok(v),
             _ => Err(err_code),
         }
+    }
+
+    pub fn fp(&self) -> &vk::KhrSwapchainFn {
+        &self.swapchain_fn
+    }
+
+    pub fn device(&self) -> vk::Device {
+        self.handle
     }
 }

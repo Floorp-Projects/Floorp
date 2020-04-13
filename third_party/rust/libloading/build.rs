@@ -14,6 +14,7 @@ fn main(){
         // What happens if the executable is not linked up dynamically?
         Ok("openbsd") | Ok("bitrig") | Ok("netbsd") | Ok("macos") | Ok("ios") => {}
         Ok("solaris") => {}
+        Ok("haiku") => {}
         // dependencies come with winapi
         Ok("windows") => {}
         tos => {

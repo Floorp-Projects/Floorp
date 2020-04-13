@@ -1,23 +1,27 @@
-use hal::pso::{Stage, Viewport};
-use hal::{command, image, pso};
+use hal::{
+    command,
+    image,
+    pso,
+    pso::{Stage, Viewport},
+};
 
-use winapi::shared::dxgiformat;
-use winapi::shared::minwindef::{FALSE, TRUE};
-use winapi::shared::winerror;
-use winapi::um::d3d11;
-use winapi::um::d3dcommon;
+use winapi::{
+    shared::{
+        dxgiformat,
+        minwindef::{FALSE, TRUE},
+        winerror,
+    },
+    um::{d3d11, d3dcommon},
+};
 
 use wio::com::ComPtr;
 
-use std::borrow::Borrow;
-use std::{mem, ptr};
+use std::{borrow::Borrow, mem, ptr};
 
 use smallvec::SmallVec;
 use spirv_cross;
 
-use {conv, shader};
-
-use {Buffer, Image, RenderPassCache};
+use crate::{conv, shader, Buffer, Image, RenderPassCache};
 
 #[repr(C)]
 struct BufferCopy {
@@ -1072,7 +1076,7 @@ impl Internal {
     }
 
     fn find_blit_shader(&self, src: &Image) -> Option<*mut d3d11::ID3D11PixelShader> {
-        use format::ChannelType as Ct;
+        use crate::format::ChannelType as Ct;
 
         match src.format.base_format().1 {
             Ct::Uint => Some(self.ps_blit_2d_uint.as_raw()),
@@ -1185,7 +1189,7 @@ impl Internal {
             context.PSSetConstantBuffers(0, 1, [self.internal_buffer.as_raw()].as_ptr());
         }
 
-        let subpass = &cache.render_pass.subpasses[cache.current_subpass];
+        let subpass = &cache.render_pass.subpasses[cache.current_subpass as usize];
 
         for clear in clears {
             let clear = clear.borrow();

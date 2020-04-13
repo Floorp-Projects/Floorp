@@ -13,7 +13,6 @@ use metal;
 
 use std::{fmt::Debug, ops::Range};
 
-
 pub type CacheResourceIndex = u32;
 
 pub trait Resources: Debug {

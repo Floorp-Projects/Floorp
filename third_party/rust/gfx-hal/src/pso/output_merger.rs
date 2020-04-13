@@ -2,10 +2,7 @@
 //! The final stage in a pipeline that creates pixel colors from
 //! the input shader results, depth/stencil information, etc.
 
-use crate::pso::{
-    graphics::StencilValue,
-    State,
-};
+use crate::pso::{graphics::StencilValue, State};
 
 /// A pixel-wise comparison function.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]

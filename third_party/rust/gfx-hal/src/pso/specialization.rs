@@ -115,7 +115,7 @@ macro_rules! spec_const_list {
     (@ $head_id:expr => $head_constant:expr $(,$tail_id:expr => $tail_constant:expr)* $(,)?) => {
         $crate::pso::SpecConstListCons {
             head: ($head_id, $head_constant),
-            tail: $crate::spec_const_list!(@ $($tail_id:expr => $tail_constant:expr),*),
+            tail: $crate::spec_const_list!(@ $($tail_id => $tail_constant),*),
         }
     };
 

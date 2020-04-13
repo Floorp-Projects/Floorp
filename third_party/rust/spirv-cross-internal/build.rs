@@ -1,7 +1,7 @@
 fn main() {
     // Prevent building SPIRV-Cross on wasm32 target
     let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH");
-    if let Ok(ref arch) = target_arch {
+    if let Ok(arch) = target_arch {
         if "wasm32" == arch {
             return;
         }
@@ -14,7 +14,7 @@ fn main() {
     let is_ios = target_os.is_ok() && target_os.unwrap() == "ios";
 
     let mut build = cc::Build::new();
-    build.cpp(true).static_crt(false);
+    build.cpp(true);
 
     let compiler = build.try_get_compiler();
     let is_clang = compiler.is_ok() && compiler.unwrap().is_like_clang();
@@ -24,10 +24,6 @@ fn main() {
     } else {
         build.flag_if_supported("-std=c++14");
     }
-
-    // add Gecko-specific flags
-    build.flag("-fno-exceptions");
-    build.flag("-fno-rtti");
 
     build
         .flag("-DSPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS")

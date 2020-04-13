@@ -13,7 +13,7 @@
 //!
 //! # Usage
 //!
-//! Add dependency to this library to your `Cargo.toml`:
+//! Add a dependency on this library to your `Cargo.toml`:
 //!
 //! ```toml
 //! [dependencies]

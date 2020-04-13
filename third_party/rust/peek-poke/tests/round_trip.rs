@@ -1,4 +1,14 @@
-use peek_poke::{Peek, PeekPoke, Poke,PeekCopy};
+// Copyright 2019 The Servo Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// http://rust-lang.org/COPYRIGHT.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+use peek_poke::{Peek, PeekPoke, Poke};
 use std::{fmt::Debug, marker::PhantomData};
 
 fn poke_into<V: Peek + Poke>(a: &V) -> Vec<u8> {
@@ -18,8 +28,7 @@ where
     V: Debug + Default + PartialEq + Peek + Poke,
 {
     let v = poke_into(&a);
-    let mut b = V::default();
-    let end_ptr = unsafe { b.peek_from(v.as_ptr()) };
+    let (b, end_ptr) = unsafe { peek_poke::peek_from_default(v.as_ptr()) };
     let size = end_ptr as usize - v.as_ptr() as usize;
     assert_eq!(size, v.len());
     assert_eq!(a, b);
@@ -89,7 +98,7 @@ fn test_fixed_size_array() {
 
 #[test]
 fn test_tuple() {
-    the_same((1isize,));
+    the_same((1isize, ));
     the_same((1isize, 2isize, 3isize));
     the_same((1isize, ()));
 }
@@ -116,7 +125,7 @@ fn test_basic_struct() {
 
 #[test]
 fn test_enum() {
-    #[derive(Clone, Copy, Debug, PartialEq, PeekCopy, Poke)]
+    #[derive(Clone, Copy, Debug, PartialEq, PeekPoke)]
     enum TestEnum {
         NoArg,
         OneArg(usize),
@@ -141,7 +150,7 @@ fn test_enum() {
 #[test]
 fn test_enum_cstyle() {
     #[repr(u32)]
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, PeekCopy, Poke)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PeekPoke)]
     enum BorderStyle {
         None = 0,
         Solid = 1,
@@ -197,6 +206,27 @@ fn test_generic() {
         y: T,
     }
     the_same(Foo { x: 19.0, y: 42.0 });
+}
+
+#[test]
+fn test_generic_enum() {
+    #[derive(Clone, Copy, Debug, Default, PartialEq, PeekPoke)]
+    pub struct PropertyBindingKey<T> {
+        pub id: usize,
+        _phantom: PhantomData<T>,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, PeekPoke)]
+    pub enum PropertyBinding<T> {
+        Value(T),
+        Binding(PropertyBindingKey<T>, T),
+    }
+
+    impl<T: Default> Default for PropertyBinding<T> {
+        fn default() -> Self {
+            PropertyBinding::Value(Default::default())
+        }
+    }
 }
 
 #[cfg(all(feature = "extras", feature = "option_copy"))]

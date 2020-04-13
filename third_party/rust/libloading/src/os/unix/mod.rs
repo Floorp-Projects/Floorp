@@ -194,6 +194,29 @@ impl Library {
             Ok(x) => Ok(x)
         }
     }
+
+    /// Convert the `Library` to a raw handle.
+    ///
+    /// The handle returned by this function shall be usable with APIs which accept handles
+    /// as returned by `dlopen`.
+    pub fn into_raw(self) -> *mut raw::c_void {
+        let handle = self.handle;
+        mem::forget(self);
+        handle
+    }
+
+    /// Convert a raw handle returned by `dlopen`-family of calls to a `Library`.
+    ///
+    /// ## Unsafety
+    ///
+    /// The pointer shall be a result of a successful call of the `dlopen`-family of functions or a
+    /// pointer previously returned by `Library::into_raw` call. It must be valid to call `dlclose`
+    /// with this pointer as an argument.
+    pub unsafe fn from_raw(handle: *mut raw::c_void) -> Library {
+        Library {
+            handle: handle
+        }
+    }
 }
 
 impl Drop for Library {
@@ -219,6 +242,15 @@ impl fmt::Debug for Library {
 pub struct Symbol<T> {
     pointer: *mut raw::c_void,
     pd: marker::PhantomData<T>
+}
+
+impl<T> Symbol<T> {
+    /// Convert the loaded Symbol into a raw pointer.
+    pub fn into_raw(self) -> *mut raw::c_void {
+        let pointer = self.pointer;
+        mem::forget(self);
+        pointer
+    }
 }
 
 impl<T> Symbol<Option<T>> {

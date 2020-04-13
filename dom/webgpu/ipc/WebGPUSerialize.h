@@ -64,9 +64,6 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUSamplerDescriptor,
                                   mLodMinClamp, mLodMaxClamp, mCompare);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
                                   height, depth);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureDescriptor,
-                                  size, array_layer_count, mip_level_count,
-                                  sample_count, dimension, format, usage);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::webgpu::ffi::WGPUTextureViewDescriptor, format, dimension, aspect,
     base_mip_level, level_count, base_array_layer, array_layer_count);
@@ -117,6 +114,10 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mFragmentStage, mPrimitiveTopology, mRasterizationState, mColorStates,
     mDepthStencilState, mVertexState, mSampleCount, mSampleMask,
     mAlphaToCoverageEnabled);
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::SerialTextureDescriptor,
+                                  mLabel, mSize, mArrayLayerCount,
+                                  mMipLevelCount, mSampleCount, mDimension,
+                                  mFormat, mUsage);
 
 #undef DEFINE_IPC_SERIALIZER_FFI_ENUM
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
