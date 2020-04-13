@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.5.49';
-var pdfjsBuild = '7ed71a0d7';
+var pdfjsVersion = '2.5.80';
+var pdfjsBuild = '852730385';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1116,6 +1116,7 @@ function getDocument(src) {
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
   params.CMapReaderFactory = params.CMapReaderFactory || _display_utils.DOMCMapReaderFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
+  params.fontExtraProperties = params.fontExtraProperties === true;
   params.pdfBug = params.pdfBug === true;
   const NativeImageDecoderValues = Object.values(_util.NativeImageDecoding);
 
@@ -1218,7 +1219,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.5.49',
+    apiVersion: '2.5.80',
     source: {
       data: source.data,
       url: source.url,
@@ -1234,7 +1235,8 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     docBaseUrl: source.docBaseUrl,
     nativeImageDecoderSupport: source.nativeImageDecoderSupport,
     ignoreErrors: source.ignoreErrors,
-    isEvalSupported: source.isEvalSupported
+    isEvalSupported: source.isEvalSupported,
+    fontExtraProperties: source.fontExtraProperties
   }).then(function (workerId) {
     if (worker.destroyed) {
       throw new Error("Worker was destroyed");
@@ -3160,9 +3162,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.5.49';
+const version = '2.5.80';
 exports.version = version;
-const build = '7ed71a0d7';
+const build = '852730385';
 exports.build = build;
 
 /***/ }),
@@ -8439,7 +8441,20 @@ var renderTextLayer = function renderTextLayerClosure() {
       textDivProperties.angle = angle * (180 / Math.PI);
     }
 
+    let shouldScaleText = false;
+
     if (geom.str.length > 1) {
+      shouldScaleText = true;
+    } else if (geom.transform[0] !== geom.transform[3]) {
+      const absScaleX = Math.abs(geom.transform[0]),
+            absScaleY = Math.abs(geom.transform[3]);
+
+      if (absScaleX !== absScaleY && Math.max(absScaleX, absScaleY) / Math.min(absScaleX, absScaleY) > 1.5) {
+        shouldScaleText = true;
+      }
+    }
+
+    if (shouldScaleText) {
       if (style.vertical) {
         textDivProperties.canvasWidth = geom.height * task._viewport.scale;
       } else {
