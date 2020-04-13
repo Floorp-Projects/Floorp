@@ -8758,8 +8758,7 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
   nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
   MOZ_KnownLive(mPresShell)
       ->ScrollContentIntoView(focusedContent, ScrollAxis(), ScrollAxis(),
-                              ScrollFlags::ScrollOverflowHidden |
-                                  ScrollFlags::IgnoreMarginAndPadding);
+                              ScrollFlags::ScrollOverflowHidden);
 
   nsPresContext* presContext = GetPresContext();
 

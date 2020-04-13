@@ -128,8 +128,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           // Only set focus on the first click of multiple clicks to prevent
           // to prevent immediate de-focus.
           if (mouseEvent->mClickCount <= 1) {
-            nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-            if (fm) {
+            if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
               // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
               // Also, within HTMLInputElement::PostHandleEvent, inputs will
               // be selected only when focused via a key or when the navigation
@@ -145,7 +144,6 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                               MouseEvent_Binding::MOZ_SOURCE_TOUCH);
               fm->SetFocus(content,
                            nsIFocusManager::FLAG_BYMOVEFOCUS |
-                               nsIFocusManager::FLAG_BYELEMENTFOCUS |
                                (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0) |
                                (byTouch ? nsIFocusManager::FLAG_BYTOUCH : 0));
             }

@@ -362,25 +362,25 @@ int32_t Element::TabIndex() {
 void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
                     ErrorResult& aError) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return;
+  }
   // Also other browsers seem to have the hack to not re-focus (and flush) when
   // the element is already focused.
   // Until https://github.com/whatwg/html/issues/4512 is clarified, we'll
   // maintain interoperatibility by not re-focusing, independent of aOptions.
   // I.e., `focus({ preventScroll: true})` followed by `focus( { preventScroll:
   // false })` won't re-focus.
-  if (fm) {
-    if (fm->CanSkipFocus(this)) {
-      fm->NeedsFlushBeforeEventHandling(this);
-    } else {
-      uint32_t fmFlags =
-          nsIFocusManager::FLAG_BYELEMENTFOCUS |
-          nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions);
-      if (aCallerType == CallerType::NonSystem) {
-        fmFlags = nsIFocusManager::FLAG_NONSYSTEMCALLER | fmFlags;
-      }
-      aError = fm->SetFocus(this, fmFlags);
-    }
+  if (fm->CanSkipFocus(this)) {
+    fm->NeedsFlushBeforeEventHandling(this);
+    return;
   }
+  uint32_t fmFlags =
+      nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions);
+  if (aCallerType == CallerType::NonSystem) {
+    fmFlags |= nsIFocusManager::FLAG_NONSYSTEMCALLER;
+  }
+  aError = fm->SetFocus(this, fmFlags);
 }
 
 void Element::SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError) {

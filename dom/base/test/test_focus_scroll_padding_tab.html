@@ -1,0 +1,69 @@
+<!doctype html>
+<title>Test for bug 1617342</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  :root {
+    scroll-padding: 100px 0;
+  }
+  body {
+    margin: 0;
+  }
+  #fixed-footer {
+    height: 100px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: green;
+  }
+  #fixed-header {
+    height: 100px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: green;
+  }
+  .padding {
+    height: 100vh;
+  }
+</style>
+<div id="fixed-header"></div>
+<div class="padding"></div>
+<input>
+<div class="padding"></div>
+<input id="end">
+<div class="padding"></div>
+<div id="fixed-footer"></div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(async function() {
+    let stack = [];
+    let end = document.getElementById("end");
+
+    let lastActiveElement = document.activeElement;
+
+    do {
+      synthesizeKey("KEY_Tab");
+      is(document.activeElement.tagName, "INPUT", "Should focus inputs only, there's nothing else");
+      isnot(document.activeElement, lastActiveElement, "Focus should've moved once per tab keypress");
+      let rect = document.activeElement.getBoundingClientRect();
+      ok(rect.top >= 100, "Should not be covered by top bar");
+      ok(rect.bottom >= 100, "Should not be covered by bottom bar");
+      lastActiveElement = document.activeElement;
+      stack.push(lastActiveElement);
+    } while (document.activeElement != end)
+
+    do {
+      let previous = stack.pop();
+      let rect = document.activeElement.getBoundingClientRect();
+      ok(rect.top >= 100, "Should not be covered by top bar");
+      ok(rect.bottom >= 100, "Should not be covered by bottom bar");
+      is(document.activeElement, previous, "Focus should've moved backwards as expected");
+      synthesizeKey("KEY_Tab", {shiftKey: true});
+    } while (stack.length);
+
+    SimpleTest.finish();
+  });
+</script>

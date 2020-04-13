@@ -369,8 +369,7 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen) {
       presShell->ScrollContentIntoView(
           content, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
           ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-          ScrollFlags::ScrollOverflowHidden |
-              ScrollFlags::IgnoreMarginAndPadding);
+          ScrollFlags::ScrollOverflowHidden);
       // mFocusedPopup can be destroyed after ScrollContentIntoView, see bug
       // 420089
       if (mFocusedPopup) {

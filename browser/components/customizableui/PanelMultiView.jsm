@@ -1871,8 +1871,8 @@ var PanelView = class extends AssociatedToNode {
   focusSelectedElement(byKey = false) {
     let selected = this.selectedElement;
     if (selected) {
-      let flag = byKey ? "FLAG_BYKEY" : "FLAG_BYELEMENTFOCUS";
-      Services.focus.setFocus(selected, Services.focus[flag]);
+      let flag = byKey ? Services.focus.FLAG_BYKEY : 0;
+      Services.focus.setFocus(selected, flag);
     }
   }
 
