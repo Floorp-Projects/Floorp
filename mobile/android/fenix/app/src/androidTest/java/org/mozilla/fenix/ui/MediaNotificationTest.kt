@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -17,6 +16,7 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.notificationShade
 
 /**
  *  Tests for verifying basic functionality of media notifications:
@@ -63,6 +63,14 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
+        }.openHomeScreen {
+            closeTab()
+        }
+
+        mDevice.openNotification()
+
+        notificationShade {
+            verifySystemNotificationGone(videoTestPage.title)
         }
     }
 
@@ -85,11 +93,18 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
+        }.openHomeScreen {
+            closeTab()
+        }
+
+        mDevice.openNotification()
+
+        notificationShade {
+            verifySystemNotificationGone(audioTestPage.title)
         }
     }
 
     @Test
-    @Ignore("Temp disable test - see: https://github.com/mozilla-mobile/fenix/issues/9670")
     fun tabMediaControlButtonTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
@@ -128,6 +143,14 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
+        }.openHomeScreen {
+            closeTab()
+        }
+
+        mDevice.openNotification()
+
+        notificationShade {
+            verifySystemNotificationGone(audioTestPage.title)
         }
     }
 }

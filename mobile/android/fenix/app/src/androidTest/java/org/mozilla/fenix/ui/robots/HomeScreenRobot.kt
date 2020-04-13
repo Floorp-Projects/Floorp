@@ -194,7 +194,11 @@ class HomeScreenRobot {
 
     fun verifyTabMediaControlButtonState(action: String) {
         mDevice.waitNotNull(
-            Until.findObject(By.res("org.mozilla.fenix.debug:id/play_pause_button")),
+            findObject(
+                By
+                    .res("org.mozilla.fenix.debug:id/play_pause_button")
+                    .desc(action)
+            ),
             waitingTime
         )
 

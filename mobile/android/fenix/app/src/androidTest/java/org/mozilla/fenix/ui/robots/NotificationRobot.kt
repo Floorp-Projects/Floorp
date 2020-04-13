@@ -5,6 +5,7 @@ import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.junit.Assert.assertFalse
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -34,6 +35,19 @@ class NotificationRobot {
                 e.printStackTrace()
             }
         }
+    }
+
+    fun verifySystemNotificationGone(notificationMessage: String) {
+        mDevice.waitNotNull(
+            Until.gone(text(notificationMessage)),
+            waitingTime
+        )
+
+        assertFalse(
+            mDevice.findObject(
+                UiSelector().text(notificationMessage)
+            ).exists()
+        )
     }
 
     fun verifyPrivateTabsNotification() {
