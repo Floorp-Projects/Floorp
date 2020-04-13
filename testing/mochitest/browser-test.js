@@ -162,22 +162,6 @@ function Tester(aTests, structuredLogger, aCallback) {
     this.EventUtils
   );
 
-  // In order to allow existing tests to continue using unsafe CPOWs
-  // with EventUtils, we need to load a separate copy into a sandbox
-  // which has unsafe CPOW usage whitelisted. We need to create a new
-  // compartment for Cu.permitCPOWsInScope.
-  this.cpowSandbox = Cu.Sandbox(window, {
-    freshCompartment: true,
-    sandboxPrototype: window,
-  });
-  Cu.permitCPOWsInScope(this.cpowSandbox);
-
-  this.cpowEventUtils = new this.cpowSandbox.Object();
-  this._scriptLoader.loadSubScript(
-    "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
-    this.cpowEventUtils
-  );
-
   // Make sure our SpecialPowers actor is instantiated, in case it was
   // registered after our DOMWindowCreated event was fired (which it
   // most likely was).
@@ -942,9 +926,7 @@ Tester.prototype = {
 
     // Import utils in the test scope.
     let { scope } = this.currentTest;
-    scope.EventUtils = this.currentTest.usesUnsafeCPOWs
-      ? this.cpowEventUtils
-      : this.EventUtils;
+    scope.EventUtils = this.EventUtils;
     scope.SimpleTest = this.SimpleTest;
     scope.gTestPath = this.currentTest.path;
     scope.ContentTask = this.ContentTask;
@@ -1467,17 +1449,6 @@ function testScope(aTester, aTest, expected) {
     });
   };
 
-  // If we're running a test that requires unsafe CPOWs, create a
-  // separate sandbox scope, with CPOWS whitelisted, for that test, and
-  // mirror all of our properties onto it. Test files will be loaded
-  // into this sandbox.
-  //
-  // Otherwise, load test files directly into the testScope instance.
-  if (aTest.usesUnsafeCPOWs) {
-    let sandbox = this._createSandbox();
-    Cu.permitCPOWsInScope(sandbox);
-    return sandbox;
-  }
   return this;
 }
 
@@ -1505,35 +1476,6 @@ testScope.prototype = {
   TestUtils: null,
   ExtensionTestUtils: null,
   Assert: null,
-
-  _createSandbox() {
-    // Force this sandbox to be in its own compartment because we call
-    // Cu.permitCPOWsInScope on it and we can't call that on objects in the
-    // shared system compartment.
-    let sandbox = Cu.Sandbox(window, {
-      freshCompartment: true,
-      sandboxPrototype: window,
-    });
-
-    for (let prop in this) {
-      if (typeof this[prop] == "function") {
-        sandbox[prop] = this[prop].bind(this);
-      } else {
-        Object.defineProperty(sandbox, prop, {
-          configurable: true,
-          enumerable: true,
-          get: () => {
-            return this[prop];
-          },
-          set: value => {
-            this[prop] = value;
-          },
-        });
-      }
-    }
-
-    return sandbox;
-  },
 
   /**
    * Add a function which returns a promise (usually an async function)

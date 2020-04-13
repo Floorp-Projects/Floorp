@@ -1542,8 +1542,6 @@ toolbar#nav-bar {
                 testob['disabled'] = test['disabled']
             if 'expected' in test:
                 testob['expected'] = test['expected']
-            if 'uses-unsafe-cpows' in test:
-                testob['uses-unsafe-cpows'] = test['uses-unsafe-cpows'] == 'true'
             if 'scheme' in test:
                 testob['scheme'] = test['scheme']
             if options.failure_pattern_file:
@@ -1724,11 +1722,6 @@ toolbar#nav-bar {
         self.mozLogs = MOZ_LOG and "MOZ_UPLOAD_DIR" in os.environ
         if self.mozLogs:
             browserEnv["MOZ_LOG"] = MOZ_LOG
-
-        # For e10s, our tests default to suppressing the "unsafe CPOW usage"
-        # warnings that can plague test logs.
-        if not options.enableCPOWWarnings:
-            browserEnv["DISABLE_UNSAFE_CPOW_WARNINGS"] = "1"
 
         if options.enable_webrender:
             browserEnv["MOZ_WEBRENDER"] = "1"

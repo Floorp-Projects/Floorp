@@ -110,7 +110,6 @@
     function browserTest(aTestFile) {
       this.path = aTestFile['url'];
       this.expected = aTestFile['expected'];
-      this.usesUnsafeCPOWs = aTestFile['uses-unsafe-cpows'] || false;
       this.dumper = gDumper;
       this.results = [];
       this.scope = null;

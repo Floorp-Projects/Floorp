@@ -30,7 +30,6 @@ function parseTestManifest(testManifest, params, callback) {
         test: {
           url: name,
           expected: obj.expected,
-          "uses-unsafe-cpows": obj["uses-unsafe-cpows"],
         },
       };
     } else {
@@ -39,7 +38,6 @@ function parseTestManifest(testManifest, params, callback) {
         test: {
           url: name,
           expected: obj.expected,
-          "uses-unsafe-cpows": obj["uses-unsafe-cpows"],
         },
       });
     }
