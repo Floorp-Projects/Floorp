@@ -37,8 +37,6 @@ this.LoginHelper = {
   privateBrowsingCaptureEnabled: null,
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
-  testOnlyUserHasInteractedWithDocument: null,
-  userInputRequiredToCapture: null,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -77,9 +75,6 @@ this.LoginHelper = {
     this.includeOtherSubdomainsInLookup = Services.prefs.getBoolPref(
       "signon.includeOtherSubdomainsInLookup"
     );
-    this.passwordEditCaptureEnabled = Services.prefs.getBoolPref(
-      "signon.passwordEditCapture.enabled"
-    );
     this.privateBrowsingCaptureEnabled = Services.prefs.getBoolPref(
       "signon.privateBrowsingCapture.enabled"
     );
@@ -90,27 +85,11 @@ this.LoginHelper = {
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref(
       "signon.storeWhenAutocompleteOff"
     );
-
-    if (
-      Services.prefs.getBoolPref(
-        "signon.testOnlyUserHasInteractedByPrefValue",
-        false
-      )
-    ) {
-      this.testOnlyUserHasInteractedWithDocument = Services.prefs.getBoolPref(
-        "signon.testOnlyUserHasInteractedWithDocument",
-        false
-      );
-      log.debug(
-        "updateSignonPrefs, using pref value for testOnlyUserHasInteractedWithDocument",
-        this.testOnlyUserHasInteractedWithDocument
-      );
-    } else {
-      this.testOnlyUserHasInteractedWithDocument = null;
-    }
-
     this.userInputRequiredToCapture = Services.prefs.getBoolPref(
       "signon.userInputRequiredToCapture.enabled"
+    );
+    this.passwordEditCaptureEnabled = Services.prefs.getBoolPref(
+      "signon.passwordEditCapture.enabled"
     );
   },
 
@@ -1183,6 +1162,8 @@ this.LoginHelper = {
   },
 };
 
+LoginHelper.init();
+
 XPCOMUtils.defineLazyPreferenceGetter(
   LoginHelper,
   "showInsecureFieldWarning",
@@ -1190,11 +1171,5 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let processName =
-    Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT
-      ? "Main"
-      : "Content";
-  return LoginHelper.createLogger(`LoginHelper(${processName})`);
+  return LoginHelper.createLogger("LoginHelper");
 });
-
-LoginHelper.init();
