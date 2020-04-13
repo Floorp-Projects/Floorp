@@ -2231,9 +2231,19 @@ impl Renderer {
         let transforms_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
         let render_task_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
 
+        // On some (mostly older, integrated) GPUs, the normal GPU texture cache update path
+        // doesn't work well when running on ANGLE, causing CPU stalls inside D3D and/or the
+        // GPU driver. See https://bugzilla.mozilla.org/show_bug.cgi?id=1576637 for much
+        // more detail. To reduce the number of code paths we have active that require testing,
+        // we will enable the GPU cache scatter update path on all devices running with ANGLE.
+        // We want a better solution long-term, but for now this is a significant performance
+        // improvement on HD4600 era GPUs, and shouldn't hurt performance in a noticeable
+        // way on other systems running under ANGLE.
+        let is_angle = device.get_capabilities().renderer_name.contains("ANGLE");
+
         let gpu_cache_texture = GpuCacheTexture::new(
             &mut device,
-            options.scatter_gpu_cache_updates,
+            is_angle,
         )?;
 
         device.end_frame();
@@ -6608,7 +6618,6 @@ pub struct RendererOptions {
     pub enable_clear_scissor: bool,
     pub max_texture_size: Option<i32>,
     pub max_glyph_cache_size: Option<usize>,
-    pub scatter_gpu_cache_updates: bool,
     pub upload_method: UploadMethod,
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
@@ -6679,8 +6688,6 @@ impl Default for RendererOptions {
             enable_clear_scissor: true,
             max_texture_size: None,
             max_glyph_cache_size: None,
-            // Scattered GPU cache updates haven't met a test that would show their superiority yet.
-            scatter_gpu_cache_updates: false,
             // This is best as `Immediate` on Angle, or `Pixelbuffer(Dynamic)` on GL,
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
