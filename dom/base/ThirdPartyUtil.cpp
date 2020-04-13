@@ -140,9 +140,8 @@ ThirdPartyUtil::GetURIFromWindow(mozIDOMWindowProxy* aWin, nsIURI** result) {
     LOG(("ThirdPartyUtil::GetURIFromWindow can't use null principal\n"));
     return NS_ERROR_INVALID_ARG;
   }
-
-  rv = prin->GetURI(result);
-  return rv;
+  auto* basePrin = BasePrincipal::Cast(prin);
+  return basePrin->GetURI(result);
 }
 
 NS_IMETHODIMP
