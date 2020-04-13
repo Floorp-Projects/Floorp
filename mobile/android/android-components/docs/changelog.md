@@ -23,6 +23,10 @@ permalink: /changelog/
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
 
+* **feature-customtabs**
+  * ⚠️ **This is a breaking change**: Removed `handleError` in `CustomTabWindowFeature` constructor
+  * ⚠️ **This is a breaking change**: Added `onLaunchUrlFallback` to `CustomTabWindowFeature` constructor
+
 * **browser-tabstray**
   * The iconView is no longer required in the template.
 

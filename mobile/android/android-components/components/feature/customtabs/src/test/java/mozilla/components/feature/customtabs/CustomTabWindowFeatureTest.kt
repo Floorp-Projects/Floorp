@@ -7,6 +7,8 @@ package mozilla.components.feature.customtabs
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.graphics.Color
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
@@ -31,7 +33,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
-import java.lang.Exception
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabWindowFeatureTest {
@@ -42,7 +43,7 @@ class CustomTabWindowFeatureTest {
     private lateinit var store: BrowserStore
     private val sessionId = "session-uuid"
     private lateinit var activity: Activity
-    private val handleError: (Exception) -> Unit = spy { _ -> }
+    private val launchUrlFallback: (Uri) -> Unit = spy { _ -> }
 
     @Before
     fun setup() {
@@ -59,7 +60,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `given a request to open window, when the url can be handled, then the activity should start`() {
-        val feature = spy(CustomTabWindowFeature(activity, store, sessionId, handleError))
+        val feature = spy(CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback))
         val windowRequest: WindowRequest = mock()
 
         feature.start()
@@ -74,7 +75,7 @@ class CustomTabWindowFeatureTest {
     @Test
     fun `given a request to open window, when the url can't be handled, then handleError should be called`() {
         val exception = ActivityNotFoundException()
-        val feature = spy(CustomTabWindowFeature(activity, store, sessionId, handleError))
+        val feature = spy(CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback))
         val windowRequest: WindowRequest = mock()
 
         feature.start()
@@ -83,12 +84,12 @@ class CustomTabWindowFeatureTest {
         whenever(activity.startActivity(any(), any())).thenThrow(exception)
         store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
 
-        verify(handleError).invoke(exception)
+        verify(launchUrlFallback).invoke("blob:https://www.firefox.com".toUri())
     }
 
     @Test
     fun `creates intent based on default custom tab config`() {
-        val feature = CustomTabWindowFeature(activity, store, sessionId, handleError)
+        val feature = CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback)
         val config = CustomTabConfig()
         val intent = feature.configToIntent(config)
 
@@ -99,7 +100,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent based on custom tab config`() {
-        val feature = CustomTabWindowFeature(activity, store, sessionId, handleError)
+        val feature = CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback)
         val config = CustomTabConfig(
             toolbarColor = Color.RED,
             navigationBarColor = Color.BLUE,
@@ -116,7 +117,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent with same menu items`() {
-        val feature = CustomTabWindowFeature(activity, store, sessionId, handleError)
+        val feature = CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback)
         val config = CustomTabConfig(
             actionButtonConfig = CustomTabActionButtonConfig(
                 description = "button",
@@ -138,7 +139,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `handles no requests when stopped`() {
-        val feature = CustomTabWindowFeature(activity, store, sessionId, handleError)
+        val feature = CustomTabWindowFeature(activity, store, sessionId, launchUrlFallback)
         feature.start()
         feature.stop()
 
@@ -147,7 +148,7 @@ class CustomTabWindowFeatureTest {
         whenever(windowRequest.url).thenReturn("https://www.firefox.com")
         store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
         verify(activity, never()).startActivity(any(), any())
-        verifyZeroInteractions(handleError)
+        verifyZeroInteractions(launchUrlFallback)
         verify(store, never()).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 
