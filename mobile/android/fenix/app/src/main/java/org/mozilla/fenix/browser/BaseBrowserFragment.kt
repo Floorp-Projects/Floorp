@@ -135,6 +135,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     // We need this so we don't accidentally remove all external sessions on back press
     private var sessionRemoved = false
+    private var enteredPip = false
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
 
@@ -574,6 +575,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     final override fun onPause() {
         super.onPause()
+        // If we didn't enter PiP, exit full screen on pause
+        if (!enteredPip) {
+            fullScreenFeature.onBackPressed()
+        }
+        enteredPip = false
         if (findNavController().currentDestination?.id != R.id.searchFragment) {
             view?.hideKeyboard()
         }
@@ -798,6 +804,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     override fun onHomePressed(): Boolean {
         if (pipFeature?.onHomePressed() == true) {
+            enteredPip = true
             return true
         }
         return false
