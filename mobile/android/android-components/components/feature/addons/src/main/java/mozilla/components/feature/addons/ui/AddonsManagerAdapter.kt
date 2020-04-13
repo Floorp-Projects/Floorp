@@ -195,13 +195,13 @@ class AddonsManagerAdapter(
 
         holder.titleView.text =
             if (addon.translatableName.isNotEmpty()) {
-                addon.translatableName.translate()
+                addon.translatedName
             } else {
                 addon.id
             }
 
         if (addon.translatableSummary.isNotEmpty()) {
-            holder.summaryView.text = addon.translatableSummary.translate()
+            holder.summaryView.text = addon.translatedSummary
         } else {
             holder.summaryView.visibility = View.GONE
         }

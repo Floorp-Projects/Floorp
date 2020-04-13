@@ -30,6 +30,7 @@ import kotlinx.android.parcel.Parcelize
  * @property updatedAt The date of the last time the add-on was updated by its developer(s).
  * @property installedState Holds the state of the installed web extension for this add-on. Null, if
  * the [Addon] is not installed.
+ * @property defaultLocale Indicates which locale will be always available to display translatable fields.
  */
 @Parcelize
 data class Addon(
@@ -47,7 +48,8 @@ data class Addon(
     val rating: Rating? = null,
     val createdAt: String = "",
     val updatedAt: String = "",
-    val installedState: InstalledState? = null
+    val installedState: InstalledState? = null,
+    val defaultLocale: String = DEFAULT_LOCALE
 ) : Parcelable {
     /**
      * Represents an add-on author.
@@ -134,15 +136,16 @@ data class Addon(
     /**
      * Returns a copy of this [Addon] containing only translations (description,
      * name, summary) of the provided locales. All other translations
-     * will be removed.
+     * except the [defaultLocale] will be removed.
      *
      * @param locales list of locales to keep.
      * @return copy of the addon with all other translations removed.
      */
     fun filterTranslations(locales: List<String>): Addon {
-        val descriptions = translatableDescription.filterKeys { locales.contains(it) }
-        val names = translatableName.filterKeys { locales.contains(it) }
-        val summaries = translatableSummary.filterKeys { locales.contains(it) }
+        val internalLocales = locales + defaultLocale
+        val descriptions = translatableDescription.filterKeys { internalLocales.contains(it) }
+        val names = translatableName.filterKeys { internalLocales.contains(it) }
+        val summaries = translatableSummary.filterKeys { internalLocales.contains(it) }
         return copy(translatableName = names, translatableDescription = descriptions, translatableSummary = summaries)
     }
 
@@ -185,5 +188,10 @@ data class Addon(
         fun localizePermissions(permissions: List<String>): List<Int> {
             return permissions.mapNotNull { permissionToTranslation[it] }
         }
+
+        /**
+         * The default fallback locale in case the [Addon] does not have its own [Addon.defaultLocale].
+         */
+        const val DEFAULT_LOCALE = "en-US"
     }
 }

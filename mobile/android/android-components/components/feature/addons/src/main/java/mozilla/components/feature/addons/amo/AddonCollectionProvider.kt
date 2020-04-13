@@ -182,7 +182,8 @@ internal fun JSONObject.toAddons(): Addon {
             translatableSummary = getSafeMap("summary"),
             iconUrl = getSafeString("icon_url"),
             siteUrl = getSafeString("url"),
-            rating = getRating()
+            rating = getRating(),
+            defaultLocale = getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
         )
     }
 }

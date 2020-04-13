@@ -135,7 +135,7 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
         rootView.findViewById<TextView>(R.id.title).text =
             requireContext().getString(
                 R.string.mozac_feature_addons_permissions_dialog_title,
-                addon.translatableName.translate()
+                addon.translatedName
             )
         rootView.findViewById<TextView>(R.id.permissions).text = buildPermissionsText()
 

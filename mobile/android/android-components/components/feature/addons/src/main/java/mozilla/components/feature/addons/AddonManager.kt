@@ -65,8 +65,7 @@ class AddonManager(
 
             // Get all available/supported addons from provider and add state if
             // installed. NB: We're keeping only the translations of the default
-            // lang and the en-US fallback.
-            val locales = listOf(Locale.getDefault().language, "en-US")
+            val locales = listOf(Locale.getDefault().language)
             val supportedAddons = addonsProvider.getAvailableAddons()
                 .map { addon -> addon.filterTranslations(locales) }
                 .map { addon ->
@@ -83,13 +82,12 @@ class AddonManager(
                 .filterValues { !it.isBuiltIn() }
                 .map { extensionEntry ->
                     val extension: WebExtension = extensionEntry.value
-                    val lang = Locale.getDefault().language
                     val name = extension.getMetadata()?.name ?: extension.id
                     val installedState =
                         extension.toInstalledState().copy(enabled = false, supported = false)
                     Addon(
                         id = extension.id,
-                        translatableName = mapOf(lang to name),
+                        translatableName = mapOf(Addon.DEFAULT_LOCALE to name),
                         siteUrl = extension.url,
                         installedState = installedState
                     )
