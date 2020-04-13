@@ -164,7 +164,6 @@ pub fn main_wrapper<E: Example>(
         precache_flags: E::PRECACHE_SHADER_FLAGS,
         device_pixel_ratio,
         clear_color: Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
-        //scatter_gpu_cache_updates: false,
         debug_flags,
         //allow_texture_swizzling: false,
         ..options.unwrap_or(webrender::RendererOptions::default())

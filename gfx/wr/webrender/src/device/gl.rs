@@ -790,7 +790,7 @@ impl ProgramSourceInfo {
         let source_and_digest = SHADERS.get(&name).expect("Shader not found");
 
         // Hash the renderer name.
-        hasher.write(device.renderer_name.as_bytes());
+        hasher.write(device.capabilities.renderer_name.as_bytes());
 
         // Hash the prefix string.
         build_shader_prefix_string(
@@ -999,6 +999,8 @@ pub struct Capabilities {
     pub supports_nonzero_pbo_offsets: bool,
     /// Whether the driver supports specifying the texture usage up front.
     pub supports_texture_usage: bool,
+    /// The name of the renderer, as reported by GL
+    pub renderer_name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -1083,7 +1085,6 @@ pub struct Device {
 
     max_texture_size: i32,
     max_texture_layers: u32,
-    renderer_name: String,
     cached_programs: Option<Rc<ProgramCache>>,
 
     // Frame counter. This is used to map between CPU
@@ -1554,6 +1555,7 @@ impl Device {
                 supports_texture_swizzle,
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
+                renderer_name,
             },
 
             color_formats,
@@ -1578,7 +1580,6 @@ impl Device {
 
             max_texture_size,
             max_texture_layers,
-            renderer_name,
             cached_programs,
             frame_id: GpuFrameId(0),
             extensions,
@@ -1998,7 +1999,7 @@ impl Device {
                     error!(
                       "Failed to load a program object with a program binary: {} renderer {}\n{}",
                       &info.base_filename,
-                      self.renderer_name,
+                      self.capabilities.renderer_name,
                       error_log
                     );
                     if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
