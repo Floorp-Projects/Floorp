@@ -6,6 +6,7 @@ package mozilla.components.feature.customtabs
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.browser.customtabs.CustomTabsIntent
@@ -32,7 +33,7 @@ class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String,
-    @VisibleForTesting internal val handleError: (Exception) -> Unit
+    @VisibleForTesting internal val onLaunchUrlFallback: (Uri) -> Unit
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -75,15 +76,16 @@ class CustomTabWindowFeature(
                     val windowRequest = state.content.windowRequest
                     if (windowRequest?.type == WindowRequest.Type.OPEN) {
                         val intent = configToIntent(state.config)
+                        val uri = windowRequest.url.toUri()
                         // This could only fail if the above intent is for our application
                         // and we are not registered to handle its schemes.
                         // Let's log this to better asses how often this happens in real world and
                         // if we need to add new schemes to properly support this workflow.
                         // See Fenix #8412
                         try {
-                            intent.launchUrl(activity, windowRequest.url.toUri())
+                            intent.launchUrl(activity, uri)
                         } catch (e: ActivityNotFoundException) {
-                            handleError(e)
+                            onLaunchUrlFallback(uri)
                         }
                         store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
                     }
