@@ -276,8 +276,6 @@ def add_extra_options(config, tests):
         if test['require-signed-extensions']:
             extra_options.append('--is-release-build')
 
-        extra_options.append("--project={}".format(config.params.get('project')))
-
         # add urlparams based on platform, test names and projects
         testurlparams_by_platform_and_project = {
             "android-hw-g5": [
