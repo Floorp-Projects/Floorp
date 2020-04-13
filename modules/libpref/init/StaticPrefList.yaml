@@ -6185,7 +6185,7 @@
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
 #else
   value: false
 #endif
