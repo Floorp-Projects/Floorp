@@ -63,6 +63,8 @@ parent:
 
   /* tabId is only required for web-proxy support, which isn't always needed */
   async PWebrtcTCPSocket(TabId? tabId);
+  async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
+                    OriginAttributes originAttributes, uint32_t flags);
   async PChildToParentStream();
   async ObserveHttpActivity(HttpActivityArgs aActivityArgs,
                             uint32_t aActivityType,
@@ -98,8 +100,6 @@ child:
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
-  async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
-                    OriginAttributes originAttributes, uint32_t flags);
 };
 
 } // namespace net

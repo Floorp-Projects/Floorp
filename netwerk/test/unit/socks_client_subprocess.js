@@ -4,8 +4,6 @@
 
 var CC = Components.Constructor;
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-
 const BinaryInputStream = CC(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
