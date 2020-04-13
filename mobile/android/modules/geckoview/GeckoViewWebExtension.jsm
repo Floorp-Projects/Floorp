@@ -281,13 +281,16 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     baseURL = policy.getURL();
     privateBrowsingAllowed = policy.privateBrowsingAllowed;
   }
+  const promptPermissions = aPermissions
+    ? aPermissions.permissions.filter(Extension.shouldPromptFor)
+    : [];
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
     isBuiltIn: isBuiltin,
     metaData: {
-      permissions: aPermissions ? aPermissions.permissions : [],
       origins: aPermissions ? aPermissions.origins : [],
+      promptPermissions,
       description,
       enabled: isActive,
       disabledFlags,
@@ -493,8 +496,14 @@ async function updatePromptHandler(aInfo) {
 
   const difference = Extension.comparePermissions(oldPerms, newPerms);
 
+  // We only care about permissions that we can prompt the user for
+  const newPermissions = difference.permissions.filter(
+    Extension.shouldPromptFor
+  );
+  const { origins: newOrigins } = difference;
+
   // If there are no new permissions, just proceed
-  if (!difference.origins.length && !difference.permissions.length) {
+  if (!newOrigins.length && !newPermissions.length) {
     return;
   }
 
@@ -504,8 +513,8 @@ async function updatePromptHandler(aInfo) {
     type: "GeckoView:WebExtension:UpdatePrompt",
     currentlyInstalled,
     updatedExtension,
-    newPermissions: difference.permissions,
-    newOrigins: difference.origins,
+    newPermissions,
+    newOrigins,
   });
 
   if (!response.allow) {
