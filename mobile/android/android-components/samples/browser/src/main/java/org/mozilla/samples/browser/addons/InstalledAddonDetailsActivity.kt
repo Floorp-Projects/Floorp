@@ -11,7 +11,6 @@ import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.BrowserActivity
@@ -29,7 +28,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
     }
 
     private fun bind(addon: Addon) {
-        title = addon.translatableName.translate()
+        title = addon.translatedName
 
         bindEnableSwitch(addon)
 

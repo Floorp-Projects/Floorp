@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
-import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.R
 
 private const val LEARN_MORE_URL =
@@ -27,7 +27,7 @@ class PermissionsDetailsActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_on_permissions)
         val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
-        title = addon.translatableName.translate()
+        title = addon.translatedName
 
         bindPermissions(addon)
 

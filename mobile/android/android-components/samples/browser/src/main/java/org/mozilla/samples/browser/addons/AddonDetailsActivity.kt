@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.showInformationDialog
-import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedDescription
+import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import org.mozilla.samples.browser.R
 import java.text.DateFormat
@@ -44,7 +45,7 @@ class AddonDetailsActivity : AppCompatActivity() {
 
     private fun bind(addon: Addon) {
 
-        title = addon.translatableName.translate()
+        title = addon.translatedName
 
         bindDetails(addon)
 
@@ -122,7 +123,7 @@ class AddonDetailsActivity : AppCompatActivity() {
 
     private fun bindDetails(addon: Addon) {
         val detailsView = findViewById<TextView>(R.id.details)
-        val detailsText = addon.translatableDescription.translate()
+        val detailsText = addon.translatedDescription
 
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)

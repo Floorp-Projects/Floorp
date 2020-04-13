@@ -58,10 +58,12 @@ class SupportedAddonsWorkerTest {
         val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
 
         val unsupportedAddon = mock<Addon> {
-            whenever(translatableName).thenReturn(mapOf("en-US" to "one"))
+            whenever(translatableName).thenReturn(mapOf(Addon.DEFAULT_LOCALE to "one"))
             whenever(isSupported()).thenReturn(true)
             whenever(isDisabledAsUnsupported()).thenReturn(true)
+            whenever(defaultLocale).thenReturn(Addon.DEFAULT_LOCALE)
         }
+
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         runBlocking {
@@ -135,9 +137,9 @@ class SupportedAddonsWorkerTest {
         val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
 
         val appName = testContext.appName
-        val firstAddon = Addon("one", translatableName = mapOf("en-US" to "one"))
-        val secondAddon = Addon("two", translatableName = mapOf("en-US" to "two"))
-        val thirdAddon = Addon("three", translatableName = mapOf("en-US" to "three"))
+        val firstAddon = Addon("one", translatableName = mapOf(Addon.DEFAULT_LOCALE to "one"))
+        val secondAddon = Addon("two", translatableName = mapOf(Addon.DEFAULT_LOCALE to "two"))
+        val thirdAddon = Addon("three", translatableName = mapOf(Addon.DEFAULT_LOCALE to "three"))
 
         // One add-on
         var contentString = worker.getNotificationBody(listOf(firstAddon))

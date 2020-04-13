@@ -12,6 +12,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-addons**
+  * Added `Addon.translatedSummary` and `Addon.translatedDescription` to ease add-on translations.
+  * Added `Addon.defaultLocale` Indicates which locale will be always available to display translatable fields.
+  * ⚠️ **This is a breaking change**: `Map<String, String>.translate` now is marked as internal, if you are trying to translate the summary or the description of an add-on, use `Addon.translatedSummary` and `Addon.translatedDescription`.
+
 * **feature-media**
   * Muted media will not start the media service anymore, causing no media notification to be shown and no audio focus getting requested.
 

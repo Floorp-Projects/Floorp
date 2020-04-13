@@ -39,7 +39,7 @@ class ExtensionsTest {
             rating = Addon.Rating(4.5f, 1000),
             createdAt = "",
             updatedAt = "",
-            translatableName = mapOf("en-US" to "name", "de" to "Name", "es" to "nombre")
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre")
         )
 
         Locale.setDefault(Locale("es"))
@@ -57,19 +57,20 @@ class ExtensionsTest {
 
     @Test
     fun translate() {
-        val map = mapOf("en-US" to "Hello", "es" to "Hola", "de" to "Hallo")
+        val addon = Addon("id")
+        val map = mapOf(addon.defaultLocale to "Hello", "es" to "Hola", "de" to "Hallo")
 
         Locale.setDefault(Locale("es"))
 
-        assertEquals("Hola", map.translate())
+        assertEquals("Hola", map.translate(addon))
 
         Locale.setDefault(Locale.GERMAN)
 
-        assertEquals("Hallo", map.translate())
+        assertEquals("Hallo", map.translate(addon))
 
-        Locale.setDefault(Locale.ENGLISH)
+        Locale.setDefault(Locale.ITALIAN)
 
-        assertEquals("Hello", map.translate())
+        assertEquals("Hello", map.translate(addon))
     }
 
     @Test

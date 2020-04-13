@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.fragment_add_on_settings.*
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
 
@@ -30,7 +30,7 @@ class AddonSettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_add_on_settings)
 
         val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
-        title = addon.translatableName.translate()
+        title = addon.translatedName
 
         supportFragmentManager
             .beginTransaction()

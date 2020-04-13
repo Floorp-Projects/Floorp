@@ -19,14 +19,24 @@ import java.util.Locale
 /**
  * A shortcut to get the localized name of an add-on.
  */
-val Addon.translatedName: String get() = translatableName.translate()
+val Addon.translatedName: String get() = translatableName.translate(this)
 
 /**
- * Try to find the default language on the map otherwise defaults to "en-US".
+ * A shortcut to get the localized summary of an add-on.
  */
-fun Map<String, String>.translate(): String {
+val Addon.translatedSummary: String get() = translatableSummary.translate(this)
+
+/**
+ * A shortcut to get the localized description of an add-on.
+ */
+val Addon.translatedDescription: String get() = translatableDescription.translate(this)
+
+/**
+ * Try to find the default language on the map otherwise defaults to [Addon.DEFAULT_LOCALE].
+ */
+internal fun Map<String, String>.translate(addon: Addon): String {
     val lang = Locale.getDefault().language
-    return get(lang) ?: getValue("en-US")
+    return get(lang) ?: getValue(addon.defaultLocale)
 }
 
 /**

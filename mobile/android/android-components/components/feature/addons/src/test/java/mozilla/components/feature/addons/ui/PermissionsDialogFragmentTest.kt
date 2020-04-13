@@ -15,7 +15,7 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment.PromptsStyling
-import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
@@ -30,7 +30,7 @@ class PermissionsDialogFragmentTest {
     @Test
     fun `build dialog`() {
         val addon = Addon(
-            "id", translatableName = mapOf("en-US" to "my_addon"),
+            "id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "<all_urls>", "tabs")
         )
         val fragment = createPermissionsDialogFragment(addon)
@@ -39,7 +39,7 @@ class PermissionsDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val name = addon.translatableName.translate()
+        val name = addon.translatedName
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
         val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
         val permissionText = fragment.buildPermissionsText()
@@ -56,7 +56,7 @@ class PermissionsDialogFragmentTest {
 
     @Test
     fun `clicking on dialog buttons notifies lambdas`() {
-        val addon = Addon("id", translatableName = mapOf("en-US" to "my_addon"))
+        val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
 
         val fragment = createPermissionsDialogFragment(addon)
         var allowedWasExecuted = false
@@ -88,7 +88,7 @@ class PermissionsDialogFragmentTest {
 
     @Test
     fun `dismissing the dialog notifies deny lambda`() {
-        val addon = Addon("id", translatableName = mapOf("en-US" to "my_addon"))
+        val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
 
         val fragment = createPermissionsDialogFragment(addon)
         var denyWasExecuted = false
@@ -110,7 +110,7 @@ class PermissionsDialogFragmentTest {
 
     @Test
     fun `dialog must have all the styles of the feature promptsStyling object`() {
-        val addon = Addon("id", translatableName = mapOf("en-US" to "my_addon"))
+        val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
         val styling = PromptsStyling(TOP, true)
         val fragment = createPermissionsDialogFragment(addon, styling)
 

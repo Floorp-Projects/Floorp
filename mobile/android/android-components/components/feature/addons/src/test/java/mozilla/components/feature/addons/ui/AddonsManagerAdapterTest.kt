@@ -146,9 +146,9 @@ class AddonsManagerAdapterTest {
             rating = Addon.Rating(4.5f, 1000),
             createdAt = "",
             updatedAt = "",
-            translatableName = mapOf("en-US" to "name", "de" to "Name", "es" to "nombre"),
-            translatableDescription = mapOf("en-US" to "description", "de" to "Beschreibung", "es" to "descripción"),
-            translatableSummary = mapOf("en-US" to "summary", "de" to "Kurzfassung", "es" to "resumen")
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre"),
+            translatableDescription = mapOf(Addon.DEFAULT_LOCALE to "description", "de" to "Beschreibung", "es" to "descripción"),
+            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen")
         )
 
         whenever(titleView.context).thenReturn(testContext)

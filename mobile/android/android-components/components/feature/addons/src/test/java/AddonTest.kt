@@ -132,18 +132,18 @@ class AddonTest {
             permissions = emptyList(),
             createdAt = "",
             updatedAt = "",
-            translatableName = mapOf("en-US" to "name", "de" to "Name", "es" to "nombre"),
-            translatableDescription = mapOf("en-US" to "description", "de" to "Beschreibung", "es" to "descripción"),
-            translatableSummary = mapOf("en-US" to "summary", "de" to "Kurzfassung", "es" to "resumen")
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre"),
+            translatableDescription = mapOf(Addon.DEFAULT_LOCALE to "description", "de" to "Beschreibung", "es" to "descripción"),
+            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen")
         )
 
-        val addonEn = addon.filterTranslations(listOf("en-US"))
+        val addonEn = addon.filterTranslations(listOf())
         assertEquals(1, addonEn.translatableName.size)
-        assertTrue(addonEn.translatableName.contains("en-US"))
+        assertTrue(addonEn.translatableName.contains(addonEn.defaultLocale))
 
-        val addonEs = addon.filterTranslations(listOf("en-US", "es"))
+        val addonEs = addon.filterTranslations(listOf("es"))
         assertEquals(2, addonEs.translatableName.size)
-        assertTrue(addonEs.translatableName.contains("en-US"))
+        assertTrue(addonEs.translatableName.contains(addonEn.defaultLocale))
         assertTrue(addonEs.translatableName.contains("es"))
     }
 }

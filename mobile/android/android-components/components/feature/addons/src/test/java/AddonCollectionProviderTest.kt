@@ -82,6 +82,7 @@ class AddonCollectionProviderTest {
             )
             assertTrue(addon.translatableDescription.getValue("ca").isNotBlank())
             assertEquals("1.23.0", addon.version)
+            assertEquals("es", addon.defaultLocale)
 
             // Authors
             assertEquals("11423598", addon.authors.first().id)
@@ -130,6 +131,7 @@ class AddonCollectionProviderTest {
             assertTrue(addon.translatableName.isEmpty())
             assertTrue(addon.translatableSummary.isEmpty())
             assertEquals("", addon.translatableDescription.getValue("ca"))
+            assertEquals(Addon.DEFAULT_LOCALE, addon.defaultLocale)
 
             // Authors
             assertTrue(addon.authors.isEmpty())
