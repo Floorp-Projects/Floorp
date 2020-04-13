@@ -72,3 +72,5 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == image-srcset-basic-selec
 
 == moz-broken-matching-1.html moz-broken-matching-1-ref.html
 pref(dom.image-lazy-loading.enabled,true) == moz-broken-matching-lazy-load.html moz-broken-matching-1-ref.html
+
+== img-invalidation-local-transform-1.html img-invalidation-local-transform-1-ref.html
