@@ -31,11 +31,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ctypes",
-  "resource://gre/modules/ctypes.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm"
 );
@@ -53,6 +48,11 @@ ChromeUtils.defineModuleGetter(
   this,
   "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "WindowsVersionInfo",
+  "resource://gre/modules/components-utils/WindowsVersionInfo.jsm"
 );
 
 // The maximum length of a string (e.g. description) in the addons section.
@@ -513,74 +513,6 @@ function getGfxAdapter(aSuffix = "") {
     driverVersion: getGfxField("adapterDriverVersion" + aSuffix, null),
     driverDate: getGfxField("adapterDriverDate" + aSuffix, null),
   };
-}
-
-/**
- * Gets the service pack and build information on Windows platforms. The initial version
- * was copied from nsUpdateService.js.
- *
- * @return An object containing the service pack major and minor versions, along with the
- *         build number.
- */
-function getWindowsVersionInfo() {
-  const UNKNOWN_VERSION_INFO = {
-    servicePackMajor: null,
-    servicePackMinor: null,
-    buildNumber: null,
-  };
-
-  if (AppConstants.platform !== "win") {
-    return UNKNOWN_VERSION_INFO;
-  }
-
-  const BYTE = ctypes.uint8_t;
-  const WORD = ctypes.uint16_t;
-  const DWORD = ctypes.uint32_t;
-  const WCHAR = ctypes.char16_t;
-  const BOOL = ctypes.int;
-
-  // This structure is described at:
-  // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
-  const SZCSDVERSIONLENGTH = 128;
-  const OSVERSIONINFOEXW = new ctypes.StructType("OSVERSIONINFOEXW", [
-    { dwOSVersionInfoSize: DWORD },
-    { dwMajorVersion: DWORD },
-    { dwMinorVersion: DWORD },
-    { dwBuildNumber: DWORD },
-    { dwPlatformId: DWORD },
-    { szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH) },
-    { wServicePackMajor: WORD },
-    { wServicePackMinor: WORD },
-    { wSuiteMask: WORD },
-    { wProductType: BYTE },
-    { wReserved: BYTE },
-  ]);
-
-  let kernel32 = ctypes.open("kernel32");
-  try {
-    let GetVersionEx = kernel32.declare(
-      "GetVersionExW",
-      ctypes.winapi_abi,
-      BOOL,
-      OSVERSIONINFOEXW.ptr
-    );
-    let winVer = OSVERSIONINFOEXW();
-    winVer.dwOSVersionInfoSize = OSVERSIONINFOEXW.size;
-
-    if (0 === GetVersionEx(winVer.address())) {
-      throw new Error("Failure in GetVersionEx (returned 0)");
-    }
-
-    return {
-      servicePackMajor: winVer.wServicePackMajor,
-      servicePackMinor: winVer.wServicePackMinor,
-      buildNumber: winVer.dwBuildNumber,
-    };
-  } catch (e) {
-    return UNKNOWN_VERSION_INFO;
-  } finally {
-    kernel32.close();
-  }
 }
 
 /**
@@ -1967,7 +1899,7 @@ EnvironmentCache.prototype = {
       const WINDOWS_UBR_KEY_PATH =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
-      let versionInfo = getWindowsVersionInfo();
+      let versionInfo = WindowsVersionInfo.get({ throwOnError: false });
       this._osData.servicePackMajor = versionInfo.servicePackMajor;
       this._osData.servicePackMinor = versionInfo.servicePackMinor;
       this._osData.windowsBuildNumber = versionInfo.buildNumber;
