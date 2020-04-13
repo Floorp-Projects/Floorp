@@ -28,14 +28,9 @@ replace-with = "vendored-sources"
 rev = "60952724c192a54f8d46c0f481f4bd8967c9bb6a"
 
 [source."https://github.com/kvark/spirv_cross"]
-branch = "wgpu"
+branch = "wgpu2"
 git = "https://github.com/kvark/spirv_cross"
 replace-with = "vendored-sources"
-
-[source."https://github.com/kvark/peek-poke"]
-git = "https://github.com/kvark/peek-poke"
-replace-with = "vendored-sources"
-rev = "969bd7fe2be1a83f87916dc8b388c63cfd457075"
 
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"

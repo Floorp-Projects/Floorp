@@ -86,7 +86,7 @@ ffi::WGPURawPass BeginRenderPass(RawId aEncoderId,
     cd.store_op = ConvertStoreOp(ca.mStoreOp);
 
     if (ca.mResolveTarget.WasPassed()) {
-      cd.resolve_target = &ca.mResolveTarget.Value().mId;
+      cd.resolve_target = ca.mResolveTarget.Value().mId;
     }
     if (ca.mLoadValue.IsGPULoadOp()) {
       cd.load_op = ConvertLoadOp(ca.mLoadValue.GetAsGPULoadOp());

@@ -1,5 +1,15 @@
 //! Project changelog
 
+/// Release 0.5.2 (2019-07-07)
+///
+/// * Added API to convert OS-specific `Library` and `Symbol` conversion to underlying resources.
+pub mod r0_5_2 {}
+
+/// Release 0.5.1 (2019-06-01)
+///
+/// * Build on Haiku targets.
+pub mod r0_5_1 {}
+
 /// Release 0.5.0 (2018-01-11)
 ///
 /// * Update to `winapi = ^0.3`;
@@ -7,7 +17,7 @@
 /// ## Breaking changes
 ///
 /// * libloading now requires a C compiler to build on UNIX;
-///   * This is a temporary measure until the [`linkage`] attribute is stablised;
+///   * This is a temporary measure until the [`linkage`] attribute is stabilised;
 ///   * Necessary to resolve [#32].
 ///
 /// [`linkage`]: https://github.com/rust-lang/rust/issues/29603
@@ -79,7 +89,7 @@ pub mod r0_3_1 {}
 /// The last two additions focus on not restricting potential usecases of this library, allowing
 /// users of the library to circumvent safety checks if need be.
 ///
-/// ## Beaking Changes
+/// ## Breaking Changes
 ///
 /// `Library::new` defaults to `RTLD_NOW` instead of `RTLD_LAZY` on UNIX for more consistent
 /// cross-platform behaviour. If a library loaded with `Library::new` had any linking errors, but

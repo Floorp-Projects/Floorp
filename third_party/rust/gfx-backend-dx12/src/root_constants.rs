@@ -6,9 +6,7 @@
 //! ranges. The disjunct ranges can be then converted into root signature entries.
 
 use hal::pso;
-use std::borrow::Borrow;
-use std::cmp::Ordering;
-use std::ops::Range;
+use std::{borrow::Borrow, cmp::Ordering, ops::Range};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct RootConstant {

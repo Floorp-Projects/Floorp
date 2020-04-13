@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{EntryV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
-use version::{EntryV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct DebugReport {
@@ -27,7 +27,7 @@ impl DebugReport {
         vk::ExtDebugReportFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkDestroyDebugReportCallbackEXT.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDebugReportCallbackEXT.html>"]
     pub unsafe fn destroy_debug_report_callback(
         &self,
         debug: vk::DebugReportCallbackEXT,
@@ -40,13 +40,13 @@ impl DebugReport {
         );
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCreateDebugReportCallbackEXT.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDebugReportCallbackEXT.html>"]
     pub unsafe fn create_debug_report_callback(
         &self,
         create_info: &vk::DebugReportCallbackCreateInfoEXT,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DebugReportCallbackEXT> {
-        let mut debug_cb = mem::uninitialized();
+        let mut debug_cb = mem::zeroed();
         let err_code = self.debug_report_fn.create_debug_report_callback_ext(
             self.handle,
             create_info,
@@ -57,5 +57,13 @@ impl DebugReport {
             vk::Result::SUCCESS => Ok(debug_cb),
             _ => Err(err_code),
         }
+    }
+
+    pub fn fp(&self) -> &vk::ExtDebugReportFn {
+        &self.debug_report_fn
+    }
+
+    pub fn instance(&self) -> vk::Instance {
+        self.handle
     }
 }

@@ -16,10 +16,7 @@ use winapi::{
 
 use wio::com::ComPtr;
 
-use std::ffi::OsString;
-use std::mem;
-use std::os::windows::ffi::OsStringExt;
-use std::ptr;
+use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt, ptr};
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum DxgiVersion {

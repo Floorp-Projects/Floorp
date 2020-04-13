@@ -1,36 +1,40 @@
-use hal::format::Format;
-use hal::image::{Anisotropic, Filter, WrapMode};
-use hal::pso::{
-    BlendDesc,
-    BlendOp,
-    ColorBlendDesc,
-    Comparison,
-    DepthBias,
-    DepthStencilDesc,
-    Face,
-    Factor,
-    FrontFace,
-    InputAssemblerDesc,
-    PolygonMode,
-    Rasterizer,
-    Rect,
-    Sided,
-    Stage,
-    State,
-    StencilFace,
-    StencilOp,
-    StencilValue,
-    Viewport,
+use hal::{
+    format::Format,
+    image::{Filter, WrapMode},
+    pso::{
+        BlendDesc,
+        BlendOp,
+        ColorBlendDesc,
+        Comparison,
+        DepthBias,
+        DepthStencilDesc,
+        Face,
+        Factor,
+        FrontFace,
+        InputAssemblerDesc,
+        PolygonMode,
+        Rasterizer,
+        Rect,
+        Sided,
+        Stage,
+        State,
+        StencilFace,
+        StencilOp,
+        StencilValue,
+        Viewport,
+    },
+    IndexType,
 };
-use hal::IndexType;
 
 use spirv_cross::spirv;
 
-use winapi::shared::dxgiformat::*;
-use winapi::shared::minwindef::{FALSE, INT, TRUE};
-
-use winapi::um::d3d11::*;
-use winapi::um::d3dcommon::*;
+use winapi::{
+    shared::{
+        dxgiformat::*,
+        minwindef::{FALSE, INT, TRUE},
+    },
+    um::{d3d11::*, d3dcommon::*},
+};
 
 use std::mem;
 
@@ -507,7 +511,7 @@ pub fn map_topology(ia: &InputAssemblerDesc) -> D3D11_PRIMITIVE_TOPOLOGY {
 fn map_fill_mode(mode: PolygonMode) -> D3D11_FILL_MODE {
     match mode {
         PolygonMode::Fill => D3D11_FILL_SOLID,
-        PolygonMode::Line(_) => D3D11_FILL_WIREFRAME,
+        PolygonMode::Line => D3D11_FILL_WIREFRAME,
         // TODO: return error
         _ => unimplemented!(),
     }
@@ -528,6 +532,9 @@ pub(crate) fn map_rasterizer_desc(desc: &Rasterizer) -> D3D11_RASTERIZER_DESC {
         Some(State::Static(db)) => db,
         Some(_) | None => DepthBias::default(),
     };
+    if let State::Static(w) = desc.line_width {
+        super::validate_line_width(w);
+    }
     D3D11_RASTERIZER_DESC {
         FillMode: map_fill_mode(desc.polygon_mode),
         CullMode: map_cull_mode(desc.cull_face),
@@ -787,13 +794,7 @@ pub fn map_wrapping(wrap: WrapMode) -> D3D11_TEXTURE_ADDRESS_MODE {
         WrapMode::Mirror => D3D11_TEXTURE_ADDRESS_MIRROR,
         WrapMode::Clamp => D3D11_TEXTURE_ADDRESS_CLAMP,
         WrapMode::Border => D3D11_TEXTURE_ADDRESS_BORDER,
-    }
-}
-
-pub fn map_anisotropic(anisotropic: Anisotropic) -> D3D11_FILTER {
-    match anisotropic {
-        Anisotropic::On(_) => D3D11_FILTER_ANISOTROPIC,
-        Anisotropic::Off => 0,
+        WrapMode::MirrorClamp => D3D11_TEXTURE_ADDRESS_MIRROR_ONCE,
     }
 }
 
@@ -810,7 +811,7 @@ pub fn map_filter(
     min_filter: Filter,
     mip_filter: Filter,
     reduction: D3D11_FILTER_REDUCTION_TYPE,
-    anisotropic: Anisotropic,
+    anisotropy_clamp: Option<u8>,
 ) -> D3D11_FILTER {
     let mag = map_filter_type(mag_filter);
     let min = map_filter_type(min_filter);
@@ -820,5 +821,7 @@ pub fn map_filter(
         | (mag & D3D11_FILTER_TYPE_MASK) << D3D11_MAG_FILTER_SHIFT
         | (mip & D3D11_FILTER_TYPE_MASK) << D3D11_MIP_FILTER_SHIFT
         | (reduction & D3D11_FILTER_REDUCTION_TYPE_MASK) << D3D11_FILTER_REDUCTION_TYPE_SHIFT
-        | map_anisotropic(anisotropic)
+        | anisotropy_clamp
+            .map(|_| D3D11_FILTER_ANISOTROPIC)
+            .unwrap_or(0)
 }

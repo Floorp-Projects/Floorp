@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{EntryV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
-use version::{EntryV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct Win32Surface {
@@ -27,13 +27,13 @@ impl Win32Surface {
         vk::KhrWin32SurfaceFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCreateWin32SurfaceKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateWin32SurfaceKHR.html>"]
     pub unsafe fn create_win32_surface(
         &self,
         create_info: &vk::Win32SurfaceCreateInfoKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
-        let mut surface = mem::uninitialized();
+        let mut surface = mem::zeroed();
         let err_code = self.win32_surface_fn.create_win32_surface_khr(
             self.handle,
             create_info,
@@ -44,5 +44,29 @@ impl Win32Surface {
             vk::Result::SUCCESS => Ok(surface),
             _ => Err(err_code),
         }
+    }
+
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceWin32PresentationSupportKHR.html"]
+    pub unsafe fn get_physical_device_win32_presentation_support(
+        &self,
+        physical_device: vk::PhysicalDevice,
+        queue_family_index: u32,
+    ) -> bool {
+        let b = self
+            .win32_surface_fn
+            .get_physical_device_win32_presentation_support_khr(
+                physical_device,
+                queue_family_index,
+            );
+
+        b > 0
+    }
+
+    pub fn fp(&self) -> &vk::KhrWin32SurfaceFn {
+        &self.win32_surface_fn
+    }
+
+    pub fn instance(&self) -> vk::Instance {
+        self.handle
     }
 }

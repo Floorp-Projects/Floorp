@@ -29,7 +29,9 @@ impl std::fmt::Display for CreationError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CreationError::OutOfMemory(err) => write!(fmt, "Failed to create query: {}", err),
-            CreationError::Unsupported(ty) => write!(fmt, "Failed to create query: Unsupported type: {:?}", ty),
+            CreationError::Unsupported(ty) => {
+                write!(fmt, "Failed to create query: Unsupported type: {:?}", ty)
+            }
         }
     }
 }

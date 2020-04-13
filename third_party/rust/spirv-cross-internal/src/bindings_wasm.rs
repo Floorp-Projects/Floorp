@@ -8,17 +8,14 @@ pub mod root {
         #[allow(unused_imports)]
         use self::super::super::root;
         pub type Id = ::std::os::raw::c_uint;
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum SourceLanguage {
-            SourceLanguageUnknown = 0,
-            SourceLanguageESSL = 1,
-            SourceLanguageGLSL = 2,
-            SourceLanguageOpenCL_C = 3,
-            SourceLanguageOpenCL_CPP = 4,
-            SourceLanguageHLSL = 5,
-            SourceLanguageMax = 2147483647,
-        }
+        pub const SourceLanguage_SourceLanguageUnknown: root::spv::SourceLanguage = 0;
+        pub const SourceLanguage_SourceLanguageESSL: root::spv::SourceLanguage = 1;
+        pub const SourceLanguage_SourceLanguageGLSL: root::spv::SourceLanguage = 2;
+        pub const SourceLanguage_SourceLanguageOpenCL_C: root::spv::SourceLanguage = 3;
+        pub const SourceLanguage_SourceLanguageOpenCL_CPP: root::spv::SourceLanguage = 4;
+        pub const SourceLanguage_SourceLanguageHLSL: root::spv::SourceLanguage = 5;
+        pub const SourceLanguage_SourceLanguageMax: root::spv::SourceLanguage = 2147483647;
+        pub type SourceLanguage = u32;
         #[repr(u32)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum ExecutionModel {
@@ -39,287 +36,351 @@ pub mod root {
             ExecutionModelCallableNV = 5318,
             ExecutionModelMax = 2147483647,
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum AddressingModel {
-            AddressingModelLogical = 0,
-            AddressingModelPhysical32 = 1,
-            AddressingModelPhysical64 = 2,
-            AddressingModelPhysicalStorageBuffer64EXT = 5348,
-            AddressingModelMax = 2147483647,
+        pub const AddressingModel_AddressingModelLogical: root::spv::AddressingModel = 0;
+        pub const AddressingModel_AddressingModelPhysical32: root::spv::AddressingModel = 1;
+        pub const AddressingModel_AddressingModelPhysical64: root::spv::AddressingModel = 2;
+        pub const AddressingModel_AddressingModelPhysicalStorageBuffer64:
+            root::spv::AddressingModel = 5348;
+        pub const AddressingModel_AddressingModelPhysicalStorageBuffer64EXT:
+            root::spv::AddressingModel = 5348;
+        pub const AddressingModel_AddressingModelMax: root::spv::AddressingModel = 2147483647;
+        pub type AddressingModel = u32;
+        pub const MemoryModel_MemoryModelSimple: root::spv::MemoryModel = 0;
+        pub const MemoryModel_MemoryModelGLSL450: root::spv::MemoryModel = 1;
+        pub const MemoryModel_MemoryModelOpenCL: root::spv::MemoryModel = 2;
+        pub const MemoryModel_MemoryModelVulkan: root::spv::MemoryModel = 3;
+        pub const MemoryModel_MemoryModelVulkanKHR: root::spv::MemoryModel = 3;
+        pub const MemoryModel_MemoryModelMax: root::spv::MemoryModel = 2147483647;
+        pub type MemoryModel = u32;
+        pub const ExecutionMode_ExecutionModeInvocations: root::spv::ExecutionMode = 0;
+        pub const ExecutionMode_ExecutionModeSpacingEqual: root::spv::ExecutionMode = 1;
+        pub const ExecutionMode_ExecutionModeSpacingFractionalEven: root::spv::ExecutionMode = 2;
+        pub const ExecutionMode_ExecutionModeSpacingFractionalOdd: root::spv::ExecutionMode = 3;
+        pub const ExecutionMode_ExecutionModeVertexOrderCw: root::spv::ExecutionMode = 4;
+        pub const ExecutionMode_ExecutionModeVertexOrderCcw: root::spv::ExecutionMode = 5;
+        pub const ExecutionMode_ExecutionModePixelCenterInteger: root::spv::ExecutionMode = 6;
+        pub const ExecutionMode_ExecutionModeOriginUpperLeft: root::spv::ExecutionMode = 7;
+        pub const ExecutionMode_ExecutionModeOriginLowerLeft: root::spv::ExecutionMode = 8;
+        pub const ExecutionMode_ExecutionModeEarlyFragmentTests: root::spv::ExecutionMode = 9;
+        pub const ExecutionMode_ExecutionModePointMode: root::spv::ExecutionMode = 10;
+        pub const ExecutionMode_ExecutionModeXfb: root::spv::ExecutionMode = 11;
+        pub const ExecutionMode_ExecutionModeDepthReplacing: root::spv::ExecutionMode = 12;
+        pub const ExecutionMode_ExecutionModeDepthGreater: root::spv::ExecutionMode = 14;
+        pub const ExecutionMode_ExecutionModeDepthLess: root::spv::ExecutionMode = 15;
+        pub const ExecutionMode_ExecutionModeDepthUnchanged: root::spv::ExecutionMode = 16;
+        pub const ExecutionMode_ExecutionModeLocalSize: root::spv::ExecutionMode = 17;
+        pub const ExecutionMode_ExecutionModeLocalSizeHint: root::spv::ExecutionMode = 18;
+        pub const ExecutionMode_ExecutionModeInputPoints: root::spv::ExecutionMode = 19;
+        pub const ExecutionMode_ExecutionModeInputLines: root::spv::ExecutionMode = 20;
+        pub const ExecutionMode_ExecutionModeInputLinesAdjacency: root::spv::ExecutionMode = 21;
+        pub const ExecutionMode_ExecutionModeTriangles: root::spv::ExecutionMode = 22;
+        pub const ExecutionMode_ExecutionModeInputTrianglesAdjacency: root::spv::ExecutionMode = 23;
+        pub const ExecutionMode_ExecutionModeQuads: root::spv::ExecutionMode = 24;
+        pub const ExecutionMode_ExecutionModeIsolines: root::spv::ExecutionMode = 25;
+        pub const ExecutionMode_ExecutionModeOutputVertices: root::spv::ExecutionMode = 26;
+        pub const ExecutionMode_ExecutionModeOutputPoints: root::spv::ExecutionMode = 27;
+        pub const ExecutionMode_ExecutionModeOutputLineStrip: root::spv::ExecutionMode = 28;
+        pub const ExecutionMode_ExecutionModeOutputTriangleStrip: root::spv::ExecutionMode = 29;
+        pub const ExecutionMode_ExecutionModeVecTypeHint: root::spv::ExecutionMode = 30;
+        pub const ExecutionMode_ExecutionModeContractionOff: root::spv::ExecutionMode = 31;
+        pub const ExecutionMode_ExecutionModeInitializer: root::spv::ExecutionMode = 33;
+        pub const ExecutionMode_ExecutionModeFinalizer: root::spv::ExecutionMode = 34;
+        pub const ExecutionMode_ExecutionModeSubgroupSize: root::spv::ExecutionMode = 35;
+        pub const ExecutionMode_ExecutionModeSubgroupsPerWorkgroup: root::spv::ExecutionMode = 36;
+        pub const ExecutionMode_ExecutionModeSubgroupsPerWorkgroupId: root::spv::ExecutionMode = 37;
+        pub const ExecutionMode_ExecutionModeLocalSizeId: root::spv::ExecutionMode = 38;
+        pub const ExecutionMode_ExecutionModeLocalSizeHintId: root::spv::ExecutionMode = 39;
+        pub const ExecutionMode_ExecutionModePostDepthCoverage: root::spv::ExecutionMode = 4446;
+        pub const ExecutionMode_ExecutionModeDenormPreserve: root::spv::ExecutionMode = 4459;
+        pub const ExecutionMode_ExecutionModeDenormFlushToZero: root::spv::ExecutionMode = 4460;
+        pub const ExecutionMode_ExecutionModeSignedZeroInfNanPreserve: root::spv::ExecutionMode =
+            4461;
+        pub const ExecutionMode_ExecutionModeRoundingModeRTE: root::spv::ExecutionMode = 4462;
+        pub const ExecutionMode_ExecutionModeRoundingModeRTZ: root::spv::ExecutionMode = 4463;
+        pub const ExecutionMode_ExecutionModeStencilRefReplacingEXT: root::spv::ExecutionMode =
+            5027;
+        pub const ExecutionMode_ExecutionModeOutputLinesNV: root::spv::ExecutionMode = 5269;
+        pub const ExecutionMode_ExecutionModeOutputPrimitivesNV: root::spv::ExecutionMode = 5270;
+        pub const ExecutionMode_ExecutionModeDerivativeGroupQuadsNV: root::spv::ExecutionMode =
+            5289;
+        pub const ExecutionMode_ExecutionModeDerivativeGroupLinearNV: root::spv::ExecutionMode =
+            5290;
+        pub const ExecutionMode_ExecutionModeOutputTrianglesNV: root::spv::ExecutionMode = 5298;
+        pub const ExecutionMode_ExecutionModePixelInterlockOrderedEXT: root::spv::ExecutionMode =
+            5366;
+        pub const ExecutionMode_ExecutionModePixelInterlockUnorderedEXT: root::spv::ExecutionMode =
+            5367;
+        pub const ExecutionMode_ExecutionModeSampleInterlockOrderedEXT: root::spv::ExecutionMode =
+            5368;
+        pub const ExecutionMode_ExecutionModeSampleInterlockUnorderedEXT: root::spv::ExecutionMode =
+            5369;
+        pub const ExecutionMode_ExecutionModeShadingRateInterlockOrderedEXT:
+            root::spv::ExecutionMode = 5370;
+        pub const ExecutionMode_ExecutionModeShadingRateInterlockUnorderedEXT:
+            root::spv::ExecutionMode = 5371;
+        pub const ExecutionMode_ExecutionModeMax: root::spv::ExecutionMode = 2147483647;
+        pub type ExecutionMode = u32;
+        pub const StorageClass_StorageClassUniformConstant: root::spv::StorageClass = 0;
+        pub const StorageClass_StorageClassInput: root::spv::StorageClass = 1;
+        pub const StorageClass_StorageClassUniform: root::spv::StorageClass = 2;
+        pub const StorageClass_StorageClassOutput: root::spv::StorageClass = 3;
+        pub const StorageClass_StorageClassWorkgroup: root::spv::StorageClass = 4;
+        pub const StorageClass_StorageClassCrossWorkgroup: root::spv::StorageClass = 5;
+        pub const StorageClass_StorageClassPrivate: root::spv::StorageClass = 6;
+        pub const StorageClass_StorageClassFunction: root::spv::StorageClass = 7;
+        pub const StorageClass_StorageClassGeneric: root::spv::StorageClass = 8;
+        pub const StorageClass_StorageClassPushConstant: root::spv::StorageClass = 9;
+        pub const StorageClass_StorageClassAtomicCounter: root::spv::StorageClass = 10;
+        pub const StorageClass_StorageClassImage: root::spv::StorageClass = 11;
+        pub const StorageClass_StorageClassStorageBuffer: root::spv::StorageClass = 12;
+        pub const StorageClass_StorageClassCallableDataNV: root::spv::StorageClass = 5328;
+        pub const StorageClass_StorageClassIncomingCallableDataNV: root::spv::StorageClass = 5329;
+        pub const StorageClass_StorageClassRayPayloadNV: root::spv::StorageClass = 5338;
+        pub const StorageClass_StorageClassHitAttributeNV: root::spv::StorageClass = 5339;
+        pub const StorageClass_StorageClassIncomingRayPayloadNV: root::spv::StorageClass = 5342;
+        pub const StorageClass_StorageClassShaderRecordBufferNV: root::spv::StorageClass = 5343;
+        pub const StorageClass_StorageClassPhysicalStorageBuffer: root::spv::StorageClass = 5349;
+        pub const StorageClass_StorageClassPhysicalStorageBufferEXT: root::spv::StorageClass = 5349;
+        pub const StorageClass_StorageClassMax: root::spv::StorageClass = 2147483647;
+        pub type StorageClass = u32;
+        pub const Dim_Dim1D: root::spv::Dim = 0;
+        pub const Dim_Dim2D: root::spv::Dim = 1;
+        pub const Dim_Dim3D: root::spv::Dim = 2;
+        pub const Dim_DimCube: root::spv::Dim = 3;
+        pub const Dim_DimRect: root::spv::Dim = 4;
+        pub const Dim_DimBuffer: root::spv::Dim = 5;
+        pub const Dim_DimSubpassData: root::spv::Dim = 6;
+        pub const Dim_DimMax: root::spv::Dim = 2147483647;
+        pub type Dim = u32;
+        pub const SamplerAddressingMode_SamplerAddressingModeNone:
+            root::spv::SamplerAddressingMode = 0;
+        pub const SamplerAddressingMode_SamplerAddressingModeClampToEdge:
+            root::spv::SamplerAddressingMode = 1;
+        pub const SamplerAddressingMode_SamplerAddressingModeClamp:
+            root::spv::SamplerAddressingMode = 2;
+        pub const SamplerAddressingMode_SamplerAddressingModeRepeat:
+            root::spv::SamplerAddressingMode = 3;
+        pub const SamplerAddressingMode_SamplerAddressingModeRepeatMirrored:
+            root::spv::SamplerAddressingMode = 4;
+        pub const SamplerAddressingMode_SamplerAddressingModeMax: root::spv::SamplerAddressingMode =
+            2147483647;
+        pub type SamplerAddressingMode = u32;
+        pub const SamplerFilterMode_SamplerFilterModeNearest: root::spv::SamplerFilterMode = 0;
+        pub const SamplerFilterMode_SamplerFilterModeLinear: root::spv::SamplerFilterMode = 1;
+        pub const SamplerFilterMode_SamplerFilterModeMax: root::spv::SamplerFilterMode = 2147483647;
+        pub type SamplerFilterMode = u32;
+        pub const ImageFormat_ImageFormatUnknown: root::spv::ImageFormat = 0;
+        pub const ImageFormat_ImageFormatRgba32f: root::spv::ImageFormat = 1;
+        pub const ImageFormat_ImageFormatRgba16f: root::spv::ImageFormat = 2;
+        pub const ImageFormat_ImageFormatR32f: root::spv::ImageFormat = 3;
+        pub const ImageFormat_ImageFormatRgba8: root::spv::ImageFormat = 4;
+        pub const ImageFormat_ImageFormatRgba8Snorm: root::spv::ImageFormat = 5;
+        pub const ImageFormat_ImageFormatRg32f: root::spv::ImageFormat = 6;
+        pub const ImageFormat_ImageFormatRg16f: root::spv::ImageFormat = 7;
+        pub const ImageFormat_ImageFormatR11fG11fB10f: root::spv::ImageFormat = 8;
+        pub const ImageFormat_ImageFormatR16f: root::spv::ImageFormat = 9;
+        pub const ImageFormat_ImageFormatRgba16: root::spv::ImageFormat = 10;
+        pub const ImageFormat_ImageFormatRgb10A2: root::spv::ImageFormat = 11;
+        pub const ImageFormat_ImageFormatRg16: root::spv::ImageFormat = 12;
+        pub const ImageFormat_ImageFormatRg8: root::spv::ImageFormat = 13;
+        pub const ImageFormat_ImageFormatR16: root::spv::ImageFormat = 14;
+        pub const ImageFormat_ImageFormatR8: root::spv::ImageFormat = 15;
+        pub const ImageFormat_ImageFormatRgba16Snorm: root::spv::ImageFormat = 16;
+        pub const ImageFormat_ImageFormatRg16Snorm: root::spv::ImageFormat = 17;
+        pub const ImageFormat_ImageFormatRg8Snorm: root::spv::ImageFormat = 18;
+        pub const ImageFormat_ImageFormatR16Snorm: root::spv::ImageFormat = 19;
+        pub const ImageFormat_ImageFormatR8Snorm: root::spv::ImageFormat = 20;
+        pub const ImageFormat_ImageFormatRgba32i: root::spv::ImageFormat = 21;
+        pub const ImageFormat_ImageFormatRgba16i: root::spv::ImageFormat = 22;
+        pub const ImageFormat_ImageFormatRgba8i: root::spv::ImageFormat = 23;
+        pub const ImageFormat_ImageFormatR32i: root::spv::ImageFormat = 24;
+        pub const ImageFormat_ImageFormatRg32i: root::spv::ImageFormat = 25;
+        pub const ImageFormat_ImageFormatRg16i: root::spv::ImageFormat = 26;
+        pub const ImageFormat_ImageFormatRg8i: root::spv::ImageFormat = 27;
+        pub const ImageFormat_ImageFormatR16i: root::spv::ImageFormat = 28;
+        pub const ImageFormat_ImageFormatR8i: root::spv::ImageFormat = 29;
+        pub const ImageFormat_ImageFormatRgba32ui: root::spv::ImageFormat = 30;
+        pub const ImageFormat_ImageFormatRgba16ui: root::spv::ImageFormat = 31;
+        pub const ImageFormat_ImageFormatRgba8ui: root::spv::ImageFormat = 32;
+        pub const ImageFormat_ImageFormatR32ui: root::spv::ImageFormat = 33;
+        pub const ImageFormat_ImageFormatRgb10a2ui: root::spv::ImageFormat = 34;
+        pub const ImageFormat_ImageFormatRg32ui: root::spv::ImageFormat = 35;
+        pub const ImageFormat_ImageFormatRg16ui: root::spv::ImageFormat = 36;
+        pub const ImageFormat_ImageFormatRg8ui: root::spv::ImageFormat = 37;
+        pub const ImageFormat_ImageFormatR16ui: root::spv::ImageFormat = 38;
+        pub const ImageFormat_ImageFormatR8ui: root::spv::ImageFormat = 39;
+        pub const ImageFormat_ImageFormatMax: root::spv::ImageFormat = 2147483647;
+        pub type ImageFormat = u32;
+        pub const ImageChannelOrder_ImageChannelOrderR: root::spv::ImageChannelOrder = 0;
+        pub const ImageChannelOrder_ImageChannelOrderA: root::spv::ImageChannelOrder = 1;
+        pub const ImageChannelOrder_ImageChannelOrderRG: root::spv::ImageChannelOrder = 2;
+        pub const ImageChannelOrder_ImageChannelOrderRA: root::spv::ImageChannelOrder = 3;
+        pub const ImageChannelOrder_ImageChannelOrderRGB: root::spv::ImageChannelOrder = 4;
+        pub const ImageChannelOrder_ImageChannelOrderRGBA: root::spv::ImageChannelOrder = 5;
+        pub const ImageChannelOrder_ImageChannelOrderBGRA: root::spv::ImageChannelOrder = 6;
+        pub const ImageChannelOrder_ImageChannelOrderARGB: root::spv::ImageChannelOrder = 7;
+        pub const ImageChannelOrder_ImageChannelOrderIntensity: root::spv::ImageChannelOrder = 8;
+        pub const ImageChannelOrder_ImageChannelOrderLuminance: root::spv::ImageChannelOrder = 9;
+        pub const ImageChannelOrder_ImageChannelOrderRx: root::spv::ImageChannelOrder = 10;
+        pub const ImageChannelOrder_ImageChannelOrderRGx: root::spv::ImageChannelOrder = 11;
+        pub const ImageChannelOrder_ImageChannelOrderRGBx: root::spv::ImageChannelOrder = 12;
+        pub const ImageChannelOrder_ImageChannelOrderDepth: root::spv::ImageChannelOrder = 13;
+        pub const ImageChannelOrder_ImageChannelOrderDepthStencil: root::spv::ImageChannelOrder =
+            14;
+        pub const ImageChannelOrder_ImageChannelOrdersRGB: root::spv::ImageChannelOrder = 15;
+        pub const ImageChannelOrder_ImageChannelOrdersRGBx: root::spv::ImageChannelOrder = 16;
+        pub const ImageChannelOrder_ImageChannelOrdersRGBA: root::spv::ImageChannelOrder = 17;
+        pub const ImageChannelOrder_ImageChannelOrdersBGRA: root::spv::ImageChannelOrder = 18;
+        pub const ImageChannelOrder_ImageChannelOrderABGR: root::spv::ImageChannelOrder = 19;
+        pub const ImageChannelOrder_ImageChannelOrderMax: root::spv::ImageChannelOrder = 2147483647;
+        pub type ImageChannelOrder = u32;
+        pub const ImageChannelDataType_ImageChannelDataTypeSnormInt8:
+            root::spv::ImageChannelDataType = 0;
+        pub const ImageChannelDataType_ImageChannelDataTypeSnormInt16:
+            root::spv::ImageChannelDataType = 1;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormInt8:
+            root::spv::ImageChannelDataType = 2;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormInt16:
+            root::spv::ImageChannelDataType = 3;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormShort565:
+            root::spv::ImageChannelDataType = 4;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormShort555:
+            root::spv::ImageChannelDataType = 5;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormInt101010:
+            root::spv::ImageChannelDataType = 6;
+        pub const ImageChannelDataType_ImageChannelDataTypeSignedInt8:
+            root::spv::ImageChannelDataType = 7;
+        pub const ImageChannelDataType_ImageChannelDataTypeSignedInt16:
+            root::spv::ImageChannelDataType = 8;
+        pub const ImageChannelDataType_ImageChannelDataTypeSignedInt32:
+            root::spv::ImageChannelDataType = 9;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnsignedInt8:
+            root::spv::ImageChannelDataType = 10;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnsignedInt16:
+            root::spv::ImageChannelDataType = 11;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnsignedInt32:
+            root::spv::ImageChannelDataType = 12;
+        pub const ImageChannelDataType_ImageChannelDataTypeHalfFloat:
+            root::spv::ImageChannelDataType = 13;
+        pub const ImageChannelDataType_ImageChannelDataTypeFloat: root::spv::ImageChannelDataType =
+            14;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormInt24:
+            root::spv::ImageChannelDataType = 15;
+        pub const ImageChannelDataType_ImageChannelDataTypeUnormInt101010_2:
+            root::spv::ImageChannelDataType = 16;
+        pub const ImageChannelDataType_ImageChannelDataTypeMax: root::spv::ImageChannelDataType =
+            2147483647;
+        pub type ImageChannelDataType = u32;
+        pub const ImageOperandsShift_ImageOperandsBiasShift: root::spv::ImageOperandsShift = 0;
+        pub const ImageOperandsShift_ImageOperandsLodShift: root::spv::ImageOperandsShift = 1;
+        pub const ImageOperandsShift_ImageOperandsGradShift: root::spv::ImageOperandsShift = 2;
+        pub const ImageOperandsShift_ImageOperandsConstOffsetShift: root::spv::ImageOperandsShift =
+            3;
+        pub const ImageOperandsShift_ImageOperandsOffsetShift: root::spv::ImageOperandsShift = 4;
+        pub const ImageOperandsShift_ImageOperandsConstOffsetsShift: root::spv::ImageOperandsShift =
+            5;
+        pub const ImageOperandsShift_ImageOperandsSampleShift: root::spv::ImageOperandsShift = 6;
+        pub const ImageOperandsShift_ImageOperandsMinLodShift: root::spv::ImageOperandsShift = 7;
+        pub const ImageOperandsShift_ImageOperandsMakeTexelAvailableShift:
+            root::spv::ImageOperandsShift = 8;
+        pub const ImageOperandsShift_ImageOperandsMakeTexelAvailableKHRShift:
+            root::spv::ImageOperandsShift = 8;
+        pub const ImageOperandsShift_ImageOperandsMakeTexelVisibleShift:
+            root::spv::ImageOperandsShift = 9;
+        pub const ImageOperandsShift_ImageOperandsMakeTexelVisibleKHRShift:
+            root::spv::ImageOperandsShift = 9;
+        pub const ImageOperandsShift_ImageOperandsNonPrivateTexelShift:
+            root::spv::ImageOperandsShift = 10;
+        pub const ImageOperandsShift_ImageOperandsNonPrivateTexelKHRShift:
+            root::spv::ImageOperandsShift = 10;
+        pub const ImageOperandsShift_ImageOperandsVolatileTexelShift:
+            root::spv::ImageOperandsShift = 11;
+        pub const ImageOperandsShift_ImageOperandsVolatileTexelKHRShift:
+            root::spv::ImageOperandsShift = 11;
+        pub const ImageOperandsShift_ImageOperandsSignExtendShift: root::spv::ImageOperandsShift =
+            12;
+        pub const ImageOperandsShift_ImageOperandsZeroExtendShift: root::spv::ImageOperandsShift =
+            13;
+        pub const ImageOperandsShift_ImageOperandsMax: root::spv::ImageOperandsShift = 2147483647;
+        pub type ImageOperandsShift = u32;
+        impl ImageOperandsMask {
+            pub const ImageOperandsMaskNone: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(0);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum MemoryModel {
-            MemoryModelSimple = 0,
-            MemoryModelGLSL450 = 1,
-            MemoryModelOpenCL = 2,
-            MemoryModelVulkanKHR = 3,
-            MemoryModelMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsBiasMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(1);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum ExecutionMode {
-            ExecutionModeInvocations = 0,
-            ExecutionModeSpacingEqual = 1,
-            ExecutionModeSpacingFractionalEven = 2,
-            ExecutionModeSpacingFractionalOdd = 3,
-            ExecutionModeVertexOrderCw = 4,
-            ExecutionModeVertexOrderCcw = 5,
-            ExecutionModePixelCenterInteger = 6,
-            ExecutionModeOriginUpperLeft = 7,
-            ExecutionModeOriginLowerLeft = 8,
-            ExecutionModeEarlyFragmentTests = 9,
-            ExecutionModePointMode = 10,
-            ExecutionModeXfb = 11,
-            ExecutionModeDepthReplacing = 12,
-            ExecutionModeDepthGreater = 14,
-            ExecutionModeDepthLess = 15,
-            ExecutionModeDepthUnchanged = 16,
-            ExecutionModeLocalSize = 17,
-            ExecutionModeLocalSizeHint = 18,
-            ExecutionModeInputPoints = 19,
-            ExecutionModeInputLines = 20,
-            ExecutionModeInputLinesAdjacency = 21,
-            ExecutionModeTriangles = 22,
-            ExecutionModeInputTrianglesAdjacency = 23,
-            ExecutionModeQuads = 24,
-            ExecutionModeIsolines = 25,
-            ExecutionModeOutputVertices = 26,
-            ExecutionModeOutputPoints = 27,
-            ExecutionModeOutputLineStrip = 28,
-            ExecutionModeOutputTriangleStrip = 29,
-            ExecutionModeVecTypeHint = 30,
-            ExecutionModeContractionOff = 31,
-            ExecutionModeInitializer = 33,
-            ExecutionModeFinalizer = 34,
-            ExecutionModeSubgroupSize = 35,
-            ExecutionModeSubgroupsPerWorkgroup = 36,
-            ExecutionModeSubgroupsPerWorkgroupId = 37,
-            ExecutionModeLocalSizeId = 38,
-            ExecutionModeLocalSizeHintId = 39,
-            ExecutionModePostDepthCoverage = 4446,
-            ExecutionModeDenormPreserve = 4459,
-            ExecutionModeDenormFlushToZero = 4460,
-            ExecutionModeSignedZeroInfNanPreserve = 4461,
-            ExecutionModeRoundingModeRTE = 4462,
-            ExecutionModeRoundingModeRTZ = 4463,
-            ExecutionModeStencilRefReplacingEXT = 5027,
-            ExecutionModeOutputLinesNV = 5269,
-            ExecutionModeOutputPrimitivesNV = 5270,
-            ExecutionModeDerivativeGroupQuadsNV = 5289,
-            ExecutionModeDerivativeGroupLinearNV = 5290,
-            ExecutionModeOutputTrianglesNV = 5298,
-            ExecutionModeMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsLodMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(2);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum StorageClass {
-            StorageClassUniformConstant = 0,
-            StorageClassInput = 1,
-            StorageClassUniform = 2,
-            StorageClassOutput = 3,
-            StorageClassWorkgroup = 4,
-            StorageClassCrossWorkgroup = 5,
-            StorageClassPrivate = 6,
-            StorageClassFunction = 7,
-            StorageClassGeneric = 8,
-            StorageClassPushConstant = 9,
-            StorageClassAtomicCounter = 10,
-            StorageClassImage = 11,
-            StorageClassStorageBuffer = 12,
-            StorageClassCallableDataNV = 5328,
-            StorageClassIncomingCallableDataNV = 5329,
-            StorageClassRayPayloadNV = 5338,
-            StorageClassHitAttributeNV = 5339,
-            StorageClassIncomingRayPayloadNV = 5342,
-            StorageClassShaderRecordBufferNV = 5343,
-            StorageClassPhysicalStorageBufferEXT = 5349,
-            StorageClassMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsGradMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(4);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum Dim {
-            Dim1D = 0,
-            Dim2D = 1,
-            Dim3D = 2,
-            DimCube = 3,
-            DimRect = 4,
-            DimBuffer = 5,
-            DimSubpassData = 6,
-            DimMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsConstOffsetMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(8);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum SamplerAddressingMode {
-            SamplerAddressingModeNone = 0,
-            SamplerAddressingModeClampToEdge = 1,
-            SamplerAddressingModeClamp = 2,
-            SamplerAddressingModeRepeat = 3,
-            SamplerAddressingModeRepeatMirrored = 4,
-            SamplerAddressingModeMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsOffsetMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(16);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum SamplerFilterMode {
-            SamplerFilterModeNearest = 0,
-            SamplerFilterModeLinear = 1,
-            SamplerFilterModeMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsConstOffsetsMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(32);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum ImageFormat {
-            ImageFormatUnknown = 0,
-            ImageFormatRgba32f = 1,
-            ImageFormatRgba16f = 2,
-            ImageFormatR32f = 3,
-            ImageFormatRgba8 = 4,
-            ImageFormatRgba8Snorm = 5,
-            ImageFormatRg32f = 6,
-            ImageFormatRg16f = 7,
-            ImageFormatR11fG11fB10f = 8,
-            ImageFormatR16f = 9,
-            ImageFormatRgba16 = 10,
-            ImageFormatRgb10A2 = 11,
-            ImageFormatRg16 = 12,
-            ImageFormatRg8 = 13,
-            ImageFormatR16 = 14,
-            ImageFormatR8 = 15,
-            ImageFormatRgba16Snorm = 16,
-            ImageFormatRg16Snorm = 17,
-            ImageFormatRg8Snorm = 18,
-            ImageFormatR16Snorm = 19,
-            ImageFormatR8Snorm = 20,
-            ImageFormatRgba32i = 21,
-            ImageFormatRgba16i = 22,
-            ImageFormatRgba8i = 23,
-            ImageFormatR32i = 24,
-            ImageFormatRg32i = 25,
-            ImageFormatRg16i = 26,
-            ImageFormatRg8i = 27,
-            ImageFormatR16i = 28,
-            ImageFormatR8i = 29,
-            ImageFormatRgba32ui = 30,
-            ImageFormatRgba16ui = 31,
-            ImageFormatRgba8ui = 32,
-            ImageFormatR32ui = 33,
-            ImageFormatRgb10a2ui = 34,
-            ImageFormatRg32ui = 35,
-            ImageFormatRg16ui = 36,
-            ImageFormatRg8ui = 37,
-            ImageFormatR16ui = 38,
-            ImageFormatR8ui = 39,
-            ImageFormatMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsSampleMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(64);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum ImageChannelOrder {
-            ImageChannelOrderR = 0,
-            ImageChannelOrderA = 1,
-            ImageChannelOrderRG = 2,
-            ImageChannelOrderRA = 3,
-            ImageChannelOrderRGB = 4,
-            ImageChannelOrderRGBA = 5,
-            ImageChannelOrderBGRA = 6,
-            ImageChannelOrderARGB = 7,
-            ImageChannelOrderIntensity = 8,
-            ImageChannelOrderLuminance = 9,
-            ImageChannelOrderRx = 10,
-            ImageChannelOrderRGx = 11,
-            ImageChannelOrderRGBx = 12,
-            ImageChannelOrderDepth = 13,
-            ImageChannelOrderDepthStencil = 14,
-            ImageChannelOrdersRGB = 15,
-            ImageChannelOrdersRGBx = 16,
-            ImageChannelOrdersRGBA = 17,
-            ImageChannelOrdersBGRA = 18,
-            ImageChannelOrderABGR = 19,
-            ImageChannelOrderMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsMinLodMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(128);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum ImageChannelDataType {
-            ImageChannelDataTypeSnormInt8 = 0,
-            ImageChannelDataTypeSnormInt16 = 1,
-            ImageChannelDataTypeUnormInt8 = 2,
-            ImageChannelDataTypeUnormInt16 = 3,
-            ImageChannelDataTypeUnormShort565 = 4,
-            ImageChannelDataTypeUnormShort555 = 5,
-            ImageChannelDataTypeUnormInt101010 = 6,
-            ImageChannelDataTypeSignedInt8 = 7,
-            ImageChannelDataTypeSignedInt16 = 8,
-            ImageChannelDataTypeSignedInt32 = 9,
-            ImageChannelDataTypeUnsignedInt8 = 10,
-            ImageChannelDataTypeUnsignedInt16 = 11,
-            ImageChannelDataTypeUnsignedInt32 = 12,
-            ImageChannelDataTypeHalfFloat = 13,
-            ImageChannelDataTypeFloat = 14,
-            ImageChannelDataTypeUnormInt24 = 15,
-            ImageChannelDataTypeUnormInt101010_2 = 16,
-            ImageChannelDataTypeMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsMakeTexelAvailableMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(256);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum ImageOperandsShift {
-            ImageOperandsBiasShift = 0,
-            ImageOperandsLodShift = 1,
-            ImageOperandsGradShift = 2,
-            ImageOperandsConstOffsetShift = 3,
-            ImageOperandsOffsetShift = 4,
-            ImageOperandsConstOffsetsShift = 5,
-            ImageOperandsSampleShift = 6,
-            ImageOperandsMinLodShift = 7,
-            ImageOperandsMakeTexelAvailableKHRShift = 8,
-            ImageOperandsMakeTexelVisibleKHRShift = 9,
-            ImageOperandsNonPrivateTexelKHRShift = 10,
-            ImageOperandsVolatileTexelKHRShift = 11,
-            ImageOperandsMax = 2147483647,
+        impl ImageOperandsMask {
+            pub const ImageOperandsMakeTexelAvailableKHRMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(256);
         }
-        pub const ImageOperandsMask_ImageOperandsMaskNone:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(0);
-        pub const ImageOperandsMask_ImageOperandsBiasMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(1);
-        pub const ImageOperandsMask_ImageOperandsLodMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(2);
-        pub const ImageOperandsMask_ImageOperandsGradMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(4);
-        pub const ImageOperandsMask_ImageOperandsConstOffsetMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(8);
-        pub const ImageOperandsMask_ImageOperandsOffsetMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(16);
-        pub const ImageOperandsMask_ImageOperandsConstOffsetsMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(32);
-        pub const ImageOperandsMask_ImageOperandsSampleMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(64);
-        pub const ImageOperandsMask_ImageOperandsMinLodMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(128);
-        pub const ImageOperandsMask_ImageOperandsMakeTexelAvailableKHRMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(256);
-        pub const ImageOperandsMask_ImageOperandsMakeTexelVisibleKHRMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(512);
-        pub const ImageOperandsMask_ImageOperandsNonPrivateTexelKHRMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(1024);
-        pub const ImageOperandsMask_ImageOperandsVolatileTexelKHRMask:
-                  root::spv::ImageOperandsMask =
-            ImageOperandsMask(2048);
-        impl ::std::ops::BitOr<root::spv::ImageOperandsMask> for
-         root::spv::ImageOperandsMask {
-            type
-            Output
-            =
-            Self;
+        impl ImageOperandsMask {
+            pub const ImageOperandsMakeTexelVisibleMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(512);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsMakeTexelVisibleKHRMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(512);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsNonPrivateTexelMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(1024);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsNonPrivateTexelKHRMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(1024);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsVolatileTexelMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(2048);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsVolatileTexelKHRMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(2048);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsSignExtendMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(4096);
+        }
+        impl ImageOperandsMask {
+            pub const ImageOperandsZeroExtendMask: root::spv::ImageOperandsMask =
+                root::spv::ImageOperandsMask(8192);
+        }
+        impl ::std::ops::BitOr<root::spv::ImageOperandsMask> for root::spv::ImageOperandsMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 ImageOperandsMask(self.0 | other.0)
@@ -331,12 +392,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::ImageOperandsMask> for
-         root::spv::ImageOperandsMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::ImageOperandsMask> for root::spv::ImageOperandsMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 ImageOperandsMask(self.0 & other.0)
@@ -348,43 +405,44 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct ImageOperandsMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum FPFastMathModeShift {
-            FPFastMathModeNotNaNShift = 0,
-            FPFastMathModeNotInfShift = 1,
-            FPFastMathModeNSZShift = 2,
-            FPFastMathModeAllowRecipShift = 3,
-            FPFastMathModeFastShift = 4,
-            FPFastMathModeMax = 2147483647,
+        pub struct ImageOperandsMask(pub u32);
+        pub const FPFastMathModeShift_FPFastMathModeNotNaNShift: root::spv::FPFastMathModeShift = 0;
+        pub const FPFastMathModeShift_FPFastMathModeNotInfShift: root::spv::FPFastMathModeShift = 1;
+        pub const FPFastMathModeShift_FPFastMathModeNSZShift: root::spv::FPFastMathModeShift = 2;
+        pub const FPFastMathModeShift_FPFastMathModeAllowRecipShift:
+            root::spv::FPFastMathModeShift = 3;
+        pub const FPFastMathModeShift_FPFastMathModeFastShift: root::spv::FPFastMathModeShift = 4;
+        pub const FPFastMathModeShift_FPFastMathModeMax: root::spv::FPFastMathModeShift =
+            2147483647;
+        pub type FPFastMathModeShift = u32;
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeMaskNone: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(0);
         }
-        pub const FPFastMathModeMask_FPFastMathModeMaskNone:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(0);
-        pub const FPFastMathModeMask_FPFastMathModeNotNaNMask:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(1);
-        pub const FPFastMathModeMask_FPFastMathModeNotInfMask:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(2);
-        pub const FPFastMathModeMask_FPFastMathModeNSZMask:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(4);
-        pub const FPFastMathModeMask_FPFastMathModeAllowRecipMask:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(8);
-        pub const FPFastMathModeMask_FPFastMathModeFastMask:
-                  root::spv::FPFastMathModeMask =
-            FPFastMathModeMask(16);
-        impl ::std::ops::BitOr<root::spv::FPFastMathModeMask> for
-         root::spv::FPFastMathModeMask {
-            type
-            Output
-            =
-            Self;
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeNotNaNMask: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(1);
+        }
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeNotInfMask: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(2);
+        }
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeNSZMask: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(4);
+        }
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeAllowRecipMask: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(8);
+        }
+        impl FPFastMathModeMask {
+            pub const FPFastMathModeFastMask: root::spv::FPFastMathModeMask =
+                root::spv::FPFastMathModeMask(16);
+        }
+        impl ::std::ops::BitOr<root::spv::FPFastMathModeMask> for root::spv::FPFastMathModeMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 FPFastMathModeMask(self.0 | other.0)
@@ -396,12 +454,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::FPFastMathModeMask> for
-         root::spv::FPFastMathModeMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::FPFastMathModeMask> for root::spv::FPFastMathModeMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 FPFastMathModeMask(self.0 & other.0)
@@ -413,45 +467,62 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct FPFastMathModeMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum FPRoundingMode {
-            FPRoundingModeRTE = 0,
-            FPRoundingModeRTZ = 1,
-            FPRoundingModeRTP = 2,
-            FPRoundingModeRTN = 3,
-            FPRoundingModeMax = 2147483647,
+        pub struct FPFastMathModeMask(pub u32);
+        pub const FPRoundingMode_FPRoundingModeRTE: root::spv::FPRoundingMode = 0;
+        pub const FPRoundingMode_FPRoundingModeRTZ: root::spv::FPRoundingMode = 1;
+        pub const FPRoundingMode_FPRoundingModeRTP: root::spv::FPRoundingMode = 2;
+        pub const FPRoundingMode_FPRoundingModeRTN: root::spv::FPRoundingMode = 3;
+        pub const FPRoundingMode_FPRoundingModeMax: root::spv::FPRoundingMode = 2147483647;
+        pub type FPRoundingMode = u32;
+        pub const LinkageType_LinkageTypeExport: root::spv::LinkageType = 0;
+        pub const LinkageType_LinkageTypeImport: root::spv::LinkageType = 1;
+        pub const LinkageType_LinkageTypeMax: root::spv::LinkageType = 2147483647;
+        pub type LinkageType = u32;
+        pub const AccessQualifier_AccessQualifierReadOnly: root::spv::AccessQualifier = 0;
+        pub const AccessQualifier_AccessQualifierWriteOnly: root::spv::AccessQualifier = 1;
+        pub const AccessQualifier_AccessQualifierReadWrite: root::spv::AccessQualifier = 2;
+        pub const AccessQualifier_AccessQualifierMax: root::spv::AccessQualifier = 2147483647;
+        pub type AccessQualifier = u32;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeZext:
+            root::spv::FunctionParameterAttribute = 0;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeSext:
+            root::spv::FunctionParameterAttribute = 1;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeByVal:
+            root::spv::FunctionParameterAttribute = 2;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeSret:
+            root::spv::FunctionParameterAttribute = 3;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeNoAlias:
+            root::spv::FunctionParameterAttribute = 4;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeNoCapture:
+            root::spv::FunctionParameterAttribute = 5;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeNoWrite:
+            root::spv::FunctionParameterAttribute = 6;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeNoReadWrite:
+            root::spv::FunctionParameterAttribute = 7;
+        pub const FunctionParameterAttribute_FunctionParameterAttributeMax:
+            root::spv::FunctionParameterAttribute = 2147483647;
+        pub type FunctionParameterAttribute = u32;
+        impl root::spv::Decoration {
+            pub const DecorationNonUniformEXT: root::spv::Decoration =
+                Decoration::DecorationNonUniform;
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum LinkageType {
-            LinkageTypeExport = 0,
-            LinkageTypeImport = 1,
-            LinkageTypeMax = 2147483647,
+        impl root::spv::Decoration {
+            pub const DecorationRestrictPointerEXT: root::spv::Decoration =
+                Decoration::DecorationRestrictPointer;
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum AccessQualifier {
-            AccessQualifierReadOnly = 0,
-            AccessQualifierWriteOnly = 1,
-            AccessQualifierReadWrite = 2,
-            AccessQualifierMax = 2147483647,
+        impl root::spv::Decoration {
+            pub const DecorationAliasedPointerEXT: root::spv::Decoration =
+                Decoration::DecorationAliasedPointer;
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum FunctionParameterAttribute {
-            FunctionParameterAttributeZext = 0,
-            FunctionParameterAttributeSext = 1,
-            FunctionParameterAttributeByVal = 2,
-            FunctionParameterAttributeSret = 3,
-            FunctionParameterAttributeNoAlias = 4,
-            FunctionParameterAttributeNoCapture = 5,
-            FunctionParameterAttributeNoWrite = 6,
-            FunctionParameterAttributeNoReadWrite = 7,
-            FunctionParameterAttributeMax = 2147483647,
+        impl root::spv::Decoration {
+            pub const DecorationHlslCounterBufferGOOGLE: root::spv::Decoration =
+                Decoration::DecorationCounterBuffer;
+        }
+        impl root::spv::Decoration {
+            pub const DecorationUserSemantic: root::spv::Decoration =
+                Decoration::DecorationHlslSemanticGOOGLE;
         }
         #[repr(u32)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -482,6 +553,7 @@ pub mod root {
             DecorationNonWritable = 24,
             DecorationNonReadable = 25,
             DecorationUniform = 26,
+            DecorationUniformId = 27,
             DecorationSaturatedConversion = 28,
             DecorationStream = 29,
             DecorationLocation = 30,
@@ -513,27 +585,36 @@ pub mod root {
             DecorationPerViewNV = 5272,
             DecorationPerTaskNV = 5273,
             DecorationPerVertexNV = 5285,
-            DecorationNonUniformEXT = 5300,
-            DecorationRestrictPointerEXT = 5355,
-            DecorationAliasedPointerEXT = 5356,
-            DecorationHlslCounterBufferGOOGLE = 5634,
+            DecorationNonUniform = 5300,
+            DecorationRestrictPointer = 5355,
+            DecorationAliasedPointer = 5356,
+            DecorationCounterBuffer = 5634,
             DecorationHlslSemanticGOOGLE = 5635,
+            DecorationUserTypeGOOGLE = 5636,
             DecorationMax = 2147483647,
         }
-        pub const BuiltIn_BuiltInSubgroupEqMaskKHR: root::spv::BuiltIn =
-            BuiltIn::BuiltInSubgroupEqMask;
-        pub const BuiltIn_BuiltInSubgroupGeMaskKHR: root::spv::BuiltIn =
-            BuiltIn::BuiltInSubgroupGeMask;
-        pub const BuiltIn_BuiltInSubgroupGtMaskKHR: root::spv::BuiltIn =
-            BuiltIn::BuiltInSubgroupGtMask;
-        pub const BuiltIn_BuiltInSubgroupLeMaskKHR: root::spv::BuiltIn =
-            BuiltIn::BuiltInSubgroupLeMask;
-        pub const BuiltIn_BuiltInSubgroupLtMaskKHR: root::spv::BuiltIn =
-            BuiltIn::BuiltInSubgroupLtMask;
-        pub const BuiltIn_BuiltInFragmentSizeNV: root::spv::BuiltIn =
-            BuiltIn::BuiltInFragSizeEXT;
-        pub const BuiltIn_BuiltInInvocationsPerPixelNV: root::spv::BuiltIn =
-            BuiltIn::BuiltInFragInvocationCountEXT;
+        impl root::spv::BuiltIn {
+            pub const BuiltInSubgroupEqMaskKHR: root::spv::BuiltIn = BuiltIn::BuiltInSubgroupEqMask;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInSubgroupGeMaskKHR: root::spv::BuiltIn = BuiltIn::BuiltInSubgroupGeMask;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInSubgroupGtMaskKHR: root::spv::BuiltIn = BuiltIn::BuiltInSubgroupGtMask;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInSubgroupLeMaskKHR: root::spv::BuiltIn = BuiltIn::BuiltInSubgroupLeMask;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInSubgroupLtMaskKHR: root::spv::BuiltIn = BuiltIn::BuiltInSubgroupLtMask;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInFragmentSizeNV: root::spv::BuiltIn = BuiltIn::BuiltInFragSizeEXT;
+        }
+        impl root::spv::BuiltIn {
+            pub const BuiltInInvocationsPerPixelNV: root::spv::BuiltIn =
+                BuiltIn::BuiltInFragInvocationCountEXT;
+        }
         #[repr(u32)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum BuiltIn {
@@ -628,30 +709,33 @@ pub mod root {
             BuiltInHitTNV = 5332,
             BuiltInHitKindNV = 5333,
             BuiltInIncomingRayFlagsNV = 5351,
+            BuiltInWarpsPerSMNV = 5374,
+            BuiltInSMCountNV = 5375,
+            BuiltInWarpIDNV = 5376,
+            BuiltInSMIDNV = 5377,
             BuiltInMax = 2147483647,
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum SelectionControlShift {
-            SelectionControlFlattenShift = 0,
-            SelectionControlDontFlattenShift = 1,
-            SelectionControlMax = 2147483647,
+        pub const SelectionControlShift_SelectionControlFlattenShift:
+            root::spv::SelectionControlShift = 0;
+        pub const SelectionControlShift_SelectionControlDontFlattenShift:
+            root::spv::SelectionControlShift = 1;
+        pub const SelectionControlShift_SelectionControlMax: root::spv::SelectionControlShift =
+            2147483647;
+        pub type SelectionControlShift = u32;
+        impl SelectionControlMask {
+            pub const SelectionControlMaskNone: root::spv::SelectionControlMask =
+                root::spv::SelectionControlMask(0);
         }
-        pub const SelectionControlMask_SelectionControlMaskNone:
-                  root::spv::SelectionControlMask =
-            SelectionControlMask(0);
-        pub const SelectionControlMask_SelectionControlFlattenMask:
-                  root::spv::SelectionControlMask =
-            SelectionControlMask(1);
-        pub const SelectionControlMask_SelectionControlDontFlattenMask:
-                  root::spv::SelectionControlMask =
-            SelectionControlMask(2);
-        impl ::std::ops::BitOr<root::spv::SelectionControlMask> for
-         root::spv::SelectionControlMask {
-            type
-            Output
-            =
-            Self;
+        impl SelectionControlMask {
+            pub const SelectionControlFlattenMask: root::spv::SelectionControlMask =
+                root::spv::SelectionControlMask(1);
+        }
+        impl SelectionControlMask {
+            pub const SelectionControlDontFlattenMask: root::spv::SelectionControlMask =
+                root::spv::SelectionControlMask(2);
+        }
+        impl ::std::ops::BitOr<root::spv::SelectionControlMask> for root::spv::SelectionControlMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 SelectionControlMask(self.0 | other.0)
@@ -663,12 +747,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::SelectionControlMask> for
-         root::spv::SelectionControlMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::SelectionControlMask> for root::spv::SelectionControlMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 SelectionControlMask(self.0 & other.0)
@@ -676,44 +756,69 @@ pub mod root {
         }
         impl ::std::ops::BitAndAssign for root::spv::SelectionControlMask {
             #[inline]
-            fn bitand_assign(&mut self,
-                             rhs: root::spv::SelectionControlMask) {
+            fn bitand_assign(&mut self, rhs: root::spv::SelectionControlMask) {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct SelectionControlMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum LoopControlShift {
-            LoopControlUnrollShift = 0,
-            LoopControlDontUnrollShift = 1,
-            LoopControlDependencyInfiniteShift = 2,
-            LoopControlDependencyLengthShift = 3,
-            LoopControlMax = 2147483647,
+        pub struct SelectionControlMask(pub u32);
+        pub const LoopControlShift_LoopControlUnrollShift: root::spv::LoopControlShift = 0;
+        pub const LoopControlShift_LoopControlDontUnrollShift: root::spv::LoopControlShift = 1;
+        pub const LoopControlShift_LoopControlDependencyInfiniteShift: root::spv::LoopControlShift =
+            2;
+        pub const LoopControlShift_LoopControlDependencyLengthShift: root::spv::LoopControlShift =
+            3;
+        pub const LoopControlShift_LoopControlMinIterationsShift: root::spv::LoopControlShift = 4;
+        pub const LoopControlShift_LoopControlMaxIterationsShift: root::spv::LoopControlShift = 5;
+        pub const LoopControlShift_LoopControlIterationMultipleShift: root::spv::LoopControlShift =
+            6;
+        pub const LoopControlShift_LoopControlPeelCountShift: root::spv::LoopControlShift = 7;
+        pub const LoopControlShift_LoopControlPartialCountShift: root::spv::LoopControlShift = 8;
+        pub const LoopControlShift_LoopControlMax: root::spv::LoopControlShift = 2147483647;
+        pub type LoopControlShift = u32;
+        impl LoopControlMask {
+            pub const LoopControlMaskNone: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(0);
         }
-        pub const LoopControlMask_LoopControlMaskNone:
-                  root::spv::LoopControlMask =
-            LoopControlMask(0);
-        pub const LoopControlMask_LoopControlUnrollMask:
-                  root::spv::LoopControlMask =
-            LoopControlMask(1);
-        pub const LoopControlMask_LoopControlDontUnrollMask:
-                  root::spv::LoopControlMask =
-            LoopControlMask(2);
-        pub const LoopControlMask_LoopControlDependencyInfiniteMask:
-                  root::spv::LoopControlMask =
-            LoopControlMask(4);
-        pub const LoopControlMask_LoopControlDependencyLengthMask:
-                  root::spv::LoopControlMask =
-            LoopControlMask(8);
-        impl ::std::ops::BitOr<root::spv::LoopControlMask> for
-         root::spv::LoopControlMask {
-            type
-            Output
-            =
-            Self;
+        impl LoopControlMask {
+            pub const LoopControlUnrollMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(1);
+        }
+        impl LoopControlMask {
+            pub const LoopControlDontUnrollMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(2);
+        }
+        impl LoopControlMask {
+            pub const LoopControlDependencyInfiniteMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(4);
+        }
+        impl LoopControlMask {
+            pub const LoopControlDependencyLengthMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(8);
+        }
+        impl LoopControlMask {
+            pub const LoopControlMinIterationsMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(16);
+        }
+        impl LoopControlMask {
+            pub const LoopControlMaxIterationsMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(32);
+        }
+        impl LoopControlMask {
+            pub const LoopControlIterationMultipleMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(64);
+        }
+        impl LoopControlMask {
+            pub const LoopControlPeelCountMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(128);
+        }
+        impl LoopControlMask {
+            pub const LoopControlPartialCountMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(256);
+        }
+        impl ::std::ops::BitOr<root::spv::LoopControlMask> for root::spv::LoopControlMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 LoopControlMask(self.0 | other.0)
@@ -725,12 +830,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::LoopControlMask> for
-         root::spv::LoopControlMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::LoopControlMask> for root::spv::LoopControlMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 LoopControlMask(self.0 & other.0)
@@ -742,39 +843,42 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct LoopControlMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum FunctionControlShift {
-            FunctionControlInlineShift = 0,
-            FunctionControlDontInlineShift = 1,
-            FunctionControlPureShift = 2,
-            FunctionControlConstShift = 3,
-            FunctionControlMax = 2147483647,
+        pub struct LoopControlMask(pub u32);
+        pub const FunctionControlShift_FunctionControlInlineShift: root::spv::FunctionControlShift =
+            0;
+        pub const FunctionControlShift_FunctionControlDontInlineShift:
+            root::spv::FunctionControlShift = 1;
+        pub const FunctionControlShift_FunctionControlPureShift: root::spv::FunctionControlShift =
+            2;
+        pub const FunctionControlShift_FunctionControlConstShift: root::spv::FunctionControlShift =
+            3;
+        pub const FunctionControlShift_FunctionControlMax: root::spv::FunctionControlShift =
+            2147483647;
+        pub type FunctionControlShift = u32;
+        impl FunctionControlMask {
+            pub const FunctionControlMaskNone: root::spv::FunctionControlMask =
+                root::spv::FunctionControlMask(0);
         }
-        pub const FunctionControlMask_FunctionControlMaskNone:
-                  root::spv::FunctionControlMask =
-            FunctionControlMask(0);
-        pub const FunctionControlMask_FunctionControlInlineMask:
-                  root::spv::FunctionControlMask =
-            FunctionControlMask(1);
-        pub const FunctionControlMask_FunctionControlDontInlineMask:
-                  root::spv::FunctionControlMask =
-            FunctionControlMask(2);
-        pub const FunctionControlMask_FunctionControlPureMask:
-                  root::spv::FunctionControlMask =
-            FunctionControlMask(4);
-        pub const FunctionControlMask_FunctionControlConstMask:
-                  root::spv::FunctionControlMask =
-            FunctionControlMask(8);
-        impl ::std::ops::BitOr<root::spv::FunctionControlMask> for
-         root::spv::FunctionControlMask {
-            type
-            Output
-            =
-            Self;
+        impl FunctionControlMask {
+            pub const FunctionControlInlineMask: root::spv::FunctionControlMask =
+                root::spv::FunctionControlMask(1);
+        }
+        impl FunctionControlMask {
+            pub const FunctionControlDontInlineMask: root::spv::FunctionControlMask =
+                root::spv::FunctionControlMask(2);
+        }
+        impl FunctionControlMask {
+            pub const FunctionControlPureMask: root::spv::FunctionControlMask =
+                root::spv::FunctionControlMask(4);
+        }
+        impl FunctionControlMask {
+            pub const FunctionControlConstMask: root::spv::FunctionControlMask =
+                root::spv::FunctionControlMask(8);
+        }
+        impl ::std::ops::BitOr<root::spv::FunctionControlMask> for root::spv::FunctionControlMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 FunctionControlMask(self.0 | other.0)
@@ -786,12 +890,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::FunctionControlMask> for
-         root::spv::FunctionControlMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::FunctionControlMask> for root::spv::FunctionControlMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 FunctionControlMask(self.0 & other.0)
@@ -803,75 +903,120 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct FunctionControlMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum MemorySemanticsShift {
-            MemorySemanticsAcquireShift = 1,
-            MemorySemanticsReleaseShift = 2,
-            MemorySemanticsAcquireReleaseShift = 3,
-            MemorySemanticsSequentiallyConsistentShift = 4,
-            MemorySemanticsUniformMemoryShift = 6,
-            MemorySemanticsSubgroupMemoryShift = 7,
-            MemorySemanticsWorkgroupMemoryShift = 8,
-            MemorySemanticsCrossWorkgroupMemoryShift = 9,
-            MemorySemanticsAtomicCounterMemoryShift = 10,
-            MemorySemanticsImageMemoryShift = 11,
-            MemorySemanticsOutputMemoryKHRShift = 12,
-            MemorySemanticsMakeAvailableKHRShift = 13,
-            MemorySemanticsMakeVisibleKHRShift = 14,
-            MemorySemanticsMax = 2147483647,
+        pub struct FunctionControlMask(pub u32);
+        pub const MemorySemanticsShift_MemorySemanticsAcquireShift:
+            root::spv::MemorySemanticsShift = 1;
+        pub const MemorySemanticsShift_MemorySemanticsReleaseShift:
+            root::spv::MemorySemanticsShift = 2;
+        pub const MemorySemanticsShift_MemorySemanticsAcquireReleaseShift:
+            root::spv::MemorySemanticsShift = 3;
+        pub const MemorySemanticsShift_MemorySemanticsSequentiallyConsistentShift:
+            root::spv::MemorySemanticsShift = 4;
+        pub const MemorySemanticsShift_MemorySemanticsUniformMemoryShift:
+            root::spv::MemorySemanticsShift = 6;
+        pub const MemorySemanticsShift_MemorySemanticsSubgroupMemoryShift:
+            root::spv::MemorySemanticsShift = 7;
+        pub const MemorySemanticsShift_MemorySemanticsWorkgroupMemoryShift:
+            root::spv::MemorySemanticsShift = 8;
+        pub const MemorySemanticsShift_MemorySemanticsCrossWorkgroupMemoryShift:
+            root::spv::MemorySemanticsShift = 9;
+        pub const MemorySemanticsShift_MemorySemanticsAtomicCounterMemoryShift:
+            root::spv::MemorySemanticsShift = 10;
+        pub const MemorySemanticsShift_MemorySemanticsImageMemoryShift:
+            root::spv::MemorySemanticsShift = 11;
+        pub const MemorySemanticsShift_MemorySemanticsOutputMemoryShift:
+            root::spv::MemorySemanticsShift = 12;
+        pub const MemorySemanticsShift_MemorySemanticsOutputMemoryKHRShift:
+            root::spv::MemorySemanticsShift = 12;
+        pub const MemorySemanticsShift_MemorySemanticsMakeAvailableShift:
+            root::spv::MemorySemanticsShift = 13;
+        pub const MemorySemanticsShift_MemorySemanticsMakeAvailableKHRShift:
+            root::spv::MemorySemanticsShift = 13;
+        pub const MemorySemanticsShift_MemorySemanticsMakeVisibleShift:
+            root::spv::MemorySemanticsShift = 14;
+        pub const MemorySemanticsShift_MemorySemanticsMakeVisibleKHRShift:
+            root::spv::MemorySemanticsShift = 14;
+        pub const MemorySemanticsShift_MemorySemanticsVolatileShift:
+            root::spv::MemorySemanticsShift = 15;
+        pub const MemorySemanticsShift_MemorySemanticsMax: root::spv::MemorySemanticsShift =
+            2147483647;
+        pub type MemorySemanticsShift = u32;
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsMaskNone: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(0);
         }
-        pub const MemorySemanticsMask_MemorySemanticsMaskNone:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(0);
-        pub const MemorySemanticsMask_MemorySemanticsAcquireMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(2);
-        pub const MemorySemanticsMask_MemorySemanticsReleaseMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(4);
-        pub const MemorySemanticsMask_MemorySemanticsAcquireReleaseMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(8);
-        pub const MemorySemanticsMask_MemorySemanticsSequentiallyConsistentMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(16);
-        pub const MemorySemanticsMask_MemorySemanticsUniformMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(64);
-        pub const MemorySemanticsMask_MemorySemanticsSubgroupMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(128);
-        pub const MemorySemanticsMask_MemorySemanticsWorkgroupMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(256);
-        pub const MemorySemanticsMask_MemorySemanticsCrossWorkgroupMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(512);
-        pub const MemorySemanticsMask_MemorySemanticsAtomicCounterMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(1024);
-        pub const MemorySemanticsMask_MemorySemanticsImageMemoryMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(2048);
-        pub const MemorySemanticsMask_MemorySemanticsOutputMemoryKHRMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(4096);
-        pub const MemorySemanticsMask_MemorySemanticsMakeAvailableKHRMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(8192);
-        pub const MemorySemanticsMask_MemorySemanticsMakeVisibleKHRMask:
-                  root::spv::MemorySemanticsMask =
-            MemorySemanticsMask(16384);
-        impl ::std::ops::BitOr<root::spv::MemorySemanticsMask> for
-         root::spv::MemorySemanticsMask {
-            type
-            Output
-            =
-            Self;
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsAcquireMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(2);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsReleaseMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(4);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsAcquireReleaseMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(8);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsSequentiallyConsistentMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(16);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsUniformMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(64);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsSubgroupMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(128);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsWorkgroupMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(256);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsCrossWorkgroupMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(512);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsAtomicCounterMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(1024);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsImageMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(2048);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsOutputMemoryMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(4096);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsOutputMemoryKHRMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(4096);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsMakeAvailableMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(8192);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsMakeAvailableKHRMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(8192);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsMakeVisibleMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(16384);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsMakeVisibleKHRMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(16384);
+        }
+        impl MemorySemanticsMask {
+            pub const MemorySemanticsVolatileMask: root::spv::MemorySemanticsMask =
+                root::spv::MemorySemanticsMask(32768);
+        }
+        impl ::std::ops::BitOr<root::spv::MemorySemanticsMask> for root::spv::MemorySemanticsMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 MemorySemanticsMask(self.0 | other.0)
@@ -883,12 +1028,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::MemorySemanticsMask> for
-         root::spv::MemorySemanticsMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::MemorySemanticsMask> for root::spv::MemorySemanticsMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 MemorySemanticsMask(self.0 & other.0)
@@ -900,47 +1041,68 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct MemorySemanticsMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum MemoryAccessShift {
-            MemoryAccessVolatileShift = 0,
-            MemoryAccessAlignedShift = 1,
-            MemoryAccessNontemporalShift = 2,
-            MemoryAccessMakePointerAvailableKHRShift = 3,
-            MemoryAccessMakePointerVisibleKHRShift = 4,
-            MemoryAccessNonPrivatePointerKHRShift = 5,
-            MemoryAccessMax = 2147483647,
+        pub struct MemorySemanticsMask(pub u32);
+        pub const MemoryAccessShift_MemoryAccessVolatileShift: root::spv::MemoryAccessShift = 0;
+        pub const MemoryAccessShift_MemoryAccessAlignedShift: root::spv::MemoryAccessShift = 1;
+        pub const MemoryAccessShift_MemoryAccessNontemporalShift: root::spv::MemoryAccessShift = 2;
+        pub const MemoryAccessShift_MemoryAccessMakePointerAvailableShift:
+            root::spv::MemoryAccessShift = 3;
+        pub const MemoryAccessShift_MemoryAccessMakePointerAvailableKHRShift:
+            root::spv::MemoryAccessShift = 3;
+        pub const MemoryAccessShift_MemoryAccessMakePointerVisibleShift:
+            root::spv::MemoryAccessShift = 4;
+        pub const MemoryAccessShift_MemoryAccessMakePointerVisibleKHRShift:
+            root::spv::MemoryAccessShift = 4;
+        pub const MemoryAccessShift_MemoryAccessNonPrivatePointerShift:
+            root::spv::MemoryAccessShift = 5;
+        pub const MemoryAccessShift_MemoryAccessNonPrivatePointerKHRShift:
+            root::spv::MemoryAccessShift = 5;
+        pub const MemoryAccessShift_MemoryAccessMax: root::spv::MemoryAccessShift = 2147483647;
+        pub type MemoryAccessShift = u32;
+        impl MemoryAccessMask {
+            pub const MemoryAccessMaskNone: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(0);
         }
-        pub const MemoryAccessMask_MemoryAccessMaskNone:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(0);
-        pub const MemoryAccessMask_MemoryAccessVolatileMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(1);
-        pub const MemoryAccessMask_MemoryAccessAlignedMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(2);
-        pub const MemoryAccessMask_MemoryAccessNontemporalMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(4);
-        pub const MemoryAccessMask_MemoryAccessMakePointerAvailableKHRMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(8);
-        pub const MemoryAccessMask_MemoryAccessMakePointerVisibleKHRMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(16);
-        pub const MemoryAccessMask_MemoryAccessNonPrivatePointerKHRMask:
-                  root::spv::MemoryAccessMask =
-            MemoryAccessMask(32);
-        impl ::std::ops::BitOr<root::spv::MemoryAccessMask> for
-         root::spv::MemoryAccessMask {
-            type
-            Output
-            =
-            Self;
+        impl MemoryAccessMask {
+            pub const MemoryAccessVolatileMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(1);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessAlignedMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(2);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessNontemporalMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(4);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessMakePointerAvailableMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(8);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessMakePointerAvailableKHRMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(8);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessMakePointerVisibleMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(16);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessMakePointerVisibleKHRMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(16);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessNonPrivatePointerMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(32);
+        }
+        impl MemoryAccessMask {
+            pub const MemoryAccessNonPrivatePointerKHRMask: root::spv::MemoryAccessMask =
+                root::spv::MemoryAccessMask(32);
+        }
+        impl ::std::ops::BitOr<root::spv::MemoryAccessMask> for root::spv::MemoryAccessMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 MemoryAccessMask(self.0 | other.0)
@@ -952,12 +1114,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::MemoryAccessMask> for
-         root::spv::MemoryAccessMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::MemoryAccessMask> for root::spv::MemoryAccessMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 MemoryAccessMask(self.0 & other.0)
@@ -969,50 +1127,47 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct MemoryAccessMask(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum Scope {
-            ScopeCrossDevice = 0,
-            ScopeDevice = 1,
-            ScopeWorkgroup = 2,
-            ScopeSubgroup = 3,
-            ScopeInvocation = 4,
-            ScopeQueueFamilyKHR = 5,
-            ScopeMax = 2147483647,
+        pub struct MemoryAccessMask(pub u32);
+        pub const Scope_ScopeCrossDevice: root::spv::Scope = 0;
+        pub const Scope_ScopeDevice: root::spv::Scope = 1;
+        pub const Scope_ScopeWorkgroup: root::spv::Scope = 2;
+        pub const Scope_ScopeSubgroup: root::spv::Scope = 3;
+        pub const Scope_ScopeInvocation: root::spv::Scope = 4;
+        pub const Scope_ScopeQueueFamily: root::spv::Scope = 5;
+        pub const Scope_ScopeQueueFamilyKHR: root::spv::Scope = 5;
+        pub const Scope_ScopeMax: root::spv::Scope = 2147483647;
+        pub type Scope = u32;
+        pub const GroupOperation_GroupOperationReduce: root::spv::GroupOperation = 0;
+        pub const GroupOperation_GroupOperationInclusiveScan: root::spv::GroupOperation = 1;
+        pub const GroupOperation_GroupOperationExclusiveScan: root::spv::GroupOperation = 2;
+        pub const GroupOperation_GroupOperationClusteredReduce: root::spv::GroupOperation = 3;
+        pub const GroupOperation_GroupOperationPartitionedReduceNV: root::spv::GroupOperation = 6;
+        pub const GroupOperation_GroupOperationPartitionedInclusiveScanNV:
+            root::spv::GroupOperation = 7;
+        pub const GroupOperation_GroupOperationPartitionedExclusiveScanNV:
+            root::spv::GroupOperation = 8;
+        pub const GroupOperation_GroupOperationMax: root::spv::GroupOperation = 2147483647;
+        pub type GroupOperation = u32;
+        impl KernelEnqueueFlags {
+            pub const KernelEnqueueFlagsNoWait: root::spv::KernelEnqueueFlags =
+                root::spv::KernelEnqueueFlags(0);
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum GroupOperation {
-            GroupOperationReduce = 0,
-            GroupOperationInclusiveScan = 1,
-            GroupOperationExclusiveScan = 2,
-            GroupOperationClusteredReduce = 3,
-            GroupOperationPartitionedReduceNV = 6,
-            GroupOperationPartitionedInclusiveScanNV = 7,
-            GroupOperationPartitionedExclusiveScanNV = 8,
-            GroupOperationMax = 2147483647,
+        impl KernelEnqueueFlags {
+            pub const KernelEnqueueFlagsWaitKernel: root::spv::KernelEnqueueFlags =
+                root::spv::KernelEnqueueFlags(1);
         }
-        pub const KernelEnqueueFlags_KernelEnqueueFlagsNoWait:
-                  root::spv::KernelEnqueueFlags =
-            KernelEnqueueFlags(0);
-        pub const KernelEnqueueFlags_KernelEnqueueFlagsWaitKernel:
-                  root::spv::KernelEnqueueFlags =
-            KernelEnqueueFlags(1);
-        pub const KernelEnqueueFlags_KernelEnqueueFlagsWaitWorkGroup:
-                  root::spv::KernelEnqueueFlags =
-            KernelEnqueueFlags(2);
-        pub const KernelEnqueueFlags_KernelEnqueueFlagsMax:
-                  root::spv::KernelEnqueueFlags =
-            KernelEnqueueFlags(2147483647);
-        impl ::std::ops::BitOr<root::spv::KernelEnqueueFlags> for
-         root::spv::KernelEnqueueFlags {
-            type
-            Output
-            =
-            Self;
+        impl KernelEnqueueFlags {
+            pub const KernelEnqueueFlagsWaitWorkGroup: root::spv::KernelEnqueueFlags =
+                root::spv::KernelEnqueueFlags(2);
+        }
+        impl KernelEnqueueFlags {
+            pub const KernelEnqueueFlagsMax: root::spv::KernelEnqueueFlags =
+                root::spv::KernelEnqueueFlags(2147483647);
+        }
+        impl ::std::ops::BitOr<root::spv::KernelEnqueueFlags> for root::spv::KernelEnqueueFlags {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 KernelEnqueueFlags(self.0 | other.0)
@@ -1024,12 +1179,8 @@ pub mod root {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::KernelEnqueueFlags> for
-         root::spv::KernelEnqueueFlags {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::KernelEnqueueFlags> for root::spv::KernelEnqueueFlags {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 KernelEnqueueFlags(self.0 & other.0)
@@ -1041,27 +1192,24 @@ pub mod root {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct KernelEnqueueFlags(pub ::std::os::raw::c_uint);
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum KernelProfilingInfoShift {
-            KernelProfilingInfoCmdExecTimeShift = 0,
-            KernelProfilingInfoMax = 2147483647,
+        pub struct KernelEnqueueFlags(pub u32);
+        pub const KernelProfilingInfoShift_KernelProfilingInfoCmdExecTimeShift:
+            root::spv::KernelProfilingInfoShift = 0;
+        pub const KernelProfilingInfoShift_KernelProfilingInfoMax:
+            root::spv::KernelProfilingInfoShift = 2147483647;
+        pub type KernelProfilingInfoShift = u32;
+        impl KernelProfilingInfoMask {
+            pub const KernelProfilingInfoMaskNone: root::spv::KernelProfilingInfoMask =
+                root::spv::KernelProfilingInfoMask(0);
         }
-        pub const KernelProfilingInfoMask_KernelProfilingInfoMaskNone:
-                  root::spv::KernelProfilingInfoMask =
-            KernelProfilingInfoMask(0);
-        pub const KernelProfilingInfoMask_KernelProfilingInfoCmdExecTimeMask:
-                  root::spv::KernelProfilingInfoMask =
-            KernelProfilingInfoMask(1);
-        impl ::std::ops::BitOr<root::spv::KernelProfilingInfoMask> for
-         root::spv::KernelProfilingInfoMask {
-            type
-            Output
-            =
-            Self;
+        impl KernelProfilingInfoMask {
+            pub const KernelProfilingInfoCmdExecTimeMask: root::spv::KernelProfilingInfoMask =
+                root::spv::KernelProfilingInfoMask(1);
+        }
+        impl ::std::ops::BitOr<root::spv::KernelProfilingInfoMask> for root::spv::KernelProfilingInfoMask {
+            type Output = Self;
             #[inline]
             fn bitor(self, other: Self) -> Self {
                 KernelProfilingInfoMask(self.0 | other.0)
@@ -1069,17 +1217,12 @@ pub mod root {
         }
         impl ::std::ops::BitOrAssign for root::spv::KernelProfilingInfoMask {
             #[inline]
-            fn bitor_assign(&mut self,
-                            rhs: root::spv::KernelProfilingInfoMask) {
+            fn bitor_assign(&mut self, rhs: root::spv::KernelProfilingInfoMask) {
                 self.0 |= rhs.0;
             }
         }
-        impl ::std::ops::BitAnd<root::spv::KernelProfilingInfoMask> for
-         root::spv::KernelProfilingInfoMask {
-            type
-            Output
-            =
-            Self;
+        impl ::std::ops::BitAnd<root::spv::KernelProfilingInfoMask> for root::spv::KernelProfilingInfoMask {
+            type Output = Self;
             #[inline]
             fn bitand(self, other: Self) -> Self {
                 KernelProfilingInfoMask(self.0 & other.0)
@@ -1087,553 +1230,760 @@ pub mod root {
         }
         impl ::std::ops::BitAndAssign for root::spv::KernelProfilingInfoMask {
             #[inline]
-            fn bitand_assign(&mut self,
-                             rhs: root::spv::KernelProfilingInfoMask) {
+            fn bitand_assign(&mut self, rhs: root::spv::KernelProfilingInfoMask) {
                 self.0 &= rhs.0;
             }
         }
-        #[repr(C)]
+        #[repr(transparent)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub struct KernelProfilingInfoMask(pub ::std::os::raw::c_uint);
-        pub const Capability_CapabilityStorageUniformBufferBlock16:
-                  root::spv::Capability =
-            Capability::CapabilityStorageBuffer16BitAccess;
-        pub const Capability_CapabilityUniformAndStorageBuffer16BitAccess:
-                  root::spv::Capability =
-            Capability::CapabilityStorageUniform16;
-        pub const Capability_CapabilityShaderViewportIndexLayerNV:
-                  root::spv::Capability =
-            Capability::CapabilityShaderViewportIndexLayerEXT;
-        pub const Capability_CapabilityShadingRateNV: root::spv::Capability =
-            Capability::CapabilityFragmentDensityEXT;
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum Capability {
-            CapabilityMatrix = 0,
-            CapabilityShader = 1,
-            CapabilityGeometry = 2,
-            CapabilityTessellation = 3,
-            CapabilityAddresses = 4,
-            CapabilityLinkage = 5,
-            CapabilityKernel = 6,
-            CapabilityVector16 = 7,
-            CapabilityFloat16Buffer = 8,
-            CapabilityFloat16 = 9,
-            CapabilityFloat64 = 10,
-            CapabilityInt64 = 11,
-            CapabilityInt64Atomics = 12,
-            CapabilityImageBasic = 13,
-            CapabilityImageReadWrite = 14,
-            CapabilityImageMipmap = 15,
-            CapabilityPipes = 17,
-            CapabilityGroups = 18,
-            CapabilityDeviceEnqueue = 19,
-            CapabilityLiteralSampler = 20,
-            CapabilityAtomicStorage = 21,
-            CapabilityInt16 = 22,
-            CapabilityTessellationPointSize = 23,
-            CapabilityGeometryPointSize = 24,
-            CapabilityImageGatherExtended = 25,
-            CapabilityStorageImageMultisample = 27,
-            CapabilityUniformBufferArrayDynamicIndexing = 28,
-            CapabilitySampledImageArrayDynamicIndexing = 29,
-            CapabilityStorageBufferArrayDynamicIndexing = 30,
-            CapabilityStorageImageArrayDynamicIndexing = 31,
-            CapabilityClipDistance = 32,
-            CapabilityCullDistance = 33,
-            CapabilityImageCubeArray = 34,
-            CapabilitySampleRateShading = 35,
-            CapabilityImageRect = 36,
-            CapabilitySampledRect = 37,
-            CapabilityGenericPointer = 38,
-            CapabilityInt8 = 39,
-            CapabilityInputAttachment = 40,
-            CapabilitySparseResidency = 41,
-            CapabilityMinLod = 42,
-            CapabilitySampled1D = 43,
-            CapabilityImage1D = 44,
-            CapabilitySampledCubeArray = 45,
-            CapabilitySampledBuffer = 46,
-            CapabilityImageBuffer = 47,
-            CapabilityImageMSArray = 48,
-            CapabilityStorageImageExtendedFormats = 49,
-            CapabilityImageQuery = 50,
-            CapabilityDerivativeControl = 51,
-            CapabilityInterpolationFunction = 52,
-            CapabilityTransformFeedback = 53,
-            CapabilityGeometryStreams = 54,
-            CapabilityStorageImageReadWithoutFormat = 55,
-            CapabilityStorageImageWriteWithoutFormat = 56,
-            CapabilityMultiViewport = 57,
-            CapabilitySubgroupDispatch = 58,
-            CapabilityNamedBarrier = 59,
-            CapabilityPipeStorage = 60,
-            CapabilityGroupNonUniform = 61,
-            CapabilityGroupNonUniformVote = 62,
-            CapabilityGroupNonUniformArithmetic = 63,
-            CapabilityGroupNonUniformBallot = 64,
-            CapabilityGroupNonUniformShuffle = 65,
-            CapabilityGroupNonUniformShuffleRelative = 66,
-            CapabilityGroupNonUniformClustered = 67,
-            CapabilityGroupNonUniformQuad = 68,
-            CapabilitySubgroupBallotKHR = 4423,
-            CapabilityDrawParameters = 4427,
-            CapabilitySubgroupVoteKHR = 4431,
-            CapabilityStorageBuffer16BitAccess = 4433,
-            CapabilityStorageUniform16 = 4434,
-            CapabilityStoragePushConstant16 = 4435,
-            CapabilityStorageInputOutput16 = 4436,
-            CapabilityDeviceGroup = 4437,
-            CapabilityMultiView = 4439,
-            CapabilityVariablePointersStorageBuffer = 4441,
-            CapabilityVariablePointers = 4442,
-            CapabilityAtomicStorageOps = 4445,
-            CapabilitySampleMaskPostDepthCoverage = 4447,
-            CapabilityStorageBuffer8BitAccess = 4448,
-            CapabilityUniformAndStorageBuffer8BitAccess = 4449,
-            CapabilityStoragePushConstant8 = 4450,
-            CapabilityDenormPreserve = 4464,
-            CapabilityDenormFlushToZero = 4465,
-            CapabilitySignedZeroInfNanPreserve = 4466,
-            CapabilityRoundingModeRTE = 4467,
-            CapabilityRoundingModeRTZ = 4468,
-            CapabilityFloat16ImageAMD = 5008,
-            CapabilityImageGatherBiasLodAMD = 5009,
-            CapabilityFragmentMaskAMD = 5010,
-            CapabilityStencilExportEXT = 5013,
-            CapabilityImageReadWriteLodAMD = 5015,
-            CapabilitySampleMaskOverrideCoverageNV = 5249,
-            CapabilityGeometryShaderPassthroughNV = 5251,
-            CapabilityShaderViewportIndexLayerEXT = 5254,
-            CapabilityShaderViewportMaskNV = 5255,
-            CapabilityShaderStereoViewNV = 5259,
-            CapabilityPerViewAttributesNV = 5260,
-            CapabilityFragmentFullyCoveredEXT = 5265,
-            CapabilityMeshShadingNV = 5266,
-            CapabilityImageFootprintNV = 5282,
-            CapabilityFragmentBarycentricNV = 5284,
-            CapabilityComputeDerivativeGroupQuadsNV = 5288,
-            CapabilityFragmentDensityEXT = 5291,
-            CapabilityGroupNonUniformPartitionedNV = 5297,
-            CapabilityShaderNonUniformEXT = 5301,
-            CapabilityRuntimeDescriptorArrayEXT = 5302,
-            CapabilityInputAttachmentArrayDynamicIndexingEXT = 5303,
-            CapabilityUniformTexelBufferArrayDynamicIndexingEXT = 5304,
-            CapabilityStorageTexelBufferArrayDynamicIndexingEXT = 5305,
-            CapabilityUniformBufferArrayNonUniformIndexingEXT = 5306,
-            CapabilitySampledImageArrayNonUniformIndexingEXT = 5307,
-            CapabilityStorageBufferArrayNonUniformIndexingEXT = 5308,
-            CapabilityStorageImageArrayNonUniformIndexingEXT = 5309,
-            CapabilityInputAttachmentArrayNonUniformIndexingEXT = 5310,
-            CapabilityUniformTexelBufferArrayNonUniformIndexingEXT = 5311,
-            CapabilityStorageTexelBufferArrayNonUniformIndexingEXT = 5312,
-            CapabilityRayTracingNV = 5340,
-            CapabilityVulkanMemoryModelKHR = 5345,
-            CapabilityVulkanMemoryModelDeviceScopeKHR = 5346,
-            CapabilityPhysicalStorageBufferAddressesEXT = 5347,
-            CapabilityComputeDerivativeGroupLinearNV = 5350,
-            CapabilitySubgroupShuffleINTEL = 5568,
-            CapabilitySubgroupBufferBlockIOINTEL = 5569,
-            CapabilitySubgroupImageBlockIOINTEL = 5570,
-            CapabilitySubgroupImageMediaBlockIOINTEL = 5579,
-            CapabilityMax = 2147483647,
-        }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum Op {
-            OpNop = 0,
-            OpUndef = 1,
-            OpSourceContinued = 2,
-            OpSource = 3,
-            OpSourceExtension = 4,
-            OpName = 5,
-            OpMemberName = 6,
-            OpString = 7,
-            OpLine = 8,
-            OpExtension = 10,
-            OpExtInstImport = 11,
-            OpExtInst = 12,
-            OpMemoryModel = 14,
-            OpEntryPoint = 15,
-            OpExecutionMode = 16,
-            OpCapability = 17,
-            OpTypeVoid = 19,
-            OpTypeBool = 20,
-            OpTypeInt = 21,
-            OpTypeFloat = 22,
-            OpTypeVector = 23,
-            OpTypeMatrix = 24,
-            OpTypeImage = 25,
-            OpTypeSampler = 26,
-            OpTypeSampledImage = 27,
-            OpTypeArray = 28,
-            OpTypeRuntimeArray = 29,
-            OpTypeStruct = 30,
-            OpTypeOpaque = 31,
-            OpTypePointer = 32,
-            OpTypeFunction = 33,
-            OpTypeEvent = 34,
-            OpTypeDeviceEvent = 35,
-            OpTypeReserveId = 36,
-            OpTypeQueue = 37,
-            OpTypePipe = 38,
-            OpTypeForwardPointer = 39,
-            OpConstantTrue = 41,
-            OpConstantFalse = 42,
-            OpConstant = 43,
-            OpConstantComposite = 44,
-            OpConstantSampler = 45,
-            OpConstantNull = 46,
-            OpSpecConstantTrue = 48,
-            OpSpecConstantFalse = 49,
-            OpSpecConstant = 50,
-            OpSpecConstantComposite = 51,
-            OpSpecConstantOp = 52,
-            OpFunction = 54,
-            OpFunctionParameter = 55,
-            OpFunctionEnd = 56,
-            OpFunctionCall = 57,
-            OpVariable = 59,
-            OpImageTexelPointer = 60,
-            OpLoad = 61,
-            OpStore = 62,
-            OpCopyMemory = 63,
-            OpCopyMemorySized = 64,
-            OpAccessChain = 65,
-            OpInBoundsAccessChain = 66,
-            OpPtrAccessChain = 67,
-            OpArrayLength = 68,
-            OpGenericPtrMemSemantics = 69,
-            OpInBoundsPtrAccessChain = 70,
-            OpDecorate = 71,
-            OpMemberDecorate = 72,
-            OpDecorationGroup = 73,
-            OpGroupDecorate = 74,
-            OpGroupMemberDecorate = 75,
-            OpVectorExtractDynamic = 77,
-            OpVectorInsertDynamic = 78,
-            OpVectorShuffle = 79,
-            OpCompositeConstruct = 80,
-            OpCompositeExtract = 81,
-            OpCompositeInsert = 82,
-            OpCopyObject = 83,
-            OpTranspose = 84,
-            OpSampledImage = 86,
-            OpImageSampleImplicitLod = 87,
-            OpImageSampleExplicitLod = 88,
-            OpImageSampleDrefImplicitLod = 89,
-            OpImageSampleDrefExplicitLod = 90,
-            OpImageSampleProjImplicitLod = 91,
-            OpImageSampleProjExplicitLod = 92,
-            OpImageSampleProjDrefImplicitLod = 93,
-            OpImageSampleProjDrefExplicitLod = 94,
-            OpImageFetch = 95,
-            OpImageGather = 96,
-            OpImageDrefGather = 97,
-            OpImageRead = 98,
-            OpImageWrite = 99,
-            OpImage = 100,
-            OpImageQueryFormat = 101,
-            OpImageQueryOrder = 102,
-            OpImageQuerySizeLod = 103,
-            OpImageQuerySize = 104,
-            OpImageQueryLod = 105,
-            OpImageQueryLevels = 106,
-            OpImageQuerySamples = 107,
-            OpConvertFToU = 109,
-            OpConvertFToS = 110,
-            OpConvertSToF = 111,
-            OpConvertUToF = 112,
-            OpUConvert = 113,
-            OpSConvert = 114,
-            OpFConvert = 115,
-            OpQuantizeToF16 = 116,
-            OpConvertPtrToU = 117,
-            OpSatConvertSToU = 118,
-            OpSatConvertUToS = 119,
-            OpConvertUToPtr = 120,
-            OpPtrCastToGeneric = 121,
-            OpGenericCastToPtr = 122,
-            OpGenericCastToPtrExplicit = 123,
-            OpBitcast = 124,
-            OpSNegate = 126,
-            OpFNegate = 127,
-            OpIAdd = 128,
-            OpFAdd = 129,
-            OpISub = 130,
-            OpFSub = 131,
-            OpIMul = 132,
-            OpFMul = 133,
-            OpUDiv = 134,
-            OpSDiv = 135,
-            OpFDiv = 136,
-            OpUMod = 137,
-            OpSRem = 138,
-            OpSMod = 139,
-            OpFRem = 140,
-            OpFMod = 141,
-            OpVectorTimesScalar = 142,
-            OpMatrixTimesScalar = 143,
-            OpVectorTimesMatrix = 144,
-            OpMatrixTimesVector = 145,
-            OpMatrixTimesMatrix = 146,
-            OpOuterProduct = 147,
-            OpDot = 148,
-            OpIAddCarry = 149,
-            OpISubBorrow = 150,
-            OpUMulExtended = 151,
-            OpSMulExtended = 152,
-            OpAny = 154,
-            OpAll = 155,
-            OpIsNan = 156,
-            OpIsInf = 157,
-            OpIsFinite = 158,
-            OpIsNormal = 159,
-            OpSignBitSet = 160,
-            OpLessOrGreater = 161,
-            OpOrdered = 162,
-            OpUnordered = 163,
-            OpLogicalEqual = 164,
-            OpLogicalNotEqual = 165,
-            OpLogicalOr = 166,
-            OpLogicalAnd = 167,
-            OpLogicalNot = 168,
-            OpSelect = 169,
-            OpIEqual = 170,
-            OpINotEqual = 171,
-            OpUGreaterThan = 172,
-            OpSGreaterThan = 173,
-            OpUGreaterThanEqual = 174,
-            OpSGreaterThanEqual = 175,
-            OpULessThan = 176,
-            OpSLessThan = 177,
-            OpULessThanEqual = 178,
-            OpSLessThanEqual = 179,
-            OpFOrdEqual = 180,
-            OpFUnordEqual = 181,
-            OpFOrdNotEqual = 182,
-            OpFUnordNotEqual = 183,
-            OpFOrdLessThan = 184,
-            OpFUnordLessThan = 185,
-            OpFOrdGreaterThan = 186,
-            OpFUnordGreaterThan = 187,
-            OpFOrdLessThanEqual = 188,
-            OpFUnordLessThanEqual = 189,
-            OpFOrdGreaterThanEqual = 190,
-            OpFUnordGreaterThanEqual = 191,
-            OpShiftRightLogical = 194,
-            OpShiftRightArithmetic = 195,
-            OpShiftLeftLogical = 196,
-            OpBitwiseOr = 197,
-            OpBitwiseXor = 198,
-            OpBitwiseAnd = 199,
-            OpNot = 200,
-            OpBitFieldInsert = 201,
-            OpBitFieldSExtract = 202,
-            OpBitFieldUExtract = 203,
-            OpBitReverse = 204,
-            OpBitCount = 205,
-            OpDPdx = 207,
-            OpDPdy = 208,
-            OpFwidth = 209,
-            OpDPdxFine = 210,
-            OpDPdyFine = 211,
-            OpFwidthFine = 212,
-            OpDPdxCoarse = 213,
-            OpDPdyCoarse = 214,
-            OpFwidthCoarse = 215,
-            OpEmitVertex = 218,
-            OpEndPrimitive = 219,
-            OpEmitStreamVertex = 220,
-            OpEndStreamPrimitive = 221,
-            OpControlBarrier = 224,
-            OpMemoryBarrier = 225,
-            OpAtomicLoad = 227,
-            OpAtomicStore = 228,
-            OpAtomicExchange = 229,
-            OpAtomicCompareExchange = 230,
-            OpAtomicCompareExchangeWeak = 231,
-            OpAtomicIIncrement = 232,
-            OpAtomicIDecrement = 233,
-            OpAtomicIAdd = 234,
-            OpAtomicISub = 235,
-            OpAtomicSMin = 236,
-            OpAtomicUMin = 237,
-            OpAtomicSMax = 238,
-            OpAtomicUMax = 239,
-            OpAtomicAnd = 240,
-            OpAtomicOr = 241,
-            OpAtomicXor = 242,
-            OpPhi = 245,
-            OpLoopMerge = 246,
-            OpSelectionMerge = 247,
-            OpLabel = 248,
-            OpBranch = 249,
-            OpBranchConditional = 250,
-            OpSwitch = 251,
-            OpKill = 252,
-            OpReturn = 253,
-            OpReturnValue = 254,
-            OpUnreachable = 255,
-            OpLifetimeStart = 256,
-            OpLifetimeStop = 257,
-            OpGroupAsyncCopy = 259,
-            OpGroupWaitEvents = 260,
-            OpGroupAll = 261,
-            OpGroupAny = 262,
-            OpGroupBroadcast = 263,
-            OpGroupIAdd = 264,
-            OpGroupFAdd = 265,
-            OpGroupFMin = 266,
-            OpGroupUMin = 267,
-            OpGroupSMin = 268,
-            OpGroupFMax = 269,
-            OpGroupUMax = 270,
-            OpGroupSMax = 271,
-            OpReadPipe = 274,
-            OpWritePipe = 275,
-            OpReservedReadPipe = 276,
-            OpReservedWritePipe = 277,
-            OpReserveReadPipePackets = 278,
-            OpReserveWritePipePackets = 279,
-            OpCommitReadPipe = 280,
-            OpCommitWritePipe = 281,
-            OpIsValidReserveId = 282,
-            OpGetNumPipePackets = 283,
-            OpGetMaxPipePackets = 284,
-            OpGroupReserveReadPipePackets = 285,
-            OpGroupReserveWritePipePackets = 286,
-            OpGroupCommitReadPipe = 287,
-            OpGroupCommitWritePipe = 288,
-            OpEnqueueMarker = 291,
-            OpEnqueueKernel = 292,
-            OpGetKernelNDrangeSubGroupCount = 293,
-            OpGetKernelNDrangeMaxSubGroupSize = 294,
-            OpGetKernelWorkGroupSize = 295,
-            OpGetKernelPreferredWorkGroupSizeMultiple = 296,
-            OpRetainEvent = 297,
-            OpReleaseEvent = 298,
-            OpCreateUserEvent = 299,
-            OpIsValidEvent = 300,
-            OpSetUserEventStatus = 301,
-            OpCaptureEventProfilingInfo = 302,
-            OpGetDefaultQueue = 303,
-            OpBuildNDRange = 304,
-            OpImageSparseSampleImplicitLod = 305,
-            OpImageSparseSampleExplicitLod = 306,
-            OpImageSparseSampleDrefImplicitLod = 307,
-            OpImageSparseSampleDrefExplicitLod = 308,
-            OpImageSparseSampleProjImplicitLod = 309,
-            OpImageSparseSampleProjExplicitLod = 310,
-            OpImageSparseSampleProjDrefImplicitLod = 311,
-            OpImageSparseSampleProjDrefExplicitLod = 312,
-            OpImageSparseFetch = 313,
-            OpImageSparseGather = 314,
-            OpImageSparseDrefGather = 315,
-            OpImageSparseTexelsResident = 316,
-            OpNoLine = 317,
-            OpAtomicFlagTestAndSet = 318,
-            OpAtomicFlagClear = 319,
-            OpImageSparseRead = 320,
-            OpSizeOf = 321,
-            OpTypePipeStorage = 322,
-            OpConstantPipeStorage = 323,
-            OpCreatePipeFromPipeStorage = 324,
-            OpGetKernelLocalSizeForSubgroupCount = 325,
-            OpGetKernelMaxNumSubgroups = 326,
-            OpTypeNamedBarrier = 327,
-            OpNamedBarrierInitialize = 328,
-            OpMemoryNamedBarrier = 329,
-            OpModuleProcessed = 330,
-            OpExecutionModeId = 331,
-            OpDecorateId = 332,
-            OpGroupNonUniformElect = 333,
-            OpGroupNonUniformAll = 334,
-            OpGroupNonUniformAny = 335,
-            OpGroupNonUniformAllEqual = 336,
-            OpGroupNonUniformBroadcast = 337,
-            OpGroupNonUniformBroadcastFirst = 338,
-            OpGroupNonUniformBallot = 339,
-            OpGroupNonUniformInverseBallot = 340,
-            OpGroupNonUniformBallotBitExtract = 341,
-            OpGroupNonUniformBallotBitCount = 342,
-            OpGroupNonUniformBallotFindLSB = 343,
-            OpGroupNonUniformBallotFindMSB = 344,
-            OpGroupNonUniformShuffle = 345,
-            OpGroupNonUniformShuffleXor = 346,
-            OpGroupNonUniformShuffleUp = 347,
-            OpGroupNonUniformShuffleDown = 348,
-            OpGroupNonUniformIAdd = 349,
-            OpGroupNonUniformFAdd = 350,
-            OpGroupNonUniformIMul = 351,
-            OpGroupNonUniformFMul = 352,
-            OpGroupNonUniformSMin = 353,
-            OpGroupNonUniformUMin = 354,
-            OpGroupNonUniformFMin = 355,
-            OpGroupNonUniformSMax = 356,
-            OpGroupNonUniformUMax = 357,
-            OpGroupNonUniformFMax = 358,
-            OpGroupNonUniformBitwiseAnd = 359,
-            OpGroupNonUniformBitwiseOr = 360,
-            OpGroupNonUniformBitwiseXor = 361,
-            OpGroupNonUniformLogicalAnd = 362,
-            OpGroupNonUniformLogicalOr = 363,
-            OpGroupNonUniformLogicalXor = 364,
-            OpGroupNonUniformQuadBroadcast = 365,
-            OpGroupNonUniformQuadSwap = 366,
-            OpSubgroupBallotKHR = 4421,
-            OpSubgroupFirstInvocationKHR = 4422,
-            OpSubgroupAllKHR = 4428,
-            OpSubgroupAnyKHR = 4429,
-            OpSubgroupAllEqualKHR = 4430,
-            OpSubgroupReadInvocationKHR = 4432,
-            OpGroupIAddNonUniformAMD = 5000,
-            OpGroupFAddNonUniformAMD = 5001,
-            OpGroupFMinNonUniformAMD = 5002,
-            OpGroupUMinNonUniformAMD = 5003,
-            OpGroupSMinNonUniformAMD = 5004,
-            OpGroupFMaxNonUniformAMD = 5005,
-            OpGroupUMaxNonUniformAMD = 5006,
-            OpGroupSMaxNonUniformAMD = 5007,
-            OpFragmentMaskFetchAMD = 5011,
-            OpFragmentFetchAMD = 5012,
-            OpImageSampleFootprintNV = 5283,
-            OpGroupNonUniformPartitionNV = 5296,
-            OpWritePackedPrimitiveIndices4x8NV = 5299,
-            OpReportIntersectionNV = 5334,
-            OpIgnoreIntersectionNV = 5335,
-            OpTerminateRayNV = 5336,
-            OpTraceNV = 5337,
-            OpTypeAccelerationStructureNV = 5341,
-            OpExecuteCallableNV = 5344,
-            OpSubgroupShuffleINTEL = 5571,
-            OpSubgroupShuffleDownINTEL = 5572,
-            OpSubgroupShuffleUpINTEL = 5573,
-            OpSubgroupShuffleXorINTEL = 5574,
-            OpSubgroupBlockReadINTEL = 5575,
-            OpSubgroupBlockWriteINTEL = 5576,
-            OpSubgroupImageBlockReadINTEL = 5577,
-            OpSubgroupImageBlockWriteINTEL = 5578,
-            OpSubgroupImageMediaBlockReadINTEL = 5580,
-            OpSubgroupImageMediaBlockWriteINTEL = 5581,
-            OpDecorateStringGOOGLE = 5632,
-            OpMemberDecorateStringGOOGLE = 5633,
-            OpMax = 2147483647,
-        }
+        pub struct KernelProfilingInfoMask(pub u32);
+        pub const Capability_CapabilityMatrix: root::spv::Capability = 0;
+        pub const Capability_CapabilityShader: root::spv::Capability = 1;
+        pub const Capability_CapabilityGeometry: root::spv::Capability = 2;
+        pub const Capability_CapabilityTessellation: root::spv::Capability = 3;
+        pub const Capability_CapabilityAddresses: root::spv::Capability = 4;
+        pub const Capability_CapabilityLinkage: root::spv::Capability = 5;
+        pub const Capability_CapabilityKernel: root::spv::Capability = 6;
+        pub const Capability_CapabilityVector16: root::spv::Capability = 7;
+        pub const Capability_CapabilityFloat16Buffer: root::spv::Capability = 8;
+        pub const Capability_CapabilityFloat16: root::spv::Capability = 9;
+        pub const Capability_CapabilityFloat64: root::spv::Capability = 10;
+        pub const Capability_CapabilityInt64: root::spv::Capability = 11;
+        pub const Capability_CapabilityInt64Atomics: root::spv::Capability = 12;
+        pub const Capability_CapabilityImageBasic: root::spv::Capability = 13;
+        pub const Capability_CapabilityImageReadWrite: root::spv::Capability = 14;
+        pub const Capability_CapabilityImageMipmap: root::spv::Capability = 15;
+        pub const Capability_CapabilityPipes: root::spv::Capability = 17;
+        pub const Capability_CapabilityGroups: root::spv::Capability = 18;
+        pub const Capability_CapabilityDeviceEnqueue: root::spv::Capability = 19;
+        pub const Capability_CapabilityLiteralSampler: root::spv::Capability = 20;
+        pub const Capability_CapabilityAtomicStorage: root::spv::Capability = 21;
+        pub const Capability_CapabilityInt16: root::spv::Capability = 22;
+        pub const Capability_CapabilityTessellationPointSize: root::spv::Capability = 23;
+        pub const Capability_CapabilityGeometryPointSize: root::spv::Capability = 24;
+        pub const Capability_CapabilityImageGatherExtended: root::spv::Capability = 25;
+        pub const Capability_CapabilityStorageImageMultisample: root::spv::Capability = 27;
+        pub const Capability_CapabilityUniformBufferArrayDynamicIndexing: root::spv::Capability =
+            28;
+        pub const Capability_CapabilitySampledImageArrayDynamicIndexing: root::spv::Capability = 29;
+        pub const Capability_CapabilityStorageBufferArrayDynamicIndexing: root::spv::Capability =
+            30;
+        pub const Capability_CapabilityStorageImageArrayDynamicIndexing: root::spv::Capability = 31;
+        pub const Capability_CapabilityClipDistance: root::spv::Capability = 32;
+        pub const Capability_CapabilityCullDistance: root::spv::Capability = 33;
+        pub const Capability_CapabilityImageCubeArray: root::spv::Capability = 34;
+        pub const Capability_CapabilitySampleRateShading: root::spv::Capability = 35;
+        pub const Capability_CapabilityImageRect: root::spv::Capability = 36;
+        pub const Capability_CapabilitySampledRect: root::spv::Capability = 37;
+        pub const Capability_CapabilityGenericPointer: root::spv::Capability = 38;
+        pub const Capability_CapabilityInt8: root::spv::Capability = 39;
+        pub const Capability_CapabilityInputAttachment: root::spv::Capability = 40;
+        pub const Capability_CapabilitySparseResidency: root::spv::Capability = 41;
+        pub const Capability_CapabilityMinLod: root::spv::Capability = 42;
+        pub const Capability_CapabilitySampled1D: root::spv::Capability = 43;
+        pub const Capability_CapabilityImage1D: root::spv::Capability = 44;
+        pub const Capability_CapabilitySampledCubeArray: root::spv::Capability = 45;
+        pub const Capability_CapabilitySampledBuffer: root::spv::Capability = 46;
+        pub const Capability_CapabilityImageBuffer: root::spv::Capability = 47;
+        pub const Capability_CapabilityImageMSArray: root::spv::Capability = 48;
+        pub const Capability_CapabilityStorageImageExtendedFormats: root::spv::Capability = 49;
+        pub const Capability_CapabilityImageQuery: root::spv::Capability = 50;
+        pub const Capability_CapabilityDerivativeControl: root::spv::Capability = 51;
+        pub const Capability_CapabilityInterpolationFunction: root::spv::Capability = 52;
+        pub const Capability_CapabilityTransformFeedback: root::spv::Capability = 53;
+        pub const Capability_CapabilityGeometryStreams: root::spv::Capability = 54;
+        pub const Capability_CapabilityStorageImageReadWithoutFormat: root::spv::Capability = 55;
+        pub const Capability_CapabilityStorageImageWriteWithoutFormat: root::spv::Capability = 56;
+        pub const Capability_CapabilityMultiViewport: root::spv::Capability = 57;
+        pub const Capability_CapabilitySubgroupDispatch: root::spv::Capability = 58;
+        pub const Capability_CapabilityNamedBarrier: root::spv::Capability = 59;
+        pub const Capability_CapabilityPipeStorage: root::spv::Capability = 60;
+        pub const Capability_CapabilityGroupNonUniform: root::spv::Capability = 61;
+        pub const Capability_CapabilityGroupNonUniformVote: root::spv::Capability = 62;
+        pub const Capability_CapabilityGroupNonUniformArithmetic: root::spv::Capability = 63;
+        pub const Capability_CapabilityGroupNonUniformBallot: root::spv::Capability = 64;
+        pub const Capability_CapabilityGroupNonUniformShuffle: root::spv::Capability = 65;
+        pub const Capability_CapabilityGroupNonUniformShuffleRelative: root::spv::Capability = 66;
+        pub const Capability_CapabilityGroupNonUniformClustered: root::spv::Capability = 67;
+        pub const Capability_CapabilityGroupNonUniformQuad: root::spv::Capability = 68;
+        pub const Capability_CapabilityShaderLayer: root::spv::Capability = 69;
+        pub const Capability_CapabilityShaderViewportIndex: root::spv::Capability = 70;
+        pub const Capability_CapabilitySubgroupBallotKHR: root::spv::Capability = 4423;
+        pub const Capability_CapabilityDrawParameters: root::spv::Capability = 4427;
+        pub const Capability_CapabilitySubgroupVoteKHR: root::spv::Capability = 4431;
+        pub const Capability_CapabilityStorageBuffer16BitAccess: root::spv::Capability = 4433;
+        pub const Capability_CapabilityStorageUniformBufferBlock16: root::spv::Capability = 4433;
+        pub const Capability_CapabilityStorageUniform16: root::spv::Capability = 4434;
+        pub const Capability_CapabilityUniformAndStorageBuffer16BitAccess: root::spv::Capability =
+            4434;
+        pub const Capability_CapabilityStoragePushConstant16: root::spv::Capability = 4435;
+        pub const Capability_CapabilityStorageInputOutput16: root::spv::Capability = 4436;
+        pub const Capability_CapabilityDeviceGroup: root::spv::Capability = 4437;
+        pub const Capability_CapabilityMultiView: root::spv::Capability = 4439;
+        pub const Capability_CapabilityVariablePointersStorageBuffer: root::spv::Capability = 4441;
+        pub const Capability_CapabilityVariablePointers: root::spv::Capability = 4442;
+        pub const Capability_CapabilityAtomicStorageOps: root::spv::Capability = 4445;
+        pub const Capability_CapabilitySampleMaskPostDepthCoverage: root::spv::Capability = 4447;
+        pub const Capability_CapabilityStorageBuffer8BitAccess: root::spv::Capability = 4448;
+        pub const Capability_CapabilityUniformAndStorageBuffer8BitAccess: root::spv::Capability =
+            4449;
+        pub const Capability_CapabilityStoragePushConstant8: root::spv::Capability = 4450;
+        pub const Capability_CapabilityDenormPreserve: root::spv::Capability = 4464;
+        pub const Capability_CapabilityDenormFlushToZero: root::spv::Capability = 4465;
+        pub const Capability_CapabilitySignedZeroInfNanPreserve: root::spv::Capability = 4466;
+        pub const Capability_CapabilityRoundingModeRTE: root::spv::Capability = 4467;
+        pub const Capability_CapabilityRoundingModeRTZ: root::spv::Capability = 4468;
+        pub const Capability_CapabilityFloat16ImageAMD: root::spv::Capability = 5008;
+        pub const Capability_CapabilityImageGatherBiasLodAMD: root::spv::Capability = 5009;
+        pub const Capability_CapabilityFragmentMaskAMD: root::spv::Capability = 5010;
+        pub const Capability_CapabilityStencilExportEXT: root::spv::Capability = 5013;
+        pub const Capability_CapabilityImageReadWriteLodAMD: root::spv::Capability = 5015;
+        pub const Capability_CapabilityShaderClockKHR: root::spv::Capability = 5055;
+        pub const Capability_CapabilitySampleMaskOverrideCoverageNV: root::spv::Capability = 5249;
+        pub const Capability_CapabilityGeometryShaderPassthroughNV: root::spv::Capability = 5251;
+        pub const Capability_CapabilityShaderViewportIndexLayerEXT: root::spv::Capability = 5254;
+        pub const Capability_CapabilityShaderViewportIndexLayerNV: root::spv::Capability = 5254;
+        pub const Capability_CapabilityShaderViewportMaskNV: root::spv::Capability = 5255;
+        pub const Capability_CapabilityShaderStereoViewNV: root::spv::Capability = 5259;
+        pub const Capability_CapabilityPerViewAttributesNV: root::spv::Capability = 5260;
+        pub const Capability_CapabilityFragmentFullyCoveredEXT: root::spv::Capability = 5265;
+        pub const Capability_CapabilityMeshShadingNV: root::spv::Capability = 5266;
+        pub const Capability_CapabilityImageFootprintNV: root::spv::Capability = 5282;
+        pub const Capability_CapabilityFragmentBarycentricNV: root::spv::Capability = 5284;
+        pub const Capability_CapabilityComputeDerivativeGroupQuadsNV: root::spv::Capability = 5288;
+        pub const Capability_CapabilityFragmentDensityEXT: root::spv::Capability = 5291;
+        pub const Capability_CapabilityShadingRateNV: root::spv::Capability = 5291;
+        pub const Capability_CapabilityGroupNonUniformPartitionedNV: root::spv::Capability = 5297;
+        pub const Capability_CapabilityShaderNonUniform: root::spv::Capability = 5301;
+        pub const Capability_CapabilityShaderNonUniformEXT: root::spv::Capability = 5301;
+        pub const Capability_CapabilityRuntimeDescriptorArray: root::spv::Capability = 5302;
+        pub const Capability_CapabilityRuntimeDescriptorArrayEXT: root::spv::Capability = 5302;
+        pub const Capability_CapabilityInputAttachmentArrayDynamicIndexing: root::spv::Capability =
+            5303;
+        pub const Capability_CapabilityInputAttachmentArrayDynamicIndexingEXT:
+            root::spv::Capability = 5303;
+        pub const Capability_CapabilityUniformTexelBufferArrayDynamicIndexing:
+            root::spv::Capability = 5304;
+        pub const Capability_CapabilityUniformTexelBufferArrayDynamicIndexingEXT:
+            root::spv::Capability = 5304;
+        pub const Capability_CapabilityStorageTexelBufferArrayDynamicIndexing:
+            root::spv::Capability = 5305;
+        pub const Capability_CapabilityStorageTexelBufferArrayDynamicIndexingEXT:
+            root::spv::Capability = 5305;
+        pub const Capability_CapabilityUniformBufferArrayNonUniformIndexing: root::spv::Capability =
+            5306;
+        pub const Capability_CapabilityUniformBufferArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5306;
+        pub const Capability_CapabilitySampledImageArrayNonUniformIndexing: root::spv::Capability =
+            5307;
+        pub const Capability_CapabilitySampledImageArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5307;
+        pub const Capability_CapabilityStorageBufferArrayNonUniformIndexing: root::spv::Capability =
+            5308;
+        pub const Capability_CapabilityStorageBufferArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5308;
+        pub const Capability_CapabilityStorageImageArrayNonUniformIndexing: root::spv::Capability =
+            5309;
+        pub const Capability_CapabilityStorageImageArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5309;
+        pub const Capability_CapabilityInputAttachmentArrayNonUniformIndexing:
+            root::spv::Capability = 5310;
+        pub const Capability_CapabilityInputAttachmentArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5310;
+        pub const Capability_CapabilityUniformTexelBufferArrayNonUniformIndexing:
+            root::spv::Capability = 5311;
+        pub const Capability_CapabilityUniformTexelBufferArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5311;
+        pub const Capability_CapabilityStorageTexelBufferArrayNonUniformIndexing:
+            root::spv::Capability = 5312;
+        pub const Capability_CapabilityStorageTexelBufferArrayNonUniformIndexingEXT:
+            root::spv::Capability = 5312;
+        pub const Capability_CapabilityRayTracingNV: root::spv::Capability = 5340;
+        pub const Capability_CapabilityVulkanMemoryModel: root::spv::Capability = 5345;
+        pub const Capability_CapabilityVulkanMemoryModelKHR: root::spv::Capability = 5345;
+        pub const Capability_CapabilityVulkanMemoryModelDeviceScope: root::spv::Capability = 5346;
+        pub const Capability_CapabilityVulkanMemoryModelDeviceScopeKHR: root::spv::Capability =
+            5346;
+        pub const Capability_CapabilityPhysicalStorageBufferAddresses: root::spv::Capability = 5347;
+        pub const Capability_CapabilityPhysicalStorageBufferAddressesEXT: root::spv::Capability =
+            5347;
+        pub const Capability_CapabilityComputeDerivativeGroupLinearNV: root::spv::Capability = 5350;
+        pub const Capability_CapabilityCooperativeMatrixNV: root::spv::Capability = 5357;
+        pub const Capability_CapabilityFragmentShaderSampleInterlockEXT: root::spv::Capability =
+            5363;
+        pub const Capability_CapabilityFragmentShaderShadingRateInterlockEXT:
+            root::spv::Capability = 5372;
+        pub const Capability_CapabilityShaderSMBuiltinsNV: root::spv::Capability = 5373;
+        pub const Capability_CapabilityFragmentShaderPixelInterlockEXT: root::spv::Capability =
+            5378;
+        pub const Capability_CapabilityDemoteToHelperInvocationEXT: root::spv::Capability = 5379;
+        pub const Capability_CapabilitySubgroupShuffleINTEL: root::spv::Capability = 5568;
+        pub const Capability_CapabilitySubgroupBufferBlockIOINTEL: root::spv::Capability = 5569;
+        pub const Capability_CapabilitySubgroupImageBlockIOINTEL: root::spv::Capability = 5570;
+        pub const Capability_CapabilitySubgroupImageMediaBlockIOINTEL: root::spv::Capability = 5579;
+        pub const Capability_CapabilityIntegerFunctions2INTEL: root::spv::Capability = 5584;
+        pub const Capability_CapabilitySubgroupAvcMotionEstimationINTEL: root::spv::Capability =
+            5696;
+        pub const Capability_CapabilitySubgroupAvcMotionEstimationIntraINTEL:
+            root::spv::Capability = 5697;
+        pub const Capability_CapabilitySubgroupAvcMotionEstimationChromaINTEL:
+            root::spv::Capability = 5698;
+        pub const Capability_CapabilityMax: root::spv::Capability = 2147483647;
+        pub type Capability = u32;
+        pub const Op_OpNop: root::spv::Op = 0;
+        pub const Op_OpUndef: root::spv::Op = 1;
+        pub const Op_OpSourceContinued: root::spv::Op = 2;
+        pub const Op_OpSource: root::spv::Op = 3;
+        pub const Op_OpSourceExtension: root::spv::Op = 4;
+        pub const Op_OpName: root::spv::Op = 5;
+        pub const Op_OpMemberName: root::spv::Op = 6;
+        pub const Op_OpString: root::spv::Op = 7;
+        pub const Op_OpLine: root::spv::Op = 8;
+        pub const Op_OpExtension: root::spv::Op = 10;
+        pub const Op_OpExtInstImport: root::spv::Op = 11;
+        pub const Op_OpExtInst: root::spv::Op = 12;
+        pub const Op_OpMemoryModel: root::spv::Op = 14;
+        pub const Op_OpEntryPoint: root::spv::Op = 15;
+        pub const Op_OpExecutionMode: root::spv::Op = 16;
+        pub const Op_OpCapability: root::spv::Op = 17;
+        pub const Op_OpTypeVoid: root::spv::Op = 19;
+        pub const Op_OpTypeBool: root::spv::Op = 20;
+        pub const Op_OpTypeInt: root::spv::Op = 21;
+        pub const Op_OpTypeFloat: root::spv::Op = 22;
+        pub const Op_OpTypeVector: root::spv::Op = 23;
+        pub const Op_OpTypeMatrix: root::spv::Op = 24;
+        pub const Op_OpTypeImage: root::spv::Op = 25;
+        pub const Op_OpTypeSampler: root::spv::Op = 26;
+        pub const Op_OpTypeSampledImage: root::spv::Op = 27;
+        pub const Op_OpTypeArray: root::spv::Op = 28;
+        pub const Op_OpTypeRuntimeArray: root::spv::Op = 29;
+        pub const Op_OpTypeStruct: root::spv::Op = 30;
+        pub const Op_OpTypeOpaque: root::spv::Op = 31;
+        pub const Op_OpTypePointer: root::spv::Op = 32;
+        pub const Op_OpTypeFunction: root::spv::Op = 33;
+        pub const Op_OpTypeEvent: root::spv::Op = 34;
+        pub const Op_OpTypeDeviceEvent: root::spv::Op = 35;
+        pub const Op_OpTypeReserveId: root::spv::Op = 36;
+        pub const Op_OpTypeQueue: root::spv::Op = 37;
+        pub const Op_OpTypePipe: root::spv::Op = 38;
+        pub const Op_OpTypeForwardPointer: root::spv::Op = 39;
+        pub const Op_OpConstantTrue: root::spv::Op = 41;
+        pub const Op_OpConstantFalse: root::spv::Op = 42;
+        pub const Op_OpConstant: root::spv::Op = 43;
+        pub const Op_OpConstantComposite: root::spv::Op = 44;
+        pub const Op_OpConstantSampler: root::spv::Op = 45;
+        pub const Op_OpConstantNull: root::spv::Op = 46;
+        pub const Op_OpSpecConstantTrue: root::spv::Op = 48;
+        pub const Op_OpSpecConstantFalse: root::spv::Op = 49;
+        pub const Op_OpSpecConstant: root::spv::Op = 50;
+        pub const Op_OpSpecConstantComposite: root::spv::Op = 51;
+        pub const Op_OpSpecConstantOp: root::spv::Op = 52;
+        pub const Op_OpFunction: root::spv::Op = 54;
+        pub const Op_OpFunctionParameter: root::spv::Op = 55;
+        pub const Op_OpFunctionEnd: root::spv::Op = 56;
+        pub const Op_OpFunctionCall: root::spv::Op = 57;
+        pub const Op_OpVariable: root::spv::Op = 59;
+        pub const Op_OpImageTexelPointer: root::spv::Op = 60;
+        pub const Op_OpLoad: root::spv::Op = 61;
+        pub const Op_OpStore: root::spv::Op = 62;
+        pub const Op_OpCopyMemory: root::spv::Op = 63;
+        pub const Op_OpCopyMemorySized: root::spv::Op = 64;
+        pub const Op_OpAccessChain: root::spv::Op = 65;
+        pub const Op_OpInBoundsAccessChain: root::spv::Op = 66;
+        pub const Op_OpPtrAccessChain: root::spv::Op = 67;
+        pub const Op_OpArrayLength: root::spv::Op = 68;
+        pub const Op_OpGenericPtrMemSemantics: root::spv::Op = 69;
+        pub const Op_OpInBoundsPtrAccessChain: root::spv::Op = 70;
+        pub const Op_OpDecorate: root::spv::Op = 71;
+        pub const Op_OpMemberDecorate: root::spv::Op = 72;
+        pub const Op_OpDecorationGroup: root::spv::Op = 73;
+        pub const Op_OpGroupDecorate: root::spv::Op = 74;
+        pub const Op_OpGroupMemberDecorate: root::spv::Op = 75;
+        pub const Op_OpVectorExtractDynamic: root::spv::Op = 77;
+        pub const Op_OpVectorInsertDynamic: root::spv::Op = 78;
+        pub const Op_OpVectorShuffle: root::spv::Op = 79;
+        pub const Op_OpCompositeConstruct: root::spv::Op = 80;
+        pub const Op_OpCompositeExtract: root::spv::Op = 81;
+        pub const Op_OpCompositeInsert: root::spv::Op = 82;
+        pub const Op_OpCopyObject: root::spv::Op = 83;
+        pub const Op_OpTranspose: root::spv::Op = 84;
+        pub const Op_OpSampledImage: root::spv::Op = 86;
+        pub const Op_OpImageSampleImplicitLod: root::spv::Op = 87;
+        pub const Op_OpImageSampleExplicitLod: root::spv::Op = 88;
+        pub const Op_OpImageSampleDrefImplicitLod: root::spv::Op = 89;
+        pub const Op_OpImageSampleDrefExplicitLod: root::spv::Op = 90;
+        pub const Op_OpImageSampleProjImplicitLod: root::spv::Op = 91;
+        pub const Op_OpImageSampleProjExplicitLod: root::spv::Op = 92;
+        pub const Op_OpImageSampleProjDrefImplicitLod: root::spv::Op = 93;
+        pub const Op_OpImageSampleProjDrefExplicitLod: root::spv::Op = 94;
+        pub const Op_OpImageFetch: root::spv::Op = 95;
+        pub const Op_OpImageGather: root::spv::Op = 96;
+        pub const Op_OpImageDrefGather: root::spv::Op = 97;
+        pub const Op_OpImageRead: root::spv::Op = 98;
+        pub const Op_OpImageWrite: root::spv::Op = 99;
+        pub const Op_OpImage: root::spv::Op = 100;
+        pub const Op_OpImageQueryFormat: root::spv::Op = 101;
+        pub const Op_OpImageQueryOrder: root::spv::Op = 102;
+        pub const Op_OpImageQuerySizeLod: root::spv::Op = 103;
+        pub const Op_OpImageQuerySize: root::spv::Op = 104;
+        pub const Op_OpImageQueryLod: root::spv::Op = 105;
+        pub const Op_OpImageQueryLevels: root::spv::Op = 106;
+        pub const Op_OpImageQuerySamples: root::spv::Op = 107;
+        pub const Op_OpConvertFToU: root::spv::Op = 109;
+        pub const Op_OpConvertFToS: root::spv::Op = 110;
+        pub const Op_OpConvertSToF: root::spv::Op = 111;
+        pub const Op_OpConvertUToF: root::spv::Op = 112;
+        pub const Op_OpUConvert: root::spv::Op = 113;
+        pub const Op_OpSConvert: root::spv::Op = 114;
+        pub const Op_OpFConvert: root::spv::Op = 115;
+        pub const Op_OpQuantizeToF16: root::spv::Op = 116;
+        pub const Op_OpConvertPtrToU: root::spv::Op = 117;
+        pub const Op_OpSatConvertSToU: root::spv::Op = 118;
+        pub const Op_OpSatConvertUToS: root::spv::Op = 119;
+        pub const Op_OpConvertUToPtr: root::spv::Op = 120;
+        pub const Op_OpPtrCastToGeneric: root::spv::Op = 121;
+        pub const Op_OpGenericCastToPtr: root::spv::Op = 122;
+        pub const Op_OpGenericCastToPtrExplicit: root::spv::Op = 123;
+        pub const Op_OpBitcast: root::spv::Op = 124;
+        pub const Op_OpSNegate: root::spv::Op = 126;
+        pub const Op_OpFNegate: root::spv::Op = 127;
+        pub const Op_OpIAdd: root::spv::Op = 128;
+        pub const Op_OpFAdd: root::spv::Op = 129;
+        pub const Op_OpISub: root::spv::Op = 130;
+        pub const Op_OpFSub: root::spv::Op = 131;
+        pub const Op_OpIMul: root::spv::Op = 132;
+        pub const Op_OpFMul: root::spv::Op = 133;
+        pub const Op_OpUDiv: root::spv::Op = 134;
+        pub const Op_OpSDiv: root::spv::Op = 135;
+        pub const Op_OpFDiv: root::spv::Op = 136;
+        pub const Op_OpUMod: root::spv::Op = 137;
+        pub const Op_OpSRem: root::spv::Op = 138;
+        pub const Op_OpSMod: root::spv::Op = 139;
+        pub const Op_OpFRem: root::spv::Op = 140;
+        pub const Op_OpFMod: root::spv::Op = 141;
+        pub const Op_OpVectorTimesScalar: root::spv::Op = 142;
+        pub const Op_OpMatrixTimesScalar: root::spv::Op = 143;
+        pub const Op_OpVectorTimesMatrix: root::spv::Op = 144;
+        pub const Op_OpMatrixTimesVector: root::spv::Op = 145;
+        pub const Op_OpMatrixTimesMatrix: root::spv::Op = 146;
+        pub const Op_OpOuterProduct: root::spv::Op = 147;
+        pub const Op_OpDot: root::spv::Op = 148;
+        pub const Op_OpIAddCarry: root::spv::Op = 149;
+        pub const Op_OpISubBorrow: root::spv::Op = 150;
+        pub const Op_OpUMulExtended: root::spv::Op = 151;
+        pub const Op_OpSMulExtended: root::spv::Op = 152;
+        pub const Op_OpAny: root::spv::Op = 154;
+        pub const Op_OpAll: root::spv::Op = 155;
+        pub const Op_OpIsNan: root::spv::Op = 156;
+        pub const Op_OpIsInf: root::spv::Op = 157;
+        pub const Op_OpIsFinite: root::spv::Op = 158;
+        pub const Op_OpIsNormal: root::spv::Op = 159;
+        pub const Op_OpSignBitSet: root::spv::Op = 160;
+        pub const Op_OpLessOrGreater: root::spv::Op = 161;
+        pub const Op_OpOrdered: root::spv::Op = 162;
+        pub const Op_OpUnordered: root::spv::Op = 163;
+        pub const Op_OpLogicalEqual: root::spv::Op = 164;
+        pub const Op_OpLogicalNotEqual: root::spv::Op = 165;
+        pub const Op_OpLogicalOr: root::spv::Op = 166;
+        pub const Op_OpLogicalAnd: root::spv::Op = 167;
+        pub const Op_OpLogicalNot: root::spv::Op = 168;
+        pub const Op_OpSelect: root::spv::Op = 169;
+        pub const Op_OpIEqual: root::spv::Op = 170;
+        pub const Op_OpINotEqual: root::spv::Op = 171;
+        pub const Op_OpUGreaterThan: root::spv::Op = 172;
+        pub const Op_OpSGreaterThan: root::spv::Op = 173;
+        pub const Op_OpUGreaterThanEqual: root::spv::Op = 174;
+        pub const Op_OpSGreaterThanEqual: root::spv::Op = 175;
+        pub const Op_OpULessThan: root::spv::Op = 176;
+        pub const Op_OpSLessThan: root::spv::Op = 177;
+        pub const Op_OpULessThanEqual: root::spv::Op = 178;
+        pub const Op_OpSLessThanEqual: root::spv::Op = 179;
+        pub const Op_OpFOrdEqual: root::spv::Op = 180;
+        pub const Op_OpFUnordEqual: root::spv::Op = 181;
+        pub const Op_OpFOrdNotEqual: root::spv::Op = 182;
+        pub const Op_OpFUnordNotEqual: root::spv::Op = 183;
+        pub const Op_OpFOrdLessThan: root::spv::Op = 184;
+        pub const Op_OpFUnordLessThan: root::spv::Op = 185;
+        pub const Op_OpFOrdGreaterThan: root::spv::Op = 186;
+        pub const Op_OpFUnordGreaterThan: root::spv::Op = 187;
+        pub const Op_OpFOrdLessThanEqual: root::spv::Op = 188;
+        pub const Op_OpFUnordLessThanEqual: root::spv::Op = 189;
+        pub const Op_OpFOrdGreaterThanEqual: root::spv::Op = 190;
+        pub const Op_OpFUnordGreaterThanEqual: root::spv::Op = 191;
+        pub const Op_OpShiftRightLogical: root::spv::Op = 194;
+        pub const Op_OpShiftRightArithmetic: root::spv::Op = 195;
+        pub const Op_OpShiftLeftLogical: root::spv::Op = 196;
+        pub const Op_OpBitwiseOr: root::spv::Op = 197;
+        pub const Op_OpBitwiseXor: root::spv::Op = 198;
+        pub const Op_OpBitwiseAnd: root::spv::Op = 199;
+        pub const Op_OpNot: root::spv::Op = 200;
+        pub const Op_OpBitFieldInsert: root::spv::Op = 201;
+        pub const Op_OpBitFieldSExtract: root::spv::Op = 202;
+        pub const Op_OpBitFieldUExtract: root::spv::Op = 203;
+        pub const Op_OpBitReverse: root::spv::Op = 204;
+        pub const Op_OpBitCount: root::spv::Op = 205;
+        pub const Op_OpDPdx: root::spv::Op = 207;
+        pub const Op_OpDPdy: root::spv::Op = 208;
+        pub const Op_OpFwidth: root::spv::Op = 209;
+        pub const Op_OpDPdxFine: root::spv::Op = 210;
+        pub const Op_OpDPdyFine: root::spv::Op = 211;
+        pub const Op_OpFwidthFine: root::spv::Op = 212;
+        pub const Op_OpDPdxCoarse: root::spv::Op = 213;
+        pub const Op_OpDPdyCoarse: root::spv::Op = 214;
+        pub const Op_OpFwidthCoarse: root::spv::Op = 215;
+        pub const Op_OpEmitVertex: root::spv::Op = 218;
+        pub const Op_OpEndPrimitive: root::spv::Op = 219;
+        pub const Op_OpEmitStreamVertex: root::spv::Op = 220;
+        pub const Op_OpEndStreamPrimitive: root::spv::Op = 221;
+        pub const Op_OpControlBarrier: root::spv::Op = 224;
+        pub const Op_OpMemoryBarrier: root::spv::Op = 225;
+        pub const Op_OpAtomicLoad: root::spv::Op = 227;
+        pub const Op_OpAtomicStore: root::spv::Op = 228;
+        pub const Op_OpAtomicExchange: root::spv::Op = 229;
+        pub const Op_OpAtomicCompareExchange: root::spv::Op = 230;
+        pub const Op_OpAtomicCompareExchangeWeak: root::spv::Op = 231;
+        pub const Op_OpAtomicIIncrement: root::spv::Op = 232;
+        pub const Op_OpAtomicIDecrement: root::spv::Op = 233;
+        pub const Op_OpAtomicIAdd: root::spv::Op = 234;
+        pub const Op_OpAtomicISub: root::spv::Op = 235;
+        pub const Op_OpAtomicSMin: root::spv::Op = 236;
+        pub const Op_OpAtomicUMin: root::spv::Op = 237;
+        pub const Op_OpAtomicSMax: root::spv::Op = 238;
+        pub const Op_OpAtomicUMax: root::spv::Op = 239;
+        pub const Op_OpAtomicAnd: root::spv::Op = 240;
+        pub const Op_OpAtomicOr: root::spv::Op = 241;
+        pub const Op_OpAtomicXor: root::spv::Op = 242;
+        pub const Op_OpPhi: root::spv::Op = 245;
+        pub const Op_OpLoopMerge: root::spv::Op = 246;
+        pub const Op_OpSelectionMerge: root::spv::Op = 247;
+        pub const Op_OpLabel: root::spv::Op = 248;
+        pub const Op_OpBranch: root::spv::Op = 249;
+        pub const Op_OpBranchConditional: root::spv::Op = 250;
+        pub const Op_OpSwitch: root::spv::Op = 251;
+        pub const Op_OpKill: root::spv::Op = 252;
+        pub const Op_OpReturn: root::spv::Op = 253;
+        pub const Op_OpReturnValue: root::spv::Op = 254;
+        pub const Op_OpUnreachable: root::spv::Op = 255;
+        pub const Op_OpLifetimeStart: root::spv::Op = 256;
+        pub const Op_OpLifetimeStop: root::spv::Op = 257;
+        pub const Op_OpGroupAsyncCopy: root::spv::Op = 259;
+        pub const Op_OpGroupWaitEvents: root::spv::Op = 260;
+        pub const Op_OpGroupAll: root::spv::Op = 261;
+        pub const Op_OpGroupAny: root::spv::Op = 262;
+        pub const Op_OpGroupBroadcast: root::spv::Op = 263;
+        pub const Op_OpGroupIAdd: root::spv::Op = 264;
+        pub const Op_OpGroupFAdd: root::spv::Op = 265;
+        pub const Op_OpGroupFMin: root::spv::Op = 266;
+        pub const Op_OpGroupUMin: root::spv::Op = 267;
+        pub const Op_OpGroupSMin: root::spv::Op = 268;
+        pub const Op_OpGroupFMax: root::spv::Op = 269;
+        pub const Op_OpGroupUMax: root::spv::Op = 270;
+        pub const Op_OpGroupSMax: root::spv::Op = 271;
+        pub const Op_OpReadPipe: root::spv::Op = 274;
+        pub const Op_OpWritePipe: root::spv::Op = 275;
+        pub const Op_OpReservedReadPipe: root::spv::Op = 276;
+        pub const Op_OpReservedWritePipe: root::spv::Op = 277;
+        pub const Op_OpReserveReadPipePackets: root::spv::Op = 278;
+        pub const Op_OpReserveWritePipePackets: root::spv::Op = 279;
+        pub const Op_OpCommitReadPipe: root::spv::Op = 280;
+        pub const Op_OpCommitWritePipe: root::spv::Op = 281;
+        pub const Op_OpIsValidReserveId: root::spv::Op = 282;
+        pub const Op_OpGetNumPipePackets: root::spv::Op = 283;
+        pub const Op_OpGetMaxPipePackets: root::spv::Op = 284;
+        pub const Op_OpGroupReserveReadPipePackets: root::spv::Op = 285;
+        pub const Op_OpGroupReserveWritePipePackets: root::spv::Op = 286;
+        pub const Op_OpGroupCommitReadPipe: root::spv::Op = 287;
+        pub const Op_OpGroupCommitWritePipe: root::spv::Op = 288;
+        pub const Op_OpEnqueueMarker: root::spv::Op = 291;
+        pub const Op_OpEnqueueKernel: root::spv::Op = 292;
+        pub const Op_OpGetKernelNDrangeSubGroupCount: root::spv::Op = 293;
+        pub const Op_OpGetKernelNDrangeMaxSubGroupSize: root::spv::Op = 294;
+        pub const Op_OpGetKernelWorkGroupSize: root::spv::Op = 295;
+        pub const Op_OpGetKernelPreferredWorkGroupSizeMultiple: root::spv::Op = 296;
+        pub const Op_OpRetainEvent: root::spv::Op = 297;
+        pub const Op_OpReleaseEvent: root::spv::Op = 298;
+        pub const Op_OpCreateUserEvent: root::spv::Op = 299;
+        pub const Op_OpIsValidEvent: root::spv::Op = 300;
+        pub const Op_OpSetUserEventStatus: root::spv::Op = 301;
+        pub const Op_OpCaptureEventProfilingInfo: root::spv::Op = 302;
+        pub const Op_OpGetDefaultQueue: root::spv::Op = 303;
+        pub const Op_OpBuildNDRange: root::spv::Op = 304;
+        pub const Op_OpImageSparseSampleImplicitLod: root::spv::Op = 305;
+        pub const Op_OpImageSparseSampleExplicitLod: root::spv::Op = 306;
+        pub const Op_OpImageSparseSampleDrefImplicitLod: root::spv::Op = 307;
+        pub const Op_OpImageSparseSampleDrefExplicitLod: root::spv::Op = 308;
+        pub const Op_OpImageSparseSampleProjImplicitLod: root::spv::Op = 309;
+        pub const Op_OpImageSparseSampleProjExplicitLod: root::spv::Op = 310;
+        pub const Op_OpImageSparseSampleProjDrefImplicitLod: root::spv::Op = 311;
+        pub const Op_OpImageSparseSampleProjDrefExplicitLod: root::spv::Op = 312;
+        pub const Op_OpImageSparseFetch: root::spv::Op = 313;
+        pub const Op_OpImageSparseGather: root::spv::Op = 314;
+        pub const Op_OpImageSparseDrefGather: root::spv::Op = 315;
+        pub const Op_OpImageSparseTexelsResident: root::spv::Op = 316;
+        pub const Op_OpNoLine: root::spv::Op = 317;
+        pub const Op_OpAtomicFlagTestAndSet: root::spv::Op = 318;
+        pub const Op_OpAtomicFlagClear: root::spv::Op = 319;
+        pub const Op_OpImageSparseRead: root::spv::Op = 320;
+        pub const Op_OpSizeOf: root::spv::Op = 321;
+        pub const Op_OpTypePipeStorage: root::spv::Op = 322;
+        pub const Op_OpConstantPipeStorage: root::spv::Op = 323;
+        pub const Op_OpCreatePipeFromPipeStorage: root::spv::Op = 324;
+        pub const Op_OpGetKernelLocalSizeForSubgroupCount: root::spv::Op = 325;
+        pub const Op_OpGetKernelMaxNumSubgroups: root::spv::Op = 326;
+        pub const Op_OpTypeNamedBarrier: root::spv::Op = 327;
+        pub const Op_OpNamedBarrierInitialize: root::spv::Op = 328;
+        pub const Op_OpMemoryNamedBarrier: root::spv::Op = 329;
+        pub const Op_OpModuleProcessed: root::spv::Op = 330;
+        pub const Op_OpExecutionModeId: root::spv::Op = 331;
+        pub const Op_OpDecorateId: root::spv::Op = 332;
+        pub const Op_OpGroupNonUniformElect: root::spv::Op = 333;
+        pub const Op_OpGroupNonUniformAll: root::spv::Op = 334;
+        pub const Op_OpGroupNonUniformAny: root::spv::Op = 335;
+        pub const Op_OpGroupNonUniformAllEqual: root::spv::Op = 336;
+        pub const Op_OpGroupNonUniformBroadcast: root::spv::Op = 337;
+        pub const Op_OpGroupNonUniformBroadcastFirst: root::spv::Op = 338;
+        pub const Op_OpGroupNonUniformBallot: root::spv::Op = 339;
+        pub const Op_OpGroupNonUniformInverseBallot: root::spv::Op = 340;
+        pub const Op_OpGroupNonUniformBallotBitExtract: root::spv::Op = 341;
+        pub const Op_OpGroupNonUniformBallotBitCount: root::spv::Op = 342;
+        pub const Op_OpGroupNonUniformBallotFindLSB: root::spv::Op = 343;
+        pub const Op_OpGroupNonUniformBallotFindMSB: root::spv::Op = 344;
+        pub const Op_OpGroupNonUniformShuffle: root::spv::Op = 345;
+        pub const Op_OpGroupNonUniformShuffleXor: root::spv::Op = 346;
+        pub const Op_OpGroupNonUniformShuffleUp: root::spv::Op = 347;
+        pub const Op_OpGroupNonUniformShuffleDown: root::spv::Op = 348;
+        pub const Op_OpGroupNonUniformIAdd: root::spv::Op = 349;
+        pub const Op_OpGroupNonUniformFAdd: root::spv::Op = 350;
+        pub const Op_OpGroupNonUniformIMul: root::spv::Op = 351;
+        pub const Op_OpGroupNonUniformFMul: root::spv::Op = 352;
+        pub const Op_OpGroupNonUniformSMin: root::spv::Op = 353;
+        pub const Op_OpGroupNonUniformUMin: root::spv::Op = 354;
+        pub const Op_OpGroupNonUniformFMin: root::spv::Op = 355;
+        pub const Op_OpGroupNonUniformSMax: root::spv::Op = 356;
+        pub const Op_OpGroupNonUniformUMax: root::spv::Op = 357;
+        pub const Op_OpGroupNonUniformFMax: root::spv::Op = 358;
+        pub const Op_OpGroupNonUniformBitwiseAnd: root::spv::Op = 359;
+        pub const Op_OpGroupNonUniformBitwiseOr: root::spv::Op = 360;
+        pub const Op_OpGroupNonUniformBitwiseXor: root::spv::Op = 361;
+        pub const Op_OpGroupNonUniformLogicalAnd: root::spv::Op = 362;
+        pub const Op_OpGroupNonUniformLogicalOr: root::spv::Op = 363;
+        pub const Op_OpGroupNonUniformLogicalXor: root::spv::Op = 364;
+        pub const Op_OpGroupNonUniformQuadBroadcast: root::spv::Op = 365;
+        pub const Op_OpGroupNonUniformQuadSwap: root::spv::Op = 366;
+        pub const Op_OpCopyLogical: root::spv::Op = 400;
+        pub const Op_OpPtrEqual: root::spv::Op = 401;
+        pub const Op_OpPtrNotEqual: root::spv::Op = 402;
+        pub const Op_OpPtrDiff: root::spv::Op = 403;
+        pub const Op_OpSubgroupBallotKHR: root::spv::Op = 4421;
+        pub const Op_OpSubgroupFirstInvocationKHR: root::spv::Op = 4422;
+        pub const Op_OpSubgroupAllKHR: root::spv::Op = 4428;
+        pub const Op_OpSubgroupAnyKHR: root::spv::Op = 4429;
+        pub const Op_OpSubgroupAllEqualKHR: root::spv::Op = 4430;
+        pub const Op_OpSubgroupReadInvocationKHR: root::spv::Op = 4432;
+        pub const Op_OpGroupIAddNonUniformAMD: root::spv::Op = 5000;
+        pub const Op_OpGroupFAddNonUniformAMD: root::spv::Op = 5001;
+        pub const Op_OpGroupFMinNonUniformAMD: root::spv::Op = 5002;
+        pub const Op_OpGroupUMinNonUniformAMD: root::spv::Op = 5003;
+        pub const Op_OpGroupSMinNonUniformAMD: root::spv::Op = 5004;
+        pub const Op_OpGroupFMaxNonUniformAMD: root::spv::Op = 5005;
+        pub const Op_OpGroupUMaxNonUniformAMD: root::spv::Op = 5006;
+        pub const Op_OpGroupSMaxNonUniformAMD: root::spv::Op = 5007;
+        pub const Op_OpFragmentMaskFetchAMD: root::spv::Op = 5011;
+        pub const Op_OpFragmentFetchAMD: root::spv::Op = 5012;
+        pub const Op_OpReadClockKHR: root::spv::Op = 5056;
+        pub const Op_OpImageSampleFootprintNV: root::spv::Op = 5283;
+        pub const Op_OpGroupNonUniformPartitionNV: root::spv::Op = 5296;
+        pub const Op_OpWritePackedPrimitiveIndices4x8NV: root::spv::Op = 5299;
+        pub const Op_OpReportIntersectionNV: root::spv::Op = 5334;
+        pub const Op_OpIgnoreIntersectionNV: root::spv::Op = 5335;
+        pub const Op_OpTerminateRayNV: root::spv::Op = 5336;
+        pub const Op_OpTraceNV: root::spv::Op = 5337;
+        pub const Op_OpTypeAccelerationStructureNV: root::spv::Op = 5341;
+        pub const Op_OpExecuteCallableNV: root::spv::Op = 5344;
+        pub const Op_OpTypeCooperativeMatrixNV: root::spv::Op = 5358;
+        pub const Op_OpCooperativeMatrixLoadNV: root::spv::Op = 5359;
+        pub const Op_OpCooperativeMatrixStoreNV: root::spv::Op = 5360;
+        pub const Op_OpCooperativeMatrixMulAddNV: root::spv::Op = 5361;
+        pub const Op_OpCooperativeMatrixLengthNV: root::spv::Op = 5362;
+        pub const Op_OpBeginInvocationInterlockEXT: root::spv::Op = 5364;
+        pub const Op_OpEndInvocationInterlockEXT: root::spv::Op = 5365;
+        pub const Op_OpDemoteToHelperInvocationEXT: root::spv::Op = 5380;
+        pub const Op_OpIsHelperInvocationEXT: root::spv::Op = 5381;
+        pub const Op_OpSubgroupShuffleINTEL: root::spv::Op = 5571;
+        pub const Op_OpSubgroupShuffleDownINTEL: root::spv::Op = 5572;
+        pub const Op_OpSubgroupShuffleUpINTEL: root::spv::Op = 5573;
+        pub const Op_OpSubgroupShuffleXorINTEL: root::spv::Op = 5574;
+        pub const Op_OpSubgroupBlockReadINTEL: root::spv::Op = 5575;
+        pub const Op_OpSubgroupBlockWriteINTEL: root::spv::Op = 5576;
+        pub const Op_OpSubgroupImageBlockReadINTEL: root::spv::Op = 5577;
+        pub const Op_OpSubgroupImageBlockWriteINTEL: root::spv::Op = 5578;
+        pub const Op_OpSubgroupImageMediaBlockReadINTEL: root::spv::Op = 5580;
+        pub const Op_OpSubgroupImageMediaBlockWriteINTEL: root::spv::Op = 5581;
+        pub const Op_OpUCountLeadingZerosINTEL: root::spv::Op = 5585;
+        pub const Op_OpUCountTrailingZerosINTEL: root::spv::Op = 5586;
+        pub const Op_OpAbsISubINTEL: root::spv::Op = 5587;
+        pub const Op_OpAbsUSubINTEL: root::spv::Op = 5588;
+        pub const Op_OpIAddSatINTEL: root::spv::Op = 5589;
+        pub const Op_OpUAddSatINTEL: root::spv::Op = 5590;
+        pub const Op_OpIAverageINTEL: root::spv::Op = 5591;
+        pub const Op_OpUAverageINTEL: root::spv::Op = 5592;
+        pub const Op_OpIAverageRoundedINTEL: root::spv::Op = 5593;
+        pub const Op_OpUAverageRoundedINTEL: root::spv::Op = 5594;
+        pub const Op_OpISubSatINTEL: root::spv::Op = 5595;
+        pub const Op_OpUSubSatINTEL: root::spv::Op = 5596;
+        pub const Op_OpIMul32x16INTEL: root::spv::Op = 5597;
+        pub const Op_OpUMul32x16INTEL: root::spv::Op = 5598;
+        pub const Op_OpDecorateString: root::spv::Op = 5632;
+        pub const Op_OpDecorateStringGOOGLE: root::spv::Op = 5632;
+        pub const Op_OpMemberDecorateString: root::spv::Op = 5633;
+        pub const Op_OpMemberDecorateStringGOOGLE: root::spv::Op = 5633;
+        pub const Op_OpVmeImageINTEL: root::spv::Op = 5699;
+        pub const Op_OpTypeVmeImageINTEL: root::spv::Op = 5700;
+        pub const Op_OpTypeAvcImePayloadINTEL: root::spv::Op = 5701;
+        pub const Op_OpTypeAvcRefPayloadINTEL: root::spv::Op = 5702;
+        pub const Op_OpTypeAvcSicPayloadINTEL: root::spv::Op = 5703;
+        pub const Op_OpTypeAvcMcePayloadINTEL: root::spv::Op = 5704;
+        pub const Op_OpTypeAvcMceResultINTEL: root::spv::Op = 5705;
+        pub const Op_OpTypeAvcImeResultINTEL: root::spv::Op = 5706;
+        pub const Op_OpTypeAvcImeResultSingleReferenceStreamoutINTEL: root::spv::Op = 5707;
+        pub const Op_OpTypeAvcImeResultDualReferenceStreamoutINTEL: root::spv::Op = 5708;
+        pub const Op_OpTypeAvcImeSingleReferenceStreaminINTEL: root::spv::Op = 5709;
+        pub const Op_OpTypeAvcImeDualReferenceStreaminINTEL: root::spv::Op = 5710;
+        pub const Op_OpTypeAvcRefResultINTEL: root::spv::Op = 5711;
+        pub const Op_OpTypeAvcSicResultINTEL: root::spv::Op = 5712;
+        pub const Op_OpSubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL: root::spv::Op =
+            5713;
+        pub const Op_OpSubgroupAvcMceSetInterBaseMultiReferencePenaltyINTEL: root::spv::Op = 5714;
+        pub const Op_OpSubgroupAvcMceGetDefaultInterShapePenaltyINTEL: root::spv::Op = 5715;
+        pub const Op_OpSubgroupAvcMceSetInterShapePenaltyINTEL: root::spv::Op = 5716;
+        pub const Op_OpSubgroupAvcMceGetDefaultInterDirectionPenaltyINTEL: root::spv::Op = 5717;
+        pub const Op_OpSubgroupAvcMceSetInterDirectionPenaltyINTEL: root::spv::Op = 5718;
+        pub const Op_OpSubgroupAvcMceGetDefaultIntraLumaShapePenaltyINTEL: root::spv::Op = 5719;
+        pub const Op_OpSubgroupAvcMceGetDefaultInterMotionVectorCostTableINTEL: root::spv::Op =
+            5720;
+        pub const Op_OpSubgroupAvcMceGetDefaultHighPenaltyCostTableINTEL: root::spv::Op = 5721;
+        pub const Op_OpSubgroupAvcMceGetDefaultMediumPenaltyCostTableINTEL: root::spv::Op = 5722;
+        pub const Op_OpSubgroupAvcMceGetDefaultLowPenaltyCostTableINTEL: root::spv::Op = 5723;
+        pub const Op_OpSubgroupAvcMceSetMotionVectorCostFunctionINTEL: root::spv::Op = 5724;
+        pub const Op_OpSubgroupAvcMceGetDefaultIntraLumaModePenaltyINTEL: root::spv::Op = 5725;
+        pub const Op_OpSubgroupAvcMceGetDefaultNonDcLumaIntraPenaltyINTEL: root::spv::Op = 5726;
+        pub const Op_OpSubgroupAvcMceGetDefaultIntraChromaModeBasePenaltyINTEL: root::spv::Op =
+            5727;
+        pub const Op_OpSubgroupAvcMceSetAcOnlyHaarINTEL: root::spv::Op = 5728;
+        pub const Op_OpSubgroupAvcMceSetSourceInterlacedFieldPolarityINTEL: root::spv::Op = 5729;
+        pub const Op_OpSubgroupAvcMceSetSingleReferenceInterlacedFieldPolarityINTEL: root::spv::Op =
+            5730;
+        pub const Op_OpSubgroupAvcMceSetDualReferenceInterlacedFieldPolaritiesINTEL: root::spv::Op =
+            5731;
+        pub const Op_OpSubgroupAvcMceConvertToImePayloadINTEL: root::spv::Op = 5732;
+        pub const Op_OpSubgroupAvcMceConvertToImeResultINTEL: root::spv::Op = 5733;
+        pub const Op_OpSubgroupAvcMceConvertToRefPayloadINTEL: root::spv::Op = 5734;
+        pub const Op_OpSubgroupAvcMceConvertToRefResultINTEL: root::spv::Op = 5735;
+        pub const Op_OpSubgroupAvcMceConvertToSicPayloadINTEL: root::spv::Op = 5736;
+        pub const Op_OpSubgroupAvcMceConvertToSicResultINTEL: root::spv::Op = 5737;
+        pub const Op_OpSubgroupAvcMceGetMotionVectorsINTEL: root::spv::Op = 5738;
+        pub const Op_OpSubgroupAvcMceGetInterDistortionsINTEL: root::spv::Op = 5739;
+        pub const Op_OpSubgroupAvcMceGetBestInterDistortionsINTEL: root::spv::Op = 5740;
+        pub const Op_OpSubgroupAvcMceGetInterMajorShapeINTEL: root::spv::Op = 5741;
+        pub const Op_OpSubgroupAvcMceGetInterMinorShapeINTEL: root::spv::Op = 5742;
+        pub const Op_OpSubgroupAvcMceGetInterDirectionsINTEL: root::spv::Op = 5743;
+        pub const Op_OpSubgroupAvcMceGetInterMotionVectorCountINTEL: root::spv::Op = 5744;
+        pub const Op_OpSubgroupAvcMceGetInterReferenceIdsINTEL: root::spv::Op = 5745;
+        pub const Op_OpSubgroupAvcMceGetInterReferenceInterlacedFieldPolaritiesINTEL:
+            root::spv::Op = 5746;
+        pub const Op_OpSubgroupAvcImeInitializeINTEL: root::spv::Op = 5747;
+        pub const Op_OpSubgroupAvcImeSetSingleReferenceINTEL: root::spv::Op = 5748;
+        pub const Op_OpSubgroupAvcImeSetDualReferenceINTEL: root::spv::Op = 5749;
+        pub const Op_OpSubgroupAvcImeRefWindowSizeINTEL: root::spv::Op = 5750;
+        pub const Op_OpSubgroupAvcImeAdjustRefOffsetINTEL: root::spv::Op = 5751;
+        pub const Op_OpSubgroupAvcImeConvertToMcePayloadINTEL: root::spv::Op = 5752;
+        pub const Op_OpSubgroupAvcImeSetMaxMotionVectorCountINTEL: root::spv::Op = 5753;
+        pub const Op_OpSubgroupAvcImeSetUnidirectionalMixDisableINTEL: root::spv::Op = 5754;
+        pub const Op_OpSubgroupAvcImeSetEarlySearchTerminationThresholdINTEL: root::spv::Op = 5755;
+        pub const Op_OpSubgroupAvcImeSetWeightedSadINTEL: root::spv::Op = 5756;
+        pub const Op_OpSubgroupAvcImeEvaluateWithSingleReferenceINTEL: root::spv::Op = 5757;
+        pub const Op_OpSubgroupAvcImeEvaluateWithDualReferenceINTEL: root::spv::Op = 5758;
+        pub const Op_OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL: root::spv::Op = 5759;
+        pub const Op_OpSubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL: root::spv::Op = 5760;
+        pub const Op_OpSubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL: root::spv::Op =
+            5761;
+        pub const Op_OpSubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL: root::spv::Op = 5762;
+        pub const Op_OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL: root::spv::Op =
+            5763;
+        pub const Op_OpSubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL: root::spv::Op =
+            5764;
+        pub const Op_OpSubgroupAvcImeConvertToMceResultINTEL: root::spv::Op = 5765;
+        pub const Op_OpSubgroupAvcImeGetSingleReferenceStreaminINTEL: root::spv::Op = 5766;
+        pub const Op_OpSubgroupAvcImeGetDualReferenceStreaminINTEL: root::spv::Op = 5767;
+        pub const Op_OpSubgroupAvcImeStripSingleReferenceStreamoutINTEL: root::spv::Op = 5768;
+        pub const Op_OpSubgroupAvcImeStripDualReferenceStreamoutINTEL: root::spv::Op = 5769;
+        pub const Op_OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL:
+            root::spv::Op = 5770;
+        pub const Op_OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL:
+            root::spv::Op = 5771;
+        pub const Op_OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL:
+            root::spv::Op = 5772;
+        pub const Op_OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeMotionVectorsINTEL:
+            root::spv::Op = 5773;
+        pub const Op_OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeDistortionsINTEL:
+            root::spv::Op = 5774;
+        pub const Op_OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeReferenceIdsINTEL:
+            root::spv::Op = 5775;
+        pub const Op_OpSubgroupAvcImeGetBorderReachedINTEL: root::spv::Op = 5776;
+        pub const Op_OpSubgroupAvcImeGetTruncatedSearchIndicationINTEL: root::spv::Op = 5777;
+        pub const Op_OpSubgroupAvcImeGetUnidirectionalEarlySearchTerminationINTEL: root::spv::Op =
+            5778;
+        pub const Op_OpSubgroupAvcImeGetWeightingPatternMinimumMotionVectorINTEL: root::spv::Op =
+            5779;
+        pub const Op_OpSubgroupAvcImeGetWeightingPatternMinimumDistortionINTEL: root::spv::Op =
+            5780;
+        pub const Op_OpSubgroupAvcFmeInitializeINTEL: root::spv::Op = 5781;
+        pub const Op_OpSubgroupAvcBmeInitializeINTEL: root::spv::Op = 5782;
+        pub const Op_OpSubgroupAvcRefConvertToMcePayloadINTEL: root::spv::Op = 5783;
+        pub const Op_OpSubgroupAvcRefSetBidirectionalMixDisableINTEL: root::spv::Op = 5784;
+        pub const Op_OpSubgroupAvcRefSetBilinearFilterEnableINTEL: root::spv::Op = 5785;
+        pub const Op_OpSubgroupAvcRefEvaluateWithSingleReferenceINTEL: root::spv::Op = 5786;
+        pub const Op_OpSubgroupAvcRefEvaluateWithDualReferenceINTEL: root::spv::Op = 5787;
+        pub const Op_OpSubgroupAvcRefEvaluateWithMultiReferenceINTEL: root::spv::Op = 5788;
+        pub const Op_OpSubgroupAvcRefEvaluateWithMultiReferenceInterlacedINTEL: root::spv::Op =
+            5789;
+        pub const Op_OpSubgroupAvcRefConvertToMceResultINTEL: root::spv::Op = 5790;
+        pub const Op_OpSubgroupAvcSicInitializeINTEL: root::spv::Op = 5791;
+        pub const Op_OpSubgroupAvcSicConfigureSkcINTEL: root::spv::Op = 5792;
+        pub const Op_OpSubgroupAvcSicConfigureIpeLumaINTEL: root::spv::Op = 5793;
+        pub const Op_OpSubgroupAvcSicConfigureIpeLumaChromaINTEL: root::spv::Op = 5794;
+        pub const Op_OpSubgroupAvcSicGetMotionVectorMaskINTEL: root::spv::Op = 5795;
+        pub const Op_OpSubgroupAvcSicConvertToMcePayloadINTEL: root::spv::Op = 5796;
+        pub const Op_OpSubgroupAvcSicSetIntraLumaShapePenaltyINTEL: root::spv::Op = 5797;
+        pub const Op_OpSubgroupAvcSicSetIntraLumaModeCostFunctionINTEL: root::spv::Op = 5798;
+        pub const Op_OpSubgroupAvcSicSetIntraChromaModeCostFunctionINTEL: root::spv::Op = 5799;
+        pub const Op_OpSubgroupAvcSicSetBilinearFilterEnableINTEL: root::spv::Op = 5800;
+        pub const Op_OpSubgroupAvcSicSetSkcForwardTransformEnableINTEL: root::spv::Op = 5801;
+        pub const Op_OpSubgroupAvcSicSetBlockBasedRawSkipSadINTEL: root::spv::Op = 5802;
+        pub const Op_OpSubgroupAvcSicEvaluateIpeINTEL: root::spv::Op = 5803;
+        pub const Op_OpSubgroupAvcSicEvaluateWithSingleReferenceINTEL: root::spv::Op = 5804;
+        pub const Op_OpSubgroupAvcSicEvaluateWithDualReferenceINTEL: root::spv::Op = 5805;
+        pub const Op_OpSubgroupAvcSicEvaluateWithMultiReferenceINTEL: root::spv::Op = 5806;
+        pub const Op_OpSubgroupAvcSicEvaluateWithMultiReferenceInterlacedINTEL: root::spv::Op =
+            5807;
+        pub const Op_OpSubgroupAvcSicConvertToMceResultINTEL: root::spv::Op = 5808;
+        pub const Op_OpSubgroupAvcSicGetIpeLumaShapeINTEL: root::spv::Op = 5809;
+        pub const Op_OpSubgroupAvcSicGetBestIpeLumaDistortionINTEL: root::spv::Op = 5810;
+        pub const Op_OpSubgroupAvcSicGetBestIpeChromaDistortionINTEL: root::spv::Op = 5811;
+        pub const Op_OpSubgroupAvcSicGetPackedIpeLumaModesINTEL: root::spv::Op = 5812;
+        pub const Op_OpSubgroupAvcSicGetIpeChromaModeINTEL: root::spv::Op = 5813;
+        pub const Op_OpSubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL: root::spv::Op = 5814;
+        pub const Op_OpSubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL: root::spv::Op = 5815;
+        pub const Op_OpSubgroupAvcSicGetInterRawSadsINTEL: root::spv::Op = 5816;
+        pub const Op_OpMax: root::spv::Op = 2147483647;
+        pub type Op = u32;
     }
     pub mod std {
         #[allow(unused_imports)]
         use self::super::super::root;
-        pub type string = [u64; 4usize];
     }
-    pub mod __gnu_cxx {
-        #[allow(unused_imports)]
-        use self::super::super::root;
-    }
-    pub type __uint8_t = ::std::os::raw::c_uchar;
-    pub type __int32_t = ::std::os::raw::c_int;
-    pub type __uint32_t = ::std::os::raw::c_uint;
-    pub mod SPIRV_CROSS_NAMESPACE {
+    pub type __darwin_size_t = ::std::os::raw::c_ulong;
+    pub mod spirv_cross {
         #[allow(unused_imports)]
         use self::super::super::root;
         #[repr(u32)]
@@ -1662,51 +2012,148 @@ pub mod root {
             ControlPointArray = 20,
             Char = 21,
         }
+        pub const MSLSamplerCoord_MSL_SAMPLER_COORD_NORMALIZED: root::spirv_cross::MSLSamplerCoord =
+            0;
+        pub const MSLSamplerCoord_MSL_SAMPLER_COORD_PIXEL: root::spirv_cross::MSLSamplerCoord = 1;
+        pub const MSLSamplerCoord_MSL_SAMPLER_INT_MAX: root::spirv_cross::MSLSamplerCoord =
+            2147483647;
+        pub type MSLSamplerCoord = u32;
+        pub const MSLSamplerFilter_MSL_SAMPLER_FILTER_NEAREST: root::spirv_cross::MSLSamplerFilter =
+            0;
+        pub const MSLSamplerFilter_MSL_SAMPLER_FILTER_LINEAR: root::spirv_cross::MSLSamplerFilter =
+            1;
+        pub const MSLSamplerFilter_MSL_SAMPLER_FILTER_INT_MAX: root::spirv_cross::MSLSamplerFilter =
+            2147483647;
+        pub type MSLSamplerFilter = u32;
+        pub const MSLSamplerMipFilter_MSL_SAMPLER_MIP_FILTER_NONE:
+            root::spirv_cross::MSLSamplerMipFilter = 0;
+        pub const MSLSamplerMipFilter_MSL_SAMPLER_MIP_FILTER_NEAREST:
+            root::spirv_cross::MSLSamplerMipFilter = 1;
+        pub const MSLSamplerMipFilter_MSL_SAMPLER_MIP_FILTER_LINEAR:
+            root::spirv_cross::MSLSamplerMipFilter = 2;
+        pub const MSLSamplerMipFilter_MSL_SAMPLER_MIP_FILTER_INT_MAX:
+            root::spirv_cross::MSLSamplerMipFilter = 2147483647;
+        pub type MSLSamplerMipFilter = u32;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_CLAMP_TO_ZERO:
+            root::spirv_cross::MSLSamplerAddress = 0;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_CLAMP_TO_EDGE:
+            root::spirv_cross::MSLSamplerAddress = 1;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_CLAMP_TO_BORDER:
+            root::spirv_cross::MSLSamplerAddress = 2;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_REPEAT:
+            root::spirv_cross::MSLSamplerAddress = 3;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_MIRRORED_REPEAT:
+            root::spirv_cross::MSLSamplerAddress = 4;
+        pub const MSLSamplerAddress_MSL_SAMPLER_ADDRESS_INT_MAX:
+            root::spirv_cross::MSLSamplerAddress = 2147483647;
+        pub type MSLSamplerAddress = u32;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_NEVER:
+            root::spirv_cross::MSLSamplerCompareFunc = 0;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_LESS:
+            root::spirv_cross::MSLSamplerCompareFunc = 1;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_LESS_EQUAL:
+            root::spirv_cross::MSLSamplerCompareFunc = 2;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_GREATER:
+            root::spirv_cross::MSLSamplerCompareFunc = 3;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_GREATER_EQUAL:
+            root::spirv_cross::MSLSamplerCompareFunc = 4;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_EQUAL:
+            root::spirv_cross::MSLSamplerCompareFunc = 5;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_NOT_EQUAL:
+            root::spirv_cross::MSLSamplerCompareFunc = 6;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_ALWAYS:
+            root::spirv_cross::MSLSamplerCompareFunc = 7;
+        pub const MSLSamplerCompareFunc_MSL_SAMPLER_COMPARE_FUNC_INT_MAX:
+            root::spirv_cross::MSLSamplerCompareFunc = 2147483647;
+        pub type MSLSamplerCompareFunc = u32;
+        pub const MSLSamplerBorderColor_MSL_SAMPLER_BORDER_COLOR_TRANSPARENT_BLACK:
+            root::spirv_cross::MSLSamplerBorderColor = 0;
+        pub const MSLSamplerBorderColor_MSL_SAMPLER_BORDER_COLOR_OPAQUE_BLACK:
+            root::spirv_cross::MSLSamplerBorderColor = 1;
+        pub const MSLSamplerBorderColor_MSL_SAMPLER_BORDER_COLOR_OPAQUE_WHITE:
+            root::spirv_cross::MSLSamplerBorderColor = 2;
+        pub const MSLSamplerBorderColor_MSL_SAMPLER_BORDER_COLOR_INT_MAX:
+            root::spirv_cross::MSLSamplerBorderColor = 2147483647;
+        pub type MSLSamplerBorderColor = u32;
+        pub const MSLFormatResolution_MSL_FORMAT_RESOLUTION_444:
+            root::spirv_cross::MSLFormatResolution = 0;
+        pub const MSLFormatResolution_MSL_FORMAT_RESOLUTION_422:
+            root::spirv_cross::MSLFormatResolution = 1;
+        pub const MSLFormatResolution_MSL_FORMAT_RESOLUTION_420:
+            root::spirv_cross::MSLFormatResolution = 2;
+        pub const MSLFormatResolution_MSL_FORMAT_RESOLUTION_INT_MAX:
+            root::spirv_cross::MSLFormatResolution = 2147483647;
+        pub type MSLFormatResolution = u32;
+        pub const MSLChromaLocation_MSL_CHROMA_LOCATION_COSITED_EVEN:
+            root::spirv_cross::MSLChromaLocation = 0;
+        pub const MSLChromaLocation_MSL_CHROMA_LOCATION_MIDPOINT:
+            root::spirv_cross::MSLChromaLocation = 1;
+        pub const MSLChromaLocation_MSL_CHROMA_LOCATION_INT_MAX:
+            root::spirv_cross::MSLChromaLocation = 2147483647;
+        pub type MSLChromaLocation = u32;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_IDENTITY:
+            root::spirv_cross::MSLComponentSwizzle = 0;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_ZERO:
+            root::spirv_cross::MSLComponentSwizzle = 1;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_ONE:
+            root::spirv_cross::MSLComponentSwizzle = 2;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_R:
+            root::spirv_cross::MSLComponentSwizzle = 3;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_G:
+            root::spirv_cross::MSLComponentSwizzle = 4;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_B:
+            root::spirv_cross::MSLComponentSwizzle = 5;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_A:
+            root::spirv_cross::MSLComponentSwizzle = 6;
+        pub const MSLComponentSwizzle_MSL_COMPONENT_SWIZZLE_INT_MAX:
+            root::spirv_cross::MSLComponentSwizzle = 2147483647;
+        pub type MSLComponentSwizzle = u32;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_RGB_IDENTITY:
+            root::spirv_cross::MSLSamplerYCbCrModelConversion = 0;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_IDENTITY : root :: spirv_cross :: MSLSamplerYCbCrModelConversion = 1 ;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_BT_709:
+            root::spirv_cross::MSLSamplerYCbCrModelConversion = 2;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_BT_601:
+            root::spirv_cross::MSLSamplerYCbCrModelConversion = 3;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_BT_2020 : root :: spirv_cross :: MSLSamplerYCbCrModelConversion = 4 ;
+        pub const MSLSamplerYCbCrModelConversion_MSL_SAMPLER_YCBCR_MODEL_CONVERSION_INT_MAX:
+            root::spirv_cross::MSLSamplerYCbCrModelConversion = 2147483647;
+        pub type MSLSamplerYCbCrModelConversion = u32;
+        pub const MSLSamplerYCbCrRange_MSL_SAMPLER_YCBCR_RANGE_ITU_FULL:
+            root::spirv_cross::MSLSamplerYCbCrRange = 0;
+        pub const MSLSamplerYCbCrRange_MSL_SAMPLER_YCBCR_RANGE_ITU_NARROW:
+            root::spirv_cross::MSLSamplerYCbCrRange = 1;
+        pub const MSLSamplerYCbCrRange_MSL_SAMPLER_YCBCR_RANGE_INT_MAX:
+            root::spirv_cross::MSLSamplerYCbCrRange = 2147483647;
+        pub type MSLSamplerYCbCrRange = u32;
         #[repr(C)]
-        #[derive(Debug, Copy)]
-        pub struct Resource {
-            pub id: u32,
-            pub type_id: u32,
-            pub base_type_id: u32,
-            pub name: root::std::string,
-        }
-        impl Clone for Resource {
-            fn clone(&self) -> Self { *self }
-        }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum MSLVertexFormat {
-            MSL_VERTEX_FORMAT_OTHER = 0,
-            MSL_VERTEX_FORMAT_UINT8 = 1,
-            MSL_VERTEX_FORMAT_UINT16 = 2,
-            MSL_VERTEX_FORMAT_INT_MAX = 2147483647,
-        }
-        #[repr(C)]
-        #[derive(Debug, Copy)]
-        pub struct MSLVertexAttr {
-            pub location: u32,
-            pub msl_buffer: u32,
-            pub msl_offset: u32,
-            pub msl_stride: u32,
-            pub per_instance: bool,
-            pub format: root::SPIRV_CROSS_NAMESPACE::MSLVertexFormat,
-            pub builtin: root::spv::BuiltIn,
-        }
-        impl Clone for MSLVertexAttr {
-            fn clone(&self) -> Self { *self }
-        }
-        #[repr(C)]
-        #[derive(Debug, Copy)]
-        pub struct MSLResourceBinding {
-            pub stage: root::spv::ExecutionModel,
-            pub desc_set: u32,
-            pub binding: u32,
-            pub msl_buffer: u32,
-            pub msl_texture: u32,
-            pub msl_sampler: u32,
-        }
-        impl Clone for MSLResourceBinding {
-            fn clone(&self) -> Self { *self }
+        #[derive(Debug, Copy, Clone)]
+        pub struct MSLConstexprSampler {
+            pub coord: root::spirv_cross::MSLSamplerCoord,
+            pub min_filter: root::spirv_cross::MSLSamplerFilter,
+            pub mag_filter: root::spirv_cross::MSLSamplerFilter,
+            pub mip_filter: root::spirv_cross::MSLSamplerMipFilter,
+            pub s_address: root::spirv_cross::MSLSamplerAddress,
+            pub t_address: root::spirv_cross::MSLSamplerAddress,
+            pub r_address: root::spirv_cross::MSLSamplerAddress,
+            pub compare_func: root::spirv_cross::MSLSamplerCompareFunc,
+            pub border_color: root::spirv_cross::MSLSamplerBorderColor,
+            pub lod_clamp_min: f32,
+            pub lod_clamp_max: f32,
+            pub max_anisotropy: ::std::os::raw::c_int,
+            pub planes: u32,
+            pub resolution: root::spirv_cross::MSLFormatResolution,
+            pub chroma_filter: root::spirv_cross::MSLSamplerFilter,
+            pub x_chroma_offset: root::spirv_cross::MSLChromaLocation,
+            pub y_chroma_offset: root::spirv_cross::MSLChromaLocation,
+            pub swizzle: [root::spirv_cross::MSLComponentSwizzle; 4usize],
+            pub ycbcr_model: root::spirv_cross::MSLSamplerYCbCrModelConversion,
+            pub ycbcr_range: root::spirv_cross::MSLSamplerYCbCrRange,
+            pub bpc: u32,
+            pub compare_enable: bool,
+            pub lod_clamp_enable: bool,
+            pub anisotropy_enable: bool,
+            pub ycbcr_conversion_enable: bool,
         }
     }
     pub type ScInternalCompilerBase = ::std::os::raw::c_void;
@@ -1721,7 +2168,7 @@ pub mod root {
         CompilationError = 2,
     }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScEntryPoint {
         pub name: *mut ::std::os::raw::c_char,
         pub execution_model: root::spv::ExecutionModel,
@@ -1729,32 +2176,30 @@ pub mod root {
         pub work_group_size_y: u32,
         pub work_group_size_z: u32,
     }
-    impl Clone for ScEntryPoint {
-        fn clone(&self) -> Self { *self }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct ScBufferRange {
+        pub index: ::std::os::raw::c_uint,
+        pub offset: usize,
+        pub range: usize,
     }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScCombinedImageSampler {
         pub combined_id: u32,
         pub image_id: u32,
         pub sampler_id: u32,
     }
-    impl Clone for ScCombinedImageSampler {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScHlslRootConstant {
         pub start: u32,
         pub end: u32,
         pub binding: u32,
         pub space: u32,
     }
-    impl Clone for ScHlslRootConstant {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScHlslCompilerOptions {
         pub shader_model: i32,
         pub point_size_compat: bool,
@@ -1762,11 +2207,8 @@ pub mod root {
         pub vertex_transform_clip_space: bool,
         pub vertex_invert_y: bool,
     }
-    impl Clone for ScHlslCompilerOptions {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScMslCompilerOptions {
         pub vertex_transform_clip_space: bool,
         pub vertex_invert_y: bool,
@@ -1786,42 +2228,30 @@ pub mod root {
         pub argument_buffers: bool,
         pub pad_fragment_output_components: bool,
     }
-    impl Clone for ScMslCompilerOptions {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScGlslCompilerOptions {
         pub vertex_transform_clip_space: bool,
         pub vertex_invert_y: bool,
         pub version: u32,
         pub es: bool,
     }
-    impl Clone for ScGlslCompilerOptions {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScResource {
         pub id: u32,
         pub type_id: u32,
         pub base_type_id: u32,
         pub name: *mut ::std::os::raw::c_char,
     }
-    impl Clone for ScResource {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScResourceArray {
         pub data: *mut root::ScResource,
         pub num: usize,
     }
-    impl Clone for ScResourceArray {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScShaderResources {
         pub uniform_buffers: root::ScResourceArray,
         pub storage_buffers: root::ScResourceArray,
@@ -1835,28 +2265,26 @@ pub mod root {
         pub separate_images: root::ScResourceArray,
         pub separate_samplers: root::ScResourceArray,
     }
-    impl Clone for ScShaderResources {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScSpecializationConstant {
         pub id: u32,
         pub constant_id: u32,
     }
-    impl Clone for ScSpecializationConstant {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
-    #[derive(Debug, Copy)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ScType {
-        pub type_: root::SPIRV_CROSS_NAMESPACE::SPIRType_BaseType,
+        pub type_: root::spirv_cross::SPIRType_BaseType,
         pub member_types: *mut u32,
         pub member_types_size: usize,
         pub array: *mut u32,
         pub array_size: usize,
     }
-    impl Clone for ScType {
-        fn clone(&self) -> Self { *self }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct ScMslConstSamplerMapping {
+        pub desc_set: u32,
+        pub binding: u32,
+        pub sampler: root::spirv_cross::MSLConstexprSampler,
     }
 }

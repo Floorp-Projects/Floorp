@@ -16,7 +16,6 @@ pub type InstanceRate = u8;
 /// Number of vertices in a patch
 pub type PatchSize = u8;
 
-
 /// The rate at which to advance input data to shaders for the given buffer
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

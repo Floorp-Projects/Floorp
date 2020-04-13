@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-metal"
-version = "0.4.5"
+version = "0.5.1"
 authors = ["The Gfx-rs Developers"]
 description = "Metal API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -31,7 +31,8 @@ name = "gfx_backend_metal"
 version = "0.5"
 
 [dependencies.auxil]
-version = "0.1"
+version = "0.3"
+features = ["spirv_cross"]
 package = "gfx-auxil"
 
 [dependencies.bitflags]
@@ -50,14 +51,14 @@ version = "0.1.4"
 version = "0.19"
 
 [dependencies.dispatch]
-version = "0.1"
+version = "0.2"
 optional = true
 
 [dependencies.foreign-types]
 version = "0.3"
 
 [dependencies.hal]
-version = "0.4"
+version = "0.5"
 package = "gfx-hal"
 
 [dependencies.lazy_static]
@@ -83,10 +84,10 @@ version = "0.1"
 version = "0.3"
 
 [dependencies.smallvec]
-version = "0.6"
+version = "1"
 
 [dependencies.spirv_cross]
-version = "0.16"
+version = "0.18"
 features = ["msl"]
 
 [dependencies.storage-map]

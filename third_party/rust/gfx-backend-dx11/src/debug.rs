@@ -1,17 +1,19 @@
 use winapi::um::d3d11;
 
-use wio::com::ComPtr;
-use wio::wide::ToWide;
+use wio::{com::ComPtr, wide::ToWide};
 
-use std::ffi::OsStr;
-use std::{env, fmt};
+use std::{env, ffi::OsStr, fmt};
 
 // TODO: replace with new winapi version when available
 #[allow(bad_style, unused)]
 mod temp {
-    use winapi::shared::minwindef::{BOOL, INT};
-    use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
-    use winapi::um::winnt::LPCWSTR;
+    use winapi::{
+        shared::minwindef::{BOOL, INT},
+        um::{
+            unknwnbase::{IUnknown, IUnknownVtbl},
+            winnt::LPCWSTR,
+        },
+    };
 
     RIDL! {#[uuid(0xb2daad8b, 0x03d4, 0x4dbf, 0x95, 0xeb, 0x32, 0xab, 0x4b, 0x63, 0xd0, 0xab)]
     interface ID3DUserDefinedAnnotation(ID3DUserDefinedAnnotationVtbl):

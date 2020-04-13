@@ -1,12 +1,9 @@
-use std::sync::Arc;
-use std::fmt;
+use std::{fmt, sync::Arc};
 
 use winapi::shared::winerror::SUCCEEDED;
 
-use command::CommandBuffer;
+use crate::{command::CommandBuffer, Backend, Shared};
 use hal::{command, pool};
-use native;
-use {Backend, Shared};
 
 #[derive(Debug)]
 pub enum CommandPoolAllocator {

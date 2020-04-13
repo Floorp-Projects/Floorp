@@ -1,11 +1,16 @@
+#[cfg(feature = "spirv_cross")]
 use {
     hal::{device::ShaderError, pso},
     spirv_cross::spirv,
 };
 
 /// Fast hash map used internally.
-pub type FastHashMap<K, V> = std::collections::HashMap<K, V, std::hash::BuildHasherDefault<fxhash::FxHasher>>;
+pub type FastHashMap<K, V> =
+    std::collections::HashMap<K, V, std::hash::BuildHasherDefault<fxhash::FxHasher>>;
+pub type FastHashSet<K> =
+    std::collections::HashSet<K, std::hash::BuildHasherDefault<fxhash::FxHasher>>;
 
+#[cfg(feature = "spirv_cross")]
 pub fn spirv_cross_specialize_ast<T>(
     ast: &mut spirv::Ast<T>,
     specialization: &pso::Specialization,

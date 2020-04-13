@@ -27,7 +27,6 @@ use hal::{
     pass::AttachmentLoadOp,
     pso,
     query,
-    range::RangeArg,
     window::{PresentError, Suboptimal, SwapImageIndex},
     DrawCount,
     IndexCount,
@@ -67,7 +66,6 @@ use std::{
     thread,
     time,
 };
-
 
 const WORD_SIZE: usize = 4;
 const WORD_ALIGNMENT: u64 = WORD_SIZE as _;
@@ -197,7 +195,6 @@ impl QueueBlocker {
         }
     }
 }
-
 
 #[derive(Debug)]
 struct PoolShared {
@@ -379,10 +376,10 @@ impl State {
     }
 
     fn make_viewport_and_scissor_commands(
-        &self
+        &self,
     ) -> (
         Option<soft::RenderCommand<&soft::Ref>>,
-        Option<soft::RenderCommand<&soft::Ref>>,    
+        Option<soft::RenderCommand<&soft::Ref>>,
     ) {
         let com_vp = self
             .viewport
@@ -504,7 +501,6 @@ impl State {
                 .iter()
                 .map(|&(resource, usage)| soft::ComputeCommand::UseResource { resource, usage })
         });
-
 
         com_pso
             .into_iter()
@@ -631,7 +627,7 @@ impl State {
         disabilities: PrivateDisabilities,
     ) -> soft::RenderCommand<&'a soft::Ref> {
         let depth = vp.depth.start .. if disabilities.broken_viewport_near_depth {
-            (vp.depth.end - vp.depth.start)
+            vp.depth.end - vp.depth.start
         } else {
             vp.depth.end
         };
@@ -798,7 +794,7 @@ unsafe impl Send for SharedCommandBuffer {}
 impl EncodePass {
     fn schedule(self, queue: &dispatch::Queue, cmd_buffer_arc: &Arc<Mutex<metal::CommandBuffer>>) {
         let cmd_buffer = SharedCommandBuffer(Arc::clone(cmd_buffer_arc));
-        queue.r#async(move || match self {
+        queue.exec_async(move || match self {
             EncodePass::Render(list, resources, desc, label) => {
                 let encoder = cmd_buffer
                     .0
@@ -832,8 +828,12 @@ impl EncodePass {
 
     fn update(&self, capacity: &mut Capacity) {
         match &self {
-            EncodePass::Render(ref list, _, _, _) => capacity.render = capacity.render.max(list.len()),
-            EncodePass::Compute(ref list, _, _) => capacity.compute = capacity.compute.max(list.len()),
+            EncodePass::Render(ref list, _, _, _) => {
+                capacity.render = capacity.render.max(list.len())
+            }
+            EncodePass::Compute(ref list, _, _) => {
+                capacity.compute = capacity.compute.max(list.len())
+            }
             EncodePass::Blit(ref list, _) => capacity.blit = capacity.blit.max(list.len()),
         }
     }
@@ -921,9 +921,11 @@ impl Journal {
                     soft::Pass::Compute => self.compute_commands.len(),
                     soft::Pass::Blit => self.blit_commands.len(),
                 };
-                self.passes
-                    .alloc()
-                    .init((pass.clone(), range.start + offset .. range.end + offset, label.clone()));
+                self.passes.alloc().init((
+                    pass.clone(),
+                    range.start + offset .. range.end + offset,
+                    label.clone(),
+                ));
             }
         }
 
@@ -1063,7 +1065,9 @@ impl<'a> PreCompute<'a> {
 impl CommandSink {
     fn label(&mut self, label: &str) -> &Self {
         match self {
-            CommandSink::Immediate { label: l, .. } | CommandSink::Deferred { label: l, .. } => *l = label.to_string(),
+            CommandSink::Immediate { label: l, .. } | CommandSink::Deferred { label: l, .. } => {
+                *l = label.to_string()
+            }
             #[cfg(feature = "dispatch")]
             CommandSink::Remote { label: l, .. } => *l = label.to_string(),
         }
@@ -1172,7 +1176,12 @@ impl CommandSink {
                 ..
             } => {
                 let list = Vec::with_capacity(capacity.render);
-                *pass = Some(EncodePass::Render(list, soft::Own::default(), descriptor, label.clone()));
+                *pass = Some(EncodePass::Render(
+                    list,
+                    soft::Own::default(),
+                    descriptor,
+                    label.clone(),
+                ));
                 match *pass {
                     Some(EncodePass::Render(ref mut list, ref mut resources, _, _)) => {
                         PreRender::Deferred(resources, list)
@@ -1241,10 +1250,11 @@ impl CommandSink {
                 if let Some(&(soft::Pass::Blit, _, _)) = journal.passes.last() {
                 } else {
                     journal.stop();
-                    journal
-                        .passes
-                        .alloc()
-                        .init((soft::Pass::Blit, journal.blit_commands.len() .. 0, label.clone()));
+                    journal.passes.alloc().init((
+                        soft::Pass::Blit,
+                        journal.blit_commands.len() .. 0,
+                        label.clone(),
+                    ));
                 }
                 PreBlit::Deferred(&mut journal.blit_commands)
             }
@@ -1348,10 +1358,11 @@ impl CommandSink {
                     false
                 } else {
                     journal.stop();
-                    journal
-                        .passes
-                        .alloc()
-                        .init((soft::Pass::Compute, journal.compute_commands.len() .. 0, label.clone()));
+                    journal.passes.alloc().init((
+                        soft::Pass::Compute,
+                        journal.compute_commands.len() .. 0,
+                        label.clone(),
+                    ));
                     true
                 };
                 (
@@ -1378,7 +1389,11 @@ impl CommandSink {
                     pass.schedule(queue, cmd_buffer);
                 }
                 let list = Vec::with_capacity(capacity.compute);
-                *pass = Some(EncodePass::Compute(list, soft::Own::default(), label.clone()));
+                *pass = Some(EncodePass::Compute(
+                    list,
+                    soft::Own::default(),
+                    label.clone(),
+                ));
                 match *pass {
                     Some(EncodePass::Compute(ref mut list, ref mut resources, _)) => {
                         (PreCompute::Deferred(resources, list), true)
@@ -1983,7 +1998,6 @@ where
     }
 }
 
-
 #[derive(Default, Debug)]
 struct PerformanceCounters {
     immediate_command_buffers: usize,
@@ -2181,7 +2195,7 @@ impl hal::queue::CommandQueue<Backend> for CommandQueue {
                         cmd_buffer.lock().enqueue();
                         let shared_cb = SharedCommandBuffer(Arc::clone(cmd_buffer));
                         //TODO: make this compatible with events
-                        queue.sync(move || {
+                        queue.exec_sync(move || {
                             shared_cb.0.lock().commit();
                         });
                     }
@@ -2544,7 +2558,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             self.state.target_extent = framebuffer.extent;
         }
         if let Some(sp) = info.subpass {
-            let subpass = &sp.main_pass.subpasses[sp.index];
+            let subpass = &sp.main_pass.subpasses[sp.index as usize];
             self.state.target_formats.copy_from(&subpass.target_formats);
 
             self.state.target_aspects = Aspects::empty();
@@ -2566,10 +2580,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 }) => {
                     *is_encoding = true;
                     let pass_desc = metal::RenderPassDescriptor::new().to_owned();
-                    journal
-                        .passes
-                        .alloc()
-                        .init((soft::Pass::Render(pass_desc), 0 .. 0, label.clone()));
+                    journal.passes.alloc().init((
+                        soft::Pass::Render(pass_desc),
+                        0 .. 0,
+                        label.clone(),
+                    ));
                 }
                 _ => {
                     warn!("Unexpected inheritance info on a primary command buffer");
@@ -2600,23 +2615,17 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     {
     }
 
-    unsafe fn fill_buffer<R>(&mut self, buffer: &native::Buffer, range: R, data: u32)
-    where
-        R: RangeArg<buffer::Offset>,
-    {
+    unsafe fn fill_buffer(&mut self, buffer: &native::Buffer, sub: buffer::SubRange, data: u32) {
         let (raw, base_range) = buffer.as_bound();
         let mut inner = self.inner.borrow_mut();
 
-        let start = base_range.start + *range.start().unwrap_or(&0);
+        let start = base_range.start + sub.offset;
         assert_eq!(start % WORD_ALIGNMENT, 0);
 
-        let end = match range.end() {
-            Some(&e) => {
-                assert_eq!(e % WORD_ALIGNMENT, 0);
-                base_range.start + e
-            }
-            None => base_range.end,
-        };
+        let end = sub.size.map_or(base_range.end, |s| {
+            assert_eq!(s % WORD_ALIGNMENT, 0);
+            base_range.start + s
+        });
 
         if (data & 0xFF) * 0x0101_0101 == data {
             let command = soft::BlitCommand::FillBuffer {
@@ -3291,10 +3300,10 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn bind_index_buffer(&mut self, view: buffer::IndexBufferView<Backend>) {
         let (raw, range) = view.buffer.as_bound();
-        assert!(range.start + view.offset < range.end); // conservative
+        assert!(range.start + view.range.offset + view.range.size.unwrap_or(0) <= range.end); // conservative
         self.state.index_buffer = Some(IndexBuffer {
             buffer: AsNative::from(raw),
-            offset: (range.start + view.offset) as _,
+            offset: (range.start + view.range.offset) as _,
             stride: match view.index_type {
                 IndexType::U16 => 2,
                 IndexType::U32 => 4,
@@ -3304,7 +3313,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn bind_vertex_buffers<I, T>(&mut self, first_binding: pso::BufferIndex, buffers: I)
     where
-        I: IntoIterator<Item = (T, buffer::Offset)>,
+        I: IntoIterator<Item = (T, buffer::SubRange)>,
         T: Borrow<native::Buffer>,
     {
         if self.state.vertex_buffers.len() <= first_binding as usize {
@@ -3312,7 +3321,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 .vertex_buffers
                 .resize(first_binding as usize + 1, None);
         }
-        for (i, (buffer, offset)) in buffers.into_iter().enumerate() {
+        for (i, (buffer, sub)) in buffers.into_iter().enumerate() {
             let b = buffer.borrow();
             let (raw, range) = b.as_bound();
             let buffer_ptr = AsNative::from(raw);
@@ -3320,7 +3329,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             self.state
                 .vertex_buffers
                 .entry(index)
-                .set(Some((buffer_ptr, range.start + offset)));
+                .set(Some((buffer_ptr, range.start + sub.offset)));
         }
 
         if let Some(command) = self
@@ -4748,5 +4757,15 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 CommandSink::Remote { .. } => unimplemented!(),
             }
         }
+    }
+
+    unsafe fn insert_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn begin_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn end_debug_marker(&mut self) {
+        //TODO
     }
 }

@@ -4,16 +4,18 @@ mod common;
 use crate::common::words_from_bytes;
 
 #[test]
-fn ast_gets_entry_points() {
-    let module =
-        spirv::Module::from_words(words_from_bytes(include_bytes!("shaders/simple.vert.spv")));
+fn ast_gets_multiple_entry_points() {
+    let module = spirv::Module::from_words(words_from_bytes(include_bytes!(
+        "shaders/multiple_entry_points.cl.spv"
+    )));
     let entry_points = spirv::Ast::<lang::Target>::parse(&module)
         .unwrap()
         .get_entry_points()
         .unwrap();
 
-    assert_eq!(entry_points.len(), 1);
-    assert_eq!(entry_points[0].name, "main");
+    assert_eq!(entry_points.len(), 2);
+    assert!(entry_points.iter().any(|e| e.name == "entry_1"));
+    assert!(entry_points.iter().any(|e| e.name == "entry_2"));
 }
 
 #[test]
@@ -229,7 +231,7 @@ fn ast_sets_member_decoration() {
 }
 
 #[test]
-fn as_gets_specialization_constants() {
+fn ast_gets_specialization_constants() {
     let comp = spirv::Module::from_words(words_from_bytes(include_bytes!(
         "shaders/specialization.comp.spv"
     )));
@@ -239,7 +241,7 @@ fn as_gets_specialization_constants() {
 }
 
 #[test]
-fn as_gets_work_group_size_specialization_constants() {
+fn ast_gets_work_group_size_specialization_constants() {
     let comp = spirv::Module::from_words(words_from_bytes(include_bytes!(
         "shaders/workgroup.comp.spv"
     )));
@@ -263,5 +265,59 @@ fn as_gets_work_group_size_specialization_constants() {
                 constant_id: 15,
             },
         }
+    );
+}
+
+#[test]
+fn ast_gets_active_buffer_ranges() {
+    let module =
+        spirv::Module::from_words(words_from_bytes(include_bytes!("shaders/two_ubo.vert.spv")));
+    let ast = spirv::Ast::<lang::Target>::parse(&module).unwrap();
+
+    let uniform_buffers = ast.get_shader_resources().unwrap().uniform_buffers;
+    assert_eq!(uniform_buffers.len(), 2);
+
+    let ubo1 = ast.get_active_buffer_ranges(uniform_buffers[0].id).unwrap();
+    assert_eq!(
+        ubo1,
+        [
+            spirv::BufferRange {
+                index: 0,
+                offset: 0,
+                range: 64,
+            },
+            spirv::BufferRange {
+                index: 1,
+                offset: 64,
+                range: 16,
+            },
+            spirv::BufferRange {
+                index: 2,
+                offset: 80,
+                range: 32,
+            }
+        ]
+    );
+
+    let ubo2 = ast.get_active_buffer_ranges(uniform_buffers[1].id).unwrap();
+    assert_eq!(
+        ubo2,
+        [
+            spirv::BufferRange {
+                index: 0,
+                offset: 0,
+                range: 16,
+            },
+            spirv::BufferRange {
+                index: 1,
+                offset: 16,
+                range: 16,
+            },
+            spirv::BufferRange {
+                index: 2,
+                offset: 32,
+                range: 12,
+            }
+        ]
     );
 }

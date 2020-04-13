@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-vulkan"
-version = "0.4.3"
+version = "0.5.2"
 authors = ["The Gfx-rs Developers"]
 description = "Vulkan API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -29,13 +29,13 @@ name = "gfx_backend_vulkan"
 version = "0.5"
 
 [dependencies.ash]
-version = "0.29.0"
+version = "0.30"
 
 [dependencies.byteorder]
 version = "1"
 
 [dependencies.hal]
-version = "0.4"
+version = "0.5"
 package = "gfx-hal"
 
 [dependencies.lazy_static]
@@ -52,7 +52,7 @@ version = "0.1.9"
 optional = true
 
 [dependencies.smallvec]
-version = "0.6"
+version = "1.0"
 
 [features]
 default = []
@@ -63,7 +63,7 @@ features = ["xlib"]
 optional = true
 
 [target."cfg(all(unix, not(target_os = \"macos\"), not(target_os = \"ios\"), not(target_os = \"android\")))".dependencies.xcb]
-version = "0.8"
+version = "0.9"
 optional = true
 [target."cfg(target_os = \"macos\")".dependencies.core-graphics]
 version = "0.19"

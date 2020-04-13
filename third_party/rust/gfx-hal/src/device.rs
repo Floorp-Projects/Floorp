@@ -17,14 +17,19 @@ use std::ops::Range;
 use std::{fmt, iter};
 
 use crate::{
-    buffer, format, image, pass, pso, query,
-    memory::Requirements,
+    buffer,
+    format,
+    image,
+    memory::{Requirements, Segment},
+    pass,
     pool::CommandPoolCreateFlags,
+    pso,
     pso::DescriptorPoolCreateFlags,
+    query,
     queue::QueueFamilyId,
-    range::RangeArg,
     window::{self, SwapchainConfig},
-    Backend, MemoryTypeId,
+    Backend,
+    MemoryTypeId,
 };
 
 /// Error occurred caused device to be lost.
@@ -105,6 +110,24 @@ impl From<DeviceLost> for OomOrDeviceLost {
     }
 }
 
+impl std::fmt::Display for OomOrDeviceLost {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OomOrDeviceLost::DeviceLost(err) => write!(fmt, "Failed querying device: {}", err),
+            OomOrDeviceLost::OutOfMemory(err) => write!(fmt, "Failed querying device: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for OomOrDeviceLost {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            OomOrDeviceLost::DeviceLost(err) => Some(err),
+            OomOrDeviceLost::OutOfMemory(err) => Some(err),
+        }
+    }
+}
+
 /// Possible cause of allocation failure.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AllocationError {
@@ -125,7 +148,9 @@ impl std::fmt::Display for AllocationError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AllocationError::OutOfMemory(err) => write!(fmt, "Failed to allocate object: {}", err),
-            AllocationError::TooManyObjects => write!(fmt, "Failed to allocate object: Too many objects"),
+            AllocationError::TooManyObjects => {
+                write!(fmt, "Failed to allocate object: Too many objects")
+            }
         }
     }
 }
@@ -172,11 +197,24 @@ impl std::fmt::Display for CreationError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CreationError::OutOfMemory(err) => write!(fmt, "Failed to create device: {}", err),
-            CreationError::InitializationFailed => write!(fmt, "Failed to create device: Implementation specific error occurred"),
-            CreationError::MissingExtension => write!(fmt, "Failed to create device: Requested extension is missing"),
-            CreationError::MissingFeature => write!(fmt, "Failed to create device: Requested feature is missing"),
-            CreationError::TooManyObjects => write!(fmt, "Failed to create device: Too many objects"),
-            CreationError::DeviceLost => write!(fmt, "Failed to create device: Logical or Physical device was lost during creation"),
+            CreationError::InitializationFailed => write!(
+                fmt,
+                "Failed to create device: Implementation specific error occurred"
+            ),
+            CreationError::MissingExtension => write!(
+                fmt,
+                "Failed to create device: Requested extension is missing"
+            ),
+            CreationError::MissingFeature => {
+                write!(fmt, "Failed to create device: Requested feature is missing")
+            }
+            CreationError::TooManyObjects => {
+                write!(fmt, "Failed to create device: Too many objects")
+            }
+            CreationError::DeviceLost => write!(
+                fmt,
+                "Failed to create device: Logical or Physical device was lost during creation"
+            ),
         }
     }
 }
@@ -246,9 +284,16 @@ impl From<OutOfMemory> for BindError {
 impl std::fmt::Display for BindError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BindError::OutOfMemory(err) => write!(fmt, "Failed to bind object to memory range: {}", err),
-            BindError::OutOfBounds => write!(fmt, "Failed to bind object to memory range: Requested range is outside the resource"),
-            BindError::WrongMemory => write!(fmt, "Failed to bind object to memory range: Wrong memory"),
+            BindError::OutOfMemory(err) => {
+                write!(fmt, "Failed to bind object to memory range: {}", err)
+            }
+            BindError::OutOfBounds => write!(
+                fmt,
+                "Failed to bind object to memory range: Requested range is outside the resource"
+            ),
+            BindError::WrongMemory => {
+                write!(fmt, "Failed to bind object to memory range: Wrong memory")
+            }
         }
     }
 }
@@ -297,10 +342,18 @@ impl std::fmt::Display for ShaderError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ShaderError::OutOfMemory(err) => write!(fmt, "Shader error: {}", err),
-            ShaderError::CompilationFailed(string) => write!(fmt, "Shader error: Compilation failed: {}", string),
-            ShaderError::MissingEntryPoint(string) => write!(fmt, "Shader error: Missing entry point: {}", string),
-            ShaderError::InterfaceMismatch(string) => write!(fmt, "Shader error: Interface mismatch: {}", string),
-            ShaderError::UnsupportedStage(stage) => write!(fmt, "Shader error: Unsupported stage: {:?}", stage),
+            ShaderError::CompilationFailed(string) => {
+                write!(fmt, "Shader error: Compilation failed: {}", string)
+            }
+            ShaderError::MissingEntryPoint(string) => {
+                write!(fmt, "Shader error: Missing entry point: {}", string)
+            }
+            ShaderError::InterfaceMismatch(string) => {
+                write!(fmt, "Shader error: Interface mismatch: {}", string)
+            }
+            ShaderError::UnsupportedStage(stage) => {
+                write!(fmt, "Shader error: Unsupported stage: {:?}", stage)
+            }
         }
     }
 }
@@ -563,11 +616,11 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     unsafe fn destroy_buffer(&self, buffer: B::Buffer);
 
     /// Create a new buffer view object
-    unsafe fn create_buffer_view<R: RangeArg<u64>>(
+    unsafe fn create_buffer_view(
         &self,
         buf: &B::Buffer,
         fmt: Option<format::Format>,
-        range: R,
+        range: buffer::SubRange,
     ) -> Result<B::BufferView, buffer::ViewCreationError>;
 
     /// Destroy a buffer view object
@@ -616,7 +669,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         format: format::Format,
         swizzle: format::Swizzle,
         range: image::SubresourceRange,
-    ) -> Result<B::ImageView, image::ViewError>;
+    ) -> Result<B::ImageView, image::ViewCreationError>;
 
     /// Destroy an image view object
     unsafe fn destroy_image_view(&self, view: B::ImageView);
@@ -687,26 +740,19 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Map a memory object into application address space
     ///
     /// Call `map_memory()` to retrieve a host virtual address pointer to a region of a mappable memory object
-    unsafe fn map_memory<R>(&self, memory: &B::Memory, range: R) -> Result<*mut u8, MapError>
-    where
-        R: RangeArg<u64>;
+    unsafe fn map_memory(&self, memory: &B::Memory, segment: Segment) -> Result<*mut u8, MapError>;
 
     /// Flush mapped memory ranges
-    unsafe fn flush_mapped_memory_ranges<'a, I, R>(&self, ranges: I) -> Result<(), OutOfMemory>
+    unsafe fn flush_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a B::Memory, R)>,
-        R: RangeArg<u64>;
+        I::Item: Borrow<(&'a B::Memory, Segment)>;
 
     /// Invalidate ranges of non-coherent memory from the host caches
-    unsafe fn invalidate_mapped_memory_ranges<'a, I, R>(
-        &self,
-        ranges: I,
-    ) -> Result<(), OutOfMemory>
+    unsafe fn invalidate_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a B::Memory, R)>,
-        R: RangeArg<u64>;
+        I::Item: Borrow<(&'a B::Memory, Segment)>;
 
     /// Unmap a memory object once host access to it is no longer needed by the application
     unsafe fn unmap_memory(&self, memory: &B::Memory);

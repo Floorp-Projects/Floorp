@@ -1,45 +1,59 @@
-use std::borrow::Borrow;
-use std::collections::{BTreeMap, VecDeque};
-use std::ops::Range;
-use std::{ffi, mem, ptr, slice};
+use std::{
+    borrow::Borrow,
+    collections::{BTreeMap, VecDeque},
+    ffi,
+    mem,
+    ops::Range,
+    ptr,
+    slice,
+};
 
-use spirv_cross::{hlsl, spirv, ErrorCode as SpirvErrorCode};
+use range_alloc::RangeAllocator;
 use smallvec::SmallVec;
+use spirv_cross::{hlsl, spirv, ErrorCode as SpirvErrorCode};
 
-use winapi::shared::minwindef::{FALSE, TRUE, UINT};
-use winapi::shared::{dxgi, dxgi1_2, dxgi1_4, dxgiformat, dxgitype, windef, winerror};
-use winapi::um::{d3d12, d3dcompiler, synchapi, winbase, winnt};
-use winapi::Interface;
+use winapi::{
+    shared::{
+        dxgi,
+        dxgi1_2,
+        dxgi1_4,
+        dxgiformat,
+        dxgitype,
+        minwindef::{FALSE, TRUE, UINT},
+        windef,
+        winerror,
+    },
+    um::{d3d12, d3dcompiler, synchapi, winbase, winnt},
+    Interface,
+};
 
 use auxil::spirv_cross_specialize_ast;
-use hal::format::Aspects;
-use hal::memory::Requirements;
-use hal::pool::CommandPoolCreateFlags;
-use hal::pso::VertexInputRate;
-use hal::queue::{CommandQueue as _, QueueFamilyId};
-use hal::range::RangeArg;
 use hal::{
     self,
     buffer,
     device as d,
     format,
+    format::Aspects,
     image,
     memory,
+    memory::Requirements,
     pass,
+    pool::CommandPoolCreateFlags,
     pso,
+    pso::VertexInputRate,
     query,
+    queue::{CommandQueue as _, QueueFamilyId},
     window as w,
 };
 
-use pool::{CommandPool, CommandPoolAllocator};
-use range_alloc::RangeAllocator;
-use root_constants::RootConstant;
-use {
-    conv,
+use crate::{
     command as cmd,
+    conv,
     descriptors_cpu,
+    pool::{CommandPool, CommandPoolAllocator},
     resource as r,
     root_constants,
+    root_constants::RootConstant,
     window::{Surface, Swapchain},
     Backend as B,
     Device,
@@ -48,10 +62,7 @@ use {
     NUM_HEAP_PROPERTIES,
     QUEUE_FAMILIES,
 };
-use native::{
-    PipelineStateSubobject,
-    Subobject,
-};
+use native::{PipelineStateSubobject, Subobject};
 
 // Register space used for root constants.
 const ROOT_CONSTANT_SPACE: u32 = 0;
@@ -268,100 +279,131 @@ impl Device {
 
     fn patch_spirv_resources(
         ast: &mut spirv::Ast<hlsl::Target>,
-        layout: Option<&r::PipelineLayout>,
+        layout: &r::PipelineLayout,
     ) -> Result<(), d::ShaderError> {
         // Move the descriptor sets away to yield for the root constants at "space0".
-        let space_offset = match layout {
-            Some(layout) if !layout.constants.is_empty() => 1,
-            _ => return Ok(()),
-        };
-
+        let space_offset = if layout.constants.is_empty() { 0 } else { 1 };
         let shader_resources = ast.get_shader_resources().map_err(gen_query_error)?;
-        for image in &shader_resources.separate_images {
-            let set = ast
-                .get_decoration(image.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
-            ast.set_decoration(
-                image.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+
+        if space_offset != 0 {
+            for image in &shader_resources.separate_images {
+                let set = ast
+                    .get_decoration(image.id, spirv::Decoration::DescriptorSet)
+                    .map_err(gen_query_error)?;
+                ast.set_decoration(
+                    image.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
         }
 
-        for uniform_buffer in &shader_resources.uniform_buffers {
-            let set = ast
-                .get_decoration(uniform_buffer.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
-            ast.set_decoration(
-                uniform_buffer.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+        if space_offset != 0 {
+            for uniform_buffer in &shader_resources.uniform_buffers {
+                let set = ast
+                    .get_decoration(uniform_buffer.id, spirv::Decoration::DescriptorSet)
+                    .map_err(gen_query_error)?;
+                ast.set_decoration(
+                    uniform_buffer.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
         }
 
         for storage_buffer in &shader_resources.storage_buffers {
             let set = ast
                 .get_decoration(storage_buffer.id, spirv::Decoration::DescriptorSet)
                 .map_err(gen_query_error)?;
-            ast.set_decoration(
-                storage_buffer.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+            let binding = ast
+                .get_decoration(storage_buffer.id, spirv::Decoration::Binding)
+                .map_err(gen_query_error)?;
+            if space_offset != 0 {
+                ast.set_decoration(
+                    storage_buffer.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
+            if !layout.elements[set as usize].mutable_bindings.contains(&binding) {
+                ast.set_decoration(
+                    storage_buffer.id,
+                    spirv::Decoration::NonWritable,
+                    0,
+                )
+                .map_err(gen_unexpected_error)?
+            }
         }
 
         for image in &shader_resources.storage_images {
             let set = ast
                 .get_decoration(image.id, spirv::Decoration::DescriptorSet)
                 .map_err(gen_query_error)?;
-            ast.set_decoration(
-                image.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
-        }
-
-        for sampler in &shader_resources.separate_samplers {
-            let set = ast
-                .get_decoration(sampler.id, spirv::Decoration::DescriptorSet)
+            let binding = ast
+                .get_decoration(image.id, spirv::Decoration::Binding)
                 .map_err(gen_query_error)?;
-            ast.set_decoration(
-                sampler.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+            if space_offset != 0 {
+                ast.set_decoration(
+                    image.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
+            if !layout.elements[set as usize].mutable_bindings.contains(&binding) {
+                ast.set_decoration(
+                    image.id,
+                    spirv::Decoration::NonWritable,
+                    0,
+                )
+                .map_err(gen_unexpected_error)?
+            }
         }
 
-        for image in &shader_resources.sampled_images {
-            let set = ast
-                .get_decoration(image.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
-            ast.set_decoration(
-                image.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+        if space_offset != 0 {
+            for sampler in &shader_resources.separate_samplers {
+                let set = ast
+                    .get_decoration(sampler.id, spirv::Decoration::DescriptorSet)
+                    .map_err(gen_query_error)?;
+                ast.set_decoration(
+                    sampler.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
         }
 
-        for input in &shader_resources.subpass_inputs {
-            let set = ast
-                .get_decoration(input.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
-            ast.set_decoration(
-                input.id,
-                spirv::Decoration::DescriptorSet,
-                space_offset + set,
-            )
-            .map_err(gen_unexpected_error)?;
+        if space_offset != 0 {
+            for image in &shader_resources.sampled_images {
+                let set = ast
+                    .get_decoration(image.id, spirv::Decoration::DescriptorSet)
+                    .map_err(gen_query_error)?;
+                ast.set_decoration(
+                    image.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
         }
 
-        // TODO: other resources
+        if space_offset != 0 {
+            for input in &shader_resources.subpass_inputs {
+                let set = ast
+                    .get_decoration(input.id, spirv::Decoration::DescriptorSet)
+                    .map_err(gen_query_error)?;
+                ast.set_decoration(
+                    input.id,
+                    spirv::Decoration::DescriptorSet,
+                    space_offset + set,
+                )
+                .map_err(gen_unexpected_error)?;
+            }
+        }
 
         Ok(())
     }
@@ -371,10 +413,11 @@ impl Device {
         shader_model: hlsl::ShaderModel,
         layout: &r::PipelineLayout,
         stage: pso::Stage,
+        features: &hal::Features,
     ) -> Result<String, d::ShaderError> {
         let mut compile_options = hlsl::CompilerOptions::default();
         compile_options.shader_model = shader_model;
-        compile_options.vertex.invert_y = true;
+        compile_options.vertex.invert_y = !features.contains(hal::Features::NDC_Y_UP);
 
         let stage_flag = stage.into();
         let root_constant_layout = layout
@@ -413,6 +456,7 @@ impl Device {
         stage: pso::Stage,
         source: &pso::EntryPoint<B>,
         layout: &r::PipelineLayout,
+        features: &hal::Features,
     ) -> Result<(native::Blob, bool), d::ShaderError> {
         match *source.module {
             r::ShaderModule::Compiled(ref shaders) => {
@@ -426,10 +470,11 @@ impl Device {
             r::ShaderModule::Spirv(ref raw_data) => {
                 let mut ast = Self::parse_spirv(raw_data)?;
                 spirv_cross_specialize_ast(&mut ast, &source.specialization)?;
-                Self::patch_spirv_resources(&mut ast, Some(layout))?;
+                Self::patch_spirv_resources(&mut ast, layout)?;
 
                 let shader_model = hlsl::ShaderModel::V5_1;
-                let shader_code = Self::translate_spirv(&mut ast, shader_model, layout, stage)?;
+                let shader_code =
+                    Self::translate_spirv(&mut ast, shader_model, layout, stage, features)?;
                 debug!("SPIRV-Cross generated shader:\n{}", shader_code);
 
                 let real_name = ast
@@ -530,7 +575,7 @@ impl Device {
         device: native::Device,
         handle: d3d12::D3D12_CPU_DESCRIPTOR_HANDLE,
         info: ViewInfo,
-    ) -> Result<(), image::ViewError> {
+    ) -> Result<(), image::ViewCreationError> {
         #![allow(non_snake_case)]
 
         let mut desc = d3d12::D3D12_RENDER_TARGET_VIEW_DESC {
@@ -544,12 +589,12 @@ impl Device {
         let ArraySize = (info.range.layers.end - info.range.layers.start) as _;
         let is_msaa = info.kind.num_samples() > 1;
         if info.range.levels.start + 1 != info.range.levels.end {
-            return Err(image::ViewError::Level(info.range.levels.start));
+            return Err(image::ViewCreationError::Level(info.range.levels.start));
         }
         if info.range.layers.end > info.kind.num_layers() {
-            return Err(image::ViewError::Layer(image::LayerError::OutOfBounds(
-                info.range.layers,
-            )));
+            return Err(image::ViewCreationError::Layer(
+                image::LayerError::OutOfBounds(info.range.layers),
+            ));
         }
 
         match info.view_kind {
@@ -628,7 +673,7 @@ impl Device {
     fn view_image_as_render_target(
         &self,
         info: ViewInfo,
-    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewError> {
+    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         let handle = self.rtv_pool.lock().unwrap().alloc_handle();
         Self::view_image_as_render_target_impl(self.raw, handle, info).map(|_| handle)
     }
@@ -637,7 +682,7 @@ impl Device {
         device: native::Device,
         handle: d3d12::D3D12_CPU_DESCRIPTOR_HANDLE,
         info: ViewInfo,
-    ) -> Result<(), image::ViewError> {
+    ) -> Result<(), image::ViewCreationError> {
         #![allow(non_snake_case)]
 
         let mut desc = d3d12::D3D12_DEPTH_STENCIL_VIEW_DESC {
@@ -652,12 +697,12 @@ impl Device {
         let ArraySize = (info.range.layers.end - info.range.layers.start) as _;
         let is_msaa = info.kind.num_samples() > 1;
         if info.range.levels.start + 1 != info.range.levels.end {
-            return Err(image::ViewError::Level(info.range.levels.start));
+            return Err(image::ViewCreationError::Level(info.range.levels.start));
         }
         if info.range.layers.end > info.kind.num_layers() {
-            return Err(image::ViewError::Layer(image::LayerError::OutOfBounds(
-                info.range.layers,
-            )));
+            return Err(image::ViewCreationError::Layer(
+                image::LayerError::OutOfBounds(info.range.layers),
+            ));
         }
 
         match info.view_kind {
@@ -701,7 +746,9 @@ impl Device {
                     ArraySize,
                 }
             }
-            image::ViewKind::D3 | image::ViewKind::Cube | image::ViewKind::CubeArray => unimplemented!(),
+            image::ViewKind::D3 | image::ViewKind::Cube | image::ViewKind::CubeArray => {
+                unimplemented!()
+            }
         };
 
         unsafe {
@@ -714,14 +761,14 @@ impl Device {
     fn view_image_as_depth_stencil(
         &self,
         info: ViewInfo,
-    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewError> {
+    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         let handle = self.dsv_pool.lock().unwrap().alloc_handle();
         Self::view_image_as_depth_stencil_impl(self.raw, handle, info).map(|_| handle)
     }
 
     pub(crate) fn build_image_as_shader_resource_desc(
         info: &ViewInfo,
-    ) -> Result<d3d12::D3D12_SHADER_RESOURCE_VIEW_DESC, image::ViewError> {
+    ) -> Result<d3d12::D3D12_SHADER_RESOURCE_VIEW_DESC, image::ViewCreationError> {
         #![allow(non_snake_case)]
 
         let mut desc = d3d12::D3D12_SHADER_RESOURCE_VIEW_DESC {
@@ -737,9 +784,9 @@ impl Device {
         let ArraySize = (info.range.layers.end - info.range.layers.start) as _;
 
         if info.range.layers.end > info.kind.num_layers() {
-            return Err(image::ViewError::Layer(image::LayerError::OutOfBounds(
-                info.range.layers.clone(),
-            )));
+            return Err(image::ViewCreationError::Layer(
+                image::LayerError::OutOfBounds(info.range.layers.clone()),
+            ));
         }
         let is_msaa = info.kind.num_samples() > 1;
         let is_cube = info.caps.contains(image::ViewCapabilities::KIND_CUBE);
@@ -832,7 +879,7 @@ impl Device {
                     "Cube views are not supported for the image, kind: {:?}",
                     info.kind
                 );
-                return Err(image::ViewError::BadKind(info.view_kind));
+                return Err(image::ViewCreationError::BadKind(info.view_kind));
             }
         }
 
@@ -842,7 +889,7 @@ impl Device {
     fn view_image_as_shader_resource(
         &self,
         mut info: ViewInfo,
-    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewError> {
+    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         #![allow(non_snake_case)]
 
         // Depth-stencil formats can't be used for SRVs.
@@ -865,7 +912,7 @@ impl Device {
     fn view_image_as_storage(
         &self,
         info: ViewInfo,
-    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewError> {
+    ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         #![allow(non_snake_case)]
         assert_eq!(info.range.levels.start + 1, info.range.levels.end);
 
@@ -880,13 +927,13 @@ impl Device {
         let ArraySize = (info.range.layers.end - info.range.layers.start) as _;
 
         if info.range.layers.end > info.kind.num_layers() {
-            return Err(image::ViewError::Layer(image::LayerError::OutOfBounds(
-                info.range.layers,
-            )));
+            return Err(image::ViewCreationError::Layer(
+                image::LayerError::OutOfBounds(info.range.layers),
+            ));
         }
         if info.kind.num_samples() > 1 {
             error!("MSAA images can't be viewed as UAV");
-            return Err(image::ViewError::Unsupported);
+            return Err(image::ViewCreationError::Unsupported);
         }
 
         match info.view_kind {
@@ -931,7 +978,7 @@ impl Device {
             }
             image::ViewKind::Cube | image::ViewKind::CubeArray => {
                 error!("Cubic images can't be viewed as UAV");
-                return Err(image::ViewError::Unsupported);
+                return Err(image::ViewCreationError::Unsupported);
             }
         }
 
@@ -1233,12 +1280,10 @@ impl d::Device<B> for Device {
             .collect::<SmallVec<[_; 5]>>();
         let mut sub_infos = subpasses
             .into_iter()
-            .map(|desc| {
-                SubInfo {
-                    desc: desc.borrow().clone(),
-                    external_dependencies: image::Access::empty() .. image::Access::empty(),
-                    unresolved_dependencies: 0,
-                }
+            .map(|desc| SubInfo {
+                desc: desc.borrow().clone(),
+                external_dependencies: image::Access::empty() .. image::Access::empty(),
+                unresolved_dependencies: 0,
             })
             .collect::<SmallVec<[_; 1]>>();
         let dependencies = dependencies.into_iter().collect::<SmallVec<[_; 2]>>();
@@ -1252,22 +1297,33 @@ impl d::Device<B> for Device {
             .collect::<SmallVec<[_; 5]>>();
 
         for dep in &dependencies {
-            use hal::pass::SubpassRef as Sr;
             let dep = dep.borrow();
             match dep.passes {
-                Range { start: Sr::External, end: Sr::External } => {
+                Range {
+                    start: None,
+                    end: None,
+                } => {
                     error!("Unexpected external-external dependency!");
                 }
-                Range { start: Sr::External, end: Sr::Pass(sid) } => {
-                    sub_infos[sid].external_dependencies.start |= dep.accesses.start;
+                Range {
+                    start: None,
+                    end: Some(sid),
+                } => {
+                    sub_infos[sid as usize].external_dependencies.start |= dep.accesses.start;
                 }
-                Range { start: Sr::Pass(sid), end: Sr::External } => {
-                    sub_infos[sid].external_dependencies.end |= dep.accesses.end;
+                Range {
+                    start: Some(sid),
+                    end: None,
+                } => {
+                    sub_infos[sid as usize].external_dependencies.end |= dep.accesses.end;
                 }
-                Range { start: Sr::Pass(from_sid), end: Sr::Pass(sid) } => {
+                Range {
+                    start: Some(from_sid),
+                    end: Some(sid),
+                } => {
                     //Note: self-dependencies are ignored
                     if from_sid != sid {
-                        sub_infos[sid].unresolved_dependencies += 1;
+                        sub_infos[sid as usize].unresolved_dependencies += 1;
                     }
                 }
             }
@@ -1287,8 +1343,12 @@ impl d::Device<B> for Device {
             }
             for &(id, layout) in sub.depth_stencil {
                 let state = SubState::New(match layout {
-                    image::Layout::DepthStencilAttachmentOptimal => d3d12::D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                    image::Layout::DepthStencilReadOnlyOptimal => d3d12::D3D12_RESOURCE_STATE_DEPTH_READ,
+                    image::Layout::DepthStencilAttachmentOptimal => {
+                        d3d12::D3D12_RESOURCE_STATE_DEPTH_WRITE
+                    }
+                    image::Layout::DepthStencilReadOnlyOptimal => {
+                        d3d12::D3D12_RESOURCE_STATE_DEPTH_READ
+                    }
                     image::Layout::General => d3d12::D3D12_RESOURCE_STATE_DEPTH_WRITE,
                     _ => {
                         error!("Unexpected depth/stencil layout: {:?}", layout);
@@ -1320,14 +1380,17 @@ impl d::Device<B> for Device {
             post_barriers: Vec::new(),
         };
 
-        while let Some(sid) = sub_infos.iter().position(|si| si.unresolved_dependencies == 0) {
+        while let Some(sid) = sub_infos
+            .iter()
+            .position(|si| si.unresolved_dependencies == 0)
+        {
             for dep in &dependencies {
                 let dep = dep.borrow();
                 if dep.passes.start != dep.passes.end
-                    && dep.passes.start == pass::SubpassRef::Pass(sid)
+                    && dep.passes.start == Some(sid as pass::SubpassId)
                 {
-                    if let pass::SubpassRef::Pass(other) = dep.passes.end {
-                        sub_infos[other].unresolved_dependencies -= 1;
+                    if let Some(other) = dep.passes.end {
+                        sub_infos[other as usize].unresolved_dependencies -= 1;
                     }
                 }
             }
@@ -1389,8 +1452,7 @@ impl d::Device<B> for Device {
                         ai.last_state = resolve_state;
                         ai.barrier_start_index = rp.subpasses.len() + 1;
                     }
-                    SubState::Undefined |
-                    SubState::New(_) => {}
+                    SubState::Undefined | SubState::New(_) => {}
                 };
             }
 
@@ -1411,7 +1473,7 @@ impl d::Device<B> for Device {
         for (att_id, (ai, att)) in att_infos.iter().zip(attachments.iter()).enumerate() {
             let state_dst = if ai.barrier_start_index == 0 {
                 // attachment wasn't used in any sub-pass?
-                continue
+                continue;
             } else {
                 let si = &sub_infos[ai.barrier_start_index - 1];
                 conv::map_image_resource_state(si.external_dependencies.end, att.layouts.end)
@@ -1530,105 +1592,113 @@ impl d::Device<B> for Device {
             .sum();
         let mut ranges = Vec::with_capacity(total);
 
-        let elements = sets.iter().enumerate().map(|(i, set)| {
-            let set = set.borrow();
-            let space = (root_space_offset + i) as u32;
-            let mut table_type = r::SetTableTypes::empty();
-            let root_table_offset = root_offset;
+        let elements = sets
+            .iter()
+            .enumerate()
+            .map(|(i, set)| {
+                let set = set.borrow();
+                let space = (root_space_offset + i) as u32;
+                let mut table_type = r::SetTableTypes::empty();
+                let root_table_offset = root_offset;
 
-            //TODO: split between sampler and non-sampler tables
-            let visibility = conv::map_shader_visibility(
-                set.bindings
-                    .iter()
-                    .fold(pso::ShaderStageFlags::empty(), |u, bind| {
-                        u | bind.stage_flags
-                    }),
-            );
+                //TODO: split between sampler and non-sampler tables
+                let visibility = conv::map_shader_visibility(
+                    set.bindings
+                        .iter()
+                        .fold(pso::ShaderStageFlags::empty(), |u, bind| {
+                            u | bind.stage_flags
+                        }),
+                );
 
-            for bind in set.bindings.iter() {
-                debug!("\tRange {:?} at space={}", bind, space);
-            }
+                for bind in set.bindings.iter() {
+                    debug!("\tRange {:?} at space={}", bind, space);
+                }
 
-            let describe = |bind: &pso::DescriptorSetLayoutBinding, ty| {
-                native::DescriptorRange::new(
-                    ty,
-                    bind.count as _,
-                    native::Binding {
-                        register: bind.binding as _,
-                        space,
-                    },
-                    d3d12::D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
-                )
-            };
+                let describe = |bind: &pso::DescriptorSetLayoutBinding, ty| {
+                    native::DescriptorRange::new(
+                        ty,
+                        bind.count as _,
+                        native::Binding {
+                            register: bind.binding as _,
+                            space,
+                        },
+                        d3d12::D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
+                    )
+                };
 
-            let mut descriptors = Vec::new();
-            let mut range_base = ranges.len();
-            for bind in set.bindings.iter() {
-                let content = r::DescriptorContent::from(bind.ty);
+                let mut descriptors = Vec::new();
+                let mut mutable_bindings = auxil::FastHashSet::default();
+                let mut range_base = ranges.len();
+                for bind in set.bindings.iter() {
+                    let content = r::DescriptorContent::from(bind.ty);
 
-                if content.is_dynamic() {
-                    // Root Descriptor
-                    let binding = native::Binding {
-                        register: bind.binding as _,
-                        space,
-                    };
+                    if content.is_dynamic() {
+                        // Root Descriptor
+                        let binding = native::Binding {
+                            register: bind.binding as _,
+                            space,
+                        };
 
-                    if content.contains(r::DescriptorContent::CBV) {
-                        descriptors.push(r::RootDescriptor {
-                            offset: root_offset,
-                        });
-                        parameters.push(native::RootParameter::cbv_descriptor(visibility, binding));
-                        root_offset += 2;
+                        if content.contains(r::DescriptorContent::CBV) {
+                            descriptors.push(r::RootDescriptor {
+                                offset: root_offset,
+                            });
+                            parameters
+                                .push(native::RootParameter::cbv_descriptor(visibility, binding));
+                            root_offset += 2;
+                        } else {
+                            // SRV and UAV not implemented so far
+                            unimplemented!()
+                        }
                     } else {
-                        // SRV and UAV not implemented so far
-                        unimplemented!()
-                    }
-                } else {
-                    // Descriptor table ranges
-                    if content.contains(r::DescriptorContent::CBV) {
-                        ranges.push(describe(bind, native::DescriptorRangeType::CBV));
-                    }
-                    if content.contains(r::DescriptorContent::SRV) {
-                        ranges.push(describe(bind, native::DescriptorRangeType::SRV));
-                    }
-                    if content.contains(r::DescriptorContent::UAV) {
-                        ranges.push(describe(bind, native::DescriptorRangeType::UAV));
+                        // Descriptor table ranges
+                        if content.contains(r::DescriptorContent::CBV) {
+                            ranges.push(describe(bind, native::DescriptorRangeType::CBV));
+                        }
+                        if content.contains(r::DescriptorContent::SRV) {
+                            ranges.push(describe(bind, native::DescriptorRangeType::SRV));
+                        }
+                        if content.contains(r::DescriptorContent::UAV) {
+                            ranges.push(describe(bind, native::DescriptorRangeType::UAV));
+                            mutable_bindings.insert(bind.binding);
+                        }
                     }
                 }
-            }
-            if ranges.len() > range_base {
-                parameters.push(native::RootParameter::descriptor_table(
-                    visibility,
-                    &ranges[range_base ..],
-                ));
-                table_type |= r::SRV_CBV_UAV;
-                root_offset += 1;
-            }
-
-            range_base = ranges.len();
-            for bind in set.bindings.iter() {
-                let content = r::DescriptorContent::from(bind.ty);
-                if content.contains(r::DescriptorContent::SAMPLER) {
-                    ranges.push(describe(bind, native::DescriptorRangeType::Sampler));
+                if ranges.len() > range_base {
+                    parameters.push(native::RootParameter::descriptor_table(
+                        visibility,
+                        &ranges[range_base ..],
+                    ));
+                    table_type |= r::SRV_CBV_UAV;
+                    root_offset += 1;
                 }
-            }
-            if ranges.len() > range_base {
-                parameters.push(native::RootParameter::descriptor_table(
-                    visibility,
-                    &ranges[range_base ..],
-                ));
-                table_type |= r::SAMPLERS;
-                root_offset += 1;
-            }
 
-            r::RootElement {
-                table: r::RootTable {
-                    ty: table_type,
-                    offset: root_table_offset as _,
-                },
-                descriptors,
-            }
-        }).collect();
+                range_base = ranges.len();
+                for bind in set.bindings.iter() {
+                    let content = r::DescriptorContent::from(bind.ty);
+                    if content.contains(r::DescriptorContent::SAMPLER) {
+                        ranges.push(describe(bind, native::DescriptorRangeType::Sampler));
+                    }
+                }
+                if ranges.len() > range_base {
+                    parameters.push(native::RootParameter::descriptor_table(
+                        visibility,
+                        &ranges[range_base ..],
+                    ));
+                    table_type |= r::SAMPLERS;
+                    root_offset += 1;
+                }
+
+                r::RootElement {
+                    table: r::RootTable {
+                        ty: table_type,
+                        offset: root_table_offset as _,
+                    },
+                    descriptors,
+                    mutable_bindings,
+                }
+            })
+            .collect();
 
         // Ensure that we didn't reallocate!
         debug_assert_eq!(ranges.len(), total);
@@ -1697,6 +1767,7 @@ impl d::Device<B> for Device {
             Borrowed(native::Blob),
             None,
         }
+        let features = &self.features;
         impl ShaderBc {
             pub fn shader(&self) -> native::Shader {
                 match *self {
@@ -1714,7 +1785,7 @@ impl d::Device<B> for Device {
                 None => return Ok(ShaderBc::None),
             };
 
-            match Self::extract_entry_point(stage, source, desc.layout) {
+            match Self::extract_entry_point(stage, source, desc.layout, features) {
                 Ok((shader, true)) => Ok(ShaderBc::Owned(shader)),
                 Ok((shader, false)) => Ok(ShaderBc::Borrowed(shader)),
                 Err(err) => Err(pso::CreationError::Shader(err)),
@@ -1820,7 +1891,7 @@ impl d::Device<B> for Device {
         // Get associated subpass information
         let pass = {
             let subpass = &desc.subpass;
-            match subpass.main_pass.subpasses.get(subpass.index) {
+            match subpass.main_pass.subpasses.get(subpass.index as usize) {
                 Some(subpass) => subpass,
                 None => return Err(pso::CreationError::InvalidSubpass(subpass.index)),
             }
@@ -1973,9 +2044,13 @@ impl d::Device<B> for Device {
         desc: &pso::ComputePipelineDesc<'a, B>,
         _cache: Option<&()>,
     ) -> Result<r::ComputePipeline, pso::CreationError> {
-        let (cs, cs_destroy) =
-            Self::extract_entry_point(pso::Stage::Compute, &desc.shader, desc.layout)
-                .map_err(|err| pso::CreationError::Shader(err))?;
+        let (cs, cs_destroy) = Self::extract_entry_point(
+            pso::Stage::Compute,
+            &desc.shader,
+            desc.layout,
+            &self.features,
+        )
+        .map_err(|err| pso::CreationError::Shader(err))?;
 
         let (pipeline, hr) = self.raw.create_compute_pipeline_state(
             desc.layout.raw,
@@ -2149,11 +2224,11 @@ impl d::Device<B> for Device {
         Ok(())
     }
 
-    unsafe fn create_buffer_view<R: RangeArg<u64>>(
+    unsafe fn create_buffer_view(
         &self,
         buffer: &r::Buffer,
         format: Option<format::Format>,
-        range: R,
+        sub: buffer::SubRange,
     ) -> Result<r::BufferView, buffer::ViewCreationError> {
         let buffer = buffer.expect_bound();
         let buffer_features = {
@@ -2162,17 +2237,17 @@ impl d::Device<B> for Device {
         };
         let (format, format_desc) = match format.and_then(conv::map_format) {
             Some(fmt) => (fmt, format.unwrap().surface_desc()),
-            None => return Err(buffer::ViewCreationError::UnsupportedFormat { format }),
+            None => return Err(buffer::ViewCreationError::UnsupportedFormat(format)),
         };
 
-        let start = *range.start().unwrap_or(&0);
-        let end = *range.end().unwrap_or(&(buffer.requirements.size as _));
+        let start = sub.offset;
+        let size = sub.size.unwrap_or(buffer.requirements.size - start);
 
         let bytes_per_texel = (format_desc.bits / 8) as u64;
         // Check if it adheres to the texel buffer offset limit
         assert_eq!(start % bytes_per_texel, 0);
         let first_element = start / bytes_per_texel;
-        let num_elements = (end - start) / bytes_per_texel; // rounds down to next smaller size
+        let num_elements = size / bytes_per_texel; // rounds down to next smaller size
 
         let handle_srv = if buffer_features.contains(format::BufferFeature::UNIFORM_TEXEL) {
             let mut desc = d3d12::D3D12_SHADER_RESOURCE_VIEW_DESC {
@@ -2528,7 +2603,7 @@ impl d::Device<B> for Device {
         format: format::Format,
         swizzle: format::Swizzle,
         range: image::SubresourceRange,
-    ) -> Result<r::ImageView, image::ViewError> {
+    ) -> Result<r::ImageView, image::ViewCreationError> {
         let image = image.expect_bound();
         let is_array = image.kind.num_layers() > 1;
         let mip_levels = (range.levels.start, range.levels.end);
@@ -2546,7 +2621,7 @@ impl d::Device<B> for Device {
             } else {
                 view_kind
             },
-            format: conv::map_format(format).ok_or(image::ViewError::BadFormat(format))?,
+            format: conv::map_format(format).ok_or(image::ViewCreationError::BadFormat(format))?,
             component_mapping: conv::map_swizzle(swizzle),
             range,
         };
@@ -2613,7 +2688,7 @@ impl d::Device<B> for Device {
                 info.min_filter,
                 info.mip_filter,
                 op,
-                info.anisotropic,
+                info.anisotropy_clamp,
             ),
             [
                 conv::map_wrap(info.wrap_mode.0),
@@ -2621,10 +2696,7 @@ impl d::Device<B> for Device {
                 conv::map_wrap(info.wrap_mode.2),
             ],
             info.lod_bias.0,
-            match info.anisotropic {
-                image::Anisotropic::On(max) => max as _, // TODO: check support here?
-                image::Anisotropic::Off => 0,
-            },
+            info.anisotropy_clamp.map_or(0, |aniso| aniso as u32),
             conv::map_comparison(info.comparison.unwrap_or(pso::Comparison::Always)),
             info.border.into(),
             info.lod_range.start.0 .. info.lod_range.end.0,
@@ -2781,17 +2853,16 @@ impl d::Device<B> for Device {
                 let mut src_sampler = None;
 
                 match *descriptor.borrow() {
-                    pso::Descriptor::Buffer(buffer, ref range) => {
+                    pso::Descriptor::Buffer(buffer, ref sub) => {
                         let buffer = buffer.expect_bound();
 
                         if bind_info.content.is_dynamic() {
                             // Root Descriptor
-                            let buffer_offset = range.start.unwrap_or(0);
                             let buffer_address = (*buffer.resource).GetGPUVirtualAddress();
-
                             // Descriptor sets need to be externally synchronized according to specification
                             let dynamic_descriptors = &mut *bind_info.dynamic_descriptors.get();
-                            dynamic_descriptors[offset as usize].gpu_buffer_location = buffer_address + buffer_offset;
+                            dynamic_descriptors[offset as usize].gpu_buffer_location =
+                                buffer_address + sub.offset;
                         } else {
                             // Descriptor table
                             if update_pool_index == descriptor_update_pools.len() {
@@ -2802,9 +2873,8 @@ impl d::Device<B> for Device {
                                     max_size as _,
                                 ));
                             }
-                            let mut heap = descriptor_update_pools.last_mut().unwrap();
-                            let start = range.start.unwrap_or(0);
-                            let end = range.end.unwrap_or(buffer.requirements.size as _);
+                            let mut heap = descriptor_update_pools.pop().unwrap();
+                            let size = sub.size_to(buffer.requirements.size);
 
                             if bind_info.content.contains(r::DescriptorContent::CBV) {
                                 // Making the size field of buffer requirements for uniform
@@ -2812,17 +2882,17 @@ impl d::Device<B> for Device {
                                 // alignment to 256 allows us to patch the size here.
                                 // We can always enforce the size to be aligned to 256 for
                                 // CBVs without going out-of-bounds.
-                                let size = ((end - start) + 255) & !255;
                                 let desc = d3d12::D3D12_CONSTANT_BUFFER_VIEW_DESC {
-                                    BufferLocation: (*buffer.resource).GetGPUVirtualAddress() + start,
-                                    SizeInBytes: size as _,
+                                    BufferLocation: (*buffer.resource).GetGPUVirtualAddress()
+                                        + sub.offset,
+                                    SizeInBytes: ((size + 0xFF) & !0xFF) as _,
                                 };
                                 let handle = heap.alloc_handle();
                                 self.raw.CreateConstantBufferView(&desc, handle);
                                 src_cbv = Some(handle);
                             }
                             if bind_info.content.contains(r::DescriptorContent::SRV) {
-                                assert_eq!((end - start) % 4, 0);
+                                assert_eq!(size % 4, 0);
                                 let mut desc = d3d12::D3D12_SHADER_RESOURCE_VIEW_DESC {
                                     Format: dxgiformat::DXGI_FORMAT_R32_TYPELESS,
                                     Shader4ComponentMapping: IDENTITY_MAPPING,
@@ -2830,8 +2900,8 @@ impl d::Device<B> for Device {
                                     u: mem::zeroed(),
                                 };
                                 *desc.u.Buffer_mut() = d3d12::D3D12_BUFFER_SRV {
-                                    FirstElement: start as _,
-                                    NumElements: ((end - start) / 4) as _,
+                                    FirstElement: sub.offset as _,
+                                    NumElements: (size / 4) as _,
                                     StructureByteStride: 0,
                                     Flags: d3d12::D3D12_BUFFER_SRV_FLAG_RAW,
                                 };
@@ -2844,15 +2914,15 @@ impl d::Device<B> for Device {
                                 src_srv = Some(handle);
                             }
                             if bind_info.content.contains(r::DescriptorContent::UAV) {
-                                assert_eq!((end - start) % 4, 0);
+                                assert_eq!(size % 4, 0);
                                 let mut desc = d3d12::D3D12_UNORDERED_ACCESS_VIEW_DESC {
                                     Format: dxgiformat::DXGI_FORMAT_R32_TYPELESS,
                                     ViewDimension: d3d12::D3D12_UAV_DIMENSION_BUFFER,
                                     u: mem::zeroed(),
                                 };
                                 *desc.u.Buffer_mut() = d3d12::D3D12_BUFFER_UAV {
-                                    FirstElement: start as _,
-                                    NumElements: ((end - start) / 4) as _,
+                                    FirstElement: sub.offset as _,
+                                    NumElements: (size / 4) as _,
                                     StructureByteStride: 0,
                                     CounterOffsetInBytes: 0,
                                     Flags: d3d12::D3D12_BUFFER_UAV_FLAG_RAW,
@@ -2861,12 +2931,15 @@ impl d::Device<B> for Device {
                                     // pool is full, move to the next one
                                     update_pool_index += 1;
                                     let max_size = 1u64 << 12; //arbitrary
-                                    descriptor_update_pools.push(descriptors_cpu::HeapLinear::new(
-                                        self.raw,
-                                        native::DescriptorHeapType::CbvSrvUav,
-                                        max_size as _,
-                                    ));
-                                    heap = descriptor_update_pools.last_mut().unwrap();
+                                    let full_heap = mem::replace(
+                                        &mut heap,
+                                        descriptors_cpu::HeapLinear::new(
+                                            self.raw,
+                                            native::DescriptorHeapType::CbvSrvUav,
+                                            max_size as _,
+                                        ),
+                                    );
+                                    descriptor_update_pools.push(full_heap);
                                 }
                                 let handle = heap.alloc_handle();
                                 self.raw.CreateUnorderedAccessView(
@@ -2883,6 +2956,7 @@ impl d::Device<B> for Device {
                                 // pool is full, move to the next one
                                 update_pool_index += 1;
                             }
+                            descriptor_update_pools.push(heap);
                         }
                     }
                     pso::Descriptor::Image(image, _layout) => {
@@ -2900,14 +2974,7 @@ impl d::Device<B> for Device {
                     pso::Descriptor::Sampler(sampler) => {
                         src_sampler = Some(sampler.handle);
                     }
-                    pso::Descriptor::UniformTexelBuffer(buffer_view) => {
-                        let handle = buffer_view.handle_srv;
-                        src_srv = Some(handle);
-                        if handle.ptr == 0 {
-                            error!("SRV handle of the uniform texel buffer is zero (not supported by specified format).");
-                        }
-                    }
-                    pso::Descriptor::StorageTexelBuffer(buffer_view) => {
+                    pso::Descriptor::TexelBuffer(buffer_view) => {
                         if bind_info.content.contains(r::DescriptorContent::SRV) {
                             let handle = buffer_view.handle_srv;
                             src_srv = Some(handle);
@@ -3065,25 +3132,21 @@ impl d::Device<B> for Device {
         }
     }
 
-    unsafe fn map_memory<R>(&self, memory: &r::Memory, range: R) -> Result<*mut u8, d::MapError>
-    where
-        R: RangeArg<u64>,
-    {
-        if let Some(mem) = memory.resource {
-            let start = range.start().unwrap_or(&0);
-            let end = range.end().unwrap_or(&memory.size);
-            assert!(start <= end);
-
-            let mut ptr = ptr::null_mut();
-            assert_eq!(
-                winerror::S_OK,
-                (*mem).Map(0, &d3d12::D3D12_RANGE { Begin: 0, End: 0 }, &mut ptr)
-            );
-            ptr = ptr.offset(*start as _);
-            Ok(ptr as *mut _)
-        } else {
-            panic!("Memory not created with a memory type exposing `CPU_VISIBLE`.")
-        }
+    unsafe fn map_memory(
+        &self,
+        memory: &r::Memory,
+        segment: memory::Segment,
+    ) -> Result<*mut u8, d::MapError> {
+        let mem = memory
+            .resource
+            .expect("Memory not created with a memory type exposing `CPU_VISIBLE`");
+        let mut ptr = ptr::null_mut();
+        assert_eq!(
+            winerror::S_OK,
+            (*mem).Map(0, &d3d12::D3D12_RANGE { Begin: 0, End: 0 }, &mut ptr)
+        );
+        ptr = ptr.offset(segment.offset as isize);
+        Ok(ptr as *mut _)
     }
 
     unsafe fn unmap_memory(&self, memory: &r::Memory) {
@@ -3092,14 +3155,13 @@ impl d::Device<B> for Device {
         }
     }
 
-    unsafe fn flush_mapped_memory_ranges<'a, I, R>(&self, ranges: I) -> Result<(), d::OutOfMemory>
+    unsafe fn flush_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), d::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a r::Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a r::Memory, memory::Segment)>,
     {
         for range in ranges {
-            let &(ref memory, ref range) = range.borrow();
+            let &(ref memory, ref segment) = range.borrow();
             if let Some(mem) = memory.resource {
                 // map and immediately unmap, hoping that dx12 drivers internally cache
                 // currently mapped buffers.
@@ -3108,8 +3170,8 @@ impl d::Device<B> for Device {
                     (*mem).Map(0, &d3d12::D3D12_RANGE { Begin: 0, End: 0 }, ptr::null_mut())
                 );
 
-                let start = *range.start().unwrap_or(&0);
-                let end = *range.end().unwrap_or(&memory.size); // TODO: only need to be end of current mapping
+                let start = segment.offset;
+                let end = segment.size.map_or(memory.size, |s| start + s); // TODO: only need to be end of current mapping
 
                 (*mem).Unmap(
                     0,
@@ -3124,20 +3186,16 @@ impl d::Device<B> for Device {
         Ok(())
     }
 
-    unsafe fn invalidate_mapped_memory_ranges<'a, I, R>(
-        &self,
-        ranges: I,
-    ) -> Result<(), d::OutOfMemory>
+    unsafe fn invalidate_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), d::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a r::Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a r::Memory, memory::Segment)>,
     {
         for range in ranges {
-            let &(ref memory, ref range) = range.borrow();
+            let &(ref memory, ref segment) = range.borrow();
             if let Some(mem) = memory.resource {
-                let start = *range.start().unwrap_or(&0);
-                let end = *range.end().unwrap_or(&memory.size); // TODO: only need to be end of current mapping
+                let start = segment.offset;
+                let end = segment.size.map_or(memory.size, |s| start + s); // TODO: only need to be end of current mapping
 
                 // map and immediately unmap, hoping that dx12 drivers internally cache
                 // currently mapped buffers.
@@ -3467,7 +3525,7 @@ impl d::Device<B> for Device {
     unsafe fn set_command_buffer_name(
         &self,
         _command_buffer: &mut cmd::CommandBuffer,
-        _name: &str
+        _name: &str,
     ) {
         // TODO
     }

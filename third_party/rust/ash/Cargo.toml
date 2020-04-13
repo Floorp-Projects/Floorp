@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "ash"
-version = "0.29.0"
+version = "0.30.0"
 authors = ["maik klein <maikklein@googlemail.com>"]
 description = "Vulkan bindings for Rust"
 documentation = "https://docs.rs/ash"
@@ -22,8 +23,8 @@ license = "MIT"
 repository = "https://github.com/MaikKlein/ash"
 [package.metadata.release]
 no-dev-version = true
-[dependencies.shared_library]
-version = "0.1.9"
+[dependencies.libloading]
+version = "0.5.2"
 
 [features]
 default = []

@@ -1,17 +1,16 @@
+#![allow(clippy::too_many_arguments, clippy::missing_safety_doc)]
 //! # Vulkan API
 //!
-//! <https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/index.html>
+//! <https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html>
 //!
 //! ## Examples
 //!
 //! ```rust,no_run
-//! # #[macro_use]
-//! # extern crate ash;
 //! use ash::{vk, Entry, version::EntryV1_0};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let entry = Entry::new()?;
 //! let app_info = vk::ApplicationInfo {
-//!     api_version: vk_make_version!(1, 0, 0),
+//!     api_version: vk::make_version(1, 0, 0),
 //!     ..Default::default()
 //! };
 //! let create_info = vk::InstanceCreateInfo {
@@ -23,11 +22,9 @@
 //! ```
 //!
 
-extern crate shared_library;
-
-pub use device::Device;
-pub use entry::{Entry, EntryCustom, InstanceError, LoadingError};
-pub use instance::Instance;
+pub use crate::device::Device;
+pub use crate::entry::{Entry, EntryCustom, InstanceError, LoadingError};
+pub use crate::instance::Instance;
 
 mod device;
 mod entry;
@@ -47,8 +44,8 @@ pub trait RawPtr<T> {
 
 impl<'r, T> RawPtr<T> for Option<&'r T> {
     fn as_raw_ptr(&self) -> *const T {
-        match self {
-            &Some(inner) => inner as *const T,
+        match *self {
+            Some(inner) => inner as *const T,
 
             _ => ::std::ptr::null(),
         }

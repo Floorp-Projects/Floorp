@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{EntryV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
-use version::{EntryV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct WaylandSurface {
@@ -27,13 +27,13 @@ impl WaylandSurface {
         vk::KhrWaylandSurfaceFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCreateWaylandSurfaceKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateWaylandSurfaceKHR.html>"]
     pub unsafe fn create_wayland_surface(
         &self,
         create_info: &vk::WaylandSurfaceCreateInfoKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
-        let mut surface = mem::uninitialized();
+        let mut surface = mem::zeroed();
         let err_code = self.wayland_surface_fn.create_wayland_surface_khr(
             self.handle,
             create_info,
@@ -44,5 +44,31 @@ impl WaylandSurface {
             vk::Result::SUCCESS => Ok(surface),
             _ => Err(err_code),
         }
+    }
+
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceWaylandPresentationSupportKHR.html"]
+    pub unsafe fn get_physical_device_wayland_presentation_support(
+        &self,
+        physical_device: vk::PhysicalDevice,
+        queue_family_index: u32,
+        wl_display: &mut vk::wl_display,
+    ) -> bool {
+        let b = self
+            .wayland_surface_fn
+            .get_physical_device_wayland_presentation_support_khr(
+                physical_device,
+                queue_family_index,
+                wl_display,
+            );
+
+        b > 0
+    }
+
+    pub fn fp(&self) -> &vk::KhrWaylandSurfaceFn {
+        &self.wayland_surface_fn
+    }
+
+    pub fn instance(&self) -> vk::Instance {
+        self.handle
     }
 }

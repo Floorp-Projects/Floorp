@@ -1163,6 +1163,7 @@ pub fn map_wrap_mode(wrap: image::WrapMode) -> MTLSamplerAddressMode {
         image::WrapMode::Mirror => MTLSamplerAddressMode::MirrorRepeat,
         image::WrapMode::Clamp => MTLSamplerAddressMode::ClampToEdge,
         image::WrapMode::Border => MTLSamplerAddressMode::ClampToBorderColor,
+        image::WrapMode::MirrorClamp => MTLSamplerAddressMode::MirrorClampToEdge,
     }
 }
 
@@ -1208,15 +1209,7 @@ pub fn map_polygon_mode(mode: pso::PolygonMode) -> MTLTriangleFillMode {
             warn!("Unable to fill with points");
             MTLTriangleFillMode::Lines
         }
-        pso::PolygonMode::Line(width) => {
-            match width {
-                pso::State::Static(w) if w != 1.0 => {
-                    warn!("Unsupported line width: {:?}", w);
-                }
-                _ => {}
-            }
-            MTLTriangleFillMode::Lines
-        }
+        pso::PolygonMode::Line => MTLTriangleFillMode::Lines,
         pso::PolygonMode::Fill => MTLTriangleFillMode::Fill,
     }
 }

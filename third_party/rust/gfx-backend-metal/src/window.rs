@@ -22,7 +22,6 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 use std::thread;
 
-
 //TODO: make it a weak pointer, so that we know which
 // frames can be replaced if we receive an unknown
 // texture pointer by an acquired drawable.
@@ -247,7 +246,6 @@ impl Drop for Frame {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum AcquireMode {
     Wait,
@@ -414,7 +412,7 @@ impl w::Surface<Backend> for Surface {
         let can_set_display_sync =
             device_caps.os_is_mac && device_caps.has_version_at_least(10, 13);
 
-         w::SurfaceCapabilities {
+        w::SurfaceCapabilities {
             present_modes: if can_set_display_sync {
                 w::PresentMode::FIFO | w::PresentMode::IMMEDIATE
             } else {
@@ -446,7 +444,7 @@ impl w::Surface<Backend> for Surface {
     }
 
     fn supported_formats(&self, _physical_device: &PhysicalDevice) -> Option<Vec<format::Format>> {
-         Some(vec![
+        Some(vec![
             format::Format::Bgra8Unorm,
             format::Format::Bgra8Srgb,
             format::Format::Rgba16Sfloat,
@@ -532,8 +530,10 @@ impl Device {
                                 match old.resize_fill {
                                     ResizeFill::Empty => {}
                                     ResizeFill::Clear(value) => {
-                                        let descriptor = metal::RenderPassDescriptor::new().to_owned();
-                                        let attachment = descriptor.color_attachments().object_at(0).unwrap();
+                                        let descriptor =
+                                            metal::RenderPassDescriptor::new().to_owned();
+                                        let attachment =
+                                            descriptor.color_attachments().object_at(0).unwrap();
                                         attachment.set_texture(Some(texture));
                                         attachment.set_store_action(metal::MTLStoreAction::Store);
                                         attachment.set_load_action(metal::MTLLoadAction::Clear);
@@ -543,7 +543,8 @@ impl Device {
                                             value[2] as _,
                                             value[3] as _,
                                         ));
-                                        let encoder = cmd_buffer.new_render_command_encoder(&descriptor);
+                                        let encoder =
+                                            cmd_buffer.new_render_command_encoder(&descriptor);
                                         encoder.end_encoding();
                                     }
                                     ResizeFill::Blit => {

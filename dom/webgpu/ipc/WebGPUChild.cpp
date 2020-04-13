@@ -99,26 +99,26 @@ UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
-  ffi::WGPUTextureDescriptor desc = {};
+  SerialTextureDescriptor desc = {};
   if (aDesc.mSize.IsUnsignedLongSequence()) {
     const auto& seq = aDesc.mSize.GetAsUnsignedLongSequence();
-    desc.size.width = seq.Length() > 0 ? seq[0] : 1;
-    desc.size.height = seq.Length() > 1 ? seq[1] : 1;
-    desc.size.depth = seq.Length() > 2 ? seq[2] : 1;
+    desc.mSize.width = seq.Length() > 0 ? seq[0] : 1;
+    desc.mSize.height = seq.Length() > 1 ? seq[1] : 1;
+    desc.mSize.depth = seq.Length() > 2 ? seq[2] : 1;
   } else if (aDesc.mSize.IsGPUExtent3DDict()) {
     const auto& dict = aDesc.mSize.GetAsGPUExtent3DDict();
-    desc.size.width = dict.mWidth;
-    desc.size.height = dict.mHeight;
-    desc.size.depth = dict.mDepth;
+    desc.mSize.width = dict.mWidth;
+    desc.mSize.height = dict.mHeight;
+    desc.mSize.depth = dict.mDepth;
   } else {
     MOZ_CRASH("Unexpected union");
   }
-  desc.array_layer_count = aDesc.mArrayLayerCount;
-  desc.mip_level_count = aDesc.mMipLevelCount;
-  desc.sample_count = aDesc.mSampleCount;
-  desc.dimension = ffi::WGPUTextureDimension(aDesc.mDimension);
-  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
-  desc.usage = aDesc.mUsage;
+  desc.mArrayLayerCount = aDesc.mArrayLayerCount;
+  desc.mMipLevelCount = aDesc.mMipLevelCount;
+  desc.mSampleCount = aDesc.mSampleCount;
+  desc.mDimension = ffi::WGPUTextureDimension(aDesc.mDimension);
+  desc.mFormat = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.mUsage = aDesc.mUsage;
 
   RawId id = ffi::wgpu_client_make_texture_id(mClient, aSelfId);
   if (!SendDeviceCreateTexture(aSelfId, desc, id)) {

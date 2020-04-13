@@ -109,7 +109,7 @@ extern "C"
     ScInternalResult sc_internal_compiler_msl_compile(const ScInternalCompilerBase *compiler, const char **shader,
                                                       const spirv_cross::MSLVertexAttr *p_vat_overrides, const size_t vat_override_count,
                                                       const spirv_cross::MSLResourceBinding *p_res_overrides, const size_t res_override_count,
-                                                      const MslConstSamplerMapping *p_const_samplers, const size_t const_sampler_count)
+                                                      const ScMslConstSamplerMapping *p_const_samplers, const size_t const_sampler_count)
     {
         INTERNAL_RESULT(
             do {
@@ -247,23 +247,19 @@ extern "C"
                 auto const &comp = *((spirv_cross::Compiler *)compiler);
                 auto const &sc_entry_point_names_and_stages = comp.get_entry_points_and_stages();
                 auto const sc_size = sc_entry_point_names_and_stages.size();
-                auto const &sc_entry_points = std::make_unique<spirv_cross::SPIREntryPoint[]>(sc_size);
-                for (uint32_t i = 0; i < sc_size; i++)
-                {
-                    auto const &sc_entry_point = sc_entry_point_names_and_stages[i];
-                    sc_entry_points[i] = comp.get_entry_point(sc_entry_point.name, sc_entry_point.execution_model);
-                }
 
                 *entry_points = (ScEntryPoint *)malloc(sc_size * sizeof(ScEntryPoint));
                 *size = sc_size;
                 for (uint32_t i = 0; i < sc_size; i++)
                 {
-                    auto const &sc_entry_point = sc_entry_points[i];
-                    entry_points[i]->name = strdup(sc_entry_point.name.c_str());
-                    entry_points[i]->execution_model = sc_entry_point.model;
-                    entry_points[i]->work_group_size_x = sc_entry_point.workgroup_size.x;
-                    entry_points[i]->work_group_size_y = sc_entry_point.workgroup_size.y;
-                    entry_points[i]->work_group_size_z = sc_entry_point.workgroup_size.z;
+                    auto const &sc_entry_point = sc_entry_point_names_and_stages[i];
+                    auto const &sc_spir_entry_point = comp.get_entry_point(sc_entry_point.name, sc_entry_point.execution_model);
+                    auto &entry_point = (*entry_points)[i];
+                    entry_point.name = strdup(sc_entry_point.name.c_str());
+                    entry_point.execution_model = sc_spir_entry_point.model;
+                    entry_point.work_group_size_x = sc_spir_entry_point.workgroup_size.x;
+                    entry_point.work_group_size_y = sc_spir_entry_point.workgroup_size.y;
+                    entry_point.work_group_size_z = sc_spir_entry_point.workgroup_size.z;
                 }
             } while (0);)
     }
@@ -281,9 +277,10 @@ extern "C"
                 for (uint32_t i = 0; i < sc_size; i++)
                 {
                     auto const &sc_active_buffer_range = sc_active_buffer_ranges[i];
-                    active_buffer_ranges[i]->index = sc_active_buffer_range.index;
-                    active_buffer_ranges[i]->offset = sc_active_buffer_range.offset;
-                    active_buffer_ranges[i]->range = sc_active_buffer_range.range;
+                    auto &active_buffer_range = (*active_buffer_ranges)[i];
+                    active_buffer_range.index = sc_active_buffer_range.index;
+                    active_buffer_range.offset = sc_active_buffer_range.offset;
+                    active_buffer_range.range = sc_active_buffer_range.range;
                 }
             } while (0);)
     }
