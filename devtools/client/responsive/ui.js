@@ -1216,14 +1216,9 @@ class ResponsiveUI {
   }
 
   async onRemotenessChange(event) {
-    const isTargetSwitchingEnabled = Services.prefs.getBoolPref(
-      "devtools.target-switching.enabled",
-      false
-    );
-
     // We should ignore the remoteness events in case of old RDM
     // as it is firing fake remoteness events.
-    if (isTargetSwitchingEnabled && this.isBrowserUIEnabled) {
+    if (this.isBrowserUIEnabled) {
       const newTarget = await this.client.mainRoot.getTab();
       await this.targetList.switchToTarget(newTarget);
     } else {
