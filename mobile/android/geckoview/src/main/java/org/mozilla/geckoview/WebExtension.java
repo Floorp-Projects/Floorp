@@ -1817,7 +1817,8 @@ public class WebExtension {
         }
 
         /* package */ MetaData(final GeckoBundle bundle) {
-            permissions = bundle.getStringArray("permissions");
+            // We only expose permissions that the embedder should prompt for
+            permissions = bundle.getStringArray("promptPermissions");
             origins = bundle.getStringArray("origins");
             description = bundle.getString("description");
             version = bundle.getString("version");
