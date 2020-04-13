@@ -272,4 +272,4 @@ __ ./fluent_migrations.html
 .. _fluent-reviewers: https://phabricator.services.mozilla.com/tag/fluent-reviewers/
 .. _fluent-react: https://github.com/projectfluent/fluent.js/wiki/React-Bindings
 .. _term: https://projectfluent.org/fluent/guide/terms.html
-.. _l10n linter: https://firefox-source-docs.mozilla.org/tools/lint/linters/l10n.html
+.. _l10n linter: https://firefox-source-docs.mozilla.org/code-quality/lint/linters/l10n.html
