@@ -19,7 +19,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -75,7 +74,7 @@ class InstalledAddonDetailsFragment : Fragment() {
     }
 
     private fun bind(view: View) {
-        val title = addon.translatableName.translate()
+        val title = addon.translatedName
         showToolbar(title)
 
         bindEnableSwitch(view)

@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.showInformationDialog
-import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translatedDescription
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemptStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
@@ -44,7 +45,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
     }
 
     private fun bind(addon: Addon, view: View) {
-        val title = addon.translatableName.translate()
+        val title = addon.translatedName
         showToolbar(title)
 
         bindDetails(addon, view)
@@ -111,7 +112,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
 
     private fun bindDetails(addon: Addon, view: View) {
         val detailsView = view.details
-        val detailsText = addon.translatableDescription.translate()
+        val detailsText = addon.translatedDescription
 
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)
