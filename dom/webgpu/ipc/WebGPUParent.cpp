@@ -325,6 +325,28 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyBufferToBuffer(
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyBufferToTexture(
+    RawId aSelfId, WGPUBufferCopyView aSource, WGPUTextureCopyView aDestination,
+    WGPUExtent3d aCopySize) {
+  ffi::wgpu_server_encoder_copy_buffer_to_texture(mContext, aSelfId, &aSource,
+                                                  &aDestination, aCopySize);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyTextureToBuffer(
+    RawId aSelfId, WGPUTextureCopyView aSource, WGPUBufferCopyView aDestination,
+    WGPUExtent3d aCopySize) {
+  ffi::wgpu_server_encoder_copy_texture_to_buffer(mContext, aSelfId, &aSource,
+                                                  &aDestination, aCopySize);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyTextureToTexture(
+    RawId aSelfId, WGPUTextureCopyView aSource,
+    WGPUTextureCopyView aDestination, WGPUExtent3d aCopySize) {
+  ffi::wgpu_server_encoder_copy_texture_to_texture(mContext, aSelfId, &aSource,
+                                                   &aDestination, aCopySize);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvCommandEncoderRunComputePass(RawId aSelfId,
                                                               Shmem&& shmem) {
   ffi::wgpu_server_encode_compute_pass(mContext, aSelfId, shmem.get<uint8_t>(),

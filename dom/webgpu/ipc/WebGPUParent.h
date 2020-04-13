@@ -56,6 +56,15 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aSelfId, RawId aSourceId, BufferAddress aSourceOffset,
       RawId aDestinationId, BufferAddress aDestinationOffset,
       BufferAddress aSize);
+  ipc::IPCResult RecvCommandEncoderCopyBufferToTexture(
+      RawId aSelfId, WGPUBufferCopyView aSource,
+      WGPUTextureCopyView aDestination, WGPUExtent3d aCopySize);
+  ipc::IPCResult RecvCommandEncoderCopyTextureToBuffer(
+      RawId aSelfId, WGPUTextureCopyView aSource,
+      WGPUBufferCopyView aDestination, WGPUExtent3d aCopySize);
+  ipc::IPCResult RecvCommandEncoderCopyTextureToTexture(
+      RawId aSelfId, WGPUTextureCopyView aSource,
+      WGPUTextureCopyView aDestination, WGPUExtent3d aCopySize);
   ipc::IPCResult RecvCommandEncoderRunComputePass(RawId aSelfId, Shmem&& shmem);
   ipc::IPCResult RecvCommandEncoderRunRenderPass(RawId aSelfId, Shmem&& shmem);
   ipc::IPCResult RecvCommandEncoderFinish(
