@@ -423,7 +423,7 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent);
 
-  virtual dom::EventTarget* GetDOMEventTarget() = 0;
+  virtual dom::EventTarget* GetDOMEventTarget() const = 0;
 
   /**
    * Similar to the setter for wrapWidth, but just sets the editor
@@ -560,13 +560,13 @@ class EditorBase : public nsIEditor,
   /**
    * Get the focused content, if we're focused.  Returns null otherwise.
    */
-  virtual nsIContent* GetFocusedContent();
+  virtual nsIContent* GetFocusedContent() const;
 
   /**
    * Get the focused content for the argument of some IMEStateManager's
    * methods.
    */
-  virtual already_AddRefed<nsIContent> GetFocusedContentForIME();
+  virtual nsIContent* GetFocusedContentForIME() const;
 
   /**
    * Whether the aGUIEvent should be handled by this editor or not.  When this
@@ -2259,7 +2259,7 @@ class EditorBase : public nsIEditor,
    * returns true but GetFocusedContent() returns null, it means that this
    * editor was focused when the DOM window was active.
    */
-  virtual bool IsActiveInDOMWindow();
+  virtual bool IsActiveInDOMWindow() const;
 
   /**
    * FindBetterInsertionPoint() tries to look for better insertion point which
@@ -2531,7 +2531,7 @@ class EditorBase : public nsIEditor,
   /**
    * Get the input event target. This might return null.
    */
-  virtual already_AddRefed<Element> GetInputEventTargetElement() = 0;
+  virtual already_AddRefed<Element> GetInputEventTargetElement() const = 0;
 
   /**
    * Return true if spellchecking should be enabled for this editor.
