@@ -194,7 +194,7 @@ TabStore.prototype = {
           let iconData = await PlacesUtils.promiseFaviconData(urls[0]);
           icon = iconData.uri.spec;
         } catch (ex) {
-          this._log.warn(`Failed to fetch favicon for ${urls[0]}`, ex);
+          this._log.trace(`Failed to fetch favicon for ${urls[0]}`, ex);
         }
         allTabs.push({
           title: current.title || "",
@@ -267,7 +267,7 @@ TabStore.prototype = {
   },
 
   async create(record) {
-    this._log.debug("Adding remote tabs from " + record.clientName);
+    this._log.debug("Adding remote tabs from " + record.id);
     this._remoteClients[record.id] = Object.assign({}, record.cleartext, {
       lastModified: record.modified,
     });
