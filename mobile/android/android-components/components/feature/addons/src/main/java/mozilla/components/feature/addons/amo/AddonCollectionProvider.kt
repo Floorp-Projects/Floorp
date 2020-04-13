@@ -31,7 +31,7 @@ internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
 internal const val COLLECTION_FILE_NAME = "mozilla_components_addon_collection_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
-internal const val READ_TIMEOUT_IN_SECONDS = 20L
+internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
 
 /**
  * Provide access to the collections AMO API.
@@ -64,11 +64,14 @@ class AddonCollectionProvider(
      *
      * @param allowCache whether or not the result may be provided
      * from a previously cached response, defaults to true.
+     * @param readTimeoutInSeconds optional timeout in seconds to use when fetching
+     * available add-ons from a remote endpoint. If not specified [DEFAULT_READ_TIMEOUT_IN_SECONDS]
+     * will be used.
      * @throws IOException if the request failed, or could not be executed due to cancellation,
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
-    override suspend fun getAvailableAddons(allowCache: Boolean): List<Addon> {
+    override suspend fun getAvailableAddons(allowCache: Boolean, readTimeoutInSeconds: Long?): List<Addon> {
         val cachedAddons = if (allowCache && !cacheExpired(context)) {
             readFromDiskCache()
         } else {
@@ -78,7 +81,7 @@ class AddonCollectionProvider(
         return cachedAddons ?: client.fetch(
                 Request(
                     url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons",
-                    readTimeout = Pair(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+                    readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 )
             )
             .use { response ->

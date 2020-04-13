@@ -14,6 +14,8 @@ interface AddonsProvider {
      *
      * @param allowCache whether or not the result may be provided
      * from a previously cached response, defaults to true.
+     * @param readTimeoutInSeconds optional timeout in seconds to use when fetching
+     * available add-ons from a remote endpoint.
      */
-    suspend fun getAvailableAddons(allowCache: Boolean = true): List<Addon>
+    suspend fun getAvailableAddons(allowCache: Boolean = true, readTimeoutInSeconds: Long? = null): List<Addon>
 }

@@ -15,6 +15,7 @@ import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -61,7 +62,9 @@ class AddonMigrationTest {
         val engine: Engine = mock()
         val addonCollectionProvider: AddonCollectionProvider = mock()
         val supportedAddons = listOf(Addon(addon1.id), Addon(addon2.id))
-        whenever(addonCollectionProvider.getAvailableAddons(anyBoolean())).thenReturn(supportedAddons)
+        whenever(
+            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS))
+        ).thenReturn(supportedAddons)
 
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
@@ -160,7 +163,9 @@ class AddonMigrationTest {
         val engine: Engine = mock()
         val addonCollectionProvider: AddonCollectionProvider = mock()
         // No supported add-on
-        whenever(addonCollectionProvider.getAvailableAddons(anyBoolean())).thenReturn(emptyList())
+        whenever(
+            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS))
+        ).thenReturn(emptyList())
 
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
