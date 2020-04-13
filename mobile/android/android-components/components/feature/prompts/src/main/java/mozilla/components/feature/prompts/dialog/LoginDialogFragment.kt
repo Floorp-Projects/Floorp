@@ -107,7 +107,8 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         }
 
         view.findViewById<Button>(R.id.save_cancel).setOnClickListener {
-            dialog?.dismiss()
+            feature?.onCancel(sessionId)
+            dismiss()
         }
         update()
     }
