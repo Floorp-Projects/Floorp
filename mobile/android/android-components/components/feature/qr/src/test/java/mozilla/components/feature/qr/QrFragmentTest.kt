@@ -17,7 +17,7 @@ import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import mozilla.components.feature.qr.QrFragment.Companion.chooseOptimalSize
-import mozilla.components.support.base.android.view.AutoFitTextureView
+import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq

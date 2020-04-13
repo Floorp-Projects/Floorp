@@ -47,7 +47,7 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
-import mozilla.components.support.base.android.view.AutoFitTextureView
+import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.support.base.log.logger.Logger
 import java.io.Serializable
 import java.util.ArrayList

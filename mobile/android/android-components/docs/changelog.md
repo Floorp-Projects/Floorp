@@ -17,6 +17,9 @@ permalink: /changelog/
 
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
+  
+  * **feature-qr**
+    * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
 # 38.0.0
 
