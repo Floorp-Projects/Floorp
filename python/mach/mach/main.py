@@ -412,7 +412,18 @@ To see more help for a specific command, run:
             return 0
 
         try:
-            args = parser.parse_args(argv)
+            try:
+                args = parser.parse_args(argv)
+            except NoCommandError as e:
+                if e.namespace.print_command:
+                    context.get_command = True
+                    args = parser.parse_args(e.namespace.print_command)
+                    if args.command == 'mach-completion':
+                        args = parser.parse_args(e.namespace.print_command[2:])
+                    print(args.command)
+                    return 0
+                else:
+                    raise
         except NoCommandError:
             print(NO_COMMAND_ERROR)
             return 1
@@ -600,7 +611,7 @@ To see more help for a specific command, run:
         global_group.add_argument('--settings', dest='settings_file',
                                   metavar='FILENAME', default=None,
                                   help='Path to settings file.')
-        global_group.add_argument('--print-command', action='store_true',
+        global_group.add_argument('--print-command', nargs=argparse.REMAINDER,
                                   help=argparse.SUPPRESS)
 
         for args, kwargs in self.global_arguments:

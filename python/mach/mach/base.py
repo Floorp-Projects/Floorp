@@ -25,6 +25,10 @@ class MachError(Exception):
 class NoCommandError(MachError):
     """No command was passed into mach."""
 
+    def __init__(self, namespace):
+        MachError.__init__(self)
+        self.namespace = namespace
+
 
 class UnknownCommandError(MachError):
     """Raised when we attempted to execute an unknown command."""
