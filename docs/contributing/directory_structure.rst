@@ -509,7 +509,7 @@ tools/lint
 ----------
 
 The linter declarations and configurations.
-See `linting documentation </tools/lint/>`_
+See `linting documentation </code-quality/lint/>`_
 
 uriloader
 ---------
