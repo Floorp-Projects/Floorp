@@ -1043,6 +1043,17 @@ static bool GetDisplayPortData(
   return true;
 }
 
+static bool GetWasDisplayPortPainted(nsIContent* aContent) {
+  DisplayPortPropertyData* rectData = nullptr;
+  DisplayPortMarginsPropertyData* marginsData = nullptr;
+
+  if (!GetDisplayPortData(aContent, &rectData, &marginsData)) {
+    return false;
+  }
+
+  return rectData ? rectData->mPainted : marginsData->mPainted;
+}
+
 bool nsLayoutUtils::IsMissingDisplayPortBaseRect(nsIContent* aContent) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
@@ -1283,7 +1294,7 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
 
   nsRect oldDisplayPort;
   bool hadDisplayPort = false;
-  bool wasPainted = false;
+  bool wasPainted = GetWasDisplayPortPainted(aContent);
   if (scrollFrame) {
     // We only use the two return values from this function to call
     // InvalidateForDisplayPortChange. InvalidateForDisplayPortChange does
@@ -1291,7 +1302,7 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     // useless if the content has no frame, so we avoid calling this to avoid
     // triggering a warning about not having a frame.
     hadDisplayPort =
-        GetHighResolutionDisplayPort(aContent, &oldDisplayPort, &wasPainted);
+        GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
   }
 
   aContent->SetProperty(
