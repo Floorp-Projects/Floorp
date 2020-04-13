@@ -189,11 +189,15 @@ class nsSVGIntegrationUtils final {
                                    const std::function<void()>& aPaintChild);
 
   /**
-   * Paint mask of non-SVG frame onto a given context, aParams.ctx.
+   * Paint mask of frame onto a given context, aParams.ctx.
    * aParams.ctx must contain an A8 surface. Returns false if the mask
    * didn't get painted and should be ignored at the call site.
+   * isMaskComplete is an outparameter returning whether the mask is complete.
+   * Incomplete masks should not be drawn and the proper fallback behaviour
+   * depends on if the masked element is html or svg.
    */
-  static bool PaintMask(const PaintFramesParams& aParams);
+  static bool PaintMask(const PaintFramesParams& aParams,
+                        bool& aOutIsMaskComplete);
 
   /**
    * Return true if all the mask resource of aFrame are ready.

@@ -2514,7 +2514,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
                            .PreScale(scale.width, scale.height));
 
     bool maskPainted = false;
-    bool paintFinished =
+    bool maskIsComplete =
         aMaskItem->PaintMask(aDisplayListBuilder, context, &maskPainted);
     if (!maskPainted) {
       return Nothing();
@@ -2545,7 +2545,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
         recorder, maskData->mExternalSurfaces,
         mManager->GetRenderRootStateManager(aBuilder.GetRenderRoot()),
         aResources);
-    if (paintFinished) {
+    if (maskIsComplete) {
       maskData->mItemRect = itemRect;
       maskData->mMaskOffset = maskOffset;
       maskData->mScale = scale;
