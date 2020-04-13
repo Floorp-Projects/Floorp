@@ -301,6 +301,10 @@ class TestSource(object):
     def make_queue(cls, tests, **kwargs):  # noqa: N805
         pass
 
+    @abstractmethod
+    def tests_by_group(cls, tests, **kwargs):  # noqa: N805
+        pass
+
     @classmethod
     def group_metadata(cls, state):
         return {"scope": "/"}
@@ -339,6 +343,17 @@ class GroupedSource(TestSource):
             test_queue.put(item)
         return test_queue
 
+    @classmethod
+    def tests_by_group(cls, tests, **kwargs):
+        groups = defaultdict(list)
+        state = {}
+        current = None
+        for test in tests:
+            if cls.new_group(state, test, **kwargs):
+                current = cls.group_metadata(state)['scope']
+            groups[current].append(test.id)
+        return groups
+
 
 class SingleTestSource(TestSource):
     @classmethod
@@ -358,6 +373,10 @@ class SingleTestSource(TestSource):
             test_queue.put(item)
 
         return test_queue
+
+    @classmethod
+    def tests_by_group(cls, tests, **kwargs):
+        return {cls.group_metadata(None): [t.id for t in tests]}
 
 
 class PathGroupedSource(GroupedSource):
