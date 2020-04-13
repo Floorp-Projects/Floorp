@@ -528,6 +528,7 @@ load 1510485.html
 pref(layout.css.individual-transform.enabled,true) load 1511442.html
 load 1511535.html
 load 1511563.html
+load 1516286-empty-mask.html
 load 1524382.html
 load 1524411.html
 load 1533885.html
@@ -551,7 +552,6 @@ load 1578844-1.html
 load 1578844-2.html
 load 1579953-1.html
 load 1580576.html
-load empty-mask.html
 load 1586600.html
 load 1599518.html
 load 1599532.html
