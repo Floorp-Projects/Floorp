@@ -1,9 +1,9 @@
-Contributing To Firefox - Quick Reference
-=========================================
+How to contribute to Firefox
+============================
 
 
-Some parts of this process, including cloning and compiling, can take a long time even on modern hardware.
-If at any point you get stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
+The whole process is a bit long, and it will take time to get things right.
+If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
 in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
 
 Clone the sources
@@ -18,7 +18,7 @@ system.
 
 For git, see the `git cinnabar documentation <https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development>`__
 
-The clone can take from 40 minutes to two hours,(depending on your connection) and
+The clone should be around 30 minutes (depending on your connection) and
 the repository should be less than 5GB (~ 20GB after the build).
 
 If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`.
@@ -44,7 +44,7 @@ Windows dependencies
 --------------------
 
 #. You need 64-bit version of Windows 7 or later.
-#. Download and install `Visual Studio Community Edition. <https://visualstudio.microsoft.com/downloads/>`__
+#. Download and install `Visual Studio. <https://visualstudio.microsoft.com/downloads/>`__
 #. Finally download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
 
 .. code-block:: shell
