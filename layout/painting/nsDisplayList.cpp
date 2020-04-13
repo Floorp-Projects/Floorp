@@ -9815,15 +9815,17 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
       *aMaskContext, mFrame, mBounds, borderArea, aBuilder, nullptr,
       mHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
-  bool painted = nsSVGIntegrationUtils::PaintMask(params);
+  bool maskIsComplete = false;
+  bool painted = nsSVGIntegrationUtils::PaintMask(params, maskIsComplete);
   if (aMaskPainted) {
     *aMaskPainted = painted;
   }
 
   nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 
-  return imgParams.result == ImgDrawResult::SUCCESS ||
-         imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE;
+  return maskIsComplete &&
+         (imgParams.result == ImgDrawResult::SUCCESS ||
+          imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE);
 }
 
 LayerState nsDisplayMasksAndClipPaths::GetLayerState(

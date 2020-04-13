@@ -443,8 +443,9 @@ typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
 
 /**
  * Paint css-positioned-mask onto a given target(aMaskDT).
+ * Return value indicates if mask is complete.
  */
-static void PaintMaskSurface(const PaintFramesParams& aParams,
+static bool PaintMaskSurface(const PaintFramesParams& aParams,
                              DrawTarget* aMaskDT, float aOpacity,
                              ComputedStyle* aSC,
                              const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
@@ -465,6 +466,8 @@ static void PaintMaskSurface(const PaintFramesParams& aParams,
   RefPtr<gfxContext> maskContext =
       gfxContext::CreatePreservingTransformOrNull(aMaskDT);
   MOZ_ASSERT(maskContext);
+
+  bool isMaskComplete = true;
 
   // Multiple SVG masks interleave with image mask. Paint each layer onto
   // aMaskDT one at a time.
@@ -506,9 +509,11 @@ static void PaintMaskSurface(const PaintFramesParams& aParams,
       aParams.imgParams.result &= nsCSSRendering::PaintStyleImageLayerWithSC(
           params, *maskContext, aSC, *aParams.frame->StyleBorder());
     } else {
-      aParams.imgParams.result &= ImgDrawResult::NOT_READY;
+      isMaskComplete = false;
     }
   }
+
+  return isMaskComplete;
 }
 
 struct MaskPaintResult {
@@ -571,11 +576,13 @@ static MaskPaintResult CreateAndPaintMaskSurface(
   // position. This makes sure that we combine the masks in device space.
   Matrix maskSurfaceMatrix = ctx.CurrentMatrix();
 
-  PaintMaskSurface(aParams, maskDT, paintResult.opacityApplied ? aOpacity : 1.0,
-                   aSC, aMaskFrames, maskSurfaceMatrix, aOffsetToUserSpace);
+  bool isMaskComplete = PaintMaskSurface(
+      aParams, maskDT, paintResult.opacityApplied ? aOpacity : 1.0, aSC,
+      aMaskFrames, maskSurfaceMatrix, aOffsetToUserSpace);
 
-  if (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
-      aParams.imgParams.result != ImgDrawResult::SUCCESS_NOT_COMPLETE) {
+  if (!isMaskComplete ||
+      (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
+       aParams.imgParams.result != ImgDrawResult::SUCCESS_NOT_COMPLETE)) {
     // Now we know the status of mask resource since we used it while painting.
     // According to the return value of PaintMaskSurface, we know whether mask
     // resource is resolvable or not.
@@ -749,7 +756,10 @@ class AutoPopGroup {
   gfxContext* mContext;
 };
 
-bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams) {
+bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
+                                      bool& aOutIsMaskComplete) {
+  aOutIsMaskComplete = true;
+
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity,
                                  maskUsage);
@@ -820,10 +830,10 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams) {
     matSR.SetContext(&ctx);
 
     EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
-    PaintMaskSurface(aParams, maskTarget,
-                     shouldPushOpacity ? 1.0 : maskUsage.opacity,
-                     firstFrame->Style(), maskFrames, ctx.CurrentMatrix(),
-                     offsets.offsetToUserSpace);
+    aOutIsMaskComplete = PaintMaskSurface(
+        aParams, maskTarget, shouldPushOpacity ? 1.0 : maskUsage.opacity,
+        firstFrame->Style(), maskFrames, ctx.CurrentMatrix(),
+        offsets.offsetToUserSpace);
   }
 
   // Paint clip-path onto ctx.
