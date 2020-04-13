@@ -82,8 +82,8 @@ class BrowserToolbarBottomBehavior(
         } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
             // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
             // state where they cannot show the toolbar
-            forceExpand(child)
             snapAnimator.cancel()
+            forceExpand(child)
             false
         } else {
             false
