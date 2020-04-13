@@ -255,7 +255,7 @@ class SyncableLoginsStorage(
     @Throws(SyncAuthInvalidException::class, RequestFailedException::class, LoginsStorageException::class)
     suspend fun sync(syncInfo: SyncUnlockInfo): SyncTelemetryPing = withContext(coroutineContext) {
         conn.getStorage().sync(syncInfo).also {
-            SyncTelemetry.processPasswordsPing(it)
+            SyncTelemetry.processLoginsPing(it)
         }
     }
 }

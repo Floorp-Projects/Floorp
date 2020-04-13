@@ -4,6 +4,47 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
+sync:
+  sync_uuid:
+    type: uuid
+    description: >
+      Unique identifier for this sync, used to correlate together individual pings for data types that
+      were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via
+      the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.
+    send_in_pings:
+      - sync
+      - history-sync
+      - bookmarks-sync
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/5371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  failure_reason:
+    type: labeled_string
+    labels:
+      - other
+      - unexpected
+      - auth
+    description: >
+      Records a global sync failure: either due to an authentication error, unexpected exception,
+      or other error that caused the sync to fail. Error strings are truncated and sanitized to omit
+      PII, like URLs and file system paths.
+    send_in_pings:
+      - sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/3092
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+
 # `history-sync`, `logins-sync` and `bookmarks-sync` metrics all use the same structure,
 # but must be specified individually. We can't define them once and use
 # `send_in_pings` because the stores might be synced in parallel, and we can't
