@@ -525,6 +525,10 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char* aName) {
     return;
   }
 
+  if (!StaticPrefs::network_process_enabled()) {
+    return;
+  }
+
   dom::Pref pref(nsCString(aName), /* isLocked */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref);
   auto sendPrefUpdate = [pref]() {
@@ -562,6 +566,7 @@ void nsIOService::CallOrWaitForSocketProcess(
     aFunc();
   } else {
     mPendingEvents.AppendElement(aFunc);  // infallible
+    LaunchSocketProcess();
   }
 }
 
