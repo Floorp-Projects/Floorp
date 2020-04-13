@@ -64,6 +64,11 @@ class ScrollAnchorContainer final {
   void SelectAnchor();
 
   /**
+   * Whether this scroll frame can maintain an anchor node at the moment.
+   */
+  bool CanMaintainAnchor() const;
+
+  /**
    * Notify the scroll anchor container that its scroll frame has been
    * scrolled by a user and should invalidate itself.
    */
