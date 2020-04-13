@@ -1634,16 +1634,6 @@ this.tabs = class extends ExtensionAPI {
           });
           return windowManager.convert(window, { populate });
         },
-
-        goForward(tabId) {
-          let nativeTab = getTabOrActive(tabId);
-          nativeTab.linkedBrowser.goForward();
-        },
-
-        goBack(tabId) {
-          let nativeTab = getTabOrActive(tabId);
-          nativeTab.linkedBrowser.goBack();
-        },
       },
     };
     return self;
