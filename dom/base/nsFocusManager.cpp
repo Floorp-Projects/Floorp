@@ -2596,16 +2596,14 @@ void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
 
 void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
                                     uint32_t aFlags) {
-  // if the noscroll flag isn't set, scroll the newly focused element into view
-  if (!(aFlags & FLAG_NOSCROLL)) {
-    ScrollFlags scrollFlags = ScrollFlags::ScrollOverflowHidden;
-    if (!(aFlags & FLAG_BYELEMENTFOCUS)) {
-      scrollFlags |= ScrollFlags::IgnoreMarginAndPadding;
-    }
-    aPresShell->ScrollContentIntoView(
-        aContent, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-        ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible), scrollFlags);
+  if (aFlags & FLAG_NOSCROLL) {
+    return;
   }
+  // If the noscroll flag isn't set, scroll the newly focused element into view.
+  aPresShell->ScrollContentIntoView(
+      aContent, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+      ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+      ScrollFlags::ScrollOverflowHidden);
 }
 
 void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
