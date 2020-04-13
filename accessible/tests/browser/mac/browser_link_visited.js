@@ -13,8 +13,8 @@ loadScripts(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserTestUtils",
-  "resource://testing-common/BrowserTestUtils.jsm"
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
 );
 
 /**
@@ -30,13 +30,12 @@ addAccessibleTask(
 
     is(link.getAttributeValue("AXVisited"), 0, "Link has not been visited");
 
-    let tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      "http://www.example.com/"
-    );
-    await BrowserTestUtils.removeTab(tab);
+    PlacesTestUtils.addVisits(["http://www.example.com/"]);
 
     await stateChanged;
     is(link.getAttributeValue("AXVisited"), 1, "Link has been visited");
+
+    // Ensure history is cleared before running
+    await PlacesUtils.history.clear();
   }
 );
