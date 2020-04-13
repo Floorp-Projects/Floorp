@@ -25,7 +25,6 @@
 #include "nsIRemoteTab.h"
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
-#include "mozilla/dom/WindowFeatures.h"  // mozilla::dom::WindowFeatures
 
 class nsIURI;
 class nsIDocShellTreeItem;
@@ -87,20 +86,23 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static nsresult URIfromURL(const char* aURL, mozIDOMWindowProxy* aParent,
                              nsIURI** aURI);
 
-  static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures,
+  static bool ShouldOpenPopup(const nsACString& aFeatures,
                               const SizeSpec& aSizeSpec);
 
-  static uint32_t CalculateChromeFlagsForChild(
-      const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec);
+  static uint32_t CalculateChromeFlagsForChild(const nsACString& aFeaturesStr,
+                                               const SizeSpec& aSizeSpec);
 
-  static uint32_t CalculateChromeFlagsForParent(
-      mozIDOMWindowProxy* aParent,
-      const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec,
-      bool aDialog, bool aChromeURL, bool aHasChromeParent, bool aCalledFromJS);
+  static uint32_t CalculateChromeFlagsForParent(mozIDOMWindowProxy* aParent,
+                                                const nsACString& aFeaturesStr,
+                                                const SizeSpec& aSizeSpec,
+                                                bool aDialog, bool aChromeURL,
+                                                bool aHasChromeParent,
+                                                bool aCalledFromJS);
 
+  static int32_t WinHasOption(const nsACString& aOptions, const char* aName,
+                              int32_t aDefault, bool* aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
-  static void CalcSizeSpec(const mozilla::dom::WindowFeatures& aFeatures,
-                           SizeSpec& aResult);
+  static void CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult);
   static void SizeOpenedWindow(
       nsIDocShellTreeOwner* aTreeOwner, mozIDOMWindowProxy* aParent,
       bool aIsCallerChrome, const SizeSpec& aSizeSpec,
@@ -111,18 +113,20 @@ class nsWindowWatcher : public nsIWindowWatcher,
                                  nsIDocShellTreeOwner** aResult);
 
  private:
-  nsresult CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
+  nsresult CreateChromeWindow(const nsACString& aFeatures,
+                              nsIWebBrowserChrome* aParentChrome,
                               uint32_t aChromeFlags,
                               nsIOpenWindowInfo* aOpenWindowInfo,
                               nsIWebBrowserChrome** aResult);
 
-  void MaybeDisablePersistence(const SizeSpec& sizeSpec,
+  void MaybeDisablePersistence(const nsACString& aFeatures,
                                nsIDocShellTreeOwner* aTreeOwner);
 
-  static uint32_t CalculateChromeFlagsHelper(
-      uint32_t aInitialFlags, const mozilla::dom::WindowFeatures& aFeatures,
-      const SizeSpec& aSizeSpec, bool* presenceFlag = nullptr,
-      bool aHasChromeParent = false);
+  static uint32_t CalculateChromeFlagsHelper(uint32_t aInitialFlags,
+                                             const nsACString& aFeatures,
+                                             const SizeSpec& aSizeSpec,
+                                             bool& presenceFlag,
+                                             bool aHasChromeParent = false);
   static uint32_t EnsureFlagsSafeForContent(uint32_t aChromeFlags,
                                             bool aChromeURL = false);
 

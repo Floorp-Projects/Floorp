@@ -63,7 +63,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -318,7 +317,9 @@ struct SizeSpec {
         mOuterHeightSpecified(false),
         mInnerWidthSpecified(false),
         mInnerHeightSpecified(false),
-        mLockAspectRatio(false) {}
+        mLockAspectRatio(false),
+        mUseDefaultWidth(false),
+        mUseDefaultHeight(false) {}
 
   int32_t mLeft;
   int32_t mTop;
@@ -334,6 +335,11 @@ struct SizeSpec {
   bool mInnerWidthSpecified;
   bool mInnerHeightSpecified;
   bool mLockAspectRatio;
+
+  // If these booleans are true, don't look at the corresponding width values
+  // even if they're specified -- they'll be bogus
+  bool mUseDefaultWidth;
+  bool mUseDefaultHeight;
 
   bool PositionSpecified() const { return mLeftSpecified || mTopSpecified; }
 
@@ -405,7 +411,8 @@ static bool CheckUserContextCompatibility(nsIDocShell* aDocShell) {
   return subjectPrincipal->GetUserContextId() == userContextId;
 }
 
-nsresult nsWindowWatcher::CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
+nsresult nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
+                                             nsIWebBrowserChrome* aParentChrome,
                                              uint32_t aChromeFlags,
                                              nsIOpenWindowInfo* aOpenWindowInfo,
                                              nsIWebBrowserChrome** aResult) {
@@ -437,18 +444,21 @@ nsresult nsWindowWatcher::CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
  * the size.
  *
  * @param aFeatures
- *        The features that was used to open the window.
+ *        The features string that was used to open the window.
  * @param aTreeOwner
  *        The nsIDocShellTreeOwner of the newly opened window. If null,
  *        this function is a no-op.
  */
 void nsWindowWatcher::MaybeDisablePersistence(
-    const SizeSpec& sizeSpec, nsIDocShellTreeOwner* aTreeOwner) {
+    const nsACString& aFeatures, nsIDocShellTreeOwner* aTreeOwner) {
   if (!aTreeOwner) {
     return;
   }
 
-  if (sizeSpec.SizeSpecified()) {
+  // At the moment, the strings "height=" or "width=" never happen
+  // outside a size specification, so we can do this the Q&D way.
+  if (PL_strcasestr(aFeatures.BeginReading(), "width=") ||
+      PL_strcasestr(aFeatures.BeginReading(), "height=")) {
     aTreeOwner->SetPersistence(false, false, false);
   }
 }
@@ -513,13 +523,10 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
     return NS_ERROR_UNEXPECTED;
   }
 
-  WindowFeatures features;
-  features.Tokenize(aFeatures);
-
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, sizeSpec);
+  CalcSizeSpec(aFeatures, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
+  uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures, sizeSpec);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -536,7 +543,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
-  CreateChromeWindow(parentChrome, chromeFlags, aOpenWindowInfo,
+  CreateChromeWindow(aFeatures, parentChrome, chromeFlags, aOpenWindowInfo,
                      getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
@@ -567,7 +574,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   // that will also run with out-of-process tabs.
   MOZ_ASSERT(chromeContext->UseRemoteTabs());
 
-  MaybeDisablePersistence(sizeSpec, chromeTreeOwner);
+  MaybeDisablePersistence(aFeatures, chromeTreeOwner);
 
   SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
                    Some(aOpenerFullZoom));
@@ -599,6 +606,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   uint32_t chromeFlags;
   nsAutoString name;           // string version of aName
+  nsAutoCString features;      // string version of aFeatures
   nsCOMPtr<nsIURI> uriToLoad;  // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>
       parentTreeOwner;            // from the parent window, if any
@@ -636,13 +644,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     name.SetIsVoid(true);
   }
 
-  WindowFeatures features;
-  nsAutoCString featuresStr;
   if (aFeatures) {
-    featuresStr.Assign(aFeatures);
-    features.Tokenize(featuresStr);
+    features.Assign(aFeatures);
+    features.StripWhitespace();
   } else {
-    featuresStr.SetIsVoid(true);
+    features.SetIsVoid(true);
   }
 
   RefPtr<BrowsingContext> parentBC(
@@ -684,13 +690,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
-
-  if (!hasChromeParent) {
-    bool outerSizeUsed =
-        features.Exists("outerwidth") || features.Exists("outerheight");
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::WINDOW_OPEN_OUTER_SIZE,
-                                   outerSizeUsed);
-  }
 
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
@@ -840,8 +839,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (provider) {
         rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
                                      sizeSpec.WidthSpecified(), uriToLoad, name,
-                                     featuresStr, aForceNoOpener,
-                                     aForceNoReferrer, aLoadState, &windowIsNew,
+                                     features, aForceNoOpener, aForceNoReferrer,
+                                     aLoadState, &windowIsNew,
                                      getter_AddRefs(newBC));
 
         if (NS_SUCCEEDED(rv) && newBC) {
@@ -937,8 +936,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
          completely honest: we clear that indicator if the opener is chrome, so
          that the downstream consumer can treat the indicator to mean simply
          that the new window is subject to popup control. */
-      rv = CreateChromeWindow(parentChrome, chromeFlags, openWindowInfo,
-                              getter_AddRefs(newChrome));
+      rv = CreateChromeWindow(features, parentChrome, chromeFlags,
+                              openWindowInfo, getter_AddRefs(newChrome));
+
       if (parentTopInnerWindow) {
         parentTopInnerWindow->Resume();
       }
@@ -1031,7 +1031,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (isNewToplevelWindow) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
     newDocShell->GetTreeOwner(getter_AddRefs(newTreeOwner));
-    MaybeDisablePersistence(sizeSpec, newTreeOwner);
+    MaybeDisablePersistence(features, newTreeOwner);
   }
 
   if (aDialog && aArgv) {
@@ -1649,43 +1649,41 @@ nsresult nsWindowWatcher::URIfromURL(const char* aURL,
   return NS_NewURI(aURI, aURL, baseURI);
 }
 
+#define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag) \
+  chromeFlags |=                                    \
+      WinHasOption(aFeatures, (feature), 0, &presenceFlag) ? (flag) : 0;
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
-    uint32_t aInitialFlags, const WindowFeatures& aFeatures,
-    const SizeSpec& aSizeSpec, bool* presenceFlag, bool aHasChromeParent) {
+    uint32_t aInitialFlags, const nsACString& aFeatures,
+    const SizeSpec& aSizeSpec, bool& presenceFlag, bool aHasChromeParent) {
   uint32_t chromeFlags = aInitialFlags;
 
-  if (aFeatures.GetBoolWithDefault("titlebar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("close", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
-  }
-  if (aFeatures.GetBoolWithDefault("toolbar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TOOLBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("location", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_LOCATIONBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("personalbar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("status", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_STATUSBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("menubar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_MENUBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("resizable", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
-  }
-  if (aFeatures.GetBoolWithDefault("minimizable", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_MIN;
-  }
+  // NS_CALCULATE_CHROME_FLAG_FOR requires aFeatures, presenceFlag, and
+  // chromeFlags to be in scope.
 
-  if (aFeatures.GetBoolWithDefault("scrollbars", true, presenceFlag)) {
+  NS_CALCULATE_CHROME_FLAG_FOR("titlebar",
+                               nsIWebBrowserChrome::CHROME_TITLEBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("close",
+                               nsIWebBrowserChrome::CHROME_WINDOW_CLOSE);
+  NS_CALCULATE_CHROME_FLAG_FOR("toolbar", nsIWebBrowserChrome::CHROME_TOOLBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("location",
+                               nsIWebBrowserChrome::CHROME_LOCATIONBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("personalbar",
+                               nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("status", nsIWebBrowserChrome::CHROME_STATUSBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("menubar", nsIWebBrowserChrome::CHROME_MENUBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("resizable",
+                               nsIWebBrowserChrome::CHROME_WINDOW_RESIZE);
+  NS_CALCULATE_CHROME_FLAG_FOR("minimizable",
+                               nsIWebBrowserChrome::CHROME_WINDOW_MIN);
+
+  // default scrollbar to "on," unless explicitly turned off
+  bool scrollbarsPresent = false;
+  if (WinHasOption(aFeatures, "scrollbars", 1, &scrollbarsPresent) ||
+      !scrollbarsPresent) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
   }
+  presenceFlag = presenceFlag || scrollbarsPresent;
 
   if (aHasChromeParent) {
     return chromeFlags;
@@ -1741,32 +1739,37 @@ uint32_t nsWindowWatcher::EnsureFlagsSafeForContent(uint32_t aChromeFlags,
 }
 
 // static
-bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
+bool nsWindowWatcher::ShouldOpenPopup(const nsACString& aFeatures,
                                       const SizeSpec& aSizeSpec) {
-  if (aFeatures.IsEmpty()) {
+  if (aFeatures.IsVoid()) {
     return false;
   }
 
   // Follow Google Chrome's behavior that opens a popup depending on
   // the following features.
-  if (!aFeatures.GetBoolWithDefault("location", false) &&
-      !aFeatures.GetBoolWithDefault("toolbar", false)) {
+  bool unused;
+  if (!WinHasOption(aFeatures, "location", 0, &unused) &&
+      !WinHasOption(aFeatures, "toolbar", 0, &unused)) {
     return true;
   }
 
-  if (!aFeatures.GetBoolWithDefault("menubar", false)) {
+  if (!WinHasOption(aFeatures, "menubar", 0, &unused)) {
     return true;
   }
 
-  if (!aFeatures.GetBoolWithDefault("resizable", true)) {
+  // `resizable` defaults to true.
+  // Should open popup only when explicitly specified to 0.
+  bool resizablePresent = false;
+  if (!WinHasOption(aFeatures, "resizable", 0, &resizablePresent) &&
+      resizablePresent) {
     return true;
   }
 
-  if (!aFeatures.GetBoolWithDefault("scrollbars", false)) {
+  if (!WinHasOption(aFeatures, "scrollbars", 0, &unused)) {
     return true;
   }
 
-  if (!aFeatures.GetBoolWithDefault("status", false)) {
+  if (!WinHasOption(aFeatures, "status", 0, &unused)) {
     return true;
   }
 
@@ -1788,13 +1791,15 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
-    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec) {
-  if (aFeatures.IsEmpty()) {
+    const nsACString& aFeatures, const SizeSpec& aSizeSpec) {
+  if (aFeatures.IsVoid()) {
     return nsIWebBrowserChrome::CHROME_ALL;
   }
 
-  uint32_t chromeFlags = CalculateChromeFlagsHelper(
-      nsIWebBrowserChrome::CHROME_WINDOW_BORDERS, aFeatures, aSizeSpec);
+  bool presenceFlag = false;
+  uint32_t chromeFlags =
+      CalculateChromeFlagsHelper(nsIWebBrowserChrome::CHROME_WINDOW_BORDERS,
+                                 aFeatures, aSizeSpec, presenceFlag);
 
   return EnsureFlagsSafeForContent(chromeFlags);
 }
@@ -1812,7 +1817,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
-    mozIDOMWindowProxy* aParent, const WindowFeatures& aFeatures,
+    mozIDOMWindowProxy* aParent, const nsACString& aFeatures,
     const SizeSpec& aSizeSpec, bool aDialog, bool aChromeURL,
     bool aHasChromeParent, bool aCalledFromJS) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1822,7 +1827,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
 
   // The features string is made void by OpenWindowInternal
   // if nullptr was originally passed as the features string.
-  if (aFeatures.IsEmpty()) {
+  if (aFeatures.IsVoid()) {
     chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
     if (aDialog) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
@@ -1841,29 +1846,29 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
      in the standards-compliant window.(normal)open. */
 
   bool presenceFlag = false;
-  if (aDialog && aFeatures.GetBoolWithDefault("all", false, &presenceFlag)) {
+  if (aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag)) {
     chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
   }
 
   /* Next, allow explicitly named options to override the initial settings */
   chromeFlags = CalculateChromeFlagsHelper(chromeFlags, aFeatures, aSizeSpec,
-                                           &presenceFlag, aHasChromeParent);
+                                           presenceFlag, aHasChromeParent);
 
   // Determine whether the window is a private browsing window
-  if (aFeatures.GetBoolWithDefault("private", false, &presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-  }
-  if (aFeatures.GetBoolWithDefault("non-private", false, &presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW;
-  }
+  chromeFlags |= WinHasOption(aFeatures, "private", 0, &presenceFlag)
+                     ? nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "non-private", 0, &presenceFlag)
+                     ? nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW
+                     : 0;
 
   // Determine whether the window should have remote tabs.
   bool remote = BrowserTabsRemoteAutostart();
 
   if (remote) {
-    remote = !aFeatures.GetBoolWithDefault("non-remote", false, &presenceFlag);
+    remote = !WinHasOption(aFeatures, "non-remote", 0, &presenceFlag);
   } else {
-    remote = aFeatures.GetBoolWithDefault("remote", false, &presenceFlag);
+    remote = WinHasOption(aFeatures, "remote", 0, &presenceFlag);
   }
 
   if (remote) {
@@ -1874,19 +1879,18 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
   bool fission = StaticPrefs::fission_autostart();
 
   if (fission) {
-    fission =
-        !aFeatures.GetBoolWithDefault("non-fission", false, &presenceFlag);
+    fission = !WinHasOption(aFeatures, "non-fission", 0, &presenceFlag);
   } else {
-    fission = aFeatures.GetBoolWithDefault("fission", false, &presenceFlag);
+    fission = WinHasOption(aFeatures, "fission", 0, &presenceFlag);
   }
 
   if (fission) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
   }
 
-  if (aFeatures.GetBoolWithDefault("popup", false, &presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
-  }
+  chromeFlags |= WinHasOption(aFeatures, "popup", 0, &presenceFlag)
+                     ? nsIWebBrowserChrome::CHROME_WINDOW_POPUP
+                     : 0;
 
   /* OK.
      Normal browser windows, in spite of a stated pattern of turning off
@@ -1897,15 +1901,15 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
 
   // default titlebar and closebox to "on," if not mentioned at all
   if (!(chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)) {
-    if (!aFeatures.Exists("titlebar")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "titlebar")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
     }
-    if (!aFeatures.Exists("close")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "close")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
     }
   }
 
-  if (aDialog && !aFeatures.IsEmpty() && !presenceFlag) {
+  if (aDialog && !aFeatures.IsVoid() && !presenceFlag) {
     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
   }
 
@@ -1913,35 +1917,35 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
      with the features that are more operating hints than appearance
      instructions. (Note modality implies dependence.) */
 
-  if (aFeatures.GetBoolWithDefault("alwayslowered", false) ||
-      aFeatures.GetBoolWithDefault("z-lock", false)) {
+  if (WinHasOption(aFeatures, "alwaysLowered", 0, nullptr) ||
+      WinHasOption(aFeatures, "z-lock", 0, nullptr)) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
-  } else if (aFeatures.GetBoolWithDefault("alwaysraised", false)) {
+  } else if (WinHasOption(aFeatures, "alwaysRaised", 0, nullptr)) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
   }
 
-  if (aFeatures.GetBoolWithDefault("suppressanimation", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_SUPPRESS_ANIMATION;
-  }
-  if (aFeatures.GetBoolWithDefault("alwaysontop", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP;
-  }
-  if (aFeatures.GetBoolWithDefault("chrome", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  }
-  if (aFeatures.GetBoolWithDefault("extrachrome", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_EXTRA;
-  }
-  if (aFeatures.GetBoolWithDefault("centerscreen", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
-  }
-  if (aFeatures.GetBoolWithDefault("dependent", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_DEPENDENT;
-  }
-  if (aFeatures.GetBoolWithDefault("modal", false)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
-                   nsIWebBrowserChrome::CHROME_DEPENDENT;
-  }
+  chromeFlags |= WinHasOption(aFeatures, "suppressanimation", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_SUPPRESS_ANIMATION
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "alwaysontop", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_OPENAS_CHROME
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "extrachrome", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_EXTRA
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "centerscreen", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_CENTER_SCREEN
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_DEPENDENT
+                     : 0;
+  chromeFlags |= WinHasOption(aFeatures, "modal", 0, nullptr)
+                     ? (nsIWebBrowserChrome::CHROME_MODAL |
+                        nsIWebBrowserChrome::CHROME_DEPENDENT)
+                     : 0;
 
   /* On mobile we want to ignore the dialog window feature, since the mobile UI
      does not provide any affordance for dialog windows. This does not interfere
@@ -1953,18 +1957,18 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
                       &disableDialogFeature);
 
   if (!disableDialogFeature) {
-    if (aFeatures.GetBoolWithDefault("dialog", false)) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
-    }
+    chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nullptr)
+                       ? nsIWebBrowserChrome::CHROME_OPENAS_DIALOG
+                       : 0;
   }
 
   /* and dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */
   if (aDialog) {
-    if (!aFeatures.Exists("dialog")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "dialog")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     }
-    if (!aFeatures.Exists("chrome")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "chrome")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
     }
   }
@@ -1986,6 +1990,63 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
   }
 
   return chromeFlags;
+}
+
+// static
+int32_t nsWindowWatcher::WinHasOption(const nsACString& aOptions,
+                                      const char* aName, int32_t aDefault,
+                                      bool* aPresenceFlag) {
+  if (aOptions.IsEmpty()) {
+    return 0;
+  }
+
+  const char* options = aOptions.BeginReading();
+  char* comma;
+  char* equal;
+  int32_t found = 0;
+
+#ifdef DEBUG
+  NS_ASSERTION(nsAutoCString(aOptions).FindCharInSet(" \n\r\t") == kNotFound,
+               "There should be no whitespace in this string!");
+#endif
+
+  while (true) {
+    comma = PL_strchr(options, ',');
+    if (comma) {
+      *comma = '\0';
+    }
+    equal = PL_strchr(options, '=');
+    if (equal) {
+      *equal = '\0';
+    }
+    if (nsCRT::strcasecmp(options, aName) == 0) {
+      if (aPresenceFlag) {
+        *aPresenceFlag = true;
+      }
+      if (equal)
+        if (*(equal + 1) == '*') {
+          found = aDefault;
+        } else if (nsCRT::strcasecmp(equal + 1, "yes") == 0) {
+          found = 1;
+        } else {
+          found = atoi(equal + 1);
+        }
+      else {
+        found = 1;
+      }
+    }
+    if (equal) {
+      *equal = '=';
+    }
+    if (comma) {
+      *comma = ',';
+    }
+    if (found || !comma) {
+      break;
+    }
+    options = comma + 1;
+  }
+  return found;
 }
 
 already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
@@ -2019,148 +2080,70 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
 }
 
 // static
-void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
+void nsWindowWatcher::CalcSizeSpec(const nsACString& aFeatures,
                                    SizeSpec& aResult) {
-  // https://drafts.csswg.org/cssom-view/#set-up-browsing-context-features
-  // To set up browsing context features for a browsing context `target` given
-  // a map `tokenizedFeatures`:
+  // Parse position spec, if any, from aFeatures
+  bool present;
+  int32_t temp;
 
-  // Step 1. Let `x` be null.
-  // (implicit)
-
-  // Step 2. Let `y` be null.
-  // (implicit)
-
-  // Step 3. Let `width` be null.
-  // (implicit)
-
-  // Step 4. Let `height` be null.
-  // (implicit)
-
-  // Step 5. If `tokenizedFeatures["left"]` exists:
-  if (aFeatures.Exists("left")) {
-    // Step 5.1. Set `x` to the result of invoking the rules for parsing
-    // integers on `tokenizedFeatures["left"]`.
-    //
-    // Step 5.2. If `x` is an error, set `x` to 0.
-    int32_t x = aFeatures.GetInt("left");
-
-    // Step 5.3. Optionally, clamp `x` in a user-agent-defined manner so that
-    // the window does not move outside the Web-exposed available screen area.
-    // (done later)
-
-    // Step 5.4. Optionally, move `target`’s window such that the window’s
-    // left edge is at the horizontal coordinate `x` relative to the left edge
-    // of the Web-exposed screen area, measured in CSS pixels of target.
-    // The positive axis is rightward.
-    aResult.mLeft = x;
-    aResult.mLeftSpecified = true;
+  present = false;
+  if ((temp = WinHasOption(aFeatures, "left", 0, &present)) || present) {
+    aResult.mLeft = temp;
+  } else if ((temp = WinHasOption(aFeatures, "screenX", 0, &present)) ||
+             present) {
+    aResult.mLeft = temp;
   }
+  aResult.mLeftSpecified = present;
 
-  // Step 6. If `tokenizedFeatures["top"]` exists:
-  if (aFeatures.Exists("top")) {
-    // Step 6.1. Set `y` to the result of invoking the rules for parsing
-    // integers on `tokenizedFeatures["top"]`.
-    //
-    // Step 6.2. If `y` is an error, set `y` to 0.
-    int32_t y = aFeatures.GetInt("top");
-
-    // Step 6.3. Optionally, clamp `y` in a user-agent-defined manner so that
-    // the window does not move outside the Web-exposed available screen area.
-    // (done later)
-
-    // Step 6.4. Optionally, move `target`’s window such that the window’s top
-    // edge is at the vertical coordinate `y` relative to the top edge of the
-    // Web-exposed screen area, measured in CSS pixels of target. The positive
-    // axis is downward.
-    aResult.mTop = y;
-    aResult.mTopSpecified = true;
+  present = false;
+  if ((temp = WinHasOption(aFeatures, "top", 0, &present)) || present) {
+    aResult.mTop = temp;
+  } else if ((temp = WinHasOption(aFeatures, "screenY", 0, &present)) ||
+             present) {
+    aResult.mTop = temp;
   }
+  aResult.mTopSpecified = present;
 
-  // Non-standard extension.
-  // See bug 1623826
-  if (aFeatures.Exists("outerwidth")) {
-    int32_t width = aFeatures.GetInt("outerwidth");
-    if (width) {
-      aResult.mOuterWidth = width;
-      aResult.mOuterWidthSpecified = true;
+  // Parse size spec, if any. Chrome size overrides content size.
+  if ((temp = WinHasOption(aFeatures, "outerWidth", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
+      aResult.mUseDefaultWidth = true;
+    } else {
+      aResult.mOuterWidth = temp;
     }
-  }
-
-  if (!aResult.mOuterWidthSpecified) {
-    // Step 7. If `tokenizedFeatures["width"]` exists:
-    if (aFeatures.Exists("width")) {
-      // Step 7.1. Set `width` to the result of invoking the rules for parsing
-      // integers on `tokenizedFeatures["width"]`.
-      //
-      // Step 7.2. If `width` is an error, set `width` to 0.
-      int32_t width = aFeatures.GetInt("width");
-
-      // Step 7.3. If `width` is not 0:
-      if (width) {
-        // Step 7.3.1. Optionally, clamp `width` in a user-agent-defined manner
-        // so that the window does not get too small or bigger than the
-        // Web-exposed available screen area.
-        // (done later)
-
-        // Step 7.3.2. Optionally, size `target`’s window by moving its right
-        // edge such that the distance between the left and right edges of the
-        // viewport are `width` CSS pixels of target.
-        aResult.mInnerWidth = width;
-        aResult.mInnerWidthSpecified = true;
-
-        // Step 7.3.3. Optionally, move target’s window in a user-agent-defined
-        // manner so that it does not grow outside the Web-exposed available
-        // screen area.
-        // (done later)
-      }
+    aResult.mOuterWidthSpecified = true;
+  } else if ((temp = WinHasOption(aFeatures, "width", INT32_MIN, nullptr)) ||
+             (temp =
+                  WinHasOption(aFeatures, "innerWidth", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
+      aResult.mUseDefaultWidth = true;
+    } else {
+      aResult.mInnerWidth = temp;
     }
+    aResult.mInnerWidthSpecified = true;
   }
 
-  // Non-standard extension.
-  // See bug 1623826
-  if (aFeatures.Exists("outerheight")) {
-    int32_t height = aFeatures.GetInt("outerheight");
-    if (height) {
-      aResult.mOuterHeight = height;
-      aResult.mOuterHeightSpecified = true;
+  if ((temp = WinHasOption(aFeatures, "outerHeight", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
+      aResult.mUseDefaultHeight = true;
+    } else {
+      aResult.mOuterHeight = temp;
     }
-  }
-
-  if (!aResult.mOuterHeightSpecified) {
-    // Step 8. If `tokenizedFeatures["height"]` exists:
-    if (aFeatures.Exists("height")) {
-      // Step 8.1. Set `height` to the result of invoking the rules for parsing
-      // integers on `tokenizedFeatures["height"]`.
-      //
-      // Step 8.2. If `height` is an error, set `height` to 0.
-      int32_t height = aFeatures.GetInt("height");
-
-      // Step 8.3. If `height` is not 0:
-      if (height) {
-        // Step 8.3.1. Optionally, clamp `height` in a user-agent-defined manner
-        // so that the window does not get too small or bigger than the
-        // Web-exposed available screen area.
-        // (done later)
-
-        // Step 8.3.2. Optionally, size `target`’s window by moving its bottom
-        // edge such that the distance between the top and bottom edges of the
-        // viewport are `height` CSS pixels of target.
-        aResult.mInnerHeight = height;
-        aResult.mInnerHeightSpecified = true;
-
-        // Step 8.3.3. Optionally, move target’s window in a user-agent-defined
-        // manner so that it does not grow outside the Web-exposed available
-        // screen area.
-        // (done later)
-      }
+    aResult.mOuterHeightSpecified = true;
+  } else if ((temp = WinHasOption(aFeatures, "height", INT32_MIN, nullptr)) ||
+             (temp =
+                  WinHasOption(aFeatures, "innerHeight", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
+      aResult.mUseDefaultHeight = true;
+    } else {
+      aResult.mInnerHeight = temp;
     }
+    aResult.mInnerHeightSpecified = true;
   }
 
-  // NOTE: The value is handled only on chrome-priv code.
-  // See nsWindowWatcher::SizeOpenedWindow.
-  aResult.mLockAspectRatio =
-      aFeatures.GetBoolWithDefault("lockaspectratio", false);
+  if (WinHasOption(aFeatures, "lockaspectratio", 0, nullptr)) {
+    aResult.mLockAspectRatio = true;
+  }
 }
 
 /* Size and position a new window according to aSizeSpec. This method
@@ -2250,18 +2233,30 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
 
   // Set up width
   if (aSizeSpec.mOuterWidthSpecified) {
-    width = NSToIntRound(aSizeSpec.mOuterWidth * openerZoom);
+    if (!aSizeSpec.mUseDefaultWidth) {
+      width = NSToIntRound(aSizeSpec.mOuterWidth * openerZoom);
+    }  // Else specified to default; just use our existing width
   } else if (aSizeSpec.mInnerWidthSpecified) {
     sizeChromeWidth = false;
-    width = NSToIntRound(aSizeSpec.mInnerWidth * openerZoom);
+    if (aSizeSpec.mUseDefaultWidth) {
+      width = width - chromeWidth;
+    } else {
+      width = NSToIntRound(aSizeSpec.mInnerWidth * openerZoom);
+    }
   }
 
   // Set up height
   if (aSizeSpec.mOuterHeightSpecified) {
-    height = NSToIntRound(aSizeSpec.mOuterHeight * openerZoom);
+    if (!aSizeSpec.mUseDefaultHeight) {
+      height = NSToIntRound(aSizeSpec.mOuterHeight * openerZoom);
+    }  // Else specified to default; just use our existing height
   } else if (aSizeSpec.mInnerHeightSpecified) {
     sizeChromeHeight = false;
-    height = NSToIntRound(aSizeSpec.mInnerHeight * openerZoom);
+    if (aSizeSpec.mUseDefaultHeight) {
+      height = height - chromeHeight;
+    } else {
+      height = NSToIntRound(aSizeSpec.mInnerHeight * openerZoom);
+    }
   }
 
   bool positionSpecified = aSizeSpec.PositionSpecified();
