@@ -258,7 +258,11 @@ def trackThreadNetIO(row, io, stage):
         gConnectionIDs[connID] = tid
     origThread = gConnectionIDs[connID]
     if origThread in gThreads:
-        netEvt = re.match("[\w-]+\/([\w-]+)", event).group(1)
+        try:
+            netEvt = re.match("[\w-]+\/([\w-]+)", event).group(1)
+        except AttributeError as e:
+            print("Error matching event {}: {}".format(event, str(e)))
+
         if netEvt in net_events:
             opType = net_events[netEvt]
             th, stg = gThreads[origThread], stages[stage]
