@@ -37,31 +37,6 @@ function waitForLoad() {
   });
 }
 
-async function setupWithOneLogin(pageUrl) {
-  let chromeScript = runInParent(function testSetup() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
-                        .createInstance(Ci.nsILoginInfo);
-    login.init("https://example.com", "https://example.com", null,
-               "user1", "pass1");
-
-    Services.logins.addLogin(login);
-    for (let l of Services.logins.getAllLogins()) {
-      info("Got login: " + l.username + ", " + l.password);
-    }
-  });
-  await setup(pageUrl);
-  return chromeScript;
-}
-
-function resetSavedLogins() {
-  let chromeScript = runInParent(function testTeardown() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    Services.logins.removeAllLogins();
-  });
-  chromeScript.destroy();
-}
-
 async function setup(pageUrl) {
   let loadPromise = waitForLoad();
   let processedFormPromise = promiseFormsProcessed();
@@ -78,63 +53,25 @@ async function setup(pageUrl) {
   });
 }
 
-async function navigateWithoutUserInteraction() {
+async function clickLink() {
   let loadPromise = waitForLoad();
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     let doc = this.content.document;
-    let hadInteracted = doc.userHasInteracted;
-    let target = doc.querySelector("a[href]");
-    if (target) {
-      target.click();
-    } else {
-      target = doc.querySelector("form");
-      target.submit();
-    }
-    is(doc.userHasInteracted, hadInteracted, "document.userHasInteracted shouldn't have changed");
+    doc.querySelector("a[href]").click();
   });
   await loadPromise;
 }
 
 async function userInput(selector, value) {
-  await SpecialPowers.spawn(getIframeBrowsingContext(window), [selector, value], async function(sel, val) {
-    // use "real" synthesized events rather than setUserInput to ensure
-    // document.userHasInteracted is flipped true
-    let EventUtils = ContentTaskUtils.getEventUtils(content);
-    let target = this.content.document.querySelector(sel);
-    target.focus();
-    target.select();
-    await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
-    await EventUtils.sendString(val, this.content);
-    info(
-      `userInput: new target.value: ${target.value}`
-    );
-    target.blur();
-    return Promise.resolve();
-  });
-}
-
-function checkDocumentUserHasInteracted() {
-  return SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-    return this.content.document.userHasInteracted;
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [selector, value], function(sel, val) {
+    this.content.document.querySelector(sel).setUserInput(val);
   });
 }
 
 add_task(async function test_init() {
-  // For this test, we'll be testing with & without user document interaction.
-  // So we'll reset the pref which dictates the behavior of LMC._formHasModifiedFields in automation
-  // and ensure all interactions are properly emulated
-  ok(SpecialPowers.getBoolPref("signon.testOnlyUserHasInteractedByPrefValue"), "signon.testOnlyUserHasInteractedByPrefValue should default to true");
-  info("test_init, flipping the signon.testOnlyUserHasInteractedByPrefValue pref");
   await SpecialPowers.pushPrefEnv({"set": [
-    ["signon.testOnlyUserHasInteractedByPrefValue", false],
+    ["signon.userInputRequiredToCapture.enabled", true],
   ]});
-  SimpleTest.registerCleanupFunction(async function cleanup_pref() {
-    await SpecialPowers.popPrefEnv();
-  });
-
-  await SimpleTest.promiseWaitForCondition(() => LoginHelper.testOnlyUserHasInteractedWithDocument === null);
-  is(LoginHelper.testOnlyUserHasInteractedWithDocument, null,
-    "LoginHelper.testOnlyUserHasInteractedWithDocument should be null for this set of tests");
 });
 
 add_task(async function test_no_message_on_navigation() {
@@ -146,7 +83,7 @@ add_task(async function test_no_message_on_navigation() {
   getSubmitMessage().then(value => {
     submitMessageSent = true;
   });
-  await navigateWithoutUserInteraction();
+  await clickLink();
 
   // allow time to pass before concluding no onFormSubmit message was sent
   await new Promise(res => setTimeout(res, 1000));
@@ -161,7 +98,7 @@ add_task(async function test_prefd_off_message_on_navigation() {
   await setup(PREFILLED_FORM_URL);
 
   let promiseSubmitMessage = getSubmitMessage();
-  await navigateWithoutUserInteraction();
+  await clickLink();
   await promiseSubmitMessage;
   info("onFormSubmit message was sent as expected after navigation");
 
@@ -173,7 +110,7 @@ add_task(async function test_message_with_user_interaction_on_navigation() {
   await userInput("#form-basic-username", "foo");
 
   let promiseSubmitMessage = getSubmitMessage();
-  await navigateWithoutUserInteraction();
+  await clickLink();
   await promiseSubmitMessage;
   info("onFormSubmit message was sent as expected after user interaction");
 });
@@ -184,77 +121,47 @@ add_task(async function test_empty_form_with_input_handler() {
   await userInput("#form-basic-password", "pass");
 
   let promiseSubmitMessage = getSubmitMessage();
-  await navigateWithoutUserInteraction();
+  await clickLink();
   await promiseSubmitMessage;
   info("onFormSubmit message was sent as expected after user interaction");
 });
 
-add_task(async function test_no_message_on_autofill_without_user_interaction() {
-  let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
+add_task(async function test_message_on_autofill_without_user_interaction() {
+  runInParent(function addLogin() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+    login.init("https://example.com", "https://example.com", null,
+               "user1", "pass1", "", "");
+
+    Services.logins.addLogin(login);
+  });
+
+  await setup(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
   await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
                                    "form-basic-password", "pass1");
-
-  info("LoginHelper.testOnlyUserHasInteractedWithDocument:" +
-      LoginHelper.testOnlyUserHasInteractedWithDocument
-  );
-  ok(!(await checkDocumentUserHasInteracted()), "document.userHasInteracted should be initially false");
-  let submitMessageSent = false;
-  getSubmitMessage().then(value => {
-    submitMessageSent = true;
-  });
-  info("Navigating the page")
-  await navigateWithoutUserInteraction();
-
-  // allow time to pass before concluding no onFormSubmit message was sent
-  await new Promise(res => setTimeout(res, 1000));
-
-  chromeScript.destroy();
-  resetSavedLogins();
-
-  ok(!submitMessageSent, "onFormSubmit message is not sent on navigation since the document had no user interaction");
-});
-
-add_task(async function test_message_on_autofill_with_document_interaction() {
-  // We expect that as long as the form values !== their defaultValues,
-  // any document interaction allows the submit message to be sent
-
-  let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
-  // Check for autofilled values.
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
-                                   "form-basic-username", "user1",
-                                   "form-basic-password", "pass1");
-
-  let userInteracted = await checkDocumentUserHasInteracted();
-  ok(!userInteracted, "document.userHasInteracted should be initially false");
-
-  await SpecialPowers.spawn(getIframeBrowsingContext(window), ["#form-basic-username"], async function(sel) {
-    // Click somewhere in the document to ensure document.userHasInteracted is flipped to true
-    let EventUtils = ContentTaskUtils.getEventUtils(content);
-    let target = this.content.document.querySelector(sel);
-
-    await EventUtils.synthesizeMouseAtCenter(target, {}, this.content);
-  });
-
-  userInteracted = await checkDocumentUserHasInteracted();
-  ok(userInteracted, "After synthesizeMouseAtCenter, document.userHasInteracted should be true");
 
   let promiseSubmitMessage = getSubmitMessage();
-  await navigateWithoutUserInteraction();
+  await clickLink();
 
   let messageData = await promiseSubmitMessage;
   ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
-  info("Message was sent as expected after document user interaction");
-
-  chromeScript.destroy();
-  resetSavedLogins();
 });
 
 add_task(async function test_message_on_autofill_with_user_interaction() {
-  // Editing a field value causes the submit message to be sent as
-  // there is both document interaction and field modification
-  let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
+  runInParent(function addLogin() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+    login.init("https://example.com", "https://example.com", null,
+               "user1", "pass1", "", "");
+
+    Services.logins.addLogin(login);
+  });
+
+  await setup(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
   await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
@@ -262,15 +169,12 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
 
   userInput("#form-basic-username", "newuser");
   let promiseSubmitMessage = getSubmitMessage();
-  await navigateWithoutUserInteraction();
+  await clickLink();
 
   let messageData = await promiseSubmitMessage;
   ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
   is(messageData.usernameField.value, "newuser", "Message was sent with correct usernameField.value");
-  info("Message was sent as expected after user form interaction");
-
-  chromeScript.destroy();
-  resetSavedLogins();
+  info("Message was sent as expected after user interaction");
 });
 
 add_task(async function test_no_message_on_user_input_from_other_form() {
@@ -303,7 +207,7 @@ add_task(async function test_no_message_on_user_input_from_other_form() {
   });
 
   info("submitting the form");
-  await navigateWithoutUserInteraction();
+  await clickLink();
 
   // allow time to pass before concluding no onFormSubmit message was sent
   await new Promise(res => setTimeout(res, 1000));

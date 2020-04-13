@@ -1564,19 +1564,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       dismissedPrompt = true;
     }
 
-    let docState = this.stateForDocument(doc);
-    let fieldsModified = this._formHasModifiedFields(form);
-    if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
-      if (targetField) {
-        throw new Error("No user input on targetField");
-      }
-      // we know no fields in this form had user modifications, so don't prompt
-      log(
-        `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
-      );
-      return;
-    }
-
     if (
       this._compareAndUpdatePreviouslySentValues(
         form.rootElement,
@@ -1587,6 +1574,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     ) {
       log(
         `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
+      );
+      return;
+    }
+
+    let docState = this.stateForDocument(doc);
+    let fieldsModified = this._formHasModifiedFields(form);
+    if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
+      if (targetField) {
+        throw new Error("No user input on targetField");
+      }
+      // we know no fields in this form had user modifications, so don't prompt
+      log(
+        `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
       );
       return;
     }
@@ -2181,23 +2181,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   _formHasModifiedFields(form) {
-    let doc = form.rootElement.ownerDocument;
-    let userHasInteracted;
-    let testOnlyUserHasInteracted =
-      LoginHelper.testOnlyUserHasInteractedWithDocument;
-    if (Cu.isInAutomation && testOnlyUserHasInteracted !== null) {
-      userHasInteracted = testOnlyUserHasInteracted;
-    } else {
-      userHasInteracted = doc.userHasInteracted;
-    }
-
-    log("_formHasModifiedFields, userHasInteracted:", userHasInteracted);
-
-    // If the user hasn't interacted at all with the page, we don't need to check futher
-    if (!userHasInteracted) {
-      return false;
-    }
-    let state = this.stateForDocument(doc);
+    let state = this.stateForDocument(form.rootElement.ownerDocument);
     // check for user inputs to the form fields
     let fieldsModified = state.fieldModificationsByRootElement.get(
       form.rootElement

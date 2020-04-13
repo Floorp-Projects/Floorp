@@ -12,8 +12,6 @@ add_task(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.rememberSignons", true],
-      ["signon.testOnlyUserHasInteractedByPrefValue", true],
-      ["signon.testOnlyUserHasInteractedWithDocument", true],
       ["toolkit.telemetry.ipcBatchTimeout", 0],
     ],
   });
