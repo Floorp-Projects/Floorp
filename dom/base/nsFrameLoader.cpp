@@ -827,16 +827,10 @@ void nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
   }
 }
 
-static bool AllDescendantsOfType(nsIDocShellTreeItem* aParentItem,
-                                 int32_t aType) {
-  int32_t childCount = 0;
-  aParentItem->GetInProcessChildCount(&childCount);
-
-  for (int32_t i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> kid;
-    aParentItem->GetInProcessChildAt(i, getter_AddRefs(kid));
-
-    if (kid->ItemType() != aType || !AllDescendantsOfType(kid, aType)) {
+static bool AllDescendantsOfType(BrowsingContext* aParent,
+                                 BrowsingContext::Type aType) {
+  for (auto& child : aParent->GetChildren()) {
+    if (child->GetType() != aType || !AllDescendantsOfType(child, aType)) {
       return false;
     }
   }
@@ -1524,13 +1518,19 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  RefPtr<BrowsingContext> ourBc = ourDocshell->GetBrowsingContext();
+  RefPtr<BrowsingContext> otherBc = otherDocshell->GetBrowsingContext();
+  if (ourBc->GetType() != otherBc->GetType()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // One more twist here.  Setting up the right treeowners in a heterogeneous
-  // tree is a bit of a pain.  So make sure that if ourType is not
+  // tree is a bit of a pain.  So make sure that if `ourBc->GetType()` is not
   // nsIDocShellTreeItem::typeContent then all of our descendants are the same
   // type as us.
   if (ourType != nsIDocShellTreeItem::typeContent &&
-      (!AllDescendantsOfType(ourDocshell, ourType) ||
-       !AllDescendantsOfType(otherDocshell, otherType))) {
+      (!AllDescendantsOfType(ourBc, ourBc->GetType()) ||
+       !AllDescendantsOfType(otherBc, otherBc->GetType()))) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
