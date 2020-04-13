@@ -946,7 +946,7 @@ bool js::StringHasRegExpMetaChars(JSLinearString* str) {
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
-    : headerAndSource(source), parenCount(0), flags(flags) {}
+    : headerAndSource(source), pairCount_(0), flags(flags) {}
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
@@ -1057,7 +1057,7 @@ void RegExpShared::useAtomMatch(HandleAtom pattern) {
   MOZ_ASSERT(kind() == RegExpShared::Kind::Unparsed);
   kind_ = RegExpShared::Kind::Atom;
   patternAtom_ = pattern;
-  parenCount = 0;
+  pairCount_ = 1;
 }
 
 #else   // !ENABLE_NEW_REGEXP
@@ -1082,7 +1082,8 @@ bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
     return false;
   }
 
-  re->parenCount = data.capture_count;
+  // Add one to account for the whole-match capture.
+  re->pairCount_ = data.capture_count + 1;
 
   JitCodeTables tables;
   irregexp::RegExpCode code = irregexp::CompilePattern(

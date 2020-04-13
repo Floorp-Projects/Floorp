@@ -102,7 +102,7 @@ class RegExpShared : public gc::TenuredCell {
 
   RegExpCompilation compilationArray[2];
 
-  uint32_t parenCount;
+  uint32_t pairCount_;
   JS::RegExpFlags flags;
 
 #ifdef ENABLE_NEW_REGEXP
@@ -156,13 +156,13 @@ class RegExpShared : public gc::TenuredCell {
 
   /* Accessors */
 
-  size_t getParenCount() const {
+  size_t pairCount() const {
 #ifdef ENABLE_NEW_REGEXP
     MOZ_ASSERT(kind() != Kind::Unparsed);
 #else
     MOZ_ASSERT(isCompiled());
 #endif
-    return parenCount;
+    return pairCount_;
   }
 
 #ifdef ENABLE_NEW_REGEXP
@@ -172,8 +172,6 @@ class RegExpShared : public gc::TenuredCell {
   void useAtomMatch(HandleAtom pattern);
 #endif
 
-  /* Accounts for the "0" (whole match) pair. */
-  size_t pairCount() const { return getParenCount() + 1; }
 
   JSAtom* getSource() const { return headerAndSource.ptr(); }
 
@@ -209,8 +207,8 @@ class RegExpShared : public gc::TenuredCell {
 
   static size_t offsetOfFlags() { return offsetof(RegExpShared, flags); }
 
-  static size_t offsetOfParenCount() {
-    return offsetof(RegExpShared, parenCount);
+  static size_t offsetOfPairCount() {
+    return offsetof(RegExpShared, pairCount_);
   }
 
   static size_t offsetOfJitCode(bool latin1) {
