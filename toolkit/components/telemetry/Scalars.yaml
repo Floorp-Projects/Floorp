@@ -3836,6 +3836,26 @@ script.preloader:
       - 'content'
 
 networking:
+  nss_initialization:
+    bug_numbers:
+      - 1628734
+    description:
+      The time in milliseconds to initialize the NSS component in the
+      parent process.
+    expires: "never"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+
   data_transferred_v3_kb:
     bug_numbers:
       - 1533363
