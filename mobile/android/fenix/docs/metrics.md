@@ -19,6 +19,15 @@ This means you might have to go searching through the dependency tree to get a f
 This ping is intended to provide a measure of the activation of mobile products. It's generated when Fenix starts, right after Glean is initialized. It doesn't include the client_id, since it might be reporting an hashed version of the Google Advertising ID.
 
 
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209>
+
+**Bugs related to this ping:**
+
+- 1538011
+- 1501822
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
@@ -184,6 +193,16 @@ The following metrics are added to the ping:
 
 This ping is intended to capture the source of the installation
 
+
+This ping includes the [client id](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section).
+
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/issues/7295>
 
 The following metrics are added to the ping:
 

@@ -8,6 +8,7 @@ import android.content.Context
 import android.view.View
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
+import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
@@ -105,6 +106,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         customTabSessionId,
                         trustedScopes
                     ) { toolbarVisible ->
+                        if (!toolbarVisible) { engineView.setDynamicToolbarMaxHeight(0) }
                         if (!FeatureFlags.dynamicBottomToolbar) { updateLayoutMargins(inFullScreen = !toolbarVisible) }
                     },
                     owner = this,
