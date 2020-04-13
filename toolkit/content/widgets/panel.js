@@ -8,6 +8,22 @@
 // leaking to window scope.
 {
   class MozPanel extends MozElements.MozElementMixin(XULPopupElement) {
+    static get markup() {
+      return `
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
+      <html:style>
+        :host([orient=vertical]) .panel-arrowcontent {
+          -moz-box-orient: vertical;
+        }
+      </html:style>
+      <vbox class="panel-arrowcontainer" flex="1">
+        <box class="panel-arrowbox" part="arrowbox">
+          <image class="panel-arrow" part="arrow"/>
+        </box>
+        <box class="panel-arrowcontent" flex="1" part="arrowcontent"><html:slot/></box>
+      </vbox>
+      `;
+    }
     constructor() {
       super();
 
@@ -59,7 +75,7 @@
       if (!this.isArrowPanel) {
         this.shadowRoot.appendChild(document.createElement("slot"));
       } else {
-        this.shadowRoot.appendChild(this.fragment);
+        this.shadowRoot.appendChild(this.constructor.fragment);
       }
     }
 
@@ -78,26 +94,6 @@
         this.initialize();
       }
       super.removeAttribute(name);
-    }
-
-    get fragment() {
-      if (!this.constructor.hasOwnProperty("_fragment")) {
-        this.constructor._fragment = MozXULElement.parseXULToFragment(`
-        <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
-        <html:style>
-          :host([orient=vertical]) .panel-arrowcontent {
-            -moz-box-orient: vertical;
-          }
-        </html:style>
-        <vbox class="panel-arrowcontainer" flex="1">
-          <box class="panel-arrowbox" part="arrowbox">
-            <image class="panel-arrow" part="arrow"/>
-          </box>
-          <box class="panel-arrowcontent" flex="1" part="arrowcontent"><html:slot/></box>
-        </vbox>
-      `);
-      }
-      return document.importNode(this.constructor._fragment, true);
     }
 
     get isArrowPanel() {
