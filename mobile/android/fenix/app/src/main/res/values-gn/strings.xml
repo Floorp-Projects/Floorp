@@ -210,6 +210,8 @@
     <string name="preferences_private_browsing_options">Kundahára ñemigua</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Embojuruja juajuha tendayke ñemíme</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Emoneĩ mba’erechaha japyhy kundaha ñemíme</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
     <!-- Preference for accessibility -->

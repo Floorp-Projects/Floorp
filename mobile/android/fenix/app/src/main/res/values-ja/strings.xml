@@ -48,6 +48,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">新しいプライベートタブ</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">よく見るサイト</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">タブを開きます</string>
@@ -113,6 +116,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">外観</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">接続できません。認識できない URL スキームです。</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">選択した言語</string>
@@ -153,6 +160,9 @@
     <string name="search_widget_text_short">検索</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ウェブ検索</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">音声検索</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -200,10 +210,18 @@
     <string name="preferences_private_browsing_options">プライベートブラウジング</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">リンクをプライベートタブで開く</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">プライベートブラウジングモードでスクリーンショットの撮影を許可する</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">プライベートブラウジングショートカットを追加する</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">アクセシビリティ</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">カスタム Firefox アカウントサーバー</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">カスタム Sync サーバー</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox アカウント/Sync サーバーが変更されました。変更を適用するためにアプリケーションを終了しています…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">アカウント</string>
     <!-- Preference shown on banner to sign into account -->
@@ -466,6 +484,14 @@
     <string name="history_delete_all_dialog">本当に履歴を消去してもよろしいですか？</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">消去</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">コピー</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">共有</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">新しいタブで開く</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">プライベートタブで開く</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">削除</string>
     <!-- History multi select title in app bar
@@ -916,6 +942,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">個人情報保護方針を読む</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">閉じる</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ブラウジングを始める</string>
 
@@ -1077,6 +1106,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">利用しているライブラリー</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">デバッグメニュー: 有効にするには %1$d 回クリックしてください</string>
+    <string name="about_debug_menu_toast_done">デバッグメニューが有効です</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">タブ 1 個</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1100,8 +1134,13 @@
     <string name="add_to_homescreen_cancel">キャンセル</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">追加</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ウェブサイトを開く</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ショートカット名</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">このウェブサイトを簡単な操作で端末のホーム画面に追加しましょう。アプリのような感覚で手軽にアクセスして素早くブラウジングできます。</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ログイン情報とパスワード</string>

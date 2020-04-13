@@ -209,6 +209,8 @@
     <string name="preferences_private_browsing_options">Privát böngészés</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Hivatkozások megnyitása privát lapon</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Képernyőképek engedélyezése privát böngészésben</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
     <!-- Preference for accessibility -->

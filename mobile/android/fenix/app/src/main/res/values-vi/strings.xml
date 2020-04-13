@@ -206,6 +206,8 @@
     <string name="preferences_private_browsing_options">Duyệt web riêng tư</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Mở liên kết trong thẻ riêng tư</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Cho phép chụp ảnh màn hình trong trình duyệt riêng tư</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Thêm lối tắt duyệt web riêng tư</string>
     <!-- Preference for accessibility -->

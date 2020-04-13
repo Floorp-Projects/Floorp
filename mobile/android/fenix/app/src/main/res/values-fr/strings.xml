@@ -46,6 +46,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nouvel onglet nav. privée</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Sites principaux</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Onglets ouverts</string>
@@ -205,6 +208,8 @@
     <string name="preferences_private_browsing_options">Navigation privée</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Ouvrir les liens dans un onglet privé</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Autoriser les captures d’écran pendant la navigation privée</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ajouter un raccourci pour la navigation privée</string>
     <!-- Preference for accessibility -->

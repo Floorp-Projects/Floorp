@@ -91,8 +91,16 @@
     <string name="preferences_search">Paluruh</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Palang alamat</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Akun</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Asup</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Singkronkeun markah, jujutan, jeung nu lianna maké Firefox Account anjeun</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Akun Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Sambungkeun deui pikeun neruskeun nyingkronkeun</string>
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Témbongkeun takulan pamaluruhan</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -107,6 +115,12 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Paluruh markah</string>
 
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Setélan akun</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Singkronkeun ayeuna</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Markah</string>
 
@@ -115,6 +129,11 @@
 
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Pinday sandi papasangan dina Firefox déstop</string>
+
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Asup</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Cabut akun</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -254,8 +273,31 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Pupus</string>
 
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Geus boga akun?</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Anjeun asup salaku %s dina séjén panyungsi Firefox di ieu telepon. Anjeun rék asup maké ieu akun?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Enya, asupkeun</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Asup…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Asup ka Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Ulah asup</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Singkronna hurung</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Gagal asup</string>
+
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Pinday sandi</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox bakal eureun nyingkronkeun jeung akun anjeun, ngan moal mupus sakur data langlangan anjeun dina ieu alat.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Pegatkeun</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Bolay</string>
 

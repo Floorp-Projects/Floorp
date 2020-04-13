@@ -210,6 +210,8 @@
     <string name="preferences_private_browsing_options">Приватний перегляд</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Відкривати посилання в приватній вкладці</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Дозволити знімки екрана в приватному перегляді</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Додати ярлик приватного перегляду</string>
     <!-- Preference for accessibility -->

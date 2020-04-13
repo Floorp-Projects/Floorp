@@ -471,6 +471,14 @@
     <string name="history_delete_all_dialog">क्या आप वाकई अपना इतिहास मिटाना चाहते हैं?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">साफ करें</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">कॉपी करें</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">साझा करें</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">नए टैब में खोलें</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">निजी टैब में खोलें</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">मिटाएं</string>
     <!-- History multi select title in app bar
@@ -621,6 +629,10 @@
 
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ऑडियो और वीडियो की अनुमति दें</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">केवल सेल्युलर डेटा पर ही ऑडियो एवं वीडियो को अवरुद्ध करें</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">ऑडियो और वीडियो वाई-फाई पर चलेंगे</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">सिर्फ ऑडियो को ब्लॉक करें</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->

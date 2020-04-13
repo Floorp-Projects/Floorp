@@ -28,7 +28,7 @@
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s는 앱을 종료하거나 모든 사생활 보호 탭을 닫을 때 검색과 브라우징 기록을 지웁니다. 이것이 사용자를 웹 사이트나 인터넷 서비스 제공자로부터 익명으로 만들지는 않지만, 사용자가 온라인에서 한 일을 이 기기를 사용하는 다른 사용자로부터 보호 할 수 있게 합니다.</string>
+    <string name="private_browsing_placeholder_description">%1$s는 앱을 종료하거나 모든 사생활 보호 탭을 닫을 때 검색과 방문 기록을 지웁니다. 이것이 사용자를 웹 사이트나 인터넷 서비스 제공자로부터 익명으로 만들지는 않지만, 사용자가 온라인에서 한 일을 이 기기를 사용하는 다른 사용자로부터 보호 할 수 있게 합니다.</string>
     <string name="private_browsing_common_myths">
 
        사생활 보호 모드에 관한 흔한 오해
@@ -236,7 +236,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">사용자 지정</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Firefox 계정으로 북마크, 방문 기록 등을 동기화하세요</string>
+    <string name="preferences_sign_in_description">Firefox 계정으로 북마크, 기록 등을 동기화하세요</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 계정</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -280,7 +280,7 @@
     <!-- Preference category for sync -->
     <string name="preferences_sync_category">동기화할 대상 선택</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">방문 기록</string>
+    <string name="preferences_sync_history">기록</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">북마크</string>
     <!-- Preference for syncing logins -->
@@ -420,7 +420,7 @@
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">다른 북마크</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">방문 기록</string>
+    <string name="library_history">기록</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">읽기 목록</string>
     <!-- Menu Item Label for Search in Library -->
@@ -430,7 +430,7 @@
     <!-- Settings Page Title -->
     <string name="settings_title">설정</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">방문 기록 항목 메뉴</string>
+    <string name="content_description_history_menu">기록 항목 메뉴</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">닫기</string>
 
@@ -483,9 +483,9 @@
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">방문 기록 삭제</string>
+    <string name="history_delete_all">기록 삭제</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">방문 기록을 삭제하시겠습니까?</string>
+    <string name="history_delete_all_dialog">기록을 삭제하시겠습니까?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">삭제</string>
     <!-- History overflow menu copy button -->
@@ -514,7 +514,7 @@
     <string name="history_older">이전</string>
 
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">방문기록 없음</string>
+    <string name="history_empty_message">기록 없음</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -846,13 +846,13 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">탭 %d개</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">탐색 기록 및 사이트 데이터</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">방문 기록 및 사이트 데이터</string>
 
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 주소</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">방문 기록</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title">기록</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 페이지</string>

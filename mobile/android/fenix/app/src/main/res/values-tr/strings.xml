@@ -207,6 +207,8 @@
     <string name="preferences_private_browsing_options">Gizli gezinti</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Bağlantıları gizli sekmede aç</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Gizli gezintide ekran görüntüsü almaya izin ver</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Gizli gezinti kısayolu ekle</string>
     <!-- Preference for accessibility -->
@@ -215,6 +217,8 @@
     <string name="preferences_override_fxa_server">Özel Firefox Hesabı sunucusu</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Özel Sync sunucusu</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox Hesabı/Sync sunucusu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Hesap</string>
     <!-- Preference shown on banner to sign into account -->
@@ -252,7 +256,7 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Pano önerilerini göster</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Gezinti geçmişinde temizle</string>
+    <string name="preferences_search_browsing_history">Gezinti geçmişinde ara</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Yer imlerinde ara</string>
     <!-- Preference for account settings -->
@@ -627,6 +631,10 @@
 
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Ses ve videoya izin ver</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Ses ve videoyu yalnızca hücresel veride engelle</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ses ve videolar yalnızca Wi-Fi’da oynatılacak</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Yalnızca sesi engelle</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->

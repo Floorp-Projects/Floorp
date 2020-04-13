@@ -204,6 +204,8 @@
     <string name="preferences_private_browsing_options">Navegação privada</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Abrir ligações num separador privado</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de ecrã na navegação privada</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Adicionar um atalho de navegação privada</string>
     <!-- Preference for accessibility -->
