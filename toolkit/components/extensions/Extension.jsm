@@ -136,6 +136,15 @@ XPCOMUtils.defineLazyGetter(
   () => ExtensionCommon.LocaleData
 );
 
+XPCOMUtils.defineLazyGetter(this, "NO_PROMPT_PERMISSIONS", () => {
+  return new Set(
+    Schemas.getPermissionNames([
+      "PermissionNoPrompt",
+      "OptionalPermissionNoPrompt",
+    ])
+  );
+});
+
 const { sharedData } = Services.ppmm;
 
 const PRIVATE_ALLOWED_PERMISSION = "internal:privateBrowsingAllowed";
@@ -674,6 +683,11 @@ class ExtensionData {
       p => !result.origins.includes(p) && !EXP_PATTERN.test(p)
     );
     return result;
+  }
+
+  // Returns whether the front end should prompt for this permission
+  static shouldPromptFor(permission) {
+    return !NO_PROMPT_PERMISSIONS.has(permission);
   }
 
   // Compute the difference between two sets of permissions, suitable
@@ -1531,12 +1545,14 @@ class ExtensionData {
       if (permission == "nativeMessaging") {
         continue;
       }
-      try {
-        result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
-      } catch (err) {
-        // We deliberately do not include all permissions in the prompt.
-        // So if we don't find one then just skip it.
+      if (!ExtensionData.shouldPromptFor(permission)) {
+        continue;
       }
+      // This will throw if the permission key is not present in the properties
+      // file. Any permission for which we prompt for needs an entry in
+      // browser.properties with the key
+      // |webextPerms.description.<permission name>|.
+      result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
     }
 
     const haveAccessKeys = AppConstants.platform !== "android";
