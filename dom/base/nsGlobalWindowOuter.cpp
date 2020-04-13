@@ -41,7 +41,6 @@
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/WindowContext.h"
-#include "mozilla/dom/WindowFeatures.h"  // WindowFeatures
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #if defined(MOZ_WIDGET_ANDROID)
@@ -77,6 +76,7 @@
 #include "jsfriendapi.h"
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsReadableUtils.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -7019,31 +7019,33 @@ nsresult nsGlobalWindowOuter::OpenInternal(
 
   NS_ASSERTION(mDocShell, "Must have docshell here");
 
-  NS_ConvertUTF16toUTF8 optionsUtf8(aOptions);
-
-  WindowFeatures features;
-  if (!features.Tokenize(optionsUtf8)) {
-    return NS_ERROR_FAILURE;
-  }
-
+  nsAutoCString options;
   bool forceNoOpener = aForceNoOpener;
-  if (features.Exists("noopener")) {
-    forceNoOpener = features.GetBool("noopener");
-    features.Remove("noopener");
-  }
-
   bool forceNoReferrer = false;
-  if (features.Exists("noreferrer")) {
-    forceNoReferrer = features.GetBool("noreferrer");
-    if (forceNoReferrer) {
+  // Unlike other window flags, "noopener" comes from splitting on commas with
+  // HTML whitespace trimming...
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
+      aOptions, ',');
+  while (tok.hasMoreTokens()) {
+    auto nextTok = tok.nextToken();
+    if (nextTok.EqualsLiteral("noopener")) {
+      forceNoOpener = true;
+      continue;
+    }
+    if (StaticPrefs::dom_window_open_noreferrer_enabled() &&
+        nextTok.LowerCaseEqualsLiteral("noreferrer")) {
+      forceNoReferrer = true;
       // noreferrer implies noopener
       forceNoOpener = true;
+      continue;
     }
-    features.Remove("noreferrer");
+    // Want to create a copy of the options without 'noopener' because having
+    // 'noopener' in the options affects other window features.
+    if (!options.IsEmpty()) {
+      options.Append(',');
+    }
+    AppendUTF16toUTF8(nextTok, options);
   }
-
-  nsAutoCString options;
-  features.Stringify(options);
 
   // If current's top-level browsing context's active document's
   // cross-origin-opener-policy is "same-origin" or "same-origin + COEP" then

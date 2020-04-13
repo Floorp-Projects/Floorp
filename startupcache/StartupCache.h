@@ -11,7 +11,6 @@
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
-#include "nsTStringHasher.h"  // mozilla::DefaultHasher<nsCString>
 #include "nsZipArchive.h"
 #include "nsITimer.h"
 #include "nsIMemoryReporter.h"
@@ -122,6 +121,19 @@ struct StartupCacheEntry {
   };
 };
 
+struct nsCStringHasher {
+  using Key = nsCString;
+  using Lookup = nsCString;
+
+  static HashNumber hash(const Lookup& aLookup) {
+    return HashString(aLookup.get());
+  }
+
+  static bool match(const Key& aKey, const Lookup& aLookup) {
+    return aKey.Equals(aLookup);
+  }
+};
+
 // We don't want to refcount StartupCache, and ObserverService wants to
 // refcount its listeners, so we'll let it refcount this instead.
 class StartupCacheListener final : public nsIObserver {
@@ -206,7 +218,7 @@ class StartupCache : public nsIMemoryReporter {
   static void ThreadedWrite(void* aClosure);
   static void ThreadedPrefetch(void* aClosure);
 
-  HashMap<nsCString, StartupCacheEntry> mTable;
+  HashMap<nsCString, StartupCacheEntry, nsCStringHasher> mTable;
   // owns references to the contents of tables which have been invalidated.
   // In theory grows forever if the cache is continually filled and then
   // invalidated, but this should not happen in practice.
