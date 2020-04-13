@@ -68,6 +68,8 @@ let Player = {
     "dblclick",
     "keydown",
     "mouseout",
+    "MozDOMFullscreen:Entered",
+    "MozDOMFullscreen:Exited",
     "resize",
     "unload",
   ],
@@ -205,6 +207,28 @@ let Player = {
 
       case "mouseout": {
         this.onMouseOut(event);
+        break;
+      }
+
+      // Normally, the DOMFullscreenParent / DOMFullscreenChild actors
+      // would take care of firing the `fullscreen-painted` notification,
+      // however, those actors are only ever instantiated when a <browser>
+      // is fullscreened, and not a <body> element in a parent-process
+      // chrome privileged DOM window.
+      //
+      // Rather than trying to re-engineer JSWindowActors to be re-usable for
+      // this edge-case, we do the work of firing fullscreen-painted when
+      // transitioning in and out of fullscreen ourselves here.
+      case "MozDOMFullscreen:Entered":
+      // Intentional fall-through
+      case "MozDOMFullscreen:Exited": {
+        let { lastTransactionId } = window.windowUtils;
+        window.addEventListener("MozAfterPaint", function onPainted(event) {
+          if (event.transactionId > lastTransactionId) {
+            window.removeEventListener("MozAfterPaint", onPainted);
+            Services.obs.notifyObservers(window, "fullscreen-painted");
+          }
+        });
         break;
       }
 
