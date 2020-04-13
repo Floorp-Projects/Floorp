@@ -23,7 +23,7 @@ class TabViewHolder(
     itemView: View,
     private val tabsTray: BrowserTabsTray
 ) : RecyclerView.ViewHolder(itemView) {
-    private val iconView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
+    private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
@@ -66,6 +66,6 @@ class TabViewHolder(
 
         thumbnailView.setImageBitmap(tab.thumbnail)
 
-        iconView.setImageBitmap(tab.icon)
+        iconView?.setImageBitmap(tab.icon)
     }
 }

@@ -23,6 +23,9 @@ permalink: /changelog/
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
 
+* **browser-tabstray**
+  * The iconView is no longer required in the template.
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)
