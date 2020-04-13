@@ -566,6 +566,39 @@ void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                       uint32_t aValue);
 
+template <ScalarID id>
+class MOZ_RAII AutoScalarTimer {
+ public:
+  explicit AutoScalarTimer(TimeStamp aStart = TimeStamp::Now()
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : start(aStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  explicit AutoScalarTimer(const nsAString& aKey,
+                           TimeStamp aStart = TimeStamp::Now()
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : start(aStart), key(aKey) {
+    MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  ~AutoScalarTimer() {
+    TimeStamp end = TimeStamp::Now();
+    uint32_t delta = static_cast<uint32_t>((end - start).ToMilliseconds());
+    if (key.IsEmpty()) {
+      mozilla::Telemetry::ScalarSet(id, delta);
+    } else {
+      mozilla::Telemetry::ScalarSet(id, key, delta);
+    }
+  }
+
+ private:
+  const TimeStamp start;
+  const nsString key;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 /**
  * Records an event. See the Event documentation for more information:
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/events.html
