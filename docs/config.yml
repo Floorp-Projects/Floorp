@@ -3,8 +3,6 @@
 # The order of the main categories are defined in index.rst
 # Sub categories orders are preserved
 categories:
-    setup_doc:
-        - contributing/setup
     contributing_doc:
         - contributing
         - bug-mgmt
