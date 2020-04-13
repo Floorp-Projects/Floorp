@@ -12,14 +12,33 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Nepavyko atlikti užklausos</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Šiuo metu apie šią problemą ar klaidą daugiau informacijos nėra.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Saugaus ryšio užmegzti nepavyko</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Svetainė, kurią bandote atverti, negali būti įkelta, nes nepavyko patikrinti gaunamų duomenų autentiškumo.</li>
+        <li>Prašome informuoti svetainės kūrėjus apie šią problemą.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Saugaus ryšio užmegzti nepavyko</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Tai gali būti serverio konfigūracijos problema, arba kažkieno bandymas apsimesti serveriu.</li>
+        <li>Jei anksčiau esate sėkmingai prisijungę prie šio serverio, ši klaida gali būti laikina, tad pabandykite vėliau.</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Papildomai…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Kažkas gali bandyti apsimesti svetaine, tad patartume jos neatverti.</label>
+        <br><br>
+        <label>Svetainės patvirtina savo tapatumą pateikdamos liudijimus. „%1$s“ nepasitikti <b>%2$s</b>, nes liudijimą išdavusi įstaiga nėra žinoma, liudijimas yra pasirašytas pačių svetainės kūrėjų, arba serveris neperduoda teisingų tarpinių liudijimų.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Grįžti (rekomenduojama)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
