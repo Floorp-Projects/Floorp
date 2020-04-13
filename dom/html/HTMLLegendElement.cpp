@@ -91,7 +91,6 @@ void HTMLLegendElement::Focus(const FocusOptions& aOptions,
   aError = fm->MoveFocus(
       nullptr, this, nsIFocusManager::MOVEFOCUS_FORWARD,
       nsIFocusManager::FLAG_NOPARENTFRAME |
-          nsIFocusManager::FLAG_BYELEMENTFOCUS |
           nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions),
       getter_AddRefs(result));
 }
