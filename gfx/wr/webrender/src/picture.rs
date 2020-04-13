@@ -5060,8 +5060,7 @@ impl PicturePrimitive {
 
                         for tile in tile_cache.tiles.values_mut() {
 
-                            // Only check for occlusion on visible tiles that are fixed position.
-                            if tile.is_visible && tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX {
+                            if tile.is_visible {
                                 // Get the world space rect that this tile will actually occupy on screem
                                 let device_draw_rect = device_clip_rect.intersection(&tile.device_valid_rect);
 
@@ -5071,7 +5070,9 @@ impl PicturePrimitive {
                                 // code below.
                                 match device_draw_rect {
                                     Some(device_draw_rect) => {
-                                        if frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
+                                        // Only check for occlusion on visible tiles that are fixed position.
+                                        if tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX &&
+                                           frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
                                             // If this tile has an allocated native surface, free it, since it's completely
                                             // occluded. We will need to re-allocate this surface if it becomes visible,
                                             // but that's likely to be rare (e.g. when there is no content display list
