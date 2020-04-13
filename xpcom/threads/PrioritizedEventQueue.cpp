@@ -203,14 +203,14 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
       break;
 
     case EventQueuePriority::High:
-      event = mHighQueue->GetEvent(aPriority, aProofOfLock,
+      event = mHighQueue->GetEvent(nullptr, aProofOfLock,
                                    aHypotheticalInputEventDelay);
       MOZ_ASSERT(event);
       mInputHandlingStartTime = TimeStamp();
       break;
 
     case EventQueuePriority::Input:
-      event = mInputQueue->GetEvent(aPriority, aProofOfLock,
+      event = mInputQueue->GetEvent(nullptr, aProofOfLock,
                                     aHypotheticalInputEventDelay);
       MOZ_ASSERT(event);
       break;
@@ -220,12 +220,12 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
       // if we're below Input; input events will only be delayed by the time
       // an event actually runs (if the event is below Input event's priority)
     case EventQueuePriority::MediumHigh:
-      event = mMediumHighQueue->GetEvent(aPriority, aProofOfLock);
+      event = mMediumHighQueue->GetEvent(nullptr, aProofOfLock);
       *aHypotheticalInputEventDelay = TimeDuration();
       break;
 
     case EventQueuePriority::Normal:
-      event = mNormalQueue->GetEvent(aPriority, aProofOfLock);
+      event = mNormalQueue->GetEvent(nullptr, aProofOfLock);
       *aHypotheticalInputEventDelay = TimeDuration();
       break;
 
@@ -244,9 +244,9 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
         return nullptr;
       }
 
-      event = mDeferredTimersQueue->GetEvent(aPriority, aProofOfLock);
+      event = mDeferredTimersQueue->GetEvent(nullptr, aProofOfLock);
       if (!event) {
-        event = mIdleQueue->GetEvent(aPriority, aProofOfLock);
+        event = mIdleQueue->GetEvent(nullptr, aProofOfLock);
       }
       if (event) {
         *aIsIdleEvent = true;
@@ -261,6 +261,8 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
   if (!event) {
     *aHypotheticalInputEventDelay = TimeDuration();
   }
+
+  MOZ_ASSERT_IF(aPriority, *aPriority == queue);
 
   return event.forget();
 }
