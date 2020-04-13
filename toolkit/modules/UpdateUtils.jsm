@@ -580,7 +580,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
         if (ubr !== undefined) {
           osVersion += `.${ubr}`;
         } else {
-          osVersion += ".undefined;";
+          osVersion += ".unknown";
         }
       }
 
