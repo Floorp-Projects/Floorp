@@ -481,32 +481,31 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                        " '--binary-path' flag")
 
     def _query_specified_suites(self, category):
-        # logic goes: if at least one '--{category}-suite' was given,
-        # then run only that(those) given suite(s). Elif no suites were
-        # specified and the --run-all-suites flag was given,
-        # run all {category} suites. Anything else, run no suites.
+        """Checks if the provided suite does indeed exist.
+
+        If at least one suite was given and if it does exist, return the suite
+        as legitimate and line it up for execution.
+
+        Otherwise, do not run any suites and return a fatal error.
+        """
         c = self.config
-        all_suites = c.get('all_%s_suites' % (category))
-        specified_suites = c.get('specified_%s_suites' % (category))  # list
-        suites = None
+        all_suites = c.get('all_{}_suites'.format(category), None)
+        specified_suites = c.get('specified_{}_suites'.format(category), None)
 
-        if specified_suites:
-            if 'all' in specified_suites:
-                # useful if you want a quick way of saying run all suites
-                # of a specific category.
-                suites = all_suites
-            else:
-                # suites gets a dict of everything from all_suites where a key
-                # is also in specified_suites
-                suites = dict((key, all_suites.get(key)) for key in
-                              specified_suites if key in all_suites.keys())
-        else:
-            if c.get('run_all_suites'):  # needed if you dont specify any suites
-                suites = all_suites
-            else:
-                suites = self.query_per_test_category_suites(category, all_suites)
+        # Bug 1603842 - disallow selection of more than 1 suite at at time
+        if specified_suites is None:
+            # Path taken by test-verify
+            return self.query_per_test_category_suites(category, all_suites)
+        if specified_suites and len(specified_suites) > 1:
+            self.fatal("""Selection of multiple suites is not permitted. \
+                       Please select at most 1 test suite.""")
+            return
 
-        return suites
+        # Normal path taken by most test suites as only one suite is specified
+        suite = specified_suites[0]
+        if suite not in all_suites:
+            self.fatal("""Selected suite does not exist!""")
+        return {suite: all_suites[suite]}
 
     def _query_try_flavor(self, category, suite):
         flavors = {
