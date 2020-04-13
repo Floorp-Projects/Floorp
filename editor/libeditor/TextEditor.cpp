@@ -1427,7 +1427,7 @@ void TextEditor::OnCompositionEnd(
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
 }
 
-already_AddRefed<Element> TextEditor::GetInputEventTargetElement() {
+already_AddRefed<Element> TextEditor::GetInputEventTargetElement() const {
   nsCOMPtr<Element> target = do_QueryInterface(mEventTarget);
   return target.forget();
 }
@@ -2130,7 +2130,7 @@ nsresult TextEditor::SelectEntireDocument() {
   return error.StealNSResult();
 }
 
-EventTarget* TextEditor::GetDOMEventTarget() { return mEventTarget; }
+EventTarget* TextEditor::GetDOMEventTarget() const { return mEventTarget; }
 
 nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
                                               nsAtom* aAttribute,

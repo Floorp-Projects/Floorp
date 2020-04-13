@@ -168,10 +168,10 @@ class HTMLEditor final : public TextEditor,
 
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
-  virtual nsIContent* GetFocusedContent() override;
-  virtual already_AddRefed<nsIContent> GetFocusedContentForIME() override;
-  virtual bool IsActiveInDOMWindow() override;
-  virtual dom::EventTarget* GetDOMEventTarget() override;
+  virtual nsIContent* GetFocusedContent() const override;
+  virtual nsIContent* GetFocusedContentForIME() const override;
+  virtual bool IsActiveInDOMWindow() const override;
+  virtual dom::EventTarget* GetDOMEventTarget() const override;
   virtual Element* FindSelectionRoot(nsINode* aNode) const override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
@@ -1037,7 +1037,7 @@ class HTMLEditor final : public TextEditor,
    */
   enum class SkipWhitespace { Yes, No };
   nsIContent* GetPriorHTMLSibling(nsINode* aNode,
-                                  SkipWhitespace = SkipWhitespace::No);
+                                  SkipWhitespace = SkipWhitespace::No) const;
 
   /**
    * GetNextHTMLSibling() returns the next editable sibling, if there is
@@ -1045,7 +1045,7 @@ class HTMLEditor final : public TextEditor,
    * whitespace.
    */
   nsIContent* GetNextHTMLSibling(nsINode* aNode,
-                                 SkipWhitespace = SkipWhitespace::No);
+                                 SkipWhitespace = SkipWhitespace::No) const;
 
   // Helper for GetPriorHTMLSibling/GetNextHTMLSibling.
   static bool SkippableWhitespace(nsINode* aNode, SkipWhitespace aSkipWS) {
@@ -1058,20 +1058,20 @@ class HTMLEditor final : public TextEditor,
    * EditorBase::GetPreviousElementOrText*() but this won't return nodes
    * outside active editing host.
    */
-  nsIContent* GetPreviousHTMLElementOrText(nsINode& aNode) {
+  nsIContent* GetPreviousHTMLElementOrText(nsINode& aNode) const {
     return GetPreviousHTMLElementOrTextInternal(aNode, false);
   }
-  nsIContent* GetPreviousHTMLElementOrTextInBlock(nsINode& aNode) {
+  nsIContent* GetPreviousHTMLElementOrTextInBlock(nsINode& aNode) const {
     return GetPreviousHTMLElementOrTextInternal(aNode, true);
   }
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrText(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetPreviousHTMLElementOrTextInternal(aPoint, false);
   }
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrTextInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetPreviousHTMLElementOrTextInternal(aPoint, true);
   }
 
@@ -1080,30 +1080,30 @@ class HTMLEditor final : public TextEditor,
    * of above methods.  Please don't use this method directly.
    */
   nsIContent* GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
-                                                   bool aNoBlockCrossing);
+                                                   bool aNoBlockCrossing) const;
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrTextInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
 
   /**
    * GetPreviousEditableHTMLNode*() methods are similar to
    * EditorBase::GetPreviousEditableNode() but this won't return nodes outside
    * active editing host.
    */
-  nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode) {
+  nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode) const {
     return GetPreviousEditableHTMLNodeInternal(aNode, false);
   }
-  nsIContent* GetPreviousEditableHTMLNodeInBlock(nsINode& aNode) {
+  nsIContent* GetPreviousEditableHTMLNodeInBlock(nsINode& aNode) const {
     return GetPreviousEditableHTMLNodeInternal(aNode, true);
   }
   template <typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNode(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetPreviousEditableHTMLNodeInternal(aPoint, false);
   }
   template <typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetPreviousEditableHTMLNodeInternal(aPoint, true);
   }
 
@@ -1112,10 +1112,10 @@ class HTMLEditor final : public TextEditor,
    * of above methods.  Please don't use this method directly.
    */
   nsIContent* GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
-                                                  bool aNoBlockCrossing);
+                                                  bool aNoBlockCrossing) const;
   template <typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
 
   /**
    * GetNextHTMLElementOrText*() methods are similar to
@@ -1127,20 +1127,20 @@ class HTMLEditor final : public TextEditor,
    * On the other hand, methods which take |nsINode&| start to search from
    * next node of aNode.
    */
-  nsIContent* GetNextHTMLElementOrText(nsINode& aNode) {
+  nsIContent* GetNextHTMLElementOrText(nsINode& aNode) const {
     return GetNextHTMLElementOrTextInternal(aNode, false);
   }
-  nsIContent* GetNextHTMLElementOrTextInBlock(nsINode& aNode) {
+  nsIContent* GetNextHTMLElementOrTextInBlock(nsINode& aNode) const {
     return GetNextHTMLElementOrTextInternal(aNode, true);
   }
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrText(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetNextHTMLElementOrTextInternal(aPoint, false);
   }
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrTextInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetNextHTMLElementOrTextInternal(aPoint, true);
   }
 
@@ -1149,10 +1149,10 @@ class HTMLEditor final : public TextEditor,
    * of above methods.  Please don't use this method directly.
    */
   nsIContent* GetNextHTMLElementOrTextInternal(nsINode& aNode,
-                                               bool aNoBlockCrossing);
+                                               bool aNoBlockCrossing) const;
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrTextInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
 
   /**
    * GetNextEditableHTMLNode*() methods are similar to
@@ -1196,8 +1196,8 @@ class HTMLEditor final : public TextEditor,
   nsIContent* GetFirstEditableChild(nsINode& aNode) const;
   nsIContent* GetLastEditableChild(nsINode& aNode) const;
 
-  nsIContent* GetFirstEditableLeaf(nsINode& aNode);
-  nsIContent* GetLastEditableLeaf(nsINode& aNode);
+  nsIContent* GetFirstEditableLeaf(nsINode& aNode) const;
+  nsIContent* GetLastEditableLeaf(nsINode& aNode) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(
       nsAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
@@ -3604,18 +3604,18 @@ class HTMLEditor final : public TextEditor,
   virtual nsresult InstallEventListeners() override;
   virtual void RemoveEventListeners() override;
 
-  bool ShouldReplaceRootElement();
+  bool ShouldReplaceRootElement() const;
   MOZ_CAN_RUN_SCRIPT void NotifyRootChanged();
-  Element* GetBodyElement();
+  Element* GetBodyElement() const;
 
   /**
    * Get the focused node of this editor.
    * @return    If the editor has focus, this returns the focused node.
    *            Otherwise, returns null.
    */
-  already_AddRefed<nsINode> GetFocusedNode();
+  nsINode* GetFocusedNode() const;
 
-  virtual already_AddRefed<Element> GetInputEventTargetElement() override;
+  virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
 
   /**
    * Return TRUE if aElement is a table-related elemet and caret was set.
@@ -4155,7 +4155,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Whether the outer window of the DOM event target has focus or not.
    */
-  bool OurWindowHasFocus();
+  bool OurWindowHasFocus() const;
 
   /**
    * This function is used to insert a string of HTML input optionally with some

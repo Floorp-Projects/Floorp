@@ -171,7 +171,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
 
-  virtual dom::EventTarget* GetDOMEventTarget() override;
+  virtual dom::EventTarget* GetDOMEventTarget() const override;
 
   /**
    * PasteAsAction() pastes clipboard content to Selection.  This method
@@ -825,7 +825,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
 
-  virtual already_AddRefed<Element> GetInputEventTargetElement() override;
+  virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
 
   /**
    * See SetUnmaskRange() and SetUnmaskRangeAndNotify() for the detail.

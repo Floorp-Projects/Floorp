@@ -4094,7 +4094,7 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
 }
 
 nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
-                                            SkipWhitespace aSkipWS) {
+                                            SkipWhitespace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
   nsIContent* node = aNode->GetPreviousSibling();
@@ -4106,7 +4106,7 @@ nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
 }
 
 nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
-                                           SkipWhitespace aSkipWS) {
+                                           SkipWhitespace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
   nsIContent* node = aNode->GetNextSibling();
@@ -4118,7 +4118,7 @@ nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
 }
 
 nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-    nsINode& aNode, bool aNoBlockCrossing) {
+    nsINode& aNode, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4128,7 +4128,7 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) {
+    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4137,7 +4137,7 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
 }
 
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    nsINode& aNode, bool aNoBlockCrossing) {
+    nsINode& aNode, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4147,7 +4147,7 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) {
+    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4156,7 +4156,7 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
 }
 
 nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
-    nsINode& aNode, bool aNoBlockCrossing) {
+    nsINode& aNode, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4166,7 +4166,7 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) {
+    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -4233,7 +4233,7 @@ nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
   return child;
 }
 
-nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) {
+nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
   nsCOMPtr<nsIContent> child = GetLeftmostChild(&aNode);
   while (child && (!IsEditable(child) || child->HasChildren())) {
     child = GetNextEditableHTMLNode(*child);
@@ -4247,7 +4247,7 @@ nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) {
   return child;
 }
 
-nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) {
+nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
   nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
   while (child && (!IsEditable(child) || child->HasChildren())) {
     child = GetPreviousEditableHTMLNode(*child);
@@ -5008,15 +5008,15 @@ nsresult HTMLEditor::GetReturnInParagraphCreatesNewParagraph(
   return NS_OK;
 }
 
-nsIContent* HTMLEditor::GetFocusedContent() {
+nsIContent* HTMLEditor::GetFocusedContent() const {
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> focusedContent = focusManager->GetFocusedElement();
+  nsIContent* focusedContent = focusManager->GetFocusedElement();
 
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -5032,7 +5032,7 @@ nsIContent* HTMLEditor::GetFocusedContent() {
   if (inDesignMode) {
     return OurWindowHasFocus() &&
                    focusedContent->IsInclusiveDescendantOf(document)
-               ? focusedContent.get()
+               ? focusedContent
                : nullptr;
   }
 
@@ -5045,30 +5045,29 @@ nsIContent* HTMLEditor::GetFocusedContent() {
     return nullptr;
   }
   // If our window is focused, we're focused.
-  return OurWindowHasFocus() ? focusedContent.get() : nullptr;
+  return OurWindowHasFocus() ? focusedContent : nullptr;
 }
 
-already_AddRefed<nsIContent> HTMLEditor::GetFocusedContentForIME() {
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+nsIContent* HTMLEditor::GetFocusedContentForIME() const {
+  nsIContent* focusedContent = GetFocusedContent();
   if (!focusedContent) {
     return nullptr;
   }
 
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
-  return document->HasFlag(NODE_IS_EDITABLE) ? nullptr
-                                             : focusedContent.forget();
+  return document->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent;
 }
 
-bool HTMLEditor::IsActiveInDOMWindow() {
+bool HTMLEditor::IsActiveInDOMWindow() const {
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
     return false;
   }
 
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
@@ -5164,16 +5163,15 @@ void HTMLEditor::NotifyEditingHostMaybeChanged() {
   }
 }
 
-EventTarget* HTMLEditor::GetDOMEventTarget() {
+EventTarget* HTMLEditor::GetDOMEventTarget() const {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor has not been initialized yet");
-  nsCOMPtr<EventTarget> target = GetDocument();
-  return target;
+  return GetDocument();
 }
 
-bool HTMLEditor::ShouldReplaceRootElement() {
+bool HTMLEditor::ShouldReplaceRootElement() const {
   if (!mRootElement) {
     // If we don't know what is our root element, we should find our root.
     return true;
@@ -5225,17 +5223,17 @@ void HTMLEditor::NotifyRootChanged() {
   SyncRealTimeSpell();
 }
 
-Element* HTMLEditor::GetBodyElement() {
+Element* HTMLEditor::GetBodyElement() const {
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
   return document->GetBody();
 }
 
-already_AddRefed<nsINode> HTMLEditor::GetFocusedNode() {
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+nsINode* HTMLEditor::GetFocusedNode() const {
+  nsIContent* focusedContent = GetFocusedContent();
   if (!focusedContent) {
     return nullptr;
   }
@@ -5247,30 +5245,24 @@ already_AddRefed<nsINode> HTMLEditor::GetFocusedNode() {
 
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   NS_ASSERTION(focusManager, "Focus manager is null");
-  RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+  Element* focusedElement = focusManager->GetFocusedElement();
   if (focusedElement) {
-    return focusedElement.forget();
+    return focusedElement;
   }
 
-  RefPtr<Document> document = GetDocument();
-  return document.forget();
+  return GetDocument();
 }
 
-bool HTMLEditor::OurWindowHasFocus() {
-  nsIFocusManager* focusManager = nsFocusManager::GetFocusManager();
+bool HTMLEditor::OurWindowHasFocus() const {
+  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
     return false;
   }
-  nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
-  DebugOnly<nsresult> rvIgnored =
-      focusManager->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  nsPIDOMWindowOuter* focusedWindow = focusManager->GetFocusedWindow();
   if (!focusedWindow) {
     return false;
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsFocusManager::GetFocusedWindow() failed, but ignored");
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
@@ -5387,7 +5379,7 @@ nsresult HTMLEditor::GetPreferredIMEState(IMEState* aState) {
   return NS_OK;
 }
 
-already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() {
+already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() const {
   RefPtr<Element> target = GetActiveEditingHost();
   return target.forget();
 }
