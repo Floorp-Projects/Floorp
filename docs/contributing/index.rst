@@ -9,6 +9,7 @@ source code documentation.
    :glob:
 
    how_to_contribute_firefox
+   editor
    reviews
    directory_structure
 
@@ -27,4 +28,3 @@ source code documentation.
    :glob:
 
    build/*
-
