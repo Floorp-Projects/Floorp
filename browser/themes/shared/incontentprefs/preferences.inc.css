@@ -852,6 +852,7 @@ image.update-throbber {
   padding: 0 8px;
   margin-inline-end: 16px;
   border-radius: 2px;
+  font-size: 85%;
 }
 
 .policies-label {
@@ -862,7 +863,6 @@ image.update-throbber {
   list-style-image: url("chrome://global/skin/icons/identity-icon.svg");
   width: 16px;
   height: 16px;
-  margin-top: calc((32px - 16px) / 2);
 }
 
 .info-icon-telemetry {
@@ -881,7 +881,6 @@ image.update-throbber {
   width: calc(100% + 8px);
   margin-inline: -4px;
   padding-inline: 4px;
-  font-size: 85%;
 }
 
 .search-tooltip {
