@@ -3856,6 +3856,26 @@ networking:
     record_in_processes:
       - 'main'
 
+  loading_certs_task:
+    bug_numbers:
+      - 1628734
+    description:
+      The time in milliseconds to load any external certificates. This occurs
+      off of the main-thread, but can block main-thread operations.
+    expires: "never"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+
   data_transferred_v3_kb:
     bug_numbers:
       - 1533363
