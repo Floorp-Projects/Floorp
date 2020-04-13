@@ -95,8 +95,11 @@ either Raptor or browsertime."""
         device_name=None,
         disable_perf_tuning=False,
         extra_prefs={},
+        project="mozilla-central",
         **kwargs
     ):
+
+        self._dirs_to_remove = []
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == "HOST_IP":
@@ -126,19 +129,26 @@ either Raptor or browsertime."""
             "enable_fission": extra_prefs.get("fission.autostart", False),
             "disable_perf_tuning": disable_perf_tuning,
             "extra_prefs": extra_prefs,
+            "project": project
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         # See bugs 1582757, 1606199, and 1606767; until we support win10-aarch64,
         # fennec_aurora, and reference browser conditioned-profile builds,
         # fall back to mozrunner-created profiles
-        self.no_condprof = (
+        self.using_condprof = not (
             (self.config["platform"] == "win" and self.config["processor"] == "aarch64")
             or self.config["binary"] == "org.mozilla.fennec_aurora"
             or self.config["binary"] == "org.mozilla.reference.browser.raptor"
+            or self.config["binary"] == "org.mozilla.firefox"
+            or self.config["binary"].startswith("org.mozilla.fenix")
             or self.config["no_conditioned_profile"]
         )
-        LOG.info("self.no_condprof is: {}".format(self.no_condprof))
+        if self.using_condprof:
+            LOG.info("Using a conditioned profile.")
+        else:
+            LOG.info("Using an empty profile.")
+        self.config["using_condprof"] = self.using_condprof
 
         # We can never use e10s on fennec
         if self.config["app"] == "fennec":
@@ -170,7 +180,7 @@ either Raptor or browsertime."""
 
         # For the post startup delay, we want to max it to 1s when using the
         # conditioned profiles.
-        if not self.no_condprof and not self.run_local:
+        if self.using_condprof and not self.run_local:
             self.post_startup_delay = min(post_startup_delay, POST_DELAY_CONDPROF)
         else:
             # if running debug-mode reduce the pause after browser startup
@@ -187,6 +197,11 @@ either Raptor or browsertime."""
         # Crashes counter
         self.crashes = 0
 
+    def _get_temp_dir(self):
+        tempdir = tempfile.mkdtemp()
+        self._dirs_to_remove.append(tempdir)
+        return tempdir
+
     @property
     def is_localhost(self):
         return self.config.get("host") in ("localhost", "127.0.0.1")
@@ -196,7 +211,7 @@ either Raptor or browsertime."""
         condprofile client API; returns a self.conditioned_profile_dir"""
 
         # create a temp file to help ensure uniqueness
-        temp_download_dir = tempfile.mkdtemp()
+        temp_download_dir = self._get_temp_dir()
         LOG.info(
             "Making temp_download_dir from inside get_conditioned_profile {}".format(
                 temp_download_dir
@@ -214,12 +229,26 @@ either Raptor or browsertime."""
             platform = get_current_platform()
 
         LOG.info("Platform used: %s" % platform)
+
+        # when running under mozharness, the --project value
+        # is set to match the project (try, mozilla-central, etc.)
+        # By default it's mozilla-central, even on local runs.
+        # We use it to prioritize conditioned profiles indexed
+        # into the same project when it runs on the CI
+        repo = self.config["project"]
+
+        # we fall back to mozilla-central in all cases. If it
+        # was already mozilla-central, we fall back to try
+        alternate_repo = "mozilla-central" if repo != "mozilla-central" else "try"
+        LOG.info("Getting profile from project %s" % repo)
         try:
-            cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
-        except ProfileNotFoundError:
-            # If we can't find the profile on mozilla-central, we look on try
             cond_prof_target_dir = get_profile(
-                temp_download_dir, platform, "settled", repo="try"
+                temp_download_dir, platform, "settled", repo=repo)
+        except ProfileNotFoundError:
+            LOG.info("Profile not found for project %s" % repo)
+            LOG.info("Getting profile from project %s" % alternate_repo)
+            cond_prof_target_dir = get_profile(
+                temp_download_dir, platform, "settled", repo=alternate_repo
             )
         except Exception:
             # any other error is a showstopper
@@ -245,12 +274,10 @@ either Raptor or browsertime."""
                 self.conditioned_profile_dir
             )
         )
-        shutil.rmtree(temp_download_dir)
-
         return self.conditioned_profile_dir
 
     def build_browser_profile(self):
-        if self.no_condprof or self.config['app'] in ['chrome', 'chromium', 'chrome-m']:
+        if not self.using_condprof or self.config['app'] in ['chrome', 'chromium', 'chrome-m']:
             self.profile = create_profile(self.profile_class)
         else:
             self.get_conditioned_profile()
@@ -375,9 +402,13 @@ either Raptor or browsertime."""
     def check_for_crashes(self):
         pass
 
-    @abstractmethod
     def clean_up(self):
-        pass
+        for dir_to_rm in self._dirs_to_remove:
+            if not os.path.exists(dir_to_rm):
+                continue
+            LOG.info("Removing temporary directory: {}".format(dir_to_rm))
+            shutil.rmtree(dir_to_rm, ignore_errors=True)
+        self._dirs_to_remove = []
 
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
