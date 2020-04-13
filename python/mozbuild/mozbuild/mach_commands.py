@@ -530,6 +530,8 @@ class GTestCommands(MachCommandBase):
 
         if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
+            if not args:
+                return 1
 
         # Use GTest environment variable to control test execution
         # For details see:
@@ -619,6 +621,7 @@ class GTestCommands(MachCommandBase):
             libxul_path = os.path.join(self.topobjdir, "dist", "bin", "gtest", "libxul.so")
 
         # run gtest via remotegtests.py
+        exit_code = 0
         import imp
         path = os.path.join('testing', 'gtest', 'remotegtests.py')
         with open(path, 'r') as fh:
@@ -626,11 +629,12 @@ class GTestCommands(MachCommandBase):
                             ('.py', 'r', imp.PY_SOURCE))
         import remotegtests
         tester = remotegtests.RemoteGTests()
-        tester.run_gtest(test_dir, shuffle, gtest_filter, package, adb_path, device_serial,
-                         remote_test_root, libxul_path, None, enable_webrender)
+        if not tester.run_gtest(test_dir, shuffle, gtest_filter, package, adb_path, device_serial,
+                                remote_test_root, libxul_path, None, enable_webrender):
+            exit_code = 1
         tester.cleanup()
 
-        return 0
+        return exit_code
 
     def prepend_debugger_args(self, args, debugger, debugger_args):
         '''
@@ -651,9 +655,10 @@ class GTestCommands(MachCommandBase):
 
         if debugger:
             debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
-            if not debuggerInfo:
-                print("Could not find a suitable debugger in your PATH.")
-                return 1
+
+        if not debugger or not debuggerInfo:
+            print("Could not find a suitable debugger in your PATH.")
+            return None
 
         # Parameters come from the CLI. We need to convert them before
         # their use.
@@ -664,7 +669,7 @@ class GTestCommands(MachCommandBase):
             except shellutil.MetaCharacterException as e:
                 print("The --debugger_args you passed require a real shell to parse them.")
                 print("(We can't handle the %r character.)" % e.char)
-                return 1
+                return None
 
         # Prepend the debugger args.
         args = [debuggerInfo.path] + debuggerInfo.args + args
@@ -1413,6 +1418,8 @@ class WebRTCGTestCommands(GTestCommands):
 
         if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
+            if not args:
+                return 1
 
         # Used to locate resources used by tests
         cwd = os.path.join(self.topsrcdir, 'media', 'webrtc', 'trunk')
