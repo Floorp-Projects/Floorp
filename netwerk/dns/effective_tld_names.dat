@@ -212,6 +212,7 @@ ac.at
 co.at
 gv.at
 or.at
+sth.ac.at
 
 // au : https://en.wikipedia.org/wiki/.au
 // http://www.auda.org.au/
@@ -11094,6 +11095,10 @@ realm.cz
 // Submitted by Jonathan Rudenberg <jonathan@cupcake.io>
 cupcake.is
 
+// Curv UG : https://curv-labs.de/
+// Submitted by Marvin Wiesner <Marvin@curv-labs.de>
+curv.dev
+
 // Customer OCI - Oracle Dyn https://cloud.oracle.com/home https://dyn.com/dns/
 // Submitted by Gregory Drake <support@dyn.com>
 // Note: This is intended to also include customer-oci.com due to wildcards implicitly including the current label
@@ -11128,6 +11133,10 @@ co.dk
 firm.dk
 reg.dk
 store.dk
+
+// dappnode.io : https://dappnode.io/
+// Submitted by Abel Boldu / DAppNode Team <community@dappnode.io>
+dyndns.dappnode.io
 
 // dapps.earth : https://dapps.earth/
 // Submitted by Daniil Burdakov <icqkill@gmail.com>
@@ -11610,6 +11619,10 @@ twmail.net
 twmail.org
 mymailer.com.tw
 url.tw
+
+// Fabrica Technologies, Inc. : https://www.fabrica.dev/
+// Submitted by Eric Jiang <eric@fabrica.dev>
+onfabrica.com
 
 // Facebook, Inc.
 // Submitted by Peter Ruibal <public-suffix@fb.com>
@@ -13040,6 +13053,11 @@ remotewd.com
 wmflabs.org
 toolforge.org
 wmcloud.org
+
+// WISP : https://wisp.gg
+// Submitted by Stepan Fedotov <stepan@wisp.gg>
+panel.gg
+daemon.panel.gg
 
 // WoltLab GmbH : https://www.woltlab.com
 // Submitted by Tim Düsterhus <security@woltlab.cloud>
