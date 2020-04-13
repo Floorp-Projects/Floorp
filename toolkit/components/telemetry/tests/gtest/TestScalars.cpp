@@ -62,6 +62,40 @@ TEST_F(TelemetryTestFixture, ScalarUnsigned) {
                   scalarsSnapshot, kExpectedUintMaximum);
 }
 
+// Test that the AutoScalarTimer records a proper uint32_t value to a
+// scalar once it goes out of scope.
+TEST_F(TelemetryTestFixture, AutoScalarTimer) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+  {
+    Telemetry::AutoScalarTimer<
+        Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND>
+        timer;
+  }
+
+  const char* kScalarName = "telemetry.test.unsigned_int_kind";
+
+  // Check that there's a recorded value that is greater than 0. Since
+  // this is a timer, we'll not check the non-deterministic value - just
+  // that it exists.
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Validate the value of the test scalar.
+  JS::RootedValue value(cx.GetJSContext());
+  JS::RootedObject scalarObj(cx.GetJSContext(), &scalarsSnapshot.toObject());
+  ASSERT_TRUE(JS_GetProperty(cx.GetJSContext(), scalarObj, kScalarName, &value))
+  << "The test scalar must be reported.";
+
+  JS_GetProperty(cx.GetJSContext(), scalarObj, kScalarName, &value);
+  ASSERT_TRUE(value.isInt32())
+  << "The scalar value must be of the correct type.";
+  ASSERT_TRUE(value.toInt32() >= 0)
+  << "The uint scalar type must contain a value >= 0.";
+}
+
 // Test that we can properly write boolean scalars using the C++ API.
 TEST_F(TelemetryTestFixture, ScalarBoolean) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
