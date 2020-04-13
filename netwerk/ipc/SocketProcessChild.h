@@ -86,6 +86,16 @@ class SocketProcessChild final
 
   bool IsShuttingDown() { return mShuttingDown; }
 
+  already_AddRefed<PDNSRequestChild> AllocPDNSRequestChild(
+      const nsCString& aHost, const nsCString& aTrrServer,
+      const uint16_t& aType, const OriginAttributes& aOriginAttributes,
+      const uint32_t& aFlags);
+  mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
+      PDNSRequestChild* aActor, const nsCString& aHost,
+      const nsCString& aTrrServer, const uint16_t& aType,
+      const OriginAttributes& aOriginAttributes,
+      const uint32_t& aFlags) override;
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
