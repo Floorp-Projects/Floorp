@@ -9634,11 +9634,17 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
           "subframes should have the same docshell type as their parent");
 #endif
     } else {
-      // If this isn't a top-level load and mScriptGlobal's frame element is
-      // null, then the element got removed from the DOM while we were trying
-      // to load this resource. This docshell is scheduled for destruction
-      // already, so bail out here.
-      return NS_OK;
+      if (mIsBeingDestroyed) {
+        // If this isn't a top-level load and mScriptGlobal's frame element is
+        // null, then the element got removed from the DOM while we were trying
+        // to load this resource. This docshell is scheduled for destruction
+        // already, so bail out here.
+        return NS_OK;
+      }
+      // If we are not being destroyed and we do not have access to the loading
+      // node, then we are a remote subframe. Set the loading principal
+      // to be a null principal and then set it correctly in the parent.
+      loadingPrincipal = NullPrincipal::Create(GetOriginAttributes(), nullptr);
     }
   }
 

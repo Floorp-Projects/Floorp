@@ -2416,6 +2416,21 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   WindowGlobalChild* wgc = mInnerWindow->GetWindowGlobalChild();
   wgc->SetDocumentURI(aDocument->GetDocumentURI());
 
+  wgc->SetDocumentPrincipal(aDocument->NodePrincipal());
+
+  wgc->SendUpdateDocumentCspSettings(
+      aDocument->GetBlockAllMixedContent(false),
+      aDocument->GetUpgradeInsecureRequests(false));
+  wgc->SendUpdateSandboxFlags(aDocument->GetSandboxFlags());
+  net::CookieJarSettingsArgs csArgs;
+  net::CookieJarSettings::Cast(aDocument->CookieJarSettings())
+      ->Serialize(csArgs);
+  if (!wgc->SendUpdateCookieJarSettings(csArgs)) {
+    NS_WARNING(
+        "Failed to update document's cookie jar settings on the "
+        "WindowGlobalParent");
+  }
+
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   bc->SetCurrentInnerWindowId(mInnerWindow->WindowID());
 
