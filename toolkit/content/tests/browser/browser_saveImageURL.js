@@ -2,7 +2,6 @@
 
 const IMAGE_PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/image_page.html";
-const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 
@@ -24,8 +23,7 @@ function waitForFilePicker() {
 }
 
 /**
- * Test that saveImageURL works when we pass in the aIsContentWindowPrivate
- * argument instead of a document. This is the preferred API.
+ * Test that internalSave works when saving an image like the context menu does.
  */
 add_task(async function preferred_API() {
   await BrowserTestUtils.withNewTab(
@@ -40,17 +38,20 @@ add_task(async function preferred_API() {
       });
 
       let filePickerPromise = waitForFilePicker();
-      saveImageURL(
+      internalSave(
         url,
+        null, // document
         "image.jpg",
-        null,
-        true,
-        false,
-        null,
-        null,
+        null, // content disposition
         "image/jpeg",
-        null,
-        false,
+        true, // bypass cache
+        null, // dialog title key
+        null, // chosen data
+        null, // no referrer info
+        null, // no document
+        false, // don't skip the filename prompt
+        null, // cache key
+        false, // not private.
         gBrowser.contentPrincipal
       );
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
@@ -68,63 +69,6 @@ add_task(async function preferred_API() {
           );
         }
       });
-      await filePickerPromise;
-    }
-  );
-});
-
-/**
- * Test that saveImageURL will still work when passed a document instead
- * of the aIsContentWindowPrivate argument. This is the deprecated API, and
- * will not work in apps using remote browsers having PREF_UNSAFE_FORBIDDEN
- * set to true.
- */
-add_task(async function deprecated_API() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: IMAGE_PAGE,
-    },
-    async function(browser) {
-      await pushPrefs([PREF_UNSAFE_FORBIDDEN, false]);
-
-      let url = await SpecialPowers.spawn(browser, [], async function() {
-        let image = content.document.getElementById("image");
-        return image.href;
-      });
-
-      // Now get the document directly from content. If we run this test with
-      // e10s-enabled, this will be a CPOW, which is forbidden. We'll just
-      // pass the XUL document instead to test this interface.
-      let doc = document;
-
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-        let channel = docShell.currentDocumentChannel;
-        if (channel) {
-          todo(
-            channel.QueryInterface(Ci.nsIHttpChannelInternal)
-              .channelIsForDownload
-          );
-
-          // Throttleable is the only class flag assigned to downloads.
-          todo(
-            channel.QueryInterface(Ci.nsIClassOfService).classFlags ==
-              Ci.nsIClassOfService.Throttleable
-          );
-        }
-      });
-      let filePickerPromise = waitForFilePicker();
-      saveImageURL(
-        url,
-        "image.jpg",
-        null,
-        true,
-        false,
-        null,
-        doc,
-        "image/jpeg",
-        null
-      );
       await filePickerPromise;
     }
   );
