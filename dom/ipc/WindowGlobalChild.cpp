@@ -455,6 +455,13 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   SendUpdateDocumentURI(aDocumentURI);
 }
 
+void WindowGlobalChild::SetDocumentPrincipal(
+    nsIPrincipal* aNewDocumentPrincipal) {
+  MOZ_ASSERT(mDocumentPrincipal->Equals(aNewDocumentPrincipal));
+  mDocumentPrincipal = aNewDocumentPrincipal;
+  SendUpdateDocumentPrincipal(aNewDocumentPrincipal);
+}
+
 const nsAString& WindowGlobalChild::GetRemoteType() {
   if (XRE_IsContentProcess()) {
     return ContentChild::GetSingleton()->GetRemoteType();

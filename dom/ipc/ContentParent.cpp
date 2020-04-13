@@ -5411,7 +5411,7 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<BrowsingContext> browsingContext;
-  rv = loadInfo->GetBrowsingContext(getter_AddRefs(browsingContext));
+  rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (browsingContext && !browsingContext->IsDiscarded()) {
