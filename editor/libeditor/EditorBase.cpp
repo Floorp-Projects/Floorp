@@ -5387,7 +5387,7 @@ bool EditorBase::IsModifiableNode(const nsINode& aNode) const {
   return !AsHTMLEditor() || aNode.IsEditable();
 }
 
-nsIContent* EditorBase::GetFocusedContent() {
+nsIContent* EditorBase::GetFocusedContent() const {
   EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return nullptr;
@@ -5404,12 +5404,11 @@ nsIContent* EditorBase::GetFocusedContent() {
   return (content == piTarget) ? content : nullptr;
 }
 
-already_AddRefed<nsIContent> EditorBase::GetFocusedContentForIME() {
-  nsCOMPtr<nsIContent> content = GetFocusedContent();
-  return content.forget();
+nsIContent* EditorBase::GetFocusedContentForIME() const {
+  return GetFocusedContent();
 }
 
-bool EditorBase::IsActiveInDOMWindow() {
+bool EditorBase::IsActiveInDOMWindow() const {
   EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return false;
@@ -5420,7 +5419,7 @@ bool EditorBase::IsActiveInDOMWindow() {
     return false;  // Do we need to check the singleton instance??
   }
 
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
