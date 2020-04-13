@@ -89,3 +89,55 @@ add_task(async function() {
     );
   });
 });
+
+add_task(async function test_eme_locked() {
+  await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
+    // Reset prefs manually since we need to unlock them.
+    let emeWasEnabled = Services.prefs.getBoolPref("media.eme.enabled", false);
+
+    // Restore the preferences to their pre-test state on test finish.
+    registerCleanupFunction(function() {
+      Services.prefs.setBoolPref("media.eme.enabled", emeWasEnabled);
+      Services.prefs.unlockPref("media.eme.enabled");
+    });
+
+    // Turn off EME and Widevine CDM.
+    Services.prefs.setBoolPref("media.eme.enabled", false);
+    Services.prefs.lockPref("media.eme.enabled");
+
+    // Have content request access to Widevine, UI should drop down to
+    // prompt user to enable DRM.
+    let result = await SpecialPowers.spawn(browser, [], async function() {
+      try {
+        let config = [
+          {
+            initDataTypes: ["webm"],
+            videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+          },
+        ];
+        await content.navigator.requestMediaKeySystemAccess(
+          "com.widevine.alpha",
+          config
+        );
+      } catch (ex) {
+        return { rejected: true };
+      }
+      return { rejected: false };
+    });
+    is(
+      result.rejected,
+      true,
+      "EME request should be denied because EME disabled."
+    );
+
+    // Verify the UI prompt did not show.
+    let box = gBrowser.getNotificationBox(browser);
+    let notification = box.currentNotification;
+
+    is(
+      notification,
+      null,
+      "Notification should not be displayed since pref is locked"
+    );
+  });
+});
