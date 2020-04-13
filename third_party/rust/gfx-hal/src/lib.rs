@@ -26,7 +26,6 @@ pub mod pool;
 pub mod pso;
 pub mod query;
 pub mod queue;
-pub mod range;
 pub mod window;
 
 /// Prelude module re-exports all the traits necessary to use gfx-hal.
@@ -62,138 +61,154 @@ bitflags! {
     /// Features that the device supports.
     /// These only include features of the core interface and not API extensions.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct Features: u64 {
+    pub struct Features: u128 {
         /// Bit mask of Vulkan Core features.
-        const CORE_MASK   = 0x0FFF_FFFF_FFFF_FFFF;
+        const CORE_MASK = 0xFFFF_FFFF_FFFF_FFFF;
         /// Bit mask of Vulkan Portability features.
-        const PORTABILITY_MASK  = 0xF000_0000_0000_0000;
+        const PORTABILITY_MASK  = 0x0000_FFFF_0000_0000_0000_0000;
+        /// Bit mask for extra WebGPU features.
+        const WEBGPU_MASK = 0xFFFF_0000_0000_0000_0000_0000;
 
         /// Support for robust buffer access.
         /// Buffer access by SPIR-V shaders is checked against the buffer/image boundaries.
-        const ROBUST_BUFFER_ACCESS = 0x000_0000_0000_0001;
+        const ROBUST_BUFFER_ACCESS = 0x0000_0000_0000_0001;
         /// Support the full 32-bit range of indexed for draw calls.
         /// If not supported, the maximum index value is determined by `Limits::max_draw_index_value`.
-        const FULL_DRAW_INDEX_U32 = 0x000_0000_0000_0002;
+        const FULL_DRAW_INDEX_U32 = 0x0000_0000_0000_0002;
         /// Support cube array image views.
-        const IMAGE_CUBE_ARRAY = 0x000_0000_0000_0004;
+        const IMAGE_CUBE_ARRAY = 0x0000_0000_0000_0004;
         /// Support different color blending settings per attachments on graphics pipeline creation.
-        const INDEPENDENT_BLENDING = 0x000_0000_0000_0008;
+        const INDEPENDENT_BLENDING = 0x0000_0000_0000_0008;
         /// Support geometry shader.
-        const GEOMETRY_SHADER = 0x000_0000_0000_0010;
+        const GEOMETRY_SHADER = 0x0000_0000_0000_0010;
         /// Support tessellation shaders.
-        const TESSELLATION_SHADER = 0x000_0000_0000_0020;
+        const TESSELLATION_SHADER = 0x0000_0000_0000_0020;
         /// Support per-sample shading and multisample interpolation.
-        const SAMPLE_RATE_SHADING = 0x000_0000_0000_0040;
+        const SAMPLE_RATE_SHADING = 0x0000_0000_0000_0040;
         /// Support dual source blending.
-        const DUAL_SRC_BLENDING = 0x000_0000_0000_0080;
+        const DUAL_SRC_BLENDING = 0x0000_0000_0000_0080;
         /// Support logic operations.
-        const LOGIC_OP = 0x000_0000_0000_0100;
+        const LOGIC_OP = 0x0000_0000_0000_0100;
         /// Support multiple draws per indirect call.
-        const MULTI_DRAW_INDIRECT = 0x000_0000_0000_0200;
+        const MULTI_DRAW_INDIRECT = 0x0000_0000_0000_0200;
         /// Support indirect drawing with first instance value.
         /// If not supported the first instance value **must** be 0.
-        const DRAW_INDIRECT_FIRST_INSTANCE = 0x00_0000_0000_0400;
+        const DRAW_INDIRECT_FIRST_INSTANCE = 0x0000_0000_0000_0400;
         /// Support depth clamping.
-        const DEPTH_CLAMP = 0x000_0000_0000_0800;
+        const DEPTH_CLAMP = 0x0000_0000_0000_0800;
         /// Support depth bias clamping.
-        const DEPTH_BIAS_CLAMP = 0x000_0000_0000_1000;
+        const DEPTH_BIAS_CLAMP = 0x0000_0000_0000_1000;
         /// Support non-fill polygon modes.
-        const NON_FILL_POLYGON_MODE = 0x000_0000_0000_2000;
+        const NON_FILL_POLYGON_MODE = 0x0000_0000_0000_2000;
         /// Support depth bounds test.
-        const DEPTH_BOUNDS = 0x000_0000_0000_4000;
+        const DEPTH_BOUNDS = 0x0000_0000_0000_4000;
         /// Support lines with width other than 1.0.
-        const LINE_WIDTH = 0x000_0000_0000_8000;
+        const LINE_WIDTH = 0x0000_0000_0000_8000;
         /// Support points with size greater than 1.0.
-        const POINT_SIZE = 0x000_0000_0001_0000;
+        const POINT_SIZE = 0x0000_0000_0001_0000;
         /// Support replacing alpha values with 1.0.
-        const ALPHA_TO_ONE = 0x000_0000_0002_0000;
+        const ALPHA_TO_ONE = 0x0000_0000_0002_0000;
         /// Support multiple viewports and scissors.
-        const MULTI_VIEWPORTS = 0x000_0000_0004_0000;
+        const MULTI_VIEWPORTS = 0x0000_0000_0004_0000;
         /// Support anisotropic filtering.
-        const SAMPLER_ANISOTROPY = 0x000_0000_0008_0000;
+        const SAMPLER_ANISOTROPY = 0x0000_0000_0008_0000;
         /// Support ETC2 texture compression formats.
-        const FORMAT_ETC2 = 0x000_0000_0010_0000;
+        const FORMAT_ETC2 = 0x0000_0000_0010_0000;
         /// Support ASTC (LDR) texture compression formats.
-        const FORMAT_ASTC_LDR = 0x000_0000_0020_0000;
+        const FORMAT_ASTC_LDR = 0x0000_0000_0020_0000;
         /// Support BC texture compression formats.
-        const FORMAT_BC = 0x000_0000_0040_0000;
+        const FORMAT_BC = 0x0000_0000_0040_0000;
         /// Support precise occlusion queries, returning the actual number of samples.
         /// If not supported, queries return a non-zero value when at least **one** sample passes.
-        const PRECISE_OCCLUSION_QUERY = 0x000_0000_0080_0000;
+        const PRECISE_OCCLUSION_QUERY = 0x0000_0000_0080_0000;
         /// Support query of pipeline statistics.
-        const PIPELINE_STATISTICS_QUERY = 0x000_0000_0100_0000;
+        const PIPELINE_STATISTICS_QUERY = 0x0000_0000_0100_0000;
         /// Support unordered access stores and atomic ops in the vertex, geometry
         /// and tessellation shader stage.
         /// If not supported, the shader resources **must** be annotated as read-only.
-        const VERTEX_STORES_AND_ATOMICS = 0x000_0000_0200_0000;
+        const VERTEX_STORES_AND_ATOMICS = 0x0000_0000_0200_0000;
         /// Support unordered access stores and atomic ops in the fragment shader stage
         /// If not supported, the shader resources **must** be annotated as read-only.
-        const FRAGMENT_STORES_AND_ATOMICS = 0x000_0000_0400_0000;
+        const FRAGMENT_STORES_AND_ATOMICS = 0x0000_0000_0400_0000;
         ///
-        const SHADER_TESSELLATION_AND_GEOMETRY_POINT_SIZE = 0x000_0000_0800_0000;
+        const SHADER_TESSELLATION_AND_GEOMETRY_POINT_SIZE = 0x0000_0000_0800_0000;
         ///
-        const SHADER_IMAGE_GATHER_EXTENDED = 0x000_0000_1000_0000;
+        const SHADER_IMAGE_GATHER_EXTENDED = 0x0000_0000_1000_0000;
         ///
-        const SHADER_STORAGE_IMAGE_EXTENDED_FORMATS = 0x000_0000_2000_0000;
+        const SHADER_STORAGE_IMAGE_EXTENDED_FORMATS = 0x0000_0000_2000_0000;
         ///
-        const SHADER_STORAGE_IMAGE_MULTISAMPLE = 0x000_0000_4000_0000;
+        const SHADER_STORAGE_IMAGE_MULTISAMPLE = 0x0000_0000_4000_0000;
         ///
-        const SHADER_STORAGE_IMAGE_READ_WITHOUT_FORMAT = 0x000_0000_8000_0000;
+        const SHADER_STORAGE_IMAGE_READ_WITHOUT_FORMAT = 0x0000_0000_8000_0000;
         ///
-        const SHADER_STORAGE_IMAGE_WRITE_WITHOUT_FORMAT = 0x000_0001_0000_0000;
+        const SHADER_STORAGE_IMAGE_WRITE_WITHOUT_FORMAT = 0x0000_0001_0000_0000;
         ///
-        const SHADER_UNIFORM_BUFFER_ARRAY_DYNAMIC_INDEXING = 0x000_0002_0000_0000;
+        const SHADER_UNIFORM_BUFFER_ARRAY_DYNAMIC_INDEXING = 0x0000_0002_0000_0000;
         ///
-        const SHADER_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING = 0x000_0004_0000_0000;
+        const SHADER_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING = 0x0000_0004_0000_0000;
         ///
-        const SHADER_STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING = 0x000_0008_0000_0000;
+        const SHADER_STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING = 0x0000_0008_0000_0000;
         ///
-        const SHADER_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING = 0x000_0010_0000_0000;
+        const SHADER_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING = 0x0000_0010_0000_0000;
         ///
-        const SHADER_CLIP_DISTANCE = 0x000_0020_0000_0000;
+        const SHADER_CLIP_DISTANCE = 0x0000_0020_0000_0000;
         ///
-        const SHADER_CULL_DISTANCE = 0x000_0040_0000_0000;
+        const SHADER_CULL_DISTANCE = 0x0000_0040_0000_0000;
         ///
-        const SHADER_FLOAT64 = 0x000_0080_0000_0000;
+        const SHADER_FLOAT64 = 0x0000_0080_0000_0000;
         ///
-        const SHADER_INT64 = 0x000_0100_0000_0000;
+        const SHADER_INT64 = 0x0000_0100_0000_0000;
         ///
-        const SHADER_INT16 = 0x000_0200_0000_0000;
+        const SHADER_INT16 = 0x0000_0200_0000_0000;
         ///
-        const SHADER_RESOURCE_RESIDENCY = 0x000_0400_0000_0000;
+        const SHADER_RESOURCE_RESIDENCY = 0x0000_0400_0000_0000;
         ///
-        const SHADER_RESOURCE_MIN_LOD = 0x000_0800_0000_0000;
+        const SHADER_RESOURCE_MIN_LOD = 0x0000_0800_0000_0000;
         ///
-        const SPARSE_BINDING = 0x000_1000_0000_0000;
+        const SPARSE_BINDING = 0x0000_1000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_BUFFER = 0x000_2000_0000_0000;
+        const SPARSE_RESIDENCY_BUFFER = 0x0000_2000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_IMAGE_2D = 0x000_4000_0000_0000;
+        const SPARSE_RESIDENCY_IMAGE_2D = 0x0000_4000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_IMAGE_3D = 0x000_8000_0000_0000;
+        const SPARSE_RESIDENCY_IMAGE_3D = 0x0000_8000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_2_SAMPLES = 0x001_0000_0000_0000;
+        const SPARSE_RESIDENCY_2_SAMPLES = 0x0001_0000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_4_SAMPLES = 0x002_0000_0000_0000;
+        const SPARSE_RESIDENCY_4_SAMPLES = 0x0002_0000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_8_SAMPLES = 0x004_0000_0000_0000;
+        const SPARSE_RESIDENCY_8_SAMPLES = 0x0004_0000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_16_SAMPLES = 0x008_0000_0000_0000;
+        const SPARSE_RESIDENCY_16_SAMPLES = 0x0008_0000_0000_0000;
         ///
-        const SPARSE_RESIDENCY_ALIASED = 0x010_0000_0000_0000;
+        const SPARSE_RESIDENCY_ALIASED = 0x0010_0000_0000_0000;
         ///
-        const VARIABLE_MULTISAMPLE_RATE = 0x020_0000_0000_0000;
+        const VARIABLE_MULTISAMPLE_RATE = 0x0020_0000_0000_0000;
         ///
-        const INHERITED_QUERIES = 0x040_0000_0000_0000;
+        const INHERITED_QUERIES = 0x0040_0000_0000_0000;
+        /// Support for
+        const SAMPLER_MIRROR_CLAMP_EDGE = 0x0100_0000_0000_0000;
 
         /// Support triangle fan primitive topology.
-        const TRIANGLE_FAN = 0x1000_0000_0000_0000;
+        const TRIANGLE_FAN = 0x0001 << 64;
         /// Support separate stencil reference values for front and back sides.
-        const SEPARATE_STENCIL_REF_VALUES = 0x2000_0000_0000_0000;
+        const SEPARATE_STENCIL_REF_VALUES = 0x0002 << 64;
         /// Support manually specified vertex attribute rates (divisors).
-        const INSTANCE_RATE = 0x4000_0000_0000_0000;
+        const INSTANCE_RATE = 0x0004 << 64;
         /// Support non-zero mipmap bias on samplers.
-        const SAMPLER_MIP_LOD_BIAS = 0x8000_0000_0000_0000;
+        const SAMPLER_MIP_LOD_BIAS = 0x0008 << 64;
+
+        /// Make the NDC coordinate system pointing Y up, to match D3D and Metal.
+        const NDC_Y_UP = 0x01 << 80;
+    }
+}
+
+bitflags! {
+    /// Features that the device supports natively, but is able to emulate.
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    pub struct Hints: u32 {
+        /// Support indexed, instanced drawing with base vertex and instance.
+        const BASE_VERTEX_INSTANCE_DRAWING = 0x0001;
     }
 }
 
@@ -412,6 +427,16 @@ pub struct MemoryTypeId(pub usize);
 impl From<usize> for MemoryTypeId {
     fn from(id: usize) -> Self {
         MemoryTypeId(id)
+    }
+}
+
+struct PseudoVec<T>(Option<T>);
+
+impl<T> std::iter::Extend<T> for PseudoVec<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let mut iter = iter.into_iter();
+        self.0 = iter.next();
+        assert!(iter.next().is_none());
     }
 }
 

@@ -12,9 +12,9 @@ use std::u8;
 pub enum Target {}
 
 pub struct TargetData {
-    vertex_attribute_overrides: Vec<br::SPIRV_CROSS_NAMESPACE::MSLVertexAttr>,
-    resource_binding_overrides: Vec<br::SPIRV_CROSS_NAMESPACE::MSLResourceBinding>,
-    const_samplers: Vec<br::MslConstSamplerMapping>,
+    vertex_attribute_overrides: Vec<br::spirv_cross::MSLVertexAttr>,
+    resource_binding_overrides: Vec<br::spirv_cross::MSLResourceBinding>,
+    const_samplers: Vec<br::ScMslConstSamplerMapping>,
 }
 
 impl spirv::Target for Target {
@@ -34,9 +34,9 @@ pub enum Format {
 }
 
 impl Format {
-    fn as_raw(&self) -> br::SPIRV_CROSS_NAMESPACE::MSLVertexFormat {
+    fn as_raw(&self) -> br::spirv_cross::MSLVertexFormat {
         use self::Format::*;
-        use crate::bindings::root::SPIRV_CROSS_NAMESPACE::MSLVertexFormat as R;
+        use crate::bindings::root::spirv_cross::MSLVertexFormat as R;
         match self {
             Other => R::MSL_VERTEX_FORMAT_OTHER,
             Uint8 => R::MSL_VERTEX_FORMAT_UINT8,
@@ -140,15 +140,47 @@ impl LodBase16 {
     pub const ZERO: Self = LodBase16(0);
     pub const MAX: Self = LodBase16(!0);
 }
+
 impl From<f32> for LodBase16 {
     fn from(v: f32) -> Self {
         LodBase16((v * 16.0).max(0.0).min(u8::MAX as f32) as u8)
     }
 }
+
 impl Into<f32> for LodBase16 {
     fn into(self) -> f32 {
         self.0 as f32 / 16.0
     }
+}
+
+/// MSL format resolution.
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum FormatResolution {
+    _444 = 0,
+    _422 = 1,
+    _420 = 2,
+}
+
+/// MSL chroma location.
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ChromaLocation {
+    CositedEven = 0,
+    LocationMidpoint = 1,
+}
+
+/// MSL component swizzle.
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ComponentSwizzle {
+    Identity = 0,
+    Zero = 1,
+    One = 2,
+    R = 3,
+    G = 4,
+    B = 5,
+    A = 6,
 }
 
 /// Data fully defining a constant sampler.
@@ -166,6 +198,36 @@ pub struct SamplerData {
     pub lod_clamp_min: LodBase16,
     pub lod_clamp_max: LodBase16,
     pub max_anisotropy: i32,
+    // Sampler YCbCr conversion parameters
+    pub planes: u32,
+    pub resolution: FormatResolution,
+    pub chroma_filter: SamplerFilter,
+    pub x_chroma_offset: ChromaLocation,
+    pub y_chroma_offset: ChromaLocation,
+    pub swizzle: [ComponentSwizzle; 4],
+    pub ycbcr_conversion_enable: bool,
+    pub ycbcr_model: SamplerYCbCrModelConversion,
+    pub ycbcr_range: SamplerYCbCrRange,
+    pub bpc: u32,
+}
+
+/// A MSL sampler YCbCr model conversion.
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum SamplerYCbCrModelConversion {
+    RgbIdentity = 0,
+    YCbCrIdentity = 1,
+    YCbCrBt709 = 2,
+    YCbCrBt601 = 3,
+    YCbCrBt2020 = 4,
+}
+
+/// A MSL sampler YCbCr range.
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum SamplerYCbCrRange {
+    ItuFull = 0,
+    ItuNarrow = 1,
 }
 
 /// A MSL shader platform.
@@ -352,7 +414,7 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
         self.compiler.target_data.resource_binding_overrides.clear();
         self.compiler.target_data.resource_binding_overrides.extend(
             options.resource_binding_overrides.iter().map(|(loc, res)| {
-                br::SPIRV_CROSS_NAMESPACE::MSLResourceBinding {
+                br::spirv_cross::MSLResourceBinding {
                     stage: loc.stage.as_raw(),
                     desc_set: loc.desc_set,
                     binding: loc.binding,
@@ -366,7 +428,7 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
         self.compiler.target_data.vertex_attribute_overrides.clear();
         self.compiler.target_data.vertex_attribute_overrides.extend(
             options.vertex_attribute_overrides.iter().map(|(loc, vat)| {
-                br::SPIRV_CROSS_NAMESPACE::MSLVertexAttr {
+                br::spirv_cross::MSLVertexAttr {
                     location: loc.0,
                     msl_buffer: vat.buffer_id,
                     msl_offset: vat.offset,
@@ -382,13 +444,15 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
         );
 
         self.compiler.target_data.const_samplers.clear();
-        self.compiler.target_data.const_samplers.extend(
-            options.const_samplers.iter().map(|(loc, data)| unsafe {
+        self.compiler
+            .target_data
+            .const_samplers
+            .extend(options.const_samplers.iter().map(|(loc, data)| unsafe {
                 use std::mem::transmute;
-                br::MslConstSamplerMapping {
+                br::ScMslConstSamplerMapping {
                     desc_set: loc.desc_set,
                     binding: loc.binding,
-                    sampler: br::SPIRV_CROSS_NAMESPACE::MSLConstexprSampler {
+                    sampler: br::spirv_cross::MSLConstexprSampler {
                         coord: transmute(data.coord),
                         min_filter: transmute(data.min_filter),
                         mag_filter: transmute(data.mag_filter),
@@ -402,13 +466,22 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
                         lod_clamp_max: data.lod_clamp_max.into(),
                         max_anisotropy: data.max_anisotropy,
                         compare_enable: data.compare_func != SamplerCompareFunc::Always,
-                        lod_clamp_enable: data.lod_clamp_min != LodBase16::ZERO ||
-                            data.lod_clamp_max != LodBase16::MAX,
+                        lod_clamp_enable: data.lod_clamp_min != LodBase16::ZERO
+                            || data.lod_clamp_max != LodBase16::MAX,
                         anisotropy_enable: data.max_anisotropy != 0,
+                        bpc: data.bpc,
+                        chroma_filter: transmute(data.chroma_filter),
+                        planes: data.planes,
+                        resolution: transmute(data.resolution),
+                        swizzle: transmute(data.swizzle),
+                        x_chroma_offset: transmute(data.x_chroma_offset),
+                        y_chroma_offset: transmute(data.y_chroma_offset),
+                        ycbcr_conversion_enable: data.ycbcr_conversion_enable,
+                        ycbcr_model: transmute(data.ycbcr_model),
+                        ycbcr_range: transmute(data.ycbcr_range),
                     },
                 }
-            }),
-        );
+            }));
 
         Ok(())
     }

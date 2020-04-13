@@ -47,8 +47,7 @@ Licensed under either of
 
 at your option.
 
-see [LICENSE-APACHE](LICENSE-APACHE), [LICENSE-MIT](LICENSE-MIT), and
-[COPYRIGHT](COPYRIGHT) for details.
+see [LICENSE-APACHE](LICENSE-APACHE), [LICENSE-MIT](LICENSE-MIT) for details.
 
 ## Contribution
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as

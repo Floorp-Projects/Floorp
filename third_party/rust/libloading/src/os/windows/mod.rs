@@ -111,6 +111,23 @@ impl Library {
             panic!("GetProcAddress failed but GetLastError did not report the error")
         ))
     }
+
+    /// Convert the `Library` to a raw handle.
+    pub fn into_raw(self) -> HMODULE {
+        let handle = self.0;
+        mem::forget(self);
+        handle
+    }
+
+    /// Convert a raw handle to a `Library`.
+    ///
+    /// ## Unsafety
+    ///
+    /// The handle shall be a result of a successful call of `LoadLibraryW` or a
+    /// handle previously returned by the `Library::into_raw` call.
+    pub unsafe fn from_raw(handle: HMODULE) -> Library {
+        Library(handle)
+    }
 }
 
 impl Drop for Library {
@@ -148,6 +165,15 @@ impl fmt::Debug for Library {
 pub struct Symbol<T> {
     pointer: FARPROC,
     pd: marker::PhantomData<T>
+}
+
+impl<T> Symbol<T> {
+    /// Convert the loaded Symbol into a handle.
+    pub fn into_raw(self) -> FARPROC {
+        let pointer = self.pointer;
+        mem::forget(self);
+        pointer
+    }
 }
 
 impl<T> Symbol<Option<T>> {
@@ -225,7 +251,7 @@ impl ErrorModeGuard {
                     // T1: SetErrorMode(old_mode) # not SEM_FAILCE
                     // T2: SetErrorMode(SEM_FAILCE) # restores to SEM_FAILCE on drop
                     //
-                    // This is still somewhat racy in a sense that T1 might resture the error
+                    // This is still somewhat racy in a sense that T1 might restore the error
                     // mode before T2 finishes loading the library, but that is less of a
                     // concern – it will only end up in end user seeing a dialog.
                     //

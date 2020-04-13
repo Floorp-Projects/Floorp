@@ -3,8 +3,6 @@
 #[macro_use]
 extern crate log;
 #[macro_use]
-extern crate ash;
-#[macro_use]
 extern crate lazy_static;
 
 #[cfg(target_os = "macos")]
@@ -30,6 +28,7 @@ use hal::{
     queue,
     window::{PresentError, Suboptimal, SwapImageIndex},
     Features,
+    Hints,
     Limits,
 };
 
@@ -91,6 +90,12 @@ lazy_static! {
         #[cfg(target_os = "macos")]
         extensions::mvk::MacOSSurface::name(),
     ];
+    static ref AMD_NEGATIVE_VIEWPORT_HEIGHT: &'static CStr =
+        CStr::from_bytes_with_nul(b"VK_AMD_negative_viewport_height\0").unwrap();
+    static ref KHR_MAINTENANCE1: &'static CStr =
+        CStr::from_bytes_with_nul(b"VK_KHR_maintenance1\0").unwrap();
+    static ref KHR_SAMPLER_MIRROR_MIRROR_CLAMP_TO_EDGE : &'static CStr =
+        CStr::from_bytes_with_nul(b"VK_KHR_sampler_mirror_clamp_to_edge\0").unwrap();
 }
 
 #[cfg(not(feature = "use-rtld-next"))]
@@ -112,7 +117,7 @@ lazy_static! {
         );
 }
 
-pub struct RawInstance(pub ash::Instance, Option<DebugMessenger>);
+pub struct RawInstance(ash::Instance, Option<DebugMessenger>);
 
 pub enum DebugMessenger {
     Utils(DebugUtils, vk::DebugUtilsMessengerEXT),
@@ -293,7 +298,8 @@ unsafe extern "system" fn debug_utils_messenger_callback(
             message
         );
 
-        for (info_label, info) in additional_info.iter() {
+        #[allow(array_into_iter)]
+        for (info_label, info) in additional_info.into_iter() {
             match info {
                 Some(data) => {
                     msg = format!("{}\n{}: {}", msg, info_label, data);
@@ -348,7 +354,7 @@ impl hal::Instance<Backend> for Instance {
             application_version: version,
             p_engine_name: b"gfx-rs\0".as_ptr() as *const _,
             engine_version: 1,
-            api_version: vk_make_version!(1, 0, 0),
+            api_version: vk::make_version(1, 0, 0),
         };
 
         let instance_extensions = entry
@@ -367,8 +373,7 @@ impl hal::Instance<Backend> for Instance {
                 instance_extensions
                     .iter()
                     .find(|inst_ext| unsafe {
-                        CStr::from_ptr(inst_ext.extension_name.as_ptr()).to_bytes()
-                            == ext.to_bytes()
+                        CStr::from_ptr(inst_ext.extension_name.as_ptr()) == ext
                     })
                     .map(|_| ext)
                     .or_else(|| {
@@ -385,8 +390,7 @@ impl hal::Instance<Backend> for Instance {
                 instance_layers
                     .iter()
                     .find(|inst_layer| unsafe {
-                        CStr::from_ptr(inst_layer.layer_name.as_ptr()).to_bytes()
-                            == layer.to_bytes()
+                        CStr::from_ptr(inst_layer.layer_name.as_ptr()) == layer
                     })
                     .map(|_| layer)
                     .or_else(|| {
@@ -478,6 +482,8 @@ impl hal::Instance<Backend> for Instance {
         devices
             .into_iter()
             .map(|device| {
+                let extensions =
+                    unsafe { self.raw.0.enumerate_device_extension_properties(device) }.unwrap();
                 let properties = unsafe { self.raw.0.get_physical_device_properties(device) };
                 let info = adapter::AdapterInfo {
                     name: unsafe {
@@ -504,6 +510,7 @@ impl hal::Instance<Backend> for Instance {
                 let physical_device = PhysicalDevice {
                     instance: self.raw.clone(),
                     handle: device,
+                    extensions,
                     properties,
                 };
                 let queue_families = unsafe {
@@ -536,13 +543,11 @@ impl hal::Instance<Backend> for Instance {
         use raw_window_handle::RawWindowHandle;
 
         match has_handle.raw_window_handle() {
-            #[cfg(all(
-                unix,
-                not(target_os = "android"),
-                not(target_os = "macos")
-            ))]
+            #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos")))]
             RawWindowHandle::Wayland(handle)
-                if self.extensions.contains(&extensions::khr::WaylandSurface::name()) =>
+                if self
+                    .extensions
+                    .contains(&extensions::khr::WaylandSurface::name()) =>
             {
                 Ok(self.create_surface_from_wayland(handle.display, handle.surface))
             }
@@ -553,7 +558,9 @@ impl hal::Instance<Backend> for Instance {
                 not(target_os = "macos")
             ))]
             RawWindowHandle::Xlib(handle)
-                if self.extensions.contains(&extensions::khr::XlibSurface::name()) =>
+                if self
+                    .extensions
+                    .contains(&extensions::khr::XlibSurface::name()) =>
             {
                 Ok(self.create_surface_from_xlib(handle.display as *mut _, handle.window))
             }
@@ -564,7 +571,11 @@ impl hal::Instance<Backend> for Instance {
                 not(target_os = "macos"),
                 not(target_os = "ios")
             ))]
-            RawWindowHandle::Xcb(handle) if self.extensions.contains(&extensions::khr::XcbSurface::name()) => {
+            RawWindowHandle::Xcb(handle)
+                if self
+                    .extensions
+                    .contains(&extensions::khr::XcbSurface::name()) =>
+            {
                 Ok(self.create_surface_from_xcb(handle.connection as *mut _, handle.window))
             }
             #[cfg(target_os = "android")]
@@ -579,15 +590,16 @@ impl hal::Instance<Backend> for Instance {
                 Ok(self.create_surface_from_hwnd(hinstance as *mut _, handle.hwnd))
             }
             #[cfg(target_os = "macos")]
-            RawWindowHandle::MacOS(handle) => {
-                Ok(self.create_surface_from_ns_view(handle.ns_view))
-            }
+            RawWindowHandle::MacOS(handle) => Ok(self.create_surface_from_ns_view(handle.ns_view)),
             _ => Err(hal::window::InitError::UnsupportedWindowHandle),
         }
     }
 
     unsafe fn destroy_surface(&self, surface: window::Surface) {
-        surface.raw.functor.destroy_surface(surface.raw.handle, None);
+        surface
+            .raw
+            .functor
+            .destroy_surface(surface.raw.handle, None);
     }
 }
 
@@ -613,7 +625,16 @@ impl queue::QueueFamily for QueueFamily {
 pub struct PhysicalDevice {
     instance: Arc<RawInstance>,
     handle: vk::PhysicalDevice,
+    extensions: Vec<vk::ExtensionProperties>,
     properties: vk::PhysicalDeviceProperties,
+}
+
+impl PhysicalDevice {
+    fn supports_extension(&self, extension: &CStr) -> bool {
+        self.extensions
+            .iter()
+            .any(|ep| unsafe { CStr::from_ptr(ep.extension_name.as_ptr()) } == extension)
+    }
 }
 
 impl fmt::Debug for PhysicalDevice {
@@ -644,14 +665,29 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             return Err(DeviceCreationError::MissingFeature);
         }
 
+        let maintenance_level = if self.supports_extension(*KHR_MAINTENANCE1) { 1 } else { 0 };
         let enabled_features = conv::map_device_features(requested_features);
+        let enabled_extensions = DEVICE_EXTENSIONS
+            .iter()
+            .cloned()
+            .chain(
+                if requested_features.contains(Features::NDC_Y_UP) && maintenance_level == 0 {
+                    Some(*AMD_NEGATIVE_VIEWPORT_HEIGHT)
+                } else {
+                    None
+                },
+            )
+            .chain(
+                match maintenance_level {
+                    0 => None,
+                    1 => Some(*KHR_MAINTENANCE1),
+                    _ => unreachable!(),
+                }
+            );
 
         // Create device
         let device_raw = {
-            let cstrings = DEVICE_EXTENSIONS
-                .iter()
-                .map(|&s| CString::from(s))
-                .collect::<Vec<_>>();
+            let cstrings = enabled_extensions.map(CString::from).collect::<Vec<_>>();
 
             let str_pointers = cstrings.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
 
@@ -670,14 +706,22 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
             match self.instance.0.create_device(self.handle, &info, None) {
                 Ok(device) => device,
-                Err(e) => return Err(match e {
-                    vk::Result::ERROR_OUT_OF_HOST_MEMORY => DeviceCreationError::OutOfMemory(OutOfMemory::Host),
-                    vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => DeviceCreationError::OutOfMemory(OutOfMemory::Device),
-                    vk::Result::ERROR_INITIALIZATION_FAILED => DeviceCreationError::InitializationFailed,
-                    vk::Result::ERROR_DEVICE_LOST => DeviceCreationError::DeviceLost,
-                    vk::Result::ERROR_TOO_MANY_OBJECTS => DeviceCreationError::TooManyObjects,
-                    _ => unreachable!(),
-                }),
+                Err(e) => {
+                    return Err(match e {
+                        vk::Result::ERROR_OUT_OF_HOST_MEMORY => {
+                            DeviceCreationError::OutOfMemory(OutOfMemory::Host)
+                        }
+                        vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => {
+                            DeviceCreationError::OutOfMemory(OutOfMemory::Device)
+                        }
+                        vk::Result::ERROR_INITIALIZATION_FAILED => {
+                            DeviceCreationError::InitializationFailed
+                        }
+                        vk::Result::ERROR_DEVICE_LOST => DeviceCreationError::DeviceLost,
+                        vk::Result::ERROR_TOO_MANY_OBJECTS => DeviceCreationError::TooManyObjects,
+                        _ => unreachable!(),
+                    })
+                }
             }
         };
 
@@ -690,18 +734,23 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         });
 
         let device = Device {
-            raw: Arc::new(RawDevice(device_raw, requested_features, self.instance.clone())),
+            shared: Arc::new(RawDevice {
+                raw: device_raw,
+                features: requested_features,
+                instance: Arc::clone(&self.instance),
+                maintenance_level,
+            }),
             vendor_id: self.properties.vendor_id,
         };
 
-        let device_arc = device.raw.clone();
+        let device_arc = Arc::clone(&device.shared);
         let queue_groups = families
             .into_iter()
             .map(|&(family, ref priorities)| {
                 let mut family_raw =
                     queue::QueueGroup::new(queue::QueueFamilyId(family.index as usize));
                 for id in 0 .. priorities.len() {
-                    let queue_raw = device_arc.0.get_device_queue(family.index, id as _);
+                    let queue_raw = device_arc.raw.get_device_queue(family.index, id as _);
                     family_raw.add_queue(CommandQueue {
                         raw: Arc::new(queue_raw),
                         device: device_arc.clone(),
@@ -849,9 +898,19 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     == info::intel::DEVICE_SKY_LAKE_MASK);
 
         let features = unsafe { self.instance.0.get_physical_device_features(self.handle) };
-        let mut bits = Features::TRIANGLE_FAN
+        let mut bits = Features::empty()
+            | Features::TRIANGLE_FAN
             | Features::SEPARATE_STENCIL_REF_VALUES
             | Features::SAMPLER_MIP_LOD_BIAS;
+
+        if self.supports_extension(*AMD_NEGATIVE_VIEWPORT_HEIGHT)
+            || self.supports_extension(*KHR_MAINTENANCE1)
+        {
+            bits |= Features::NDC_Y_UP;
+        }
+        if self.supports_extension(*KHR_SAMPLER_MIRROR_MIRROR_CLAMP_TO_EDGE) {
+            bits |= Features::SAMPLER_MIRROR_CLAMP_EDGE;
+        }
 
         if features.robust_buffer_access != 0 {
             bits |= Features::ROBUST_BUFFER_ACCESS;
@@ -1022,6 +1081,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         bits
     }
 
+    fn hints(&self) -> Hints {
+        Hints::BASE_VERTEX_INSTANCE_DRAWING
+    }
+
     fn limits(&self) -> Limits {
         let limits = &self.properties.limits;
         let max_group_count = limits.max_compute_work_group_count;
@@ -1182,11 +1245,12 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 }
 
 #[doc(hidden)]
-pub struct RawDevice(
-    pub ash::Device,
-    Features,
-    Arc<RawInstance>,
-);
+pub struct RawDevice {
+    raw: ash::Device,
+    features: Features,
+    instance: Arc<RawInstance>,
+    maintenance_level: u8,
+}
 
 impl fmt::Debug for RawDevice {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -1196,8 +1260,20 @@ impl fmt::Debug for RawDevice {
 impl Drop for RawDevice {
     fn drop(&mut self) {
         unsafe {
-            self.0.destroy_device(None);
+            self.raw.destroy_device(None);
         }
+    }
+}
+
+impl RawDevice {
+    fn debug_messenger(&self) -> Option<&DebugMessenger> {
+        self.instance.1.as_ref()
+    }
+
+    fn map_viewport(&self, rect: &hal::pso::Viewport) -> vk::Viewport {
+        let flip_y = self.features.contains(hal::Features::NDC_Y_UP);
+        let shift_y = flip_y && self.maintenance_level != 0;
+        conv::map_viewport(rect, flip_y, shift_y)
     }
 }
 
@@ -1266,7 +1342,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
 
         let fence_raw = fence.map(|fence| fence.0).unwrap_or(vk::Fence::null());
 
-        let result = self.device.0.queue_submit(*self.raw, &[info], fence_raw);
+        let result = self.device.raw.queue_submit(*self.raw, &[info], fence_raw);
         assert_eq!(Ok(()), result);
     }
 
@@ -1342,7 +1418,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
                 p_signal_semaphores: &ssc.semaphore.0,
             };
             self.device
-                .0
+                .raw
                 .queue_submit(*self.raw, &[submit_info], vk::Fence::null())
                 .unwrap();
             &ssc.semaphore.0
@@ -1378,7 +1454,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
     }
 
     fn wait_idle(&self) -> Result<(), OutOfMemory> {
-        match unsafe { self.device.0.queue_wait_idle(*self.raw) } {
+        match unsafe { self.device.raw.queue_wait_idle(*self.raw) } {
             Ok(()) => Ok(()),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(OutOfMemory::Host),
             Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(OutOfMemory::Device),
@@ -1389,7 +1465,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
 
 #[derive(Debug)]
 pub struct Device {
-    raw: Arc<RawDevice>,
+    shared: Arc<RawDevice>,
     vendor_id: u32,
 }
 

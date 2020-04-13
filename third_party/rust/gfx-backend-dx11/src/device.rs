@@ -1,32 +1,42 @@
-use hal::adapter::MemoryProperties;
-use hal::pso::VertexInputRate;
-use hal::queue::QueueFamilyId;
-use hal::range::RangeArg;
-use hal::{buffer, device, format, image, memory, pass, pool, pso, query, window};
-
-use winapi::shared::dxgi::{
-    IDXGIFactory,
-    IDXGISwapChain,
-    DXGI_SWAP_CHAIN_DESC,
-    DXGI_SWAP_EFFECT_DISCARD,
+use hal::{
+    adapter::MemoryProperties,
+    buffer,
+    device,
+    format,
+    image,
+    memory,
+    pass,
+    pool,
+    pso,
+    pso::VertexInputRate,
+    query,
+    queue::QueueFamilyId,
+    window,
 };
-use winapi::shared::minwindef::TRUE;
-use winapi::shared::windef::HWND;
-use winapi::shared::{dxgiformat, dxgitype, winerror};
-use winapi::um::{d3d11, d3d11sdklayers, d3dcommon};
-use winapi::Interface as _;
+
+use winapi::{
+    shared::{
+        dxgi::{IDXGIFactory, IDXGISwapChain, DXGI_SWAP_CHAIN_DESC, DXGI_SWAP_EFFECT_DISCARD},
+        dxgiformat,
+        dxgitype,
+        minwindef::TRUE,
+        windef::HWND,
+        winerror,
+    },
+    um::{d3d11, d3d11sdklayers, d3dcommon},
+    Interface as _,
+};
 
 use wio::com::ComPtr;
 
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::ops::Range;
-use std::sync::Arc;
-use std::{fmt, mem, ptr};
+use std::{borrow::Borrow, cell::RefCell, fmt, mem, ops::Range, ptr, sync::Arc};
 
 use parking_lot::{Condvar, Mutex};
 
-use {
+use crate::{
+    conv,
+    internal,
+    shader,
     Backend,
     Buffer,
     BufferView,
@@ -51,8 +61,8 @@ use {
     PipelineLayout,
     QueryPool,
     RawFence,
-    RegisterData,
     RegisterAccumulator,
+    RegisterData,
     RenderPass,
     ResourceIndex,
     Sampler,
@@ -63,9 +73,6 @@ use {
     Swapchain,
     ViewInfo,
 };
-
-use {conv, internal, shader};
-
 
 //TODO: expose coherent type 0x2 when it's properly supported
 const BUFFER_TYPE_MASK: u64 = 0x1 | 0x4;
@@ -81,6 +88,7 @@ struct InputLayout {
 pub struct Device {
     raw: ComPtr<d3d11::ID3D11Device>,
     pub(crate) context: ComPtr<d3d11::ID3D11DeviceContext>,
+    features: hal::Features,
     memory_properties: MemoryProperties,
     pub(crate) internal: internal::Internal,
 }
@@ -105,21 +113,23 @@ unsafe impl Send for Device {}
 unsafe impl Sync for Device {}
 
 impl Device {
-    pub fn as_raw(&self) -> *mut d3d11::ID3D11Device {
-        self.raw.as_raw()
-    }
-
     pub fn new(
         device: ComPtr<d3d11::ID3D11Device>,
         context: ComPtr<d3d11::ID3D11DeviceContext>,
+        features: hal::Features,
         memory_properties: MemoryProperties,
     ) -> Self {
         Device {
             raw: device.clone(),
             context,
+            features,
             memory_properties,
             internal: internal::Internal::new(&device),
         }
+    }
+
+    pub fn as_raw(&self) -> *mut d3d11::ID3D11Device {
+        self.raw.as_raw()
     }
 
     fn create_rasterizer_state(
@@ -413,6 +423,7 @@ impl Device {
         stage: pso::Stage,
         source: &pso::EntryPoint<Backend>,
         layout: &PipelineLayout,
+        features: &hal::Features,
     ) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, device::ShaderError> {
         // TODO: entrypoint stuff
         match *source.module {
@@ -422,7 +433,7 @@ impl Device {
                 // Ok(Some(shader))
             }
             ShaderModule::Spirv(ref raw_data) => Ok(shader::compile_spirv_entrypoint(
-                raw_data, stage, source, layout,
+                raw_data, stage, source, layout, features,
             )?),
         }
     }
@@ -430,7 +441,7 @@ impl Device {
     fn view_image_as_shader_resource(
         &self,
         info: &ViewInfo,
-    ) -> Result<ComPtr<d3d11::ID3D11ShaderResourceView>, image::ViewError> {
+    ) -> Result<ComPtr<d3d11::ID3D11ShaderResourceView>, image::ViewCreationError> {
         let mut desc: d3d11::D3D11_SHADER_RESOURCE_VIEW_DESC = unsafe { mem::zeroed() };
         desc.Format = info.format;
         if desc.Format == dxgiformat::DXGI_FORMAT_D32_FLOAT_S8X24_UINT {
@@ -516,14 +527,14 @@ impl Device {
         if winerror::SUCCEEDED(hr) {
             Ok(unsafe { ComPtr::from_raw(srv) })
         } else {
-            Err(image::ViewError::Unsupported)
+            Err(image::ViewCreationError::Unsupported)
         }
     }
 
     fn view_image_as_unordered_access(
         &self,
         info: &ViewInfo,
-    ) -> Result<ComPtr<d3d11::ID3D11UnorderedAccessView>, image::ViewError> {
+    ) -> Result<ComPtr<d3d11::ID3D11UnorderedAccessView>, image::ViewCreationError> {
         let mut desc: d3d11::D3D11_UNORDERED_ACCESS_VIEW_DESC = unsafe { mem::zeroed() };
         desc.Format = info.format;
 
@@ -586,14 +597,14 @@ impl Device {
         if winerror::SUCCEEDED(hr) {
             Ok(unsafe { ComPtr::from_raw(uav) })
         } else {
-            Err(image::ViewError::Unsupported)
+            Err(image::ViewCreationError::Unsupported)
         }
     }
 
     pub(crate) fn view_image_as_render_target(
         &self,
         info: &ViewInfo,
-    ) -> Result<ComPtr<d3d11::ID3D11RenderTargetView>, image::ViewError> {
+    ) -> Result<ComPtr<d3d11::ID3D11RenderTargetView>, image::ViewCreationError> {
         let mut desc: d3d11::D3D11_RENDER_TARGET_VIEW_DESC = unsafe { mem::zeroed() };
         desc.Format = info.format;
 
@@ -652,14 +663,14 @@ impl Device {
         if winerror::SUCCEEDED(hr) {
             Ok(unsafe { ComPtr::from_raw(rtv) })
         } else {
-            Err(image::ViewError::Unsupported)
+            Err(image::ViewCreationError::Unsupported)
         }
     }
 
     fn view_image_as_depth_stencil(
         &self,
         info: &ViewInfo,
-    ) -> Result<ComPtr<d3d11::ID3D11DepthStencilView>, image::ViewError> {
+    ) -> Result<ComPtr<d3d11::ID3D11DepthStencilView>, image::ViewCreationError> {
         #![allow(non_snake_case)]
 
         let MipSlice = info.range.levels.start as _;
@@ -699,7 +710,7 @@ impl Device {
         if winerror::SUCCEEDED(hr) {
             Ok(unsafe { ComPtr::from_raw(dsv) })
         } else {
-            Err(image::ViewError::Unsupported)
+            Err(image::ViewCreationError::Unsupported)
         }
     }
 
@@ -860,13 +871,11 @@ impl device::Device<Backend> for Device {
                 bindings: Arc::clone(&layout.bindings),
                 registers: res_offsets.advance(&layout.pool_mapping),
             });
-        };
+        }
 
         //TODO: assert that res_offsets are within supported range
 
-        Ok(PipelineLayout {
-            sets,
-        })
+        Ok(PipelineLayout { sets })
     }
 
     unsafe fn create_pipeline_cache(
@@ -899,13 +908,14 @@ impl device::Device<Backend> for Device {
         desc: &pso::GraphicsPipelineDesc<'a, Backend>,
         _cache: Option<&()>,
     ) -> Result<GraphicsPipeline, pso::CreationError> {
+        let features = &self.features;
         let build_shader = |stage: pso::Stage, source: Option<&pso::EntryPoint<'a, Backend>>| {
             let source = match source {
                 Some(src) => src,
                 None => return Ok(None),
             };
 
-            Self::extract_entry_point(stage, source, desc.layout)
+            Self::extract_entry_point(stage, source, desc.layout, features)
                 .map_err(|err| pso::CreationError::Shader(err))
         };
 
@@ -970,13 +980,14 @@ impl device::Device<Backend> for Device {
         desc: &pso::ComputePipelineDesc<'a, Backend>,
         _cache: Option<&()>,
     ) -> Result<ComputePipeline, pso::CreationError> {
+        let features = &self.features;
         let build_shader = |stage: pso::Stage, source: Option<&pso::EntryPoint<'a, Backend>>| {
             let source = match source {
                 Some(src) => src,
                 None => return Ok(None),
             };
 
-            Self::extract_entry_point(stage, source, desc.layout)
+            Self::extract_entry_point(stage, source, desc.layout, features)
                 .map_err(|err| pso::CreationError::Shader(err))
         };
 
@@ -1126,10 +1137,7 @@ impl device::Device<Backend> for Device {
                 BindFlags: buffer.bind,
                 CPUAccessFlags: 0,
                 MiscFlags,
-                StructureByteStride: if buffer
-                    .internal
-                    .usage
-                    .contains(buffer::Usage::TRANSFER_SRC)
+                StructureByteStride: if buffer.internal.usage.contains(buffer::Usage::TRANSFER_SRC)
                 {
                     4
                 } else {
@@ -1161,10 +1169,7 @@ impl device::Device<Backend> for Device {
                 BindFlags: buffer.bind,
                 CPUAccessFlags: 0,
                 MiscFlags,
-                StructureByteStride: if buffer
-                    .internal
-                    .usage
-                    .contains(buffer::Usage::TRANSFER_SRC)
+                StructureByteStride: if buffer.internal.usage.contains(buffer::Usage::TRANSFER_SRC)
                 {
                     4
                 } else {
@@ -1302,11 +1307,11 @@ impl device::Device<Backend> for Device {
         Ok(())
     }
 
-    unsafe fn create_buffer_view<R: RangeArg<u64>>(
+    unsafe fn create_buffer_view(
         &self,
         _buffer: &Buffer,
         _format: Option<format::Format>,
-        _range: R,
+        _range: buffer::SubRange,
     ) -> Result<BufferView, buffer::ViewCreationError> {
         unimplemented!()
     }
@@ -1714,7 +1719,7 @@ impl device::Device<Backend> for Device {
         format: format::Format,
         _swizzle: format::Swizzle,
         range: image::SubresourceRange,
-    ) -> Result<ImageView, image::ViewError> {
+    ) -> Result<ImageView, image::ViewCreationError> {
         let is_array = image.kind.num_layers() > 1;
 
         let info = ViewInfo {
@@ -1729,7 +1734,7 @@ impl device::Device<Backend> for Device {
             } else {
                 view_kind
             },
-            format: conv::map_format(format).ok_or(image::ViewError::BadFormat(format))?,
+            format: conv::map_format(format).ok_or(image::ViewCreationError::BadFormat(format))?,
             range,
         };
 
@@ -1780,16 +1785,13 @@ impl device::Device<Backend> for Device {
                 info.mag_filter,
                 info.mip_filter,
                 op,
-                info.anisotropic,
+                info.anisotropy_clamp,
             ),
             AddressU: conv::map_wrapping(info.wrap_mode.0),
             AddressV: conv::map_wrapping(info.wrap_mode.1),
             AddressW: conv::map_wrapping(info.wrap_mode.2),
             MipLODBias: info.lod_bias.0,
-            MaxAnisotropy: match info.anisotropic {
-                image::Anisotropic::Off => 0,
-                image::Anisotropic::On(aniso) => aniso as _,
-            },
+            MaxAnisotropy: info.anisotropy_clamp.map_or(0, |aniso| aniso as u32),
             ComparisonFunc: info.comparison.map_or(0, |comp| conv::map_comparison(comp)),
             BorderColor: info.border.into(),
             MinLOD: info.lod_range.start.0,
@@ -1871,9 +1873,15 @@ impl device::Device<Backend> for Device {
         J::Item: Borrow<pso::Descriptor<'a, Backend>>,
     {
         for write in write_iter {
-            let mut mapping = write.set.layout.pool_mapping
+            let mut mapping = write
+                .set
+                .layout
+                .pool_mapping
                 .map_register(|mapping| mapping.offset);
-            let binding_start = write.set.layout.bindings
+            let binding_start = write
+                .set
+                .layout
+                .bindings
                 .iter()
                 .position(|binding| binding.binding == write.binding)
                 .unwrap();
@@ -1887,7 +1895,7 @@ impl device::Device<Backend> for Device {
                 .zip(write.descriptors)
             {
                 let handles = match *descriptor.borrow() {
-                    pso::Descriptor::Buffer(buffer, ref _range) => RegisterData {
+                    pso::Descriptor::Buffer(buffer, ref _sub) => RegisterData {
                         c: match buffer.internal.disjoint_cb {
                             Some(dj_buf) => dj_buf as *mut _,
                             None => buffer.internal.raw as *mut _,
@@ -1898,8 +1906,14 @@ impl device::Device<Backend> for Device {
                     },
                     pso::Descriptor::Image(image, _layout) => RegisterData {
                         c: ptr::null_mut(),
-                        t: image.srv_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        u: image.uav_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
+                        t: image
+                            .srv_handle
+                            .clone()
+                            .map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
+                        u: image
+                            .uav_handle
+                            .clone()
+                            .map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
                         s: ptr::null_mut(),
                     },
                     pso::Descriptor::Sampler(sampler) => RegisterData {
@@ -1908,32 +1922,47 @@ impl device::Device<Backend> for Device {
                         u: ptr::null_mut(),
                         s: sampler.sampler_handle.as_raw() as *mut _,
                     },
-                    pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: image.srv_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        u: image.uav_handle.clone().map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
-                        s: sampler.sampler_handle.as_raw() as *mut _,
-                    },
-                    pso::Descriptor::UniformTexelBuffer(_buffer_view) => unimplemented!(),
-                    pso::Descriptor::StorageTexelBuffer(_buffer_view) => unimplemented!(),
+                    pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => {
+                        RegisterData {
+                            c: ptr::null_mut(),
+                            t: image
+                                .srv_handle
+                                .clone()
+                                .map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
+                            u: image
+                                .uav_handle
+                                .clone()
+                                .map_or(ptr::null_mut(), |h| h.as_raw() as *mut _),
+                            s: sampler.sampler_handle.as_raw() as *mut _,
+                        }
+                    }
+                    pso::Descriptor::TexelBuffer(_buffer_view) => unimplemented!(),
                 };
 
                 let content = DescriptorContent::from(binding.ty);
                 if content.contains(DescriptorContent::CBV) {
                     let offsets = mapping.map_other(|map| map.c);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.c);
+                    write
+                        .set
+                        .assign_stages(&offsets, binding.stage_flags, handles.c);
                 };
                 if content.contains(DescriptorContent::SRV) {
                     let offsets = mapping.map_other(|map| map.t);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.t);
+                    write
+                        .set
+                        .assign_stages(&offsets, binding.stage_flags, handles.t);
                 };
                 if content.contains(DescriptorContent::UAV) {
                     let offsets = mapping.map_other(|map| map.u);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.u);
+                    write
+                        .set
+                        .assign_stages(&offsets, binding.stage_flags, handles.u);
                 };
                 if content.contains(DescriptorContent::SAMPLER) {
                     let offsets = mapping.map_other(|map| map.s);
-                    write.set.assign_stages(&offsets, binding.stage_flags, handles.s);
+                    write
+                        .set
+                        .assign_stages(&offsets, binding.stage_flags, handles.s);
                 };
 
                 mapping.add_content(content, binding.stage_flags);
@@ -1963,7 +1992,9 @@ impl device::Device<Backend> for Device {
                 let src_handle = copy.dst_set.handles.offset(src_handle_offset as isize);
 
                 match dst_ty {
-                    pso::DescriptorType::CombinedImageSampler => {
+                    pso::DescriptorType::Image {
+                        ty: pso::ImageDescriptorType::Sampled { with_sampler: true }
+                    } => {
                         let dst_second_handle = copy
                             .dst_set
                             .handles
@@ -1982,36 +2013,31 @@ impl device::Device<Backend> for Device {
         }
     }
 
-    unsafe fn map_memory<R>(&self, memory: &Memory, range: R) -> Result<*mut u8, device::MapError>
-    where
-        R: RangeArg<u64>,
-    {
+    unsafe fn map_memory(
+        &self,
+        memory: &Memory,
+        segment: memory::Segment,
+    ) -> Result<*mut u8, device::MapError> {
         assert_eq!(memory.host_visible.is_some(), true);
 
-        Ok(memory
-            .mapped_ptr
-            .offset(*range.start().unwrap_or(&0) as isize))
+        Ok(memory.mapped_ptr.offset(segment.offset as isize))
     }
 
     unsafe fn unmap_memory(&self, memory: &Memory) {
         assert_eq!(memory.host_visible.is_some(), true);
     }
 
-    unsafe fn flush_mapped_memory_ranges<'a, I, R>(
-        &self,
-        ranges: I,
-    ) -> Result<(), device::OutOfMemory>
+    unsafe fn flush_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), device::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a Memory, memory::Segment)>,
     {
         let _scope = debug_scope!(&self.context, "FlushMappedRanges");
 
         // go through every range we wrote to
         for range in ranges.into_iter() {
-            let &(memory, ref range) = range.borrow();
-            let range = memory.resolve(range);
+            let &(memory, ref segment) = range.borrow();
+            let range = memory.resolve(segment);
 
             let _scope = debug_scope!(&self.context, "Range({:?})", range);
             memory.flush(&self.context, range);
@@ -2020,21 +2046,20 @@ impl device::Device<Backend> for Device {
         Ok(())
     }
 
-    unsafe fn invalidate_mapped_memory_ranges<'a, I, R>(
+    unsafe fn invalidate_mapped_memory_ranges<'a, I>(
         &self,
         ranges: I,
     ) -> Result<(), device::OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<(&'a Memory, R)>,
-        R: RangeArg<u64>,
+        I::Item: Borrow<(&'a Memory, memory::Segment)>,
     {
         let _scope = debug_scope!(&self.context, "InvalidateMappedRanges");
 
         // go through every range we want to read from
         for range in ranges.into_iter() {
-            let &(memory, ref range) = range.borrow();
-            let range = *range.start().unwrap_or(&0) .. *range.end().unwrap_or(&memory.size);
+            let &(memory, ref segment) = range.borrow();
+            let range = memory.resolve(segment);
 
             let _scope = debug_scope!(&self.context, "Range({:?})", range);
             memory.invalidate(

@@ -16,20 +16,12 @@ of continuous descriptor ranges (per type, per shader stage).
 
 //#[deny(missing_docs)]
 
-extern crate auxil;
-extern crate gfx_hal as hal;
-extern crate range_alloc;
 #[macro_use]
 extern crate bitflags;
-extern crate libloading;
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
-extern crate smallvec;
-extern crate spirv_cross;
 #[macro_use]
 extern crate winapi;
-extern crate wio;
 
 use hal::{
     adapter,
@@ -42,7 +34,6 @@ use hal::{
     pso,
     query,
     queue,
-    range::RangeArg,
     window,
     DrawCount,
     IndexCount,
@@ -71,15 +62,7 @@ use wio::com::ComPtr;
 
 use parking_lot::{Condvar, Mutex};
 
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::fmt;
-use std::mem;
-use std::ops::Range;
-use std::ptr;
-use std::sync::Arc;
-
-use std::os::raw::c_void;
+use std::{borrow::Borrow, cell::RefCell, fmt, mem, ops::Range, os::raw::c_void, ptr, sync::Arc};
 
 macro_rules! debug_scope {
     ($context:expr, $($arg:tt)+) => ({
@@ -171,11 +154,14 @@ fn get_features(
     _device: ComPtr<d3d11::ID3D11Device>,
     _feature_level: d3dcommon::D3D_FEATURE_LEVEL,
 ) -> hal::Features {
-    hal::Features::ROBUST_BUFFER_ACCESS
+    hal::Features::empty()
+        | hal::Features::ROBUST_BUFFER_ACCESS
         | hal::Features::FULL_DRAW_INDEX_U32
         | hal::Features::FORMAT_BC
         | hal::Features::INSTANCE_RATE
         | hal::Features::SAMPLER_MIP_LOD_BIAS
+        | hal::Features::SAMPLER_MIRROR_CLAMP_EDGE
+        | hal::Features::NDC_Y_UP
 }
 
 fn get_format_properties(
@@ -431,11 +417,13 @@ impl hal::Instance<Backend> for Instance {
 
             let features = get_features(device.clone(), feature_level);
             let format_properties = get_format_properties(device.clone());
+            let hints = hal::Hints::BASE_VERTEX_INSTANCE_DRAWING;
 
             let physical_device = PhysicalDevice {
                 adapter,
                 library_d3d11: Arc::clone(&self.library_d3d11),
                 features,
+                hints,
                 limits,
                 memory_properties,
                 format_properties,
@@ -474,6 +462,7 @@ pub struct PhysicalDevice {
     adapter: ComPtr<IDXGIAdapter>,
     library_d3d11: Arc<libloading::Library>,
     features: hal::Features,
+    hints: hal::Hints,
     limits: hal::Limits,
     memory_properties: adapter::MemoryProperties,
     format_properties: [format::Properties; format::NUM_FORMATS],
@@ -597,7 +586,12 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             (ComPtr::from_raw(device), ComPtr::from_raw(cxt))
         };
 
-        let device = device::Device::new(device, cxt, self.memory_properties.clone());
+        let device = device::Device::new(
+            device,
+            cxt,
+            requested_features,
+            self.memory_properties.clone(),
+        );
 
         // TODO: deferred context => 1 cxt/queue?
         let queue_groups = families
@@ -733,6 +727,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         self.features
     }
 
+    fn hints(&self) -> hal::Hints {
+        self.hints
+    }
+
     fn limits(&self) -> Limits {
         self.limits
     }
@@ -750,7 +748,6 @@ pub struct Surface {
     wnd_handle: HWND,
     presentation: Option<Presentation>,
 }
-
 
 impl fmt::Debug for Surface {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -908,11 +905,9 @@ impl window::PresentationSurface<Backend> for Surface {
     }
 }
 
-
 pub struct Swapchain {
     dxgi_swapchain: ComPtr<IDXGISwapChain>,
 }
-
 
 impl fmt::Debug for Swapchain {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -1063,7 +1058,7 @@ pub struct RenderPassCache {
     pub framebuffer: Framebuffer,
     pub attachment_clear_values: Vec<AttachmentClear>,
     pub target_rect: pso::Rect,
-    pub current_subpass: usize,
+    pub current_subpass: pass::SubpassId,
 }
 
 impl RenderPassCache {
@@ -1092,7 +1087,7 @@ impl RenderPassCache {
             &self,
         );
 
-        let subpass = &self.render_pass.subpasses[self.current_subpass];
+        let subpass = &self.render_pass.subpasses[self.current_subpass as usize];
         let color_views = subpass
             .color_attachments
             .iter()
@@ -1161,7 +1156,6 @@ pub struct CommandBufferState {
     stencil_write_mask: Option<pso::StencilValue>,
     current_blend: Option<*mut d3d11::ID3D11BlendState>,
 }
-
 
 impl fmt::Debug for CommandBufferState {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -1553,7 +1547,11 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             //let attachment = render_pass.attachments[attachment_ref];
             let format = attachment.format.unwrap();
 
-            let subpass_id = render_pass.subpasses.iter().position(|sp| sp.is_using(idx));
+            let subpass_id = render_pass
+                .subpasses
+                .iter()
+                .position(|sp| sp.is_using(idx))
+                .map(|i| i as pass::SubpassId);
 
             if attachment.has_clears() {
                 let value = *clear_iter.next().unwrap().borrow();
@@ -1774,16 +1772,16 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         self.context.IASetIndexBuffer(
             ibv.buffer.internal.raw,
             conv::map_index_type(ibv.index_type),
-            ibv.offset as u32,
+            ibv.range.offset as u32,
         );
     }
 
     unsafe fn bind_vertex_buffers<I, T>(&mut self, first_binding: pso::BufferIndex, buffers: I)
     where
-        I: IntoIterator<Item = (T, buffer::Offset)>,
+        I: IntoIterator<Item = (T, buffer::SubRange)>,
         T: Borrow<Buffer>,
     {
-        for (i, (buf, offset)) in buffers.into_iter().enumerate() {
+        for (i, (buf, sub)) in buffers.into_iter().enumerate() {
             let idx = i + first_binding as usize;
             let buf = buf.borrow();
 
@@ -1792,7 +1790,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             }
 
             self.cache
-                .set_vertex_buffer(idx, offset as u32, buf.internal.raw);
+                .set_vertex_buffer(idx, sub.offset as u32, buf.internal.raw);
         }
 
         self.cache.bind_vertex_buffers(&self.context);
@@ -1893,10 +1891,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
 
         //let offsets: Vec<command::DescriptorSetOffset> = offsets.into_iter().map(|o| *o.borrow()).collect();
 
-        for (set, info) in sets
-            .into_iter()
-            .zip(&layout.sets[first_set ..])
-        {
+        for (set, info) in sets.into_iter().zip(&layout.sets[first_set ..]) {
             let set = set.borrow();
 
             {
@@ -2006,10 +2001,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             [ptr::null_mut(); 16].as_ptr(),
             ptr::null_mut(),
         );
-        for (set, info) in sets
-            .into_iter()
-            .zip(&layout.sets[first_set ..])
-        {
+        for (set, info) in sets.into_iter().zip(&layout.sets[first_set ..]) {
             let set = set.borrow();
 
             {
@@ -2087,10 +2079,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         unimplemented!()
     }
 
-    unsafe fn fill_buffer<R>(&mut self, _buffer: &Buffer, _range: R, _data: u32)
-    where
-        R: RangeArg<buffer::Offset>,
-    {
+    unsafe fn fill_buffer(&mut self, _buffer: &Buffer, _sub: buffer::SubRange, _data: u32) {
         unimplemented!()
     }
 
@@ -2311,6 +2300,16 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     {
         unimplemented!()
     }
+
+    unsafe fn insert_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn begin_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn end_debug_marker(&mut self) {
+        //TODO
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -2499,8 +2498,8 @@ unsafe impl Send for Memory {}
 unsafe impl Sync for Memory {}
 
 impl Memory {
-    pub fn resolve<R: RangeArg<u64>>(&self, range: &R) -> Range<u64> {
-        *range.start().unwrap_or(&0) .. *range.end().unwrap_or(&self.size)
+    pub fn resolve(&self, segment: &memory::Segment) -> Range<u64> {
+        segment.offset .. segment.size.map_or(self.size, |s| segment.offset + s)
     }
 
     pub fn bind_buffer(&self, range: Range<u64>, buffer: InternalBuffer) {
@@ -2621,7 +2620,7 @@ pub enum ShaderModule {
 }
 
 // TODO: temporary
-impl ::fmt::Debug for ShaderModule {
+impl fmt::Debug for ShaderModule {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{}", "ShaderModule { ... }")
     }
@@ -2675,8 +2674,8 @@ pub struct InternalBuffer {
 pub struct Buffer {
     internal: InternalBuffer,
     properties: memory::Properties, // empty if unbound
-    host_ptr: *mut u8,       // null if unbound
-    bound_range: Range<u64>, // 0 if unbound
+    host_ptr: *mut u8,              // null if unbound
+    bound_range: Range<u64>,        // 0 if unbound
     requirements: memory::Requirements,
     bind: d3d11::D3D11_BIND_FLAG,
 }
@@ -2866,10 +2865,7 @@ struct RegisterData<T> {
 }
 
 impl<T> RegisterData<T> {
-    fn map<U, F: Fn(&T) -> U>(
-        &self,
-        fun: F,
-    ) -> RegisterData<U> {
+    fn map<U, F: Fn(&T) -> U>(&self, fun: F) -> RegisterData<U> {
         RegisterData {
             c: fun(&self.c),
             t: fun(&self.t),
@@ -2917,16 +2913,13 @@ impl<T> MultiStageData<T> {
             pso::Stage::Vertex => self.vs,
             pso::Stage::Fragment => self.ps,
             pso::Stage::Compute => self.cs,
-            _ => panic!("Unsupported stage {:?}", stage)
+            _ => panic!("Unsupported stage {:?}", stage),
         }
     }
 }
 
 impl<T> MultiStageData<RegisterData<T>> {
-    fn map_register<U, F: Fn(&T) -> U>(
-        &self,
-        fun: F,
-    ) -> MultiStageData<RegisterData<U>> {
+    fn map_register<U, F: Fn(&T) -> U>(&self, fun: F) -> MultiStageData<RegisterData<U>> {
         MultiStageData {
             vs: self.vs.map(&fun),
             ps: self.ps.map(&fun),
@@ -2934,10 +2927,7 @@ impl<T> MultiStageData<RegisterData<T>> {
         }
     }
 
-    fn map_other<U, F: Fn(&RegisterData<T>) -> U>(
-        &self,
-        fun: F,
-    ) -> MultiStageData<U> {
+    fn map_other<U, F: Fn(&RegisterData<T>) -> U>(&self, fun: F) -> MultiStageData<U> {
         MultiStageData {
             vs: fun(&self.vs),
             ps: fun(&self.ps),
@@ -2993,10 +2983,7 @@ struct RegisterAccumulator {
 }
 
 impl RegisterAccumulator {
-    fn to_mapping(
-        &self,
-        cur_offset: &mut DescriptorIndex,
-    ) -> RegisterPoolMapping {
+    fn to_mapping(&self, cur_offset: &mut DescriptorIndex) -> RegisterPoolMapping {
         let offset = *cur_offset;
         *cur_offset += self.res_index as DescriptorIndex;
 
@@ -3006,10 +2993,7 @@ impl RegisterAccumulator {
         }
     }
 
-    fn advance(
-        &mut self,
-        mapping: &RegisterPoolMapping,
-    ) -> RegisterInfo {
+    fn advance(&mut self, mapping: &RegisterPoolMapping) -> RegisterInfo {
         let res_index = self.res_index;
         self.res_index += mapping.count;
         RegisterInfo {
@@ -3021,10 +3005,7 @@ impl RegisterAccumulator {
 }
 
 impl RegisterData<RegisterAccumulator> {
-    fn to_mapping(
-        &self,
-        pool_offset: &mut DescriptorIndex,
-    ) -> RegisterData<RegisterPoolMapping> {
+    fn to_mapping(&self, pool_offset: &mut DescriptorIndex) -> RegisterData<RegisterPoolMapping> {
         RegisterData {
             c: self.c.to_mapping(pool_offset),
             t: self.t.to_mapping(pool_offset),
@@ -3080,13 +3061,14 @@ impl DescriptorSetInfo {
         stage: pso::Stage,
         binding_index: pso::DescriptorBinding,
     ) -> (DescriptorContent, RegisterData<ResourceIndex>) {
-        let mut res_offsets = self.registers
+        let mut res_offsets = self
+            .registers
             .map_register(|info| info.res_index as DescriptorIndex)
             .select(stage);
         for binding in self.bindings.iter() {
             let content = DescriptorContent::from(binding.ty);
             if binding.binding == binding_index {
-                return (content, res_offsets.map(|offset| *offset as ResourceIndex))
+                return (content, res_offsets.map(|offset| *offset as ResourceIndex));
             }
             res_offsets.add_content(content);
         }
@@ -3218,21 +3200,61 @@ bitflags! {
 
 impl From<pso::DescriptorType> for DescriptorContent {
     fn from(ty: pso::DescriptorType) -> Self {
-        use hal::pso::DescriptorType as Dt;
+        use hal::pso::{
+            BufferDescriptorFormat as Bdf,
+            BufferDescriptorType as Bdt,
+            DescriptorType as Dt,
+            ImageDescriptorType as Idt,
+        };
         match ty {
             Dt::Sampler => DescriptorContent::SAMPLER,
-            Dt::CombinedImageSampler => DescriptorContent::SRV | DescriptorContent::SAMPLER,
-            Dt::SampledImage | Dt::InputAttachment | Dt::UniformTexelBuffer => {
-                DescriptorContent::SRV
+            Dt::Image {
+                ty: Idt::Sampled { with_sampler: true },
+            } => DescriptorContent::SRV | DescriptorContent::SAMPLER,
+            Dt::Image {
+                ty: Idt::Sampled {
+                    with_sampler: false,
+                },
             }
-            Dt::StorageImage | Dt::StorageBuffer | Dt::StorageTexelBuffer => {
-                DescriptorContent::SRV | DescriptorContent::UAV
+            | Dt::Image {
+                ty: Idt::Storage { read_only: true },
             }
-            Dt::StorageBufferDynamic => {
-                DescriptorContent::SRV | DescriptorContent::UAV | DescriptorContent::DYNAMIC
-            }
-            Dt::UniformBuffer => DescriptorContent::CBV,
-            Dt::UniformBufferDynamic => DescriptorContent::CBV | DescriptorContent::DYNAMIC,
+            | Dt::InputAttachment => DescriptorContent::SRV,
+            Dt::Image {
+                ty: Idt::Storage { read_only: false },
+            } => DescriptorContent::SRV | DescriptorContent::UAV,
+            Dt::Buffer {
+                ty: Bdt::Uniform,
+                format:
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    },
+            } => DescriptorContent::CBV | DescriptorContent::DYNAMIC,
+            Dt::Buffer {
+                ty: Bdt::Uniform, ..
+            } => DescriptorContent::CBV,
+            Dt::Buffer {
+                ty: Bdt::Storage { read_only: true },
+                format:
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    },
+            } => DescriptorContent::SRV | DescriptorContent::DYNAMIC,
+            Dt::Buffer {
+                ty: Bdt::Storage { read_only: false },
+                format:
+                    Bdf::Structured {
+                        dynamic_offset: true,
+                    },
+            } => DescriptorContent::SRV | DescriptorContent::UAV | DescriptorContent::DYNAMIC,
+            Dt::Buffer {
+                ty: Bdt::Storage { read_only: true },
+                ..
+            } => DescriptorContent::SRV,
+            Dt::Buffer {
+                ty: Bdt::Storage { read_only: false },
+                ..
+            } => DescriptorContent::SRV | DescriptorContent::UAV,
         }
     }
 }
@@ -3316,7 +3338,8 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         &mut self,
         layout: &DescriptorSetLayout,
     ) -> Result<DescriptorSet, pso::AllocationError> {
-        let len = layout.pool_mapping
+        let len = layout
+            .pool_mapping
             .map_register(|mapping| mapping.count as DescriptorIndex)
             .sum()
             .max(1);

@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "gfx-backend-dx12"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-12 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -27,21 +28,24 @@ default-target = "x86_64-pc-windows-msvc"
 [lib]
 name = "gfx_backend_dx12"
 [dependencies.auxil]
-version = "0.1"
+version = "0.3"
+features = ["spirv_cross"]
 package = "gfx-auxil"
 
 [dependencies.bitflags]
 version = "1"
 
-[dependencies.d3d12]
-version = "0.3"
-features = ["libloading"]
-
-[dependencies.gfx-hal]
-version = "0.4"
+[dependencies.hal]
+version = "0.5"
+package = "gfx-hal"
 
 [dependencies.log]
 version = "0.4"
+
+[dependencies.native]
+version = "0.3"
+features = ["libloading"]
+package = "d3d12"
 
 [dependencies.range-alloc]
 version = "0.1"
@@ -50,10 +54,10 @@ version = "0.1"
 version = "0.3"
 
 [dependencies.smallvec]
-version = "0.6"
+version = "1.0"
 
 [dependencies.spirv_cross]
-version = "0.16"
+version = "0.18"
 features = ["hlsl"]
 
 [dependencies.winapi]

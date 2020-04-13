@@ -87,18 +87,19 @@ pub const BITS_ZERO: FormatBits = FormatBits {
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Component {
+    //TODO: add `Identity = 0`?
     /// Hardcoded zero
-    Zero,
+    Zero = 1,
     /// Hardcoded one
-    One,
+    One = 2,
     /// Red channel
-    R,
+    R = 3,
     /// Green channel
-    G,
+    G = 4,
     /// Blue channel
-    B,
+    B = 5,
     /// Alpha channel.
-    A,
+    A = 6,
 }
 
 /// Channel swizzle configuration for the resource views.

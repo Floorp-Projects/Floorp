@@ -51,6 +51,17 @@ impl std::fmt::Display for CreationError {
     }
 }
 
+impl std::error::Error for CreationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            CreationError::OutOfMemory(err) => Some(err),
+            CreationError::Shader(err) => Some(err),
+            CreationError::InvalidSubpass(_) => None,
+            CreationError::Other => None,
+        }
+    }
+}
+
 bitflags!(
     /// Stages of the logical pipeline.
     ///
@@ -241,7 +252,6 @@ impl<T> State<T> {
         !self.is_static()
     }
 }
-
 
 /// Safely read SPIR-V
 ///

@@ -1,13 +1,21 @@
 use auxil::FastHashMap;
-use std::ffi::CStr;
-use std::sync::{Arc, Mutex};
-use std::{mem, ptr};
+use std::{
+    ffi::CStr,
+    mem,
+    ptr,
+    sync::{Arc, Mutex},
+};
 
-use d3d12;
-use winapi::shared::minwindef::{FALSE, TRUE};
-use winapi::shared::{dxgiformat, dxgitype, winerror};
-use winapi::um::d3d12::*;
-use winapi::Interface;
+use winapi::{
+    shared::{
+        dxgiformat,
+        dxgitype,
+        minwindef::{FALSE, TRUE},
+        winerror,
+    },
+    um::d3d12::{self, *},
+    Interface,
+};
 
 use native;
 
@@ -132,7 +140,9 @@ impl ServicePipes {
         }
 
         let (signature, _hr) = self.device.create_root_signature(signature_raw, 0);
-        unsafe { signature_raw.destroy(); }
+        unsafe {
+            signature_raw.destroy();
+        }
 
         let shader_src = include_bytes!("../shaders/blit.hlsl");
         // TODO: check results

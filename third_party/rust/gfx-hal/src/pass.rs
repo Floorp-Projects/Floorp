@@ -46,6 +46,12 @@ impl AttachmentOps {
         store: AttachmentStoreOp::DontCare,
     };
 
+    /// Specifies `Clear` for load op and `Store` for store op.
+    pub const INIT: Self = AttachmentOps {
+        load: AttachmentLoadOp::Clear,
+        store: AttachmentStoreOp::Store,
+    };
+
     /// Specifies `Load` for load op and `Store` for store op.
     pub const PRESERVE: Self = AttachmentOps {
         load: AttachmentLoadOp::Load,
@@ -103,19 +109,8 @@ pub type AttachmentRef = (AttachmentId, AttachmentLayout);
 /// An AttachmentId that can be used instead of providing an attachment.
 pub const ATTACHMENT_UNUSED: AttachmentId = !0;
 
-/// Which other subpasses a particular subpass depends on.
-#[derive(Copy, Clone, Debug, Hash, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum SubpassRef {
-    /// The subpass depends on something that was submitted to the
-    /// queue before or after the render pass began.
-    External,
-    /// The subpass depends on another subpass with the given index,
-    /// which must be less than or equal to the index of the current
-    /// subpass. The index here refers to the corresponding
-    /// `SubpassId` of a `Subpass`.
-    Pass(usize),
-}
+/// Index of a subpass.
+pub type SubpassId = u8;
 
 /// Expresses a dependency between multiple subpasses. This is used
 /// both to describe a source or destination subpass; data either
@@ -125,7 +120,10 @@ pub enum SubpassRef {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SubpassDependency {
     /// Other subpasses this one depends on.
-    pub passes: Range<SubpassRef>,
+    ///
+    /// If one of the range sides is `None`, it refers to the external
+    /// scope either before or after the whole render pass.
+    pub passes: Range<Option<SubpassId>>,
     /// Other pipeline stages this subpass depends on.
     pub stages: Range<PipelineStage>,
     /// Resource accesses this subpass depends on.
@@ -153,9 +151,6 @@ pub struct SubpassDesc<'a> {
     /// passed on to subsequent passes.
     pub preserves: &'a [AttachmentId],
 }
-
-/// Index of a subpass.
-pub type SubpassId = usize;
 
 /// A sub-pass borrow of a pass.
 #[derive(Debug)]

@@ -176,8 +176,8 @@ pub enum BuiltIn {
 
 #[cfg(feature = "msl")]
 pub(crate) fn built_in_as_raw(built_in: Option<BuiltIn>) -> crate::bindings::spv::BuiltIn {
-    use BuiltIn::*;
     use crate::bindings as br;
+    use BuiltIn::*;
     match built_in {
         None => br::spv::BuiltIn::BuiltInMax,
         Some(Position) => br::spv::BuiltIn::BuiltInPosition,
@@ -293,11 +293,11 @@ pub struct EntryPoint {
 /// Description of struct member's range.
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct BufferRange {
-    /// Useful for passing to get_member_name() and get_member_decoration(), testing showes.
+    /// An index. Useful for passing to `get_member_name` and `get_member_decoration`.
     pub index: u32,
-    /// Bytes from start of buffer not beggining of struct, testing showes.
+    /// Bytes from start of buffer not beginning of struct.
     pub offset: usize,
-    /// Size of field in bytes.  From https://github.com/KhronosGroup/SPIRV-Cross/issues/1176#issuecomment-542563608
+    /// Size of field in bytes.
     pub range: usize,
 }
 
@@ -455,7 +455,7 @@ where
         self.compiler.get_decoration(id, decoration)
     }
 
-	/// Gets a name. If not defined, an empty string will be returned.
+    /// Gets a name. If not defined, an empty string will be returned.
     pub fn get_name(&mut self, id: u32) -> Result<String, ErrorCode> {
         self.compiler.get_name(id)
     }

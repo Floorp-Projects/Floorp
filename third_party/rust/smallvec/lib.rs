@@ -14,7 +14,16 @@
 //! `write` feature implements the `std::io::Write` trait for vectors of `u8`.
 //! When this feature is enabled, `smallvec` depends on `std`.
 //!
-//! ## `union` feature
+//! ## Optional features
+//!
+//! ### `write`
+//!
+//! When this feature is enabled, `SmallVec<[u8; _]>` implements the `std::io::Write` trait.
+//! This feature is not compatible with `#![no_std]` programs.
+//!
+//! ### `union`
+//!
+//! **This feature is unstable and requires a nightly build of the Rust toolchain.**
 //!
 //! When the `union` feature is enabled `smallvec` will track its state (inline or spilled)
 //! without the use of an enum tag, reducing the size of the `smallvec` by one machine word.
@@ -24,11 +33,36 @@
 //!
 //! To use this feature add `features = ["union"]` in the `smallvec` section of Cargo.toml.
 //! Note that this feature requires a nightly compiler (for now).
+//!
+//! ### `const_generics`
+//!
+//! **This feature is unstable and requires a nightly build of the Rust toolchain.**
+//!
+//! When this feature is enabled, `SmallVec` works with any arrays of any size, not just a fixed
+//! list of sizes.
+//! 
+//! ### `specialization`
+//!
+//! **This feature is unstable and requires a nightly build of the Rust toolchain.**
+//!
+//! When this feature is enabled, `SmallVec::from(slice)` has improved performance for slices
+//! of `Copy` types.  (Without this feature, you can use `SmallVec::from_slice` to get optimal
+//! performance for `Copy` types.)
+//!
+//! ### `may_dangle`
+//!
+//! **This feature is unstable and requires a nightly build of the Rust toolchain.**
+//!
+//! This feature makes the Rust compiler less strict about use of vectors that contain borrowed
+//! references. For details, see the
+//! [Rustonomicon](https://doc.rust-lang.org/1.42.0/nomicon/dropck.html#an-escape-hatch).
 
 #![no_std]
 #![cfg_attr(feature = "union", feature(untagged_unions))]
 #![cfg_attr(feature = "specialization", feature(specialization))]
 #![cfg_attr(feature = "may_dangle", feature(dropck_eyepatch))]
+#![cfg_attr(feature = "const_generics", allow(incomplete_features))]
+#![cfg_attr(feature = "const_generics", feature(const_generics))]
 #![deny(missing_docs)]
 
 #[doc(hidden)]
@@ -1053,6 +1087,7 @@ impl<A: Array> SmallVec<A> {
     ///         assert_eq!(&*rebuilt, &[4, 5, 6]);
     ///     }
     /// }
+    #[inline]
     pub unsafe fn from_raw_parts(ptr: *mut A::Item, length: usize, capacity: usize) -> SmallVec<A> {
         assert!(capacity > A::size());
         SmallVec {
@@ -1370,6 +1405,7 @@ where
 }
 
 impl<A: Array> FromIterator<A::Item> for SmallVec<A> {
+    #[inline]
     fn from_iter<I: IntoIterator<Item = A::Item>>(iterable: I) -> SmallVec<A> {
         let mut v = SmallVec::new();
         v.extend(iterable);
@@ -1450,6 +1486,7 @@ impl<A: Array> Clone for SmallVec<A>
 where
     A::Item: Clone,
 {
+    #[inline]
     fn clone(&self) -> SmallVec<A> {
         let mut new_vector = SmallVec::with_capacity(self.len());
         for element in self.iter() {
@@ -1667,6 +1704,13 @@ impl<'a> Drop for SetLenOnDrop<'a> {
     }
 }
 
+#[cfg(feature = "const_generics")]
+unsafe impl<T, const N: usize> Array for [T; N] {
+    type Item = T;
+    fn size() -> usize { N }
+}
+
+#[cfg(not(feature = "const_generics"))]
 macro_rules! impl_array(
     ($($size:expr),+) => {
         $(
@@ -1678,11 +1722,26 @@ macro_rules! impl_array(
     }
 );
 
+#[cfg(not(feature = "const_generics"))]
 impl_array!(
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 36, 0x40, 0x60, 0x80,
     0x100, 0x200, 0x400, 0x600, 0x800, 0x1000, 0x2000, 0x4000, 0x6000, 0x8000, 0x10000, 0x20000,
     0x40000, 0x60000, 0x80000, 0x10_0000
 );
+
+/// Convenience trait for constructing a `SmallVec`
+pub trait ToSmallVec<A:Array> {
+    /// Construct a new `SmallVec` from a slice.
+    fn to_smallvec(&self) -> SmallVec<A>;
+}
+
+impl<A:Array> ToSmallVec<A> for [A::Item]
+    where A::Item: Copy {
+    #[inline]
+    fn to_smallvec(&self) -> SmallVec<A> {
+        SmallVec::from_slice(self)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -2521,5 +2580,11 @@ mod tests {
         v.grow(4);
         assert_eq!(v.capacity(), 4);
         assert_eq!(v[..], [0, 1, 2]);
+    }
+
+    #[cfg(feature = "const_generics")]
+    #[test]
+    fn const_generics() {
+        let _v = SmallVec::<[i32; 987]>::default();
     }
 }

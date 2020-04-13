@@ -2,11 +2,12 @@ use ash::version::DeviceV1_0;
 use ash::vk;
 use smallvec::SmallVec;
 use std::borrow::Borrow;
+use std::ffi::CString;
 use std::ops::Range;
 use std::sync::Arc;
 use std::{mem, ptr, slice};
 
-use crate::{conv, native as n, Backend, RawDevice};
+use crate::{conv, native as n, Backend, DebugMessenger, RawDevice};
 use hal::{
     buffer,
     command as com,
@@ -15,7 +16,6 @@ use hal::{
     memory,
     pso,
     query,
-    range::RangeArg,
     DrawCount,
     IndexCount,
     InstanceCount,
@@ -28,6 +28,14 @@ use hal::{
 pub struct CommandBuffer {
     pub raw: vk::CommandBuffer,
     pub device: Arc<RawDevice>,
+}
+
+fn debug_color(color: u32) -> [f32; 4] {
+    let mut result = [0.0; 4];
+    for (i, c) in result.iter_mut().enumerate() {
+        *c = ((color >> (24 - i * 8)) & 0xFF) as f32 / 255.0;
+    }
+    result
 }
 
 fn map_subpass_contents(contents: com::SubpassContents) -> vk::SubpassContents {
@@ -110,10 +118,8 @@ where
                     src_queue_family_index: families.start,
                     dst_queue_family_index: families.end,
                     buffer: target.raw,
-                    offset: range.start.unwrap_or(0),
-                    size: range
-                        .end
-                        .map_or(vk::WHOLE_SIZE, |end| end - range.start.unwrap_or(0)),
+                    offset: range.offset,
+                    size: range.size.unwrap_or(vk::WHOLE_SIZE),
                 });
             }
             memory::Barrier::Image {
@@ -169,7 +175,7 @@ impl CommandBuffer {
             offsets.into_iter().map(|offset| *offset.borrow()).collect();
 
         unsafe {
-            self.device.0.cmd_bind_descriptor_sets(
+            self.device.raw.cmd_bind_descriptor_sets(
                 self.raw,
                 bind_point,
                 layout.raw,
@@ -213,11 +219,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             p_inheritance_info: &inheritance_info,
         };
 
-        assert_eq!(Ok(()), self.device.0.begin_command_buffer(self.raw, &info));
+        assert_eq!(Ok(()), self.device.raw.begin_command_buffer(self.raw, &info));
     }
 
     unsafe fn finish(&mut self) {
-        assert_eq!(Ok(()), self.device.0.end_command_buffer(self.raw));
+        assert_eq!(Ok(()), self.device.raw.end_command_buffer(self.raw));
     }
 
     unsafe fn reset(&mut self, release_resources: bool) {
@@ -227,7 +233,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             vk::CommandBufferResetFlags::empty()
         };
 
-        assert_eq!(Ok(()), self.device.0.reset_command_buffer(self.raw, flags));
+        assert_eq!(Ok(()), self.device.raw.reset_command_buffer(self.raw, flags));
     }
 
     unsafe fn begin_render_pass<T>(
@@ -271,17 +277,17 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         let contents = map_subpass_contents(first_subpass);
         self.device
-            .0
+            .raw
             .cmd_begin_render_pass(self.raw, &info, contents);
     }
 
     unsafe fn next_subpass(&mut self, contents: com::SubpassContents) {
         let contents = map_subpass_contents(contents);
-        self.device.0.cmd_next_subpass(self.raw, contents);
+        self.device.raw.cmd_next_subpass(self.raw, contents);
     }
 
     unsafe fn end_render_pass(&mut self) {
-        self.device.0.cmd_end_render_pass(self.raw);
+        self.device.raw.cmd_end_render_pass(self.raw);
     }
 
     unsafe fn pipeline_barrier<'a, T>(
@@ -299,7 +305,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             image,
         } = destructure_barriers(barriers);
 
-        self.device.0.cmd_pipeline_barrier(
+        self.device.raw.cmd_pipeline_barrier(
             self.raw, // commandBuffer
             conv::map_pipeline_stage(stages.start),
             conv::map_pipeline_stage(stages.end),
@@ -310,19 +316,19 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         );
     }
 
-    unsafe fn fill_buffer<R>(&mut self, buffer: &n::Buffer, range: R, data: u32)
-    where
-        R: RangeArg<buffer::Offset>,
-    {
-        let (offset, size) = conv::map_range_arg(&range);
-        self.device
-            .0
-            .cmd_fill_buffer(self.raw, buffer.raw, offset, size, data);
+    unsafe fn fill_buffer(&mut self, buffer: &n::Buffer, range: buffer::SubRange, data: u32) {
+        self.device.raw.cmd_fill_buffer(
+            self.raw,
+            buffer.raw,
+            range.offset,
+            range.size.unwrap_or(vk::WHOLE_SIZE),
+            data,
+        );
     }
 
     unsafe fn update_buffer(&mut self, buffer: &n::Buffer, offset: buffer::Offset, data: &[u8]) {
         self.device
-            .0
+            .raw
             .cmd_update_buffer(self.raw, buffer.raw, offset, data);
     }
 
@@ -365,7 +371,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         };
 
         if !color_ranges.is_empty() {
-            self.device.0.cmd_clear_color_image(
+            self.device.raw.cmd_clear_color_image(
                 self.raw,
                 image.raw,
                 conv::map_image_layout(layout),
@@ -374,7 +380,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             )
         }
         if !ds_ranges.is_empty() {
-            self.device.0.cmd_clear_depth_stencil_image(
+            self.device.raw.cmd_clear_depth_stencil_image(
                 self.raw,
                 image.raw,
                 conv::map_image_layout(layout),
@@ -428,7 +434,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .collect();
 
         self.device
-            .0
+            .raw
             .cmd_clear_attachments(self.raw, &clears, &rects)
     }
 
@@ -457,7 +463,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             })
             .collect::<SmallVec<[_; 4]>>();
 
-        self.device.0.cmd_resolve_image(
+        self.device.raw.cmd_resolve_image(
             self.raw,
             src.raw,
             conv::map_image_layout(src_layout),
@@ -498,7 +504,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             })
             .collect::<SmallVec<[_; 4]>>();
 
-        self.device.0.cmd_blit_image(
+        self.device.raw.cmd_blit_image(
             self.raw,
             src.raw,
             conv::map_image_layout(src_layout),
@@ -510,27 +516,27 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn bind_index_buffer(&mut self, ibv: buffer::IndexBufferView<Backend>) {
-        self.device.0.cmd_bind_index_buffer(
+        self.device.raw.cmd_bind_index_buffer(
             self.raw,
             ibv.buffer.raw,
-            ibv.offset,
+            ibv.range.offset,
             conv::map_index_type(ibv.index_type),
         );
     }
 
     unsafe fn bind_vertex_buffers<I, T>(&mut self, first_binding: pso::BufferIndex, buffers: I)
     where
-        I: IntoIterator<Item = (T, buffer::Offset)>,
+        I: IntoIterator<Item = (T, buffer::SubRange)>,
         T: Borrow<n::Buffer>,
     {
         let (buffers, offsets): (SmallVec<[vk::Buffer; 16]>, SmallVec<[vk::DeviceSize; 16]>) =
             buffers
                 .into_iter()
-                .map(|(buffer, offset)| (buffer.borrow().raw, offset))
+                .map(|(buffer, sub)| (buffer.borrow().raw, sub.offset))
                 .unzip();
 
         self.device
-            .0
+            .raw
             .cmd_bind_vertex_buffers(self.raw, first_binding, &buffers, &offsets);
     }
 
@@ -541,11 +547,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     {
         let viewports: SmallVec<[vk::Viewport; 16]> = viewports
             .into_iter()
-            .map(|viewport| conv::map_viewport(viewport.borrow()))
+            .map(|viewport| self.device.map_viewport(viewport.borrow()))
             .collect();
 
         self.device
-            .0
+            .raw
             .cmd_set_viewport(self.raw, first_viewport, &viewports);
     }
 
@@ -560,47 +566,47 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .collect();
 
         self.device
-            .0
+            .raw
             .cmd_set_scissor(self.raw, first_scissor, &scissors);
     }
 
     unsafe fn set_stencil_reference(&mut self, faces: pso::Face, value: pso::StencilValue) {
         // Vulkan and HAL share same faces bit flags
         self.device
-            .0
+            .raw
             .cmd_set_stencil_reference(self.raw, mem::transmute(faces), value);
     }
 
     unsafe fn set_stencil_read_mask(&mut self, faces: pso::Face, value: pso::StencilValue) {
         // Vulkan and HAL share same faces bit flags
         self.device
-            .0
+            .raw
             .cmd_set_stencil_compare_mask(self.raw, mem::transmute(faces), value);
     }
 
     unsafe fn set_stencil_write_mask(&mut self, faces: pso::Face, value: pso::StencilValue) {
         // Vulkan and HAL share same faces bit flags
         self.device
-            .0
+            .raw
             .cmd_set_stencil_write_mask(self.raw, mem::transmute(faces), value);
     }
 
     unsafe fn set_blend_constants(&mut self, color: pso::ColorValue) {
-        self.device.0.cmd_set_blend_constants(self.raw, &color);
+        self.device.raw.cmd_set_blend_constants(self.raw, &color);
     }
 
     unsafe fn set_depth_bounds(&mut self, bounds: Range<f32>) {
         self.device
-            .0
+            .raw
             .cmd_set_depth_bounds(self.raw, bounds.start, bounds.end);
     }
 
     unsafe fn set_line_width(&mut self, width: f32) {
-        self.device.0.cmd_set_line_width(self.raw, width);
+        self.device.raw.cmd_set_line_width(self.raw, width);
     }
 
     unsafe fn set_depth_bias(&mut self, depth_bias: pso::DepthBias) {
-        self.device.0.cmd_set_depth_bias(
+        self.device.raw.cmd_set_depth_bias(
             self.raw,
             depth_bias.const_factor,
             depth_bias.clamp,
@@ -610,7 +616,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn bind_graphics_pipeline(&mut self, pipeline: &n::GraphicsPipeline) {
         self.device
-            .0
+            .raw
             .cmd_bind_pipeline(self.raw, vk::PipelineBindPoint::GRAPHICS, pipeline.0)
     }
 
@@ -637,7 +643,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn bind_compute_pipeline(&mut self, pipeline: &n::ComputePipeline) {
         self.device
-            .0
+            .raw
             .cmd_bind_pipeline(self.raw, vk::PipelineBindPoint::COMPUTE, pipeline.0)
     }
 
@@ -664,13 +670,13 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn dispatch(&mut self, count: WorkGroupCount) {
         self.device
-            .0
+            .raw
             .cmd_dispatch(self.raw, count[0], count[1], count[2])
     }
 
     unsafe fn dispatch_indirect(&mut self, buffer: &n::Buffer, offset: buffer::Offset) {
         self.device
-            .0
+            .raw
             .cmd_dispatch_indirect(self.raw, buffer.raw, offset)
     }
 
@@ -692,7 +698,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .collect();
 
         self.device
-            .0
+            .raw
             .cmd_copy_buffer(self.raw, src.raw, dst.raw, &regions)
     }
 
@@ -721,7 +727,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             })
             .collect();
 
-        self.device.0.cmd_copy_image(
+        self.device.raw.cmd_copy_image(
             self.raw,
             src.raw,
             conv::map_image_layout(src_layout),
@@ -743,7 +749,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     {
         let regions = map_buffer_image_regions(dst, regions);
 
-        self.device.0.cmd_copy_buffer_to_image(
+        self.device.raw.cmd_copy_buffer_to_image(
             self.raw,
             src.raw,
             dst.raw,
@@ -764,7 +770,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     {
         let regions = map_buffer_image_regions(src, regions);
 
-        self.device.0.cmd_copy_image_to_buffer(
+        self.device.raw.cmd_copy_image_to_buffer(
             self.raw,
             src.raw,
             conv::map_image_layout(src_layout),
@@ -774,7 +780,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn draw(&mut self, vertices: Range<VertexCount>, instances: Range<InstanceCount>) {
-        self.device.0.cmd_draw(
+        self.device.raw.cmd_draw(
             self.raw,
             vertices.end - vertices.start,
             instances.end - instances.start,
@@ -789,7 +795,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         base_vertex: VertexOffset,
         instances: Range<InstanceCount>,
     ) {
-        self.device.0.cmd_draw_indexed(
+        self.device.raw.cmd_draw_indexed(
             self.raw,
             indices.end - indices.start,
             instances.end - instances.start,
@@ -807,7 +813,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         stride: u32,
     ) {
         self.device
-            .0
+            .raw
             .cmd_draw_indirect(self.raw, buffer.raw, offset, draw_count, stride)
     }
 
@@ -819,12 +825,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         stride: u32,
     ) {
         self.device
-            .0
+            .raw
             .cmd_draw_indexed_indirect(self.raw, buffer.raw, offset, draw_count, stride)
     }
 
     unsafe fn set_event(&mut self, event: &n::Event, stage_mask: pso::PipelineStage) {
-        self.device.0.cmd_set_event(
+        self.device.raw.cmd_set_event(
             self.raw,
             event.0,
             vk::PipelineStageFlags::from_raw(stage_mask.bits()),
@@ -832,7 +838,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn reset_event(&mut self, event: &n::Event, stage_mask: pso::PipelineStage) {
-        self.device.0.cmd_reset_event(
+        self.device.raw.cmd_reset_event(
             self.raw,
             event.0,
             vk::PipelineStageFlags::from_raw(stage_mask.bits()),
@@ -858,7 +864,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             image,
         } = destructure_barriers(barriers);
 
-        self.device.0.cmd_wait_events(
+        self.device.raw.cmd_wait_events(
             self.raw,
             &events,
             vk::PipelineStageFlags::from_raw(stages.start.bits()),
@@ -870,7 +876,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn begin_query(&mut self, query: query::Query<Backend>, flags: query::ControlFlags) {
-        self.device.0.cmd_begin_query(
+        self.device.raw.cmd_begin_query(
             self.raw,
             query.pool.0,
             query.id,
@@ -880,12 +886,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn end_query(&mut self, query: query::Query<Backend>) {
         self.device
-            .0
+            .raw
             .cmd_end_query(self.raw, query.pool.0, query.id)
     }
 
     unsafe fn reset_query_pool(&mut self, pool: &n::QueryPool, queries: Range<query::Id>) {
-        self.device.0.cmd_reset_query_pool(
+        self.device.raw.cmd_reset_query_pool(
             self.raw,
             pool.0,
             queries.start,
@@ -903,7 +909,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         flags: query::ResultFlags,
     ) {
         //TODO: use safer wrapper
-        self.device.0.fp_v1_0().cmd_copy_query_pool_results(
+        self.device.raw.fp_v1_0().cmd_copy_query_pool_results(
             self.raw,
             pool.0,
             queries.start,
@@ -916,7 +922,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn write_timestamp(&mut self, stage: pso::PipelineStage, query: query::Query<Backend>) {
-        self.device.0.cmd_write_timestamp(
+        self.device.raw.cmd_write_timestamp(
             self.raw,
             conv::map_pipeline_stage(stage),
             query.pool.0,
@@ -930,7 +936,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         offset: u32,
         constants: &[u32],
     ) {
-        self.device.0.cmd_push_constants(
+        self.device.raw.cmd_push_constants(
             self.raw,
             layout.raw,
             vk::ShaderStageFlags::COMPUTE,
@@ -946,7 +952,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         offset: u32,
         constants: &[u32],
     ) {
-        self.device.0.cmd_push_constants(
+        self.device.raw.cmd_push_constants(
             self.raw,
             layout.raw,
             conv::map_stage_flags(stages),
@@ -965,7 +971,33 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .map(|b| b.borrow().raw)
             .collect::<Vec<_>>();
         self.device
-            .0
+            .raw
             .cmd_execute_commands(self.raw, &command_buffers);
+    }
+
+    unsafe fn insert_debug_marker(&mut self, name: &str, color: u32) {
+        if let Some(&DebugMessenger::Utils(ref ext, _)) = self.device.debug_messenger() {
+            let cstr = CString::new(name).unwrap();
+            let label = vk::DebugUtilsLabelEXT::builder()
+                .label_name(&cstr)
+                .color(debug_color(color))
+                .build();
+            ext.cmd_insert_debug_utils_label(self.raw, &label);
+        }
+    }
+    unsafe fn begin_debug_marker(&mut self, name: &str, color: u32) {
+        if let Some(&DebugMessenger::Utils(ref ext, _)) = self.device.debug_messenger() {
+            let cstr = CString::new(name).unwrap();
+            let label = vk::DebugUtilsLabelEXT::builder()
+                .label_name(&cstr)
+                .color(debug_color(color))
+                .build();
+            ext.cmd_begin_debug_utils_label(self.raw, &label);
+        }
+    }
+    unsafe fn end_debug_marker(&mut self) {
+        if let Some(&DebugMessenger::Utils(ref ext, _)) = self.device.debug_messenger() {
+            ext.cmd_end_debug_utils_label(self.raw);
+        }
     }
 }

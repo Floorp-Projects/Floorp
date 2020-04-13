@@ -1,8 +1,8 @@
 #![allow(dead_code)]
+use crate::version::{DeviceV1_0, InstanceV1_0};
+use crate::vk;
 use std::ffi::CStr;
 use std::mem;
-use version::{DeviceV1_0, InstanceV1_0};
-use vk;
 
 #[derive(Clone)]
 pub struct MeshShader {
@@ -16,7 +16,7 @@ impl MeshShader {
         });
         MeshShader { mesh_shader_fn }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCmdDrawMeshTasksNV.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -26,7 +26,7 @@ impl MeshShader {
         self.mesh_shader_fn
             .cmd_draw_mesh_tasks_nv(command_buffer, task_count, first_task);
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks_indirect(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -43,7 +43,7 @@ impl MeshShader {
             stride,
         );
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks_indirect_count(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -66,5 +66,9 @@ impl MeshShader {
     }
     pub fn name() -> &'static CStr {
         vk::NvMeshShaderFn::name()
+    }
+
+    pub fn fp(&self) -> &vk::NvMeshShaderFn {
+        &self.mesh_shader_fn
     }
 }

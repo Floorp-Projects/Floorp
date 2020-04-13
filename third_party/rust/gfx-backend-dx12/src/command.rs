@@ -1,8 +1,15 @@
 use auxil::FastHashMap;
-use hal::format::Aspects;
-use hal::range::RangeArg;
-use hal::{buffer, command as com, format, image, memory, pass, pool, pso, query};
 use hal::{
+    buffer,
+    command as com,
+    format,
+    format::Aspects,
+    image,
+    memory,
+    pass,
+    pool,
+    pso,
+    query,
     DrawCount,
     IndexCount,
     IndexType,
@@ -12,26 +19,27 @@ use hal::{
     WorkGroupCount,
 };
 
-use std::borrow::Borrow;
-use std::ops::Range;
-use std::sync::Arc;
-use std::{cmp, fmt, iter, mem, ptr};
+use std::{borrow::Borrow, cmp, fmt, iter, mem, ops::Range, ptr, sync::Arc};
 
-use winapi::shared::minwindef::{FALSE, TRUE, UINT};
-use winapi::shared::{dxgiformat, winerror};
-use winapi::um::{d3d12, d3dcommon};
-use winapi::Interface;
+use winapi::{
+    shared::{
+        dxgiformat,
+        minwindef::{FALSE, TRUE, UINT},
+        winerror,
+    },
+    um::{d3d12, d3dcommon},
+    Interface,
+};
 
-use native;
-
-use root_constants::RootConstant;
 use smallvec::SmallVec;
-use {
+
+use crate::{
     conv,
     descriptors_cpu,
     device,
     internal,
     resource as r,
+    root_constants::RootConstant,
     validate_line_width,
     Backend,
     Device,
@@ -91,7 +99,6 @@ enum OcclusionQuery {
     Binary(UINT),
     Precise(UINT),
 }
-
 
 /// Strongly-typed root signature element
 ///
@@ -293,8 +300,10 @@ impl PipelineCache {
                 let dynamic_descriptors = unsafe { &*binding.dynamic_descriptors.get() };
                 for descriptor in dynamic_descriptors {
                     let root_offset = element.descriptors[descriptor_id].offset;
-                    self.user_data
-                        .set_descriptor_cbv(root_offset, descriptor.gpu_buffer_location + offsets.next().unwrap());
+                    self.user_data.set_descriptor_cbv(
+                        root_offset,
+                        descriptor.gpu_buffer_location + offsets.next().unwrap(),
+                    );
                     descriptor_id += 1;
                 }
             }
@@ -331,7 +340,7 @@ pub struct CommandBuffer {
 
     // Cache renderpasses for graphics operations
     pass_cache: Option<RenderPassCache>,
-    cur_subpass: usize,
+    cur_subpass: pass::SubpassId,
 
     // Cache current graphics root signature and pipeline to minimize rebinding and support two
     // bindpoints.
@@ -500,7 +509,7 @@ impl CommandBuffer {
 
     fn insert_subpass_barriers(&self, insertion: BarrierPoint) {
         let state = self.pass_cache.as_ref().unwrap();
-        let proto_barriers = match state.render_pass.subpasses.get(self.cur_subpass) {
+        let proto_barriers = match state.render_pass.subpasses.get(self.cur_subpass as usize) {
             Some(subpass) => match insertion {
                 BarrierPoint::Pre => &subpass.pre_barriers,
                 BarrierPoint::Post => &subpass.post_barriers,
@@ -542,7 +551,7 @@ impl CommandBuffer {
 
     fn bind_targets(&mut self) {
         let state = self.pass_cache.as_ref().unwrap();
-        let subpass = &state.render_pass.subpasses[self.cur_subpass];
+        let subpass = &state.render_pass.subpasses[self.cur_subpass as usize];
 
         // collect render targets
         let color_views = subpass
@@ -596,7 +605,7 @@ impl CommandBuffer {
     fn resolve_attachments(&self) {
         let state = self.pass_cache.as_ref().unwrap();
         let framebuffer = &state.framebuffer;
-        let subpass = &state.render_pass.subpasses[self.cur_subpass];
+        let subpass = &state.render_pass.subpasses[self.cur_subpass as usize];
 
         for (&(src_attachment, _), &(dst_attachment, _)) in subpass
             .color_attachments
@@ -814,18 +823,25 @@ impl CommandBuffer {
             if user_data.is_index_dirty(table_index) {
                 match user_data.data[table_index] {
                     RootElement::TableSrvCbvUav(offset) => {
-                        let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE { ptr: pipeline.srv_cbv_uav_start + offset as u64 };
+                        let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE {
+                            ptr: pipeline.srv_cbv_uav_start + offset as u64,
+                        };
                         table_update(i as _, gpu);
                         user_data.clear_dirty(table_index);
                     }
                     RootElement::TableSampler(offset) => {
-                        let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE { ptr: pipeline.sampler_start + offset as u64 };
+                        let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE {
+                            ptr: pipeline.sampler_start + offset as u64,
+                        };
                         table_update(i as _, gpu);
                         user_data.clear_dirty(table_index);
                     }
                     RootElement::DescriptorCbv { buffer } => {
                         debug_assert!(user_data.is_index_dirty(table_index + 1));
-                        debug_assert_eq!(user_data.data[table_index + 1], RootElement::DescriptorPlaceholder);
+                        debug_assert_eq!(
+                            user_data.data[table_index + 1],
+                            RootElement::DescriptorPlaceholder
+                        );
 
                         descriptor_cbv_update(i as _, buffer);
 
@@ -1108,13 +1124,12 @@ impl CommandBuffer {
         range: &image::SubresourceRange,
         list: &mut impl Extend<d3d12::D3D12_RESOURCE_BARRIER>,
     ) {
-        let mut bar =
-            Self::transition_barrier(d3d12::D3D12_RESOURCE_TRANSITION_BARRIER {
-                pResource: target.resource.as_mut_ptr(),
-                Subresource: d3d12::D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                StateBefore: states.start,
-                StateAfter: states.end,
-            });
+        let mut bar = Self::transition_barrier(d3d12::D3D12_RESOURCE_TRANSITION_BARRIER {
+            pResource: target.resource.as_mut_ptr(),
+            Subresource: d3d12::D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+            StateBefore: states.start,
+            StateAfter: states.end,
+        });
 
         if *range == target.to_subresource_range(range.aspects) {
             // Only one barrier if it affects the whole image.
@@ -1204,7 +1219,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 };
 
                 AttachmentClear {
-                    subpass_id: render_pass.subpasses.iter().position(|sp| sp.is_using(i)),
+                    subpass_id: render_pass
+                        .subpasses
+                        .iter()
+                        .position(|sp| sp.is_using(i))
+                        .map(|i| i as pass::SubpassId),
                     value: if attachment.ops.load == pass::AttachmentLoadOp::Clear {
                         assert!(cv.is_some());
                         cv
@@ -1326,7 +1345,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                     }
 
                     let target = target.expect_bound();
-                    Self::fill_texture_barries(target, state_src .. state_dst, range, &mut raw_barriers);
+                    Self::fill_texture_barries(
+                        target,
+                        state_src .. state_dst,
+                        range,
+                        &mut raw_barriers,
+                    );
                 }
             }
         }
@@ -1439,7 +1463,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             Some(ref cache) => cache,
             None => panic!("`clear_attachments` can only be called inside a renderpass"),
         };
-        let sub_pass = &pass_cache.render_pass.subpasses[self.cur_subpass];
+        let sub_pass = &pass_cache.render_pass.subpasses[self.cur_subpass as usize];
 
         let clear_rects: SmallVec<[pso::ClearRect; 4]> = rects
             .into_iter()
@@ -1836,27 +1860,27 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         };
         let location = buffer.resource.gpu_virtual_address();
         self.raw.set_index_buffer(
-            location + ibv.offset,
-            (buffer.requirements.size - ibv.offset) as u32,
+            location + ibv.range.offset,
+            ibv.range.size_to(buffer.requirements.size) as u32,
             format,
         );
     }
 
     unsafe fn bind_vertex_buffers<I, T>(&mut self, first_binding: pso::BufferIndex, buffers: I)
     where
-        I: IntoIterator<Item = (T, buffer::Offset)>,
+        I: IntoIterator<Item = (T, buffer::SubRange)>,
         T: Borrow<r::Buffer>,
     {
         assert!(first_binding as usize <= MAX_VERTEX_BUFFERS);
 
-        for (view, (buffer, offset)) in self.vertex_buffer_views[first_binding as _ ..]
+        for (view, (buffer, sub)) in self.vertex_buffer_views[first_binding as _ ..]
             .iter_mut()
             .zip(buffers)
         {
             let b = buffer.borrow().expect_bound();
             let base = (*b.resource).GetGPUVirtualAddress();
-            view.BufferLocation = base + offset;
-            view.SizeInBytes = (b.requirements.size - offset) as u32;
+            view.BufferLocation = base + sub.offset;
+            view.SizeInBytes = sub.size_to(b.requirements.size) as u32;
         }
         self.set_vertex_buffers();
     }
@@ -2068,18 +2092,17 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         );
     }
 
-    unsafe fn fill_buffer<R>(&mut self, buffer: &r::Buffer, range: R, _data: u32)
-    where
-        R: RangeArg<buffer::Offset>,
-    {
+    unsafe fn fill_buffer(&mut self, buffer: &r::Buffer, range: buffer::SubRange, _data: u32) {
         let buffer = buffer.expect_bound();
         assert!(
             buffer.clear_uav.is_some(),
             "Buffer needs to be created with usage `TRANSFER_DST`"
         );
         let bytes_per_unit = 4;
-        let start = *range.start().unwrap_or(&0) as i32;
-        let end = *range.end().unwrap_or(&(buffer.requirements.size as u64)) as i32;
+        let start = range.offset as i32;
+        let end = range
+            .size
+            .map_or(buffer.requirements.size, |s| range.offset + s) as i32;
         if start % 4 != 0 || end % 4 != 0 {
             warn!("Fill buffer bounds have to be multiples of 4");
         }
@@ -2540,9 +2563,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 self.occlusion_query = None;
                 d3d12::D3D12_QUERY_TYPE_BINARY_OCCLUSION
             }
-            native::QueryHeapType::PipelineStatistics
-                if self.pipeline_stats_query == Some(id) =>
-            {
+            native::QueryHeapType::PipelineStatistics if self.pipeline_stats_query == Some(id) => {
                 self.pipeline_stats_query = None;
                 d3d12::D3D12_QUERY_TYPE_PIPELINE_STATISTICS
             }
@@ -2614,5 +2635,15 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         for _cmd_buf in cmd_buffers {
             error!("TODO: execute_commands");
         }
+    }
+
+    unsafe fn insert_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn begin_debug_marker(&mut self, _name: &str, _color: u32) {
+        //TODO
+    }
+    unsafe fn end_debug_marker(&mut self) {
+        //TODO
     }
 }

@@ -14,7 +14,6 @@ use storage_map::{StorageMap, StorageMapGuard};
 
 use std::mem;
 
-
 pub type FastStorageMap<K, V> = StorageMap<RawRwLock, FastHashMap<K, V>>;
 pub type FastStorageGuard<'a, V> = StorageMapGuard<'a, RawRwLock, V>;
 
@@ -330,10 +329,10 @@ impl ImageClearPipes {
         for i in 0 .. 1 {
             let mtl_attribute_desc = vertex_descriptor
                 .attributes()
-                .object_at(i as u64)
+                .object_at(i)
                 .expect("too many vertex attributes");
             mtl_attribute_desc.set_buffer_index(0);
-            mtl_attribute_desc.set_offset((i * mem::size_of::<[f32; 4]>()) as _);
+            mtl_attribute_desc.set_offset(i * mem::size_of::<[f32; 4]>() as u64);
             mtl_attribute_desc.set_format(metal::MTLVertexFormat::Float4);
         }
         pipeline.set_vertex_descriptor(Some(&vertex_descriptor));
@@ -426,10 +425,10 @@ impl ImageBlitPipes {
         for i in 0 .. 2 {
             let mtl_attribute_desc = vertex_descriptor
                 .attributes()
-                .object_at(i as u64)
+                .object_at(i)
                 .expect("too many vertex attributes");
             mtl_attribute_desc.set_buffer_index(0);
-            mtl_attribute_desc.set_offset((i * mem::size_of::<[f32; 4]>()) as _);
+            mtl_attribute_desc.set_offset(i * mem::size_of::<[f32; 4]>() as u64);
             mtl_attribute_desc.set_format(metal::MTLVertexFormat::Float4);
         }
         pipeline.set_vertex_descriptor(Some(&vertex_descriptor));

@@ -1,3 +1,5 @@
+use crate::native as n;
+
 use ash::vk;
 
 use hal::{
@@ -5,19 +7,19 @@ use hal::{
     command,
     format,
     image,
+    memory::Segment,
     pass,
     pso,
     query,
-    range::RangeArg,
     window::{CompositeAlphaMode, PresentMode},
     Features,
     IndexType,
 };
 
-use crate::native as n;
-use std::borrow::Borrow;
-use std::mem;
-use std::ptr;
+use smallvec::SmallVec;
+
+use std::{borrow::Borrow, mem, ptr};
+
 
 pub fn map_format(format: format::Format) -> vk::Format {
     vk::Format::from_raw(format as i32)
@@ -168,7 +170,37 @@ pub fn map_vk_image_usage(usage: vk::ImageUsageFlags) -> image::Usage {
 }
 
 pub fn map_descriptor_type(ty: pso::DescriptorType) -> vk::DescriptorType {
-    vk::DescriptorType::from_raw(ty as i32)
+    match ty {
+        pso::DescriptorType::Sampler => vk::DescriptorType::SAMPLER,
+        pso::DescriptorType::Image { ty } => match ty {
+            pso::ImageDescriptorType::Sampled { with_sampler } => match with_sampler {
+                true => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+                false => vk::DescriptorType::SAMPLED_IMAGE,
+            },
+            pso::ImageDescriptorType::Storage { .. } => vk::DescriptorType::STORAGE_IMAGE,
+        },
+        pso::DescriptorType::Buffer { ty, format } => match ty {
+            pso::BufferDescriptorType::Storage { .. } => match format {
+                pso::BufferDescriptorFormat::Structured { dynamic_offset } => {
+                    match dynamic_offset {
+                        true => vk::DescriptorType::STORAGE_BUFFER_DYNAMIC,
+                        false => vk::DescriptorType::STORAGE_BUFFER,
+                    }
+                }
+                pso::BufferDescriptorFormat::Texel => vk::DescriptorType::STORAGE_TEXEL_BUFFER,
+            },
+            pso::BufferDescriptorType::Uniform => match format {
+                pso::BufferDescriptorFormat::Structured { dynamic_offset } => {
+                    match dynamic_offset {
+                        true => vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC,
+                        false => vk::DescriptorType::UNIFORM_BUFFER,
+                    }
+                }
+                pso::BufferDescriptorFormat::Texel => vk::DescriptorType::UNIFORM_TEXEL_BUFFER,
+            },
+        },
+        pso::DescriptorType::InputAttachment => vk::DescriptorType::INPUT_ATTACHMENT,
+    }
 }
 
 pub fn map_stage_flags(stages: pso::ShaderStageFlags) -> vk::ShaderStageFlags {
@@ -190,6 +222,7 @@ pub fn map_wrap(wrap: image::WrapMode) -> vk::SamplerAddressMode {
         Wm::Mirror => vk::SamplerAddressMode::MIRRORED_REPEAT,
         Wm::Clamp => vk::SamplerAddressMode::CLAMP_TO_EDGE,
         Wm::Border => vk::SamplerAddressMode::CLAMP_TO_BORDER,
+        Wm::MirrorClamp => vk::SamplerAddressMode::MIRROR_CLAMP_TO_EDGE,
     }
 }
 
@@ -213,7 +246,9 @@ pub fn map_topology(ia: &pso::InputAssemblerDesc) -> vk::PrimitiveTopology {
         (pso::Primitive::TriangleList, false) => vk::PrimitiveTopology::TRIANGLE_LIST,
         (pso::Primitive::TriangleList, true) => vk::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY,
         (pso::Primitive::TriangleStrip, false) => vk::PrimitiveTopology::TRIANGLE_STRIP,
-        (pso::Primitive::TriangleStrip, true) => vk::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY,
+        (pso::Primitive::TriangleStrip, true) => {
+            vk::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY
+        }
         (pso::Primitive::PatchList(_), false) => vk::PrimitiveTopology::PATCH_LIST,
         (pso::Primitive::PatchList(_), true) => panic!("Patches can't have adjacency info"),
     }
@@ -434,43 +469,24 @@ pub fn map_device_features(features: Features) -> vk::PhysicalDeviceFeatures {
         .build()
 }
 
-pub fn map_memory_ranges<'a, I, R>(ranges: I) -> Vec<vk::MappedMemoryRange>
+pub fn map_memory_ranges<'a, I>(ranges: I) -> SmallVec<[vk::MappedMemoryRange; 4]>
 where
     I: IntoIterator,
-    I::Item: Borrow<(&'a n::Memory, R)>,
-    R: RangeArg<u64>,
+    I::Item: Borrow<(&'a n::Memory, Segment)>,
 {
     ranges
         .into_iter()
         .map(|range| {
-            let &(ref memory, ref range) = range.borrow();
-            let (offset, size) = map_range_arg(range);
+            let &(ref memory, ref segment) = range.borrow();
             vk::MappedMemoryRange {
                 s_type: vk::StructureType::MAPPED_MEMORY_RANGE,
                 p_next: ptr::null(),
                 memory: memory.raw,
-                offset,
-                size,
+                offset: segment.offset,
+                size: segment.size.unwrap_or(vk::WHOLE_SIZE),
             }
         })
         .collect()
-}
-
-/// Returns (offset, size) of the range.
-///
-/// Unbound start indices will be mapped to 0.
-/// Unbound end indices will be mapped to VK_WHOLE_SIZE.
-pub fn map_range_arg<R>(range: &R) -> (u64, u64)
-where
-    R: RangeArg<u64>,
-{
-    let offset = *range.start().unwrap_or(&0);
-    let size = match range.end() {
-        Some(end) => end - offset,
-        None => vk::WHOLE_SIZE,
-    };
-
-    (offset, size)
 }
 
 pub fn map_command_buffer_flags(flags: command::CommandBufferFlags) -> vk::CommandBufferUsageFlags {
@@ -528,12 +544,16 @@ pub fn map_clear_rect(rect: &pso::ClearRect) -> vk::ClearRect {
     }
 }
 
-pub fn map_viewport(vp: &pso::Viewport) -> vk::Viewport {
+pub fn map_viewport(vp: &pso::Viewport, flip_y: bool, shift_y: bool) -> vk::Viewport {
     vk::Viewport {
         x: vp.rect.x as _,
-        y: vp.rect.y as _,
+        y: if shift_y {
+            vp.rect.y + vp.rect.h
+        } else {
+            vp.rect.y
+        } as _,
         width: vp.rect.w as _,
-        height: vp.rect.h as _,
+        height: if flip_y { -vp.rect.h } else { vp.rect.h } as _,
         min_depth: vp.depth.start,
         max_depth: vp.depth.end,
     }
@@ -572,7 +592,9 @@ pub fn map_vk_present_mode(mode: vk::PresentModeKHR) -> PresentMode {
     }
 }
 
-pub fn map_composite_alpha_mode(composite_alpha_mode: CompositeAlphaMode) -> vk::CompositeAlphaFlagsKHR {
+pub fn map_composite_alpha_mode(
+    composite_alpha_mode: CompositeAlphaMode,
+) -> vk::CompositeAlphaFlagsKHR {
     vk::CompositeAlphaFlagsKHR::from_raw(composite_alpha_mode.bits())
 }
 

@@ -1,16 +1,26 @@
 pub use self::android_surface::AndroidSurface;
+pub use self::display::Display;
 pub use self::display_swapchain::DisplaySwapchain;
+pub use self::external_memory_fd::ExternalMemoryFd;
+pub use self::push_descriptor::PushDescriptor;
+pub use self::ray_tracing::RayTracing;
 pub use self::surface::Surface;
 pub use self::swapchain::Swapchain;
+pub use self::timeline_semaphore::TimelineSemaphore;
 pub use self::wayland_surface::WaylandSurface;
 pub use self::win32_surface::Win32Surface;
 pub use self::xcb_surface::XcbSurface;
 pub use self::xlib_surface::XlibSurface;
 
 mod android_surface;
+mod display;
 mod display_swapchain;
+mod external_memory_fd;
+mod push_descriptor;
+mod ray_tracing;
 mod surface;
 mod swapchain;
+mod timeline_semaphore;
 mod wayland_surface;
 mod win32_surface;
 mod xcb_surface;

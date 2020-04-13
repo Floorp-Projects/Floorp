@@ -1336,7 +1336,8 @@ uint32_t CompilerGLSL::type_to_packed_size(const SPIRType &type, const Bitset &f
 }
 
 bool CompilerGLSL::buffer_is_packing_standard(const SPIRType &type, BufferPackingStandard packing,
-                                              uint32_t start_offset, uint32_t end_offset)
+                                              uint32_t *failed_validation_index, uint32_t start_offset,
+                                              uint32_t end_offset)
 {
 	// This is very tricky and error prone, but try to be exhaustive and correct here.
 	// SPIR-V doesn't directly say if we're using std430 or std140.
@@ -1417,18 +1418,28 @@ bool CompilerGLSL::buffer_is_packing_standard(const SPIRType &type, BufferPackin
 			if (!packing_has_flexible_offset(packing))
 			{
 				if (actual_offset != offset) // This cannot be the packing we're looking for.
+				{
+					if (failed_validation_index)
+						*failed_validation_index = i;
 					return false;
+				}
 			}
 			else if ((actual_offset & (alignment - 1)) != 0)
 			{
 				// We still need to verify that alignment rules are observed, even if we have explicit offset.
+				if (failed_validation_index)
+					*failed_validation_index = i;
 				return false;
 			}
 
 			// Verify array stride rules.
 			if (!memb_type.array.empty() && type_to_packed_array_stride(memb_type, member_flags, packing) !=
 			                                    type_struct_member_array_stride(type, i))
+			{
+				if (failed_validation_index)
+					*failed_validation_index = i;
 				return false;
+			}
 
 			// Verify that sub-structs also follow packing rules.
 			// We cannot use enhanced layouts on substructs, so they better be up to spec.
@@ -1437,6 +1448,8 @@ bool CompilerGLSL::buffer_is_packing_standard(const SPIRType &type, BufferPackin
 			if (!memb_type.pointer && !memb_type.member_types.empty() &&
 			    !buffer_is_packing_standard(memb_type, substruct_packing))
 			{
+				if (failed_validation_index)
+					*failed_validation_index = i;
 				return false;
 			}
 		}
@@ -10762,8 +10775,10 @@ string CompilerGLSL::to_array_size(const SPIRType &type, uint32_t index)
 
 	// Tessellation control and evaluation shaders must have either gl_MaxPatchVertices or unsized arrays for input arrays.
 	// Opt for unsized as it's the more "correct" variant to use.
-	if (type.storage == StorageClassInput && (get_entry_point().model == ExecutionModelTessellationControl ||
-	                                          get_entry_point().model == ExecutionModelTessellationEvaluation))
+	if (type.storage == StorageClassInput &&
+	    (get_entry_point().model == ExecutionModelTessellationControl ||
+	     get_entry_point().model == ExecutionModelTessellationEvaluation) &&
+	    index == uint32_t(type.array.size() - 1))
 		return "";
 
 	auto &size = type.array[index];
@@ -12765,14 +12780,14 @@ void CompilerGLSL::unroll_array_from_complex_load(uint32_t target_id, uint32_t s
 		auto new_expr = join("_", target_id, "_unrolled");
 		statement(variable_decl(type, new_expr, target_id), ";");
 		string array_expr;
-		if (type.array_size_literal.front())
+		if (type.array_size_literal.back())
 		{
-			array_expr = convert_to_string(type.array.front());
-			if (type.array.front() == 0)
+			array_expr = convert_to_string(type.array.back());
+			if (type.array.back() == 0)
 				SPIRV_CROSS_THROW("Cannot unroll an array copy from unsized array.");
 		}
 		else
-			array_expr = to_expression(type.array.front());
+			array_expr = to_expression(type.array.back());
 
 		// The array size might be a specialization constant, so use a for-loop instead.
 		statement("for (int i = 0; i < int(", array_expr, "); i++)");

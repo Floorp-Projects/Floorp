@@ -1,7 +1,6 @@
 use crate::{window::FramebufferCachePtr, Backend, RawDevice};
 use ash::{version::DeviceV1_0, vk};
 use hal::{image::SubresourceRange, pso};
-use smallvec::SmallVec;
 use std::{borrow::Borrow, sync::Arc};
 
 #[derive(Debug, Hash)]
@@ -110,14 +109,15 @@ pub struct DescriptorPool {
 }
 
 impl pso::DescriptorPool<Backend> for DescriptorPool {
-    unsafe fn allocate_sets<I>(
+    unsafe fn allocate<I, E>(
         &mut self,
         layout_iter: I,
-        output: &mut SmallVec<[DescriptorSet; 1]>,
+        list: &mut E,
     ) -> Result<(), pso::AllocationError>
     where
         I: IntoIterator,
         I::Item: Borrow<DescriptorSetLayout>,
+        E: Extend<DescriptorSet>,
     {
         use std::ptr;
 
@@ -137,10 +137,10 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         };
 
         self.device
-            .0
+            .raw
             .allocate_descriptor_sets(&info)
             .map(|sets| {
-                output.extend(
+                list.extend(
                     sets.into_iter()
                         .zip(layout_bindings)
                         .map(|(raw, bindings)| DescriptorSet { raw, bindings }),
@@ -162,7 +162,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         self.set_free_vec
             .extend(descriptor_sets.into_iter().map(|d| d.raw));
         self.device
-            .0
+            .raw
             .free_descriptor_sets(self.raw, &self.set_free_vec);
     }
 
@@ -170,7 +170,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         assert_eq!(
             Ok(()),
             self.device
-                .0
+                .raw
                 .reset_descriptor_pool(self.raw, vk::DescriptorPoolResetFlags::empty())
         );
     }

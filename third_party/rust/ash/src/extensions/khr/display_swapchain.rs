@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use prelude::*;
+use crate::prelude::*;
+use crate::version::{DeviceV1_0, InstanceV1_0};
+use crate::vk;
+use crate::RawPtr;
 use std::ffi::CStr;
 use std::mem;
-use version::{DeviceV1_0, InstanceV1_0};
-use vk;
-use RawPtr;
 
 #[derive(Clone)]
 pub struct DisplaySwapchain {
@@ -19,7 +19,7 @@ impl DisplaySwapchain {
         });
         DisplaySwapchain {
             handle: device.handle(),
-            swapchain_fn: swapchain_fn,
+            swapchain_fn,
         }
     }
 
@@ -27,7 +27,7 @@ impl DisplaySwapchain {
         vk::KhrDisplaySwapchainFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCreateSharedSwapchainsKHR.html>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSharedSwapchainsKHR.html>"]
     pub unsafe fn create_shared_swapchains(
         &self,
         create_infos: &[vk::SwapchainCreateInfoKHR],
@@ -46,5 +46,13 @@ impl DisplaySwapchain {
             vk::Result::SUCCESS => Ok(swapchains),
             _ => Err(err_code),
         }
+    }
+
+    pub fn fp(&self) -> &vk::KhrDisplaySwapchainFn {
+        &self.swapchain_fn
+    }
+
+    pub fn device(&self) -> vk::Device {
+        self.handle
     }
 }

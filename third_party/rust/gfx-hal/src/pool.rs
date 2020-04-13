@@ -1,9 +1,8 @@
 //! Command pools
 
 use crate::command::Level;
-use crate::Backend;
+use crate::{Backend, PseudoVec};
 
-use smallvec::SmallVec;
 use std::any::Any;
 use std::fmt;
 
@@ -28,12 +27,17 @@ pub trait CommandPool<B: Backend>: fmt::Debug + Any + Send + Sync {
 
     /// Allocate a single command buffers from the pool.
     unsafe fn allocate_one(&mut self, level: Level) -> B::CommandBuffer {
-        self.allocate_vec(1, level).pop().unwrap()
+        let mut result = PseudoVec(None);
+        self.allocate(1, level, &mut result);
+        result.0.unwrap()
     }
 
     /// Allocate new command buffers from the pool.
-    unsafe fn allocate_vec(&mut self, num: usize, level: Level) -> SmallVec<[B::CommandBuffer; 1]> {
-        (0 .. num).map(|_| self.allocate_one(level)).collect()
+    unsafe fn allocate<E>(&mut self, num: usize, level: Level, list: &mut E)
+    where
+        E: Extend<B::CommandBuffer>,
+    {
+        list.extend((0 .. num).map(|_| self.allocate_one(level)));
     }
 
     /// Free command buffers which are allocated from this pool.

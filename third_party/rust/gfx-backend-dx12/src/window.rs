@@ -1,17 +1,16 @@
-use std::collections::VecDeque;
-use std::{fmt, mem};
+use std::{collections::VecDeque, fmt, mem, os::raw::c_void};
 
-use winapi::shared::{
-    dxgi1_4,
-    windef::{HWND, RECT},
-    winerror,
+use winapi::{
+    shared::{
+        dxgi1_4,
+        windef::{HWND, RECT},
+        winerror,
+    },
+    um::winuser::GetClientRect,
 };
-use winapi::um::winuser::GetClientRect;
 
+use crate::{conv, resource as r, Backend, Device, Instance, PhysicalDevice, QueueFamily};
 use hal::{self, device::Device as _, format as f, image as i, window as w};
-use {conv, native, resource as r, Backend, Device, Instance, PhysicalDevice, QueueFamily};
-
-use std::os::raw::c_void;
 
 impl Instance {
     pub fn create_surface_from_hwnd(&self, hwnd: *mut c_void) -> Surface {
@@ -77,7 +76,7 @@ impl w::Surface<Backend> for Surface {
         };
 
         w::SurfaceCapabilities {
-            present_modes: w::PresentMode::FIFO, //TODO
+            present_modes: w::PresentMode::FIFO,                  //TODO
             composite_alpha_modes: w::CompositeAlphaMode::OPAQUE, //TODO
             image_count: 2 ..= 16, // we currently use a flip effect which supports 2..=16 buffers
             current_extent,
@@ -94,7 +93,7 @@ impl w::Surface<Backend> for Surface {
     }
 
     fn supported_formats(&self, _physical_device: &PhysicalDevice) -> Option<Vec<f::Format>> {
-         Some(vec![
+        Some(vec![
             f::Format::Bgra8Srgb,
             f::Format::Bgra8Unorm,
             f::Format::Rgba8Srgb,

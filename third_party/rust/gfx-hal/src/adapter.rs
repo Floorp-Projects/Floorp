@@ -9,8 +9,15 @@
 use std::{any::Any, fmt};
 
 use crate::{
+    device,
+    format,
+    image,
+    memory,
     queue::{QueueGroup, QueuePriority},
-    device, format, image, memory, Backend, Features, Limits,
+    Backend,
+    Features,
+    Hints,
+    Limits,
 };
 
 /// A description for a single chunk of memory in a heap.
@@ -93,14 +100,17 @@ pub trait PhysicalDevice<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Fetch details for the memory regions provided by the device.
     fn memory_properties(&self) -> MemoryProperties;
 
-    /// Returns the features of this `Device`. This usually depends on the graphics API being
+    /// Returns the features of this `PhysicalDevice`. This usually depends on the graphics API being
     /// used.
     fn features(&self) -> Features;
 
-    /// Returns the resource limits of this `Device`.
+    /// Returns the performance hints of this `PhysicalDevice`.
+    fn hints(&self) -> Hints;
+
+    /// Returns the resource limits of this `PhysicalDevice`.
     fn limits(&self) -> Limits;
 
-    /// Check cache compatibility with the `Device`.
+    /// Check cache compatibility with the `PhysicalDevice`.
     fn is_valid_cache(&self, _cache: &[u8]) -> bool {
         false
     }
