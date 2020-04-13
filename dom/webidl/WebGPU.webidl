@@ -777,7 +777,6 @@ interface GPUCommandEncoder {
         u64 destinationOffset,
         u64 size);
 
-    /*
     void copyBufferToTexture(
         GPUBufferCopyView source,
         GPUTextureCopyView destination,
@@ -793,6 +792,7 @@ interface GPUCommandEncoder {
         GPUTextureCopyView destination,
         GPUExtent3D copySize);
 
+    /*
     void copyImageBitmapToTexture(
         GPUImageBitmapCopyView source,
         GPUTextureCopyView destination,
