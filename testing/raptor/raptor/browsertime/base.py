@@ -119,7 +119,7 @@ class Browsertime(Perftest):
             self.driver_paths.extend(
                 ["--firefox.geckodriverPath", self.browsertime_geckodriver]
             )
-        if self.browsertime_chromedriver:
+        if self.browsertime_chromedriver and self.config["app"] in ["chrome", "chrome-m"]:
             if (
                 not self.config.get("run_local", None)
                 or "{}" in self.browsertime_chromedriver
@@ -133,6 +133,12 @@ class Browsertime(Perftest):
                 self.browsertime_chromedriver = self.browsertime_chromedriver.format(
                     chromedriver_version
                 )
+
+                if not os.path.exists(self.browsertime_chromedriver):
+                    raise Exception(
+                        "Cannot find the chromedriver for the chrome version "
+                        "being tested: %s" % self.browsertime_chromedriver
+                    )
 
             self.driver_paths.extend(
                 ["--chrome.chromedriverPath", self.browsertime_chromedriver]

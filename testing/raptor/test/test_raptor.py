@@ -226,7 +226,6 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         browsertime_options["browsertime_node"],
         browsertime_options["browsertime_browsertimejs"],
         "--firefox.geckodriverPath", browsertime_options["browsertime_geckodriver"],
-        "--chrome.chromedriverPath", browsertime_options["browsertime_chromedriver"],
         "--browsertime.page_cycles", "1",
         "--browsertime.url", mock_test["test_url"],
         "--browsertime.page_cycle_delay", "1000",
@@ -241,6 +240,11 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         "--resultDir",
         "-n", "1",
     }
+    if browsertime_options.get("app") in ["chrome", "chrome-m"]:
+        expected_cmd.add(
+            "--chrome.chromedriverPath", browsertime_options["browsertime_chromedriver"]
+        )
+
     browsertime = ConcreteBrowsertime(
         post_startup_delay=DEFAULT_TIMEOUT, **browsertime_options
     )
