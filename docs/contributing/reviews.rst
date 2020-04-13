@@ -24,6 +24,9 @@ Review groups
    * - Name
      - Owns
      - Members
+   * - #build or #firefox-build-system-reviewers
+     - The configure & build system
+     - `Member list <https://phabricator.services.mozilla.com/project/members/20/>`__
    * - #dom-workers-and-storage-reviewers
      - DOM Workers & Storage
      - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
@@ -33,15 +36,9 @@ Review groups
    * - #fluent-reviewers
      - Changes to Fluent (FTL) files (translation).
      - `Member list <https://phabricator.services.mozilla.com/project/members/105/>`__
-   * - #firefox-build-system-reviewers
-     - The configure & build system
-     - `Member list <https://phabricator.services.mozilla.com/project/members/20/>`__
    * - #firefox-source-docs-reviewers
      - Documentation files and its build
      - `Member list <https://phabricator.services.mozilla.com/project/members/118/>`__
-   * - #firefox-style-system-reviewers
-     - Firefox style system
-     - `Member list <https://phabricator.services.mozilla.com/project/members/90/>`__
    * - #firefox-ux-team
      - User experience (UX)
      - `Member list <https://phabricator.services.mozilla.com/project/members/91/>`__
@@ -78,6 +75,9 @@ Review groups
    * - #static-analysis-reviewers
      - Changes related to Static Analysis
      - `Member list <https://phabricator.services.mozilla.com/project/members/120/>`__
+   * - #style or #firefox-style-system-reviewers
+     - Firefox style system (servo, layout/style).
+     - `Member list <https://phabricator.services.mozilla.com/project/members/90/>`__
    * - #webdriver-reviewers
      - Marionette and Geckodriver in Firefox
      - `Member list <https://phabricator.services.mozilla.com/project/members/103/>`__
