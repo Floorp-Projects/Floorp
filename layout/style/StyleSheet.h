@@ -278,7 +278,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   nsINode* GetOwnerNode() const { return mOwningNode; }
 
-  StyleSheet* GetParentSheet() const { return mParent; }
+  StyleSheet* GetParentSheet() const { return mParentSheet; }
 
   void SetOwnerRule(dom::CSSImportRule* aOwnerRule) {
     mOwnerRule = aOwnerRule; /* Not ref counted */
@@ -403,7 +403,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // True if any of this sheet's ancestors were created through the
   // Constructable StyleSheets API
   bool SelfOrAncestorIsConstructed() const {
-    for (auto* sheet = this; sheet; sheet = sheet->mParent) {
+    for (auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
       if (sheet->IsConstructed()) {
         return true;
       }
@@ -560,7 +560,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Return whether the given @import rule has pending child sheet.
   static bool RuleHasPendingChildSheet(css::Rule* aRule);
 
-  StyleSheet* mParent;  // weak ref
+  StyleSheet* mParentSheet;  // weak ref
 
   RefPtr<dom::Document> mConstructorDocument;
 

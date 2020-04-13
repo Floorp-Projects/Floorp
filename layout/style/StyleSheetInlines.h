@@ -27,7 +27,7 @@ dom::ParentObject StyleSheet::GetParentObject() const {
   if (mOwningNode) {
     return dom::ParentObject(mOwningNode);
   }
-  return dom::ParentObject(mParent);
+  return dom::ParentObject(mParentSheet);
 }
 
 }  // namespace mozilla
