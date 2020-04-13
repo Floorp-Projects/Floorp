@@ -61,8 +61,7 @@ class ImageCacheKey final {
  private:
   // For ServiceWorker we need to use the document as
   // token for the key. All those exceptions are handled by this method.
-  static void* GetSpecialCaseDocumentToken(dom::Document* aDocument,
-                                           nsIURI* aURI);
+  static void* GetSpecialCaseDocumentToken(dom::Document* aDocument);
 
   // For anti-tracking we need to use the top-level document's base domain for
   // the key. This is handled by this method.

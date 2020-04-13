@@ -44,7 +44,7 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
                              Document* aDocument)
     : mURI(aURI),
       mOriginAttributes(aAttrs),
-      mControlledDocument(GetSpecialCaseDocumentToken(aDocument, aURI)),
+      mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
       mTopLevelBaseDomain(GetTopLevelBaseDomain(aDocument, aURI)),
       mIsChrome(false) {
   if (mURI->SchemeIs("blob")) {
@@ -144,8 +144,7 @@ void ImageCacheKey::EnsureHash() const {
 }
 
 /* static */
-void* ImageCacheKey::GetSpecialCaseDocumentToken(Document* aDocument,
-                                                 nsIURI* aURI) {
+void* ImageCacheKey::GetSpecialCaseDocumentToken(Document* aDocument) {
   // Cookie-averse documents can never have storage granted to them.  Since they
   // may not have inner windows, they would require special handling below, so
   // just bail out early here.
