@@ -2,7 +2,7 @@
 
 # Item
 
-`data class Item` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L435)
+`data class Item` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L439)
 
 ### Constructors
 
