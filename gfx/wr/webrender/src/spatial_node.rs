@@ -464,7 +464,7 @@ impl SpatialNode {
         // between the scrolled content and unscrolled viewport we adjust the viewport's
         // position by the scroll offset in order to work with their relative positions on the
         // page.
-        let sticky_rect = info.frame_rect.translate(*viewport_scroll_offset);
+        let mut sticky_rect = info.frame_rect.translate(*viewport_scroll_offset);
 
         let mut sticky_offset = LayoutVector2D::zero();
         if let Some(margin) = info.margins.top {
@@ -489,19 +489,28 @@ impl SpatialNode {
 
         // If we don't have a sticky-top offset (sticky_offset.y + info.previously_applied_offset.y
         // == 0), or if we have a previously-applied bottom offset (previously_applied_offset.y < 0)
-        // then we check for handling the bottom margin case.
+        // then we check for handling the bottom margin case. Note that the "don't have a sticky-top
+        // offset" case includes the case where we *had* a sticky-top offset but we reduced it to
+        // zero in the above block.
         if sticky_offset.y + info.previously_applied_offset.y <= 0.0 {
             if let Some(margin) = info.margins.bottom {
+                // If sticky_offset.y is nonzero that means we must have set it
+                // in the sticky-top handling code above, so this item must have
+                // both top and bottom sticky margins. We adjust the item's rect
+                // by the top-sticky offset, and then combine any offset from
+                // the bottom-sticky calculation into sticky_offset below.
+                sticky_rect.origin.y += sticky_offset.y;
+
                 // Same as the above case, but inverted for bottom-sticky items. Here
                 // we adjust items upwards, resulting in a negative sticky_offset.y,
                 // or reduce the already-present upward adjustment, resulting in a positive
                 // sticky_offset.y.
                 let bottom_viewport_edge = viewport_rect.max_y() - margin;
                 if sticky_rect.max_y() > bottom_viewport_edge {
-                    sticky_offset.y = bottom_viewport_edge - sticky_rect.max_y();
+                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max_y();
                 } else if info.previously_applied_offset.y < 0.0 &&
                     sticky_rect.max_y() < bottom_viewport_edge {
-                    sticky_offset.y = bottom_viewport_edge - sticky_rect.max_y();
+                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max_y();
                     sticky_offset.y = sticky_offset.y.min(-info.previously_applied_offset.y);
                 }
             }
@@ -521,12 +530,13 @@ impl SpatialNode {
 
         if sticky_offset.x + info.previously_applied_offset.x <= 0.0 {
             if let Some(margin) = info.margins.right {
+                sticky_rect.origin.x += sticky_offset.x;
                 let right_viewport_edge = viewport_rect.max_x() - margin;
                 if sticky_rect.max_x() > right_viewport_edge {
-                    sticky_offset.x = right_viewport_edge - sticky_rect.max_x();
+                    sticky_offset.x += right_viewport_edge - sticky_rect.max_x();
                 } else if info.previously_applied_offset.x < 0.0 &&
                     sticky_rect.max_x() < right_viewport_edge {
-                    sticky_offset.x = right_viewport_edge - sticky_rect.max_x();
+                    sticky_offset.x += right_viewport_edge - sticky_rect.max_x();
                     sticky_offset.x = sticky_offset.x.min(-info.previously_applied_offset.x);
                 }
             }

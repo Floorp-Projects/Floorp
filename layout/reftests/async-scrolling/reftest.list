@@ -114,24 +114,24 @@ skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-overri
 # back up to the desired scroll offset. Therefore the reference page for three
 # variants is always the same.
 defaults fuzzy(0-1,0-120000)
-                    == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref.html
-                    == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref.html
-                    == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref.html
-                    == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref.html
-                    == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref.html
-                    == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref.html
-                    == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
-                    == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
-                    == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
-                    == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
-                    == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
-                    == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref.html
-                    == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref.html
-                    == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref.html
-                    == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref.html
-                    == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref.html
-                    == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref.html
+== dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref.html
+== dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref.html
+== dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref.html
+== dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref.html
+== dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref.html
+== dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref.html
+== dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
+== dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
+== dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
+== dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
+== dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
+== dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
+== dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref.html
+== dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref.html
+== dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref.html
+== dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref.html
+== dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref.html
+== dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref.html
 defaults
 
 # Same as above block of tests, except with a simulated dynamic toolbar
