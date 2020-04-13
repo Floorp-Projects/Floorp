@@ -47,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -77,7 +78,7 @@ class AddonManagerTest {
         val addon2 = Addon(id = "ext2")
         val addon3 = Addon(id = "ext3")
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon1, addon2, addon3))
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null))).thenReturn(listOf(addon1, addon2, addon3))
 
         // Prepare engine
         val engine: Engine = mock()
@@ -164,7 +165,7 @@ class AddonManagerTest {
         }
 
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenThrow(IllegalStateException("test"))
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), anyLong())).thenThrow(IllegalStateException("test"))
         WebExtensionSupport.initialize(engine, store)
 
         AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -189,7 +190,7 @@ class AddonManagerTest {
         }
 
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon))
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null))).thenReturn(listOf(addon))
         WebExtensionSupport.initialize(engine, store)
 
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -221,7 +222,7 @@ class AddonManagerTest {
         val addonsProvider: AddonsProvider = mock()
 
         runBlocking {
-            whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon))
+            whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null))).thenReturn(listOf(addon))
             WebExtensionSupport.initialize(engine, store)
             WebExtensionSupport.installedExtensions[addon.id] = extension
         }

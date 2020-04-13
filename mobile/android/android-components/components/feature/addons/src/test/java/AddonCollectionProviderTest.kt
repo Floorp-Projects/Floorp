@@ -135,11 +135,33 @@ class AddonCollectionProviderTest {
             assertTrue(addon.authors.isEmpty())
             verify(mockedClient).fetch(Request(
                 url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons",
-                readTimeout = Pair(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             ))
 
             // Ratings
             assertNull(addon.rating)
+        }
+    }
+
+    @Test
+    fun `getAvailableAddons - read timeout can be configured`() {
+        val jsonResponse = loadResourceAsString("/collection_with_empty_values.json")
+        val mockedClient = mock<Client>()
+        val mockedResponse = mock<Response>()
+        val mockedBody = mock<Response.Body>()
+        whenever(mockedBody.string(any())).thenReturn(jsonResponse)
+        whenever(mockedResponse.body).thenReturn(mockedBody)
+        whenever(mockedResponse.status).thenReturn(200)
+        whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
+
+        val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
+
+        runBlocking {
+            provider.getAvailableAddons(readTimeoutInSeconds = 5)
+            verify(mockedClient).fetch(Request(
+                url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons",
+                readTimeout = Pair(5, TimeUnit.SECONDS)
+            ))
         }
     }
 

@@ -18,6 +18,9 @@ import mozilla.components.feature.addons.update.AddonUpdater
 @VisibleForTesting
 internal var supportedAddonsFallback = listOf("uBlock0@raymondhill.net")
 
+@VisibleForTesting
+internal const val AMO_READ_TIMEOUT_IN_SECONDS = 5L
+
 /**
  * Wraps [AddonMigrationResult] in an exception so that it can be returned via [Result.Failure].
  *
@@ -106,7 +109,9 @@ internal object AddonMigration {
         }
 
         val supportedAddonIds = try {
-            addonCollectionProvider.getAvailableAddons().mapNotNull { it.id }
+            addonCollectionProvider.getAvailableAddons(
+                readTimeoutInSeconds = AMO_READ_TIMEOUT_IN_SECONDS
+            ).mapNotNull { it.id }
         } catch (e: Exception) {
             supportedAddonsFallback
         }
