@@ -234,12 +234,7 @@ def run_tests(config, test_paths, product, **kwargs):
 
                 test_count = 0
                 unexpected_count = 0
-
-                tests = []
-                for test_type in test_loader.test_types:
-                    tests.extend(test_loader.tests[test_type])
-
-                logger.suite_start(test_source_cls.tests_by_group(tests, **test_source_kwargs),
+                logger.suite_start(test_loader.test_ids,
                                    name='web-platform-test',
                                    run_info=run_info,
                                    extra={"run_by_dir": kwargs["run_by_dir"]})
