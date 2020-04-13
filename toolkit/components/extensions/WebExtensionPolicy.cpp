@@ -844,8 +844,9 @@ const URLInfo& DocInfo::PrincipalURL() const {
 
   if (mPrincipalURL.isNothing()) {
     nsIPrincipal* prin = Principal();
+    auto* basePrin = BasePrincipal::Cast(prin);
     nsCOMPtr<nsIURI> uri;
-    if (NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
+    if (NS_SUCCEEDED(basePrin->GetURI(getter_AddRefs(uri)))) {
       MOZ_DIAGNOSTIC_ASSERT(uri);
       mPrincipalURL.emplace(uri);
     } else {
