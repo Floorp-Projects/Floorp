@@ -35,7 +35,6 @@ class WebExtension(Perftest):
         self.cpu_profiler = None
 
         super(WebExtension, self).__init__(*args, **kwargs)
-        self.using_condprof = self.config.get("using_condprof", True)
 
         # set up the results handler
         self.results_handler = RaptorResultsHandler(
