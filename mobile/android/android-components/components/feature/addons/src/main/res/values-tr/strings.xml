@@ -128,6 +128,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Eklentileri %1$s tarayıcısına ekle</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox eklenti teknolojisi modernleşiyor. Bu eklentiler Firefox 75 ve sonrasıyla uyumlu olmayan kodlar kullanıyor.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Önerdiğimiz eklentilerden bazılarını desteklemek için çalışmalara başladık.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Eklenti indiriliyor ve doğrulanıyor…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

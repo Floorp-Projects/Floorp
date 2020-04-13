@@ -15,7 +15,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">브라우저 설정 읽고 수정</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">최근 브라우징 탐색기록, 쿠키, 관련 데이터 삭제</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">최근 방문 기록, 쿠키 및 관련 데이터 삭제</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">클립보드의 데이터 가져오기</string>
     <!-- Description for clipboard_write permission. -->
@@ -29,7 +29,7 @@
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">사용자 위치에 접근</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">브라우징 기록에 접근</string>
+    <string name="mozac_feature_addons_permissions_history_description">방문 기록에 접근</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">확장 기능 사용 모니터와 테마 관리</string>
     <!-- Description for native_messaging permission. -->
@@ -45,7 +45,7 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">브라우저 탭 숨기기 및 표시</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">브라우징 기록에 접근</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">방문 기록에 접근</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">열려있는 탭의 데이터에 접근하도록 개발자 도구를 확장</string>
     <!-- The version on of add-on. -->
