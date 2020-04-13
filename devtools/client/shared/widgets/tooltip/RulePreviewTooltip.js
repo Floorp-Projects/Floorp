@@ -59,9 +59,7 @@ class RulePreviewTooltip {
     this.message.textContent = ruleText;
     this.container.appendChild(this.message);
     this.container.appendChild(this.footer);
-
-    element.addEventListener("mouseout", () => this._tooltip.hide());
-    this._tooltip.show(element);
+    this._tooltip.startTogglingOnHover(element);
   }
 
   destroy() {
