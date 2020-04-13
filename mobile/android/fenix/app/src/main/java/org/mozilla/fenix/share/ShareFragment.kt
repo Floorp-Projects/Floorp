@@ -74,7 +74,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 shareData = shareData,
                 snackbar = FenixSnackbar.make(
                     view = requireActivity().getRootView()!!,
-                    isDisplayedOnBrowserFragment = true
+                    isDisplayedWithBrowserToolbar = true
                 ),
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),

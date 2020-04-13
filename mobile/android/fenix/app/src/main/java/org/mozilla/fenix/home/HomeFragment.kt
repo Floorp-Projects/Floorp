@@ -388,7 +388,7 @@ class HomeFragment : Fragment() {
                         view?.let {
                             FenixSnackbar.make(view = it,
                                 duration = Snackbar.LENGTH_SHORT,
-                                isDisplayedOnBrowserFragment = false
+                                isDisplayedWithBrowserToolbar = false
                             )
                                 .setText(it.context.getString(R.string.onboarding_firefox_account_sync_is_on))
                                 .setAnchorView(toolbarLayout)
@@ -663,7 +663,7 @@ class HomeFragment : Fragment() {
                         lifecycleScope,
                         view?.let { view -> FenixSnackbar.make(
                             view = view,
-                            isDisplayedOnBrowserFragment = false
+                            isDisplayedWithBrowserToolbar = false
                         )
                         }
                     )
@@ -894,7 +894,7 @@ class HomeFragment : Fragment() {
                 }
                 FenixSnackbar.make(view = view,
                     duration = Snackbar.LENGTH_LONG,
-                    isDisplayedOnBrowserFragment = false
+                    isDisplayedWithBrowserToolbar = false
                 )
                     .setText(view.context.getString(stringRes))
                     .setAnchorView(snackbarAnchorView)
@@ -909,7 +909,7 @@ class HomeFragment : Fragment() {
             FenixSnackbar.make(
                 view = view,
                 duration = Snackbar.LENGTH_LONG,
-                isDisplayedOnBrowserFragment = false
+                isDisplayedWithBrowserToolbar = false
             )
                 .setText(string)
                 .setAnchorView(snackbarAnchorView)

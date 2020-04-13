@@ -157,7 +157,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                         FenixSnackbar.make(
                             view = it,
                             duration = FenixSnackbar.LENGTH_SHORT,
-                            isDisplayedOnBrowserFragment = false
+                            isDisplayedWithBrowserToolbar = false
                         )
                             .setText(successMessage)
                             .show()

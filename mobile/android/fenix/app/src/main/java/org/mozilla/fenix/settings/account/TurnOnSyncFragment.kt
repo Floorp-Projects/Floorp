@@ -84,7 +84,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             FenixSnackbar.make(
                 view = requireView(),
                 duration = snackbarLength,
-                isDisplayedOnBrowserFragment = true
+                isDisplayedWithBrowserToolbar = true
             )
                 .setText(snackbarText)
                 .show()
@@ -92,7 +92,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             FenixSnackbar.make(
                 view = requireView(),
                 duration = snackbarLength,
-                isDisplayedOnBrowserFragment = false
+                isDisplayedWithBrowserToolbar = false
             )
                 .setText(snackbarText)
                 .show()

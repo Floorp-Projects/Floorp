@@ -313,7 +313,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             FenixSnackbar.make(
                                 view = view,
                                 duration = Snackbar.LENGTH_SHORT,
-                                isDisplayedOnBrowserFragment = true
+                                isDisplayedWithBrowserToolbar = true
                             )
                                 .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
                                 .show()
@@ -785,7 +785,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     FenixSnackbar.make(
                         view = view,
                         duration = FenixSnackbar.LENGTH_LONG,
-                        isDisplayedOnBrowserFragment = true
+                        isDisplayedWithBrowserToolbar = true
                     )
                         .setText(getString(R.string.bookmark_saved_snackbar))
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
@@ -837,10 +837,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private fun fullScreenChanged(inFullScreen: Boolean) {
         if (inFullScreen) {
             FenixSnackbar.make(
-                view = view!!,
-                duration = Snackbar.LENGTH_SHORT,
-                isDisplayedOnBrowserFragment = true
-            )
+                    view = view!!,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedWithBrowserToolbar = false
+                )
                 .setText(getString(R.string.full_screen_notification))
                 .show()
             activity?.enterToImmersiveMode()

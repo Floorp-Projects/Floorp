@@ -166,7 +166,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                             bookmarkNode?.let { bookmark ->
                                 FenixSnackbar.make(
                                     view = activity.getRootView()!!,
-                                    isDisplayedOnBrowserFragment = true
+                                    isDisplayedWithBrowserToolbar = true
                                 )
                                     .setText(
                                         getString(

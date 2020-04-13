@@ -91,7 +91,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 snackbar = FenixSnackbar.make(
                     view = view,
                     duration = FenixSnackbar.LENGTH_LONG,
-                    isDisplayedOnBrowserFragment = false
+                    isDisplayedWithBrowserToolbar = false
                 ),
                 deleteBookmarkNodes = ::deleteMulti,
                 invokePendingDeletion = ::invokePendingDeletion

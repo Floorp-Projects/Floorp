@@ -29,7 +29,7 @@ internal fun showSnackBar(view: View, text: String) {
     FenixSnackbar.make(
         view = view,
         duration = FenixSnackbar.LENGTH_SHORT,
-        isDisplayedOnBrowserFragment = true
+        isDisplayedWithBrowserToolbar = true
     )
         .setText(text)
         .show()

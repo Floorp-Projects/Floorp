@@ -22,7 +22,7 @@ class FenixSnackbarDelegate(val view: View) :
             FenixSnackbar.make(
                 view = view,
                 duration = FenixSnackbar.LENGTH_SHORT,
-                isDisplayedOnBrowserFragment = true
+                isDisplayedWithBrowserToolbar = true
             )
                 .setText(view.context.getString(text))
                 .setAction(view.context.getString(action)) { listener.invoke(view) }
@@ -30,7 +30,7 @@ class FenixSnackbarDelegate(val view: View) :
         } else {
             FenixSnackbar.make(view,
                 duration = FenixSnackbar.LENGTH_SHORT,
-                isDisplayedOnBrowserFragment = true
+                isDisplayedWithBrowserToolbar = true
             )
                 .setText(view.context.getString(text))
                 .show()

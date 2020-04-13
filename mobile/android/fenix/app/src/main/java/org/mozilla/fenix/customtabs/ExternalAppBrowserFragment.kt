@@ -89,7 +89,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         FenixSnackbar.make(
                             view = view.swipeRefresh,
                             duration = FenixSnackbar.LENGTH_LONG,
-                            isDisplayedOnBrowserFragment = true
+                            isDisplayedWithBrowserToolbar = true
                         ).apply {
                             setText(resources.getString(R.string.unknown_scheme_error_message))
                             setAppropriateBackground(true)

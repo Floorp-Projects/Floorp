@@ -67,7 +67,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             FenixSnackbar.make(
                 view = view,
                 duration = FenixSnackbar.LENGTH_LONG,
-                isDisplayedOnBrowserFragment = false
+                isDisplayedWithBrowserToolbar = false
             ),
             activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager,
             ::openItem,

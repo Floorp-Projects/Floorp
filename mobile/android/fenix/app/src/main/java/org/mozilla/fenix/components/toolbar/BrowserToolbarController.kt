@@ -170,7 +170,7 @@ class DefaultBrowserToolbarController(
                         FenixSnackbar.make(
                             view = swipeRefresh,
                             duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedOnBrowserFragment = true
+                            isDisplayedWithBrowserToolbar = true
                         )
                             .setText(
                                 swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
@@ -266,7 +266,7 @@ class DefaultBrowserToolbarController(
                     FenixSnackbar.make(
                         view = v,
                         duration = Snackbar.LENGTH_LONG,
-                        isDisplayedOnBrowserFragment = true
+                        isDisplayedWithBrowserToolbar = true
                     )
                         .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
                 }

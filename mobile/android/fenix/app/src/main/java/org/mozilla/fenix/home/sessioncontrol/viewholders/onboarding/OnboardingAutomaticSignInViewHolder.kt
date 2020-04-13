@@ -42,7 +42,7 @@ class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView
                         FenixSnackbar.make(
                             view = it,
                             duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedOnBrowserFragment = false
+                            isDisplayedWithBrowserToolbar = false
                         ).setText(
                             it.context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
                         ).show()

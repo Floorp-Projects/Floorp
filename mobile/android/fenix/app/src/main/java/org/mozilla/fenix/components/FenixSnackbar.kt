@@ -100,7 +100,7 @@ class FenixSnackbar private constructor(
             view: View,
             duration: Int = LENGTH_LONG,
             isError: Boolean = false,
-            isDisplayedOnBrowserFragment: Boolean
+            isDisplayedWithBrowserToolbar: Boolean
         ): FenixSnackbar {
             val parent = findSuitableParent(view) ?: run {
                 throw IllegalArgumentException(
@@ -130,7 +130,7 @@ class FenixSnackbar private constructor(
                     0,
                     0,
                     if (
-                        isDisplayedOnBrowserFragment &&
+                        isDisplayedWithBrowserToolbar &&
                         shouldUseBottomToolbar &&
                         // If the view passed in is a ContentFrameLayout, it does not matter
                         // if the user has a dynamicBottomToolbar or not, as the Android system

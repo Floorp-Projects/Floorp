@@ -139,7 +139,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         FenixSnackbar.make(
             view = requireView(),
             duration = FenixSnackbar.LENGTH_SHORT,
-            isDisplayedOnBrowserFragment = true
+            isDisplayedWithBrowserToolbar = true
         )
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()

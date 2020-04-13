@@ -47,7 +47,7 @@ fun CoroutineScope.allowUndo(
             .make(
                 view = view,
                 duration = FenixSnackbar.LENGTH_INDEFINITE,
-                isDisplayedOnBrowserFragment = false
+                isDisplayedWithBrowserToolbar = false
             )
             .setText(message)
             .setAnchorView(anchorView)

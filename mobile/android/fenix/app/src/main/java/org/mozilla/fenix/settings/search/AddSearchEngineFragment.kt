@@ -210,7 +210,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
                     view?.also {
                         FenixSnackbar.make(view = it,
                             duration = FenixSnackbar.LENGTH_SHORT,
-                            isDisplayedOnBrowserFragment = false
+                            isDisplayedWithBrowserToolbar = false
                         )
                             .setText(successMessage)
                             .show()
