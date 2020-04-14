@@ -600,6 +600,7 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
       case CKM_AES_GCM:
         gcmParams.pIv = mIv.Elements();
         gcmParams.ulIvLen = mIv.Length();
+        gcmParams.ulIvBits = gcmParams.ulIvLen * 8;
         gcmParams.pAAD = mAad.Elements();
         gcmParams.ulAADLen = mAad.Length();
         gcmParams.ulTagBits = mTagLength;
