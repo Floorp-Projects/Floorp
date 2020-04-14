@@ -701,7 +701,9 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
 
   data->mBuffersLock.Lock();
   for (const auto bid : data->mUnassignedBufferIds) {
-    ffi::wgpu_server_buffer_destroy(mContext, bid);
+    if (!SendFreeBuffer(bid)) {
+      NS_WARNING("Unable to free an ID for non-assigned buffer");
+    }
   }
   for (const auto bid : data->mAvailableBufferIds) {
     ffi::wgpu_server_buffer_destroy(mContext, bid);
