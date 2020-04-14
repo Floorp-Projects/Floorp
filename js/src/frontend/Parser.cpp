@@ -1762,10 +1762,6 @@ bool LazyScriptCreationData::create(JSContext* cx,
     return false;
   }
 
-  if (fieldInitializers) {
-    lazy->setFieldInitializers(*fieldInitializers);
-  }
-
   function->initLazyScript(lazy);
 
   return true;
