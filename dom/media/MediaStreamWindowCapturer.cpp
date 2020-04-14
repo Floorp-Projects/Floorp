@@ -19,7 +19,11 @@ MediaStreamWindowCapturer::CapturedTrack::CapturedTrack(
       mPort(aTrack->Graph()->ConnectToCaptureTrack(aWindowID,
                                                    aTrack->GetTrack())) {}
 
-MediaStreamWindowCapturer::CapturedTrack::~CapturedTrack() { mPort->Destroy(); }
+MediaStreamWindowCapturer::CapturedTrack::~CapturedTrack() {
+  if (mPort) {
+    mPort->Destroy();
+  }
+}
 
 MediaStreamWindowCapturer::MediaStreamWindowCapturer(DOMMediaStream* aStream,
                                                      uint64_t aWindowId)
