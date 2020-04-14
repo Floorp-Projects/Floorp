@@ -376,6 +376,18 @@
       }
     },
 
+    "EncryptedMediaExtensions": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "Extensions": {
       "type": "object",
       "properties": {
