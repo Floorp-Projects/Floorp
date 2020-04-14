@@ -109,9 +109,7 @@ class WebRenderCommandBuilder final {
   void ClearCachedResources();
 
   bool ShouldDumpDisplayList(nsDisplayListBuilder* aBuilder);
-  wr::usize GetBuilderDumpIndex(wr::RenderRoot aRenderRoot) const {
-    return mBuilderDumpIndex[aRenderRoot];
-  }
+  wr::usize GetBuilderDumpIndex() const { return mBuilderDumpIndex; }
 
   bool GetContainsSVGGroup() { return mContainsSVGGroup; }
 
@@ -204,7 +202,7 @@ class WebRenderCommandBuilder final {
   // Store of WebRenderLocalCanvasData objects for use in empty transactions
   LocalCanvasDataSet mLastLocalCanvasDatas;
 
-  wr::RenderRootArray<wr::usize> mBuilderDumpIndex;
+  wr::usize mBuilderDumpIndex;
   wr::usize mDumpIndent;
 
  public:
