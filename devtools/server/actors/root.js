@@ -322,9 +322,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // We'll extend the reply here to also mention all the tabs.
     Object.assign(reply, {
       selected: selected || 0,
-      tabs: [...this._tabDescriptorActorPool.poolChildren()].map(descriptor =>
-        descriptor.form()
-      ),
+      tabs: [...this._tabDescriptorActorPool.poolChildren()],
     });
 
     return reply;
@@ -362,7 +360,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     descriptorActor.parentID = this.actorID;
     this._tabDescriptorActorPool.manage(descriptorActor);
 
-    return descriptorActor.form();
+    return descriptorActor;
   },
 
   getWindow: function({ outerWindowID }) {
