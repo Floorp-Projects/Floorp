@@ -38,6 +38,11 @@ EXTRA_SHARED_LIBS +=  \
 	$(NULL)
 endif # OS_TARGET
 
+SIMPLE_OBJS   = $(notdir $(CSRCS:.c=$(OBJ_SUFFIX)))
+OBJS          = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
+vpath %c $(dir $(CSRCS)) # $(OBJDIR)
+
+
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 CFLAGS += -I$(CORE_DEPTH)/lib/ckfw/builtins
@@ -50,3 +55,4 @@ endif
 $(OBJDIR)/certdata-testlib.c: $(NSS_CERTDATA-TESTLIB_TXT)
 	@$(MAKE_OBJDIR)
 	$(PERL) ../certdata.perl $(NSS_CERTDATA-TESTLIB_TXT) $@
+

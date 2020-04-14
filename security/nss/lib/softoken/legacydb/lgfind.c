@@ -666,11 +666,11 @@ lg_searchTokenList(SDB *sdb, SDBFind *search,
             case CKA_LABEL:
                 copy = &name;
                 break;
-            case CKA_NETSCAPE_EMAIL:
+            case CKA_NSS_EMAIL:
                 copy = &email;
                 classFlags &= LG_SMIME | LG_CERT;
                 break;
-            case CKA_NETSCAPE_SMIME_TIMESTAMP:
+            case CKA_NSS_SMIME_TIMESTAMP:
                 classFlags &= LG_SMIME;
                 break;
             case CKA_CLASS:
@@ -683,13 +683,13 @@ lg_searchTokenList(SDB *sdb, SDBFind *search,
                     case CKO_CERTIFICATE:
                         classFlags &= LG_CERT;
                         break;
-                    case CKO_NETSCAPE_TRUST:
+                    case CKO_NSS_TRUST:
                         classFlags &= LG_TRUST;
                         break;
-                    case CKO_NETSCAPE_CRL:
+                    case CKO_NSS_CRL:
                         classFlags &= LG_CRL;
                         break;
-                    case CKO_NETSCAPE_SMIME:
+                    case CKO_NSS_SMIME:
                         classFlags &= LG_SMIME;
                         break;
                     case CKO_PRIVATE_KEY:
@@ -761,7 +761,7 @@ lg_searchTokenList(SDB *sdb, SDBFind *search,
                 copy = &key_id;
                 classFlags &= (LG_CERT | LG_PRIVATE | LG_KEY | LG_PUBLIC);
                 break;
-            case CKA_NETSCAPE_KRL:
+            case CKA_NSS_KRL:
                 if (pTemplate[i].ulValueLen != sizeof(CK_BBOOL)) {
                     classFlags = 0;
                     break;

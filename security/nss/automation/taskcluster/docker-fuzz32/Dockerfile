@@ -10,6 +10,8 @@ LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 RUN dpkg --add-architecture i386
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    apt-utils \
     build-essential \
     ca-certificates \
     curl \

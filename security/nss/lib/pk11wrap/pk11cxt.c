@@ -17,6 +17,8 @@
 #include "secoid.h"
 #include "sechash.h"
 #include "secerr.h"
+#include "blapit.h"
+#include "secport.h"
 
 static const SECItem pk11_null_params = { 0 };
 
@@ -141,6 +143,52 @@ pk11_restoreContext(PK11Context *context, void *space, unsigned long savedLength
 SECStatus pk11_Finalize(PK11Context *context);
 
 /*
+ *  Initialize a Message function. Particular function is passed in as a
+ *  function pointer. Since all C_Message*Init funcitons have the same
+ *  prototype, we just pick one of the the prototypes to declare our init
+ *  function.
+ */
+static CK_RV
+pk11_contextInitMessage(PK11Context *context, CK_MECHANISM_PTR mech,
+                        PK11SymKey *key, CK_C_MessageEncryptInit initFunc,
+                        CK_FLAGS flags, CK_RV scrv)
+{
+    PK11SlotInfo *slot = context->slot;
+    CK_VERSION version = slot->module->cryptokiVersion;
+    CK_RV crv = CKR_OK;
+
+    context->ivCounter = 0;
+    context->ivMaxCount = 0;
+    context->ivFixedBits = 0;
+    context->ivLen = 0;
+    context->ivGen = CKG_NO_GENERATE;
+    context->simulate_mechanism = (mech)->mechanism;
+    context->simulate_message = PR_FALSE;
+    /* check that we can do the Message interface. We need to check
+     * for either 1) are we using a PKCS #11 v3 interface and 2) is the
+     * Message flag set on the mechanism. If either is false we simulate
+     * the message interface for the Encrypt and Decrypt cases using the
+     * PKCS #11 V2 interface.
+     * Sign and verify do not have V2 interfaces, so we go ahead and fail
+     * if those cases */
+    if ((version.major >= 3) &&
+        PK11_DoesMechanismFlag(slot, (mech)->mechanism, flags)) {
+        crv = (*initFunc)((context)->session, (mech), (key)->objectID);
+        if ((crv == CKR_FUNCTION_NOT_SUPPORTED) ||
+            (crv == CKR_MECHANISM_INVALID)) {
+            /* we have a 3.0 interface, and the flag was set (or ignored)
+             * but the implementation was not there, use the V2 interface */
+            crv = (scrv);
+            context->simulate_message = PR_TRUE;
+        }
+    } else {
+        crv = (scrv);
+        context->simulate_message = PR_TRUE;
+    }
+    return crv;
+}
+
+/*
  * Context initialization. Used by all flavors of CreateContext
  */
 static SECStatus
@@ -150,6 +198,7 @@ pk11_context_init(PK11Context *context, CK_MECHANISM *mech_info)
     PK11SymKey *symKey = context->key;
     SECStatus rv = SECSuccess;
 
+    context->simulate_message = PR_FALSE;
     switch (context->operation) {
         case CKA_ENCRYPT:
             crv = PK11_GETTAB(context->slot)->C_EncryptInit(context->session, mech_info, symKey->objectID);
@@ -176,6 +225,27 @@ pk11_context_init(PK11Context *context, CK_MECHANISM *mech_info)
         case CKA_DIGEST:
             crv = PK11_GETTAB(context->slot)->C_DigestInit(context->session, mech_info);
             break;
+
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            crv = pk11_contextInitMessage(context, mech_info, symKey,
+                                          PK11_GETTAB(context->slot)->C_MessageEncryptInit,
+                                          CKF_MESSAGE_ENCRYPT, CKR_OK);
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            crv = pk11_contextInitMessage(context, mech_info, symKey,
+                                          PK11_GETTAB(context->slot)->C_MessageDecryptInit,
+                                          CKF_MESSAGE_DECRYPT, CKR_OK);
+            break;
+        case CKA_NSS_MESSAGE | CKA_SIGN:
+            crv = pk11_contextInitMessage(context, mech_info, symKey,
+                                          PK11_GETTAB(context->slot)->C_MessageSignInit,
+                                          CKF_MESSAGE_SIGN, CKR_FUNCTION_NOT_SUPPORTED);
+            break;
+        case CKA_NSS_MESSAGE | CKA_VERIFY:
+            crv = pk11_contextInitMessage(context, mech_info, symKey,
+                                          PK11_GETTAB(context->slot)->C_MessageVerifyInit,
+                                          CKF_MESSAGE_VERIFY, CKR_FUNCTION_NOT_SUPPORTED);
+            break;
         default:
             crv = CKR_OPERATION_NOT_INITIALIZED;
             break;
@@ -184,6 +254,18 @@ pk11_context_init(PK11Context *context, CK_MECHANISM *mech_info)
     if (crv != CKR_OK) {
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
+    }
+
+    /* handle the case where the token is using the old NSS mechanism */
+    if (context->simulate_message &&
+        !PK11_DoesMechanism(context->slot, context->simulate_mechanism)) {
+        if ((context->simulate_mechanism == CKM_CHACHA20_POLY1305) &&
+            PK11_DoesMechanism(context->slot, CKM_NSS_CHACHA20_POLY1305)) {
+            context->simulate_mechanism = CKM_NSS_CHACHA20_POLY1305;
+        } else {
+            PORT_SetError(PK11_MapError(CKR_MECHANISM_INVALID));
+            return SECFailure;
+        }
     }
 
     /*
@@ -198,6 +280,51 @@ pk11_context_init(PK11Context *context, CK_MECHANISM *mech_info)
         pk11_Finalize(context);
     }
     return rv;
+}
+
+/*
+ * Testing interfaces, not for general use. This function forces
+ * an AEAD context into simulation mode even though the target token
+ * can already do PKCS #11 v3.0 Message (i.e. softoken).
+ */
+SECStatus
+_PK11_ContextSetAEADSimulation(PK11Context *context)
+{
+    CK_RV crv;
+    /* only message encrypt and message decrypt contexts can be simulated */
+    if ((context->operation != (CKA_NSS_MESSAGE | CKA_ENCRYPT)) &&
+        (context->operation != (CKA_NSS_MESSAGE | CKA_DECRYPT))) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    /* if we are already simulating, return */
+    if (context->simulate_message) {
+        return SECSuccess;
+    }
+    /* we need to shutdown the existing AEAD operation */
+    switch (context->operation) {
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            crv = PK11_GETTAB(context->slot)->C_MessageEncryptFinal(context->session);
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            crv = PK11_GETTAB(context->slot)->C_MessageDecryptFinal(context->session);
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+            return SECFailure;
+    }
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        return SECFailure;
+    }
+    context->simulate_message = PR_TRUE;
+    return SECSuccess;
+}
+
+PRBool
+_PK11_ContextGetAEADSimulation(PK11Context *context)
+{
+    return context->simulate_message;
 }
 
 /*
@@ -741,6 +868,531 @@ PK11_CipherOp(PK11Context *context, unsigned char *out, int *outlen,
 }
 
 /*
+ * Simulate the IV generation that normally would happen in the token.
+ *
+ * This is a modifed copy of what is in freebl/gcm.c. We can't use the
+ * version in freebl because of layering, since freebl is inside the token
+ * boundary. These issues are traditionally handled by moving them to util,
+ * but we also have two different Random functions we have two switch between.
+ * Since this is primarily here for tokens that don't support the PKCS #11
+ * Message Interface, it's OK if they diverge a bit. Slight semantic
+ * differences from the freebl/gcm.c version shouldn't be much more than the
+ * sematic differences between freebl and other tokens which do implement the
+ * Message Interface. */
+static SECStatus
+pk11_GenerateIV(PK11Context *context, CK_GENERATOR_FUNCTION ivgen,
+                int fixedBits, unsigned char *iv, int ivLen)
+{
+    unsigned int i;
+    unsigned int flexBits;
+    unsigned int ivOffset;
+    unsigned int ivNewCount;
+    unsigned char ivMask;
+    unsigned char ivSave;
+    SECStatus rv;
+
+    if (context->ivCounter != 0) {
+        /* If we've already generated a message, make sure all subsequent
+         * messages are using the same generator */
+        if ((context->ivGen != ivgen) ||
+            (context->ivFixedBits != fixedBits) ||
+            (context->ivLen != ivLen)) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+    } else {
+        /* remember these values */
+        context->ivGen = ivgen;
+        context->ivFixedBits = fixedBits;
+        context->ivLen = ivLen;
+        /* now calculate how may bits of IV we have to supply */
+        flexBits = ivLen * PR_BITS_PER_BYTE;
+        /* first make sure we aren't going to overflow */
+        if (flexBits < fixedBits) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        flexBits -= fixedBits;
+        /* if we are generating a random number reduce the acceptable bits to
+         * avoid birthday attacks */
+        if (ivgen == CKG_GENERATE_RANDOM) {
+            if (flexBits <= GCMIV_RANDOM_BIRTHDAY_BITS) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            /* see freebl/blapit.h for how GCMIV_RANDOM_BIRTHDAY_BITS is
+             * calculated. */
+            flexBits -= GCMIV_RANDOM_BIRTHDAY_BITS;
+            flexBits = flexBits >> 1;
+        }
+        if (flexBits == 0) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        /* Turn those bits into the number of IV's we can safely return */
+        if (flexBits >= sizeof(context->ivMaxCount) * PR_BITS_PER_BYTE) {
+            context->ivMaxCount = PR_UINT64(0xffffffffffffffff);
+        } else {
+            context->ivMaxCount = (PR_UINT64(1) << flexBits);
+        }
+    }
+
+    /* no generate, accept the IV from the source */
+    if (ivgen == CKG_NO_GENERATE) {
+        context->ivCounter = 1;
+        return SECSuccess;
+    }
+
+    /* make sure we haven't exceeded the number of IVs we can return
+     * for this key, generator, and IV size */
+    if (context->ivCounter >= context->ivMaxCount) {
+        /* use a unique error from just bad user input */
+        PORT_SetError(SEC_ERROR_EXTRA_INPUT);
+        return SECFailure;
+    }
+
+    /* build to mask to handle the first byte of the IV */
+    ivOffset = fixedBits / PR_BITS_PER_BYTE;
+    ivMask = 0xff >> ((PR_BITS_PER_BYTE - (fixedBits & 7)) & 7);
+    ivNewCount = ivLen - ivOffset;
+
+    /* finally generate the IV */
+    switch (ivgen) {
+        case CKG_GENERATE: /* default to counter */
+        case CKG_GENERATE_COUNTER:
+            iv[ivOffset] = (iv[ivOffset] & ~ivMask) |
+                           (PORT_GET_BYTE_BE(context->ivCounter, 0, ivNewCount) & ivMask);
+            for (i = 1; i < ivNewCount; i++) {
+                iv[ivOffset + i] =
+                    PORT_GET_BYTE_BE(context->ivCounter, i, ivNewCount);
+            }
+            break;
+        case CKG_GENERATE_COUNTER_XOR:
+            iv[ivOffset] ^=
+                (PORT_GET_BYTE_BE(context->ivCounter, 0, ivNewCount) & ivMask);
+            for (i = 1; i < ivNewCount; i++) {
+                iv[ivOffset + i] ^=
+                    PORT_GET_BYTE_BE(context->ivCounter, i, ivNewCount);
+            }
+            break;
+        case CKG_GENERATE_RANDOM:
+            ivSave = iv[ivOffset] & ~ivMask;
+            rv = PK11_GenerateRandom(iv + ivOffset, ivNewCount);
+            iv[ivOffset] = ivSave | (iv[ivOffset] & ivMask);
+            if (rv != SECSuccess) {
+                return rv;
+            }
+            break;
+    }
+    context->ivCounter++;
+    return SECSuccess;
+}
+
+/*
+ * PKCS #11 v2.40 did not have a message interface. If our module can't
+ * do the message interface use the old method of doing AEAD */
+static SECStatus
+pk11_AEADSimulateOp(PK11Context *context, void *params, int paramslen,
+                    const unsigned char *aad, int aadlen,
+                    unsigned char *out, int *outlen,
+                    int maxout, const unsigned char *in, int inlen)
+{
+    unsigned int length = maxout;
+    SECStatus rv = SECSuccess;
+    unsigned char *saveOut = out;
+    unsigned char *allocOut = NULL;
+
+    /*
+     * first we need to convert the single shot (v2.40) parameters into
+     * the message version of the parameters. This usually involves
+     * copying the Nonce or IV, setting the AAD from our parameter list
+     * and handling the tag differences */
+    CK_GCM_PARAMS_V3 gcm;
+    CK_GCM_MESSAGE_PARAMS *gcm_message;
+    CK_CCM_PARAMS ccm;
+    CK_CCM_MESSAGE_PARAMS *ccm_message;
+    CK_SALSA20_CHACHA20_POLY1305_PARAMS chacha_poly;
+    CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS *chacha_poly_message;
+    CK_NSS_AEAD_PARAMS nss_chacha_poly;
+    CK_MECHANISM_TYPE mechanism = context->simulate_mechanism;
+    SECItem sim_params = { 0, NULL, 0 };
+    unsigned char *tag = NULL;
+    unsigned int taglen;
+    PRBool encrypt;
+
+    *outlen = 0;
+    /* figure out if we are encrypting or decrypting, as tags are
+     * handled differently in both */
+    switch (context->operation) {
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            encrypt = PR_TRUE;
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            encrypt = PR_FALSE;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+    }
+
+    switch (mechanism) {
+        case CKM_CHACHA20_POLY1305:
+        case CKM_SALSA20_POLY1305:
+            if (paramslen != sizeof(CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            chacha_poly_message =
+                (CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS *)params;
+            chacha_poly.pNonce = chacha_poly_message->pNonce;
+            chacha_poly.ulNonceLen = chacha_poly_message->ulNonceLen;
+            chacha_poly.pAAD = (CK_BYTE_PTR)aad;
+            chacha_poly.ulAADLen = aadlen;
+            tag = chacha_poly_message->pTag;
+            taglen = 16;
+            sim_params.data = (unsigned char *)&chacha_poly;
+            sim_params.len = sizeof(chacha_poly);
+            /* SALSA20_POLY1305 and CHACHA20_POLY1305 do not generate the iv
+         * internally, don't simulate it either */
+            break;
+        case CKM_NSS_CHACHA20_POLY1305:
+            if (paramslen != sizeof(CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            chacha_poly_message =
+                (CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS *)params;
+            tag = chacha_poly_message->pTag;
+            taglen = 16;
+            nss_chacha_poly.pNonce = chacha_poly_message->pNonce;
+            nss_chacha_poly.ulNonceLen = chacha_poly_message->ulNonceLen;
+            nss_chacha_poly.pAAD = (CK_BYTE_PTR)aad;
+            nss_chacha_poly.ulAADLen = aadlen;
+            nss_chacha_poly.ulTagLen = taglen;
+            sim_params.data = (unsigned char *)&nss_chacha_poly;
+            sim_params.len = sizeof(nss_chacha_poly);
+            /* CKM_NSS_CHACHA20_POLY1305 does not generate the iv
+             * internally, don't simulate it either */
+            break;
+        case CKM_AES_CCM:
+            if (paramslen != sizeof(CK_CCM_MESSAGE_PARAMS)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            ccm_message = (CK_CCM_MESSAGE_PARAMS *)params;
+            ccm.ulDataLen = ccm_message->ulDataLen;
+            ccm.pNonce = ccm_message->pNonce;
+            ccm.ulNonceLen = ccm_message->ulNonceLen;
+            ccm.pAAD = (CK_BYTE_PTR)aad;
+            ccm.ulAADLen = aadlen;
+            ccm.ulMACLen = ccm_message->ulMACLen;
+            tag = ccm_message->pMAC;
+            taglen = ccm_message->ulMACLen;
+            sim_params.data = (unsigned char *)&ccm;
+            sim_params.len = sizeof(ccm);
+            if (encrypt) {
+                /* simulate generating the IV */
+                rv = pk11_GenerateIV(context, ccm_message->nonceGenerator,
+                                     ccm_message->ulNonceFixedBits,
+                                     ccm_message->pNonce,
+                                     ccm_message->ulNonceLen);
+                if (rv != SECSuccess) {
+                    return rv;
+                }
+            }
+            break;
+        case CKM_AES_GCM:
+            if (paramslen != sizeof(CK_GCM_MESSAGE_PARAMS)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            gcm_message = (CK_GCM_MESSAGE_PARAMS *)params;
+            gcm.pIv = gcm_message->pIv;
+            gcm.ulIvLen = gcm_message->ulIvLen;
+            gcm.ulIvBits = gcm.ulIvLen * PR_BITS_PER_BYTE;
+            gcm.pAAD = (CK_BYTE_PTR)aad;
+            gcm.ulAADLen = aadlen;
+            gcm.ulTagBits = gcm_message->ulTagBits;
+            tag = gcm_message->pTag;
+            taglen = (gcm_message->ulTagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
+            sim_params.data = (unsigned char *)&gcm;
+            sim_params.len = sizeof(gcm);
+            if (encrypt) {
+                /* simulate generating the IV */
+                rv = pk11_GenerateIV(context, gcm_message->ivGenerator,
+                                     gcm_message->ulIvFixedBits,
+                                     gcm_message->pIv, gcm_message->ulIvLen);
+                if (rv != SECSuccess) {
+                    return rv;
+                }
+            }
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return SECFailure;
+    }
+    /* now handle the tag. The message interface separates the tag from
+     * the data, while the single shot gets and puts the tag at the end of
+     * the encrypted data. */
+    if (!encrypt) {
+        /* In the decrypt case, if the tag is already at the end of the
+         * input buffer we are golden, otherwise we'll need a new input
+         * buffer and copy the tag at the end of it */
+        if (tag != in + inlen) {
+            allocOut = PORT_Alloc(inlen + taglen);
+            if (allocOut == NULL) {
+                return SECFailure;
+            }
+            PORT_Memcpy(allocOut, in, inlen);
+            PORT_Memcpy(allocOut + inlen, tag, taglen);
+            in = allocOut;
+        }
+        inlen = inlen + taglen;
+    } else {
+        /* if we end up allocating, we don't want to overrun this buffer,
+         * so we fail early here */
+        if (maxout < inlen) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        /* in the encrypt case, we are fine if maxout is big enough to hold
+         * the tag. We'll copy the tag after the operation */
+        if (maxout < inlen + taglen) {
+            allocOut = PORT_Alloc(inlen + taglen);
+            out = allocOut;
+            length = maxout = inlen + taglen;
+        }
+    }
+    /* now do the operation */
+    if (encrypt) {
+        rv = PK11_Encrypt(context->key, mechanism, &sim_params, out, &length,
+                          maxout, in, inlen);
+    } else {
+        rv = PK11_Decrypt(context->key, mechanism, &sim_params, out, &length,
+                          maxout, in, inlen);
+    }
+    if (rv != SECSuccess) {
+        /* If the mechanism was CKM_AES_GCM, the module may have been
+         * following the same error as old versions of NSS. Retry with
+         * the CK_NSS_GCM_PARAMS */
+        if ((mechanism == CKM_AES_GCM) &&
+            (PORT_GetError() == SEC_ERROR_BAD_DATA)) {
+            CK_NSS_GCM_PARAMS gcm_nss;
+            gcm_message = (CK_GCM_MESSAGE_PARAMS *)params;
+            gcm_nss.pIv = gcm_message->pIv;
+            gcm_nss.ulIvLen = gcm_message->ulIvLen;
+            gcm_nss.pAAD = (CK_BYTE_PTR)aad;
+            gcm_nss.ulAADLen = aadlen;
+            gcm_nss.ulTagBits = gcm_message->ulTagBits;
+            sim_params.data = (unsigned char *)&gcm_nss;
+            sim_params.len = sizeof(gcm_nss);
+            if (encrypt) {
+                rv = PK11_Encrypt(context->key, mechanism, &sim_params, out,
+                                  &length, maxout, in, inlen);
+            } else {
+                rv = PK11_Decrypt(context->key, mechanism, &sim_params, out,
+                                  &length, maxout, in, inlen);
+            }
+            if (rv != SECSuccess) {
+                goto fail;
+            }
+        } else {
+            goto fail;
+        }
+    }
+
+    /* on encrypt, separate the output buffer from the tag */
+    if (encrypt) {
+        if ((length < taglen) || (length > inlen + taglen)) {
+            /* PKCS #11 module should not return a length smaller than
+             * taglen, or bigger than inlen+taglen */
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            rv = SECFailure;
+            goto fail;
+        }
+        length = length - taglen;
+        if (allocOut) {
+            /*
+             * If we used a temporary buffer, copy it out to the original
+             * buffer.
+             */
+            PORT_Memcpy(saveOut, allocOut, length);
+        }
+        /* if the tag isn't in the right place, copy it out */
+        if (tag != out + length) {
+            PORT_Memcpy(tag, out + length, taglen);
+        }
+    }
+    *outlen = length;
+    rv = SECSuccess;
+fail:
+    if (allocOut) {
+        PORT_Free(allocOut);
+    }
+    return rv;
+}
+
+/*
+ * Do an AEAD operation. This function optionally returns
+ * and IV on Encrypt for all mechanism. NSS knows which mechanisms
+ * generate IV's in the token and which don't. This allows the
+ * applications to make a single call without special handling for
+ * each AEAD mechanism (the special handling is all contained here.
+ */
+SECStatus
+PK11_AEADOp(PK11Context *context, CK_GENERATOR_FUNCTION ivgen,
+            int fixedbits, unsigned char *iv, int ivlen,
+            const unsigned char *aad, int aadlen,
+            unsigned char *out, int *outlen,
+            int maxout, unsigned char *tag, int taglen,
+            const unsigned char *in, int inlen)
+{
+    CK_GCM_MESSAGE_PARAMS gcm_message;
+    CK_CCM_MESSAGE_PARAMS ccm_message;
+    CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS chacha_poly_message;
+    void *params;
+    int paramslen;
+    SECStatus rv;
+
+    switch (context->simulate_mechanism) {
+        case CKM_CHACHA20_POLY1305:
+        case CKM_SALSA20_POLY1305:
+        case CKM_NSS_CHACHA20_POLY1305:
+            chacha_poly_message.pNonce = iv;
+            chacha_poly_message.ulNonceLen = ivlen;
+            chacha_poly_message.pTag = tag;
+            params = &chacha_poly_message;
+            paramslen = sizeof(CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS);
+            /* SALSA20_POLY1305 and CHACHA20_POLY1305 do not generate the iv
+         * internally, Do it here. */
+            if (context->operation == (CKA_NSS_MESSAGE | CKA_ENCRYPT)) {
+                /* simulate generating the IV */
+                rv = pk11_GenerateIV(context, ivgen, fixedbits, iv, ivlen);
+                if (rv != SECSuccess) {
+                    return rv;
+                }
+            }
+            break;
+        case CKM_AES_GCM:
+            gcm_message.pIv = iv;
+            gcm_message.ulIvLen = ivlen;
+            gcm_message.ivGenerator = ivgen;
+            gcm_message.ulIvFixedBits = fixedbits;
+            gcm_message.pTag = tag;
+            gcm_message.ulTagBits = taglen * 8;
+            params = &gcm_message;
+            paramslen = sizeof(CK_GCM_MESSAGE_PARAMS);
+            /* GCM generates IV internally */
+            break;
+        case CKM_AES_CCM:
+            ccm_message.ulDataLen = inlen;
+            ccm_message.pNonce = iv;
+            ccm_message.ulNonceLen = ivlen;
+            ccm_message.nonceGenerator = ivgen;
+            ccm_message.ulNonceFixedBits = fixedbits;
+            ccm_message.pMAC = tag;
+            ccm_message.ulMACLen = taglen;
+            params = &ccm_message;
+            paramslen = sizeof(CK_GCM_MESSAGE_PARAMS);
+            /* CCM generates IV internally */
+            break;
+
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return SECFailure;
+    }
+    return PK11_AEADRawOp(context, params, paramslen, aad, aadlen, out, outlen,
+                          maxout, in, inlen);
+}
+
+/* Do and AED operation. The application builds the params on it's own
+ * and passes them in. This allows applications direct access to the params
+ * so they can use mechanisms not yet understood by, NSS, or get semantics
+ * not suppied by PK11_AEAD. */
+SECStatus
+PK11_AEADRawOp(PK11Context *context, void *params, int paramslen,
+               const unsigned char *aad, int aadlen,
+               unsigned char *out, int *outlen,
+               int maxout, const unsigned char *in, int inlen)
+{
+    CK_RV crv = CKR_OK;
+    CK_ULONG length = maxout;
+    SECStatus rv = SECSuccess;
+
+    PORT_Assert(outlen != NULL);
+    *outlen = 0;
+    if (((context->operation) & CKA_NSS_MESSAGE_MASK) != CKA_NSS_MESSAGE) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    /*
+     * The PKCS 11 module does not support the message interface, fall
+     * back to using single shot operation */
+    if (context->simulate_message) {
+        return pk11_AEADSimulateOp(context, params, paramslen, aad, aadlen,
+                                   out, outlen, maxout, in, inlen);
+    }
+
+    /* if we ran out of session, we need to restore our previously stored
+     * state.
+     */
+    PK11_EnterContextMonitor(context);
+    if (!context->ownSession) {
+        rv = pk11_restoreContext(context, context->savedData,
+                                 context->savedLength);
+        if (rv != SECSuccess) {
+            PK11_ExitContextMonitor(context);
+            return rv;
+        }
+    }
+
+    switch (context->operation) {
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            length = maxout;
+            crv = PK11_GETTAB(context->slot)->C_EncryptMessage(context->session, params, paramslen, (CK_BYTE_PTR)aad, aadlen, (CK_BYTE_PTR)in, inlen, out, &length);
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            length = maxout;
+            crv = PK11_GETTAB(context->slot)->C_DecryptMessage(context->session, params, paramslen, (CK_BYTE_PTR)aad, aadlen, (CK_BYTE_PTR)in, inlen, out, &length);
+            break;
+        case CKA_NSS_MESSAGE | CKA_SIGN:
+            length = maxout;
+            crv = PK11_GETTAB(context->slot)->C_SignMessage(context->session, params, paramslen, (CK_BYTE_PTR)in, inlen, out, &length);
+            break;
+        case CKA_NSS_MESSAGE | CKA_VERIFY:
+            length = maxout; /* sig length */
+            crv = PK11_GETTAB(context->slot)->C_VerifyMessage(context->session, params, paramslen, (CK_BYTE_PTR)in, inlen, out /* sig */, length);
+            break;
+        default:
+            crv = CKR_OPERATION_NOT_INITIALIZED;
+            break;
+    }
+
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        rv = SECFailure;
+    } else {
+        *outlen = length;
+    }
+
+    /*
+     * handle session starvation case.. use our last session to multiplex
+     */
+    if (!context->ownSession) {
+        context->savedData = pk11_saveContext(context, context->savedData,
+                                              &context->savedLength);
+        if (context->savedData == NULL)
+            rv = SECFailure;
+
+        /* clear out out session for others to use */
+        pk11_Finalize(context);
+    }
+    PK11_ExitContextMonitor(context);
+    return rv;
+}
+
+/*
  * execute a digest/signature operation
  */
 SECStatus
@@ -923,6 +1575,18 @@ finalize:
         case CKA_DIGEST:
             crv = PK11_GETTAB(context->slot)->C_DigestFinal(context->session, buffer, &count);
             break;
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            crv = PK11_GETTAB(context->slot)->C_MessageEncryptFinal(context->session);
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            crv = PK11_GETTAB(context->slot)->C_MessageDecryptFinal(context->session);
+            break;
+        case CKA_NSS_MESSAGE | CKA_SIGN:
+            crv = PK11_GETTAB(context->slot)->C_MessageSignFinal(context->session);
+            break;
+        case CKA_NSS_MESSAGE | CKA_VERIFY:
+            crv = PK11_GETTAB(context->slot)->C_MessageVerifyFinal(context->session);
+            break;
         default:
             crv = CKR_OPERATION_NOT_INITIALIZED;
             break;
@@ -938,6 +1602,11 @@ finalize:
         }
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
+    }
+
+    /* Message interface does not need to allocate a final buffer */
+    if (((context->operation) & CKA_NSS_MESSAGE_MASK) == CKA_NSS_MESSAGE) {
+        return SECSuccess;
     }
 
     /* try to finalize the session with a buffer */
@@ -971,6 +1640,13 @@ PK11_DigestFinal(PK11Context *context, unsigned char *data,
     CK_ULONG len;
     CK_RV crv;
     SECStatus rv;
+
+    /* message interface returns no data on Final, Should not use DigestFinal
+     * in this case */
+    if (((context->operation) & CKA_NSS_MESSAGE_MASK) == CKA_NSS_MESSAGE) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     /* if we ran out of session, we need to restore our previously stored
      * state.

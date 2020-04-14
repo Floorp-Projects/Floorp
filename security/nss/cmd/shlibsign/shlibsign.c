@@ -483,8 +483,8 @@ static const tuple_str errStrings[] = {
     { CKR_MUTEX_NOT_LOCKED, "CKR_MUTEX_NOT_LOCKED                " },
     { CKR_FUNCTION_REJECTED, "CKR_FUNCTION_REJECTED               " },
     { CKR_VENDOR_DEFINED, "CKR_VENDOR_DEFINED                  " },
-    { 0xCE534351, "CKR_NETSCAPE_CERTDB_FAILED          " },
-    { 0xCE534352, "CKR_NETSCAPE_KEYDB_FAILED           " }
+    { 0xCE534351, "CKR_NSS_CERTDB_FAILED          " },
+    { 0xCE534352, "CKR_NSS_KEYDB_FAILED           " }
 
 };
 

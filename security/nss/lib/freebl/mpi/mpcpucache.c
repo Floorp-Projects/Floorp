@@ -39,7 +39,8 @@ freebl_cpuid(unsigned long op, unsigned long *eax,
              unsigned long *ebx, unsigned long *ecx,
              unsigned long *edx)
 {
-    __asm__("cpuid\n\t"
+    __asm__("xor %%ecx, %%ecx\n\t"
+            "cpuid\n\t"
             : "=a"(*eax),
               "=b"(*ebx),
               "=c"(*ecx),

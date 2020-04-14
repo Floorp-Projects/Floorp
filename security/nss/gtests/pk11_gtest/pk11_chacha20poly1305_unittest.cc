@@ -7,6 +7,7 @@
 #include <memory>
 #include "nss.h"
 #include "pk11pub.h"
+#include "pk11priv.h"
 #include "sechash.h"
 #include "secerr.h"
 
@@ -186,6 +187,168 @@ class Pkcs11ChaCha20Poly1305Test
                    testvector.ciphertext.data(), testvector.ciphertext.size());
   }
 
+  void MessageInterfaceTest(CK_MECHANISM_TYPE mech, int iterations,
+                            PRBool separateTag) {
+    // Generate a random key.
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    ASSERT_NE(nullptr, slot);
+    ScopedPK11SymKey sym_key(
+        PK11_KeyGen(slot.get(), mech, nullptr, 32, nullptr));
+    ASSERT_NE(nullptr, sym_key);
+
+    int tagSize = 16;
+    int cipher_simulated_size;
+    int output_len_message = 0;
+    int output_len_simulated = 0;
+    unsigned int output_len_v24 = 0;
+
+    std::vector<uint8_t> plainIn(17);
+    std::vector<uint8_t> plainOut_message(17);
+    std::vector<uint8_t> plainOut_simulated(17);
+    std::vector<uint8_t> plainOut_v24(17);
+    std::vector<uint8_t> nonce(12);
+    std::vector<uint8_t> cipher_message(33);
+    std::vector<uint8_t> cipher_simulated(33);
+    std::vector<uint8_t> cipher_v24(33);
+    std::vector<uint8_t> aad(16);
+    std::vector<uint8_t> tag_message(16);
+    std::vector<uint8_t> tag_simulated(16);
+
+    // Prepare AEAD v2.40 params.
+    CK_SALSA20_CHACHA20_POLY1305_PARAMS chacha_params;
+    chacha_params.pNonce = nonce.data();
+    chacha_params.ulNonceLen = nonce.size();
+    chacha_params.pAAD = aad.data();
+    chacha_params.ulAADLen = aad.size();
+
+    // Prepare AEAD MESSAGE params.
+    CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS chacha_message_params;
+    chacha_message_params.pNonce = nonce.data();
+    chacha_message_params.ulNonceLen = nonce.size();
+    if (separateTag) {
+      chacha_message_params.pTag = tag_message.data();
+    } else {
+      chacha_message_params.pTag = cipher_message.data() + plainIn.size();
+    }
+
+    // Prepare AEAD MESSAGE params for simulated case
+    CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS chacha_simulated_params;
+    chacha_simulated_params = chacha_message_params;
+    if (separateTag) {
+      // The simulated case, we have to allocate temp bufs for separate
+      // tags, make sure that works in both the encrypt and the decrypt
+      // cases.
+      chacha_simulated_params.pTag = tag_simulated.data();
+      cipher_simulated_size = cipher_simulated.size() - tagSize;
+    } else {
+      chacha_simulated_params.pTag = cipher_simulated.data() + plainIn.size();
+      cipher_simulated_size = cipher_simulated.size();
+    }
+    SECItem params = {siBuffer,
+                      reinterpret_cast<unsigned char*>(&chacha_params),
+                      sizeof(chacha_params)};
+    SECItem empty = {siBuffer, NULL, 0};
+
+    // initialize our plain text, IV and aad.
+    ASSERT_EQ(PK11_GenerateRandom(plainIn.data(), plainIn.size()), SECSuccess);
+    ASSERT_EQ(PK11_GenerateRandom(aad.data(), aad.size()), SECSuccess);
+
+    // Initialize message encrypt context
+    ScopedPK11Context encrypt_message_context(PK11_CreateContextBySymKey(
+        mech, CKA_NSS_MESSAGE | CKA_ENCRYPT, sym_key.get(), &empty));
+    ASSERT_NE(nullptr, encrypt_message_context);
+    ASSERT_FALSE(_PK11_ContextGetAEADSimulation(encrypt_message_context.get()));
+
+    // Initialize simulated encrypt context
+    ScopedPK11Context encrypt_simulated_context(PK11_CreateContextBySymKey(
+        mech, CKA_NSS_MESSAGE | CKA_ENCRYPT, sym_key.get(), &empty));
+    ASSERT_NE(nullptr, encrypt_simulated_context);
+    ASSERT_EQ(SECSuccess,
+              _PK11_ContextSetAEADSimulation(encrypt_simulated_context.get()));
+
+    // Initialize message decrypt context
+    ScopedPK11Context decrypt_message_context(PK11_CreateContextBySymKey(
+        mech, CKA_NSS_MESSAGE | CKA_DECRYPT, sym_key.get(), &empty));
+    ASSERT_NE(nullptr, decrypt_message_context);
+    ASSERT_FALSE(_PK11_ContextGetAEADSimulation(decrypt_message_context.get()));
+
+    // Initialize simulated decrypt context
+    ScopedPK11Context decrypt_simulated_context(PK11_CreateContextBySymKey(
+        mech, CKA_NSS_MESSAGE | CKA_DECRYPT, sym_key.get(), &empty));
+    ASSERT_NE(nullptr, decrypt_simulated_context);
+    EXPECT_EQ(SECSuccess,
+              _PK11_ContextSetAEADSimulation(decrypt_simulated_context.get()));
+
+    // Now walk down our iterations. Each method of calculating the operation
+    // should agree at each step.
+    for (int i = 0; i < iterations; i++) {
+      // get a unique nonce for each iteration
+      EXPECT_EQ(PK11_GenerateRandom(nonce.data(), nonce.size()), SECSuccess);
+      EXPECT_EQ(SECSuccess,
+                PK11_AEADRawOp(
+                    encrypt_message_context.get(), &chacha_message_params,
+                    sizeof(chacha_message_params), aad.data(), aad.size(),
+                    cipher_message.data(), &output_len_message,
+                    cipher_message.size(), plainIn.data(), plainIn.size()));
+      EXPECT_EQ(SECSuccess,
+                PK11_AEADRawOp(
+                    encrypt_simulated_context.get(), &chacha_simulated_params,
+                    sizeof(chacha_simulated_params), aad.data(), aad.size(),
+                    cipher_simulated.data(), &output_len_simulated,
+                    cipher_simulated_size, plainIn.data(), plainIn.size()));
+      // make sure simulated and message is the same
+      EXPECT_EQ(output_len_message, output_len_simulated);
+      EXPECT_EQ(0, memcmp(cipher_message.data(), cipher_simulated.data(),
+                          output_len_message));
+      EXPECT_EQ(0, memcmp(chacha_message_params.pTag,
+                          chacha_simulated_params.pTag, tagSize));
+      // make sure v2.40 is the same.
+      EXPECT_EQ(SECSuccess,
+                PK11_Encrypt(sym_key.get(), mech, &params, cipher_v24.data(),
+                             &output_len_v24, cipher_v24.size(), plainIn.data(),
+                             plainIn.size()));
+      EXPECT_EQ(output_len_message, (int)output_len_v24 - tagSize);
+      EXPECT_EQ(0, memcmp(cipher_message.data(), cipher_v24.data(),
+                          output_len_message));
+      EXPECT_EQ(0, memcmp(chacha_message_params.pTag,
+                          cipher_v24.data() + output_len_message, tagSize));
+      // now make sure we can decrypt
+      EXPECT_EQ(
+          SECSuccess,
+          PK11_AEADRawOp(decrypt_message_context.get(), &chacha_message_params,
+                         sizeof(chacha_message_params), aad.data(), aad.size(),
+                         plainOut_message.data(), &output_len_message,
+                         plainOut_message.size(), cipher_message.data(),
+                         output_len_message));
+      EXPECT_EQ(output_len_message, (int)plainIn.size());
+      EXPECT_EQ(
+          0, memcmp(plainOut_message.data(), plainIn.data(), plainIn.size()));
+      EXPECT_EQ(SECSuccess,
+                PK11_AEADRawOp(decrypt_simulated_context.get(),
+                               &chacha_simulated_params,
+                               sizeof(chacha_simulated_params), aad.data(),
+                               aad.size(), plainOut_simulated.data(),
+                               &output_len_simulated, plainOut_simulated.size(),
+                               cipher_message.data(), output_len_simulated));
+      EXPECT_EQ(output_len_simulated, (int)plainIn.size());
+      EXPECT_EQ(
+          0, memcmp(plainOut_simulated.data(), plainIn.data(), plainIn.size()));
+      if (separateTag) {
+        // in the separateTag case, we need to copy the tag back to the
+        // end of the cipher_message.data() before using the v2.4 interface
+        memcpy(cipher_message.data() + output_len_message,
+               chacha_message_params.pTag, tagSize);
+      }
+      EXPECT_EQ(SECSuccess,
+                PK11_Decrypt(sym_key.get(), mech, &params, plainOut_v24.data(),
+                             &output_len_v24, plainOut_v24.size(),
+                             cipher_message.data(), output_len_v24));
+      EXPECT_EQ(output_len_v24, plainIn.size());
+      EXPECT_EQ(0, memcmp(plainOut_v24.data(), plainIn.data(), plainIn.size()));
+    }
+    return;
+  }
+
  protected:
 };
 
@@ -304,5 +467,18 @@ INSTANTIATE_TEST_CASE_P(NSSTestVector, Pkcs11ChaCha20Poly1305Test,
 
 INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11ChaCha20Poly1305Test,
                         ::testing::ValuesIn(kChaCha20WycheproofVectors));
+
+// basic message interface it's the most common configuration
+TEST_F(Pkcs11ChaCha20Poly1305Test, ChaCha201305MessageInterfaceBasic) {
+  MessageInterfaceTest(CKM_CHACHA20_POLY1305, 16, PR_FALSE);
+}
+
+// basic interface, but return the tags in a separate buffer. This triggers
+// different behaviour in the simulated case, which has to buffer the
+// intermediate values in a separate buffer.
+TEST_F(Pkcs11ChaCha20Poly1305Test,
+       ChaCha20Poly1305MessageInterfaceSeparateTags) {
+  MessageInterfaceTest(CKM_CHACHA20_POLY1305, 16, PR_TRUE);
+}
 
 }  // namespace nss_test

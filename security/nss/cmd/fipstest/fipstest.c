@@ -1027,7 +1027,7 @@ aes_gcm(char *reqfn, int encrypt)
     unsigned int tagbits;
     unsigned int taglen = 0;
     unsigned int ivlen;
-    CK_GCM_PARAMS params;
+    CK_NSS_GCM_PARAMS params;
     SECStatus rv;
 
     aesreq = fopen(reqfn, "r");

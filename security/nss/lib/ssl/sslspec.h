@@ -105,16 +105,16 @@ typedef SECStatus (*SSLCipher)(void *context,
                                unsigned int maxout,
                                const unsigned char *in,
                                unsigned int inlen);
-typedef SECStatus (*SSLAEADCipher)(
-    const ssl3KeyMaterial *keys,
-    PRBool doDecrypt,
-    unsigned char *out,
-    unsigned int *outlen,
-    unsigned int maxout,
-    const unsigned char *in,
-    unsigned int inlen,
-    const unsigned char *additionalData,
-    unsigned int additionalDataLen);
+typedef SECStatus (*SSLAEADCipher)(PK11Context *context,
+                                   CK_GENERATOR_FUNCTION ivGen,
+                                   unsigned int fixedbits,
+                                   unsigned char *iv, unsigned int ivlen,
+                                   const unsigned char *aad,
+                                   unsigned int aadlen,
+                                   unsigned char *out, unsigned int *outlen,
+                                   unsigned int maxout, unsigned char *tag,
+                                   unsigned int taglen,
+                                   const unsigned char *in, unsigned int inlen);
 
 /* The DTLS anti-replay window in number of packets. Defined here because we
  * need it in the cipher spec. Note that this is a ring buffer but left and
@@ -149,7 +149,6 @@ struct ssl3CipherSpecStr {
     const ssl3MACDef *macDef;
 
     SSLCipher cipher;
-    SSLAEADCipher aead;
     void *cipherContext;
 
     PK11SymKey *masterSecret;

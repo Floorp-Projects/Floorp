@@ -327,9 +327,14 @@ static const struct FREEBLVectorStr vector =
       CMAC_Begin,
       CMAC_Update,
       CMAC_Finish,
-      CMAC_Destroy
+      CMAC_Destroy,
 
       /* End of version 3.022 */
+      ChaCha20Poly1305_Encrypt,
+      ChaCha20Poly1305_Decrypt,
+      AES_AEAD
+
+      /* End of version 3.023 */
     };
 
 const FREEBLVector*

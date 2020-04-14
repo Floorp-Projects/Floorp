@@ -40,6 +40,20 @@ SECStatus intel_AES_GCM_DecryptUpdate(intel_AES_GCMContext *gcm, unsigned char *
                                       unsigned int *outlen, unsigned int maxout,
                                       const unsigned char *inbuf, unsigned int inlen,
                                       unsigned int blocksize);
+SECStatus intel_AES_GCM_EncryptAEAD(intel_AES_GCMContext *gcm,
+                                    unsigned char *outbuf,
+                                    unsigned int *outlen, unsigned int maxout,
+                                    const unsigned char *inbuf, unsigned int inlen,
+                                    void *params, unsigned int paramLen,
+                                    const unsigned char *aad, unsigned int aadLen,
+                                    unsigned int blocksize);
+SECStatus intel_AES_GCM_DecryptAEAD(intel_AES_GCMContext *gcm,
+                                    unsigned char *outbuf,
+                                    unsigned int *outlen, unsigned int maxout,
+                                    const unsigned char *inbuf, unsigned int inlen,
+                                    void *params, unsigned int paramLen,
+                                    const unsigned char *aad, unsigned int aadLen,
+                                    unsigned int blocksize);
 
 /* Prototypes of functions in the assembler file for fast AES-GCM, using
    Intel AES-NI and CLMUL-NI, as described in [1]

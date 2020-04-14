@@ -392,7 +392,7 @@ static const SSLCipher2Mech alg2Mech[] = {
     { ssl_calg_camellia, CKM_CAMELLIA_CBC },
     { ssl_calg_seed, CKM_SEED_CBC },
     { ssl_calg_aes_gcm, CKM_AES_GCM },
-    { ssl_calg_chacha20, CKM_NSS_CHACHA20_POLY1305 },
+    { ssl_calg_chacha20, CKM_CHACHA20_POLY1305 },
 };
 
 const PRUint8 tls12_downgrade_random[] = { 0x44, 0x4F, 0x57, 0x4E,
@@ -1740,117 +1740,6 @@ ssl3_BuildRecordPseudoHeader(DTLSEpoch epoch,
     return SECSuccess;
 }
 
-static SECStatus
-ssl3_AESGCM(const ssl3KeyMaterial *keys,
-            PRBool doDecrypt,
-            unsigned char *out,
-            unsigned int *outlen,
-            unsigned int maxout,
-            const unsigned char *in,
-            unsigned int inlen,
-            const unsigned char *additionalData,
-            unsigned int additionalDataLen)
-{
-    SECItem param;
-    SECStatus rv = SECFailure;
-    unsigned char nonce[12];
-    unsigned int uOutLen;
-    CK_GCM_PARAMS gcmParams;
-
-    const int tagSize = 16;
-    const int explicitNonceLen = 8;
-
-    /* See https://tools.ietf.org/html/rfc5288#section-3 for details of how the
-     * nonce is formed. */
-    memcpy(nonce, keys->iv, 4);
-    if (doDecrypt) {
-        memcpy(nonce + 4, in, explicitNonceLen);
-        in += explicitNonceLen;
-        inlen -= explicitNonceLen;
-        *outlen = 0;
-    } else {
-        if (maxout < explicitNonceLen) {
-            PORT_SetError(SEC_ERROR_INPUT_LEN);
-            return SECFailure;
-        }
-        /* Use the 64-bit sequence number as the explicit nonce. */
-        memcpy(nonce + 4, additionalData, explicitNonceLen);
-        memcpy(out, additionalData, explicitNonceLen);
-        out += explicitNonceLen;
-        maxout -= explicitNonceLen;
-        *outlen = explicitNonceLen;
-    }
-
-    param.type = siBuffer;
-    param.data = (unsigned char *)&gcmParams;
-    param.len = sizeof(gcmParams);
-    gcmParams.pIv = nonce;
-    gcmParams.ulIvLen = sizeof(nonce);
-    gcmParams.pAAD = (unsigned char *)additionalData; /* const cast */
-    gcmParams.ulAADLen = additionalDataLen;
-    gcmParams.ulTagBits = tagSize * 8;
-
-    if (doDecrypt) {
-        rv = PK11_Decrypt(keys->key, CKM_AES_GCM, &param, out, &uOutLen,
-                          maxout, in, inlen);
-    } else {
-        rv = PK11_Encrypt(keys->key, CKM_AES_GCM, &param, out, &uOutLen,
-                          maxout, in, inlen);
-    }
-    *outlen += (int)uOutLen;
-
-    return rv;
-}
-
-static SECStatus
-ssl3_ChaCha20Poly1305(const ssl3KeyMaterial *keys, PRBool doDecrypt,
-                      unsigned char *out, unsigned int *outlen, unsigned int maxout,
-                      const unsigned char *in, unsigned int inlen,
-                      const unsigned char *additionalData,
-                      unsigned int additionalDataLen)
-{
-    size_t i;
-    SECItem param;
-    SECStatus rv = SECFailure;
-    unsigned int uOutLen;
-    unsigned char nonce[12];
-    CK_NSS_AEAD_PARAMS aeadParams;
-
-    const int tagSize = 16;
-
-    /* See
-     * https://tools.ietf.org/html/draft-ietf-tls-chacha20-poly1305-04#section-2
-     * for details of how the nonce is formed. */
-    PORT_Memcpy(nonce, keys->iv, 12);
-
-    /* XOR the last 8 bytes of the IV with the sequence number. */
-    PORT_Assert(additionalDataLen >= 8);
-    for (i = 0; i < 8; ++i) {
-        nonce[4 + i] ^= additionalData[i];
-    }
-
-    param.type = siBuffer;
-    param.len = sizeof(aeadParams);
-    param.data = (unsigned char *)&aeadParams;
-    memset(&aeadParams, 0, sizeof(aeadParams));
-    aeadParams.pNonce = nonce;
-    aeadParams.ulNonceLen = sizeof(nonce);
-    aeadParams.pAAD = (unsigned char *)additionalData;
-    aeadParams.ulAADLen = additionalDataLen;
-    aeadParams.ulTagLen = tagSize;
-
-    if (doDecrypt) {
-        rv = PK11_Decrypt(keys->key, CKM_NSS_CHACHA20_POLY1305, &param,
-                          out, &uOutLen, maxout, in, inlen);
-    } else {
-        rv = PK11_Encrypt(keys->key, CKM_NSS_CHACHA20_POLY1305, &param,
-                          out, &uOutLen, maxout, in, inlen);
-    }
-    *outlen = (int)uOutLen;
-
-    return rv;
-}
-
 /* Initialize encryption and MAC contexts for pending spec.
  * Master Secret already is derived.
  * Caller holds Spec write lock.
@@ -1868,40 +1757,26 @@ ssl3_InitPendingContexts(sslSocket *ss, ssl3CipherSpec *spec)
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSpecWriteLock(ss));
 
-    macLength = spec->macDef->mac_size;
     calg = spec->cipherDef->calg;
     PORT_Assert(alg2Mech[calg].calg == calg);
 
-    if (spec->cipherDef->type == type_aead) {
-        spec->cipher = NULL;
-        spec->cipherContext = NULL;
-        switch (calg) {
-            case ssl_calg_aes_gcm:
-                spec->aead = ssl3_AESGCM;
-                break;
-            case ssl_calg_chacha20:
-                spec->aead = ssl3_ChaCha20Poly1305;
-                break;
-            default:
-                PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-                return SECFailure;
+    if (spec->cipherDef->type != type_aead) {
+        macLength = spec->macDef->mac_size;
+
+        /*
+        ** Now setup the MAC contexts,
+        **   crypto contexts are setup below.
+        */
+        macParam.data = (unsigned char *)&macLength;
+        macParam.len = sizeof(macLength);
+        macParam.type = siBuffer;
+
+        spec->keyMaterial.macContext = PK11_CreateContextBySymKey(
+            spec->macDef->mmech, CKA_SIGN, spec->keyMaterial.macKey, &macParam);
+        if (!spec->keyMaterial.macContext) {
+            ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_CONTEXT_FAILURE);
+            return SECFailure;
         }
-        return SECSuccess;
-    }
-
-    /*
-    ** Now setup the MAC contexts,
-    **   crypto contexts are setup below.
-    */
-    macParam.data = (unsigned char *)&macLength;
-    macParam.len = sizeof(macLength);
-    macParam.type = siBuffer;
-
-    spec->keyMaterial.macContext = PK11_CreateContextBySymKey(
-        spec->macDef->mmech, CKA_SIGN, spec->keyMaterial.macKey, &macParam);
-    if (!spec->keyMaterial.macContext) {
-        ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_CONTEXT_FAILURE);
-        return SECFailure;
     }
 
     /*
@@ -1912,15 +1787,21 @@ ssl3_InitPendingContexts(sslSocket *ss, ssl3CipherSpec *spec)
         return SECSuccess;
     }
 
-    spec->cipher = (SSLCipher)PK11_CipherOp;
     encMechanism = ssl3_Alg2Mech(calg);
     encMode = (spec->direction == ssl_secret_write) ? CKA_ENCRYPT : CKA_DECRYPT;
+    if (spec->cipherDef->type == type_aead) {
+        encMode |= CKA_NSS_MESSAGE;
+        iv.data = NULL;
+        iv.len = 0;
+    } else {
+        spec->cipher = (SSLCipher)PK11_CipherOp;
+        iv.data = spec->keyMaterial.iv;
+        iv.len = spec->cipherDef->iv_size;
+    }
 
     /*
      * build the context
      */
-    iv.data = spec->keyMaterial.iv;
-    iv.len = spec->cipherDef->iv_size;
     spec->cipherContext = PK11_CreateContextBySymKey(encMechanism, encMode,
                                                      spec->keyMaterial.key,
                                                      &iv);
@@ -2239,25 +2120,54 @@ ssl3_MACEncryptRecord(ssl3CipherSpec *cwSpec,
         isDTLS, contentLen, &pseudoHeader);
     PORT_Assert(rv == SECSuccess);
     if (cwSpec->cipherDef->type == type_aead) {
-        const int nonceLen = cwSpec->cipherDef->explicit_nonce_size;
-        const int tagLen = cwSpec->cipherDef->tag_size;
+        const unsigned int nonceLen = cwSpec->cipherDef->explicit_nonce_size;
+        const unsigned int tagLen = cwSpec->cipherDef->tag_size;
+        unsigned int ivOffset = 0;
+        CK_GENERATOR_FUNCTION gen;
+        /* ivOut includes the iv and the nonce and is the internal iv/nonce
+         * for the AEAD function. On Encrypt, this is an in/out parameter */
+        unsigned char ivOut[MAX_IV_LENGTH];
+        ivLen = cwSpec->cipherDef->iv_size;
+
+        PORT_Assert((ivLen + nonceLen) <= MAX_IV_LENGTH);
+        PORT_Assert((ivLen + nonceLen) >= sizeof(sslSequenceNumber));
 
         if (nonceLen + contentLen + tagLen > SSL_BUFFER_SPACE(wrBuf)) {
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             return SECFailure;
         }
 
-        rv = cwSpec->aead(
-            &cwSpec->keyMaterial,
-            PR_FALSE,                /* do encrypt */
-            SSL_BUFFER_NEXT(wrBuf),  /* output  */
-            &len,                    /* out len */
-            SSL_BUFFER_SPACE(wrBuf), /* max out */
-            pIn, contentLen,         /* input   */
-            SSL_BUFFER_BASE(&pseudoHeader), SSL_BUFFER_LEN(&pseudoHeader));
+        if (nonceLen == 0) {
+            ivOffset = ivLen - sizeof(sslSequenceNumber);
+            gen = CKG_GENERATE_COUNTER_XOR;
+        } else {
+            ivOffset = ivLen;
+            gen = CKG_GENERATE_COUNTER;
+        }
+        ivOffset = tls13_SetupAeadIv(isDTLS, ivOut, cwSpec->keyMaterial.iv,
+                                     ivOffset, ivLen, cwSpec->epoch);
+        rv = tls13_AEAD(cwSpec->cipherContext,
+                        PR_FALSE,
+                        gen, ivOffset * BPB,                /* iv generator params */
+                        ivOut,                              /* iv in  */
+                        ivOut,                              /* iv out */
+                        ivLen + nonceLen,                   /* full iv length */
+                        NULL, 0,                            /* nonce is generated*/
+                        SSL_BUFFER_BASE(&pseudoHeader),     /* aad */
+                        SSL_BUFFER_LEN(&pseudoHeader),      /* aadlen */
+                        SSL_BUFFER_NEXT(wrBuf) + nonceLen,  /* output  */
+                        &len,                               /* out len */
+                        SSL_BUFFER_SPACE(wrBuf) - nonceLen, /* max out */
+                        tagLen,
+                        pIn, contentLen); /* input   */
         if (rv != SECSuccess) {
             PORT_SetError(SSL_ERROR_ENCRYPTION_FAILURE);
             return SECFailure;
+        }
+        len += nonceLen; /* include the nonce at the beginning */
+        /* copy out the generated iv if we are using explict nonces */
+        if (nonceLen) {
+            PORT_Memcpy(SSL_BUFFER_NEXT(wrBuf), ivOut + ivLen, nonceLen);
         }
 
         rv = sslBuffer_Skip(wrBuf, len, NULL);
@@ -11398,9 +11308,9 @@ ssl3_ComputeTLSFinished(sslSocket *ss, ssl3CipherSpec *spec,
     }
 
     if (spec->version < SSL_LIBRARY_VERSION_TLS_1_2) {
-        tls_mac_params.prfMechanism = CKM_TLS_PRF;
+        tls_mac_params.prfHashMechanism = CKM_TLS_PRF;
     } else {
-        tls_mac_params.prfMechanism = ssl3_GetPrfHashMechanism(ss);
+        tls_mac_params.prfHashMechanism = ssl3_GetPrfHashMechanism(ss);
     }
     tls_mac_params.ulMacLength = 12;
     tls_mac_params.ulServerOrClient = isServer ? 1 : 2;
@@ -12707,21 +12617,50 @@ ssl3_UnprotectRecord(sslSocket *ss,
          * ciphertext by a fixed byte count, but it is not true in general.
          * Each AEAD cipher should provide a function that returns the
          * plaintext length for a given ciphertext. */
-        unsigned int decryptedLen =
-            cText->buf->len - cipher_def->explicit_nonce_size -
-            cipher_def->tag_size;
+        const unsigned int explicitNonceLen = cipher_def->explicit_nonce_size;
+        const unsigned int tagLen = cipher_def->tag_size;
+        unsigned int nonceLen = explicitNonceLen;
+        unsigned int decryptedLen = cText->buf->len - nonceLen - tagLen;
+        /* even though read doesn't return and IV, we still need a space to put
+         * the combined iv/nonce n the gcm 1.2 case*/
+        unsigned char ivOut[MAX_IV_LENGTH];
+        unsigned char *iv = NULL;
+        unsigned char *nonce = NULL;
+
+        ivLen = cipher_def->iv_size;
+
         rv = ssl3_BuildRecordPseudoHeader(
             spec->epoch, cText->seqNum,
             rType, isTLS, rVersion, IS_DTLS(ss), decryptedLen, &header);
         PORT_Assert(rv == SECSuccess);
-        rv = spec->aead(&spec->keyMaterial,
-                        PR_TRUE,          /* do decrypt */
-                        plaintext->buf,   /* out */
-                        &plaintext->len,  /* outlen */
-                        plaintext->space, /* maxout */
-                        cText->buf->buf,  /* in */
-                        cText->buf->len,  /* inlen */
-                        SSL_BUFFER_BASE(&header), SSL_BUFFER_LEN(&header));
+
+        /* build the iv */
+        if (explicitNonceLen == 0) {
+            nonceLen = sizeof(cText->seqNum);
+            iv = spec->keyMaterial.iv;
+            nonce = SSL_BUFFER_BASE(&header);
+        } else {
+            PORT_Memcpy(ivOut, spec->keyMaterial.iv, ivLen);
+            PORT_Memset(ivOut + ivLen, 0, explicitNonceLen);
+            iv = ivOut;
+            nonce = cText->buf->buf;
+            nonceLen = explicitNonceLen;
+        }
+        rv = tls13_AEAD(spec->cipherContext, PR_TRUE,
+                        CKG_NO_GENERATE, 0,       /* iv generator params
+                                                        * (not used in decrypt)*/
+                        iv,                       /* iv in */
+                        NULL,                     /* iv out */
+                        ivLen + explicitNonceLen, /* full iv length */
+                        nonce, nonceLen,          /* nonce in */
+                        SSL_BUFFER_BASE(&header), /* aad */
+                        SSL_BUFFER_LEN(&header),  /* aadlen */
+                        plaintext->buf,           /* output  */
+                        &plaintext->len,          /* out len */
+                        plaintext->space,         /* max out */
+                        tagLen,
+                        cText->buf->buf + explicitNonceLen,  /* input */
+                        cText->buf->len - explicitNonceLen); /* input len */
         if (rv != SECSuccess) {
             good = 0;
         }

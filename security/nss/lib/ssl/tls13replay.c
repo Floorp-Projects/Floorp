@@ -75,26 +75,17 @@ tls13_RefAntiReplayContext(SSLAntiReplayContext *ctx)
 static SECStatus
 tls13_AntiReplayKeyGen(SSLAntiReplayContext *ctx)
 {
-    PRUint8 buf[32];
-    SECItem keyItem = { siBuffer, buf, sizeof(buf) };
     PK11SlotInfo *slot;
-    SECStatus rv;
 
     PORT_Assert(ctx);
 
-    slot = PK11_GetInternalSlot();
+    slot = PK11_GetBestSlot(CKM_HKDF_DERIVE, NULL);
     if (!slot) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-    rv = PK11_GenerateRandomOnSlot(slot, buf, sizeof(buf));
-    if (rv != SECSuccess) {
-        goto loser;
-    }
 
-    ctx->key = PK11_ImportSymKey(slot, CKM_NSS_HKDF_SHA256,
-                                 PK11_OriginUnwrap, CKA_DERIVE,
-                                 &keyItem, NULL);
+    ctx->key = PK11_KeyGen(slot, CKM_HKDF_KEY_GEN, NULL, 32, NULL);
     if (!ctx->key) {
         goto loser;
     }

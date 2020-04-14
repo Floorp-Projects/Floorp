@@ -158,6 +158,117 @@ class ECDH():
 
         return result
 
+class RSA_PKCS1_SIGNATURE():
+    pub_keys = {}
+
+    def format_testcase(self, testcase, key, keysize, hash_oid, out_defs):
+        # To avoid hundreds of copies of the same key, define it once and reuse.
+        key_name = "pub_key_"
+        if key in self.pub_keys:
+            key_name = self.pub_keys[key]
+        else:
+            key_name += str(len(self.pub_keys))
+            self.pub_keys[key] = key_name
+            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(key) + ';\n\n')
+
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n// tcID: {}\n'.format(testcase['tcId'])
+        result += '{{{}, {}, \n'.format(hash_oid, testcase['tcId'])
+        result += '{},\n'.format(string_to_hex_array(testcase['sig']))
+        result += '{},\n'.format(key_name)
+        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
+
+        valid = testcase['result'] == 'valid'
+        if not valid and testcase['result'] == 'acceptable':
+            valid = keysize >= 1024 and ('SmallModulus' in testcase['flags'] or
+                                         'SmallPublicKey' in testcase['flags'])
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
+
+class RSA_PKCS1_DECRYPT():
+    priv_keys = {}
+
+    def format_testcase(self, testcase, priv_key, key_size, out_defs):
+        key_name = "priv_key_"
+        if priv_key in self.priv_keys:
+            key_name = self.priv_keys[priv_key]
+        else:
+            key_name += str(len(self.priv_keys))
+            self.priv_keys[priv_key] = key_name
+            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(priv_key) + ';\n\n')
+
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n// tcID: {}'.format(testcase['tcId'])
+        result += '\n{{{},\n'.format(testcase['tcId'])
+        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
+        result += '{},\n'.format(string_to_hex_array(testcase['ct']))
+        result += '{},\n'.format(key_name)
+        valid = testcase['result'] == 'valid'
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
+class RSA_PSS():
+    pub_keys = {}
+
+    def format_testcase(self, testcase, key, hash_oid, mgf_hash, sLen, out_defs):
+        key_name = "pub_key_"
+        if key in self.pub_keys:
+            key_name = self.pub_keys[key]
+        else:
+            key_name += str(len(self.pub_keys))
+            self.pub_keys[key] = key_name
+            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(key) + ';\n\n')
+
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n// tcID: {}\n'.format(testcase['tcId'])
+        result += '{{{}, {}, {}, {},\n'.format(hash_oid, mgf_hash, testcase['tcId'], sLen)
+        result += '{},\n'.format(string_to_hex_array(testcase['sig']))
+        result += '{},\n'.format(key_name)
+        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
+
+        valid = testcase['result'] == 'valid'
+        if not valid and testcase['result'] == 'acceptable':
+            valid = ('WeakHash' in testcase['flags'])
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
+class RSA_OAEP():
+    priv_keys = {}
+
+    def format_testcase(self, testcase, key, hash_oid, mgf_hash, out_defs):
+        key_name = "priv_key_"
+        if key in self.priv_keys:
+            key_name = self.priv_keys[key]
+        else:
+            key_name += str(len(self.priv_keys))
+            self.priv_keys[key] = key_name
+            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(key) + ';\n\n')
+
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n// tcID: {}\n'.format(testcase['tcId'])
+        result += '{{{}, {}, {},\n'.format(hash_oid, mgf_hash, testcase['tcId'])
+        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
+        result += '{},\n'.format(string_to_hex_array(testcase['ct']))
+        result += '{},\n'.format(string_to_hex_array(testcase['label']))
+        result += '{},\n'.format(key_name)
+
+        valid = testcase['result'] == 'valid'
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
+def getSha(sha):
+    s = sha.split("-")
+    return "SEC_OID_SHA" + s[1]
+
+def getMgfSha(sha):
+    s = sha.split("-")
+    return "CKG_MGF1_SHA" + s[1]
+
 def generate_vectors_file(params):
     """
     Generate and store a .h-file with test vectors for one test.
@@ -183,16 +294,16 @@ def generate_vectors_file(params):
 
     for include in standard_params['includes']:
         header += "#include " + include + "\n"
-    
+
     header += "\n"
 
     if 'includes' in params:
         for include in params['includes']:
             header += "#include " + include + "\n"
-
         header += "\n"
 
-    vectors_file = header + base_vectors + params['array_init']
+    shared_defs = []
+    vectors_file = base_vectors + params['array_init']
 
     for group in cases['testGroups']:
         for test in group['tests']:
@@ -200,6 +311,15 @@ def generate_vectors_file(params):
                 if 'curve' in group['key'] and group['key']['curve'] not in ['secp256r1', 'secp384r1', 'secp521r1']:
                     continue
                 vectors_file += params['formatter'].format_testcase(test, group['keyDer'], getSha(group['sha']), group['key']['keySize'])
+            elif 'type' in group and group['type'] == 'RsassaPssVerify':
+                sLen = group['sLen'] if 'sLen' in group else 0
+                vectors_file += params['formatter'].format_testcase(test, group['keyDer'], getSha(group['sha']), getMgfSha(group['mgfSha']), sLen, shared_defs)
+            elif 'type' in group and group['type'] == 'RsaesOaepDecrypt':
+                vectors_file += params['formatter'].format_testcase(test, group['privateKeyPkcs8'], getSha(group['sha']), getMgfSha(group['mgfSha']), shared_defs)
+            elif 'keyDer' in group:
+                vectors_file += params['formatter'].format_testcase(test, group['keyDer'], group['keysize'], getSha(group['sha']), shared_defs)
+            elif 'privateKeyPkcs8' in group:
+                vectors_file += params['formatter'].format_testcase(test, group['privateKeyPkcs8'], group['keysize'], shared_defs)
             elif 'curve' in group:
                 if group['curve'] == 'secp256r1':
                     curve = ec.SECP256R1()
@@ -219,6 +339,9 @@ def generate_vectors_file(params):
     vectors_file += "#endif // " + params['section'] + '\n'
 
     with open(os.path.join(script_dir, params['target']), 'w') as target:
+        target.write(header)
+        for definition in shared_defs:
+            target.write(definition)
         target.write(vectors_file)
 
 
@@ -299,7 +422,7 @@ curve25519_params = {
     'source_file': 'x25519_test.json',
     'base': '../testvectors_base/curve25519-vectors_base.h',
     'target': '../testvectors/curve25519-vectors.h',
-    'array_init': 'const EcdhTestVectorStr kCurve25519WycheproofVectors[] = {\n',
+    'array_init': 'const EcdhTestVector kCurve25519WycheproofVectors[] = {\n',
     'formatter' : Curve25519(),
     'crop_size_end': -2,
     'section': 'curve25519_vectors_h__',
@@ -312,7 +435,7 @@ p256ecdh_params = {
     'source_dir': 'source_vectors/',
     'source_file': 'ecdh_secp256r1_test.json',
     'target': '../testvectors/p256ecdh-vectors.h',
-    'array_init': 'const EcdhTestVectorStr kP256EcdhWycheproofVectors[] = {\n',
+    'array_init': 'const EcdhTestVector kP256EcdhWycheproofVectors[] = {\n',
     'formatter' : ECDH(),
     'crop_size_end': -2,
     'section': 'p256ecdh_vectors_h__',
@@ -323,7 +446,7 @@ p384ecdh_params = {
     'source_dir': 'source_vectors/',
     'source_file': 'ecdh_secp384r1_test.json',
     'target': '../testvectors/p384ecdh-vectors.h',
-    'array_init': 'const EcdhTestVectorStr kP384EcdhWycheproofVectors[] = {\n',
+    'array_init': 'const EcdhTestVector kP384EcdhWycheproofVectors[] = {\n',
     'formatter' : ECDH(),
     'crop_size_end': -2,
     'section': 'p384ecdh_vectors_h__',
@@ -334,12 +457,314 @@ p521ecdh_params = {
     'source_dir': 'source_vectors/',
     'source_file': 'ecdh_secp521r1_test.json',
     'target': '../testvectors/p521ecdh-vectors.h',
-    'array_init': 'const EcdhTestVectorStr kP521EcdhWycheproofVectors[] = {\n',
+    'array_init': 'const EcdhTestVector kP521EcdhWycheproofVectors[] = {\n',
     'formatter' : ECDH(),
     'crop_size_end': -2,
     'section': 'p521ecdh_vectors_h__',
     'comment' : ''
 }
+
+rsa_signature_2048_sha224_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_2048_sha224_test.json',
+    'target': '../testvectors/rsa_signature_2048_sha224-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha224WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_2048_sha224_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_2048_sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_2048_sha256_test.json',
+    'target': '../testvectors/rsa_signature_2048_sha256-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha256WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_2048_sha256_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_2048_sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_2048_sha512_test.json',
+    'target': '../testvectors/rsa_signature_2048_sha512-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha512WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_2048_sha512_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_3072_sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_3072_sha256_test.json',
+    'target': '../testvectors/rsa_signature_3072_sha256-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha256WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_3072_sha256_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_3072_sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_3072_sha256_test.json',
+    'target': '../testvectors/rsa_signature_3072_sha256-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha256WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_3072_sha256_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_3072_sha384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_3072_sha384_test.json',
+    'target': '../testvectors/rsa_signature_3072_sha384-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha384WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_3072_sha384_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_3072_sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_3072_sha512_test.json',
+    'target': '../testvectors/rsa_signature_3072_sha512-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha512WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_3072_sha512_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_4096_sha384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_4096_sha384_test.json',
+    'target': '../testvectors/rsa_signature_4096_sha384-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature4096Sha384WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_4096_sha384_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_4096_sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_4096_sha512_test.json',
+    'target': '../testvectors/rsa_signature_4096_sha512-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignature4096Sha512WycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_4096_sha512_vectors_h__',
+    'comment' : ''
+}
+
+rsa_signature_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_signature_test.json',
+    'base': '../testvectors_base/rsa_signature-vectors_base.txt',
+    'target': '../testvectors/rsa_signature-vectors.h',
+    'array_init': 'const RsaSignatureTestVector kRsaSignatureWycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_SIGNATURE(),
+    'crop_size_end': -2,
+    'section': 'rsa_signature_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pkcs1_dec_2048_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pkcs1_2048_test.json',
+    'target': '../testvectors/rsa_pkcs1_2048_test-vectors.h',
+    'array_init': 'const RsaDecryptTestVector kRsa2048DecryptWycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_DECRYPT(),
+    'crop_size_end': -2,
+    'section': 'rsa_pkcs1_2048_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pkcs1_dec_3072_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pkcs1_3072_test.json',
+    'target': '../testvectors/rsa_pkcs1_3072_test-vectors.h',
+    'array_init': 'const RsaDecryptTestVector kRsa3072DecryptWycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_DECRYPT(),
+    'crop_size_end': -2,
+    'section': 'rsa_pkcs1_3072_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pkcs1_dec_4096_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pkcs1_4096_test.json',
+    'target': '../testvectors/rsa_pkcs1_4096_test-vectors.h',
+    'array_init': 'const RsaDecryptTestVector kRsa4096DecryptWycheproofVectors[] = {\n',
+    'formatter' : RSA_PKCS1_DECRYPT(),
+    'crop_size_end': -2,
+    'section': 'rsa_pkcs1_4096_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_2048_sha256_mgf1_32_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_2048_sha256_mgf1_32_test.json',
+    'target': '../testvectors/rsa_pss_2048_sha256_mgf1_32-vectors.h',
+    # One key is used in both files. Just pull in the header that defines it.
+    'array_init': '''#include "testvectors/rsa_pss_2048_sha256_mgf1_0-vectors.h"\n\n
+                      const RsaPssTestVector kRsaPss2048Sha25632WycheproofVectors[] = {\n''',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_2048_sha256_32_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_2048_sha256_mgf1_0_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_2048_sha256_mgf1_0_test.json',
+    'target': '../testvectors/rsa_pss_2048_sha256_mgf1_0-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPss2048Sha2560WycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_2048_sha256_0_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_2048_sha1_mgf1_20_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_2048_sha1_mgf1_20_test.json',
+    'target': '../testvectors/rsa_pss_2048_sha1_mgf1_20-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPss2048Sha120WycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_2048_sha1_20_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_3072_sha256_mgf1_32_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_3072_sha256_mgf1_32_test.json',
+    'target': '../testvectors/rsa_pss_3072_sha256_mgf1_32-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPss3072Sha25632WycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_3072_sha256_32_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_4096_sha256_mgf1_32_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_4096_sha256_mgf1_32_test.json',
+    'target': '../testvectors/rsa_pss_4096_sha256_mgf1_32-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPss4096Sha25632WycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_4096_sha256_32_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_4096_sha512_mgf1_32_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_4096_sha512_mgf1_32_test.json',
+    'target': '../testvectors/rsa_pss_4096_sha512_mgf1_32-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPss4096Sha51232WycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_4096_sha512_32_vectors_h__',
+    'comment' : ''
+}
+
+rsa_pss_misc_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_pss_misc_test.json',
+    'target': '../testvectors/rsa_pss_misc-vectors.h',
+    'array_init': 'const RsaPssTestVector kRsaPssMiscWycheproofVectors[] = {\n',
+    'formatter' : RSA_PSS(),
+    'crop_size_end': -2,
+    'section': 'rsa_pss_misc_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha1_mgf1sha1_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha1_mgf1sha1_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha1_mgf1sha1-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha1WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha1_mgf1sha1_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha256_mgf1sha1_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha256_mgf1sha1_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha256_mgf1sha1-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha256Mgf1Sha1WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha256_mgf1sha1_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha256_mgf1sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha256_mgf1sha256_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha256_mgf1sha256-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha256Mgf1Sha256WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha256_mgf1sha256_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha384_mgf1sha1_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha384_mgf1sha1_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha384_mgf1sha1-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha384Mgf1Sha1WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha384_mgf1sha1_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha384_mgf1sha384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha384_mgf1sha384_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha384_mgf1sha384-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha384Mgf1Sha384WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha384_mgf1sha384_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha512_mgf1sha1_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha512_mgf1sha1_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha512_mgf1sha1-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha512Mgf1Sha1WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha512_mgf1sha1_vectors_h__',
+    'comment' : ''
+}
+
+rsa_oaep_2048_sha512_mgf1sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'rsa_oaep_2048_sha512_mgf1sha512_test.json',
+    'target': '../testvectors/rsa_oaep_2048_sha512_mgf1sha512-vectors.h',
+    'array_init': 'const RsaOaepTestVector kRsaOaep2048Sha512Mgf1Sha512WycheproofVectors[] = {\n',
+    'formatter' : RSA_OAEP(),
+    'crop_size_end': -2,
+    'section': 'rsa_oaep_2048_sha512_mgf1sha512_vectors_h__',
+    'comment' : ''
+}
+
+
 
 def update_tests(tests):
 
@@ -357,7 +782,33 @@ def generate_test_vectors():
                  curve25519_params,
                  p256ecdh_params,
                  p384ecdh_params,
-                 p521ecdh_params]
+                 p521ecdh_params,
+                 rsa_oaep_2048_sha1_mgf1sha1_params,
+                 rsa_oaep_2048_sha256_mgf1sha1_params,
+                 rsa_oaep_2048_sha256_mgf1sha256_params,
+                 rsa_oaep_2048_sha384_mgf1sha1_params,
+                 rsa_oaep_2048_sha384_mgf1sha384_params,
+                 rsa_oaep_2048_sha512_mgf1sha1_params,
+                 rsa_oaep_2048_sha512_mgf1sha512_params,
+                 rsa_pkcs1_dec_2048_params,
+                 rsa_pkcs1_dec_3072_params,
+                 rsa_pkcs1_dec_4096_params,
+                 rsa_pss_2048_sha1_mgf1_20_params,
+                 rsa_pss_2048_sha256_mgf1_0_params,
+                 rsa_pss_2048_sha256_mgf1_32_params,
+                 rsa_pss_3072_sha256_mgf1_32_params,
+                 rsa_pss_4096_sha256_mgf1_32_params,
+                 rsa_pss_4096_sha512_mgf1_32_params,
+                 rsa_pss_misc_params,
+                 rsa_signature_2048_sha224_params,
+                 rsa_signature_2048_sha256_params,
+                 rsa_signature_2048_sha512_params,
+                 rsa_signature_3072_sha256_params,
+                 rsa_signature_3072_sha384_params,
+                 rsa_signature_3072_sha512_params,
+                 rsa_signature_4096_sha384_params,
+                 rsa_signature_4096_sha512_params,
+                 rsa_signature_params]
     update_tests(all_tests)
     for test in all_tests:
         generate_vectors_file(test)

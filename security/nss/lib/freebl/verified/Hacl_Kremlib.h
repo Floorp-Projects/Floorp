@@ -29,23 +29,23 @@
 #ifndef __Hacl_Kremlib_H
 #define __Hacl_Kremlib_H
 
-inline static uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
+static inline uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
 
-inline static uint64_t FStar_UInt64_eq_mask(uint64_t a, uint64_t b);
+static inline uint64_t FStar_UInt64_eq_mask(uint64_t a, uint64_t b);
 
-inline static uint64_t FStar_UInt64_gte_mask(uint64_t a, uint64_t b);
+static inline uint64_t FStar_UInt64_gte_mask(uint64_t a, uint64_t b);
 
-inline static FStar_UInt128_uint128
+static inline FStar_UInt128_uint128
 FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
 
-inline static FStar_UInt128_uint128
+static inline FStar_UInt128_uint128
 FStar_UInt128_shift_right(FStar_UInt128_uint128 a, uint32_t s);
 
-inline static FStar_UInt128_uint128 FStar_UInt128_uint64_to_uint128(uint64_t a);
+static inline FStar_UInt128_uint128 FStar_UInt128_uint64_to_uint128(uint64_t a);
 
-inline static uint64_t FStar_UInt128_uint128_to_uint64(FStar_UInt128_uint128 a);
+static inline uint64_t FStar_UInt128_uint128_to_uint64(FStar_UInt128_uint128 a);
 
-inline static FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
+static inline FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
 
 #define __Hacl_Kremlib_H_DEFINED
 #endif
