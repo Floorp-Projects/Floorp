@@ -1181,32 +1181,33 @@ static inline void CheckHolderIsSingleZone(
   aParticipant->Trace(aHolder, tracer, nullptr);
 }
 
+#endif
+
 static inline bool ShouldCheckSingleZoneHolders() {
-#  ifdef DEBUG
+#if defined(DEBUG)
   return true;
-#  else
+#elif defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
   // Don't check every time to avoid performance impact.
   return rand() % 256 == 0;
+#else
+  return false;
 #  endif
 }
-
-#endif
 
 void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
   TraceAdditionalNativeGrayRoots(aTracer);
 
-#ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
   bool checkSingleZoneHolders = ShouldCheckSingleZoneHolders();
-#endif
-
   mJSHolders.ForEach([aTracer, checkSingleZoneHolders](
                          void* holder, nsScriptObjectTracer* tracer) {
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
     if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
       CheckHolderIsSingleZone(holder, tracer);
     }
+#else
+    Unused << checkSingleZoneHolders;
 #endif
     tracer->Trace(holder, JsGcTracer(), aTracer);
   });
