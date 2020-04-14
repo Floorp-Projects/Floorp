@@ -399,10 +399,10 @@ DebuggerEnvironment* DebuggerEnvironment::create(JSContext* cx,
                                                  HandleObject proto,
                                                  HandleObject referent,
                                                  HandleNativeObject debugger) {
-  NewObjectKind newKind =
-      IsInsideNursery(referent) ? GenericObject : TenuredObject;
   DebuggerEnvironment* obj =
-      NewObjectWithGivenProtoAndKind<DebuggerEnvironment>(cx, proto, newKind);
+      IsInsideNursery(referent)
+          ? NewObjectWithGivenProto<DebuggerEnvironment>(cx, proto)
+          : NewTenuredObjectWithGivenProto<DebuggerEnvironment>(cx, proto);
   if (!obj) {
     return nullptr;
   }

@@ -1618,10 +1618,10 @@ NativeObject* DebuggerObject::initClass(JSContext* cx,
 DebuggerObject* DebuggerObject::create(JSContext* cx, HandleObject proto,
                                        HandleObject referent,
                                        HandleNativeObject debugger) {
-  NewObjectKind newKind =
-      IsInsideNursery(referent) ? GenericObject : TenuredObject;
   DebuggerObject* obj =
-      NewObjectWithGivenProtoAndKind<DebuggerObject>(cx, proto, newKind);
+      IsInsideNursery(referent)
+          ? NewObjectWithGivenProto<DebuggerObject>(cx, proto)
+          : NewTenuredObjectWithGivenProto<DebuggerObject>(cx, proto);
   if (!obj) {
     return nullptr;
   }
