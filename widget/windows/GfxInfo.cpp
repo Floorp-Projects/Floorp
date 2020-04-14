@@ -2016,11 +2016,11 @@ void GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
 
   JS::Rooted<JSObject*> obj(aCx);
 
-  gfx::FeatureStatus d3d11 = gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
+  gfx::FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   if (!InitFeatureObject(aCx, aObj, "d3d11", d3d11, &obj)) {
     return;
   }
-  if (d3d11 == gfx::FeatureStatus::Available) {
+  if (d3d11.GetValue() == gfx::FeatureStatus::Available) {
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     JS::Rooted<JS::Value> val(aCx,
                               JS::Int32Value(dm->GetCompositorFeatureLevel()));
@@ -2047,7 +2047,7 @@ void GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
     JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
-  gfx::FeatureStatus d2d = gfxConfig::GetValue(Feature::DIRECT2D);
+  gfx::FeatureState& d2d = gfxConfig::GetFeature(Feature::DIRECT2D);
   if (!InitFeatureObject(aCx, aObj, "d2d", d2d, &obj)) {
     return;
   }
