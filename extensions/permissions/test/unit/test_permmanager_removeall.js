@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test() {
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
   // setup a profile directory
   var dir = do_get_profile();
 
