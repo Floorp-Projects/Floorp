@@ -601,7 +601,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
   MOZ_ASSERT(clasp->isTrace(JS_GlobalObjectTraceHook));
 
-  JSObject* obj = NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject);
+  JSObject* obj = NewSingletonObjectWithGivenProto(cx, clasp, nullptr);
   if (!obj) {
     return nullptr;
   }

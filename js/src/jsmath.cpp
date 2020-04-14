@@ -942,7 +942,7 @@ static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewObjectWithGivenProto(cx, &MathClass, proto, SingletonObject);
+  return NewSingletonObjectWithGivenProto(cx, &MathClass, proto);
 }
 
 static bool MathClassFinish(JSContext* cx, HandleObject ctor,
