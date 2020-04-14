@@ -78,25 +78,25 @@ const Layout = {
       x.value / dpr,
       xInCSS.value,
       1,
-      "Heights in CSS pixels is calculated correctly"
+      "X in CSS pixels is calculated correctly"
     );
     this.isWithin(
       y.value / dpr,
       yInCSS.value,
       1,
-      "Heights in CSS pixels is calculated correctly"
+      "Y in CSS pixels is calculated correctly"
     );
     this.isWithin(
       width.value / dpr,
       widthInCSS.value,
       1,
-      "Heights in CSS pixels is calculated correctly"
+      "Width in CSS pixels is calculated correctly"
     );
     this.isWithin(
       height.value / dpr,
       heightInCSS.value,
       1,
-      "Heights in CSS pixels is calculated correctly"
+      "Height in CSS pixels is calculated correctly"
     );
 
     return [x.value, y.value, width.value, height.value];

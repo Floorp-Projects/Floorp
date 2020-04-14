@@ -1610,7 +1610,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvChildAtPoint(
   *aResultDoc = nullptr;
   *aResultID = 0;
   Accessible* acc = IdToAccessible(aID);
-  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
+  if (acc && !acc->IsDefunct()) {
     int32_t x = aX;
     int32_t y = aY;
     Accessible* result = acc->ChildAtPoint(
