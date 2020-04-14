@@ -427,9 +427,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
       // the cursor to home/end on some systems
       *_retval = true;
       bool reverse = aKey == dom::KeyboardEvent_Binding::DOM_VK_UP ||
-                     aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP;
+                             aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP
+                         ? true
+                         : false;
       bool page = aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP ||
-                  aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_DOWN;
+                          aKey == dom::KeyboardEvent_Binding::DOM_VK_PAGE_DOWN
+                      ? true
+                      : false;
 
       // Fill in the value of the textbox with whatever is selected in the popup
       // if the completeSelectedIndex attribute is set.  We check this before
