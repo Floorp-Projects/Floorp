@@ -37,12 +37,6 @@ class ProxyObject : public JSObject {
                   "Proxy reservedSlots must overlay native object slots field");
   }
 
-  static JS::Result<ProxyObject*, JS::OOM&> create(JSContext* cx,
-                                                   const JSClass* clasp,
-                                                   Handle<TaggedProto> proto,
-                                                   js::gc::AllocKind allocKind,
-                                                   js::NewObjectKind newKind);
-
  public:
   static ProxyObject* New(JSContext* cx, const BaseProxyHandler* handler,
                           HandleValue priv, TaggedProto proto_,
