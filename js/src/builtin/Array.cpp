@@ -4005,9 +4005,9 @@ static inline bool EnsureNewArrayElements(JSContext* cx, ArrayObject* obj,
 }
 
 template <uint32_t maxLength>
-static MOZ_ALWAYS_INLINE ArrayObject* NewArray(
-    JSContext* cx, uint32_t length, HandleObject protoArg,
-    NewObjectKind newKind = GenericObject) {
+static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
+                                               HandleObject protoArg,
+                                               NewObjectKind newKind) {
   gc::AllocKind allocKind = GuessArrayGCKind(length);
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
