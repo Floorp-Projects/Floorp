@@ -65,15 +65,17 @@ function reverseSearchInputChange(value) {
   };
 }
 
-function showReverseSearchNext() {
+function showReverseSearchNext({ access } = {}) {
   return {
     type: REVERSE_SEARCH_NEXT,
+    access,
   };
 }
 
-function showReverseSearchBack() {
+function showReverseSearchBack({ access } = {}) {
   return {
     type: REVERSE_SEARCH_BACK,
+    access,
   };
 }
 
