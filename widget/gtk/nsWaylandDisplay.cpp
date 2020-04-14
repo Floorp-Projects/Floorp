@@ -453,7 +453,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   }
 }
 
-void nsWaylandDisplay::Shutdown() { 
+void nsWaylandDisplay::Shutdown() {
   StaticMutexAutoLock lock(gWaylandDisplaysMutex);
   mDispatcherThreadLoop = nullptr;
 }
