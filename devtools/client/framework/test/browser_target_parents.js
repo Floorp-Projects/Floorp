@@ -19,8 +19,7 @@ add_task(async function() {
   const client = await setupDebuggerClient();
   const mainRoot = client.mainRoot;
 
-  const tabs = await mainRoot.listTabs();
-  const tabDescriptors = tabs.map(tabTarget => tabTarget.descriptorFront);
+  const tabDescriptors = await mainRoot.listTabs();
 
   await testGetTargetWithConcurrentCalls(tabDescriptors, tabTarget => {
     // Tab Target is attached when it has a console front.

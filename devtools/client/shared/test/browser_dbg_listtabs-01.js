@@ -104,7 +104,7 @@ registerCleanupFunction(function() {
 });
 
 async function getTargetActorForUrl(client, url) {
-  const tabs = await client.mainRoot.listTabs();
-  const targetFront = tabs.find(front => front.url == url);
-  return targetFront;
+  const tabDescriptors = await client.mainRoot.listTabs();
+  const tabDescriptor = tabDescriptors.find(front => front.url == url);
+  return tabDescriptor?.getTarget();
 }

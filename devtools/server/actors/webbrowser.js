@@ -326,7 +326,6 @@ BrowserTabList.prototype._getActorForBrowser = async function(browser) {
   let actor = this._actorByBrowser.get(browser);
   if (actor) {
     this._foundCount++;
-    await actor.update();
     return actor;
   }
 
