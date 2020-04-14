@@ -1431,7 +1431,9 @@ class UrlbarView {
     // If the view is open without the input being focused, it will not close
     // automatically when the window loses focus. We might be in this state
     // after a Search Tip is shown on an engine homepage.
-    this.close();
+    if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
+      this.close();
+    }
   }
 
   _on_mousedown(event) {
