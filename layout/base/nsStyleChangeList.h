@@ -16,6 +16,7 @@
 
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 class nsIFrame;
 class nsIContent;
