@@ -197,7 +197,7 @@ namespace jit {
   _(NewObjectOperation, js::NewObjectOperation)                                \
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
   _(NewRegExpStringIteratorObject, js::NewRegExpStringIteratorObject)          \
-  _(NewStringIteratorObject, js::NewStringIteratorObject)                      \
+  _(NewStringIterator, js::NewStringIterator)                                  \
   _(NewStringObject, js::jit::NewStringObject)                                 \
   _(NewTypedArrayWithTemplateAndArray, js::NewTypedArrayWithTemplateAndArray)  \
   _(NewTypedArrayWithTemplateAndBuffer,                                        \
