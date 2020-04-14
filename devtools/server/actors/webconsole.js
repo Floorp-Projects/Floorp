@@ -209,7 +209,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       );
     }
 
-    this.traits = {};
+    this.traits = {
+      // Supports new cached messages structure for 77+
+      newCacheStructure: true,
+    };
   },
   /**
    * Debugger instance.
@@ -911,8 +914,14 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     const messages = [];
 
-    while (messageTypes.length > 0) {
-      const type = messageTypes.shift();
+    const consoleServiceCachedMessages =
+      messageTypes.includes("PageError") || messageTypes.includes("LogMessage")
+        ? this.consoleServiceListener?.getCachedMessages(
+            !this.parentActor.isRootActor
+          )
+        : null;
+
+    for (const type of messageTypes) {
       switch (type) {
         case "ConsoleAPI": {
           if (!this.consoleAPIListener) {
@@ -944,27 +953,40 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           });
           break;
         }
+
         case "PageError": {
-          if (!this.consoleServiceListener) {
+          if (!consoleServiceCachedMessages) {
             break;
           }
-          const cache = this.consoleServiceListener.getCachedMessages(
-            !this.parentActor.isRootActor
-          );
-          cache.forEach(cachedMessage => {
-            let message = null;
-            if (cachedMessage instanceof Ci.nsIScriptError) {
-              message = this.preparePageErrorForRemote(cachedMessage);
-              message._type = type;
-            } else {
-              message = {
-                _type: "LogMessage",
-                message: this._createStringGrip(cachedMessage.message),
-                timeStamp: cachedMessage.timeStamp,
-              };
+
+          for (const cachedMessage of consoleServiceCachedMessages) {
+            if (!(cachedMessage instanceof Ci.nsIScriptError)) {
+              continue;
             }
+
+            const message = this.preparePageErrorForRemote(cachedMessage);
+            message._type = type;
             messages.push(message);
-          });
+          }
+          break;
+        }
+
+        case "LogMessage": {
+          if (!consoleServiceCachedMessages) {
+            break;
+          }
+
+          for (const cachedMessage of consoleServiceCachedMessages) {
+            if (cachedMessage instanceof Ci.nsIScriptError) {
+              continue;
+            }
+
+            messages.push({
+              _type: type,
+              message: this._createStringGrip(cachedMessage.message),
+              timeStamp: cachedMessage.timeStamp,
+            });
+          }
           break;
         }
       }
