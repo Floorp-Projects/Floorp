@@ -254,7 +254,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateTexture(
     RawId aSelfId, const SerialTextureDescriptor& aDesc, RawId aNewId) {
   ffi::WGPUTextureDescriptor desc = {};
   desc.size = aDesc.mSize;
-  desc.array_layer_count = aDesc.mArrayLayerCount;
   desc.mip_level_count = aDesc.mMipLevelCount;
   desc.sample_count = aDesc.mSampleCount;
   desc.dimension = aDesc.mDimension;
