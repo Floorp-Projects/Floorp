@@ -125,8 +125,7 @@ JS_FRIEND_API JSObject* JS_NewObjectWithUniqueType(JSContext* cx,
    * ObjectGroup attached to our proto with information about our object, since
    * we're not going to be using that ObjectGroup anyway.
    */
-  RootedObject obj(
-      cx, NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject));
+  RootedObject obj(cx, NewSingletonObjectWithGivenProto(cx, clasp, nullptr));
   if (!obj) {
     return nullptr;
   }
