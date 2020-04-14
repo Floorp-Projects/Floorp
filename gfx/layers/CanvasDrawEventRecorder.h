@@ -182,16 +182,16 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   };
 
   struct ReadFooter {
-    Atomic<uint32_t, ReleaseAcquire> count;
-    Atomic<uint32_t, ReleaseAcquire> returnCount;
-    Atomic<State, ReleaseAcquire> state;
+    Atomic<uint32_t> count;
+    Atomic<uint32_t> returnCount;
+    Atomic<State> state;
   };
 
   struct WriteFooter {
-    Atomic<uint32_t, ReleaseAcquire> count;
-    Atomic<uint32_t, ReleaseAcquire> returnCount;
-    Atomic<uint32_t, ReleaseAcquire> requiredDifference;
-    Atomic<State, ReleaseAcquire> state;
+    Atomic<uint32_t> count;
+    Atomic<uint32_t> returnCount;
+    Atomic<uint32_t> requiredDifference;
+    Atomic<State> state;
   };
 
   CanvasEventRingBuffer(const CanvasEventRingBuffer&) = delete;
