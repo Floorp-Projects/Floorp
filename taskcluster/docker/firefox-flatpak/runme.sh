@@ -89,10 +89,16 @@ name=org.mozilla.firefox
 runtime=org.freedesktop.Platform/${ARCH}/${FREEDESKTOP_VERSION}
 sdk=org.freedesktop.Sdk/${ARCH}/${FREEDESKTOP_VERSION}
 base=app/org.mozilla.Firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
+
 [Extension org.mozilla.firefox.Locale]
 directory=share/runtime/langpack
 autodelete=true
 locale-subset=true
+
+[Extension org.freedesktop.Platform.ffmpeg-full]
+directory=lib/ffmpeg
+add-ld-path=.
+version=19.08
 EOF
 
 cat <<EOF > build/metadata.locale
