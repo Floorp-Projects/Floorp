@@ -1477,7 +1477,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 WebRenderCommandBuilder::WebRenderCommandBuilder(
     WebRenderLayerManager* aManager)
     : mManager(aManager),
-      mRootStackingContexts(nullptr),
       mLastAsr(nullptr),
       mBuilderDumpIndex(0),
       mDumpIndent(0),
@@ -1553,10 +1552,6 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mBuilderDumpIndex =
           aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
-    MOZ_ASSERT(mRootStackingContexts == nullptr);
-    AutoRestore<wr::RenderRootArray<Maybe<StackingContextHelper>>*> rootScs(
-        mRootStackingContexts);
-    mRootStackingContexts = &pageRootScs;
     CreateWebRenderCommandsFromDisplayList(
         aDisplayList, nullptr, aDisplayListBuilder,
         *pageRootScs[wr::RenderRoot::Default], aBuilder, aResourceUpdates);

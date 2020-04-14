@@ -113,11 +113,6 @@ class WebRenderCommandBuilder final {
 
   bool GetContainsSVGGroup() { return mContainsSVGGroup; }
 
-  const StackingContextHelper& GetRootStackingContextHelper(
-      wr::RenderRoot aRenderRoot) const {
-    return *(*mRootStackingContexts)[aRenderRoot];
-  }
-
   // Those are data that we kept between transactions. We used to cache some
   // data in the layer. But in layers free mode, we don't have layer which
   // means we need some other place to cached the data between transaction.
@@ -182,7 +177,6 @@ class WebRenderCommandBuilder final {
                                const StackingContextHelper& aSc,
                                nsDisplayListBuilder* aDisplayListBuilder);
 
-  wr::RenderRootArray<Maybe<StackingContextHelper>>* mRootStackingContexts;
   ClipManager mClipManager;
 
   // We use this as a temporary data structure while building the mScrollData
