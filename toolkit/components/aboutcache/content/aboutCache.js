@@ -25,7 +25,6 @@ addEventListener(
   "DOMContentLoaded",
   function() {
     $("anon").checked = !!isAnon;
-    $("inbrowser").checked = !!isInBrowser;
     $("priv").checked = !!isPrivate;
   },
   false
@@ -38,9 +37,7 @@ function navigate() {
   if ($("anon").checked) {
     context += "a,";
   }
-  if ($("inbrowser").checked) {
-    context += "b,";
-  }
+
   if ($("priv").checked) {
     context += "p,";
   }
