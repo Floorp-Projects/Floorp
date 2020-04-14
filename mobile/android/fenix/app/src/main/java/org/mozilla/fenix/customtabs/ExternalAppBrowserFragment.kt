@@ -84,8 +84,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         activity,
                         components.core.store,
                         customTabSessionId
-                    ) { exception ->
-                        components.analytics.crashReporter.submitCaughtException(exception)
+                    ) { uri ->
+                        components.analytics.crashReporter.submitCaughtException(Exception("Unknown scheme error $uri"))
                         FenixSnackbar.make(
                             view = view.swipeRefresh,
                             duration = FenixSnackbar.LENGTH_LONG,
