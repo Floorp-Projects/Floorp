@@ -331,9 +331,10 @@ void runTestFromPath(JSContext* cx, const char* path) {
       MOZ_CRASH();
     }
 
+    SourceExtent extent;
     frontend::Directives directives(false);
-    frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global,
-                                           binCompilationInfo, directives);
+    frontend::GlobalSharedContext globalsc(
+        cx, ScopeKind::Global, binCompilationInfo, directives, extent);
 
     frontend::BinASTParser<Tok> binParser(cx, binCompilationInfo, binOptions,
                                           binCompilationInfo.sourceObject);

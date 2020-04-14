@@ -598,8 +598,10 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleBuilder builder(cx, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
+  uint32_t len = this->sourceBuffer_.length();
+  SourceExtent extent = SourceExtent::makeGlobalExtent(len);
   ModuleSharedContext modulesc(cx, module, compilationInfo, enclosingScope,
-                               builder);
+                               builder, extent);
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
     return nullptr;
@@ -772,7 +774,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
-  SourceExtent extent(0, len, 0, len, 0, 0);
+  SourceExtent extent = SourceExtent::makeGlobalExtent(len);
   RootedScript script(
       cx,
       JSScript::Create(cx, cx->global(), compilationInfo.sourceObject, extent,
@@ -783,7 +785,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               compilationInfo.directives);
+                               compilationInfo.directives, extent);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject);
