@@ -35,10 +35,7 @@
         this.onInput(event);
       });
 
-      this.addEventListener("keypress", event => this.handleKeyPress(event), {
-        capture: true,
-        mozSystemGroup: true,
-      });
+      this.addEventListener("keydown", event => this.handleKeyDown(event));
 
       this.addEventListener(
         "compositionstart",
@@ -479,10 +476,17 @@
       }
     }
 
-    handleKeyPress(aEvent) {
+    handleKeyDown(aEvent) {
       // Re: urlbarDeferred, see the comment in urlbarBindings.xml.
       if (aEvent.defaultPrevented && !aEvent.urlbarDeferred) {
         return false;
+      }
+
+      if (
+        typeof this.onBeforeHandleKeyDown == "function" &&
+        this.onBeforeHandleKeyDown(aEvent)
+      ) {
+        return true;
       }
 
       const isMac = AppConstants.platform == "macosx";
