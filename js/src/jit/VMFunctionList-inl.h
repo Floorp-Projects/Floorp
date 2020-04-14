@@ -189,7 +189,7 @@ namespace jit {
   _(NativeGetElement, js::NativeGetElement)                                    \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
-  _(NewArrayIteratorObject, js::NewArrayIteratorObject)                        \
+  _(NewArrayIterator, js::NewArrayIterator)                                    \
   _(NewArrayOperation, js::NewArrayOperation)                                  \
   _(NewArrayWithGroup, js::NewArrayWithGroup)                                  \
   _(NewCallObject, js::jit::NewCallObject)                                     \
