@@ -1365,7 +1365,11 @@ function defineAddonWrapperProperty(name, getter) {
 
 ["installDate", "updateDate"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
-    return new Date(addonFor(this)[aProp]);
+    let addon = addonFor(this);
+    if (addon[aProp]) {
+      return new Date(addon[aProp]);
+    }
+    return null;
   });
 });
 
