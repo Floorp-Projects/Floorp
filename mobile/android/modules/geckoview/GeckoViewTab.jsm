@@ -27,6 +27,10 @@ class Tab {
     this.active = false;
   }
 
+  get linkedBrowser() {
+    return this.browser;
+  }
+
   getActive() {
     return this.active;
   }
@@ -128,7 +132,11 @@ const GeckoViewTabBridge = {
       Services.obs.addObserver(handler, "geckoview-window-created");
     });
 
-    return BrowserAppShim.getBrowserApp(window).selectedTab;
+    const { selectedTab } = BrowserAppShim.getBrowserApp(window);
+    if (!window.tab) {
+      window.tab = selectedTab;
+    }
+    return selectedTab;
   },
 
   /**
@@ -162,7 +170,11 @@ const GeckoViewTabBridge = {
 
 class GeckoViewTab extends GeckoViewModule {
   onInit() {
-    BrowserAppShim.getBrowserApp(this.window);
+    const { window } = this;
+    const { selectedTab } = BrowserAppShim.getBrowserApp(window);
+    if (!window.tab) {
+      window.tab = selectedTab;
+    }
 
     this.registerListener(["GeckoView:WebExtension:SetTabActive"]);
   }
