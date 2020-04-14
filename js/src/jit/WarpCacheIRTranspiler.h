@@ -25,8 +25,10 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 // instead.
 #define WARP_CACHE_IR_OPS(_)          \
   _(GuardShape)                       \
+  _(GuardToObject)                    \
   _(LoadEnclosingEnvironment)         \
   _(LoadDynamicSlotResult)            \
+  _(LoadFixedSlotResult)              \
   _(LoadEnvironmentFixedSlotResult)   \
   _(LoadEnvironmentDynamicSlotResult) \
   _(TypeMonitorResult)
