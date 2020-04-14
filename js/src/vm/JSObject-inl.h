@@ -496,16 +496,9 @@ inline T* NewObjectWithGivenProtoAndKinds(JSContext* cx, HandleObject proto,
 
 // Make an object with the prototype set according to the cached prototype or
 // Object.prototype.
-JSObject* NewObjectWithClassProtoCommon(JSContext* cx, const JSClass* clasp,
-                                        HandleObject proto,
-                                        gc::AllocKind allocKind,
-                                        NewObjectKind newKind);
-
-inline JSObject* NewObjectWithClassProto(
-    JSContext* cx, const JSClass* clasp, HandleObject proto,
-    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
-  return NewObjectWithClassProtoCommon(cx, clasp, proto, allocKind, newKind);
-}
+JSObject* NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
+                                  HandleObject proto, gc::AllocKind allocKind,
+                                  NewObjectKind newKind = GenericObject);
 
 inline JSObject* NewObjectWithClassProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
