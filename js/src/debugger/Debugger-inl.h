@@ -16,7 +16,7 @@
 
 /* static */ inline js::Debugger* js::Debugger::fromJSObject(
     const JSObject* obj) {
-  MOZ_ASSERT(obj->getClass() == &class_);
+  MOZ_ASSERT(obj->is<DebuggerInstanceObject>());
   return (Debugger*)obj->as<NativeObject>().getPrivate();
 }
 
