@@ -145,27 +145,42 @@ struct PK11SymKeyStr {
  * if necessary. ... Not RefCounted.
  */
 struct PK11ContextStr {
-    CK_ATTRIBUTE_TYPE operation; /* type of operation this context is doing
-                                  * (CKA_ENCRYPT, CKA_SIGN, CKA_HASH, etc. */
-    PK11SymKey *key;             /* symetric key used in this context */
-    PK11SlotInfo *slot;          /* slot this context is operationing on */
-    CK_SESSION_HANDLE session;   /* session this context is using */
-    PZLock *sessionLock;         /* lock before accessing a PKCS #11
-                                  * session */
-    PRBool ownSession;           /* do we own the session? */
-    void *cx;                    /* window context in case we need to loggin*/
-    void *savedData;             /* save data when we are multiplexing on a
-                                  * single context */
-    unsigned long savedLength;   /* length of the saved context */
-    SECItem *param;              /* mechanism parameters used to build this
-                                                                context */
-    PRBool init;                 /* has this contexted been initialized */
-    CK_MECHANISM_TYPE type;      /* what is the PKCS #11 this context is
-                                  * representing (usually what algorithm is
-                                  * being used (CKM_RSA_PKCS, CKM_DES,
-                                  * CKM_SHA, etc.*/
-    PRBool fortezzaHack;         /* Fortezza SSL has some special
-                                  * non-standard semantics*/
+    CK_ATTRIBUTE_TYPE operation;          /* type of operation this context is
+                                           * doing (CKA_ENCRYPT, CKA_SIGN,
+                                           * CKA_HASH, etc.) */
+    PK11SymKey *key;                      /* symetric key for this context */
+    PK11SlotInfo *slot;                   /* slot this context is using */
+    CK_SESSION_HANDLE session;            /* session this context is using */
+    PZLock *sessionLock;                  /* lock before accessing a PKCS #11
+                                           * session */
+    PRBool ownSession;                    /* do we own the session? */
+    void *cx;                             /* window context for login */
+    void *savedData;                      /* save data when we are 
+                                           * multiplexing on a single context */
+    unsigned long savedLength;            /* length of the saved context */
+    SECItem *param;                       /* mechanism parameters used to
+                                           * build this context */
+    PRBool init;                          /* this contexted been initialized? */
+    CK_MECHANISM_TYPE type;               /* what is the PKCS #11 this context
+                                           * is representing (usually what 
+                                           * algorithm is being used 
+                                           * (CKM_RSA_PKCS, CKM_DES, CKM_SHA,
+                                           * etc. */
+    PRBool fortezzaHack;                  /* Fortezza SSL has some special
+                                           * non-standard semantics*/
+    PRBool simulate_message;              /* We are initializing a message
+                                           * interface but the underlying 
+                                           * PKCS #11 module does not support
+                                           * it. We simulate the interface with
+                                           * the PCKS #11 v2 interface */
+    CK_MECHANISM_TYPE simulate_mechanism; /* The mechanism we are simulating */
+    PRUint64 ivCounter;                   /* iv counter for simulated message */
+    PRUint64 ivMaxCount;                  /* total number of IVs valid for 
+                                           * this key */
+    unsigned long ivLen;                  /* length of the iv in bytes */
+    unsigned int ivFixedBits;             /* number of bits not generated
+                                           * for the iv */
+    CK_GENERATOR_FUNCTION ivGen;          /* PKCS #11 iv generator value */
 };
 
 /*

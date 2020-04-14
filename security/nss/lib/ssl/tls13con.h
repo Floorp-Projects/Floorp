@@ -50,8 +50,6 @@ SECStatus tls13_GetHashAndCipher(PRUint16 version, PRUint16 cipherSuite,
 SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
 unsigned int tls13_GetHashSize(const sslSocket *ss);
 unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
-CK_MECHANISM_TYPE tls13_GetHkdfMechanism(sslSocket *ss);
-CK_MECHANISM_TYPE tls13_GetHkdfMechanismForHash(SSLHashType hash);
 SECStatus tls13_ComputeHash(sslSocket *ss, SSL3Hashes *hashes,
                             const PRUint8 *buf, unsigned int len);
 SECStatus tls13_ComputeHandshakeHashes(sslSocket *ss,
@@ -135,12 +133,18 @@ SECStatus tls13_SendKeyUpdate(sslSocket *ss, tls13KeyUpdateRequest request,
                               PRBool buffer);
 SECStatus SSLExp_KeyUpdate(PRFileDesc *fd, PRBool requestUpdate);
 PRBool tls13_MaybeTls13(sslSocket *ss);
-SSLAEADCipher tls13_GetAead(const ssl3BulkCipherDef *cipherDef);
-SECStatus tls13_AEAD(const ssl3KeyMaterial *keys, PRBool doDecrypt,
-                     unsigned char *out, unsigned int *outlen, unsigned int maxout,
-                     const unsigned char *in, unsigned int inlen,
-                     CK_MECHANISM_TYPE mechanism,
-                     unsigned char *aeadParams, unsigned int aeadParamLength);
+unsigned int tls13_SetupAeadIv(PRBool isDTLS, unsigned char *ivOut,
+                               unsigned char *ivIn, unsigned int offset,
+                               unsigned int ivLen, DTLSEpoch epoch);
+SECStatus tls13_AEAD(PK11Context *context, PRBool decrypt,
+                     CK_GENERATOR_FUNCTION ivGen, unsigned int fixedbits,
+                     const unsigned char *ivIn, unsigned char *ivOut,
+                     unsigned int ivLen,
+                     const unsigned char *nonceIn, unsigned int nonceLen,
+                     const unsigned char *aad, unsigned int aadLen,
+                     unsigned char *out, unsigned int *outLen,
+                     unsigned int maxout, unsigned int tagLen,
+                     const unsigned char *in, unsigned int inLen);
 void tls13_SetSpecRecordVersion(sslSocket *ss, ssl3CipherSpec *spec);
 SECStatus SSLExp_SendCertificateRequest(PRFileDesc *fd);
 

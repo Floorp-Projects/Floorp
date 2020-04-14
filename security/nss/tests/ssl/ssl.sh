@@ -413,15 +413,6 @@ ssl_auth()
       echo "${testname}" | grep "TLS 1.3" > /dev/null
       TLS13=$?
 
-      # Currently TLS 1.3 tests are known to fail under FIPS mode,
-      # because HKDF is implemented using the PKCS #11 functions
-      # prohibited under FIPS mode.
-      if [ "${TLS13}" -eq 0 ] && \
-	 [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
-          echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
-          continue
-      fi
-
       if [ "${CLIENT_MODE}" = "fips" -a "${CAUTH}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then

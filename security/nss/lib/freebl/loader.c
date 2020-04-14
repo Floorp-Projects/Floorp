@@ -471,6 +471,19 @@ AES_Decrypt(AESContext *cx, unsigned char *output,
 }
 
 SECStatus
+AES_AEAD(AESContext *cx, unsigned char *output,
+         unsigned int *outputLen, unsigned int maxOutputLen,
+         const unsigned char *input, unsigned int inputLen,
+         void *params, unsigned int paramsLen,
+         const unsigned char *aad, unsigned int aadLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_AES_AEAD)(cx, output, outputLen, maxOutputLen, input,
+                                inputLen, params, paramsLen, aad, aadLen);
+}
+
+SECStatus
 MD5_Hash(unsigned char *dest, const char *src)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -2125,6 +2138,38 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx,
     return (vector->p_ChaCha20Poly1305_Open)(
         ctx, output, outputLen, maxOutputLen, input, inputLen,
         nonce, nonceLen, ad, adLen);
+}
+
+SECStatus
+ChaCha20Poly1305_Encrypt(const ChaCha20Poly1305Context *ctx,
+                         unsigned char *output, unsigned int *outputLen,
+                         unsigned int maxOutputLen,
+                         const unsigned char *input, unsigned int inputLen,
+                         const unsigned char *nonce, unsigned int nonceLen,
+                         const unsigned char *ad, unsigned int adLen,
+                         unsigned char *tagOut)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ChaCha20Poly1305_Encrypt)(
+        ctx, output, outputLen, maxOutputLen, input, inputLen,
+        nonce, nonceLen, ad, adLen, tagOut);
+}
+
+SECStatus
+ChaCha20Poly1305_Decrypt(const ChaCha20Poly1305Context *ctx,
+                         unsigned char *output, unsigned int *outputLen,
+                         unsigned int maxOutputLen,
+                         const unsigned char *input, unsigned int inputLen,
+                         const unsigned char *nonce, unsigned int nonceLen,
+                         const unsigned char *ad, unsigned int adLen,
+                         unsigned char *tagIn)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ChaCha20Poly1305_Decrypt)(
+        ctx, output, outputLen, maxOutputLen, input, inputLen,
+        nonce, nonceLen, ad, adLen, tagIn);
 }
 
 int

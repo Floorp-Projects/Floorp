@@ -1481,7 +1481,7 @@ bltest_aes_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     unsigned char *params;
     int len;
     CK_AES_CTR_PARAMS ctrParams;
-    CK_GCM_PARAMS gcmParams;
+    CK_NSS_GCM_PARAMS gcmParams;
 
     params = aesp->iv.buf.data;
     switch (cipherInfo->mode) {

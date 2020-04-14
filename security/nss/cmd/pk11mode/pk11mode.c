@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
+#if defined(XP_UNIX) && defined(DO_FORK_CHECK)
 #include <unistd.h>
 #include <sys/wait.h>
 #else

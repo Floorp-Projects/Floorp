@@ -25,52 +25,73 @@ static const struct {
     { ssl_hash_md5, 0, 0 },
     { ssl_hash_sha1, 0, 0 },
     { ssl_hash_sha224, 0 },
-    { ssl_hash_sha256, CKM_NSS_HKDF_SHA256, 32 },
-    { ssl_hash_sha384, CKM_NSS_HKDF_SHA384, 48 },
-    { ssl_hash_sha512, CKM_NSS_HKDF_SHA512, 64 }
+    { ssl_hash_sha256, CKM_SHA256, 32 },
+    { ssl_hash_sha384, CKM_SHA384, 48 },
+    { ssl_hash_sha512, CKM_SHA512, 64 }
 };
 
 SECStatus
-tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2in, SSLHashType baseHash,
+tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
                   PK11SymKey **prkp)
 {
-    CK_NSS_HKDFParams params;
+    CK_HKDF_PARAMS params;
     SECItem paramsi;
-    SECStatus rv;
-    SECItem *salt;
     PK11SymKey *prk;
     static const PRUint8 zeroKeyBuf[HASH_LENGTH_MAX];
-    PK11SymKey *zeroKey = NULL;
     PK11SlotInfo *slot = NULL;
-    PK11SymKey *ikm2;
+    PK11SymKey *newIkm2 = NULL;
+    PK11SymKey *newIkm1 = NULL;
+    SECStatus rv;
 
     params.bExtract = CK_TRUE;
     params.bExpand = CK_FALSE;
+    params.prfHashMechanism = kTlsHkdfInfo[baseHash].pkcs11Mech;
     params.pInfo = NULL;
     params.ulInfoLen = 0UL;
+    params.pSalt = NULL;
+    params.ulSaltLen = 0UL;
+    params.hSaltKey = CK_INVALID_HANDLE;
 
-    if (ikm1) {
-        /* TODO(ekr@rtfm.com): This violates the PKCS#11 key boundary
-         * but is imposed on us by the present HKDF interface. */
-        rv = PK11_ExtractKeyValue(ikm1);
-        if (rv != SECSuccess)
-            return rv;
-
-        salt = PK11_GetKeyData(ikm1);
-        if (!salt)
-            return SECFailure;
-
-        params.pSalt = salt->data;
-        params.ulSaltLen = salt->len;
-        PORT_Assert(salt->len > 0);
+    if (!ikm1) {
+        /* PKCS #11 v3.0 has and explict NULL value, which equates to
+         * a sequence of zeros equal in length to the HMAC. */
+        params.ulSaltType = CKF_HKDF_SALT_NULL;
     } else {
-        /* Per documentation for CKM_NSS_HKDF_*:
-         *
-         *  If the optional salt is given, it is used; otherwise, the salt is
-         *  set to a sequence of zeros equal in length to the HMAC output.
-         */
-        params.pSalt = NULL;
-        params.ulSaltLen = 0UL;
+        /* PKCS #11 v3.0 can take the salt as a key handle */
+        params.hSaltKey = PK11_GetSymKeyHandle(ikm1);
+        params.ulSaltType = CKF_HKDF_SALT_KEY;
+
+        /* if we have both keys, make sure they are in the same slot */
+        if (ikm2) {
+            rv = PK11_SymKeysToSameSlot(CKM_HKDF_DERIVE,
+                                        CKA_DERIVE, CKA_DERIVE,
+                                        ikm2, ikm1, &newIkm2, &newIkm1);
+            if (rv != SECSuccess) {
+                SECItem *salt;
+                /* couldn't move the keys, try extracting the salt */
+                rv = PK11_ExtractKeyValue(ikm1);
+                if (rv != SECSuccess)
+                    return rv;
+                salt = PK11_GetKeyData(ikm1);
+                if (!salt)
+                    return SECFailure;
+                PORT_Assert(salt->len > 0);
+                /* Set up for Salt as Data instead of Salt as key */
+                params.pSalt = salt->data;
+                params.ulSaltLen = salt->len;
+                params.ulSaltType = CKF_HKDF_SALT_DATA;
+            }
+            /* use the new keys */
+            if (newIkm1) {
+                /* we've moved the key, get the handle for the new key */
+                params.hSaltKey = PK11_GetSymKeyHandle(newIkm1);
+                /* we don't use ikm1 after this, so don't bother setting it */
+            }
+            if (newIkm2) {
+                /* new ikm2 key, use the new key */
+                ikm2 = newIkm2;
+            }
+        }
     }
     paramsi.data = (unsigned char *)&params;
     paramsi.len = sizeof(params);
@@ -80,40 +101,64 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2in, SSLHashType baseHash,
     PORT_Assert(kTlsHkdfInfo[baseHash].hash == baseHash);
 
     /* A zero ikm2 is a key of hash-length 0s. */
-    if (!ikm2in) {
-        SECItem zeroItem = {
-            siBuffer,
-            (unsigned char *)zeroKeyBuf,
-            kTlsHkdfInfo[baseHash].hashSize
+    if (!ikm2) {
+        CK_OBJECT_CLASS ckoData = CKO_DATA;
+        CK_ATTRIBUTE template[2] = {
+            { CKA_CLASS, (CK_BYTE_PTR)&ckoData, sizeof(ckoData) },
+            { CKA_VALUE, (CK_BYTE_PTR)zeroKeyBuf, kTlsHkdfInfo[baseHash].hashSize }
         };
-        slot = PK11_GetInternalSlot();
+        CK_OBJECT_HANDLE handle;
+        PK11GenericObject *genObject;
+
+        /* if we have ikm1, put the zero key in the same slot */
+        slot = ikm1 ? PK11_GetSlotFromKey(ikm1) : PK11_GetBestSlot(CKM_HKDF_DERIVE, NULL);
         if (!slot) {
             return SECFailure;
         }
-        zeroKey = PK11_ImportSymKey(slot,
-                                    kTlsHkdfInfo[baseHash].pkcs11Mech,
-                                    PK11_OriginUnwrap,
-                                    CKA_DERIVE, &zeroItem, NULL);
-        if (!zeroKey)
+        genObject = PK11_CreateGenericObject(slot, template,
+                                             PR_ARRAY_SIZE(template), PR_FALSE);
+        if (genObject == NULL) {
             return SECFailure;
-        ikm2 = zeroKey;
-    } else {
-        ikm2 = ikm2in;
+        }
+        handle = PK11_GetObjectHandle(PK11_TypeGeneric, genObject, NULL);
+        if (handle == CK_INVALID_HANDLE) {
+            return SECFailure;
+        }
+        /* A note about ownership of the PKCS #11 handle.
+         * PK11_CreateGenericObject() will not destroy the object it creates
+         * on Free, For that you want PK11_CreateManagedGenericObject().
+         * Below we import the handle into the symKey structure. We pass
+         * PR_TRUE as the owner so that the symKey will destroy the object
+         * once it's freed. This is way it's safe to free now */
+        PK11_DestroyGenericObject(genObject);
+
+        /* NOTE: we can't both be in this block, and the block above where
+         * we moved the keys (because this block requires ikm2 to be NULL and
+         * the other requires ikm2 to be non-NULL. It's therefore safe to
+         * use newIkm2 in both cases and have a single free at the end for
+         * both */
+        PORT_Assert(newIkm2 == NULL); /* verify logic of the above statement */
+        newIkm2 = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginUnwrap,
+                                        CKM_HKDF_DERIVE, handle, PR_TRUE, NULL);
+        if (!newIkm2) {
+            return SECFailure;
+        }
+        ikm2 = newIkm2;
     }
     PORT_Assert(ikm2);
 
     PRINT_BUF(50, (NULL, "HKDF Extract: IKM1/Salt", params.pSalt, params.ulSaltLen));
     PRINT_KEY(50, (NULL, "HKDF Extract: IKM2", ikm2));
 
-    prk = PK11_Derive(ikm2, kTlsHkdfInfo[baseHash].pkcs11Mech,
-                      &paramsi, kTlsHkdfInfo[baseHash].pkcs11Mech,
-                      CKA_DERIVE, kTlsHkdfInfo[baseHash].hashSize);
-    if (zeroKey)
-        PK11_FreeSymKey(zeroKey);
+    prk = PK11_Derive(ikm2, CKM_HKDF_DERIVE, &paramsi, CKM_HKDF_DERIVE,
+                      CKA_DERIVE, 0);
+    PK11_FreeSymKey(newIkm2);
+    PK11_FreeSymKey(newIkm1);
     if (slot)
         PK11_FreeSlot(slot);
-    if (!prk)
+    if (!prk) {
         return SECFailure;
+    }
 
     PRINT_KEY(50, (NULL, "HKDF Extract", prk));
     *prkp = prk;
@@ -122,13 +167,14 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2in, SSLHashType baseHash,
 }
 
 SECStatus
-tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
-                      const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
-                      const char *label, unsigned int labelLen,
-                      CK_MECHANISM_TYPE algorithm, unsigned int keySize,
-                      SSLProtocolVariant variant, PK11SymKey **keyp)
+tls13_HkdfExpandLabelGeneral(CK_MECHANISM_TYPE deriveMech, PK11SymKey *prk,
+                             SSLHashType baseHash,
+                             const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
+                             const char *label, unsigned int labelLen,
+                             CK_MECHANISM_TYPE algorithm, unsigned int keySize,
+                             SSLProtocolVariant variant, PK11SymKey **keyp)
 {
-    CK_NSS_HKDFParams params;
+    CK_HKDF_PARAMS params;
     SECItem paramsi = { siBuffer, NULL, 0 };
     /* Size of info array needs to be big enough to hold the maximum Prefix,
      * Label, plus HandshakeHash. If it's ever to small, the code will abort.
@@ -196,17 +242,18 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
 
     params.bExtract = CK_FALSE;
     params.bExpand = CK_TRUE;
+    params.prfHashMechanism = kTlsHkdfInfo[baseHash].pkcs11Mech;
     params.pInfo = SSL_BUFFER_BASE(&infoBuf);
     params.ulInfoLen = SSL_BUFFER_LEN(&infoBuf);
     paramsi.data = (unsigned char *)&params;
     paramsi.len = sizeof(params);
-
-    derived = PK11_DeriveWithFlags(prk, kTlsHkdfInfo[baseHash].pkcs11Mech,
+    derived = PK11_DeriveWithFlags(prk, deriveMech,
                                    &paramsi, algorithm,
                                    CKA_DERIVE, keySize,
                                    CKF_SIGN | CKF_VERIFY);
-    if (!derived)
+    if (!derived) {
         return SECFailure;
+    }
 
     *keyp = derived;
 
@@ -230,6 +277,19 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
 }
 
 SECStatus
+tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
+                      const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
+                      const char *label, unsigned int labelLen,
+                      CK_MECHANISM_TYPE algorithm, unsigned int keySize,
+                      SSLProtocolVariant variant, PK11SymKey **keyp)
+{
+    return tls13_HkdfExpandLabelGeneral(CKM_HKDF_DERIVE, prk, baseHash,
+                                        handshakeHash, handshakeHashLen,
+                                        label, labelLen, algorithm, keySize,
+                                        variant, keyp);
+}
+
+SECStatus
 tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
                          const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
                          const char *label, unsigned int labelLen,
@@ -240,10 +300,11 @@ tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
     SECItem *rawkey;
     SECStatus rv;
 
-    rv = tls13_HkdfExpandLabel(prk, baseHash, handshakeHash, handshakeHashLen,
-                               label, labelLen,
-                               kTlsHkdfInfo[baseHash].pkcs11Mech, outputLen,
-                               variant, &derived);
+    /* the result is not really a key, it's a data object */
+    rv = tls13_HkdfExpandLabelGeneral(CKM_HKDF_DATA, prk, baseHash,
+                                      handshakeHash, handshakeHashLen,
+                                      label, labelLen, CKM_HKDF_DERIVE, outputLen,
+                                      variant, &derived);
     if (rv != SECSuccess || !derived) {
         goto abort;
     }

@@ -662,12 +662,6 @@ tls13_FormatEsniAADInput(sslBuffer *aadInput,
 {
     SECStatus rv;
 
-    /* 8 bytes of 0 for the sequence number. */
-    rv = sslBuffer_AppendNumber(aadInput, 0, 8);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
     /* Key share. */
     PORT_Assert(keyShareLen > 0);
     rv = sslBuffer_Append(aadInput, keyShare, keyShareLen);
@@ -680,12 +674,10 @@ tls13_FormatEsniAADInput(sslBuffer *aadInput,
 
 static SECStatus
 tls13_ServerGetEsniAEAD(const sslSocket *ss, PRUint64 suite,
-                        const ssl3CipherSuiteDef **suiteDefp,
-                        SSLAEADCipher *aeadp)
+                        const ssl3CipherSuiteDef **suiteDefp)
 {
     SECStatus rv;
     const ssl3CipherSuiteDef *suiteDef;
-    SSLAEADCipher aead;
 
     /* Check against the suite list for ESNI */
     PRBool csMatch = PR_FALSE;
@@ -712,13 +704,8 @@ tls13_ServerGetEsniAEAD(const sslSocket *ss, PRUint64 suite,
     if (!suiteDef) {
         return SECFailure;
     }
-    aead = tls13_GetAead(ssl_GetBulkCipherDef(suiteDef));
-    if (!aead) {
-        return SECFailure;
-    }
 
     *suiteDefp = suiteDef;
-    *aeadp = aead;
     return SECSuccess;
 }
 
@@ -729,7 +716,6 @@ tls13_ServerDecryptEsniXtn(const sslSocket *ss, const PRUint8 *in, unsigned int 
     sslReader rdr = SSL_READER(in, inLen);
     PRUint64 suite;
     const ssl3CipherSuiteDef *suiteDef = NULL;
-    SSLAEADCipher aead = NULL;
     TLSExtension *keyShareExtension;
     TLS13KeyShareEntry *entry = NULL;
     ssl3KeyMaterial keyMat = { NULL };
@@ -748,7 +734,7 @@ tls13_ServerDecryptEsniXtn(const sslSocket *ss, const PRUint8 *in, unsigned int 
     }
 
     /* Find the AEAD */
-    rv = tls13_ServerGetEsniAEAD(ss, suite, &suiteDef, &aead);
+    rv = tls13_ServerGetEsniAEAD(ss, suite, &suiteDef);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -822,11 +808,25 @@ tls13_ServerDecryptEsniXtn(const sslSocket *ss, const PRUint8 *in, unsigned int 
         goto loser;
     }
 
-    rv = aead(&keyMat, PR_TRUE /* Decrypt */,
-              out, outLen, maxLen,
-              buf.buf, buf.len,
-              SSL_BUFFER_BASE(&aadInput),
-              SSL_BUFFER_LEN(&aadInput));
+    const ssl3BulkCipherDef *cipher_def = ssl_GetBulkCipherDef(suiteDef);
+    unsigned char *aad = SSL_BUFFER_BASE(&aadInput);
+    int aadLen = SSL_BUFFER_LEN(&aadInput);
+    int ivLen = cipher_def->iv_size + cipher_def->explicit_nonce_size;
+    SSLCipherAlgorithm calg = cipher_def->calg;
+    unsigned char zero[sizeof(sslSequenceNumber)] = { 0 };
+    SECItem null_params = { siBuffer, NULL, 0 };
+    PK11Context *ctxt = PK11_CreateContextBySymKey(ssl3_Alg2Mech(calg),
+                                                   CKA_NSS_MESSAGE | CKA_DECRYPT,
+                                                   keyMat.key, &null_params);
+    if (!ctxt) {
+        sslBuffer_Clear(&aadInput);
+        goto loser;
+    }
+
+    rv = tls13_AEAD(ctxt, PR_TRUE /* Decrypt */, CKG_NO_GENERATE, 0,
+                    keyMat.iv, NULL, ivLen, zero, sizeof(zero), aad, aadLen,
+                    out, outLen, maxLen, cipher_def->tag_size, buf.buf, buf.len);
+    PK11_DestroyContext(ctxt, PR_TRUE);
     sslBuffer_Clear(&aadInput);
     if (rv != SECSuccess) {
         goto loser;

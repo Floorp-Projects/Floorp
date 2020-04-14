@@ -59,6 +59,7 @@
           'sftkdb.c',
           'sftkhmac.c',
           'sftkike.c',
+          'sftkmessage.c',
           'sftkpars.c',
           'sftkpwd.c',
           'softkver.c',

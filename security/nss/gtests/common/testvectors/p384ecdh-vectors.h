@@ -12,7 +12,7 @@
 
 #include "testvectors_base/test-structs.h"
 
-const EcdhTestVectorStr kP384EcdhWycheproofVectors[] = {
+const EcdhTestVector kP384EcdhWycheproofVectors[] = {
 
     // Comment: normal case
     // tcID: 1
