@@ -36,7 +36,7 @@ namespace js {
                                                        HandleObject proto,
                                                        NewObjectKind newKind) {
   Rooted<StringObject*> obj(
-      cx, NewObjectWithClassProto<StringObject>(cx, proto, newKind));
+      cx, NewObjectWithClassProtoAndKind<StringObject>(cx, proto, newKind));
   if (!obj) {
     return nullptr;
   }
