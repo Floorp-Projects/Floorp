@@ -6,8 +6,6 @@
 
 /* import-globals-from ../../mochitest/layout.js */
 
-/* global getContentDPR */
-
 async function runTests(browser, accDoc) {
   async function testTextNode(id) {
     let hyperTextNode = findAccessibleChildByID(accDoc, id);
