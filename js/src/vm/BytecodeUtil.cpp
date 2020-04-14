@@ -1890,9 +1890,11 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
     case JSOp::FunCall:
-    case JSOp::FunApply:
-      return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
-             write("(...)");
+    case JSOp::FunApply: {
+      uint16_t argc = GET_ARGC(pc);
+      return decompilePCForStackOperand(pc, -int32_t(argc + 2)) &&
+             write(argc ? "(...)" : "()");
+    }
     case JSOp::SpreadCall:
       return decompilePCForStackOperand(pc, -3) && write("(...)");
     case JSOp::NewArray:
@@ -1940,6 +1942,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
              write(")");
 
     case JSOp::SuperCall:
+      if (GET_ARGC(pc) == 0) {
+        return write("super()");
+      }
+      [[fallthrough]];
     case JSOp::SpreadSuperCall:
       return write("super(...)");
     case JSOp::SuperFun:
@@ -1951,10 +1957,12 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::StrictSpreadEval:
       return write("eval(...)");
 
-    case JSOp::New:
+    case JSOp::New: {
+      uint16_t argc = GET_ARGC(pc);
       return write("(new ") &&
-             decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 3)) &&
-             write("(...))");
+             decompilePCForStackOperand(pc, -int32_t(argc + 3)) &&
+             write(argc ? "(...))" : "())");
+    }
 
     case JSOp::SpreadNew:
       return write("(new ") && decompilePCForStackOperand(pc, -4) &&

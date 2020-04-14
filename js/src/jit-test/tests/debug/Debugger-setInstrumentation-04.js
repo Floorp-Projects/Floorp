@@ -29,6 +29,6 @@ try {
   g.foo({ f: () => { return { g: 0 } } });
 } catch (e) {
   gotException = true;
-  assertEq(e.toString().includes("v.f(...).g is not a function"), true);
+  assertEq(e.toString().includes("v.f().g is not a function"), true);
 }
 assertEq(gotException, true);
