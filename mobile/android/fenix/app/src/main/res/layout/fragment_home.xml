@@ -39,7 +39,8 @@
                 android:contentDescription="@string/content_description_private_browsing_button"
                 app:srcCompat="@drawable/private_browsing_button"
                 app:layout_collapseMode="parallax"
-                app:layout_collapseParallaxMultiplier=".8"/>
+                app:layout_collapseParallaxMultiplier=".167"/>
+            <!-- This value needs to be 1.67 * the wordmark parallax value as its 24dp vs 40 -->
 
             <ImageView
                 android:id="@+id/wordmark"
@@ -55,7 +56,7 @@
                 android:importantForAccessibility="no"
                 app:srcCompat="?fenixLogo"
                 app:layout_collapseMode="parallax"
-                app:layout_collapseParallaxMultiplier=".8"/>
+                app:layout_collapseParallaxMultiplier=".1"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
