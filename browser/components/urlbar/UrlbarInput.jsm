@@ -312,7 +312,7 @@ class UrlbarInput {
       valid = true;
     }
 
-    let isDifferentValidValue = valid && value != this.value;
+    let isDifferentValidValue = valid && value != this.untrimmedValue;
     this.value = value;
     this.valueIsTyped = !valid;
     this.removeAttribute("usertyping");
