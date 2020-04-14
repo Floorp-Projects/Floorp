@@ -66,16 +66,12 @@ function TestTabList(connection) {
 
   for (const global of gTestGlobals) {
     const actor = new TestTargetActor(connection, global);
-    actor.selected = false;
     this._descriptorActorPool.manage(actor);
 
     const descriptorActor = new TestDescriptorActor(connection, actor);
     this._descriptorActorPool.manage(descriptorActor);
 
     this._descriptorActors.push(descriptorActor);
-  }
-  if (this._descriptorActors.length > 0) {
-    this._descriptorActors[0]._targetActor.selected = true;
   }
 }
 
@@ -117,6 +113,11 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
     this._targetActor = targetActor;
   },
 
+  // We don't exercise the selected tab in xpcshell tests.
+  get selected() {
+    return false;
+  },
+
   get title() {
     return this._targetActor.title;
   },
@@ -127,6 +128,7 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
       traits: {
         getFavicon: true,
       },
+      selected: this.selected,
       title: this._targetActor.title,
       url: this._targetActor.url,
     };
