@@ -100,19 +100,16 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                                 HandleScript script, uint32_t line,
-                                 uint32_t column,
+                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
       script(cx, script),
-      bytecodeSection_(cx, line),
+      bytecodeSection_(cx, sc->extent.lineno),
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
-      firstLine(line),
-      firstColumn(column),
       emitterMode(emitterMode) {
   if (IsTypeInferenceEnabled() && sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
@@ -122,24 +119,20 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
-                                 HandleScript script, uint32_t line,
-                                 uint32_t column,
+                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
-                      emitterMode) {
+    : BytecodeEmitter(parent, sc, script, compilationInfo, emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
-                                 HandleScript script, uint32_t line,
-                                 uint32_t column,
+                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
-                      emitterMode) {
+    : BytecodeEmitter(parent, sc, script, compilationInfo, emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -5506,9 +5499,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       nestedMode = BytecodeEmitter::Normal;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, innerScript,
-                         funbox->extent.lineno, funbox->extent.column,
-                         compilationInfo, nestedMode);
+    BytecodeEmitter bce2(this, parser, funbox, innerScript, compilationInfo,
+                         nestedMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
