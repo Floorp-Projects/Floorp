@@ -474,12 +474,6 @@ skip script test262/built-ins/Proxy/create-handler-is-revoked-proxy.js
 skip script test262/built-ins/Proxy/create-target-is-revoked-proxy.js
 skip script test262/built-ins/Proxy/create-target-is-revoked-function-proxy.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1629793
-skip script test262/language/statements/class/elements/static-as-valid-instance-field-assigned.js
-skip script test262/language/statements/class/elements/static-as-valid-instance-field.js
-skip script test262/language/expressions/class/elements/static-as-valid-instance-field-assigned.js
-skip script test262/language/expressions/class/elements/static-as-valid-instance-field.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
