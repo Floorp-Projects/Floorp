@@ -4930,7 +4930,7 @@ JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
 
   RootedObject obj(cx, script->getObject(pc));
   if (cx->realm()->creationOptions().cloneSingletons()) {
-    return DeepCloneObjectLiteral(cx, obj);
+    return DeepCloneObjectLiteral(cx, obj, TenuredObject);
   }
 
   cx->realm()->behaviors().setSingletonsAsValues();
@@ -5445,7 +5445,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
     obj = CopyInitializerObject(cx, baseObject, newKind);
   } else {
     MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
-    obj = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+    obj = NewBuiltinClassInstance<PlainObject>(cx, newKind);
   }
 
   if (!obj) {

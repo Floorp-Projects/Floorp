@@ -220,7 +220,7 @@ static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewSingletonObjectWithGivenProto<PlainObject>(cx, proto);
+  return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
 }
 
 static const ClassSpec ReflectClassSpec = {CreateReflectObject, nullptr,

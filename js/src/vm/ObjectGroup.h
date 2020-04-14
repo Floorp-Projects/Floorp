@@ -49,6 +49,12 @@ enum NewObjectKind {
   SingletonObject,
 
   /*
+   * CrossCompartmentWrappers use the common Proxy class, but are allowed
+   * to have nursery lifetime.
+   */
+  NurseryAllocatedProxy,
+
+  /*
    * Objects which will not benefit from being allocated in the nursery
    * (e.g. because they are known to have a long lifetime) may be allocated
    * with this kind to place them immediately into the tenured generation.
@@ -460,25 +466,14 @@ class ObjectGroup : public gc::TenuredCell {
   static bool useSingletonForAllocationSite(JSScript* script, jsbytecode* pc,
                                             JSProtoKey key);
 
- public:
   // Static accessors for ObjectGroupRealm NewTable.
 
   static ObjectGroup* defaultNewGroup(JSContext* cx, const JSClass* clasp,
                                       TaggedProto proto,
                                       JSObject* associated = nullptr);
-
-  // For use in creating a singleton group without needing to replace an
-  // existing group.
-  static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm,
-                                         JS::Realm* objectRealm,
+  static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroup* oldGroup,
                                          const JSClass* clasp,
                                          TaggedProto proto);
-
-  // For use in replacing an already-existing group with a singleton group.
-  static inline ObjectGroup* lazySingletonGroup(JSContext* cx,
-                                                ObjectGroup* oldGroup,
-                                                const JSClass* clasp,
-                                                TaggedProto proto);
 
   static void setDefaultNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
                                         const JSClass* clasp,

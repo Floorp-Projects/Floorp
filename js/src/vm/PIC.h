@@ -8,7 +8,6 @@
 #define vm_PIC_h
 
 #include "vm/GlobalObject.h"
-#include "vm/NativeObject.h"
 
 namespace js {
 
@@ -74,12 +73,6 @@ class PICChain {
     }
     return count;
   }
-};
-
-// Class for object that holds ForOfPIC chain.
-class ForOfPICObject : public NativeObject {
- public:
-  static const JSClass class_;
 };
 
 /*
@@ -221,11 +214,14 @@ struct ForOfPIC {
     void freeAllStubs(JSFreeOp* fop);
   };
 
+  // Class for object that holds ForOfPIC chain.
+  static const JSClass class_;
+
   static NativeObject* createForOfPICObject(JSContext* cx,
                                             Handle<GlobalObject*> global);
 
   static inline Chain* fromJSObject(NativeObject* obj) {
-    MOZ_ASSERT(obj->is<ForOfPICObject>());
+    MOZ_ASSERT(obj->getClass() == &ForOfPIC::class_);
     return (ForOfPIC::Chain*)obj->getPrivate();
   }
   static inline Chain* getOrCreate(JSContext* cx) {

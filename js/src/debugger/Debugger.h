@@ -500,20 +500,11 @@ class MOZ_RAII DebuggerList {
                                            FireHookFun fireHook);
 };
 
-class DebuggerInstanceObject : public NativeObject {
- private:
-  static const JSClassOps classOps_;
-
- public:
-  static const JSClass class_;
-};
-
 class Debugger : private mozilla::LinkedListElement<Debugger> {
   friend class DebugAPI;
   friend class Breakpoint;
   friend class DebuggerFrame;
   friend class DebuggerMemory;
-  friend class DebuggerInstanceObject;
 
   template <typename>
   friend class DebuggerList;
@@ -875,6 +866,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   void traceForMovingGC(JSTracer* trc);
   void traceCrossCompartmentEdges(JSTracer* tracer);
+
+  static const JSClassOps classOps_;
+
+ public:
+  static const JSClass class_;
 
  private:
   template <typename F>
