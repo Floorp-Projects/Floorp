@@ -306,6 +306,10 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <style name="Body16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?primaryText</item>
+    </style>
+
     <style name="SubtitleTextStyle" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">?secondaryText</item>
         <item name="android:textSize">14sp</item>
