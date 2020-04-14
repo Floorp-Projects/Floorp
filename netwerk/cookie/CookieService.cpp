@@ -43,9 +43,8 @@ static StaticRefPtr<CookieService> gCookieService;
 constexpr auto CONSOLE_SAMESITE_CATEGORY = NS_LITERAL_CSTRING("cookieSameSite");
 constexpr auto CONSOLE_GENERIC_CATEGORY = NS_LITERAL_CSTRING("cookies");
 
-// XXX This is not the final URL. See bug 1620334.
-constexpr auto SAMESITE_MDN_URL =
-    NS_LITERAL_STRING("https://developer.mozilla.org/docs/Web/HTTP/Cookies");
+constexpr auto SAMESITE_MDN_URL = NS_LITERAL_STRING(
+    "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite");
 
 namespace {
 
