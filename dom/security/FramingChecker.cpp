@@ -6,106 +6,55 @@
 
 #include "FramingChecker.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 #include "nsCSPUtils.h"
 #include "nsDocShell.h"
 #include "nsHttpChannel.h"
 #include "nsIChannel.h"
-#include "nsIConsoleService.h"
+#include "nsIConsoleReportCollector.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
+#include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/NullPrincipal.h"
-#include "nsIStringBundle.h"
+#include "mozilla/net/HttpBaseChannel.h"
 
 #include "nsIObserverService.h"
 
 using namespace mozilla;
 
 /* static */
-void FramingChecker::ReportError(const char* aMessageTag, nsIURI* aParentURI,
-                                 nsIURI* aChildURI, const nsAString& aPolicy,
-                                 uint64_t aInnerWindowID) {
-  MOZ_ASSERT(aParentURI, "Need a parent URI");
-  if (!aChildURI || !aParentURI) {
-    return;
-  }
-
-  // Get the parent URL spec
-  nsAutoCString parentSpec;
-  nsresult rv;
-  rv = aParentURI->GetAsciiSpec(parentSpec);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  // Get the child URL spec
-  nsAutoCString childSpec;
-  rv = aChildURI->GetAsciiSpec(childSpec);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(
-      "chrome://global/locale/security/security.properties",
-      getter_AddRefs(bundle));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (NS_WARN_IF(!bundle)) {
-    return;
-  }
-
-  nsCOMPtr<nsIConsoleService> console(
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  if (!console || !error) {
-    return;
-  }
-
-  // Localize the error message
-  nsAutoString message;
-  AutoTArray<nsString, 3> formatStrings;
-  formatStrings.AppendElement(aPolicy);
-  CopyASCIItoUTF16(childSpec, *formatStrings.AppendElement());
-  CopyASCIItoUTF16(parentSpec, *formatStrings.AppendElement());
-  rv = bundle->FormatStringFromName(aMessageTag, formatStrings, message);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  rv = error->InitWithWindowID(message, EmptyString(), EmptyString(), 0, 0,
-                               nsIScriptError::errorFlag, "X-Frame-Options",
-                               aInnerWindowID);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  console->LogMessage(error);
-}
-
-/* static */
 void FramingChecker::ReportError(const char* aMessageTag,
-                                 BrowsingContext* aParentContext,
-                                 nsIURI* aChildURI, const nsAString& aPolicy,
-                                 uint64_t aInnerWindowID) {
-  nsCOMPtr<nsIURI> parentURI;
-  if (aParentContext) {
-    BrowsingContext* topContext = aParentContext->Top();
-    WindowGlobalParent* window =
-        topContext->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      parentURI = window->GetDocumentURI();
-    }
-    ReportError(aMessageTag, parentURI, aChildURI, aPolicy, aInnerWindowID);
+                                 nsIHttpChannel* aChannel, nsIURI* aURI,
+                                 const nsAString& aPolicy) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aURI);
+
+  nsCOMPtr<net::HttpBaseChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    return;
   }
+
+  // Get the URL spec
+  nsAutoCString spec;
+  nsresult rv = aURI->GetAsciiSpec(spec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsTArray<nsString> params;
+  params.AppendElement(aPolicy);
+  params.AppendElement(NS_ConvertUTF8toUTF16(spec));
+
+  httpChannel->AddConsoleReport(nsIScriptError::errorFlag,
+                                NS_LITERAL_CSTRING("X-Frame-Options"),
+                                nsContentUtils::eSECURITY_PROPERTIES, spec, 0,
+                                0, nsDependentCString(aMessageTag), params);
 }
 
 /* static */
@@ -114,21 +63,20 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   nsCOMPtr<nsIURI> uri;
   aHttpChannel->GetURI(getter_AddRefs(uri));
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aHttpChannel->LoadInfo();
-  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
-  RefPtr<mozilla::dom::BrowsingContext> ctx;
-  loadInfo->GetBrowsingContext(getter_AddRefs(ctx));
-
   // return early if header does not have one of the values with meaning
   if (!aPolicy.LowerCaseEqualsLiteral("deny") &&
       !aPolicy.LowerCaseEqualsLiteral("sameorigin")) {
-    ReportError("XFOInvalid", ctx, uri, aPolicy, innerWindowID);
+    ReportError("XFrameOptionsInvalid", aHttpChannel, uri, aPolicy);
     return true;
   }
 
   // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
   // parent chain must be from the same origin as this document.
   bool checkSameOrigin = aPolicy.LowerCaseEqualsLiteral("sameorigin");
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aHttpChannel->LoadInfo();
+  RefPtr<mozilla::dom::BrowsingContext> ctx;
+  loadInfo->GetBrowsingContext(getter_AddRefs(ctx));
 
   while (ctx) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -153,7 +101,7 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
       }
       // one of the ancestors is not same origin as this document
       if (!isSameOrigin) {
-        ReportError("XFOSameOrigin", ctx, uri, aPolicy, innerWindowID);
+        ReportError("XFrameOptionsDeny", aHttpChannel, uri, aPolicy);
         return false;
       }
     }
@@ -164,9 +112,7 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // not met (current docshell is not the top docshell), prohibit the
   // load.
   if (aPolicy.LowerCaseEqualsLiteral("deny")) {
-    RefPtr<mozilla::dom::BrowsingContext> ctx;
-    loadInfo->GetBrowsingContext(getter_AddRefs(ctx));
-    ReportError("XFODeny", ctx, uri, aPolicy, innerWindowID);
+    ReportError("XFrameOptionsDeny", aHttpChannel, uri, aPolicy);
     return false;
   }
 
