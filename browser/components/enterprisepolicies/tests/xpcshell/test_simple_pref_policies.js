@@ -667,6 +667,20 @@ const POLICIES_TESTS = [
         "example.com,example.org",
     },
   },
+
+  // POLICY: EncryptedMediaExtensions
+
+  {
+    policies: {
+      EncryptedMediaExtensions: {
+        Enabled: false,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "media.eme.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

@@ -93,6 +93,9 @@ policy-DownloadDirectory = Set and lock the download directory.
 # “lock” means that the user won’t be able to change this setting
 policy-EnableTrackingProtection = Enable or disable Content Blocking and optionally lock it.
 
+# “lock” means that the user won’t be able to change this setting
+policy-EncryptedMediaExtensions = Enable or disable Encrypted Media Extensions and optionally lock it.
+
 # A “locked” extension can’t be disabled or removed by the user. This policy
 # takes 3 keys (“Install”, ”Uninstall”, ”Locked”), you can either keep them in
 # English or translate them as verbs.
