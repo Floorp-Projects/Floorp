@@ -13,6 +13,7 @@
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/ObjectGroup-inl.h"  // JSObject::setSingleton
 #include "vm/TypeInference-inl.h"
 
 using namespace js;
