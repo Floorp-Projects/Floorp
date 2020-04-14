@@ -49,12 +49,6 @@ enum NewObjectKind {
   SingletonObject,
 
   /*
-   * CrossCompartmentWrappers use the common Proxy class, but are allowed
-   * to have nursery lifetime.
-   */
-  NurseryAllocatedProxy,
-
-  /*
    * Objects which will not benefit from being allocated in the nursery
    * (e.g. because they are known to have a long lifetime) may be allocated
    * with this kind to place them immediately into the tenured generation.
