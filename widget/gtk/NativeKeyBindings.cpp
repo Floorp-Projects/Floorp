@@ -77,7 +77,6 @@ static void delete_from_cursor_cb(GtkWidget* w, GtkDeleteType del_type,
 
   bool forward = count > 0;
 
-#ifdef MOZ_WIDGET_GTK
   // Ignore GTK's Ctrl-K keybinding introduced in GTK 3.14 and removed in
   // 3.18 if the user has custom bindings set. See bug 1176929.
   if (del_type == GTK_DELETE_PARAGRAPH_ENDS && forward && GTK_IS_ENTRY(w) &&
@@ -90,7 +89,6 @@ static void delete_from_cursor_cb(GtkWidget* w, GtkDeleteType del_type,
     if (!array) return;
     g_ptr_array_unref(array);
   }
-#endif
 
   gHandled = true;
   if (uint32_t(del_type) >= ArrayLength(sDeleteCommands)) {

@@ -14,9 +14,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <dlfcn.h>
-#ifdef MOZ_WIDGET_GTK
-#  include <gdk/gdkkeysyms-compat.h>
-#endif
+#include <gdk/gdkkeysyms-compat.h>
 #include <X11/XKBlib.h>
 #include "X11UndefineNone.h"
 #include "IMContextWrapper.h"
