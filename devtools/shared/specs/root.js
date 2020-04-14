@@ -20,9 +20,6 @@ types.addDictType("root.listServiceWorkerRegistrations", {
 types.addDictType("root.listRemoteFrames", {
   frames: "array:frameDescriptor",
 });
-types.addDictType("root.listTabs", {
-  tabs: "array:tabDescriptor",
-});
 types.addPolymorphicType("root.browsingContextDescriptor", [
   "frameDescriptor",
   "processDescriptor",
@@ -43,7 +40,9 @@ const rootSpecPrototype = {
         // The argument can be dropped when FF76 hits the release channel.
         favicons: Option(0, "boolean"),
       },
-      response: RetVal("root.listTabs"),
+      response: {
+        tabs: RetVal("array:tabDescriptor"),
+      },
     },
 
     getTab: {
