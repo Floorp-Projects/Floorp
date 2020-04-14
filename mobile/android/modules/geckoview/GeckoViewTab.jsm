@@ -43,28 +43,8 @@ class BrowserAppShim {
     this.tabs = [this.selectedTab];
   }
 
-  getTabForId(aId) {
-    return this.selectedTab;
-  }
-
   getTabForBrowser(aBrowser) {
     return this.selectedTab;
-  }
-
-  getTabForWindow(aWindow) {
-    return this.selectedTab;
-  }
-
-  getTabForDocument(aDocument) {
-    return this.selectedTab;
-  }
-
-  getBrowserForOuterWindowID(aID) {
-    return this.selectedBrowser;
-  }
-
-  getBrowserForDocument(aDocument) {
-    return this.selectedBrowser;
   }
 
   static getBrowserApp(window) {
@@ -159,7 +139,7 @@ const GeckoViewTabBridge = {
    * @param {Window} options.window The window owning the tab to close
    * @param {string} options.extensionId
    *
-   * @returns {Promise<Tab>}
+   * @returns {Promise<Void>}
    *          A promise resolved after GeckoSession is closed.
    * @throws {Error}
    *         Throws an error if the GeckoView app doesn't allow extension to close tab.
