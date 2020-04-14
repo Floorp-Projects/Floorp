@@ -31,6 +31,18 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build."""
 
     def filter(task, parameters):
+        # We don't want to ship nightly while Google Play is still behind manual review.
+        # See bug 1628413 for more context.
+        return task.attributes.get("nightly", False) and task.kind != "push-apk"
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+
+@_target_task("nightly-on-google-play")
+def target_tasks_nightly_on_google_play(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build that goes on Google Play."""
+
+    def filter(task, parameters):
         return task.attributes.get("nightly", False)
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
