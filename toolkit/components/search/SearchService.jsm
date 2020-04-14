@@ -215,13 +215,13 @@ async function storeRegion(region) {
   let platformCC = await Services.sysinfo.countryCode;
   if (platformCC) {
     let probeUSMismatched, probeNonUSMismatched;
-    switch (Services.appinfo.OS) {
-      case "Darwin":
+    switch (AppConstants.platform) {
+      case "macosx":
         probeUSMismatched = "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_OSX";
         probeNonUSMismatched =
           "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_OSX";
         break;
-      case "WINNT":
+      case "win":
         probeUSMismatched = "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_WIN";
         probeNonUSMismatched =
           "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_WIN";
