@@ -99,18 +99,17 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
-BytecodeEmitter::BytecodeEmitter(
-    BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
-    uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
-    EmitterMode emitterMode,
-    FieldInitializers fieldInitializers /* = FieldInitializers::Invalid() */)
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
+                                 HandleScript script, uint32_t line,
+                                 uint32_t column,
+                                 CompilationInfo& compilationInfo,
+                                 EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
       script(cx, script),
       bytecodeSection_(cx, line),
       perScriptData_(cx, compilationInfo),
-      fieldInitializers_(fieldInitializers),
       compilationInfo(compilationInfo),
       firstLine(line),
       firstColumn(column),
@@ -126,10 +125,9 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  HandleScript script, uint32_t line,
                                  uint32_t column,
                                  CompilationInfo& compilationInfo,
-                                 EmitterMode emitterMode,
-                                 FieldInitializers fieldInitializers)
+                                 EmitterMode emitterMode)
     : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
-                      emitterMode, fieldInitializers) {
+                      emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
@@ -139,10 +137,9 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  HandleScript script, uint32_t line,
                                  uint32_t column,
                                  CompilationInfo& compilationInfo,
-                                 EmitterMode emitterMode,
-                                 FieldInitializers fieldInitializers)
+                                 EmitterMode emitterMode)
     : BytecodeEmitter(parent, sc, script, line, column, compilationInfo,
-                      emitterMode, fieldInitializers) {
+                      emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
