@@ -44,7 +44,6 @@ class BrowserAppShim {
     );
     this.selectedBrowser = window.browser;
     this.selectedTab = new Tab(tabId, this.selectedBrowser);
-    this.tabs = [this.selectedTab];
   }
 
   getTabForBrowser(aBrowser) {
