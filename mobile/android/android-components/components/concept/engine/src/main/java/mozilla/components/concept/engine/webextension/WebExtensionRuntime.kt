@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine.webextension
 
+import mozilla.components.concept.engine.CancellableOperation
 import java.lang.UnsupportedOperationException
 
 /**
@@ -37,7 +38,10 @@ interface WebExtensionRuntime {
         supportActions: Boolean = false,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
-    ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
+    ): CancellableOperation {
+        onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
+        return CancellableOperation.Noop()
+    }
 
     /**
      * Updates the provided [extension] if a new version is available.
