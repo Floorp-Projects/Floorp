@@ -66,6 +66,7 @@ class nsMixedContentBlocker : public nsIContentPolicy,
    */
   static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
                              uint32_t aContentType, nsIURI* aContentLocation,
+                             nsIURI* aRequestingLocation,
                              nsISupports* aRequestingContext,
                              const nsACString& aMimeGuess,
                              nsIPrincipal* aRequestPrincipal,
