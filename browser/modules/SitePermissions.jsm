@@ -302,6 +302,18 @@ var SitePermissions = {
         if (permission.type == "canvas" && !this.resistFingerprinting) {
           continue;
         }
+        /* Hide persistent storage permission when extension principal
+         * have WebExtensions-unlimitedStorage permission. */
+
+        if (
+          permission.type == "persistent-storage" &&
+          SitePermissions.getForPrincipal(
+            principal,
+            "WebExtensions-unlimitedStorage"
+          ).state == SitePermissions.ALLOW
+        ) {
+          continue;
+        }
 
         let scope = this.SCOPE_PERSISTENT;
         if (permission.expireType == Services.perms.EXPIRE_SESSION) {
