@@ -382,10 +382,5 @@ bool DocGroup::IsActive() const {
   return false;
 }
 
-void DocGroup::ClearEventTarget() {
-  nsCOMPtr<LabellingEventTarget> target = do_QueryInterface(mEventTarget);
-  target->ClearDocGroup();
-}
-
 }  // namespace dom
 }  // namespace mozilla

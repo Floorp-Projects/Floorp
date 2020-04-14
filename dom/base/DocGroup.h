@@ -130,8 +130,6 @@ class DocGroup final {
 
   bool IsEmpty() const { return mDocuments.IsEmpty(); }
 
-  void ClearEventTarget();
-
  private:
   DocGroup(BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey);
 
