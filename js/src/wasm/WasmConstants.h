@@ -609,6 +609,9 @@ static const unsigned MaxTableInitialLength = 10000000;
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxMemoryInitialPages = 16384;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
+static const unsigned MaxResultsForJitEntry = 1;
+static const unsigned MaxResultsForJitExit = 1;
+static const unsigned MaxResultsForJitInlineCall = MaxResultsForJitEntry;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.

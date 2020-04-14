@@ -4035,8 +4035,7 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
 
   // If there are too many results, don't inline as we don't currently
   // add MWasmStackResults.
-  static constexpr size_t MaxNumInlinedResults = 1;
-  if (sig.results().length() > MaxNumInlinedResults) {
+  if (sig.results().length() > wasm::MaxResultsForJitInlineCall) {
     return InliningStatus_NotInlined;
   }
 
