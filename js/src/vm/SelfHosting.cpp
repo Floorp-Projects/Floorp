@@ -2954,7 +2954,7 @@ static JSObject* CloneObject(JSContext* cx,
     }
     clone = StringObject::create(cx, str);
   } else if (selfHostedObject->is<ArrayObject>()) {
-    clone = NewDenseEmptyArray(cx, nullptr, TenuredObject);
+    clone = NewTenuredDenseEmptyArray(cx, nullptr);
   } else {
     MOZ_ASSERT(selfHostedObject->isNative());
     clone = NewObjectWithGivenProto(
