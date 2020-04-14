@@ -34,11 +34,12 @@ function enableActorReleaser(webConsoleUI) {
       ) {
         const promises = [];
         state.messages.frontsToRelease.forEach(front => {
-          // We only release the front if it actually has a release method,
-          // and if it's not in the sidebar (where we might still need it).
+          // We only release the front if it actually has a release method, if it isn't
+          // already destroyed, and if it's not in the sidebar (where we might still need it).
           if (
             front &&
             typeof front.release === "function" &&
+            front.actorID &&
             (!state.ui.frontInSidebar ||
               state.ui.frontInSidebar.actorID !== front.actorID)
           ) {
