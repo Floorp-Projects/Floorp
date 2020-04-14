@@ -361,12 +361,6 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
 
 inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
                                       const JSClass* clasp) {
-  if (newKind == NurseryAllocatedProxy) {
-    MOZ_ASSERT(clasp->isProxy());
-    MOZ_ASSERT(clasp->hasFinalize());
-    MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
-    return gc::DefaultHeap;
-  }
   if (newKind != GenericObject) {
     return gc::TenuredHeap;
   }
