@@ -574,74 +574,40 @@
         this.textbox.popup.removeAttribute("showonlysettings");
       });
 
-      this.textbox.addEventListener(
-        "keypress",
-        event => {
-          // accel + up/down changes the default engine and shouldn't affect
-          // the selection on the one-off buttons.
-          let popup = this.textbox.popup;
-          if (!popup.popupOpen || event.getModifierState("Accel")) {
-            return;
-          }
+      this.textbox.addEventListener("keydown", event => {
+        if (
+          event.keyCode == KeyEvent.DOM_VK_UP &&
+          event.getModifierState("Accel")
+        ) {
+          this.selectEngine(event, false);
+        }
+      });
 
-          let suggestionsHidden =
-            popup.richlistbox.getAttribute("collapsed") == "true";
-          let numItems = suggestionsHidden ? 0 : popup.matchCount;
-          popup.oneOffButtons.handleKeyPress(event, numItems, true);
-        },
-        true
-      );
+      this.textbox.addEventListener("keydown", event => {
+        if (
+          event.keyCode == KeyEvent.DOM_VK_DOWN &&
+          event.getModifierState("Accel")
+        ) {
+          this.selectEngine(event, true);
+        }
+      });
 
-      this.textbox.addEventListener(
-        "keypress",
-        event => {
-          if (
-            event.keyCode == KeyEvent.DOM_VK_UP &&
-            event.getModifierState("Accel")
-          ) {
-            this.selectEngine(event, false);
-          }
-        },
-        true
-      );
-
-      this.textbox.addEventListener(
-        "keypress",
-        event => {
-          if (
-            event.keyCode == KeyEvent.DOM_VK_DOWN &&
-            event.getModifierState("Accel")
-          ) {
-            this.selectEngine(event, true);
-          }
-        },
-        true
-      );
-
-      this.textbox.addEventListener(
-        "keypress",
-        event => {
-          if (
-            event.getModifierState("Alt") &&
-            (event.keyCode == KeyEvent.DOM_VK_DOWN ||
-              event.keyCode == KeyEvent.DOM_VK_UP)
-          ) {
-            this.textbox.openSearch();
-          }
-        },
-        true
-      );
+      this.textbox.addEventListener("keydown", event => {
+        if (
+          event.getModifierState("Alt") &&
+          (event.keyCode == KeyEvent.DOM_VK_DOWN ||
+            event.keyCode == KeyEvent.DOM_VK_UP)
+        ) {
+          this.textbox.openSearch();
+        }
+      });
 
       if (AppConstants.platform == "macosx") {
-        this.textbox.addEventListener(
-          "keypress",
-          event => {
-            if (event.keyCode == KeyEvent.DOM_VK_F4) {
-              this.textbox.openSearch();
-            }
-          },
-          true
-        );
+        this.textbox.addEventListener("keydown", event => {
+          if (event.keyCode == KeyEvent.DOM_VK_F4) {
+            this.textbox.openSearch();
+          }
+        });
       }
 
       this.textbox.addEventListener("dragover", event => {
@@ -739,6 +705,18 @@
       this.textbox.onBeforeValueSet = aValue => {
         this.textbox.popup.oneOffButtons.query = aValue;
         return aValue;
+      };
+
+      this.textbox.onBeforeHandleKeyDown = aEvent => {
+        let popup = this.textbox.popup;
+        if (!popup.popupOpen || aEvent.getModifierState("Accel")) {
+          return false;
+        }
+
+        let suggestionsHidden =
+          popup.richlistbox.getAttribute("collapsed") == "true";
+        let numItems = suggestionsHidden ? 0 : popup.matchCount;
+        return popup.oneOffButtons.handleKeyDown(aEvent, numItems, true);
       };
 
       // This method overrides the autocomplete binding's openPopup (essentially
