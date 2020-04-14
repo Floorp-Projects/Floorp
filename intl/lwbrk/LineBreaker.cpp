@@ -790,7 +790,7 @@ class ContextState {
             break;
           }
         } else if (!mHasCJKChar && IS_CJK_CHAR(u)) {
-          mHasCJKChar = 1;
+          mHasCJKChar = true;
           if (mHasNonbreakableSpace) {
             break;
           }
