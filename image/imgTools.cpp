@@ -56,25 +56,6 @@ static nsresult sniff_mimetype_callback(nsIInputStream* in, void* data,
   return NS_ERROR_FAILURE;
 }
 
-// Provides WeakPtr for imgINotificationObserver
-class NotificationObserverWrapper
-    : public imgINotificationObserver,
-      public mozilla::SupportsWeakPtr<NotificationObserverWrapper> {
- public:
-  NS_DECL_ISUPPORTS
-  NS_FORWARD_IMGINOTIFICATIONOBSERVER(mObserver->)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
-
-  explicit NotificationObserverWrapper(imgINotificationObserver* observer)
-      : mObserver(observer) {}
-
- private:
-  virtual ~NotificationObserverWrapper() = default;
-  nsCOMPtr<imgINotificationObserver> mObserver;
-};
-
-NS_IMPL_ISUPPORTS(NotificationObserverWrapper, imgINotificationObserver)
-
 class ImageDecoderListener final : public nsIStreamListener,
                                    public IProgressObserver,
                                    public imgIContainer {
@@ -86,8 +67,7 @@ class ImageDecoderListener final : public nsIStreamListener,
       : mURI(aURI),
         mImage(nullptr),
         mCallback(aCallback),
-        mObserver(aObserver ? new NotificationObserverWrapper(aObserver)
-                            : nullptr) {
+        mObserver(aObserver) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
@@ -177,7 +157,7 @@ class ImageDecoderListener final : public nsIStreamListener,
   nsCOMPtr<nsIURI> mURI;
   RefPtr<image::Image> mImage;
   nsCOMPtr<imgIContainerCallback> mCallback;
-  WeakPtr<NotificationObserverWrapper> mObserver;
+  nsCOMPtr<imgINotificationObserver> mObserver;
 };
 
 NS_IMPL_ISUPPORTS(ImageDecoderListener, nsIStreamListener, imgIContainer)
