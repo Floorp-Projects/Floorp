@@ -1,0 +1,165 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<!--
+  scrolling=no is just paranoia to ensure that we don't get invalidations
+  due to scrollbars
+-->
+<iframe scrolling="no" id="iframe"></iframe>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// We hit an optimized path in WebRender that doesn't cause a repaint on the
+// main thread:
+//
+// https://searchfox.org/mozilla-central/rev/b7f3977978922d44c7d92ae01c0d4cc2baca7bc2/layout/style/ImageLoader.cpp#553
+//
+// So our assertions and polling need to be a bit weaker on WR.
+const kUsingWebRender = SpecialPowers.DOMWindowUtils.layerManagerType === "WebRender";
+
+let iframe = document.getElementById("iframe");
+let blankSnapshot;
+
+async function assertAnimates(html, getExpectedRepaintedElement) {
+  const kExpectEqual = true;
+  const kNumRetries = kUsingWebRender ? 600 : 30;
+
+  info("testing: " + html);
+
+  {
+    let load = new Promise(resolve => {
+      iframe.addEventListener("load", resolve, { once: true });
+    });
+    iframe.srcdoc = html;
+    await load;
+  }
+
+  // This ensures the MozAfterPaint events come through as expected.
+  await SimpleTest.promiseFocus(iframe.contentWindow);
+
+  let initial = await snapshotWindow(iframe.contentWindow);
+
+  let repaintedElement = getExpectedRepaintedElement(iframe.contentDocument);
+  if (!kUsingWebRender) {
+    // Ensure the painted state is clear before we start polling.
+    SpecialPowers.DOMWindowUtils.checkAndClearPaintedState(repaintedElement);
+  }
+
+  {
+    let [equal, s1 /* , s2, differentPixels, maxDiff */] = compareSnapshots(initial, blankSnapshot, kExpectEqual);
+    ok(!equal, "Initial snapshot shouldn't be blank");
+    info(s1);
+  }
+
+  let foundDifferent = false;
+  let foundInitialAgain = false;
+  for (let i = 0; i < kNumRetries; ++i) {
+    let current = await snapshotWindow(iframe.contentWindow);
+    let [equal, /* s1 */, s2 /* , differentPixels, maxDiff */ ] = compareSnapshots(initial, current, kExpectEqual);
+    if (!foundDifferent && !equal) {
+      ok(true, `Found different image after ${i} retries`);
+      ok(kUsingWebRender || SpecialPowers.DOMWindowUtils.checkAndClearPaintedState(repaintedElement), "Should've repainted the expected element");
+      info(s2);
+      foundDifferent = true;
+    }
+
+    // Ensure that we go back to the initial state (animated1.gif) is an
+    // infinite gif.
+    if (foundDifferent && equal) {
+      ok(true, `Found same image again after ${i} retries`);
+      ok(kUsingWebRender || SpecialPowers.DOMWindowUtils.checkAndClearPaintedState(repaintedElement), "Should've repainted the expected element");
+      foundInitialAgain = true;
+      break;
+    }
+
+    await new Promise(resolve => {
+      if (kUsingWebRender) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      } else {
+        iframe.contentWindow.addEventListener("MozAfterPaint", resolve, { once: true });
+      }
+    });
+  }
+
+  ok(foundDifferent && foundInitialAgain, `Should've found a different snapshot and then an equal one, after ${kNumRetries} retries`);
+}
+
+const kTests = [
+  // Sanity test: background-image on a regular element.
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div {
+          width: 100px;
+          height: 100px;
+          background-image: url(animated1.gif);
+        }
+      </style>
+      <div></div>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
+
+  // bug 1627585: content: url()
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div::before {
+          content: url(animated1.gif);
+        }
+      </style>
+      <div></div>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
+
+  // bug 1627585: content: url() (on an element directly)
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div {
+          content: url(animated1.gif);
+        }
+      </style>
+      <div></div>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
+
+  // bug 1625571: background propagated to canvas.
+  {
+    html: `
+      <!doctype html>
+      <style>
+        body {
+          background-image: url(animated1.gif);
+        }
+      </style>
+    `,
+    element(doc) {
+      return doc.documentElement;
+    },
+  }
+];
+
+onload = async function() {
+  // First snapshot the blank window.
+  blankSnapshot = await snapshotWindow(iframe.contentWindow);
+
+  for (let { html, element } of kTests)
+    await assertAnimates(html, element);
+
+  SimpleTest.finish();
+}
+</script>
