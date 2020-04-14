@@ -34,6 +34,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
+#include "nsDocShell.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsImageFrame.h"
