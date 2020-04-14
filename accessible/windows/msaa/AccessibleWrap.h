@@ -186,7 +186,7 @@ class AccessibleWrap : public Accessible,
   /**
    * Find an accessible by the given child ID in cached documents.
    */
-  MOZ_MUST_USE already_AddRefed<IAccessible> GetIAccessibleFor(
+  [[nodiscard]] already_AddRefed<IAccessible> GetIAccessibleFor(
       const VARIANT& aVarChild, bool* aIsDefunct);
 
   virtual void GetNativeInterface(void** aOutAccessible) override;
@@ -221,7 +221,7 @@ class AccessibleWrap : public Accessible,
   /**
    * Find a remote accessible by the given child ID.
    */
-  MOZ_MUST_USE already_AddRefed<IAccessible> GetRemoteIAccessibleFor(
+  [[nodiscard]] already_AddRefed<IAccessible> GetRemoteIAccessibleFor(
       const VARIANT& aVarChild);
 
   /**
