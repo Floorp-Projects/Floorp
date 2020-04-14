@@ -45,13 +45,28 @@ static gc::AllocKind GetProxyGCObjectKind(const JSClass* clasp,
   return kind;
 }
 
+void ProxyObject::init(const BaseProxyHandler* handler, HandleValue priv,
+                       JSContext* cx) {
+  setInlineValueArray();
+
+  detail::ProxyValueArray* values = detail::GetProxyDataLayout(this)->values();
+  values->init(numReservedSlots());
+
+  data.handler = handler;
+
+  if (IsCrossCompartmentWrapper(this)) {
+    MOZ_ASSERT(cx->global() == &cx->compartment()->globalForNewCCW());
+    setCrossCompartmentPrivate(priv);
+  } else {
+    setSameCompartmentPrivate(priv);
+  }
+}
+
 /* static */
 ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
                               HandleValue priv, TaggedProto proto_,
-                              const ProxyOptions& options) {
+                              const JSClass* clasp) {
   Rooted<TaggedProto> proto(cx, proto_);
-
-  const JSClass* clasp = options.clasp();
 
 #ifdef DEBUG
   MOZ_ASSERT(isValidProxyClass(clasp));
@@ -71,7 +86,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
    * because we want to be able to keep track of them in typesets in useful
    * ways.
    */
-  if (proto.isObject() && !options.singleton() && !clasp->isDOMClass()) {
+  if (proto.isObject() && !clasp->isDOMClass()) {
     ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
     RootedObject protoObj(cx, proto.toObject());
     if (!JSObject::setNewGroupUnknown(cx, realm, clasp, protoObj)) {
@@ -82,12 +97,8 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   // Ensure that the wrapper has the same lifetime assumptions as the
   // wrappee. Prefer to allocate in the nursery, when possible.
   NewObjectKind newKind = NurseryAllocatedProxy;
-  if (options.singleton()) {
-    MOZ_ASSERT(priv.isNull() ||
-               (priv.isGCThing() && priv.toGCThing()->isTenured()));
-    newKind = SingletonObject;
-  } else if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
-             !handler->canNurseryAllocate()) {
+  if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
+      !handler->canNurseryAllocate()) {
     newKind = TenuredObject;
   }
 
@@ -100,33 +111,51 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   JS_TRY_VAR_OR_RETURN_NULL(cx, proxy,
                             create(cx, clasp, proto, allocKind, newKind));
 
-  proxy->setInlineValueArray();
+  proxy->init(handler, priv, cx);
 
-  detail::ProxyValueArray* values = detail::GetProxyDataLayout(proxy)->values();
-  values->init(proxy->numReservedSlots());
-
-  proxy->data.handler = handler;
-  if (IsCrossCompartmentWrapper(proxy)) {
-    MOZ_ASSERT(cx->global() == &cx->compartment()->globalForNewCCW());
-    proxy->setCrossCompartmentPrivate(priv);
-  } else {
-    proxy->setSameCompartmentPrivate(priv);
-  }
-
-  if (newKind == SingletonObject) {
-    Rooted<ProxyObject*> rootedProxy(cx, proxy);
-    if (!JSObject::setSingleton(cx, rootedProxy)) {
-      return nullptr;
-    }
-    return rootedProxy;
-  }
-
-  /* Don't track types of properties of non-DOM and non-singleton proxies. */
+  // Don't track types of properties of non-DOM and non-singleton proxies.
   if (!clasp->isDOMClass()) {
     MarkObjectGroupUnknownProperties(cx, proxy->group());
   }
 
   return proxy;
+}
+
+/* static */
+ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
+                                       const BaseProxyHandler* handler,
+                                       HandleValue priv, TaggedProto proto_,
+                                       const JSClass* clasp) {
+  Rooted<TaggedProto> proto(cx, proto_);
+
+#ifdef DEBUG
+  MOZ_ASSERT(isValidProxyClass(clasp));
+  MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+  MOZ_ASSERT_IF(proto.isObject(),
+                cx->compartment() == proto.toObject()->compartment());
+  MOZ_ASSERT(clasp->hasFinalize());
+  if (priv.isGCThing()) {
+    JS::AssertCellIsNotGray(priv.toGCThing());
+  }
+#endif
+
+  gc::AllocKind allocKind = GetProxyGCObjectKind(clasp, handler, priv);
+
+  AutoSetNewObjectMetadata metadata(cx);
+  // Note: this will initialize the object's |data| to strange values, but we
+  // will immediately overwrite those below.
+  ProxyObject* proxy;
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, proxy, create(cx, clasp, proto, allocKind, SingletonObject));
+
+  proxy->init(handler, priv, cx);
+
+  Rooted<ProxyObject*> rootedProxy(cx, proxy);
+  if (!JSObject::setSingleton(cx, rootedProxy)) {
+    return nullptr;
+  }
+
+  return rootedProxy;
 }
 
 gc::AllocKind ProxyObject::allocKindForTenure() const {

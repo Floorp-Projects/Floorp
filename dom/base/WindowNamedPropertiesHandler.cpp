@@ -225,16 +225,16 @@ static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
 // static
 JSObject* WindowNamedPropertiesHandler::Create(JSContext* aCx,
                                                JS::Handle<JSObject*> aProto) {
+  js::ProxyOptions options;
+  options.setClass(&WindowNamedPropertiesClass.mBase);
+
   // Note: since the scope polluter proxy lives on the window's prototype
   // chain, it needs a singleton type to avoid polluting type information
   // for properties on the window.
-  js::ProxyOptions options;
-  options.setSingleton(true);
-  options.setClass(&WindowNamedPropertiesClass.mBase);
-
-  JS::Rooted<JSObject*> gsp(aCx);
-  gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
-                           JS::NullHandleValue, aProto, options);
+  JS::Rooted<JSObject*> gsp(
+      aCx, js::NewSingletonProxyObject(
+               aCx, WindowNamedPropertiesHandler::getInstance(),
+               JS::NullHandleValue, aProto, options));
   if (!gsp) {
     return nullptr;
   }

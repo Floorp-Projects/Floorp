@@ -555,19 +555,11 @@ inline bool IsScriptedProxy(const JSObject* obj) {
 class MOZ_STACK_CLASS ProxyOptions {
  protected:
   /* protected constructor for subclass */
-  explicit ProxyOptions(bool singletonArg, bool lazyProtoArg = false)
-      : singleton_(singletonArg),
-        lazyProto_(lazyProtoArg),
-        clasp_(&ProxyClass) {}
+  explicit ProxyOptions(bool lazyProtoArg)
+      : lazyProto_(lazyProtoArg), clasp_(&ProxyClass) {}
 
  public:
-  ProxyOptions() : singleton_(false), lazyProto_(false), clasp_(&ProxyClass) {}
-
-  bool singleton() const { return singleton_; }
-  ProxyOptions& setSingleton(bool flag) {
-    singleton_ = flag;
-    return *this;
-  }
+  ProxyOptions() : ProxyOptions(false) {}
 
   bool lazyProto() const { return lazyProto_; }
   ProxyOptions& setLazyProto(bool flag) {
@@ -582,12 +574,15 @@ class MOZ_STACK_CLASS ProxyOptions {
   }
 
  private:
-  bool singleton_;
   bool lazyProto_;
   const JSClass* clasp_;
 };
 
 JS_FRIEND_API JSObject* NewProxyObject(
+    JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
+    JSObject* proto, const ProxyOptions& options = ProxyOptions());
+
+JS_FRIEND_API JSObject* NewSingletonProxyObject(
     JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
     JSObject* proto, const ProxyOptions& options = ProxyOptions());
 
