@@ -6,6 +6,9 @@ let instance = wasmEvalText(`
        (i32.const 32)
        (i32.const 10)))`);
 
-for (let i = 0; i < 1e3; i++) {
+const options = getJitCompilerOptions();
+const jitThreshold = options['ion.warmup.trigger'] * 2 + 2;
+
+for (let i = 0; i < jitThreshold; i++) {
     assertDeepEq(instance.exports.f(), [0, 32, 10]);
 }
