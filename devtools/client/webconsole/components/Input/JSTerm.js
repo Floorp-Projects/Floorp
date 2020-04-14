@@ -642,6 +642,10 @@ class JSTerm extends Component {
     }
 
     if (!this.props.editorMode) {
+      // Calling this.props.terminalInputChanged instead of this.terminalInputChanged
+      // because we want to instantly hide the instant evaluation result, and don't want
+      // the delay we have in this.terminalInputChanged.
+      this.props.terminalInputChanged("");
       this._setValue("");
     }
     this.clearCompletion();
