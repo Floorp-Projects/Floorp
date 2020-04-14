@@ -210,7 +210,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
                         NSAccessibilityWindowAttribute, NSAccessibilityFocusedAttribute,
                         NSAccessibilityHelpAttribute, NSAccessibilityTitleUIElementAttribute,
                         NSAccessibilityTopLevelUIElementAttribute, NSAccessibilityHasPopupAttribute,
-                        NSAccessibilityARIACurrentAttribute,
+                        NSAccessibilityARIACurrentAttribute, NSAccessibilitySelectedAttribute,
 #if DEBUG
                         @"AXMozDescription",
 #endif
@@ -351,6 +351,9 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     } else {
       return nil;
     }
+  }
+  if ([attribute isEqualToString:NSAccessibilitySelectedAttribute]) {
+    return [NSNumber numberWithBool:NO];
   }
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return [self roleDescription];
