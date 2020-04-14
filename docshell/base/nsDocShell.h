@@ -980,7 +980,7 @@ class nsDocShell final : public nsDocLoader,
    * passing the return value of MaybeInitTiming(): if it's possible to reset
    * the Timing, this method will do it.
    */
-  MOZ_MUST_USE bool MaybeInitTiming();
+  [[nodiscard]] bool MaybeInitTiming();
   void MaybeResetInitTiming(bool aReset);
 
   // Convenience method for getting our parent docshell. Can return null

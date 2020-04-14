@@ -18,8 +18,8 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
                              const nsACString& aFileExt, bool* aFound,
                              nsIMIMEInfo** aMIMEInfo) override;
 
-  MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
-                                                bool* aExists) override;
+  [[nodiscard]] nsresult OSProtocolHandlerExists(const char* aScheme,
+                                                 bool* aExists) override;
 
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
                                           bool* found,

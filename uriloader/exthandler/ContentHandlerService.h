@@ -26,7 +26,7 @@ class ContentHandlerService : public nsIHandlerService {
   NS_DECL_NSIHANDLERSERVICE
 
   ContentHandlerService();
-  MOZ_MUST_USE nsresult Init();
+  [[nodiscard]] nsresult Init();
   static void nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo,
                                           HandlerInfo* aHandlerInfo);
 
