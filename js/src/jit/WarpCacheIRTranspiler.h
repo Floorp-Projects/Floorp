@@ -24,6 +24,7 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 // List of supported ops. Eventually we should use the full CacheIR ops list
 // instead.
 #define WARP_CACHE_IR_OPS(_)          \
+  _(GuardClass)                       \
   _(GuardShape)                       \
   _(GuardToObject)                    \
   _(LoadEnclosingEnvironment)         \
@@ -31,7 +32,9 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   _(LoadFixedSlotResult)              \
   _(LoadEnvironmentFixedSlotResult)   \
   _(LoadEnvironmentDynamicSlotResult) \
-  _(TypeMonitorResult)
+  _(LoadInt32ArrayLengthResult)       \
+  _(TypeMonitorResult)                \
+  _(ReturnFromIC)
 
 // TranspilerOutput contains information from the transpiler that needs to be
 // passed back to WarpBuilder.
