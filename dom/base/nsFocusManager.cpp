@@ -2964,10 +2964,6 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
     bool aNoParentTraversal, bool aNavigateByKey, nsIContent** aNextContent) {
   *aNextContent = nullptr;
 
-  // True if we are navigating by document (F6/Shift+F6) or false if we are
-  // navigating by element (Tab/Shift+Tab).
-  bool forDocumentNavigation = false;
-
   // This is used for document navigation only. It will be set to true if we
   // start navigating from a starting point. If this starting point is near the
   // end of the document (for example, an element on a statusbar), and there
@@ -3005,11 +3001,11 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   LookAndFeel::GetInt(LookAndFeel::eIntID_TabFocusModel,
                       &nsIContent::sTabFocusModel);
 
-  // These types are for document navigation using F6.
-  if (aType == MOVEFOCUS_FORWARDDOC || aType == MOVEFOCUS_BACKWARDDOC ||
-      aType == MOVEFOCUS_FIRSTDOC || aType == MOVEFOCUS_LASTDOC) {
-    forDocumentNavigation = true;
-  }
+  // True if we are navigating by document (F6/Shift+F6) or false if we are
+  // navigating by element (Tab/Shift+Tab).
+  const bool forDocumentNavigation =
+      aType == MOVEFOCUS_FORWARDDOC || aType == MOVEFOCUS_BACKWARDDOC ||
+      aType == MOVEFOCUS_FIRSTDOC || aType == MOVEFOCUS_LASTDOC;
 
   // If moving to the root or first document, find the root element and return.
   if (aType == MOVEFOCUS_ROOT || aType == MOVEFOCUS_FIRSTDOC) {
@@ -3998,8 +3994,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           // code to have the caller return early. If the child ends up not
           // being focusable in some way, the child process will call back
           // into document navigation again by calling MoveFocus.
-          BrowserParent* remote = BrowserParent::GetFrom(currentContent);
-          if (remote) {
+          if (BrowserParent* remote = BrowserParent::GetFrom(currentContent)) {
             if (aNavigateByKey) {
               remote->NavigateByKey(aForward, aForDocumentNavigation);
               return NS_SUCCESS_DOM_NO_OPERATION;
@@ -4008,8 +4003,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           }
 
           // Same as above but for out-of-process iframes
-          BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(currentContent);
-          if (bbc) {
+          if (auto* bbc = BrowserBridgeChild::GetFrom(currentContent)) {
             if (aNavigateByKey) {
               bbc->NavigateByKey(aForward, aForDocumentNavigation);
               return NS_SUCCESS_DOM_NO_OPERATION;
@@ -4113,8 +4107,7 @@ bool nsFocusManager::TryDocumentNavigation(nsIContent* aCurrentContent,
                                            bool* aCheckSubDocument,
                                            nsIContent** aResultContent) {
   *aCheckSubDocument = true;
-  Element* docRoot = GetRootForChildDocument(aCurrentContent);
-  if (docRoot) {
+  if (Element* docRoot = GetRootForChildDocument(aCurrentContent)) {
     // If GetRootForChildDocument returned something then call
     // FocusFirst to find the root or first element to focus within
     // the child document. If this is a frameset though, skip this and
@@ -4145,8 +4138,7 @@ bool nsFocusManager::TryToMoveFocusToSubDocument(
     if (aForward) {
       // When tabbing forward into a frame, return the root
       // frame so that the canvas becomes focused.
-      nsCOMPtr<nsPIDOMWindowOuter> subframe = subdoc->GetWindow();
-      if (subframe) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> subframe = subdoc->GetWindow()) {
         *aResultContent = GetRootForFocus(subframe, subdoc, false, true);
         if (*aResultContent) {
           NS_ADDREF(*aResultContent);
