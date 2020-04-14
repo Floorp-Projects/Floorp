@@ -31,7 +31,7 @@ job-defaults:
             - 'gfx/wgpu/**'
 
 jobs:
-    linux-debug:
+    linux64-debug:
         description: Runs debug-mode wgpu CI tests on a Linux worker
         worker-type: b-linux
         worker:
