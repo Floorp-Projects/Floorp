@@ -890,7 +890,7 @@ bool js::intrinsic_NewStringIterator(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  JSObject* obj = NewStringIteratorObject(cx);
+  JSObject* obj = NewStringIterator(cx);
   if (!obj) {
     return false;
   }
