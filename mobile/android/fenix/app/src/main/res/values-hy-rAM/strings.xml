@@ -113,6 +113,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Տեսք</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Հնարավոր չէ կապակցվել: Անճանաչելի URL ուրվակազմ:</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ընտրված լեզուն</string>
@@ -200,6 +204,8 @@
     <string name="preferences_private_browsing_options">Գաղտնի դիտարկում</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Բացել հղումը գաղտնի ներդիրում</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Թույլ տալ էկրանի կորզումը գաղտնի դիտարկումում</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ավելացնել գաղտնի դիտարկման դյուրանցում</string>
     <!-- Preference for accessibility -->
@@ -448,7 +454,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Ընթացիկ աշխատաշրջանի պատկերը</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Պահպանել հավաքածույում</string>
+    <string name="save_to_collection">Պահպանել հավաքածուում</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Ջնջել հավաքածուն</string>
     <!-- Text for the menu button to rename a collection -->

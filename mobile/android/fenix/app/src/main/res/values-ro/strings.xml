@@ -202,6 +202,8 @@
     <string name="preferences_private_browsing_options">Navigare privată</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Deschide linkuri într-o filă privată</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permite capturi de ecran în navigare privată</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Adaugă o comandă rapidă pentru navigare privată</string>
     <!-- Preference for accessibility -->

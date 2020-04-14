@@ -50,6 +50,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova unghjetta privata</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Siti principali</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Unghjette aperte</string>
@@ -113,6 +116,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aspettu</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Impussibule di cunnettassi. Schema d’URL scunnisciutu.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lingua selezziunata</string>
@@ -152,6 +159,9 @@
     <string name="search_widget_text_short">Ricercà</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Ricercà nant’à u web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Ricerca vucale</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -198,10 +208,18 @@
     <string name="preferences_private_browsing_options">Navigazione privata</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Apre i liami in un’unghjetta privata</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permette e catture di screnu durante a navigazione privata</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghjiu per a navigazione privata</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilità</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Servitore persunalizatu di contu Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Servitore persunalizatu di sincrunizazione</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Mudificazione di u servitore di contu o di sincrunizazione. Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Contu</string>
     <!-- Preference shown on banner to sign into account -->
@@ -1075,6 +1093,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bibliuteche impiegate</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Listinu di spannatura : %1$d cliccu(hi) per attivalu</string>
+    <string name="about_debug_menu_toast_done">Listinu di spannatura attivatu</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 unghjetta</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1096,8 +1119,13 @@
     <string name="add_to_homescreen_cancel">Abbandunà</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Aghjunghje</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Cuntinuà nant’à u situ web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nome di l’accurtatoghju</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru telefonu per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Identificazioni è parolle d’entrata</string>

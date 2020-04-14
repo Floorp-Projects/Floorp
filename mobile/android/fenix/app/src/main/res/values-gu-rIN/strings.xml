@@ -60,8 +60,6 @@
     <string name="browser_menu_whats_new">નવું શું છે</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">સેટિંગ્સ</string>
-    <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">તમારી લાઇબ્રેરી</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ડેસ્કટોપ સાઇટ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -74,8 +72,6 @@
     <string name="browser_menu_private_tab">ખાનગી ટૅબ</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">નવું ટૅબ</string>
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">સંગ્રહમાં સાચવો</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">સાઈટ ની સમસ્યાની જાણ કરો</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -602,5 +598,88 @@
     <string name="sync_offline">ઑફલાઇન</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">બીજા ઉપકરણ સાથે જોડાણ કરો</string>
+
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">આ જોડાણ સુરક્ષિત નથી. અહીં દાખલ કરેલા લોગિન્સ સાથે ચેડા થઈ શકે છે.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">વધુ શીખો</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">શું તમે ઇચ્છો છો કે %s આ લોગિનને સાચવે?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">સાચવો</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">સાચવશો નહીં</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">પાસવર્ડ ક્લિપબોર્ડ પર નકલ કરો</string>
+
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">વપરાશકર્તા નામ ક્લિપબોર્ડ પર નકલ કર્યું</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">ક્લિપબોર્ડ પર સાઇટની નકલ કરી</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">પાસવર્ડની નકલ કરો</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">વપરાશકર્તાનામની નકલ કરો</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">સાઇટની નકલ કરો</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">પાસવર્ડ બતાવો</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">પાસવર્ડ છુપાવો</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">તમારા સાચવેલા લોગિન્સને જોવા માટે અનલૉક કરો</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">તમારા લોગિન અને પાસવર્ડ્સને સુરક્ષિત કરો</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">જો કોઈ બીજા પાસે તમારું ડિવાઇસ હોય તો તમારા સેવ કરેલા લોગિન અને પાસવર્ડ્સને ઍક્સેસ કરવાથી બચાવવા માટે ઉપકરણ પેટર્ન, પિન અથવા પાસવર્ડ સેટ કરો.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">પછીથી</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">હવે સેટ કરો</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">તમારા ઉપકરણને અનલૉક કરો</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">બધી વેબસાઇટ્સ પર ઝૂમ કરો</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">શોધ એન્જિન ઉમેરો</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">શોધ એંજિન સંપાદિત કરો</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">ઉમેરો</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">સાચવો</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">ફેરફાર કરો</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">કાઢી નાખો</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">અન્ય</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">નામ</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">વાપરવા માટે શોધ શબ્દમાળા</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">ક્વેરીને “%s”થી બદલો. ઉદાહરણ:\n https://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">વધુ શીખો</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">શોધ એંજીન નામ દાખલ કરો</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” નામવાળા શોધ એંજિન પહેલાથી અસ્તિત્વમાં છે.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">શોધ શબ્દમાળા દાખલ કરો</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">તે તપાસણી કરો કે શોધ શબ્દમાળા ઉદાહરણ ફોર્મેટ સાથે મેળ ખાય છે</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” થી કનેક્ટ કરવામાં ભૂલ</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s બનાવ્યું</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s સાચવ્યું</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s કાઢી નાખ્યું</string>
 
     </resources>

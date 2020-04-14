@@ -79,7 +79,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Gwefan bwrdd gwaith</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Ychwanegu i’r sgrin Cartref</string>
+    <string name="browser_menu_add_to_homescreen">I’r sgrin Cartref</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Gosod</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -91,7 +91,7 @@
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Cadw i gasgliad</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Adrodd ar fater gwefan</string>
+    <string name="browser_menu_report_issue">Pryder am wefan</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Rhannu</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -204,6 +204,8 @@
     <string name="preferences_private_browsing_options">Pori preifat</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Agor dolen mewn tab preifat</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Caniatáu lluniau sgrin o fewn pori preifat</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ychwanegu llwybr byr pori preifat</string>
     <!-- Preference for accessibility -->
@@ -673,7 +675,7 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Tabiau wedi’u cadw!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">Tabiau wedi’u cadw!</string>
+    <string name="create_collection_tab_saved">Tab wedi’i gadw!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Cau</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -1106,7 +1108,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL wedi ei gopïo i’r clipfwrdd</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Ychwanegu i’r sgrin Cartref</string>
+    <string name="add_to_homescreen_title">I’r sgrin Cartref</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Diddymu</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -1122,13 +1124,13 @@
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Mewngofnodion a chyfrineiriau</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Cadw mewngofnodi a chyfrineiriau</string>
+    <string name="preferences_passwords_save_logins">Cadw mewngofnodion a chyfrineiriau</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Gofyn i gadw</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Byth cadw</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Awto Lanw</string>
+    <string name="preferences_passwords_autofill">Awtolanw</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Cydweddu mewngofnodion</string>
     <!-- Syncing saved logins in Fenix is on -->
@@ -1148,9 +1150,9 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eithriadau</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Bydd mewngofnodi a chyfrineiriau sydd heb eu cadw i’w gweld yma.</string>
+    <string name="preferences_passwords_exceptions_description_empty">Bydd mewngofnodion a chyfrineiriau sydd heb eu cadw i’w gweld yma.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Ni fydd mewngofnodi a chyfrineiriau’n cael eu cadw ar gyfer y gwefannau hyn.</string>
+    <string name="preferences_passwords_exceptions_description">Ni fydd mewngofnodion a chyfrineiriau’n cael eu cadw ar gyfer y gwefannau hyn.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Chwilio mewngofnodion</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1296,7 +1298,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Ychwanegu at y gwefannau gorau</string>
+    <string name="browser_menu_add_to_top_sites">I’m hoff wefannau</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Dilyswyd gan: %1$s</string>
