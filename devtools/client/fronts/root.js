@@ -202,18 +202,16 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    * It can be removed when Firefox 76 hits the release channel.
    */
   async listTabs({ favicons } = {}) {
-    const { selected, tabs } = await super.listTabs({ favicons });
+    const { tabs } = await super.listTabs({ favicons });
     const targets = [];
-    for (const i in tabs) {
+    for (const tabDescriptor of tabs) {
       if (!this.actorID) {
         console.error("The root front was destroyed while processing listTabs");
         return [];
       }
 
       try {
-        const tabDescriptor = tabs[i];
         const target = await tabDescriptor.getTarget();
-        target.setIsSelected(i == selected);
         targets.push(target);
       } catch (e) {
         console.error("Failed to get the target for tab descriptor", e);
