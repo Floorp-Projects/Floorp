@@ -4,15 +4,6 @@
 ---
 
 jobs:
-    - name: snapshot
-      job:
-          type: decision-task
-          treeherder-symbol: snapshot-D
-          target-tasks-method: snapshot
-      when:
-          - {weekday: 'Monday', hour: 13, minute: 0}
-          - {weekday: 'Wednesday', hour: 13, minute: 0}
-          - {weekday: 'Friday', hour: 13, minute: 0}
     - name: nightly
       job:
           type: decision-task
