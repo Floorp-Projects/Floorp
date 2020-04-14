@@ -370,7 +370,7 @@ static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
   }
 
   RootedPlainObject proto(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, objProto, SingletonObject));
+      cx, NewSingletonObjectWithGivenProto<PlainObject>(cx, objProto));
   if (!proto) {
     return false;
   }
