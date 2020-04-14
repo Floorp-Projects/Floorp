@@ -28,6 +28,7 @@ EXPORTS += [
     'nsTLiteralString.h',
     'nsTPromiseFlatString.h',
     'nsTString.h',
+    'nsTStringHasher.h',
     'nsTStringRepr.h',
     'nsTSubstring.h',
     'nsTSubstringTuple.h',
