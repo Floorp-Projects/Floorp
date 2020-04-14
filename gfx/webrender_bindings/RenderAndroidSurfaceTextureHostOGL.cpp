@@ -55,6 +55,13 @@ gfx::IntSize RenderAndroidSurfaceTextureHostOGL::GetSize(
 wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   MOZ_ASSERT(aChannelIndex == 0);
+  MOZ_ASSERT((mPrepareStatus == STATUS_PREPARED) ||
+             (!mSurfTex->IsSingleBuffer() &&
+              mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED));
+
+  if (!EnsureAttachedToGLContext()) {
+    return InvalidToWrExternalImage();
+  }
 
   if (mGL.get() != aGL) {
     // This should not happen. On android, SharedGL is used.
@@ -63,11 +70,6 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
   }
 
   if (!mSurfTex || !mGL || !mGL->MakeCurrent()) {
-    return InvalidToWrExternalImage();
-  }
-
-  MOZ_ASSERT(mAttachedToGLContext);
-  if (!mAttachedToGLContext) {
     return InvalidToWrExternalImage();
   }
 
@@ -99,6 +101,10 @@ void RenderAndroidSurfaceTextureHostOGL::Unlock() {}
 
 void RenderAndroidSurfaceTextureHostOGL::DeleteTextureHandle() {
   NotifyNotUsed();
+}
+
+void RenderAndroidSurfaceTextureHostOGL::DetachedFromGLContext() {
+  mAttachedToGLContext = false;
 }
 
 bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {

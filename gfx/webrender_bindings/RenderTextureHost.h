@@ -22,6 +22,7 @@ class GLContext;
 
 namespace wr {
 
+class RenderAndroidSurfaceTextureHostOGL;
 class RenderDXGITextureHostOGL;
 class RenderBufferTextureHost;
 class RenderTextureHostOGL;
@@ -51,6 +52,11 @@ class RenderTextureHost {
   virtual void NotifyNotUsed() {}
 
   virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
+    return nullptr;
+  }
+
+  virtual RenderAndroidSurfaceTextureHostOGL*
+  AsRenderAndroidSurfaceTextureHostOGL() {
     return nullptr;
   }
 

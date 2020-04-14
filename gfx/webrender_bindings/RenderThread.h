@@ -264,6 +264,9 @@ class RenderThread final {
   /// Can only be called from the render thread.
   bool IsHandlingWebRenderError();
 
+  /// Can only be called from the render thread.
+  void NotifyAllAndroidSurfaceTexturesDetatched();
+
   size_t RendererCount();
 
   void SetCompositionRecorderForWindow(

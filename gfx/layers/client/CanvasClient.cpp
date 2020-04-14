@@ -430,7 +430,17 @@ void CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize,
   SharedSurface* surf = mShSurfClient->Surf();
 
   if (!surf->IsBufferAvailable()) {
-    NS_WARNING("SharedSurface buffer not available, skip update");
+    // SharedSurface is already forwared to compositor side.
+    // SharedSurface::Commit() could not be called again.
+    // It happens only with SharedSurface_SurfaceTexture.
+    if (!mNewFront && !mFront) {
+      // This could happen when CanvasClientSharedSurface is re-created, but
+      // GLScreenBuffer is not re-created.
+      // See Bug 1626142
+      mNewFront = newFront;
+    } else {
+      NS_WARNING("SharedSurface buffer not available, skip update");
+    }
     return;
   }
 

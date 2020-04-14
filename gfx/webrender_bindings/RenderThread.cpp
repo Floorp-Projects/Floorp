@@ -32,6 +32,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GLLibraryEGL.h"
 #  include "GeneratedJNIWrappers.h"
+#  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -717,6 +718,20 @@ void RenderThread::UnregisterExternalImageDuringShutdown(
   MOZ_ASSERT(mHasShutdown);
   MOZ_ASSERT(mRenderTextures.find(aExternalImageId) != mRenderTextures.end());
   mRenderTextures.erase(aExternalImageId);
+}
+
+void RenderThread::NotifyAllAndroidSurfaceTexturesDetatched() {
+  MOZ_ASSERT(IsInRenderThread());
+#ifdef MOZ_WIDGET_ANDROID
+  MutexAutoLock lock(mRenderTextureMapLock);
+  for (const auto& entry : mRenderTextures) {
+    RenderAndroidSurfaceTextureHostOGL* host =
+        entry.second->AsRenderAndroidSurfaceTextureHostOGL();
+    if (host) {
+      host->DetachedFromGLContext();
+    }
+  }
+#endif
 }
 
 void RenderThread::HandlePrepareForUse() {
