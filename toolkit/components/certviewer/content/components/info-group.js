@@ -40,6 +40,11 @@ export class InfoGroup extends HTMLElement {
     if (this.item.sectionId === "issuer-name") {
       this.setLinkToTab();
     }
+
+    let criticalIcon = this.shadowRoot.querySelector("#critical-info");
+    if (!this.item.Critical) {
+      criticalIcon.style.visibility = "hidden";
+    }
   }
 
   setLinkToTab() {
