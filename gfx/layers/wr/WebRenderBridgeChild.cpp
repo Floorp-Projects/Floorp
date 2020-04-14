@@ -74,7 +74,7 @@ void WebRenderBridgeChild::DoDestroy() {
 void WebRenderBridgeChild::AddWebRenderParentCommand(
     const WebRenderParentCommand& aCmd, wr::RenderRoot aRenderRoot) {
   MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-  mParentCommands[aRenderRoot].AppendElement(aCmd);
+  mParentCommands.AppendElement(aCmd);
 }
 
 void WebRenderBridgeChild::BeginTransaction() {
@@ -117,7 +117,7 @@ void WebRenderBridgeChild::EndTransaction(
 
   for (auto& renderRoot : aRenderRoots) {
     MOZ_ASSERT(renderRoot.mRenderRoot == wr::RenderRoot::Default);
-    renderRoot.mCommands = std::move(mParentCommands[renderRoot.mRenderRoot]);
+    renderRoot.mCommands = std::move(mParentCommands);
     renderRoot.mIdNamespace = mIdNamespace;
   }
 
@@ -154,7 +154,7 @@ void WebRenderBridgeChild::EndEmptyTransaction(
 
   for (auto& update : aRenderRootUpdates) {
     MOZ_ASSERT(update.mRenderRoot == wr::RenderRoot::Default);
-    update.mCommands = std::move(mParentCommands[update.mRenderRoot]);
+    update.mCommands = std::move(mParentCommands);
   }
 
   nsTArray<CompositionPayload> payloads;
@@ -178,12 +178,9 @@ void WebRenderBridgeChild::EndEmptyTransaction(
 void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   MOZ_ASSERT(!mDestroyed);
 
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (!mParentCommands[renderRoot].IsEmpty()) {
-      MOZ_ASSERT(renderRoot == wr::RenderRoot::Default);
-      this->SendParentCommands(mParentCommands[renderRoot], renderRoot);
-      mParentCommands[renderRoot].Clear();
-    }
+  if (!mParentCommands.IsEmpty()) {
+    this->SendParentCommands(mParentCommands, wr::RenderRoot::Default);
+    mParentCommands.Clear();
   }
 }
 
