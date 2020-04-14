@@ -1172,6 +1172,21 @@ devtools.main:
       input: Indicates from which input the command was evaluated ("inline" for regular input, "multiline" for editor mode).
       lines: The number of lines contained in the command.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  reverse_search:
+    objects: ["webconsole"]
+    bug_numbers: [1489489]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
+    record_in_processes: ["main"]
+    description: User has toggled, navigated or evaluated expressions from reverse search .
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      functionality: Indicates functionality of reverse search being accessed.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   exit:
     objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "storage", "styleeditor", "webconsole", "whatsnew", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1455270]

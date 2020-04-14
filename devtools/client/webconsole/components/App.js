@@ -145,7 +145,10 @@ class App extends Component {
     ) {
       const initialValue =
         webConsoleUI.jsterm && webConsoleUI.jsterm.getSelectedText();
-      dispatch(actions.reverseSearchInputToggle({ initialValue }));
+
+      dispatch(
+        actions.reverseSearchInputToggle({ initialValue, access: "keyboard" })
+      );
       event.stopPropagation();
     }
 

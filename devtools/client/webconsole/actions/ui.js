@@ -192,10 +192,11 @@ function showObjectInSidebar(front) {
   };
 }
 
-function reverseSearchInputToggle({ initialValue } = {}) {
+function reverseSearchInputToggle({ initialValue, access } = {}) {
   return {
     type: REVERSE_SEARCH_INPUT_TOGGLE,
     initialValue,
+    access,
   };
 }
 

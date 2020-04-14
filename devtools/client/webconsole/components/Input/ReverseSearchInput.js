@@ -94,7 +94,7 @@ class ReverseSearchInput extends Component {
     const { dispatch } = this.props;
     event.stopPropagation();
     dispatch(actions.reverseSearchInputToggle());
-    dispatch(actions.evaluateExpression());
+    dispatch(actions.evaluateExpression(undefined, "reverse-search"));
   }
 
   onEscapeKeyboardShortcut(event) {
@@ -108,7 +108,7 @@ class ReverseSearchInput extends Component {
     event.stopPropagation();
     event.preventDefault();
     if (canNavigate) {
-      dispatch(actions.showReverseSearchBack());
+      dispatch(actions.showReverseSearchBack({ access: "keyboard" }));
     }
   }
 
@@ -117,7 +117,7 @@ class ReverseSearchInput extends Component {
     event.stopPropagation();
     event.preventDefault();
     if (canNavigate) {
-      dispatch(actions.showReverseSearchNext());
+      dispatch(actions.showReverseSearchNext({ access: "keyboard" }));
     }
   }
 
@@ -203,7 +203,7 @@ class ReverseSearchInput extends Component {
           [isMacOS ? "Ctrl + R" : "F9"]
         ),
         onClick: () => {
-          dispatch(actions.showReverseSearchBack());
+          dispatch(actions.showReverseSearchBack({ access: "click" }));
           this.inputNode.focus();
         },
       }),
@@ -215,7 +215,7 @@ class ReverseSearchInput extends Component {
           [isMacOS ? "Ctrl + S" : "Shift + F9"]
         ),
         onClick: () => {
-          dispatch(actions.showReverseSearchNext());
+          dispatch(actions.showReverseSearchNext({ access: "click" }));
           this.inputNode.focus();
         },
       }),

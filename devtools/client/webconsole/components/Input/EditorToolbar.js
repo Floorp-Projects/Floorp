@@ -54,6 +54,7 @@ class EditorToolbar extends Component {
     dispatch(
       actions.reverseSearchInputToggle({
         initialValue: serviceContainer.getInputSelection(),
+        access: "editor-toolbar-icon",
       })
     );
   }
