@@ -28,10 +28,12 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         LOG.info("creating browser runner using mozrunner")
         self.output_handler = OutputHandler()
         process_args = {"processOutputLine": [self.output_handler]}
+        firefox_args = ["--allow-downgrade"]
         runner_cls = runners[self.config["app"]]
         self.runner = runner_cls(
             self.config["binary"],
             profile=self.profile,
+            cmdargs=firefox_args,
             process_args=process_args,
             symbols_path=self.config["symbols_path"],
         )
