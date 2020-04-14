@@ -40,7 +40,6 @@ import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
@@ -177,8 +176,7 @@ class Core(private val context: Context) {
         WebAppShortcutManager(
             context,
             client,
-            webAppManifestStorage,
-            supportWebApps = FeatureFlags.progressiveWebApps
+            webAppManifestStorage
         )
     }
 

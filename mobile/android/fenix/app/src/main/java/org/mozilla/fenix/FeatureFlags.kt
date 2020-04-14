@@ -11,11 +11,6 @@ object FeatureFlags {
     const val pullToRefreshEnabled = false
 
     /**
-     * Allows Progressive Web Apps to be installed to the device home screen.
-     */
-    val progressiveWebApps = Config.channel.isNightlyOrDebug
-
-    /**
      * Disables FxA Application Services Web Channels feature
      */
     const val asFeatureWebChannelsDisabled = false
