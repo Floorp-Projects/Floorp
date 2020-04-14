@@ -26,6 +26,13 @@ with Files('dlmanager/**'):
 with Files('enum34/**'):
     BUG_COMPONENT = ('Release Engineering', 'General')
 
+with Files('fluent.migrate/**'):
+    BUG_COMPONENT = ('Localization Infrastructure and Tools', 'Fluent Migration')
+
+# Actually, https://github.com/projectfluent/python-fluent/issues
+with Files('fluent.syntax/**'):
+    BUG_COMPONENT = ('Localization Infrastructure and Tools', 'General')
+
 with Files('futures/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 

@@ -22,7 +22,8 @@ mozilla.pth:third_party/python/diskcache
 mozilla.pth:third_party/python/distro
 mozilla.pth:third_party/python/dlmanager
 mozilla.pth:third_party/python/enum34
-mozilla.pth:third_party/python/fluent
+mozilla.pth:third_party/python/fluent.migrate
+mozilla.pth:third_party/python/fluent.syntax
 mozilla.pth:third_party/python/funcsigs
 python2:mozilla.pth:third_party/python/futures
 python3:mozilla.pth:third_party/python/glean_parser
