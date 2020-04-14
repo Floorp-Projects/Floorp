@@ -409,6 +409,11 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     this.flushStyle();
   },
 
+  async setMaxTouchPoints(touchSimulationEnabled) {
+    const maxTouchPoints = touchSimulationEnabled ? 1 : 0;
+    this.docShell.browsingContext.setRDMPaneMaxTouchPoints(maxTouchPoints);
+  },
+
   flushStyle() {
     // Force presContext destruction
     const isSticky = this.docShell.contentViewer.sticky;
