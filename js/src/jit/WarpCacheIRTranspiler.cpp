@@ -102,6 +102,27 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::transpile_GuardClass() {
+  ObjOperandId objId = reader.objOperandId();
+  MDefinition* def = getOperand(objId);
+  GuardClassKind classKind = reader.guardClassKind();
+
+  const JSClass* classp = nullptr;
+  switch (classKind) {
+    case GuardClassKind::Array:
+      classp = &ArrayObject::class_;
+      break;
+    default:
+      MOZ_CRASH("not yet supported");
+  }
+
+  auto* ins = MGuardToClass::New(alloc(), def, classp);
+  current->add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::transpile_GuardShape() {
   ObjOperandId objId = reader.objOperandId();
   MDefinition* def = getOperand(objId);
@@ -208,8 +229,26 @@ bool WarpCacheIRTranspiler::transpile_LoadEnvironmentDynamicSlotResult() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::transpile_LoadInt32ArrayLengthResult() {
+  ObjOperandId objId = reader.objOperandId();
+  MDefinition* obj = getOperand(objId);
+
+  auto* elements = MElements::New(alloc(), obj);
+  current->add(elements);
+
+  auto* length = MArrayLength::New(alloc(), elements);
+  current->add(length);
+
+  setResult(length);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::transpile_TypeMonitorResult() {
   MOZ_ASSERT(output_.result, "Didn't set result MDefinition");
+  return true;
+}
+
+bool WarpCacheIRTranspiler::transpile_ReturnFromIC() {
   return true;
 }
 
