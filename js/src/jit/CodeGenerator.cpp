@@ -6739,9 +6739,9 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
   OutOfLineCode* ool;
   switch (lir->mir()->type()) {
     case MNewIterator::ArrayIterator: {
-      using Fn = ArrayIteratorObject* (*)(JSContext*, NewObjectKind);
-      ool = oolCallVM<Fn, NewArrayIteratorObject>(
-          lir, ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
+      using Fn = ArrayIteratorObject* (*)(JSContext*);
+      ool = oolCallVM<Fn, NewArrayIterator>(lir, ArgList(),
+                                            StoreRegisterTo(objReg));
       break;
     }
     case MNewIterator::StringIterator: {

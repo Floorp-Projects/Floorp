@@ -1111,16 +1111,24 @@ enum {
 const JSClass ArrayIteratorObject::class_ = {
     "Array Iterator", JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount)};
 
-ArrayIteratorObject* js::NewArrayIteratorObject(JSContext* cx,
-                                                NewObjectKind newKind) {
+ArrayIteratorObject* js::NewArrayIteratorTemplate(JSContext* cx) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
 
-  return NewObjectWithGivenProtoAndKind<ArrayIteratorObject>(cx, proto,
-                                                             newKind);
+  return NewTenuredObjectWithGivenProto<ArrayIteratorObject>(cx, proto);
+}
+
+ArrayIteratorObject* js::NewArrayIterator(JSContext* cx) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  return NewObjectWithGivenProto<ArrayIteratorObject>(cx, proto);
 }
 
 static const JSFunctionSpec array_iterator_methods[] = {
