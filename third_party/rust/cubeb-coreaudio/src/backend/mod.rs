@@ -705,6 +705,7 @@ extern "C" fn audiounit_output_callback(
     status
 }
 
+#[allow(clippy::cognitive_complexity)]
 extern "C" fn audiounit_property_listener_callback(
     id: AudioObjectID,
     address_count: u32,
@@ -1378,6 +1379,7 @@ fn get_presentation_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
     device_latency + stream_latency
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn get_device_group_id(
     id: AudioDeviceID,
     devtype: DeviceType,
@@ -1450,6 +1452,7 @@ fn get_device_global_uid(id: AudioDeviceID) -> std::result::Result<StringRef, OS
     get_device_uid(id, DeviceType::INPUT | DeviceType::OUTPUT)
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn create_cubeb_device_info(
     devid: AudioObjectID,
     devtype: DeviceType,
@@ -1665,7 +1668,10 @@ fn audiounit_get_devices_of_type(devtype: DeviceType) -> Vec<AudioObjectID> {
 
     // Remove the aggregate device from the list of devices (if any).
     devices.retain(|&device| {
-        if let Ok(uid) = get_device_global_uid(device) {
+        // TODO: (bug 1628411) Figure out when `device` is `kAudioObjectUnknown`.
+        if device == kAudioObjectUnknown {
+            false
+        } else if let Ok(uid) = get_device_global_uid(device) {
             let uid = uid.into_string();
             !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
         } else {
