@@ -19,7 +19,7 @@
 using namespace js;
 using namespace js::jit;
 
-static_assert(!std::is_polymorphic<WarpOpSnapshot>::value,
+static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
               "WarpOpSnapshot should not have any virtual methods");
 
 WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script)

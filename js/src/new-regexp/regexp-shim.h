@@ -640,8 +640,8 @@ class MOZ_NONHEAP_CLASS Handle {
   Handle(JS::Value value, Isolate* isolate);
 
   // Constructor for handling automatic up casting.
-  template <typename S, typename = typename std::enable_if<
-                            std::is_convertible<S*, T*>::value>::type>
+  template <typename S,
+            typename = std::enable_if_t<std::is_convertible_v<S*, T*>>>
   inline Handle(Handle<S> handle) : location_(handle.location_) {}
 
   template <typename S>
@@ -705,8 +705,8 @@ class MOZ_NONHEAP_CLASS MaybeHandle final {
 
   // Constructor for handling automatic up casting from Handle.
   // Ex. Handle<JSArray> can be passed when MaybeHandle<Object> is expected.
-  template <typename S, typename = typename std::enable_if<
-                            std::is_convertible<S*, T*>::value>::type>
+  template <typename S,
+            typename = std::enable_if_t<std::is_convertible_v<S*, T*>>>
   MaybeHandle(Handle<S> handle) : location_(handle.location_) {}
 
   inline Handle<T> ToHandleChecked() const {

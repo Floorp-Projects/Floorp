@@ -331,7 +331,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
   }
 
   if (efs) {
-    if constexpr (std::is_same<T, JSErrorReport>::value) {
+    if constexpr (std::is_same_v<T, JSErrorReport>) {
       reportp->exnType = efs->exnType;
     }
 

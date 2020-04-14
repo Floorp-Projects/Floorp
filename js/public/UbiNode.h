@@ -326,7 +326,7 @@ class StackFrame {
 
   template <typename T>
   void construct(T* ptr) {
-    static_assert(std::is_base_of<BaseStackFrame, ConcreteStackFrame<T>>::value,
+    static_assert(std::is_base_of_v<BaseStackFrame, ConcreteStackFrame<T>>,
                   "ConcreteStackFrame<T> must inherit from BaseStackFrame");
     static_assert(
         sizeof(ConcreteStackFrame<T>) == sizeof(*base()),
@@ -714,7 +714,7 @@ class Node {
     static_assert(
         sizeof(Concrete<T>) == sizeof(*base()),
         "ubi::Base specializations must be the same size as ubi::Base");
-    static_assert(std::is_base_of<Base, Concrete<T>>::value,
+    static_assert(std::is_base_of_v<Base, Concrete<T>>,
                   "ubi::Concrete<T> must inherit from ubi::Base");
     Concrete<T>::construct(base(), ptr);
   }

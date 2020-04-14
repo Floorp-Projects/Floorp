@@ -2429,7 +2429,7 @@ static_assert(sizeof(PRFuncPtr) == sizeof(void*));
 static_assert(numeric_limits<double>::is_signed);
 
 template <typename TargetType, typename FromType,
-          bool FromIsIntegral = std::is_integral<FromType>::value>
+          bool FromIsIntegral = std::is_integral_v<FromType>>
 struct ConvertImpl;
 
 template <typename TargetType, typename FromType>
@@ -2441,10 +2441,8 @@ struct ConvertImpl<TargetType, FromType, false> {
 
 template <typename TargetType>
 struct ConvertUnsignedTargetTo {
-  static TargetType convert(
-      typename std::make_unsigned<TargetType>::type input) {
-    return std::is_signed<TargetType>::value ? mozilla::WrapToSigned(input)
-                                             : input;
+  static TargetType convert(std::make_unsigned_t<TargetType> input) {
+    return std::is_signed_v<TargetType> ? mozilla::WrapToSigned(input) : input;
   }
 };
 
@@ -2459,7 +2457,7 @@ struct ConvertUnsignedTargetTo<char16_t> {
 template <typename TargetType, typename FromType>
 struct ConvertImpl<TargetType, FromType, true> {
   static MOZ_ALWAYS_INLINE TargetType Convert(FromType input) {
-    using UnsignedTargetType = typename std::make_unsigned<TargetType>::type;
+    using UnsignedTargetType = std::make_unsigned_t<TargetType>;
     auto resultUnsigned = static_cast<UnsignedTargetType>(input);
 
     return ConvertUnsignedTargetTo<TargetType>::convert(resultUnsigned);
@@ -2468,9 +2466,9 @@ struct ConvertImpl<TargetType, FromType, true> {
 
 template <class TargetType, class FromType>
 static MOZ_ALWAYS_INLINE TargetType Convert(FromType d) {
-  static_assert(std::is_integral<FromType>::value !=
-                    std::is_floating_point<FromType>::value,
-                "should only be converting from floating/integral type");
+  static_assert(
+      std::is_integral_v<FromType> != std::is_floating_point_v<FromType>,
+      "should only be converting from floating/integral type");
 
   return ConvertImpl<TargetType, FromType>::Convert(d);
 }

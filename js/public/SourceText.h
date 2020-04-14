@@ -54,7 +54,7 @@
 
 #include <stddef.h>     // size_t
 #include <stdint.h>     // UINT32_MAX
-#include <type_traits>  // std::conditional, std::is_same
+#include <type_traits>  // std::conditional_t, std::is_same_v
 
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Utility.h"    // JS::FreePolicy
@@ -75,8 +75,8 @@ enum class SourceOwnership {
 template <typename Unit>
 class SourceText final {
  private:
-  static_assert(std::is_same<Unit, mozilla::Utf8Unit>::value ||
-                    std::is_same<Unit, char16_t>::value,
+  static_assert(std::is_same_v<Unit, mozilla::Utf8Unit> ||
+                    std::is_same_v<Unit, char16_t>,
                 "Unit must be either char16_t or Utf8Unit for "
                 "SourceText<Unit>");
 
@@ -95,8 +95,8 @@ class SourceText final {
  public:
   // A C++ character type that can represent the source units -- suitable for
   // passing to C++ string functions.
-  using CharT = typename std::conditional<std::is_same<Unit, char16_t>::value,
-                                          char16_t, char>::type;
+  using CharT =
+      std::conditional_t<std::is_same_v<Unit, char16_t>, char16_t, char>;
 
  public:
   /**
@@ -179,9 +179,9 @@ class SourceText final {
    * UTF-16 case this overload and the one above would be identical.  So we
    * use SFINAE to expose the |CharT| overload only if it's different.)
    */
-  template <typename Char, typename = typename std::enable_if<
-                               std::is_same<Char, CharT>::value &&
-                               !std::is_same<Char, Unit>::value>::type>
+  template <typename Char,
+            typename = std::enable_if_t<std::is_same_v<Char, CharT> &&
+                                        !std::is_same_v<Char, Unit>>>
   MOZ_IS_CLASS_INIT MOZ_MUST_USE bool init(JSContext* cx, const Char* chars,
                                            size_t charsLength,
                                            SourceOwnership ownership) {
@@ -207,9 +207,9 @@ class SourceText final {
    * then in the UTF-16 case this overload and the one above would be identical.
    * So we use SFINAE to expose the |CharT| overload only if it's different.)
    */
-  template <typename Char, typename = typename std::enable_if<
-                               std::is_same<Char, CharT>::value &&
-                               !std::is_same<Char, Unit>::value>::type>
+  template <typename Char,
+            typename = std::enable_if_t<std::is_same_v<Char, CharT> &&
+                                        !std::is_same_v<Char, Unit>>>
   MOZ_MUST_USE bool init(JSContext* cx,
                          js::UniquePtr<Char[], JS::FreePolicy> data,
                          size_t dataLength) {

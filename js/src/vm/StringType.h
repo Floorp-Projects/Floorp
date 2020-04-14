@@ -1315,9 +1315,9 @@ class StaticStrings {
   /* Return null if no static atom exists for the given (chars, length). */
   template <typename Chars>
   MOZ_ALWAYS_INLINE JSAtom* lookup(Chars chars, size_t length) {
-    static_assert(std::is_same<Chars, const Latin1Char*>::value ||
-                      std::is_same<Chars, const char16_t*>::value ||
-                      std::is_same<Chars, LittleEndianChars>::value,
+    static_assert(std::is_same_v<Chars, const Latin1Char*> ||
+                      std::is_same_v<Chars, const char16_t*> ||
+                      std::is_same_v<Chars, LittleEndianChars>,
                   "for understandability, |chars| must be one of a few "
                   "identified types");
 
@@ -1366,8 +1366,8 @@ class StaticStrings {
     return lookup(reinterpret_cast<const Latin1Char*>(chars), length);
   }
 
-  template <typename CharT, typename = typename std::enable_if<
-                                !std::is_const<CharT>::value>::type>
+  template <typename CharT,
+            typename = std::enable_if_t<!std::is_const_v<CharT>>>
   MOZ_ALWAYS_INLINE JSAtom* lookup(CharT* chars, size_t length) {
     // Collapse the remaining |CharT*| to |const CharT*| to avoid excess
     // instantiations.

@@ -170,7 +170,7 @@ struct LitValPOD {
   }
 };
 
-static_assert(std::is_pod<LitValPOD>::value,
+static_assert(std::is_pod_v<LitValPOD>,
               "must be POD to be simply serialized/deserialized");
 
 // An AsmJSGlobal represents a JS global variable in the asm.js module function.

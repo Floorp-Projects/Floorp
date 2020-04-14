@@ -788,7 +788,7 @@ Statistics::Statistics(GCRuntime* gc)
 #ifdef DEBUG
   for (const auto& duration : totalTimes_) {
     using ElementType = std::remove_reference_t<decltype(duration)>;
-    static_assert(!std::is_trivially_constructible<ElementType>::value,
+    static_assert(!std::is_trivially_constructible_v<ElementType>,
                   "Statistics::Statistics will only initialize "
                   "totalTimes_'s elements if their default constructor is "
                   "non-trivial");

@@ -106,8 +106,7 @@ static MOZ_ALWAYS_INLINE JSLinearString* TryEmptyOrStaticString(JSContext* cx,
   return nullptr;
 }
 
-template <typename CharT, typename = typename std::enable_if<
-                              !std::is_const<CharT>::value>::type>
+template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
 static MOZ_ALWAYS_INLINE JSLinearString* TryEmptyOrStaticString(JSContext* cx,
                                                                 CharT* chars,
                                                                 size_t n) {

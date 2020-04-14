@@ -616,7 +616,7 @@ MOZ_ALWAYS_INLINE JS::Handle<U*> js::HandleBase<JSObject*, Wrapper>::as()
 
 template <class T>
 bool JSObject::canUnwrapAs() {
-  static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+  static_assert(!std::is_convertible_v<T*, js::Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
   if (is<T>()) {
@@ -628,7 +628,7 @@ bool JSObject::canUnwrapAs() {
 
 template <class T>
 T& JSObject::unwrapAs() {
-  static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+  static_assert(!std::is_convertible_v<T*, js::Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
   if (is<T>()) {
@@ -645,7 +645,7 @@ T& JSObject::unwrapAs() {
 
 template <class T>
 T* JSObject::maybeUnwrapAs() {
-  static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+  static_assert(!std::is_convertible_v<T*, js::Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
   if (is<T>()) {
@@ -666,7 +666,7 @@ T* JSObject::maybeUnwrapAs() {
 
 template <class T>
 T* JSObject::maybeUnwrapIf() {
-  static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+  static_assert(!std::is_convertible_v<T*, js::Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
   if (is<T>()) {

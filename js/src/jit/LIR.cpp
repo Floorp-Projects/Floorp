@@ -707,8 +707,8 @@ void LMoveGroup::printOperands(GenericPrinter& out) {
 }
 #endif
 
-#define LIROP(x)                                   \
-  static_assert(!std::is_polymorphic<L##x>::value, \
+#define LIROP(x)                              \
+  static_assert(!std::is_polymorphic_v<L##x>, \
                 "LIR instructions should not have virtual methods");
 LIR_OPCODE_LIST(LIROP)
 #undef LIROP

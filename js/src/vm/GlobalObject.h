@@ -963,7 +963,7 @@ JSObject* GenericCreateConstructor(JSContext* cx, JSProtoKey key) {
 template <typename T>
 JSObject* GenericCreatePrototype(JSContext* cx, JSProtoKey key) {
   static_assert(
-      !std::is_same<T, PlainObject>::value,
+      !std::is_same_v<T, PlainObject>,
       "creating Object.prototype is very special and isn't handled here");
   MOZ_ASSERT(&T::class_ == ProtoKeyToClass(key),
              "type mismatch--probably too much copy/paste in your ClassSpec");
