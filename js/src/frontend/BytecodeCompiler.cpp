@@ -1012,14 +1012,9 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   Rooted<JSScript*> script(cx, JSScript::CastFromLazy(lazy));
   uint32_t lazyFlags = lazy->immutableFlags();
 
-  FieldInitializers fieldInitializers = FieldInitializers::Invalid();
-  if (fun->isClassConstructor()) {
-    fieldInitializers = lazy->getFieldInitializers();
-  }
-
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
                       lazy->lineno(), lazy->column(), compilationInfo,
-                      BytecodeEmitter::LazyFunction, fieldInitializers);
+                      BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
