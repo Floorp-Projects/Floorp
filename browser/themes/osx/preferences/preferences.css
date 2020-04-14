@@ -12,11 +12,6 @@ tabpanels {
   padding: 20px 7px 7px;
 }
 
-#translationAttributionImage {
-  width: 70px;
-  cursor: pointer;
-}
-
 #browserUseCurrent,
 #browserUseBookmark,
 #browserUseBlank {
@@ -39,17 +34,6 @@ tabpanels {
   font: message-box !important;
 }
 
-/* General Pane */
-
-#useFirefoxSync,
-#getStarted {
-  font-size: 90%;
-}
-
-#isNotDefaultLabel {
-  font-weight: bold;
-}
-
 /**
  * Update Preferences
  */
@@ -59,14 +43,4 @@ tabpanels {
 
 .updateControls {
   margin-inline-start: 10px;
-}
-
-/* ----- SYNC PANE ----- */
-
-#noFxaAccount {
-  line-height: 1.2em;
-}
-
-#noFxaAccount > label:first-child {
-  margin-bottom: 0.6em;
 }
