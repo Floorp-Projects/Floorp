@@ -6,7 +6,7 @@
 
 extern crate serde_bytes;
 
-use crate::channel::{self, MsgReceiver, MsgSender, Payload, PayloadSender};
+use crate::channel::{self, MsgReceiver, MsgSender};
 use peek_poke::PeekPoke;
 use std::cell::Cell;
 use std::fmt;
@@ -128,9 +128,6 @@ pub struct Transaction {
     /// Operations affecting the generation of frames (applied after scene building).
     frame_ops: Vec<FrameMsg>,
 
-    /// Additional display list data.
-    payloads: Vec<Payload>,
-
     notifications: Vec<NotificationRequest>,
 
     /// Persistent resource updates to apply as part of this transaction.
@@ -156,7 +153,6 @@ impl Transaction {
             scene_ops: Vec::new(),
             frame_ops: Vec::new(),
             resource_updates: Vec::new(),
-            payloads: Vec::new(),
             notifications: Vec::new(),
             use_scene_builder_thread: true,
             generate_frame: false,
@@ -254,7 +250,7 @@ impl Transaction {
         (pipeline_id, content_size, display_list): (PipelineId, LayoutSize, BuiltDisplayList),
         preserve_frame_state: bool,
     ) {
-        let (display_list_data, list_descriptor) = display_list.into_data();
+        let (list_data, list_descriptor) = display_list.into_data();
         self.scene_ops.push(
             SceneMsg::SetDisplayList {
                 epoch,
@@ -263,10 +259,10 @@ impl Transaction {
                 viewport_size,
                 content_size,
                 list_descriptor,
+                list_data,
                 preserve_frame_state,
             }
         );
-        self.payloads.push(Payload { epoch, pipeline_id, display_list_data });
     }
 
     /// Add a set of persistent resource updates to apply as part of this transaction.
@@ -392,20 +388,17 @@ impl Transaction {
         self.frame_ops
     }
 
-    fn finalize(self) -> (TransactionMsg, Vec<Payload>) {
-        (
-            TransactionMsg {
-                scene_ops: self.scene_ops,
-                frame_ops: self.frame_ops,
-                resource_updates: self.resource_updates,
-                notifications: self.notifications,
-                use_scene_builder_thread: self.use_scene_builder_thread,
-                generate_frame: self.generate_frame,
-                invalidate_rendered_frame: self.invalidate_rendered_frame,
-                low_priority: self.low_priority,
-            },
-            self.payloads,
-        )
+    fn finalize(self) -> TransactionMsg {
+        TransactionMsg {
+            scene_ops: self.scene_ops,
+            frame_ops: self.frame_ops,
+            resource_updates: self.resource_updates,
+            notifications: self.notifications,
+            use_scene_builder_thread: self.use_scene_builder_thread,
+            generate_frame: self.generate_frame,
+            invalidate_rendered_frame: self.invalidate_rendered_frame,
+            low_priority: self.low_priority,
+        }
     }
 
     /// See `ResourceUpdate::AddImage`.
@@ -817,6 +810,8 @@ pub enum SceneMsg {
     SetDisplayList {
         ///
         list_descriptor: BuiltDisplayListDescriptor,
+        /// The serialized display list.
+        list_data: Vec<u8>,
         ///
         epoch: Epoch,
         ///
@@ -1301,15 +1296,13 @@ pub enum ScrollClamping {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct RenderApiSender {
     api_sender: MsgSender<ApiMsg>,
-    payload_sender: PayloadSender,
 }
 
 impl RenderApiSender {
     /// Used internally by the `Renderer`.
-    pub fn new(api_sender: MsgSender<ApiMsg>, payload_sender: PayloadSender) -> Self {
+    pub fn new(api_sender: MsgSender<ApiMsg>) -> Self {
         RenderApiSender {
             api_sender,
-            payload_sender,
         }
     }
 
@@ -1333,7 +1326,6 @@ impl RenderApiSender {
         };
         RenderApi {
             api_sender: self.api_sender.clone(),
-            payload_sender: self.payload_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
         }
@@ -1349,7 +1341,6 @@ impl RenderApiSender {
         self.api_sender.send(msg).expect("Failed to send CloneApiByClient message");
         RenderApi {
             api_sender: self.api_sender.clone(),
-            payload_sender: self.payload_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
         }
@@ -1441,7 +1432,6 @@ bitflags! {
 /// The main entry point to interact with WebRender.
 pub struct RenderApi {
     api_sender: MsgSender<ApiMsg>,
-    payload_sender: PayloadSender,
     namespace_id: IdNamespace,
     next_id: Cell<ResourceId>,
 }
@@ -1454,7 +1444,7 @@ impl RenderApi {
 
     ///
     pub fn clone_sender(&self) -> RenderApiSender {
-        RenderApiSender::new(self.api_sender.clone(), self.payload_sender.clone())
+        RenderApiSender::new(self.api_sender.clone())
     }
 
     /// Add a document to the WebRender instance.
@@ -1608,14 +1598,6 @@ impl RenderApi {
         self.api_sender.send(msg).unwrap();
     }
 
-    // For use in Wrench only
-    #[doc(hidden)]
-    pub fn send_payload(&self, data: &[u8]) {
-        self.payload_sender
-            .send(Payload::from_data(data))
-            .unwrap();
-    }
-
     /// A helper method to send document messages.
     fn send_scene_msg(&self, document_id: DocumentId, msg: SceneMsg) {
         // This assertion fails on Servo use-cases, because it creates different
@@ -1638,28 +1620,17 @@ impl RenderApi {
 
     /// Send a transaction to WebRender.
     pub fn send_transaction(&self, document_id: DocumentId, transaction: Transaction) {
-        let (msg, payloads) = transaction.finalize();
-        for payload in payloads {
-            self.payload_sender.send(payload).unwrap();
-        }
+        let msg = transaction.finalize();
         self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
     }
 
     /// Send multiple transactions.
     pub fn send_transactions(&self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
         debug_assert!(document_ids.len() == transactions.len());
-        let length = document_ids.len();
-        let (msgs, mut document_payloads) = transactions.drain(..)
-            .fold((Vec::with_capacity(length), Vec::with_capacity(length)),
-                |(mut msgs, mut document_payloads), transaction| {
-                    let (msg, payloads) = transaction.finalize();
-                    msgs.push(msg);
-                    document_payloads.push(payloads);
-                    (msgs, document_payloads)
-                });
-        for payload in document_payloads.drain(..).flatten() {
-            self.payload_sender.send(payload).unwrap();
-        }
+        let msgs = transactions.drain(..)
+            .map(|txn| txn.finalize())
+            .collect();
+
         self.api_sender.send(ApiMsg::UpdateDocuments(document_ids, msgs)).unwrap();
     }
 
