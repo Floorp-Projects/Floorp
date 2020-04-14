@@ -4027,7 +4027,7 @@ dependencies = [
 [[package]]
 name = "spirv-cross-internal"
 version = "0.1.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f0c322e8a17d4957fbb5b7cd3b56d520ad72fbf2"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f252537beb139a818b4a8c854e501690c9ade20e"
 dependencies = [
  "cc",
 ]
@@ -4035,7 +4035,7 @@ dependencies = [
 [[package]]
 name = "spirv_cross"
 version = "0.18.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f0c322e8a17d4957fbb5b7cd3b56d520ad72fbf2"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f252537beb139a818b4a8c854e501690c9ade20e"
 dependencies = [
  "spirv-cross-internal",
 ]
