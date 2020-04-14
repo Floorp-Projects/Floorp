@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure the ForceEmptyHitRegion flag works properly</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe1", "helper_fission_empty.html"))
+  .then(loadOOPIFrame("testframe2", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(runAsyncContinuation(test))
+  .finally(FissionTestHelper.subtestDone);
+
+
+// The actual test
+
+let code_for_oopif_to_run = function() {
+  document.body.style.backgroundColor = 'green'; // To ensure opaqueness
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  dump("OOPIF got layersId: " + utils.getLayersId() +
+       ", scrollId: " + utils.getViewId(document.scrollingElement) + "\n");
+  return JSON.stringify({
+      layersId: utils.getLayersId(),
+      viewId: utils.getViewId(document.scrollingElement)
+  });
+};
+
+let iframe_compositor_test_data = function() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let result = JSON.stringify(utils.getCompositorAPZTestData());
+  dump("OOPIF got compositor APZ data: " + result + "\n");
+  return result;
+};
+
+async function* test() {
+  let iframe1 = document.getElementById("testframe1");
+  let iframe2 = document.getElementById("testframe2");
+
+  let iframeResponse = await FissionTestHelper.sendToOopif(iframe1, `(${code_for_oopif_to_run})()`);
+  dump("OOPIF response: " + iframeResponse + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed in frame1");
+
+  iframeResponse = await FissionTestHelper.sendToOopif(iframe2, `(${code_for_oopif_to_run})()`);
+  dump("OOPIF response: " + iframeResponse + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed in frame2");
+  let iframe2Expected = JSON.parse(iframeResponse);
+
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // Hit-testing the iframe with pointer-events:none should end up hitting the
+  // document containing the iframe instead (i.e. this document).
+  checkHitResult(hitTest(centerOf(iframe1)),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "center of pointer-events:none iframe should hit parent doc");
+
+  // Hit-testing the iframe that doesn't have pointer-events:none should end up
+  // hitting that iframe. But! the APZ code puts the hit-test information into
+  // the APZ test data based on the layers id, so the hit result information
+  // needs to be fished out of the iframe's DOMWindowUtils.
+  /*let uselessResult = */hitTest(centerOf(iframe2));
+  let data = JSON.parse(
+    await FissionTestHelper.sendToOopif(iframe2, `(${iframe_compositor_test_data})()`)
+  );
+  let result = data.hitResults[Object.keys(data.hitResults).length - 1];
+  let realHitResult = {
+    hitInfo: result.hitResult,
+    scrollId: result.scrollId,
+    layersId: result.layersId,
+  };
+  dump("Real hit result is " + JSON.stringify(realHitResult) + "\n");
+  checkHitResult(realHitResult,
+                 APZHitResultFlags.VISIBLE,
+                 iframe2Expected.viewId,
+                 iframe2Expected.layersId,
+                 "center of regular iframe should hit iframe doc");
+}
+
+  </script>
+</head>
+<body>
+<iframe id="testframe1" style="pointer-events:none"></iframe>
+<iframe id="testframe2"></iframe>
+</body>
+</html>
