@@ -55,6 +55,22 @@ class EvaluationContextSelector extends Component {
     }
   }
 
+  getIcon(target) {
+    if (target.type === TARGET_TYPES.FRAME) {
+      return "resource://devtools/client/debugger/images/globe-small.svg";
+    }
+
+    if (target.type === TARGET_TYPES.WORKER) {
+      return "resource://devtools/client/debugger/images/worker.svg";
+    }
+
+    if (target.type === TARGET_TYPES.CONTENT_PROCESS) {
+      return "resource://devtools/client/debugger/images/window.svg";
+    }
+
+    return null;
+  }
+
   renderMenuItem(target) {
     const { selectTarget, selectedTarget } = this.props;
 
@@ -72,6 +88,7 @@ class EvaluationContextSelector extends Component {
         : target.type == TARGET_TYPES.MAIN_TARGET,
       label,
       tooltip: target.url,
+      icon: this.getIcon(target),
       onClick: () => selectTarget(target.actorID),
     });
   }
@@ -79,23 +96,39 @@ class EvaluationContextSelector extends Component {
   renderMenuItems() {
     const { targets } = this.props;
 
+    // Let's sort the targets (using "numeric" so Content processes are ordered by PID).
+    const collator = new Intl.Collator("en", { numeric: true });
+    targets.sort((a, b) => collator.compare(a.name, b.name));
+
     let mainTarget;
+    const frames = [];
     const contentProcesses = [];
     const workers = [];
+
+    const dict = {
+      [TARGET_TYPES.FRAME]: frames,
+      [TARGET_TYPES.CONTENT_PROCESS]: contentProcesses,
+      [TARGET_TYPES.WORKER]: workers,
+    };
 
     for (const target of targets) {
       const menuItem = this.renderMenuItem(target);
 
       if (target.type == TARGET_TYPES.MAIN_TARGET) {
         mainTarget = menuItem;
-      } else if (target.type == TARGET_TYPES.CONTENT_PROCESS) {
-        contentProcesses.push(menuItem);
-      } else if (target.type == TARGET_TYPES.WORKER) {
-        workers.push(menuItem);
+      } else {
+        dict[target.type].push(menuItem);
       }
     }
 
     const items = [mainTarget];
+
+    if (frames.length > 0) {
+      items.push(
+        MenuItem({ role: "menuseparator", key: "frames-separator" }),
+        ...frames
+      );
+    }
 
     if (contentProcesses.length > 0) {
       items.push(
