@@ -6,7 +6,6 @@ use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImage
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
 use api::{BuiltDisplayList, ColorF, NotificationRequest, Checkpoint, IdNamespace};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind};
-use api::channel::MsgSender;
 use api::units::LayoutSize;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
@@ -151,13 +150,13 @@ pub enum SceneBuilderRequest {
     ExternalEvent(ExternalEvent),
     DeleteDocument(DocumentId),
     WakeUp,
-    Flush(MsgSender<()>),
+    Flush(Sender<()>),
     ClearNamespace(IdNamespace),
     SetFrameBuilderConfig(FrameBuilderConfig),
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
     Stop,
-    ReportMemory(Box<MemoryReport>, MsgSender<Box<MemoryReport>>),
+    ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
@@ -169,7 +168,7 @@ pub enum SceneBuilderRequest {
 pub enum SceneBuilderResult {
     Transactions(Vec<Box<BuiltTransaction>>, Option<Sender<SceneSwapResult>>),
     ExternalEvent(ExternalEvent),
-    FlushComplete(MsgSender<()>),
+    FlushComplete(Sender<()>),
     ClearNamespace(IdNamespace),
     Stopped,
     DocumentsForDebugger(String)
@@ -263,7 +262,7 @@ pub struct SceneBuilderThread {
     documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
-    api_tx: MsgSender<ApiMsg>,
+    api_tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
     size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
@@ -274,12 +273,12 @@ pub struct SceneBuilderThread {
 pub struct SceneBuilderThreadChannels {
     rx: Receiver<SceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
-    api_tx: MsgSender<ApiMsg>,
+    api_tx: Sender<ApiMsg>,
 }
 
 impl SceneBuilderThreadChannels {
     pub fn new(
-        api_tx: MsgSender<ApiMsg>
+        api_tx: Sender<ApiMsg>
     ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
         let (in_tx, in_rx) = channel();
         let (out_tx, out_rx) = channel();
