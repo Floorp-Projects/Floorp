@@ -4990,7 +4990,8 @@ class XDRBufferObject : public NativeObject {
 
 XDRBufferObject* XDRBufferObject::create(JSContext* cx,
                                          JS::TranscodeBuffer* buf) {
-  XDRBufferObject* bufObj = NewObjectWithNullTaggedProto<XDRBufferObject>(cx);
+  XDRBufferObject* bufObj =
+      NewObjectWithGivenProto<XDRBufferObject>(cx, nullptr);
   if (!bufObj) {
     return nullptr;
   }

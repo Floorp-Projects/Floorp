@@ -440,15 +440,6 @@ inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
   return obj ? &obj->as<T>() : nullptr;
 }
 
-template <typename T>
-inline T* NewObjectWithNullTaggedProto(JSContext* cx,
-                                       NewObjectKind newKind = GenericObject,
-                                       uint32_t initialShapeFlags = 0) {
-  Handle<TaggedProto> nullProto = AsTaggedProto(nullptr);
-  return NewObjectWithGivenTaggedProto<T>(cx, nullProto, newKind,
-                                          initialShapeFlags);
-}
-
 inline JSObject* NewObjectWithGivenProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
