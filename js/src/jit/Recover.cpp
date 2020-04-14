@@ -1302,7 +1302,7 @@ bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
       resultObject = NewStringIterator(cx);
       break;
     case MNewIterator::RegExpStringIterator:
-      resultObject = NewRegExpStringIteratorObject(cx);
+      resultObject = NewRegExpStringIterator(cx);
       break;
   }
 
