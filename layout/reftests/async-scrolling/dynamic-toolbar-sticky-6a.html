@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width">
+<style>
+html, body {
+    margin: 0;
+    scrollbar-width: none;
+}
+.spacer {
+    height: 100vh;
+    background-color: green;
+}
+.sticky_bottom {
+    position: sticky;
+    bottom: 20px;
+    height: 50px;
+    background-color: blue;
+    opacity: 50%;
+}
+.sticky_both {
+    position: sticky;
+    top: 20px;
+    bottom: 20px;
+    height: 50px;
+    background-color: purple;
+    opacity: 50%;
+}
+.sticky_top {
+    position: sticky;
+    top: 20px;
+    height: 50px;
+    background-color: red;
+    opacity: 50%;
+}
+</style>
+<div class="spacer"></div>
+<div class="sticky_bottom"></div>
+<div class="sticky_both"></div>
+<div class="sticky_top"></div>
+<div class="spacer"></div>
+<script>
+document.scrollingElement.scrollTop = 1140;
+</script>
