@@ -1254,7 +1254,7 @@ nsresult nsCocoaUtils::GetScreenCapturePermissionState(uint16_t& aPermissionStat
     // screen. We use the window name, window level, and owning PID as
     // heuristics to determine if we have screen recording permission.
     AutoCFRelease<CFArrayRef> windowArray =
-        CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
+        CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID);
     if (!windowArray) {
       LOG("GetScreenCapturePermissionState() ERROR: got NULL window info list");
       return NS_ERROR_UNEXPECTED;
@@ -1449,6 +1449,7 @@ void nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted) {
 // in which case macOS does not display the dialog again.
 //
 nsresult nsCocoaUtils::MaybeRequestScreenCapturePermission() {
+  LOG("MaybeRequestScreenCapturePermission()");
   AutoCFRelease<CGImageRef> image =
       CGDisplayCreateImageForRect(kCGDirectMainDisplay, CGRectMake(0, 0, 1, 1));
   return NS_OK;
