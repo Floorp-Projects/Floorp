@@ -119,7 +119,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     ]
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIRS += ['normandy']
+    DIRS += ['normandy', 'messaging-system']
 
 # This is only packaged for browser since corrupt JAR and XPI files tend to be a desktop-OS problem.
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
