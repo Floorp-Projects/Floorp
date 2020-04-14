@@ -1821,6 +1821,11 @@ bool WarpBuilder::buildGetPropOp(BytecodeLocation loc, MDefinition* val,
 bool WarpBuilder::build_GetProp(BytecodeLocation loc) {
   PropertyName* name = loc.getPropertyName(script_);
   MDefinition* val = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, val);
+  }
+
   MConstant* id = constant(StringValue(name));
   return buildGetPropOp(loc, val, id);
 }

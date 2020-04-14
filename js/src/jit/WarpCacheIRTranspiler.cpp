@@ -114,6 +114,21 @@ bool WarpCacheIRTranspiler::transpile_GuardShape() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::transpile_GuardToObject() {
+  ValOperandId inputId = reader.valOperandId();
+
+  MDefinition* def = getOperand(inputId);
+  if (def->type() == MIRType::Object) {
+    return true;
+  }
+
+  auto* ins = MUnbox::New(alloc(), def, MIRType::Object, MUnbox::Fallible);
+  current->add(ins);
+
+  setOperand(inputId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::transpile_LoadEnclosingEnvironment() {
   ObjOperandId inputId = reader.objOperandId();
   ObjOperandId outputId = reader.objOperandId();
@@ -136,6 +151,20 @@ bool WarpCacheIRTranspiler::transpile_LoadDynamicSlotResult() {
   current->add(slots);
 
   auto* load = MLoadSlot::New(alloc(), slots, slotIndex);
+  current->add(load);
+
+  setResult(load);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::transpile_LoadFixedSlotResult() {
+  ObjOperandId objId = reader.objOperandId();
+  int32_t offset = int32StubField(reader.stubOffset());
+
+  MDefinition* obj = getOperand(objId);
+  uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
+
+  auto* load = MLoadFixedSlot::New(alloc(), obj, slotIndex);
   current->add(load);
 
   setResult(load);
