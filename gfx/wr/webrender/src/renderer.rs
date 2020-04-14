@@ -1998,6 +1998,8 @@ pub struct Renderer {
     debug_server: Box<dyn DebugServer>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
+    /// True if there are any TextureCacheUpdate pending.
+    pending_texture_cache_updates: bool,
     pending_native_surface_updates: Vec<NativeSurfaceOperation>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
     pending_gpu_cache_clear: bool,
@@ -2596,6 +2598,7 @@ impl Renderer {
             device,
             active_documents: Vec::new(),
             pending_texture_updates: Vec::new(),
+            pending_texture_cache_updates: false,
             pending_native_surface_updates: Vec::new(),
             pending_gpu_cache_updates: Vec::new(),
             pending_gpu_cache_clear: false,
@@ -2770,6 +2773,7 @@ impl Renderer {
                     //            3) bad stuff happens.
 
                     //TODO: associate `document_id` with target window
+                    self.pending_texture_cache_updates |= !resource_update_list.texture_updates.updates.is_empty();
                     self.pending_texture_updates.push(resource_update_list.texture_updates);
                     self.pending_native_surface_updates.extend(resource_update_list.native_surface_updates);
                     self.backend_profile_counters = profile_counters;
@@ -2827,6 +2831,7 @@ impl Renderer {
                         }
                     }
 
+                    self.pending_texture_cache_updates |= !resource_updates.texture_updates.updates.is_empty();
                     self.pending_texture_updates.push(resource_updates.texture_updates);
                     self.pending_native_surface_updates.extend(resource_updates.native_surface_updates);
                     self.device.begin_frame();
@@ -2855,7 +2860,12 @@ impl Renderer {
                     }
                 }
                 ResultMsg::AppendNotificationRequests(mut notifications) => {
-                    if self.pending_texture_updates.is_empty() {
+                    // We need to know specifically if there are any pending
+                    // TextureCacheUpdate updates in any of the entries in
+                    // pending_texture_updates. They may simply be nops, which do not
+                    // need to prevent issuing the notification, and if so, may not
+                    // cause a timely frame render to occur to wake up any listeners.
+                    if !self.pending_texture_cache_updates {
                         drain_filter(
                             &mut notifications,
                             |n| { n.when() == Checkpoint::FrameTexturesUpdated },
@@ -3732,6 +3742,7 @@ impl Renderer {
     fn update_texture_cache(&mut self) {
         let _gm = self.gpu_profile.start_marker("texture cache update");
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
+        self.pending_texture_cache_updates = false;
 
         let mut upload_time = TimeProfileCounter::new("Resource upload time", false, Some(0.0..2.0));
         upload_time.profile(|| {
