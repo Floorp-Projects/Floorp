@@ -1284,7 +1284,7 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
   // Create the typed prototype for the scalar type. This winds up
   // not being user accessible, but we still create one for consistency.
   Rooted<TypedProto*> proto(cx);
-  proto = NewObjectWithGivenProto<TypedProto>(cx, objProto, TenuredObject);
+  proto = NewTenuredObjectWithGivenProto<TypedProto>(cx, objProto);
   if (!proto) {
     return false;
   }

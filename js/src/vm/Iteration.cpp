@@ -1119,7 +1119,8 @@ ArrayIteratorObject* js::NewArrayIteratorObject(JSContext* cx,
     return nullptr;
   }
 
-  return NewObjectWithGivenProto<ArrayIteratorObject>(cx, proto, newKind);
+  return NewObjectWithGivenProtoAndKind<ArrayIteratorObject>(cx, proto,
+                                                             newKind);
 }
 
 static const JSFunctionSpec array_iterator_methods[] = {
@@ -1147,7 +1148,8 @@ StringIteratorObject* js::NewStringIteratorObject(JSContext* cx,
     return nullptr;
   }
 
-  return NewObjectWithGivenProto<StringIteratorObject>(cx, proto, newKind);
+  return NewObjectWithGivenProtoAndKind<StringIteratorObject>(cx, proto,
+                                                              newKind);
 }
 
 static const JSClass RegExpStringIteratorPrototypeClass = {
@@ -1216,8 +1218,8 @@ RegExpStringIteratorObject* js::NewRegExpStringIteratorObject(
     return nullptr;
   }
 
-  return NewObjectWithGivenProto<RegExpStringIteratorObject>(cx, proto,
-                                                             newKind);
+  return NewObjectWithGivenProtoAndKind<RegExpStringIteratorObject>(cx, proto,
+                                                                    newKind);
 }
 
 JSObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {
