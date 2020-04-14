@@ -968,6 +968,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     options.setForceStrictMode();
   }
 
+  SourceExtent extent = SourceExtent::makeGlobalExtent(chars.length(), options);
+
   SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
                    SourceOwnership::Borrowed)) {
@@ -1000,7 +1002,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
 
     frontend::EvalSharedContext evalsc(cx, env, compilationInfo, scope,
-                                       compilationInfo.directives);
+                                       compilationInfo.directives, extent);
     script = frontend::CompileEvalScript(compilationInfo, evalsc, env, srcBuf);
     if (!script) {
       return false;
@@ -1021,7 +1023,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
                scopeKind == ScopeKind::NonSyntactic);
 
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationInfo.directives);
+                                           compilationInfo.directives, extent);
     script = frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
     if (!script) {
       return false;
