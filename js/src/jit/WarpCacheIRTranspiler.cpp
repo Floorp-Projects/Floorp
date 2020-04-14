@@ -59,6 +59,8 @@ class MOZ_RAII WarpCacheIRTranspiler {
     return static_cast<int32_t>(readStubWord(offset));
   }
 
+  bool transpileGuardTo(MIRType type);
+
 #define DEFINE_OP(op, ...) MOZ_MUST_USE bool transpile_##op();
   WARP_CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
@@ -135,19 +137,27 @@ bool WarpCacheIRTranspiler::transpile_GuardShape() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardToObject() {
+bool WarpCacheIRTranspiler::transpileGuardTo(MIRType type) {
   ValOperandId inputId = reader.valOperandId();
 
   MDefinition* def = getOperand(inputId);
-  if (def->type() == MIRType::Object) {
+  if (def->type() == type) {
     return true;
   }
 
-  auto* ins = MUnbox::New(alloc(), def, MIRType::Object, MUnbox::Fallible);
+  auto* ins = MUnbox::New(alloc(), def, type, MUnbox::Fallible);
   current->add(ins);
 
   setOperand(inputId, ins);
   return true;
+}
+
+bool WarpCacheIRTranspiler::transpile_GuardToObject() {
+  return transpileGuardTo(MIRType::Object);
+}
+
+bool WarpCacheIRTranspiler::transpile_GuardToString() {
+  return transpileGuardTo(MIRType::String);
 }
 
 bool WarpCacheIRTranspiler::transpile_LoadEnclosingEnvironment() {
@@ -237,6 +247,17 @@ bool WarpCacheIRTranspiler::transpile_LoadInt32ArrayLengthResult() {
   current->add(elements);
 
   auto* length = MArrayLength::New(alloc(), elements);
+  current->add(length);
+
+  setResult(length);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::transpile_LoadStringLengthResult() {
+  StringOperandId strId = reader.stringOperandId();
+  MDefinition* str = getOperand(strId);
+
+  auto* length = MStringLength::New(alloc(), str);
   current->add(length);
 
   setResult(length);
