@@ -1100,16 +1100,21 @@ impl TextureResolver {
             self.return_to_pool(device, target);
         }
 
-        // GC the render target pool.
+        // GC the render target pool, if it's currently > 32 MB in size.
         //
         // We use a simple scheme whereby we drop any texture that hasn't been used
-        // in the last 30 frames. This should generally prevent any sustained build-
-        // up of unused textures, unless we don't generate frames for a long period.
-        // This can happen when the window is minimized, and we probably want to
-        // flush all the WebRender caches in that case [1].
+        // in the last 60 frames, until we are below the size threshold. This should
+        // generally prevent any sustained build-up of unused textures, unless we don't
+        // generate frames for a long period. This can happen when the window is
+        // minimized, and we probably want to flush all the WebRender caches in that case [1].
         //
         // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
-        self.retain_targets(device, |texture| texture.used_recently(frame_id, 30));
+        self.gc_targets(
+            device,
+            frame_id,
+            32 * 1024 * 1024,
+            60,
+        );
     }
 
     /// Transfers ownership of a render target back to the pool.
@@ -1118,18 +1123,59 @@ impl TextureResolver {
         self.render_target_pool.push(target);
     }
 
-    /// Drops all targets from the render target pool that do not satisfy the predicate.
-    pub fn retain_targets<F: Fn(&Texture) -> bool>(&mut self, device: &mut Device, f: F) {
-        // We can't just use retain() because `Texture` requires manual cleanup.
-        let mut tmp = SmallVec::<[Texture; 8]>::new();
+    /// Frees any memory possible, in the event of a memory pressure signal.
+    fn on_memory_pressure(
+        &mut self,
+        device: &mut Device,
+    ) {
+        // Clear all textures in the render target pool
         for target in self.render_target_pool.drain(..) {
-            if f(&target) {
-                tmp.push(target);
-            } else {
+            device.delete_texture(target);
+        }
+    }
+
+    /// Drops all targets from the render target pool that do not satisfy the predicate.
+    pub fn gc_targets(
+        &mut self,
+        device: &mut Device,
+        current_frame_id: GpuFrameId,
+        total_bytes_threshold: usize,
+        frames_threshold: usize,
+    ) {
+        // Get the total GPU memory size used by the current render target pool
+        let mut rt_pool_size_in_bytes: usize = self.render_target_pool
+            .iter()
+            .map(|t| t.size_in_bytes())
+            .sum();
+
+        // If the total size of the pool is less than the threshold, don't bother
+        // trying to GC any targets
+        if rt_pool_size_in_bytes <= total_bytes_threshold {
+            return;
+        }
+
+        // Sort the current pool by age, so that we remove oldest textures first
+        self.render_target_pool.sort_by_key(|t| t.last_frame_used());
+
+        // We can't just use retain() because `Texture` requires manual cleanup.
+        let mut retained_targets = SmallVec::<[Texture; 8]>::new();
+
+        for target in self.render_target_pool.drain(..) {
+            // Drop oldest textures until we are under the allowed size threshold.
+            // However, if it's been used in very recently, it is always kept around,
+            // which ensures we don't thrash texture allocations on pages that do
+            // require a very large render target pool and are regularly changing.
+            if rt_pool_size_in_bytes > total_bytes_threshold &&
+               !target.used_recently(current_frame_id, frames_threshold)
+            {
+                rt_pool_size_in_bytes -= target.size_in_bytes();
                 device.delete_texture(target);
+            } else {
+                retained_targets.push(target);
             }
         }
-        self.render_target_pool.extend(tmp);
+
+        self.render_target_pool.extend(retained_targets);
     }
 
     fn end_pass(
@@ -2799,7 +2845,9 @@ impl Renderer {
                     // the device module asserts if we delete textures while
                     // not in a frame.
                     if memory_pressure {
-                        self.texture_resolver.retain_targets(&mut self.device, |_| false);
+                        self.texture_resolver.on_memory_pressure(
+                            &mut self.device,
+                        );
                     }
 
                     self.device.end_frame();
