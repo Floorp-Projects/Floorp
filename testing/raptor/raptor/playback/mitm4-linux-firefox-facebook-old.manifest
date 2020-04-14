@@ -1,0 +1,10 @@
+[
+  {
+    "algorithm": "sha512", 
+    "digest": "c25210aef5302d86d28dba8b52700bb74daf00fe1050273e3b3cfcda72b26d1343e790a4221f590c5e6b2ddbc3a9169da07f062b2d3d30e85ed2c52d4835fd54", 
+    "filename": "mitm4-linux-firefox-facebook-old.zip", 
+    "size": 29276648, 
+    "unpack": true, 
+    "visibility": "public"
+  }
+]
