@@ -22,6 +22,9 @@ permalink: /changelog/
 
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
+  
+  * **feature-qr**
+    * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
 * **service-sync-logins**
   * Adds fun `LoginsStorage.getPotentialDupesIgnoringUsername` for fetching list of potential duplicate logins from the underlying storage layer, ignoring username.

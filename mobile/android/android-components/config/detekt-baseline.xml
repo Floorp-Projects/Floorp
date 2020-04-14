@@ -2,7 +2,7 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.support.base.android.view.AutoFitTextureView.kt</ID>
+    <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
     <ID>LargeClass:BrowserToolbar.kt$BrowserToolbar : ViewGroupToolbar</ID>
     <ID>LargeClass:ContextMenuCandidate.kt$ContextMenuCandidate$Companion</ID>

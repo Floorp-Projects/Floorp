@@ -12,7 +12,7 @@
     android:focusable="true"
     tools:ignore="Overdraw">
 
-    <mozilla.components.support.base.android.view.AutoFitTextureView
+    <mozilla.components.feature.qr.views.AutoFitTextureView
         android:id="@+id/texture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
