@@ -16,7 +16,6 @@ use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::channel::Payload;
 use api::units::*;
-use api::channel::{MsgReceiver, MsgSender};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
 #[cfg(feature = "replay")]
@@ -151,7 +150,7 @@ impl ::std::ops::Sub<usize> for FrameId {
 
 enum RenderBackendStatus {
     Continue,
-    ShutDown(Option<MsgSender<()>>),
+    ShutDown(Option<Sender<()>>),
 }
 
 /// Identifier to track a sequence of frames.
@@ -750,7 +749,7 @@ struct PlainRenderBackend {
 ///
 /// The render backend operates on its own thread.
 pub struct RenderBackend {
-    api_rx: MsgReceiver<ApiMsg>,
+    api_rx: Receiver<ApiMsg>,
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
     low_priority_scene_tx: Sender<SceneBuilderRequest>,
@@ -779,7 +778,7 @@ pub struct RenderBackend {
 
 impl RenderBackend {
     pub fn new(
-        api_rx: MsgReceiver<ApiMsg>,
+        api_rx: Receiver<ApiMsg>,
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
         low_priority_scene_tx: Sender<SceneBuilderRequest>,
@@ -1733,7 +1732,7 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 
-    fn report_memory(&mut self, tx: MsgSender<Box<MemoryReport>>) {
+    fn report_memory(&mut self, tx: Sender<Box<MemoryReport>>) {
         let mut report = Box::new(MemoryReport::default());
         let ops = self.size_of_ops.as_mut().unwrap();
         let op = ops.size_of_op;
