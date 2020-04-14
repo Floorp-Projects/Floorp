@@ -1,0 +1,11 @@
+{
+    "stages": "1",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "ml": "ml64.exe",
+    "patches": []
+}
