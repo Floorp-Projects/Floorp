@@ -285,7 +285,7 @@ class UrlbarController {
 
     if (this.view.isOpen && executeAction && this._lastQueryContextWrapper) {
       let { queryContext } = this._lastQueryContextWrapper;
-      let handled = this.view.oneOffSearchButtons.handleKeyPress(
+      let handled = this.view.oneOffSearchButtons.handleKeyDown(
         event,
         this.view.visibleElementCount,
         this.view.allowEmptySelection,
