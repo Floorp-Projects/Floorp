@@ -1,11 +1,5 @@
-commit 25c9e334d301944537215caba1d7f44319f3e0da
-Author: Mathias Bynens <mathias@qiwi.be>
-Date:   Wed Mar 11 17:53:16 2020 -0300
+commit 4a8e49b3ca7f9f74a4cafe6621ff9ba548ccc353
+Author: Alexey Shvayka <shvaikalesh@gmail.com>
+Date:   Sat Apr 11 01:41:59 2020 +0300
 
-    Update RegExp property escape tests per Unicode v13.0.0 (#2526)
-    
-    Upstream change in test generator:
-    https://github.com/mathiasbynens/unicode-property-escapes-tests/commit/11fa92ca644f1b6c0f3be40f32533ff0ec64e86c
-    
-    Unicode v13.0.0:
-    https://unicode.org/versions/Unicode13.0.0/
+    Add test for \0 in Unicode patterns (#2569)
