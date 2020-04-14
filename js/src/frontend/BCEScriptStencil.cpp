@@ -44,6 +44,7 @@ void BCEScriptStencil::init() {
   if (isFunction()) {
     FunctionBox* funbox = bce_.sc->asFunctionBox();
     functionIndex.emplace(funbox->index());
+    fieldInitializers = funbox->fieldInitializers;
 
     // Set flags that don't have direct flag representation within the
     // FunctionBox.

@@ -454,8 +454,11 @@ class ScriptStencil {
 
   ScriptThingsVector gcThings;
 
-  // The function to link this script to
+  // The function to link this script to.
   mozilla::Maybe<FunctionIndex> functionIndex;
+
+  // (Only) Class-constructors should use this field.
+  mozilla::Maybe<FieldInitializers> fieldInitializers;
 
   ScriptStencil(JSContext* cx,
                 UniquePtr<js::ImmutableScriptData> immutableScriptData)
