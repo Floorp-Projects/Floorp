@@ -26,7 +26,7 @@ def test_browser():
         runs.append((args, kw))
 
     mach_cmd.run_process = _run_process
-    metadata["mach_args"] = {"tests": [os.path.join(HERE, "example.js")]}
+    metadata.set_arg("tests", [os.path.join(HERE, "example.js")])
 
     try:
         with pick_browser("script", mach_cmd) as env:

@@ -43,7 +43,7 @@ class ProxyRunner(MachEnvironment):
             prefs["network.proxy.ssl"] = "localhost"
             prefs["network.proxy.ssl_port"] = port
             prefs["network.proxy.no_proxies_on"] = "localhost"
-            metadata["browser"]["prefs"].update(prefs)
+            metadata.update_browser_prefs(prefs)
         return metadata
 
     def teardown(self):

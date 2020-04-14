@@ -12,7 +12,7 @@ class CommonMetrics(object):
     The metrics classes will be composed of this objcet, rather than inherit from it.
     """
 
-    def __init__(self, results, output="artifacts", prefix="", **kwargs):
+    def __init__(self, results, output="artifacts", prefix=""):
         """Initialize CommonMetrics object.
 
         :param results list/dict/str: Can be a single path to a result, a
@@ -59,7 +59,11 @@ class CommonMetrics(object):
                 files = [f for f in p.glob("**/*") if not f.is_dir()]
                 res.extend(self.parse_results(files))
             else:
-                res.append(open_file(p.as_posix()))
+                # XXX here we get browsertime.json as well as mp4s when
+                # recording videos
+                # XXX for now we skip binary files
+                if str(p).endswith("browsertime.json"):
+                    res.append(open_file(p.as_posix()))
         elif isinstance(results, list):
             # Expecting a list of paths
             for path in results:

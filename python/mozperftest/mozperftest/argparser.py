@@ -63,6 +63,12 @@ class GenericGroup:
                 "help": "Prefix the output files with this string.",
             },
         ],
+        [
+            ["--extra-options"],
+            {"type": str, "default": "", "help": "Extra options passed through"},
+        ],
+        [["--cycles"], {"type": int, "default": 1, "help": "Number of full cycles"}],
+        [["--hooks"], {"type": str, "default": "", "help": "Python hooks"}],
     ]
     defaults = {}
 

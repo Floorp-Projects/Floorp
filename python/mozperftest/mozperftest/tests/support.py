@@ -1,5 +1,6 @@
 import tempfile
 from mock import MagicMock
+from mozperftest.metadata import Metadata
 
 
 def get_running_env():
@@ -12,6 +13,5 @@ def get_running_env():
     mach_cmd.topobjdir = config.topobjdir
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
-    metadata = {"mach_cmd": mach_cmd, "browser": {"prefs": {}}}
-
+    metadata = Metadata(mach_cmd, "script")
     return mach_cmd, metadata

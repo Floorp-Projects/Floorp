@@ -35,7 +35,7 @@ class Perfherder(MachEnvironment):
         # the artifacts are uploaded?
         # if not perfherder:
         #    return
-        flavor = metadata.get("flavor")
+        flavor = metadata.flavor
         if not flavor or flavor not in KNOWN_FLAVORS:
             flavor = "default"
             self.warning(
@@ -47,7 +47,7 @@ class Perfherder(MachEnvironment):
 
         # Get the common requirements for metrics (i.e. output path,
         # results to process)
-        cm = CommonMetrics(metadata["results"], **metadata["mach_args"])
+        cm = CommonMetrics(metadata.get_result())
 
         # Process the results and save them
         # TODO: Get app/browser name from metadata/kwargs
@@ -59,5 +59,5 @@ class Perfherder(MachEnvironment):
         self.info(
             "Writing perfherder results to {}".format(os.path.join(cm.output, file))
         )
-        metadata["output"] = write_json(proc, cm.output, file)
+        metadata.set_output(write_json(proc, cm.output, file))
         return metadata
