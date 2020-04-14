@@ -71,7 +71,7 @@ namespace {
 LazyLogModule gCubebLog("cubeb");
 
 void CubebLogCallback(const char* aFmt, ...) {
-  char buffer[256];
+  char buffer[1024];
 
   va_list arglist;
   va_start(arglist, aFmt);
