@@ -165,6 +165,8 @@
   fill-opacity: 1;
 }
 
+/* Favicon */
+
 .urlbarView-favicon {
   min-width: 16px;
   height: 16px;
@@ -173,6 +175,23 @@
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
 }
+
+@media (min-resolution: 2dppx) {
+  .urlbarView-favicon {
+      transform: translateY(-1.5px);
+  }
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
+  min-width: 24px;
+  height: 24px;
+  margin-inline-end: 12px;
+  flex-basis: 24px;
+  flex-grow:  0;
+  flex-shrink: 0;
+}
+
+/* Type icon */
 
 .urlbarView-type-icon {
   position: absolute;
@@ -185,53 +204,13 @@
   -moz-context-properties: fill, stroke;
 }
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
-  min-width: 24px;
-  height: 24px;
-  margin-inline-end: 12px;
-  flex-basis: 24px;
-  flex-grow:  0;
-  flex-shrink: 0;
-}
-
-/* The help icon is a standard Photon ghost button. */
-.urlbarView-tip-help {
-  min-width: 16px;
-  height: 32px;
-  background-image: url("chrome://global/skin/icons/help.svg");
-  background-size: 16px;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding-inline: 8px;
-  margin-inline-start: 8px;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-.urlbarView-tip-help[selected] {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
-}
-
-.urlbarView-tip-help:hover {
-  background-color: var(--urlbarView-button-background-hover);
-}
-
-.urlbarView-tip-help:hover:active {
-  background-color: var(--urlbarView-button-background-active);
-}
-
-@media (min-resolution: 2dppx) {
-  .urlbarView-type-icon,
-  .urlbarView-favicon {
-      transform: translateY(-1.5px);
-  }
-}
-
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
   color: #0060df; /* Blue-60 */
   stroke: #fff;
 }
 
+.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
 .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab-12.svg);
   color: #008eaf; /* Teal-70 */
@@ -243,15 +222,13 @@
   stroke: #38383d; /* Grey-70 */
 }
 
+:root[lwt-toolbar-field-brighttext] .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
 :root[lwt-toolbar-field-brighttext] .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #00c8d7; /* Teal-60 */
   stroke: #38383d; /* Grey-70 */
 }
 
-.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
-.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  background-image: url(chrome://browser/skin/tab.svg);
-}
+/* Tip rows */
 
 .urlbarView-row[type=tip]:not(:last-child) {
   border-bottom: 1px solid var(--panel-separator-color);
@@ -279,6 +256,31 @@
 .urlbarView-tip-button,
 .urlbarView-tip-help {
   margin-block-end: 16px;
+}
+
+/* The help icon is a standard Photon ghost button. */
+.urlbarView-tip-help {
+  min-width: 16px;
+  height: 32px;
+  background-image: url("chrome://global/skin/icons/help.svg");
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-inline: 8px;
+  margin-inline-start: 8px;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+.urlbarView-tip-help[selected] {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+.urlbarView-tip-help:hover {
+  background-color: var(--urlbarView-button-background-hover);
+}
+
+.urlbarView-tip-help:hover:active {
+  background-color: var(--urlbarView-button-background-active);
 }
 
 /* The tip button is a Photon default button when unfocused and a
@@ -327,6 +329,8 @@
   flex-shrink: 1;
 }
 
+/* Title */
+
 .urlbarView-title {
   overflow: hidden;
   white-space: nowrap;
@@ -343,6 +347,8 @@
   flex-shrink: 1;
 }
 
+/* Title separator */
+
 .urlbarView-title-separator::before {
   content: "\2014";
   margin: 0 .4em;
@@ -352,6 +358,8 @@
 .urlbarView-title:empty + .urlbarView-tags:empty + .urlbarView-title-separator {
   display: none;
 }
+
+/* URLs, action labels, tags */
 
 .urlbarView-tags,
 .urlbarView-url,
@@ -406,7 +414,8 @@
   color: var(--autocomplete-popup-highlight-background);
 }
 
-/* Search one-offs. */
+/* Search one-offs */
+
 #urlbar .search-one-offs:not([hidden]) {
   display: flex;
   align-items: start;
