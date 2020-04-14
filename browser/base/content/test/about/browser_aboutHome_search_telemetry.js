@@ -13,16 +13,18 @@ add_task(async function() {
     { gBrowser, url: "about:home" },
     async function(browser) {
       let currEngine = await Services.search.getDefault();
-      let engine = await promiseNewEngine("searchSuggestionEngine.xml");
+
+      let engine;
+      await promiseContentSearchChange(browser, async () => {
+        engine = await promiseNewEngine("searchSuggestionEngine.xml");
+        await Services.search.setDefault(engine);
+        return engine.name;
+      });
+
       // Make this actually work in healthreport by giving it an ID:
       Object.defineProperty(engine.wrappedJSObject, "identifier", {
         value: "org.mozilla.testsearchsuggestions",
       });
-
-      await Promise.all([
-        promiseContentSearchChange(browser, engine.name),
-        Services.search.setDefault(engine),
-      ]);
 
       await SpecialPowers.spawn(
         browser,
