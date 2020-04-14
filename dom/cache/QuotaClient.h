@@ -37,20 +37,10 @@ already_AddRefed<quota::Client> CreateQuotaClient();
  * cannot be trusted, and we need to restore the padding file from the database.
  */
 
-/**
- * Note: The aCommitHook argument will be invoked while a lock is held. Callers
- * should be careful not to pass a hook that might lock on something else and
- * trigger a deadlock.
- */
-template <typename Callable>
-nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
-                                const int64_t aIncreaseSize,
-                                const int64_t aDecreaseSize,
-                                Callable aCommitHook);
-
 nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn);
 
 nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
+
 }  // namespace cache
 }  // namespace dom
 }  // namespace mozilla
