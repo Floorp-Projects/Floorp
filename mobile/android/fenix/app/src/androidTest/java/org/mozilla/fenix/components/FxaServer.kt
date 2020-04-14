@@ -21,6 +21,6 @@ object FxaServer {
 
     @Suppress("UNUSED_PARAMETER")
     fun config(context: Context): ServerConfig {
-        return ServerConfig(Server.DEV, CLIENT_ID, REDIRECT_URL)
+        return ServerConfig(Server.STAGE, CLIENT_ID, REDIRECT_URL)
     }
 }
