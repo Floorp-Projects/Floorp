@@ -290,9 +290,6 @@ class ResponsePanel extends Component {
         text,
         mode: json ? "application/json" : mimeType.replace(/;.+/, ""),
         targetSearchResult,
-        limit: Services.prefs.getIntPref(
-          "devtools.netmonitor.response.ui.limit"
-        ),
       },
       header: RESPONSE_PAYLOAD,
       id: "responsePayload",
