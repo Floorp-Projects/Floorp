@@ -11,7 +11,7 @@ class nsCycleCollectorLogger;
 %}
 
 [ptr] native FILE(FILE);
-[ptr] native nsCycleCollectorLoggerPtr (nsCycleCollectorLogger);
+[ptr] native nsCycleCollectorLoggerPtr(nsCycleCollectorLogger);
 interface nsIFile;
 
 /**
