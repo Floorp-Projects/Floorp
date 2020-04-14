@@ -7,8 +7,12 @@ package mozilla.components.browser.engine.gecko
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -49,5 +53,28 @@ class GeckoResultTest {
             assertTrue(it is IllegalStateException)
             GeckoResult.fromValue(null)
         }).await()
+    }
+
+    @Test
+    fun asCancellableOperation() = runBlockingTest {
+        val geckoResult: GeckoResult<Int> = mock()
+        val op = geckoResult.asCancellableOperation()
+
+        whenever(geckoResult.cancel()).thenReturn(GeckoResult.fromValue(false))
+        assertFalse(op.cancel().await())
+
+        whenever(geckoResult.cancel()).thenReturn(GeckoResult.fromValue(null))
+        assertFalse(op.cancel().await())
+
+        whenever(geckoResult.cancel()).thenReturn(GeckoResult.fromValue(true))
+        assertTrue(op.cancel().await())
+
+        whenever(geckoResult.cancel()).thenReturn(GeckoResult.fromException(IllegalStateException()))
+        try {
+            op.cancel().await()
+            fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) {
+            // expected
+        }
     }
 }

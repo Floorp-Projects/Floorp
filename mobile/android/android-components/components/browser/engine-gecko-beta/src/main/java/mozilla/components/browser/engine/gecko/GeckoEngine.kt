@@ -14,6 +14,7 @@ import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushHandler
+import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
@@ -196,17 +197,17 @@ class GeckoEngine(
         supportActions: Boolean,
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
-    ) {
+    ): CancellableOperation {
         val ext = GeckoWebExtension(id, url, runtime, allowContentMessaging, supportActions)
-        installWebExtension(ext, onSuccess, onError)
+        return installWebExtension(ext, onSuccess, onError)
     }
 
     internal fun installWebExtension(
         ext: GeckoWebExtension,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
-    ) {
-        if (ext.isBuiltIn()) {
+    ): CancellableOperation {
+        val geckoResult = if (ext.isBuiltIn()) {
             if (ext.supportActions) {
                 // We currently have to install the global action handler before we
                 // install the extension which is why this is done here directly.
@@ -222,27 +223,32 @@ class GeckoEngine(
 
             // For now we have to use registerWebExtension for builtin extensions until we get the
             // new installBuiltIn call on the controller: https://bugzilla.mozilla.org/show_bug.cgi?id=1601067
-            runtime.registerWebExtension(ext.nativeExtension).then({
-                webExtensionDelegate?.onInstalled(ext)
-                onSuccess(ext)
-                GeckoResult<Void>()
-            }, { throwable ->
-                onError(ext.id, throwable)
-                GeckoResult<Void>()
-            })
+            runtime.registerWebExtension(ext.nativeExtension).apply {
+                then({
+                    webExtensionDelegate?.onInstalled(ext)
+                    onSuccess(ext)
+                    GeckoResult<Void>()
+                }, { throwable ->
+                    onError(ext.id, throwable)
+                    GeckoResult<Void>()
+                })
+            }
         } else {
-            runtime.webExtensionController.install(ext.url).then({
-                val installedExtension = GeckoWebExtension(it!!, runtime)
-                webExtensionDelegate?.onInstalled(installedExtension)
-                installedExtension.registerActionHandler(webExtensionActionHandler)
-                installedExtension.registerTabHandler(webExtensionTabHandler)
-                onSuccess(installedExtension)
-                GeckoResult<Void>()
-            }, { throwable ->
-                onError(ext.id, throwable)
-                GeckoResult<Void>()
-            })
+            runtime.webExtensionController.install(ext.url).apply {
+                then({
+                    val installedExtension = GeckoWebExtension(it!!, runtime)
+                    webExtensionDelegate?.onInstalled(installedExtension)
+                    installedExtension.registerActionHandler(webExtensionActionHandler)
+                    installedExtension.registerTabHandler(webExtensionTabHandler)
+                    onSuccess(installedExtension)
+                    GeckoResult<Void>()
+                }, { throwable ->
+                    onError(ext.id, throwable)
+                    GeckoResult<Void>()
+                })
+            }
         }
+        return geckoResult.asCancellableOperation()
     }
 
     /**

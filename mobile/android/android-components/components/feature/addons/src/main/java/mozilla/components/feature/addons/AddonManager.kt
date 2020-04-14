@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitAll
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
@@ -113,19 +114,19 @@ class AddonManager(
         addon: Addon,
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
-    ) {
+    ): CancellableOperation {
 
         // Verify the add-on doesn't require blocked permissions
         // only available to built-in extensions
         BLOCKED_PERMISSIONS.forEach { blockedPermission ->
             if (addon.permissions.any { it.equals(blockedPermission, ignoreCase = true) }) {
                 onError(addon.id, IllegalArgumentException("Addon requires invalid permission $blockedPermission"))
-                return
+                return CancellableOperation.Noop()
             }
         }
 
         val pendingAction = addPendingAddonAction()
-        engine.installWebExtension(
+        return engine.installWebExtension(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
