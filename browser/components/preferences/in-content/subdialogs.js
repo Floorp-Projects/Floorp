@@ -44,10 +44,9 @@ SubDialog.prototype = {
   _box: null,
   _openedURL: null,
   _injectedStyleSheets: [
-    "chrome://browser/skin/preferences/preferences.css",
     "chrome://global/skin/in-content/common.css",
-    "chrome://browser/skin/preferences/in-content/preferences.css",
-    "chrome://browser/skin/preferences/in-content/dialog.css",
+    "chrome://browser/skin/preferences/preferences.css",
+    "chrome://browser/skin/preferences/dialog.css",
   ],
   _resizeObserver: null,
   _template: null,
