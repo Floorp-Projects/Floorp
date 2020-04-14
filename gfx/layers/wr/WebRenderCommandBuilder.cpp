@@ -2499,6 +2499,24 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       return Nothing();
     }
 
+    // If a mask is incomplete or missing (e.g. it's display: none) the proper
+    // behaviour depends on the masked frame being html or svg.
+    //
+    // For an HTML frame:
+    //   According to css-masking spec, always create a mask surface when
+    //   we have any item in maskFrame even if all of those items are
+    //   non-resolvable <mask-sources> or <images> so continue with the
+    //   painting code. Note that in a common case of no layer of the mask being
+    //   complete or even partially complete then the mask surface will be
+    //   transparent black so this results in hiding the frame.
+    // For an SVG frame:
+    //   SVG 1.1 say that if we fail to resolve a mask, we should draw the
+    //   object unmasked so return Nothing().
+    if (!maskIsComplete &&
+        (aMaskItem->Frame()->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+      return Nothing();
+    }
+
     recorder->FlushItem(IntRect(0, 0, size.width, size.height));
     recorder->Finish();
 
