@@ -732,7 +732,7 @@ bool FunctionScriptEmitter::emitEndBody() {
 }
 
 bool FunctionScriptEmitter::initScript(
-    const FieldInitializers& fieldInitializers) {
+    const mozilla::Maybe<FieldInitializers>& fieldInitializers) {
   MOZ_ASSERT(state_ == State::EndBody);
 
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
@@ -747,7 +747,9 @@ bool FunctionScriptEmitter::initScript(
     return false;
   }
 
-  bce_->script->setFieldInitializers(fieldInitializers);
+  if (fieldInitializers) {
+    bce_->script->setFieldInitializers(*fieldInitializers);
+  }
 
 #ifdef DEBUG
   state_ = State::End;

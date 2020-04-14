@@ -2479,8 +2479,6 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), funbox);
 
-  MOZ_ASSERT(fieldInitializers_.valid == funbox->isClassConstructor());
-
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
 
   //                [stack]
@@ -2518,7 +2516,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     }
   }
 
-  if (!fse.initScript(getFieldInitializers())) {
+  if (!fse.initScript(funbox->fieldInitializers)) {
     return false;
   }
 
@@ -5511,22 +5509,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       nestedMode = BytecodeEmitter::Normal;
     }
 
-    mozilla::Maybe<FieldInitializers> fieldInitializers;
-    if (classContentsIfConstructor) {
-      fieldInitializers = setupFieldInitializers(classContentsIfConstructor,
-                                                 FieldPlacement::Instance);
-      if (!fieldInitializers) {
-        ReportAllocationOverflow(cx);
-        return false;
-      }
-    } else {
-      // The BCE requires passing some value even if not used.
-      fieldInitializers = Some(FieldInitializers::Invalid());
-    }
-
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
                          funbox->extent.lineno, funbox->extent.column,
-                         compilationInfo, nestedMode, *fieldInitializers);
+                         compilationInfo, nestedMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -8839,12 +8824,10 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
 const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
-      FunctionBox* box = current->sc->asFunctionBox();
-      if (box->isClassConstructor()) {
-        const FieldInitializers& fieldInitializers =
-            current->getFieldInitializers();
-        MOZ_ASSERT(fieldInitializers.valid);
-        return fieldInitializers;
+      FunctionBox* funbox = current->sc->asFunctionBox();
+      if (funbox->isClassConstructor()) {
+        MOZ_ASSERT(funbox->fieldInitializers->valid);
+        return *funbox->fieldInitializers;
       }
     }
   }
