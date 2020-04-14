@@ -492,14 +492,8 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateRenderPipeline(
       aDesc.mVertexStage.mEntryPoint);
   const NS_LossyConvertUTF16toASCII fsEntryPoint(
       aDesc.mFragmentStage.mEntryPoint);
-  size_t totalAttributes = 0;
-  for (const auto& vertexBuffer : aDesc.mVertexState.mVertexBuffers) {
-    totalAttributes += vertexBuffer.mAttributes.Length();
-  }
   nsTArray<ffi::WGPUVertexBufferLayoutDescriptor> vertexBuffers(
       aDesc.mVertexState.mVertexBuffers.Length());
-  nsTArray<ffi::WGPUVertexAttributeDescriptor> vertexAttributes(
-      totalAttributes);
 
   ffi::WGPURenderPipelineDescriptor desc = {};
   ffi::WGPUProgrammableStageDescriptor fragmentDesc = {};
@@ -520,16 +514,12 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateRenderPipeline(
   if (aDesc.mDepthStencilState.isSome()) {
     desc.depth_stencil_state = aDesc.mDepthStencilState.ptr();
   }
-  totalAttributes = 0;
   for (const auto& vertexBuffer : aDesc.mVertexState.mVertexBuffers) {
     ffi::WGPUVertexBufferLayoutDescriptor vb = {};
     vb.array_stride = vertexBuffer.mArrayStride;
     vb.step_mode = vertexBuffer.mStepMode;
-    vb.attributes = vertexAttributes.Elements() + totalAttributes;
+    vb.attributes = vertexBuffer.mAttributes.Elements();
     vb.attributes_length = vertexBuffer.mAttributes.Length();
-    for (const auto& attribute : vertexBuffer.mAttributes) {
-      vertexAttributes.AppendElement(attribute);
-    }
     vertexBuffers.AppendElement(vb);
   }
   desc.vertex_state.index_format = aDesc.mVertexState.mIndexFormat;
