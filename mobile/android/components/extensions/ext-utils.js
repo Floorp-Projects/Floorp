@@ -215,15 +215,15 @@ class TabTracker extends TabTrackerBase {
     this.initialized = true;
 
     windowTracker.addOpenListener(window => {
-      const nativeTab = window.BrowserApp.selectedTab;
+      const nativeTab = window.tab;
       this.emit("tab-created", { nativeTab });
     });
 
     windowTracker.addCloseListener(window => {
-      const nativeTab = window.BrowserApp.selectedTab;
-      const { windowId, tabId } = this.getBrowserData(window.browser);
+      const { tab, browser } = window;
+      const { windowId, tabId } = this.getBrowserData(browser);
       this.emit("tab-removed", {
-        nativeTab,
+        tab,
         tabId,
         windowId,
         // In GeckoView, it is not meaningful to speak of "window closed", because a tab is a window.
@@ -240,12 +240,12 @@ class TabTracker extends TabTrackerBase {
 
   getTab(id, default_ = undefined) {
     const windowId = GeckoViewTabBridge.tabIdToWindowId(id);
-    const win = windowTracker.getWindow(windowId, null, false);
+    const window = windowTracker.getWindow(windowId, null, false);
 
-    if (win && win.BrowserApp) {
-      let nativeTab = win.BrowserApp.selectedTab;
-      if (nativeTab) {
-        return nativeTab;
+    if (window) {
+      const { tab } = window;
+      if (tab) {
+        return tab;
       }
     }
 
@@ -257,7 +257,8 @@ class TabTracker extends TabTrackerBase {
 
   getBrowserData(browser) {
     const window = browser.ownerGlobal;
-    if (!window.BrowserApp) {
+    const { tab } = window;
+    if (!tab) {
       return {
         tabId: -1,
         windowId: -1,
@@ -275,14 +276,14 @@ class TabTracker extends TabTrackerBase {
 
     return {
       windowId,
-      tabId: this.getId(window.BrowserApp.selectedTab),
+      tabId: this.getId(tab),
     };
   }
 
   get activeTab() {
-    let win = windowTracker.topWindow;
-    if (win && win.BrowserApp) {
-      return win.BrowserApp.selectedTab;
+    const window = windowTracker.topWindow;
+    if (window) {
+      return window.tab;
     }
     return null;
   }
@@ -418,8 +419,7 @@ class TabContext extends EventEmitter {
       // location changes related to the top level frame (See Bug 1493470 for a rationale).
       return;
     }
-    const gBrowser = browser.ownerGlobal.gBrowser;
-    const tab = gBrowser.getTabForBrowser(browser);
+    const { tab } = browser.ownerGlobal;
     // fromBrowse will be false in case of e.g. a hash change or history.pushState
     const fromBrowse = !(
       flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
@@ -501,7 +501,7 @@ class Window extends WindowBase {
 
   get activeTab() {
     const { tabManager } = this.extension;
-    return tabManager.getWrapper(this.window.BrowserApp.selectedTab);
+    return tabManager.getWrapper(this.window.tab);
   }
 
   getTabAtIndex(index) {

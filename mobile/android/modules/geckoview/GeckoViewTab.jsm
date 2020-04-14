@@ -19,11 +19,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });
 
-// Based on the "Tab" prototype from mobile/android/chrome/content/browser.js
 class Tab {
-  constructor(id, browser) {
-    this.id = id;
-    this.browser = browser;
+  constructor(window) {
+    this.id = GeckoViewTabBridge.windowIdToTabId(
+      window.windowUtils.outerWindowID
+    );
+    this.browser = window.browser;
     this.active = false;
   }
 
@@ -33,33 +34,6 @@ class Tab {
 
   getActive() {
     return this.active;
-  }
-}
-
-// Stub BrowserApp implementation for WebExtensions support.
-class BrowserAppShim {
-  constructor(window) {
-    const tabId = GeckoViewTabBridge.windowIdToTabId(
-      window.windowUtils.outerWindowID
-    );
-    this.selectedBrowser = window.browser;
-    this.selectedTab = new Tab(tabId, this.selectedBrowser);
-  }
-
-  getTabForBrowser(aBrowser) {
-    return this.selectedTab;
-  }
-
-  static getBrowserApp(window) {
-    let { BrowserApp } = window;
-
-    if (!BrowserApp) {
-      BrowserApp = window.gBrowser = window.BrowserApp = new BrowserAppShim(
-        window
-      );
-    }
-
-    return BrowserApp;
   }
 }
 
@@ -131,11 +105,10 @@ const GeckoViewTabBridge = {
       Services.obs.addObserver(handler, "geckoview-window-created");
     });
 
-    const { selectedTab } = BrowserAppShim.getBrowserApp(window);
     if (!window.tab) {
-      window.tab = selectedTab;
+      window.tab = new Tab(window);
     }
-    return selectedTab;
+    return window.tab;
   },
 
   /**
@@ -170,9 +143,8 @@ const GeckoViewTabBridge = {
 class GeckoViewTab extends GeckoViewModule {
   onInit() {
     const { window } = this;
-    const { selectedTab } = BrowserAppShim.getBrowserApp(window);
     if (!window.tab) {
-      window.tab = selectedTab;
+      window.tab = new Tab(window);
     }
 
     this.registerListener(["GeckoView:WebExtension:SetTabActive"]);
