@@ -506,8 +506,8 @@ static TypedProto* CreatePrototypeObjectForComplexTypeInstance(
     return nullptr;
   }
 
-  return NewObjectWithGivenProto<TypedProto>(cx, ctorPrototypePrototype,
-                                             SingletonObject);
+  return NewSingletonObjectWithGivenProto<TypedProto>(cx,
+                                                      ctorPrototypePrototype);
 }
 
 static const JSClassOps ArrayTypeDescrClassOps = {
@@ -604,8 +604,8 @@ ArrayTypeDescr* ArrayMetaTypeDescr::create(JSContext* cx,
                                            int32_t length) {
   MOZ_ASSERT(arrayTypePrototype);
   Rooted<ArrayTypeDescr*> obj(cx);
-  obj = NewObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype,
-                                                SingletonObject);
+  obj =
+      NewSingletonObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype);
   if (!obj) {
     return nullptr;
   }
@@ -1004,8 +1004,8 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
   // Now create the resulting type descriptor.
 
   Rooted<StructTypeDescr*> descr(cx);
-  descr = NewObjectWithGivenProto<StructTypeDescr>(cx, structTypePrototype,
-                                                   SingletonObject);
+  descr = NewSingletonObjectWithGivenProto<StructTypeDescr>(
+      cx, structTypePrototype);
   if (!descr) {
     return nullptr;
   }
@@ -1258,8 +1258,7 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
     return false;
   }
 
-  Rooted<T*> descr(cx);
-  descr = NewObjectWithGivenProto<T>(cx, funcProto, SingletonObject);
+  Rooted<T*> descr(cx, NewSingletonObjectWithGivenProto<T>(cx, funcProto));
   if (!descr) {
     return false;
   }
@@ -1328,7 +1327,7 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
   // Create ctor.prototype, which inherits from Function.__proto__
 
   RootedObject proto(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, funcProto, SingletonObject));
+      cx, NewSingletonObjectWithGivenProto<PlainObject>(cx, funcProto));
   if (!proto) {
     return nullptr;
   }
@@ -1341,8 +1340,7 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
     return nullptr;
   }
   RootedObject protoProto(cx);
-  protoProto =
-      NewObjectWithGivenProto<PlainObject>(cx, objProto, SingletonObject);
+  protoProto = NewSingletonObjectWithGivenProto<PlainObject>(cx, objProto);
   if (!protoProto) {
     return nullptr;
   }
@@ -1380,8 +1378,8 @@ static JSObject* CreateTypedObjectModuleObject(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  return NewObjectWithGivenProto<TypedObjectModuleObject>(cx, objProto,
-                                                          SingletonObject);
+  return NewSingletonObjectWithGivenProto<TypedObjectModuleObject>(cx,
+                                                                   objProto);
 }
 
 /*  The initialization strategy for TypedObjects is mildly unusual
