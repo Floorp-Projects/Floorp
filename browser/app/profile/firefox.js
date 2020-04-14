@@ -757,6 +757,8 @@ pref("browser.download.hide_plugins_without_extensions", true);
   pref("browser.backspace_action", 0);
 #endif
 
+pref("intl.regional_prefs.use_os_locales", false);
+
 // this will automatically enable inline spellchecking (if it is available) for
 // editable elements in HTML
 // 0 = spellcheck nothing
@@ -1203,6 +1205,7 @@ pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
 pref("services.sync.prefs.sync.extensions.activeThemeID", true);
 pref("services.sync.prefs.sync.intl.accept_languages", true);
+pref("services.sync.prefs.sync.intl.regional_prefs.use_os_locales", true);
 pref("services.sync.prefs.sync.layout.spellcheckDefault", true);
 pref("services.sync.prefs.sync.media.autoplay.default", true);
 pref("services.sync.prefs.sync.media.eme.enabled", true);
