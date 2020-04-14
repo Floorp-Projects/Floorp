@@ -2848,19 +2848,19 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
     return hit;
   }
 
-  wr::WrPipelineId pipelineId;
-  ScrollableLayerGuid::ViewID scrollId;
-  gfx::CompositorHitTestInfo hitInfo;
-  SideBits sideBits = SideBits::eNone;
   APZCTM_LOG("Hit-testing point %s with WR\n",
              Stringify(aHitTestPoint).c_str());
-  bool hitSomething = wr->HitTest(wr::ToWorldPoint(aHitTestPoint), pipelineId,
-                                  scrollId, hitInfo, sideBits);
-  if (!hitSomething) {
+  std::vector<wr::WrHitResult> results =
+      wr->HitTest(wr::ToWorldPoint(aHitTestPoint));
+  if (results.empty()) {
     return hit;
   }
 
-  hit.mLayersId = wr::AsLayersId(pipelineId);
+  hit.mLayersId = results[0].mLayersId;
+  ScrollableLayerGuid::ViewID scrollId = results[0].mScrollId;
+  gfx::CompositorHitTestInfo hitInfo = results[0].mHitInfo;
+  SideBits sideBits = results[0].mSideBits;
+
   ScrollableLayerGuid guid{hit.mLayersId, 0, scrollId};
   if (RefPtr<HitTestingTreeNode> node =
           GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
