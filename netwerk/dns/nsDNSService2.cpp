@@ -10,6 +10,7 @@
 #include "nsIDNSByTypeRecord.h"
 #include "nsICancelable.h"
 #include "nsIPrefBranch.h"
+#include "nsIOService.h"
 #include "nsIXPConnect.h"
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
@@ -39,6 +40,7 @@
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
@@ -545,6 +547,18 @@ NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
 static StaticRefPtr<nsDNSService> gDNSService;
 
 already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
+  if (nsIOService::UseSocketProcess()) {
+    if (XRE_IsSocketProcess()) {
+      return GetSingleton();
+    }
+
+    if (XRE_IsContentProcess() || XRE_IsParentProcess()) {
+      return ChildDNSService::GetSingleton();
+    }
+
+    return nullptr;
+  }
+
   if (XRE_IsParentProcess()) {
     return GetSingleton();
   }
@@ -557,14 +571,31 @@ already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
 }
 
 already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
-  NS_ASSERTION(XRE_IsParentProcess(), "not a parent process");
+  MOZ_ASSERT_IF(nsIOService::UseSocketProcess(), XRE_IsSocketProcess());
+  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), XRE_IsParentProcess());
 
   if (!gDNSService) {
-    gDNSService = new nsDNSService();
-    if (NS_SUCCEEDED(gDNSService->Init())) {
-      ClearOnShutdown(&gDNSService);
+    auto initTask = []() {
+      gDNSService = new nsDNSService();
+      if (NS_SUCCEEDED(gDNSService->Init())) {
+        ClearOnShutdown(&gDNSService);
+      } else {
+        gDNSService = nullptr;
+      }
+    };
+
+    if (!NS_IsMainThread()) {
+      // Forward to the main thread synchronously.
+      RefPtr<nsIThread> mainThread = do_GetMainThread();
+      if (!mainThread) {
+        return nullptr;
+      }
+
+      SyncRunnable::DispatchToThread(mainThread,
+                                     new SyncRunnable(NS_NewRunnableFunction(
+                                         "nsDNSService::Init", initTask)));
     } else {
-      gDNSService = nullptr;
+      initTask();
     }
   }
 
