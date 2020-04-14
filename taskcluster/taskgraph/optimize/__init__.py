@@ -356,3 +356,8 @@ class experimental(object):
             'test': Either('skip-unless-schedules', 'bugbug-debug'),
         }
         """Restricts tests to debug platforms."""
+
+        reduced = {
+            'test': Either('skip-unless-schedules', 'bugbug-reduced'),
+        }
+        """Use the reduced set of tasks (and no groups) chosen by bugbug."""
