@@ -27,12 +27,14 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   _(GuardClass)                       \
   _(GuardShape)                       \
   _(GuardToObject)                    \
+  _(GuardToString)                    \
   _(LoadEnclosingEnvironment)         \
   _(LoadDynamicSlotResult)            \
   _(LoadFixedSlotResult)              \
   _(LoadEnvironmentFixedSlotResult)   \
   _(LoadEnvironmentDynamicSlotResult) \
   _(LoadInt32ArrayLengthResult)       \
+  _(LoadStringLengthResult)           \
   _(TypeMonitorResult)                \
   _(ReturnFromIC)
 
