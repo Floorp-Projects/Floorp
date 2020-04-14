@@ -6,6 +6,7 @@ import mozilla.components.feature.push.PushConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.push.FirebasePushService
 
 /**
  * Component group for push services. These components use services that strongly depend on
