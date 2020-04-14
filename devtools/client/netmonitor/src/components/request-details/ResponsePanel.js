@@ -221,6 +221,7 @@ class ResponsePanel extends Component {
           useQuotes: true,
           filterText,
           targetSearchResult,
+          defaultSelectFirstNode: false,
           mode: MODE.LONG,
         },
         header: sectionName,

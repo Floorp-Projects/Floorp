@@ -36,21 +36,6 @@ add_task(async function() {
 
   info("Check if Headers are filtered correctly");
 
-  const totalResponseHeaders = [
-    "cache-control",
-    "connection",
-    "content-length",
-    "content-type",
-    "date",
-    "expires",
-    "foo-bar",
-    "foo-bar",
-    "foo-bar",
-    "pragma",
-    "server",
-    "set-cookie",
-    "set-cookie",
-  ];
   const expectedResponseHeaders = [
     "cache-control",
     "connection",
@@ -59,20 +44,24 @@ add_task(async function() {
   ];
   const expectedRequestHeaders = ["Cache-Control", "Connection"];
 
-  const labelCells = document.querySelectorAll(".treeLabelCell");
+  const responseLabelCells = document.querySelectorAll(
+    "#responseHeaders .treeLabelCell"
+  );
+  const requestLabelCells = document.querySelectorAll(
+    "#requestHeaders .treeLabelCell"
+  );
   const filteredResponseHeaders = [];
   const filteredRequestHeaders = [];
 
-  const responseHeadersLength = totalResponseHeaders.length;
-  for (let i = 1; i < responseHeadersLength + 1; i++) {
-    if (labelCells[i].offsetHeight > 0) {
-      filteredResponseHeaders.push(labelCells[i].innerText);
+  for (let i = 0; i < responseLabelCells.length; i++) {
+    if (responseLabelCells[i].offsetHeight > 0) {
+      filteredResponseHeaders.push(responseLabelCells[i].innerText);
     }
   }
 
-  for (let i = responseHeadersLength + 2; i < labelCells.length; i++) {
-    if (labelCells[i].offsetHeight > 0) {
-      filteredRequestHeaders.push(labelCells[i].innerText);
+  for (let i = 0; i < requestLabelCells.length; i++) {
+    if (requestLabelCells[i].offsetHeight > 0) {
+      filteredRequestHeaders.push(requestLabelCells[i].innerText);
     }
   }
 
