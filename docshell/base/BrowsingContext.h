@@ -120,7 +120,8 @@ class WindowProxyHolder;
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)               \
   FIELD(UserAgentOverride, nsString)                                         \
   FIELD(EmbedderElementType, Maybe<nsString>)                                \
-  FIELD(MessageManagerGroup, nsString)
+  FIELD(MessageManagerGroup, nsString)                                       \
+  FIELD(MaxTouchPointsOverride, uint8_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -363,6 +364,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetRDMPaneOrientation(OrientationType aType, float aAngle) {
     if (InRDMPane()) {
       SetCurrentOrientation(aType, aAngle);
+    }
+  }
+
+  void SetRDMPaneMaxTouchPoints(uint8_t aMaxTouchPoints) {
+    if (InRDMPane()) {
+      SetMaxTouchPointsOverride(aMaxTouchPoints);
     }
   }
 
