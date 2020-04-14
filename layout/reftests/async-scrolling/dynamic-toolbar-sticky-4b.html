@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2150"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="1020">
+<meta name="viewport" content="width=device-width">
+<style>
+html, body {
+    margin: 0;
+    scrollbar-width: none;
+}
+.spacer {
+    height: 100vh;
+    background-color: green;
+}
+.sticky_bottom {
+    position: sticky;
+    bottom: 20px;
+    height: 50px;
+    background-color: blue;
+    opacity: 50%;
+}
+.sticky_both {
+    position: sticky;
+    top: 20px;
+    bottom: 20px;
+    height: 50px;
+    background-color: purple;
+    opacity: 50%;
+}
+.sticky_top {
+    position: sticky;
+    top: 20px;
+    height: 50px;
+    background-color: red;
+    opacity: 50%;
+}
+</style>
+<div class="spacer"></div>
+<div class="sticky_bottom"></div>
+<div class="sticky_both"></div>
+<div class="sticky_top"></div>
+<div class="spacer"></div>
