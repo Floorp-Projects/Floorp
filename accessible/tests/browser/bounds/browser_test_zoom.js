@@ -6,18 +6,6 @@
 
 /* import-globals-from ../../mochitest/layout.js */
 
-/* global getContentDPR */
-
-async function getContentBoundsForDOMElm(browser, id) {
-  return invokeContentTask(browser, [id], contentId => {
-    const { Layout } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
-    );
-
-    return Layout.getBoundsForDOMElm(contentId, content.document);
-  });
-}
-
 async function testContentBounds(browser, acc) {
   let [
     expectedX,
