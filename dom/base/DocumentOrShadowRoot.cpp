@@ -812,6 +812,11 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
 
 void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets);
+  for (StyleSheet* sheet : tmp->mStyleSheets) {
+    sheet->ClearAssociatedDocumentOrShadowRoot();
+    tmp->RemoveSheetFromStylesIfApplicable(*sheet);
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets);
   for (RefPtr<StyleSheet>& sheet : tmp->mAdoptedStyleSheets) {
     sheet->RemoveAdopter(*tmp);
   }
