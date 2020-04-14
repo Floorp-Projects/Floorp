@@ -34,6 +34,7 @@ import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
 import mozilla.components.support.ktx.android.content.appName
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KProperty
@@ -171,6 +172,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
         with(usernameEditText) {
             onDone(false) {
+                hideKeyboard()
                 clearFocus()
             }
         }
@@ -206,6 +208,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
         with(passwordEditText) {
             onDone(false) {
+                hideKeyboard()
                 clearFocus()
             }
         }

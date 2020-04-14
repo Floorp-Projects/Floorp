@@ -20,6 +20,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:drawablePadding="16dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
         android:gravity="center_vertical"
         android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
