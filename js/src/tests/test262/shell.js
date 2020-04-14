@@ -98,6 +98,10 @@ assert.throws = function (expectedErrorConstructor, func, message) {
 
 assert._toString = function (value) {
   try {
+    if (value === 0 && 1 / value === -Infinity) {
+      return '-0';
+    }
+
     return String(value);
   } catch (err) {
     if (err.name === 'TypeError') {
@@ -291,8 +295,12 @@ function isSameValue(a, b) {
   return a === b;
 }
 
+var __isArray = Array.isArray;
 function isWritable(obj, name, verifyProp, value) {
-  var newValue = value || "unlikelyValue";
+  var unlikelyValue = __isArray(obj) && name === "length" ?
+    Math.pow(2, 32) - 1 :
+    "unlikelyValue";
+  var newValue = value || unlikelyValue;
   var hadValue = Object.prototype.hasOwnProperty.call(obj, name);
   var oldValue = obj[name];
   var writeSucceeded;
