@@ -158,28 +158,56 @@ function promiseTabLoadEvent(tab, url) {
 }
 
 /**
- * Wait for the search engine to change.
+ * Wait for the search engine to change. searchEngineChangeFn is a function
+ * that will be called to change the search engine.
  */
-function promiseContentSearchChange(browser, newEngineName) {
-  // Callers of this depend on very specific, very racy timing, and fail
-  // if we introduce the trip through SpecialPowersParent that
-  // SpecialPowers.spawn requires.
-  return ContentTask.spawn(browser, { newEngineName }, async function(args) {
-    return new Promise(resolve => {
-      content.addEventListener("ContentSearchService", function listener(
-        aEvent
-      ) {
-        if (
-          aEvent.detail.type == "CurrentState" &&
-          content.wrappedJSObject.gContentSearchController.defaultEngine.name ==
-            args.newEngineName
-        ) {
-          content.removeEventListener("ContentSearchService", listener);
-          resolve();
+async function promiseContentSearchChange(browser, searchEngineChangeFn) {
+  // Add an event listener manually then perform the action, rather than using
+  // BrowserTestUtils.addContentEventListener as that doesn't add the listener
+  // early enough.
+  await SpecialPowers.spawn(browser, [], async () => {
+    // Store the results in a temporary place.
+    content._searchDetails = {
+      defaultEnginesList: [],
+      listener: event => {
+        if (event.detail.type == "CurrentState") {
+          content._searchDetails.defaultEnginesList.push(
+            content.wrappedJSObject.gContentSearchController.defaultEngine.name
+          );
         }
-      });
-    });
+      },
+    };
+
+    // Listen using the system group to ensure that it fires after
+    // the default behaviour.
+    content.addEventListener(
+      "ContentSearchService",
+      content._searchDetails.listener,
+      { mozSystemGroup: true }
+    );
   });
+
+  let expectedEngineName = await searchEngineChangeFn();
+
+  await SpecialPowers.spawn(
+    browser,
+    [expectedEngineName],
+    async expectedEngineNameChild => {
+      await ContentTaskUtils.waitForCondition(
+        () =>
+          content._searchDetails.defaultEnginesList &&
+          content._searchDetails.defaultEnginesList[
+            content._searchDetails.defaultEnginesList.length - 1
+          ] == expectedEngineNameChild
+      );
+      content.removeEventListener(
+        "ContentSearchService",
+        content._searchDetails.listener,
+        { mozSystemGroup: true }
+      );
+      delete content._searchDetails;
+    }
+  );
 }
 
 /**
