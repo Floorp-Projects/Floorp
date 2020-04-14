@@ -40,6 +40,7 @@ class platform(object):
 @register_strategy("bugbug-all-low", args=(platform.all, 0.3))
 @register_strategy("bugbug-all-high", args=(platform.all, 0.7))
 @register_strategy("bugbug-debug", args=(platform.debug, 0.5))
+@register_strategy("bugbug-reduced", args=(platform.all, 0.7, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
@@ -51,9 +52,10 @@ class BugBugPushSchedules(OptimizationStrategy):
     RETRY_TIMEOUT = 4 * 60  # seconds
     RETRY_INTERVAL = 5      # seconds
 
-    def __init__(self, filterfn, confidence_threshold):
+    def __init__(self, filterfn, confidence_threshold, use_reduced_tasks=False):
         self.filterfn = filterfn
         self.confidence_threshold = confidence_threshold
+        self.use_reduced_tasks = use_reduced_tasks
 
     @memoized_property
     def session(self):
@@ -96,14 +98,21 @@ class BugBugPushSchedules(OptimizationStrategy):
             for group, confidence in data.get('groups', {}).items()
             if confidence >= self.confidence_threshold
         )
-        tasks = set(
-            task
-            for task, confidence in data.get('tasks', {}).items()
-            if confidence >= self.confidence_threshold
-        )
+        if not self.use_reduced_tasks:
+            tasks = set(
+                task
+                for task, confidence in data.get('tasks', {}).items()
+                if confidence >= self.confidence_threshold
+            )
+        else:
+            tasks = set(
+                task
+                for task, confidence in data.get('reduced_tasks', {}).items()
+                if confidence >= self.confidence_threshold
+            )
 
         test_manifests = task.attributes.get('test_manifests')
-        if test_manifests is None:
+        if test_manifests is None or self.use_reduced_tasks:
             if task.label not in tasks:
                 return True
 

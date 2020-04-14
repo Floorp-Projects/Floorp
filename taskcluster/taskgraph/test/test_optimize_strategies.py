@@ -96,6 +96,17 @@ def idfn(param):
         ['task-0', 'task-4'],
     ),
 
+    # tasks matching "reduced_tasks" are selected, when they exceed the confidence threshold
+    pytest.param(
+        (platform.all, 0.7, True),
+        {
+            'tasks': {'task-2': 0.7, 'task-4': 0.7},
+            'reduced_tasks': {'task-4': 0.7},
+            'groups': {'foo/test.ini': 0.75, 'bar/test.ini': 0.25}
+        },
+        ['task-4'],
+    ),
+
     # debug platform filter
     pytest.param(
         (platform.debug, 0.5),
