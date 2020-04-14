@@ -15,6 +15,7 @@ def open_file(path):
     :return dict/str: Returns a dict for JSON data, and
         a str for any other type.
     """
+    print("Reading %s" % path)
     with open(path) as f:
         if os.path.splitext(path)[-1] == ".json":
             return json.load(f)
