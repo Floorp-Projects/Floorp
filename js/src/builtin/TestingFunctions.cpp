@@ -4524,6 +4524,13 @@ static bool GetConstructorName(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+class AllocationMarkerObject : public NativeObject {
+ public:
+  static const JSClass class_;
+};
+
+const JSClass AllocationMarkerObject::class_ = {"AllocationMarker"};
+
 static bool AllocationMarker(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4538,10 +4545,10 @@ static bool AllocationMarker(JSContext* cx, unsigned argc, Value* vp) {
     allocateInsideNursery = ToBoolean(nurseryVal);
   }
 
-  static const JSClass cls = {"AllocationMarker"};
-
-  auto newKind = allocateInsideNursery ? GenericObject : TenuredObject;
-  RootedObject obj(cx, NewObjectWithGivenProto(cx, &cls, nullptr, newKind));
+  JSObject* obj =
+      allocateInsideNursery
+          ? NewObjectWithGivenProto<AllocationMarkerObject>(cx, nullptr)
+          : NewTenuredObjectWithGivenProto<AllocationMarkerObject>(cx, nullptr);
   if (!obj) {
     return false;
   }

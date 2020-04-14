@@ -447,11 +447,17 @@ inline JSObject* NewObjectWithGivenProto(
                                        allocKind, newKind);
 }
 
-inline JSObject* NewObjectWithGivenProto(
-    JSContext* cx, const JSClass* clasp, HandleObject proto,
-    NewObjectKind newKind = GenericObject) {
+inline JSObject* NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp,
+                                         HandleObject proto) {
   return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
-                                       newKind);
+                                       GenericObject);
+}
+
+inline JSObject* NewTenuredObjectWithGivenProto(JSContext* cx,
+                                                const JSClass* clasp,
+                                                HandleObject proto) {
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       TenuredObject);
 }
 
 inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
