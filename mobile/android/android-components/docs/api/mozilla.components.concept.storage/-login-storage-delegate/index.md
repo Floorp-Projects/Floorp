@@ -2,7 +2,7 @@
 
 # LoginStorageDelegate
 
-`interface LoginStorageDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L233)
+`interface LoginStorageDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L256)
 
 Used to handle [Login](../-login/index.md) storage so that the underlying engine doesn't have to. An instance of
 this should be attached to the Gecko runtime in order to be used.

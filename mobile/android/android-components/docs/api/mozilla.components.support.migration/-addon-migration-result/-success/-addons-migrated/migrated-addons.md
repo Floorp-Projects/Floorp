@@ -2,4 +2,4 @@
 
 # migratedAddons
 
-`val migratedAddons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebExtension`](../../../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L45)
+`val migratedAddons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebExtension`](../../../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L48)

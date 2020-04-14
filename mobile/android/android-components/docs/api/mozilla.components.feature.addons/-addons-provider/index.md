@@ -10,7 +10,7 @@ A contract that indicate how an add-on provider must behave.
 
 | Name | Summary |
 |---|---|
-| [getAvailableAddons](get-available-addons.md) | `abstract suspend fun getAvailableAddons(allowCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../-addon/index.md)`>`<br>Provides a list of all available add-ons. |
+| [getAvailableAddons](get-available-addons.md) | `abstract suspend fun getAvailableAddons(allowCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, readTimeoutInSeconds: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`? = null): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../-addon/index.md)`>`<br>Provides a list of all available add-ons. |
 
 ### Extension Functions
 

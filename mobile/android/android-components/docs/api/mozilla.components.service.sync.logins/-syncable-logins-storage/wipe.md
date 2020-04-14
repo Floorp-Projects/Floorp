@@ -2,7 +2,7 @@
 
 # wipe
 
-`suspend fun wipe(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L139)
+`suspend fun wipe(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L140)
 
 Overrides [LoginsStorage.wipe](../../mozilla.components.concept.storage/-logins-storage/wipe.md)
 

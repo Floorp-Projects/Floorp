@@ -2,7 +2,7 @@
 
 # InvalidRecordException
 
-`typealias InvalidRecordException = InvalidRecordException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L91)
+`typealias InvalidRecordException = InvalidRecordException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L92)
 
 This is thrown on attempts to insert or update a record so that it
 is no longer valid, where "invalid" is defined as such:

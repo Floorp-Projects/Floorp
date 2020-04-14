@@ -2,11 +2,11 @@
 
 # filterTranslations
 
-`fun filterTranslations(locales: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Addon`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L142)
+`fun filterTranslations(locales: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Addon`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L144)
 
 Returns a copy of this [Addon](index.md) containing only translations (description,
 name, summary) of the provided locales. All other translations
-will be removed.
+except the [defaultLocale](default-locale.md) will be removed.
 
 ### Parameters
 

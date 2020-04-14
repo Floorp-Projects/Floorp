@@ -2,7 +2,7 @@
 
 # sync
 
-`suspend fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): SyncTelemetryPing` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L256)
+`suspend fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): SyncTelemetryPing` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L281)
 
 Synchronizes the logins storage layer with a remote layer.
 If synchronizing multiple stores, avoid using this - prefer setting up sync via FxaAccountManager instead.

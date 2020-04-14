@@ -2,7 +2,7 @@
 
 # InstalledState
 
-`data class InstalledState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L94)
+`data class InstalledState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L96)
 
 Returns a list of id resources per each item on the [Addon.permissions](../permissions.md) list.
 Holds the state of the installed web extension of this add-on.

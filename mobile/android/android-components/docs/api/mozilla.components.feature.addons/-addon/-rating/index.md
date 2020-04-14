@@ -2,7 +2,7 @@
 
 # Rating
 
-`data class Rating` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L75)
+`data class Rating` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L77)
 
 Holds all the rating information of this add-on.
 

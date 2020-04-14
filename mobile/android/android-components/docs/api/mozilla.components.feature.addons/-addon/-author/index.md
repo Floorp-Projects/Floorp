@@ -2,7 +2,7 @@
 
 # Author
 
-`data class Author` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L61)
+`data class Author` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L63)
 
 Represents an add-on author.
 
