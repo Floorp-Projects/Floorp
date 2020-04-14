@@ -5333,17 +5333,17 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     }
 
     case InlinableNative::IntrinsicNewArrayIterator: {
-      res.set(NewArrayIteratorTemplate(cx_));
+      res.set(NewArrayIteratorObject(cx_, TenuredObject));
       return !!res;
     }
 
     case InlinableNative::IntrinsicNewStringIterator: {
-      res.set(NewStringIteratorTemplate(cx_));
+      res.set(NewStringIteratorObject(cx_, TenuredObject));
       return !!res;
     }
 
     case InlinableNative::IntrinsicNewRegExpStringIterator: {
-      res.set(NewRegExpStringIteratorTemplate(cx_));
+      res.set(NewRegExpStringIteratorObject(cx_, TenuredObject));
       return !!res;
     }
 

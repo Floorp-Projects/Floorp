@@ -562,10 +562,11 @@ JSObject* NewShellWindowProxy(JSContext* cx, JS::HandleObject global) {
 
   js::WrapperOptions options;
   options.setClass(&ShellWindowProxyClass);
+  options.setSingleton(true);
 
   JSAutoRealm ar(cx, global);
   JSObject* obj =
-      js::Wrapper::NewSingleton(cx, global, &js::Wrapper::singleton, options);
+      js::Wrapper::New(cx, global, &js::Wrapper::singleton, options);
   MOZ_ASSERT_IF(obj, js::IsWindowProxy(obj));
   return obj;
 }
@@ -4989,8 +4990,7 @@ class XDRBufferObject : public NativeObject {
 
 XDRBufferObject* XDRBufferObject::create(JSContext* cx,
                                          JS::TranscodeBuffer* buf) {
-  XDRBufferObject* bufObj =
-      NewObjectWithGivenProto<XDRBufferObject>(cx, nullptr);
+  XDRBufferObject* bufObj = NewObjectWithNullTaggedProto<XDRBufferObject>(cx);
   if (!bufObj) {
     return nullptr;
   }
@@ -7845,7 +7845,7 @@ static bool EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!priv->grayRoot) {
-    if (!(priv->grayRoot = NewTenuredDenseEmptyArray(cx, nullptr))) {
+    if (!(priv->grayRoot = NewDenseEmptyArray(cx, nullptr, TenuredObject))) {
       return false;
     }
   }

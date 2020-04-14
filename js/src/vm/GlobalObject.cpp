@@ -601,7 +601,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
   MOZ_ASSERT(clasp->isTrace(JS_GlobalObjectTraceHook));
 
-  JSObject* obj = NewSingletonObjectWithGivenProto(cx, clasp, nullptr);
+  JSObject* obj = NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject);
   if (!obj) {
     return nullptr;
   }
@@ -856,13 +856,13 @@ static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
                                       HandleObject proto) {
   MOZ_ASSERT(clasp != &JSFunction::class_);
 
-  RootedObject blankProto(cx,
-                          NewSingletonObjectWithGivenProto(cx, clasp, proto));
+  RootedNativeObject blankProto(
+      cx, NewNativeObjectWithGivenProto(cx, clasp, proto, SingletonObject));
   if (!blankProto || !JSObject::setDelegate(cx, blankProto)) {
     return nullptr;
   }
 
-  return &blankProto->as<NativeObject>();
+  return blankProto;
 }
 
 /* static */
@@ -969,7 +969,8 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
   if (isSelfHostingGlobal) {
     intrinsicsHolder = global;
   } else {
-    intrinsicsHolder = NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr);
+    intrinsicsHolder =
+        NewObjectWithGivenProto<PlainObject>(cx, nullptr, TenuredObject);
     if (!intrinsicsHolder) {
       return nullptr;
     }

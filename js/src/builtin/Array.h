@@ -14,13 +14,10 @@
 
 #include "jspubtd.h"
 
+#include "vm/ArrayObject.h"
 #include "vm/JSObject.h"
-#include "vm/NativeObject.h"  // js::ShouldUpdateTypes
 
 namespace js {
-
-class ArrayObject;
-
 /* 2^32-2, inclusive */
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 
@@ -47,19 +44,20 @@ MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
 
 // The methods below only create dense boxed arrays.
 
-// Create a dense array with no capacity allocated, length set to 0, in the
-// normal (i.e. non-tenured) heap.
+// Create a dense array with no capacity allocated, length set to 0.
 extern ArrayObject* JS_FASTCALL
-NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr);
-
-// Create a dense array with no capacity allocated, length set to 0, in the
-// tenured heap.
-extern ArrayObject* JS_FASTCALL
-NewTenuredDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr);
+NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr,
+                   NewObjectKind newKind = GenericObject);
 
 // Create a dense array with a set length, but without allocating space for the
 // contents. This is useful, e.g., when accepting length from the user.
 extern ArrayObject* JS_FASTCALL NewDenseUnallocatedArray(
+    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
+    NewObjectKind newKind = GenericObject);
+
+// Create a dense array with length and capacity == |length|, initialized length
+// set to 0, but with only |EagerAllocationMaxLength| elements allocated.
+extern ArrayObject* JS_FASTCALL NewDensePartlyAllocatedArray(
     JSContext* cx, uint32_t length, HandleObject proto = nullptr,
     NewObjectKind newKind = GenericObject);
 
@@ -77,7 +75,7 @@ extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
 
 // Create a dense array based on templateObject with the given length.
 extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
-    JSContext* cx, uint32_t length, ArrayObject* templateObject);
+    JSContext* cx, uint32_t length, JSObject* templateObject);
 
 // Create a dense array with the same copy-on-write elements as another object.
 extern ArrayObject* NewDenseCopyOnWriteArray(JSContext* cx,
