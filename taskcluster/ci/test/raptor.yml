@@ -261,6 +261,27 @@ raptor-tp6-10-firefox-profiling:
             - --test=raptor-tp6-10
             - --gecko-profile
 
+raptor-tp6-11-firefox:
+    description: "Raptor tp6-11 on Firefox"
+    variants: ["fission"]
+    try-name: raptor-tp6-11-firefox
+    treeherder-symbol: Rap(tp6-11)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-11
+
+raptor-tp6-11-firefox-profiling:
+    description: "Raptor tp6-11 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-11-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-11)
+    max-run-time: 900
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-11
+            - --gecko-profile
+
+
 raptor-tp6-binast-1-firefox:
     description: "Raptor tp6-binast-1 on Firefox"
     variants: ["fission"]
@@ -945,6 +966,14 @@ raptor-tp6-30-firefox-cold:
     mozharness:
         extra-options:
             - --test=raptor-tp6-30-cold
+
+raptor-tp6-31-firefox-cold:
+    description: "Raptor tp6-31 cold page-load on Firefox"
+    try-name: raptor-tp6-31-firefox-cold
+    treeherder-symbol: Rap(tp6-c-31)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-31-cold
 
 raptor-ares6-firefox:
     description: "Raptor Ares6 on Firefox"

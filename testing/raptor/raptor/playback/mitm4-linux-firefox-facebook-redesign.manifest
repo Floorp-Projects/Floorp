@@ -1,0 +1,10 @@
+[
+  {
+    "algorithm": "sha512", 
+    "digest": "df151b87d21c0ad7962f3c3b084c86a50ad691ae2ebd831f6ce07f3f022d03ad877210866df5145a820236d779674a8871680184fd32006162887039f3fe1463", 
+    "filename": "mitm4-linux-firefox-facebook-redesign.zip", 
+    "size": 13846814, 
+    "unpack": true, 
+    "visibility": "public"
+  }
+]
