@@ -20,13 +20,13 @@
 #include "vm/NativeObject.h"  // js::NativeObject
 
 #include "vm/Compartment-inl.h"    // JS::Compartment::wrap
-#include "vm/JSObject-inl.h"       // js::NewObjectWithNullTaggedProto
+#include "vm/JSObject-inl.h"       // js::NewObjectWithGivenProto
 #include "vm/NativeObject-inl.h"   // js::NativeObject::*
 #include "vm/Realm-inl.h"          // js::AutoRealm
 #include "vm/TypeInference-inl.h"  // js::MarkObjectGroupUnknownProperties
 
 inline /* static */ js::ListObject* js::ListObject::create(JSContext* cx) {
-  js::ListObject* obj = NewObjectWithNullTaggedProto<ListObject>(cx);
+  js::ListObject* obj = NewObjectWithGivenProto<ListObject>(cx, nullptr);
   if (!obj) {
     return nullptr;
   }
