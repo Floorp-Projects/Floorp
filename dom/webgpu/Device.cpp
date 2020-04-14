@@ -213,7 +213,6 @@ already_AddRefed<Texture> Device::InitSwapChain(
   desc.mDimension = dom::GPUTextureDimension::_2d;
   desc.mSize.SetAsGPUExtent3DDict() = aExtent3D;
   desc.mFormat = aDesc.mFormat;
-  desc.mArrayLayerCount = 1;
   desc.mMipLevelCount = 1;
   desc.mSampleCount = 1;
   desc.mUsage = aDesc.mUsage | dom::GPUTextureUsage_Binding::COPY_SRC;
