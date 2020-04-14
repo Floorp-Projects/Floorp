@@ -23,6 +23,9 @@ permalink: /changelog/
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
 
+* **service-sync-logins**
+  * Adds fun `LoginsStorage.getPotentialDupesIgnoringUsername` for fetching list of potential duplicate logins from the underlying storage layer, ignoring username.
+
 * **feature-customtabs**
   * ⚠️ **This is a breaking change**: Removed `handleError` in `CustomTabWindowFeature` constructor
   * ⚠️ **This is a breaking change**: Added `onLaunchUrlFallback` to `CustomTabWindowFeature` constructor

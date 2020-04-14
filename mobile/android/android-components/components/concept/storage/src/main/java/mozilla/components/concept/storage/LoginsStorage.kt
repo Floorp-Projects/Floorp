@@ -112,6 +112,14 @@ interface LoginsStorage : AutoCloseable {
      * @return A list of [Login] objects, representing matching logins.
      */
     suspend fun getByBaseDomain(origin: String): List<Login>
+
+    /**
+     * Fetch the list of potential duplicate logins from the underlying storage layer, ignoring username.
+     *
+     * @param login The [Login] to compare against for finding dupes.
+     * @return A list of [Login] objects, representing matching potential dupe logins.
+     */
+    suspend fun getPotentialDupesIgnoringUsername(login: Login): List<Login>
 }
 
 /**
@@ -196,12 +204,17 @@ interface LoginValidationDelegate {
          * Indicates that a matching [Login] was found in storage, and the [Login] can be used
          * to update its information.
          */
-        object CanBeUpdated : Result()
+        data class CanBeUpdated(val foundLogin: Login) : Result()
 
         /**
          * The [Login] cannot be saved.
          */
         sealed class Error : Result() {
+            /**
+             * Indicates that a duplicate [Login] was found in storage, we should not save it again.
+             */
+            object Duplicate : Result()
+
             /**
              * The passed [Login] had an empty password field, and so cannot be saved.
              */
@@ -216,14 +229,24 @@ interface LoginValidationDelegate {
     }
 
     /**
-     * Checks whether or not [login] can be persisted.
+     *
+     * Calls underlying storage methods to fetch list of [Login]s that could be potential dupes of [newLogin]
      *
      * Note that this method is not thread safe.
      *
-     * @returns a [LoginValidationDelegate.Result], detailing whether [login] can be saved as a new
-     * value, used to update an existing one, or an error occured.
+     * @returns a list of potential duplicate [Login]s
      */
-    fun validateCanPersist(login: Login): Deferred<Result>
+    fun getPotentialDupesIgnoringUsernameAsync(newLogin: Login): Deferred<List<Login>>
+
+    /**
+     *
+     * Checks whether a [login] should be saved or updated.
+     *
+     * Note that this method is not thread safe.
+     *
+     * @returns a [Result], detailing whether a [login] should be saved or updated.
+     */
+    fun shouldUpdateOrCreateAsync(newLogin: Login, potentialDupes: List<Login>? = null): Deferred<Result>
 }
 
 /**

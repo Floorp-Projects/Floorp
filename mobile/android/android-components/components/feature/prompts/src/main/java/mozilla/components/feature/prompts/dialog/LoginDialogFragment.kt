@@ -30,12 +30,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
-import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.toScope
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KProperty
 import com.google.android.material.R as MaterialR
 
@@ -71,7 +71,11 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     private var username by SafeArgString(KEY_LOGIN_USERNAME)
     private var password by SafeArgString(KEY_LOGIN_PASSWORD)
 
-    private var stateUpdate: Job? = null
+    private var validateStateUpdate: Job? = null
+
+    // List of potential dupes ignoring username. We could potentially both read and write this list
+    // from different threads, so we are using a copy-on-write list.
+    private var potentialDupesList: CopyOnWriteArrayList<Login>? = null
 
     override fun shouldDismissOnLoad(): Boolean = false
 
@@ -180,7 +184,6 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             override fun afterTextChanged(editable: Editable) {
                 // Note that password is accessed by `fun update`
                 password = editable.toString()
-
                 if (password.isEmpty()) {
                     setViewState(
                         confirmButtonEnabled = false,
@@ -224,42 +227,44 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         )
         // The below code is not thread safe, so we ensure that we block here until we are sure that
         // the previous call has been canceled
-        runBlocking { stateUpdate?.cancelAndJoin() }
+        runBlocking { validateStateUpdate?.cancelAndJoin() }
         var validateDeferred: Deferred<Result>? = null
-        stateUpdate = scope.launch(IO) {
-            validateDeferred = feature?.loginValidationDelegate?.validateCanPersist(login)
+        validateStateUpdate = scope.launch(IO) {
+            val validationDelegate = feature?.loginValidationDelegate ?: return@launch
+            // We only want to fetch this list once. Since we are ignoring username the results will
+            // not change when user changes username or password fields
+            if (potentialDupesList == null) {
+                this@LoginDialogFragment.potentialDupesList = CopyOnWriteArrayList(
+                    validationDelegate.getPotentialDupesIgnoringUsernameAsync(
+                        login
+                    ).await()
+                )
+            }
+            // Passing a copy of this potential dupes list, not a reference, so we know for certain
+            // that what shouldUpdateOrCreateAsync is using can't change.
+            validateDeferred = validationDelegate.shouldUpdateOrCreateAsync(
+                login,
+                potentialDupesList?.toList()
+            )
             val result = validateDeferred?.await()
-
             withContext(Main) {
                 when (result) {
-                    is LoginValidationDelegate.Result.CanBeCreated ->
+                    Result.CanBeCreated -> {
                         setViewState(
                             confirmText =
                             context?.getString(R.string.mozac_feature_prompt_save_confirmation)
                         )
-                    is LoginValidationDelegate.Result.CanBeUpdated ->
+                    }
+                    is Result.CanBeUpdated -> {
                         setViewState(
                             confirmText =
                             context?.getString(R.string.mozac_feature_prompt_update_confirmation)
-                        )
-                    is LoginValidationDelegate.Result.Error.EmptyPassword ->
-                        setViewState(
-                            confirmButtonEnabled = false,
-                            passwordErrorText =
-                            context?.getString(R.string.mozac_feature_prompt_error_empty_password)
-                        )
-                    is LoginValidationDelegate.Result.Error.GeckoError -> {
-                        // TODO handle these errors more robustly. See:
-                        // https://github.com/mozilla-mobile/fenix/issues/7545
-                        setViewState(
-                            passwordErrorText =
-                            context?.getString(R.string.mozac_feature_prompt_error_unknown_cause)
                         )
                     }
                 }
             }
         }
-        stateUpdate?.invokeOnCompletion {
+        validateStateUpdate?.invokeOnCompletion {
             if (it is CancellationException) {
                 validateDeferred?.cancel()
             }

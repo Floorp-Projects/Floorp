@@ -6,11 +6,11 @@ package mozilla.components.service.sync.logins
 
 import android.content.Context
 import androidx.annotation.GuardedBy
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import mozilla.appservices.logins.DatabaseLoginsStorage
-import mozilla.appservices.logins.LoginsStorage as RustLoginStorage
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
@@ -20,6 +20,7 @@ import mozilla.components.support.sync.telemetry.SyncTelemetry
 import mozilla.components.support.utils.logElapsedTime
 import org.json.JSONObject
 import java.io.Closeable
+import mozilla.appservices.logins.LoginsStorage as RustLoginStorage
 
 const val DB_NAME = "logins.sqlite"
 
@@ -199,6 +200,20 @@ class SyncableLoginsStorage(
     }
 
     /**
+     *
+     * Allows adding a new login with a specified GUID. Useful for testing.
+     *
+     * @throws [IdCollisionException] if a nonempty id is provided, and
+     * @throws [InvalidRecordException] if the record is invalid.
+     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
+     */
+    @VisibleForTesting
+    internal suspend fun addWithGuid(login: Login): String = withContext(coroutineContext) {
+        conn.getStorage().add(login.toServerPassword())
+    }
+
+    /**
      * @throws [NoSuchRecordException] if the login does not exist.
      * @throws [InvalidRecordException] if the update would create an invalid record.
      * @throws [LoginsStorageException] if the storage is locked, and on unexpected
@@ -237,6 +252,16 @@ class SyncableLoginsStorage(
     override suspend fun getByBaseDomain(origin: String): List<Login> = withContext(coroutineContext) {
         conn.getStorage().getByBaseDomain(origin).map { it.toLogin() }
     }
+
+    /**
+     * @throws [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
+     */
+    @Throws(LoginsStorageException::class)
+    override suspend fun getPotentialDupesIgnoringUsername(login: Login): List<Login> =
+        withContext(coroutineContext) {
+            conn.getStorage().potentialDupesIgnoringUsername(login.toServerPassword())
+                .map { it.toLogin() }
+        }
 
     override fun close() {
         coroutineContext.cancel()

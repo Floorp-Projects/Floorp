@@ -119,7 +119,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="16dp"
-        android:backgroundTint="?android:colorEdgeEffect"
+        android:backgroundTint="@color/button_state_list"
         android:text="@string/mozac_feature_prompt_save_confirmation"
         android:textAllCaps="false"
         android:textColor="?android:windowBackground"
