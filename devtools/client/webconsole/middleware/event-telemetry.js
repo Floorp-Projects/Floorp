@@ -11,6 +11,9 @@ const {
   EVALUATE_EXPRESSION,
   MESSAGES_ADD,
   PERSIST_TOGGLE,
+  REVERSE_SEARCH_INPUT_TOGGLE,
+  REVERSE_SEARCH_NEXT,
+  REVERSE_SEARCH_BACK,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -54,9 +57,35 @@ function eventTelemetryMiddleware(telemetry, sessionId, store) {
     } else if (action.type === EVALUATE_EXPRESSION) {
       // Send telemetry event. If we are in the browser toolbox we send -1 as the
       // toolbox session id.
+
       telemetry.recordEvent("execute_js", "webconsole", null, {
         lines: action.expression.split(/\n/).length,
         input: state.ui.editor ? "multiline" : "inline",
+        session_id: sessionId,
+      });
+
+      if (action.from === "reverse-search") {
+        telemetry.recordEvent("reverse_search", "webconsole", null, {
+          functionality: "evaluate expression",
+          session_id: sessionId,
+        });
+      }
+    } else if (
+      action.type === REVERSE_SEARCH_INPUT_TOGGLE &&
+      state.ui.reverseSearchInputVisible
+    ) {
+      telemetry.recordEvent("reverse_search", "webconsole", action.access, {
+        functionality: "open",
+        session_id: sessionId,
+      });
+    } else if (action.type === REVERSE_SEARCH_NEXT) {
+      telemetry.recordEvent("reverse_search", "webconsole", action.access, {
+        functionality: "navigate next",
+        session_id: sessionId,
+      });
+    } else if (action.type === REVERSE_SEARCH_BACK) {
+      telemetry.recordEvent("reverse_search", "webconsole", action.access, {
+        functionality: "navigate previous",
         session_id: sessionId,
       });
     }
