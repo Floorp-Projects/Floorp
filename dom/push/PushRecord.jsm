@@ -199,13 +199,8 @@ PushRecord.prototype = {
       if (window.closed || PrivateBrowsingUtils.isWindowPrivate(window)) {
         continue;
       }
-      // `gBrowser` on Desktop; `BrowserApp` on Fennec.
-      let tabs = window.gBrowser
-        ? window.gBrowser.tabs
-        : window.BrowserApp.tabs;
-      for (let tab of tabs) {
-        // `linkedBrowser` on Desktop; `browser` on Fennec.
-        let tabURI = (tab.linkedBrowser || tab.browser).currentURI;
+      for (let tab of window.gBrowser.tabs) {
+        let tabURI = tab.linkedBrowser.currentURI;
         if (tabURI.prePath == this.uri.prePath) {
           return true;
         }
