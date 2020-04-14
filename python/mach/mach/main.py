@@ -588,7 +588,7 @@ To see more help for a specific command, run:
                                   action='store_true', default=False,
                                   help='Print verbose output.')
         global_group.add_argument('-l', '--log-file', dest='logfile',
-                                  metavar='FILENAME', type=argparse.FileType('ab'),
+                                  metavar='FILENAME', type=argparse.FileType('a'),
                                   help='Filename to write log data to.')
         global_group.add_argument('--log-interval', dest='log_interval',
                                   action='store_true', default=False,
