@@ -33,7 +33,9 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 
@@ -110,7 +112,7 @@ class SavedLoginsFragment : Fragment() {
      */
     override fun onPause() {
         if (findNavController().currentDestination?.id != R.id.savedLoginSiteInfoFragment) {
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            activity?.let { it.checkAndUpdateScreenshotPermission(it.settings()) }
             findNavController().popBackStack(R.id.loginsFragment, false)
         }
         super.onPause()
