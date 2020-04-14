@@ -25,3 +25,12 @@
   margin: auto 0;
   inset: 0;
 }
+
+#critical-info {
+  height: 13px;
+  width: 13px;
+}
+
+.extension {
+  text-align: end;
+}

@@ -292,3 +292,5 @@
   skin/classic/browser/privatebrowsing/favicon.svg             (../shared/privatebrowsing/favicon.svg)
   skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)
   skin/classic/browser/install-ssb.svg                         (../shared/install-ssb.svg)
+  skin/classic/browser/critical.svg                            (../shared/icons/critical.svg)
+  
