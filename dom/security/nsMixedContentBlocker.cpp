@@ -87,8 +87,7 @@ class nsMixedContentEvent : public Runnable {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIDocShell> rootShell =
-        docShell->GetBrowsingContext()->Top()->GetDocShell();
+    nsCOMPtr<nsIDocShell> rootShell = docShell->GetBrowsingContext()->Top()->GetDocShell();
     if (!rootShell) {
       return NS_OK;
     }
@@ -324,15 +323,24 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   uint32_t contentType = aLoadInfo->InternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsIURI> requestingLocation;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
+
+  // We need to get a Requesting Location if possible
+  // so we're casting to BasePrincipal to acess GetURI
+  auto* basePrin = BasePrincipal::Cast(loadingPrincipal);
+  if (basePrin) {
+    basePrin->GetURI(getter_AddRefs(requestingLocation));
+  }
 
   // We pass in false as the first parameter to ShouldLoad(), because the
   // callers of this method don't know whether the load went through cached
   // image redirects.  This is handled by direct callers of the static
   // ShouldLoad.
-  nsresult rv = ShouldLoad(false,  // aHadInsecureImageRedirect
-                           contentType, aContentLocation, requestingContext,
-                           aMimeGuess, requestPrincipal, aDecision);
+  nsresult rv =
+      ShouldLoad(false,  // aHadInsecureImageRedirect
+                 contentType, aContentLocation, requestingLocation,
+                 requestingContext, aMimeGuess, requestPrincipal, aDecision);
 
   if (*aDecision == nsIContentPolicy::REJECT_REQUEST) {
     NS_SetRequestBlockingReason(aLoadInfo,
@@ -494,13 +502,11 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
  * logic.  Called from non-static ShouldLoad().
  */
-nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
-                                           uint32_t aContentType,
-                                           nsIURI* aContentLocation,
-                                           nsISupports* aRequestingContext,
-                                           const nsACString& aMimeGuess,
-                                           nsIPrincipal* aRequestPrincipal,
-                                           int16_t* aDecision) {
+nsresult nsMixedContentBlocker::ShouldLoad(
+    bool aHadInsecureImageRedirect, uint32_t aContentType,
+    nsIURI* aContentLocation, nsIURI* aRequestingLocation,
+    nsISupports* aRequestingContext, const nsACString& aMimeGuess,
+    nsIPrincipal* aRequestPrincipal, int16_t* aDecision) {
   // Asserting that we are on the main thread here and hence do not have to lock
   // and unlock security.mixed_content.block_active_content and
   // security.mixed_content.block_display_content before reading/writing to
@@ -675,9 +681,14 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // 2) if aRequestingContext yields a principal but no location, we check
   //    if its the system principal. If it is, allow the load.
   // 3) Special case handling for:
-  //       content scripts from addon code that do not provide
-  //       aRequestingContext, but do provide aRequestPrincipal.
-  //       If aRequestPrincipal is an expanded principal,
+  //    a) speculative loads, where shouldLoad is called twice (bug 839235)
+  //       and the first speculative load does not include a context.
+  //       In this case we use aRequestingLocation to set requestingLocation.
+  //    b) TYPE_CSP_REPORT which does not provide a context. In this case we
+  //       use aRequestingLocation to set requestingLocation.
+  //    c) content scripts from addon code that do not provide
+  //       aRequestingContext or aRequestingLocation, but do provide
+  //       aRequestPrincipal. If aRequestPrincipal is an expanded principal,
   //       we allow the load.
   // 4) If we still end up not having a requestingLocation, we reject the load.
 
@@ -714,7 +725,16 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     }
   }
 
-  // 3) Special case handling for content scripts from addons code, which only
+  // 3a,b) Special case handling for speculative loads and TYPE_CSP_REPORT. In
+  // such cases, aRequestingContext doesn't exist, so we use
+  // aRequestingLocation. Unfortunately we can not distinguish between
+  // speculative and normal loads here, otherwise we could special case this
+  // assignment.
+  if (!requestingLocation) {
+    requestingLocation = aRequestingLocation;
+  }
+
+  // 3c) Special case handling for content scripts from addons code, which only
   // provide a aRequestPrincipal; aRequestingContext and aRequestingLocation are
   // both null; if the aRequestPrincipal is an expandedPrincipal, we allow the
   // load.
