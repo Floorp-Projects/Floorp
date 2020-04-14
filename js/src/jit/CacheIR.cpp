@@ -5343,7 +5343,7 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     }
 
     case InlinableNative::IntrinsicNewRegExpStringIterator: {
-      res.set(NewRegExpStringIteratorObject(cx_, TenuredObject));
+      res.set(NewRegExpStringIteratorTemplate(cx_));
       return !!res;
     }
 

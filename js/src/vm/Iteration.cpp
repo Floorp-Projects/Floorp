@@ -1226,16 +1226,24 @@ static const JSFunctionSpec regexp_string_iterator_methods[] = {
 
     JS_FS_END};
 
-RegExpStringIteratorObject* js::NewRegExpStringIteratorObject(
-    JSContext* cx, NewObjectKind newKind) {
+RegExpStringIteratorObject* js::NewRegExpStringIteratorTemplate(JSContext* cx) {
   RootedObject proto(cx, GlobalObject::getOrCreateRegExpStringIteratorPrototype(
                              cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
 
-  return NewObjectWithGivenProtoAndKind<RegExpStringIteratorObject>(cx, proto,
-                                                                    newKind);
+  return NewTenuredObjectWithGivenProto<RegExpStringIteratorObject>(cx, proto);
+}
+
+RegExpStringIteratorObject* js::NewRegExpStringIterator(JSContext* cx) {
+  RootedObject proto(cx, GlobalObject::getOrCreateRegExpStringIteratorPrototype(
+                             cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  return NewObjectWithGivenProto<RegExpStringIteratorObject>(cx, proto);
 }
 
 JSObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {

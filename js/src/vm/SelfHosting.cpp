@@ -904,7 +904,7 @@ bool js::intrinsic_NewRegExpStringIterator(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  JSObject* obj = NewRegExpStringIteratorObject(cx);
+  JSObject* obj = NewRegExpStringIterator(cx);
   if (!obj) {
     return false;
   }
