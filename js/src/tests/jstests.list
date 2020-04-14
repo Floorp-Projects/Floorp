@@ -463,11 +463,6 @@ skip script test262/language/statements/for-await-of/iterator-close-throw-get-me
 skip script test262/language/statements/for-of/iterator-close-throw-get-method-non-callable.js
 skip script test262/language/statements/for-of/iterator-close-throw-get-method-abrupt.js
 
-# https://github.com/tc39/ecma262/pull/1776
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1629794
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
