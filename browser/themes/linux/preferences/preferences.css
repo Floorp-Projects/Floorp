@@ -14,34 +14,8 @@ body {
   -moz-appearance: none;
 }
 
-/* General Pane */
-#useFirefoxSync,
-#getStarted {
-  font-size: 90%;
-}
-
-#isNotDefaultLabel {
-  font-weight: bold;
-}
-
-/* Content Pane */
-#translationAttributionImage {
-  width: 70px;
-  cursor: pointer;
-}
-
 /* Modeless Window Dialogs */
 
 .actionButtons {
   margin: 0 3px 6px;
-}
-
-/* Sync Pane */
-
-#noFxaAccount {
-  line-height: 1.2em;
-}
-
-#noFxaAccount > label:first-child {
-  margin-bottom: 0.6em;
 }
