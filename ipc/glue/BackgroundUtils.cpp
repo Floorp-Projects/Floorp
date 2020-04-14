@@ -330,7 +330,7 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     baseDomain.SetIsVoid(true);
   } else {
     if (NS_FAILED(aPrincipal->GetBaseDomain(baseDomain))) {
-      NS_WARNING("Failed to get base domain!");
+      // No warning here. Some principal URLs do not have a base-domain.
       baseDomain.SetIsVoid(true);
     }
   }
