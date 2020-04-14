@@ -12,6 +12,8 @@ import tempfile
 import shutil
 import time
 
+from mozprofile.prefs import Preferences
+
 from condprof import check_install  # NOQA
 from condprof import progress
 from condprof.util import download_file, TASK_CLUSTER, logger, ArchiveNotFound
@@ -34,6 +36,25 @@ RETRY_PAUSE = 30
 
 class ProfileNotFoundError(Exception):
     pass
+
+
+def _check_profile(profile_dir):
+    """Checks for GFX black list prefs to make sure none is set
+    """
+
+    def keep_pref(name, value):
+        if name.startswith("gfx.blacklist."):
+            logger.info("Removing pref %s: %s" % (name, value))
+            return False
+        return True
+
+    prefs_js = os.path.join(profile_dir, "prefs.js")
+    prefs = Preferences.read_prefs(prefs_js)
+    cleaned_prefs = [pref for pref in prefs if keep_pref(*pref)]
+    if len(prefs) == len(cleaned_prefs):
+        return
+    with open(prefs_js, "w") as f:
+        Preferences.write(f, cleaned_prefs)
 
 
 def get_profile(
@@ -109,6 +130,8 @@ def get_profile(
             finally:
                 if not download_cache:
                     shutil.rmtree(download_dir)
+
+            _check_profile(target_dir)
             logger.info("Success, we have a profile to work with")
             return target_dir
         except Exception:
