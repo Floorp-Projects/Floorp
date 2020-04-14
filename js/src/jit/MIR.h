@@ -1061,8 +1061,6 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
 
   void setResumePoint(MResumePoint* resumePoint);
 
-  // Used to transfer the resume point to the rewritten instruction.
-  void stealResumePoint(MInstruction* ins);
   void moveResumePointAsEntry();
   void clearResumePoint();
   MResumePoint* resumePoint() const { return resumePoint_; }
@@ -8408,8 +8406,6 @@ class MGetPropertyCache : public MBinaryInstruction,
     return AliasSet::Store(AliasSet::Any);
   }
 
-  bool allowDoubleResult() const;
-
   bool appendRoots(MRootList& roots) const override {
     if (inlinePropertyTable_) {
       return inlinePropertyTable_->appendRoots(roots);
@@ -10274,9 +10270,6 @@ class MResumePoint final : public MNode
  public:
   static MResumePoint* New(TempAllocator& alloc, MBasicBlock* block,
                            jsbytecode* pc, Mode mode);
-  static MResumePoint* New(TempAllocator& alloc, MBasicBlock* block,
-                           MResumePoint* model,
-                           const MDefinitionVector& operands);
   static MResumePoint* Copy(TempAllocator& alloc, MResumePoint* src);
 
   MBasicBlock* block() const { return resumePointBlock(); }

@@ -192,20 +192,6 @@ class ConvertToStringPolicy final : public TypePolicy {
   }
 };
 
-// Expect an Boolean for operand Op. If the input is a Value, it is unboxed.
-template <unsigned Op>
-class BooleanPolicy final : private TypePolicy {
- public:
-  constexpr BooleanPolicy() = default;
-  EMPTY_DATA_;
-  static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc,
-                                              MInstruction* def);
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* def) const override {
-    return staticAdjustInputs(alloc, def);
-  }
-};
-
 // Expects either an Int32 or a boxed Int32 for operand Op; may unbox if needed.
 template <unsigned Op>
 class UnboxedInt32Policy final : private TypePolicy {
