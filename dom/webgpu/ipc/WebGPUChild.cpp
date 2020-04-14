@@ -92,7 +92,6 @@ UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
       MOZ_CRASH("Unexpected texture dimension");
   }
   desc.level_count = aDesc.mMipLevelCount;
-  desc.array_layer_count = aDesc.mArrayLayerCount;
   return UniquePtr<ffi::WGPUTextureViewDescriptor>(
       new ffi::WGPUTextureViewDescriptor(desc));
 }
@@ -113,7 +112,6 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   } else {
     MOZ_CRASH("Unexpected union");
   }
-  desc.mArrayLayerCount = aDesc.mArrayLayerCount;
   desc.mMipLevelCount = aDesc.mMipLevelCount;
   desc.mSampleCount = aDesc.mSampleCount;
   desc.mDimension = ffi::WGPUTextureDimension(aDesc.mDimension);

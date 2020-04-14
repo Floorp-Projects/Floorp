@@ -292,7 +292,6 @@ interface GPUTextureUsage {
 
 dictionary GPUTextureDescriptor {
     required GPUExtent3D size;
-    u32 arrayLayerCount = 1;
     u32 mipLevelCount = 1;
     u32 sampleCount = 1;
     GPUTextureDimension dimension = "2d";
