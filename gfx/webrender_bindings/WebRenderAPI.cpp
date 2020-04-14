@@ -463,24 +463,25 @@ SideBits ExtractSideBitsFromHitInfoBits(uint16_t& aHitInfoBits) {
   return sideBits;
 }
 
-bool WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
-                           wr::WrPipelineId& aOutPipelineId,
-                           layers::ScrollableLayerGuid::ViewID& aOutScrollId,
-                           gfx::CompositorHitTestInfo& aOutHitInfo,
-                           SideBits& aOutSideBits) {
+std::vector<WrHitResult> WebRenderAPI::HitTest(const wr::WorldPoint& aPoint) {
   static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
                 "CompositorHitTestFlags MAX value has to be less than number "
                 "of bits in uint16_t minus 4 for SideBitsPacked");
 
-  uint16_t serialized = static_cast<uint16_t>(aOutHitInfo.serialize());
-  const bool result = wr_api_hit_test(mDocHandle, aPoint, &aOutPipelineId,
-                                      &aOutScrollId, &serialized);
+  nsTArray<wr::HitResult> wrResults;
+  wr_api_hit_test(mDocHandle, aPoint, &wrResults);
 
-  if (result) {
-    aOutSideBits = ExtractSideBitsFromHitInfoBits(serialized);
-    aOutHitInfo.deserialize(serialized);
+  std::vector<WrHitResult> geckoResults;
+  for (wr::HitResult wrResult : wrResults) {
+    WrHitResult geckoResult;
+    geckoResult.mLayersId = wr::AsLayersId(wrResult.pipeline_id);
+    geckoResult.mScrollId =
+        static_cast<layers::ScrollableLayerGuid::ViewID>(wrResult.scroll_id);
+    geckoResult.mSideBits = ExtractSideBitsFromHitInfoBits(wrResult.hit_info);
+    geckoResult.mHitInfo.deserialize(wrResult.hit_info);
+    geckoResults.push_back(geckoResult);
   }
-  return result;
+  return geckoResults;
 }
 
 void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,

@@ -3590,34 +3590,30 @@ pub extern "C" fn wr_clear_item_tag(state: &mut WrState) {
     state.current_tag = None;
 }
 
+#[repr(C)]
+pub struct HitResult {
+    pipeline_id: WrPipelineId,
+    scroll_id: u64,
+    hit_info: u16,
+}
+
 #[no_mangle]
-pub extern "C" fn wr_api_hit_test(
-    dh: &mut DocumentHandle,
-    point: WorldPoint,
-    out_pipeline_id: &mut WrPipelineId,
-    out_scroll_id: &mut u64,
-    out_hit_info: &mut u16,
-) -> bool {
+pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle, point: WorldPoint, out_results: &mut ThinVec<HitResult>) {
     dh.ensure_hit_tester();
 
     let result = dh
         .hit_tester
         .as_ref()
         .unwrap()
-        .hit_test(None, point, HitTestFlags::empty());
+        .hit_test(None, point, HitTestFlags::FIND_ALL);
 
     for item in &result.items {
-        // For now we should never be getting results back for which the tag is
-        // 0 (== CompositorHitTestInvisibleToHit). In the future if we allow this,
-        // we'll want to |continue| on the loop in this scenario.
-        debug_assert!(item.tag.1 != 0);
-        *out_pipeline_id = item.pipeline;
-        *out_scroll_id = item.tag.0;
-        *out_hit_info = item.tag.1;
-        return true;
+        out_results.push(HitResult {
+            pipeline_id: item.pipeline,
+            scroll_id: item.tag.0,
+            hit_info: item.tag.1,
+        });
     }
-
-    false
 }
 
 pub type VecU8 = Vec<u8>;
