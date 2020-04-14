@@ -479,8 +479,10 @@ void ShadowRoot::RemoveSheetFromStyles(StyleSheet& aSheet) {
 
 void ShadowRoot::RemoveSheet(StyleSheet& aSheet) {
   RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(aSheet);
-  MOZ_ASSERT(sheet);
-  if (sheet->IsApplicable()) {
+  MOZ_ASSERT(sheet || mStyleSheets.IsEmpty(),
+             "sheet should always be found, except after unlink, where we "
+             "should've cleared all stylesheets");
+  if (sheet && sheet->IsApplicable()) {
     RemoveSheetFromStyles(*sheet);
   }
 }
