@@ -171,6 +171,10 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
   immutableFlags_ = lazy->immutableFlags();
   extent = lazy->extent();
+
+  if (fun->isClassConstructor()) {
+    fieldInitializers = mozilla::Some(lazy->getFieldInitializers());
+  }
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
@@ -284,6 +288,10 @@ void FunctionBox::finish() {
     // Apply updates from FunctionEmitter::emitLazy().
     function()->setEnclosingScope(enclosingScope_.getExistingScope());
     function()->baseScript()->setTreatAsRunOnce(treatAsRunOnce());
+
+    if (fieldInitializers) {
+      function()->baseScript()->setFieldInitializers(*fieldInitializers);
+    }
   } else {
     // Non-lazy inner functions don't use the enclosingScope_ field.
     MOZ_ASSERT(!enclosingScope_);
