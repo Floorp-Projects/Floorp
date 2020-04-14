@@ -213,21 +213,6 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
 
   /**
-   * Retrieve the target descriptor for the provided id.
-   *
-   * @return {ProcessDescriptorFront} the process descriptor front for the
-   *         provided id.
-   */
-  async getProcess(id) {
-    const { form, processDescriptor } = await super.getProcess(id);
-    // Backward compatibility: FF74 or older servers will return the
-    // process descriptor as the "form" property of the response.
-    // Once FF75 is merged to release we can always expect `processDescriptor`
-    // to be defined.
-    return processDescriptor || form;
-  }
-
-  /**
    * Override default listTabs request in order to return a list of
    * BrowsingContextTargetFronts while updating their selected state.
    *
