@@ -116,9 +116,8 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
 
 void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
                                                 nsDisplayList* aList) {
-  nsTArray<dom::Element*> fullscreenStack =
-      PresContext()->Document()->GetFullscreenStack();
-  for (dom::Element* elem : fullscreenStack) {
+  nsTArray<dom::Element*> topLayer = PresContext()->Document()->GetTopLayer();
+  for (dom::Element* elem : topLayer) {
     if (nsIFrame* frame = elem->GetPrimaryFrame()) {
       // There are two cases where an element in fullscreen is not in
       // the top layer:
