@@ -176,31 +176,6 @@ async function testContainer(browser) {
   testAccessibleTree(acc, tree);
 }
 
-async function waitForImageMap(browser, accDoc) {
-  const id = "imgmap";
-  const acc = findAccessibleChildByID(accDoc, id);
-  if (acc.firstChild) {
-    return;
-  }
-
-  const onReorder = waitForEvent(EVENT_REORDER, id);
-  // Wave over image map
-  await invokeContentTask(browser, [id], contentId => {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
-    );
-    const EventUtils = ContentTaskUtils.getEventUtils(content);
-    EventUtils.synthesizeMouse(
-      content.document.getElementById(contentId),
-      10,
-      10,
-      { type: "mousemove" },
-      content
-    );
-  });
-  await onReorder;
-}
-
 addAccessibleTask(
   "e10s/doc_treeupdate_imagemap.html",
   async function(browser, accDoc) {
