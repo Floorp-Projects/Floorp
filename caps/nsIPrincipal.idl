@@ -260,6 +260,11 @@ interface nsIPrincipal : nsISerializable
     */
     readonly attribute ACString exposablePrePath;
 
+    /* Returns the Spec of the Principals URI with
+    * user/pass/ref/query stripped for privacy and spoof prevention
+    */
+     readonly attribute ACString exposableSpec;
+
     /**
     * Checks if the Principal's URI Scheme matches with the parameter
     *
