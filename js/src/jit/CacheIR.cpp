@@ -5338,7 +5338,7 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     }
 
     case InlinableNative::IntrinsicNewStringIterator: {
-      res.set(NewStringIteratorObject(cx_, TenuredObject));
+      res.set(NewStringIteratorTemplate(cx_));
       return !!res;
     }
 

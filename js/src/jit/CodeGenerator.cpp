@@ -6745,9 +6745,9 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
       break;
     }
     case MNewIterator::StringIterator: {
-      using Fn = StringIteratorObject* (*)(JSContext*, NewObjectKind);
-      ool = oolCallVM<Fn, NewStringIteratorObject>(
-          lir, ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
+      using Fn = StringIteratorObject* (*)(JSContext*);
+      ool = oolCallVM<Fn, NewStringIterator>(lir, ArgList(),
+                                             StoreRegisterTo(objReg));
       break;
     }
     case MNewIterator::RegExpStringIterator: {
