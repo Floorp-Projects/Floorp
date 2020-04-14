@@ -145,3 +145,13 @@ fun MediaState.playIfPaused() {
         getActiveElements().play()
     }
 }
+
+/**
+ * If this state is [MediaState.State.PLAYING] then return true, else return false.
+ */
+fun MediaState.playing(): Boolean {
+    return when (aggregate.state) {
+        MediaState.State.PLAYING -> true
+        else -> false
+    }
+}
