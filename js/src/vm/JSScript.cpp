@@ -4794,7 +4794,7 @@ static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
                                          sourceObject);
   }
 
-  return DeepCloneObjectLiteral(cx, obj, TenuredObject);
+  return DeepCloneObjectLiteral(cx, obj);
 }
 
 /* static */

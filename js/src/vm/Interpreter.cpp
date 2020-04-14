@@ -4930,7 +4930,7 @@ JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
 
   RootedObject obj(cx, script->getObject(pc));
   if (cx->realm()->creationOptions().cloneSingletons()) {
-    return DeepCloneObjectLiteral(cx, obj, TenuredObject);
+    return DeepCloneObjectLiteral(cx, obj);
   }
 
   cx->realm()->behaviors().setSingletonsAsValues();

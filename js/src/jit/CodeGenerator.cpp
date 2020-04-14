@@ -3736,10 +3736,9 @@ void CodeGenerator::visitTableSwitchV(LTableSwitchV* ins) {
 }
 
 void CodeGenerator::visitCloneLiteral(LCloneLiteral* lir) {
-  pushArg(ImmWord(TenuredObject));
   pushArg(ToRegister(lir->getObjectLiteral()));
 
-  using Fn = JSObject* (*)(JSContext*, HandleObject, NewObjectKind);
+  using Fn = JSObject* (*)(JSContext*, HandleObject);
   callVM<Fn, DeepCloneObjectLiteral>(lir);
 }
 
