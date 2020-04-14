@@ -185,8 +185,7 @@ class WebRenderCommandBuilder final {
                                nsDisplayListBuilder* aDisplayListBuilder);
 
   wr::RenderRootArray<Maybe<StackingContextHelper>>* mRootStackingContexts;
-  wr::RenderRootArray<ClipManager> mClipManagers;
-  ClipManager* mCurrentClipManager;
+  ClipManager mClipManager;
 
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.
