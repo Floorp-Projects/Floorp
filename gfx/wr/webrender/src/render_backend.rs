@@ -289,10 +289,7 @@ impl DataStores {
                 unreachable!();
             }
             _ => {
-                LayoutRect::new(
-                    prim_instance.prim_origin,
-                    self.as_common_data(prim_instance).prim_size,
-                )
+                self.as_common_data(prim_instance).prim_rect
             }
         }
     }

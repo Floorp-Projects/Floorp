@@ -4,7 +4,7 @@
 
 use api::{
     ColorF, ColorU, ExtendMode, GradientStop,
-    PremultipliedColorF, LineOrientation, PrimitiveFlags,
+    PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
 use crate::scene_building::IsVisible;
@@ -78,15 +78,11 @@ pub struct LinearGradientKey {
 
 impl LinearGradientKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
+        info: &LayoutPrimitiveInfo,
         linear_grad: LinearGradient,
     ) -> Self {
         LinearGradientKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
+            common: info.into(),
             extend_mode: linear_grad.extend_mode,
             start_point: linear_grad.start_point,
             end_point: linear_grad.end_point,
@@ -154,8 +150,8 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         //           although this catches the vast majority of gradients on real pages.
         let mut supports_caching =
             // Gradient must cover entire primitive
-            item.tile_spacing.w + item.stretch_size.w >= common.prim_size.width &&
-            item.tile_spacing.h + item.stretch_size.h >= common.prim_size.height &&
+            item.tile_spacing.w + item.stretch_size.w >= common.prim_rect.size.width &&
+            item.tile_spacing.h + item.stretch_size.h >= common.prim_rect.size.height &&
             // Must be a vertical or horizontal gradient
             (item.start_point.x.approx_eq(&item.end_point.x) ||
              item.start_point.y.approx_eq(&item.end_point.y)) &&
@@ -202,7 +198,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size);
         }
 
         // Save opacity of the stops for use in
@@ -277,8 +273,8 @@ impl LinearGradientTemplate {
             // then we just assume the gradient is translucent for now.
             // (In the future we could consider segmenting in some cases).
             let stride = self.stretch_size + self.tile_spacing;
-            if stride.width >= self.common.prim_size.width &&
-               stride.height >= self.common.prim_size.height {
+            if stride.width >= self.common.prim_rect.size.width &&
+               stride.height >= self.common.prim_rect.size.height {
                 self.stops_opacity
             } else {
                PrimitiveOpacity::translucent()
@@ -314,11 +310,7 @@ impl InternablePrimitive for LinearGradient {
         self,
         info: &LayoutPrimitiveInfo,
     ) -> LinearGradientKey {
-        LinearGradientKey::new(
-            info.flags,
-            info.rect.size,
-            self
-        )
+        LinearGradientKey::new(info, self)
     }
 
     fn make_instance_kind(
@@ -391,15 +383,11 @@ pub struct RadialGradientKey {
 
 impl RadialGradientKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
+        info: &LayoutPrimitiveInfo,
         radial_grad: RadialGradient,
     ) -> Self {
         RadialGradientKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
+            common: info.into(),
             extend_mode: radial_grad.extend_mode,
             center: radial_grad.center,
             params: radial_grad.params,
@@ -447,7 +435,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size);
         }
 
         let stops = item.stops.iter().map(|stop| {
@@ -544,11 +532,7 @@ impl InternablePrimitive for RadialGradient {
         self,
         info: &LayoutPrimitiveInfo,
     ) -> RadialGradientKey {
-        RadialGradientKey::new(
-            info.flags,
-            info.rect.size,
-            self,
-        )
+        RadialGradientKey::new(info, self)
     }
 
     fn make_instance_kind(
@@ -611,15 +595,11 @@ pub struct ConicGradientKey {
 
 impl ConicGradientKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
+        info: &LayoutPrimitiveInfo,
         conic_grad: ConicGradient,
     ) -> Self {
         ConicGradientKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
+            common: info.into(),
             extend_mode: conic_grad.extend_mode,
             center: conic_grad.center,
             params: conic_grad.params,
@@ -667,7 +647,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size);
         }
 
         let stops = item.stops.iter().map(|stop| {
@@ -764,11 +744,7 @@ impl InternablePrimitive for ConicGradient {
         self,
         info: &LayoutPrimitiveInfo,
     ) -> ConicGradientKey {
-        ConicGradientKey::new(
-            info.flags,
-            info.rect.size,
-            self,
-        )
+        ConicGradientKey::new(info, self)
     }
 
     fn make_instance_kind(
@@ -1007,14 +983,14 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 112, "LinearGradientTemplate size changed");
-    assert_eq!(mem::size_of::<LinearGradientKey>(), 80, "LinearGradientKey size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 120, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientKey>(), 88, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
-    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 120, "RadialGradientTemplate size changed");
-    assert_eq!(mem::size_of::<RadialGradientKey>(), 88, "RadialGradientKey size changed");
+    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 128, "RadialGradientTemplate size changed");
+    assert_eq!(mem::size_of::<RadialGradientKey>(), 96, "RadialGradientKey size changed");
 
     assert_eq!(mem::size_of::<ConicGradient>(), 72, "ConicGradient size changed");
-    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 120, "ConicGradientTemplate size changed");
-    assert_eq!(mem::size_of::<ConicGradientKey>(), 88, "ConicGradientKey size changed");
+    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 128, "ConicGradientTemplate size changed");
+    assert_eq!(mem::size_of::<ConicGradientKey>(), 96, "ConicGradientKey size changed");
 }
