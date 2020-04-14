@@ -43,10 +43,6 @@ class ProxyObject : public JSObject {
                                                    js::gc::AllocKind allocKind,
                                                    js::NewObjectKind newKind);
 
-  static JS::Result<ProxyObject*, JS::OOM&> createSingleton(
-      JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
-      js::gc::AllocKind allocKind);
-
  public:
   static ProxyObject* New(JSContext* cx, const BaseProxyHandler* handler,
                           HandleValue priv, TaggedProto proto_,
