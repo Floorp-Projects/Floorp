@@ -225,12 +225,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
   return NS_OK;
 }
 
-static void
-#ifdef MOZ_WIDGET_GTK
-print_callback(GtkPrintJob* aJob, gpointer aData, const GError* aError) {
-#else
-print_callback(GtkPrintJob* aJob, gpointer aData, GError* aError) {
-#endif
+static void print_callback(GtkPrintJob* aJob, gpointer aData,
+                           const GError* aError) {
   g_object_unref(aJob);
   ((nsIFile*)aData)->Remove(false);
 }

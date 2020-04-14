@@ -62,7 +62,6 @@ static gint PollWrapper(GPollFD* ufds, guint nfsd, gint timeout_) {
   return result;
 }
 
-#ifdef MOZ_WIDGET_GTK
 // For bug 726483.
 static decltype(GtkContainerClass::check_resize) sReal_gtk_window_check_resize;
 
@@ -109,7 +108,6 @@ static void WrapGdkFrameClockDispose(GObject* object) {
 
   sRealGdkFrameClockDispose(object);
 }
-#endif
 
 /*static*/
 gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
@@ -188,7 +186,6 @@ nsresult nsAppShell::Init() {
     }
   }
 
-#ifdef MOZ_WIDGET_GTK
   if (!sReal_gtk_window_check_resize &&
       gtk_check_version(3, 8, 0) != nullptr) {  // GTK 3.0 to GTK 3.6.
     // GtkWindow is a static class and so will leak anyway but this ref
@@ -218,10 +215,13 @@ nsresult nsAppShell::Init() {
   }
 
   // Workaround for bug 1209659 which is fixed by Gtk3.20
-  if (gtk_check_version(3, 20, 0) != nullptr) unsetenv("GTK_CSD");
-#endif
+  if (gtk_check_version(3, 20, 0) != nullptr) {
+    unsetenv("GTK_CSD");
+  }
 
-  if (PR_GetEnv("MOZ_DEBUG_PAINTS")) gdk_window_set_debug_updates(TRUE);
+  if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
+    gdk_window_set_debug_updates(TRUE);
+  }
 
   // Whitelist of only common, stable formats - see bugs 1197059 and 1203078
   GSList* pixbufFormats = gdk_pixbuf_get_formats();
