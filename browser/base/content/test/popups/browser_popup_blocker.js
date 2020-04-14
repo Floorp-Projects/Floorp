@@ -34,7 +34,7 @@ add_task(async function test_maximum_reported_blocks() {
   );
 
   // Wait for the popup-blocked notification.
-  let notification = await BrowserTestUtils.waitForCondition(() =>
+  let notification = await TestUtils.waitForCondition(() =>
     gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
   );
 
@@ -62,7 +62,7 @@ add_task(async function test_opening_blocked_popups() {
 
   // Wait for the popup-blocked notification.
   let notification;
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       (notification = gBrowser
         .getNotificationBox()
@@ -89,7 +89,7 @@ add_task(async function test_opening_blocked_popups() {
   // Press the button.
   let allow = document.getElementById("blockedPopupAllowSite");
   allow.doCommand();
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       popupTabs.length == 2 &&
       popupTabs.every(
