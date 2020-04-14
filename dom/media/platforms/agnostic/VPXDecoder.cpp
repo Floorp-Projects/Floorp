@@ -470,8 +470,8 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
         }
       } else {
         aInfo.mColorSpace = 1;  // CS_BT_601
-        aInfo.mSubSampling_x = 1;
-        aInfo.mSubSampling_y = 1;
+        aInfo.mSubSampling_x = true;
+        aInfo.mSubSampling_y = true;
         aInfo.mBitDepth = 8;
       }
       Unused << br.ReadBits(8);  // refresh_frame_flags
