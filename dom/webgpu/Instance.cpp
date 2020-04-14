@@ -19,14 +19,13 @@ GPU_IMPL_CYCLE_COLLECTION(Instance, mBridge, mOwner)
 
 /*static*/
 already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
-  if (!gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU)) {
-    return nullptr;
-  }
+  RefPtr<WebGPUChild> bridge;
 
-  RefPtr<WebGPUChild> bridge =
-      layers::CompositorBridgeChild::Get()->GetWebGPUChild();
-  if (NS_WARN_IF(!bridge)) {
-    MOZ_CRASH("Failed to create an IPDL bridge for WebGPU!");
+  if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU)) {
+    bridge = layers::CompositorBridgeChild::Get()->GetWebGPUChild();
+    if (NS_WARN_IF(!bridge)) {
+      MOZ_CRASH("Failed to create an IPDL bridge for WebGPU!");
+    }
   }
 
   RefPtr<Instance> result = new Instance(aOwner, bridge);
@@ -50,6 +49,10 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   RefPtr<dom::Promise> promise = dom::Promise::Create(mOwner, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+  if (!mBridge) {
+    promise->MaybeRejectWithInvalidStateError("WebGPU is not enabled!");
+    return promise.forget();
   }
 
   RefPtr<Instance> instance = this;
