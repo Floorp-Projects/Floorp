@@ -1804,7 +1804,11 @@ void nsGlobalWindowInner::UpdateParentTarget() {
   // child global, and if it doesn't have one, just use the chrome event
   // handler itself.
 
-  nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
+  nsPIDOMWindowOuter* outer = GetOuterWindow();
+  if (!outer) {
+    return;
+  }
+  nsCOMPtr<Element> frameElement = outer->GetFrameElementInternal();
   nsCOMPtr<EventTarget> eventTarget =
       nsContentUtils::TryGetBrowserChildGlobal(frameElement);
 
