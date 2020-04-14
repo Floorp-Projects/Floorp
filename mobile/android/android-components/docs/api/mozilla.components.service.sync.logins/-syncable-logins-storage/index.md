@@ -2,7 +2,7 @@
 
 # SyncableLoginsStorage
 
-`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L114)
+`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L115)
 
 An implementation of [LoginsStorage](../../mozilla.components.concept.storage/-logins-storage/index.md) backed by application-services' `logins` library.
 Synchronization support is provided both directly (via [sync](sync.md)) when only syncing this storage layer,
@@ -25,6 +25,7 @@ or via [getHandle](get-handle.md) when syncing multiple stores. Use the latter i
 | [get](get.md) | `suspend fun get(guid: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`?` |
 | [getByBaseDomain](get-by-base-domain.md) | `suspend fun getByBaseDomain(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../../mozilla.components.concept.storage/-login/index.md)`>` |
 | [getHandle](get-handle.md) | `fun getHandle(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>This should be removed. See: https://github.com/mozilla/application-services/issues/1877 |
+| [getPotentialDupesIgnoringUsername](get-potential-dupes-ignoring-username.md) | `suspend fun getPotentialDupesIgnoringUsername(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../../mozilla.components.concept.storage/-login/index.md)`>` |
 | [importLoginsAsync](import-logins-async.md) | `suspend fun importLoginsAsync(logins: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../../mozilla.components.concept.storage/-login/index.md)`>): <ERROR CLASS>` |
 | [list](list.md) | `suspend fun list(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../../mozilla.components.concept.storage/-login/index.md)`>` |
 | [sync](sync.md) | `suspend fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): SyncTelemetryPing`<br>Synchronizes the logins storage layer with a remote layer. If synchronizing multiple stores, avoid using this - prefer setting up sync via FxaAccountManager instead. |

@@ -2,7 +2,7 @@
 
 # Login
 
-`data class Login` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L123)
+`data class Login` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L131)
 
 Represents a login that can be used by autofill APIs.
 
@@ -37,5 +37,4 @@ blank username).
 | Name | Summary |
 |---|---|
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
-| [mergeWithLogin](../../mozilla.components.service.sync.logins/merge-with-login.md) | `fun `[`Login`](./index.md)`.mergeWithLogin(login: `[`Login`](./index.md)`): `[`Login`](./index.md)<br>Will use values from [this](../../mozilla.components.service.sync.logins/merge-with-login/-this-.md) if they are 1) non-null and 2) non-empty.  Otherwise, will fall back to values from [this](../../mozilla.components.service.sync.logins/merge-with-login/-this-.md). |
 | [toServerPassword](../../mozilla.components.service.sync.logins/to-server-password.md) | `fun `[`Login`](./index.md)`.toServerPassword(): `[`ServerPassword`](../../mozilla.components.service.sync.logins/-server-password.md)<br>Converts an Android Components [Login](./index.md) to an Application Services [ServerPassword](../../mozilla.components.service.sync.logins/-server-password.md) |

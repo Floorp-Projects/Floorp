@@ -2,7 +2,7 @@
 
 # SyncAuthInvalidException
 
-`typealias SyncAuthInvalidException = SyncAuthInvalidException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L60)
+`typealias SyncAuthInvalidException = SyncAuthInvalidException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L61)
 
 This indicates that the authentication information (e.g. the [SyncUnlockInfo](-sync-unlock-info.md))
 provided to [AsyncLoginsStorage.sync](#) is invalid. This often indicates that it's

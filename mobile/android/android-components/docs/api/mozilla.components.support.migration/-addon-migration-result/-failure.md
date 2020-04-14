@@ -2,7 +2,7 @@
 
 # Failure
 
-`sealed class Failure : `[`AddonMigrationResult`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L56)
+`sealed class Failure : `[`AddonMigrationResult`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L59)
 
 Failure variants of an add-on migration.
 

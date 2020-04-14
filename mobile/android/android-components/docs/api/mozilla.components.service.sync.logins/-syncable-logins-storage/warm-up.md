@@ -2,7 +2,7 @@
 
 # warmUp
 
-`suspend fun warmUp(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L129)
+`suspend fun warmUp(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L130)
 
 "Warms up" this storage layer by establishing the database connection.
 

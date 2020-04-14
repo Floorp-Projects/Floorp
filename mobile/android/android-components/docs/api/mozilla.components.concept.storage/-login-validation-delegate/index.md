@@ -2,7 +2,7 @@
 
 # LoginValidationDelegate
 
-`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L182)
+`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L190)
 
 Provides a method for checking whether or not a given login can be stored.
 
@@ -16,7 +16,8 @@ Provides a method for checking whether or not a given login can be stored.
 
 | Name | Summary |
 |---|---|
-| [validateCanPersist](validate-can-persist.md) | `abstract fun validateCanPersist(login: `[`Login`](../-login/index.md)`): Deferred<`[`Result`](-result/index.md)`>`<br>Checks whether or not [login](validate-can-persist.md#mozilla.components.concept.storage.LoginValidationDelegate$validateCanPersist(mozilla.components.concept.storage.Login)/login) can be persisted. |
+| [getPotentialDupesIgnoringUsernameAsync](get-potential-dupes-ignoring-username-async.md) | `abstract fun getPotentialDupesIgnoringUsernameAsync(newLogin: `[`Login`](../-login/index.md)`): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../-login/index.md)`>>`<br>Calls underlying storage methods to fetch list of [Login](../-login/index.md)s that could be potential dupes of [newLogin](get-potential-dupes-ignoring-username-async.md#mozilla.components.concept.storage.LoginValidationDelegate$getPotentialDupesIgnoringUsernameAsync(mozilla.components.concept.storage.Login)/newLogin) |
+| [shouldUpdateOrCreateAsync](should-update-or-create-async.md) | `abstract fun shouldUpdateOrCreateAsync(newLogin: `[`Login`](../-login/index.md)`, potentialDupes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Login`](../-login/index.md)`>? = null): Deferred<`[`Result`](-result/index.md)`>`<br>Checks whether a [login](#) should be saved or updated. |
 
 ### Extension Functions
 

@@ -8,7 +8,6 @@
 |---|---|
 | [DefaultLoginValidationDelegate](-default-login-validation-delegate/index.md) | `class DefaultLoginValidationDelegate : `[`LoginValidationDelegate`](../mozilla.components.concept.storage/-login-validation-delegate/index.md)<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
 | [GeckoLoginStorageDelegate](-gecko-login-storage-delegate/index.md) | `class GeckoLoginStorageDelegate : `[`LoginStorageDelegate`](../mozilla.components.concept.storage/-login-storage-delegate/index.md)<br>[LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
-| [Operation](-operation/index.md) | `enum class Operation`<br>A type of persistence operation, either 'create' or 'update'. |
 | [SyncableLoginsStorage](-syncable-logins-storage/index.md) | `class SyncableLoginsStorage : `[`LoginsStorage`](../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An implementation of [LoginsStorage](../mozilla.components.concept.storage/-logins-storage/index.md) backed by application-services' `logins` library. Synchronization support is provided both directly (via [sync](-syncable-logins-storage/sync.md)) when only syncing this storage layer, or via [getHandle](-syncable-logins-storage/get-handle.md) when syncing multiple stores. Use the latter in conjunction with [FxaAccountManager](#). |
 
 ### Type Aliases
@@ -44,5 +43,4 @@
 | Name | Summary |
 |---|---|
 | [into](into.md) | `fun `[`SyncAuthInfo`](../mozilla.components.concept.sync/-sync-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |
-| [mergeWithLogin](merge-with-login.md) | `fun `[`Login`](../mozilla.components.concept.storage/-login/index.md)`.mergeWithLogin(login: `[`Login`](../mozilla.components.concept.storage/-login/index.md)`): `[`Login`](../mozilla.components.concept.storage/-login/index.md)<br>Will use values from [this](merge-with-login/-this-.md) if they are 1) non-null and 2) non-empty.  Otherwise, will fall back to values from [this](merge-with-login/-this-.md). |
 | [toServerPassword](to-server-password.md) | `fun `[`Login`](../mozilla.components.concept.storage/-login/index.md)`.toServerPassword(): `[`ServerPassword`](-server-password.md)<br>Converts an Android Components [Login](../mozilla.components.concept.storage/-login/index.md) to an Application Services [ServerPassword](-server-password.md) |

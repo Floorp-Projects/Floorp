@@ -2,7 +2,7 @@
 
 # EmptyPassword
 
-`object EmptyPassword : `[`Error`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L208)
+`object EmptyPassword : `[`Error`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L221)
 
 The passed [Login](../../../-login/index.md) had an empty password field, and so cannot be saved.
 

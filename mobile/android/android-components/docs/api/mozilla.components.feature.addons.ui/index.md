@@ -14,17 +14,13 @@
 | [UnsupportedAddonsAdapter](-unsupported-addons-adapter/index.md) | `class UnsupportedAddonsAdapter : Adapter<ViewHolder>`<br>An adapter for displaying unsupported add-on items. |
 | [UnsupportedAddonsAdapterDelegate](-unsupported-addons-adapter-delegate/index.md) | `interface UnsupportedAddonsAdapterDelegate`<br>Provides methods for handling the success and error callbacks from uninstalling an add-on in the list of unsupported add-on items. |
 
-### Extensions for External Classes
-
-| Name | Summary |
-|---|---|
-| [kotlin.collections.Map](kotlin.collections.-map/index.md) |  |
-
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [translatedDescription](translated-description.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized description of an add-on. |
 | [translatedName](translated-name.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized name of an add-on. |
+| [translatedSummary](translated-summary.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedSummary: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized summary of an add-on. |
 
 ### Functions
 

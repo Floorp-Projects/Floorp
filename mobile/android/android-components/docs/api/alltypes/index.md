@@ -421,7 +421,6 @@
 | [mozilla.components.support.test.rule.MainCoroutineRule](../mozilla.components.support.test.rule/-main-coroutine-rule/index.md) | JUnit rule to change Dispatchers.Main in coroutines. |
 | [mozilla.components.feature.pwa.ManifestStorage](../mozilla.components.feature.pwa/-manifest-storage/index.md) | Disk storage for [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest. |
 | [mozilla.components.feature.pwa.feature.ManifestUpdateFeature](../mozilla.components.feature.pwa.feature/-manifest-update-feature/index.md) | Feature used to update the existing web app manifest and web app shortcut. |
-| [kotlin.collections.Map](../mozilla.components.feature.addons.ui/kotlin.collections.-map/index.md) (extensions in package mozilla.components.feature.addons.ui) |  |
 | [kotlin.collections.Map](../mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
@@ -489,7 +488,6 @@
 | [mozilla.components.feature.accounts.push.OneTimeFxaPushReset](../mozilla.components.feature.accounts.push/-one-time-fxa-push-reset/index.md) | Resets the fxa push scope (and therefore push subscription) if it does not follow the new format. |
 | [org.mozilla.telemetry.measurement.OperatingSystemMeasurement](../org.mozilla.telemetry.measurement/-operating-system-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement](../org.mozilla.telemetry.measurement/-operating-system-version-measurement/index.md) |  |
-| [mozilla.components.service.sync.logins.Operation](../mozilla.components.service.sync.logins/-operation/index.md) | A type of persistence operation, either 'create' or 'update'. |
 | [mozilla.components.feature.customtabs.store.OriginRelationPair](../mozilla.components.feature.customtabs.store/-origin-relation-pair/index.md) | Pair of origin and relation type used as key in [CustomTabState.relationships](../mozilla.components.feature.customtabs.store/-custom-tab-state/relationships.md). |
 | [mozilla.components.feature.customtabs.verify.OriginVerifier](../mozilla.components.feature.customtabs.verify/-origin-verifier/index.md) | Used to verify postMessage origin for a designated package name. |
 | [mozilla.components.feature.customtabs.feature.OriginVerifierFeature](../mozilla.components.feature.customtabs.feature/-origin-verifier-feature/index.md) |  |
