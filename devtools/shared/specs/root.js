@@ -20,14 +20,6 @@ types.addDictType("root.listServiceWorkerRegistrations", {
 types.addDictType("root.listRemoteFrames", {
   frames: "array:frameDescriptor",
 });
-// Backward compatibility: FF74 or older servers will return the
-// process descriptor as the "form" property of the response.
-// Once FF75 is merged to release we can always expect `processDescriptor`
-// to be defined.
-types.addDictType("root.getProcess", {
-  form: "nullable:processDescriptor",
-  processDescriptor: "nullable:processDescriptor",
-});
 types.addDictType("root.listTabs", {
   // Backwards compatibility for servers FF74 and before
   // once FF75 is merged into release, we can return tabDescriptors directly.
@@ -108,7 +100,9 @@ const rootSpecPrototype = {
       request: {
         id: Arg(0, "number"),
       },
-      response: RetVal("root.getProcess"),
+      response: {
+        processDescriptor: RetVal("processDescriptor"),
+      },
     },
 
     listRemoteFrames: {
