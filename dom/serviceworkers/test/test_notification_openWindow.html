@@ -29,7 +29,7 @@ add_task(async function setup() {
   MockServices.register();
   SimpleTest.requestFlakyTimeout("Mock alert service dispatches show and click events.");
   SimpleTest.registerCleanupFunction(() => {
-    MockServices.unregister()
+    MockServices.unregister();
   });
 });
 
@@ -43,25 +43,36 @@ add_task(async function test() {
     navigator.serviceWorker.onmessage = null;
   });
 
-  // The onclicknotification handler uses Clients.openWindow() to open a new
-  // window. This newly created window will attempt to open another window with
-  // Window.open() and some arbitrary URL. We crash before the second window
-  // finishes loading.
-  info("Showing notification.");
-  await swr.showNotification("notification");
+  for (let prefValue of [
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW,
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW,
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+  ]) {
+    info(`Setting browser.link.open_newwindow to ${prefValue}.`);
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.link.open_newwindow", prefValue]],
+    });
 
-  info("Waiting for \"DONE\" from worker.");
-  await new Promise(resolve => {
-    navigator.serviceWorker.onmessage = event => {
-      if (event.data !== "DONE") {
-        ok(false, `Unexpected message from service worker: ${JSON.stringify(event.data)}`);
+    // The onclicknotification handler uses Clients.openWindow() to open a new
+    // window. This newly created window will attempt to open another window with
+    // Window.open() and some arbitrary URL. We crash before the second window
+    // finishes loading.
+    info("Showing notification.");
+    await swr.showNotification("notification");
+
+    info("Waiting for \"DONE\" from worker.");
+    await new Promise(resolve => {
+      navigator.serviceWorker.onmessage = event => {
+        if (event.data !== "DONE") {
+          ok(false, `Unexpected message from service worker: ${JSON.stringify(event.data)}`);
+        }
+        resolve();
       }
-      resolve();
-    }
-  });
+    });
 
-  // If we make it here, then we didn't crash.
-  ok(true, "Didn't crash!");
+    // If we make it here, then we didn't crash.
+    ok(true, "Didn't crash!");
+  }
 });
 
 </script>
