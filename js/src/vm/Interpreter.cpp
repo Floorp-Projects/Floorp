@@ -5445,7 +5445,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
     obj = CopyInitializerObject(cx, baseObject, newKind);
   } else {
     MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
-    obj = NewBuiltinClassInstance<PlainObject>(cx, newKind);
+    obj = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
   }
 
   if (!obj) {
