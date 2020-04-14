@@ -6853,13 +6853,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     if (!tokenStream.peekToken(&tt)) {
       return false;
     }
-    if (tt == TokenKind::RightCurly) {
-      tokenStream.consumeKnownToken(tt);
-      error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(tt));
-      return false;
-    }
 
-    if (tt != TokenKind::LeftParen) {
+    if (tt != TokenKind::LeftParen && tt != TokenKind::Assign &&
+        tt != TokenKind::Semi && tt != TokenKind::RightCurly) {
       isStatic = true;
     } else {
       anyChars.ungetToken();
