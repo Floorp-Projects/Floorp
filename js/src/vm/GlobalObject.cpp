@@ -856,13 +856,13 @@ static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
                                       HandleObject proto) {
   MOZ_ASSERT(clasp != &JSFunction::class_);
 
-  RootedNativeObject blankProto(
-      cx, NewNativeObjectWithGivenProto(cx, clasp, proto, SingletonObject));
+  RootedObject blankProto(cx,
+                          NewSingletonObjectWithGivenProto(cx, clasp, proto));
   if (!blankProto || !JSObject::setDelegate(cx, blankProto)) {
     return nullptr;
   }
 
-  return blankProto;
+  return &blankProto->as<NativeObject>();
 }
 
 /* static */
