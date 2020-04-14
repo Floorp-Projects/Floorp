@@ -878,7 +878,14 @@ fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError>
 fn make_env(path: &Path) -> Result<Rkv, SecurityStateError> {
     let mut builder = Rkv::environment_builder::<SafeMode>();
     builder.set_max_dbs(2);
-    builder.set_map_size(16777216); // 16MB
+
+    // 16MB is a little over twice the size of the current dataset. When we
+    // eventually switch to the LMDB backend to create the builder above,
+    // we should set this as the map size, since it cannot currently resize.
+    // (The SafeMode backend warns when a map size is specified, so we skip it
+    // for now to avoid console spam.)
+
+    // builder.set_map_size(16777216);
 
     // Bug 1595004: Migrate databases between backends in the future,
     // and handle 32 and 64 bit architectures in case of LMDB.
