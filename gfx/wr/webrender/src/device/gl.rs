@@ -1038,6 +1038,26 @@ enum TexStorageUsage {
     Always,
 }
 
+/// Describes a required alignment for a stride,
+/// which can either be represented in bytes or pixels.
+#[derive(Copy, Clone, Debug)]
+pub enum StrideAlignment {
+    Bytes(NonZeroUsize),
+    Pixels(NonZeroUsize),
+}
+
+impl StrideAlignment {
+    pub fn num_bytes(&self, format: ImageFormat) -> NonZeroUsize {
+        match *self {
+            Self::Bytes(bytes) => bytes,
+            Self::Pixels(pixels) => {
+                assert!(format.bytes_per_pixel() > 0);
+                NonZeroUsize::new(pixels.get() * format.bytes_per_pixel() as usize).unwrap()
+            }
+        }
+    }
+}
+
 // We get 24 bits of Z value - use up 22 bits of it to give us
 // 4 bits to account for GPU issues. This seems to manifest on
 // some GPUs under certain perspectives due to z interpolation
@@ -1102,7 +1122,7 @@ pub struct Device {
     /// format, we fall back to glTexImage*.
     texture_storage_usage: TexStorageUsage,
 
-    optimal_pbo_stride: NonZeroUsize,
+    optimal_pbo_stride: StrideAlignment,
 
     /// Whether we must ensure the source strings passed to glShaderSource()
     /// are null-terminated, to work around driver bugs.
@@ -1525,16 +1545,22 @@ impl Device {
         // strings are not null-terminated. See bug 1591945.
         let requires_null_terminated_shader_source = is_emulator;
 
-        // On Adreno GPUs PBO texture upload is only performed asynchronously
-        // if the stride of the data in the PBO is a multiple of 256 bytes.
+        let is_amd_macos = cfg!(target_os = "macos") && renderer_name.starts_with("AMD");
+
+        // On certain GPUs PBO texture upload is only performed asynchronously
+        // if the stride of the data is a multiple of a certain value.
+        // On Adreno it must be a multiple of 64 pixels, meaning value in bytes
+        // varies with the texture format.
+        // On AMD Mac, it must always be a multiple of 256 bytes.
         // Other platforms may have similar requirements and should be added
         // here.
-        // The default value should be 4.
-        let is_amd_macos = cfg!(target_os = "macos") && renderer_name.starts_with("AMD");
-        let optimal_pbo_stride = if is_adreno || is_amd_macos {
-            NonZeroUsize::new(256).unwrap()
+        // The default value should be 4 bytes.
+        let optimal_pbo_stride = if is_adreno {
+            StrideAlignment::Pixels(NonZeroUsize::new(64).unwrap())
+        } else if is_amd_macos {
+            StrideAlignment::Bytes(NonZeroUsize::new(256).unwrap())
         } else {
-            NonZeroUsize::new(4).unwrap()
+            StrideAlignment::Bytes(NonZeroUsize::new(4).unwrap())
         };
 
         // On AMD Macs there is a driver bug which causes some texture uploads
@@ -1665,7 +1691,7 @@ impl Device {
         return (self.max_depth_ids() - 1) as f32;
     }
 
-    pub fn optimal_pbo_stride(&self) -> NonZeroUsize {
+    pub fn optimal_pbo_stride(&self) -> StrideAlignment {
         self.optimal_pbo_stride
     }
 
@@ -2863,7 +2889,7 @@ impl Device {
         let bytes_pp = format.bytes_per_pixel() as usize;
         let width_bytes = size.width as usize * bytes_pp;
 
-        let dst_stride = round_up_to_multiple(width_bytes, self.optimal_pbo_stride);
+        let dst_stride = round_up_to_multiple(width_bytes, self.optimal_pbo_stride.num_bytes(format));
 
         // The size of the chunk should only need to be (height - 1) * dst_stride + width_bytes,
         // however, the android emulator will error unless it is height * dst_stride.
