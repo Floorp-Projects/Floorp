@@ -15,6 +15,7 @@ EXTRA_JS_MODULES += [
     'UrlbarProviderInterventions.jsm',
     'UrlbarProviderOpenTabs.jsm',
     'UrlbarProviderPrivateSearch.jsm',
+    'UrlbarProviderSearchSuggestions.jsm',
     'UrlbarProviderSearchTips.jsm',
     'UrlbarProvidersManager.jsm',
     'UrlbarProviderTopSites.jsm',
