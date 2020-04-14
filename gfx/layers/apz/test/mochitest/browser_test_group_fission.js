@@ -6,6 +6,9 @@ add_task(async function setup_pref() {
       ["layout.throttled_frame_rate", 60],
       ["dom.animations-api.getAnimations.enabled", true],
       ["dom.animations-api.timelines.enabled", true],
+      // Next two prefs are needed for hit-testing to work
+      ["test.events.async.enabled", true],
+      ["apz.test.logging_enabled", true],
     ],
   });
 });
@@ -41,6 +44,7 @@ add_task(async function test_main() {
       },
     },
     { url: httpURL("helper_fission_animation_styling_in_oopif.html") },
+    { url: httpURL("helper_fission_force_empty_hit_region.html") },
     // add additional tests here
   ];
   if (isWebRender) {
