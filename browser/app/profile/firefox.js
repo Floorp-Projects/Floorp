@@ -200,8 +200,6 @@ pref("browser.fixup.domainwhitelist.localhost", true);
   pref("general.autoScroll", true);
 #endif
 
-pref("browser.stopReloadAnimation.enabled", true);
-
 // UI density of the browser chrome. This mostly affects toolbarbutton
 // and urlbar spacing. The possible values are 0=normal, 1=compact, 2=touch.
 pref("browser.uidensity", 0);
