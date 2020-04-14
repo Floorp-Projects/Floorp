@@ -4137,14 +4137,14 @@ ArrayObject* js::NewDenseCopiedArray(
 }
 
 ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
-    JSContext* cx, uint32_t length, JSObject* templateObject) {
+    JSContext* cx, uint32_t length, ArrayObject* templateObject) {
   AutoSetNewObjectMetadata metadata(cx);
   gc::AllocKind allocKind = GuessArrayGCKind(length);
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
   RootedObjectGroup group(cx, templateObject->group());
-  RootedShape shape(cx, templateObject->as<ArrayObject>().lastProperty());
+  RootedShape shape(cx, templateObject->lastProperty());
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
   Rooted<ArrayObject*> arr(
