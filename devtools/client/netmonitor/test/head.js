@@ -166,9 +166,6 @@ Services.prefs.setCharPref(
     '{"name":"waterfall","minWidth":150,"width":15}]'
 );
 
-// Increase UI limit for responses rendered using CodeMirror in tests.
-Services.prefs.setIntPref("devtools.netmonitor.response.ui.limit", 1024 * 105);
-
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
 
@@ -176,7 +173,6 @@ registerCleanupFunction(() => {
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
   Services.prefs.clearUserPref("devtools.cache.disabled");
   Services.prefs.clearUserPref("devtools.netmonitor.columnsData");
-  Services.prefs.clearUserPref("devtools.netmonitor.response.ui.limit");
   Services.prefs.clearUserPref("devtools.netmonitor.visibleColumns");
   Services.cookies.removeAll();
 });

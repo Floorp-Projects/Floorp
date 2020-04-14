@@ -37,7 +37,7 @@ add_task(async function() {
   );
   const waitSourceEditor = waitForDOM(
     document,
-    "#params-panel .responseTextContainer"
+    "#params-panel .CodeMirror.cm-s-mozilla"
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
