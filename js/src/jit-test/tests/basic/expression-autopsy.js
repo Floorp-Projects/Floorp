@@ -77,7 +77,7 @@ check("o[268435455]");
 check("o['1.1']");
 check("o[4 + 'h']", "o['4h']");
 check("ieval(undef)", "ieval(...)");
-check("ieval.call()", "ieval.call(...)");
+check("ieval.call()", "ieval.call()");
 check("ieval(...[])", "ieval(...)");
 check("ieval(...[undef])", "ieval(...)");
 check("ieval(...[undef, undef])", "ieval(...)");
@@ -105,7 +105,7 @@ check("o[(- (o + 1))]");
 check_one("6", (function () { 6() }), " is not a function");
 check_one("4", (function() { (4||eval)(); }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
-check_one("[...][Symbol.iterator](...).next(...).value",
+check_one("[...][Symbol.iterator]().next().value",
           function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 check_one("(void 1)", function() { (void 1)(); }, " is not a function");
 check_one("(void o[1])", function() { var o = []; (void o[1])() }, " is not a function");
@@ -129,11 +129,11 @@ check_one("(delete obj[y])",
           function() { "use strict"; var obj = {}, y = {}; (delete obj[y])(); },
           " is not a function");
 
-check_one("foo.apply(...)",
+check_one("foo.apply()",
           function() { function foo() {} foo.apply()(); },
           " is not a function");
 
-check_one("super(...)",
+check_one("super()",
           function() {
             class X extends Object {
               constructor() {
@@ -179,7 +179,7 @@ check_one("super[a]",
           },
           " is not a function");
 
-check_one("super.a(...)",
+check_one("super.a()",
           function() {
             class Y {
               a() {
@@ -198,7 +198,7 @@ check_one("super.a(...)",
           },
           " is not a function");
 
-check_one("super[a](...)",
+check_one("super[a]()",
           function() {
             class Y {
               a() {
@@ -242,13 +242,13 @@ check_one("eval(...)",
           function() { "use strict"; eval(...[""])(); },
           " is not a function");
 
-check_one("(new foo(...))",
+check_one("(new foo())",
           function() { function foo() {}; new foo()(); },
           " is not a function");
 check_one("(new foo(...))",
           function() { function foo() {}; new foo(...[])(); },
           " is not a function");
-check_one("(new foo.x(...))",
+check_one("(new foo.x())",
           function() { var foo = { x: function() {} }; new foo.x()(); },
           " is not a function");
 check_one("(new foo.x(...))",
@@ -262,9 +262,9 @@ check_one("[...].foo",
           function() { [undefined, ...[]].foo(); },
           " is not a function");
 
-check_one("[...][Symbol.iterator](...).next(...).value",
+check_one("[...][Symbol.iterator]().next().value",
           function () { var [{x}] = [null, {}]; }, " is null");
-check_one("[...][Symbol.iterator](...).next(...).value",
+check_one("[...][Symbol.iterator]().next().value",
           function () { var [{x}] = [void 0, {}]; }, " is undefined");
 
 try {
