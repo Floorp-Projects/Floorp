@@ -39,21 +39,22 @@ let tabListener = {
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     if (webProgress.isTopLevel) {
-      const { tab } = browser.ownerGlobal;
+      let { BrowserApp } = browser.ownerGlobal;
+      let nativeTab = BrowserApp.getTabForBrowser(browser);
 
       // Ignore initial about:blank
-      if (!request && this.initializingTabs.has(tab)) {
+      if (!request && this.initializingTabs.has(nativeTab)) {
         return;
       }
 
       // Now we are certain that the first page in the tab was loaded.
-      this.initializingTabs.delete(tab);
+      this.initializingTabs.delete(nativeTab);
 
       // browser.innerWindowID is now set, resolve the promises if any.
-      let deferred = this.tabReadyPromises.get(tab);
+      let deferred = this.tabReadyPromises.get(nativeTab);
       if (deferred) {
-        deferred.resolve(tab);
-        this.tabReadyPromises.delete(tab);
+        deferred.resolve(nativeTab);
+        this.tabReadyPromises.delete(nativeTab);
       }
     }
   },
@@ -257,17 +258,21 @@ this.tabs = class extends ExtensionAPI {
               let nativeTab;
               switch (event.type) {
                 case "DOMTitleChanged": {
-                  const window = getBrowserWindow(event.target.ownerGlobal);
-                  nativeTab = window.tab;
+                  let { BrowserApp } = getBrowserWindow(
+                    event.target.ownerGlobal
+                  );
 
+                  nativeTab = BrowserApp.getTabForWindow(
+                    event.target.ownerGlobal
+                  );
                   needed.push("title");
                   break;
                 }
 
                 case "DOMAudioPlaybackStarted":
                 case "DOMAudioPlaybackStopped": {
-                  const window = event.target.ownerGlobal;
-                  nativeTab = window.tab;
+                  let { BrowserApp } = event.target.ownerGlobal;
+                  nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
                   needed.push("audible");
                   break;
                 }
@@ -287,14 +292,15 @@ this.tabs = class extends ExtensionAPI {
             };
 
             let statusListener = ({ browser, status, url }) => {
-              const { tab } = browser.ownerGlobal;
-              if (tab) {
+              let { BrowserApp } = browser.ownerGlobal;
+              let nativeTab = BrowserApp.getTabForBrowser(browser);
+              if (nativeTab) {
                 let changed = { status };
                 if (url) {
                   changed.url = url;
                 }
 
-                fireForTab(tabManager.wrapTab(tab), changed);
+                fireForTab(tabManager.wrapTab(nativeTab), changed);
               }
             };
 
@@ -484,7 +490,7 @@ this.tabs = class extends ExtensionAPI {
               ? windowTracker.topWindow
               : windowTracker.getWindow(windowId, context);
 
-          let tab = tabManager.wrapTab(window.tab);
+          let tab = tabManager.wrapTab(window.BrowserApp.selectedTab);
           await tabListener.awaitTabReady(tab.nativeTab);
 
           return tab.capture(context, options);
