@@ -46,9 +46,9 @@ function GetPermissionsFile(profile) {
  */
 
 add_task(function test() {
-  /* Create and set up the permissions database */
-  let profile = do_get_profile();
+  // Create and set up the permissions database.
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
+  let profile = do_get_profile();
 
   // Make sure that we can't resolve the nsINavHistoryService
   try {

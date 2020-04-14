@@ -16,9 +16,9 @@ function GetPermissionsFile(profile) {
 }
 
 add_task(function test() {
-  /* Create and set up the permissions database */
-  let profile = do_get_profile();
+  // Create and set up the permissions database.
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
+  let profile = do_get_profile();
 
   // We need to execute a pm method to be sure that the DB is fully
   // initialized.
