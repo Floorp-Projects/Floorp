@@ -196,7 +196,7 @@ namespace jit {
   _(NewDenseCopyOnWriteArray, js::NewDenseCopyOnWriteArray)                    \
   _(NewObjectOperation, js::NewObjectOperation)                                \
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
-  _(NewRegExpStringIteratorObject, js::NewRegExpStringIteratorObject)          \
+  _(NewRegExpStringIterator, js::NewRegExpStringIterator)                      \
   _(NewStringIterator, js::NewStringIterator)                                  \
   _(NewStringObject, js::jit::NewStringObject)                                 \
   _(NewTypedArrayWithTemplateAndArray, js::NewTypedArrayWithTemplateAndArray)  \
