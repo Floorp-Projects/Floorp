@@ -999,6 +999,7 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
     }
 
     /* finally, set up any mode specific contexts */
+    cx->worker_aead = 0;
     switch (mode) {
         case NSS_AES_CTS:
             cx->worker_cx = CTS_CreateContext(cx, cx->worker, iv);
@@ -1013,6 +1014,8 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
                 cx->worker_cx = intel_AES_GCM_CreateContext(cx, cx->worker, iv);
                 cx->worker = (freeblCipherFunc)(encrypt ? intel_AES_GCM_EncryptUpdate
                                                         : intel_AES_GCM_DecryptUpdate);
+                cx->worker_aead = (freeblAeadFunc)(encrypt ? intel_AES_GCM_EncryptAEAD
+                                                           : intel_AES_GCM_DecryptAEAD);
                 cx->destroy = (freeblDestroyFunc)intel_AES_GCM_DestroyContext;
                 cx->isBlock = PR_FALSE;
             } else
@@ -1021,6 +1024,9 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
                 cx->worker_cx = GCM_CreateContext(cx, cx->worker, iv);
                 cx->worker = (freeblCipherFunc)(encrypt ? GCM_EncryptUpdate
                                                         : GCM_DecryptUpdate);
+                cx->worker_aead = (freeblAeadFunc)(encrypt ? GCM_EncryptAEAD
+                                                           : GCM_DecryptAEAD);
+
                 cx->destroy = (freeblDestroyFunc)GCM_DestroyContext;
                 cx->isBlock = PR_FALSE;
             }
@@ -1170,11 +1176,63 @@ AES_Decrypt(AESContext *cx, unsigned char *output,
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         return SECFailure;
     }
-    if (maxOutputLen < inputLen) {
+    if ((cx->mode != NSS_AES_GCM) && (maxOutputLen < inputLen)) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
         return SECFailure;
     }
     *outputLen = inputLen;
     return (*cx->worker)(cx->worker_cx, output, outputLen, maxOutputLen,
                          input, inputLen, AES_BLOCK_SIZE);
+}
+
+/*
+ * AES_Encrypt_AEAD
+ *
+ * Encrypt using GCM or CCM. include the nonce, extra data, and the tag
+ */
+SECStatus
+AES_AEAD(AESContext *cx, unsigned char *output,
+         unsigned int *outputLen, unsigned int maxOutputLen,
+         const unsigned char *input, unsigned int inputLen,
+         void *params, unsigned int paramsLen,
+         const unsigned char *aad, unsigned int aadLen)
+{
+    /* Check args */
+    if (cx == NULL || output == NULL || (input == NULL && inputLen != 0) || (aad == NULL && aadLen != 0) || params == NULL) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (cx->worker_aead == NULL) {
+        PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+        return SECFailure;
+    }
+    if (maxOutputLen < inputLen) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+    *outputLen = inputLen;
+#if UINT_MAX > MP_32BIT_MAX
+    /*
+     * we can guarentee that GSM won't overlfow if we limit the input to
+     * 2^36 bytes. For simplicity, we are limiting it to 2^32 for now.
+     *
+     * We do it here to cover both hardware and software GCM operations.
+     */
+    {
+        PR_STATIC_ASSERT(sizeof(unsigned int) > 4);
+    }
+    if (inputLen > MP_32BIT_MAX) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+#else
+    /* if we can't pass in a 32_bit number, then no such check needed */
+    {
+        PR_STATIC_ASSERT(sizeof(unsigned int) <= 4);
+    }
+#endif
+
+    return (*cx->worker_aead)(cx->worker_cx, output, outputLen, maxOutputLen,
+                              input, inputLen, params, paramsLen, aad, aadLen,
+                              AES_BLOCK_SIZE);
 }

@@ -415,7 +415,7 @@ main(int argc, char **argv)
         return 1;
     }
 
-    if (argc || !argv[1] || strlen(argv[1]) == 0) {
+    if (argc < 2 || !argv[1] || strlen(argv[1]) == 0) {
         rv += testMD5(initCtx);
         rv += testSHA1(initCtx);
         rv += testSHA224(initCtx);
@@ -428,7 +428,7 @@ main(int argc, char **argv)
         rv += testSHA1(initCtx);
     } else if (strcmp(argv[1], "SHA224") == 0) {
         rv += testSHA224(initCtx);
-    } else if (strcmp(argv[1], "SHA226") == 0) {
+    } else if (strcmp(argv[1], "SHA256") == 0) {
         rv += testSHA256(initCtx);
     } else if (strcmp(argv[1], "SHA384") == 0) {
         rv += testSHA384(initCtx);

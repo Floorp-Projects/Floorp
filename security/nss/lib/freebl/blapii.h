@@ -18,6 +18,12 @@ typedef SECStatus (*freeblCipherFunc)(void *cx, unsigned char *output,
                                       unsigned int *outputLen, unsigned int maxOutputLen,
                                       const unsigned char *input, unsigned int inputLen,
                                       unsigned int blocksize);
+typedef SECStatus (*freeblAeadFunc)(void *cx, unsigned char *output,
+                                    unsigned int *outputLen, unsigned int maxOutputLen,
+                                    const unsigned char *input, unsigned int inputLen,
+                                    void *params, unsigned int paramsLen,
+                                    const unsigned char *aad, unsigned int aadLen,
+                                    unsigned int blocksize);
 typedef void (*freeblDestroyFunc)(void *cx, PRBool freeit);
 
 SEC_BEGIN_PROTOS
@@ -80,6 +86,7 @@ SECStatus generate_prime(mp_int *prime, int primeLen);
 PRBool aesni_support();
 PRBool clmul_support();
 PRBool avx_support();
+PRBool avx2_support();
 PRBool ssse3_support();
 PRBool sse4_1_support();
 PRBool sse4_2_support();

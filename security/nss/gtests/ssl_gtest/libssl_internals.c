@@ -9,8 +9,11 @@
 
 #include "nss.h"
 #include "pk11pub.h"
+#include "pk11priv.h"
 #include "seccomon.h"
 #include "selfencrypt.h"
+#include "secmodti.h"
+#include "sslproto.h"
 
 SECStatus SSLInt_SetDCAdvertisedSigSchemes(PRFileDesc *fd,
                                            const SSLSignatureScheme *schemes,
@@ -331,6 +334,9 @@ SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to) {
 
 SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
   sslSocket *ss;
+  ssl3CipherSpec *spec;
+  PK11Context *pk11ctxt;
+  const ssl3BulkCipherDef *cipher_def;
 
   ss = ssl_FindSocket(fd);
   if (!ss) {
@@ -341,7 +347,43 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
     return SECFailure;
   }
   ssl_GetSpecWriteLock(ss);
-  ss->ssl3.cwSpec->nextSeqNum = to;
+  spec = ss->ssl3.cwSpec;
+  cipher_def = spec->cipherDef;
+  spec->nextSeqNum = to;
+  if (cipher_def->type != type_aead) {
+    ssl_ReleaseSpecWriteLock(ss);
+    return SECSuccess;
+  }
+  /* If we are using aead, we need to advance the counter in the
+   * internal IV generator as well.
+   * This could be in the token or software. */
+  pk11ctxt = spec->cipherContext;
+  /* If counter is in the token, we need to switch it to software,
+   * since we don't have access to the internal state of the token. We do
+   * that by turning on the simulated message interface, then setting up the
+   * software IV generator */
+  if (pk11ctxt->ivCounter == 0) {
+    _PK11_ContextSetAEADSimulation(pk11ctxt);
+    pk11ctxt->ivLen = cipher_def->iv_size + cipher_def->explicit_nonce_size;
+    pk11ctxt->ivMaxCount = PR_UINT64(0xffffffffffffffff);
+    if ((cipher_def->explicit_nonce_size == 0) ||
+        (spec->version >= SSL_LIBRARY_VERSION_TLS_1_3)) {
+      pk11ctxt->ivFixedBits =
+          (pk11ctxt->ivLen - sizeof(sslSequenceNumber)) * BPB;
+      pk11ctxt->ivGen = CKG_GENERATE_COUNTER_XOR;
+    } else {
+      pk11ctxt->ivFixedBits = cipher_def->iv_size * BPB;
+      pk11ctxt->ivGen = CKG_GENERATE_COUNTER;
+    }
+    /* DTLS included the epoch in the fixed portion of the IV */
+    if (IS_DTLS(ss)) {
+      pk11ctxt->ivFixedBits += 2 * BPB;
+    }
+  }
+  /* now we can update the internal counter (either we are already using
+   * the software IV generator, or we just switched to it above */
+  pk11ctxt->ivCounter = to;
+
   ssl_ReleaseSpecWriteLock(ss);
   return SECSuccess;
 }

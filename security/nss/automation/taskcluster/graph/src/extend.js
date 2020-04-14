@@ -101,7 +101,7 @@ queue.filter(task => {
   // Don't run all additional hardware tests on ARM.
   if (task.group == "Cipher" && task.platform == "aarch64" && task.env &&
       (task.env.NSS_DISABLE_PCLMUL == "1" || task.env.NSS_DISABLE_HW_AES == "1"
-       || task.env.NSS_DISABLE_AVX == "1")) {
+       || task.env.NSS_DISABLE_AVX == "1" || task.env.NSS_DISABLE_AVX2 == "1")) {
     return false;
   }
 
@@ -1013,6 +1013,10 @@ function scheduleTests(task_build, task_cert, test_base) {
   queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoAVX", tests: "cipher",
     env: {NSS_DISABLE_AVX: "1"}, group: "Cipher"
+  }));
+  queue.scheduleTask(merge(cert_base_long, {
+    name: "Cipher tests", symbol: "NoAVX2", tests: "cipher",
+    env: {NSS_DISABLE_AVX2: "1"}, group: "Cipher"
   }));
   queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoSSSE3|NEON", tests: "cipher",

@@ -7,19 +7,21 @@
 
 static PRLogModuleInfo *modlog = NULL;
 
-static CK_FUNCTION_LIST_PTR module_functions;
+static CK_FUNCTION_LIST_3_0_PTR module_functions;
 
-static CK_FUNCTION_LIST debug_functions;
+static CK_FUNCTION_LIST_3_0 debug_functions;
 
 static void print_final_statistics(void);
 
 #define STRING static const char
-
 STRING fmt_flags[] = "  flags = 0x%x";
 STRING fmt_hKey[] = "  hKey = 0x%x";
 STRING fmt_hObject[] = "  hObject = 0x%x";
 STRING fmt_hSession[] = "  hSession = 0x%x";
 STRING fmt_manufacturerID[] = "  manufacturerID = \"%.32s\"";
+STRING fmt_pAssociatedData[] = "  pAssociatedData = 0x%p";
+STRING fmt_pCiphertext[] = "  pCiphertext = 0x%p";
+STRING fmt_pCiphertextPart[] = "  pCiphertextPart = 0x%p";
 STRING fmt_pData[] = "  pData = 0x%p";
 STRING fmt_pDigest[] = "  pDigest = 0x%p";
 STRING fmt_pEncryptedData[] = "  pEncryptedData = 0x%p";
@@ -27,7 +29,10 @@ STRING fmt_pEncryptedPart[] = "  pEncryptedPart = 0x%p";
 STRING fmt_pInfo[] = "  pInfo = 0x%p";
 STRING fmt_pMechanism[] = "  pMechanism = 0x%p";
 STRING fmt_pOperationState[] = "  pOperationState = 0x%p";
+STRING fmt_pParameter[] = "  pParameter = 0x%p";
 STRING fmt_pPart[] = "  pPart = 0x%p";
+STRING fmt_pPlaintext[] = "  pPlaintext = 0x%p";
+STRING fmt_pPlaintextPart[] = "  pPlaintextPart = 0x%p";
 STRING fmt_pPin[] = "  pPin = 0x%p";
 STRING fmt_pSignature[] = "  pSignature = 0x%p";
 STRING fmt_pTemplate[] = "  pTemplate = 0x%p";
@@ -35,10 +40,14 @@ STRING fmt_pWrappedKey[] = "  pWrappedKey = 0x%p";
 STRING fmt_phKey[] = "  phKey = 0x%p";
 STRING fmt_phObject[] = "  phObject = 0x%p";
 STRING fmt_pulCount[] = "  pulCount = 0x%p";
+STRING fmt_pulCiphertextLen[] = "  pulCiphertextLen = 0x%p";
+STRING fmt_pulCiphertextPartLen[] = "  pulCiphertextPartLen = 0x%p";
 STRING fmt_pulDataLen[] = "  pulDataLen = 0x%p";
 STRING fmt_pulDigestLen[] = "  pulDigestLen = 0x%p";
 STRING fmt_pulEncryptedPartLen[] = "  pulEncryptedPartLen = 0x%p";
 STRING fmt_pulPartLen[] = "  pulPartLen = 0x%p";
+STRING fmt_pulPlaintextLen[] = "  pulPlaintextLen = 0x%p";
+STRING fmt_pulPlaintextPartLen[] = "  pulPlaintextPartLen = 0x%p";
 STRING fmt_pulSignatureLen[] = "  pulSignatureLen = 0x%p";
 STRING fmt_slotID[] = "  slotID = 0x%x";
 STRING fmt_sphKey[] = "  *phKey = 0x%x";
@@ -49,10 +58,16 @@ STRING fmt_spulEncryptedPartLen[] = "  *pulEncryptedPartLen = 0x%x";
 STRING fmt_spulPartLen[] = "  *pulPartLen = 0x%x";
 STRING fmt_spulSignatureLen[] = "  *pulSignatureLen = 0x%x";
 STRING fmt_ulAttributeCount[] = "  ulAttributeCount = %d";
+STRING fmt_ulCiphertextLen[] = "  ulCiphertextLen = %d";
+STRING fmt_ulCiphertextPartLen[] = "  ulCiphertextPartLen = %d";
 STRING fmt_ulCount[] = "  ulCount = %d";
 STRING fmt_ulDataLen[] = "  ulDataLen = %d";
 STRING fmt_ulEncryptedPartLen[] = "  ulEncryptedPartLen = %d";
+STRING fmt_ulAssociatedDataLen[] = "  ulAssociatedDataLen = 0x%p";
+STRING fmt_ulParameterLen[] = "  ulParameterLen = 0x%p";
 STRING fmt_ulPartLen[] = "  ulPartLen = %d";
+STRING fmt_ulPlaintextLen[] = "  ulPlaintextLen = 0x%p";
+STRING fmt_ulPlaintextPartLen[] = "  ulPlaintextPartLen = 0x%p";
 STRING fmt_ulPinLen[] = "  ulPinLen = %d";
 STRING fmt_ulSignatureLen[] = "  ulSignatureLen = %d";
 
@@ -165,8 +180,8 @@ get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
         CASE(CKA_TRUST_TIME_STAMPING);
         CASE(CKA_CERT_SHA1_HASH);
         CASE(CKA_CERT_MD5_HASH);
-        CASE(CKA_NETSCAPE_DB);
-        CASE(CKA_NETSCAPE_TRUST);
+        CASE(CKA_NSS_DB);
+        CASE(CKA_NSS_TRUST);
         default:
             break;
     }
@@ -337,7 +352,16 @@ log_rv(CK_RV rv)
         CASE(CKR_MUTEX_BAD);
         CASE(CKR_MUTEX_NOT_LOCKED);
         CASE(CKR_FUNCTION_REJECTED);
-        CASE(CKR_KEY_PARAMS_INVALID);
+        CASE(CKR_ACTION_PROHIBITED);
+        CASE(CKR_CURVE_NOT_SUPPORTED);
+        CASE(CKR_NEW_PIN_MODE);
+        CASE(CKR_NEXT_OTP);
+        CASE(CKR_EXCEEDED_MAX_ITERATIONS);
+        CASE(CKR_FIPS_SELF_TEST_FAILED);
+        CASE(CKR_LIBRARY_LOAD_FAILED);
+        CASE(CKR_PIN_TOO_WEAK);
+        CASE(CKR_TOKEN_RESOURCE_EXCEEDED);
+        CASE(CKR_OPERATION_CANCEL_FAILED);
         default:
             break;
     }
@@ -409,6 +433,8 @@ print_mechanism(CK_MECHANISM_PTR m)
         CASE(CKM_CAMELLIA_KEY_GEN);
         CASE(CKM_CAMELLIA_MAC);
         CASE(CKM_CAMELLIA_MAC_GENERAL);
+        CASE(CKM_CHACHA20_KEY_GEN);
+        CASE(CKM_CHACHA20);
         CASE(CKM_CDMF_CBC);
         CASE(CKM_CDMF_CBC_PAD);
         CASE(CKM_CDMF_ECB);
@@ -454,6 +480,11 @@ print_mechanism(CK_MECHANISM_PTR m)
         CASE(CKM_ECMQV_DERIVE);
         CASE(CKM_EC_KEY_PAIR_GEN); /* also CASE(CKM_ECDSA_KEY_PAIR_GEN); */
         CASE(CKM_EXTRACT_KEY_FROM_KEY);
+        CASE(CKM_ECDSA_SHA224);
+        CASE(CKM_ECDSA_SHA256);
+        CASE(CKM_ECDSA_SHA384);
+        CASE(CKM_ECDSA_SHA512);
+        CASE(CKM_EC_KEY_PAIR_GEN_W_EXTRA_BITS);
         CASE(CKM_FASTHASH);
         CASE(CKM_FORTEZZA_TIMESTAMP);
         CASE(CKM_GENERIC_SECRET_KEY_GEN);
@@ -487,6 +518,8 @@ print_mechanism(CK_MECHANISM_PTR m)
         CASE(CKM_PBE_SHA1_RC4_128);
         CASE(CKM_PBE_SHA1_RC4_40);
         CASE(CKM_PKCS5_PBKD2);
+        CASE(CKM_POLY1305_KEY_GEN);
+        CASE(CKM_POLY1305);
         CASE(CKM_RC2_CBC);
         CASE(CKM_RC2_CBC_PAD);
         CASE(CKM_RC2_ECB);
@@ -614,6 +647,36 @@ get_key_type(CK_KEY_TYPE keyType, char *str, int len)
         CASE(CKK_SKIPJACK);
         CASE(CKK_TWOFISH);
         CASE(CKK_X9_42_DH);
+        CASE(CKK_MD5_HMAC);
+        CASE(CKK_SHA_1_HMAC);
+        CASE(CKK_RIPEMD128_HMAC);
+        CASE(CKK_RIPEMD160_HMAC);
+        CASE(CKK_SHA256_HMAC);
+        CASE(CKK_SHA384_HMAC);
+        CASE(CKK_SHA512_HMAC);
+        CASE(CKK_SHA224_HMAC);
+        CASE(CKK_GOSTR3410);
+        CASE(CKK_GOSTR3411);
+        CASE(CKK_GOST28147);
+        CASE(CKK_CHACHA20);
+        CASE(CKK_POLY1305);
+        CASE(CKK_AES_XTS);
+        CASE(CKK_SHA3_224_HMAC);
+        CASE(CKK_SHA3_256_HMAC);
+        CASE(CKK_SHA3_384_HMAC);
+        CASE(CKK_SHA3_512_HMAC);
+        CASE(CKK_BLAKE2B_160_HMAC);
+        CASE(CKK_BLAKE2B_256_HMAC);
+        CASE(CKK_BLAKE2B_384_HMAC);
+        CASE(CKK_BLAKE2B_512_HMAC);
+        CASE(CKK_SALSA20);
+        CASE(CKK_X2RATCHET);
+        CASE(CKK_EC_EDWARDS);
+        CASE(CKK_EC_MONTGOMERY);
+        CASE(CKK_HKDF);
+        CASE(CKK_SHA512_224_HMAC);
+        CASE(CKK_SHA512_256_HMAC);
+        CASE(CKK_SHA512_T_HMAC);
         default:
             break;
     }
@@ -938,7 +1001,55 @@ struct nssdbg_prof_str nssdbg_prof_data[] = {
 #define FUNC_C_CANCELFUNCTION 66
     NSSDBG_DEFINE(C_CancelFunction),
 #define FUNC_C_WAITFORSLOTEVENT 67
-    NSSDBG_DEFINE(C_WaitForSlotEvent)
+    NSSDBG_DEFINE(C_WaitForSlotEvent),
+#define FUNC_C_GETINTERFACELIST 68
+    NSSDBG_DEFINE(C_GetInterfaceList),
+#define FUNC_C_GETINTERFACE 69
+    NSSDBG_DEFINE(C_GetInterface),
+#define FUNC_C_LOGINUSER 70
+    NSSDBG_DEFINE(C_LoginUser),
+#define FUNC_C_SESSIONCANCEL 71
+    NSSDBG_DEFINE(C_SessionCancel),
+#define FUNC_C_MESSAGEENCRYPTINIT 72
+    NSSDBG_DEFINE(C_MessageEncryptInit),
+#define FUNC_C_ENCRYPTMESSAGE 73
+    NSSDBG_DEFINE(C_EncryptMessage),
+#define FUNC_C_ENCRYPTMESSAGEBEGIN 74
+    NSSDBG_DEFINE(C_EncryptMessageBegin),
+#define FUNC_C_ENCRYPTMESSAGENEXT 75
+    NSSDBG_DEFINE(C_EncryptMessageNext),
+#define FUNC_C_MESSAGEENCRYPTFINAL 76
+    NSSDBG_DEFINE(C_MessageEncryptFinal),
+#define FUNC_C_MESSAGEDECRYPTINIT 77
+    NSSDBG_DEFINE(C_MessageDecryptInit),
+#define FUNC_C_DECRYPTMESSAGE 78
+    NSSDBG_DEFINE(C_DecryptMessage),
+#define FUNC_C_DECRYPTMESSAGEBEGIN 79
+    NSSDBG_DEFINE(C_DecryptMessageBegin),
+#define FUNC_C_DECRYPTMESSAGENEXT 80
+    NSSDBG_DEFINE(C_DecryptMessageNext),
+#define FUNC_C_MESSAGEDECRYPTFINAL 81
+    NSSDBG_DEFINE(C_MessageDecryptFinal),
+#define FUNC_C_MESSAGESIGNINIT 82
+    NSSDBG_DEFINE(C_MessageSignInit),
+#define FUNC_C_SIGNMESSAGE 83
+    NSSDBG_DEFINE(C_SignMessage),
+#define FUNC_C_SIGNMESSAGEBEGIN 84
+    NSSDBG_DEFINE(C_SignMessageBegin),
+#define FUNC_C_SIGNMESSAGENEXT 85
+    NSSDBG_DEFINE(C_SignMessageNext),
+#define FUNC_C_MESSAGESIGNFINAL 86
+    NSSDBG_DEFINE(C_MessageSignFinal),
+#define FUNC_C_MESSAGEVERIFYINIT 87
+    NSSDBG_DEFINE(C_MessageVerifyInit),
+#define FUNC_C_VERIFYMESSAGE 88
+    NSSDBG_DEFINE(C_VerifyMessage),
+#define FUNC_C_VERIFYMESSAGEBEGIN 89
+    NSSDBG_DEFINE(C_VerifyMessageBegin),
+#define FUNC_C_VERIFYMESSAGENEXT 90
+    NSSDBG_DEFINE(C_VerifyMessageNext),
+#define FUNC_C_MESSAGEVERIFYFINAL 91
+    NSSDBG_DEFINE(C_MessageVerifyFinal)
 };
 
 int nssdbg_prof_size = sizeof(nssdbg_prof_data) / sizeof(nssdbg_prof_data[0]);
@@ -2610,11 +2721,574 @@ NSSDBGC_WaitForSlotEvent(
     return rv;
 }
 
-CK_FUNCTION_LIST_PTR
+CK_RV
+NSSDBGC_GetInterfaceList(CK_INTERFACE_PTR interfaces,
+                         CK_ULONG_PTR pulCount)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_GetInterfaceList"));
+    PR_LOG(modlog, 3, ("  interfaces = 0x%p", interfaces));
+    PR_LOG(modlog, 3, ("  pulCount = %d", pulCount));
+    nssdbg_start_time(FUNC_C_GETINTERFACELIST, &start);
+    rv = module_functions->C_GetInterfaceList(interfaces,
+                                              pulCount);
+    nssdbg_finish_time(FUNC_C_GETINTERFACELIST, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_GetInterface(CK_UTF8CHAR_PTR pInterfaceName,
+                     CK_VERSION_PTR pVersion,
+                     CK_INTERFACE_PTR_PTR ppInterface,
+                     CK_FLAGS flags)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_GetInterface"));
+    PR_LOG(modlog, 3, ("  pInterfaceName = 0x%p", pInterfaceName));
+    PR_LOG(modlog, 3, ("  pVersion = 0x%p", pVersion));
+    PR_LOG(modlog, 3, ("  ppInterface = 0x%p", ppInterface));
+    PR_LOG(modlog, 3, (fmt_flags, flags));
+    nssdbg_start_time(FUNC_C_GETINTERFACE, &start);
+    rv = module_functions->C_GetInterface(pInterfaceName,
+                                          pVersion,
+                                          ppInterface,
+                                          flags);
+    nssdbg_finish_time(FUNC_C_GETINTERFACE, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_LoginUser(CK_SESSION_HANDLE hSession,
+                  CK_USER_TYPE userType,
+                  CK_CHAR_PTR pPin,
+                  CK_ULONG ulPinLen,
+                  CK_UTF8CHAR_PTR pUsername,
+                  CK_ULONG ulUsernameLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_LoginUser"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, ("  userType = 0x%x", userType));
+    PR_LOG(modlog, 3, (fmt_pPin, pPin));
+    PR_LOG(modlog, 3, (fmt_ulPinLen, ulPinLen));
+    PR_LOG(modlog, 3, ("  pUsername = 0x%p", pUsername));
+    PR_LOG(modlog, 3, ("  ulUsernameLen = %d", ulUsernameLen));
+    nssdbg_start_time(FUNC_C_LOGINUSER, &start);
+    rv = module_functions->C_LoginUser(hSession,
+                                       userType,
+                                       pPin,
+                                       ulPinLen,
+                                       pUsername,
+                                       ulUsernameLen);
+    nssdbg_finish_time(FUNC_C_LOGINUSER, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_SessionCancel(CK_SESSION_HANDLE hSession,
+                      CK_FLAGS flags)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_SessionCancel"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_flags, flags));
+    nssdbg_start_time(FUNC_C_SESSIONCANCEL, &start);
+    rv = module_functions->C_SessionCancel(hSession,
+                                           flags);
+    nssdbg_finish_time(FUNC_C_SESSIONCANCEL, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageEncryptInit(CK_SESSION_HANDLE hSession,
+                           CK_MECHANISM_PTR pMechanism,
+                           CK_OBJECT_HANDLE hKey)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageEncryptInit"));
+    log_handle(3, fmt_hSession, hSession);
+    print_mechanism(pMechanism);
+    log_handle(3, fmt_hKey, hKey);
+    nssdbg_start_time(FUNC_C_MESSAGEENCRYPTINIT, &start);
+    rv = module_functions->C_MessageEncryptInit(hSession,
+                                                pMechanism,
+                                                hKey);
+    nssdbg_finish_time(FUNC_C_MESSAGEENCRYPTINIT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_EncryptMessage(CK_SESSION_HANDLE hSession,
+                       CK_VOID_PTR pParameter,
+                       CK_ULONG ulParameterLen,
+                       CK_BYTE_PTR pAssociatedData,
+                       CK_ULONG ulAssociatedDataLen,
+                       CK_BYTE_PTR pPlaintext,
+                       CK_ULONG ulPlaintextLen,
+                       CK_BYTE_PTR pCiphertext,
+                       CK_ULONG_PTR pulCiphertextLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_EncryptMessage"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pAssociatedData, pAssociatedData));
+    PR_LOG(modlog, 3, (fmt_ulAssociatedDataLen, ulAssociatedDataLen));
+    PR_LOG(modlog, 3, (fmt_pPlaintext, pPlaintext));
+    PR_LOG(modlog, 3, (fmt_ulPlaintextLen, ulPlaintextLen));
+    PR_LOG(modlog, 3, (fmt_pCiphertext, pCiphertext));
+    PR_LOG(modlog, 3, (fmt_pulCiphertextLen, pulCiphertextLen));
+    nssdbg_start_time(FUNC_C_ENCRYPTMESSAGE, &start);
+    rv = module_functions->C_EncryptMessage(hSession,
+                                            pParameter,
+                                            ulParameterLen,
+                                            pAssociatedData,
+                                            ulAssociatedDataLen,
+                                            pPlaintext,
+                                            ulPlaintextLen,
+                                            pCiphertext,
+                                            pulCiphertextLen);
+    nssdbg_finish_time(FUNC_C_ENCRYPTMESSAGE, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_EncryptMessageBegin(CK_SESSION_HANDLE hSession,
+                            CK_VOID_PTR pParameter,
+                            CK_ULONG ulParameterLen,
+                            CK_BYTE_PTR pAssociatedData,
+                            CK_ULONG ulAssociatedDataLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_EncryptMessageBegin"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pAssociatedData, pAssociatedData));
+    PR_LOG(modlog, 3, (fmt_ulAssociatedDataLen, ulAssociatedDataLen));
+    nssdbg_start_time(FUNC_C_ENCRYPTMESSAGEBEGIN, &start);
+    rv = module_functions->C_EncryptMessageBegin(hSession,
+                                                 pParameter,
+                                                 ulParameterLen,
+                                                 pAssociatedData,
+                                                 ulAssociatedDataLen);
+    nssdbg_finish_time(FUNC_C_ENCRYPTMESSAGEBEGIN, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_EncryptMessageNext(CK_SESSION_HANDLE hSession,
+                           CK_VOID_PTR pParameter,
+                           CK_ULONG ulParameterLen,
+                           CK_BYTE_PTR pPlaintextPart,
+                           CK_ULONG ulPlaintextPartLen,
+                           CK_BYTE_PTR pCiphertextPart,
+                           CK_ULONG_PTR pulCiphertextPartLen,
+                           CK_FLAGS flags)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_EncryptMessageNext"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pPlaintextPart, pPlaintextPart));
+    PR_LOG(modlog, 3, (fmt_ulPlaintextPartLen, ulPlaintextPartLen));
+    PR_LOG(modlog, 3, (fmt_pCiphertextPart, pCiphertextPart));
+    PR_LOG(modlog, 3, (fmt_pulCiphertextPartLen, pulCiphertextPartLen));
+    nssdbg_start_time(FUNC_C_ENCRYPTMESSAGENEXT, &start);
+    rv = module_functions->C_EncryptMessageNext(hSession,
+                                                pParameter,
+                                                ulParameterLen,
+                                                pPlaintextPart,
+                                                ulPlaintextPartLen,
+                                                pCiphertextPart,
+                                                pulCiphertextPartLen,
+                                                flags);
+    nssdbg_finish_time(FUNC_C_ENCRYPTMESSAGENEXT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageEncryptFinal(CK_SESSION_HANDLE hSession)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageEncryptFinal"));
+    log_handle(3, fmt_hSession, hSession);
+    nssdbg_start_time(FUNC_C_MESSAGEENCRYPTFINAL, &start);
+    rv = module_functions->C_MessageEncryptFinal(hSession);
+    nssdbg_finish_time(FUNC_C_MESSAGEENCRYPTFINAL, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageDecryptInit(CK_SESSION_HANDLE hSession,
+                           CK_MECHANISM_PTR pMechanism,
+                           CK_OBJECT_HANDLE hKey)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageDecryptInit"));
+    log_handle(3, fmt_hSession, hSession);
+    print_mechanism(pMechanism);
+    log_handle(3, fmt_hKey, hKey);
+    nssdbg_start_time(FUNC_C_MESSAGEDECRYPTINIT, &start);
+    rv = module_functions->C_MessageDecryptInit(hSession,
+                                                pMechanism,
+                                                hKey);
+    nssdbg_finish_time(FUNC_C_MESSAGEDECRYPTINIT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_DecryptMessage(CK_SESSION_HANDLE hSession,
+                       CK_VOID_PTR pParameter,
+                       CK_ULONG ulParameterLen,
+                       CK_BYTE_PTR pAssociatedData,
+                       CK_ULONG ulAssociatedDataLen,
+                       CK_BYTE_PTR pCiphertext,
+                       CK_ULONG ulCiphertextLen,
+                       CK_BYTE_PTR pPlaintext,
+                       CK_ULONG_PTR pulPlaintextLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_DecryptMessage"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pAssociatedData, pAssociatedData));
+    PR_LOG(modlog, 3, (fmt_ulAssociatedDataLen, ulAssociatedDataLen));
+    PR_LOG(modlog, 3, (fmt_pCiphertext, pCiphertext));
+    PR_LOG(modlog, 3, (fmt_ulCiphertextLen, ulCiphertextLen));
+    PR_LOG(modlog, 3, (fmt_pPlaintext, pPlaintext));
+    PR_LOG(modlog, 3, (fmt_pulPlaintextLen, pulPlaintextLen));
+    nssdbg_start_time(FUNC_C_DECRYPTMESSAGE, &start);
+    rv = module_functions->C_DecryptMessage(hSession,
+                                            pParameter,
+                                            ulParameterLen,
+                                            pAssociatedData,
+                                            ulAssociatedDataLen,
+                                            pCiphertext,
+                                            ulCiphertextLen,
+                                            pPlaintext,
+                                            pulPlaintextLen);
+    nssdbg_finish_time(FUNC_C_DECRYPTMESSAGE, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_DecryptMessageBegin(CK_SESSION_HANDLE hSession,
+                            CK_VOID_PTR pParameter,
+                            CK_ULONG ulParameterLen,
+                            CK_BYTE_PTR pAssociatedData,
+                            CK_ULONG ulAssociatedDataLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_DecryptMessageBegin"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pAssociatedData, pAssociatedData));
+    PR_LOG(modlog, 3, (fmt_ulAssociatedDataLen, ulAssociatedDataLen));
+    nssdbg_start_time(FUNC_C_DECRYPTMESSAGEBEGIN, &start);
+    rv = module_functions->C_DecryptMessageBegin(hSession,
+                                                 pParameter,
+                                                 ulParameterLen,
+                                                 pAssociatedData,
+                                                 ulAssociatedDataLen);
+    nssdbg_finish_time(FUNC_C_DECRYPTMESSAGEBEGIN, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_DecryptMessageNext(CK_SESSION_HANDLE hSession,
+                           CK_VOID_PTR pParameter,
+                           CK_ULONG ulParameterLen,
+                           CK_BYTE_PTR pCiphertextPart,
+                           CK_ULONG ulCiphertextPartLen,
+                           CK_BYTE_PTR pPlaintextPart,
+                           CK_ULONG_PTR pulPlaintextPartLen,
+                           CK_FLAGS flags)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_DecryptMessageNext"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pCiphertextPart, pCiphertextPart));
+    PR_LOG(modlog, 3, (fmt_ulCiphertextPartLen, ulCiphertextPartLen));
+    PR_LOG(modlog, 3, (fmt_pPlaintextPart, pPlaintextPart));
+    PR_LOG(modlog, 3, (fmt_pulPlaintextPartLen, pulPlaintextPartLen));
+    nssdbg_start_time(FUNC_C_DECRYPTMESSAGENEXT, &start);
+    rv = module_functions->C_DecryptMessageNext(hSession,
+                                                pParameter,
+                                                ulParameterLen,
+                                                pCiphertextPart,
+                                                ulCiphertextPartLen,
+                                                pPlaintextPart,
+                                                pulPlaintextPartLen,
+                                                flags);
+    nssdbg_finish_time(FUNC_C_DECRYPTMESSAGENEXT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageDecryptFinal(CK_SESSION_HANDLE hSession)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageDecryptFinal"));
+    log_handle(3, fmt_hSession, hSession);
+    nssdbg_start_time(FUNC_C_MESSAGEDECRYPTFINAL, &start);
+    rv = module_functions->C_MessageDecryptFinal(hSession);
+    nssdbg_finish_time(FUNC_C_MESSAGEDECRYPTFINAL, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageSignInit(CK_SESSION_HANDLE hSession,
+                        CK_MECHANISM_PTR pMechanism,
+                        CK_OBJECT_HANDLE hKey)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageSignInit"));
+    log_handle(3, fmt_hSession, hSession);
+    print_mechanism(pMechanism);
+    log_handle(3, fmt_hKey, hKey);
+    nssdbg_start_time(FUNC_C_MESSAGESIGNINIT, &start);
+    rv = module_functions->C_MessageSignInit(hSession,
+                                             pMechanism,
+                                             hKey);
+    nssdbg_finish_time(FUNC_C_MESSAGESIGNINIT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_SignMessage(CK_SESSION_HANDLE hSession,
+                    CK_VOID_PTR pParameter,
+                    CK_ULONG ulParameterLen,
+                    CK_BYTE_PTR pData,
+                    CK_ULONG ulDataLen,
+                    CK_BYTE_PTR pSignature,
+                    CK_ULONG_PTR pulSignatureLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_SignMessage"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pData, pData));
+    PR_LOG(modlog, 3, (fmt_ulDataLen, ulDataLen));
+    PR_LOG(modlog, 3, (fmt_pSignature, pSignature));
+    PR_LOG(modlog, 3, (fmt_pulSignatureLen, pulSignatureLen));
+    nssdbg_start_time(FUNC_C_SIGNMESSAGE, &start);
+    rv = module_functions->C_SignMessage(hSession,
+                                         pParameter,
+                                         ulParameterLen,
+                                         pData,
+                                         ulDataLen,
+                                         pSignature,
+                                         pulSignatureLen);
+    nssdbg_finish_time(FUNC_C_SIGNMESSAGE, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_SignMessageBegin(CK_SESSION_HANDLE hSession,
+                         CK_VOID_PTR pParameter,
+                         CK_ULONG ulParameterLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_SignMessageBegin"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    nssdbg_start_time(FUNC_C_SIGNMESSAGEBEGIN, &start);
+    rv = module_functions->C_SignMessageBegin(hSession,
+                                              pParameter,
+                                              ulParameterLen);
+    nssdbg_finish_time(FUNC_C_SIGNMESSAGEBEGIN, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_SignMessageNext(CK_SESSION_HANDLE hSession,
+                        CK_VOID_PTR pParameter,
+                        CK_ULONG ulParameterLen,
+                        CK_BYTE_PTR pData,
+                        CK_ULONG ulDataLen,
+                        CK_BYTE_PTR pSignature,
+                        CK_ULONG_PTR pulSignatureLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_SignMessageNext"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pData, pData));
+    PR_LOG(modlog, 3, (fmt_ulDataLen, ulDataLen));
+    PR_LOG(modlog, 3, (fmt_pSignature, pSignature));
+    PR_LOG(modlog, 3, (fmt_pulSignatureLen, pulSignatureLen));
+    nssdbg_start_time(FUNC_C_SIGNMESSAGENEXT, &start);
+    rv = module_functions->C_SignMessageNext(hSession,
+                                             pParameter,
+                                             ulParameterLen,
+                                             pData,
+                                             ulDataLen,
+                                             pSignature,
+                                             pulSignatureLen);
+    nssdbg_finish_time(FUNC_C_SIGNMESSAGENEXT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageSignFinal(CK_SESSION_HANDLE hSession)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageSignFinal"));
+    log_handle(3, fmt_hSession, hSession);
+    nssdbg_start_time(FUNC_C_MESSAGESIGNFINAL, &start);
+    rv = module_functions->C_MessageSignFinal(hSession);
+    nssdbg_finish_time(FUNC_C_MESSAGESIGNFINAL, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageVerifyInit(CK_SESSION_HANDLE hSession,
+                          CK_MECHANISM_PTR pMechanism,
+                          CK_OBJECT_HANDLE hKey)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageVerifyInit"));
+    log_handle(3, fmt_hSession, hSession);
+    print_mechanism(pMechanism);
+    log_handle(3, fmt_hKey, hKey);
+    nssdbg_start_time(FUNC_C_MESSAGEVERIFYINIT, &start);
+    rv = module_functions->C_MessageVerifyInit(hSession,
+                                               pMechanism,
+                                               hKey);
+    nssdbg_finish_time(FUNC_C_MESSAGEVERIFYINIT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_VerifyMessage(CK_SESSION_HANDLE hSession,
+                      CK_VOID_PTR pParameter,
+                      CK_ULONG ulParameterLen,
+                      CK_BYTE_PTR pData,
+                      CK_ULONG ulDataLen,
+                      CK_BYTE_PTR pSignature,
+                      CK_ULONG ulSignatureLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_VerifyMessage"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pData, pData));
+    PR_LOG(modlog, 3, (fmt_ulDataLen, ulDataLen));
+    PR_LOG(modlog, 3, (fmt_pSignature, pSignature));
+    PR_LOG(modlog, 3, (fmt_ulSignatureLen, ulSignatureLen));
+    nssdbg_start_time(FUNC_C_VERIFYMESSAGE, &start);
+    rv = module_functions->C_VerifyMessage(hSession,
+                                           pParameter,
+                                           ulParameterLen,
+                                           pData,
+                                           ulDataLen,
+                                           pSignature,
+                                           ulSignatureLen);
+    nssdbg_finish_time(FUNC_C_VERIFYMESSAGE, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_VerifyMessageBegin(CK_SESSION_HANDLE hSession,
+                           CK_VOID_PTR pParameter,
+                           CK_ULONG ulParameterLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_VerifyMessageBegin"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    nssdbg_start_time(FUNC_C_VERIFYMESSAGEBEGIN, &start);
+    rv = module_functions->C_VerifyMessageBegin(hSession,
+                                                pParameter,
+                                                ulParameterLen);
+    nssdbg_finish_time(FUNC_C_VERIFYMESSAGEBEGIN, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_VerifyMessageNext(CK_SESSION_HANDLE hSession,
+                          CK_VOID_PTR pParameter,
+                          CK_ULONG ulParameterLen,
+                          CK_BYTE_PTR pData,
+                          CK_ULONG ulDataLen,
+                          CK_BYTE_PTR pSignature,
+                          CK_ULONG ulSignatureLen)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_VerifyMessageNext"));
+    log_handle(3, fmt_hSession, hSession);
+    PR_LOG(modlog, 3, (fmt_pParameter, pParameter));
+    PR_LOG(modlog, 3, (fmt_ulParameterLen, ulParameterLen));
+    PR_LOG(modlog, 3, (fmt_pData, pData));
+    PR_LOG(modlog, 3, (fmt_ulDataLen, ulDataLen));
+    PR_LOG(modlog, 3, (fmt_pSignature, pSignature));
+    PR_LOG(modlog, 3, (fmt_ulSignatureLen, ulSignatureLen));
+    nssdbg_start_time(FUNC_C_VERIFYMESSAGENEXT, &start);
+    rv = module_functions->C_VerifyMessageNext(hSession,
+                                               pParameter,
+                                               ulParameterLen,
+                                               pData,
+                                               ulDataLen,
+                                               pSignature,
+                                               ulSignatureLen);
+    nssdbg_finish_time(FUNC_C_VERIFYMESSAGENEXT, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_RV
+NSSDBGC_MessageVerifyFinal(CK_SESSION_HANDLE hSession)
+{
+    COMMON_DEFINITIONS;
+    PR_LOG(modlog, 1, ("C_MessageVerifyFinal"));
+    log_handle(3, fmt_hSession, hSession);
+    nssdbg_start_time(FUNC_C_MESSAGEVERIFYFINAL, &start);
+    rv = module_functions->C_MessageVerifyFinal(hSession);
+    nssdbg_finish_time(FUNC_C_MESSAGEVERIFYFINAL, start);
+    log_rv(rv);
+    return rv;
+}
+
+CK_FUNCTION_LIST_3_0_PTR
 nss_InsertDeviceLog(
-    CK_FUNCTION_LIST_PTR devEPV)
+    CK_FUNCTION_LIST_3_0_PTR devEPV)
 {
     module_functions = devEPV;
+    debug_functions.version = devEPV->version;
     modlog = PR_NewLogModule("nss_mod_log");
     debug_functions.C_Initialize = NSSDBGC_Initialize;
     debug_functions.C_Finalize = NSSDBGC_Finalize;
@@ -2684,6 +3358,30 @@ nss_InsertDeviceLog(
     debug_functions.C_GetFunctionStatus = NSSDBGC_GetFunctionStatus;
     debug_functions.C_CancelFunction = NSSDBGC_CancelFunction;
     debug_functions.C_WaitForSlotEvent = NSSDBGC_WaitForSlotEvent;
+    debug_functions.C_GetInterfaceList = NSSDBGC_GetInterfaceList;
+    debug_functions.C_GetInterface = NSSDBGC_GetInterface;
+    debug_functions.C_LoginUser = NSSDBGC_LoginUser;
+    debug_functions.C_SessionCancel = NSSDBGC_SessionCancel;
+    debug_functions.C_MessageEncryptInit = NSSDBGC_MessageEncryptInit;
+    debug_functions.C_EncryptMessage = NSSDBGC_EncryptMessage;
+    debug_functions.C_EncryptMessageBegin = NSSDBGC_EncryptMessageBegin;
+    debug_functions.C_EncryptMessageNext = NSSDBGC_EncryptMessageNext;
+    debug_functions.C_MessageEncryptFinal = NSSDBGC_MessageEncryptFinal;
+    debug_functions.C_MessageDecryptInit = NSSDBGC_MessageDecryptInit;
+    debug_functions.C_DecryptMessage = NSSDBGC_DecryptMessage;
+    debug_functions.C_DecryptMessageBegin = NSSDBGC_DecryptMessageBegin;
+    debug_functions.C_DecryptMessageNext = NSSDBGC_DecryptMessageNext;
+    debug_functions.C_MessageDecryptFinal = NSSDBGC_MessageDecryptFinal;
+    debug_functions.C_MessageSignInit = NSSDBGC_MessageSignInit;
+    debug_functions.C_SignMessage = NSSDBGC_SignMessage;
+    debug_functions.C_SignMessageBegin = NSSDBGC_SignMessageBegin;
+    debug_functions.C_SignMessageNext = NSSDBGC_SignMessageNext;
+    debug_functions.C_MessageSignFinal = NSSDBGC_MessageSignFinal;
+    debug_functions.C_MessageVerifyInit = NSSDBGC_MessageVerifyInit;
+    debug_functions.C_VerifyMessage = NSSDBGC_VerifyMessage;
+    debug_functions.C_VerifyMessageBegin = NSSDBGC_VerifyMessageBegin;
+    debug_functions.C_VerifyMessageNext = NSSDBGC_VerifyMessageNext;
+    debug_functions.C_MessageVerifyFinal = NSSDBGC_MessageVerifyFinal;
     return &debug_functions;
 }
 
@@ -2694,7 +3392,7 @@ nss_InsertDeviceLog(
  *    If the time is greater than 10 minutes, output the time in minutes.
  *    If the time is less than 10 minutes but greater than 10 seconds output 
  * the time in second.
- *    If the time is less than 10 seconds but greater than 10 milliseconds 
+ *    If the time is less than 10 seconds but greater than 10 milliseconds
  * output * the time in millisecond.
  *    If the time is less than 10 milliseconds but greater than 0 ticks output 
  * the time in microsecond.

@@ -1384,7 +1384,7 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
     certdb = keydb->peerDB;
     if (certdb) {
         CK_ATTRIBUTE objectType = { CKA_CLASS, 0, sizeof(CK_OBJECT_CLASS) };
-        CK_OBJECT_CLASS myClass = CKO_NETSCAPE_TRUST;
+        CK_OBJECT_CLASS myClass = CKO_NSS_TRUST;
 
         objectType.pValue = &myClass;
         crv = sftkdb_convertObjects(certdb, &objectType, 1, &newKey,

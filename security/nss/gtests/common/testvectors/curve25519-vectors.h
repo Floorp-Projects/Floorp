@@ -74,7 +74,7 @@ const EcdhTestVectorStr kCurve25519Vectors[] = {
      false,
      false}};
 
-const EcdhTestVectorStr kCurve25519WycheproofVectors[] = {
+const EcdhTestVector kCurve25519WycheproofVectors[] = {
 
     // Comment: normal case
     {1,

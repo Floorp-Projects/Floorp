@@ -1154,7 +1154,6 @@ tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     sslBuffer sni = SSL_BUFFER(sniBuf);
     const ssl3CipherSuiteDef *suiteDef;
     ssl3KeyMaterial keyMat;
-    SSLAEADCipher aead;
     PRUint8 outBuf[1024];
     unsigned int outLen;
     unsigned int sniStart;
@@ -1203,10 +1202,6 @@ tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     PORT_Assert(suiteDef);
     if (!suiteDef) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-    aead = tls13_GetAead(ssl_GetBulkCipherDef(suiteDef));
-    if (!aead) {
         return SECFailure;
     }
 
@@ -1266,15 +1261,33 @@ tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         ssl_DestroyKeyMaterial(&keyMat);
         return SECFailure;
     }
+
     /* Now encrypt. */
-    rv = aead(&keyMat, PR_FALSE /* Encrypt */,
-              outBuf, &outLen, sizeof(outBuf),
-              SSL_BUFFER_BASE(&sni),
-              SSL_BUFFER_LEN(&sni),
-              SSL_BUFFER_BASE(&aadInput),
-              SSL_BUFFER_LEN(&aadInput));
+    unsigned char *aad = SSL_BUFFER_BASE(&aadInput);
+    int aadLen = SSL_BUFFER_LEN(&aadInput);
+    const ssl3BulkCipherDef *cipher_def = ssl_GetBulkCipherDef(suiteDef);
+    int ivLen = cipher_def->iv_size + cipher_def->explicit_nonce_size;
+    unsigned char zero[sizeof(sslSequenceNumber)] = { 0 };
+    SSLCipherAlgorithm calg = cipher_def->calg;
+    SECItem null_params = { siBuffer, NULL, 0 };
+    PK11Context *ctxt = PK11_CreateContextBySymKey(ssl3_Alg2Mech(calg),
+                                                   CKA_NSS_MESSAGE | CKA_ENCRYPT,
+                                                   keyMat.key, &null_params);
+    if (!ctxt) {
+        ssl_DestroyKeyMaterial(&keyMat);
+        sslBuffer_Clear(&aadInput);
+        return SECFailure;
+    }
+
+    /* This function is a single shot, with fresh/unique keys, no need to
+     * generate the IV internally */
+    rv = tls13_AEAD(ctxt, PR_FALSE /* Encrypt */, CKG_NO_GENERATE, 0,
+                    keyMat.iv, NULL, ivLen, zero, sizeof(zero), aad, aadLen,
+                    outBuf, &outLen, sizeof(outBuf), cipher_def->tag_size,
+                    SSL_BUFFER_BASE(&sni), SSL_BUFFER_LEN(&sni));
     ssl_DestroyKeyMaterial(&keyMat);
     sslBuffer_Clear(&aadInput);
+    PK11_DestroyContext(ctxt, PR_TRUE);
     if (rv != SECSuccess) {
         return SECFailure;
     }

@@ -574,8 +574,8 @@ lg_mkPrivKey(SDB *sdb, const CK_ATTRIBUTE *templ, CK_ULONG count,
                                        &privKey->u.dsa.privateValue, sdb);
             if (crv != CKR_OK)
                 break;
-            if (lg_hasAttribute(CKA_NETSCAPE_DB, templ, count)) {
-                crv = lg_Attribute2SSecItem(arena, CKA_NETSCAPE_DB, templ, count,
+            if (lg_hasAttribute(CKA_NSS_DB, templ, count)) {
+                crv = lg_Attribute2SSecItem(arena, CKA_NSS_DB, templ, count,
                                             &privKey->u.dsa.publicValue);
                 /* privKey was zero'd so public value is already set to NULL, 0
                  * if we don't set it explicitly */
@@ -596,8 +596,8 @@ lg_mkPrivKey(SDB *sdb, const CK_ATTRIBUTE *templ, CK_ULONG count,
                                        &privKey->u.dh.privateValue, sdb);
             if (crv != CKR_OK)
                 break;
-            if (lg_hasAttribute(CKA_NETSCAPE_DB, templ, count)) {
-                crv = lg_Attribute2SSecItem(arena, CKA_NETSCAPE_DB, templ, count,
+            if (lg_hasAttribute(CKA_NSS_DB, templ, count)) {
+                crv = lg_Attribute2SSecItem(arena, CKA_NSS_DB, templ, count,
                                             &privKey->u.dh.publicValue);
                 /* privKey was zero'd so public value is already set to NULL, 0
                  * if we don't set it explicitly */
@@ -623,8 +623,8 @@ lg_mkPrivKey(SDB *sdb, const CK_ATTRIBUTE *templ, CK_ULONG count,
                                        &privKey->u.ec.privateValue, sdb);
             if (crv != CKR_OK)
                 break;
-            if (lg_hasAttribute(CKA_NETSCAPE_DB, templ, count)) {
-                crv = lg_Attribute2SSecItem(arena, CKA_NETSCAPE_DB, templ, count,
+            if (lg_hasAttribute(CKA_NSS_DB, templ, count)) {
+                crv = lg_Attribute2SSecItem(arena, CKA_NSS_DB, templ, count,
                                             &privKey->u.ec.publicValue);
                 if (crv != CKR_OK)
                     break;
@@ -672,7 +672,7 @@ lg_createPrivateKeyObject(SDB *sdb, CK_KEY_TYPE key_type,
         return crv;
     label = lg_getString(CKA_LABEL, templ, count);
 
-    crv = lg_Attribute2SSecItem(NULL, CKA_NETSCAPE_DB, templ, count, &pubKey);
+    crv = lg_Attribute2SSecItem(NULL, CKA_NSS_DB, templ, count, &pubKey);
     if (crv != CKR_OK) {
         crv = CKR_TEMPLATE_INCOMPLETE;
         rv = SECFailure;

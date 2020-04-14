@@ -397,7 +397,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
     slot->defRWSession = PR_FALSE;
     slot->protectedAuthPath = PR_FALSE;
     slot->flags = 0;
-    slot->session = CK_INVALID_SESSION;
+    slot->session = CK_INVALID_HANDLE;
     slot->slotID = 0;
     slot->defaultFlags = 0;
     slot->refCount = 1;
@@ -737,22 +737,22 @@ PK11_GetRWSession(PK11SlotInfo *slot)
         haveMonitor = PR_TRUE;
     }
     if (slot->defRWSession) {
-        PORT_Assert(slot->session != CK_INVALID_SESSION);
-        if (slot->session != CK_INVALID_SESSION)
+        PORT_Assert(slot->session != CK_INVALID_HANDLE);
+        if (slot->session != CK_INVALID_HANDLE)
             return slot->session;
     }
 
     crv = PK11_GETTAB(slot)->C_OpenSession(slot->slotID,
                                            CKF_RW_SESSION | CKF_SERIAL_SESSION,
                                            slot, pk11_notify, &rwsession);
-    PORT_Assert(rwsession != CK_INVALID_SESSION || crv != CKR_OK);
-    if (crv != CKR_OK || rwsession == CK_INVALID_SESSION) {
+    PORT_Assert(rwsession != CK_INVALID_HANDLE || crv != CKR_OK);
+    if (crv != CKR_OK || rwsession == CK_INVALID_HANDLE) {
         if (crv == CKR_OK)
             crv = CKR_DEVICE_ERROR;
         if (haveMonitor)
             PK11_ExitSlotMonitor(slot);
         PORT_SetError(PK11_MapError(crv));
-        return CK_INVALID_SESSION;
+        return CK_INVALID_HANDLE;
     }
     if (slot->defRWSession) { /* we have the monitor */
         slot->session = rwsession;
@@ -765,7 +765,7 @@ PK11_RWSessionHasLock(PK11SlotInfo *slot, CK_SESSION_HANDLE session_handle)
 {
     PRBool hasLock;
     hasLock = (PRBool)(!slot->isThreadSafe ||
-                       (slot->defRWSession && slot->session != CK_INVALID_SESSION));
+                       (slot->defRWSession && slot->session != CK_INVALID_HANDLE));
     return hasLock;
 }
 
@@ -775,7 +775,7 @@ pk11_RWSessionIsDefault(PK11SlotInfo *slot, CK_SESSION_HANDLE rwsession)
     PRBool isDefault;
     isDefault = (PRBool)(slot->session == rwsession &&
                          slot->defRWSession &&
-                         slot->session != CK_INVALID_SESSION);
+                         slot->session != CK_INVALID_HANDLE);
     return isDefault;
 }
 
@@ -787,8 +787,8 @@ pk11_RWSessionIsDefault(PK11SlotInfo *slot, CK_SESSION_HANDLE rwsession)
 void
 PK11_RestoreROSession(PK11SlotInfo *slot, CK_SESSION_HANDLE rwsession)
 {
-    PORT_Assert(rwsession != CK_INVALID_SESSION);
-    if (rwsession != CK_INVALID_SESSION) {
+    PORT_Assert(rwsession != CK_INVALID_HANDLE);
+    if (rwsession != CK_INVALID_HANDLE) {
         PRBool doExit = PK11_RWSessionHasLock(slot, rwsession);
         if (!pk11_RWSessionIsDefault(slot, rwsession))
             PK11_GETTAB(slot)
@@ -1316,7 +1316,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     }
 
     /* Make sure our session handle is valid */
-    if (slot->session == CK_INVALID_SESSION) {
+    if (slot->session == CK_INVALID_HANDLE) {
         /* we know we don't have a valid session, go get one */
         CK_SESSION_HANDLE session;
 
@@ -1352,7 +1352,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
                                                    slot, pk11_notify, &slot->session);
             if (crv != CKR_OK) {
                 PORT_SetError(PK11_MapError(crv));
-                slot->session = CK_INVALID_SESSION;
+                slot->session = CK_INVALID_HANDLE;
                 if (!slot->isThreadSafe)
                     PK11_ExitSlotMonitor(slot);
                 return SECFailure;
@@ -1411,7 +1411,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     /* work around a problem in softoken where it incorrectly
      * reports databases opened read only as read/write. */
     if (slot->isInternal && !slot->readOnly) {
-        CK_SESSION_HANDLE session = CK_INVALID_SESSION;
+        CK_SESSION_HANDLE session = CK_INVALID_HANDLE;
 
         /* try to open a R/W session */
         crv = PK11_GETTAB(slot)->C_OpenSession(slot->slotID,
@@ -1483,7 +1483,7 @@ pk11_isRootSlot(PK11SlotInfo *slot)
 {
     CK_ATTRIBUTE findTemp[1];
     CK_ATTRIBUTE *attrs;
-    CK_OBJECT_CLASS oclass = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+    CK_OBJECT_CLASS oclass = CKO_NSS_BUILTIN_ROOT_LIST;
     int tsize;
     CK_OBJECT_HANDLE handle;
 
@@ -1592,7 +1592,7 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
     }
 
     /* permanent slots are always present */
-    if (slot->isPerm && (slot->session != CK_INVALID_SESSION)) {
+    if (slot->isPerm && (slot->session != CK_INVALID_HANDLE)) {
         return PR_TRUE;
     }
 
@@ -1610,10 +1610,10 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
     }
     if ((slotInfo.flags & CKF_TOKEN_PRESENT) == 0) {
         /* if the slot is no longer present, close the session */
-        if (slot->session != CK_INVALID_SESSION) {
+        if (slot->session != CK_INVALID_HANDLE) {
             PK11_GETTAB(slot)
                 ->C_CloseSession(slot->session);
-            slot->session = CK_INVALID_SESSION;
+            slot->session = CK_INVALID_HANDLE;
         }
         if (!slot->isThreadSafe)
             PK11_ExitSlotMonitor(slot);
@@ -1622,14 +1622,14 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
 
     /* use the session Info to determine if the card has been removed and then
      * re-inserted */
-    if (slot->session != CK_INVALID_SESSION) {
+    if (slot->session != CK_INVALID_HANDLE) {
         if (slot->isThreadSafe)
             PK11_EnterSlotMonitor(slot);
         crv = PK11_GETTAB(slot)->C_GetSessionInfo(slot->session, &sessionInfo);
         if (crv != CKR_OK) {
             PK11_GETTAB(slot)
                 ->C_CloseSession(slot->session);
-            slot->session = CK_INVALID_SESSION;
+            slot->session = CK_INVALID_HANDLE;
         }
         if (slot->isThreadSafe)
             PK11_ExitSlotMonitor(slot);
@@ -1638,7 +1638,7 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
         PK11_ExitSlotMonitor(slot);
 
     /* card has not been removed, current token info is correct */
-    if (slot->session != CK_INVALID_SESSION)
+    if (slot->session != CK_INVALID_HANDLE)
         return PR_TRUE;
 
     /* initialize the token info state */
@@ -2111,6 +2111,19 @@ PK11_DoesMechanism(PK11SlotInfo *slot, CK_MECHANISM_TYPE type)
             return PR_TRUE;
     }
     return PR_FALSE;
+}
+
+PRBool pk11_filterSlot(PK11SlotInfo *slot, CK_MECHANISM_TYPE mechanism,
+                       CK_FLAGS mechanismInfoFlags, unsigned int keySize);
+/*
+ * Check that the given mechanism has the appropriate flags. This function
+ * presumes that slot can already do the given mechanism.
+ */
+PRBool
+PK11_DoesMechanismFlag(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
+                       CK_FLAGS flags)
+{
+    return !pk11_filterSlot(slot, type, flags, 0);
 }
 
 /*
@@ -2621,7 +2634,7 @@ PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd)
     /* first shutdown the token. Existing sessions will get closed here */
     PK11_GETTAB(slot)
         ->C_CloseAllSessions(slot->slotID);
-    slot->session = CK_INVALID_SESSION;
+    slot->session = CK_INVALID_HANDLE;
 
     /* now re-init the token */
     crv = PK11_GETTAB(slot)->C_InitToken(slot->slotID,

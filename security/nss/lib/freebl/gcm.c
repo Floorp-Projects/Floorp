@@ -9,6 +9,7 @@
 #endif
 #include "blapii.h"
 #include "blapit.h"
+#include "blapi.h"
 #include "gcm.h"
 #include "ctr.h"
 #include "secerr.h"
@@ -21,7 +22,8 @@
 #if defined(__aarch64__) && defined(IS_LITTLE_ENDIAN) && \
     (defined(__clang__) || defined(__GNUC__) && __GNUC__ > 6)
 #define USE_ARM_GCM
-#elif defined(__arm__) && defined(IS_LITTLE_ENDIAN)
+#elif defined(__arm__) && defined(IS_LITTLE_ENDIAN) && \
+    !defined(NSS_DISABLE_ARM32_NEON)
 /* We don't test on big endian platform, so disable this on big endian. */
 #define USE_ARM_GCM
 #endif
@@ -524,9 +526,17 @@ gcmHash_Reset(gcmHashContext *ghash, const unsigned char *AAD,
 struct GCMContextStr {
     gcmHashContext *ghash_context;
     CTRContext ctr_context;
+    freeblCipherFunc cipher;
+    void *cipher_context;
     unsigned long tagBits;
     unsigned char tagKey[MAX_BLOCK_SIZE];
+    PRBool ctr_context_init;
+    gcmIVContext gcm_iv;
 };
+
+SECStatus gcm_InitCounter(GCMContext *gcm, const unsigned char *iv,
+                          unsigned int ivLen, unsigned int tagBits,
+                          const unsigned char *aad, unsigned int aadLen);
 
 GCMContext *
 GCM_CreateContext(void *context, freeblCipherFunc cipher,
@@ -536,9 +546,7 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     gcmHashContext *ghash = NULL;
     unsigned char H[MAX_BLOCK_SIZE];
     unsigned int tmp;
-    PRBool freeCtr = PR_FALSE;
-    const CK_GCM_PARAMS *gcmParams = (const CK_GCM_PARAMS *)params;
-    CK_AES_CTR_PARAMS ctrParams;
+    const CK_NSS_GCM_PARAMS *gcmParams = (const CK_NSS_GCM_PARAMS *)params;
     SECStatus rv;
 #ifdef DISABLE_HW_GCM
     const PRBool sw = PR_TRUE;
@@ -546,23 +554,12 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     const PRBool sw = PR_FALSE;
 #endif
 
-    if (gcmParams->ulIvLen == 0) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-
-    if (gcmParams->ulTagBits != 128 && gcmParams->ulTagBits != 120 &&
-        gcmParams->ulTagBits != 112 && gcmParams->ulTagBits != 104 &&
-        gcmParams->ulTagBits != 96 && gcmParams->ulTagBits != 64 &&
-        gcmParams->ulTagBits != 32) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-
     gcm = PORT_ZNew(GCMContext);
     if (gcm == NULL) {
         return NULL;
     }
+    gcm->cipher = cipher;
+    gcm->cipher_context = context;
     ghash = PORT_ZNewAligned(gcmHashContext, 16, mem);
 
     /* first plug in the ghash context */
@@ -577,51 +574,29 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
         goto loser;
     }
 
-    /* fill in the Counter context */
-    ctrParams.ulCounterBits = 32;
-    PORT_Memset(ctrParams.cb, 0, sizeof(ctrParams.cb));
-    if (gcmParams->ulIvLen == 12) {
-        PORT_Memcpy(ctrParams.cb, gcmParams->pIv, gcmParams->ulIvLen);
-        ctrParams.cb[AES_BLOCK_SIZE - 1] = 1;
-    } else {
-        rv = gcmHash_Update(ghash, gcmParams->pIv, gcmParams->ulIvLen);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
-        rv = gcmHash_Final(ghash, ctrParams.cb, &tmp, AES_BLOCK_SIZE);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+    gcm_InitIVContext(&gcm->gcm_iv);
+    gcm->ctr_context_init = PR_FALSE;
+
+    /* if gcmPara/ms is NULL, then we are creating an PKCS #11 MESSAGE
+     * style context, in which we initialize the key once, then do separate
+     * iv/aad's for each message. In that case we only initialize the key
+     * and ghash. We initialize the counter in each separate message */
+    if (gcmParams == NULL) {
+        /* OK we are finished with init, if we are doing MESSAGE interface,
+         * return from here */
+        return gcm;
     }
-    rv = CTR_InitContext(&gcm->ctr_context, context, cipher,
-                         (unsigned char *)&ctrParams);
+
+    rv = gcm_InitCounter(gcm, gcmParams->pIv, gcmParams->ulIvLen,
+                         gcmParams->ulTagBits, gcmParams->pAAD,
+                         gcmParams->ulAADLen);
     if (rv != SECSuccess) {
         goto loser;
     }
-    freeCtr = PR_TRUE;
-
-    /* fill in the gcm structure */
-    gcm->tagBits = gcmParams->ulTagBits; /* save for final step */
-    /* calculate the final tag key. NOTE: gcm->tagKey is zero to start with.
-     * if this assumption changes, we would need to explicitly clear it here */
-    rv = CTR_Update(&gcm->ctr_context, gcm->tagKey, &tmp, AES_BLOCK_SIZE,
-                    gcm->tagKey, AES_BLOCK_SIZE, AES_BLOCK_SIZE);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    /* finally mix in the AAD data */
-    rv = gcmHash_Reset(ghash, gcmParams->pAAD, gcmParams->ulAADLen);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
+    gcm->ctr_context_init = PR_TRUE;
     return gcm;
 
 loser:
-    if (freeCtr) {
-        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
-    }
     if (ghash && ghash->mem) {
         PORT_Free(ghash->mem);
     }
@@ -631,13 +606,93 @@ loser:
     return NULL;
 }
 
+SECStatus
+gcm_InitCounter(GCMContext *gcm, const unsigned char *iv, unsigned int ivLen,
+                unsigned int tagBits, const unsigned char *aad,
+                unsigned int aadLen)
+{
+    gcmHashContext *ghash = gcm->ghash_context;
+    unsigned int tmp;
+    PRBool freeCtr = PR_FALSE;
+    CK_AES_CTR_PARAMS ctrParams;
+    SECStatus rv;
+
+    /* Verify our parameters here */
+    if (ivLen == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto loser;
+    }
+
+    if (tagBits != 128 && tagBits != 120 &&
+        tagBits != 112 && tagBits != 104 &&
+        tagBits != 96 && tagBits != 64 &&
+        tagBits != 32) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto loser;
+    }
+
+    /* fill in the Counter context */
+    ctrParams.ulCounterBits = 32;
+    PORT_Memset(ctrParams.cb, 0, sizeof(ctrParams.cb));
+    if (ivLen == 12) {
+        PORT_Memcpy(ctrParams.cb, iv, ivLen);
+        ctrParams.cb[AES_BLOCK_SIZE - 1] = 1;
+    } else {
+        rv = gcmHash_Reset(ghash, NULL, 0);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        rv = gcmHash_Update(ghash, iv, ivLen);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        rv = gcmHash_Final(ghash, ctrParams.cb, &tmp, AES_BLOCK_SIZE);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+    }
+    rv = CTR_InitContext(&gcm->ctr_context, gcm->cipher_context, gcm->cipher,
+                         (unsigned char *)&ctrParams);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    freeCtr = PR_TRUE;
+
+    /* fill in the gcm structure */
+    gcm->tagBits = tagBits; /* save for final step */
+    /* calculate the final tag key. NOTE: gcm->tagKey is zero to start with.
+     * if this assumption changes, we would need to explicitly clear it here */
+    PORT_Memset(gcm->tagKey, 0, sizeof(gcm->tagKey));
+    rv = CTR_Update(&gcm->ctr_context, gcm->tagKey, &tmp, AES_BLOCK_SIZE,
+                    gcm->tagKey, AES_BLOCK_SIZE, AES_BLOCK_SIZE);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    /* finally mix in the AAD data */
+    rv = gcmHash_Reset(ghash, aad, aadLen);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    return SECSuccess;
+
+loser:
+    if (freeCtr) {
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+    }
+    return SECFailure;
+}
+
 void
 GCM_DestroyContext(GCMContext *gcm, PRBool freeit)
 {
     /* these two are statically allocated and will be freed when we free
      * gcm. call their destroy functions to free up any locally
      * allocated data (like mp_int's) */
-    CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+    if (gcm->ctr_context_init) {
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+    }
     PORT_Free(gcm->ghash_context->mem);
     PORT_Memset(&gcm->tagBits, 0, sizeof(gcm->tagBits));
     PORT_Memset(gcm->tagKey, 0, sizeof(gcm->tagKey));
@@ -706,6 +761,11 @@ GCM_EncryptUpdate(GCMContext *gcm, unsigned char *outbuf,
         return SECFailure;
     }
 
+    if (!gcm->ctr_context_init) {
+        PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+        return SECFailure;
+    }
+
     tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
     if (UINT_MAX - inlen < tagBytes) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
@@ -764,6 +824,11 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
         return SECFailure;
     }
 
+    if (!gcm->ctr_context_init) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
     tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
 
     /* get the authentication block */
@@ -797,4 +862,299 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
     /* finish the decryption */
     return CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
                       inbuf, inlen, AES_BLOCK_SIZE);
+}
+
+void
+gcm_InitIVContext(gcmIVContext *gcmIv)
+{
+    gcmIv->counter = 0;
+    gcmIv->max_count = 0;
+    gcmIv->ivGen = CKG_GENERATE;
+    gcmIv->ivLen = 0;
+    gcmIv->fixedBits = 0;
+}
+
+/*
+ * generate the IV on the fly and return it to the application.
+ *   This function keeps a counter, which may be used in the IV
+ *   generation, or may be used in simply to make sure we don't
+ *   generate to many IV's from this same key.
+ *   PKCS #11 defines 4 generating values:
+ *       1) CKG_NO_GENERATE: just use the passed in IV as it.
+ *       2) CKG_GENERATE: the application doesn't care what generation
+ *       scheme is use (we default to counter in this code).
+ *       3) CKG_GENERATE_COUNTER: The IV is the value of a counter.
+ *       4) CKG_GENERATE_RANDOM: The IV is randomly generated.
+ *   We add a fifth rule:
+ *       5) CKG_GENERATE_COUNTER_XOR: The Counter value is xor'ed with
+ *       the IV.
+ *   The value fixedBits specifies the number of bits that will be passed
+ *   on from the original IV. The counter or the random data is is loaded
+ *   in the remainder of the IV not covered by fixedBits, overwriting any
+ *   data there. In the xor case the counter is xor'ed with the data in the
+ *   IV. In all cases only bits outside of fixedBits is modified.
+ *   The number of IV's we can generate is restricted by the size of the
+ *   variable part of the IV and the generation algorithm used. Because of
+ *   this, we require subsequent calls on this context to use the same
+ *   generator, IV len, and fixed bits as the first call.
+ */
+SECStatus
+gcm_GenerateIV(gcmIVContext *gcmIv, unsigned char *iv, unsigned int ivLen,
+               unsigned int fixedBits, CK_GENERATOR_FUNCTION ivGen)
+{
+    unsigned int i;
+    unsigned int flexBits;
+    unsigned int ivOffset;
+    unsigned int ivNewCount;
+    unsigned char ivMask;
+    unsigned char ivSave;
+    SECStatus rv;
+
+    if (gcmIv->counter != 0) {
+        /* If we've already generated a message, make sure all subsequent
+         * messages are using the same generator */
+        if ((gcmIv->ivGen != ivGen) || (gcmIv->fixedBits != fixedBits) ||
+            (gcmIv->ivLen != ivLen)) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+    } else {
+        /* remember these values */
+        gcmIv->ivGen = ivGen;
+        gcmIv->fixedBits = fixedBits;
+        gcmIv->ivLen = ivLen;
+        /* now calculate how may bits of IV we have to supply */
+        flexBits = ivLen * PR_BITS_PER_BYTE; /* bytes->bits */
+        /* first make sure we aren't going to overflow */
+        if (flexBits < fixedBits) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        flexBits -= fixedBits;
+        /* if we are generating a random number reduce the acceptable bits to
+         * avoid birthday attacks */
+        if (ivGen == CKG_GENERATE_RANDOM) {
+            if (flexBits <= GCMIV_RANDOM_BIRTHDAY_BITS) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            /* see freebl/blapit.h for how we calculate
+             * GCMIV_RANDOM_BIRTHDAY_BITS */
+            flexBits -= GCMIV_RANDOM_BIRTHDAY_BITS;
+            flexBits = flexBits >> 1;
+        }
+        if (flexBits == 0) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        /* Turn those bits into the number of IV's we can safely return */
+        if (flexBits >= sizeof(gcmIv->max_count) * PR_BITS_PER_BYTE) {
+            gcmIv->max_count = PR_UINT64(0xffffffffffffffff);
+        } else {
+            gcmIv->max_count = PR_UINT64(1) << flexBits;
+        }
+    }
+
+    /* no generate, accept the IV from the source */
+    if (ivGen == CKG_NO_GENERATE) {
+        gcmIv->counter = 1;
+        return SECSuccess;
+    }
+
+    /* make sure we haven't exceeded the number of IVs we can return
+     * for this key, generator, and IV size */
+    if (gcmIv->counter >= gcmIv->max_count) {
+        /* use a unique error from just bad user input */
+        PORT_SetError(SEC_ERROR_EXTRA_INPUT);
+        return SECFailure;
+    }
+
+    /* build to mask to handle the first byte of the IV */
+    ivOffset = fixedBits / PR_BITS_PER_BYTE;
+    ivMask = 0xff >> ((8 - (fixedBits & 7)) & 7);
+    ivNewCount = ivLen - ivOffset;
+
+    /* finally generate the IV */
+    switch (ivGen) {
+        case CKG_GENERATE: /* default to counter */
+        case CKG_GENERATE_COUNTER:
+            iv[ivOffset] = (iv[ivOffset] & ~ivMask) |
+                           (PORT_GET_BYTE_BE(gcmIv->counter, 0, ivNewCount) & ivMask);
+            for (i = 1; i < ivNewCount; i++) {
+                iv[ivOffset + i] = PORT_GET_BYTE_BE(gcmIv->counter, i, ivNewCount);
+            }
+            break;
+        /* for TLS 1.3 */
+        case CKG_GENERATE_COUNTER_XOR:
+            iv[ivOffset] ^=
+                (PORT_GET_BYTE_BE(gcmIv->counter, 0, ivNewCount) & ivMask);
+            for (i = 1; i < ivNewCount; i++) {
+                iv[ivOffset + i] ^= PORT_GET_BYTE_BE(gcmIv->counter, i, ivNewCount);
+            }
+            break;
+        case CKG_GENERATE_RANDOM:
+            ivSave = iv[ivOffset] & ~ivMask;
+            rv = RNG_GenerateGlobalRandomBytes(iv + ivOffset, ivNewCount);
+            iv[ivOffset] = ivSave | (iv[ivOffset] & ivMask);
+            if (rv != SECSuccess) {
+                return rv;
+            }
+            break;
+    }
+    gcmIv->counter++;
+    return SECSuccess;
+}
+
+SECStatus
+GCM_EncryptAEAD(GCMContext *gcm, unsigned char *outbuf,
+                unsigned int *outlen, unsigned int maxout,
+                const unsigned char *inbuf, unsigned int inlen,
+                void *params, unsigned int paramLen,
+                const unsigned char *aad, unsigned int aadLen,
+                unsigned int blocksize)
+{
+    SECStatus rv;
+    unsigned int tagBytes;
+    unsigned int len;
+    const CK_GCM_MESSAGE_PARAMS *gcmParams =
+        (const CK_GCM_MESSAGE_PARAMS *)params;
+
+    PORT_Assert(blocksize == AES_BLOCK_SIZE);
+    if (blocksize != AES_BLOCK_SIZE) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    /* paramLen comes all the way from the application layer, make sure
+     * it's correct */
+    if (paramLen != sizeof(CK_GCM_MESSAGE_PARAMS)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    /* if we were initialized with the C_EncryptInit, we shouldn't be in this
+     * function */
+    if (gcm->ctr_context_init) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    if (maxout < inlen) {
+        *outlen = inlen;
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+
+    rv = gcm_GenerateIV(&gcm->gcm_iv, gcmParams->pIv, gcmParams->ulIvLen,
+                        gcmParams->ulIvFixedBits, gcmParams->ivGenerator);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    rv = gcm_InitCounter(gcm, gcmParams->pIv, gcmParams->ulIvLen,
+                         gcmParams->ulTagBits, aad, aadLen);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
+
+    rv = CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
+                    inbuf, inlen, AES_BLOCK_SIZE);
+    CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    rv = gcmHash_Update(gcm->ghash_context, outbuf, *outlen);
+    if (rv != SECSuccess) {
+        PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
+        *outlen = 0;
+        return SECFailure;
+    }
+    rv = gcm_GetTag(gcm, gcmParams->pTag, &len, tagBytes);
+    if (rv != SECSuccess) {
+        PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
+        *outlen = 0;
+        return SECFailure;
+    };
+    return SECSuccess;
+}
+
+SECStatus
+GCM_DecryptAEAD(GCMContext *gcm, unsigned char *outbuf,
+                unsigned int *outlen, unsigned int maxout,
+                const unsigned char *inbuf, unsigned int inlen,
+                void *params, unsigned int paramLen,
+                const unsigned char *aad, unsigned int aadLen,
+                unsigned int blocksize)
+{
+    SECStatus rv;
+    unsigned int tagBytes;
+    unsigned char tag[MAX_BLOCK_SIZE];
+    const unsigned char *intag;
+    unsigned int len;
+    const CK_GCM_MESSAGE_PARAMS *gcmParams =
+        (const CK_GCM_MESSAGE_PARAMS *)params;
+
+    PORT_Assert(blocksize == AES_BLOCK_SIZE);
+    if (blocksize != AES_BLOCK_SIZE) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    /* paramLen comes all the way from the application layer, make sure
+     * it's correct */
+    if (paramLen != sizeof(CK_GCM_MESSAGE_PARAMS)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    /* if we were initialized with the C_DecryptInit, we shouldn't be in this
+     * function */
+    if (gcm->ctr_context_init) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    if (maxout < inlen) {
+        *outlen = inlen;
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+
+    rv = gcm_InitCounter(gcm, gcmParams->pIv, gcmParams->ulIvLen,
+                         gcmParams->ulTagBits, aad, aadLen);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
+    intag = gcmParams->pTag;
+    PORT_Assert(tagBytes != 0);
+
+    /* verify the block */
+    rv = gcmHash_Update(gcm->ghash_context, inbuf, inlen);
+    if (rv != SECSuccess) {
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+        return SECFailure;
+    }
+    rv = gcm_GetTag(gcm, tag, &len, AES_BLOCK_SIZE);
+    if (rv != SECSuccess) {
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+        return SECFailure;
+    }
+    /* Don't decrypt if we can't authenticate the encrypted data!
+     * This assumes that if tagBits is may not be a multiple of 8, intag will
+     * preserve the masked off missing bits.  */
+    if (NSS_SecureMemcmp(tag, intag, tagBytes) != 0) {
+        /* force a CKR_ENCRYPTED_DATA_INVALID error at in softoken */
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+        PORT_SetError(SEC_ERROR_BAD_DATA);
+        PORT_Memset(tag, 0, sizeof(tag));
+        return SECFailure;
+    }
+    PORT_Memset(tag, 0, sizeof(tag));
+    /* finish the decryption */
+    rv = CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
+                    inbuf, inlen, AES_BLOCK_SIZE);
+    CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+    return rv;
 }

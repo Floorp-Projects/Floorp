@@ -363,6 +363,25 @@ SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,
 PK11SymKey *PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation,
                             CK_FLAGS flags, PRBool perm, PK11SymKey *symKey);
 /*
+ * To do joint operations, we often need two keys in the same slot.
+ * Usually the PKCS #11 wrappers handle this correctly (like for PK11_WrapKey),
+ * but sometimes the wrappers don't know about mechanism specific keys in
+ * the Mechanism params. This function makes sure the two keys are in the
+ * same slot by copying one or both of the keys into a common slot. This
+ * functions makes sure the slot can handle the target mechanism. If the copy
+ * is warranted, this function will prefer to move the movingKey first, then
+ * the preferedKey. If the keys are moved, the new keys are returned in
+ * newMovingKey and/or newPreferedKey. The application is responsible
+ * for freeing those keys one the operation is complete.
+ */
+SECStatus PK11_SymKeysToSameSlot(CK_MECHANISM_TYPE mech,
+                                 CK_ATTRIBUTE_TYPE preferedOperation,
+                                 CK_ATTRIBUTE_TYPE movingOperation,
+                                 PK11SymKey *preferedKey, PK11SymKey *movingKey,
+                                 PK11SymKey **newPreferedKey,
+                                 PK11SymKey **newMovingKey);
+
+/*
  * derive a new key from the base key.
  *  PK11_Derive returns a key which can do exactly one operation, and is
  * ephemeral (session key).
@@ -741,6 +760,19 @@ SECStatus PK11_DigestOp(PK11Context *context, const unsigned char *in,
                         unsigned len);
 SECStatus PK11_CipherOp(PK11Context *context, unsigned char *out, int *outlen,
                         int maxout, const unsigned char *in, int inlen);
+/* application builds the mechanism specific params */
+SECStatus PK11_AEADRawOp(PK11Context *context, void *params, int paramslen,
+                         const unsigned char *aad, int aadlen,
+                         unsigned char *out, int *outlen,
+                         int maxout, const unsigned char *in, int inlen);
+/* NSS builds the mechanism specific params */
+SECStatus PK11_AEADOp(PK11Context *context, CK_GENERATOR_FUNCTION ivGen,
+                      int fixedbits, unsigned char *iv, int ivlen,
+                      const unsigned char *aad, int aadlen,
+                      unsigned char *out, int *outlen,
+                      int maxout, unsigned char *tag, int taglen,
+                      const unsigned char *in, int inlen);
+
 SECStatus PK11_Finalize(PK11Context *context);
 SECStatus PK11_DigestFinal(PK11Context *context, unsigned char *data,
                            unsigned int *outLen, unsigned int length);
@@ -863,6 +895,9 @@ SECStatus PK11_ReadRawAttribute(PK11ObjectType type, void *object,
                                 CK_ATTRIBUTE_TYPE attr, SECItem *item);
 SECStatus PK11_WriteRawAttribute(PK11ObjectType type, void *object,
                                  CK_ATTRIBUTE_TYPE attr, SECItem *item);
+/* get the PKCS #11 handle and slot for a generic object */
+CK_OBJECT_HANDLE PK11_GetObjectHandle(PK11ObjectType objType, void *objSpec,
+                                      PK11SlotInfo **slotp);
 
 /*
  * PK11_GetAllSlotsForCert returns all the slots that a given certificate

@@ -17,6 +17,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
 	secmodi.h \
+	secmodti.h \
 	dev3hack.h \
 	$(NULL)
 

@@ -36,7 +36,7 @@ pk11_setAttributes(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
     CK_SESSION_HANDLE rwsession;
 
     rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_SESSION) {
+    if (rwsession == CK_INVALID_HANDLE) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
@@ -93,7 +93,7 @@ pk11_copyAttributes(PLArenaPool *arena,
     }
     if (targetID == CK_INVALID_HANDLE) {
         /* we need to create the object */
-        rv = PK11_CreateNewObject(targetSlot, CK_INVALID_SESSION,
+        rv = PK11_CreateNewObject(targetSlot, CK_INVALID_HANDLE,
                                   copyTemplate, copyTemplateCount, PR_TRUE, &targetID);
     } else {
         /* update the existing object with the new attributes */
