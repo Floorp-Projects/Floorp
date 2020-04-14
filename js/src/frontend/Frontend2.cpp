@@ -18,6 +18,7 @@
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/CompilationInfo.h"   // CompilationInfo
+#include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"  // ScopeCreationData, RegExpCreationData, RegExpIndex
