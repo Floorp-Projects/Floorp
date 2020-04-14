@@ -464,8 +464,7 @@ class MobileWindowTracker extends EventEmitter {
   }
 
   setTabActive(aWindow, aActive) {
-    const { browser, BrowserApp, windowUtils } = aWindow;
-    const tab = BrowserApp.selectedTab;
+    const { browser, tab, windowUtils } = aWindow;
     tab.active = aActive;
 
     if (aActive) {
