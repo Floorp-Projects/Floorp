@@ -289,14 +289,6 @@ BrowserTabList.prototype._getChildren = function(window) {
 };
 
 BrowserTabList.prototype.getList = async function() {
-  const topAppWindow = Services.wm.getMostRecentWindow(
-    DevToolsServer.chromeWindowType
-  );
-  let selectedBrowser = null;
-  if (topAppWindow) {
-    selectedBrowser = this._getSelectedBrowser(topAppWindow);
-  }
-
   // As a sanity check, make sure all the actors presently in our map get
   // picked up when we iterate over all windows' tabs.
   const initialMapSize = this._actorByBrowser.size;
@@ -305,11 +297,8 @@ BrowserTabList.prototype.getList = async function() {
   const actors = [];
 
   for (const browser of this._getBrowsers()) {
-    const selected = browser === selectedBrowser;
     try {
       const actor = await this._getActorForBrowser(browser);
-      // Set the 'selected' properties on all actors correctly.
-      actor.selected = selected;
       actors.push(actor);
     } catch (e) {
       if (e.error === "tabDestroyed") {
