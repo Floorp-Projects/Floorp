@@ -12,6 +12,7 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
+const Services = require("Services");
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
@@ -50,12 +51,24 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   form() {
     return {
       actor: this.actorID,
+      selected: this.selected,
       traits: {
         // Backward compatibility for FF75 or older.
         // Remove when FF76 is on the release channel.
         getFavicon: true,
       },
     };
+  },
+
+  get selected() {
+    // getMostRecentBrowserWindow will find the appropriate window on Firefox
+    // Desktop and on GeckoView.
+    const topAppWindow = Services.wm.getMostRecentBrowserWindow();
+    if (!topAppWindow) {
+      return false;
+    }
+    const selectedBrowser = topAppWindow.gBrowser.selectedBrowser;
+    return this._browser === selectedBrowser;
   },
 
   async getTarget() {

@@ -30,6 +30,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
 
   form(json) {
     this.actorID = json.actor;
+    this.selected = json.selected;
     this.traits = json.traits || {};
   }
 
