@@ -20,7 +20,6 @@
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozStorageHelper.h"
 #include "nsIInputStream.h"
@@ -29,12 +28,39 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
+#include "QuotaClientImpl.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
 namespace {
+
+/**
+ * Note: The aCommitHook argument will be invoked while a lock is held. Callers
+ * should be careful not to pass a hook that might lock on something else and
+ * trigger a deadlock.
+ */
+template <typename Callable>
+nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
+                                const int64_t aIncreaseSize,
+                                const int64_t aDecreaseSize,
+                                Callable aCommitHook) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
+
+  RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
+  MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
+
+  nsresult rv = cacheQuotaClient->MaybeUpdatePaddingFileInternal(
+      aBaseDir, aConn, aIncreaseSize, aDecreaseSize, aCommitHook);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return rv;
+}
 
 // An Action that is executed when a Context is first created.  It ensures that
 // the directory and database are setup properly.  This lets other actions
