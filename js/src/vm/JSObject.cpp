@@ -2266,6 +2266,12 @@ bool js::SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
     return true;
   }
 
+  // Regenerate object shape (and possibly prototype shape) to invalidate JIT
+  // code that is affected by a prototype mutation.
+  if (!ReshapeForProtoMutation(cx, fun)) {
+    return false;
+  }
+
   if (!JSObject::setDelegate(cx, proto)) {
     return false;
   }
