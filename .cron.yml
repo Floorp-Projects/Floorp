@@ -232,6 +232,8 @@ jobs:
           type: decision-task
           treeherder-symbol: condprof
           target-tasks-method: condprof
+          include-push-tasks: true
+          optimize-target-tasks: false
       run-on-projects:
           - mozilla-central
       when:
