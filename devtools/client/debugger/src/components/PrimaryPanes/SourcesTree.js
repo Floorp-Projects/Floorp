@@ -156,16 +156,17 @@ class SourcesTree extends Component<Props, State> {
     // NOTE: do not run this every time a source is clicked,
     // only when a new source is added
     if (nextProps.sources != this.props.sources) {
-      this.setState(
-        updateTree({
-          newSources: nextProps.sources,
-          threads: nextProps.threads,
-          prevSources: sources,
-          debuggeeUrl,
-          uncollapsedTree,
-          sourceTree,
-        })
-      );
+      const update = updateTree({
+        newSources: nextProps.sources,
+        threads: nextProps.threads,
+        prevSources: sources,
+        debuggeeUrl,
+        uncollapsedTree,
+        sourceTree,
+      });
+      if (update) {
+        this.setState(update);
+      }
     }
   }
 
