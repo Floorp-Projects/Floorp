@@ -702,7 +702,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
   MOZ_ASSERT(sizeof(sysctlValue32) == len);
 
 #elif defined(XP_LINUX) && !defined(ANDROID)
-  // Get vendor, family, model, stepping, physical cores, L3 cache size
+  // Get vendor, family, model, stepping, physical cores
   // from /proc/cpuinfo file
   {
     std::map<nsCString, nsCString> keyValuePairs;
@@ -750,23 +750,6 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
         physicalCPUs = static_cast<int>(t.AsInteger());
       }
     }
-
-    {
-      // cacheSizeL3 from "cache size"
-      Tokenizer::Token t;
-      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cache size")]);
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cacheSizeL3 = static_cast<int>(t.AsInteger());
-        if (p.Next(t) && t.Type() == Tokenizer::TOKEN_WORD &&
-            t.AsString() != NS_LITERAL_CSTRING("KB")) {
-          // If we get here, there was some text after the cache size value
-          // and that text was not KB.  For now, just don't report the
-          // L3 cache.
-          cacheSizeL3 = -1;
-        }
-      }
-    }
   }
 
   {
@@ -794,6 +777,20 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
         cacheSizeL2 = static_cast<int>(t.AsInteger());
+      }
+    }
+  }
+
+  {
+    // Get cacheSizeL3 from yet another file
+    std::ifstream input("/sys/devices/system/cpu/cpu0/cache/index3/size");
+    std::string line;
+    if (getline(input, line)) {
+      Tokenizer::Token t;
+      Tokenizer p(line.c_str(), nullptr, "K");
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cacheSizeL3 = static_cast<int>(t.AsInteger());
       }
     }
   }
