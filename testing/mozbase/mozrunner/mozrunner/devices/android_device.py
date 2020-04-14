@@ -435,7 +435,7 @@ class AndroidEmulator(object):
             _tooltool_fetch(self.substs)
             self._update_avd_paths()
 
-    def start(self):
+    def start(self, gpu_arg=None):
         """
            Launch the emulator.
         """
@@ -451,14 +451,24 @@ class AndroidEmulator(object):
         env = os.environ
         env['ANDROID_AVD_HOME'] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd", self.avd_info.name]
-        if self.gpu:
-            command += ['-gpu', 'on']
-        if self.avd_info.extra_args:
-            # -enable-kvm option is not valid on OSX and Windows
-            if _get_host_platform() in ('macosx64', 'win32') and \
-               '-enable-kvm' in self.avd_info.extra_args:
-                self.avd_info.extra_args.remove('-enable-kvm')
-            command += self.avd_info.extra_args
+        override = os.environ.get('MOZ_EMULATOR_COMMAND_ARGS')
+        if override:
+            command += override.split()
+            _log_debug("Found MOZ_EMULATOR_COMMAND_ARGS in env: %s" % override)
+        else:
+            if gpu_arg:
+                command += ['-gpu', gpu_arg]
+                # Clear self.gpu to avoid our restart-without-gpu feature: if a specific
+                # gpu setting is requested, try to use that, and nothing else.
+                self.gpu = False
+            elif self.gpu:
+                command += ['-gpu', 'on']
+            if self.avd_info.extra_args:
+                # -enable-kvm option is not valid on OSX and Windows
+                if _get_host_platform() in ('macosx64', 'win32') and \
+                   '-enable-kvm' in self.avd_info.extra_args:
+                    self.avd_info.extra_args.remove('-enable-kvm')
+                command += self.avd_info.extra_args
         log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
         self.emulator_log = open(log_path, 'w+')
         _log_debug("Starting the emulator with this command: %s" %
