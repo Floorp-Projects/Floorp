@@ -1448,10 +1448,10 @@ static bool GetScriptPlainObjectProperties(
   return true;
 }
 
-static bool DeepCloneValue(JSContext* cx, Value* vp, NewObjectKind newKind) {
+static bool DeepCloneValue(JSContext* cx, Value* vp) {
   if (vp->isObject()) {
     RootedObject obj(cx, &vp->toObject());
-    obj = DeepCloneObjectLiteral(cx, obj, newKind);
+    obj = DeepCloneObjectLiteral(cx, obj);
     if (!obj) {
       return false;
     }
@@ -1462,13 +1462,11 @@ static bool DeepCloneValue(JSContext* cx, Value* vp, NewObjectKind newKind) {
   return true;
 }
 
-JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
-                                     NewObjectKind newKind) {
+JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
   /* NB: Keep this in sync with XDRObjectLiteral. */
   MOZ_ASSERT_IF(obj->isSingleton(),
                 cx->realm()->behaviors().getSingletonsAsTemplates());
   MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
-  MOZ_ASSERT(newKind != SingletonObject);
 
   if (obj->is<ArrayObject>()) {
     Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
@@ -1478,7 +1476,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
 
     // Deep clone any elements.
     for (uint32_t i = 0; i < values.length(); ++i) {
-      if (!DeepCloneValue(cx, values[i].address(), newKind)) {
+      if (!DeepCloneValue(cx, values[i].address())) {
         return nullptr;
       }
     }
@@ -1490,7 +1488,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
     }
 
     return ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
-                                       newKind, arrayKind);
+                                       TenuredObject, arrayKind);
   }
 
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
@@ -1500,15 +1498,12 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
 
   for (size_t i = 0; i < properties.length(); i++) {
     cx->markId(properties[i].get().id);
-    if (!DeepCloneValue(cx, &properties[i].get().value, newKind)) {
+    if (!DeepCloneValue(cx, &properties[i].get().value)) {
       return nullptr;
     }
   }
 
-  if (obj->isSingleton()) {
-    newKind = SingletonObject;
-  }
-
+  NewObjectKind newKind = obj->isSingleton() ? SingletonObject : TenuredObject;
   return ObjectGroup::newPlainObject(cx, properties.begin(),
                                      properties.length(), newKind);
 }
