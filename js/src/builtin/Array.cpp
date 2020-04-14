@@ -4110,13 +4110,6 @@ ArrayObject* JS_FASTCALL js::NewDenseFullyAllocatedArray(
   return NewArray<UINT32_MAX>(cx, length, proto, newKind);
 }
 
-ArrayObject* JS_FASTCALL js::NewDensePartlyAllocatedArray(
-    JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
-    NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto,
-                                                         newKind);
-}
-
 ArrayObject* JS_FASTCALL js::NewDenseUnallocatedArray(
     JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
     NewObjectKind newKind /* = GenericObject */) {
