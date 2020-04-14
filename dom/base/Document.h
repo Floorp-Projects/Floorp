@@ -1871,14 +1871,14 @@ class Document : public nsINode,
   void RemoveFromNameTable(Element* aElement, nsAtom* aName);
 
   /**
-   * Returns all elements in the fullscreen stack in the insertion order.
+   * Returns all elements in the top layer in the insertion order.
    */
-  nsTArray<Element*> GetFullscreenStack() const;
+  nsTArray<Element*> GetTopLayer() const;
 
   /**
    * Asynchronously requests that the document make aElement the fullscreen
    * element, and move into fullscreen mode. The current fullscreen element
-   * (if any) is pushed onto the fullscreen element stack, and it can be
+   * (if any) is pushed onto the top layer, and it can be
    * returned to fullscreen status by calling RestorePreviousFullscreenState().
    *
    * Note that requesting fullscreen in a document also makes the element which
@@ -1898,19 +1898,24 @@ class Document : public nsINode,
   void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
                          bool applyFullScreenDirectly = false);
 
-  // Removes all elements from the fullscreen stack, removing full-scren
-  // styles from the top element in the stack.
+  // Removes all the elements with fullscreen flag set from the top layer, and
+  // clears their fullscreen flag.
   void CleanupFullscreenState();
 
-  // Pushes aElement onto the fullscreen stack, and removes fullscreen styles
-  // from the former fullscreen stack top, and its ancestors, and applies the
-  // styles to aElement. aElement becomes the new "fullscreen element".
-  bool FullscreenStackPush(Element* aElement);
+  // Pushes aElement onto the top layer
+  bool TopLayerPush(Element* aElement);
 
-  // Remove the top element from the fullscreen stack. Removes the fullscreen
-  // styles from the former top element, and applies them to the new top
-  // element, if there is one.
-  void FullscreenStackPop();
+  // Removes the topmost element which have aPredicate return true from the top
+  // layer. The removed element, if any, is returned.
+  Element* TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc);
+
+  // Pops the fullscreen element from the top layer and clears its
+  // fullscreen flag.
+  void UnsetFullscreenElement();
+
+  // Pushes the given element into the top of top layer and set fullscreen
+  // flag.
+  bool SetFullscreenElement(Element* aElement);
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a
@@ -1922,7 +1927,7 @@ class Document : public nsINode,
 
   /**
    * Called when a frame in a remote child document has rolled back fullscreen
-   * so that all its fullscreen element stacks are empty; we must continue the
+   * so that all its top layer are empty; we must continue the
    * rollback in this parent process' doc tree branch which is fullscreen.
    * Note that only one branch of the document tree can have its documents in
    * fullscreen state at one time. We're in inconsistent state if a
@@ -1950,6 +1955,8 @@ class Document : public nsINode,
    * fullscreen.
    */
   Document* GetFullscreenRoot();
+
+  size_t CountFullscreenElements() const;
 
   /**
    * Sets the fullscreen root to aRoot. This stores a weak reference to aRoot
@@ -3345,7 +3352,9 @@ class Document : public nsINode,
   nsIURI* GetDocumentURIObject() const;
   // Not const because all the fullscreen goop is not const
   bool FullscreenEnabled(CallerType aCallerType);
-  Element* FullscreenStackTop();
+  Element* GetTopLayerTop();
+  // Return the fullscreen element in the top layer
+  Element* GetUnretargetedFullScreenElement();
   bool Fullscreen() { return !!GetFullscreenElement(); }
   already_AddRefed<Promise> ExitFullscreen(ErrorResult&);
   void ExitPointerLock() { UnlockPointer(this); }
@@ -4912,10 +4921,8 @@ class Document : public nsINode,
 
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
 
-  // Stack of fullscreen elements. When we request fullscreen we push the
-  // fullscreen element onto this stack, and when we cancel fullscreen we
-  // pop one off this stack, restoring the previous fullscreen state
-  nsTArray<nsWeakPtr> mFullscreenStack;
+  // Stack of top layer elements.
+  nsTArray<nsWeakPtr> mTopLayer;
 
   // The root of the doc tree in which this document is in. This is only
   // non-null when this document is in fullscreen mode.
