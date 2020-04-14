@@ -1,5 +1,5 @@
 var BUGNUMBER = 1151149;
-var summary = "Proxy constructor should throw if either the target or handler is a revoked proxy.";
+var summary = "Proxy constructor should not throw if either the target or handler is a revoked proxy.";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -16,8 +16,8 @@ new Proxy({}, p);
 
 r.revoke();
 
-assertThrowsInstanceOf(() => new Proxy(p, {}), TypeError);
-assertThrowsInstanceOf(() => new Proxy({}, p), TypeError);
+new Proxy(p, {});
+new Proxy({}, p);
 
 
 var r2 = Proxy.revocable({}, {});
@@ -34,8 +34,8 @@ new Proxy({}, p);
 
 r.revoke();
 
-assertThrowsInstanceOf(() => new Proxy(p, {}), TypeError);
-assertThrowsInstanceOf(() => new Proxy({}, p), TypeError);
+new Proxy(p, {});
+new Proxy({}, p);
 
 
 var g = newGlobal();
@@ -46,8 +46,8 @@ new Proxy({}, p);
 
 g.eval(`r.revoke();`);
 
-assertThrowsInstanceOf(() => new Proxy(p, {}), TypeError);
-assertThrowsInstanceOf(() => new Proxy({}, p), TypeError);
+new Proxy(p, {});
+new Proxy({}, p);
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);

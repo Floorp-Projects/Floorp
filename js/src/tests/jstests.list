@@ -468,12 +468,6 @@ skip script test262/language/statements/for-of/iterator-close-throw-get-method-a
 skip script test262/built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
 skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
 
-# https://github.com/tc39/ecma262/pull/1814
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1617585
-skip script test262/built-ins/Proxy/create-handler-is-revoked-proxy.js
-skip script test262/built-ins/Proxy/create-target-is-revoked-proxy.js
-skip script test262/built-ins/Proxy/create-target-is-revoked-function-proxy.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
