@@ -1362,8 +1362,8 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   GP("DoGroupingForDisplayList\n");
 
-  mCurrentClipManager->BeginList(aSc);
-  Grouper g(*mCurrentClipManager);
+  mClipManager.BeginList(aSc);
+  Grouper g(mClipManager);
 
   int32_t appUnitsPerDevPixel =
       aWrappingItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -1471,14 +1471,13 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mScrollId = scrollId;
   g.ConstructGroups(aDisplayListBuilder, this, aBuilder, aResources, &group,
                     aList, aSc);
-  mCurrentClipManager->EndList(aSc);
+  mClipManager.EndList(aSc);
 }
 
 WebRenderCommandBuilder::WebRenderCommandBuilder(
     WebRenderLayerManager* aManager)
     : mManager(aManager),
       mRootStackingContexts(nullptr),
-      mCurrentClipManager(nullptr),
       mLastAsr(nullptr),
       mDumpIndent(0),
       mDoGrouping(false),
@@ -1520,8 +1519,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
+  mClipManager.BeginBuild(mManager, aBuilder);
   for (auto renderRoot : wr::kRenderRoots) {
-    mClipManagers[renderRoot].BeginBuild(mManager, aBuilder);
     mBuilderDumpIndex[renderRoot] = 0;
   }
   mLastCanvasDatas.Clear();
@@ -1600,10 +1599,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     aScrollData.AddLayerData(*it);
   }
   mLayerScrollData.clear();
-
-  for (auto renderRoot : wr::kRenderRoots) {
-    mClipManagers[renderRoot].EndBuild();
-  }
+  mClipManager.EndBuild();
 
   // Remove the user data those are not displayed on the screen and
   // also reset the data to unused for next transaction.
@@ -1650,8 +1646,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources) {
-  AutoRestore<ClipManager*> prevClipManager(mCurrentClipManager);
-  mCurrentClipManager = &mClipManagers[aBuilder.GetRenderRoot()];
   if (mDoGrouping) {
     MOZ_RELEASE_ASSERT(
         aWrappingItem,
@@ -1673,7 +1667,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   }
 
   mDumpIndent++;
-  mCurrentClipManager->BeginList(aSc);
+  mClipManager.BeginList(aSc);
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
 
@@ -1725,7 +1719,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     // This is where we emulate the clip/scroll stack that was previously
     // implemented on the WR display list side.
-    auto spaceAndClipChain = mCurrentClipManager->SwitchItem(item);
+    auto spaceAndClipChain = mClipManager.SwitchItem(item);
     wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
     {  // scope restoreDoGrouping
@@ -1821,17 +1815,17 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   }
 
   mDumpIndent--;
-  mCurrentClipManager->EndList(aSc);
+  mClipManager.EndList(aSc);
 }
 
 void WebRenderCommandBuilder::PushOverrideForASR(
     const ActiveScrolledRoot* aASR, const wr::WrSpatialId& aSpatialId) {
-  mCurrentClipManager->PushOverrideForASR(aASR, aSpatialId);
+  mClipManager.PushOverrideForASR(aASR, aSpatialId);
 }
 
 void WebRenderCommandBuilder::PopOverrideForASR(
     const ActiveScrolledRoot* aASR) {
-  mCurrentClipManager->PopOverrideForASR(aASR);
+  mClipManager.PopOverrideForASR(aASR);
 }
 
 Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageKey(
