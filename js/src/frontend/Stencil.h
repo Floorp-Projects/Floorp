@@ -83,8 +83,6 @@ struct LazyScriptCreationData {
   bool forceStrict = false;
   bool strict = false;
 
-  mozilla::Maybe<FieldInitializers> fieldInitializers;
-
   explicit LazyScriptCreationData(JSContext* cx) : innerFunctionIndexes(cx) {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
