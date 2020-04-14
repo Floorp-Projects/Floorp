@@ -679,7 +679,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=27cf89ef920d1968c06e45f2a7903725d6b635cd#27cf89ef920d1968c06e45f2a7903725d6b635cd"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0f62d389cc04cc3707368eda14fe1904ee8d7981#0f62d389cc04cc3707368eda14fe1904ee8d7981"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -896,9 +896,9 @@ dependencies = [
 
 [[package]]
 name = "cubeb-backend"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a1e7add4e7642a8aebb24172922318482bed52389a12cb339f728bbd4c4ed9c"
+checksum = "228778b00abd85a2ccca9330bc0ee7e72795dd255039814baef02b99757ad12e"
 dependencies = [
  "cubeb-core",
 ]
@@ -916,7 +916,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=27cf89ef920d1968c06e45f2a7903725d6b635cd#27cf89ef920d1968c06e45f2a7903725d6b635cd"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0f62d389cc04cc3707368eda14fe1904ee8d7981#0f62d389cc04cc3707368eda14fe1904ee8d7981"
 dependencies = [
  "atomic",
  "audio-mixer",

@@ -12,7 +12,7 @@
 
 [package]
 name = "cubeb-backend"
-version = "0.6.2"
+version = "0.6.3"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = "Bindings to libcubeb internals to facilitate implementing cubeb backends in rust.\n"
 homepage = "https://github.com/djg/cubeb-rs"
