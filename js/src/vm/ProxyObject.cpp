@@ -128,12 +128,14 @@ ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
                                        const JSClass* clasp) {
   Rooted<TaggedProto> proto(cx, proto_);
 
-#ifdef DEBUG
+  MOZ_ASSERT(clasp->isProxy());
   MOZ_ASSERT(isValidProxyClass(clasp));
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->compartment() == proto.toObject()->compartment());
   MOZ_ASSERT(clasp->hasFinalize());
+
+#ifdef DEBUG
   if (priv.isGCThing()) {
     JS::AssertCellIsNotGray(priv.toGCThing());
   }
@@ -142,20 +144,59 @@ ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
   gc::AllocKind allocKind = GetProxyGCObjectKind(clasp, handler, priv);
 
   AutoSetNewObjectMetadata metadata(cx);
-  // Note: this will initialize the object's |data| to strange values, but we
-  // will immediately overwrite those below.
-  ProxyObject* proxy;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, proxy,
-                            createSingleton(cx, clasp, proto, allocKind));
+  Rooted<ProxyObject*> proxy(cx);
+  {
+    Realm* realm = cx->realm();
+    RootedObjectGroup group(cx);
+    RootedShape shape(cx);
+
+    // Try to look up the group and shape in the NewProxyCache.
+    if (!realm->newProxyCache.lookup(clasp, proto, group.address(),
+                                     shape.address())) {
+      group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
+      if (!group) {
+        return nullptr;
+      }
+
+      shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
+      if (!shape) {
+        return nullptr;
+      }
+
+      realm->newProxyCache.add(group, shape);
+    }
+
+    MOZ_ASSERT(group->realm() == realm);
+    MOZ_ASSERT(shape->zone() == cx->zone());
+    MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
+    MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
+
+    gc::InitialHeap heap = GetInitialHeap(SingletonObject, group);
+    debugCheckNewObject(group, shape, allocKind, heap);
+
+    JSObject* obj =
+        js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+    if (!obj) {
+      return nullptr;
+    }
+
+    proxy = static_cast<ProxyObject*>(obj);
+    proxy->initGroup(group);
+    proxy->initShape(shape);
+
+    MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+    cx->realm()->setObjectPendingMetadata(cx, proxy);
+
+    js::gc::gcTracer.traceCreateObject(proxy);
+  }
 
   proxy->init(handler, priv, cx);
 
-  Rooted<ProxyObject*> rootedProxy(cx, proxy);
-  if (!JSObject::setSingleton(cx, rootedProxy)) {
+  if (!JSObject::setSingleton(cx, proxy)) {
     return nullptr;
   }
 
-  return rootedProxy;
+  return proxy;
 }
 
 gc::AllocKind ProxyObject::allocKindForTenure() const {
@@ -226,57 +267,6 @@ void ProxyObject::nuke() {
   MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
 
   gc::InitialHeap heap = GetInitialHeap(newKind, group);
-  debugCheckNewObject(group, shape, allocKind, heap);
-
-  JSObject* obj =
-      js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
-  if (!obj) {
-    return cx->alreadyReportedOOM();
-  }
-
-  ProxyObject* pobj = static_cast<ProxyObject*>(obj);
-  pobj->initGroup(group);
-  pobj->initShape(shape);
-
-  MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
-  cx->realm()->setObjectPendingMetadata(cx, pobj);
-
-  js::gc::gcTracer.traceCreateObject(pobj);
-
-  return pobj;
-}
-
-/* static */ JS::Result<ProxyObject*, JS::OOM&> ProxyObject::createSingleton(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
-    gc::AllocKind allocKind) {
-  MOZ_ASSERT(clasp->isProxy());
-
-  Realm* realm = cx->realm();
-  RootedObjectGroup group(cx);
-  RootedShape shape(cx);
-
-  // Try to look up the group and shape in the NewProxyCache.
-  if (!realm->newProxyCache.lookup(clasp, proto, group.address(),
-                                   shape.address())) {
-    group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
-    if (!group) {
-      return cx->alreadyReportedOOM();
-    }
-
-    shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
-    if (!shape) {
-      return cx->alreadyReportedOOM();
-    }
-
-    realm->newProxyCache.add(group, shape);
-  }
-
-  MOZ_ASSERT(group->realm() == realm);
-  MOZ_ASSERT(shape->zone() == cx->zone());
-  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
-  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
-
-  gc::InitialHeap heap = GetInitialHeap(SingletonObject, group);
   debugCheckNewObject(group, shape, allocKind, heap);
 
   JSObject* obj =
