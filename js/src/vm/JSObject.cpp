@@ -1378,9 +1378,6 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
           obj->as<NativeObject>().getPrivate());
     }
   } else {
-    ProxyOptions options;
-    options.setClass(obj->getClass());
-
     auto* handler = GetProxyHandler(obj);
 
     // Same as above, require tenure allocation of the clone. This means for
@@ -1391,7 +1388,8 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
       return nullptr;
     }
 
-    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto, options);
+    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto,
+                             obj->getClass());
     if (!clone) {
       return nullptr;
     }

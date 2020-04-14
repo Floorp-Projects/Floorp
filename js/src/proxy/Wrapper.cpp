@@ -282,6 +282,19 @@ JSObject* Wrapper::New(JSContext* cx, JSObject* obj, const Wrapper* handler,
   return NewProxyObject(cx, handler, priv, options.proto(), options);
 }
 
+JSObject* Wrapper::NewSingleton(JSContext* cx, JSObject* obj,
+                                const Wrapper* handler,
+                                const WrapperOptions& options) {
+  // If this is a cross-compartment wrapper allocate it in the compartment's
+  // first global. See Compartment::globalForNewCCW.
+  mozilla::Maybe<AutoRealm> ar;
+  if (handler->isCrossCompartmentWrapper()) {
+    ar.emplace(cx, &cx->compartment()->globalForNewCCW());
+  }
+  RootedValue priv(cx, ObjectValue(*obj));
+  return NewSingletonProxyObject(cx, handler, priv, options.proto(), options);
+}
+
 JSObject* Wrapper::Renew(JSObject* existing, JSObject* obj,
                          const Wrapper* handler) {
   existing->as<ProxyObject>().renew(handler, ObjectValue(*obj));

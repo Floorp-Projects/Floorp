@@ -151,6 +151,10 @@ class JS_FRIEND_API Wrapper : public ForwardingProxyHandler {
   static JSObject* New(JSContext* cx, JSObject* obj, const Wrapper* handler,
                        const WrapperOptions& options = WrapperOptions());
 
+  static JSObject* NewSingleton(
+      JSContext* cx, JSObject* obj, const Wrapper* handler,
+      const WrapperOptions& options = WrapperOptions());
+
   static JSObject* Renew(JSObject* existing, JSObject* obj,
                          const Wrapper* handler);
 
