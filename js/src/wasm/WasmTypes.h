@@ -271,7 +271,7 @@ class Opcode {
 
 enum class PackedTypeCode : uint32_t {};
 
-static_assert(std::is_pod<PackedTypeCode>::value,
+static_assert(std::is_pod_v<PackedTypeCode>,
               "must be POD to be simply serialized/deserialized");
 
 const uint32_t NoTypeCode = 0xFF;          // Only use these

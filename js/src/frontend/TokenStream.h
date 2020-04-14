@@ -1923,7 +1923,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
   TokenStreamSpecific* asSpecific() {
     static_assert(
-        std::is_base_of<GeneralTokenStreamChars, TokenStreamSpecific>::value,
+        std::is_base_of_v<GeneralTokenStreamChars, TokenStreamSpecific>,
         "static_cast below presumes an inheritance relationship");
 
     return static_cast<TokenStreamSpecific*>(this);

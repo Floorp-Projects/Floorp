@@ -1567,8 +1567,8 @@ bool CacheIRCompiler::emitGuardToInt32() {
 // To select this function simply omit the |Label* fail| parameter for the
 // emitter lambda function.
 template <typename EmitDouble>
-static typename std::enable_if_t<
-    mozilla::FunctionTypeTraits<EmitDouble>::arity == 1, void>
+static std::enable_if_t<mozilla::FunctionTypeTraits<EmitDouble>::arity == 1,
+                        void>
 EmitGuardDouble(CacheIRCompiler* compiler, MacroAssembler& masm,
                 ValueOperand input, FailurePath* failure,
                 EmitDouble emitDouble) {
@@ -1579,8 +1579,8 @@ EmitGuardDouble(CacheIRCompiler* compiler, MacroAssembler& masm,
 }
 
 template <typename EmitDouble>
-static typename std::enable_if_t<
-    mozilla::FunctionTypeTraits<EmitDouble>::arity == 2, void>
+static std::enable_if_t<mozilla::FunctionTypeTraits<EmitDouble>::arity == 2,
+                        void>
 EmitGuardDouble(CacheIRCompiler* compiler, MacroAssembler& masm,
                 ValueOperand input, FailurePath* failure,
                 EmitDouble emitDouble) {
@@ -4433,7 +4433,7 @@ bool CacheIRCompiler::emitCompareBigIntInt32ResultShared(
     JSOp op, const AutoOutputRegister& output) {
   MOZ_ASSERT(IsLooseEqualityOp(op) || IsRelationalOp(op));
 
-  static_assert(std::is_same<BigInt::Digit, uintptr_t>::value,
+  static_assert(std::is_same_v<BigInt::Digit, uintptr_t>,
                 "BigInt digit can be loaded in a pointer-sized register");
   static_assert(sizeof(BigInt::Digit) >= sizeof(uint32_t),
                 "BigInt digit stores at least an uint32");
@@ -5815,7 +5815,7 @@ struct VMFunctionReturnType<R (*)(JSContext*, Args...)> {
 
   // By convention VMFunctions returning `bool` use an output parameter.
   using ReturnType =
-      std::conditional_t<std::is_same<R, bool>::value, LastArgument, R>;
+      std::conditional_t<std::is_same_v<R, bool>, LastArgument, R>;
 };
 
 template <class>

@@ -648,8 +648,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     JSContext* cx, Chars chars, size_t length, const AtomHasher::Lookup& lookup,
     PinningBehavior pin, const Maybe<uint32_t>& indexValue);
 
-template <typename CharT, typename = typename std::enable_if<
-                              !std::is_const<CharT>::value>::type>
+template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
 static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     JSContext* cx, CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup, PinningBehavior pin,
@@ -663,8 +662,7 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
     JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, Chars chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
-template <typename CharT, typename = typename std::enable_if<
-                              !std::is_const<CharT>::value>::type>
+template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
 static JSAtom* PermanentlyAtomizeAndCopyChars(
     JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, CharT* chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
@@ -745,8 +743,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     JSContext* cx, Chars chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
-template <typename CharT, typename = typename std::enable_if<
-                              !std::is_const<CharT>::value>::type>
+template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     JSContext* cx, CharT* chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
@@ -1085,7 +1082,7 @@ JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
 
   AtomizeUTF8OrWTF8CharsWrapper<CharsT> chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
-  if (std::is_same<CharsT, WTF8Chars>::value) {
+  if (std::is_same_v<CharsT, WTF8Chars>) {
     lookup.type = AtomHasher::Lookup::WTF8;
   }
   return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom,

@@ -2946,9 +2946,9 @@ template <typename Unit, XDRMode mode>
 /* static */
 XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
                                              ScriptSource* const ss) {
-  static_assert(std::is_same<Unit, Utf8Unit>::value ||
-                    std::is_same<Unit, char16_t>::value,
-                "should handle UTF-8 and UTF-16");
+  static_assert(
+      std::is_same_v<Unit, Utf8Unit> || std::is_same_v<Unit, char16_t>,
+      "should handle UTF-8 and UTF-16");
 
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(ss->isUncompressed<Unit>());
@@ -2970,9 +2970,9 @@ template <typename Unit, XDRMode mode>
 /* static */
 XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
                                            ScriptSource* const ss) {
-  static_assert(std::is_same<Unit, Utf8Unit>::value ||
-                    std::is_same<Unit, char16_t>::value,
-                "should handle UTF-8 and UTF-16");
+  static_assert(
+      std::is_same_v<Unit, Utf8Unit> || std::is_same_v<Unit, char16_t>,
+      "should handle UTF-8 and UTF-16");
 
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(ss->isCompressed<Unit>());
@@ -3020,9 +3020,9 @@ template <typename Unit,
           XDRMode mode>
 /* static */
 void ScriptSource::codeRetrievable(ScriptSource* const ss) {
-  static_assert(std::is_same<Unit, Utf8Unit>::value ||
-                    std::is_same<Unit, char16_t>::value,
-                "should handle UTF-8 and UTF-16");
+  static_assert(
+      std::is_same_v<Unit, Utf8Unit> || std::is_same_v<Unit, char16_t>,
+      "should handle UTF-8 and UTF-16");
 
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT((ss->data.is<Data<Unit, SourceRetrievable::Yes>>()));

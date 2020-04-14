@@ -369,7 +369,7 @@ XrayTraits* GetXrayTraits(JSObject* obj);
 
 template <typename Base, typename Traits>
 class XrayWrapper : public Base {
-  static_assert(std::is_base_of<js::BaseProxyHandler, Base>::value,
+  static_assert(std::is_base_of_v<js::BaseProxyHandler, Base>,
                 "Base *must* derive from js::BaseProxyHandler");
 
  public:

@@ -110,7 +110,7 @@ template <class ParseHandler, typename Unit>
 inline typename GeneralParser<ParseHandler, Unit>::FinalParser*
 GeneralParser<ParseHandler, Unit>::asFinalParser() {
   static_assert(
-      std::is_base_of<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
+      std::is_base_of_v<GeneralParser<ParseHandler, Unit>, FinalParser>,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<FinalParser*>(this);
@@ -120,7 +120,7 @@ template <class ParseHandler, typename Unit>
 inline const typename GeneralParser<ParseHandler, Unit>::FinalParser*
 GeneralParser<ParseHandler, Unit>::asFinalParser() const {
   static_assert(
-      std::is_base_of<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
+      std::is_base_of_v<GeneralParser<ParseHandler, Unit>, FinalParser>,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<const FinalParser*>(this);

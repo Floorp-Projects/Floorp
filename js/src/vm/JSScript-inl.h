@@ -61,7 +61,7 @@ void SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 inline void ScriptWarmUpData::initEnclosingScript(BaseScript* enclosingScript) {
   MOZ_ASSERT(data_ == ResetState());
   setTaggedPtr<EnclosingScriptTag>(enclosingScript);
-  static_assert(std::is_base_of<gc::TenuredCell, BaseScript>::value,
+  static_assert(std::is_base_of_v<gc::TenuredCell, BaseScript>,
                 "BaseScript must be TenuredCell to avoid post-barriers");
 }
 inline void ScriptWarmUpData::clearEnclosingScript() {
@@ -72,7 +72,7 @@ inline void ScriptWarmUpData::clearEnclosingScript() {
 inline void ScriptWarmUpData::initEnclosingScope(Scope* enclosingScope) {
   MOZ_ASSERT(data_ == ResetState());
   setTaggedPtr<EnclosingScopeTag>(enclosingScope);
-  static_assert(std::is_base_of<gc::TenuredCell, Scope>::value,
+  static_assert(std::is_base_of_v<gc::TenuredCell, Scope>,
                 "Scope must be TenuredCell to avoid post-barriers");
 }
 inline void ScriptWarmUpData::clearEnclosingScope() {

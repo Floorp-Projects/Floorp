@@ -102,7 +102,7 @@ class AbstractScopePtr {
   // or otherwise would reify to a particular scope type.
   template <typename T>
   bool is() const {
-    static_assert(std::is_base_of<Scope, T>::value,
+    static_assert(std::is_base_of_v<Scope, T>,
                   "Trying to ask about non-Scope type");
     if (isNullptr()) {
       return false;

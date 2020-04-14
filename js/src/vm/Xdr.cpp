@@ -51,7 +51,7 @@ XDRResult XDRState<mode>::codeChars(Latin1Char* chars, size_t nchars) {
   static_assert(sizeof(Latin1Char) == 1,
                 "Latin1Char must be 1 byte for nchars below to be the "
                 "proper count of bytes");
-  static_assert(std::is_same<Latin1Char, unsigned char>::value,
+  static_assert(std::is_same_v<Latin1Char, unsigned char>,
                 "Latin1Char must be unsigned char to C++-safely reinterpret "
                 "the bytes generically copied below as Latin1Char");
   return codeBytes(chars, nchars);
