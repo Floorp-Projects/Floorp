@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::PrimitiveFlags;
 use api::units::*;
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
-    InternablePrimitive, PictureIndex, PrimitiveInstanceKind, PrimKey, PrimKeyCommonData, PrimTemplate,
+    InternablePrimitive, PictureIndex, PrimitiveInstanceKind, PrimKey, PrimTemplate,
     PrimTemplateCommonData, PrimitiveStore, RectangleKey,
 };
 
@@ -35,15 +34,11 @@ pub type BackdropKey = PrimKey<Backdrop>;
 
 impl BackdropKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
+        info: &LayoutPrimitiveInfo,
         backdrop: Backdrop,
     ) -> Self {
         BackdropKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
+            common: info.into(),
             kind: backdrop,
         }
     }
@@ -86,11 +81,7 @@ impl InternablePrimitive for Backdrop {
         self,
         info: &LayoutPrimitiveInfo,
     ) -> BackdropKey {
-        BackdropKey::new(
-            info.flags,
-            info.rect.size,
-            self
-        )
+        BackdropKey::new(info, self)
     }
 
     fn make_instance_kind(

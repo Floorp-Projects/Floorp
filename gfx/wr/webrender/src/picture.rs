@@ -4155,12 +4155,8 @@ impl PrimitiveCluster {
     fn push(
         &mut self,
         prim_instance: PrimitiveInstance,
-        prim_size: LayoutSize,
+        prim_rect: LayoutRect,
     ) {
-        let prim_rect = LayoutRect::new(
-            prim_instance.prim_origin,
-            prim_size,
-        );
         let culling_rect = prim_instance.local_clip_rect
             .intersection(&prim_rect)
             .unwrap_or_else(LayoutRect::zero);
@@ -4195,7 +4191,7 @@ impl PrimitiveList {
     fn push(
         &mut self,
         prim_instance: PrimitiveInstance,
-        prim_size: LayoutSize,
+        prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         prim_flags: PrimitiveFlags,
         insert_position: PrimitiveListPosition,
@@ -4236,13 +4232,13 @@ impl PrimitiveList {
                     spatial_node_index,
                     flags,
                 );
-                cluster.push(prim_instance, prim_size);
+                cluster.push(prim_instance, prim_rect);
                 self.clusters.insert(0, cluster);
             }
             PrimitiveListPosition::End => {
                 if let Some(cluster) = self.clusters.last_mut() {
                     if cluster.is_compatible(spatial_node_index, flags) {
-                        cluster.push(prim_instance, prim_size);
+                        cluster.push(prim_instance, prim_rect);
                         return;
                     }
                 }
@@ -4251,7 +4247,7 @@ impl PrimitiveList {
                     spatial_node_index,
                     flags,
                 );
-                cluster.push(prim_instance, prim_size);
+                cluster.push(prim_instance, prim_rect);
                 self.clusters.push(cluster);
             }
         }
@@ -4261,13 +4257,13 @@ impl PrimitiveList {
     pub fn add_prim_to_start(
         &mut self,
         prim_instance: PrimitiveInstance,
-        prim_size: LayoutSize,
+        prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         flags: PrimitiveFlags,
     ) {
         self.push(
             prim_instance,
-            prim_size,
+            prim_rect,
             spatial_node_index,
             flags,
             PrimitiveListPosition::Begin,
@@ -4278,13 +4274,13 @@ impl PrimitiveList {
     pub fn add_prim(
         &mut self,
         prim_instance: PrimitiveInstance,
-        prim_size: LayoutSize,
+        prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         flags: PrimitiveFlags,
     ) {
         self.push(
             prim_instance,
-            prim_size,
+            prim_rect,
             spatial_node_index,
             flags,
             PrimitiveListPosition::End,
@@ -5921,8 +5917,7 @@ impl PicturePrimitive {
                             // TODO(aosmond): Is this safe? Updating the primitive size during
                             // frame building is usually problematic since scene building will cache
                             // the primitive information in the GPU already.
-                            prim_instance.prim_origin = prim_rect.origin;
-                            prim_data.common.prim_size = prim_rect.size;
+                            prim_data.common.prim_rect = prim_rect;
                             prim_instance.local_clip_rect = prim_rect;
 
                             // Update the cluster bounding rect now that we have the backdrop rect.

@@ -668,16 +668,14 @@ impl From<WorldPoint> for PointKey {
 #[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct PrimKeyCommonData {
     pub flags: PrimitiveFlags,
-    pub prim_size: SizeKey,
+    pub prim_rect: RectangleKey,
 }
 
-impl PrimKeyCommonData {
-    pub fn with_info(
-        info: &LayoutPrimitiveInfo,
-    ) -> Self {
+impl From<&LayoutPrimitiveInfo> for PrimKeyCommonData {
+    fn from(info: &LayoutPrimitiveInfo) -> Self {
         PrimKeyCommonData {
             flags: info.flags,
-            prim_size: info.rect.size.into(),
+            prim_rect: info.rect.into(),
         }
     }
 }
@@ -700,15 +698,11 @@ pub struct PrimitiveKey {
 
 impl PrimitiveKey {
     pub fn new(
-        flags: PrimitiveFlags,
-        prim_size: LayoutSize,
+        info: &LayoutPrimitiveInfo,
         kind: PrimitiveKeyKind,
     ) -> Self {
         PrimitiveKey {
-            common: PrimKeyCommonData {
-                flags,
-                prim_size: prim_size.into(),
-            },
+            common: info.into(),
             kind,
         }
     }
@@ -752,7 +746,7 @@ impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
 pub struct PrimTemplateCommonData {
     pub flags: PrimitiveFlags,
     pub may_need_repetition: bool,
-    pub prim_size: LayoutSize,
+    pub prim_rect: LayoutRect,
     pub opacity: PrimitiveOpacity,
     /// The GPU cache handle for a primitive template. Since this structure
     /// is retained across display lists by interning, this GPU cache handle
@@ -766,7 +760,7 @@ impl PrimTemplateCommonData {
         PrimTemplateCommonData {
             flags: common.flags,
             may_need_repetition: true,
-            prim_size: common.prim_size.into(),
+            prim_rect: common.prim_rect.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
             opacity: PrimitiveOpacity::translucent(),
         }
@@ -868,11 +862,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
         self,
         info: &LayoutPrimitiveInfo,
     ) -> PrimitiveKey {
-        PrimitiveKey::new(
-            info.flags,
-            info.rect.size,
-            self,
-        )
+        PrimitiveKey::new(info, self)
     }
 
     fn make_instance_kind(
@@ -1584,10 +1574,6 @@ pub struct PrimitiveInstance {
     /// can be found.
     pub kind: PrimitiveInstanceKind,
 
-    /// Local space origin of this primitive. The size
-    /// of the primitive is defined by the template.
-    pub prim_origin: LayoutPoint,
-
     /// Local space clip rect for this instance
     pub local_clip_rect: LayoutRect,
 
@@ -1609,13 +1595,11 @@ pub struct PrimitiveInstance {
 
 impl PrimitiveInstance {
     pub fn new(
-        prim_origin: LayoutPoint,
         local_clip_rect: LayoutRect,
         kind: PrimitiveInstanceKind,
         clip_chain_id: ClipChainId,
     ) -> Self {
         PrimitiveInstance {
-            prim_origin,
             local_clip_rect,
             kind,
             #[cfg(debug_assertions)]
@@ -2061,17 +2045,7 @@ impl PrimitiveStore {
 
                         frame_state.clip_chain_stack.pop_clip();
 
-                        // The local rect of pictures is calculated dynamically based on
-                        // the content of children, which may move due to the spatial
-                        // node they are attached to. Other parts of the code (such as
-                        // segment generation) reads the origin from the prim instance,
-                        // so ensure that is kept up to date here.
-                        // TODO(gw): It's unfortunate that the prim origin is duplicated
-                        //           this way. In future, we could perhaps just store the
-                        //           size in the picture primitive, to that there isn't
-                        //           any duplicated data.
                         let pic = &self.pictures[pic_index.0];
-                        prim_instance.prim_origin = pic.precise_local_rect.origin;
 
                         if prim_instance.is_chased() && pic.estimated_local_rect != pic.precise_local_rect {
                             println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
@@ -2104,12 +2078,7 @@ impl PrimitiveStore {
                     _ => {
                         let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
 
-                        let prim_rect = LayoutRect::new(
-                            prim_instance.prim_origin,
-                            prim_data.prim_size,
-                        );
-
-                        (false, prim_rect, prim_rect)
+                        (false, prim_data.prim_rect, prim_data.prim_rect)
                     }
                 };
 
@@ -2493,13 +2462,9 @@ impl PrimitiveStore {
                         // produce primitives that are partially covering the original image
                         // rect and we want to clip these extra parts out.
                         let prim_info = &frame_state.scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                        let prim_rect = LayoutRect::new(
-                            prim_instance.prim_origin,
-                            common_data.prim_size,
-                        );
                         let tight_clip_rect = prim_info
                             .combined_local_clip_rect
-                            .intersection(&prim_rect).unwrap();
+                            .intersection(&common_data.prim_rect).unwrap();
                         image_instance.tight_local_clip_rect = tight_clip_rect;
 
                         let map_local_to_world = SpaceMapper::new_with_target(
@@ -2524,7 +2489,7 @@ impl PrimitiveStore {
                         common_data.may_need_repetition = false;
 
                         let repetitions = crate::image::repetitions(
-                            &prim_rect,
+                            &common_data.prim_rect,
                             &visible_rect,
                             stride,
                         );
@@ -2821,8 +2786,14 @@ impl PrimitiveStore {
             }
         };
 
+        let prim_rect = data_stores.get_local_prim_rect(
+            prim_instance,
+            self,
+        );
+
         if !is_passthrough {
             prim_instance.update_clip_task(
+                &prim_rect.origin,
                 prim_spatial_node_index,
                 pic_context.raster_spatial_node_index,
                 pic_context,
@@ -2835,7 +2806,7 @@ impl PrimitiveStore {
             );
 
             if prim_instance.is_chased() {
-                println!("\tconsidered visible and ready with local pos {:?}", prim_instance.prim_origin);
+                println!("\tconsidered visible and ready with local pos {:?}", prim_rect.origin);
             }
         }
 
@@ -3010,7 +2981,7 @@ impl PrimitiveStore {
                         pic_context.raster_spatial_node_index,
                     )
                     .into_fast_transform();
-                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
+                let prim_offset = prim_data.common.prim_rect.origin.to_vector() - run.reference_frame_relative_offset;
 
                 let pic = &self.pictures[pic_context.pic_index.0];
                 let raster_space = pic.get_raster_space(frame_context.spatial_tree);
@@ -3217,8 +3188,8 @@ impl PrimitiveStore {
                 let common_data = &mut prim_data.common;
                 let image_data = &mut prim_data.kind;
 
-                if image_data.stretch_size.width >= common_data.prim_size.width &&
-                    image_data.stretch_size.height >= common_data.prim_size.height {
+                if image_data.stretch_size.width >= common_data.prim_rect.size.width &&
+                    image_data.stretch_size.height >= common_data.prim_rect.size.height {
 
                     common_data.may_need_repetition = false;
                 }
@@ -3253,8 +3224,8 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 prim_data.update(frame_state);
 
-                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
-                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
+                if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
+                    prim_data.stretch_size.height >= prim_data.common.prim_rect.size.height {
 
                     prim_data.common.may_need_repetition = false;
                 }
@@ -3270,13 +3241,13 @@ impl PrimitiveStore {
                     let (size, orientation, prim_start_offset, prim_end_offset) =
                         if prim_data.start_point.x.approx_eq(&prim_data.end_point.x) {
                             let prim_start_offset = -prim_data.start_point.y / gradient_size.height;
-                            let prim_end_offset = (prim_data.common.prim_size.height - prim_data.start_point.y)
+                            let prim_end_offset = (prim_data.common.prim_rect.size.height - prim_data.start_point.y)
                                                     / gradient_size.height;
                             let size = DeviceIntSize::new(16, TEXTURE_REGION_DIMENSIONS);
                             (size, LineOrientation::Vertical, prim_start_offset, prim_end_offset)
                         } else {
                             let prim_start_offset = -prim_data.start_point.x / gradient_size.width;
-                            let prim_end_offset = (prim_data.common.prim_size.width - prim_data.start_point.x)
+                            let prim_end_offset = (prim_data.common.prim_rect.size.width - prim_data.start_point.x)
                                                     / gradient_size.width;
                             let size = DeviceIntSize::new(TEXTURE_REGION_DIMENSIONS, 16);
                             (size, LineOrientation::Horizontal, prim_start_offset, prim_end_offset)
@@ -3481,8 +3452,8 @@ impl PrimitiveStore {
                         emit_segments(prim_start_offset, prim_end_offset,
                                       0.0,
                                       prim_start_offset, prim_end_offset,
-                                      prim_instance.prim_origin,
-                                      prim_data.common.prim_size,
+                                      prim_data.common.prim_rect.origin,
+                                      prim_data.common.prim_rect.size,
                                       size,
                                       prim_data.stops_opacity.is_opaque,
                                       &stops,
@@ -3508,8 +3479,8 @@ impl PrimitiveStore {
                             emit_segments(repeat_start, repeat_end,
                                           gradient_offset_base,
                                           prim_start_offset, prim_end_offset,
-                                          prim_instance.prim_origin,
-                                          prim_data.common.prim_size,
+                                          prim_data.common.prim_rect.origin,
+                                          prim_data.common.prim_rect.size,
                                           size,
                                           prim_data.stops_opacity.is_opaque,
                                           &stops,
@@ -3528,10 +3499,6 @@ impl PrimitiveStore {
                     prim_data.common.may_need_repetition = false;
 
                     let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                    let prim_rect = LayoutRect::new(
-                        prim_instance.prim_origin,
-                        prim_data.common.prim_size,
-                    );
 
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
@@ -3542,7 +3509,7 @@ impl PrimitiveStore {
 
                     gradient.visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
-                        &prim_rect,
+                        &prim_data.common.prim_rect,
                         prim_info.clipped_world_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
@@ -3576,8 +3543,8 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::RadialGradient { data_handle, ref mut visible_tiles_range, .. } => {
                 let prim_data = &mut data_stores.radial_grad[*data_handle];
 
-                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
-                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
+                if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
+                    prim_data.stretch_size.height >= prim_data.common.prim_rect.size.height {
 
                     // We are performing the decomposition on the CPU here, no need to
                     // have it in the shader.
@@ -3590,10 +3557,6 @@ impl PrimitiveStore {
 
                 if prim_data.tile_spacing != LayoutSize::zero() {
                     let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                    let prim_rect = LayoutRect::new(
-                        prim_instance.prim_origin,
-                        prim_data.common.prim_size,
-                    );
 
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
@@ -3606,7 +3569,7 @@ impl PrimitiveStore {
 
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
-                        &prim_rect,
+                        &prim_data.common.prim_rect,
                         prim_info.clipped_world_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
@@ -3640,8 +3603,8 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::ConicGradient { data_handle, ref mut visible_tiles_range, .. } => {
                 let prim_data = &mut data_stores.conic_grad[*data_handle];
 
-                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
-                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
+                if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
+                    prim_data.stretch_size.height >= prim_data.common.prim_rect.size.height {
 
                     // We are performing the decomposition on the CPU here, no need to
                     // have it in the shader.
@@ -3654,10 +3617,6 @@ impl PrimitiveStore {
 
                 if prim_data.tile_spacing != LayoutSize::zero() {
                     let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                    let prim_rect = LayoutRect::new(
-                        prim_instance.prim_origin,
-                        prim_data.common.prim_size,
-                    );
 
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
@@ -3670,7 +3629,7 @@ impl PrimitiveStore {
 
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
-                        &prim_rect,
+                        &prim_data.common.prim_rect,
                         prim_info.clipped_world_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
@@ -4100,6 +4059,7 @@ impl PrimitiveInstance {
 
     fn update_clip_task_for_brush(
         &self,
+        prim_origin: &LayoutPoint,
         prim_info: &mut PrimitiveVisibility,
         prim_spatial_node_index: SpatialNodeIndex,
         root_spatial_node_index: SpatialNodeIndex,
@@ -4256,7 +4216,7 @@ impl PrimitiveInstance {
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        segment.local_rect.translate(self.prim_origin.to_vector()),
+                        segment.local_rect.translate(prim_origin.to_vector()),
                         &pic_state.map_local_to_pic,
                         &pic_state.map_pic_to_world,
                         &frame_context.spatial_tree,
@@ -4290,6 +4250,7 @@ impl PrimitiveInstance {
 
     fn update_clip_task(
         &mut self,
+        prim_origin: &LayoutPoint,
         prim_spatial_node_index: SpatialNodeIndex,
         root_spatial_node_index: SpatialNodeIndex,
         pic_context: &PictureContext,
@@ -4328,6 +4289,7 @@ impl PrimitiveInstance {
 
         // First try to  render this primitive's mask using optimized brush rendering.
         if self.update_clip_task_for_brush(
+            prim_origin,
             prim_info,
             prim_spatial_node_index,
             root_spatial_node_index,
@@ -4580,10 +4542,10 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 88, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 80, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 48, "PrimitiveTemplate size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 56, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 28, "PrimitiveTemplateKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveKey>(), 28, "PrimitiveKey size changed");
+    assert_eq!(mem::size_of::<PrimitiveKey>(), 36, "PrimitiveKey size changed");
     assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 16, "PrimitiveKeyKind size changed");
 }

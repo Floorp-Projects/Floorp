@@ -281,7 +281,7 @@ impl Slice {
                     clip_chain_instance.clip_chain_id,
                     PrimitiveInstanceKind::PushClipChain,
                 ),
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 clip_chain_instance.spatial_node_index,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
@@ -299,7 +299,7 @@ impl Slice {
                     clip_chain_instance.clip_chain_id,
                     PrimitiveInstanceKind::PopClipChain,
                 ),
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 clip_chain_instance.spatial_node_index,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
@@ -692,7 +692,7 @@ impl<'a> SceneBuilder<'a> {
 
             main_prim_list.add_prim(
                 instance,
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 scroll_root,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
@@ -1599,7 +1599,6 @@ impl<'a> SceneBuilder<'a> {
         );
 
         PrimitiveInstance::new(
-            info.rect.origin,
             info.clip_rect,
             instance_kind,
             clip_chain_id,
@@ -1650,7 +1649,7 @@ impl<'a> SceneBuilder<'a> {
     pub fn add_primitive_to_draw_list(
         &mut self,
         prim_instance: PrimitiveInstance,
-        prim_size: LayoutSize,
+        prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         flags: PrimitiveFlags,
     ) {
@@ -1662,7 +1661,7 @@ impl<'a> SceneBuilder<'a> {
         let stacking_context = self.sc_stack.last_mut().unwrap();
         stacking_context.prim_list.add_prim(
             prim_instance,
-            prim_size,
+            prim_rect,
             spatial_node_index,
             flags,
         );
@@ -1753,7 +1752,7 @@ impl<'a> SceneBuilder<'a> {
         self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
         self.add_primitive_to_draw_list(
             prim_instance,
-            info.rect.size,
+            info.rect,
             clip_and_scroll.spatial_node_index,
             info.flags,
         );
@@ -1928,7 +1927,7 @@ impl<'a> SceneBuilder<'a> {
                             );
                             stacking_context.prim_list.add_prim_to_start(
                                 prim,
-                                LayoutSize::zero(),
+                                LayoutRect::zero(),
                                 stacking_context.spatial_node_index,
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                             );
@@ -1939,7 +1938,7 @@ impl<'a> SceneBuilder<'a> {
                             );
                             stacking_context.prim_list.add_prim(
                                 prim,
-                                LayoutSize::zero(),
+                                LayoutRect::zero(),
                                 stacking_context.spatial_node_index,
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                             );
@@ -2075,7 +2074,7 @@ impl<'a> SceneBuilder<'a> {
             for ext_prim in prims.drain(..) {
                 prim_list.add_prim(
                     ext_prim.instance,
-                    LayoutSize::zero(),
+                    LayoutRect::zero(),
                     ext_prim.spatial_node_index,
                     ext_prim.flags,
                 );
@@ -2142,7 +2141,7 @@ impl<'a> SceneBuilder<'a> {
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
                 cur_instance.clone(),
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 stacking_context.spatial_node_index,
                 stacking_context.prim_flags,
             );
@@ -2201,7 +2200,7 @@ impl<'a> SceneBuilder<'a> {
                 }
                 parent_sc.prim_list.add_prim(
                     cur_instance,
-                    LayoutSize::zero(),
+                    LayoutRect::zero(),
                     stacking_context.spatial_node_index,
                     stacking_context.prim_flags,
                 );
@@ -2596,7 +2595,6 @@ impl<'a> SceneBuilder<'a> {
                             .intern(&shadow_pic_key, || ());
 
                         let shadow_prim_instance = PrimitiveInstance::new(
-                            LayoutPoint::zero(),
                             LayoutRect::max_rect(),
                             PrimitiveInstanceKind::Picture {
                                 data_handle: shadow_prim_data_handle,
@@ -2610,7 +2608,7 @@ impl<'a> SceneBuilder<'a> {
                         // picture on to the shadow stack, to avoid infinite recursion!
                         self.add_primitive_to_draw_list(
                             shadow_prim_instance,
-                            LayoutSize::zero(),
+                            LayoutRect::zero(),
                             pending_shadow.clip_and_scroll.spatial_node_index,
                             PrimitiveFlags::IS_BACKFACE_VISIBLE,
                         );
@@ -2688,7 +2686,7 @@ impl<'a> SceneBuilder<'a> {
         // Add the new primitive to the shadow picture.
         prim_list.add_prim(
             shadow_prim_instance,
-            info.rect.size,
+            info.rect,
             pending_primitive.clip_and_scroll.spatial_node_index,
             info.flags,
         );
@@ -3308,7 +3306,7 @@ impl<'a> SceneBuilder<'a> {
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
                 instance,
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 backdrop_spatial_node_index,
                 prim_flags,
             );
@@ -3388,7 +3386,7 @@ impl<'a> SceneBuilder<'a> {
             .prim_list
             .add_prim(
                 filtered_instance,
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 backdrop_spatial_node_index,
                 info.flags,
             );
@@ -3404,7 +3402,7 @@ impl<'a> SceneBuilder<'a> {
             if let Some((_, flattened_instance)) = flattened_items.take() {
                 sc.prim_list.add_prim(
                     flattened_instance,
-                    LayoutSize::zero(),
+                    LayoutRect::zero(),
                     spatial_node_index,
                     prim_flags,
                 );
@@ -3429,7 +3427,7 @@ impl<'a> SceneBuilder<'a> {
             .prim_list
             .add_prim(
                 instance,
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 spatial_node_index,
                 prim_flags,
             );
@@ -3493,7 +3491,7 @@ impl<'a> SceneBuilder<'a> {
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
                 cur_instance.clone(),
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 spatial_node_index,
                 flags,
             );
@@ -3563,7 +3561,7 @@ impl<'a> SceneBuilder<'a> {
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
                 cur_instance.clone(),
-                LayoutSize::zero(),
+                LayoutRect::zero(),
                 spatial_node_index,
                 flags,
             );
@@ -3984,7 +3982,6 @@ fn create_prim_instance(
         .intern(&pic_key, || ());
 
     PrimitiveInstance::new(
-        LayoutPoint::zero(),
         LayoutRect::max_rect(),
         PrimitiveInstanceKind::Picture {
             data_handle,
@@ -4000,7 +3997,6 @@ fn create_clip_prim_instance(
     kind: PrimitiveInstanceKind,
 ) -> PrimitiveInstance {
     PrimitiveInstance::new(
-        LayoutPoint::zero(),
         LayoutRect::max_rect(),
         kind,
         clip_chain_id,
@@ -4152,7 +4148,6 @@ fn create_tile_cache(
     ));
 
     PrimitiveInstance::new(
-        LayoutPoint::zero(),
         LayoutRect::max_rect(),
         PrimitiveInstanceKind::Picture {
             data_handle: pic_data_handle,
