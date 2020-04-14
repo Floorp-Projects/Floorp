@@ -960,7 +960,7 @@ static JSString* FormattedNumberToString(
     JSContext* cx, PartitionNumberPatternResult formattedValue) {
 #ifndef U_HIDE_DRAFT_API
   static_assert(
-      std::is_same<PartitionNumberPatternResult, const UFormattedValue*>::value,
+      std::is_same_v<PartitionNumberPatternResult, const UFormattedValue*>,
       "UFormattedValue arm");
 
   UErrorCode status = U_ZERO_ERROR;
@@ -973,9 +973,9 @@ static JSString* FormattedNumberToString(
 
   return NewStringCopyN<CanGC>(cx, str, AssertedCast<uint32_t>(strLength));
 #else
-  static_assert(std::is_same<PartitionNumberPatternResult,
-                             const UFormattedNumber*>::value,
-                "UFormattedNumber arm");
+  static_assert(
+      std::is_same_v<PartitionNumberPatternResult, const UFormattedNumber*>,
+      "UFormattedNumber arm");
 
   return CallICU(cx,
                  [formatted](UChar* chars, int32_t size, UErrorCode* status) {

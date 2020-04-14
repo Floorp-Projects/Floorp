@@ -209,8 +209,7 @@ class CodeGeneratorShared : public LElementVisitor {
 
   template <typename T>
   inline size_t allocateIC(const T& cache) {
-    static_assert(std::is_base_of<IonIC, T>::value,
-                  "T must inherit from IonIC");
+    static_assert(std::is_base_of_v<IonIC, T>, "T must inherit from IonIC");
     size_t index;
     masm.propagateOOM(
         allocateData(sizeof(mozilla::AlignedStorage2<T>), &index));

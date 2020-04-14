@@ -316,9 +316,9 @@ struct JSPropertySpec {
   }
 };
 
-#define JS_CHECK_ACCESSOR_FLAGS(flags)                                         \
-  (static_cast<std::enable_if<((flags) & ~(JSPROP_ENUMERATE |                  \
-                                           JSPROP_PERMANENT)) == 0>::type>(0), \
+#define JS_CHECK_ACCESSOR_FLAGS(flags)                                     \
+  (static_cast<std::enable_if_t<((flags) & ~(JSPROP_ENUMERATE |            \
+                                             JSPROP_PERMANENT)) == 0>>(0), \
    (flags))
 
 #define JS_PSG(name, getter, flags)                                     \

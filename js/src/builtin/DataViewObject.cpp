@@ -421,11 +421,11 @@ bool DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj,
 
 template <typename T>
 static inline T WrappingConvert(int32_t value) {
-  if (std::is_unsigned<T>::value) {
+  if (std::is_unsigned_v<T>) {
     return static_cast<T>(value);
   }
 
-  return WrapToSigned(static_cast<typename std::make_unsigned<T>::type>(value));
+  return WrapToSigned(static_cast<typename std::make_unsigned_t<T>>(value));
 }
 
 template <typename NativeType>
