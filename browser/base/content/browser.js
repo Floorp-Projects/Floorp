@@ -2099,9 +2099,18 @@ var gBrowserInit = {
       this._firstBrowserPaintDeferred.resolve = resolve;
     });
 
+    // To prevent startup flicker, the urlbar has the 'focused' attribute set
+    // by default. If we are not sure the urlbar will be focused in this
+    // window, we need to remove the attribute before first paint.
+    // TODO (bug 1629956): The urlbar having the 'focused' attribute by default
+    // isn't a useful optimization anymore since UrlbarInput needs layout
+    // information to focus the urlbar properly.
+    let shouldRemoveFocusedAttribute = true;
+
     this._callWithURIToLoad(uriToLoad => {
       if (isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") {
         gURLBar.select();
+        shouldRemoveFocusedAttribute = false;
         return;
       }
 
@@ -2123,6 +2132,17 @@ var gBrowserInit = {
         gBrowser.selectedBrowser.focus();
       }
     });
+
+    // Delay removing the attribute using requestAnimationFrame to avoid
+    // invalidating styles multiple times in a row if uriToLoadPromise
+    // resolves before first paint.
+    if (shouldRemoveFocusedAttribute) {
+      window.requestAnimationFrame(() => {
+        if (shouldRemoveFocusedAttribute) {
+          gURLBar.removeAttribute("focused");
+        }
+      });
+    }
   },
 
   _handleURIToLoad() {
