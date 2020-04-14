@@ -1533,28 +1533,22 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     bool isTopLevelContent =
         presContext->Document()->IsTopLevelContentDocument();
 
-    wr::RenderRootArray<Maybe<StackingContextHelper>> pageRootScs;
-    for (auto renderRoot : wr::kRenderRoots) {
-      wr::StackingContextParams params;
-      // Just making this explicit - we assume that we do not want any
-      // filters traversing a RenderRoot boundary
-      if (renderRoot == wr::RenderRoot::Default) {
-        params.mFilters = std::move(aFilters.filters);
-        params.mFilterDatas = std::move(aFilters.filter_datas);
-      }
-      params.cache_tiles = isTopLevelContent;
-      params.clip =
-          wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
-      pageRootScs[renderRoot].emplace(rootScs[renderRoot], nullptr, nullptr,
-                                      nullptr, aBuilder, params);
-    }
+    wr::StackingContextParams params;
+    params.mFilters = std::move(aFilters.filters);
+    params.mFilterDatas = std::move(aFilters.filter_datas);
+    params.cache_tiles = isTopLevelContent;
+    params.clip =
+        wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
+
+    StackingContextHelper pageRootSc(rootScs[wr::RenderRoot::Default], nullptr,
+                                     nullptr, nullptr, aBuilder, params);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex =
           aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
-    CreateWebRenderCommandsFromDisplayList(
-        aDisplayList, nullptr, aDisplayListBuilder,
-        *pageRootScs[wr::RenderRoot::Default], aBuilder, aResourceUpdates);
+    CreateWebRenderCommandsFromDisplayList(aDisplayList, nullptr,
+                                           aDisplayListBuilder, pageRootSc,
+                                           aBuilder, aResourceUpdates);
   }
 
   // Make a "root" layer data that has everything else as descendants
