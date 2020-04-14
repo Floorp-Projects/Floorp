@@ -67,15 +67,10 @@ add_task(async function test() {
           SpecialPowers.registerObservers("xfo-on-violate-policy");
 
           function examiner() {
-            // Depending on whether xfo checks are performed in the parent
-            // or in the content process we have to use the specialpowers version
-            // for observing XFO violations. After Bug 1574372 we should be able
-            // to remove the "xfo-on-violate-policy" here.
             SpecialPowers.addObserver(
               this,
               "specialpowers-xfo-on-violate-policy"
             );
-            SpecialPowers.addObserver(this, "xfo-on-violate-policy");
           }
           examiner.prototype = {
             observe(subject, topic, data) {
@@ -92,7 +87,6 @@ add_task(async function test() {
                 this,
                 "specialpowers-xfo-on-violate-policy"
               );
-              SpecialPowers.removeObserver(this, "xfo-on-violate-policy");
             },
           };
           let myExaminer = new examiner();

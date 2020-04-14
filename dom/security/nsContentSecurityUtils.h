@@ -36,6 +36,12 @@ class nsContentSecurityUtils {
   static nsresult GetHttpChannelFromPotentialMultiPart(
       nsIChannel* aChannel, nsIHttpChannel** aHttpChannel);
 
+  // Helper function which performs the following framing checks
+  // * CSP frame-ancestors
+  // * x-frame-options
+  // If any of the two disallows framing, the channel will be cancelled.
+  static void PerformCSPFrameAncestorAndXFOCheck(nsIChannel* aChannel);
+
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
 #endif

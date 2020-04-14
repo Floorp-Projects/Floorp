@@ -606,6 +606,124 @@ nsresult nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
   return NS_OK;
 }
 
+nsresult ParseCSPAndEnforceFrameAncestorCheck(
+    nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP) {
+  MOZ_ASSERT(aChannel);
+
+  // CSP can only hang off an http channel, if this channel is not
+  // an http channel then there is nothing to do here.
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
+      aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+  // frame-ancestor check only makes sense for subdocument and object loads,
+  // if this is not a load of such type, there is nothing to do here.
+  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT &&
+      contentType != nsIContentPolicy::TYPE_OBJECT) {
+    return NS_OK;
+  }
+
+  nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+
+  Unused << httpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("content-security-policy"), tCspHeaderValue);
+
+  Unused << httpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("content-security-policy-report-only"),
+      tCspROHeaderValue);
+
+  // if there are no CSP values, then there is nothing to do here.
+  if (tCspHeaderValue.IsEmpty() && tCspROHeaderValue.IsEmpty()) {
+    return NS_OK;
+  }
+
+  NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+  NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
+
+  RefPtr<nsCSPContext> csp = new nsCSPContext();
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      aChannel, getter_AddRefs(resultPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> selfURI;
+  aChannel->GetURI(getter_AddRefs(selfURI));
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+  nsAutoString referrerSpec;
+  if (referrerInfo) {
+    referrerInfo->GetComputedReferrerSpec(referrerSpec);
+  }
+  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
+
+  rv = csp->SetRequestContextWithPrincipal(resultPrincipal, selfURI,
+                                           referrerSpec, innerWindowID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // ----- if there's a full-strength CSP header, apply it.
+  if (!cspHeaderValue.IsEmpty()) {
+    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // ----- if there's a report-only CSP header, apply it.
+  if (!cspROHeaderValue.IsEmpty()) {
+    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // ----- Enforce frame-ancestor policy on any applied policies
+  bool safeAncestry = false;
+  // PermitsAncestry sends violation reports when necessary
+  rv = csp->PermitsAncestry(loadInfo, &safeAncestry);
+
+  if (NS_FAILED(rv) || !safeAncestry) {
+    // stop!  ERROR page!
+    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+    return NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION;
+  }
+
+  // return the CSP for x-frame-options check
+  csp.forget(aOutCSP);
+
+  return NS_OK;
+}
+
+void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
+                               nsIContentSecurityPolicy* aCsp) {
+  MOZ_ASSERT(aChannel);
+  if (!FramingChecker::CheckFrameOptions(aChannel, aCsp)) {
+    // stop!  ERROR page!
+    aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
+  }
+}
+
+/* static */
+void nsContentSecurityUtils::PerformCSPFrameAncestorAndXFOCheck(
+    nsIChannel* aChannel) {
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv =
+      ParseCSPAndEnforceFrameAncestorCheck(aChannel, getter_AddRefs(csp));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // X-Frame-Options needs to be enforced after CSP frame-ancestors
+  // checks because if frame-ancestors is present, then x-frame-options
+  // will be discarded
+  EnforceXFrameOptionsCheck(aChannel, csp);
+}
+
 #if defined(DEBUG)
 /* static */
 void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
