@@ -169,15 +169,106 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks import v38 populated`() {
-        // Fennec v38 schema populated with data.
+    fun `bookmarks import v34 populated`() = runBlocking {
+        val path = getTestPath("databases/history-v34.db").absolutePath
+
+        // Need to import history first before we import bookmarks.
+        PlacesHistoryStorage(testContext).importFromFennec(path)
+        bookmarks.importFromFennec(path)
+
+        with(bookmarks.getTree(BookmarkRoot.Root.id)!!) {
+            assertEquals(4, this.children!!.size)
+            val children = this.children!!.map { it.guid }
+            assertTrue(BookmarkRoot.Mobile.id in children)
+            assertTrue(BookmarkRoot.Unfiled.id in children)
+            assertTrue(BookmarkRoot.Toolbar.id in children)
+            assertTrue(BookmarkRoot.Menu.id in children)
+        }
+
+        with(bookmarks.getTree(BookmarkRoot.Mobile.id)!!) {
+            assertEquals(3, this.children!!.size)
+            with(this.children!![0]) {
+                assertEquals("Firefox: About your browser", this.title)
+                assertEquals("about:firefox", this.url)
+                assertEquals("t4ov0nhBpPAY", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![1]) {
+                assertEquals("Firefox: Customize with add-ons", this.title)
+                assertEquals("https://addons.mozilla.org/android?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("dhoCQAToruIT", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![2]) {
+                assertEquals("Firefox: Support", this.title)
+                assertEquals("https://support.mozilla.org/products/mobile?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("gIqii_3QBZWG", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+        }
+    }
+
+    @Test
+    fun `bookmarks import v38 populated`() = runBlocking {
         val path = getTestPath("databases/populated-v38.db").absolutePath
-        try {
-            bookmarks.importFromFennec(path)
-            fail("Expected v38 database to be unsupported")
-        } catch (e: PlacesException) {
-            // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Database version 38 is not supported", e.message)
+
+        // Need to import history first before we import bookmarks.
+        PlacesHistoryStorage(testContext).importFromFennec(path)
+        bookmarks.importFromFennec(path)
+
+        with(bookmarks.getTree(BookmarkRoot.Root.id)!!) {
+            assertEquals(4, this.children!!.size)
+            val children = this.children!!.map { it.guid }
+            assertTrue(BookmarkRoot.Mobile.id in children)
+            assertTrue(BookmarkRoot.Unfiled.id in children)
+            assertTrue(BookmarkRoot.Toolbar.id in children)
+            assertTrue(BookmarkRoot.Menu.id in children)
+        }
+
+        with(bookmarks.getTree(BookmarkRoot.Mobile.id)!!) {
+            assertEquals(7, this.children!!.size)
+            with(this.children!![0]) {
+                assertEquals("Firefox: About your browser", this.title)
+                assertEquals("about:firefox", this.url)
+                assertEquals("9MVmaUmIEKST", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![1]) {
+                assertEquals("Firefox: Customize with add-ons", this.title)
+                assertEquals("https://addons.mozilla.org/android?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("-wR8auFiXifM", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![2]) {
+                assertEquals("Firefox: Support", this.title)
+                assertEquals("https://support.mozilla.org/products/mobile?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("UUJ5Ru2TouvB", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![3]) {
+                assertEquals("Problem loading page", this.title)
+                assertEquals("file:///", this.url)
+                assertEquals("YWIdMNLBXzUa", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![4]) {
+                assertEquals("Kotaku - The Gamer's Guide", this.title)
+                assertEquals("http://kotaku.com/", this.url)
+                assertEquals("_nrbwE-uDI4w", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![5]) {
+                assertEquals("News, sport and opinion from the Guardian's US edition | The Guardian", this.title)
+                assertEquals("https://www.theguardian.com/us", this.url)
+                assertEquals("9pdaS9QzEwYy", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![6]) {
+                assertEquals("Rollins Pass - Wikipedia", this.title)
+                assertEquals("https://en.m.wikipedia.org/wiki/Rollins_Pass#/random", this.url)
+                assertEquals("mEFfANXkYH6T", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
         }
     }
 
