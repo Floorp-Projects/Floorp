@@ -641,12 +641,10 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
 
 /* static */
 ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
-                                             ObjectGroup* oldGroup,
+                                             ObjectGroupRealm& realm,
+                                             JS::Realm* objectRealm,
                                              const JSClass* clasp,
                                              TaggedProto proto) {
-  ObjectGroupRealm& realm = oldGroup ? ObjectGroupRealm::get(oldGroup)
-                                     : ObjectGroupRealm::getForNewObject(cx);
-
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->compartment() == proto.toObject()->compartment());
 
@@ -672,7 +670,7 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
 
   Rooted<TaggedProto> protoRoot(cx, proto);
   ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, oldGroup ? oldGroup->realm() : cx->realm(), clasp, protoRoot,
+      cx, objectRealm, clasp, protoRoot,
       OBJECT_FLAG_SINGLETON | OBJECT_FLAG_LAZY_SINGLETON);
   if (!group) {
     return nullptr;
