@@ -11,7 +11,17 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(nsStreamListenerWrapper, nsIStreamListener,
-                  nsIRequestObserver, nsIThreadRetargetableStreamListener)
+                  nsIRequestObserver, nsIMultiPartChannelListener,
+                  nsIThreadRetargetableStreamListener)
+
+NS_IMETHODIMP
+nsStreamListenerWrapper::OnAfterLastPart(nsresult aStatus) {
+  if (nsCOMPtr<nsIMultiPartChannelListener> listener =
+          do_QueryInterface(mListener)) {
+    return listener->OnAfterLastPart(aStatus);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsStreamListenerWrapper::CheckListenerChain() {

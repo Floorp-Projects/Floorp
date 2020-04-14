@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsIMultiPartChannel.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -17,6 +18,7 @@ namespace net {
 // from JavaScript possible. It is workaround for bug 433711 and 682305.
 class nsStreamListenerWrapper final
     : public nsIStreamListener,
+      public nsIMultiPartChannelListener,
       public nsIThreadRetargetableStreamListener {
  public:
   explicit nsStreamListenerWrapper(nsIStreamListener* listener)
@@ -27,6 +29,7 @@ class nsStreamListenerWrapper final
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSIREQUESTOBSERVER(mListener)
   NS_FORWARD_SAFE_NSISTREAMLISTENER(mListener)
+  NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
  private:
