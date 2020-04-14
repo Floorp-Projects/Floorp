@@ -508,24 +508,6 @@ template bool ConvertToStringPolicy<2>::staticAdjustInputs(TempAllocator& alloc,
                                                            MInstruction* ins);
 
 template <unsigned Op>
-bool BooleanPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
-                                           MInstruction* def) {
-  MDefinition* in = def->getOperand(Op);
-  if (in->type() == MIRType::Boolean) {
-    return true;
-  }
-
-  MUnbox* replace = MUnbox::New(alloc, in, MIRType::Boolean, MUnbox::Fallible);
-  def->block()->insertBefore(def, replace);
-  def->replaceOperand(Op, replace);
-
-  return replace->typePolicy()->adjustInputs(alloc, replace);
-}
-
-template bool BooleanPolicy<3>::staticAdjustInputs(TempAllocator& alloc,
-                                                   MInstruction* def);
-
-template <unsigned Op>
 bool UnboxedInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                                 MInstruction* def) {
   MDefinition* in = def->getOperand(Op);
