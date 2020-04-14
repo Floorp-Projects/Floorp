@@ -337,7 +337,7 @@ static const JSClassOps ForOfPICClassOps = {
     ForOfPIC_traceObject,  // trace
 };
 
-const JSClass ForOfPIC::class_ = {
+const JSClass ForOfPICObject::class_ = {
     "ForOfPIC", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &ForOfPICClassOps};
 
@@ -345,8 +345,8 @@ const JSClass ForOfPIC::class_ = {
 NativeObject* js::ForOfPIC::createForOfPICObject(JSContext* cx,
                                                  Handle<GlobalObject*> global) {
   cx->check(global);
-  NativeObject* obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::class_,
-                                                    nullptr, TenuredObject);
+  ForOfPICObject* obj =
+      NewTenuredObjectWithGivenProto<ForOfPICObject>(cx, nullptr);
   if (!obj) {
     return nullptr;
   }
