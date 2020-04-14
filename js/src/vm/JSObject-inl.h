@@ -486,9 +486,9 @@ inline T* NewTenuredObjectWithGivenProto(JSContext* cx, HandleObject proto) {
 }
 
 template <typename T>
-inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto,
-                                  gc::AllocKind allocKind,
-                                  NewObjectKind newKind = GenericObject) {
+inline T* NewObjectWithGivenProtoAndKinds(JSContext* cx, HandleObject proto,
+                                          gc::AllocKind allocKind,
+                                          NewObjectKind newKind) {
   JSObject* obj = NewObjectWithGivenTaggedProto(
       cx, &T::class_, AsTaggedProto(proto), allocKind, newKind);
   return obj ? &obj->as<T>() : nullptr;
