@@ -35,7 +35,7 @@
 #include "wasm/WasmTypes.h"       // for Bytes, RootedWasmInstanceObject
 
 #include "vm/JSObject-inl.h"      // for InitClass
-#include "vm/NativeObject-inl.h"  // for NewNativeObjectWithGivenProto
+#include "vm/NativeObject-inl.h"  // for NewTenuredObjectWithGivenProto
 
 namespace js {
 class GlobalObject;
@@ -78,12 +78,11 @@ NativeObject* DebuggerSource::initClass(JSContext* cx,
 DebuggerSource* DebuggerSource::create(JSContext* cx, HandleObject proto,
                                        Handle<DebuggerSourceReferent> referent,
                                        HandleNativeObject debugger) {
-  NativeObject* obj =
-      NewNativeObjectWithGivenProto(cx, &class_, proto, TenuredObject);
-  if (!obj) {
+  Rooted<DebuggerSource*> sourceObj(
+      cx, NewTenuredObjectWithGivenProto<DebuggerSource>(cx, proto));
+  if (!sourceObj) {
     return nullptr;
   }
-  RootedDebuggerSource sourceObj(cx, &obj->as<DebuggerSource>());
   sourceObj->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
   referent.get().match(
       [&](auto sourceHandle) { sourceObj->setPrivateGCThing(sourceHandle); });
