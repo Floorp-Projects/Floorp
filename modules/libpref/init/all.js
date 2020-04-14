@@ -653,6 +653,7 @@ pref("gfx.font_rendering.graphite.enabled", true);
 #endif
 
 #ifdef XP_WIN
+  pref("gfx.webrender.force-angle", true);
   pref("gfx.webrender.flip-sequential", false);
   pref("gfx.webrender.dcomp-win.enabled", true);
   pref("gfx.webrender.triple-buffering.enabled", true);

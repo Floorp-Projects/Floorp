@@ -162,7 +162,7 @@ bool RenderCompositorANGLE::Initialize() {
 
   // Create DCLayerTree when DirectComposition is used.
   if (gfx::gfxVars::UseWebRenderDCompWin()) {
-    HWND compositorHwnd = GetCompositorHwnd();
+    HWND compositorHwnd = mWidget->AsWindows()->GetCompositorHwnd();
     if (compositorHwnd) {
       mDCLayerTree =
           DCLayerTree::Create(gl, mEGLConfig, mDevice, compositorHwnd);
@@ -189,26 +189,6 @@ bool RenderCompositorANGLE::Initialize() {
   InitializeUsePartialPresent();
 
   return true;
-}
-
-HWND RenderCompositorANGLE::GetCompositorHwnd() {
-  HWND hwnd = 0;
-
-  if (XRE_IsGPUProcess()) {
-    hwnd = mWidget->AsWindows()->GetCompositorHwnd();
-  }
-#ifdef NIGHTLY_BUILD
-  else if (
-      StaticPrefs::
-          gfx_webrender_enabled_no_gpu_process_with_angle_win_AtStartup()) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-
-    // When GPU process does not exist, we do not need to use compositor window.
-    hwnd = mWidget->AsWindows()->GetHwnd();
-  }
-#endif
-
-  return hwnd;
 }
 
 bool RenderCompositorANGLE::CreateSwapChain() {
@@ -322,7 +302,7 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     return;
   }
 
-  HWND hwnd = GetCompositorHwnd();
+  HWND hwnd = mWidget->AsWindows()->GetCompositorHwnd();
   if (!hwnd) {
     // When DirectComposition or DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL is used,
     // compositor window needs to exist.
@@ -332,6 +312,8 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     }
     return;
   }
+
+  MOZ_ASSERT(XRE_IsGPUProcess());
 
   // When compositor is enabled, CompositionSurface is used for rendering.
   // It does not support triple buffering.
