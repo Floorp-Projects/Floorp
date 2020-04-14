@@ -1446,6 +1446,11 @@ class BuildDriver(MozbuildObject):
                 'topobjdir': self.topobjdir,
                 'mozconfig': self.mozconfig,
             }, sort_keys=True, indent=2))
+            # json.dumps in python2 inserts some trailing whitespace while
+            # json.dumps in python3 does not, which defeats the FileAvoidWrite
+            # mechanism. Strip the trailing whitespace to avoid rewriting this
+            # file unnecessarily.
+            to_write = '\n'.join([line.rstrip() for line in to_write.splitlines()])
             fh.write(to_write)
 
     def _run_client_mk(self, target=None, line_handler=None, jobs=0,
