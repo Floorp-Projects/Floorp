@@ -225,7 +225,8 @@ var gConnectionsDialog = {
     var proxyTypePref = Preferences.get("network.proxy.type");
     var isDefinitelySocks4 =
       !socksVersionPref.disabled && socksVersionPref.value == 4;
-    socksDNSPref.disabled = isDefinitelySocks4 || proxyTypePref.value == 0;
+    socksDNSPref.disabled =
+      isDefinitelySocks4 || proxyTypePref.value == 0 || socksDNSPref.locked;
     return undefined;
   },
 
