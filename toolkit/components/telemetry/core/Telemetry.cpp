@@ -1177,7 +1177,6 @@ static void internal_initGlean() {
       "telemetry.fog.temporary_and_just_for_testing.data_path", dataPath);
 
   if (NS_FAILED(rv)) {
-    NS_WARNING("Can't read data path preference. FOG will not be initialized");
     return;
   }
 
