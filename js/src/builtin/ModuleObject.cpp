@@ -385,10 +385,9 @@ ModuleNamespaceObject* ModuleNamespaceObject::create(
   RootedValue priv(cx, ObjectValue(*module));
   ProxyOptions options;
   options.setLazyProto(true);
-  options.setSingleton(true);
   Rooted<UniquePtr<IndirectBindingMap>> rootedBindings(cx, std::move(bindings));
   RootedObject object(
-      cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
+      cx, NewSingletonProxyObject(cx, &proxyHandler, priv, nullptr, options));
   if (!object) {
     return nullptr;
   }
