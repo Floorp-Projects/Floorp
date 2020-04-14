@@ -82,15 +82,22 @@ test-verify:
                 linux.*:
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
                 macosx.*:
                     - macosx64-node
                     - macosx64-minidump-stackwalk
-                win.*64.*:
+                    - macosx64-fix-stacks
+                win.*aarch64.*:
+                    - win32-node
+                    - win32-minidump-stackwalk
+                win.*-64.*:
                     - win64-node
                     - win32-minidump-stackwalk
+                    - win32-fix-stacks
                 win.*32.*:
                     - win32-node
                     - win32-minidump-stackwalk
+                    - win32-fix-stacks
                 android-em-7.*:
                     - linux64-node
                     - linux64-minidump-stackwalk
@@ -175,18 +182,22 @@ test-coverage:
                 linux.*:
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
                 macosx.*:
                     - macosx64-node
                     - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
                 win.*aarch64.*:
                     - win32-node
                     - win32-minidump-stackwalk
                 win.*-64.*:
                     - win64-node
                     - win32-minidump-stackwalk
+                    - win32-fix-stacks
                 win.*32.*:
                     - win32-node
                     - win32-minidump-stackwalk
+                    - win32-fix-stacks
                 android-em-7.*:
                     - linux64-node
                     - linux64-minidump-stackwalk
