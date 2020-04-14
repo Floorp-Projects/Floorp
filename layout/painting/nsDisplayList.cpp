@@ -6536,7 +6536,9 @@ bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
     return false;
   }
 
-  if (IsEffectsWrapper()) {
+  const bool usingLayers = !aBuilder->IsPaintingForWebRender();
+
+  if (usingLayers && IsEffectsWrapper()) {
     MOZ_ASSERT(nsSVGIntegrationUtils::UsingEffectsForFrame(mFrame));
     static_cast<nsDisplayEffectsBase*>(mList.GetBottom())->SetHandleOpacity();
     mChildOpacityState = ChildOpacityState::Applied;
@@ -6546,7 +6548,7 @@ bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
   // Return true if we successfully applied opacity to child items, or if
   // WebRender is not in use. In the latter case, the opacity gets flattened and
   // applied during layer building.
-  return ApplyOpacityToChildren(aBuilder) || !gfxVars::UseWebRender();
+  return ApplyOpacityToChildren(aBuilder) || usingLayers;
 }
 
 nsDisplayItem::LayerState nsDisplayOpacity::GetLayerState(
@@ -10094,18 +10096,13 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   return Some(clipId);
 }
 
-enum class HandleOpacity {
-  No,
-  Yes,
-};
-
-static Maybe<std::pair<wr::WrClipId, HandleOpacity>> CreateWRClipPathAndMasks(
+static Maybe<wr::WrClipId> CreateWRClipPathAndMasks(
     nsDisplayMasksAndClipPaths* aDisplayItem, const LayoutDeviceRect& aBounds,
     wr::IpcResourceUpdateQueue& aResources, wr::DisplayListBuilder& aBuilder,
     const StackingContextHelper& aSc, layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (auto clip = CreateSimpleClipRegion(*aDisplayItem, aBuilder)) {
-    return Some(std::make_pair(*clip, HandleOpacity::Yes));
+    return clip;
   }
 
   Maybe<wr::ImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
@@ -10117,7 +10114,7 @@ static Maybe<std::pair<wr::WrClipId, HandleOpacity>> CreateWRClipPathAndMasks(
   wr::WrClipId clipId = aBuilder.DefineClip(
       Nothing(), wr::ToLayoutRect(aBounds), nullptr, mask.ptr());
 
-  return Some(std::make_pair(clipId, HandleOpacity::No));
+  return Some(clipId);
 }
 
 bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
@@ -10132,7 +10129,7 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   LayoutDeviceRect bounds =
       LayoutDeviceRect::FromAppUnits(displayBounds, appUnitsPerDevPixel);
 
-  Maybe<std::pair<wr::WrClipId, HandleOpacity>> clip = CreateWRClipPathAndMasks(
+  Maybe<wr::WrClipId> clip = CreateWRClipPathAndMasks(
       this, bounds, aResources, aBuilder, aSc, aManager, aDisplayListBuilder);
 
   Maybe<StackingContextHelper> layer;
@@ -10144,15 +10141,8 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     // The stacking context shouldn't have any offset.
     bounds.MoveTo(0, 0);
 
-    wr::WrClipId clipId = clip->first;
-
-    Maybe<float> opacity = clip->second == HandleOpacity::Yes
-                               ? Some(mFrame->StyleEffects()->mOpacity)
-                               : Nothing();
-
     wr::StackingContextParams params;
-    params.clip = wr::WrStackingContextClip::ClipId(clipId);
-    params.opacity = opacity.ptrOr(nullptr);
+    params.clip = wr::WrStackingContextClip::ClipId(*clip);
     layer.emplace(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, params,
                   bounds);
     sc = layer.ptr();

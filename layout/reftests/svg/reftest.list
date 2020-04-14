@@ -596,3 +596,6 @@ fails-if(Android) != mask-resource.html about:blank # The image the test uses is
 
 != bug-1562091.html bug-1562091-ref.html
 == 1570363-1.html 1570363-1-ref.html
+
+fuzzy-if(!webrender,0-2,0-7900) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # Non-WR mask opacity optimization
+
