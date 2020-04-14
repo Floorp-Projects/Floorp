@@ -39,8 +39,8 @@ let tabListener = {
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     if (webProgress.isTopLevel) {
-      let { BrowserApp } = browser.ownerGlobal;
-      let nativeTab = BrowserApp.getTabForBrowser(browser);
+      const window = browser.ownerGlobal;
+      const nativeTab = window.BrowserApp.selectedTab;
 
       // Ignore initial about:blank
       if (!request && this.initializingTabs.has(nativeTab)) {
@@ -258,21 +258,17 @@ this.tabs = class extends ExtensionAPI {
               let nativeTab;
               switch (event.type) {
                 case "DOMTitleChanged": {
-                  let { BrowserApp } = getBrowserWindow(
-                    event.target.ownerGlobal
-                  );
+                  const window = getBrowserWindow(event.target.ownerGlobal);
+                  nativeTab = window.BrowserApp.selectedTab;
 
-                  nativeTab = BrowserApp.getTabForWindow(
-                    event.target.ownerGlobal
-                  );
                   needed.push("title");
                   break;
                 }
 
                 case "DOMAudioPlaybackStarted":
                 case "DOMAudioPlaybackStopped": {
-                  let { BrowserApp } = event.target.ownerGlobal;
-                  nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
+                  const window = event.target.ownerGlobal;
+                  nativeTab = window.BrowserApp.selectedTab;
                   needed.push("audible");
                   break;
                 }
@@ -292,8 +288,8 @@ this.tabs = class extends ExtensionAPI {
             };
 
             let statusListener = ({ browser, status, url }) => {
-              let { BrowserApp } = browser.ownerGlobal;
-              let nativeTab = BrowserApp.getTabForBrowser(browser);
+              const window = browser.ownerGlobal;
+              const nativeTab = window.BrowserApp.selectedTab;
               if (nativeTab) {
                 let changed = { status };
                 if (url) {
