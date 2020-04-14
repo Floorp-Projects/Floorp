@@ -484,13 +484,6 @@ extern JS_FRIEND_API void IterateGrayObjects(JS::Zone* zone,
                                              GCThingCallback cellCallback,
                                              void* data);
 
-/**
- * Invoke cellCallback on every gray JSObject in the given zone while cycle
- * collection is in progress.
- */
-extern JS_FRIEND_API void IterateGrayObjectsUnderCC(
-    JS::Zone* zone, GCThingCallback cellCallback, void* data);
-
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 // Trace the heap and check there are no black to gray edges. These are
 // not allowed since the cycle collector could throw away the gray thing and

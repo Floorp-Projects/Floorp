@@ -382,12 +382,6 @@ namespace gc {
 JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(JS_DECLARE_TRACE_EXTERNAL_EDGE)
 JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(JS_DECLARE_TRACE_EXTERNAL_EDGE)
 
-// We also require overloads for these purely-internal types.  These overloads
-// ought not be in public headers, and they should use a different name in order
-// to not be *actual* overloads, but for the moment we still declare them here.
-JS_DECLARE_TRACE_EXTERNAL_EDGE(AbstractGeneratorObject*)
-JS_DECLARE_TRACE_EXTERNAL_EDGE(SavedFrame*)
-
 #undef JS_DECLARE_TRACE_EXTERNAL_EDGE
 
 }  // namespace gc
