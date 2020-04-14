@@ -126,7 +126,7 @@ private fun assertSupport() {
     onView(withId(R.id.mozac_browser_toolbar_title_view)).check(
         matches(
             withText(
-                containsString("Firefox Preview | Mozilla Support")
+                containsString("Firefox Preview Help")
             )
 
         )
@@ -166,7 +166,7 @@ private fun assertKnowYourRights() {
     onView(withId(R.id.mozac_browser_toolbar_title_view)).check(
         matches(
             withText(
-                containsString("Firefox Preview - Your Rights | How to | Mozilla Support")
+                containsString("Firefox Preview - Your Rights | Firefox Preview Help")
             )
         )
     )
