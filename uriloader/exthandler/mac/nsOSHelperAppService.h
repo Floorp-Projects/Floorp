@@ -43,11 +43,11 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   //                     spec, a unix path or a windows path depending on the
   //                     platform
   // aFile --> an nsIFile representation of that platform application path.
-  MOZ_MUST_USE nsresult GetFileTokenForPath(const char16_t* platformAppPath,
-                                            nsIFile** aFile) override;
+  [[nodiscard]] nsresult GetFileTokenForPath(const char16_t* platformAppPath,
+                                             nsIFile** aFile) override;
 
-  MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
-                                                bool* aHandlerExists) override;
+  [[nodiscard]] nsresult OSProtocolHandlerExists(const char* aScheme,
+                                                 bool* aHandlerExists) override;
 };
 
 #endif  // nsOSHelperAppService_h__
