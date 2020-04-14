@@ -731,8 +731,7 @@ bool FunctionScriptEmitter::emitEndBody() {
   return true;
 }
 
-bool FunctionScriptEmitter::initScript(
-    const mozilla::Maybe<FieldInitializers>& fieldInitializers) {
+bool FunctionScriptEmitter::initScript() {
   MOZ_ASSERT(state_ == State::EndBody);
 
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
@@ -745,10 +744,6 @@ bool FunctionScriptEmitter::initScript(
   if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo,
                                       bce_->script, stencil)) {
     return false;
-  }
-
-  if (fieldInitializers) {
-    bce_->script->setFieldInitializers(*fieldInitializers);
   }
 
 #ifdef DEBUG

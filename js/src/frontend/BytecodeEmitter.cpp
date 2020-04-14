@@ -2513,7 +2513,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     }
   }
 
-  if (!fse.initScript(funbox->fieldInitializers)) {
+  if (!fse.initScript()) {
     return false;
   }
 
