@@ -463,6 +463,13 @@ inline JSObject* NewObjectWithGivenProto(
                                        newKind);
 }
 
+inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
+                                                  const JSClass* clasp,
+                                                  HandleObject proto) {
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       SingletonObject);
+}
+
 template <typename T>
 inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto,
                                   NewObjectKind newKind = GenericObject) {
