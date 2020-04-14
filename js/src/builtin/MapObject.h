@@ -320,6 +320,12 @@ class SetIteratorObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
+  void init(SetObject* setObj, SetObject::IteratorKind kind) {
+    initFixedSlot(TargetSlot, JS::ObjectValue(*setObj));
+    initFixedSlot(RangeSlot, JS::PrivateValue(nullptr));
+    initFixedSlot(KindSlot, JS::Int32Value(int32_t(kind)));
+  }
+
   static MOZ_MUST_USE bool next(Handle<SetIteratorObject*> setIterator,
                                 HandleArrayObject resultObj, JSContext* cx);
 
