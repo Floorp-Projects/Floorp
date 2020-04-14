@@ -147,6 +147,8 @@ flatpak build-finish build                                      \
         --talk-name=org.gnome.SessionManager                    \
         --talk-name=org.freedesktop.ScreenSaver                 \
         --talk-name="org.gtk.vfs.*"                             \
+        --talk-name=org.freedesktop.Notifications               \
+        --talk-name=org.mpris.MediaPlayer2.org.mozilla.firefox  \
         --command=firefox
 
 flatpak build-export --disable-sandbox --no-update-summary --exclude='/share/runtime/langpack/*/*' repo build "$FLATPAK_BRANCH"
