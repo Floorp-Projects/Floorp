@@ -578,7 +578,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       processDescriptor = new ProcessDescriptorActor(this.conn, options);
       this._processDescriptorActorPool.manage(processDescriptor);
     }
-    return { processDescriptor };
+    return processDescriptor;
   },
 
   /**
