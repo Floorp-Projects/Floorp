@@ -5,6 +5,7 @@
 DevToolsModules(
     'CachePanel.js',
     'CookiesPanel.js',
+    'HeadersPanel.js',
     'NetworkDetailsBar.js',
     'ParamsPanel.js',
     'PropertiesView.js',

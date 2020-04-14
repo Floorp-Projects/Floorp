@@ -59,7 +59,9 @@ class PropertiesView extends Component {
       cropLimit: PropTypes.number,
       targetSearchResult: PropTypes.object,
       resetTargetSearchResult: PropTypes.func,
+      selectPath: PropTypes.func,
       mode: PropTypes.symbol,
+      defaultSelectFirstNode: PropTypes.bool,
     };
   }
 
@@ -120,12 +122,19 @@ class PropertiesView extends Component {
    * which happens when the user clicks on a search result.
    */
   scrollSelectedIntoView() {
-    const { targetSearchResult, resetTargetSearchResult } = this.props;
+    const {
+      targetSearchResult,
+      resetTargetSearchResult,
+      selectPath,
+    } = this.props;
     if (!targetSearchResult) {
       return;
     }
 
-    const path = this.getSelectedPath(targetSearchResult);
+    const path =
+      typeof selectPath == "function"
+        ? selectPath(targetSearchResult)
+        : this.getSelectedPath(targetSearchResult);
     const element = document.getElementById(path);
     if (element) {
       element.scrollIntoView({ block: "center" });
@@ -184,7 +193,9 @@ class PropertiesView extends Component {
       renderValue,
       provider,
       targetSearchResult,
+      selectPath,
       cropLimit,
+      defaultSelectFirstNode,
     } = this.props;
 
     return div(
@@ -210,7 +221,11 @@ class PropertiesView extends Component {
           renderRow,
           renderValue: renderValue || this.renderValueWithRep,
           onContextMenuRow: this.onContextMenuRow,
-          selected: this.getSelectedPath(targetSearchResult),
+          selected:
+            typeof selectPath == "function"
+              ? selectPath(targetSearchResult)
+              : this.getSelectedPath(targetSearchResult),
+          defaultSelectFirstNode,
           cropLimit,
         })
       )

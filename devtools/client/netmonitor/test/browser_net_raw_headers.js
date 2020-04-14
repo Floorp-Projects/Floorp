@@ -24,27 +24,28 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  let wait = waitForDOM(document, "#headers-panel .tree-section", 2);
+  let wait = waitForDOM(document, "#headers-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  wait = waitForDOM(document, "textarea.raw-headers", 2);
+  wait = waitForDOM(document, "#responseHeaders textarea.raw-headers", 1);
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("RESPONSE"));
+  await wait;
+
+  wait = waitForDOM(document, "#requestHeaders textarea.raw-headers", 1);
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("REQUEST"));
   await wait;
 
   testRawHeaderToggleStyle(true);
-
   testShowRawHeaders(getSortedRequests(store.getState())[0]);
 
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("RESPONSE"));
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("REQUEST"));
 
   testRawHeaderToggleStyle(false);
-
   testHideRawHeaders(document);
 
   return teardown(monitor);
