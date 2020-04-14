@@ -251,8 +251,8 @@ JSObject* js::NewSingletonObjectWithFunctionPrototype(
   if (!proto) {
     return nullptr;
   }
-  RootedObject obj(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject));
+  RootedObject obj(cx,
+                   NewSingletonObjectWithGivenProto<PlainObject>(cx, proto));
   if (!obj) {
     return nullptr;
   }

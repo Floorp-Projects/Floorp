@@ -2013,7 +2013,7 @@ static JSObject* CreateObjectPrototype(JSContext* cx, JSProtoKey key) {
    * prototype of the created object.
    */
   RootedPlainObject objectProto(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, SingletonObject));
+      cx, NewSingletonObjectWithGivenProto<PlainObject>(cx, nullptr));
   if (!objectProto) {
     return nullptr;
   }
