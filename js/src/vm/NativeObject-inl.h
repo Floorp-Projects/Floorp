@@ -669,21 +669,6 @@ inline NativeObject* NewNativeObjectWithGivenTaggedProto(
       NewObjectWithGivenTaggedProto(cx, clasp, proto, newKind));
 }
 
-inline NativeObject* NewNativeObjectWithGivenProto(JSContext* cx,
-                                                   const JSClass* clasp,
-                                                   HandleObject proto,
-                                                   gc::AllocKind allocKind,
-                                                   NewObjectKind newKind) {
-  return MaybeNativeObject(
-      NewObjectWithGivenProto(cx, clasp, proto, allocKind, newKind));
-}
-
-inline NativeObject* NewNativeObjectWithGivenProto(
-    JSContext* cx, const JSClass* clasp, HandleObject proto,
-    NewObjectKind newKind = GenericObject) {
-  return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, newKind));
-}
-
 inline NativeObject* NewNativeObjectWithClassProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
