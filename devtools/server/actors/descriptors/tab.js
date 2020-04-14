@@ -116,6 +116,8 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       };
 
       try {
+        await this._unzombifyIfNeeded();
+
         // Check if the browser is still connected before calling connectToFrame
         if (!this._browser.isConnected) {
           onDestroy();
@@ -162,7 +164,12 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   _isZombieTab() {
-    // Note: GeckoView doesn't support zombie tabs
+    // Check for Firefox on Android.
+    if (this._browser.hasAttribute("pending")) {
+      return true;
+    }
+
+    // Check for other.
     const tabbrowser = this._tabbrowser;
     const tab = tabbrowser ? tabbrowser.getTabForBrowser(this._browser) : null;
     return tab?.hasAttribute && tab.hasAttribute("pending");
@@ -173,8 +180,15 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
    * it on the chrome side.
    */
   _getZombieTabTitle() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser && this._browser.__SS_restore) {
+      const sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      const entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.title;
+    }
     // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
-    // tabbrowser (i.e. desktop Firefox, but not GeckoView), we can use the label
+    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
     // as the title.
     if (this._tabbrowser) {
       const tab = this._tabbrowser.getTabForBrowser(this._browser);
@@ -186,11 +200,54 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     return null;
   },
 
+  /**
+   * If we don't have a url from the content side because it's a zombie tab, try to find
+   * it on the chrome side.
+   */
+  _getZombieTabUrl() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser && this._browser.__SS_restore) {
+      const sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      const entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.url;
+    }
+
+    return null;
+  },
+
+  async _unzombifyIfNeeded() {
+    if (!this._isZombieTab()) {
+      return;
+    }
+
+    // Unzombify if the browser is a zombie tab on Android.
+    const browserApp = this._browser
+      ? this._browser.ownerGlobal.BrowserApp
+      : null;
+    if (browserApp) {
+      // Wait until the content is loaded so as to ensure that the inspector actor refers
+      // to same document.
+      const waitForUnzombify = new Promise(resolve => {
+        this._browser.addEventListener("DOMContentLoaded", resolve, {
+          capture: true,
+          once: true,
+        });
+      });
+
+      const tab = browserApp.getTabForBrowser(this._browser);
+      tab.unzombify();
+
+      await waitForUnzombify;
+    }
+  },
+
   _createTargetForm(connectedForm) {
     const form = Object.assign({}, connectedForm);
-    // In case of Zombie tabs (not yet restored), look up title from other.
+    // In case of Zombie tabs (not yet restored), look up title and url from other.
     if (this._isZombieTab()) {
       form.title = this._getZombieTabTitle() || form.title;
+      form.url = this._getZombieTabUrl() || form.url;
     }
 
     return form;

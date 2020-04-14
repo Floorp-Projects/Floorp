@@ -72,21 +72,6 @@ Context.Chrome = "chrome";
 Context.Content = "content";
 this.Context = Context;
 
-// GeckoView shim for Desktop's gBrowser
-class MobileTabBrowser {
-  constructor(window) {
-    this.window = window;
-  }
-
-  get tabs() {
-    return [this.window.tab];
-  }
-
-  get selectedTab() {
-    return this.window.tab;
-  }
-}
-
 /**
  * Get the <code>&lt;xul:browser&gt;</code> for the specified tab.
  *
@@ -97,7 +82,12 @@ class MobileTabBrowser {
  *     The linked browser for the tab or null if no browser can be found.
  */
 browser.getBrowserForTab = function(tab) {
-  if (tab && "linkedBrowser" in tab) {
+  // Fennec
+  if (tab && "browser" in tab) {
+    return tab.browser;
+
+    // Firefox
+  } else if (tab && "linkedBrowser" in tab) {
     return tab.linkedBrowser;
   }
 
@@ -114,9 +104,11 @@ browser.getBrowserForTab = function(tab) {
  *     Tab browser or null if it's not a browser window.
  */
 browser.getTabBrowser = function(window) {
-  if ("browser" in window) {
-    // GeckoView
-    return new MobileTabBrowser(window);
+  // Fennec
+  if ("BrowserApp" in window) {
+    return window.BrowserApp;
+
+    // Firefox
   } else if ("gBrowser" in window) {
     return window.gBrowser;
 
@@ -132,7 +124,7 @@ browser.getTabBrowser = function(window) {
  * Creates a browsing context wrapper.
  *
  * Browsing contexts handle interactions with the browser, according to
- * the current environment.
+ * the current environment (Firefox, Fennec).
  */
 browser.Context = class {
   /**
@@ -146,7 +138,7 @@ browser.Context = class {
     this.driver = driver;
 
     // In Firefox this is <xul:tabbrowser> (not <xul:browser>!)
-    // and MobileTabBrowser in GeckoView.
+    // and BrowserApp in Fennec
     this.tabBrowser = browser.getTabBrowser(this.window);
 
     this.knownFrames = [];
@@ -404,6 +396,12 @@ browser.Context = class {
     let tabClosed;
 
     switch (this.driver.appName) {
+      case "fennec":
+        // Fennec
+        tabClosed = waitForEvent(this.tabBrowser.deck, "TabClose");
+        this.tabBrowser.closeTab(this.tab);
+        break;
+
       case "firefox":
         tabClosed = waitForEvent(this.tab, "TabClose");
         this.tabBrowser.removeTab(this.tab);
@@ -426,6 +424,11 @@ browser.Context = class {
     let tabOpened = waitForEvent(this.window, "TabOpen");
 
     switch (this.driver.appName) {
+      case "fennec":
+        tab = this.tabBrowser.addTab(null);
+        this.tabBrowser.selectTab(focus ? tab : this.tab);
+        break;
+
       case "firefox":
         this.window.BrowserOpenTab();
         tab = this.tabBrowser.selectedTab;
@@ -486,6 +489,11 @@ browser.Context = class {
       let tabSelected = waitForEvent(this.window, "TabSelect");
 
       switch (this.driver.appName) {
+        case "fennec":
+          this.tabBrowser.selectTab(this.tab);
+          await tabSelected;
+          break;
+
         case "firefox":
           this.tabBrowser.selectedTab = this.tab;
           await tabSelected;
