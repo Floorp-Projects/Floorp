@@ -800,7 +800,7 @@ bool js::intrinsic_NewArrayIterator(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  JSObject* obj = NewArrayIteratorObject(cx);
+  JSObject* obj = NewArrayIterator(cx);
   if (!obj) {
     return false;
   }
