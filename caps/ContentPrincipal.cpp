@@ -412,6 +412,13 @@ static nsresult GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aURI,
     return aURI->GetSpec(aBaseDomain);
   }
 
+  // No baseDomain for resource: URIs.
+  if (aURI->SchemeIs("resource")) {
+    *aHandled = true;
+    aBaseDomain.SetIsVoid(true);
+    return NS_OK;
+  }
+
   return NS_OK;
 }
 
