@@ -141,7 +141,7 @@ class GfxInfoBase : public nsIGfxInfo,
 
   bool InitFeatureObject(JSContext* aCx, JS::Handle<JSObject*> aContainer,
                          const char* aName,
-                         mozilla::gfx::FeatureState& aFeatureState,
+                         mozilla::gfx::FeatureStatus& aKnownStatus,
                          JS::MutableHandle<JSObject*> aOutObj);
 
   NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) override;
