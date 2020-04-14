@@ -55,12 +55,6 @@ extern ArrayObject* JS_FASTCALL NewDenseUnallocatedArray(
     JSContext* cx, uint32_t length, HandleObject proto = nullptr,
     NewObjectKind newKind = GenericObject);
 
-// Create a dense array with length and capacity == |length|, initialized length
-// set to 0, but with only |EagerAllocationMaxLength| elements allocated.
-extern ArrayObject* JS_FASTCALL NewDensePartlyAllocatedArray(
-    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
-    NewObjectKind newKind = GenericObject);
-
 // Create a dense array with length and capacity == 'length', initialized length
 // set to 0.
 extern ArrayObject* JS_FASTCALL NewDenseFullyAllocatedArray(
