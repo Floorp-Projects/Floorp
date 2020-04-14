@@ -147,7 +147,13 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         if (popAfter) viewLifecycleOwner.lifecycleScope.launch(
             Dispatchers.Main
         ) {
-            returnToDeletionOrigin()
+
+            findNavController().apply {
+                // If the user deletes all open tabs we need to make sure we remove
+                // the BrowserFragment from the backstack.
+                popBackStack(R.id.homeFragment, false)
+                navigate(DeleteBrowsingDataFragmentDirections.actionGlobalSettingsFragment())
+            }
         }
     }
 
@@ -212,11 +218,6 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             fragmentView.cached_files_item,
             fragmentView.site_permissions_item
         )
-    }
-
-    private fun returnToDeletionOrigin() {
-        val directions = DeleteBrowsingDataFragmentDirections.actionDeleteBrowsingDataFragmentToSettingsFragment()
-        findNavController().navigate(directions)
     }
 
     companion object {

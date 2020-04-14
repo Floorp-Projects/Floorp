@@ -236,7 +236,7 @@ class DefaultSearchControllerTest {
     @Test
     fun handleClickSearchEngineSettings() {
         val directions: NavDirections =
-            SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
+            SearchFragmentDirections.actionGlobalSearchEngineFragment()
 
         controller.handleClickSearchEngineSettings()
 

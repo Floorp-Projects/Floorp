@@ -85,7 +85,7 @@ class DefaultBookmarkController(
 
     override fun handleBookmarkSharing(item: BookmarkNode) {
         navigate(
-            BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
+            BookmarkFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )
         )

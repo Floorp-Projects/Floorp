@@ -143,8 +143,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         requireContext().metrics.track(Event.TrackingProtectionSettingsPanel)
         nav(
             R.id.trackingProtectionPanelDialogFragment,
-            TrackingProtectionPanelDialogFragmentDirections
-                .actionTrackingProtectionPanelDialogFragmentToTrackingProtectionFragment()
+            TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment()
         )
     }
 

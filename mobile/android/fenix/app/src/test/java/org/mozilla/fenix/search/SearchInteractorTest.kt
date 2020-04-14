@@ -276,7 +276,7 @@ class SearchInteractorTest {
         verify {
             navController.navigateSafe(
                 R.id.searchFragment,
-                SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
+                SearchFragmentDirections.actionGlobalSearchEngineFragment()
             )
         }
     }

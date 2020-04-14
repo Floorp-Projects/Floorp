@@ -160,7 +160,7 @@ class DefaultSearchController(
     }
 
     override fun handleClickSearchEngineSettings() {
-        val directions = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
+        val directions = SearchFragmentDirections.actionGlobalSearchEngineFragment()
         navController.navigateSafe(R.id.searchFragment, directions)
     }
 

@@ -183,7 +183,7 @@ class HistoryControllerTest {
 
         assertEquals(
             directions.captured::class.simpleName,
-            "ActionHistoryFragmentToShareFragment"
+            "ActionGlobalShareFragment"
         )
         assertEquals(1, (directions.captured.arguments["data"] as Array<ShareData>).size)
         assertEquals(historyItem.title, (directions.captured.arguments["data"] as Array<ShareData>)[0].title)

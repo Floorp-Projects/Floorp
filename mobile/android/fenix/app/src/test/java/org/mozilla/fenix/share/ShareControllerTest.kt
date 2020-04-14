@@ -191,7 +191,7 @@ class ShareControllerTest {
             metrics.track(Event.SignInToSendTab)
             navController.nav(
                 R.id.shareFragment,
-                ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
+                ShareFragmentDirections.actionGlobalTurnOnSync()
             )
             dismiss(ShareController.Result.DISMISSED)
         }
@@ -204,7 +204,7 @@ class ShareControllerTest {
         verifyOrder {
             navController.nav(
                 R.id.shareFragment,
-                ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
+                ShareFragmentDirections.actionGlobalAccountProblemFragment()
             )
             dismiss(ShareController.Result.DISMISSED)
         }

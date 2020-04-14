@@ -582,7 +582,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToSearch() {
-        val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
+        val directions = HomeFragmentDirections.actionGlobalSearch(
             sessionId = null
         )
 
@@ -590,7 +590,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun openSettingsScreen() {
-        val directions = HomeFragmentDirections.actionHomeFragmentToPrivateBrowsingFragment()
+        val directions = HomeFragmentDirections.actionGlobalPrivateBrowsingFragment()
         nav(R.id.homeFragment, directions)
     }
 
@@ -612,7 +612,7 @@ class HomeFragment : Fragment() {
                     hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
-                        HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
+                        HomeFragmentDirections.actionGlobalSettingsFragment()
                     )
                 }
                 HomeMenu.Item.Bookmarks -> {
@@ -620,7 +620,7 @@ class HomeFragment : Fragment() {
                     hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
-                        HomeFragmentDirections.actionHomeFragmentToBookmarksFragment(BookmarkRoot.Mobile.id)
+                        HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
                     )
                 }
                 HomeMenu.Item.History -> {
@@ -628,7 +628,7 @@ class HomeFragment : Fragment() {
                     hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
-                        HomeFragmentDirections.actionHomeFragmentToHistoryFragment()
+                        HomeFragmentDirections.actionGlobalHistoryFragment()
                     )
                 }
                 HomeMenu.Item.Help -> {
@@ -673,7 +673,7 @@ class HomeFragment : Fragment() {
                     hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
-                        HomeFragmentDirections.actionHomeFragmentToAccountProblemFragment()
+                        HomeFragmentDirections.actionGlobalAccountProblemFragment()
                     )
                 }
             }

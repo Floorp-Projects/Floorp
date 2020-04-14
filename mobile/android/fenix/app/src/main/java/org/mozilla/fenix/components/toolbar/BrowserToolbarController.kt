@@ -221,8 +221,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.AddonsManager -> {
                 navController.nav(
                     R.id.browserFragment,
-                    BrowserFragmentDirections
-                        .actionBrowserFragmentToAddonsManagementFragment()
+                    BrowserFragmentDirections.actionGlobalAddonsManagementFragment()
                 )
             }
             ToolbarMenu.Item.SaveToCollection -> {
@@ -231,7 +230,7 @@ class DefaultBrowserToolbarController(
 
                 currentSession?.let { currentSession ->
                     val directions =
-                        BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                        BrowserFragmentDirections.actionGlobalCollectionCreationFragment(
                             previousFragmentId = R.id.browserFragment,
                             tabIds = arrayOf(currentSession.id),
                             selectedTabIds = arrayOf(currentSession.id),
@@ -316,11 +315,9 @@ class DefaultBrowserToolbarController(
             // before we transition the fragment. This makes the animation feel smoother
             delay(ANIMATION_DELAY)
             if (!navController.popBackStack(R.id.homeFragment, false)) {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToHomeFragment()
                 navController.nav(
                     R.id.browserFragment,
-                    directions,
-                    null
+                    BrowserFragmentDirections.actionGlobalHome()
                 )
             }
         }

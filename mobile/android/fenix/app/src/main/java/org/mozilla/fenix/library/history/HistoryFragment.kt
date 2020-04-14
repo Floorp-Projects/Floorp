@@ -170,7 +170,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
             nav(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionHistoryFragmentToHomeFragment()
+                HistoryFragmentDirections.actionGlobalHome()
             )
             true
         }
@@ -186,7 +186,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             }
             nav(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionHistoryFragmentToHomeFragment()
+                HistoryFragmentDirections.actionGlobalHome()
             )
             true
         }
@@ -245,7 +245,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     private fun share(data: List<ShareData>) {
         requireComponents.analytics.metrics.track(Event.HistoryItemShared)
-        val directions = HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
+        val directions = HistoryFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
         nav(R.id.historyFragment, directions)

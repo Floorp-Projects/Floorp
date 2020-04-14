@@ -464,7 +464,7 @@ class DefaultBrowserToolbarControllerTest {
         }
         verify {
             val directions =
-                BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                BrowserFragmentDirections.actionGlobalCollectionCreationFragment(
                     previousFragmentId = R.id.browserFragment,
                     saveCollectionStep = SaveCollectionStep.SelectCollection,
                     tabIds = arrayOf(currentSession.id),
@@ -493,7 +493,7 @@ class DefaultBrowserToolbarControllerTest {
         }
         verify {
             val directions =
-                BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                BrowserFragmentDirections.actionGlobalCollectionCreationFragment(
                     previousFragmentId = R.id.browserFragment,
                     saveCollectionStep = SaveCollectionStep.NameCollection,
                     tabIds = arrayOf(currentSession.id),

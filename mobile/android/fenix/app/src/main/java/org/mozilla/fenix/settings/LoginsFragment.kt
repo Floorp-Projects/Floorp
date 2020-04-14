@@ -271,12 +271,12 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun navigateToAccountSettingsFragment() {
         val directions =
-            LoginsFragmentDirections.actionLoginsFragmentToAccountSettingsFragment()
+            LoginsFragmentDirections.actionGlobalAccountSettingsFragment()
         findNavController().navigate(directions)
     }
 
     private fun navigateToAccountProblemFragment() {
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToAccountProblemFragment()
+        val directions = LoginsFragmentDirections.actionGlobalAccountProblemFragment()
         findNavController().navigate(directions)
     }
 

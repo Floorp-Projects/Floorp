@@ -82,7 +82,7 @@ class DefaultHistoryController(
 
     override fun handleShare(item: HistoryItem) {
         navController.navigate(
-            HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
+            HistoryFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )
         )

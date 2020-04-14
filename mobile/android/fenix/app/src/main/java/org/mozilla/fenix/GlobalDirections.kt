@@ -13,7 +13,7 @@ import androidx.navigation.NavDirections
  * @property destinationId fragment ID of the fragment being navigated to
  */
 enum class GlobalDirections(val navDirections: NavDirections, val destinationId: Int) {
-    Home(NavGraphDirections.actionGlobalHomeFragment(), R.id.homeFragment),
+    Home(NavGraphDirections.actionGlobalHome(), R.id.homeFragment),
     Settings(
         NavGraphDirections.actionGlobalSettingsFragment(),
         R.id.settingsFragment

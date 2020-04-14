@@ -328,31 +328,23 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         BrowserDirection.FromHome ->
             HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId, true)
         BrowserDirection.FromSearch ->
-            SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
+            SearchFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
-            SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
+            SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromBookmarks ->
-            BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
+            BookmarkFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHistory ->
-            HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
+            HistoryFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromExceptions ->
-            ExceptionsFragmentDirections.actionExceptionsFragmentToBrowserFragment(
-                customTabSessionId
-            )
+            ExceptionsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromAbout ->
-            AboutFragmentDirections.actionAboutFragmentToBrowserFragment(customTabSessionId)
+            AboutFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromTrackingProtection ->
-            TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToBrowserFragment(
-                customTabSessionId
-            )
+            TrackingProtectionFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromDefaultBrowserSettingsFragment ->
-            DefaultBrowserSettingsFragmentDirections.actionDefaultBrowserSettingsFragmentToBrowserFragment(
-                customTabSessionId
-            )
+            DefaultBrowserSettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSavedLoginsFragment ->
-            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToBrowserFragment(
-                customTabSessionId
-            )
+            SavedLoginsFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     private fun load(

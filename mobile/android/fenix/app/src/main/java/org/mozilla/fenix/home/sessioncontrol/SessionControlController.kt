@@ -408,7 +408,7 @@ class DefaultSessionControlController(
     }
 
     private fun showShareFragment(data: List<ShareData>) {
-        val directions = HomeFragmentDirections.actionHomeFragmentToShareFragment(
+        val directions = HomeFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
         navController.nav(R.id.homeFragment, directions)

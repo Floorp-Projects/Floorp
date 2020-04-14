@@ -17,7 +17,7 @@ import org.mozilla.fenix.home.HomeFragmentDirections
 class OnboardingManualSignInViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
     init {
         view.turn_on_sync_button.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToTurnOnSyncFragment()
+            val directions = HomeFragmentDirections.actionGlobalTurnOnSync()
             Navigation.findNavController(view).navigate(directions)
         }
     }

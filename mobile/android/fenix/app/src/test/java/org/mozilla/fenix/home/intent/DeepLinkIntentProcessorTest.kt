@@ -69,7 +69,7 @@ class DeepLinkIntentProcessorTest {
         assertTrue(processor.process(testIntent("fenix://home"), navController, out))
 
         verify { activity wasNot Called }
-        verify { navController.navigate(NavGraphDirections.actionGlobalHomeFragment()) }
+        verify { navController.navigate(NavGraphDirections.actionGlobalHome()) }
         verify { out wasNot Called }
     }
 
@@ -123,7 +123,7 @@ class DeepLinkIntentProcessorTest {
         assertTrue(processor.process(testIntent("fenix://enable_private_browsing"), navController, out))
 
         verify { activity.browsingModeManager.mode = BrowsingMode.Private }
-        verify { navController.navigate(NavGraphDirections.actionGlobalHomeFragment()) }
+        verify { navController.navigate(NavGraphDirections.actionGlobalHome()) }
         verify { out wasNot Called }
     }
 
