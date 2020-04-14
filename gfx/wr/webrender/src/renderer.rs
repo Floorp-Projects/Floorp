@@ -2702,8 +2702,8 @@ impl Renderer {
         self.device.preferred_color_formats().external
     }
 
-    pub fn optimal_texture_stride_alignment(&self) -> usize {
-        self.device.optimal_pbo_stride().get()
+    pub fn optimal_texture_stride_alignment(&self, format: ImageFormat) -> usize {
+        self.device.optimal_pbo_stride().num_bytes(format).get()
     }
 
     pub fn flush_pipeline_info(&mut self) -> PipelineInfo {
