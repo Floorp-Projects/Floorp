@@ -31,48 +31,6 @@ class WebRenderFallbackData;
 class WebRenderParentCommand;
 class WebRenderUserData;
 
-class WebRenderScrollDataCollection {
- public:
-  WebRenderScrollDataCollection() = default;
-
-  std::vector<WebRenderLayerScrollData>& operator[](
-      wr::RenderRoot aRenderRoot) {
-    return mInternalScrollDatas[aRenderRoot];
-  }
-
-  bool IsEmpty() const {
-    for (auto renderRoot : wr::kRenderRoots) {
-      if (!mInternalScrollDatas[renderRoot].empty()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void AppendRoot(Maybe<ScrollMetadata>& aRootMetadata,
-                  wr::RenderRootArray<WebRenderScrollData>& aScrollDatas);
-
-  void AppendScrollData(const wr::DisplayListBuilder& aBuilder,
-                        WebRenderLayerManager* aManager, nsDisplayItem* aItem,
-                        size_t aLayerCountBeforeRecursing,
-                        const ActiveScrolledRoot* aStopAtAsr,
-                        const Maybe<gfx::Matrix4x4>& aAncestorTransform);
-
-  size_t GetLayerCount(wr::RenderRoot aRenderRoot) const;
-
-  void Clear() {
-    for (auto renderRoot : wr::kRenderRoots) {
-      mInternalScrollDatas[renderRoot].clear();
-      mSeenRenderRoot[renderRoot] = false;
-    }
-  }
-
- private:
-  wr::RenderRootArray<std::vector<WebRenderLayerScrollData>>
-      mInternalScrollDatas;
-  wr::RenderRootArray<bool> mSeenRenderRoot;
-};
-
 class WebRenderCommandBuilder final {
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
       WebRenderUserDataRefTable;
