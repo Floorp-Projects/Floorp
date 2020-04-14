@@ -388,6 +388,7 @@ class ResponsiveUI {
 
       // Restore screen orientation of physical device.
       await this.updateScreenOrientation("landscape-primary", 0);
+      await this.updateMaxTouchPointsEnabled(false);
 
       if (this.isBrowserUIEnabled) {
         await this.responsiveFront.setDocumentInRDMPane(false);
@@ -626,6 +627,7 @@ class ResponsiveUI {
     const { device, viewport } = event.data;
     const { type, angle } = getOrientation(device, viewport);
     await this.updateScreenOrientation(type, angle);
+    await this.updateMaxTouchPointsEnabled(touch);
 
     reloadNeeded |=
       (await this.updateUserAgent(userAgent)) &&
@@ -654,6 +656,9 @@ class ResponsiveUI {
 
   async onChangeTouchSimulation(event) {
     const { enabled } = event.data;
+
+    await this.updateMaxTouchPointsEnabled(enabled);
+
     const reloadNeeded =
       (await this.updateTouchSimulation(enabled)) &&
       this.reloadOnChange("touchSimulation");
@@ -950,6 +955,7 @@ class ResponsiveUI {
 
     await this.updateDPPX(pixelRatio);
     await this.updateScreenOrientation(type, angle);
+    await this.updateMaxTouchPointsEnabled(touchSimulationEnabled);
 
     let reloadNeeded = false;
     if (touchSimulationEnabled) {
@@ -1084,6 +1090,23 @@ class ResponsiveUI {
     // Used by tests.
     if (!isViewportRotated) {
       this.emit("only-viewport-orientation-changed");
+    }
+  }
+
+  /**
+   * Sets whether or not maximum touch points are supported for the simulated device.
+   *
+   * @param {Boolean} touchSimulationEnabled
+   *        Whether or not touch is enabled for the simulated device.
+   */
+  async updateMaxTouchPointsEnabled(touchSimulationEnabled) {
+    const setMaxTouchPointsSupported = await this.currentTarget.actorHasMethod(
+      "responsive",
+      "setMaxTouchPoints"
+    );
+
+    if (setMaxTouchPointsSupported) {
+      await this.responsiveFront.setMaxTouchPoints(touchSimulationEnabled);
     }
   }
 
