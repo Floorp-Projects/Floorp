@@ -595,6 +595,10 @@ impl Texture {
         !self.fbos_with_depth.is_empty()
     }
 
+    pub fn last_frame_used(&self) -> GpuFrameId {
+        self.last_frame_used
+    }
+
     pub fn used_in_frame(&self, frame_id: GpuFrameId) -> bool {
         self.last_frame_used == frame_id
     }
