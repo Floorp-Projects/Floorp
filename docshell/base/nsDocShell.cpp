@@ -2659,7 +2659,8 @@ nsDocShell::GetInProcessSameTypeParent(nsIDocShellTreeItem** aParent) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetSameTypeParentIgnoreBrowserBoundaries(nsIDocShell** aParent) {
+nsDocShell::GetSameTypeInProcessParentIgnoreBrowserBoundaries(
+    nsIDocShell** aParent) {
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nullptr;
 

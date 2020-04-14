@@ -5792,7 +5792,7 @@ snwprintf
 ?GetScriptableParent@nsGlobalWindowOuter@@UEAAPEAVnsPIDOMWindowOuter@@XZ
 ?GetIsMozBrowser@nsDocShell@@UEAA?AW4nsresult@@PEA_N@Z
 ?GetParent@nsGlobalWindowOuter@@UEAA?AU?$already_AddRefed@VnsPIDOMWindowOuter@@@@XZ
-?GetSameTypeParentIgnoreBrowserBoundaries@nsDocShell@@UEAA?AW4nsresult@@PEAPEAVnsIDocShell@@@Z
+?GetSameTypeInProcessParentIgnoreBrowserBoundaries@nsDocShell@@UEAA?AW4nsresult@@PEAPEAVnsIDocShell@@@Z
 ?GetChromeEventHandler@nsDocShell@@UEAA?AW4nsresult@@PEAPEAVEventTarget@dom@mozilla@@@Z
 ?NS_NewWindowRoot@@YA?AU?$already_AddRefed@VEventTarget@dom@mozilla@@@@PEAVnsPIDOMWindowOuter@@@Z
 ??0nsWindowRoot@@QEAA@PEAVnsPIDOMWindowOuter@@@Z
