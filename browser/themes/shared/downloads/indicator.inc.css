@@ -52,24 +52,14 @@
 
 #downloads-indicator-progress-inner:-moz-locale-dir(rtl) {
   background-position-x: right;
-  animation-name: indicatorArrowProgressRTL;
 }
 
 @keyframes indicatorArrowProgress {
   0% {
-    margin-right: 15px;
+    margin-inline-end: 15px;
   }
   100% {
-    margin-right: 1px;
-  }
-}
-
-@keyframes indicatorArrowProgressRTL {
-  0% {
-    margin-left: 15px;
-  }
-  100% {
-    margin-left: 1px;
+    margin-inline-end: 1px;
   }
 }
 
