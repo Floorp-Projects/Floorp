@@ -7845,7 +7845,7 @@ static bool EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!priv->grayRoot) {
-    if (!(priv->grayRoot = NewDenseEmptyArray(cx, nullptr, TenuredObject))) {
+    if (!(priv->grayRoot = NewTenuredDenseEmptyArray(cx, nullptr))) {
       return false;
     }
   }

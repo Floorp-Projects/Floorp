@@ -4099,9 +4099,13 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(
 }
 
 ArrayObject* JS_FASTCALL
-js::NewDenseEmptyArray(JSContext* cx, HandleObject proto /* = nullptr */,
-                       NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<0>(cx, 0, proto, newKind);
+js::NewDenseEmptyArray(JSContext* cx, HandleObject proto /* = nullptr */) {
+  return NewArray<0>(cx, 0, proto, GenericObject);
+}
+
+ArrayObject* JS_FASTCALL js::NewTenuredDenseEmptyArray(
+    JSContext* cx, HandleObject proto /* = nullptr */) {
+  return NewArray<0>(cx, 0, proto, TenuredObject);
 }
 
 ArrayObject* JS_FASTCALL js::NewDenseFullyAllocatedArray(
