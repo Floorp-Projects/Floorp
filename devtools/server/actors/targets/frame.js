@@ -13,7 +13,6 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-var { Cr } = require("chrome");
 var {
   BrowsingContextTargetActor,
   browsingContextTargetPrototype,
@@ -41,14 +40,7 @@ const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
 frameTargetPrototype.initialize = function(connection, docShell) {
   BrowsingContextTargetActor.prototype.initialize.call(this, connection);
 
-  // Retrieve the message manager from the provided docShell.
-  // Note that messageManager also has a docShell property, but in some
-  // situations docShell.messageManager.docShell points to a different docShell.
-  this._messageManager = docShell.messageManager;
-
   this.traits.reconfigure = false;
-  this._sendForm = this._sendForm.bind(this);
-  this._messageManager.addMessageListener("debug:form", this._sendForm);
 
   Object.defineProperty(this, "docShell", {
     value: docShell,
@@ -63,34 +55,6 @@ Object.defineProperty(frameTargetPrototype, "title", {
   enumerable: true,
   configurable: true,
 });
-
-frameTargetPrototype.exit = function() {
-  if (this._sendForm) {
-    try {
-      this._messageManager.removeMessageListener("debug:form", this._sendForm);
-    } catch (e) {
-      if (e.result != Cr.NS_ERROR_NULL_POINTER) {
-        throw e;
-      }
-      // In some cases, especially when using messageManagers in non-e10s mode, we reach
-      // this point with a dead messageManager which only throws errors but does not
-      // seem to indicate in any other way that it is dead.
-    }
-    this._sendForm = null;
-  }
-
-  BrowsingContextTargetActor.prototype.exit.call(this);
-
-  this._messageManager = null;
-};
-
-/**
- * On navigation events, our URL and/or title may change, so we update our
- * counterpart in the parent process that participates in the tab list.
- */
-frameTargetPrototype._sendForm = function() {
-  this._messageManager.sendAsyncMessage("debug:form", this.form());
-};
 
 exports.FrameTargetActor = ActorClassWithSpec(
   frameTargetSpec,
