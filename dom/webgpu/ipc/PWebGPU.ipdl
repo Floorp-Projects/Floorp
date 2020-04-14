@@ -48,7 +48,7 @@ parent:
   async AdapterDestroy(RawId selfId);
   async DeviceCreateBuffer(RawId selfId, GPUBufferDescriptor desc, RawId newId);
   async DeviceDestroy(RawId selfId);
-  async DeviceUnmapBuffer(RawId selfId, RawId bufferId, Shmem shmem);
+  async DeviceUnmapBuffer(RawId selfId, RawId bufferId, Shmem shmem, bool flush);
   async BufferMapRead(RawId selfId, Shmem shmem) returns (Shmem sm);
   async BufferDestroy(RawId selfId);
   async DeviceCreateTexture(RawId selfId, SerialTextureDescriptor desc, RawId newId);

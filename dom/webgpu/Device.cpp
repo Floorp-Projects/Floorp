@@ -115,7 +115,7 @@ void Device::CreateBufferMapped(JSContext* aCx,
   aSequence.AppendElement(bufferValue);
   aSequence.AppendElement(JS::ObjectValue(*arrayBuffer));
 
-  buffer->InitMapping(std::move(shmem), arrayBuffer);
+  buffer->InitMapping(std::move(shmem), arrayBuffer, true);
 }
 
 RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
@@ -131,8 +131,8 @@ RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
   return mBridge->SendBufferMapRead(aId, std::move(shmem));
 }
 
-void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem) {
-  mBridge->SendDeviceUnmapBuffer(mId, aId, std::move(*aShmem));
+void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem, bool aFlush) {
+  mBridge->SendDeviceUnmapBuffer(mId, aId, std::move(*aShmem), aFlush);
 }
 
 already_AddRefed<Texture> Device::CreateTexture(
