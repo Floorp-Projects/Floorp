@@ -885,10 +885,10 @@ static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind,
          clasp->isNative();
 }
 
-JSObject* js::NewObjectWithClassProtoCommon(JSContext* cx, const JSClass* clasp,
-                                            HandleObject protoArg,
-                                            gc::AllocKind allocKind,
-                                            NewObjectKind newKind) {
+JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
+                                      HandleObject protoArg,
+                                      gc::AllocKind allocKind,
+                                      NewObjectKind newKind) {
   if (protoArg) {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg),
                                          allocKind, newKind);
