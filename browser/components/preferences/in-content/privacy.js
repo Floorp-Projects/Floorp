@@ -870,19 +870,6 @@ var gPrivacyPane = {
         );
       }
 
-      // Hide all cookie options first, until we learn which one should be showing.
-      document.querySelector(selector + " .all-cookies-option").hidden = true;
-      document.querySelector(
-        selector + " .unvisited-cookies-option"
-      ).hidden = true;
-      document.querySelector(
-        selector + " .third-party-tracking-cookies-option"
-      ).hidden = true;
-      document.querySelector(
-        selector + " .all-third-party-cookies-option"
-      ).hidden = true;
-      document.querySelector(selector + " .social-media-option").hidden = true;
-
       for (let item of rulesArray) {
         // Note "cookieBehavior0", will result in no UI changes, so is not listed here.
         switch (item) {
