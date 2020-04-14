@@ -5021,7 +5021,7 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.1.0"
+version = "0.5.0"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -5056,7 +5056,7 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "0.1.0"
+version = "0.5.0"
 dependencies = [
  "bitflags",
  "peek-poke 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
