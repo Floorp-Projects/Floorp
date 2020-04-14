@@ -172,15 +172,6 @@ bool js::IsTracerKind(JSTracer* trc, JS::CallbackTracer::TracerKind kind) {
 bool ThingIsPermanentAtomOrWellKnownSymbol(JSString* str) {
   return str->isPermanentAtom();
 }
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString* str) {
-  return str->isPermanentAtom();
-}
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSAtom* atom) {
-  return atom->isPermanent();
-}
-bool ThingIsPermanentAtomOrWellKnownSymbol(PropertyName* name) {
-  return name->isPermanent();
-}
 bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol* sym) {
   return sym->isWellKnownSymbol();
 }
@@ -466,10 +457,6 @@ class SavedFrame;
 // Define TraceExternalEdge for each public GC pointer type.
 JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION)
 JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION)
-
-// Also, for the moment, define TraceExternalEdge for internal GC pointer types.
-DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION(AbstractGeneratorObject*)
-DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION(SavedFrame*)
 
 #undef DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION
 
@@ -3134,10 +3121,6 @@ static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
   str->traceChildren(&mover);
 }
 
-static inline void TraceWholeCell(TenuringTracer& mover, JS::BigInt* bi) {
-  bi->traceChildren(&mover);
-}
-
 static inline void TraceWholeCell(TenuringTracer& mover, BaseScript* script) {
   script->traceChildren(&mover);
 }
@@ -3178,9 +3161,6 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
         break;
       case JS::TraceKind::String:
         TraceBufferedCells<JSString>(mover, arena, cells);
-        break;
-      case JS::TraceKind::BigInt:
-        TraceBufferedCells<JS::BigInt>(mover, arena, cells);
         break;
       case JS::TraceKind::Script:
         TraceBufferedCells<BaseScript>(mover, arena, cells);

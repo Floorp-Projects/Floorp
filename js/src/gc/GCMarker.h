@@ -572,9 +572,6 @@ inline bool ThingIsPermanentAtomOrWellKnownSymbol(js::gc::Cell* thing) {
   return false;
 }
 bool ThingIsPermanentAtomOrWellKnownSymbol(JSString*);
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString*);
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSAtom*);
-bool ThingIsPermanentAtomOrWellKnownSymbol(js::PropertyName*);
 bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol*);
 
 #endif /* gc_GCMarker_h */
