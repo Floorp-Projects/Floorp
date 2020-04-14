@@ -163,13 +163,13 @@ exports.openResponseDetailsPanel = async function(label, toolbox) {
   // editor test
   const testEditor = runTest(label + ".responsePanel.editor");
   const request = document.querySelectorAll(".request-list-item")[0];
-  const waitForPre = waitForDOMElement(
+  const waitForEditor = waitForDOMElement(
     monitor,
-    "#response-panel .responseTextContainer pre",
+    "#response-panel .CodeMirror.cm-s-mozilla",
     win
   );
   mouseDownElement(request, win);
-  await waitForPre;
+  await waitForEditor;
 
   testEditor.done();
   store.dispatch(Actions.toggleNetworkDetails());

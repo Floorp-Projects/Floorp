@@ -237,10 +237,6 @@ class ParamsPanel extends Component {
           text: postData,
           mode: mimeType.replace(/;.+/, ""),
           targetSearchResult,
-          // Using the response limit to improve perf when rendering
-          limit: Services.prefs.getIntPref(
-            "devtools.netmonitor.response.ui.limit"
-          ),
         },
         header: PARAMS_POST_PAYLOAD,
         id: "paramsPostPayload",

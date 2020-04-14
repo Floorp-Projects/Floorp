@@ -13,7 +13,7 @@ const Editor = require("devtools/client/shared/sourceeditor/editor");
 const {
   setTargetSearchResult,
 } = require("devtools/client/netmonitor/src/actions/search");
-const { div, pre } = dom;
+const { div } = dom;
 /**
  * CodeMirror editor as a React component
  */
@@ -29,16 +29,12 @@ class SourcePreview extends Component {
       // Reset target search result that has been used for navigation in this panel.
       // This is done to avoid second navigation the next time.
       resetTargetSearchResult: PropTypes.func,
-      // Limit for determine how to render large content
-      limit: PropTypes.number,
     };
   }
 
   componentDidMount() {
     const { mode, text } = this.props;
-    if (!this.isOverSizeLimit(text)) {
-      this.loadEditor(mode, text);
-    }
+    this.loadEditor(mode, text);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -53,20 +49,8 @@ class SourcePreview extends Component {
     const { mode, targetSearchResult, text } = this.props;
 
     if (prevProps.text !== text) {
-      // if the text size is over the limit we have switched to
-      // rendering with a PRE, lets clean up any previous editor object.
-      if (this.isOverSizeLimit(text)) {
-        this.unloadEditor();
-        return;
-      }
-
-      if (!this.editor || this.editor.isDestroyed()) {
-        // When updating from a PRE to an editor
-        this.loadEditor(mode, text);
-      } else {
-        // When updating from editor to editor
-        this.updateEditor(mode, text);
-      }
+      // When updating from editor to editor
+      this.updateEditor(mode, text);
     } else if (prevProps.targetSearchResult !== targetSearchResult) {
       this.findSearchResult();
     }
@@ -167,23 +151,6 @@ class SourcePreview extends Component {
     }
   }
 
-  isOverSizeLimit(text) {
-    const { limit } = this.props;
-    return text && text.length > limit;
-  }
-
-  renderPre(text) {
-    return div(
-      { className: "responseTextContainer" },
-      pre(
-        { ref: element => this.scrollToLine(element) },
-        text.split(/\r\n|\r|\n/).map((line, index) => {
-          return div({ key: index }, line);
-        })
-      )
-    );
-  }
-
   renderEditor() {
     return div(
       { className: "editor-row-container" },
@@ -195,13 +162,9 @@ class SourcePreview extends Component {
   }
 
   render() {
-    const { text } = this.props;
-    // To prevent performance issues, switch from editor to pre()
-    // if response size is greater than specified limit.
-    const isOverSize = this.isOverSizeLimit(text);
     return div(
       { key: "EDITOR_CONFIG", className: "editor-row-container" },
-      isOverSize ? this.renderPre(text) : this.renderEditor()
+      this.renderEditor()
     );
   }
 }
