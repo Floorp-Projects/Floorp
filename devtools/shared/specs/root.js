@@ -22,7 +22,6 @@ types.addDictType("root.listRemoteFrames", {
 });
 types.addDictType("root.listTabs", {
   tabs: "array:tabDescriptor",
-  selected: "number",
 });
 types.addPolymorphicType("root.browsingContextDescriptor", [
   "frameDescriptor",

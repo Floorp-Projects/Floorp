@@ -24,9 +24,6 @@ class BrowsingContextTargetFront extends TargetMixin(
       javascriptEnabled: null,
     };
 
-    // RootFront.listTabs is going to update this state via `setIsSelected`  method
-    this._selected = false;
-
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onFrameUpdate = this._onFrameUpdate.bind(this);
   }
@@ -43,17 +40,6 @@ class BrowsingContextTargetFront extends TargetMixin(
     this.favicon = json.favicon;
     this._title = json.title;
     this._url = json.url;
-  }
-
-  // Reports if the related tab is selected. Only applies to BrowsingContextTarget
-  // issued from RootFront.listTabs.
-  get selected() {
-    return this._selected;
-  }
-
-  // This is called by RootFront.listTabs, to update the currently selected tab.
-  setIsSelected(selected) {
-    this._selected = selected;
   }
 
   /**

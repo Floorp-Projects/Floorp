@@ -296,16 +296,9 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // pool with the one we build here, thus retiring any actors that didn't get listed
     // again, and preparing any new actors to receive packets.
     const newActorPool = new Pool(this.conn, "listTabs-tab-descriptors");
-    let selected;
 
     const tabDescriptorActors = await tabList.getList();
     for (const tabDescriptorActor of tabDescriptorActors) {
-      if (tabDescriptorActor.selected) {
-        const index = tabDescriptorActors.findIndex(
-          descriptor => descriptor === tabDescriptorActor
-        );
-        selected = index;
-      }
       newActorPool.manage(tabDescriptorActor);
     }
 
@@ -321,7 +314,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     // We'll extend the reply here to also mention all the tabs.
     Object.assign(reply, {
-      selected: selected || 0,
       tabs: [...this._tabDescriptorActorPool.poolChildren()],
     });
 
