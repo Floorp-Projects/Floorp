@@ -122,14 +122,13 @@ void VideoStreamFactory::SetSendingFramerate(unsigned int aSendingFramerate) {
 
 std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     int width, int height, const webrtc::VideoEncoderConfig& config) {
-  size_t streamCount = config.number_of_streams;
+  // We only allow one layer when screensharing
+  const size_t streamCount =
+      mCodecMode == webrtc::VideoCodecMode::kScreensharing
+          ? 1
+          : config.number_of_streams;
 
   MOZ_RELEASE_ASSERT(streamCount >= 1, "Should request at least one stream");
-
-  // We only allow one layer when screensharing
-  if (mCodecMode == webrtc::VideoCodecMode::kScreensharing) {
-    streamCount = 1;
-  }
 
   std::vector<webrtc::VideoStream> streams;
   streams.reserve(streamCount);
@@ -141,7 +140,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
   mSimulcastAdapter->OnOutputFormatRequest(
       cricket::VideoFormat(width, height, 0, 0));
 
-  for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
+  for (int idx = streamCount - 1; idx >= 0; --idx) {
     webrtc::VideoStream video_stream;
     auto& encoding = mCodecConfig.mEncodings[idx];
     MOZ_ASSERT(encoding.constraints.scaleDownBy >= 1.0);
