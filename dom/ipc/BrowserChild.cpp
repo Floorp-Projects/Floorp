@@ -2558,12 +2558,16 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
 
 mozilla::ipc::IPCResult BrowserChild::RecvNavigateByKey(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    RefPtr<Element> result;
-    nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
 
-    // Move to the first or last document.
+  RefPtr<Element> result;
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+
+  // Move to the first or last document.
+  {
     uint32_t type =
         aForward
             ? (aForDocumentNavigation
@@ -2572,18 +2576,20 @@ mozilla::ipc::IPCResult BrowserChild::RecvNavigateByKey(
             : (aForDocumentNavigation
                    ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_LASTDOC)
                    : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_LAST));
-    fm->MoveFocus(window, nullptr, type, nsIFocusManager::FLAG_BYKEY,
-                  getter_AddRefs(result));
-
-    // No valid root element was found, so move to the first focusable element.
-    if (!result && aForward && !aForDocumentNavigation) {
-      fm->MoveFocus(window, nullptr, nsIFocusManager::MOVEFOCUS_FIRST,
-                    nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));
+    uint32_t flags = nsIFocusManager::FLAG_BYKEY;
+    if (aForward || aForDocumentNavigation) {
+      flags |= nsIFocusManager::FLAG_NOSCROLL;
     }
-
-    SendRequestFocus(false, CallerType::System);
+    fm->MoveFocus(window, nullptr, type, flags, getter_AddRefs(result));
   }
 
+  // No valid root element was found, so move to the first focusable element.
+  if (!result && aForward && !aForDocumentNavigation) {
+    fm->MoveFocus(window, nullptr, nsIFocusManager::MOVEFOCUS_FIRST,
+                  nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));
+  }
+
+  SendRequestFocus(false, CallerType::System);
   return IPC_OK();
 }
 
