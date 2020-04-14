@@ -68,7 +68,7 @@
 
 #include "vm/Compartment-inl.h"       // for Compartment::wrap
 #include "vm/JSAtom-inl.h"            // for ValueToId
-#include "vm/JSObject-inl.h"          // for GetObjectClassName, InitClass
+#include "vm/JSObject-inl.h"  // for GetObjectClassName, InitClass, NewObjectWithGivenProtoAndKind
 #include "vm/NativeObject-inl.h"      // for NativeObject::global
 #include "vm/ObjectOperations-inl.h"  // for DeleteProperty, GetProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
@@ -1621,7 +1621,7 @@ DebuggerObject* DebuggerObject::create(JSContext* cx, HandleObject proto,
   NewObjectKind newKind =
       IsInsideNursery(referent) ? GenericObject : TenuredObject;
   DebuggerObject* obj =
-      NewObjectWithGivenProto<DebuggerObject>(cx, proto, newKind);
+      NewObjectWithGivenProtoAndKind<DebuggerObject>(cx, proto, newKind);
   if (!obj) {
     return nullptr;
   }
