@@ -453,7 +453,10 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   }
 }
 
-void nsWaylandDisplay::Shutdown() { mDispatcherThreadLoop = nullptr; }
+void nsWaylandDisplay::Shutdown() { 
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  mDispatcherThreadLoop = nullptr;
+}
 
 nsWaylandDisplay::~nsWaylandDisplay() {
   // Owned by Gtk+, we don't need to release
