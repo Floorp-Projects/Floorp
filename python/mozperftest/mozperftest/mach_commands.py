@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from functools import partial
-
 from mach.decorators import CommandProvider, Command
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
@@ -29,6 +28,15 @@ class Perftest(MachCommandBase):
 
         system, browser, metrics = get_env(self, flavor, test_objects, resolve_tests)
         metadata = get_metadata(self, flavor, **kwargs)
-
-        with system, browser, metrics:
-            metrics(browser(system(metadata)))
+        metadata.run_hook("before_cycles")
+        cycles = metadata.get_arg("cycles", 1)
+        try:
+            for cycle in range(1, cycles + 1):
+                with metadata.frozen() as m, system, browser, metrics:
+                    m.run_hook("before_cycle", cycle=cycle)
+                    try:
+                        metrics(browser(system(m)))
+                    finally:
+                        m.run_hook("after_cycle", cycle=cycle)
+        finally:
+            metadata.run_hook("after_cycles")

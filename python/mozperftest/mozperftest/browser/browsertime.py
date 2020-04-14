@@ -407,7 +407,7 @@ class BrowsertimeRunner(NodeRunner):
         from mozprofile import create_profile
 
         profile = create_profile(app="firefox")
-        prefs = metadata["browser"]["prefs"]
+        prefs = metadata.get_browser_prefs()
         profile.set_preferences(prefs)
         self.info("Created profile at %s" % profile.profile)
         self._created_dirs.append(profile.profile)
@@ -417,25 +417,37 @@ class BrowsertimeRunner(NodeRunner):
         # keep the object around
         # see https://bugzilla.mozilla.org/show_bug.cgi?id=1625118
         profile = self.get_profile(metadata)
-
-        test_script = metadata["mach_args"]["tests"][0]
+        test_script = metadata.get_arg("tests")[0]
         result_dir = os.path.join(os.path.dirname(__file__), "browsertime-results")
         args = [
             "--resultDir",
             result_dir,
             "--firefox.profileTemplate",
             profile.profile,
+            "-vvv",
             "--iterations",
             "1",
             test_script,
         ]
+
+        extra_options = metadata.get_arg("extra_options")
+        if extra_options:
+            for option in extra_options.split(","):
+                option = option.strip()
+                if not option:
+                    continue
+                option = option.split("=")
+                if len(option) != 2:
+                    continue
+                name, value = option
+                args += ["--" + name, value]
 
         firefox_args = ["--firefox.developer"]
         extra = self.extra_default_args(args=firefox_args)
         command = [self.browsertime_js] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
         self.node(command)
-        metadata["results"] = result_dir
+        metadata.set_result(result_dir)
         return metadata
 
     def teardown(self):
