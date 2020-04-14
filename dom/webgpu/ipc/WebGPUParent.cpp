@@ -211,10 +211,15 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
 
 ipc::IPCResult WebGPUParent::RecvDeviceUnmapBuffer(RawId aSelfId,
                                                    RawId aBufferId,
-                                                   Shmem&& shmem) {
-  ffi::wgpu_server_device_set_buffer_sub_data(mContext, aSelfId, aBufferId, 0,
-                                              shmem.get<uint8_t>(),
-                                              shmem.Size<uint8_t>());
+                                                   Shmem&& aShmem,
+                                                   bool aFlush) {
+  if (aFlush) {
+    ffi::wgpu_server_device_set_buffer_sub_data(mContext, aSelfId, aBufferId, 0,
+                                                aShmem.get<uint8_t>(),
+                                                aShmem.Size<uint8_t>());
+  } else {
+    ffi::wgpu_server_buffer_unmap(mContext, aBufferId);
+  }
   return IPC_OK();
 }
 
@@ -237,9 +242,9 @@ static void MapReadCallback(ffi::WGPUBufferMapAsyncStatus status,
 }
 
 ipc::IPCResult WebGPUParent::RecvBufferMapRead(
-    RawId aSelfId, Shmem&& shmem, BufferMapReadResolver&& resolver) {
-  auto size = shmem.Size<uint8_t>();
-  auto request = new MapReadRequest(std::move(shmem), std::move(resolver));
+    RawId aSelfId, Shmem&& aShmem, BufferMapReadResolver&& aResolver) {
+  auto size = aShmem.Size<uint8_t>();
+  auto request = new MapReadRequest(std::move(aShmem), std::move(aResolver));
   ffi::wgpu_server_buffer_map_read(mContext, aSelfId, 0, size, &MapReadCallback,
                                    reinterpret_cast<uint8_t*>(request));
   return IPC_OK();

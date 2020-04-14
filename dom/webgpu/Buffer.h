@@ -27,12 +27,13 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   struct Mapping final {
     UniquePtr<ipc::Shmem> mShmem;
     JS::Heap<JSObject*> mArrayBuffer;
+    const bool mWrite;
 
-    Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer);
+    Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer, bool aWrite);
   };
 
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize);
-  void InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer);
+  void InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer, bool aWrite);
 
   const RawId mId;
 

@@ -35,9 +35,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-Buffer::Mapping::Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer)
+Buffer::Mapping::Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer,
+                         bool aWrite)
     : mShmem(MakeUnique<ipc::Shmem>(std::move(aShmem))),
-      mArrayBuffer(aArrayBuffer) {}
+      mArrayBuffer(aArrayBuffer),
+      mWrite(aWrite) {}
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize)
     : ChildOf(aParent), mId(aId), mSize(aSize) {
@@ -59,8 +61,9 @@ void Buffer::Cleanup() {
   mMapping.reset();
 }
 
-void Buffer::InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer) {
-  mMapping.emplace(std::move(aShmem), aArrayBuffer);
+void Buffer::InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer,
+                         bool aWrite) {
+  mMapping.emplace(std::move(aShmem), aArrayBuffer, aWrite);
 }
 
 already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
@@ -105,7 +108,7 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
           return;
         }
         JS::Rooted<JS::Value> val(jsapi.cx(), JS::ObjectValue(*arrayBuffer));
-        self->mMapping.emplace(std::move(aShmem), arrayBuffer);
+        self->mMapping.emplace(std::move(aShmem), arrayBuffer, false);
         promise->MaybeResolve(val);
       },
       [promise](const ipc::ResponseRejectReason&) {
@@ -125,7 +128,7 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
     aRv.NoteJSContextException(aCx);
     return;
   }
-  mParent->UnmapBuffer(mId, std::move(mMapping->mShmem));
+  mParent->UnmapBuffer(mId, std::move(mMapping->mShmem), mMapping->mWrite);
   mMapping.reset();
 }
 
