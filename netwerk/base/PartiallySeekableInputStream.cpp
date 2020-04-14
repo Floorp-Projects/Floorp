@@ -56,6 +56,8 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(
       mWeakCloneableInputStream(nullptr),
       mWeakIPCSerializableInputStream(nullptr),
       mWeakAsyncInputStream(nullptr),
+      mWeakInputStreamLength(nullptr),
+      mWeakAsyncInputStreamLength(nullptr),
       mCachedBuffer(aClonedFrom->mCachedBuffer),
       mBufferSize(aClonedFrom->mBufferSize),
       mPos(aClonedFrom->mPos),
