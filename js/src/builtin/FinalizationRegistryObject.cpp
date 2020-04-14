@@ -45,7 +45,7 @@ FinalizationRecordObject* FinalizationRecordObject::create(
     HandleValue heldValue) {
   MOZ_ASSERT(registry);
 
-  auto record = NewObjectWithGivenProto<FinalizationRecordObject>(cx, nullptr);
+  auto record = NewObjectWithNullTaggedProto<FinalizationRecordObject>(cx);
   if (!record) {
     return nullptr;
   }
@@ -163,7 +163,7 @@ FinalizationRegistrationsObject* FinalizationRegistrationsObject::create(
   }
 
   auto object =
-      NewObjectWithGivenProto<FinalizationRegistrationsObject>(cx, nullptr);
+      NewObjectWithNullTaggedProto<FinalizationRegistrationsObject>(cx);
   if (!object) {
     return nullptr;
   }

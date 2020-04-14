@@ -885,10 +885,10 @@ static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind,
          clasp->isNative();
 }
 
-JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
-                                      HandleObject protoArg,
-                                      gc::AllocKind allocKind,
-                                      NewObjectKind newKind) {
+JSObject* js::NewObjectWithClassProtoCommon(JSContext* cx, const JSClass* clasp,
+                                            HandleObject protoArg,
+                                            gc::AllocKind allocKind,
+                                            NewObjectKind newKind) {
   if (protoArg) {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg),
                                          allocKind, newKind);
@@ -1147,7 +1147,7 @@ JSObject* js::CreateThisForFunctionWithProto(
 
     res = CreateThisForFunctionWithGroup(cx, group, newKind);
   } else {
-    res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+    res = NewBuiltinClassInstance<PlainObject>(cx, newKind);
   }
 
   if (res) {
@@ -1378,6 +1378,9 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
           obj->as<NativeObject>().getPrivate());
     }
   } else {
+    ProxyOptions options;
+    options.setClass(obj->getClass());
+
     auto* handler = GetProxyHandler(obj);
 
     // Same as above, require tenure allocation of the clone. This means for
@@ -1388,8 +1391,7 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
       return nullptr;
     }
 
-    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto,
-                             obj->getClass());
+    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto, options);
     if (!clone) {
       return nullptr;
     }
@@ -1448,10 +1450,10 @@ static bool GetScriptPlainObjectProperties(
   return true;
 }
 
-static bool DeepCloneValue(JSContext* cx, Value* vp) {
+static bool DeepCloneValue(JSContext* cx, Value* vp, NewObjectKind newKind) {
   if (vp->isObject()) {
     RootedObject obj(cx, &vp->toObject());
-    obj = DeepCloneObjectLiteral(cx, obj);
+    obj = DeepCloneObjectLiteral(cx, obj, newKind);
     if (!obj) {
       return false;
     }
@@ -1462,11 +1464,13 @@ static bool DeepCloneValue(JSContext* cx, Value* vp) {
   return true;
 }
 
-JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
+JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
+                                     NewObjectKind newKind) {
   /* NB: Keep this in sync with XDRObjectLiteral. */
   MOZ_ASSERT_IF(obj->isSingleton(),
                 cx->realm()->behaviors().getSingletonsAsTemplates());
   MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
+  MOZ_ASSERT(newKind != SingletonObject);
 
   if (obj->is<ArrayObject>()) {
     Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
@@ -1476,7 +1480,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
 
     // Deep clone any elements.
     for (uint32_t i = 0; i < values.length(); ++i) {
-      if (!DeepCloneValue(cx, values[i].address())) {
+      if (!DeepCloneValue(cx, values[i].address(), newKind)) {
         return nullptr;
       }
     }
@@ -1488,7 +1492,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
     }
 
     return ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
-                                       TenuredObject, arrayKind);
+                                       newKind, arrayKind);
   }
 
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
@@ -1498,12 +1502,15 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
 
   for (size_t i = 0; i < properties.length(); i++) {
     cx->markId(properties[i].get().id);
-    if (!DeepCloneValue(cx, &properties[i].get().value)) {
+    if (!DeepCloneValue(cx, &properties[i].get().value, newKind)) {
       return nullptr;
     }
   }
 
-  NewObjectKind newKind = obj->isSingleton() ? SingletonObject : TenuredObject;
+  if (obj->isSingleton()) {
+    newKind = SingletonObject;
+  }
+
   return ObjectGroup::newPlainObject(cx, properties.begin(),
                                      properties.length(), newKind);
 }

@@ -36,7 +36,7 @@
 
 #include "vm/Compartment-inl.h"        // for Compartment::wrap
 #include "vm/EnvironmentObject-inl.h"  // for JSObject::enclosingEnvironment
-#include "vm/JSObject-inl.h"  // for IsInternalFunctionObject, NewObjectWithGivenProtoAndKind
+#include "vm/JSObject-inl.h"           // for IsInternalFunctionObject
 #include "vm/ObjectOperations-inl.h"   // for HasProperty, GetProperty
 #include "vm/Realm-inl.h"              // for AutoRealm::AutoRealm
 
@@ -399,10 +399,10 @@ DebuggerEnvironment* DebuggerEnvironment::create(JSContext* cx,
                                                  HandleObject proto,
                                                  HandleObject referent,
                                                  HandleNativeObject debugger) {
+  NewObjectKind newKind =
+      IsInsideNursery(referent) ? GenericObject : TenuredObject;
   DebuggerEnvironment* obj =
-      IsInsideNursery(referent)
-          ? NewObjectWithGivenProto<DebuggerEnvironment>(cx, proto)
-          : NewTenuredObjectWithGivenProto<DebuggerEnvironment>(cx, proto);
+      NewObjectWithGivenProto<DebuggerEnvironment>(cx, proto, newKind);
   if (!obj) {
     return nullptr;
   }

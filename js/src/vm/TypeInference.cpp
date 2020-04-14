@@ -45,7 +45,6 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/ObjectGroup-inl.h"  // JSObject::setSingleton
 
 using namespace js;
 

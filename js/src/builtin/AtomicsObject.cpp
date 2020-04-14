@@ -980,7 +980,8 @@ static JSObject* CreateAtomicsObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewSingletonObjectWithGivenProto(cx, &AtomicsObject::class_, proto);
+  return NewObjectWithGivenProto(cx, &AtomicsObject::class_, proto,
+                                 SingletonObject);
 }
 
 static const ClassSpec AtomicsClassSpec = {CreateAtomicsObject, nullptr,

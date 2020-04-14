@@ -3736,9 +3736,10 @@ void CodeGenerator::visitTableSwitchV(LTableSwitchV* ins) {
 }
 
 void CodeGenerator::visitCloneLiteral(LCloneLiteral* lir) {
+  pushArg(ImmWord(TenuredObject));
   pushArg(ToRegister(lir->getObjectLiteral()));
 
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
+  using Fn = JSObject* (*)(JSContext*, HandleObject, NewObjectKind);
   callVM<Fn, DeepCloneObjectLiteral>(lir);
 }
 
@@ -6738,21 +6739,21 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
   OutOfLineCode* ool;
   switch (lir->mir()->type()) {
     case MNewIterator::ArrayIterator: {
-      using Fn = ArrayIteratorObject* (*)(JSContext*);
-      ool = oolCallVM<Fn, NewArrayIterator>(lir, ArgList(),
-                                            StoreRegisterTo(objReg));
+      using Fn = ArrayIteratorObject* (*)(JSContext*, NewObjectKind);
+      ool = oolCallVM<Fn, NewArrayIteratorObject>(
+          lir, ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
       break;
     }
     case MNewIterator::StringIterator: {
-      using Fn = StringIteratorObject* (*)(JSContext*);
-      ool = oolCallVM<Fn, NewStringIterator>(lir, ArgList(),
-                                             StoreRegisterTo(objReg));
+      using Fn = StringIteratorObject* (*)(JSContext*, NewObjectKind);
+      ool = oolCallVM<Fn, NewStringIteratorObject>(
+          lir, ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
       break;
     }
     case MNewIterator::RegExpStringIterator: {
-      using Fn = RegExpStringIteratorObject* (*)(JSContext*);
-      ool = oolCallVM<Fn, NewRegExpStringIterator>(lir, ArgList(),
-                                                   StoreRegisterTo(objReg));
+      using Fn = RegExpStringIteratorObject* (*)(JSContext*, NewObjectKind);
+      ool = oolCallVM<Fn, NewRegExpStringIteratorObject>(
+          lir, ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
       break;
     }
     default:

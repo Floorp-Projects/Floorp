@@ -506,8 +506,8 @@ static TypedProto* CreatePrototypeObjectForComplexTypeInstance(
     return nullptr;
   }
 
-  return NewSingletonObjectWithGivenProto<TypedProto>(cx,
-                                                      ctorPrototypePrototype);
+  return NewObjectWithGivenProto<TypedProto>(cx, ctorPrototypePrototype,
+                                             SingletonObject);
 }
 
 static const JSClassOps ArrayTypeDescrClassOps = {
@@ -604,8 +604,8 @@ ArrayTypeDescr* ArrayMetaTypeDescr::create(JSContext* cx,
                                            int32_t length) {
   MOZ_ASSERT(arrayTypePrototype);
   Rooted<ArrayTypeDescr*> obj(cx);
-  obj =
-      NewSingletonObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype);
+  obj = NewObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype,
+                                                SingletonObject);
   if (!obj) {
     return nullptr;
   }
@@ -910,12 +910,12 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
   RootedObject userFieldTypes(cx);     // User-exposed {f:descr} object.
   Layout layout;                       // Field offsetter
 
-  userFieldOffsets = NewTenuredBuiltinClassInstance<PlainObject>(cx);
+  userFieldOffsets = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
   if (!userFieldOffsets) {
     return nullptr;
   }
 
-  userFieldTypes = NewTenuredBuiltinClassInstance<PlainObject>(cx);
+  userFieldTypes = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
   if (!userFieldTypes) {
     return nullptr;
   }
@@ -1004,8 +1004,8 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
   // Now create the resulting type descriptor.
 
   Rooted<StructTypeDescr*> descr(cx);
-  descr = NewSingletonObjectWithGivenProto<StructTypeDescr>(
-      cx, structTypePrototype);
+  descr = NewObjectWithGivenProto<StructTypeDescr>(cx, structTypePrototype,
+                                                   SingletonObject);
   if (!descr) {
     return nullptr;
   }
@@ -1258,7 +1258,8 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
     return false;
   }
 
-  Rooted<T*> descr(cx, NewSingletonObjectWithGivenProto<T>(cx, funcProto));
+  Rooted<T*> descr(cx);
+  descr = NewObjectWithGivenProto<T>(cx, funcProto, SingletonObject);
   if (!descr) {
     return false;
   }
@@ -1284,7 +1285,7 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
   // Create the typed prototype for the scalar type. This winds up
   // not being user accessible, but we still create one for consistency.
   Rooted<TypedProto*> proto(cx);
-  proto = NewTenuredObjectWithGivenProto<TypedProto>(cx, objProto);
+  proto = NewObjectWithGivenProto<TypedProto>(cx, objProto, TenuredObject);
   if (!proto) {
     return false;
   }
@@ -1327,7 +1328,7 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
   // Create ctor.prototype, which inherits from Function.__proto__
 
   RootedObject proto(
-      cx, NewSingletonObjectWithGivenProto<PlainObject>(cx, funcProto));
+      cx, NewObjectWithGivenProto<PlainObject>(cx, funcProto, SingletonObject));
   if (!proto) {
     return nullptr;
   }
@@ -1340,7 +1341,8 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
     return nullptr;
   }
   RootedObject protoProto(cx);
-  protoProto = NewSingletonObjectWithGivenProto<PlainObject>(cx, objProto);
+  protoProto =
+      NewObjectWithGivenProto<PlainObject>(cx, objProto, SingletonObject);
   if (!protoProto) {
     return nullptr;
   }
@@ -1378,8 +1380,8 @@ static JSObject* CreateTypedObjectModuleObject(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  return NewSingletonObjectWithGivenProto<TypedObjectModuleObject>(cx,
-                                                                   objProto);
+  return NewObjectWithGivenProto<TypedObjectModuleObject>(cx, objProto,
+                                                          SingletonObject);
 }
 
 /*  The initialization strategy for TypedObjects is mildly unusual

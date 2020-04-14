@@ -119,7 +119,7 @@
 #include "vm/GeckoProfiler-inl.h"  // for AutoSuppressProfilerSampling
 #include "vm/JSAtom-inl.h"         // for AtomToId, ValueToId
 #include "vm/JSContext-inl.h"      // for JSContext::check
-#include "vm/JSObject-inl.h"  // for JSObject::isCallable, NewTenuredObjectWithGivenProto
+#include "vm/JSObject-inl.h"       // for JSObject::isCallable
 #include "vm/JSScript-inl.h"       // for JSScript::isDebuggee, JSScript
 #include "vm/NativeObject-inl.h"  // for NativeObject::ensureDenseInitializedLength
 #include "vm/ObjectOperations-inl.h"  // for GetProperty, HasProperty
@@ -3919,7 +3919,7 @@ bool DebuggerWeakMap<UnbarrieredKey, Wrapper,
   return true;
 }
 
-const JSClassOps DebuggerInstanceObject::classOps_ = {
+const JSClassOps Debugger::classOps_ = {
     nullptr,                // addProperty
     nullptr,                // delProperty
     nullptr,                // enumerate
@@ -3933,11 +3933,10 @@ const JSClassOps DebuggerInstanceObject::classOps_ = {
     Debugger::traceObject,  // trace
 };
 
-const JSClass DebuggerInstanceObject::class_ = {
+const JSClass Debugger::class_ = {
     "Debugger",
-    JSCLASS_HAS_PRIVATE |
-        JSCLASS_HAS_RESERVED_SLOTS(Debugger::JSSLOT_DEBUG_COUNT),
-    &classOps_};
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
+    &Debugger::classOps_};
 
 static Debugger* Debugger_fromThisValue(JSContext* cx, const CallArgs& args,
                                         const char* fnname) {
@@ -3945,7 +3944,7 @@ static Debugger* Debugger_fromThisValue(JSContext* cx, const CallArgs& args,
   if (!thisobj) {
     return nullptr;
   }
-  if (!thisobj->is<DebuggerInstanceObject>()) {
+  if (thisobj->getClass() != &Debugger::class_) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger", fnname,
                               thisobj->getClass()->name);
@@ -4485,13 +4484,13 @@ bool Debugger::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   RootedNativeObject proto(cx, &v.toObject().as<NativeObject>());
-  MOZ_ASSERT(proto->is<DebuggerInstanceObject>());
+  MOZ_ASSERT(proto->getClass() == &Debugger::class_);
 
   // Make the new Debugger object. Each one has a reference to
   // Debugger.{Frame,Object,Script,Memory}.prototype in reserved slots. The
   // rest of the reserved slots are for hooks; they default to undefined.
-  Rooted<DebuggerInstanceObject*> obj(
-      cx, NewTenuredObjectWithGivenProto<DebuggerInstanceObject>(cx, proto));
+  RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(
+                                 cx, &Debugger::class_, proto, TenuredObject));
   if (!obj) {
     return false;
   }
@@ -6515,9 +6514,9 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
   Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
   debugProto =
-      InitClass(cx, global, nullptr, &DebuggerInstanceObject::class_,
-                Debugger::construct, 1, Debugger::properties, Debugger::methods,
-                nullptr, Debugger::static_methods, debugCtor.address());
+      InitClass(cx, global, nullptr, &Debugger::class_, Debugger::construct, 1,
+                Debugger::properties, Debugger::methods, nullptr,
+                Debugger::static_methods, debugCtor.address());
   if (!debugProto) {
     return false;
   }
@@ -6586,7 +6585,7 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
 JS_PUBLIC_API bool JS::dbg::IsDebugger(JSObject& obj) {
   /* We only care about debugger objects, so CheckedUnwrapStatic is OK. */
   JSObject* unwrapped = CheckedUnwrapStatic(&obj);
-  return unwrapped && unwrapped->is<DebuggerInstanceObject>() &&
+  return unwrapped && unwrapped->getClass() == &Debugger::class_ &&
          js::Debugger::fromJSObject(unwrapped) != nullptr;
 }
 

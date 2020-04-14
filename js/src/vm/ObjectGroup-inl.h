@@ -91,30 +91,6 @@ inline PreliminaryObjectArrayWithTemplate* ObjectGroup::maybePreliminaryObjects(
   return maybePreliminaryObjectsDontCheckGeneration();
 }
 
-/* static */ inline ObjectGroup* ObjectGroup::lazySingletonGroup(
-    JSContext* cx, ObjectGroup* oldGroup, const JSClass* clasp,
-    TaggedProto proto) {
-  ObjectGroupRealm& realm = oldGroup ? ObjectGroupRealm::get(oldGroup)
-                                     : ObjectGroupRealm::getForNewObject(cx);
-  JS::Realm* objectRealm = oldGroup ? oldGroup->realm() : cx->realm();
-  return lazySingletonGroup(cx, realm, objectRealm, clasp, proto);
-}
-
 }  // namespace js
-
-/* static */ inline bool JSObject::setSingleton(JSContext* cx,
-                                                js::HandleObject obj) {
-  MOZ_ASSERT(!IsInsideNursery(obj));
-  MOZ_ASSERT(!obj->isSingleton());
-
-  js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(
-      cx, obj->groupRaw(), obj->getClass(), obj->taggedProto());
-  if (!group) {
-    return false;
-  }
-
-  obj->setGroupRaw(group);
-  return true;
-}
 
 #endif /* vm_ObjectGroup_inl_h */
