@@ -5668,7 +5668,8 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     // Get a URI from the document principal. We use the original
     // content URI in case the domain was changed by SetDomain
     nsCOMPtr<nsIURI> principalURI;
-    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
+    auto* basePrin = BasePrincipal::Cast(NodePrincipal());
+    basePrin->GetURI(getter_AddRefs(principalURI));
 
     if (!principalURI) {
       // Document's principal is not a content or null (may be system), so
@@ -5726,7 +5727,8 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& aRv) {
 
   // The code for getting the URI matches Navigator::CookieEnabled
   nsCOMPtr<nsIURI> principalURI;
-  NodePrincipal()->GetURI(getter_AddRefs(principalURI));
+  auto* basePrin = BasePrincipal::Cast(NodePrincipal());
+  basePrin->GetURI(getter_AddRefs(principalURI));
 
   if (!principalURI) {
     // Document's principal is not a content or null (may be system), so
@@ -8072,8 +8074,8 @@ already_AddRefed<nsIURI> Document::GetDomainURI() {
   if (uri) {
     return uri.forget();
   }
-
-  principal->GetURI(getter_AddRefs(uri));
+  auto* basePrin = BasePrincipal::Cast(principal);
+  basePrin->GetURI(getter_AddRefs(uri));
   return uri.forget();
 }
 
@@ -14556,15 +14558,15 @@ void Document::ReportUseCounters() {
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
       (IsContentDocument() || IsResourceDoc())) {
-    nsCOMPtr<nsIURI> uri;
-    NodePrincipal()->GetURI(getter_AddRefs(uri));
-    if (!uri || uri->SchemeIs("about") || uri->SchemeIs("chrome") ||
-        uri->SchemeIs("resource")) {
+    if (NodePrincipal()->SchemeIs("about") ||
+        NodePrincipal()->SchemeIs("chrome") ||
+        NodePrincipal()->SchemeIs("resource")) {
       return;
     }
 
     if (kDebugUseCounters) {
-      nsCString spec = uri->GetSpecOrDefault();
+      nsCString spec;
+      NodePrincipal()->GetAsciiSpec(spec);
 
       // URIs can be rather long for data documents, so truncate them to
       // some reasonable length.
