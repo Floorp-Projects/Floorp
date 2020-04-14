@@ -216,6 +216,12 @@ sm-nonunified-linux64/debug:
         symbol: SM(nu)
     run:
         spidermonkey-variant: nonunified
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
 
 sm-fuzzing-linux64/opt:
     description: "Spidermonkey Fuzzing"
