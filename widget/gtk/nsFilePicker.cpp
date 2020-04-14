@@ -156,12 +156,8 @@ NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 nsFilePicker::nsFilePicker()
     : mSelectedType(0),
       mRunning(false),
-      mAllowURLs(false)
-#ifdef MOZ_WIDGET_GTK
-      ,
-      mFileChooserDelegate(nullptr)
-#endif
-{
+      mAllowURLs(false),
+      mFileChooserDelegate(nullptr) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
 }
@@ -410,7 +406,6 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
       nsAutoCString directory;
       defaultPath->GetNativePath(directory);
 
-#ifdef MOZ_WIDGET_GTK
       // Workaround for problematic refcounting in GTK3 before 3.16.
       // We need to keep a reference to the dialog's internal delegate.
       // Otherwise, if our dialog gets destroyed, we'll lose the dialog's
@@ -433,8 +428,6 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
           g_object_ref(mFileChooserDelegate);
         }
       }
-#endif
-
       gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
                                           directory.get());
     }
@@ -550,7 +543,6 @@ void nsFilePicker::Done(void* file_chooser, gint response) {
   // been released.
   GtkFileChooserDestroy(file_chooser);
 
-#ifdef MOZ_WIDGET_GTK
   if (mFileChooserDelegate) {
     // Properly deref our acquired reference. We call this after
     // gtk_widget_destroy() to try and ensure that pending file info
@@ -565,7 +557,6 @@ void nsFilePicker::Done(void* file_chooser, gint response) {
         mFileChooserDelegate);
     mFileChooserDelegate = nullptr;
   }
-#endif
 
   if (mCallback) {
     mCallback->Done(result);

@@ -80,9 +80,7 @@ class nsFilePicker : public nsBaseFilePicker {
   void GtkFileChooserSetModal(void* file_chooser, GtkWindow* parent_widget,
                               gboolean modal);
 
-#ifdef MOZ_WIDGET_GTK
   GtkFileChooserWidget* mFileChooserDelegate;
-#endif
   bool mUseNativeFileChooser;
 };
 
