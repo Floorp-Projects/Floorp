@@ -835,17 +835,6 @@
       "chrome://global/content/elements/toolbarbutton.js",
       "chrome://global/content/elements/tree.js",
       "chrome://global/content/elements/wizard.js",
-      // We load autocomplete-input eagerly, because we use system event
-      // listeners to be able to see keypress events for non-printable keys
-      // (see bug 1434837), and in the capture phase, for some reason.
-      //
-      // That means that they can run after the actual internal <input> element
-      // event listeners if custom element construction is not synchronous, and
-      // thus be default-prevented by them.
-      //
-      // This all seems pretty fishy, ideally we'd stop using keypress for
-      // these events, but for now this preserves behavior.
-      "chrome://global/content/elements/autocomplete-input.js",
     ]) {
       Services.scriptloader.loadSubScript(script, window);
     }
@@ -858,6 +847,10 @@
       [
         "printpreview-toolbar",
         "chrome://global/content/printPreviewToolbar.js",
+      ],
+      [
+        "autocomplete-input",
+        "chrome://global/content/elements/autocomplete-input.js",
       ],
       ["editor", "chrome://global/content/elements/editor.js"],
     ]) {
