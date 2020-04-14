@@ -60,6 +60,10 @@ interface BrowsingContext {
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
   void setRDMPaneOrientation(OrientationType type, float rotationAngle);
+
+  // Extension to give chrome JS the ability to set a maxTouchPoints override
+  // while in RDM.
+  void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
 };
 
 [Exposed=Window, ChromeOnly]
