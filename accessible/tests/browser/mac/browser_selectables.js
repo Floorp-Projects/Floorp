@@ -60,3 +60,12 @@ addAccessibleTask("mac/doc_aria_tabs.html", async (browser, accDoc) => {
     "Correct title for tab"
   );
 });
+
+addAccessibleTask('<p id="p">hello</p>', async (browser, accDoc) => {
+  let p = getNativeInterface(accDoc, "p");
+  ok(
+    p.attributeNames.includes("AXSelected"),
+    "html element includes 'AXSelected' attribute"
+  );
+  is(p.getAttributeValue("AXSelected"), false, "AX selected is 'false'");
+});
