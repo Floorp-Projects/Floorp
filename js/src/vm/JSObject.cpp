@@ -1147,7 +1147,7 @@ JSObject* js::CreateThisForFunctionWithProto(
 
     res = CreateThisForFunctionWithGroup(cx, group, newKind);
   } else {
-    res = NewBuiltinClassInstance<PlainObject>(cx, newKind);
+    res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
   }
 
   if (res) {

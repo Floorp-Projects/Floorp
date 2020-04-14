@@ -542,8 +542,20 @@ inline JSObject* NewBuiltinClassInstance(
 }
 
 template <typename T>
-inline T* NewBuiltinClassInstance(JSContext* cx,
-                                  NewObjectKind newKind = GenericObject) {
+inline T* NewBuiltinClassInstance(JSContext* cx) {
+  JSObject* obj = NewBuiltinClassInstance(cx, &T::class_, GenericObject);
+  return obj ? &obj->as<T>() : nullptr;
+}
+
+template <typename T>
+inline T* NewTenuredBuiltinClassInstance(JSContext* cx) {
+  JSObject* obj = NewBuiltinClassInstance(cx, &T::class_, TenuredObject);
+  return obj ? &obj->as<T>() : nullptr;
+}
+
+template <typename T>
+inline T* NewBuiltinClassInstanceWithKind(JSContext* cx,
+                                          NewObjectKind newKind) {
   JSObject* obj = NewBuiltinClassInstance(cx, &T::class_, newKind);
   return obj ? &obj->as<T>() : nullptr;
 }
