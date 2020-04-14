@@ -1138,6 +1138,9 @@ extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
 extern JSFunction* CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun);
 
+extern bool SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
+                                          HandleObject proto);
+
 }  // namespace js
 
 inline js::FunctionExtended* JSFunction::toExtended() {
