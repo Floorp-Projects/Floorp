@@ -25,13 +25,18 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
         ? [{ text: "", count: expectedMessages }]
         : expectedMessages;
 
-    await waitForConsoleOutputChildListChange(hud, consoleOutputEl => {
-      dump("[TEST_LOG] Console output changed - checking content:\n");
-      const messages = Array.from(consoleOutputEl.querySelectorAll(".message"));
+    let logMissingMessagesTimeoutId;
 
+    await waitForConsoleOutputChildListChange(hud, consoleOutputEl => {
+      if (logMissingMessagesTimeoutId) {
+        clearTimeout(logMissingMessagesTimeoutId);
+        logMissingMessagesTimeoutId = null;
+      }
+
+      const messages = Array.from(consoleOutputEl.querySelectorAll(".message"));
       const missing = new Map(expected.map(e => [e.text, e.count || 1]));
 
-      const foundAllMessages = expected.every(({ text, count = 1 }) => {
+      for (const { text, count = 1 } of expected) {
         let found = 0;
         for (const message of messages) {
           const messageText = message.querySelector(".message-body").innerText;
@@ -49,22 +54,22 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
         } else {
           missing.set(text, count - found);
         }
-
-        return allFound;
-      });
-
-      if (!foundAllMessages) {
-        dump(
-          `[TEST_LOG] Still waiting for the following messages: \n${Array.from(
-            missing.entries()
-          )
-            .map(([text, count]) => `${text || "<any text>"} (✕${count})`)
-            .join("\n")}\n`
-        );
-      } else {
-        dump(`[TEST_LOG] All expected messages where found\n`);
       }
-      dump("---\n");
+
+      const foundAllMessages = missing.size == 0;
+      if (!foundAllMessages) {
+        // Only log missing messages after 3s, if there was no other DOM updates.
+        logMissingMessagesTimeoutId = setTimeout(() => {
+          dump(
+            `[TEST_LOG] Still waiting for the following messages: \n${Array.from(
+              missing.entries()
+            )
+              .map(([text, count]) => `${text || "<any text>"} (✕${count})`)
+              .join("\n")}\n`
+          );
+          dump("---\n");
+        }, 3000);
+      }
       return foundAllMessages;
     });
   };
