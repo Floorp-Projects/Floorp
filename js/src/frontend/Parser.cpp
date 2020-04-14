@@ -2499,9 +2499,14 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   funbox->initFromLazyFunction(fun);
-  MOZ_ASSERT(fun->baseScript()->hasEnclosingScript(),
-             "Inner lazy function should not have a scope until we finish our "
-             "own compile");
+
+  // Info derived from parent compilation should not be set yet for our inner
+  // lazy functions. Instead that info will be updated when we finish our
+  // compilation.
+  MOZ_ASSERT(fun->baseScript()->hasEnclosingScript());
+  MOZ_ASSERT(fun->baseScript()->treatAsRunOnce() == false);
+  MOZ_ASSERT_IF(fun->isClassConstructor(),
+                !fun->baseScript()->getFieldInitializers().valid);
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 

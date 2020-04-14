@@ -341,6 +341,8 @@ class FunctionBox : public SharedContext {
   // Back pointer used by asm.js for error messages.
   FunctionNode* functionNode;
 
+  mozilla::Maybe<FieldInitializers> fieldInitializers;
+
   SourceExtent extent;
 
   uint16_t length;
@@ -623,12 +625,6 @@ class FunctionBox : public SharedContext {
     if (hasFunction()) {
       function()->setArgCount(nargs_);
     }
-  }
-
-  void setFieldInitializers(FieldInitializers fi) {
-    MOZ_ASSERT(function()->baseScript());
-    function()->baseScript()->setFieldInitializers(fi);
-    return;
   }
 
   bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
