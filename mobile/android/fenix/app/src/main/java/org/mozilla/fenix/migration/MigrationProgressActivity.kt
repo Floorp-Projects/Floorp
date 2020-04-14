@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_migration.*
 import kotlinx.android.synthetic.main.migration_list_item.view.*
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.migration.AbstractMigrationProgressActivity
 import mozilla.components.support.migration.AbstractMigrationService
 import mozilla.components.support.migration.Migration
@@ -47,6 +48,8 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
     }
 
     fun init() {
+        window.navigationBarColor = getColorFromAttr(R.attr.foundation)
+
         val appName = migration_description.context.getString(R.string.app_name)
 
         migration_description.apply {
