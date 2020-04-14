@@ -581,8 +581,9 @@ BrowserTabList.prototype._listenForMessagesIf = function(
 BrowserTabList.prototype._onAndroidDocumentEvent = function(event) {
   switch (event.type) {
     case "DOMTitleChanged": {
-      const window = event.currentTarget.ownerGlobal;
-      this._onDOMTitleChanged(window.browser);
+      const win = event.currentTarget.ownerGlobal;
+      const browser = win.BrowserApp.getBrowserForDocument(event.target);
+      this._onDOMTitleChanged(browser);
       break;
     }
   }
