@@ -1,6 +1,9 @@
 {
     "configure-args": "--enable-warnings-as-errors --enable-rust-simd",
     "debug": true,
+    "conditional-configure-args": {
+        "linux64": "--enable-smoosh"
+    },
     "skip-tests": {
         "all": ["jstests", "jittest", "checks"]
     }
