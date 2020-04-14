@@ -2852,25 +2852,49 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
              Stringify(aHitTestPoint).c_str());
   std::vector<wr::WrHitResult> results =
       wr->HitTest(wr::ToWorldPoint(aHitTestPoint));
-  if (results.empty()) {
+
+  Maybe<wr::WrHitResult> chosenResult;
+  for (const wr::WrHitResult& result : results) {
+    ScrollableLayerGuid guid{result.mLayersId, 0, result.mScrollId};
+    APZCTM_LOG("Examining result with guid %s hit info 0x%d... ",
+               Stringify(guid).c_str(), result.mHitInfo.serialize());
+    if (result.mHitInfo == CompositorHitTestInvisibleToHit) {
+      MOZ_ASSERT(false);
+      APZCTM_LOG("skipping due to invisibility.\n");
+      continue;
+    }
+    RefPtr<HitTestingTreeNode> node =
+        GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+    if (!node) {
+      APZCTM_LOG("no corresponding node found.\n");
+      chosenResult = Some(result);
+      break;
+    }
+    MOZ_ASSERT(node->GetApzc());  // any node returned must have an APZC
+    EventRegionsOverride flags = node->GetEventRegionsOverride();
+    if (flags & EventRegionsOverride::ForceEmptyHitRegion) {
+      // This result is inside a subtree that is invisible to hit-testing.
+      APZCTM_LOG("skipping due to FEHR subtree.\n");
+      continue;
+    }
+
+    APZCTM_LOG("selecting as chosen result.\n");
+    chosenResult = Some(result);
+    hit.mTargetApzc = node->GetApzc();
+    if (flags & EventRegionsOverride::ForceDispatchToContent) {
+      chosenResult->mHitInfo += CompositorHitTestFlags::eApzAwareListeners;
+    }
+    break;
+  }
+  if (!chosenResult) {
     return hit;
   }
 
-  hit.mLayersId = results[0].mLayersId;
-  ScrollableLayerGuid::ViewID scrollId = results[0].mScrollId;
-  gfx::CompositorHitTestInfo hitInfo = results[0].mHitInfo;
-  SideBits sideBits = results[0].mSideBits;
+  hit.mLayersId = chosenResult->mLayersId;
+  ScrollableLayerGuid::ViewID scrollId = chosenResult->mScrollId;
+  gfx::CompositorHitTestInfo hitInfo = chosenResult->mHitInfo;
+  SideBits sideBits = chosenResult->mSideBits;
 
-  ScrollableLayerGuid guid{hit.mLayersId, 0, scrollId};
-  if (RefPtr<HitTestingTreeNode> node =
-          GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
-    MOZ_ASSERT(node->GetApzc());  // any node returned must have an APZC
-    hit.mTargetApzc = node->GetApzc();
-    EventRegionsOverride flags = node->GetEventRegionsOverride();
-    if (flags & EventRegionsOverride::ForceDispatchToContent) {
-      hitInfo += CompositorHitTestFlags::eApzAwareListeners;
-    }
-  }
   APZCTM_LOG("Successfully matched APZC %p (hit result 0x%x)\n",
              hit.mTargetApzc.get(), hitInfo.serialize());
   if (!hit.mTargetApzc) {
