@@ -61,6 +61,10 @@ class PrimaryPanes extends Component<Props, State> {
     };
   }
 
+  componentDidCatch(error: Error) {
+    console.log(error);
+  }
+
   showPane = (selectedPane: SelectedPrimaryPaneTabType) => {
     this.props.setPrimaryPaneTab(selectedPane);
   };
@@ -202,11 +206,14 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
-  setPrimaryPaneTab: actions.setPrimaryPaneTab,
-  setActiveSearch: actions.setActiveSearch,
-  closeActiveSearch: actions.closeActiveSearch,
-  clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
-});
+const connector = connect<Props, OwnProps, _, _, _, _>(
+  mapStateToProps,
+  {
+    setPrimaryPaneTab: actions.setPrimaryPaneTab,
+    setActiveSearch: actions.setActiveSearch,
+    closeActiveSearch: actions.closeActiveSearch,
+    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+  }
+);
 
 export default connector(PrimaryPanes);

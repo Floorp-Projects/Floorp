@@ -11,7 +11,7 @@ import { getDomain } from "./treeOrder";
 
 import type { SourcesMapByThread } from "../../reducers/types";
 import type { Thread, Source, URL } from "../../types";
-import type { TreeDirectory } from "./types";
+import type { TreeDirectory, TreeNode } from "./types";
 
 function getSourcesToAdd(newSources, prevSources): Source[] {
   const sourcesToAdd = [];
@@ -33,6 +33,7 @@ type UpdateTreeParams = {
   uncollapsedTree: TreeDirectory,
   debuggeeUrl: URL,
   threads: Thread[],
+  sourceTree?: TreeNode,
 };
 
 type CreateTreeParams = {
@@ -47,14 +48,19 @@ export function createTree({
   threads,
 }: CreateTreeParams) {
   const uncollapsedTree = createDirectoryNode("root", "", []);
-
-  return updateTree({
+  const result = updateTree({
     debuggeeUrl,
     newSources: sources,
     prevSources: {},
     threads,
     uncollapsedTree,
   });
+
+  if (!result) {
+    throw new Error("Tree must exist");
+  }
+
+  return result;
 }
 
 export function updateTree({
@@ -63,11 +69,14 @@ export function updateTree({
   debuggeeUrl,
   uncollapsedTree,
   threads,
+  create,
+  sourceTree,
 }: UpdateTreeParams) {
   const debuggeeHost = getDomain(debuggeeUrl);
   const contexts = (Object.keys(newSources): any);
 
-  contexts.forEach(context => {
+  let shouldUpdate = !sourceTree;
+  for (const context of contexts) {
     const thread = threads.find(t => t.actor === context);
     if (!thread) {
       return;
@@ -79,9 +88,14 @@ export function updateTree({
     );
 
     for (const source of sourcesToAdd) {
+      shouldUpdate = true;
       addToTree(uncollapsedTree, source, debuggeeHost, thread.actor);
     }
-  });
+  }
+
+  if (!shouldUpdate) {
+    return false;
+  }
 
   const newSourceTree = collapseTree(uncollapsedTree);
 
