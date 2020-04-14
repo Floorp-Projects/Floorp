@@ -56,10 +56,12 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.MediaState.State.PLAYING
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.flowScoped
@@ -411,6 +413,11 @@ class HomeFragment : Fragment() {
 
     private fun closeTab(sessionId: String) {
         val deletionJob = pendingSessionDeletion?.deletionJob
+        context?.let {
+            if (sessionManager.findSessionById(sessionId)?.toTab(it)?.mediaState == PLAYING) {
+                it.components.core.store.state.media.pauseIfPlaying()
+            }
+        }
 
         if (deletionJob == null) {
             removeTabWithUndo(sessionId, browsingModeManager.mode.isPrivate)
@@ -426,6 +433,14 @@ class HomeFragment : Fragment() {
 
     private fun closeAllTabs(isPrivateMode: Boolean) {
         val deletionJob = pendingSessionDeletion?.deletionJob
+
+        context?.let {
+            sessionManager.sessionsOfType(private = isPrivateMode).forEach { session ->
+                if (session.toTab(it).mediaState == PLAYING) {
+                    it.components.core.store.state.media.pauseIfPlaying()
+                }
+            }
+        }
 
         if (deletionJob == null) {
             removeAllTabsWithUndo(
