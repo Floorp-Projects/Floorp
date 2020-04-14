@@ -238,8 +238,9 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
     aRv.ThrowTypeError("Unable to open window");
     return;
   }
-
-  rv = bwin->OpenURI(uri, nullptr, nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
+  // annyG: This is a hack to fix bug 1622749.
+  // We will force to open new windows in tabs so we don't crash later.
+  rv = bwin->OpenURI(uri, nullptr, nsIBrowserDOMWindow::OPEN_NEWTAB,
                      nsIBrowserDOMWindow::OPEN_NEW, principal, csp, aBC);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError("Unable to open window");
