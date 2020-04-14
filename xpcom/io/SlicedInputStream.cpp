@@ -70,6 +70,8 @@ SlicedInputStream::SlicedInputStream()
       mWeakSeekableInputStream(nullptr),
       mWeakTellableInputStream(nullptr),
       mWeakAsyncInputStream(nullptr),
+      mWeakInputStreamLength(nullptr),
+      mWeakAsyncInputStreamLength(nullptr),
       mStart(0),
       mLength(0),
       mCurPos(0),
