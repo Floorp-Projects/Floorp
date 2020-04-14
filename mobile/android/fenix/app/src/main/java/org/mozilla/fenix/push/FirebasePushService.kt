@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.leanplum.LeanplumPushFirebaseMessagingService
+import com.leanplum.LeanplumPushService
 import mozilla.components.concept.push.PushService
 import mozilla.components.lib.push.firebase.AbstractFirebasePushService
 import mozilla.components.feature.push.AutoPushFeature
@@ -42,6 +43,11 @@ import mozilla.components.feature.push.AutoPushFeature
  */
 class FirebasePushService : LeanplumPushFirebaseMessagingService(),
     PushService by AutoPushService {
+
+    override fun onCreate() {
+        LeanplumPushService.setCustomizer(LeanplumNotificationCustomizer())
+        super.onCreate()
+    }
 
     override fun onNewToken(newToken: String) {
         AutoPushService.onNewToken(newToken)
