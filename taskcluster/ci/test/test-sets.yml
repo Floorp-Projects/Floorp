@@ -81,6 +81,7 @@ raptor-firefox:
     - raptor-tp6-8-firefox
     - raptor-tp6-9-firefox
     - raptor-tp6-10-firefox
+    - raptor-tp6-11-firefox
     - raptor-tp6-binast-1-firefox
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
@@ -120,6 +121,7 @@ raptor-firefox:
     - raptor-tp6-28-firefox-cold
     - raptor-tp6-29-firefox-cold
     - raptor-tp6-30-firefox-cold
+    - raptor-tp6-31-firefox-cold
     - raptor-ares6-firefox
     - raptor-jetstream2-firefox
 
@@ -134,6 +136,7 @@ raptor-chrome:
     - raptor-tp6-8-chrome
     - raptor-tp6-9-chrome
     - raptor-tp6-10-chrome
+    - raptor-tp6-11-chrome
     - raptor-speedometer-chrome
     - raptor-stylebench-chrome
     - raptor-motionmark-htmlsuite-chrome
@@ -171,6 +174,7 @@ raptor-chrome:
     - raptor-tp6-28-chrome-cold
     - raptor-tp6-29-chrome-cold
     - raptor-tp6-30-chrome-cold
+    - raptor-tp6-31-chrome-cold
     - raptor-ares6-chrome
     - raptor-jetstream2-chrome
     - raptor-youtube-playback-chrome
@@ -186,6 +190,7 @@ raptor-profiling:
     - raptor-tp6-8-firefox-profiling
     - raptor-tp6-9-firefox-profiling
     - raptor-tp6-10-firefox-profiling
+    - raptor-tp6-11-firefox-profiling
     - raptor-speedometer-firefox-profiling
     - raptor-stylebench-firefox-profiling
     - raptor-motionmark-htmlsuite-firefox-profiling
@@ -208,6 +213,7 @@ raptor-chromium:
     - raptor-tp6-8-chromium
     - raptor-tp6-9-chromium
     - raptor-tp6-10-chromium
+    - raptor-tp6-11-chromium
     - raptor-speedometer-chromium
     - raptor-stylebench-chromium
     - raptor-motionmark-htmlsuite-chromium
@@ -245,6 +251,7 @@ raptor-chromium:
     - raptor-tp6-28-chromium-cold
     - raptor-tp6-29-chromium-cold
     - raptor-tp6-30-chromium-cold
+    - raptor-tp6-31-chromium-cold
     - raptor-ares6-chromium
     - raptor-jetstream2-chromium
 

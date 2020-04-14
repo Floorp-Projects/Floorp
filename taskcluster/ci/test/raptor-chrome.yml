@@ -121,6 +121,15 @@ raptor-tp6-10-chrome:
             - --test=raptor-tp6-10
             - --app=chrome
 
+raptor-tp6-11-chrome:
+    description: "Raptor tp6-11 on Chrome"
+    try-name: raptor-tp6-11-chrome
+    treeherder-symbol: Rap-ChR(tp6-11)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-11
+            - --app=chrome
+
 raptor-speedometer-chrome:
     description: "Raptor Speedometer on Chrome"
     try-name: raptor-speedometer-chrome
@@ -491,6 +500,15 @@ raptor-tp6-30-chrome-cold:
     mozharness:
         extra-options:
             - --test=raptor-tp6-30-cold
+            - --app=chrome
+
+raptor-tp6-31-chrome-cold:
+    description: "Raptor tp6-31 cold page-load on Chrome"
+    try-name: raptor-tp6-31-chrome-cold
+    treeherder-symbol: Rap-ChR(tp6-c-31)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-31-cold
             - --app=chrome
 
 raptor-ares6-chrome:
