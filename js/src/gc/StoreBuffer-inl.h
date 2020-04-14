@@ -59,6 +59,9 @@ inline void ArenaCellSet::check() const {
 inline void StoreBuffer::WholeCellBuffer::put(const Cell* cell) {
   MOZ_ASSERT(cell->isTenured());
 
+  // BigInts don't have any children, so shouldn't show up here.
+  MOZ_ASSERT(cell->getTraceKind() != JS::TraceKind::BigInt);
+
   Arena* arena = cell->asTenured().arena();
   ArenaCellSet* cells = arena->bufferedCells();
   if (cells->isEmpty()) {
