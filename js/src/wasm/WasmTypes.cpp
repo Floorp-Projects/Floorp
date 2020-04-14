@@ -106,8 +106,7 @@ const JSClass WasmValueBox::class_ = {
     "WasmValueBox", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
 
 WasmValueBox* WasmValueBox::create(JSContext* cx, HandleValue val) {
-  WasmValueBox* obj = (WasmValueBox*)NewObjectWithGivenProto(
-      cx, &WasmValueBox::class_, nullptr);
+  WasmValueBox* obj = NewObjectWithGivenProto<WasmValueBox>(cx, nullptr);
   if (!obj) {
     return nullptr;
   }
