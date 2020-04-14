@@ -112,7 +112,6 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool SutdownEGLLibraryIfNecessary();
   RefPtr<ID3D11Query> GetD3D11Query();
   void ReleaseNativeCompositorResources();
-  HWND GetCompositorHwnd();
 
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
