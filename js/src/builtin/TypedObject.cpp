@@ -910,12 +910,12 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
   RootedObject userFieldTypes(cx);     // User-exposed {f:descr} object.
   Layout layout;                       // Field offsetter
 
-  userFieldOffsets = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
+  userFieldOffsets = NewTenuredBuiltinClassInstance<PlainObject>(cx);
   if (!userFieldOffsets) {
     return nullptr;
   }
 
-  userFieldTypes = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
+  userFieldTypes = NewTenuredBuiltinClassInstance<PlainObject>(cx);
   if (!userFieldTypes) {
     return nullptr;
   }
