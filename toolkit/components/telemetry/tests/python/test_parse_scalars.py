@@ -6,6 +6,7 @@ import yaml
 import mozunit
 import sys
 import unittest
+import os
 from os import path
 
 TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
@@ -27,6 +28,15 @@ def load_scalar(scalar):
 
 
 class TestParser(unittest.TestCase):
+    def setUp(self):
+        def mockexit(x):
+            raise SystemExit(x)
+        self.oldexit = os._exit
+        os._exit = mockexit
+
+    def tearDown(self):
+        os._exit = self.oldexit
+
     def test_valid_email_address(self):
         SAMPLE_SCALAR_VALID_ADDRESSES = """
 description: A nice one-line description.
