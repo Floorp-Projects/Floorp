@@ -28,6 +28,10 @@
 #include "mozilla/dom/StorageUtils.h"
 #include "nsIURL.h"
 #include "prnetdb.h"
+#include "nsIURIFixup.h"
+#include "mozilla/dom/StorageUtils.h"
+
+#include "nsIURIMutator.h"
 
 #include "json/json.h"
 #include "nsSerializationHelper.h"
@@ -629,6 +633,25 @@ BasePrincipal::GetExposablePrePath(nsACString& aPrepath) {
   nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(prinURI);
   return exposableURI->GetDisplayPrePath(aPrepath);
 }
+
+NS_IMETHODIMP
+BasePrincipal::GetExposableSpec(nsACString& aSpec) {
+  aSpec.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIURI> clone;
+  rv = NS_MutateURI(prinURI)
+           .SetQuery(EmptyCString())
+           .SetRef(EmptyCString())
+           .SetUserPass(EmptyCString())
+           .Finalize(clone);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return clone->GetAsciiSpec(aSpec);
+}
+
 NS_IMETHODIMP
 BasePrincipal::GetPrepath(nsACString& aPath) {
   aPath.Truncate();
