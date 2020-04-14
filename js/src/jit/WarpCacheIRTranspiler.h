@@ -21,6 +21,16 @@ class WarpCacheIR;
 
 using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 
+// List of supported ops. Eventually we should use the full CacheIR ops list
+// instead.
+#define WARP_CACHE_IR_OPS(_)          \
+  _(GuardShape)                       \
+  _(LoadEnclosingEnvironment)         \
+  _(LoadDynamicSlotResult)            \
+  _(LoadEnvironmentFixedSlotResult)   \
+  _(LoadEnvironmentDynamicSlotResult) \
+  _(TypeMonitorResult)
+
 // TranspilerOutput contains information from the transpiler that needs to be
 // passed back to WarpBuilder.
 struct MOZ_STACK_CLASS TranspilerOutput {
