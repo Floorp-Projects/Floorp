@@ -5,6 +5,7 @@
 import mozunit
 import sys
 import unittest
+import os
 from os import path
 from test_histogramtools_non_strict import load_histogram
 
@@ -18,6 +19,15 @@ from mozparsers import parse_histograms
 
 
 class TestParser(unittest.TestCase):
+    def setUp(self):
+        def mockexit(x):
+            raise SystemExit(x)
+        self.oldexit = os._exit
+        os._exit = mockexit
+
+    def tearDown(self):
+        os._exit = self.oldexit
+
     def test_valid_histogram(self):
         SAMPLE_HISTOGRAM = {
             "TEST_VALID_HISTOGRAM": {
