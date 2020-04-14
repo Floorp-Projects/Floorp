@@ -1130,9 +1130,9 @@ void HttpChannelChild::OnStopRequest(
     return;
   }
 
-  // If we're a multi-part stream, and this wasn't the last part, then don't
-  // cleanup yet, as we're expecting more parts.
-  if (mMultiPartID && !mIsLastPartOfMultiPart) {
+  // If we're a multi-part stream, then don't cleanup yet, and we'll do so
+  // in OnAfterLastPart.
+  if (mMultiPartID) {
     LOG(
         ("HttpChannelChild::OnStopRequest  - Expecting future parts on a "
          "multipart channel"
@@ -1252,9 +1252,9 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   }
   mOnStopRequestCalled = true;
 
-  // If we're a multi-part stream, and this wasn't the last part, then don't
-  // cleanup yet, as we're expecting more parts.
-  if (mMultiPartID && !mIsLastPartOfMultiPart) {
+  // If we're a multi-part stream, then don't cleanup yet, and we'll do so
+  // in OnAfterLastPart.
+  if (mMultiPartID) {
     LOG(
         ("HttpChannelChild::DoOnStopRequest  - Expecting future parts on a "
          "multipart channel"
