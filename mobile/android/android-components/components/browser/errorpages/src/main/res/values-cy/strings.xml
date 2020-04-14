@@ -10,7 +10,7 @@
     <string name="mozac_browser_errorpages_page_go_back">Ewch Nôl</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">Methu Cyflawni\'r Cais</string>
+    <string name="mozac_browser_errorpages_generic_title">Methu Cyflawni’r Cais</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
         <p>Nid oes gwybodaeth ar gael am y gwall neu broblem yma ar hyn o bryd.</p>
@@ -30,12 +30,10 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Methodd y Cysylltiad Diogel</string>
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
-      <ul>
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
          <li>Gall hwn fod yn anhawster gyda ffurfweddiad y gweinydd neu gall fod yn rhywun sy\'n ceisio dynwared y gweinydd.</li>
-         <li>Os ydych wedi cysylltu’n llwyddiannus gyda\'r gweinydd yn y gorffennol, efallai mai gwall dros dro ydyw ac i geisio eto.</li>
-       </ul>
-]]></string>
+         <li>Os ydych wedi cysylltu’n llwyddiannus gyda’r gweinydd yn y gorffennol, efallai mai gwall dros dro ydyw ac i geisio eto.</li>
+       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Uwch…</string>
@@ -54,13 +52,11 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">Cafodd y cysylltiad ei darfu</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-      <p>Cysylltodd y porwr yn llwyddiannus, ond amharwyd ar y cysylltiad wrth drosglwyddo gwybodaeth. Rhowch gynnig arall arni.</p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Cysylltodd y porwr yn llwyddiannus, ond amharwyd ar y cysylltiad wrth drosglwyddo gwybodaeth. Rhowch gynnig arall arni.</p>
       <ul>
-        <li>Gallai’r wefan fod ar gael dros dro neu\'n rhy brysur. Rhowch gynnig arall arni mewn ychydig eiliadau.</li>
+        <li>Gallai’r wefan fod ar gael dros dro neu’n rhy brysur. Rhowch gynnig arall arni mewn ychydig eiliadau.</li>
         <li>Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad diwifr eich dyfais.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Mae cyfnod y cyswllt wedi dod i ben</string>

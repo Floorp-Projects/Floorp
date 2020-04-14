@@ -6,4 +6,22 @@
     <string name="mozac_feature_addons_permissions_all_urls_description">તમામ વેબસાઇટ્સ માટે તમારા ડેટાને ઍક્સેસ કરો</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">બ્રાઉઝર ટૅબ્સને ઍક્સેસ કરો</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">આવૃત્તિ</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">લેખકો</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">છેલ્લે સુધારાયેલ</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">મુખ્યપૃષ્ઠ</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">પરવાનગી વિશે વધુ શીખો</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">મૂલ્યાંકન</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">સેટિંગ્સ</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">ચાલુ કરો</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">બંધ કરો</string>
     </resources>

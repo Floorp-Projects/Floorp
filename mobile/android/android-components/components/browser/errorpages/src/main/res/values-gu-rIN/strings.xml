@@ -28,6 +28,12 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">સુરક્ષિત જોડાણ નિષ્ફળ થયું</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>આ સર્વરના ગોઠવણીમાં સમસ્યા હોઈ શકે છે, અથવા કોઈ હોઈ શકે છે કે જે સર્વરની impersonate કરવાનો પ્રયાસ કરે છે.</li>
+        <li>જો તમે આ સર્વર સાથે ભૂતકાળમાં સફળતાપૂર્વક કનેક્ટ કર્યું છે, તો ભૂલ અસ્થાયી હોઈ શકે છે, અને તમે પછીથી ફરી પ્રયાસ કરી શકો છો.</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">અદ્યતન…</string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
