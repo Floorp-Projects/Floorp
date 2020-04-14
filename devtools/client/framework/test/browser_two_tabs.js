@@ -22,7 +22,8 @@ add_task(async () => {
   const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
-  const tabs = await client.mainRoot.listTabs();
+  const tabDescriptors = await client.mainRoot.listTabs();
+  const tabs = await Promise.all(tabDescriptors.map(d => d.getTarget()));
   const targetFront1 = tabs.find(a => a.url === TAB_URL_1);
   const targetFront2 = tabs.find(a => a.url === TAB_URL_2);
 

@@ -203,21 +203,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    */
   async listTabs({ favicons } = {}) {
     const { tabs } = await super.listTabs({ favicons });
-    const targets = [];
-    for (const tabDescriptor of tabs) {
-      if (!this.actorID) {
-        console.error("The root front was destroyed while processing listTabs");
-        return [];
-      }
-
-      try {
-        const target = await tabDescriptor.getTarget();
-        targets.push(target);
-      } catch (e) {
-        console.error("Failed to get the target for tab descriptor", e);
-      }
-    }
-    return targets;
+    return tabs;
   }
 
   /**

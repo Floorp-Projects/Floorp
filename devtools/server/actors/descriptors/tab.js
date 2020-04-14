@@ -39,25 +39,51 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     Actor.prototype.initialize.call(this, connection);
     this._conn = connection;
     this._browser = browser;
-    this._form = null;
     this.exited = false;
-
-    // The update request could timeout if the descriptor is destroyed while an
-    // update is pending. This property will hold a reject callback that can be
-    // used to reject the current update promise and avoid blocking the client.
-    this._formUpdateReject = null;
   },
 
   form() {
-    return {
+    const form = {
       actor: this.actorID,
+      browsingContextID:
+        this._browser && this._browser.browsingContext
+          ? this._browser.browsingContext.id
+          : null,
+      outerWindowID: this._getOuterWindowId(),
       selected: this.selected,
+      title: this._getZombieTabTitle(),
       traits: {
         // Backward compatibility for FF75 or older.
         // Remove when FF76 is on the release channel.
         getFavicon: true,
+        // Backward compatibility for FF76 or older.
+        // Remove when FF77 is on the release channel.
+        // This trait indicates that meta data such as title, url and
+        // outerWindowID are directly available on the TabDescriptor.
+        hasTabInfo: true,
       },
+      url: this._getUrl(),
     };
+
+    return form;
+  },
+
+  _getUrl() {
+    if (!this._browser || !this._browser.browsingContext) {
+      return "";
+    }
+
+    const { browsingContext } = this._browser;
+    return browsingContext.currentWindowGlobal.documentURI.spec;
+  },
+
+  _getOuterWindowId() {
+    if (!this._browser || !this._browser.browsingContext) {
+      return "";
+    }
+
+    const { browsingContext } = this._browser;
+    return browsingContext.currentWindowGlobal.outerWindowId;
   },
 
   get selected() {
@@ -78,9 +104,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         message: "Tab destroyed while performing a TabDescriptorActor update",
       };
     }
-    if (this._form) {
-      return this._form;
-    }
+
     /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
       const onDestroy = () => {
@@ -105,7 +129,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         );
 
         const form = this._createTargetForm(connectForm);
-        this._form = form;
         resolve(form);
       } catch (e) {
         reject({
@@ -123,14 +146,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     return null;
   },
 
-  get _mm() {
-    // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-    // or else fallback to asking the frameLoader itself.
-    return (
-      this._browser.messageManager || this._browser.frameLoader.messageManager
-    );
-  },
-
   async getFavicon() {
     if (!AppConstants.MOZ_PLACES) {
       // PlacesUtils is not supported
@@ -138,40 +153,12 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     }
 
     try {
-      const { data } = await PlacesUtils.promiseFaviconData(this._form.url);
+      const { data } = await PlacesUtils.promiseFaviconData(this._getUrl());
       return data;
     } catch (e) {
       // Favicon unavailable for this url.
       return null;
     }
-  },
-
-  async update() {
-    // If the child happens to be crashed/close/detach, it won't have _form set,
-    // so only request form update if some code is still listening on the other
-    // side.
-    if (!this._form) {
-      return;
-    }
-
-    const form = await new Promise((resolve, reject) => {
-      this._formUpdateReject = reject;
-      const onFormUpdate = msg => {
-        // There may be more than one FrameTargetActor up and running
-        if (this._form.actor != msg.json.actor) {
-          return;
-        }
-        this._mm.removeMessageListener("debug:form", onFormUpdate);
-
-        this._formUpdateReject = null;
-        resolve(msg.json);
-      };
-
-      this._mm.addMessageListener("debug:form", onFormUpdate);
-      this._mm.sendAsyncMessage("debug:form");
-    });
-
-    this._form = form;
   },
 
   _isZombieTab() {
@@ -210,15 +197,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   destroy() {
-    if (this._formUpdateReject) {
-      this._formUpdateReject({
-        error: "tabDestroyed",
-        message: "Tab destroyed while performing a TabDescriptorActor update",
-      });
-      this._formUpdateReject = null;
-    }
     this._browser = null;
-    this._form = null;
     this.exited = true;
     this.emit("exited");
 

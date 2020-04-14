@@ -39,11 +39,8 @@ async function testFirstTab(client, tab) {
   const targetFront = tabs.find(grip => grip.url == TAB1_URL);
   ok(targetFront, "Should find a target actor for the first tab.");
 
-  ok(
-    !tabs[0].descriptorFront.selected,
-    "The previously opened tab isn't selected."
-  );
-  ok(tabs[1].descriptorFront.selected, "The first tab is selected.");
+  ok(!tabs[0].selected, "The previously opened tab isn't selected.");
+  ok(tabs[1].selected, "The first tab is selected.");
 }
 
 async function testNewWindow(client, win) {
@@ -71,12 +68,9 @@ async function testNewWindow(client, win) {
   }
 
   const tabs = await client.mainRoot.listTabs();
-  ok(
-    !tabs[0].descriptorFront.selected,
-    "The previously opened tab isn't selected."
-  );
-  ok(!tabs[1].descriptorFront.selected, "The first tab isn't selected.");
-  ok(tabs[2].descriptorFront.selected, "The second tab is selected.");
+  ok(!tabs[0].selected, "The previously opened tab isn't selected.");
+  ok(!tabs[1].selected, "The first tab isn't selected.");
+  ok(tabs[2].selected, "The second tab is selected.");
 }
 
 async function testFocusFirst(client) {
@@ -89,15 +83,9 @@ async function testFocusFirst(client) {
   });
 
   const tabs = await client.mainRoot.listTabs();
-  ok(
-    !tabs[0].descriptorFront.selected,
-    "The previously opened tab isn't selected."
-  );
-  ok(
-    !tabs[1].descriptorFront.selected,
-    "The first tab is selected after focusing on i."
-  );
-  ok(tabs[2].descriptorFront.selected, "The second tab isn't selected.");
+  ok(!tabs[0].selected, "The previously opened tab isn't selected.");
+  ok(!tabs[1].selected, "The first tab is selected after focusing on i.");
+  ok(tabs[2].selected, "The second tab isn't selected.");
 }
 
 async function testRemoveTab(client, win, tab) {
@@ -112,16 +100,14 @@ async function continue_remove_tab(client, tab) {
   removeTab(tab);
 
   const tabs = await client.mainRoot.listTabs();
+
   // Verify that tabs are no longer included in listTabs.
   const foundTab1 = tabs.some(grip => grip.url == TAB1_URL);
   const foundTab2 = tabs.some(grip => grip.url == TAB2_URL);
   ok(!foundTab1, "Tab1 should be gone.");
   ok(!foundTab2, "Tab2 should be gone.");
 
-  ok(
-    tabs[0].descriptorFront.selected,
-    "The previously opened tab is selected."
-  );
+  ok(tabs[0].selected, "The previously opened tab is selected.");
 }
 
 async function addWindow(url) {

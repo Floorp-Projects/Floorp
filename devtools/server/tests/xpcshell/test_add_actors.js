@@ -48,6 +48,7 @@ add_task(async function() {
 
   let actors = await client.mainRoot.rootForm;
   const tabs = await client.mainRoot.listTabs();
+  const tabTarget = await tabs[0].getTarget();
   Assert.equal(tabs.length, 1);
 
   let reply = await client.request({
@@ -57,7 +58,7 @@ add_task(async function() {
   Assert.equal(reply.message, "pong");
 
   reply = await client.request({
-    to: tabs[0].targetForm.preInitTargetScopedActor,
+    to: tabTarget.targetForm.preInitTargetScopedActor,
     type: "ping",
   });
   Assert.equal(reply.message, "pong");
@@ -69,7 +70,7 @@ add_task(async function() {
   Assert.equal(reply.message, "pong");
 
   reply = await client.request({
-    to: tabs[0].targetForm.postInitTargetScopedActor,
+    to: tabTarget.targetForm.postInitTargetScopedActor,
     type: "ping",
   });
   Assert.equal(reply.message, "pong");
