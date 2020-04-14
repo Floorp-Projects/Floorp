@@ -2250,6 +2250,38 @@ static bool SetProto(JSContext* cx, HandleObject obj,
   return true;
 }
 
+bool js::SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
+                                       HandleObject proto) {
+  // This function must only be called from |CloneFunctionObjectIfNotSingleton|!
+
+  // |CanReuseFunctionForClone| ensures |fun| is a singleton function. |fun|
+  // must also be extensible and have a mutable prototype for its prototype
+  // to be modifiable, so assert both conditions, too.
+  MOZ_ASSERT(fun->isSingleton());
+  MOZ_ASSERT(!fun->staticPrototypeIsImmutable());
+  MOZ_ASSERT(fun->isExtensible());
+  MOZ_ASSERT(proto);
+
+  if (proto == fun->staticPrototype()) {
+    return true;
+  }
+
+  if (!JSObject::setDelegate(cx, proto)) {
+    return false;
+  }
+
+  // Directly splice the prototype instead of calling |js::SetPrototype| to
+  // ensure we don't mark the function as having "unknown properties". This
+  // is safe to do, because the singleton function hasn't yet been exposed
+  // to scripts.
+  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
+  if (!JSObject::splicePrototype(cx, fun, tagged)) {
+    return false;
+  }
+
+  return true;
+}
+
 /* static */
 bool JSObject::changeToSingleton(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(!obj->isSingleton());
