@@ -14,12 +14,6 @@ use webrender::WEBRENDER_RECORDING_HEADER;
 use webrender::api::{ApiMsg, SceneMsg};
 use crate::wrench::{Wrench, WrenchThing};
 
-#[derive(Clone)]
-enum Item {
-    Message(ApiMsg),
-    Data(Vec<u8>),
-}
-
 pub struct BinaryFrameReader {
     file: File,
     eof: bool,
@@ -29,7 +23,7 @@ pub struct BinaryFrameReader {
     replay_api: bool,
     play_through: bool,
 
-    frame_data: Vec<Item>,
+    frame_data: Vec<ApiMsg>,
     frame_num: u32,
     frame_read: bool,
 }
@@ -128,7 +122,7 @@ impl WrenchThing for BinaryFrameReader {
             let mut found_frame_marker = false;
             let mut found_display_list = false;
             let mut found_pipeline = false;
-            while let Ok(mut len) = self.file.read_u32::<LittleEndian>() {
+            while let Ok(len) = self.file.read_u32::<LittleEndian>() {
                 if len > 0 {
                     let mut buffer = vec![0; len as usize];
                     self.file.read_exact(&mut buffer).unwrap();
@@ -168,7 +162,7 @@ impl WrenchThing for BinaryFrameReader {
                         _ => {}
                     }
                     if store_message {
-                        self.frame_data.push(Item::Message(msg));
+                        self.frame_data.push(msg);
                     }
                     // Frames are marked by the GenerateFrame message.
                     // On the first frame, we additionally need to find at least
@@ -178,11 +172,6 @@ impl WrenchThing for BinaryFrameReader {
                     if found_frame_marker && (self.frame_num > 0 || (found_display_list && found_pipeline)) {
                         break;
                     }
-                } else {
-                    len = self.file.read_u32::<LittleEndian>().unwrap();
-                    let mut buffer = vec![0; len as usize];
-                    self.file.read_exact(&mut buffer).unwrap();
-                    self.frame_data.push(Item::Data(buffer));
                 }
             }
 
@@ -198,14 +187,9 @@ impl WrenchThing for BinaryFrameReader {
         if first_time || self.replay_api {
             wrench.begin_frame();
             let frame_items = self.frame_data.clone();
-            for item in frame_items {
-                match item {
-                    Item::Message(msg) => if !self.should_skip_upload_msg(&msg) {
-                        wrench.api.send_message(msg);
-                    },
-                    Item::Data(buf) => {
-                        wrench.api.send_payload(&buf);
-                    }
+            for msg in frame_items {
+                if !self.should_skip_upload_msg(&msg) {
+                    wrench.api.send_message(msg);
                 }
             }
         } else if self.play_through {
