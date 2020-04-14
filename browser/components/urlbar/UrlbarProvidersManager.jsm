@@ -39,6 +39,8 @@ var localProviderModules = {
   UrlbarProviderPrivateSearch:
     "resource:///modules/UrlbarProviderPrivateSearch.jsm",
   UrlbarProviderSearchTips: "resource:///modules/UrlbarProviderSearchTips.jsm",
+  UrlbarProviderSearchSuggestions:
+    "resource:///modules/UrlbarProviderSearchSuggestions.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
 };
 
