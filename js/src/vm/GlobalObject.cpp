@@ -969,8 +969,7 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
   if (isSelfHostingGlobal) {
     intrinsicsHolder = global;
   } else {
-    intrinsicsHolder =
-        NewObjectWithGivenProto<PlainObject>(cx, nullptr, TenuredObject);
+    intrinsicsHolder = NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr);
     if (!intrinsicsHolder) {
       return nullptr;
     }
