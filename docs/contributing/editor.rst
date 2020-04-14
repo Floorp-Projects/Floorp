@@ -11,6 +11,30 @@ them.
     This page is a work in progress. Please enhance this page with instructions
     for your favourite editor.
 
+Visual Studio Code
+------------------
+
+For general information on using VS Code, see their `home page <https://code.visualstudio.com/>`__, `repo <https://github.com/Microsoft/vscode/>`__ and `guide to working with C++ <https://code.visualstudio.com/docs/languages/cpp>`__.
+
+For IntelliSense to work properly, a :ref:`compilation database <CompileDB back-end / compileflags>` as described below is required. When it is present when you open the mozilla source code folder, it will be automatically detected and Visual Studio Code will ask you if it should use it, which you should confirm.
+
+VS Code provides number of extensions for JavaScript, Rust, etc.
+
+Useful preferences
+^^^^^^^^^^^^^^^^^^
+
+When setting the preference
+
+.. code::
+
+  "editor.formatOnSave": true
+
+you might find that this isn't working on large source code files, but triggering formatting manually works. This is due to the default timeout for formatOnSave, which is quite short (750ms). You might want to increase this timeout, e.g.
+
+.. code::
+
+   "editor.formatOnSaveTimeout": 5000
+
 VIM
 ---
 
@@ -49,8 +73,8 @@ running:
 
     ./mach build-backend --backend=CompileDB
 
-This file is understood by a variety of C++ editors / IDEs to provide
-auto-completion capabilities. You can also get an individual compile command by
+This file, the compilation database, is understood by a variety of C++ editors / IDEs
+to provide auto-completion capabilities. You can also get an individual compile command by
 running:
 
 .. code::
