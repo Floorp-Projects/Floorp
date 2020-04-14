@@ -47,10 +47,15 @@ MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
 
 // The methods below only create dense boxed arrays.
 
-// Create a dense array with no capacity allocated, length set to 0.
+// Create a dense array with no capacity allocated, length set to 0, in the
+// normal (i.e. non-tenured) heap.
 extern ArrayObject* JS_FASTCALL
-NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr,
-                   NewObjectKind newKind = GenericObject);
+NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr);
+
+// Create a dense array with no capacity allocated, length set to 0, in the
+// tenured heap.
+extern ArrayObject* JS_FASTCALL
+NewTenuredDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr);
 
 // Create a dense array with a set length, but without allocating space for the
 // contents. This is useful, e.g., when accepting length from the user.
