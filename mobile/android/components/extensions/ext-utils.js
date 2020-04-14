@@ -115,7 +115,7 @@ const PROGRESS_LISTENER_FLAGS =
 class ProgressListenerWrapper {
   constructor(window, listener) {
     this.listener = new BrowserProgressListener(
-      window.BrowserApp.selectedBrowser,
+      window.browser,
       listener,
       PROGRESS_LISTENER_FLAGS
     );
@@ -221,9 +221,7 @@ class TabTracker extends TabTrackerBase {
 
     windowTracker.addCloseListener(window => {
       const nativeTab = window.BrowserApp.selectedTab;
-      const { windowId, tabId } = this.getBrowserData(
-        window.BrowserApp.selectedBrowser
-      );
+      const { windowId, tabId } = this.getBrowserData(window.browser);
       this.emit("tab-removed", {
         nativeTab,
         tabId,
@@ -329,7 +327,7 @@ class Tab extends TabBase {
   }
 
   get index() {
-    return this.window.BrowserApp.tabs.indexOf(this.nativeTab);
+    return 0;
   }
 
   get mutedInfo() {
@@ -345,25 +343,6 @@ class Tab extends TabBase {
   }
 
   get active() {
-    // If there is an extension popup tab and it is active,
-    // then the parent tab of the extension popup tab is active
-    // (while the extension popup tab will not be included in the
-    // tabs.query results).
-    if (tabTracker.extensionPopupTab) {
-      if (
-        tabTracker.extensionPopupTab.getActive() &&
-        this.nativeTab.id === tabTracker.extensionPopupTab.parentId
-      ) {
-        return true;
-      }
-
-      // Never return true for an active extension popup, e.g. so that
-      // the popup tab will not be part of the results of querying
-      // all the active tabs.
-      if (tabTracker.extensionPopupTab === this.nativeTab) {
-        return false;
-      }
-    }
     return this.nativeTab.getActive();
   }
 
@@ -513,11 +492,7 @@ class Window extends WindowBase {
   }
 
   *getTabs() {
-    let { tabManager } = this.extension;
-
-    for (let nativeTab of this.window.BrowserApp.tabs) {
-      yield tabManager.getWrapper(nativeTab);
-    }
+    yield this.activeTab;
   }
 
   *getHighlightedTabs() {
@@ -525,23 +500,13 @@ class Window extends WindowBase {
   }
 
   get activeTab() {
-    let { BrowserApp } = this.window;
-    let { selectedTab } = BrowserApp;
-
-    // If the current tab is an extension popup tab, we use the parentId to retrieve
-    // and return the tab that was selected when the popup tab has been opened.
-    if (selectedTab === tabTracker.extensionPopupTab) {
-      selectedTab = BrowserApp.getTabForId(selectedTab.parentId);
-    }
-
-    let { tabManager } = this.extension;
-    return tabManager.getWrapper(selectedTab);
+    const { tabManager } = this.extension;
+    return tabManager.getWrapper(this.window.BrowserApp.selectedTab);
   }
 
   getTabAtIndex(index) {
-    let nativeTab = this.window.BrowserApp.tabs[index];
-    if (nativeTab) {
-      return this.extension.tabManager.getWrapper(nativeTab);
+    if (index == 0) {
+      return this.activeTab;
     }
   }
 }
