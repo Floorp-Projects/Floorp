@@ -4204,6 +4204,10 @@ bool PrivateScriptData::InitFromStencil(
     }
   }
 
+  if (stencil.fieldInitializers) {
+    script->setFieldInitializers(*stencil.fieldInitializers);
+  }
+
   return true;
 }
 
