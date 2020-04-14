@@ -177,13 +177,18 @@ class WebConsoleConnectionProxy {
    *
    * @private
    * @returns A Promise that resolves with the cached messages, or reject if something
-   *          went wront.
+   *          went wrong.
    */
   async _getCachedMessages() {
-    const response = await this.webConsoleFront.getCachedMessages([
-      "PageError",
-    ]);
+    const messageTypes = ["PageError"];
+    if (this.webConsoleFront.traits.newCacheStructure) {
+      messageTypes.push("LogMessage");
+    }
 
+    const response = await this.webConsoleFront.getCachedMessages(messageTypes);
+    if (this.webConsoleFront.traits.newCacheStructure) {
+      messageTypes.push("LogMessage");
+    }
     if (response.error) {
       throw new Error(
         `Web Console getCachedMessages error: ${response.error} ${response.message}`
