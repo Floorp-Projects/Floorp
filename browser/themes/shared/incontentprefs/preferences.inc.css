@@ -236,7 +236,8 @@ button > hbox > label {
 
 /* General Pane */
 
-#isDefaultLabel {
+#isDefaultLabel,
+#isNotDefaultLabel {
   font-weight: 600;
 }
 
@@ -296,6 +297,11 @@ button > hbox > label {
 
 #useDocumentColors {
   margin: 0;
+}
+
+#translationAttributionImage {
+  width: 70px;
+  cursor: pointer;
 }
 
 #activeLanguages > richlistitem {
@@ -648,6 +654,14 @@ button > hbox > label {
 #fxaChangeDeviceName {
   margin-block: 4px;
   margin-inline-end: 0;
+}
+
+#noFxaAccount {
+  line-height: 1.2em;
+}
+
+#noFxaAccount > label:first-child {
+  margin-bottom: 0.6em;
 }
 
 #noFxaCaption {
