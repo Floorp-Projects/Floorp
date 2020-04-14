@@ -7,7 +7,6 @@
 %filter substitution
 %define urlbarViewPadding 4px
 %define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInlineEnd@)
-%define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
 %define urlbarViewMarginInline 7px
 %define urlbarViewItemInlinePadding 6px
 
