@@ -807,11 +807,11 @@ class SearchOneOffs {
    *        to pass anything for this parameter.  (Pass undefined or null.)
    * @returns {boolean} True if the one-offs handled the key press.
    */
-  handleKeyDown(event, numListItems, allowEmptySelection, textboxUserValue) {
+  handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {
     if (!this.popup && !this._view) {
       return false;
     }
-    let handled = this._handleKeyDown(
+    let handled = this._handleKeyPress(
       event,
       numListItems,
       allowEmptySelection,
@@ -824,7 +824,7 @@ class SearchOneOffs {
     return handled;
   }
 
-  _handleKeyDown(event, numListItems, allowEmptySelection, textboxUserValue) {
+  _handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {
     if (this.compact && this.container.hidden) {
       return false;
     }
