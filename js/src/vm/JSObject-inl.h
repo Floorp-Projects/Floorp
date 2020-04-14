@@ -508,8 +508,14 @@ inline JSObject* NewObjectWithClassProto(
 }
 
 template <class T>
-inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto,
-                                  NewObjectKind newKind = GenericObject) {
+inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto) {
+  JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, GenericObject);
+  return obj ? &obj->as<T>() : nullptr;
+}
+
+template <class T>
+inline T* NewObjectWithClassProtoAndKind(JSContext* cx, HandleObject proto,
+                                         NewObjectKind newKind) {
   JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
   return obj ? &obj->as<T>() : nullptr;
 }
