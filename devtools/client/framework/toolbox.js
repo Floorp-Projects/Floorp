@@ -703,7 +703,7 @@ Toolbox.prototype = {
     await this._attachTarget({ type, targetFront, isTopLevel });
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
-      await this.store.dispatch(registerTarget(targetFront));
+      await this.store.dispatch(registerTarget(targetFront, this.targetList));
     }
 
     if (isTopLevel) {

@@ -5,15 +5,16 @@
 
 const TARGET_TYPES = {
   MAIN_TARGET: "mainTarget",
+  FRAME: "frame",
   CONTENT_PROCESS: "contentProcess",
   WORKER: "worker",
 };
 
-function registerTarget(targetFront) {
+function registerTarget(targetFront, targetList) {
   const target = {
     actorID: targetFront.actorID,
     url: targetFront.url,
-    type: getTargetType(targetFront),
+    type: getTargetType(targetFront, targetList),
     name: targetFront.name,
     serviceWorkerStatus: targetFront.debuggerServiceWorkerStatus,
     _targetFront: targetFront,
@@ -35,7 +36,7 @@ function selectTarget(targetActorID) {
   };
 }
 
-function getTargetType(target) {
+function getTargetType(target, targetList) {
   if (target.isWorkerTarget) {
     return TARGET_TYPES.WORKER;
   }
@@ -44,7 +45,11 @@ function getTargetType(target) {
     return TARGET_TYPES.CONTENT_PROCESS;
   }
 
-  return TARGET_TYPES.MAIN_TARGET;
+  if (targetList?.targetFront === target) {
+    return TARGET_TYPES.MAIN_TARGET;
+  }
+
+  return TARGET_TYPES.FRAME;
 }
 
 module.exports = {

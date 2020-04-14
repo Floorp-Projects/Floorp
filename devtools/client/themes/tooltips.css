@@ -451,6 +451,8 @@ strong {
   flex: 1;
   font: menu;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .tooltip-container[type="doorhanger"] .checkbox-container .menuitem > .command > .label {
