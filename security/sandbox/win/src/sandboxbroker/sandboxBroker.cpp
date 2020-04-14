@@ -32,6 +32,10 @@
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
 
+#if defined(MOZ_LAUNCHER_PROCESS)
+#  include "mozilla/LauncherRegistryInfo.h"
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
+
 namespace mozilla {
 
 sandbox::BrokerServices* SandboxBroker::sBrokerService = nullptr;
@@ -300,6 +304,16 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
       TerminateProcess(targetInfo.hProcess, 1);
       CloseHandle(targetInfo.hThread);
       CloseHandle(targetInfo.hProcess);
+
+#if defined(MOZ_LAUNCHER_PROCESS)
+      // The launcher process had started the browser process successfully, but
+      // the browser process failed start to a content process.  We're entering
+      // into a situation where the browser is opened without content processes.
+      // To stop it next time, we disable the launcher process.
+      LauncherRegistryInfo regInfo;
+      Unused << regInfo.DisableDueToFailure();
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
+
       return false;
     }
   } else {
