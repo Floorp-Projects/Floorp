@@ -16,16 +16,6 @@
 using namespace js;
 using namespace js::jit;
 
-// List of supported ops. Eventually we should use the full CacheIR ops list
-// instead.
-#define WARP_CACHE_IR_OPS(_)          \
-  _(GuardShape)                       \
-  _(LoadEnclosingEnvironment)         \
-  _(LoadDynamicSlotResult)            \
-  _(LoadEnvironmentFixedSlotResult)   \
-  _(LoadEnvironmentDynamicSlotResult) \
-  _(TypeMonitorResult)
-
 // The CacheIR transpiler generates MIR from Baseline CacheIR.
 class MOZ_RAII WarpCacheIRTranspiler {
   TempAllocator& alloc_;

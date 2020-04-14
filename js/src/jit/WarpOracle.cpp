@@ -11,11 +11,13 @@
 
 #include <algorithm>
 
+#include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
 #include "jit/WarpBuilder.h"
+#include "jit/WarpCacheIRTranspiler.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/Instrumentation.h"
@@ -650,6 +652,26 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       break;
     default:
       MOZ_CRASH("Unexpected stub");
+  }
+
+  // Only create a snapshots if all opcodes are supported by the transpiler.
+  CacheIRReader reader(stubInfo);
+  while (reader.more()) {
+    CacheOp op = reader.readOp();
+    uint32_t argLength = CacheIROpFormat::ArgLengths[uint8_t(op)];
+    reader.skip(argLength);
+
+    switch (op) {
+#define DEFINE_OP(op, ...) \
+  case CacheOp::op:        \
+    break;
+      WARP_CACHE_IR_OPS(DEFINE_OP)
+#undef DEFINE_OP
+
+      default:
+        // Unsupported opcode.
+        return Ok();
+    }
   }
 
   // Copy the ICStub data to protect against the stub being unlinked or mutated.
