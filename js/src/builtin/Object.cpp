@@ -998,7 +998,8 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
     return NewObjectWithGroup<PlainObject>(cx, ngroup, allocKind, newKind);
   }
 
-  return NewObjectWithGivenProto<PlainObject>(cx, proto, allocKind, newKind);
+  return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
+                                                      newKind);
 }
 
 PlainObject* js::ObjectCreateWithTemplate(JSContext* cx,
