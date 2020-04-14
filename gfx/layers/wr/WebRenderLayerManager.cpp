@@ -333,8 +333,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
         mScrollData, std::move(aFilters));
 
-    builderDumpIndex =
-        mWebRenderCommandBuilder.GetBuilderDumpIndex(builder.GetRenderRoot());
+    builderDumpIndex = mWebRenderCommandBuilder.GetBuilderDumpIndex();
     containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();
   } else {
     // ViewToPaint does not have frame yet, then render only background clolor.

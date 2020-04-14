@@ -1479,6 +1479,7 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
     : mManager(aManager),
       mRootStackingContexts(nullptr),
       mLastAsr(nullptr),
+      mBuilderDumpIndex(0),
       mDumpIndent(0),
       mDoGrouping(false),
       mContainsSVGGroup(false) {}
@@ -1520,9 +1521,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
   mClipManager.BeginBuild(mManager, aBuilder);
-  for (auto renderRoot : wr::kRenderRoots) {
-    mBuilderDumpIndex[renderRoot] = 0;
-  }
+  mBuilderDumpIndex = 0;
   mLastCanvasDatas.Clear();
   mLastLocalCanvasDatas.Clear();
   mLastAsr = nullptr;
@@ -1551,9 +1550,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
                                       nullptr, aBuilder, params);
     }
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
-      mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
-          mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-          Nothing());
+      mBuilderDumpIndex =
+          aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
     MOZ_ASSERT(mRootStackingContexts == nullptr);
     AutoRestore<wr::RenderRootArray<Maybe<StackingContextHelper>>*> rootScs(
@@ -1661,9 +1659,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   if (dumpEnabled) {
     // If we're inside a nested display list, print the WR DL items from the
     // wrapper item before we start processing the nested items.
-    mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
-        mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-        Nothing());
+    mBuilderDumpIndex =
+        aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
   }
 
   mDumpIndent++;
@@ -1744,9 +1741,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
                               aDisplayListBuilder);
 
       if (dumpEnabled) {
-        mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
-            mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-            Nothing());
+        mBuilderDumpIndex =
+            aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
       }
     }
 
