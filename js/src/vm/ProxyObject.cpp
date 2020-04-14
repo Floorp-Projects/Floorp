@@ -13,7 +13,6 @@
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/ObjectGroup-inl.h"  // JSObject::setSingleton
 #include "vm/TypeInference-inl.h"
 
 using namespace js;
@@ -148,35 +147,40 @@ ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
   Rooted<ProxyObject*> proxy(cx);
   {
     Realm* realm = cx->realm();
-    RootedObjectGroup group(cx);
-    RootedShape shape(cx);
 
-    // Try to look up the group and shape in the NewProxyCache.
-    if (!realm->newProxyCache.lookup(clasp, proto, group.address(),
-                                     shape.address())) {
-      group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
-      if (!group) {
-        return nullptr;
-      }
-
-      shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
-      if (!shape) {
-        return nullptr;
-      }
-
-      realm->newProxyCache.add(group, shape);
+    // We're creating a singleton, so go straight to getting a singleton group,
+    // from the singleton group cache (or creating it freshly if needed).
+    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(
+                                    cx, ObjectGroupRealm::getForNewObject(cx),
+                                    realm, clasp, proto));
+    if (!group) {
+      return nullptr;
     }
 
     MOZ_ASSERT(group->realm() == realm);
-    MOZ_ASSERT(shape->zone() == cx->zone());
+    MOZ_ASSERT(group->singleton());
     MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
+
+    // Also retrieve an empty shape.  Unlike for non-singleton proxies, this
+    // shape lookup is not cached in |realm->newProxyCache|.  We could cache it
+    // there, but distinguishing group/shape for singleton and non-singleton
+    // proxies would increase contention on the cache (and might end up evicting
+    // non-singleton cases where performance really matters).  Assume that
+    // singleton proxies are rare, and don't bother caching their shapes/groups.
+    RootedShape shape(
+        cx, EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0));
+    if (!shape) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(shape->zone() == cx->zone());
     MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
 
-    gc::InitialHeap heap = GetInitialHeap(SingletonObject, group);
+    gc::InitialHeap heap = gc::TenuredHeap;
     debugCheckNewObject(group, shape, allocKind, heap);
 
     JSObject* obj =
-        js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+        AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
     if (!obj) {
       return nullptr;
     }
@@ -186,17 +190,14 @@ ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
     proxy->initShape(shape);
 
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
-    cx->realm()->setObjectPendingMetadata(cx, proxy);
+    realm->setObjectPendingMetadata(cx, proxy);
 
     js::gc::gcTracer.traceCreateObject(proxy);
   }
 
   proxy->init(handler, priv, cx);
 
-  if (!JSObject::setSingleton(cx, proxy)) {
-    return nullptr;
-  }
-
+  MOZ_ASSERT(proxy->isSingleton());
   return proxy;
 }
 
