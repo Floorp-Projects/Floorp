@@ -405,13 +405,6 @@ void MInstruction::setResumePoint(MResumePoint* resumePoint) {
   resumePoint_->setInstruction(this);
 }
 
-void MInstruction::stealResumePoint(MInstruction* ins) {
-  MOZ_ASSERT(ins->resumePoint_->instruction() == ins);
-  resumePoint_ = ins->resumePoint_;
-  ins->resumePoint_ = nullptr;
-  resumePoint_->replaceInstruction(this);
-}
-
 void MInstruction::moveResumePointAsEntry() {
   MOZ_ASSERT(isNop());
   block()->clearEntryResumePoint();
@@ -3599,28 +3592,6 @@ MResumePoint* MResumePoint::New(TempAllocator& alloc, MBasicBlock* block,
   return resume;
 }
 
-MResumePoint* MResumePoint::New(TempAllocator& alloc, MBasicBlock* block,
-                                MResumePoint* model,
-                                const MDefinitionVector& operands) {
-  MResumePoint* resume =
-      new (alloc) MResumePoint(block, model->pc(), model->mode());
-
-  // Allocate the same number of operands as the original resume point, and
-  // copy operands from the operands vector and not the not from the current
-  // block stack.
-  if (!resume->operands_.init(alloc, model->numAllocatedOperands())) {
-    block->discardPreAllocatedResumePoint(resume);
-    return nullptr;
-  }
-
-  // Copy the operands.
-  for (size_t i = 0; i < operands.length(); i++) {
-    resume->initOperand(i, operands[i]);
-  }
-
-  return resume;
-}
-
 MResumePoint* MResumePoint::Copy(TempAllocator& alloc, MResumePoint* src) {
   MResumePoint* resume =
       new (alloc) MResumePoint(src->block(), src->pc(), src->mode());
@@ -5176,14 +5147,6 @@ bool InlinePropertyTable::appendRoots(MRootList& roots) const {
     }
   }
   return true;
-}
-
-bool MGetPropertyCache::allowDoubleResult() const {
-  if (!resultTypeSet()) {
-    return true;
-  }
-
-  return resultTypeSet()->hasType(TypeSet::DoubleType());
 }
 
 MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
