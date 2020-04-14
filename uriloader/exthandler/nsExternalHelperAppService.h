@@ -61,7 +61,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
    * Initializes internal state. Will be called automatically when
    * this service is first instantiated.
    */
-  MOZ_MUST_USE nsresult Init();
+  [[nodiscard]] nsresult Init();
 
   /**
    * nsIExternalProtocolService methods that we provide in this class. Other

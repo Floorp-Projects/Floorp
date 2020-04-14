@@ -27,17 +27,18 @@ class nsChildProcessMIMEInfo : public nsMIMEInfoImpl {
   };
 
  protected:
-  virtual MOZ_MUST_USE nsresult LoadUriInternal(nsIURI* aURI) override {
+  [[nodiscard]] virtual nsresult LoadUriInternal(nsIURI* aURI) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   };
 
 #ifdef DEBUG
-  virtual MOZ_MUST_USE nsresult LaunchDefaultWithFile(nsIFile* aFile) override {
+  [[nodiscard]] virtual nsresult LaunchDefaultWithFile(
+      nsIFile* aFile) override {
     return NS_ERROR_UNEXPECTED;
   }
 #endif
-  static MOZ_MUST_USE nsresult OpenApplicationWithURI(nsIFile* aApplication,
-                                                      const nsCString& aURI) {
+  [[nodiscard]] static nsresult OpenApplicationWithURI(nsIFile* aApplication,
+                                                       const nsCString& aURI) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
