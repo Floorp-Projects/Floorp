@@ -7,6 +7,7 @@
 const EXPORTED_SYMBOLS = ["CommonUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 const MAX_TRIM_LENGTH = 100;
 
@@ -340,7 +341,7 @@ const CommonUtils = {
     } else {
       elm = doc.getElementById(accOrElmOrID);
       if (!elm) {
-        ok(false, `Can't get DOM element for ${accOrElmOrID}`);
+        Assert.ok(false, `Can't get DOM element for ${accOrElmOrID}`);
         return null;
       }
     }
@@ -357,7 +358,7 @@ const CommonUtils = {
 
       if (!acc) {
         if (!(doNotFailIf & this.DONOTFAIL_IF_NO_ACC)) {
-          ok(
+          Assert.ok(
             false,
             `Can't get accessible for ${this.prettyName(accOrElmOrID)}`
           );
@@ -384,7 +385,10 @@ const CommonUtils = {
         acc.QueryInterface(interfaces[index]);
       } catch (e) {
         if (!(doNotFailIf & this.DONOTFAIL_IF_NO_INTERFACE)) {
-          ok(false, `Can't query ${interfaces[index]} for ${accOrElmOrID}`);
+          Assert.ok(
+            false,
+            `Can't query ${interfaces[index]} for ${accOrElmOrID}`
+          );
         }
 
         return null;
@@ -412,10 +416,41 @@ const CommonUtils = {
 
     const node = doc.getElementById(accOrNodeOrID);
     if (!node) {
-      ok(false, `Can't get DOM element for ${accOrNodeOrID}`);
+      Assert.ok(false, `Can't get DOM element for ${accOrNodeOrID}`);
       return null;
     }
 
     return node;
+  },
+
+  /**
+   * Return root accessible.
+   *
+   * @param  {DOMNode} doc
+   *         Chrome document.
+   *
+   * @return {nsIAccessible}
+   *         Accessible object for chrome window.
+   */
+  getRootAccessible(doc) {
+    const acc = this.getAccessible(doc);
+    return acc ? acc.rootDocument.QueryInterface(Ci.nsIAccessible) : null;
+  },
+
+  /**
+   * Analogy of SimpleTest.is function used to compare objects.
+   */
+  isObject(obj, expectedObj, msg) {
+    if (obj == expectedObj) {
+      Assert.ok(true, msg);
+      return;
+    }
+
+    Assert.ok(
+      false,
+      `${msg} - got "${this.prettyName(obj)}", expected "${this.prettyName(
+        expectedObj
+      )}"`
+    );
   },
 };
