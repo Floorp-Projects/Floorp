@@ -10,6 +10,7 @@
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CacheStorage.h"
+#include "mozilla/dom/cache/CacheWorkerRef.h"
 
 namespace mozilla {
 namespace dom {

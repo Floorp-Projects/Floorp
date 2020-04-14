@@ -8,6 +8,7 @@
 
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/AutoUtils.h"
+#include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
