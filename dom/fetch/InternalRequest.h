@@ -240,8 +240,8 @@ class InternalRequest final {
   }
 
   const nsString& GetIntegrity() const { return mIntegrity; }
+
   void SetIntegrity(const nsAString& aIntegrity) {
-    MOZ_ASSERT(mIntegrity.IsEmpty());
     mIntegrity.Assign(aIntegrity);
   }
 
