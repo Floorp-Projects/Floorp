@@ -384,8 +384,8 @@ class StringIteratorObject : public NativeObject {
   static const JSClass class_;
 };
 
-StringIteratorObject* NewStringIteratorObject(
-    JSContext* cx, NewObjectKind newKind = GenericObject);
+StringIteratorObject* NewStringIteratorTemplate(JSContext* cx);
+StringIteratorObject* NewStringIterator(JSContext* cx);
 
 class RegExpStringIteratorObject : public NativeObject {
  public:

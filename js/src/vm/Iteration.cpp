@@ -1148,16 +1148,24 @@ const JSClass StringIteratorObject::class_ = {
 static const JSFunctionSpec string_iterator_methods[] = {
     JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0), JS_FS_END};
 
-StringIteratorObject* js::NewStringIteratorObject(JSContext* cx,
-                                                  NewObjectKind newKind) {
+StringIteratorObject* js::NewStringIteratorTemplate(JSContext* cx) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateStringIteratorPrototype(cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
 
-  return NewObjectWithGivenProtoAndKind<StringIteratorObject>(cx, proto,
-                                                              newKind);
+  return NewTenuredObjectWithGivenProto<StringIteratorObject>(cx, proto);
+}
+
+StringIteratorObject* js::NewStringIterator(JSContext* cx) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateStringIteratorPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  return NewObjectWithGivenProto<StringIteratorObject>(cx, proto);
 }
 
 static const JSClass RegExpStringIteratorPrototypeClass = {
