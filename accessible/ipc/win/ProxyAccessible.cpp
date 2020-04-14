@@ -465,6 +465,34 @@ static IA2TextBoundaryType GetIA2TextBoundary(
   }
 }
 
+int32_t ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
+                                       uint32_t aCoordinateType) {
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return -1;
+  }
+
+  IA2CoordinateType coordType;
+  if (aCoordinateType ==
+      nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE) {
+    coordType = IA2_COORDTYPE_SCREEN_RELATIVE;
+  } else if (aCoordinateType ==
+             nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE) {
+    coordType = IA2_COORDTYPE_PARENT_RELATIVE;
+  } else {
+    MOZ_CRASH("unsupported coord type");
+  }
+
+  long offset;
+  HRESULT hr = acc->get_offsetAtPoint(
+      static_cast<long>(aX), static_cast<long>(aY), coordType, &offset);
+  if (FAILED(hr)) {
+    return -1;
+  }
+
+  return static_cast<int32_t>(offset);
+}
+
 bool ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
                                     nsString& aText) const {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
