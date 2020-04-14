@@ -216,7 +216,8 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
   void* buffer;
   NewObjectKind objectKind = GenericObject;
   while (true) {
-    iterobj = NewObjectWithGivenProto<MapIteratorObject>(cx, proto, objectKind);
+    iterobj = NewObjectWithGivenProtoAndKind<MapIteratorObject>(cx, proto,
+                                                                objectKind);
     if (!iterobj) {
       return nullptr;
     }
@@ -992,7 +993,8 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
   void* buffer;
   NewObjectKind objectKind = GenericObject;
   while (true) {
-    iterobj = NewObjectWithGivenProto<SetIteratorObject>(cx, proto, objectKind);
+    iterobj = NewObjectWithGivenProtoAndKind<SetIteratorObject>(cx, proto,
+                                                                objectKind);
     if (!iterobj) {
       return nullptr;
     }
