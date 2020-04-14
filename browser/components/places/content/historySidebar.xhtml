@@ -9,8 +9,6 @@
 <?xml-stylesheet href="chrome://browser/skin/places/sidebar.css"?>
 
 <!DOCTYPE window [
-<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
-%placesDTD;
 <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -35,6 +33,7 @@
 
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/places.ftl"/>
   </linkset>
 
 #include placesCommands.inc.xhtml
@@ -51,29 +50,31 @@
 
   <hbox id="sidebar-search-container">
     <search-textbox id="search-box" flex="1"
-                    placeholder="&historySearch.placeholder;"
+                    data-l10n-id="places-history-search"
+                    data-l10n-attrs="placeholder"
                     aria-controls="historyTree"
                     oncommand="searchHistory(this.value);"/>
     <button id="viewButton" style="min-width:0px !important;" type="menu"
-            label="&view.label;" accesskey="&view.accesskey;" selectedsort="day"
+            data-l10n-id="places-view" selectedsort="day"
             persist="selectedsort">
       <menupopup>
-        <menuitem id="bydayandsite" label="&byDayAndSite.label;"
-                  accesskey="&byDayAndSite.accesskey;" type="radio"
+        <menuitem id="bydayandsite"
+                  data-l10n-id="places-by-day-and-site" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite');"/>
-        <menuitem id="bysite" label="&bySite.label;"
-                  accesskey="&bySite.accesskey;" type="radio"
+        <menuitem id="bysite"
+                  data-l10n-id="places-by-site"
+                  type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'site'); GroupBy('site');"/>
-        <menuitem id="byday" label="&byDate.label;"
-                  accesskey="&byDate.accesskey;"
+        <menuitem id="byday"
+                  data-l10n-id="places-by-date"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day'); GroupBy('day');"/>
-        <menuitem id="byvisited" label="&byMostVisited.label;"
-                  accesskey="&byMostVisited.accesskey;"
+        <menuitem id="byvisited"
+                  data-l10n-id="places-by-most-visited"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited'); GroupBy('visited');"/>
-        <menuitem id="bylastvisited" label="&byLastVisited.label;"
-                  accesskey="&byLastVisited.accesskey;"
+        <menuitem id="bylastvisited"
+                  data-l10n-id="places-by-last-visited"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'lastvisited'); GroupBy('lastvisited');"/>
       </menupopup>
