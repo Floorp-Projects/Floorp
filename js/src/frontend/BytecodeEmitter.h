@@ -100,9 +100,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // switchToMain sets this to the bytecode offset of the main section.
   mozilla::Maybe<uint32_t> mainOffset_ = {};
 
-  /* field info for enclosing class */
-  const FieldInitializers fieldInitializers_;
-
  public:
   // Private storage for parser wrapper. DO NOT REFERENCE INTERNALLY. May not be
   // initialized. Use |parser| instead.
@@ -124,8 +121,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   NestableControl* innermostNestableControl = nullptr;
   EmitterScope* innermostEmitterScope_ = nullptr;
   TDZCheckCache* innermostTDZCheckCache = nullptr;
-
-  const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
 
 #ifdef DEBUG
   bool unstableEmitterScope = false;
@@ -181,11 +176,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    */
  private:
   // Internal constructor, for delegation use only.
-  BytecodeEmitter(
-      BytecodeEmitter* parent, SharedContext* sc, JS::Handle<JSScript*> script,
-      uint32_t line, uint32_t column, CompilationInfo& compilationInfo,
-      EmitterMode emitterMode,
-      FieldInitializers fieldInitializers = FieldInitializers::Invalid());
+  BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
+                  JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
+                  CompilationInfo& compilationInfo, EmitterMode emitterMode);
 
   void initFromBodyPosition(TokenPos bodyPosition);
 
@@ -199,27 +192,26 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                const ListNode* argsList);
 
  public:
-  BytecodeEmitter(
-      BytecodeEmitter* parent, BCEParserHandle* parser, SharedContext* sc,
-      JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
-      CompilationInfo& compilationInfo, EmitterMode emitterMode = Normal,
-      FieldInitializers fieldInitializers = FieldInitializers::Invalid());
+  BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
+                  SharedContext* sc, JS::Handle<JSScript*> script,
+                  uint32_t line, uint32_t column,
+                  CompilationInfo& compilationInfo,
+                  EmitterMode emitterMode = Normal);
 
-  BytecodeEmitter(
-      BytecodeEmitter* parent, const EitherParser& parser, SharedContext* sc,
-      JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
-      CompilationInfo& compilationInfo, EmitterMode emitterMode = Normal,
-      FieldInitializers fieldInitializers = FieldInitializers::Invalid());
+  BytecodeEmitter(BytecodeEmitter* parent, const EitherParser& parser,
+                  SharedContext* sc, JS::Handle<JSScript*> script,
+                  uint32_t line, uint32_t column,
+                  CompilationInfo& compilationInfo,
+                  EmitterMode emitterMode = Normal);
 
   template <typename Unit>
-  BytecodeEmitter(
-      BytecodeEmitter* parent, Parser<FullParseHandler, Unit>* parser,
-      SharedContext* sc, JS::Handle<JSScript*> script, uint32_t line,
-      uint32_t column, CompilationInfo& compilationInfo,
-      EmitterMode emitterMode = Normal,
-      FieldInitializers fieldInitializers = FieldInitializers::Invalid())
+  BytecodeEmitter(BytecodeEmitter* parent,
+                  Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
+                  JS::Handle<JSScript*> script, uint32_t line, uint32_t column,
+                  CompilationInfo& compilationInfo,
+                  EmitterMode emitterMode = Normal)
       : BytecodeEmitter(parent, EitherParser(parser), sc, script, line, column,
-                        compilationInfo, emitterMode, fieldInitializers) {}
+                        compilationInfo, emitterMode) {}
 
   MOZ_MUST_USE bool init();
   MOZ_MUST_USE bool init(TokenPos bodyPosition);
