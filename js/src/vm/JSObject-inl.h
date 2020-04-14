@@ -117,21 +117,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   }
 }
 
-/* static */ inline bool JSObject::setSingleton(JSContext* cx,
-                                                js::HandleObject obj) {
-  MOZ_ASSERT(!IsInsideNursery(obj));
-  MOZ_ASSERT(!obj->isSingleton());
-
-  js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(
-      cx, obj->groupRaw(), obj->getClass(), obj->taggedProto());
-  if (!group) {
-    return false;
-  }
-
-  obj->setGroupRaw(group);
-  return true;
-}
-
 /* static */ inline js::ObjectGroup* JSObject::getGroup(JSContext* cx,
                                                         js::HandleObject obj) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
