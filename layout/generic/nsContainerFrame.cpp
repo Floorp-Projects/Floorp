@@ -1514,6 +1514,95 @@ bool nsContainerFrame::MoveOverflowToChildList() {
   return DrainSelfOverflowList() || result;
 }
 
+void nsContainerFrame::MergeSortedOverflow(nsFrameList& aList) {
+  if (aList.IsEmpty()) {
+    return;
+  }
+  MOZ_ASSERT(
+      !aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
+      "this is the wrong list to put this child frame");
+  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
+  nsFrameList* overflow = GetOverflowFrames();
+  if (overflow) {
+    MergeSortedFrameLists(*overflow, aList, GetContent());
+  } else {
+    SetOverflowFrames(aList);
+  }
+}
+
+void nsContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList) {
+  if (aList.IsEmpty()) {
+    return;
+  }
+  MOZ_ASSERT(
+      aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
+      "this is the wrong list to put this child frame");
+  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
+  nsFrameList* eoc = GetPropTableFrames(ExcessOverflowContainersProperty());
+  if (eoc) {
+    MergeSortedFrameLists(*eoc, aList, GetContent());
+  } else {
+    SetPropTableFrames(new (PresShell()) nsFrameList(aList),
+                       ExcessOverflowContainersProperty());
+  }
+}
+
+/**
+ * Is aFrame1 a prev-continuation of aFrame2?
+ */
+static bool IsPrevContinuationOf(nsIFrame* aFrame1, nsIFrame* aFrame2) {
+  nsIFrame* prev = aFrame2;
+  while ((prev = prev->GetPrevContinuation())) {
+    if (prev == aFrame1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void nsContainerFrame::MergeSortedFrameLists(nsFrameList& aDest,
+                                             nsFrameList& aSrc,
+                                             nsIContent* aCommonAncestor) {
+  nsIFrame* dest = aDest.FirstChild();
+  for (nsIFrame* src = aSrc.FirstChild(); src;) {
+    if (!dest) {
+      aDest.AppendFrames(nullptr, aSrc);
+      break;
+    }
+    nsIContent* srcContent = src->GetContent();
+    nsIContent* destContent = dest->GetContent();
+    int32_t result = nsLayoutUtils::CompareTreePosition(srcContent, destContent,
+                                                        aCommonAncestor);
+    if (MOZ_UNLIKELY(result == 0)) {
+      // NOTE: we get here when comparing ::before/::after for the same element.
+      if (MOZ_UNLIKELY(srcContent->IsGeneratedContentContainerForBefore())) {
+        if (MOZ_LIKELY(!destContent->IsGeneratedContentContainerForBefore()) ||
+            ::IsPrevContinuationOf(src, dest)) {
+          result = -1;
+        }
+      } else if (MOZ_UNLIKELY(
+                     srcContent->IsGeneratedContentContainerForAfter())) {
+        if (MOZ_UNLIKELY(destContent->IsGeneratedContentContainerForAfter()) &&
+            ::IsPrevContinuationOf(src, dest)) {
+          result = -1;
+        }
+      } else if (::IsPrevContinuationOf(src, dest)) {
+        result = -1;
+      }
+    }
+    if (result < 0) {
+      // src should come before dest
+      nsIFrame* next = src->GetNextSibling();
+      aSrc.RemoveFrame(src);
+      aDest.InsertFrame(nullptr, dest->GetPrevSibling(), src);
+      src = next;
+    } else {
+      dest = dest->GetNextSibling();
+    }
+  }
+  MOZ_ASSERT(aSrc.IsEmpty());
+}
+
 bool nsContainerFrame::MoveInlineOverflowToChildList(nsIFrame* aLineContainer) {
   MOZ_ASSERT(aLineContainer,
              "Must have line container for moving inline overflows");

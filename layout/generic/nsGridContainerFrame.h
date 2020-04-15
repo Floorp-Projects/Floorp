@@ -363,11 +363,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
   // Helper for AppendFrames / InsertFrames.
   void NoteNewChildren(ChildListID aListID, const nsFrameList& aFrameList);
 
-  // Helper to move child frames into the kOverflowList.
-  void MergeSortedOverflow(nsFrameList& aList);
-  // Helper to move child frames into the kExcessOverflowContainersList:.
-  void MergeSortedExcessOverflowContainers(nsFrameList& aList);
-
   bool GetBBaseline(BaselineSharingGroup aBaselineGroup,
                     nscoord* aResult) const {
     *aResult = mBaseline[mozilla::eLogicalAxisBlock][aBaselineGroup];

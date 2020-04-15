@@ -368,72 +368,6 @@ TrackSize::StateBits nsGridContainerFrame::TrackSize::Initialize(
 }
 
 /**
- * Is aFrame1 a prev-continuation of aFrame2?
- */
-static bool IsPrevContinuationOf(nsIFrame* aFrame1, nsIFrame* aFrame2) {
-  nsIFrame* prev = aFrame2;
-  while ((prev = prev->GetPrevContinuation())) {
-    if (prev == aFrame1) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Moves all frames from aSrc into aDest such that the resulting aDest
- * is still sorted in document content order and continuation order.
- * Precondition: both |aSrc| and |aDest| must be sorted to begin with.
- * @param aCommonAncestor a hint for nsLayoutUtils::CompareTreePosition
- */
-static void MergeSortedFrameLists(nsFrameList& aDest, nsFrameList& aSrc,
-                                  nsIContent* aCommonAncestor) {
-  nsIFrame* dest = aDest.FirstChild();
-  for (nsIFrame* src = aSrc.FirstChild(); src;) {
-    if (!dest) {
-      aDest.AppendFrames(nullptr, aSrc);
-      break;
-    }
-    nsIContent* srcContent = src->GetContent();
-    nsIContent* destContent = dest->GetContent();
-    int32_t result = nsLayoutUtils::CompareTreePosition(srcContent, destContent,
-                                                        aCommonAncestor);
-    if (MOZ_UNLIKELY(result == 0)) {
-      // NOTE: we get here when comparing ::before/::after for the same element.
-      if (MOZ_UNLIKELY(srcContent->IsGeneratedContentContainerForBefore())) {
-        if (MOZ_LIKELY(!destContent->IsGeneratedContentContainerForBefore()) ||
-            ::IsPrevContinuationOf(src, dest)) {
-          result = -1;
-        }
-      } else if (MOZ_UNLIKELY(
-                     srcContent->IsGeneratedContentContainerForAfter())) {
-        if (MOZ_UNLIKELY(destContent->IsGeneratedContentContainerForAfter()) &&
-            ::IsPrevContinuationOf(src, dest)) {
-          result = -1;
-        }
-      } else if (::IsPrevContinuationOf(src, dest)) {
-        result = -1;
-      }
-    }
-    if (result < 0) {
-      // src should come before dest
-      nsIFrame* next = src->GetNextSibling();
-      aSrc.RemoveFrame(src);
-      aDest.InsertFrame(nullptr, dest->GetPrevSibling(), src);
-      src = next;
-    } else {
-      dest = dest->GetNextSibling();
-    }
-  }
-  MOZ_ASSERT(aSrc.IsEmpty());
-}
-
-static void MergeSortedFrameListsFor(nsFrameList& aDest, nsFrameList& aSrc,
-                                     nsContainerFrame* aParent) {
-  MergeSortedFrameLists(aDest, aSrc, aParent->GetContent());
-}
-
-/**
  * A LineRange can be definite or auto - when it's definite it represents
  * a consecutive set of tracks between a starting line and an ending line.
  * Before it's definite it can also represent an auto position with a span,
@@ -7185,7 +7119,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
     AutoFrameListPtr overflow(PresContext(), prevInFlow->StealOverflowFrames());
     if (overflow) {
       ReparentFrames(*overflow, prevInFlow, this);
-      ::MergeSortedFrameLists(mFrames, *overflow, GetContent());
+      MergeSortedFrameLists(mFrames, *overflow, GetContent());
 
       // Move trailing next-in-flows into our overflow list.
       nsFrameList continuations;
@@ -7243,7 +7177,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
         }
         f = next;
       }
-      ::MergeSortedFrameLists(mFrames, items, GetContent());
+      MergeSortedFrameLists(mFrames, items, GetContent());
       if (ourOverflow->IsEmpty()) {
         DestroyOverflowList();
       }
@@ -7295,7 +7229,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
         }
         nifChild = next;
       }
-      ::MergeSortedFrameLists(items, nifItems, GetContent());
+      MergeSortedFrameLists(items, nifItems, GetContent());
 
       if (!nif->HasAnyStateBits(NS_STATE_GRID_DID_PUSH_ITEMS)) {
         MOZ_ASSERT(!nifNeedPushedItem || mDidPushItemsBitMayLie,
@@ -7315,7 +7249,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
         }
         nifChild = next;
       }
-      ::MergeSortedFrameLists(items, nifItems, GetContent());
+      MergeSortedFrameLists(items, nifItems, GetContent());
 
       nif->RemoveStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
       nif = static_cast<nsGridContainerFrame*>(nif->GetNextInFlow());
@@ -7349,7 +7283,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
     MOZ_ASSERT(
         foundOwnPushedChild || !items.IsEmpty() || mDidPushItemsBitMayLie,
         "NS_STATE_GRID_DID_PUSH_ITEMS lied");
-    ::MergeSortedFrameLists(mFrames, items, GetContent());
+    MergeSortedFrameLists(mFrames, items, GetContent());
   }
 }
 
@@ -8116,7 +8050,7 @@ bool nsGridContainerFrame::DrainSelfOverflowList() {
   // there are also direct calls from the fctor (FindAppendPrevSibling).
   AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
   if (overflowFrames) {
-    ::MergeSortedFrameLists(mFrames, *overflowFrames, GetContent());
+    MergeSortedFrameLists(mFrames, *overflowFrames, GetContent());
     // We set a frame bit to push them again in Reflow() to avoid creating
     // multiple grid items per grid container fragment for the same content.
     AddStateBits(NS_STATE_GRID_HAS_CHILD_NIFS);
@@ -8368,40 +8302,6 @@ void nsGridContainerFrame::NoteNewChildren(ChildListID aListID,
     }
     presShell->FrameNeedsReflow(pif, IntrinsicDirty::TreeChange,
                                 NS_FRAME_IS_DIRTY);
-  }
-}
-
-void nsGridContainerFrame::MergeSortedOverflow(nsFrameList& aList) {
-  if (aList.IsEmpty()) {
-    return;
-  }
-  MOZ_ASSERT(
-      !aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
-      "this is the wrong list to put this child frame");
-  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
-  nsFrameList* overflow = GetOverflowFrames();
-  if (overflow) {
-    ::MergeSortedFrameLists(*overflow, aList, GetContent());
-  } else {
-    SetOverflowFrames(aList);
-  }
-}
-
-void nsGridContainerFrame::MergeSortedExcessOverflowContainers(
-    nsFrameList& aList) {
-  if (aList.IsEmpty()) {
-    return;
-  }
-  MOZ_ASSERT(
-      aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
-      "this is the wrong list to put this child frame");
-  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
-  nsFrameList* eoc = GetPropTableFrames(ExcessOverflowContainersProperty());
-  if (eoc) {
-    ::MergeSortedFrameLists(*eoc, aList, GetContent());
-  } else {
-    SetPropTableFrames(new (PresShell()) nsFrameList(aList),
-                       ExcessOverflowContainersProperty());
   }
 }
 
