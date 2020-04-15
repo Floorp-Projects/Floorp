@@ -1841,6 +1841,11 @@ bool WarpBuilder::build_Length(BytecodeLocation loc) {
 bool WarpBuilder::build_GetElem(BytecodeLocation loc) {
   MDefinition* id = current->pop();
   MDefinition* val = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, {val, id});
+  }
+
   return buildGetPropOp(loc, val, id);
 }
 

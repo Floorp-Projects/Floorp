@@ -160,6 +160,17 @@ bool WarpCacheIRTranspiler::transpile_GuardToString() {
   return transpileGuardTo(MIRType::String);
 }
 
+bool WarpCacheIRTranspiler::transpile_GuardToInt32Index() {
+  ValOperandId inputId = reader.valOperandId();
+  Int32OperandId outputId = reader.int32OperandId();
+
+  MDefinition* input = getOperand(inputId);
+  auto* ins = MToNumberInt32::New(alloc(), input);
+  current->add(ins);
+
+  return defineOperand(outputId, ins);
+}
+
 bool WarpCacheIRTranspiler::transpile_LoadEnclosingEnvironment() {
   ObjOperandId inputId = reader.objOperandId();
   ObjOperandId outputId = reader.objOperandId();
@@ -264,14 +275,42 @@ bool WarpCacheIRTranspiler::transpile_LoadStringLengthResult() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::transpile_LoadDenseElementResult() {
+  ObjOperandId objId = reader.objOperandId();
+  Int32OperandId indexId = reader.int32OperandId();
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* elements = MElements::New(alloc(), obj);
+  current->add(elements);
+
+  auto* length = MInitializedLength::New(alloc(), elements);
+  current->add(length);
+
+  MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+  current->add(check);
+
+  if (JitOptions.spectreIndexMasking) {
+    check = MSpectreMaskIndex::New(alloc(), check, length);
+    current->add(check);
+  }
+
+  bool needsHoleCheck = true;
+  bool loadDouble = false;  // TODO: Ion-only optimization.
+  auto* load =
+      MLoadElement::New(alloc(), elements, check, needsHoleCheck, loadDouble);
+  current->add(load);
+
+  setResult(load);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::transpile_TypeMonitorResult() {
   MOZ_ASSERT(output_.result, "Didn't set result MDefinition");
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_ReturnFromIC() {
-  return true;
-}
+bool WarpCacheIRTranspiler::transpile_ReturnFromIC() { return true; }
 
 bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, MBasicBlock* current,
                                 const WarpCacheIR* snapshot,

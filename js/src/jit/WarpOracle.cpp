@@ -390,6 +390,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::GetProp:
       case JSOp::CallProp:
       case JSOp::Length:
+      case JSOp::GetElem:
+      case JSOp::CallElem:
         MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
         break;
 
@@ -503,8 +505,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::SuperCall:
       case JSOp::BindName:
       case JSOp::BindGName:
-      case JSOp::GetElem:
-      case JSOp::CallElem:
       case JSOp::SetProp:
       case JSOp::StrictSetProp:
       case JSOp::SetName:
