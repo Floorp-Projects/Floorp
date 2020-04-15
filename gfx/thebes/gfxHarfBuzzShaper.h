@@ -86,6 +86,14 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
 
   static hb_codepoint_t GetVerticalPresentationForm(hb_codepoint_t aUnicode);
 
+  // Create an hb_font corresponding to the given gfxFont instance, with size
+  // and variations set appropriately. If aFontFuncs and aCallbackData are
+  // provided, they may be used as harfbuzz font callbacks for advances, glyph
+  // bounds, etc; if not, the built-in hb_ot font functions will be used.
+  static hb_font_t* CreateHBFont(gfxFont* aFont,
+                                 hb_font_funcs_t* aFontFuncs = nullptr,
+                                 FontCallbackData* aCallbackData = nullptr);
+
  protected:
   nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset,
                             uint32_t aLength, const char16_t* aText,
@@ -109,10 +117,6 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
   };
 
   const Glyf* FindGlyf(hb_codepoint_t aGlyph, bool* aEmptyGlyf) const;
-
-  // harfbuzz face object: we acquire a reference from the font entry
-  // on shaper creation, and release it in our destructor
-  hb_face_t* mHBFace;
 
   // size-specific font object, owned by the gfxHarfBuzzShaper
   hb_font_t* mHBFont;
