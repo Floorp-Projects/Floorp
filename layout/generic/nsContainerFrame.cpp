@@ -531,6 +531,27 @@ void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
   }
 }
 
+void nsContainerFrame::ReparentFrame(nsIFrame* aFrame,
+                                     nsContainerFrame* aOldParent,
+                                     nsContainerFrame* aNewParent) {
+  NS_ASSERTION(aOldParent == aFrame->GetParent(),
+               "Parent not consistent with expectations");
+
+  aFrame->SetParent(aNewParent);
+
+  // When pushing and pulling frames we need to check for whether any
+  // views need to be reparented
+  ReparentFrameView(aFrame, aOldParent, aNewParent);
+}
+
+void nsContainerFrame::ReparentFrames(nsFrameList& aFrameList,
+                                      nsContainerFrame* aOldParent,
+                                      nsContainerFrame* aNewParent) {
+  for (auto* f : aFrameList) {
+    ReparentFrame(f, aOldParent, aNewParent);
+  }
+}
+
 static nsIWidget* GetPresContextContainerWidget(nsPresContext* aPresContext) {
   nsCOMPtr<nsISupports> container = aPresContext->Document()->GetContainer();
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
