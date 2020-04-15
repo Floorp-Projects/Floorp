@@ -1421,7 +1421,7 @@ bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
   // error page
   return win && win->GetDocument() && win->GetDocument()->IsErrorPage();
 #else
-  return IsAboutErrorPage(win, "neterror");
+  return win && IsAboutErrorPage(win, "neterror");
 #endif
 }
 
@@ -1593,7 +1593,7 @@ bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
   // error page
   return win && win->GetDocument() && win->GetDocument()->IsErrorPage();
 #else
-  return IsAboutErrorPage(win, "certerror");
+  return win && IsAboutErrorPage(win, "certerror");
 #endif
 }
 
