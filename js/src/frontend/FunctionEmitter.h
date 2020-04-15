@@ -128,9 +128,6 @@ class MOZ_STACK_CLASS FunctionEmitter {
   MOZ_MUST_USE bool emitAsmJSModule();
 
  private:
-  // Common code for non-lazy and lazy functions.
-  MOZ_MUST_USE bool interpretedCommon();
-
   // Emit the function declaration, expression, method etc.
   // This leaves function object on the stack for expression etc,
   // and doesn't for declaration.
