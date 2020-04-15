@@ -142,13 +142,10 @@ EventStates Link::LinkState() const {
     // If we have a good href, register with History if available.
     if (mHistory && hrefURI) {
       if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
-        nsresult rv = history->RegisterVisitedCallback(hrefURI, self);
-        if (NS_SUCCEEDED(rv)) {
-          self->mRegistered = true;
-
-          // And make sure we are in the document's link map.
-          element->GetComposedDoc()->AddStyleRelevantLink(self);
-        }
+        self->mRegistered = true;
+        history->RegisterVisitedCallback(hrefURI, self);
+        // And make sure we are in the document's link map.
+        element->GetComposedDoc()->AddStyleRelevantLink(self);
       }
     }
   }

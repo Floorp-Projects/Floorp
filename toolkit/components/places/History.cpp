@@ -424,21 +424,10 @@ class VisitedQuery final : public AsyncStatementCallback {
       return;
     }
 
-    if (mIsVisited || StaticPrefs::layout_css_notify_of_unvisited()) {
-      History* history = History::GetService();
-      if (!history) {
-        return;
-      }
+    if (History* history = History::GetService()) {
       auto status = mIsVisited ? IHistory::VisitedStatus::Visited
                                : IHistory::VisitedStatus::Unvisited;
       history->NotifyVisited(mURI, status);
-      if (BrowserTabsRemoteAutostart()) {
-        AutoTArray<VisitedQueryResult, 1> results;
-        VisitedQueryResult& result = *results.AppendElement();
-        result.visited() = mIsVisited;
-        result.uri() = mURI;
-        history->NotifyVisitedParent(results);
-      }
     }
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -576,30 +565,14 @@ class NotifyManyVisitsObservers : public Runnable {
 
     PRTime now = PR_Now();
     if (!mPlaces.IsEmpty()) {
-      nsTArray<VisitedQueryResult> results(mPlaces.Length());
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
         nsresult rv =
             NotifyVisit(navHistory, obsService, now, uris[i], mPlaces[i]);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (BrowserTabsRemoteAutostart()) {
-          VisitedQueryResult& result = *results.AppendElement();
-          result.uri() = uris[i];
-          result.visited() = true;
-        }
       }
-      mHistory->NotifyVisitedParent(results);
     } else {
-      AutoTArray<VisitedQueryResult, 1> results;
       nsresult rv = NotifyVisit(navHistory, obsService, now, uris[0], mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      if (BrowserTabsRemoteAutostart()) {
-        VisitedQueryResult& result = *results.AppendElement();
-        result.uri() = uris[0];
-        result.visited() = true;
-        mHistory->NotifyVisitedParent(results);
-      }
     }
 
     return NS_OK;
@@ -1432,16 +1405,6 @@ History::~History() {
 }
 
 void History::InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
-
-void History::NotifyVisitedParent(const nsTArray<VisitedQueryResult>& aURIs) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  nsTArray<ContentParent*> cplist;
-  ContentParent::GetAll(cplist);
-
-  for (auto* cp : cplist) {
-    Unused << cp->SendNotifyVisited(aURIs);
-  }
-}
 
 class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
  public:
