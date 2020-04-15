@@ -1625,11 +1625,14 @@ class D3DVsyncSource final : public VsyncSource {
         : mPrevVsync(TimeStamp::Now()),
           mVsyncEnabledLock("D3DVsyncEnabledLock"),
           mVsyncEnabled(false),
-          mWaitVBlankMonitor(NULL) {
+          mWaitVBlankMonitor(NULL),
+          mIsWindows10OrLater(false) {
       mVsyncThread = new base::Thread("WindowsVsyncThread");
       MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
                          "GFX: Could not start Windows vsync thread");
       SetVsyncRate();
+
+      mIsWindows10OrLater = IsWin10OrLater();
     }
 
     void SetVsyncRate() {
@@ -1801,7 +1804,8 @@ class D3DVsyncSource final : public VsyncSource {
         }
 
         HRESULT hr = E_FAIL;
-        if (StaticPrefs::gfx_vsync_use_waitforvblank()) {
+        if (mIsWindows10OrLater &&
+            !StaticPrefs::gfx_vsync_force_disable_waitforvblank()) {
           UpdateVBlankOutput();
           if (mWaitVBlankOutput) {
             hr = mWaitVBlankOutput->WaitForVBlank();
@@ -1886,6 +1890,7 @@ class D3DVsyncSource final : public VsyncSource {
 
     HMONITOR mWaitVBlankMonitor;
     RefPtr<IDXGIOutput> mWaitVBlankOutput;
+    bool mIsWindows10OrLater;
   };  // end d3dvsyncdisplay
 
   D3DVsyncSource() { mPrimaryDisplay = new D3DVsyncDisplay(); }
