@@ -349,6 +349,9 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Temna</string>
 
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Sledi temi naprave</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Seje</string>
@@ -549,6 +552,16 @@
     <string name="preference_phone_feature_microphone">Mikrofon</string>
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Lokacija</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Obvestilo</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Vprašaj za dovoljenje</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Zavrnjeno</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Dovoljeno</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Zavrnil Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Izjeme</string>
 
@@ -731,6 +744,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Izhod</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">S tem boste izbrisali vse podatke brskanja.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s bo izbrisal izbrane podatke brskanja.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -738,6 +753,8 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Izbriši</string>
 
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Podatki brskanja so izbrisani</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Brisanje podatkov brskanja …</string>
 
@@ -752,6 +769,9 @@
     <string name="onboarding_feature_section_header">Spoznajte %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Kaj je novega</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Imate vprašanja o preoblikovanem %su? Želite izvedeti, kaj se je spremenilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tukaj poiščite odgovore</string>
     <!-- text for the firefox account onboarding card header
@@ -771,6 +791,10 @@
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Običajno</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Zavrača manj sledilcev, vendar omogoča normalno nalaganje strani</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Brskajte zasebno</string>
     <!-- text for the private browsing onbording card button, that launches settings -->

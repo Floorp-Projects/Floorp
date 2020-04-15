@@ -2,11 +2,10 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview 사생활 보호 모드</string>
-
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (사생활 보호 모드)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">사생활 보호 %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (사생활 보호)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">옵션 더보기</string>
@@ -305,7 +304,7 @@
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%2$s %3$s 상의 %1$s</string>
+    <string name="default_device_name_2">%2$s %3$s의 %1$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -840,7 +839,7 @@
     <string name="preference_accessibility_auto_size_summary">글꼴 크기를 Android 설정과 맞춥니다. 비활성화하면 글꼴 크기를 여기서 조절할 수 있습니다.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">브라우징 데이터 삭제</string>
+    <string name="preferences_delete_browsing_data">탐색 데이터 삭제</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">열린 탭</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -867,14 +866,14 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">사이트 권한</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">브라우징 데이터 삭제</string>
+    <string name="preferences_delete_browsing_data_button">탐색 데이터 삭제</string>
 
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">종료시 브라우징 데이터 삭제</string>
+    <string name="preferences_delete_browsing_data_on_quit">종료시 탐색 데이터 삭제</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">주 메뉴에서 &quot;종료&quot;를 선택하면 브라우징 데이터를 자동으로 삭제합니다</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">주 메뉴에서 &quot;종료&quot;를 선택하면 탐색 데이터를 자동으로 삭제합니다</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">주 메뉴에서 \&quot;종료\&quot;를 선택하면 브라우징 데이터를 자동으로 삭제합니다</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">주 메뉴에서 \&quot;종료\&quot;를 선택하면 탐색 데이터를 자동으로 삭제합니다</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">방문 기록</string>
 
@@ -882,18 +881,18 @@
     <string name="delete_browsing_data_on_quit_action">종료</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">브라우징 데이터가 모두 삭제됩니다.</string>
+    <string name="delete_browsing_data_prompt_message">탐색 데이터가 모두 삭제됩니다.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s가 선택된 브라우징 데이터를 삭제합니다.</string>
+    <string name="delete_browsing_data_prompt_message_3">%s가 선택된 탐색 데이터를 삭제합니다.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">취소</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">삭제</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
-    <string name="preferences_delete_browsing_data_snackbar">브라우징 데이터가 삭제되었습니다</string>
+    <string name="preferences_delete_browsing_data_snackbar">탐색 데이터가 삭제되었습니다</string>
 
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
-    <string name="deleting_browsing_data_in_progress">브라우징 데이터 삭제 중…</string>
+    <string name="deleting_browsing_data_in_progress">탐색 데이터 삭제 중…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1009,7 +1008,9 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">대신 이메일 사용</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox가 계정과의 동기화를 중단하지만 이 기기의 사용자 브라우징 데이터는 삭제하지 않습니다.</string>
+    <string name="sign_out_confirmation_message">Firefox가 계정과의 동기화를 중단하지만 이 기기의 사용자 탐색 데이터는 삭제하지 않습니다.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s가 계정과의 동기화를 중단하지만 이 기기의 사용자 탐색 데이터는 삭제하지 않습니다.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">연결 끊기</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1090,7 +1091,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">교차 사이트 추적 쿠키</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">광고 네트워크 및 분석 회사가 여러 사이트에서 사용자 브라우징 데이터를 컴파일하는데 사용하는 쿠키를 차단합니다.</string>
+    <string name="etp_cookies_description">광고 네트워크 및 분석 회사가 여러 사이트에서 사용자 탐색 데이터를 컴파일하는데 사용하는 쿠키를 차단합니다.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">크립토마이너</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
