@@ -149,6 +149,11 @@ class Repository(object):
         """Hash of revision the current topic branch is based on."""
 
     @abc.abstractmethod
+    def get_commit_time(self):
+        """Return the Unix time of the HEAD revision.
+        """
+
+    @abc.abstractmethod
     def sparse_checkout_present(self):
         """Whether the working directory is using a sparse checkout.
 
@@ -316,6 +321,10 @@ class HgRepository(Repository):
         args = [a.encode('utf-8') if not isinstance(a, bytes) else a for a in args]
         return self._client.rawcommand(args).decode('utf-8')
 
+    def get_commit_time(self):
+        return int(self._run(
+            'parent', '--template', '{word(0, date|hgdate)}').strip())
+
     def sparse_checkout_present(self):
         # We assume a sparse checkout is enabled if the .hg/sparse file
         # has data. Strictly speaking, we should look for a requirement in
@@ -451,6 +460,9 @@ class GitRepository(Repository):
         except subprocess.CalledProcessError:
             return False
         return True
+
+    def get_commit_time(self):
+        return int(self._run('log', '-1', '--format=%ct').strip())
 
     def sparse_checkout_present(self):
         # Not yet implemented.
