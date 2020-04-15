@@ -450,6 +450,7 @@ raptor-wasm-misc-cranelift-firefox:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central', 'try']
     max-run-time: 1800
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-cranelift
@@ -630,6 +631,7 @@ raptor-wasm-godot-cranelift-firefox:
             .*-qr/.*: 2100
             .*-ref-hw-2017/.*: 2100
             default: 1500
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-cranelift
@@ -639,6 +641,7 @@ raptor-wasm-godot-cranelift-firefox-profiling:
     try-name: raptor-wasm-godot-cranelift-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-c)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-cranelift
