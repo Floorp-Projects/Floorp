@@ -307,17 +307,17 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin: 0 2px;
-  padding: 2px 4px;
+  padding: 4px;
   -moz-appearance: none;
 }
 
 :root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin: 0 1px;
-  padding: 1px 4px;
+  margin-inline: 1px;
+  padding-block: 1px;
 }
 
 :root[uidensity=touch] toolbarbutton.bookmark-item:not(.subviewbutton) {
-  padding: 4px;
+  padding-block: 7px;
 }
 
 toolbarbutton.bookmark-item {
