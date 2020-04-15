@@ -17,7 +17,6 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProcessSwitchRequestor.h"
