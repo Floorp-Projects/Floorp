@@ -27,6 +27,46 @@
 // Global reference to the URI fixup service.
 static mozilla::StaticRefPtr<nsIURIFixup> sURIFixup;
 
+namespace {
+already_AddRefed<nsIURIFixupInfo> GetFixupURIInfo(const nsACString& aStringURI,
+                                                  uint32_t aFixupFlags,
+                                                  nsIInputStream** aPostData) {
+  nsCOMPtr<nsIURIFixupInfo> info;
+  if (XRE_IsContentProcess()) {
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+    if (!contentChild) {
+      return nullptr;
+    }
+
+    RefPtr<nsIInputStream> postData;
+    RefPtr<nsIURI> fixedURI, preferredURI;
+    nsAutoString providerName;
+    nsAutoCString stringURI(aStringURI);
+    // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
+    if (contentChild->SendGetFixupURIInfo(stringURI, aFixupFlags, &providerName,
+                                          &postData, &fixedURI,
+                                          &preferredURI)) {
+      if (preferredURI) {
+        info = do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
+        if (NS_WARN_IF(!info)) {
+          return nullptr;
+        }
+        info->SetKeywordProviderName(providerName);
+        if (aPostData) {
+          postData.forget(aPostData);
+        }
+        info->SetFixedURI(fixedURI);
+        info->SetPreferredURI(preferredURI);
+      }
+    }
+  } else {
+    sURIFixup->GetFixupURIInfo(aStringURI, aFixupFlags, aPostData,
+                               getter_AddRefs(info));
+  }
+  return info.forget();
+}
+}  // anonymous namespace
+
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : mURI(aURI),
       mResultPrincipalURIIsSome(false),
@@ -168,9 +208,10 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   nsCOMPtr<nsIURIFixupInfo> fixupInfo;
   if (fixup) {
     uint32_t fixupFlags;
-    rv = sURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
-                                                   &fixupFlags);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    if (NS_FAILED(sURIFixup->WebNavigationFlagsToFixupFlags(
+            uriString, loadFlags, &fixupFlags))) {
+      return NS_ERROR_FAILURE;
+    }
 
     // If we don't allow keyword lookups for this URL string, make sure to
     // update loadFlags to indicate this as well.
@@ -189,12 +230,13 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     if (loadContext && loadContext->UsePrivateBrowsing()) {
       fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
     }
-    nsCOMPtr<nsIInputStream> fixupStream;
-    rv = sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
-                                    getter_AddRefs(fixupStream),
-                                    getter_AddRefs(fixupInfo));
 
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIInputStream> fixupStream;
+    fixupInfo =
+        GetFixupURIInfo(uriString, fixupFlags, getter_AddRefs(fixupStream));
+    if (fixupInfo) {
+      // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
+      rv = NS_OK;
       fixupInfo->GetPreferredURI(getter_AddRefs(uri));
       fixupInfo->SetConsumer(aConsumer);
     }

@@ -4200,6 +4200,32 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvGetFixupURIInfo(
+    const nsCString& aURIString, const uint32_t& aFixupFlags,
+    nsString* aProviderName, RefPtr<nsIInputStream>* aPostData,
+    RefPtr<nsIURI>* aFixedURI, RefPtr<nsIURI>* aPreferredURI) {
+  *aPostData = nullptr;
+  *aFixedURI = nullptr;
+  *aPreferredURI = nullptr;
+  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
+  if (!fixup) {
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIURIFixupInfo> info;
+  if (NS_FAILED(fixup->GetFixupURIInfo(aURIString, aFixupFlags,
+                                       getter_AddRefs(*aPostData),
+                                       getter_AddRefs(info)))) {
+    return IPC_OK();
+  }
+  info->GetKeywordProviderName(*aProviderName);
+  nsCOMPtr<nsIURI> uri;
+  info->GetFixedURI(getter_AddRefs(uri));
+  *aFixedURI = uri;
+  info->GetPreferredURI(getter_AddRefs(uri));
+  *aPreferredURI = uri;
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvNotifyKeywordSearchLoading(
     const nsString& aProvider, const nsString& aKeyword) {
   nsCOMPtr<nsISearchService> searchSvc =
