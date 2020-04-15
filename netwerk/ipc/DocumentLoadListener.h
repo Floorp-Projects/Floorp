@@ -17,6 +17,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProcessSwitchRequestor.h"
@@ -116,14 +117,11 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This helper resumes the underlying channel again, and manually
   // forwards any nsIStreamListener messages that arrived while we
   // were suspended (which might have failed).
-  // Returns true if the channel was finished before we could resume it.
-  bool ResumeSuspendedChannel(nsIStreamListener* aListener);
+  void ResumeSuspendedChannel(nsIStreamListener* aListener);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_LOAD_LISTENER_IID)
 
   void Cancel(const nsresult& status);
-
-  nsIChannel* GetChannel() const { return mChannel; }
 
   nsresult ReportSecurityMessage(const nsAString& aMessageTag,
                                  const nsAString& aMessageCategory) override {
@@ -180,13 +178,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // in the content process into the RedirectToRealChannelArgs struct.
   void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
-                             uint32_t aLoadFlags) const;
-
-  const nsTArray<DocumentChannelRedirect>& Redirects() const {
-    return mRedirects;
-  }
-
-  net::LastVisitInfo LastVisitInfo() const;
+                             uint32_t aLoadFlags);
 
  protected:
   virtual ~DocumentLoadListener();
@@ -227,8 +219,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
-
-  void ApplyPendingFunctions(nsISupports* aChannel) const;
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel

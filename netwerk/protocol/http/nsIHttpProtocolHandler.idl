@@ -121,7 +121,7 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_OPENING_REQUEST_TOPIC "http-on-opening-request"
 
  /**
- * This observer topic is notified when a document channel is opened.
+ * This observer topic is notified when an document channel is opened.
  * It is similar to http-on-opening-request.
  */
 #define NS_DOCUMENT_ON_OPENING_REQUEST_TOPIC "document-on-opening-request"
@@ -133,13 +133,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
  * The "subject" of the notification is the nsIHttpChannel instance.
  */
 #define NS_HTTP_ON_MODIFY_REQUEST_TOPIC "http-on-modify-request"
-
-/**
-  * Before an HTTP request is sent to the server via a document channel this
-  * observer topic is notified.
-  * It is similar to http-on-modify-request.
-*/
-#define NS_DOCUMENT_ON_MODIFY_REQUEST_TOPIC "document-on-modify-request"
 
 /**
  * Before an HTTP connection to the server is created, this observer topic is
