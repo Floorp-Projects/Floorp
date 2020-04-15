@@ -60,14 +60,6 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   float depthNear = (float)renderState->DepthNear();
   float depthFar = (float)renderState->DepthFar();
 
-  const gfx::PointDouble3D& originPosition =
-      aReferenceSpace.GetEffectiveOriginPosition();
-  const gfx::QuaternionDouble& originOrientation =
-      aReferenceSpace.GetEffectiveOriginOrientation();
-
-  gfx::QuaternionDouble invOriginOrientation = originOrientation;
-  invOriginOrientation.Invert();
-
   gfx::VRDisplayClient* display = mSession->GetDisplayClient();
   if (display) {
     // Have a VRDisplayClient
@@ -86,13 +78,16 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     // TODO: Remove those extra inverts when WebVR support is disabled.
     viewerOrientation.Invert();
 
-    viewerPosition = invOriginOrientation.RotatePoint(viewerPosition);
-    viewerPosition -= originPosition;
-    viewerOrientation *= invOriginOrientation;
-
     gfx::Matrix4x4Double headTransform;
     headTransform.SetRotationFromQuaternion(viewerOrientation);
     headTransform.PostTranslate(viewerPosition);
+
+    gfx::Matrix4x4Double originTransform;
+    originTransform.SetRotationFromQuaternion(
+        aReferenceSpace.GetEffectiveOriginOrientation());
+    originTransform.PreTranslate(-aReferenceSpace.GetEffectiveOriginPosition());
+
+    headTransform *= originTransform;
 
     auto addEye = [&](XREye xrEye, VRDisplayState::Eye eye) {
       auto offset = displayInfo.GetEyeTranslation(eye);
@@ -165,21 +160,13 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
 
-  const gfx::PointDouble3D& originPosition =
-      aBaseSpace.GetEffectiveOriginPosition();
-  gfx::PointDouble3D position = aSpace.GetEffectiveOriginPosition();
-  gfx::QuaternionDouble orientation = aSpace.GetEffectiveOriginOrientation();
+  gfx::Matrix4x4Double base;
+  base.SetRotationFromQuaternion(aBaseSpace.GetEffectiveOriginOrientation());
+  base.PreTranslate(-aBaseSpace.GetEffectiveOriginPosition());
 
-  gfx::QuaternionDouble invOriginOrientation(
-      aBaseSpace.GetEffectiveOriginOrientation());
-  invOriginOrientation.Invert();
+  gfx::Matrix4x4Double matrix = aSpace.GetEffectiveOriginTransform() * base;
 
-  position = invOriginOrientation.RotatePoint(position);
-  position -= originPosition;
-  orientation *= invOriginOrientation;
-
-  RefPtr<XRRigidTransform> transform =
-      new XRRigidTransform(mParent, position, orientation);
+  RefPtr<XRRigidTransform> transform = new XRRigidTransform(mParent, matrix);
   RefPtr<XRPose> pose = new XRPose(mParent, transform, false);
 
   return pose;
