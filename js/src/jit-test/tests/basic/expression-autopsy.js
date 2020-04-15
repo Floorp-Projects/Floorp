@@ -267,6 +267,10 @@ check_one("[...][Symbol.iterator]().next().value",
 check_one("[...][Symbol.iterator]().next().value",
           function () { var [{x}] = [void 0, {}]; }, " is undefined");
 
+check_one("(a += b)",
+    function() { var a, b; (a += b)(); },
+    " is not a function");
+
 try {
   (function() {
     "use strict";
