@@ -135,9 +135,12 @@ export type SourcesState = {
   projectDirectoryRoot: string,
   chromeAndExtensionsEnabled: boolean,
   focusedItem: ?FocusItem,
+  tabsBlackBoxed: any,
 };
 
-export function initialSourcesState(): SourcesState {
+export function initialSourcesState(
+  state: ?{ tabsBlackBoxed: string[] }
+): SourcesState {
   return {
     sources: createInitial(),
     urls: {},
@@ -152,6 +155,7 @@ export function initialSourcesState(): SourcesState {
     projectDirectoryRoot: prefs.projectDirectoryRoot,
     chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
     focusedItem: null,
+    tabsBlackBoxed: state?.tabsBlackBoxed ?? [],
   };
 }
 
@@ -221,7 +225,7 @@ function update(
         const { shouldBlackBox } = action;
         const { sources } = action.value;
 
-        updateBlackBoxListSources(sources, shouldBlackBox);
+        state = updateBlackBoxListSources(state, sources, shouldBlackBox);
         return updateBlackboxFlagSources(state, sources, shouldBlackBox);
       }
       break;
@@ -230,7 +234,7 @@ function update(
       if (action.status === "done") {
         const { id, url } = action.source;
         const { isBlackBoxed } = ((action: any): DonePromiseAction).value;
-        updateBlackBoxList(url, isBlackBoxed);
+        state = updateBlackBoxList(state, url, isBlackBoxed);
         return updateBlackboxFlag(state, id, isBlackBoxed);
       }
       break;
@@ -263,7 +267,7 @@ function update(
     }
     case "NAVIGATE":
       return {
-        ...initialSourcesState(),
+        ...initialSourcesState(state),
         epoch: state.epoch + 1,
       };
 
@@ -541,24 +545,27 @@ function updateBlackboxTabs(tabs, url: URL, isBlackBoxed: boolean): void {
   }
 }
 
-function updateBlackBoxList(url: URL, isBlackBoxed: boolean): void {
-  const tabs = getBlackBoxList();
+function updateBlackBoxList(
+  state: SourcesState,
+  url: URL,
+  isBlackBoxed: boolean
+): SourcesState {
+  const tabs = [...state.tabsBlackBoxed];
   updateBlackboxTabs(tabs, url, isBlackBoxed);
-  prefs.tabsBlackBoxed = tabs;
+  return { ...state, tabsBlackBoxed: tabs };
 }
 
-function updateBlackBoxListSources(sources, shouldBlackBox) {
-  const tabs = getBlackBoxList();
+function updateBlackBoxListSources(
+  state: SourcesState,
+  sources,
+  shouldBlackBox
+): SourcesState {
+  const tabs = [...state.tabsBlackBoxed];
 
   sources.forEach(source => {
     updateBlackboxTabs(tabs, source.url, shouldBlackBox);
   });
-
-  prefs.tabsBlackBoxed = tabs;
-}
-
-export function getBlackBoxList(): string[] {
-  return prefs.tabsBlackBoxed || [];
+  return { ...state, tabsBlackBoxed: tabs };
 }
 
 // Selectors
@@ -1099,6 +1106,10 @@ export function isSourceLoadingOrLoaded(
 ): boolean {
   const { content } = getResource(state.sources.sources, sourceId);
   return content !== null;
+}
+
+export function getBlackBoxList(state: OuterState): string[] {
+  return state.sources.tabsBlackBoxed;
 }
 
 export default update;
