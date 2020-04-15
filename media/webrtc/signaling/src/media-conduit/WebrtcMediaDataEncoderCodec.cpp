@@ -76,7 +76,8 @@ static MediaDataEncoder::H264Specific GetCodecSpecific(
 }
 
 WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
-    : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)),
+    : mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
+      mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
       mFactory(new PEMFactory()),
@@ -157,21 +158,21 @@ bool WebrtcMediaDataEncoder::InitEncoder() {
 
 int32_t WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* aCallback) {
-  OwnerThread()->Dispatch(NS_NewRunnableFunction(
-      "WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback",
-      [self = RefPtr<WebrtcMediaDataEncoder>(this), aCallback]() {
-        self->mCallback = aCallback;
-      }));
+  MutexAutoLock lock(mCallbackMutex);
+  mCallback = aCallback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcMediaDataEncoder::Shutdown() {
   LOG("Release encoder");
-  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+  {
+    MutexAutoLock lock(mCallbackMutex);
+    mCallback = nullptr;
+  }
+  mThreadPool->Dispatch(NS_NewRunnableFunction(
       "WebrtcMediaDataEncoder::Shutdown",
       [self = RefPtr<WebrtcMediaDataEncoder>(this),
        encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
-        self->mCallback = nullptr;
         self->mError = NS_OK;
         encoder->Shutdown();
       }));
@@ -250,6 +251,7 @@ void WebrtcMediaDataEncoder::ProcessEncode(
           [display, self = RefPtr<WebrtcMediaDataEncoder>(this),
            // capture this for printing address in LOG.
            this](const MediaDataEncoder::EncodedData& aData) {
+            MutexAutoLock lock(mCallbackMutex);
             // Callback has been unregistered.
             if (!mCallback) {
               return;
