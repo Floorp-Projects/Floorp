@@ -36,7 +36,6 @@ const inspectorSpec = generateActorSpec({
     getHighlighter: {
       request: {
         autohide: Arg(0, "boolean"),
-        useNewBoxModelHighlighter: Arg(1, "nullable:boolean"),
       },
       response: {
         highligter: RetVal("highlighter"),

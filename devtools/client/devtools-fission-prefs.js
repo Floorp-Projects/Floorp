@@ -27,12 +27,6 @@ const PREFERENCES = [
       "processes at the same time as resources from the parent process",
   ],
   [
-    "devtools.inspector.use-new-box-model-highlighter",
-    "Enables a new highlighter implementation that can simultaneously " +
-      "highlight content in the parent and content processes. This allows to " +
-      "use a single highlighter in the Multiprocess Browser Toolbox.",
-  ],
-  [
     "devtools.target-switching.enabled",
     "If you navigate between two distinct process, the toolbox won’t close " +
       "and will instead switch to the new target. This impacts the regular " +
