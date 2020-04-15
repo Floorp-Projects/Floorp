@@ -11,7 +11,6 @@ DIRS += [
 DevToolsModules(
     'accessible.js',
     'auto-refresh.js',
-    'box-model-observer.js',
     'box-model-renderer.js',
     'box-model.js',
     'css-grid.js',
@@ -20,7 +19,6 @@ DevToolsModules(
     'flexbox.js',
     'fonts.js',
     'geometry-editor.js',
-    'highlighter-renderer.js',
     'measuring-tool.js',
     'paused-debugger.js',
     'rulers.js',

@@ -19,8 +19,6 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
 const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
-const USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF =
-  "devtools.inspector.use-new-box-model-highlighter";
 
 const telemetry = new Telemetry();
 
@@ -80,10 +78,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   async _getHighlighter() {
     const autohide = !flags.testing;
-    this.highlighter = await this.getHighlighter(
-      autohide,
-      Services.prefs.getBoolPref(USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF)
-    );
+    this.highlighter = await this.getHighlighter(autohide);
   }
 
   hasHighlighter(type) {
