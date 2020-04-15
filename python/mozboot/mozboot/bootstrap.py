@@ -6,10 +6,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import OrderedDict
 
+import os
 import platform
 import sys
-import os
 import subprocess
+import time
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
@@ -203,6 +204,15 @@ If you plan on submitting changes to Firefox use the following command to
 install the review submission tool "moz-phab":
 
   mach install-moz-phab
+'''
+
+
+OLD_REVISION_WARNING = '''
+WARNING! You appear to be running `mach bootstrap` from an old revision.
+bootstrap is meant primarily for getting developer environments up-to-date to
+build the latest version of tree. Running bootstrap on old revisions may fail
+and is not guaranteed to bring your machine to any working state in particular.
+Proceed at your own peril.
 '''
 
 
@@ -678,6 +688,7 @@ def current_firefox_checkout(check_output, env, hg=None):
                                     env=env,
                                     universal_newlines=True)
                 if node in HG_ROOT_REVISIONS:
+                    _warn_if_risky_revision(path)
                     return ('hg', path)
                 # Else the root revision is different. There could be nested
                 # repos. So keep traversing the parents.
@@ -690,6 +701,7 @@ def current_firefox_checkout(check_output, env, hg=None):
         elif os.path.exists(git_dir):
             moz_configure = os.path.join(path, 'moz.configure')
             if os.path.exists(moz_configure):
+                _warn_if_risky_revision(path)
                 return ('git', path)
 
         path, child = os.path.split(path)
@@ -798,3 +810,15 @@ def git_clone_firefox(git, dest, watchman=None):
 
     print('Firefox source code available at %s' % dest)
     return True
+
+
+def _warn_if_risky_revision(path):
+    # Warn the user if they're trying to bootstrap from an obviously old
+    # version of tree as reported by the version control system (a month in
+    # this case). This is an approximate calculation but is probably good
+    # enough for our purposes.
+    NUM_SECONDS_IN_MONTH = 60 * 60 * 24 * 30
+    from mozversioncontrol import get_repository_object
+    repo = get_repository_object(path)
+    if (time.time() - repo.get_commit_time()) >= NUM_SECONDS_IN_MONTH:
+        print(OLD_REVISION_WARNING)
