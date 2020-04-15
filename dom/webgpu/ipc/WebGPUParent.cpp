@@ -220,6 +220,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceUnmapBuffer(RawId aSelfId,
   } else {
     ffi::wgpu_server_buffer_unmap(mContext, aBufferId);
   }
+  DeallocShmem(aShmem);
   return IPC_OK();
 }
 
@@ -337,16 +338,18 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyTextureToTexture(
 }
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderRunComputePass(RawId aSelfId,
-                                                              Shmem&& shmem) {
-  ffi::wgpu_server_encode_compute_pass(mContext, aSelfId, shmem.get<uint8_t>(),
-                                       shmem.Size<uint8_t>());
+                                                              Shmem&& aShmem) {
+  ffi::wgpu_server_encode_compute_pass(mContext, aSelfId, aShmem.get<uint8_t>(),
+                                       aShmem.Size<uint8_t>());
+  DeallocShmem(aShmem);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderRunRenderPass(RawId aSelfId,
-                                                             Shmem&& shmem) {
-  ffi::wgpu_server_encode_render_pass(mContext, aSelfId, shmem.get<uint8_t>(),
-                                      shmem.Size<uint8_t>());
+                                                             Shmem&& aShmem) {
+  ffi::wgpu_server_encode_render_pass(mContext, aSelfId, aShmem.get<uint8_t>(),
+                                      aShmem.Size<uint8_t>());
+  DeallocShmem(aShmem);
   return IPC_OK();
 }
 
