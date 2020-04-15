@@ -1446,14 +1446,15 @@ JSLinearString* BigInt::toStringGeneric(JSContext* cx, HandleBigInt x,
                                maximumCharactersRequired - writePos);
 }
 
-static void FreeDigits(JSContext* cx, BigInt* bi, BigInt::Digit* digits) {
+static void FreeDigits(JSContext* cx, BigInt* bi, BigInt::Digit* digits,
+                       size_t nbytes) {
   if (cx->isHelperThreadContext()) {
     js_free(digits);
   } else if (bi->isTenured()) {
     MOZ_ASSERT(!cx->nursery().isInside(digits));
     js_free(digits);
   } else {
-    cx->nursery().freeBuffer(digits);
+    cx->nursery().freeBuffer(digits, nbytes);
   }
 }
 
@@ -1497,9 +1498,9 @@ BigInt* BigInt::destructivelyTrimHighZeroDigits(JSContext* cx, BigInt* x) {
       Digit digits[InlineDigitsLength];
       std::copy_n(x->heapDigits_, InlineDigitsLength, digits);
 
-      FreeDigits(cx, x, x->heapDigits_);
-      RemoveCellMemory(x, x->digitLength() * sizeof(Digit),
-                       js::MemoryUse::BigIntDigits);
+      size_t nbytes = x->digitLength() * sizeof(Digit);
+      FreeDigits(cx, x, x->heapDigits_, nbytes);
+      RemoveCellMemory(x, nbytes, js::MemoryUse::BigIntDigits);
 
       std::copy_n(digits, InlineDigitsLength, x->inlineDigits_);
     }

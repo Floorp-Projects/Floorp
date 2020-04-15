@@ -652,7 +652,8 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
       if (!inTenured && left.isTenured()) {
         // tenured leftmost child is giving its chars buffer to the
         // nursery-allocated root node.
-        if (!nursery.registerMallocedBuffer(wholeChars)) {
+        if (!nursery.registerMallocedBuffer(wholeChars,
+                                            wholeCapacity * sizeof(CharT))) {
           if (maybecx) {
             ReportOutOfMemory(maybecx);
           }
@@ -663,7 +664,7 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
       } else if (inTenured && !left.isTenured()) {
         // leftmost child is giving its nursery-held chars buffer to a
         // tenured string.
-        nursery.removeMallocedBuffer(wholeChars);
+        nursery.removeMallocedBuffer(wholeChars, wholeCapacity * sizeof(CharT));
       }
 
       /*
@@ -717,7 +718,8 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
 
   if (!isTenured()) {
     Nursery& nursery = runtimeFromMainThread()->gc.nursery();
-    if (!nursery.registerMallocedBuffer(wholeChars)) {
+    if (!nursery.registerMallocedBuffer(wholeChars,
+                                        wholeCapacity * sizeof(CharT))) {
       js_free(wholeChars);
       if (maybecx) {
         ReportOutOfMemory(maybecx);

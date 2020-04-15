@@ -281,7 +281,7 @@ size_t MapIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
 
   Nursery& nursery = iter->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(range)) {
-    nursery.removeMallocedBuffer(range);
+    nursery.removeMallocedBufferDuringMinorGC(range);
     return 0;
   }
 
@@ -1055,7 +1055,7 @@ size_t SetIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
 
   Nursery& nursery = iter->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(range)) {
-    nursery.removeMallocedBuffer(range);
+    nursery.removeMallocedBufferDuringMinorGC(range);
     return 0;
   }
 
