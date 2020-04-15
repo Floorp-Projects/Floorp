@@ -1064,7 +1064,10 @@ class nsDocShell final : public nsDocLoader,
   // embedder that loading has finished and we shouldn't be blocking
   // load of the embedder. Only called when we fail to load, as we wait
   // for the load event of our Document before notifying success.
-  void UnblockEmbedderLoadEventForFailure();
+  //
+  // If aFireFrameErrorEvent is true, then fires an error event at the
+  // embedder element, for both in-process and OOP embedders.
+  void UnblockEmbedderLoadEventForFailure(bool aFireFrameErrorEvent = false);
 
   struct SameDocumentNavigationState {
     nsAutoCString mCurrentHash;

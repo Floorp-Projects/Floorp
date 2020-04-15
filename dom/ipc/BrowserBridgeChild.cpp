@@ -171,18 +171,21 @@ BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
 }
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvMaybeFireEmbedderLoadEvents(
-    bool aFireLoadAtEmbeddingElement) {
+    EmbedderElementEventType aFireEventAtEmbeddingElement) {
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   if (!owner) {
     return IPC_OK();
   }
 
-  if (aFireLoadAtEmbeddingElement) {
+  if (aFireEventAtEmbeddingElement == EmbedderElementEventType::LoadEvent) {
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetEvent event(/* aIsTrusted = */ true, eLoad);
     event.mFlags.mBubbles = false;
     event.mFlags.mCancelable = false;
     EventDispatcher::Dispatch(owner, nullptr, &event, nullptr, &status);
+  } else if (aFireEventAtEmbeddingElement ==
+             EmbedderElementEventType::ErrorEvent) {
+    mFrameLoader->FireErrorEvent();
   }
 
   UnblockOwnerDocsLoadEvent();
