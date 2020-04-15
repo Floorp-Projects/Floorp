@@ -131,7 +131,10 @@ class HeaderChanger {
     // and an extension also added the header
     // "Set-Cookie: examplename=examplevalue") then the header value is not
     // re-set, but subsequent headers of the same type will be merged in.
-    let headersAlreadySet = new Set();
+    //
+    // Multiple addons will be able to provide modifications to any headers
+    // listed in the default set.
+    let headersAlreadySet = new Set(["content-security-policy"]);
     for (let { name, value, binaryValue } of headers) {
       if (binaryValue) {
         value = String.fromCharCode(...binaryValue);
