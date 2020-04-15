@@ -66,6 +66,10 @@ enum AssignmentOperator {
   AOP_BITOR,
   AOP_BITXOR,
   AOP_BITAND,
+  /* short-circuit */
+  AOP_COALESCE,
+  AOP_OR,
+  AOP_AND,
 
   AOP_LIMIT
 };
@@ -140,19 +144,22 @@ enum PropKind {
 };
 
 static const char* const aopNames[] = {
-    "=",    /* AOP_ASSIGN */
-    "+=",   /* AOP_PLUS */
-    "-=",   /* AOP_MINUS */
-    "*=",   /* AOP_STAR */
-    "/=",   /* AOP_DIV */
-    "%=",   /* AOP_MOD */
-    "**=",  /* AOP_POW */
-    "<<=",  /* AOP_LSH */
-    ">>=",  /* AOP_RSH */
-    ">>>=", /* AOP_URSH */
-    "|=",   /* AOP_BITOR */
-    "^=",   /* AOP_BITXOR */
-    "&="    /* AOP_BITAND */
+    "=",     /* AOP_ASSIGN */
+    "+=",    /* AOP_PLUS */
+    "-=",    /* AOP_MINUS */
+    "*=",    /* AOP_STAR */
+    "/=",    /* AOP_DIV */
+    "%=",    /* AOP_MOD */
+    "**=",   /* AOP_POW */
+    "<<=",   /* AOP_LSH */
+    ">>=",   /* AOP_RSH */
+    ">>>=",  /* AOP_URSH */
+    "|=",    /* AOP_BITOR */
+    "^=",    /* AOP_BITXOR */
+    "&=",    /* AOP_BITAND */
+    "\?\?=", /* AOP_COALESCE */
+    "||=",   /* AOP_OR */
+    "&&=",   /* AOP_AND */
 };
 
 static const char* const binopNames[] = {
@@ -1779,6 +1786,12 @@ AssignmentOperator ASTSerializer::aop(ParseNodeKind kind) {
       return AOP_BITXOR;
     case ParseNodeKind::BitAndAssignExpr:
       return AOP_BITAND;
+    case ParseNodeKind::CoalesceAssignExpr:
+      return AOP_COALESCE;
+    case ParseNodeKind::OrAssignExpr:
+      return AOP_OR;
+    case ParseNodeKind::AndAssignExpr:
+      return AOP_AND;
     default:
       return AOP_ERR;
   }
@@ -2744,6 +2757,9 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::AssignExpr:
     case ParseNodeKind::AddAssignExpr:
     case ParseNodeKind::SubAssignExpr:
+    case ParseNodeKind::CoalesceAssignExpr:
+    case ParseNodeKind::OrAssignExpr:
+    case ParseNodeKind::AndAssignExpr:
     case ParseNodeKind::BitOrAssignExpr:
     case ParseNodeKind::BitXorAssignExpr:
     case ParseNodeKind::BitAndAssignExpr:
