@@ -30,7 +30,6 @@ namespace dom {
 class PerformanceStorage;
 class XMLHttpRequestMainThread;
 class CanonicalBrowsingContext;
-class WindowGlobalParent;
 }  // namespace dom
 
 namespace net {
@@ -57,7 +56,6 @@ class LoadInfo final : public nsILoadInfo {
   NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
 
-  // Used for TYPE_SUBDOCUMENT load.
   // aLoadingPrincipal MUST NOT BE NULL.
   LoadInfo(nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
@@ -67,10 +65,6 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController =
                Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
            uint32_t aSandboxFlags = 0);
-  // Used for TYPE_SUBDOCUMENT load.
-  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
-           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
-           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
@@ -185,7 +179,6 @@ class LoadInfo final : public nsILoadInfo {
   ~LoadInfo() = default;
 
   void ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow);
-  void ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal);
 
   // This function is the *only* function which can change the securityflags
   // of a loadinfo. It only exists because of the XHR code. Don't call it

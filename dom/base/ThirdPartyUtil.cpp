@@ -274,39 +274,6 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult ThirdPartyUtil::IsThirdPartyGlobal(
-    mozilla::dom::WindowGlobalParent* aWindowGlobal, bool* aResult) {
-  NS_ENSURE_ARG(aWindowGlobal);
-  NS_ASSERTION(aResult, "null outparam pointer");
-
-  auto* currentWGP = aWindowGlobal;
-  do {
-    MOZ_ASSERT(currentWGP->BrowsingContext());
-    if (currentWGP->BrowsingContext()->IsTop()) {
-      *aResult = false;
-      return NS_OK;
-    }
-    nsCOMPtr<nsIPrincipal> currentPrincipal = currentWGP->DocumentPrincipal();
-    RefPtr<WindowGlobalParent> parent =
-        currentWGP->BrowsingContext()->GetEmbedderWindowGlobal();
-    if (!parent) {
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIPrincipal> parentPrincipal = parent->DocumentPrincipal();
-    nsresult rv =
-        currentPrincipal->IsThirdPartyPrincipal(parentPrincipal, aResult);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (*aResult) {
-      return NS_OK;
-    }
-
-    currentWGP = parent;
-  } while (true);
-}
-
 // Determine if the URI associated with aChannel or any URI of the window
 // hierarchy associated with the channel is foreign with respect to aSecondURI.
 // See docs for mozIThirdPartyUtil.
