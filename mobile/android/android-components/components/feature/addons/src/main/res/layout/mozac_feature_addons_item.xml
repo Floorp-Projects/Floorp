@@ -76,8 +76,9 @@
                 android:id="@+id/rating"
                 style="@style/Widget.AppCompat.RatingBar.Small"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
                 android:importantForAccessibility="no"
+                android:layout_gravity="center_vertical"
                 android:isIndicator="true"
                 android:numStars="5" />
 
@@ -92,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:textSize="12sp"
+                android:layout_gravity="center_vertical"
                 tools:text="Users: 591,642" />
 
         </LinearLayout>
