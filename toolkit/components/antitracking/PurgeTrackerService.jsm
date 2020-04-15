@@ -18,13 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIURIClassifier"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "loggingEnabled",
-  "privacy.purge_trackers.logging.enabled",
-  false
-);
-
 this.PurgeTrackerService = function() {};
 
 PurgeTrackerService.prototype = {
@@ -273,13 +266,11 @@ PurgeTrackerService.prototype = {
  */
 var logConsole;
 function LOG(...args) {
-  if (loggingEnabled) {
-    if (!logConsole) {
-      logConsole = console.createInstance({
-        prefix: "*** PurgeTrackerService:",
-        maxLogLevelPref: "privacy.purge_trackers.logging.level",
-      });
-    }
-    logConsole.log(...args);
+  if (!logConsole) {
+    logConsole = console.createInstance({
+      prefix: "*** PurgeTrackerService:",
+      maxLogLevelPref: "privacy.purge_trackers.logging.level",
+    });
   }
+  logConsole.log(...args);
 }
