@@ -1,0 +1,11 @@
+---
+clang-format:
+    description: Reformat C/C++
+    include:
+        - '.'
+    extensions: ['cpp', 'c', 'cc', 'h', 'm', 'mm']
+    support-files:
+        - 'tools/lint/clang-format/**'
+    type: external
+    payload: clang-format:lint
+    code_review_warnings: true
