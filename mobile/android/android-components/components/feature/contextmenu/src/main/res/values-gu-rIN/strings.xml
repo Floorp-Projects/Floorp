@@ -14,6 +14,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">છબી સ્થાન કૉપિ કરો</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">છબી સાચવો</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">ઉપકરણ પર ફાઇલ સાચવો</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">નવી ટૅબ ખૂલી ગઇ છે</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
@@ -22,4 +24,10 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">ક્લિપબોર્ડ પર લિંક કૉપિ કરી</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">બદલો</string>
-</resources>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">અન્ય એપ્લિકેશનમાં લિંક ખોલો</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
+    <string name="mozac_selection_context_menu_search">%s શોધ</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">%s ખાનગી શોધ</string>
+    </resources>
