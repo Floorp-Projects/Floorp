@@ -21,6 +21,7 @@ let newEngine;
 add_task(async function setup() {
   SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.oneOffSearches", true],
       // Avoid hitting the network with search suggestions.
       ["browser.urlbar.suggest.searches", false],
       ["browser.tabs.loadInBackground", true],
