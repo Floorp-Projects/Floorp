@@ -89,9 +89,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of results in the urlbar popup.
   ["maxRichResults", 10],
 
-  // One-off search buttons enabled status.
-  ["oneOffSearches", false],
-
   // Whether addresses and search results typed into the address bar
   // should be opened in new tabs by default.
   ["openintab", false],
