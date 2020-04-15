@@ -639,11 +639,13 @@ bool EditorBase::IsSelectionEditable() {
     return false;
   }
 
-  if (!mIsHTMLEditorClass) {
+  if (IsTextEditor()) {
     // XXX we just check that the anchor node is editable at the moment
     //     we should check that all nodes in the selection are editable
     nsCOMPtr<nsINode> anchorNode = SelectionRefPtr()->GetAnchorNode();
-    return anchorNode && IsEditable(anchorNode);
+    return anchorNode && anchorNode->IsContent() &&
+           EditorUtils::IsEditableContent(*anchorNode->AsContent(),
+                                          GetEditorType());
   }
 
   nsINode* anchorNode = SelectionRefPtr()->GetAnchorNode();
@@ -1788,7 +1790,7 @@ nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
 }
 
 NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
-  if (NS_WARN_IF(!aNode)) {
+  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!aNode->IsContent())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1800,15 +1802,14 @@ NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = DeleteNodeWithTransaction(*aNode);
+  rv = DeleteNodeWithTransaction(MOZ_KnownLive(*aNode->AsContent()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DeleteNodeWithTransaction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
+nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aNode.IsContent());
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
@@ -1821,13 +1822,13 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (AsHTMLEditor()) {
-    TopLevelEditSubActionDataRef().WillDeleteContent(*this, *aNode.AsContent());
+    TopLevelEditSubActionDataRef().WillDeleteContent(*this, aContent);
   }
 
-  // FYI: DeleteNodeTransaction grabs aNode while it's alive.  So, it's safe
-  //      to refer aNode even after calling DoTransaction().
+  // FYI: DeleteNodeTransaction grabs aContent while it's alive.  So, it's safe
+  //      to refer aContent even after calling DoTransaction().
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      DeleteNodeTransaction::MaybeCreate(*this, *aNode.AsContent());
+      DeleteNodeTransaction::MaybeCreate(*this, aContent);
   NS_WARNING_ASSERTION(deleteNodeTransaction,
                        "DeleteNodeTransaction::MaybeCreate() failed");
   nsresult rv;
@@ -1838,7 +1839,7 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
 
     if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
       RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-      textServicesDocument->DidDeleteNode(&aNode);
+      textServicesDocument->DidDeleteNode(&aContent);
     }
   } else {
     rv = NS_ERROR_FAILURE;
@@ -1847,7 +1848,7 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(&aNode, rv);
+      DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(&aContent, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidDeleteNode() failed, but ignored");
@@ -3095,12 +3096,13 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
 nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
   MOZ_ASSERT(aRoot);
 
-  nsIContent* node = GetLeftmostChild(aRoot);
-  if (node && !IsEditable(node)) {
-    node = GetNextEditableNode(*node);
+  EditorType editorType = GetEditorType();
+  nsIContent* content = GetLeftmostChild(aRoot);
+  if (content && !EditorUtils::IsEditableContent(*content, editorType)) {
+    content = GetNextEditableNode(*content);
   }
 
-  return (node != aRoot) ? node : nullptr;
+  return (content != aRoot) ? content : nullptr;
 }
 
 nsresult EditorBase::NotifyDocumentListeners(
@@ -3796,19 +3798,20 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
-  nsIContent* rightMostNode =
+  nsIContent* rightMostContent =
       GetRightmostChild(aPoint.GetContainer(), aNoBlockCrossing);
-  if (!rightMostNode) {
+  if (!rightMostContent) {
     return nullptr;
   }
 
-  if ((!aFindEditableNode || IsEditable(rightMostNode)) &&
-      (aFindAnyDataNode || IsElementOrText(*rightMostNode))) {
-    return rightMostNode;
+  if ((!aFindEditableNode ||
+       EditorUtils::IsEditableContent(*rightMostContent, GetEditorType())) &&
+      (aFindAnyDataNode || EditorUtils::IsElementOrText(*rightMostContent))) {
+    return rightMostContent;
   }
 
   // restart the search from the non-editable node we just found
-  return GetPreviousNodeInternal(*rightMostNode, aFindEditableNode,
+  return GetPreviousNodeInternal(*rightMostContent, aFindEditableNode,
                                  aFindAnyDataNode, aNoBlockCrossing);
 }
 
@@ -3848,23 +3851,24 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
       return point.GetChild();
     }
 
-    nsIContent* leftMostNode =
+    nsIContent* leftMostContent =
         GetLeftmostChild(point.GetChild(), aNoBlockCrossing);
-    if (!leftMostNode) {
+    if (!leftMostContent) {
       return point.GetChild();
     }
 
-    if (!IsDescendantOfEditorRoot(leftMostNode)) {
+    if (!IsDescendantOfEditorRoot(leftMostContent)) {
       return nullptr;
     }
 
-    if ((!aFindEditableNode || IsEditable(leftMostNode)) &&
-        (aFindAnyDataNode || IsElementOrText(*leftMostNode))) {
-      return leftMostNode;
+    if ((!aFindEditableNode ||
+         EditorUtils::IsEditableContent(*leftMostContent, GetEditorType())) &&
+        (aFindAnyDataNode || EditorUtils::IsElementOrText(*leftMostContent))) {
+      return leftMostContent;
     }
 
     // restart the search from the non-editable node we just found
-    return GetNextNodeInternal(*leftMostNode, aFindEditableNode,
+    return GetNextNodeInternal(*leftMostContent, aFindEditableNode,
                                aFindAnyDataNode, aNoBlockCrossing);
   }
 
@@ -3941,15 +3945,16 @@ nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> candidate =
+  nsIContent* candidate =
       FindNextLeafNode(aCurrentNode, aGoForward, bNoBlockCrossing);
 
   if (!candidate) {
     return nullptr;
   }
 
-  if ((!aEditableNode || IsEditable(candidate)) &&
-      (aFindAnyDataNode || IsElementOrText(*candidate))) {
+  if ((!aEditableNode ||
+       EditorUtils::IsEditableContent(*candidate, GetEditorType())) &&
+      (aFindAnyDataNode || EditorUtils::IsElementOrText(*candidate))) {
     return candidate;
   }
 
@@ -4084,9 +4089,10 @@ bool EditorBase::IsContainer(nsINode* aNode) const {
 uint32_t EditorBase::CountEditableChildren(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   uint32_t count = 0;
+  EditorType editorType = GetEditorType();
   for (nsIContent* child = aNode->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    if (IsEditable(child)) {
+    if (EditorUtils::IsEditableContent(*child, editorType)) {
       ++count;
     }
   }
@@ -4342,6 +4348,7 @@ EditorDOMPoint EditorBase::JoinNodesDeepWithTransaction(
   nsCOMPtr<nsINode> parentNode = aRightNode.GetParentNode();
 
   EditorDOMPoint ret;
+  EditorType editorType = GetEditorType();
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
          AreNodesSameType(*leftNodeToJoin, *rightNodeToJoin)) {
     uint32_t length = leftNodeToJoin->Length();
@@ -4370,14 +4377,16 @@ EditorDOMPoint EditorBase::JoinNodesDeepWithTransaction(
     }
 
     // Skip over non-editable nodes
-    while (leftNodeToJoin && !IsEditable(leftNodeToJoin)) {
+    while (leftNodeToJoin &&
+           !EditorUtils::IsEditableContent(*leftNodeToJoin, editorType)) {
       leftNodeToJoin = leftNodeToJoin->GetPreviousSibling();
     }
     if (!leftNodeToJoin) {
       return ret;
     }
 
-    while (rightNodeToJoin && !IsEditable(rightNodeToJoin)) {
+    while (rightNodeToJoin &&
+           !EditorUtils::IsEditableContent(*rightNodeToJoin, editorType)) {
       rightNodeToJoin = rightNodeToJoin->GetNextSibling();
     }
     if (!rightNodeToJoin) {
@@ -4440,11 +4449,14 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   // Now we've got the body element. Iterate over the body element's children,
   // looking for editable content. If no editable content is found, insert the
   // padding <br> element.
-  bool isRootEditable = IsEditable(rootElement);
+  EditorType editorType = GetEditorType();
+  bool isRootEditable =
+      EditorUtils::IsEditableContent(*rootElement, editorType);
   for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
        rootChild = rootChild->GetNextSibling()) {
-    if (EditorBase::IsPaddingBRElementForEmptyEditor(*rootChild) ||
-        !isRootEditable || IsEditable(rootChild) ||
+    if (EditorUtils::IsPaddingBRElementForEmptyEditor(*rootChild) ||
+        !isRootEditable ||
+        EditorUtils::IsEditableContent(*rootChild, editorType) ||
         HTMLEditUtils::IsBlockElement(*rootChild)) {
       return NS_OK;
     }
@@ -4452,7 +4464,7 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
 
   // Skip adding the padding <br> element for empty editor if body
   // is read-only.
-  if (!IsModifiableNode(*rootElement)) {
+  if (IsHTMLEditor() && !HTMLEditUtils::IsSimplyEditableNode(*rootElement)) {
     return NS_OK;
   }
 
@@ -5380,10 +5392,6 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
   return NS_OK;
 }
 
-bool EditorBase::IsModifiableNode(const nsINode& aNode) const {
-  return !AsHTMLEditor() || aNode.IsEditable();
-}
-
 nsIContent* EditorBase::GetFocusedContent() const {
   EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
@@ -6017,7 +6025,7 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
 
     mEditAction = aEditAction;
     mDirectionOfTopLevelEditSubAction = eNone;
-    if (mEditorBase.mIsHTMLEditorClass) {
+    if (mEditorBase.IsHTMLEditor()) {
       mTopLevelEditSubActionData.mSelectedRange =
           mEditorBase.AsHTMLEditor()
               ->GetSelectedRangeItemForTopLevelEditSubAction();

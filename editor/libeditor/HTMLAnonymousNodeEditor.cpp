@@ -4,6 +4,7 @@
 
 #include "HTMLEditor.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
@@ -436,7 +437,8 @@ nsresult HTMLEditor::RefreshEditingUI() {
   nsIContent* hostContent = GetActiveEditingHost();
 
   if (IsObjectResizerEnabled() && focusElement &&
-      IsModifiableNode(*focusElement) && focusElement != hostContent) {
+      HTMLEditUtils::IsSimplyEditableNode(*focusElement) &&
+      focusElement != hostContent) {
     if (nsGkAtoms::img == focusTagAtom) {
       mResizedObjectIsAnImage = true;
     }
@@ -456,7 +458,8 @@ nsresult HTMLEditor::RefreshEditingUI() {
   }
 
   if (IsAbsolutePositionEditorEnabled() && absPosElement &&
-      IsModifiableNode(*absPosElement) && absPosElement != hostContent) {
+      HTMLEditUtils::IsSimplyEditableNode(*absPosElement) &&
+      absPosElement != hostContent) {
     if (mAbsolutelyPositionedObject) {
       nsresult rv = RefreshGrabberInternal();
       if (NS_FAILED(rv)) {
@@ -472,8 +475,10 @@ nsresult HTMLEditor::RefreshEditingUI() {
     }
   }
 
+  // XXX Shouldn't we check whether the `<table>` element is editable or not?
   if (IsInlineTableEditorEnabled() && cellElement &&
-      IsModifiableNode(*cellElement) && cellElement != hostContent) {
+      HTMLEditUtils::IsSimplyEditableNode(*cellElement) &&
+      cellElement != hostContent) {
     if (mInlineEditedCell) {
       nsresult rv = RefreshInlineTableEditingUIInternal();
       if (NS_FAILED(rv)) {

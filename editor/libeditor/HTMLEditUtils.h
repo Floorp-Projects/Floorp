@@ -14,11 +14,31 @@ class nsAtom;
 
 namespace mozilla {
 
+enum class EditAction;
+
 class HTMLEditUtils final {
   using Element = dom::Element;
   using Selection = dom::Selection;
 
  public:
+  /**
+   * IsSimplyEditableNode() returns true when aNode is simply editable.
+   * This does NOT means that aNode can be removed from current parent nor
+   * aNode's data is editable.
+   */
+  static bool IsSimplyEditableNode(const nsINode& aNode) {
+    return aNode.IsEditable();
+  }
+
+  /**
+   * IsRemovableFromParentNode() returns true when aContent is editable, has a
+   * parent node and the parent node is also editable.
+   */
+  static bool IsRemovableFromParentNode(const nsIContent& aContent) {
+    return aContent.IsEditable() && aContent.GetParentNode() &&
+           aContent.GetParentNode()->IsEditable();
+  }
+
   /**
    * IsBlockElement() returns true if aContent is an element and it should
    * be treated as a block.  (This does not refer style information.)
