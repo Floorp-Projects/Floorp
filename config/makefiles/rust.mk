@@ -298,14 +298,12 @@ $(RUST_LIBRARY_FILE): force-cargo-library-build
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
 # The check only works when rust code is built with -Clto.
-# Enabling sancov or TSan also causes this to fail.
+# Sanitizers and sancov also fail because compiler-rt hooks network functions.
 ifndef MOZ_PROFILE_GENERATE
-ifndef MOZ_TSAN
 ifeq ($(OS_ARCH), Linux)
-ifeq (,$(rustflags_sancov))
+ifeq (,$(rustflags_sancov)$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
 	$(call py3_action,check_binary,--target --networking $@)
-endif
 endif
 endif
 endif
