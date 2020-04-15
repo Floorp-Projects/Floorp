@@ -566,7 +566,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // Perform all pending weakmap entry marking for this zone after
   // transitioning to weak marking mode.
-  void enterWeakMarkingMode(js::GCMarker* marker);
+  js::gc::IncrementalProgress enterWeakMarkingMode(js::GCMarker* marker,
+                                                   js::SliceBudget& budget);
   void checkWeakMarkingMode();
 
   // A set of edges from this zone to other zones used during GC to calculate

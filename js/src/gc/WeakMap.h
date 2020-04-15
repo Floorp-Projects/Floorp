@@ -345,7 +345,7 @@ class WeakMap
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
   // value getting marked. Insert it or its delegate (if any) into the
   // appropriate zone's gcWeakKeys or gcNurseryWeakKeys.
-  static void addWeakEntry(GCMarker* marker, JS::Zone* keyZone, gc::Cell* key,
+  static void addWeakEntry(GCMarker* marker, gc::Cell* key,
                            const gc::WeakMarkable& markable);
 
   bool markEntries(GCMarker* marker) override;
