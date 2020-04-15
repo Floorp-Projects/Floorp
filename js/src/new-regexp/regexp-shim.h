@@ -504,14 +504,12 @@ class Object {
   constexpr Object(JS::Value value) : value_(value) {}
   operator JS::Value() const { return value_; }
 
-  // Used in regexp-interpreter.cc to check the return value of
-  // isolate->stack_guard()->HandleInterrupts(). We want to handle
-  // interrupts in the caller, so we always return false from
-  // HandleInterrupts and true here.
-  inline bool IsException(Isolate*) const {
-    MOZ_ASSERT(!value_.toBoolean());
-    return true;
-  }
+  // Used in regexp-macro-assembler.cc and regexp-interpreter.cc to
+  // check the return value of isolate->stack_guard()->HandleInterrupts()
+  // In V8, this will be either an exception object or undefined.
+  // In SM, we store the exception in the context, so we can use our normal
+  // idiom: return false iff we are throwing an exception.
+  inline bool IsException(Isolate*) const { return !value_.toBoolean(); }
 
  protected:
   JS::Value value_;
@@ -547,6 +545,12 @@ class FixedArray : public HeapObject {
  public:
   inline void set(uint32_t index, Object value) {}
   inline static FixedArray cast(Object object) { MOZ_CRASH("TODO"); }
+};
+
+class ByteArrayData {
+public:
+  uint32_t length;
+  uint8_t* data();
 };
 
 /*
@@ -744,18 +748,15 @@ class DisallowHeapAllocation {
   const JS::AutoAssertNoGC no_gc_;
 };
 
-// V8 uses this inside DisallowHeapAllocation regions to turn
-// allocation back on before throwing a stack overflow exception or
-// handling interrupts. AutoSuppressGC is sufficient for the former
-// case, but not for the latter: handling interrupts can execute
-// arbitrary script code, and V8 jumps through some scary hoops to
-// "manually relocate unhandlified references" afterwards. To keep
-// things sane, we don't try to handle interrupts while regex code is
-// still on the stack. Instead, we return EXCEPTION and handle
-// interrupts in the caller. (See RegExpShared::execute.)
-
+// This is used inside DisallowHeapAllocation regions to enable
+// allocation just before throwing an exception, to allocate the
+// exception object. Specifically, it only ever guards:
+// - isolate->stack_guard()->HandleInterrupts()
+// - isolate->StackOverflow()
+// Those cases don't allocate in SpiderMonkey, so this can be a no-op.
 class AllowHeapAllocation {
  public:
+  // Empty constructor to avoid unused_variable warnings
   AllowHeapAllocation() {}
 };
 
@@ -766,7 +767,7 @@ class String : public HeapObject {
   JSString* str() const { return value_.toString(); }
 
  public:
-  String() = default;
+  String() : HeapObject() {}
   String(JSString* str) { value_ = JS::StringValue(str); }
 
   operator JSString*() const { return str(); }
@@ -890,23 +891,21 @@ class MOZ_STACK_CLASS FlatStringReader {
 
 class JSRegExp : public HeapObject {
  public:
-  JSRegExp() : HeapObject() {}
-  JSRegExp(js::RegExpShared* re) { value_ = JS::PrivateGCThingValue(re); }
-
   // ******************************************************
   // Methods that are called from inside the implementation
   // ******************************************************
-  void TierUpTick() { inner()->tierUpTick(); }
-
-  Object Code(bool is_latin1) const {
-    return Object(JS::PrivateGCThingValue(inner()->getJitCode(is_latin1)));
-  }
-  Object Bytecode(bool is_latin1) const {
-    return Object(JS::PrivateValue(inner()->getByteCode(is_latin1)));
+  void TierUpTick() { /*inner()->tierUpTick();*/ }
+  bool MarkedForTierUp() const {
+    return false; /*inner()->markedForTierUp();*/
   }
 
-  // TODO: should we expose this?
-  uint32_t BacktrackLimit() const { return 0; }
+  // TODO: hook these up
+  Object Code(bool is_latin1) const { return Object(JS::UndefinedValue()); }
+  Object Bytecode(bool is_latin1) const { return Object(JS::UndefinedValue()); }
+
+  uint32_t BacktrackLimit() const {
+    return 0; /*inner()->backtrackLimit();*/
+  }
 
   static JSRegExp cast(Object object) {
     JSRegExp regexp;
@@ -918,6 +917,12 @@ class JSRegExp : public HeapObject {
   // ******************************
   // Static constants
   // ******************************
+
+  // Meaning of Type:
+  // NOT_COMPILED: Initial value. No data has been stored in the JSRegExp yet.
+  // ATOM: A simple string to match against using an indexOf operation.
+  // IRREGEXP: Compiled with Irregexp.
+  enum Type { NOT_COMPILED, ATOM, IRREGEXP };
 
   // Maximum number of captures allowed.
   static constexpr int kMaxCaptures = 1 << 16;
@@ -940,9 +945,9 @@ class JSRegExp : public HeapObject {
   static constexpr int kNoBacktrackLimit = 0;
 
 private:
- js::RegExpShared* inner() const {
-   return value_.toGCThing()->as<js::RegExpShared>();
- }
+  js::RegExpShared* inner() {
+    return value_.toGCThing()->as<js::RegExpShared>();
+  }
 };
 
 class Histogram {
@@ -1023,12 +1028,9 @@ public:
 
   //********** Stack guard code **********//
   inline StackGuard* stack_guard() { return this; }
-
-  // This is called from inside no-GC code. V8 runs the interrupt
-  // inside the no-GC code and then "manually relocates unhandlified
-  // references" afterwards. We just return false and let the caller
-  // handle interrupts.
-  Object HandleInterrupts() { return Object(JS::BooleanValue(false)); }
+  Object HandleInterrupts() {
+    return Object(JS::BooleanValue(cx()->handleInterrupt()));
+  }
 
   JSContext* cx() const { return cx_; }
 
@@ -1078,9 +1080,7 @@ class StackLimitCheck {
   bool HasOverflowed() { return !CheckRecursionLimitDontReport(cx_); }
 
   // Use this to check for interrupt request in C++ code.
-  bool InterruptRequested() {
-    return cx_->hasPendingInterrupt(js::InterruptReason::CallbackUrgent);
-  }
+  bool InterruptRequested() { return cx_->hasAnyPendingInterrupt(); }
 
   // Use this to check for stack-overflow when entering runtime from JS code.
   bool JsHasOverflowed() {
