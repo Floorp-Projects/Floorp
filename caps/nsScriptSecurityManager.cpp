@@ -1082,13 +1082,12 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
     return rv;
   }
 
+  // URIFixup's keyword and alternate flags can only fixup to http/https, so we
+  // can skip testing them. This simplifies our life because this code can be
+  // invoked from the content process where the search service would not be
+  // available.
   uint32_t flags[] = {nsIURIFixup::FIXUP_FLAG_NONE,
-                      nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS,
-                      nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
-                      nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-                      nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
-                          nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI};
-
+                      nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS};
   for (uint32_t i = 0; i < ArrayLength(flags); ++i) {
     uint32_t fixupFlags = flags[i];
     if (aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {

@@ -1403,7 +1403,7 @@ var gKeywordURIFixup = {
     // As fixupInfo comes from a serialized message, its URI properties are
     // strings that we need to recreate nsIURIs from.
     this.check(browser, {
-      fixedURI: makeURI(fixupInfo.fixedURI),
+      fixedURI: fixupInfo.fixedURI ? makeURI(fixupInfo.fixedURI) : null,
       keywordProviderName: fixupInfo.keywordProviderName,
       preferredURI: makeURI(fixupInfo.preferredURI),
     });

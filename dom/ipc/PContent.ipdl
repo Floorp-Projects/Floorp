@@ -1070,6 +1070,8 @@ parent:
 
     sync KeywordToURI(nsCString keyword, bool isPrivateContext)
         returns (nsString providerName, nsIInputStream postData, nsIURI uri);
+    sync GetFixupURIInfo(nsCString uriString, uint32_t fixupflags)
+        returns (nsString providerName, nsIInputStream postData, nsIURI fixedURI, nsIURI preferredURI);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
