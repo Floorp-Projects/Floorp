@@ -317,7 +317,7 @@ class Nursery {
   void* allocateBuffer(JS::BigInt* bi, size_t nbytes);
 
   // Free an object buffer.
-  void freeBuffer(void* buffer);
+  void freeBuffer(void* buffer, size_t nbytes);
 
   // The maximum number of bytes allowed to reside in nursery buffers.
   static const size_t MaxNurseryBufferSize = 1024;
@@ -342,10 +342,22 @@ class Nursery {
   // Register a malloced buffer that is held by a nursery object, which
   // should be freed at the end of a minor GC. Buffers are unregistered when
   // their owning objects are tenured.
-  MOZ_MUST_USE bool registerMallocedBuffer(void* buffer);
+  MOZ_MUST_USE bool registerMallocedBuffer(void* buffer, size_t nbytes);
 
   // Mark a malloced buffer as no longer needing to be freed.
-  void removeMallocedBuffer(void* buffer) {
+  void removeMallocedBuffer(void* buffer, size_t nbytes) {
+    MOZ_ASSERT(mallocedBuffers.has(buffer));
+    MOZ_ASSERT(nbytes > 0);
+    MOZ_ASSERT(mallocedBufferBytes >= nbytes);
+    mallocedBuffers.remove(buffer);
+    mallocedBufferBytes -= nbytes;
+  }
+
+  // Mark a malloced buffer as no longer needing to be freed during minor
+  // GC. There's no need to account for the size here since all remaining
+  // buffers will soon be freed.
+  void removeMallocedBufferDuringMinorGC(void* buffer) {
+    MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
     MOZ_ASSERT(mallocedBuffers.has(buffer));
     mallocedBuffers.remove(buffer);
   }
@@ -542,6 +554,7 @@ class Nursery {
   // stored in the nursery. Any external buffers that do not belong to a
   // tenured thing at the end of a minor GC must be freed.
   BufferSet mallocedBuffers;
+  size_t mallocedBufferBytes = 0;
 
   // During a collection most hoisted slot and element buffers indicate their
   // new location with a forwarding pointer at the base. This does not work

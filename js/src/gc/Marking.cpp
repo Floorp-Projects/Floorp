@@ -3391,7 +3391,7 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
 
   if (!nursery().isInside(src->slots_)) {
     AddCellMemory(dst, count * sizeof(HeapSlot), MemoryUse::ObjectSlots);
-    nursery().removeMallocedBuffer(src->slots_);
+    nursery().removeMallocedBufferDuringMinorGC(src->slots_);
     return 0;
   }
 
@@ -3428,7 +3428,7 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
   /* TODO Bug 874151: Prefer to put element data inline if we have space. */
   if (!nursery().isInside(srcAllocatedHeader)) {
     MOZ_ASSERT(src->elements_ == dst->elements_);
-    nursery().removeMallocedBuffer(srcAllocatedHeader);
+    nursery().removeMallocedBufferDuringMinorGC(srcAllocatedHeader);
 
     AddCellMemory(dst, nslots * sizeof(HeapSlot), MemoryUse::ObjectElements);
 
@@ -3561,7 +3561,7 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
 
   if (src->ownsMallocedChars()) {
     void* chars = src->asLinear().nonInlineCharsRaw();
-    nursery().removeMallocedBuffer(chars);
+    nursery().removeMallocedBufferDuringMinorGC(chars);
     AddCellMemory(dst, dst->asLinear().allocSize(), MemoryUse::StringContents);
   }
 
@@ -3585,7 +3585,7 @@ size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
   if (src->hasHeapDigits()) {
     size_t length = dst->digitLength();
     if (!nursery().isInside(src->heapDigits_)) {
-      nursery().removeMallocedBuffer(src->heapDigits_);
+      nursery().removeMallocedBufferDuringMinorGC(src->heapDigits_);
     } else {
       Zone* zone = src->zone();
       {
