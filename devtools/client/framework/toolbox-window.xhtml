@@ -5,13 +5,19 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<!-- minwidth=50 is sum width of chevron and meatball menu button. -->
+<!--
+  min-width: min-content makes us have the min size of our
+  browser element, which is set explicitly via css in
+  toolbox-host-manager.js. It could be set on the window
+  instead and then it wouldn't be needed.
+-->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-toolbox-window"
         macanimationtype="document"
         fullscreenbutton="true"
         windowtype="devtools:toolbox"
         width="900" height="320"
+        style="min-width: min-content"
         persist="screenX screenY width height sizemode">
   <tooltip id="aHTMLTooltip" page="true"/>
 </window>
