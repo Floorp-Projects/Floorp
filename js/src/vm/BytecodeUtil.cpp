@@ -1747,11 +1747,11 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     switch (CodeSpec(op).nuses) {
       case 2: {
         const SrcNote* sn = GetSrcNote(cx, script, pc);
-        if (!sn || sn->type() != SrcNoteType::AssignOp) {
-          return write("(") && decompilePCForStackOperand(pc, -2) &&
-                 write(" ") && write(token) && write(" ") &&
-                 decompilePCForStackOperand(pc, -1) && write(")");
-        }
+        const char* extra =
+            sn && sn->type() == SrcNoteType::AssignOp ? "=" : "";
+        return write("(") && decompilePCForStackOperand(pc, -2) && write(" ") &&
+               write(token) && write(extra) && write(" ") &&
+               decompilePCForStackOperand(pc, -1) && write(")");
         break;
       }
       case 1:
