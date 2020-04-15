@@ -28,10 +28,34 @@ def write_json(data, path, file):
     :param data dict: Data to write.
     :param path str: Directory of where the data will be stored.
     :param file str: Name of the JSON file.
-
-    Returns the path of the file.
+    :return str: Path to the output.
     """
     path = os.path.join(path, file)
     with open(path, "w+") as f:
         json.dump(data, f)
     return path
+
+
+def filter_metrics(results, metrics):
+    """Filters the metrics to only those that were requested by `metrics`.
+
+    If metrics is Falsey (None, empty list, etc.) then no metrics
+    will be filtered. The entries in metrics are pattern matched with
+    the subtests in the standardized data (not a regular expression).
+    For example, if "firstPaint" is in metrics, then all subtests which
+    contain this string in their name, then they will be kept.
+
+    :param results list: Standardized data from the notebook.
+    :param metrics list: List of metrics to keep.
+    :return dict: Standardized notebook data with containing the
+        requested metrics.
+    """
+    if not metrics:
+        return results
+
+    newresults = []
+    for res in results:
+        if any([met in res["subtest"] for met in metrics]):
+            newresults.append(res)
+
+    return newresults
