@@ -229,7 +229,7 @@ void XRInputSource::Update(XRSession* aSession) {
   // Update button values.
   nsTArray<RefPtr<GamepadButton>> buttons;
   mGamepad->GetButtons(buttons);
-  for (uint32_t i = 0; i < controllerState.numButtons; ++i) {
+  for (uint32_t i = 0; i < buttons.Length(); ++i) {
     const bool pressed = controllerState.buttonPressed & (1ULL << i);
     const bool touched = controllerState.buttonTouched & (1ULL << i);
 
@@ -241,7 +241,7 @@ void XRInputSource::Update(XRSession* aSession) {
   // Update axis values.
   nsTArray<double> axes;
   mGamepad->GetAxes(axes);
-  for (uint32_t i = 0; i < controllerState.numAxes; ++i) {
+  for (uint32_t i = 0; i < axes.Length(); ++i) {
     if (axes[i] != controllerState.axisValue[i]) {
       mGamepad->SetAxis(i, controllerState.axisValue[i]);
     }
@@ -256,51 +256,57 @@ void XRInputSource::Update(XRSession* aSession) {
   const uint32_t squeezeIndex = 1;
 
   // Checking selectstart, select, selectend
-  if (controllerState.selectActionStartFrameId >
-      controllerState.selectActionStopFrameId) {
-    if (mSelectAction == ActionState::ActionState_Released &&
-        controllerState.triggerValue[selectIndex] > endThreshold) {
-      DispatchEvent(NS_LITERAL_STRING("selectstart"), aSession);
-      mSelectAction = ActionState::ActionState_Pressing;
-    } else if (mSelectAction == ActionState::ActionState_Pressing &&
-               controllerState.triggerValue[selectIndex] > completeThreshold) {
-      mSelectAction = ActionState::ActionState_Pressed;
-    } else if (mSelectAction == ActionState::ActionState_Pressed &&
-               controllerState.triggerValue[selectIndex] < startThreshold) {
-      DispatchEvent(NS_LITERAL_STRING("select"), aSession);
-      mSelectAction = ActionState::ActionState_Releasing;
-    } else if (mSelectAction <= ActionState::ActionState_Releasing &&
-               controllerState.triggerValue[selectIndex] < endThreshold) {
+  if (buttons.Length() > selectIndex) {
+    if (controllerState.selectActionStartFrameId >
+        controllerState.selectActionStopFrameId) {
+      if (mSelectAction == ActionState::ActionState_Released &&
+          controllerState.triggerValue[selectIndex] > endThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("selectstart"), aSession);
+        mSelectAction = ActionState::ActionState_Pressing;
+      } else if (mSelectAction == ActionState::ActionState_Pressing &&
+                 controllerState.triggerValue[selectIndex] >
+                     completeThreshold) {
+        mSelectAction = ActionState::ActionState_Pressed;
+      } else if (mSelectAction == ActionState::ActionState_Pressed &&
+                 controllerState.triggerValue[selectIndex] < startThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+        mSelectAction = ActionState::ActionState_Releasing;
+      } else if (mSelectAction <= ActionState::ActionState_Releasing &&
+                 controllerState.triggerValue[selectIndex] < endThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+        mSelectAction = ActionState::ActionState_Released;
+      }
+    } else if (mSelectAction <= ActionState::ActionState_Releasing) {
       DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
       mSelectAction = ActionState::ActionState_Released;
     }
-  } else if (mSelectAction <= ActionState::ActionState_Releasing) {
-    DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
-    mSelectAction = ActionState::ActionState_Released;
   }
 
   // Checking squeezestart, squeeze, squeezeend
-  if (controllerState.squeezeActionStartFrameId >
-      controllerState.squeezeActionStopFrameId) {
-    if (mSqueezeAction == ActionState::ActionState_Released &&
-        controllerState.triggerValue[squeezeIndex] > endThreshold) {
-      DispatchEvent(NS_LITERAL_STRING("squeezestart"), aSession);
-      mSqueezeAction = ActionState::ActionState_Pressing;
-    } else if (mSqueezeAction == ActionState::ActionState_Pressing &&
-               controllerState.triggerValue[squeezeIndex] > completeThreshold) {
-      mSqueezeAction = ActionState::ActionState_Pressed;
-    } else if (mSqueezeAction == ActionState::ActionState_Pressed &&
-               controllerState.triggerValue[squeezeIndex] < startThreshold) {
-      DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
-      mSqueezeAction = ActionState::ActionState_Releasing;
-    } else if (mSqueezeAction <= ActionState::ActionState_Releasing &&
-               controllerState.triggerValue[squeezeIndex] < endThreshold) {
+  if (buttons.Length() > squeezeIndex) {
+    if (controllerState.squeezeActionStartFrameId >
+        controllerState.squeezeActionStopFrameId) {
+      if (mSqueezeAction == ActionState::ActionState_Released &&
+          controllerState.triggerValue[squeezeIndex] > endThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("squeezestart"), aSession);
+        mSqueezeAction = ActionState::ActionState_Pressing;
+      } else if (mSqueezeAction == ActionState::ActionState_Pressing &&
+                 controllerState.triggerValue[squeezeIndex] >
+                     completeThreshold) {
+        mSqueezeAction = ActionState::ActionState_Pressed;
+      } else if (mSqueezeAction == ActionState::ActionState_Pressed &&
+                 controllerState.triggerValue[squeezeIndex] < startThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+        mSqueezeAction = ActionState::ActionState_Releasing;
+      } else if (mSqueezeAction <= ActionState::ActionState_Releasing &&
+                 controllerState.triggerValue[squeezeIndex] < endThreshold) {
+        DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+        mSqueezeAction = ActionState::ActionState_Released;
+      }
+    } else if (mSqueezeAction <= ActionState::ActionState_Releasing) {
       DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
       mSqueezeAction = ActionState::ActionState_Released;
     }
-  } else if (mSqueezeAction <= ActionState::ActionState_Releasing) {
-    DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
-    mSqueezeAction = ActionState::ActionState_Released;
   }
 }
 
