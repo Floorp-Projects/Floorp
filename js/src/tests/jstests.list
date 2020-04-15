@@ -456,13 +456,6 @@ skip script test262/built-ins/FinalizationRegistry/prototype/cleanupSome/cleanup
 skip script test262/built-ins/FinalizationRegistry/prototype/cleanupSome/reentrancy.js
 skip script test262/built-ins/FinalizationRegistry/prototype/unregister/unregister-cleaned-up-cell.js
 
-# https://github.com/tc39/ecma262/pull/1408
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1629795
-skip script test262/language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js
-skip script test262/language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js
-skip script test262/language/statements/for-of/iterator-close-throw-get-method-non-callable.js
-skip script test262/language/statements/for-of/iterator-close-throw-get-method-abrupt.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
