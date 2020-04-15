@@ -3330,10 +3330,28 @@ nsDocShell::LoadURIFromScript(const nsAString& aURI,
   return LoadURI(aURI, loadURIOptions);
 }
 
-void nsDocShell::UnblockEmbedderLoadEventForFailure() {
+void nsDocShell::UnblockEmbedderLoadEventForFailure(bool aFireFrameErrorEvent) {
   // If we're not in a content frame, or are at a BrowsingContext tree boundary,
   // such as the content-chrome boundary, don't fire the error event.
   if (mBrowsingContext->IsTopContent() || mBrowsingContext->IsChrome()) {
+    return;
+  }
+
+  // If embedder is same-process, then unblocking the load event is already
+  // handled by nsDocLoader. Fire the error event on our embedder element if
+  // requested.
+  //
+  // XXX: Bug 1440212 is looking into potentially changing this behaviour to act
+  // more like the remote case when in-process.
+  RefPtr<Element> element = mBrowsingContext->GetEmbedderElement();
+  if (element) {
+    if (aFireFrameErrorEvent) {
+      if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(element)) {
+        if (RefPtr<nsFrameLoader> fl = flo->GetFrameLoader()) {
+          fl->FireErrorEvent();
+        }
+      }
+    }
     return;
   }
 
@@ -3345,7 +3363,8 @@ void nsDocShell::UnblockEmbedderLoadEventForFailure() {
   RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
   if (browserChild) {
     mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-        EmbedderElementEventType::NoEvent);
+        aFireFrameErrorEvent ? EmbedderElementEventType::ErrorEvent
+                             : EmbedderElementEventType::NoEvent);
   }
 }
 
@@ -6197,7 +6216,15 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // Well, fixup didn't work :-(
     // It is time to throw an error dialog box, and be done with it...
 
-    UnblockEmbedderLoadEventForFailure();
+    // If we got CONTENT_BLOCKED from EndPageLoad, then we need to fire
+    // the error event to our embedder, since tests are relying on this.
+    // The error event is usually fired by the caller of InternalLoad, but
+    // this particular error can happen asynchronously.
+    // Bug 1629201 is filed for having much clearer decision making around
+    // which cases need error events.
+    bool fireFrameErrorEvent = (aStatus == NS_ERROR_CONTENT_BLOCKED_SHOW_ALT ||
+                                aStatus == NS_ERROR_CONTENT_BLOCKED);
+    UnblockEmbedderLoadEventForFailure(fireFrameErrorEvent);
 
     // Errors to be shown only on top-level frames
     if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
