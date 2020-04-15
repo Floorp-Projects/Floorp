@@ -1,0 +1,90 @@
+<html>
+
+<head>
+  <title>Test removal of focused accessible</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    function focusableStateChange(id, enabled) {
+      return [EVENT_STATE_CHANGE, e => {
+         e.QueryInterface(nsIAccessibleStateChangeEvent);
+         return getAccessible(id) == e.accessible &&
+          e.state == STATE_FOCUSABLE && (enabled == undefined || e.isEnabled == enabled);
+      }];
+     }
+
+    async function doTests() {
+      info("disable buttons.");
+      // Expect focusable change with 'disabled',
+      // and don't expect it with 'aria-disabled'.
+      let p = waitForEvents({
+        expected: [focusableStateChange("button2", false)],
+        unexpected: [focusableStateChange("button1")]
+      });
+      getNode("button1").setAttribute("aria-disabled", "true");
+      getNode("button2").disabled = true;
+      await p;
+
+      info("re-enable button");
+      // Expect focusable change with 'disabled',
+      // and don't expect it with 'aria-disabled'.
+      p = waitForEvents({
+        expected: [focusableStateChange("button2", true)],
+        unexpected: [focusableStateChange("button1")]
+      });
+      getNode("button1").setAttribute("aria-disabled", "false");
+      getNode("button2").disabled = false;
+      await p;
+
+      info("add tabindex");
+      // Expect focusable change on non-input,
+      // and don't expect event on an already focusable input.
+      p = waitForEvents({
+        expected: [focusableStateChange("div", true)],
+        unexpected: [focusableStateChange("button2")]
+      });
+      getNode("button2").tabIndex = "0";
+      getNode("div").tabIndex = "0";
+      await p;
+
+      info("remove tabindex");
+      // Expect focusable change when removing tabindex.
+      p = waitForEvent(...focusableStateChange("div", false));
+      getNode("div").removeAttribute("tabindex");
+      await p;
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <button id="button1"></button>
+  <button id="button2"></button>
+
+  <div id="div">Hello</div>
+
+</body>
+</html>
