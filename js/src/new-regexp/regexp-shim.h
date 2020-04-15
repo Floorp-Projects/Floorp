@@ -547,12 +547,6 @@ class FixedArray : public HeapObject {
   inline static FixedArray cast(Object object) { MOZ_CRASH("TODO"); }
 };
 
-class ByteArrayData {
-public:
-  uint32_t length;
-  uint8_t* data();
-};
-
 /*
  * Conceptually, ByteArrayData is a variable-size structure. To
  * implement this in a C++-approved way, we allocate a struct
@@ -767,7 +761,7 @@ class String : public HeapObject {
   JSString* str() const { return value_.toString(); }
 
  public:
-  String() : HeapObject() {}
+  String() = default;
   String(JSString* str) { value_ = JS::StringValue(str); }
 
   operator JSString*() const { return str(); }
@@ -891,6 +885,9 @@ class MOZ_STACK_CLASS FlatStringReader {
 
 class JSRegExp : public HeapObject {
  public:
+  JSRegExp() : HeapObject() {}
+  JSRegExp(js::RegExpShared* re) { value_ = JS::PrivateGCThingValue(re); }
+
   // ******************************************************
   // Methods that are called from inside the implementation
   // ******************************************************
@@ -898,10 +895,12 @@ class JSRegExp : public HeapObject {
   bool MarkedForTierUp() const {
     return false; /*inner()->markedForTierUp();*/
   }
+  Object Bytecode(bool is_latin1) const {
+    return Object(JS::PrivateValue(inner()->getByteCode(is_latin1)));
+  }
 
   // TODO: hook these up
   Object Code(bool is_latin1) const { return Object(JS::UndefinedValue()); }
-  Object Bytecode(bool is_latin1) const { return Object(JS::UndefinedValue()); }
 
   uint32_t BacktrackLimit() const {
     return 0; /*inner()->backtrackLimit();*/
@@ -917,12 +916,6 @@ class JSRegExp : public HeapObject {
   // ******************************
   // Static constants
   // ******************************
-
-  // Meaning of Type:
-  // NOT_COMPILED: Initial value. No data has been stored in the JSRegExp yet.
-  // ATOM: A simple string to match against using an indexOf operation.
-  // IRREGEXP: Compiled with Irregexp.
-  enum Type { NOT_COMPILED, ATOM, IRREGEXP };
 
   // Maximum number of captures allowed.
   static constexpr int kMaxCaptures = 1 << 16;
@@ -945,9 +938,9 @@ class JSRegExp : public HeapObject {
   static constexpr int kNoBacktrackLimit = 0;
 
 private:
-  js::RegExpShared* inner() {
-    return value_.toGCThing()->as<js::RegExpShared>();
-  }
+ js::RegExpShared* inner() const {
+   return value_.toGCThing()->as<js::RegExpShared>();
+ }
 };
 
 class Histogram {
