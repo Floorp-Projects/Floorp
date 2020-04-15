@@ -507,9 +507,6 @@ void nsAppShell::RecordLatencies() {
   }
 }
 
-#define PREFNAME_COALESCE_TOUCHES "dom.event.touch.coalescing.enabled"
-static const char* kObservedPrefs[] = {PREFNAME_COALESCE_TOUCHES, nullptr};
-
 nsresult nsAppShell::Init() {
   nsresult rv = nsBaseAppShell::Init();
   nsCOMPtr<nsIObserverService> obsServ =
@@ -533,9 +530,6 @@ nsresult nsAppShell::Init() {
   if (sPowerManagerService)
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
 
-  Preferences::AddStrongObservers(this, kObservedPrefs);
-  mAllowCoalescingTouches =
-      Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
   return rv;
 }
 
@@ -555,13 +549,6 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
     // or we'll see crashes, as the app shell outlives XPConnect.
     mObserversHash.Clear();
     return nsBaseAppShell::Observe(aSubject, aTopic, aData);
-
-  } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData &&
-             nsDependentString(aData).Equals(
-                 NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES))) {
-    mAllowCoalescingTouches =
-        Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
-    return NS_OK;
 
   } else if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
     NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,

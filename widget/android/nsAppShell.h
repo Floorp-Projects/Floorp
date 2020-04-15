@@ -243,8 +243,6 @@ class nsAppShell : public nsBaseAppShell {
   mozilla::CondVar mSyncRunFinished;
   bool mSyncRunQuit;
 
-  bool mAllowCoalescingTouches;
-
   nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
   nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 };
