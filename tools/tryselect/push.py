@@ -175,8 +175,7 @@ def push_to_try(method, msg, try_task_config=None,
                     print(fh.read())
             return
 
-        for path in changed_files:
-            vcs.add_remove_files(path)
+        vcs.add_remove_files(*changed_files)
 
         try:
             vcs.push_to_try(commit_message)

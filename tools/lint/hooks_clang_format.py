@@ -53,10 +53,7 @@ def run_clang_format(hooktype, changedFiles):
         # don't prevent commits, just display the clang-format results
         subprocess.call(clang_format_cmd)
 
-        # Add the modified files back to the repo (expect a string)
-        # one by one (fails otherwise, see bug #1541409)
-        for f in path_list:
-            vcs.add_remove_files(f)
+        vcs.add_remove_files(*path_list)
 
         return False
     print("warning: '{}' is not a valid clang-format hooktype".format(hooktype))
