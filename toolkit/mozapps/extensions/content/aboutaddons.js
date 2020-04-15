@@ -332,9 +332,11 @@ function checkForUpdate(addon) {
   return new Promise(resolve => {
     let listener = {
       onUpdateAvailable(addon, install) {
-        attachUpdateHandler(install);
-
         if (AddonManager.shouldAutoUpdate(addon)) {
+          // Make sure that an update handler is attached to all the install
+          // objects when updated xpis are going to be installed automatically.
+          attachUpdateHandler(install);
+
           let failed = () => {
             install.removeListener(updateListener);
             resolve({ installed: false, pending: false, found: true });
@@ -2852,6 +2854,14 @@ class AddonCard extends HTMLElement {
           break;
         }
         case "install-update":
+          // Make sure that an update handler is attached to the install object
+          // before starting the update installation (otherwise the user would
+          // not be prompted for the new permissions requested if necessary),
+          // and also make sure that a prompt handler attached from a closed
+          // about:addons tab is replaced by the one attached by the currently
+          // active about:addons tab.
+          attachUpdateHandler(this.updateInstall);
+
           this.updateInstall.install().then(
             () => {
               // The card will update with the new add-on when it gets
