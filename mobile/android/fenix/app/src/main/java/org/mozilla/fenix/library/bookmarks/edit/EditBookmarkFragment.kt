@@ -67,6 +67,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             val context = requireContext()
+            val bookmarkNodeBeforeReload = bookmarkNode
 
             withContext(IO) {
                 val bookmarksStorage = context.components.core.bookmarksStorage
@@ -89,9 +90,10 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 else -> throw IllegalArgumentException()
             }
 
-            bookmarkNode?.let { bookmarkNode ->
-                bookmarkNameEdit.setText(bookmarkNode.title)
-                bookmarkUrlEdit.setText(bookmarkNode.url)
+            val currentBookmarkNode = bookmarkNode
+            if (currentBookmarkNode != null && currentBookmarkNode != bookmarkNodeBeforeReload) {
+                bookmarkNameEdit.setText(currentBookmarkNode.title)
+                bookmarkUrlEdit.setText(currentBookmarkNode.url)
             }
 
             bookmarkParent?.let { node ->
