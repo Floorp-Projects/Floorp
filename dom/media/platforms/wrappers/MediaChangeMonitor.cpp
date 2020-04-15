@@ -35,20 +35,10 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   }
 
   bool CanBeInstantiated() const override {
-    // Found encrypted content, let the CDM handle it.
-    if ((mTrackInfo && (*mTrackInfo)->mCrypto.IsEncrypted()) ||
-        mGotEncryptedContent) {
-      return true;
-    }
     return H264::HasSPS(mCurrentConfig.mExtraData);
   }
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
-    // Don't look at encrypted content.
-    if (aSample->mCrypto.IsEncrypted()) {
-      mGotEncryptedContent = true;
-      return NS_OK;
-    }
     // To be usable we need to convert the sample to 4 bytes NAL size AVCC.
     if (!AnnexB::ConvertSampleToAVCC(aSample)) {
       // We need AVCC content to be able to later parse the SPS.
@@ -153,7 +143,6 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   uint32_t mStreamID = 0;
   const bool mFullParsing;
   bool mGotSPS = false;
-  bool mGotEncryptedContent = false;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
