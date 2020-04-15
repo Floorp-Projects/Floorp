@@ -447,6 +447,12 @@ const buildChain = async chain => {
       if (certs.length === 0) {
         return Promise.reject();
       }
+      let certTitle = document.querySelector("#certTitle");
+      let firstCertCommonName = certs[0].subject.cn;
+      document.l10n.setAttributes(certTitle, "certificate-viewer-tab-title", {
+        firstCertName: firstCertCommonName,
+      });
+
       let adjustedCerts = certs.map(cert => adjustCertInformation(cert));
       return render(adjustedCerts, false);
     })
