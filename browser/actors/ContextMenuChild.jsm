@@ -998,9 +998,20 @@ class ContextMenuChild extends JSWindowActorChild {
       // currentRequestFinalURI.  We should use that as the URL for purposes of
       // deciding on the filename, if it is present. It might not be present
       // if images are blocked.
-      context.mediaURL = (
-        context.target.currentRequestFinalURI || context.target.currentURI
-      ).spec;
+      //
+      // It is important to check both the final and the current URI, as they
+      // could be different blob URIs, see bug 1625786.
+      context.mediaURL = (() => {
+        let finalURI = context.target.currentRequestFinalURI?.spec;
+        if (finalURI && this._isMediaURLReusable(finalURI)) {
+          return finalURI;
+        }
+        let currentURI = context.target.currentURI?.spec;
+        if (currentURI && this._isMediaURLReusable(currentURI)) {
+          return currentURI;
+        }
+        return "";
+      })();
 
       const descURL = context.target.getAttribute("longdesc");
 
