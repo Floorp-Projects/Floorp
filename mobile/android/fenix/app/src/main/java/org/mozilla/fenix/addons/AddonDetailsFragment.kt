@@ -106,8 +106,8 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
 
     private fun bindAuthors(addon: Addon, view: View) {
         view.author_text.text = addon.authors.joinToString { author ->
-            author.name + " \n"
-        }
+            author.name
+        }.trim()
     }
 
     private fun bindDetails(addon: Addon, view: View) {
