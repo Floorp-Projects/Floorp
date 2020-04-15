@@ -1093,11 +1093,6 @@ class nsDocShell final : public nsDocLoader,
   void NotifyPrivateBrowsingChanged();
 
  private:  // data members
-#ifdef DEBUG
-           // We're counting the number of |nsDocShells| to help find leaks
-  static unsigned long gNumberOfDocShells;
-#endif /* DEBUG */
-
   nsID mHistoryID;
   nsString mTitle;
   nsCString mOriginalUriString;
@@ -1140,6 +1135,9 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 
 #ifdef DEBUG
+  // We're counting the number of |nsDocShells| to help find leaks
+  static unsigned long gNumberOfDocShells;
+
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 

@@ -456,9 +456,14 @@ URIFixup.prototype = {
       responseType = "application/x-moz-keywordsearch";
     }
     let submission = engine.getSubmission(keyword, responseType, "keyword");
-    if (!submission) {
+    if (
+      !submission ||
+      // For security reasons (avoid redirecting to file, data, or other unsafe
+      // protocols) we only allow fixup to http/https search engines.
+      !submission.uri.scheme.startsWith("http")
+    ) {
       throw new Components.Exception(
-        "Invalid search submission",
+        "Invalid search submission uri",
         Cr.NS_ERROR_NOT_AVAILABLE
       );
     }
@@ -590,6 +595,13 @@ function tryKeywordFixupForURIInfo(
   } catch (ex) {}
 }
 
+/**
+ * This generates an alternate fixedURI, by adding a prefix and a suffix to
+ * the fixedURI host, if and only if the protocol is http. It should _never_
+ * modify URIs with other protocols.
+ * @param info an URIInfo object
+ * @returns whether an alternate uri was generated.
+ */
 function makeAlternateFixedURI(info) {
   let uri = info.fixedURI;
   if (

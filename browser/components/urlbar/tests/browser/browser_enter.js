@@ -79,3 +79,45 @@ add_task(async function altGrReturnKeypress() {
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function searchOnEnterNoPick() {
+  info("Search on Enter without picking a urlbar result");
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+  );
+  let defaultEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
+  // Why is BrowserTestUtils.openNewForegroundTab not causing the bug?
+  let promiseTabOpened = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabOpen"
+  );
+  EventUtils.synthesizeMouseAtCenter(gBrowser.tabContainer.newTabButton, {});
+  let openEvent = await promiseTabOpened;
+  let tab = openEvent.target;
+  registerCleanupFunction(async function() {
+    Services.search.defaultEngine = defaultEngine;
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    null,
+    true
+  );
+  gURLBar.focus();
+  gURLBar.value = "test test";
+  EventUtils.synthesizeKey("KEY_Enter");
+  await loadPromise;
+
+  Assert.ok(
+    gBrowser.selectedBrowser.currentURI.spec.endsWith("test+test"),
+    "Should have loaded the correct page"
+  );
+  Assert.equal(
+    gBrowser.selectedBrowser.currentURI.spec,
+    gURLBar.untrimmedValue,
+    "The location should have changed"
+  );
+});
