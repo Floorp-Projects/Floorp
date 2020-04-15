@@ -680,13 +680,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   bool IsFixedToRootContent(const FixedPositionInfo& aFixedInfo,
                             const MutexAutoLock& aProofOfMapLock) const;
 
-  // Returns true that |aNode| is stuck to the root content at bottom.
+  // Returns the vertical sides of |aNode| that are stuck to the root content.
   // The map lock is required within these functions; if the map lock is already
   // being held by the caller, the second overload should be used. If the map
   // lock is not being held at the call site, the first overload should be used.
-  bool IsStuckToRootContentAtBottom(const HitTestingTreeNode* aNode) const;
-  bool IsStuckToRootContentAtBottom(const StickyPositionInfo& aStickyInfo,
-                                    const MutexAutoLock& aProofOfMapLock) const;
+  SideBits SidesStuckToRootContent(const HitTestingTreeNode* aNode) const;
+  SideBits SidesStuckToRootContent(const StickyPositionInfo& aStickyInfo,
+                                   const MutexAutoLock& aProofOfMapLock) const;
 
   /**
    * Perform hit testing for a touch-start event.
