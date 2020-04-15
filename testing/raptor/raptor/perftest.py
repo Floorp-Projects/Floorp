@@ -94,6 +94,7 @@ either Raptor or browsertime."""
         no_conditioned_profile=False,
         device_name=None,
         disable_perf_tuning=False,
+        conditioned_profile_scenario='settled',
         extra_prefs={},
         **kwargs
     ):
@@ -125,6 +126,7 @@ either Raptor or browsertime."""
             "device_name": device_name,
             "enable_fission": extra_prefs.get("fission.autostart", False),
             "disable_perf_tuning": disable_perf_tuning,
+            "conditioned_profile_scenario": conditioned_profile_scenario,
             "extra_prefs": extra_prefs,
         }
 
@@ -214,12 +216,20 @@ either Raptor or browsertime."""
             platform = get_current_platform()
 
         LOG.info("Platform used: %s" % platform)
+        profile_scenario = self.config.get("conditioned_profile_scenario", "settled")
         try:
-            cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
+            cond_prof_target_dir = get_profile(
+                temp_download_dir,
+                platform,
+                profile_scenario
+            )
         except ProfileNotFoundError:
             # If we can't find the profile on mozilla-central, we look on try
             cond_prof_target_dir = get_profile(
-                temp_download_dir, platform, "settled", repo="try"
+                temp_download_dir,
+                platform,
+                profile_scenario,
+                repo="try"
             )
         except Exception:
             # any other error is a showstopper
@@ -234,8 +244,11 @@ either Raptor or browsertime."""
         if not os.path.exists(cond_prof_target_dir):
             LOG.critical(
                 "Can't find target_dir {}, from get_profile()"
-                "temp_download_dir {}, platform {}, settled".format(
-                    cond_prof_target_dir, temp_download_dir, platform
+                "temp_download_dir {}, platform {}, scenario {}".format(
+                    cond_prof_target_dir,
+                    temp_download_dir,
+                    platform,
+                    profile_scenario
                 )
             )
             raise OSError
