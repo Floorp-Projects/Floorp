@@ -672,8 +672,10 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   }
 
   if (aAttribute == nsGkAtoms::aria_disabled ||
-      aAttribute == nsGkAtoms::disabled)
-    mStateBitWasOn = accessible->Unavailable();
+      aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::tabindex ||
+      aAttribute == nsGkAtoms::contenteditable) {
+    mPrevStateBits = accessible->State();
+  }
 }
 
 void DocAccessible::NativeAnonymousChildListChange(nsIContent* aContent,
@@ -772,17 +774,33 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   // ARIA's aria-disabled does not affect the disabled state bit.
   if (aAttribute == nsGkAtoms::disabled ||
       aAttribute == nsGkAtoms::aria_disabled) {
+    // disabled can affect focusable state
+    aAccessible->MaybeFireFocusableStateChange(
+        (mPrevStateBits & states::FOCUSABLE) != 0);
+
     // Do nothing if state wasn't changed (like @aria-disabled was removed but
     // @disabled is still presented).
-    if (aAccessible->Unavailable() == mStateBitWasOn) return;
+    uint64_t unavailableState = (aAccessible->State() & states::UNAVAILABLE);
+    if ((mPrevStateBits & states::UNAVAILABLE) == unavailableState) {
+      return;
+    }
 
-    RefPtr<AccEvent> enabledChangeEvent =
-        new AccStateChangeEvent(aAccessible, states::ENABLED, mStateBitWasOn);
+    RefPtr<AccEvent> enabledChangeEvent = new AccStateChangeEvent(
+        aAccessible, states::ENABLED, !unavailableState);
     FireDelayedEvent(enabledChangeEvent);
 
-    RefPtr<AccEvent> sensitiveChangeEvent =
-        new AccStateChangeEvent(aAccessible, states::SENSITIVE, mStateBitWasOn);
+    RefPtr<AccEvent> sensitiveChangeEvent = new AccStateChangeEvent(
+        aAccessible, states::SENSITIVE, !unavailableState);
     FireDelayedEvent(sensitiveChangeEvent);
+
+    return;
+  }
+
+  if (aAttribute == nsGkAtoms::tabindex) {
+    // Fire a focusable state change event if the previous state was different.
+    // It may be the same if tabindex is on a redundantly focusable element.
+    aAccessible->MaybeFireFocusableStateChange(
+        (mPrevStateBits & states::FOCUSABLE));
     return;
   }
 
@@ -892,6 +910,11 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     RefPtr<AccEvent> editableChangeEvent =
         new AccStateChangeEvent(aAccessible, states::EDITABLE);
     FireDelayedEvent(editableChangeEvent);
+    // Fire a focusable state change event if the previous state was different.
+    // It may be the same if contenteditable is set on a node that doesn't
+    // support it. Like an <input>.
+    aAccessible->MaybeFireFocusableStateChange(
+        (mPrevStateBits & states::FOCUSABLE));
     return;
   }
 

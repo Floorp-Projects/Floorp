@@ -2607,6 +2607,15 @@ AccGroupInfo* Accessible::GetGroupInfo() const {
   return mBits.groupInfo;
 }
 
+void Accessible::MaybeFireFocusableStateChange(bool aPreviouslyFocusable) {
+  bool isFocusable = (State() & states::FOCUSABLE);
+  if (isFocusable != aPreviouslyFocusable) {
+    RefPtr<AccEvent> focusableChangeEvent =
+        new AccStateChangeEvent(this, states::FOCUSABLE, isFocusable);
+    mDoc->FireDelayedEvent(focusableChangeEvent);
+  }
+}
+
 void Accessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
                                             int32_t* aSetSize) {
   AccGroupInfo* groupInfo = GetGroupInfo();

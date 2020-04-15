@@ -270,15 +270,6 @@ class Accessible : public nsISupports {
   }
 
   /**
-   * Return if accessible is unavailable.
-   */
-  bool Unavailable() const {
-    uint64_t state = NativelyUnavailable() ? states::UNAVAILABLE : 0;
-    ApplyARIAState(&state);
-    return state & states::UNAVAILABLE;
-  }
-
-  /**
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
@@ -980,6 +971,12 @@ class Accessible : public nsISupports {
   void SetHideEventTarget(bool aTarget) { mHideEventTarget = aTarget; }
 
   void Announce(const nsAString& aAnnouncement, uint16_t aPriority);
+
+  /**
+   * Fire a focusable state change event if the previous state
+   * was different.
+   */
+  void MaybeFireFocusableStateChange(bool aPreviouslyFocusable);
 
  protected:
   virtual ~Accessible();
