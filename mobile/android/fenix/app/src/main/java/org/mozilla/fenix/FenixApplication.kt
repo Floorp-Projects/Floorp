@@ -374,6 +374,8 @@ open class FenixApplication : LocaleAwareApplication() {
     protected fun recordOnInit() {
         // This gets called by more than one process. Ideally we'd only run this in the main process
         // but the code to check which process we're in crashes because the Context isn't valid yet.
-        StartupTimeline.onApplicationInit()
+        //
+        // This method is not covered by our internal crash reporting: be very careful when modifying it.
+        StartupTimeline.onApplicationInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing is critical.
     }
 }

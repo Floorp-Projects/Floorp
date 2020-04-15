@@ -46,6 +46,8 @@ object StartupTimeline {
 
     fun onApplicationInit() {
         // This gets called from multiple processes: don't do anything expensive. See call site for details.
+        //
+        // This method also gets called multiple times if there are multiple Application implementations.
         frameworkStartMeasurement.onApplicationInit()
     }
 
