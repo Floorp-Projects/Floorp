@@ -25,6 +25,8 @@ class XRRigidTransform final : public nsWrapperCache {
   explicit XRRigidTransform(nsISupports* aParent,
                             const gfx::PointDouble3D& aPosition,
                             const gfx::QuaternionDouble& aOrientation);
+  explicit XRRigidTransform(nsISupports* aParent,
+                            const gfx::Matrix4x4Double& aTransform);
   static already_AddRefed<XRRigidTransform> Constructor(
       const GlobalObject& aGlobal, const DOMPointInit& aOrigin,
       const DOMPointInit& aDirection, ErrorResult& aRv);
