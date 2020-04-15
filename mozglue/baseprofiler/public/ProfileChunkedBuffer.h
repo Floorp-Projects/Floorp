@@ -71,6 +71,25 @@ class ProfileChunkedBuffer {
   explicit ProfileChunkedBuffer(ThreadSafety aThreadSafety)
       : mMutex(aThreadSafety != ThreadSafety::WithoutMutex) {}
 
+  // Start in-session with external chunk manager.
+  ProfileChunkedBuffer(ThreadSafety aThreadSafety,
+                       ProfileBufferChunkManager& aChunkManager)
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex) {
+    SetChunkManager(aChunkManager);
+  }
+
+  // Start in-session with owned chunk manager.
+  ProfileChunkedBuffer(ThreadSafety aThreadSafety,
+                       UniquePtr<ProfileBufferChunkManager>&& aChunkManager)
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex) {
+    SetChunkManager(std::move(aChunkManager));
+  }
+
+  ~ProfileChunkedBuffer() {
+    // Do proper clean-up by resetting the chunk manager.
+    ResetChunkManager();
+  }
+
   // This cannot change during the lifetime of this buffer, so there's no need
   // to lock.
   [[nodiscard]] bool IsThreadSafe() const { return mMutex.IsActivated(); }
@@ -78,6 +97,40 @@ class ProfileChunkedBuffer {
   [[nodiscard]] bool IsInSession() const {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return !!mChunkManager;
+  }
+
+  // Stop using the current chunk manager.
+  // If we own the current chunk manager, it will be destroyed.
+  // This will always clear currently-held chunks, if any.
+  void ResetChunkManager() {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    Unused << ResetChunkManager(lock);
+  }
+
+  // Set the current chunk manager.
+  // The caller is responsible for keeping the chunk manager alive as along as
+  // it's used here (until the next (Re)SetChunkManager, or
+  // ~ProfileChunkedBuffer).
+  void SetChunkManager(ProfileBufferChunkManager& aChunkManager) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    Unused << ResetChunkManager(lock);
+    SetChunkManager(aChunkManager, lock);
+  }
+
+  // Set the current chunk manager, and keep ownership of it.
+  void SetChunkManager(UniquePtr<ProfileBufferChunkManager>&& aChunkManager) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    Unused << ResetChunkManager(lock);
+    mOwnedChunkManager = std::move(aChunkManager);
+    if (mOwnedChunkManager) {
+      SetChunkManager(*mOwnedChunkManager, lock);
+    }
+  }
+
+  // Stop using the current chunk manager, and return it if owned here.
+  [[nodiscard]] UniquePtr<ProfileBufferChunkManager> ExtractChunkManager() {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    return ResetChunkManager(lock);
   }
 
   void Clear() {
@@ -219,6 +272,57 @@ class ProfileChunkedBuffer {
 #endif  // DEBUG
 
  private:
+  [[nodiscard]] UniquePtr<ProfileBufferChunkManager> ResetChunkManager(
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock&) {
+    UniquePtr<ProfileBufferChunkManager> chunkManager;
+    if (mChunkManager) {
+      mChunkManager->ForgetUnreleasedChunks();
+#ifdef DEBUG
+      mChunkManager->DeregisteredFrom(this);
+#endif
+      mChunkManager = nullptr;
+      chunkManager = std::move(mOwnedChunkManager);
+      if (mCurrentChunk) {
+        mCurrentChunk->MarkDone();
+        mCurrentChunk = nullptr;
+      }
+      mNextChunks = nullptr;
+      mNextChunkRangeStart = mRangeEnd;
+      mRangeStart = mRangeEnd;
+      mPushedBlockCount = 0;
+      mClearedBlockCount = 0;
+    }
+    return chunkManager;
+  }
+
+  void SetChunkManager(
+      ProfileBufferChunkManager& aChunkManager,
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock) {
+    MOZ_ASSERT(!mChunkManager);
+    mChunkManager = &aChunkManager;
+#ifdef DEBUG
+    mChunkManager->RegisteredWith(this);
+#endif
+
+    mChunkManager->SetChunkDestroyedCallback(
+        [this](const ProfileBufferChunk& aChunk) {
+          for (;;) {
+            ProfileBufferIndex rangeStart = mRangeStart;
+            if (MOZ_LIKELY(rangeStart <= aChunk.RangeStart())) {
+              if (MOZ_LIKELY(mRangeStart.compareExchange(
+                      rangeStart,
+                      aChunk.RangeStart() + aChunk.BufferBytes()))) {
+                break;
+              }
+            }
+          }
+          mClearedBlockCount += aChunk.BlockCount();
+        });
+
+    // We start with one chunk right away.
+    SetAndInitializeCurrentChunk(mChunkManager->GetChunk(), aLock);
+  }
+
   [[nodiscard]] size_t SizeOfExcludingThis(
       MallocSizeOf aMallocSizeOf,
       const baseprofiler::detail::BaseProfilerMaybeAutoLock&) const {
@@ -259,6 +363,9 @@ class ProfileChunkedBuffer {
   // Pointer to the current Chunk Manager (or null when out-of-session.)
   // It may be owned locally (see below) or externally.
   ProfileBufferChunkManager* mChunkManager = nullptr;
+
+  // Only non-null when we own the current Chunk Manager.
+  UniquePtr<ProfileBufferChunkManager> mOwnedChunkManager;
 
   UniquePtr<ProfileBufferChunk> mCurrentChunk;
 
