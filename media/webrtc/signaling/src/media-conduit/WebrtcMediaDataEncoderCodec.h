@@ -55,6 +55,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   AbstractThread* OwnerThread() const { return mTaskQueue; }
   bool OnTaskQueue() const { return OwnerThread()->IsCurrentThreadIn(); };
 
+  Mutex mCallbackMutex;
   const RefPtr<SharedThreadPool> mThreadPool;
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;
