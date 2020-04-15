@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1626249: Ensure correct display of neterror page for XFO</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="xfo_testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const XFO_ERROR_PAGE_MSG = "This page has an X-Frame-Options policy that prevents it from being loaded in this context";
+
+let xfo_testframe = document.getElementById("xfo_testframe");
+
+xfo_testframe.onload = function() {
+  let wrappedXFOFrame = SpecialPowers.wrap(xfo_testframe.contentWindow);
+  let frameContentXFO = wrappedXFOFrame.document.body.innerHTML;
+  ok(frameContentXFO.includes(XFO_ERROR_PAGE_MSG), "xfo error page correct");
+  SimpleTest.finish();
+}
+
+xfo_testframe.onerror = function() {
+  ok(false, "sanity: should not fire onerror for xfo_testframe");
+  SimpleTest.finish();
+}
+
+xfo_testframe.src = "file_xfo_error_page.sjs";
+
+</script>
+</body>
+</html>
