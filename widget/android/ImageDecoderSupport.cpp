@@ -117,6 +117,9 @@ class ImageCallbackHelper : public imgIContainerCallback,
               const nsIntRect* aData) override {
     if (aType == imgINotificationObserver::DECODE_COMPLETE) {
       SendBitmap();
+      // Breack the cyclic reference between `ImageDecoderListener` (which is a
+      // `imgIContainer`) and `ImageCallbackHelper`.
+      mImage = nullptr;
     }
   }
 
