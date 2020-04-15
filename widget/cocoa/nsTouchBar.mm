@@ -5,7 +5,6 @@
 #include "nsTouchBar.h"
 
 #include "mozilla/MacStringHelpers.h"
-#include "mozilla/Telemetry.h"
 #include "nsArrayUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIArray.h"
@@ -591,10 +590,6 @@ static const uint32_t kInputIconSize = 16;
       titleToShare = nsCocoaUtils::ToNSString(title);
     }
   }
-
-  // If the user has gotten this far, they have clicked the share button so it
-  // is logged.
-  Telemetry::AccumulateCategorical(Telemetry::LABELS_TOUCHBAR_BUTTON_PRESSES::Share);
 
   return @[ urlToShare, titleToShare ];
 }
