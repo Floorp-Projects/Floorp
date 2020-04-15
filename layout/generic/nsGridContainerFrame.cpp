@@ -110,26 +110,6 @@ inline const StyleTrackBreadth& StyleTrackSize::GetMin() const {
 
 }  // namespace mozilla
 
-static void ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
-                          nsContainerFrame* aNewParent) {
-  NS_ASSERTION(aOldParent == aFrame->GetParent(),
-               "Parent not consistent with expectations");
-
-  aFrame->SetParent(aNewParent);
-
-  // When pushing and pulling frames we need to check for whether any
-  // views need to be reparented
-  nsContainerFrame::ReparentFrameView(aFrame, aOldParent, aNewParent);
-}
-
-static void ReparentFrames(nsFrameList& aFrameList,
-                           nsContainerFrame* aOldParent,
-                           nsContainerFrame* aNewParent) {
-  for (auto f : aFrameList) {
-    ReparentFrame(f, aOldParent, aNewParent);
-  }
-}
-
 static nscoord ClampToCSSMaxBSize(nscoord aSize,
                                   const ReflowInput* aReflowInput) {
   auto maxSize = aReflowInput->ComputedMaxBSize();

@@ -159,6 +159,24 @@ class nsContainerFrame : public nsSplittableFrame {
                                     nsIFrame* aOldParentFrame,
                                     nsIFrame* aNewParentFrame);
 
+  /**
+   * Reparent aFrame from aOldParent to aNewParent.
+   */
+  static void ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
+                            nsContainerFrame* aNewParent);
+
+  /**
+   * Reparent all the frames in aFrameList from aOldParent to aNewParent.
+   *
+   * Note: Reparenting a large frame list can be have huge performance impact.
+   * For example, instead of using this method, nsInlineFrame uses a "lazy
+   * reparenting" technique that it reparents a child frame just before
+   * reflowing the child. (See InlineReflowInput::mSetParentPointer.)
+   */
+  static void ReparentFrames(nsFrameList& aFrameList,
+                             nsContainerFrame* aOldParent,
+                             nsContainerFrame* aNewParent);
+
   // Set the view's size and position after its frame has been reflowed.
   static void SyncFrameViewAfterReflow(
       nsPresContext* aPresContext, nsIFrame* aFrame, nsView* aView,

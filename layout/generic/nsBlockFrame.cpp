@@ -693,26 +693,6 @@ void nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
 /* virtual */
 bool nsBlockFrame::IsFloatContainingBlock() const { return true; }
 
-static void ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
-                          nsContainerFrame* aNewParent) {
-  NS_ASSERTION(aOldParent == aFrame->GetParent(),
-               "Parent not consistent with expectations");
-
-  aFrame->SetParent(aNewParent);
-
-  // When pushing and pulling frames we need to check for whether any
-  // views need to be reparented
-  nsContainerFrame::ReparentFrameView(aFrame, aOldParent, aNewParent);
-}
-
-static void ReparentFrames(nsFrameList& aFrameList,
-                           nsContainerFrame* aOldParent,
-                           nsContainerFrame* aNewParent) {
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    ReparentFrame(e.get(), aOldParent, aNewParent);
-  }
-}
-
 /**
  * Remove the first line from aFromLines and adjust the associated frame list
  * aFromFrames accordingly.  The removed line is assigned to *aOutLine and
