@@ -285,23 +285,8 @@ ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSampler(
-    RawId aSelfId, const dom::GPUSamplerDescriptor& aDesc, RawId aNewId) {
-  ffi::WGPUSamplerDescriptor desc = {};
-  desc.address_mode_u = ffi::WGPUAddressMode(aDesc.mAddressModeU);
-  desc.address_mode_v = ffi::WGPUAddressMode(aDesc.mAddressModeV);
-  desc.address_mode_w = ffi::WGPUAddressMode(aDesc.mAddressModeW);
-  desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
-  desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
-  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
-  desc.lod_min_clamp = aDesc.mLodMinClamp;
-  desc.lod_max_clamp = aDesc.mLodMaxClamp;
-  ffi::WGPUCompareFunction compare;
-  if (aDesc.mCompare.WasPassed()) {
-    compare = ffi::WGPUCompareFunction(aDesc.mCompare.Value());
-    desc.compare = compare;
-  }
-
-  ffi::wgpu_server_device_create_sampler(mContext, aSelfId, &desc, aNewId);
+    RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId) {
+  ffi::wgpu_server_device_create_sampler(mContext, aSelfId, &aDesc, aNewId);
   return IPC_OK();
 }
 

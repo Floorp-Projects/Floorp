@@ -45,9 +45,8 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc, RawId aNewId);
   ipc::IPCResult RecvTextureDestroy(RawId aSelfId);
   ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
-  ipc::IPCResult RecvDeviceCreateSampler(RawId aSelfId,
-                                         const dom::GPUSamplerDescriptor& aDesc,
-                                         RawId aNewId);
+  ipc::IPCResult RecvDeviceCreateSampler(
+      RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId);
   ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
