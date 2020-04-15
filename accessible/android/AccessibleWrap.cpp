@@ -95,8 +95,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         if (accessible != aEvent->Document() && !aEvent->IsFromUserInput()) {
           AccCaretMoveEvent* caretEvent = downcast_accEvent(aEvent);
           HyperTextAccessible* ht = AsHyperText();
-          if ((State() & states::FOCUSABLE) != 0 ||
-              (ht && ht->SelectionCount())) {
+          // Pivot to the caret's position if it has an expanded selection.
+          // This is used mostly for find in page.
+          if ((ht && ht->SelectionCount())) {
             DOMPoint point =
                 AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
             if (Accessible* newPos =
