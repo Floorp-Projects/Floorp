@@ -166,6 +166,8 @@ def create_parser(mach_interface=False):
             help="Location where Android browser APK was extracted to before installation.")
     add_arg('--disable-perf-tuning', dest='disable_perf_tuning', default=False,
             action="store_true", help="Disable performance tuning on android.")
+    add_arg('--conditioned-profile-scenario', dest='conditioned_profile_scenario',
+            default='settled', type=str, help="Name of profile scenario.")
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
     add_arg('--cold', dest="cold", action="store_true",
