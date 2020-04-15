@@ -226,6 +226,8 @@ You can generate an Eclipse project by running:
 
     ./mach ide eclipse
 
+See also the `Eclipse CDT <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Eclipse/Eclipse_CDT>`__ docs on MDN.
+
 Visual Studio
 -------------
 
