@@ -74,8 +74,8 @@ struct RegExpByteCodeHeader {
  */
 class RegExpShared : public gc::TenuredCell {
  public:
-  enum ForceByteCodeEnum { DontForceByteCode, ForceByteCode };
   enum class Kind { Unparsed, Atom, RegExp };
+  enum class CodeKind { Bytecode, Jitcode, Any };
 
 #ifdef ENABLE_NEW_REGEXP
   using ByteCode = js::irregexp::ByteArrayData;
@@ -94,8 +94,16 @@ class RegExpShared : public gc::TenuredCell {
     WeakHeapPtr<jit::JitCode*> jitCode;
     ByteCode* byteCode = nullptr;
 
-    bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
-      return byteCode || (force == DontForceByteCode && jitCode);
+    bool compiled(CodeKind kind = CodeKind::Any) const {
+      switch (kind) {
+        case CodeKind::Bytecode:
+          return !!byteCode;
+        case CodeKind::Jitcode:
+          return !!jitCode;
+        case CodeKind::Any:
+          return !!byteCode || !!jitCode;
+      }
+      MOZ_CRASH("Unreachable");
     }
 
     size_t byteCodeLength() const {
@@ -135,14 +143,13 @@ class RegExpShared : public gc::TenuredCell {
   RegExpShared(JSAtom* source, JS::RegExpFlags flags);
 
   static bool compile(JSContext* cx, MutableHandleRegExpShared res,
-                      HandleLinearString input, ForceByteCodeEnum force);
+                      HandleLinearString input, CodeKind code);
   static bool compile(JSContext* cx, MutableHandleRegExpShared res,
                       HandleAtom pattern, HandleLinearString input,
-                      ForceByteCodeEnum force);
+                      CodeKind code);
 
   static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
-                                 HandleLinearString input,
-                                 ForceByteCodeEnum force);
+                                 HandleLinearString input, CodeKind code);
 
   const RegExpCompilation& compilation(bool latin1) const {
     return compilationArray[CompilationIndex(latin1)];
@@ -218,9 +225,8 @@ class RegExpShared : public gc::TenuredCell {
   bool unicode() const { return flags.unicode(); }
   bool sticky() const { return flags.sticky(); }
 
-  bool isCompiled(bool latin1,
-                  ForceByteCodeEnum force = DontForceByteCode) const {
-    return compilation(latin1).compiled(force);
+  bool isCompiled(bool latin1, CodeKind codeKind = CodeKind::Any) const {
+    return compilation(latin1).compiled(codeKind);
   }
   bool isCompiled() const { return isCompiled(true) || isCompiled(false); }
 
