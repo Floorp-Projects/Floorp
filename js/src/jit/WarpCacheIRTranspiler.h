@@ -37,6 +37,7 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   _(LoadInt32ArrayLengthResult)       \
   _(LoadStringLengthResult)           \
   _(LoadDenseElementResult)           \
+  _(LoadStringCharResult)             \
   _(TypeMonitorResult)                \
   _(ReturnFromIC)
 
