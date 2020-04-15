@@ -19,9 +19,6 @@ function createSourcesMap(sources: RawSource[]) {
 }
 
 function formatTree(tree) {
-  if (!tree) {
-    throw new Error("Tree must exist");
-  }
   return JSON.stringify(tree.uncollapsedTree, null, 2);
 }
 
@@ -59,7 +56,6 @@ describe("calls updateTree.js", () => {
       sources: prevSources,
       threads,
     });
-
     const newTree = updateTree({
       debuggeeUrl,
       prevSources,
