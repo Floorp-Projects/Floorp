@@ -700,7 +700,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
   }
 
   if (nsDocShell* docShell = nsDocShell::Cast(window->GetDocShell())) {
-    MOZ_ASSERT(docShell->ItemType() == nsIDocShellTreeItem::typeChrome);
+    MOZ_ASSERT(docShell->GetBrowsingContext()->IsChrome());
 
     docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
     docShell->SetRemoteTabs(aChromeMask &

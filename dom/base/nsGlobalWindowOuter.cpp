@@ -1754,7 +1754,7 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
   // nsAppShellService::JustCreateTopWindow
   if (nsContentUtils::IsExpandedPrincipal(newWindowPrincipal) ||
       (newWindowPrincipal->IsSystemPrincipal() &&
-       GetDocShell()->ItemType() != nsIDocShellTreeItem::typeChrome)) {
+       GetBrowsingContext()->IsContent())) {
     newWindowPrincipal = nullptr;
   }
 
