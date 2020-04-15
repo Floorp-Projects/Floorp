@@ -182,7 +182,7 @@ void CustomElementData::AttachedInternals() {
   mIsAttachedInternals = true;
 }
 
-CustomElementDefinition* CustomElementData::GetCustomElementDefinition() {
+CustomElementDefinition* CustomElementData::GetCustomElementDefinition() const {
   // Per spec, if there is a definition, the custom element state should be
   // either "failed" (during upgrade) or "customized".
   MOZ_ASSERT_IF(mCustomElementDefinition, mState != State::eUndefined);
@@ -492,6 +492,7 @@ CustomElementRegistry::CreateCustomElementCallback(
   return callback;
 }
 
+// https://html.spec.whatwg.org/commit-snapshots/65f39c6fc0efa92b0b2b23b93197016af6ac0de6/#enqueue-a-custom-element-callback-reaction
 /* static */
 void CustomElementRegistry::EnqueueLifecycleCallback(
     Document::ElementCallbackType aType, Element* aCustomElement,
