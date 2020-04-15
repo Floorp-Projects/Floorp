@@ -15,11 +15,9 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"
-#include "vm/JSObject.h"
 
 namespace js {
 namespace gc {
@@ -108,14 +106,9 @@ WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
 // is the key in the weakmap. In the absence of delegates, these will be the
 // same, but when a delegate is marked then origKey will be its wrapper.
 // `markedCell` is only used for an assertion.
-//
-// markKey is called when encountering a weakmap key during marking, or when
-// entering weak marking mode.
 template <class K, class V>
 void WeakMap<K, V>::markKey(GCMarker* marker, gc::Cell* markedCell,
                             gc::Cell* origKey) {
-  using namespace gc::detail;
-
 #if DEBUG
   if (!mapColor) {
     fprintf(stderr, "markKey called on an unmarked map %p", this);
@@ -134,7 +127,6 @@ void WeakMap<K, V>::markKey(GCMarker* marker, gc::Cell* markedCell,
     }
   }
 #endif
-
   MOZ_ASSERT(mapColor);
 
   Ptr p = Base::lookup(static_cast<Lookup>(origKey));
@@ -258,9 +250,10 @@ template <class K, class V>
 
 template <class K, class V>
 /* static */ void WeakMap<K, V>::addWeakEntry(
-    GCMarker* marker, JS::Zone* keyZone, gc::Cell* key,
-    const gc::WeakMarkable& markable) {
-  auto& weakKeys = keyZone->gcWeakKeys(key);
+    GCMarker* marker, gc::Cell* key, const gc::WeakMarkable& markable) {
+  Zone* zone = key->asTenured().zone();
+  auto& weakKeys =
+      gc::IsInsideNursery(key) ? zone->gcNurseryWeakKeys() : zone->gcWeakKeys();
   auto p = weakKeys.get(key);
   if (p) {
     gc::WeakEntryVector& weakEntries = p->value;
@@ -300,13 +293,12 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
       // the lookup key in the list of weak keys. If the key has a delegate,
       // then the lookup key is the delegate (because marking the key will end
       // up marking the delegate and thereby mark the entry.)
-      auto& weakKey = e.front().key();
-      gc::Cell* weakKeyCell = gc::detail::ExtractUnbarriered(weakKey);
-      gc::WeakMarkable markable(this, weakKeyCell);
-      if (JSObject* delegate = gc::detail::GetDelegate(weakKey)) {
-        addWeakEntry(marker, delegate->zone(), delegate, markable);
+      gc::Cell* weakKey = gc::detail::ExtractUnbarriered(e.front().key());
+      gc::WeakMarkable markable(this, weakKey);
+      if (JSObject* delegate = gc::detail::GetDelegate(e.front().key())) {
+        addWeakEntry(marker, delegate, markable);
       } else {
-        addWeakEntry(marker, weakKey.get()->zone(), weakKeyCell, markable);
+        addWeakEntry(marker, weakKey, markable);
       }
     }
   }
@@ -321,7 +313,7 @@ void WeakMap<K, V>::postSeverDelegate(GCMarker* marker, JSObject* key,
     // We only stored the delegate, not the key, and we're severing the
     // delegate from the key. So store the key.
     gc::WeakMarkable markable(this, key);
-    addWeakEntry(marker, key->zone(), key, markable);
+    addWeakEntry(marker, key, markable);
   }
 }
 

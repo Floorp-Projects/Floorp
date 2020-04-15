@@ -4217,47 +4217,57 @@ void GCRuntime::updateMemoryCountersOnGCStart() {
 }
 
 template <class ZoneIterT>
-void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
-  MOZ_ASSERT(marker.isDrained());
-
+IncrementalProgress GCRuntime::markWeakReferences(gcstats::PhaseKind phase,
+                                                  SliceBudget& budget) {
   gcstats::AutoPhase ap1(stats(), phase);
 
-  if (marker.enterWeakMarkingMode()) {
+  // We may have already entered weak marking mode.
+  if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
     for (ZoneIterT zone(this); !zone.done(); zone.next()) {
-      zone->enterWeakMarkingMode(&marker);
+      if (zone->enterWeakMarkingMode(&marker, budget) == NotFinished) {
+        marker.leaveWeakMarkingMode();
+        return NotFinished;
+      }
     }
-#ifdef DEBUG
-    for (ZoneIterT zone(this); !zone.done(); zone.next()) {
-      zone->checkWeakMarkingMode();
-    }
-#endif
   }
 
-  // TODO bug 1167452: Make weak marking incremental
-  drainMarkStack();
+#ifdef DEBUG
+  for (ZoneIterT zone(this); !zone.done(); zone.next()) {
+    zone->checkWeakMarkingMode();
+  }
+#endif
 
-  for (;;) {
-    bool markedAny = false;
+  // This is not strictly necessary; if we yield here, we could run the mutator
+  // in weak marking mode and unmark gray would end up doing the key lookups.
+  // But it seems better to not slow down barriers. Re-entering weak marking
+  // mode will be fast since already-processed markables have been removed.
+  auto leaveOnExit =
+      mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
+
+  bool markedAny = true;
+  while (markedAny) {
+    if (!marker.markUntilBudgetExhausted(budget)) {
+      return NotFinished;
+    }
+
+    markedAny = false;
+
     if (!marker.isWeakMarking()) {
       for (ZoneIterT zone(this); !zone.done(); zone.next()) {
         markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
       }
     }
+
     markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
-
-    if (!markedAny) {
-      break;
-    }
-
-    drainMarkStack();
   }
   MOZ_ASSERT(marker.isDrained());
 
-  marker.leaveWeakMarkingMode();
+  return Finished;
 }
 
-void GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase) {
-  markWeakReferences<SweepGroupZonesIter>(phase);
+IncrementalProgress GCRuntime::markWeakReferencesInCurrentGroup(
+    gcstats::PhaseKind phase, SliceBudget& budget) {
+  return markWeakReferences<SweepGroupZonesIter>(phase, budget);
 }
 
 template <class ZoneIterT>
@@ -4277,8 +4287,9 @@ void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
   }
 }
 
-void GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase) {
-  markWeakReferences<GCZonesIter>(phase);
+IncrementalProgress GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase,
+                                                     SliceBudget& budget) {
+  return markWeakReferences<GCZonesIter>(phase, budget);
 }
 
 void GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase) {
@@ -4830,13 +4841,19 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
+  if (markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK,
+                                       budget) == NotFinished) {
+    return NotFinished;
+  }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
   marker.setMainStackColor(MarkColor::Gray);
 
   // Mark transitively inside the current compartment group.
-  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
+  if (markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK,
+                                       budget) == NotFinished) {
+    return NotFinished;
+  }
 
   MOZ_ASSERT(marker.isDrained());
 
