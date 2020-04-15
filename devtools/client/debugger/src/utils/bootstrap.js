@@ -77,7 +77,7 @@ export function bootstrapStore(
   });
 
   const store = createStore(combineReducers(reducers), initialState);
-  store.subscribe(() => updatePrefs(store.getState()));
+  registerStoreObserver(store, updatePrefs);
 
   const actions = bindActionCreators(
     require("../actions").default,
@@ -128,40 +128,35 @@ export function bootstrapApp(store: any, panel: Panel): void {
   }
 }
 
-let currentPendingBreakpoints;
-let currentXHRBreakpoints;
-let currentEventBreakpoints;
-let currentTabs;
+function registerStoreObserver(store, subscriber) {
+  let oldState = store.getState();
+  store.subscribe(() => {
+    const state = store.getState();
+    subscriber(state, oldState);
+    oldState = state;
+  });
+}
 
-function updatePrefs(state: any): void {
-  const previousPendingBreakpoints = currentPendingBreakpoints;
-  const previousXHRBreakpoints = currentXHRBreakpoints;
-  const previousEventBreakpoints = currentEventBreakpoints;
-  const previousTabs = currentTabs;
-  currentPendingBreakpoints = selectors.getPendingBreakpoints(state);
-  currentXHRBreakpoints = selectors.getXHRBreakpoints(state);
-  currentEventBreakpoints = state.eventListenerBreakpoints;
-  currentTabs = selectors.getTabs(state);
+function updatePrefs(state: any, oldState: any): void {
+  const hasChanged = selector =>
+    selector(oldState) && selector(oldState) !== selector(state);
 
-  if (
-    previousPendingBreakpoints &&
-    currentPendingBreakpoints !== previousPendingBreakpoints
-  ) {
-    asyncStore.pendingBreakpoints = currentPendingBreakpoints;
+  if (hasChanged(selectors.getPendingBreakpoints)) {
+    asyncStore.pendingBreakpoints = selectors.getPendingBreakpoints(state);
   }
 
   if (
-    previousEventBreakpoints &&
-    previousEventBreakpoints !== currentEventBreakpoints
+    oldState.eventListenerBreakpoints &&
+    oldState.eventListenerBreakpoints !== state.eventListenerBreakpoints
   ) {
-    asyncStore.eventListenerBreakpoints = currentEventBreakpoints;
+    asyncStore.eventListenerBreakpoints = state.eventListenerBreakpoints;
   }
 
-  if (previousTabs && previousTabs !== currentTabs) {
-    asyncStore.tabs = persistTabs(currentTabs);
+  if (hasChanged(selectors.getTabs)) {
+    asyncStore.tabs = persistTabs(selectors.getTabs(state));
   }
 
-  if (currentXHRBreakpoints !== previousXHRBreakpoints) {
-    asyncStore.xhrBreakpoints = currentXHRBreakpoints;
+  if (hasChanged(selectors.getXHRBreakpoints)) {
+    asyncStore.xhrBreakpoints = selectors.getXHRBreakpoints(state);
   }
 }

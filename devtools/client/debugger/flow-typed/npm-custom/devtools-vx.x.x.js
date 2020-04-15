@@ -7,3 +7,7 @@
 declare module "devtools/client/framework/store-provider" {
   declare module.exports: any;
 }
+
+declare module "devtools/client/shared/redux/subscriber" {
+  declare module.exports: any;
+}
