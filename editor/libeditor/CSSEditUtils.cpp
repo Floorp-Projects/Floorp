@@ -1167,26 +1167,23 @@ bool CSSEditUtils::IsCSSPrefChecked() const { return mIsCSSPrefChecked; }
 // class
 
 // static
-bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
-                                     Element* aSecondElement) {
-  MOZ_ASSERT(aFirstElement);
-  MOZ_ASSERT(aSecondElement);
-
-  if (aFirstElement->HasAttr(kNameSpaceID_None, nsGkAtoms::id) ||
-      aSecondElement->HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+bool CSSEditUtils::DoElementsHaveSameStyle(const Element& aElement,
+                                           const Element& aOtherElement) {
+  if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::id) ||
+      aOtherElement.HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
     // at least one of the spans carries an ID ; suspect a CSS rule applies to
     // it and refuse to merge the nodes
     return false;
   }
 
-  nsAutoString firstClass, secondClass;
-  bool isFirstClassSet =
-      aFirstElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, firstClass);
-  bool isSecondClassSet = aSecondElement->GetAttr(
-      kNameSpaceID_None, nsGkAtoms::_class, secondClass);
-  if (isFirstClassSet && isSecondClassSet) {
+  nsAutoString firstClass, otherClass;
+  bool isElementClassSet =
+      aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_class, firstClass);
+  bool isOtherElementClassSet =
+      aOtherElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_class, otherClass);
+  if (isElementClassSet && isOtherElementClassSet) {
     // both spans carry a class, let's compare them
-    if (!firstClass.Equals(secondClass)) {
+    if (!firstClass.Equals(otherClass)) {
       // WARNING : technically, the comparison just above is questionable :
       // from a pure HTML/CSS point of view class="a b" is NOT the same than
       // class="b a" because a CSS rule could test the exact value of the class
@@ -1195,27 +1192,27 @@ bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
       // need to discuss this issue before any modification.
       return false;
     }
-  } else if (isFirstClassSet || isSecondClassSet) {
+  } else if (isElementClassSet || isOtherElementClassSet) {
     // one span only carries a class, early way out
     return false;
   }
 
-  nsCOMPtr<nsICSSDeclaration> firstCSSDecl, secondCSSDecl;
-  uint32_t firstLength, secondLength;
-  nsresult rv = GetInlineStyles(aFirstElement, getter_AddRefs(firstCSSDecl),
-                                &firstLength);
+  nsCOMPtr<nsICSSDeclaration> firstCSSDecl, otherCSSDecl;
+  uint32_t firstLength, otherLength;
+  nsresult rv =
+      GetInlineStyles(aElement, getter_AddRefs(firstCSSDecl), &firstLength);
   if (NS_FAILED(rv) || !firstCSSDecl) {
-    NS_WARNING("CSSEditUtils::GetInlineStyle() failed");
+    NS_WARNING("CSSEditUtils::GetInlineStyles() failed");
     return false;
   }
-  rv = GetInlineStyles(aSecondElement, getter_AddRefs(secondCSSDecl),
-                       &secondLength);
-  if (NS_FAILED(rv) || !secondCSSDecl) {
+  rv = GetInlineStyles(aOtherElement, getter_AddRefs(otherCSSDecl),
+                       &otherLength);
+  if (NS_FAILED(rv) || !otherCSSDecl) {
     NS_WARNING("CSSEditUtils::GetInlineStyles() failed");
     return false;
   }
 
-  if (firstLength != secondLength) {
+  if (firstLength != otherLength) {
     // early way out if we can
     return false;
   }
@@ -1226,7 +1223,7 @@ bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
   }
 
   nsAutoCString propertyNameString;
-  nsAutoString firstValue, secondValue;
+  nsAutoString firstValue, otherValue;
   for (uint32_t i = 0; i < firstLength; i++) {
     firstCSSDecl->Item(i, propertyNameString);
     DebugOnly<nsresult> rvIgnored =
@@ -1234,19 +1231,18 @@ bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
-    rvIgnored =
-        secondCSSDecl->GetPropertyValue(propertyNameString, secondValue);
+    rvIgnored = otherCSSDecl->GetPropertyValue(propertyNameString, otherValue);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
-    if (!firstValue.Equals(secondValue)) {
+    if (!firstValue.Equals(otherValue)) {
       return false;
     }
   }
-  for (uint32_t i = 0; i < secondLength; i++) {
-    secondCSSDecl->Item(i, propertyNameString);
+  for (uint32_t i = 0; i < otherLength; i++) {
+    otherCSSDecl->Item(i, propertyNameString);
     DebugOnly<nsresult> rvIgnored =
-        secondCSSDecl->GetPropertyValue(propertyNameString, secondValue);
+        otherCSSDecl->GetPropertyValue(propertyNameString, otherValue);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
@@ -1254,7 +1250,7 @@ bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
-    if (!firstValue.Equals(secondValue)) {
+    if (!firstValue.Equals(otherValue)) {
       return false;
     }
   }
@@ -1263,15 +1259,16 @@ bool CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
 }
 
 // static
-nsresult CSSEditUtils::GetInlineStyles(Element* aElement,
+nsresult CSSEditUtils::GetInlineStyles(const Element& aElement,
                                        nsICSSDeclaration** aCssDecl,
                                        uint32_t* aLength) {
-  if (NS_WARN_IF(!aElement) || NS_WARN_IF(!aLength)) {
+  if (NS_WARN_IF(!aLength)) {
     return NS_ERROR_INVALID_ARG;
   }
   *aLength = 0;
   // TODO: Perhaps, this method should take nsStyledElement& instead.
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(aElement);
+  nsCOMPtr<nsStyledElement> styledElement =
+      do_QueryInterface(const_cast<Element*>(&aElement));
   if (NS_WARN_IF(!styledElement)) {
     return NS_ERROR_INVALID_ARG;
   }

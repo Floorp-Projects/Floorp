@@ -383,7 +383,7 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
                                              aAttribute, aValue,
                                              /*suppress transaction*/ true);
 
-  return CSSEditUtils::ElementsSameStyle(newSpanElement, element);
+  return CSSEditUtils::DoElementsHaveSameStyle(*newSpanElement, *element);
 }
 
 nsresult HTMLEditor::SetInlinePropertyOnTextNode(

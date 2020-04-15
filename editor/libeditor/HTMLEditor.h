@@ -11,6 +11,7 @@
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/ManualNAC.h"
+#include "mozilla/Result.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/UniquePtr.h"
@@ -2102,6 +2103,23 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPointInHardLine,
       const EditorDOMPoint& aPointToInsert,
       MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
+
+  /**
+   * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
+   * First, they are joined simply, then, new right node is assumed as the
+   * child at length of the left node before joined and new left node is
+   * assumed as its previous sibling.  Then, they will be joined again.
+   * And then, these steps are repeated.
+   *
+   * @param aLeftContent    The node which will be removed form the tree.
+   * @param aRightContent   The node which will be inserted the contents of
+   *                        aRightContent.
+   * @return                The point of the first child of the last right node.
+   *                        The result is always set if this succeeded.
+   */
+  MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  JoinNodesDeepWithTransaction(nsIContent& aLeftContent,
+                               nsIContent& aRightContent);
 
   /**
    * TryToJoinBlocksWithTransaction() tries to join two block elements.  The
