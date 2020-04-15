@@ -3529,33 +3529,35 @@ bool APZCTreeManager::IsFixedToRootContent(
   return targetApzc && targetApzc->IsRootContent();
 }
 
-bool APZCTreeManager::IsStuckToRootContentAtBottom(
+SideBits APZCTreeManager::SidesStuckToRootContent(
     const HitTestingTreeNode* aNode) const {
   MutexAutoLock lock(mMapLock);
-  return IsStuckToRootContentAtBottom(StickyPositionInfo(aNode), lock);
+  return SidesStuckToRootContent(StickyPositionInfo(aNode), lock);
 }
 
-bool APZCTreeManager::IsStuckToRootContentAtBottom(
+SideBits APZCTreeManager::SidesStuckToRootContent(
     const StickyPositionInfo& aStickyInfo,
     const MutexAutoLock& aProofOfMapLock) const {
+  SideBits result = SideBits::eNone;
+
   ScrollableLayerGuid::ViewID stickyTarget = aStickyInfo.mStickyPosTarget;
   if (stickyTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
-    return false;
+    return result;
   }
 
   // We support the dynamic toolbar at top and bottom.
   if ((aStickyInfo.mFixedPosSides & SideBits::eTopBottom) == SideBits::eNone) {
-    return false;
+    return result;
   }
 
   auto it = mApzcMap.find(
       ScrollableLayerGuid(aStickyInfo.mLayersId, 0, stickyTarget));
   if (it == mApzcMap.end()) {
-    return false;
+    return result;
   }
   RefPtr<AsyncPanZoomController> stickyTargetApzc = it->second.apzc;
   if (!stickyTargetApzc || !stickyTargetApzc->IsRootContent()) {
-    return false;
+    return result;
   }
 
   ParentLayerPoint translation =
@@ -3564,9 +3566,16 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
               AsyncPanZoomController::eForHitTesting,
               AsyncTransformComponents{AsyncTransformComponent::eLayout})
           .mTranslation;
-  return apz::IsStuckAtBottom(translation.y,
-                              aStickyInfo.mStickyScrollRangeInner,
-                              aStickyInfo.mStickyScrollRangeOuter);
+
+  if (apz::IsStuckAtTop(translation.y, aStickyInfo.mStickyScrollRangeInner,
+                        aStickyInfo.mStickyScrollRangeOuter)) {
+    result |= SideBits::eTop;
+  }
+  if (apz::IsStuckAtBottom(translation.y, aStickyInfo.mStickyScrollRangeInner,
+                           aStickyInfo.mStickyScrollRangeOuter)) {
+    result |= SideBits::eBottom;
+  }
+  return result;
 }
 
 LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
@@ -3648,14 +3657,15 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     return aNode->GetTransform() *
            CompleteAsyncTransform(
                AsyncTransformComponentMatrix::Translation(translation));
-  } else if (IsStuckToRootContentAtBottom(aNode)) {
+  }
+  SideBits sides = SidesStuckToRootContent(aNode);
+  if (sides != SideBits::eNone) {
     ParentLayerPoint translation;
     {
       MutexAutoLock mapLock(mMapLock);
       translation = ViewAs<ParentLayerPixel>(
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(mapLock),
-              aNode->GetFixedPosSides() & SideBits::eTopBottom,
+              GetCompositorFixedLayerMargins(mapLock), sides,
               // For sticky layers, we don't need to factor
               // mGeckoFixedLayerMargins because Gecko doesn't shift the
               // position of sticky elements for dynamic toolbar movements.
