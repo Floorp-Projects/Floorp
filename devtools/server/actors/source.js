@@ -396,20 +396,18 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     let scripts = this.dbg.findScripts({ source: this._source });
 
     if (!this.isWasm) {
-      const topLevel = scripts.filter(script => !script.isFunction);
-      if (topLevel.length) {
-        scripts = topLevel;
-      } else {
-        const allScripts = new Set(scripts);
-
-        for (const script of allScripts) {
-          for (const child of script.getChildScripts()) {
-            allScripts.delete(child);
-          }
+      // There is no easier way to get the top-level scripts right now, so
+      // we have to build that up the list manually.
+      // Note: It is not valid to simply look for scripts where
+      // `.isFunction == false` because a source may have executed multiple
+      // where some have been GCed and some have not (bug 1627712).
+      const allScripts = new Set(scripts);
+      for (const script of allScripts) {
+        for (const child of script.getChildScripts()) {
+          allScripts.delete(child);
         }
-
-        scripts = [...allScripts];
       }
+      scripts = [...allScripts];
     }
 
     this._scripts = scripts;
