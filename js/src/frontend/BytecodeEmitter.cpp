@@ -118,6 +118,13 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
     // Functions have IC entries for type monitoring |this| and arguments.
     bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
   }
+
+  // TODO: standardize how "input" flags are initialized.
+  if (sc->isTopLevelContext()) {
+    bool isRunOnce = compilationInfo.options.isRunOnce;
+    sc->setTreatAsRunOnce(isRunOnce);
+    MOZ_ASSERT(script->treatAsRunOnce() == isRunOnce);
+  }
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
@@ -1529,7 +1536,7 @@ bool BytecodeEmitter::isInLoop() {
 }
 
 bool BytecodeEmitter::checkSingletonContext() {
-  return script->treatAsRunOnce() && !sc->isFunctionBox() && !isInLoop();
+  return sc->treatAsRunOnce() && !sc->isFunctionBox() && !isInLoop();
 }
 
 bool BytecodeEmitter::checkRunOnceContext() {
@@ -2185,7 +2192,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt) {
 
 bool BytecodeEmitter::isRunOnceLambda() {
   if (emitterMode == LazyFunction) {
-    return sc->asFunctionBox()->treatAsRunOnce();
+    return sc->treatAsRunOnce();
   }
 
   return parent && parent->emittingRunOnceLambda &&
