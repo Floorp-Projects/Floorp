@@ -429,12 +429,6 @@ struct LayoutDevicePixel {
         aRect.ToOutsidePixels(aAppUnitsPerDevPixel));
   }
 
-  static LayoutDeviceIntSize FromAppUnitsToOutside(
-      const nsSize& aSize, nscoord aAppUnitsPerDevPixel) {
-    return LayoutDeviceIntSize::FromUnknownSize(
-        aSize.ToOutsidePixels(aAppUnitsPerDevPixel));
-  }
-
   static LayoutDeviceIntSize FromAppUnitsRounded(const nsSize& aSize,
                                                  nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntSize(

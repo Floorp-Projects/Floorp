@@ -551,22 +551,18 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
                                             nsIFrame* aFrame, nsView* aView,
                                             gfxContext* aRC, uint32_t aFlags) {
-  if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget()) {
+#ifdef MOZ_XUL
+  if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
     return;
-  }
 
   nsCOMPtr<nsIWidget> windowWidget =
       GetPresContextContainerWidget(aPresContext);
-  if (!windowWidget || !IsTopLevelWidget(windowWidget)) {
-    return;
-  }
+  if (!windowWidget || !IsTopLevelWidget(windowWidget)) return;
 
   nsViewManager* vm = aView->GetViewManager();
   nsView* rootView = vm->GetRootView();
 
-  if (aView != rootView) {
-    return;
-  }
+  if (aView != rootView) return;
 
   Element* rootElement = aPresContext->Document()->GetRootElement();
   if (!rootElement) {
@@ -575,9 +571,7 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
 
   nsIFrame* rootFrame =
       aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-  if (!rootFrame) {
-    return;
-  }
+  if (!rootFrame) return;
 
   if (aFlags & SET_ASYNC) {
     aView->SetNeedsWindowPropertiesSync();
@@ -606,9 +600,7 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     windowWidget->SetWindowShadowStyle(shadow);
   }
 
-  if (!aRC) {
-    return;
-  }
+  if (!aRC) return;
 
   if (!weak.IsAlive()) {
     return;
@@ -616,49 +608,36 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
 
   nsSize minSize(0, 0);
   nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  const auto& pos = *rootFrame->StylePosition();
-#ifdef MOZ_XUL
-  if (rootFrame->IsXULBoxFrame()) {
-    nsBoxLayoutState xulState(aPresContext, aRC);
-    minSize = rootFrame->GetXULMinSize(xulState);
-    const bool isMinContent =
-        pos.mMinWidth.IsExtremumLength() &&
-        pos.mMinWidth.AsExtremumLength() == StyleExtremumLength::MinContent;
-    // By default we behave with min-width: max-content, to ensure that all
-    // content is shown (i.e., the GetXULPrefSize call below).
-    //
-    // It can be overridden to min-content (i.e., leave GetXULMinSize()) and
-    // a fixed width (handled below).
-    if (!isMinContent && !pos.mMinWidth.ConvertsToLength()) {
-      minSize.width = rootFrame->GetXULPrefSize(xulState).width;
+  if (rootElement->IsXULElement()) {
+    nsBoxLayoutState aState(aPresContext, aRC);
+    minSize = rootFrame->GetXULMinSize(aState);
+    maxSize = rootFrame->GetXULMaxSize(aState);
+  } else {
+    auto* pos = rootFrame->StylePosition();
+    if (pos->mMinWidth.ConvertsToLength()) {
+      minSize.width = pos->mMinWidth.ToLength();
     }
-    maxSize = rootFrame->GetXULMaxSize(xulState);
+    if (pos->mMinHeight.ConvertsToLength()) {
+      minSize.height = pos->mMinHeight.ToLength();
+    }
+    if (pos->mMaxWidth.ConvertsToLength()) {
+      maxSize.width = pos->mMaxWidth.ToLength();
+    }
+    if (pos->mMaxHeight.ConvertsToLength()) {
+      maxSize.height = pos->mMaxHeight.ToLength();
+    }
   }
-#endif
-
-  if (pos.mMinWidth.ConvertsToLength()) {
-    minSize.width = pos.mMinWidth.ToLength();
-  }
-  if (pos.mMinHeight.ConvertsToLength()) {
-    minSize.height = pos.mMinHeight.ToLength();
-  }
-  if (pos.mMaxWidth.ConvertsToLength()) {
-    maxSize.width = pos.mMaxWidth.ToLength();
-  }
-  if (pos.mMaxHeight.ConvertsToLength()) {
-    maxSize.height = pos.mMaxHeight.ToLength();
-  }
-
   SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
+#endif
 }
 
 void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
                                           nsIWidget* aWidget,
                                           const nsSize& aMinSize,
                                           const nsSize& aMaxSize) {
-  auto devMinSize = LayoutDeviceIntSize::FromAppUnitsToOutside(
-      aMinSize, aPresContext->AppUnitsPerDevPixel());
+  LayoutDeviceIntSize devMinSize(
+      aPresContext->AppUnitsToDevPixels(aMinSize.width),
+      aPresContext->AppUnitsToDevPixels(aMinSize.height));
   LayoutDeviceIntSize devMaxSize(
       aMaxSize.width == NS_UNCONSTRAINEDSIZE
           ? NS_MAXSIZE
@@ -668,8 +647,9 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
           : aPresContext->AppUnitsToDevPixels(aMaxSize.height));
 
   // MinSize has a priority over MaxSize
-  devMaxSize.width = std::max(devMinSize.width, devMaxSize.width);
-  devMaxSize.height = std::max(devMinSize.height, devMaxSize.height);
+  if (devMinSize.width > devMaxSize.width) devMaxSize.width = devMinSize.width;
+  if (devMinSize.height > devMaxSize.height)
+    devMaxSize.height = devMinSize.height;
 
   widget::SizeConstraints constraints(devMinSize, devMaxSize);
 
