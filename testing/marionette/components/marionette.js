@@ -243,10 +243,6 @@ const RECOMMENDED_PREFS = new Map([
   // Do not prompt for temporary redirects
   ["network.http.prompt-temp-redirect", false],
 
-  // Disable speculative connections so they are not reported as leaking
-  // when they are hanging around
-  ["network.http.speculative-parallel-limit", 0],
-
   // Do not automatically switch between offline and online
   ["network.manage-offline-status", false],
 
