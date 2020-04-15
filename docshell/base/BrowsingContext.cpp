@@ -1423,8 +1423,6 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
     }
 
     if (ContentParent* cp = Canonical()->GetContentParent()) {
-      cp->TransmitBlobDataIfBlobURL(aLoadState->URI(),
-                                    aLoadState->TriggeringPrincipal());
       Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   }
