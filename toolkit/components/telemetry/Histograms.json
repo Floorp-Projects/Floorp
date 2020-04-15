@@ -14448,17 +14448,6 @@
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
   },
-  "TOUCHBAR_BUTTON_PRESSES": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["htwyford@mozilla.com"],
-    "bug_numbers": [1313429, 1593726],
-    "expires_in_version": "77",
-    "kind": "categorical",
-    "labels": ["Back", "Forward", "Reload", "Home",  "Fullscreen", "Find", "NewTab", "ReaderView", "AddBookmark", "OpenLocation", "Focus", "Share", "Sidebar"],
-    "releaseChannelCollection": "opt-out",
-    "description": "What buttons are pressed most often on the Mac Touch Bar?"
-  },
   "AUDIO_TRACK_SILENCE_PROPORTION": {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],

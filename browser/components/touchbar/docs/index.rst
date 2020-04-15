@@ -91,9 +91,7 @@ Clarification on some of these properties is warranted.
 * ``callback`` points to a JavaScript function. Any chrome-level JavaScript can
   be executed. ``execCommand`` is a convenience method in ``MacTouchBar.js``
   that takes a XUL command as a string and executes that command. For instance,
-  one input sets ``callback`` to ``execCommand("Browser:Back", "Back")``. The
-  second string, "Back", records an interaction with the back button in
-  Telemetry.
+  one input sets ``callback`` to ``execCommand("Browser:Back")``.
 * ``children`` is an array of objects with the same properties as members of
   ``gBuiltInInputs``. When used with an input of type
   ``kInputTypes.SCROLLVIEW``, ``children`` can only contain inputs of type
