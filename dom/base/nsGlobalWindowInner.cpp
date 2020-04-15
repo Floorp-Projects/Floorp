@@ -1945,7 +1945,7 @@ void nsGlobalWindowInner::FireFrameLoadEvent() {
     }
 
     mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-        /*aFireLoadAtEmbeddingElement*/ true);
+        EmbedderElementEventType::LoadEvent);
   }
 }
 
