@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [CancellableOperation](-cancellable-operation/index.md) | `interface CancellableOperation`<br>Represents an async operation that can be cancelled. |
 | [DataCleanable](-data-cleanable/index.md) | `interface DataCleanable`<br>Contract to indicate how objects with the ability to clear data should behave. |
 | [DefaultSettings](-default-settings/index.md) | `data class DefaultSettings : `[`Settings`](-settings/index.md)<br>[Settings](-settings/index.md) implementation used to set defaults for [Engine](-engine/index.md) and [EngineSession](-engine-session/index.md). |
 | [Engine](-engine/index.md) | `interface Engine : `[`WebExtensionRuntime`](../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`, `[`DataCleanable`](-data-cleanable/index.md)<br>Entry point for interacting with the engine implementation. |

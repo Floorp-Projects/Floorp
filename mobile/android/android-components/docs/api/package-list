@@ -1,5 +1,6 @@
 $dokka.format:gfm
 $dokka.linkExtension:md
+$dokka.location:mozilla.components.browser.engine.gecko$asCancellableOperation(org.mozilla.geckoview.GeckoResult((mozilla.components.browser.engine.gecko.asCancellableOperation.T)))mozilla.components.browser.engine.gecko/org.mozilla.geckoview.-gecko-result/as-cancellable-operation.md
 $dokka.location:mozilla.components.browser.engine.gecko$await(org.mozilla.geckoview.GeckoResult((mozilla.components.browser.engine.gecko.await.T)))mozilla.components.browser.engine.gecko/org.mozilla.geckoview.-gecko-result/await.md
 $dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, kotlinx.coroutines.CoroutineStart, kotlin.SuspendFunction1((kotlinx.coroutines.CoroutineScope, mozilla.components.browser.engine.gecko.launchGeckoResult.T)))mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
@@ -205,6 +206,7 @@ mozilla.components.feature.pwa.ext
 mozilla.components.feature.pwa.feature
 mozilla.components.feature.pwa.intent
 mozilla.components.feature.qr
+mozilla.components.feature.qr.views
 mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
 mozilla.components.feature.search
@@ -274,7 +276,6 @@ mozilla.components.support.android.test.espresso.matcher
 mozilla.components.support.android.test.leaks
 mozilla.components.support.android.test.rules
 mozilla.components.support.base.android
-mozilla.components.support.base.android.view
 mozilla.components.support.base.coroutines
 mozilla.components.support.base.crash
 mozilla.components.support.base.facts

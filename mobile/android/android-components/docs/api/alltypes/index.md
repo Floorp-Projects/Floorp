@@ -58,7 +58,7 @@
 | [mozilla.components.concept.sync.AuthExceptionType](../mozilla.components.concept.sync/-auth-exception-type/index.md) | An auth-related exception type, for use with [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md). |
 | [mozilla.components.concept.sync.AuthFlowUrl](../mozilla.components.concept.sync/-auth-flow-url/index.md) | An object that represents a login flow initiated by [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
 | [mozilla.components.concept.sync.AuthType](../mozilla.components.concept.sync/-auth-type/index.md) |  |
-| [mozilla.components.support.base.android.view.AutoFitTextureView](../mozilla.components.support.base.android.view/-auto-fit-texture-view/index.md) | A [TextureView](#) that can be adjusted to a specified aspect ratio. |
+| [mozilla.components.feature.qr.views.AutoFitTextureView](../mozilla.components.feature.qr.views/-auto-fit-texture-view/index.md) | A [TextureView](#) that can be adjusted to a specified aspect ratio. |
 | [mozilla.components.feature.push.AutoPushFeature](../mozilla.components.feature.push/-auto-push-feature/index.md) | A implementation of a [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
 | [mozilla.components.feature.push.AutoPushSubscription](../mozilla.components.feature.push/-auto-push-subscription/index.md) | The subscription information from AutoPush that can be used to send push messages to other devices. |
 | [mozilla.components.feature.push.AutoPushSubscriptionChanged](../mozilla.components.feature.push/-auto-push-subscription-changed/index.md) | The subscription from AutoPush that has changed on the remote push servers. |
@@ -108,6 +108,7 @@
 | [mozilla.components.support.utils.Browsers](../mozilla.components.support.utils/-browsers/index.md) | Helpful tools for dealing with other browsers on this device. |
 | [mozilla.components.Build](../mozilla.components/-build/index.md) | Information about the current Android Components build. |
 | [kotlin.ByteArray](../mozilla.components.support.ktx.kotlin/kotlin.-byte-array/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
+| [mozilla.components.concept.engine.CancellableOperation](../mozilla.components.concept.engine/-cancellable-operation/index.md) | Represents an async operation that can be cancelled. |
 | [mozilla.appservices.fxaclient.Device.Capability](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.support.ktx.android.notification.ChannelData](../mozilla.components.support.ktx.android.notification/-channel-data/index.md) | Wraps the data of a NotificationChannel as this class is available after API 26. |
 | [kotlin.Char](../mozilla.components.support.ktx.kotlin/kotlin.-char/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
