@@ -594,10 +594,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   // initialized SSO.
   sourceObjects.infallibleAppend(compilationInfo.sourceObject);
 
-  uint32_t len = data.length();
-  SourceExtent extent = SourceExtent::makeGlobalExtent(len, options);
   frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                         compilationInfo.directives, extent);
+                                         compilationInfo.directives);
   JSScript* script =
       frontend::CompileGlobalScript(compilationInfo, globalsc, data);
 

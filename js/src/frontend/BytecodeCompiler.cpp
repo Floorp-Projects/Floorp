@@ -479,7 +479,8 @@ static bool EmplaceEmitter(CompilationInfo& compilationInfo,
       compilationInfo.options.selfHostingMode ? BytecodeEmitter::SelfHosting
                                               : BytecodeEmitter::Normal;
   emitter.emplace(/* parent = */ nullptr, parser, sharedContext,
-                  compilationInfo.script, compilationInfo, emitterMode);
+                  compilationInfo.script, compilationInfo.options.lineno,
+                  compilationInfo.options.column, compilationInfo, emitterMode);
   return emitter->init();
 }
 
@@ -597,10 +598,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleBuilder builder(cx, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  uint32_t len = this->sourceBuffer_.length();
-  SourceExtent extent = SourceExtent::makeGlobalExtent(len);
   ModuleSharedContext modulesc(cx, module, compilationInfo, enclosingScope,
-                               builder, extent);
+                               builder);
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
     return nullptr;
@@ -773,8 +772,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
-  SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-  extent.lineno = 0;
+  SourceExtent extent(0, len, 0, len, 0, 0);
   RootedScript script(
       cx,
       JSScript::Create(cx, cx->global(), compilationInfo.sourceObject, extent,
@@ -785,7 +783,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               compilationInfo.directives, extent);
+                               compilationInfo.directives);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject);
@@ -803,7 +801,8 @@ static JSScript* CompileGlobalBinASTScriptImpl(
 
   compilationInfo.sourceObject->source()->setBinASTSourceMetadata(metadata);
 
-  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, compilationInfo);
+  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, 0, 0,
+                      compilationInfo);
 
   if (!bce.init()) {
     return nullptr;
@@ -1014,7 +1013,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   uint32_t lazyFlags = lazy->immutableFlags();
 
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
-                      compilationInfo, BytecodeEmitter::LazyFunction);
+                      lazy->lineno(), lazy->column(), compilationInfo,
+                      BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
@@ -1082,7 +1082,8 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
 
   FunctionNode* pn = parsed.unwrap();
 
-  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, compilationInfo,
+  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy->lineno(),
+                      lazy->column(), compilationInfo,
                       BytecodeEmitter::LazyFunction);
 
   if (!bce.init(pn->pn_pos)) {
