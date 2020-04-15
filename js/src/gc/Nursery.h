@@ -308,17 +308,13 @@ class Nursery {
   void* allocateZeroedBuffer(JSObject* obj, size_t nbytes,
                              arena_id_t arena = js::MallocArena);
 
-  // Resize an existing object buffer.
-  void* reallocateBuffer(JSObject* obj, void* oldBuffer, size_t oldBytes,
-                         size_t newBytes);
+  // Resize an existing buffer.
+  void* reallocateBuffer(JS::Zone* zone, gc::Cell* cell, void* oldBuffer,
+                         size_t oldBytes, size_t newBytes);
 
   // Allocate a digits buffer for a given BigInt, using the nursery if possible
   // and |bi| is in the nursery.
   void* allocateBuffer(JS::BigInt* bi, size_t nbytes);
-
-  // Resize an existing BigInt digits buffer.
-  void* reallocateBuffer(JS::BigInt* bi, void* oldDigits, size_t oldBytes,
-                         size_t newBytes);
 
   // Free an object buffer.
   void freeBuffer(void* buffer);
