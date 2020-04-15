@@ -61,6 +61,8 @@ class MOZ_RAII WarpCacheIRTranspiler {
 
   bool transpileGuardTo(MIRType type);
 
+  MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
+
 #define DEFINE_OP(op, ...) MOZ_MUST_USE bool transpile_##op();
   WARP_CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
@@ -275,6 +277,32 @@ bool WarpCacheIRTranspiler::transpile_LoadStringLengthResult() {
   return true;
 }
 
+MInstruction* WarpCacheIRTranspiler::addBoundsCheck(MDefinition* index,
+                                                    MDefinition* length) {
+  MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+  current->add(check);
+
+  if (JitOptions.spectreIndexMasking) {
+    // Use a separate MIR instruction for the index masking. Doing this as
+    // part of MBoundsCheck would be unsound because bounds checks can be
+    // optimized or eliminated completely. Consider this:
+    //
+    //   for (var i = 0; i < x; i++)
+    //        res = arr[i];
+    //
+    // If we can prove |x < arr.length|, we are able to eliminate the bounds
+    // check, but we should not get rid of the index masking because the
+    // |i < x| branch could still be mispredicted.
+    //
+    // Using a separate instruction lets us eliminate the bounds check
+    // without affecting the index masking.
+    check = MSpectreMaskIndex::New(alloc(), check, length);
+    current->add(check);
+  }
+
+  return check;
+}
+
 bool WarpCacheIRTranspiler::transpile_LoadDenseElementResult() {
   ObjOperandId objId = reader.objOperandId();
   Int32OperandId indexId = reader.int32OperandId();
@@ -287,21 +315,36 @@ bool WarpCacheIRTranspiler::transpile_LoadDenseElementResult() {
   auto* length = MInitializedLength::New(alloc(), elements);
   current->add(length);
 
-  MInstruction* check = MBoundsCheck::New(alloc(), index, length);
-  current->add(check);
-
-  if (JitOptions.spectreIndexMasking) {
-    check = MSpectreMaskIndex::New(alloc(), check, length);
-    current->add(check);
-  }
+  index = addBoundsCheck(index, length);
 
   bool needsHoleCheck = true;
   bool loadDouble = false;  // TODO: Ion-only optimization.
   auto* load =
-      MLoadElement::New(alloc(), elements, check, needsHoleCheck, loadDouble);
+      MLoadElement::New(alloc(), elements, index, needsHoleCheck, loadDouble);
   current->add(load);
 
   setResult(load);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::transpile_LoadStringCharResult() {
+  StringOperandId strId = reader.stringOperandId();
+  Int32OperandId indexId = reader.int32OperandId();
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* length = MStringLength::New(alloc(), str);
+  current->add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* charCode = MCharCodeAt::New(alloc(), str, index);
+  current->add(charCode);
+
+  auto* fromCharCode = MFromCharCode::New(alloc(), charCode);
+  current->add(fromCharCode);
+
+  setResult(fromCharCode);
   return true;
 }
 
