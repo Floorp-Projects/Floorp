@@ -1341,6 +1341,10 @@ class nsDocShell final : public nsDocLoader,
   // This flag indicates whether or not the DocShell is currently executing an
   // nsIWebNavigation navigation method.
   bool mIsNavigating : 1;
+
+  // This flag indicates whether the media in this docshell should be suspended
+  // when the docshell is inactive.
+  bool mSuspendMediaWhenInactive : 1;
 };
 
 #endif /* nsDocShell_h__ */
