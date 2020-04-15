@@ -45,6 +45,7 @@ class XRRenderState final : public nsWrapperCache {
   HTMLCanvasElement* GetOutputCanvas() const;
   void SetCompositionDisabled(bool aCompositionDisabled);
   bool IsCompositionDisabled() const;
+  void SessionEnded();
 
  protected:
   virtual ~XRRenderState() = default;

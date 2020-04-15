@@ -47,10 +47,15 @@ XRWebGLLayer::XRWebGLLayer(
 }
 
 XRWebGLLayer::~XRWebGLLayer() {
+  DeleteFramebuffer();
+  mozilla::DropJSObjects(this);
+}
+
+void XRWebGLLayer::DeleteFramebuffer() {
   if (mFramebuffer) {
     mWebGL->DeleteFramebuffer(mFramebuffer.get(), true);
+    mFramebuffer = nullptr;
   }
-  mozilla::DropJSObjects(this);
 }
 
 /* static */
@@ -245,6 +250,8 @@ void XRWebGLLayer::EndAnimationFrame() {
 HTMLCanvasElement* XRWebGLLayer::GetCanvas() {
   return mWebGL->GetParentObject();
 }
+
+void XRWebGLLayer::SessionEnded() { DeleteFramebuffer(); }
 
 }  // namespace dom
 }  // namespace mozilla
