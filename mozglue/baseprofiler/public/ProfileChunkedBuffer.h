@@ -9,6 +9,7 @@
 
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ProfileBufferChunkManager.h"
+#include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
@@ -206,6 +207,82 @@ class ProfileChunkedBuffer {
   auto LockAndRun(Callback&& aCallback) const {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return std::forward<Callback>(aCallback)();
+  }
+
+  // Reserve a block that can hold an entry of the given `aCallbackEntryBytes()`
+  // size, write the entry size (ULEB128-encoded), and invoke and return
+  // `aCallback(ProfileBufferEntryWriter*)`.
+  // Note: `aCallbackEntryBytes` is a callback instead of a simple value, to
+  // delay this potentially-expensive computation until after we're checked that
+  // we're in-session; use `Put(Length, Callback)` below if you know the size
+  // already.
+  template <typename CallbackEntryBytes, typename Callback>
+  auto ReserveAndPut(CallbackEntryBytes&& aCallbackEntryBytes,
+                     Callback&& aCallback)
+      -> decltype(std::forward<Callback>(aCallback)(
+          std::declval<ProfileBufferEntryWriter*>())) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+
+    // This can only be read in the 2nd lambda below after it has been written
+    // by the first lambda.
+    Length entryBytes;
+
+    return ReserveAndPutRaw(
+        [&]() {
+          entryBytes = std::forward<CallbackEntryBytes>(aCallbackEntryBytes)();
+          MOZ_ASSERT(entryBytes != 0, "Empty entries are not allowed");
+          return ULEB128Size(entryBytes) + entryBytes;
+        },
+        [&](ProfileBufferEntryWriter* aEntryWriter) {
+          if (aEntryWriter) {
+            aEntryWriter->WriteULEB128(entryBytes);
+            MOZ_ASSERT(aEntryWriter->RemainingBytes() == entryBytes);
+          }
+          return std::forward<Callback>(aCallback)(aEntryWriter);
+        },
+        lock);
+  }
+
+  template <typename Callback>
+  auto Put(Length aEntryBytes, Callback&& aCallback) {
+    return ReserveAndPut([aEntryBytes]() { return aEntryBytes; },
+                         std::forward<Callback>(aCallback));
+  }
+
+  // Add a new entry copied from the given buffer, return block index.
+  ProfileBufferBlockIndex PutFrom(const void* aSrc, Length aBytes) {
+    return ReserveAndPut(
+        [aBytes]() { return aBytes; },
+        [aSrc, aBytes](ProfileBufferEntryWriter* aEntryWriter) {
+          if (!aEntryWriter) {
+            return ProfileBufferBlockIndex{};
+          }
+          aEntryWriter->WriteBytes(aSrc, aBytes);
+          return aEntryWriter->CurrentBlockIndex();
+        });
+  }
+
+  // Add a new single entry with *all* given object (using a Serializer for
+  // each), return block index.
+  template <typename... Ts>
+  ProfileBufferBlockIndex PutObjects(const Ts&... aTs) {
+    static_assert(sizeof...(Ts) > 0,
+                  "PutObjects must be given at least one object.");
+    return ReserveAndPut(
+        [&]() { return ProfileBufferEntryWriter::SumBytes(aTs...); },
+        [&](ProfileBufferEntryWriter* aEntryWriter) {
+          if (!aEntryWriter) {
+            return ProfileBufferBlockIndex{};
+          }
+          aEntryWriter->WriteObjects(aTs...);
+          return aEntryWriter->CurrentBlockIndex();
+        });
+  }
+
+  // Add a new entry copied from the given object, return block index.
+  template <typename T>
+  ProfileBufferBlockIndex PutObject(const T& aOb) {
+    return PutObjects(aOb);
   }
 
   // Get *all* chunks related to this buffer, including extant chunks in its
@@ -439,6 +516,203 @@ class ProfileChunkedBuffer {
     }
 
     return false;
+  }
+
+  // Get a pointer to the next chunk available
+  [[nodiscard]] ProfileBufferChunk* GetOrCreateCurrentChunk(
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock) {
+    ProfileBufferChunk* current = mCurrentChunk.get();
+    if (MOZ_UNLIKELY(!current)) {
+      // No current chunk ready.
+      MOZ_ASSERT(!mNextChunks,
+                 "There shouldn't be next chunks when there is no current one");
+      // See if a request has recently been fulfilled, ignore pending status.
+      Unused << HandleRequestedChunk_IsPending(aLock);
+      current = mCurrentChunk.get();
+      if (MOZ_UNLIKELY(!current)) {
+        // There was no pending chunk, try to get one right now.
+        // This may still fail, but we can't do anything else about it, the
+        // caller must handle the nullptr case.
+        // Attempt a request for later.
+        SetAndInitializeCurrentChunk(mChunkManager->GetChunk(), aLock);
+        current = mCurrentChunk.get();
+      }
+    }
+    return current;
+  }
+
+  // Get a pointer to the next chunk available
+  [[nodiscard]] ProfileBufferChunk* GetOrCreateNextChunk(
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock) {
+    MOZ_ASSERT(!!mCurrentChunk,
+               "Why ask for a next chunk when there isn't even a current one?");
+    ProfileBufferChunk* next = mNextChunks.get();
+    if (MOZ_UNLIKELY(!next)) {
+      // No next chunk ready, see if a request has recently been fulfilled,
+      // ignore pending status.
+      Unused << HandleRequestedChunk_IsPending(aLock);
+      next = mNextChunks.get();
+      if (MOZ_UNLIKELY(!next)) {
+        // There was no pending chunk, try to get one right now.
+        mNextChunks = mChunkManager->GetChunk();
+        next = mNextChunks.get();
+        // This may still fail, but we can't do anything else about it, the
+        // caller must handle the nullptr case.
+        if (MOZ_UNLIKELY(!next)) {
+          // Attempt a request for later.
+          RequestChunk(aLock);
+        }
+      }
+    }
+    return next;
+  }
+
+  // Reserve a block of `aCallbackBlockBytes()` size, and invoke and return
+  // `aCallback(ProfileBufferEntryWriter*)`. Note that this is the "raw" version
+  // that doesn't write the entry size at the beginning of the block.
+  // Note: `aCallbackBlockBytes` is a callback instead of a simple value, to
+  // delay this potentially-expensive computation until after we're checked that
+  // we're in-session; use `Put(Length, Callback)` below if you know the size
+  // already.
+  template <typename CallbackBlockBytes, typename Callback>
+  auto ReserveAndPutRaw(CallbackBlockBytes&& aCallbackBlockBytes,
+                        Callback&& aCallback,
+                        baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock,
+                        uint64_t aBlockCount = 1) {
+    // The current chunk will be filled if we need to write more than its
+    // remaining space.
+    bool currentChunkFilled = false;
+
+    // If the current chunk gets filled, we may or may not initialize the next
+    // chunk!
+    bool nextChunkInitialized = false;
+
+    // The entry writer that will point into one or two chunks to write
+    // into, empty by default (failure).
+    ProfileBufferEntryWriter entryWriter;
+
+    // After we invoke the callback and return, we may need to handle the
+    // current chunk being filled.
+    auto handleFilledChunk = MakeScopeExit([&]() {
+      // If the entry writer was not already empty, the callback *must* have
+      // filled the full entry.
+      MOZ_ASSERT(entryWriter.RemainingBytes() == 0);
+
+      if (currentChunkFilled) {
+        // Extract current (now filled) chunk.
+        UniquePtr<ProfileBufferChunk> filled = std::move(mCurrentChunk);
+
+        if (mNextChunks) {
+          // Cycle to the next chunk.
+          mCurrentChunk =
+              std::exchange(mNextChunks, mNextChunks->ReleaseNext());
+
+          // Make sure it is initialized (it is now the current chunk).
+          if (!nextChunkInitialized) {
+            InitializeCurrentChunk(aLock);
+          }
+        }
+
+        // And finally mark filled chunk done and release it.
+        filled->MarkDone();
+        mChunkManager->ReleaseChunks(std::move(filled));
+
+        // Request another chunk if needed.
+        // In most cases, here we should have one current chunk and no next
+        // chunk, so we want to do a request so there hopefully will be a next
+        // chunk available when the current one gets filled.
+        // But we also for a request if we don't even have a current chunk (if
+        // it's too late, it's ok because the next `ReserveAndPutRaw` wil just
+        // allocate one on the spot.)
+        // And if we already have a next chunk, there's no need for more now.
+        if (!mCurrentChunk || !mNextChunks) {
+          RequestChunk(aLock);
+        }
+      }
+    });
+
+    if (MOZ_LIKELY(mChunkManager)) {
+      // In-session.
+
+      if (ProfileBufferChunk* current = GetOrCreateCurrentChunk(aLock);
+          MOZ_LIKELY(current)) {
+        const Length blockBytes =
+            std::forward<CallbackBlockBytes>(aCallbackBlockBytes)();
+        if (blockBytes <= current->RemainingBytes()) {
+          // Block fits in current chunk with only one span.
+          currentChunkFilled = blockBytes == current->RemainingBytes();
+          const auto [mem0, blockIndex] = current->ReserveBlock(blockBytes);
+          MOZ_ASSERT(mem0.LengthBytes() == blockBytes);
+          entryWriter.Set(
+              mem0, blockIndex,
+              ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                  blockIndex.ConvertToProfileBufferIndex() + blockBytes));
+        } else {
+          // Block doesn't fit fully in current chunk, it needs to overflow into
+          // the next one.
+          // Make sure the next chunk is available (from a previous request),
+          // otherwise create one on the spot.
+          if (ProfileBufferChunk* next = GetOrCreateNextChunk(aLock);
+              MOZ_LIKELY(next)) {
+            // Here, we know we have a current and a next chunk.
+            // Reserve head of block at the end of the current chunk.
+            const auto [mem0, blockIndex] =
+                current->ReserveBlock(current->RemainingBytes());
+            MOZ_ASSERT(mem0.LengthBytes() < blockBytes);
+            MOZ_ASSERT(current->RemainingBytes() == 0);
+            // Set the next chunk range, and reserve the needed space for the
+            // tail of the block.
+            next->SetRangeStart(mNextChunkRangeStart);
+            mNextChunkRangeStart += next->BufferBytes();
+            const auto mem1 = next->ReserveInitialBlockAsTail(
+                blockBytes - mem0.LengthBytes());
+            MOZ_ASSERT(next->RemainingBytes() != 0);
+            currentChunkFilled = true;
+            nextChunkInitialized = true;
+            // Block is split in two spans.
+            entryWriter.Set(
+                mem0, mem1, blockIndex,
+                ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                    blockIndex.ConvertToProfileBufferIndex() + blockBytes));
+          }
+        }
+
+        // Here, we either have an empty `entryWriter` (failure), or a non-empty
+        // writer pointing at the start of the block.
+
+        // Remember that following the final `return` below, `handleFilledChunk`
+        // will take care of releasing the current chunk, and cycling to the
+        // next one, if needed.
+
+        if (MOZ_LIKELY(entryWriter.RemainingBytes() != 0)) {
+          // `entryWriter` is not empty, record some stats and let the user
+          // write their data in the entry.
+          MOZ_ASSERT(entryWriter.RemainingBytes() == blockBytes);
+          mRangeEnd += blockBytes;
+          mPushedBlockCount += aBlockCount;
+          return std::forward<Callback>(aCallback)(&entryWriter);
+        }
+
+        // If we're here, `entryWriter` was empty (probably because we couldn't
+        // get a next chunk to write into), we just fall back to the `nullptr`
+        // case below...
+
+      }  // end of `if (current)`
+    }    // end of `if (mChunkManager)`
+
+    return std::forward<Callback>(aCallback)(nullptr);
+  }
+
+  // Reserve a block of `aBlockBytes` size, and invoke and return
+  // `aCallback(ProfileBufferEntryWriter*)`. Note that this is the "raw" version
+  // that doesn't write the entry size at the beginning of the block.
+  template <typename Callback>
+  auto ReserveAndPutRaw(Length aBlockBytes, Callback&& aCallback,
+                        uint64_t aBlockCount) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    return ReserveAndPutRaw([aBlockBytes]() { return aBlockBytes; },
+                            std::forward<Callback>(aCallback), lock,
+                            aBlockCount);
   }
 
   // Mutex guarding the following members.
