@@ -14,12 +14,15 @@
 #include "gc/Tracer.h"
 #include "gc/ZoneAllocator.h"
 #include "js/HashTable.h"
+#include "js/HeapAPI.h"
 
 namespace js {
 
 class GCMarker;
 class WeakMapBase;
 struct WeakMapTracer;
+
+extern void DumpWeakMapLog(JSRuntime* rt);
 
 namespace gc {
 
@@ -46,6 +49,42 @@ bool CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key, Cell* value);
 // implementation takes care of the special weak marking (ie, marking through
 // the implicit edges stored in the map) and of removing (sweeping) table
 // entries when collection is complete.
+
+// WeakMaps are marked with an incremental linear-time algorithm that handles
+// all orderings of map and key marking. The basic algorithm is:
+//
+// At first while marking, do nothing special when marking WeakMap keys (there
+// is no straightforward way to know whether a particular object is being used
+// as a key in some weakmap.) When a WeakMap is marked, scan through it to mark
+// all entries with live keys, and collect all unmarked keys into a "weak keys"
+// table.
+//
+// At some point, everything reachable has been marked. At this point, enter
+// "weak marking mode". In this mode, whenever any object is marked, look it up
+// in the weak keys table to see if it is the key for any WeakMap entry and if
+// so, mark the value. When entering weak marking mode, scan the weak key table
+// to find all keys that have been marked since we added them to the table, and
+// mark those entries.
+//
+// In addition, we want weakmap marking to work incrementally. So WeakMap
+// mutations are barriered to keep the weak keys table up to date: entries are
+// removed if their key is removed from the table, etc.
+//
+// You can break down various ways that WeakMap values get marked based on the
+// order that the map and key are marked. All of these assume the map and key
+// get marked at some point:
+//
+//   key marked, then map marked:
+//    - value was marked with map in `markEntries()`
+//   map marked, key already in map, key marked before weak marking mode:
+//    - key added to weakKeys when map marked in `markEntries()`
+//    - value marked during `enterWeakMarkingMode`
+//   map marked, key already in map, key marked after weak marking mode:
+//    - when key is marked, weakKeys[key] triggers marking of value in
+//      `markImplicitEdges()`
+//   map marked, key inserted into map, key marked:
+//    - value marked by insert barrier in `barrierForInsert`
+//
 
 using WeakMapColors = HashMap<WeakMapBase*, js::gc::CellColor,
                               DefaultHasher<WeakMapBase*>, SystemAllocPolicy>;
@@ -85,6 +124,9 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // entries of live weak maps whose keys are dead.
   static void sweepZone(JS::Zone* zone);
 
+  // Sweep the marked weak maps in a zone, updating moved keys.
+  static void sweepZoneAfterMinorGC(JS::Zone* zone);
+
   // Trace all weak map bindings. Used by the cycle collector.
   static void traceAllMappings(WeakMapTracer* tracer);
 
@@ -111,6 +153,12 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Any weakmap key types that want to participate in the non-iterative
   // ephemeron marking must override this method.
   virtual void markKey(GCMarker* marker, gc::Cell* markedCell, gc::Cell* l) = 0;
+
+  // An unmarked CCW with a delegate will add a weakKeys entry for the
+  // delegate. If the delegate is removed with NukeCrossCompartmentWrapper,
+  // then the (former) CCW needs to be added to weakKeys instead.
+  virtual void postSeverDelegate(GCMarker* marker, JSObject* key,
+                                 Compartment* comp) = 0;
 
   virtual bool markEntries(GCMarker* marker) = 0;
 
@@ -195,26 +243,66 @@ class WeakMap
     return p;
   }
 
+  void remove(Ptr p) {
+    MOZ_ASSERT(p.found());
+    if (mapColor) {
+      forgetKey(p->key());
+    }
+    Base::remove(p);
+  }
+
+  void remove(const Lookup& l) {
+    if (Ptr p = lookup(l)) {
+      remove(p);
+    }
+  }
+
+  void clear();
+
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool put(KeyInput&& key, ValueInput&& value) {
-    MOZ_ASSERT(key);
-    return Base::put(std::forward<KeyInput>(key),
-                     std::forward<ValueInput>(value));
+  MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+    MOZ_ASSERT(k);
+    if (!Base::add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v))) {
+      return false;
+    }
+    barrierForInsert(p->key(), p->value());
+    return true;
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool putNew(KeyInput&& key, ValueInput&& value) {
-    MOZ_ASSERT(key);
-    return Base::putNew(std::forward<KeyInput>(key),
-                        std::forward<ValueInput>(value));
+  MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+    MOZ_ASSERT(k);
+    if (!Base::relookupOrAdd(p, std::forward<KeyInput>(k),
+                             std::forward<ValueInput>(v))) {
+      return false;
+    }
+    barrierForInsert(p->key(), p->value());
+    return true;
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool relookupOrAdd(AddPtr& ptr, KeyInput&& key,
-                                  ValueInput&& value) {
-    MOZ_ASSERT(key);
-    return Base::relookupOrAdd(ptr, std::forward<KeyInput>(key),
-                               std::forward<ValueInput>(value));
+  MOZ_MUST_USE bool put(KeyInput&& k, ValueInput&& v) {
+    MOZ_ASSERT(k);
+    AddPtr p = lookupForAdd(k);
+    if (p) {
+      p->value() = std::forward<ValueInput>(v);
+      return true;
+    }
+    return add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+  }
+
+  template <typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool putNew(KeyInput&& k, ValueInput&& v) {
+    MOZ_ASSERT(k);
+    barrierForInsert(k, v);
+    return Base::putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+  }
+
+  template <typename KeyInput, typename ValueInput>
+  void putNewInfallible(KeyInput&& k, ValueInput&& v) {
+    MOZ_ASSERT(k);
+    barrierForInsert(k, v);
+    Base::putNewInfallible(std::forward(k), std::forward<KeyInput>(k));
   }
 
 #ifdef DEBUG
@@ -230,13 +318,34 @@ class WeakMap
 
   bool markEntry(GCMarker* marker, Key& key, Value& value);
 
+  // 'key' has lost its delegate, update our weak key state.
+  void postSeverDelegate(GCMarker* marker, JSObject* key,
+                         Compartment* comp) override;
+
   void trace(JSTracer* trc) override;
 
  protected:
+  inline void forgetKey(UnbarrieredKey key);
+
+  void barrierForInsert(Key k, const Value& v) {
+    if (!mapColor) {
+      return;
+    }
+    auto mapZone = JS::shadow::Zone::from(zone());
+    if (!mapZone->needsIncrementalBarrier()) {
+      return;
+    }
+
+    JSTracer* trc = mapZone->barrierTracer();
+    Value tmp = v;
+    TraceEdge(trc, &tmp, "weakmap inserted value");
+    MOZ_ASSERT(tmp == v);
+  }
+
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
   // value getting marked. Insert it or its delegate (if any) into the
   // appropriate zone's gcWeakKeys or gcNurseryWeakKeys.
-  static void addWeakEntry(GCMarker* marker, gc::Cell* key,
+  static void addWeakEntry(GCMarker* marker, JS::Zone* keyZone, gc::Cell* key,
                            const gc::WeakMarkable& markable);
 
   bool markEntries(GCMarker* marker) override;

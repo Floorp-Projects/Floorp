@@ -12,6 +12,7 @@
 #include "vm/Realm.h"
 
 #include "gc/ObjectKind-inl.h"
+#include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
@@ -223,6 +224,15 @@ inline void ProxyObject::setPrivate(const Value& priv) {
 }
 
 void ProxyObject::nuke() {
+  // Notify the zone that a delegate is no longer a delegate. Be careful not to
+  // expose this pointer, because it has already been removed from the wrapper
+  // map yet we have assertions during tracing that will verify that it is
+  // still present.
+  JSObject* delegate = UncheckedUnwrapWithoutExpose(this);
+  if (delegate != this) {
+    delegate->zone()->delegatePreWriteBarrier(this, delegate);
+  }
+
   // Clear the target reference and replaced it with a value that encodes
   // various information about the original target.
   setSameCompartmentPrivate(DeadProxyTargetValue(this));

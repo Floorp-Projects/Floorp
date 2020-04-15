@@ -550,8 +550,19 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     weakCaches().insertBack(cachep);
   }
 
+  void delegatePreWriteBarrier(JSObject* obj, JSObject* delegate) {
+    if (needsIncrementalBarrier()) {
+      delegatePreWriteBarrierInternal(obj, delegate);
+    }
+  }
+
+  void delegatePreWriteBarrierInternal(JSObject* obj, JSObject* delegate);
   js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
   js::gc::WeakKeyTable& gcNurseryWeakKeys() { return gcNurseryWeakKeys_.ref(); }
+
+  js::gc::WeakKeyTable& gcWeakKeys(const js::gc::Cell* cell) {
+    return cell->isTenured() ? gcWeakKeys() : gcNurseryWeakKeys();
+  }
 
   // Perform all pending weakmap entry marking for this zone after
   // transitioning to weak marking mode.
