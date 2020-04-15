@@ -104,3 +104,60 @@ add_task(async function test_check_default_modification() {
   Assert.equal(newMail.alwaysAskBeforeHandling, false);
   await deleteHandlerStore();
 });
+
+/**
+ * Check that we don't add bogus handlers.
+ */
+add_task(async function test_check_restrictions() {
+  const kTestData = {
+    testdeleteme: [
+      ["Delete me", ""],
+      ["Delete me insecure", "http://example.com/%s"],
+      ["Delete me no substitution", "https://example.com/"],
+      ["Keep me", "https://example.com/%s"],
+    ],
+    testreallydeleteme: [
+      // used to check we remove the entire entry.
+      ["Delete me", "http://example.com/%s"],
+    ],
+  };
+  for (let [scheme, handlers] of Object.entries(kTestData)) {
+    let count = 1;
+    for (let [name, uriTemplate] of handlers) {
+      let pref = `gecko.handlerService.schemes.${scheme}.${count}.`;
+      let obj = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+        Ci.nsIPrefLocalizedString
+      );
+      obj.data = name;
+      Services.prefs.setComplexValue(
+        pref + "name",
+        Ci.nsIPrefLocalizedString,
+        obj
+      );
+      obj.data = uriTemplate;
+      Services.prefs.setComplexValue(
+        pref + "uriTemplate",
+        Ci.nsIPrefLocalizedString,
+        obj
+      );
+      count++;
+    }
+  }
+
+  gHandlerService.wrappedJSObject._injectDefaultProtocolHandlers();
+  let schemeData = gHandlerService.wrappedJSObject._store.data.schemes;
+
+  Assert.ok(schemeData.testdeleteme, "Expect an entry for testdeleteme");
+  Assert.ok(
+    schemeData.testdeleteme.stubEntry,
+    "Expect a stub entry for testdeleteme"
+  );
+
+  Assert.deepEqual(
+    schemeData.testdeleteme.handlers,
+    [null, { name: "Keep me", uriTemplate: "https://example.com/%s" }],
+    "Expect only one handler is kept."
+  );
+
+  Assert.ok(!schemeData.testreallydeleteme, "No entry for reallydeleteme");
+});
