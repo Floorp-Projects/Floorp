@@ -101,13 +101,9 @@ bool FunctionEmitter::emitLazy() {
     return false;
   }
 
-  bool isRunOnceLambda = bce_->emittingRunOnceLambda &&
-                         !funbox_->shouldSuppressRunOnce();
-
   // Prepare to update the inner lazy script now that it's parent is fully
   // compiled. These updates will be applied in FunctionBox::finish().
   funbox_->setEnclosingScopeForInnerLazyFunction(bce_->innermostScope());
-  funbox_->setTreatAsRunOnce(isRunOnceLambda);
 
   if (!emitFunction()) {
     //              [stack] FUN?
@@ -382,15 +378,6 @@ bool FunctionScriptEmitter::prepareForParameters() {
     if (!namedLambdaEmitterScope_->enterNamedLambda(bce_, funbox_)) {
       return false;
     }
-  }
-
-  /*
-   * Mark the script so that initializers created within it may be given more
-   * precise types.
-   */
-  if (bce_->isRunOnceLambda()) {
-    bce_->script->setTreatAsRunOnce();
-    MOZ_ASSERT(!bce_->script->hasRunOnce());
   }
 
   if (bodyEnd_) {

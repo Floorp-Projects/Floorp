@@ -5692,7 +5692,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   }
 
   if (funbox->isInterpreted()) {
-    // Compute the field initializers data and update funbox.
+    // Compute the field initializers data and update the funbox.
+    //
     // NOTE: For a lazy function, this will be applied to any existing function
     //       in FunctionBox::finish().
     if (classContentsIfConstructor) {
@@ -5703,6 +5704,23 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
         return false;
       }
     }
+
+    // A function is a run-once lambda if the following all hold:
+    //  - Enclosing script must be run-once lambda or run-once top-level.
+    //        `SharedContext::treatAsRunOnce()`
+    //  - Function definition must not be in a loop.
+    //        `BytecodeEmitter::isInLoop() == false`
+    //  - Function must be an IIFE like "(function(){ })()".
+    //        `CallOrNewEmitter::state == State::FunctionCallee`
+    //  - Function must not match `shouldSuppressRunOnce` conditions.
+    //
+    // NOTE: This is a heuristic and through trick such as `fun.caller` it may
+    //       still be run more than once. The VM must accomodate this.
+    // NOTE: For a lazy function, this will be applied to any existing function
+    //       in FunctionBox::finish().
+    bool isRunOnceLambda =
+        emittingRunOnceLambda && !funbox->shouldSuppressRunOnce();
+    funbox->setTreatAsRunOnce(isRunOnceLambda);
 
     if (!funbox->emitBytecode) {
       return fe.emitLazy();
