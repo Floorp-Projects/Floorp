@@ -58,7 +58,7 @@ class CrashReporterControllerTest {
     }
 
     @Test
-    fun `"handle close and remove tab`() {
+    fun `handle close and remove tab`() {
         val controller = CrashReporterController(crash, session, navContoller, components, settings)
         controller.handleCloseAndRemove(sendCrash = false)?.joinBlocking()
 

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -11,6 +12,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -42,8 +44,8 @@ import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 
@@ -85,6 +87,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 navController = findNavController(),
                 showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
+                deleteBookmarkFolder = ::showRemoveFolderDialog,
                 invokePendingDeletion = ::invokePendingDeletion
             ),
             metrics = metrics!!
@@ -261,24 +264,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     }
 
     private fun deleteMulti(selected: Set<BookmarkNode>, eventType: Event = Event.RemoveBookmarks) {
-        pendingBookmarksToDelete.addAll(selected)
+        updatePendingBookmarksToDelete(selected)
 
-        val bookmarkTree = sharedViewModel.selectedFolder!! - pendingBookmarksToDelete
-        bookmarkInteractor.onBookmarksChanged(bookmarkTree)
-
-        val deleteOperation: (suspend () -> Unit) = {
-            deleteSelectedBookmarks(pendingBookmarksToDelete)
-            pendingBookmarkDeletionJob = null
-            // Since this runs in a coroutine, we can't depend upon the fragment still being attached
-            metrics?.track(Event.RemoveBookmarks)
-            refreshBookmarks()
-        }
-
-        pendingBookmarkDeletionJob = deleteOperation
+        pendingBookmarkDeletionJob = getDeleteOperation(eventType)
 
         val message = when (eventType) {
             is Event.RemoveBookmarks -> {
-                getString(R.string.bookmark_deletion_multiple_snackbar_message)
+                getRemoveBookmarksSnackBarMessage(selected)
             }
             is Event.RemoveBookmarkFolder,
             is Event.RemoveBookmark -> {
@@ -294,16 +286,85 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!, message,
             getString(R.string.bookmark_undo_deletion), {
-                pendingBookmarksToDelete.removeAll(selected)
-                pendingBookmarkDeletionJob = null
-                refreshBookmarks()
-            }, operation = deleteOperation
+                undoPendingDeletion(selected)
+            }, operation = getDeleteOperation(eventType)
         )
+    }
+
+    private fun getRemoveBookmarksSnackBarMessage(selected: Set<BookmarkNode>): String {
+        return if (selected.size > 1) {
+            getString(R.string.bookmark_deletion_multiple_snackbar_message)
+        } else {
+            val bookmarkNode = selected.first()
+            getString(
+                R.string.bookmark_deletion_snackbar_message,
+                bookmarkNode.url?.toShortUrl(context!!.components.publicSuffixList)
+                    ?: bookmarkNode.title
+            )
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _bookmarkInteractor = null
+    }
+
+    private fun showRemoveFolderDialog(selected: BookmarkNode) {
+        activity?.let { activity ->
+            AlertDialog.Builder(activity).apply {
+                setMessage(R.string.bookmark_delete_folder_confirmation_dialog)
+                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
+                    updatePendingBookmarksToDelete(setOf(selected))
+                    pendingBookmarkDeletionJob = getDeleteOperation(Event.RemoveBookmarkFolder)
+                    dialog.dismiss()
+                    val message = getDeleteDialogString(selected)
+                    lifecycleScope.allowUndo(
+                        view!!,
+                        message,
+                        getString(R.string.bookmark_undo_deletion),
+                        {
+                            undoPendingDeletion(setOf(selected))
+                        },
+                        operation = getDeleteOperation(Event.RemoveBookmarkFolder)
+                    )
+                }
+                create()
+            }
+                .show()
+        }
+    }
+
+    private fun updatePendingBookmarksToDelete(selected: Set<BookmarkNode>) {
+        pendingBookmarksToDelete.addAll(selected)
+        val bookmarkTree = sharedViewModel.selectedFolder!! - pendingBookmarksToDelete
+        bookmarkInteractor.onBookmarksChanged(bookmarkTree)
+    }
+
+    private fun getDeleteDialogString(selected: BookmarkNode): String {
+        return getString(
+            R.string.bookmark_deletion_snackbar_message,
+            context?.components?.publicSuffixList?.let { selected.url?.toShortUrl(it) }
+                ?: selected.title
+        )
+    }
+
+    private suspend fun undoPendingDeletion(selected: Set<BookmarkNode>) {
+        pendingBookmarksToDelete.removeAll(selected)
+        pendingBookmarkDeletionJob = null
+        refreshBookmarks()
+    }
+
+    private fun getDeleteOperation(event: Event): (suspend () -> Unit) {
+        return {
+            deleteSelectedBookmarks(pendingBookmarksToDelete)
+            pendingBookmarkDeletionJob = null
+            // Since this runs in a coroutine, we can't depend upon the fragment still being attached
+            metrics?.track(event)
+            refreshBookmarks()
+        }
     }
 
     private fun invokePendingDeletion() {

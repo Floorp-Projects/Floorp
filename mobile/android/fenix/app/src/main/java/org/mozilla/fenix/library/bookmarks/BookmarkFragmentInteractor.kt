@@ -89,7 +89,11 @@ class BookmarkFragmentInteractor(
             BookmarkNodeType.FOLDER -> Event.RemoveBookmarkFolder
             null -> Event.RemoveBookmarks
         }
-        bookmarksController.handleBookmarkDeletion(nodes, eventType)
+        if (eventType == Event.RemoveBookmarkFolder) {
+            bookmarksController.handleBookmarkFolderDeletion(nodes.first())
+        } else {
+            bookmarksController.handleBookmarkDeletion(nodes, eventType)
+        }
     }
 
     override fun onBackPressed() {

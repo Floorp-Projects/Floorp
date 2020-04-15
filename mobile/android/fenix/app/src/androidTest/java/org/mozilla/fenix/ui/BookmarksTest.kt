@@ -445,8 +445,14 @@ class BookmarksTest {
             getInstrumentation().waitForIdleSync()
         }.openThreeDotMenu("1") {
         }.clickDelete {
+            verifyDeleteFolderConfirmationMessage()
+            confirmFolderDeletion()
+            verifyDeleteSnackBarText()
         }.openThreeDotMenu("2") {
         }.clickDelete {
+            verifyDeleteFolderConfirmationMessage()
+            confirmFolderDeletion()
+            verifyDeleteSnackBarText()
             verifyFolderTitle("3")
         }.goBack {
         }

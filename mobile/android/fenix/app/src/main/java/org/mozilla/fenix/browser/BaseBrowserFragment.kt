@@ -759,7 +759,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             withContext(Main) {
                 nav(
                     R.id.browserFragment,
-                    BrowserFragmentDirections.actionGlobalBookmarkEditFragment(existing.guid)
+                    BrowserFragmentDirections.actionGlobalBookmarkEditFragment(existing.guid, true)
                 )
             }
         } else {
@@ -784,7 +784,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
                                 R.id.browserFragment,
-                                BrowserFragmentDirections.actionGlobalBookmarkEditFragment(guid)
+                                BrowserFragmentDirections.actionGlobalBookmarkEditFragment(guid, true)
                             )
                         }
                         .show()

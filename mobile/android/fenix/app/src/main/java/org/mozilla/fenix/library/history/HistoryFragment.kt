@@ -28,6 +28,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
@@ -38,6 +39,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -106,6 +108,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
     }
 
     private fun deleteHistoryItems(items: Set<HistoryItem>) {
+        val message = getMultiSelectSnackBarMessage(items)
         viewLifecycleOwner.lifecycleScope.launch {
             context?.components?.run {
                 for (item in items) {
@@ -114,6 +117,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 }
             }
             viewModel.invalidate()
+            showSnackBar(view!!, message)
             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
         }
     }
@@ -155,10 +159,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             true
         }
         R.id.delete_history_multi_select -> {
+            val message = getMultiSelectSnackBarMessage(selectedItems)
             viewLifecycleOwner.lifecycleScope.launch(Main) {
                 deleteSelectedHistory(historyStore.state.mode.selectedItems, requireComponents)
                 viewModel.invalidate()
                 historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
+                showSnackBar(requireView(), message)
             }
             true
         }
@@ -193,6 +199,17 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
         else -> super.onOptionsItemSelected(item)
     }
 
+    private fun getMultiSelectSnackBarMessage(historyItems: Set<HistoryItem>): String {
+        return if (historyItems.size > 1) {
+            getString(R.string.history_delete_multiple_items_snackbar)
+        } else {
+            getString(
+                R.string.history_delete_single_item_snackbar,
+                historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
+            )
+        }
+    }
+
     override fun onBackPressed(): Boolean = historyView.onBackPressed()
 
     private fun openItem(item: HistoryItem, mode: BrowsingMode? = null) {
@@ -222,6 +239,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                         launch(Main) {
                             viewModel.invalidate()
                             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
+                            showSnackBar(requireView(), getString(R.string.preferences_delete_browsing_data_snackbar))
                         }
                     }
 

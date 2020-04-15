@@ -196,7 +196,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onDelete(setOf(subfolder))
 
         verify {
-            bookmarkController.handleBookmarkDeletion(setOf(subfolder), Event.RemoveBookmarkFolder)
+            bookmarkController.handleBookmarkFolderDeletion(subfolder)
         }
     }
 

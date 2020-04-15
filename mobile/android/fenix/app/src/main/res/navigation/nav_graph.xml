@@ -241,6 +241,10 @@
         <action
             android:id="@+id/action_bookmarkEditFragment_to_bookmarkSelectFolderFragment"
             app:destination="@id/bookmarkSelectFolderFragment" />
+        <argument
+            android:name="requiresSnackbarPaddingForToolbar"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 
     <fragment

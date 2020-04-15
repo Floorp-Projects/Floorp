@@ -35,6 +35,7 @@ interface BookmarkController {
     fun handleBookmarkSharing(item: BookmarkNode)
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
     fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event)
+    fun handleBookmarkFolderDeletion(node: BookmarkNode)
     fun handleBackPressed()
 }
 
@@ -44,6 +45,7 @@ class DefaultBookmarkController(
     private val navController: NavController,
     private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
+    private val deleteBookmarkFolder: (BookmarkNode) -> Unit,
     private val invokePendingDeletion: () -> Unit
 ) : BookmarkController {
 
@@ -90,6 +92,10 @@ class DefaultBookmarkController(
 
     override fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event) {
         deleteBookmarkNodes(nodes, eventType)
+    }
+
+    override fun handleBookmarkFolderDeletion(node: BookmarkNode) {
+        deleteBookmarkFolder(node)
     }
 
     override fun handleBackPressed() {

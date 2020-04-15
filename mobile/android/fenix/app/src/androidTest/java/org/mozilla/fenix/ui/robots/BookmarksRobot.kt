@@ -13,6 +13,7 @@ import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
@@ -113,6 +114,8 @@ class BookmarksRobot {
 
     fun verifySignInToSyncButton() = signInToSyncButton().check(matches(isDisplayed()))
 
+    fun verifyDeleteFolderConfirmationMessage() = assertDeleteFolderConfirmationMessage()
+
     fun createFolder(name: String) {
         clickAddFolderButton()
         addNewFolderName(name)
@@ -168,6 +171,13 @@ class BookmarksRobot {
     fun selectFolder(title: String) = onView(withText(title)).click()
 
     fun longTapDesktopFolder(title: String) = onView(withText(title)).perform(longClick())
+
+    fun confirmFolderDeletion() {
+        onView(withText(R.string.delete_browsing_data_prompt_allow))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
+            .click()
+    }
 
     class Transition {
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -335,3 +345,8 @@ private fun assertShareBookmarkFavicon() =
 
 private fun assertShareBookmarkUrl() =
     onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
+
+private fun assertDeleteFolderConfirmationMessage() =
+    onView(withText(R.string.bookmark_delete_folder_confirmation_dialog))
+        .inRoot(RootMatchers.isDialog())
+        .check(matches(isDisplayed()))
