@@ -144,6 +144,9 @@ void AppShutdown::Init(AppShutdownMode aMode) {
 void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
   if (aPhase == sFastShutdownPhase) {
     StopLateWriteChecks();
+    if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
+      cache->EnsureShutdownWriteComplete();
+    }
     RecordShutdownEndTimeStamp();
     MaybeDoRestart();
 

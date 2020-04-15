@@ -23,6 +23,7 @@
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 
@@ -156,6 +157,10 @@ class StartupCache : public nsIMemoryReporter {
   // to disk if the timer hasn't already gone off.
   void MaybeInitShutdownWrite();
 
+  // For use during shutdown - ensure we complete the shutdown write
+  // before shutdown, even in the FastShutdown case.
+  void EnsureShutdownWriteComplete();
+
   // Signal that data should not be loaded from the cache file
   static void IgnoreDiskCache();
 
@@ -196,14 +201,12 @@ class StartupCache : public nsIMemoryReporter {
   // Writes the cache to disk
   Result<Ok, nsresult> WriteToDisk();
 
-  void WaitOnWriteThread();
   void WaitOnPrefetchThread();
   void StartPrefetchMemoryThread();
-  void MaybeSpawnWriteThread();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
-  static void ThreadedWrite(void* aClosure);
+  void MaybeWriteOffMainThread();
   static void ThreadedPrefetch(void* aClosure);
 
   HashMap<nsCString, StartupCacheEntry> mTable;
@@ -213,6 +216,7 @@ class StartupCache : public nsIMemoryReporter {
   nsTArray<decltype(mTable)> mOldTables;
   nsCOMPtr<nsIFile> mFile;
   loader::AutoMemMap mCacheData;
+  Mutex mTableLock;
 
   nsCOMPtr<nsIObserverService> mObserverService;
   RefPtr<StartupCacheListener> mListener;
@@ -229,7 +233,6 @@ class StartupCache : public nsIMemoryReporter {
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   static bool gFoundDiskCacheOnInit;
-  PRThread* mWriteThread;
   PRThread* mPrefetchThread;
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
