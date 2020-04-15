@@ -11,6 +11,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"  // for GetPresShell()
+#include "mozilla/FlushType.h"
 
 #include "nsPoint.h"
 #include "nsTArray.h"
@@ -253,7 +254,8 @@ class nsCoreUtils {
    * Return first sensible column for the given tree box object.
    */
   static already_AddRefed<nsTreeColumn> GetFirstSensibleColumn(
-      mozilla::dom::XULTreeElement* aTree);
+      mozilla::dom::XULTreeElement* aTree,
+      mozilla::FlushType = mozilla::FlushType::Frames);
 
   /**
    * Return sensible columns count for the given tree box object.
