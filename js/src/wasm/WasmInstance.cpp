@@ -425,7 +425,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  MOZ_ASSERT(argTypes.length() == argc);
+  MOZ_ASSERT(argTypes.lengthWithStackResults() == argc);
   Maybe<char*> stackResultPointer;
   for (size_t i = 0; i < argc; i++) {
     const void* rawArgLoc = &argv[i];
@@ -2105,7 +2105,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   // stored in the first element of the array (which, therefore, must have
   // length >= 1).
   Vector<ExportArg, 8> exportArgs(cx);
-  if (!exportArgs.resize(std::max<size_t>(1, argTypes.length()))) {
+  if (!exportArgs.resize(
+          std::max<size_t>(1, argTypes.lengthWithStackResults()))) {
     return false;
   }
 
@@ -2115,7 +2116,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   DebugCodegen(DebugChannel::Function, "wasm-function[%d] arguments [",
                funcIndex);
   RootedValue v(cx);
-  for (size_t i = 0; i < argTypes.length(); ++i) {
+  for (size_t i = 0; i < argTypes.lengthWithStackResults(); ++i) {
     void* rawArgLoc = &exportArgs[i];
     if (argTypes.isSyntheticStackResultPointerArg(i)) {
       *reinterpret_cast<void**>(rawArgLoc) = results.stackResultsArea();
@@ -2158,7 +2159,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   if (refs.length() > 0) {
     DebugCodegen(DebugChannel::Function, "; ");
     size_t nextRef = 0;
-    for (size_t i = 0; i < argTypes.length(); ++i) {
+    for (size_t i = 0; i < argTypes.lengthWithStackResults(); ++i) {
       if (argTypes.isSyntheticStackResultPointerArg(i)) {
         continue;
       }
