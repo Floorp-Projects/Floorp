@@ -19,14 +19,10 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
-#include "jit/JitOptions.h"
 #include "js/AllocPolicy.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
 #include "js/Vector.h"
-#ifdef ENABLE_NEW_REGEXP
-#  include "new-regexp/RegExpTypes.h"
-#endif
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 
@@ -42,23 +38,12 @@ using RootedRegExpShared = JS::Rooted<RegExpShared*>;
 using HandleRegExpShared = JS::Handle<RegExpShared*>;
 using MutableHandleRegExpShared = JS::MutableHandle<RegExpShared*>;
 
-enum RegExpRunStatus : int32_t {
-  RegExpRunStatus_Error = -1,
-  RegExpRunStatus_Success = 1,
-  RegExpRunStatus_Success_NotFound = 0,
+enum RegExpRunStatus {
+  RegExpRunStatus_Error,
+  RegExpRunStatus_Success,
+  RegExpRunStatus_Success_NotFound
 };
 
-#ifdef ENABLE_NEW_REGEXP
-
-inline bool IsNativeRegExpEnabled() {
-#  ifdef JS_CODEGEN_NONE
-  return false;
-#  else
-  return jit::JitOptions.nativeRegExp;
-#  endif
-}
-
-#else
 /*
  * Layout of the reg exp bytecode header.
  */
@@ -66,7 +51,6 @@ struct RegExpByteCodeHeader {
   uint32_t length;        // Number of instructions.
   uint32_t numRegisters;  // Number of registers used.
 };
-#endif  // ENABLE_NEW_REGEXP
 
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
@@ -87,16 +71,10 @@ struct RegExpByteCodeHeader {
  */
 class RegExpShared : public gc::TenuredCell {
  public:
+  enum ForceByteCodeEnum { DontForceByteCode, ForceByteCode };
   enum class Kind { Unparsed, Atom, RegExp };
-  enum class CodeKind { Bytecode, Jitcode, Any };
 
-#ifdef ENABLE_NEW_REGEXP
-  using ByteCode = js::irregexp::ByteArrayData;
-  using JitCodeTable = js::irregexp::ByteArray;
-#else
-  using ByteCode = uint8_t;
   using JitCodeTable = UniquePtr<uint8_t[], JS::FreePolicy>;
-#endif
   using JitCodeTables = Vector<JitCodeTable, 0, SystemAllocPolicy>;
 
  private:
@@ -105,28 +83,16 @@ class RegExpShared : public gc::TenuredCell {
 
   struct RegExpCompilation {
     WeakHeapPtr<jit::JitCode*> jitCode;
-    ByteCode* byteCode = nullptr;
+    uint8_t* byteCode = nullptr;
 
-    bool compiled(CodeKind kind = CodeKind::Any) const {
-      switch (kind) {
-        case CodeKind::Bytecode:
-          return !!byteCode;
-        case CodeKind::Jitcode:
-          return !!jitCode;
-        case CodeKind::Any:
-          return !!byteCode || !!jitCode;
-      }
-      MOZ_CRASH("Unreachable");
+    bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
+      return byteCode || (force == DontForceByteCode && jitCode);
     }
 
     size_t byteCodeLength() const {
       MOZ_ASSERT(byteCode);
-#ifdef ENABLE_NEW_REGEXP
-      return byteCode->length;
-#else
       auto header = reinterpret_cast<RegExpByteCodeHeader*>(byteCode);
       return header->length;
-#endif
     }
   };
 
@@ -136,14 +102,12 @@ class RegExpShared : public gc::TenuredCell {
 
   RegExpCompilation compilationArray[2];
 
-  uint32_t pairCount_;
+  uint32_t parenCount;
   JS::RegExpFlags flags;
 
 #ifdef ENABLE_NEW_REGEXP
   RegExpShared::Kind kind_ = Kind::Unparsed;
   GCPtrAtom patternAtom_;
-  uint32_t maxRegisters_ = 0;
-  uint32_t ticks_ = 0;
 #else
   bool canStringMatch = false;
 #endif
@@ -157,13 +121,14 @@ class RegExpShared : public gc::TenuredCell {
   RegExpShared(JSAtom* source, JS::RegExpFlags flags);
 
   static bool compile(JSContext* cx, MutableHandleRegExpShared res,
-                      HandleLinearString input, CodeKind code);
+                      HandleLinearString input, ForceByteCodeEnum force);
   static bool compile(JSContext* cx, MutableHandleRegExpShared res,
                       HandleAtom pattern, HandleLinearString input,
-                      CodeKind code);
+                      ForceByteCodeEnum force);
 
   static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
-                                 HandleLinearString input, CodeKind code);
+                                 HandleLinearString input,
+                                 ForceByteCodeEnum force);
 
   const RegExpCompilation& compilation(bool latin1) const {
     return compilationArray[CompilationIndex(latin1)];
@@ -191,13 +156,13 @@ class RegExpShared : public gc::TenuredCell {
 
   /* Accessors */
 
-  size_t pairCount() const {
+  size_t getParenCount() const {
 #ifdef ENABLE_NEW_REGEXP
     MOZ_ASSERT(kind() != Kind::Unparsed);
 #else
     MOZ_ASSERT(isCompiled());
 #endif
-    return pairCount_;
+    return parenCount;
   }
 
 #ifdef ENABLE_NEW_REGEXP
@@ -205,31 +170,10 @@ class RegExpShared : public gc::TenuredCell {
 
   // Use simple string matching for this regexp.
   void useAtomMatch(HandleAtom pattern);
-
-  // Use the regular expression engine for this regexp.
-  void useRegExpMatch(size_t parenCount);
-
-  void tierUpTick();
-  bool markedForTierUp();
-
-  void setByteCode(ByteCode* code, bool latin1) {
-    compilation(latin1).byteCode = code;
-  }
-  ByteCode* getByteCode(bool latin1) const {
-    return compilation(latin1).byteCode;
-  }
-  void setJitCode(jit::JitCode* code, bool latin1) {
-    compilation(latin1).jitCode = code;
-  }
-  jit::JitCode* getJitCode(bool latin1) const {
-    return compilation(latin1).jitCode;
-  }
-  uint32_t getMaxRegisters() const { return maxRegisters_; }
-  void updateMaxRegisters(uint32_t numRegisters) {
-    maxRegisters_ = std::max(maxRegisters_, numRegisters);
-  }
-
 #endif
+
+  /* Accounts for the "0" (whole match) pair. */
+  size_t pairCount() const { return getParenCount() + 1; }
 
   JSAtom* getSource() const { return headerAndSource.ptr(); }
 
@@ -248,8 +192,9 @@ class RegExpShared : public gc::TenuredCell {
   bool unicode() const { return flags.unicode(); }
   bool sticky() const { return flags.sticky(); }
 
-  bool isCompiled(bool latin1, CodeKind codeKind = CodeKind::Any) const {
-    return compilation(latin1).compiled(codeKind);
+  bool isCompiled(bool latin1,
+                  ForceByteCodeEnum force = DontForceByteCode) const {
+    return compilation(latin1).compiled(force);
   }
   bool isCompiled() const { return isCompiled(true) || isCompiled(false); }
 
@@ -264,8 +209,8 @@ class RegExpShared : public gc::TenuredCell {
 
   static size_t offsetOfFlags() { return offsetof(RegExpShared, flags); }
 
-  static size_t offsetOfPairCount() {
-    return offsetof(RegExpShared, pairCount_);
+  static size_t offsetOfParenCount() {
+    return offsetof(RegExpShared, parenCount);
   }
 
   static size_t offsetOfJitCode(bool latin1) {
