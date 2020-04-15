@@ -192,7 +192,7 @@ button > hbox > label {
 }
 
 #category-general > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/general.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/general.svg");
 }
 
 #category-home > .category-icon {
@@ -200,15 +200,15 @@ button > hbox > label {
 }
 
 #category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/search.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/search.svg");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/privacy-security.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/privacy-security.svg");
 }
 
 #category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/sync.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/sync.svg");
 }
 
 /* header */
@@ -763,17 +763,17 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-bookmarks .checkbox-icon,
 .sync-engine-bookmarks.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/bookmark.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/bookmark.svg");
 }
 
 .sync-engine-history .checkbox-icon,
 .sync-engine-history.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/history.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/history.svg");
 }
 
 .sync-engine-tabs .checkbox-icon,
 .sync-engine-tabs.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/tab.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/tab.svg");
 }
 
 .sync-engine-passwords .checkbox-icon,
@@ -783,17 +783,17 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-addons .checkbox-icon,
 .sync-engine-addons.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/extensions.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/extensions.svg");
 }
 
 .sync-engine-prefs .checkbox-icon,
 .sync-engine-prefs.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/preferences.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/preferences.svg");
 }
 
 .sync-engine-addresses .checkbox-icon,
 .sync-engine-addresses.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/formfill.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/formfill.svg");
 }
 
 .fxaMobilePromo {
@@ -839,7 +839,7 @@ image.update-throbber {
 }
 
 .face-sad {
-  list-style-image: url("chrome://browser/skin/preferences/face-sad.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/face-sad.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -847,7 +847,7 @@ image.update-throbber {
 }
 
 .face-smile {
-  list-style-image: url("chrome://browser/skin/preferences/face-smile.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/face-smile.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -963,7 +963,7 @@ menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left >
 }
 
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url(chrome://browser/skin/preferences/search-arrow-indicator.svg);
+  list-style-image: url(chrome://browser/skin/preferences/in-content/search-arrow-indicator.svg);
 }
 
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl) {
@@ -984,13 +984,13 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 .no-results-image {
-  list-style-image: url("chrome://browser/skin/preferences/no-search-results.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-results.svg");
   width: 380px;
   height: 293px;
 }
 
 #no-results-message[query*=🔥🦊] {
-  background-image: url("chrome://browser/skin/preferences/critters-postcard.jpg");
+  background-image: url("chrome://browser/skin/preferences/in-content/critters-postcard.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
