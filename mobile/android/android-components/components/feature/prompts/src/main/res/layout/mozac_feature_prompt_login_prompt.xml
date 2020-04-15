@@ -47,9 +47,9 @@
         app:layout_goneMarginTop="8dp"
         tools:text="@string/mozac_feature_prompt_logins_save_message" />
 
-    <com.google.android.material.textfield.TextInputLayout
+    <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
         android:id="@+id/userNameLayout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/MozTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
@@ -67,11 +67,11 @@
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textSize="16sp" />
-    </com.google.android.material.textfield.TextInputLayout>
+    </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
+    <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
         android:id="@+id/password_text_input_layout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/MozTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
@@ -96,18 +96,18 @@
             android:textColor="?android:textColorPrimary"
             android:textSize="16sp" />
 
-    </com.google.android.material.textfield.TextInputLayout>
+    </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
 
     <Button
         android:id="@+id/save_cancel"
-        style="?android:attr/borderlessButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="12dp"
+        android:backgroundTint="?android:colorEdgeEffect"
         android:text="@string/mozac_feature_prompt_dont_save"
         android:textAllCaps="false"
-        android:textColor="?android:colorEdgeEffect"
+        android:textColor="?android:windowBackground"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
