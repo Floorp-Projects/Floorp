@@ -2761,7 +2761,8 @@ bool GCMarker::enterWeakMarkingMode() {
   return true;
 }
 
-void JS::Zone::enterWeakMarkingMode(GCMarker* marker) {
+IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
+                                                   SliceBudget& budget) {
   MOZ_ASSERT(marker->isWeakMarking());
 
   // gcWeakKeys contains the keys from all weakmaps marked so far, or at least
@@ -2773,7 +2774,7 @@ void JS::Zone::enterWeakMarkingMode(GCMarker* marker) {
   // we may later leave weak marking mode, do some more marking, and then enter
   // back in.
   if (!isGCMarking()) {
-    return;
+    return IncrementalProgress::Finished;
   }
 
   MOZ_ASSERT(gcNurseryWeakKeys().count() == 0);
@@ -2797,6 +2798,10 @@ void JS::Zone::enterWeakMarkingMode(GCMarker* marker) {
         // vector may be appended to within this loop body. So iterate just
         // over the ones from before weak marking mode was switched on.
         v.weakmap->markKey(marker, key, v.key);
+        budget.step();
+        if (budget.isOverBudget()) {
+          return NotFinished;
+        }
       }
 
       if (keyColor == gc::CellColor::Black) {
@@ -2813,6 +2818,8 @@ void JS::Zone::enterWeakMarkingMode(GCMarker* marker) {
       r.popFront();
     }
   }
+
+  return IncrementalProgress::Finished;
 }
 
 #ifdef DEBUG

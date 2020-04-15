@@ -28,6 +28,8 @@ static const size_t SMALL_MARK_STACK_BASE_CAPACITY = 256;
 
 namespace gc {
 
+enum IncrementalProgress { NotFinished = 0, Finished };
+
 struct Cell;
 
 struct WeakKeyTableHashPolicy {
