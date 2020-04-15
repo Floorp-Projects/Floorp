@@ -142,9 +142,6 @@ class History final : public BaseHistory,
    */
   void AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden);
 
-  void NotifyVisitedParent(
-      const nsTArray<mozilla::dom::VisitedQueryResult>& aURIs);
-
  private:
   virtual ~History();
 

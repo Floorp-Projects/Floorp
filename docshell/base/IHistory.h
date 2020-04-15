@@ -38,11 +38,10 @@ class IHistory : public nsISupports {
    * Registers the Link for notifications about the visited-ness of aURI.
    * Consumers should assume that the URI is unvisited after calling this, and
    * they will be notified if that state (unvisited) changes by having
-   * SetLinkState called on themselves.  This function is guaranteed to run to
-   * completion before aLink is notified.  After the node is notified, it will
-   * be unregistered.
+   * VisitedQueryFinished called on themselves. Note that it may call
+   * synchronously if the answer is already known.
    *
-   * @note SetLinkState must not call RegisterVisitedCallback or
+   * @note VisitedQueryFinished must not call RegisterVisitedCallback or
    *       UnregisterVisitedCallback.
    *
    * @pre aURI must not be null.
@@ -56,7 +55,7 @@ class IHistory : public nsISupports {
    *        object should be destroyed, be sure to call
    *        UnregisterVistedCallback first.
    */
-  virtual nsresult RegisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
+  virtual void RegisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
 
   /**
    * Unregisters a previously registered Link object.  This must be called
