@@ -73,6 +73,7 @@
 #include "wasm/WasmTypes.h"                // for DebugFrame
 
 #include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
+#include "gc/WeakMap-inl.h"         // for WeakMap::remove
 #include "vm/Compartment-inl.h"     // for Compartment::wrap
 #include "vm/JSContext-inl.h"       // for JSContext::check
 #include "vm/JSObject-inl.h"        // for NewObjectWithGivenProto
