@@ -51,6 +51,10 @@ add_task(async function test_replaceResponseHeaders() {
           value: "object-src 'none'; script-src https:",
         },
       ];
+      let combinedHeaders = {
+        name: "Content-Security-Policy",
+        value: `${testHeaders[0].value}, ${testHeaders[1].value}`,
+      };
       browser.webRequest.onHeadersReceived.addListener(
         details => {
           if (!details.fromCache) {
@@ -86,7 +90,7 @@ add_task(async function test_replaceResponseHeaders() {
       );
       browser.webRequest.onResponseStarted.addListener(
         details => {
-          let needle = details.fromCache ? testHeaders[1] : testHeaders[0];
+          let needle = details.fromCache ? combinedHeaders : testHeaders[0];
           let header = details.responseHeaders.filter(header => {
             browser.test.log(`header ${header.name} = ${header.value}`);
             return header.name == needle.name && header.value == needle.value;
