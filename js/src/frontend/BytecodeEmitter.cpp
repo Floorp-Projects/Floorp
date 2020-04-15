@@ -4313,8 +4313,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
         //          [stack] VAL
         return false;
       }
-
-      poe.reset();
       break;
     }
     case ParseNodeKind::CallExpr:
@@ -4325,8 +4323,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
         //          [stack] VAL
         return false;
       }
-
-      eoe.reset();
       break;
     }
     case ParseNodeKind::ArrayExpr:
