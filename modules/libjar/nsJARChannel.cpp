@@ -997,6 +997,7 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
 
   mRequest = req;
   nsresult rv = mListener->OnStartRequest(this);
+  mRequest = nullptr;
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1037,7 +1038,6 @@ nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
 
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, status);
 
-  mRequest = nullptr;
   mPump = nullptr;
   mIsPending = false;
 
