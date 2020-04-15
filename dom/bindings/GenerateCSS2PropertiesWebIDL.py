@@ -23,7 +23,7 @@ def generate(output, idlFilename, dataFile):
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = ["CEReactions", "Throws",
                          "SetterNeedsSubjectPrincipal=NonSystem"]
-        if p.pref is not "":
+        if p.pref != "":
             extendedAttrs.append('Pref="%s"' % p.pref)
 
         prop = p.method
