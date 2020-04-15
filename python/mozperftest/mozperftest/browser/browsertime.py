@@ -4,6 +4,7 @@
 import collections
 import json
 import os
+import pathlib
 import stat
 import sys
 import re
@@ -418,7 +419,18 @@ class BrowsertimeRunner(NodeRunner):
         # see https://bugzilla.mozilla.org/show_bug.cgi?id=1625118
         profile = self.get_profile(metadata)
         test_script = metadata.get_arg("tests")[0]
-        result_dir = os.path.join(os.path.dirname(__file__), "browsertime-results")
+        output = metadata.get_arg("output")
+        if output is not None:
+            p = pathlib.Path(output)
+            p = p / "browsertime-results"
+            result_dir = str(p.resolve())
+        else:
+            result_dir = os.path.join(
+                self.topsrcdir, "artifacts", "browsertime-results"
+            )
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir, exist_ok=True)
+
         args = [
             "--resultDir",
             result_dir,
