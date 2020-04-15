@@ -8,6 +8,7 @@
 #define ProfileChunkedBuffer_h
 
 #include "mozilla/BaseProfilerDetail.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ProfileBufferChunkManager.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefCounted.h"
@@ -597,6 +598,390 @@ class ProfileChunkedBuffer {
     mChunkManager->ForgetUnreleasedChunks();
     mRangeStart = mRangeEnd = mNextChunkRangeStart;
     return chunks;
+  }
+
+  class Reader;
+
+  // Class that can iterate through blocks and provide
+  // `ProfileBufferEntryReader`s.
+  // Created through `Reader`, lives within a lock guard lifetime.
+  class BlockIterator {
+   public:
+#ifdef DEBUG
+    ~BlockIterator() {
+      // No BlockIterator should live outside of a mutexed call.
+      mBuffer->mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
+    // Comparison with other iterator, mostly used in range-for loops.
+    [[nodiscard]] bool operator==(const BlockIterator& aRhs) const {
+      MOZ_ASSERT(mBuffer == aRhs.mBuffer);
+      return mCurrentBlockIndex == aRhs.mCurrentBlockIndex;
+    }
+    [[nodiscard]] bool operator!=(const BlockIterator& aRhs) const {
+      MOZ_ASSERT(mBuffer == aRhs.mBuffer);
+      return mCurrentBlockIndex != aRhs.mCurrentBlockIndex;
+    }
+
+    // Advance to next BlockIterator.
+    BlockIterator& operator++() {
+      mBuffer->mMutex.AssertCurrentThreadOwns();
+      mCurrentBlockIndex =
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+              mNextBlockPointer.GlobalRangePosition());
+      mCurrentEntry =
+          mNextBlockPointer.EntryReader(mNextBlockPointer.ReadEntrySize());
+      return *this;
+    }
+
+    // Dereferencing creates a `ProfileBufferEntryReader` object for the entry
+    // inside this block.
+    // (Note: It would be possible to return a `const
+    // ProfileBufferEntryReader&`, but not useful in practice, because in most
+    // case the user will want to read, which is non-const.)
+    [[nodiscard]] ProfileBufferEntryReader operator*() const {
+      return mCurrentEntry;
+    }
+
+    // True if this iterator is just past the last entry.
+    [[nodiscard]] bool IsAtEnd() const {
+      return mCurrentEntry.RemainingBytes() == 0;
+    }
+
+    // Can be used as reference to come back to this entry with `GetEntryAt()`.
+    [[nodiscard]] ProfileBufferBlockIndex CurrentBlockIndex() const {
+      return mCurrentBlockIndex;
+    }
+
+    // Index past the end of this block, which is the start of the next block.
+    [[nodiscard]] ProfileBufferBlockIndex NextBlockIndex() const {
+      MOZ_ASSERT(!IsAtEnd());
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mNextBlockPointer.GlobalRangePosition());
+    }
+
+    // Index of the first block in the whole buffer.
+    [[nodiscard]] ProfileBufferBlockIndex BufferRangeStart() const {
+      mBuffer->mMutex.AssertCurrentThreadOwns();
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mBuffer->mRangeStart);
+    }
+
+    // Index past the last block in the whole buffer.
+    [[nodiscard]] ProfileBufferBlockIndex BufferRangeEnd() const {
+      mBuffer->mMutex.AssertCurrentThreadOwns();
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mBuffer->mRangeEnd);
+    }
+
+   private:
+    // Only a Reader can instantiate a BlockIterator.
+    friend class Reader;
+
+    BlockIterator(const ProfileChunkedBuffer& aBuffer,
+                  const ProfileBufferChunk* aChunks0,
+                  const ProfileBufferChunk* aChunks1,
+                  ProfileBufferBlockIndex aBlockIndex)
+        : mNextBlockPointer(aChunks0, aChunks1, aBlockIndex),
+          mCurrentBlockIndex(
+              ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                  mNextBlockPointer.GlobalRangePosition())),
+          mCurrentEntry(
+              mNextBlockPointer.EntryReader(mNextBlockPointer.ReadEntrySize())),
+          mBuffer(WrapNotNull(&aBuffer)) {
+      // No BlockIterator should live outside of a mutexed call.
+      mBuffer->mMutex.AssertCurrentThreadOwns();
+    }
+
+    detail::InChunkPointer mNextBlockPointer;
+
+    ProfileBufferBlockIndex mCurrentBlockIndex;
+
+    ProfileBufferEntryReader mCurrentEntry;
+
+    // Using a non-null pointer instead of a reference, to allow copying.
+    // This BlockIterator should only live inside one of the thread-safe
+    // ProfileChunkedBuffer functions, for this reference to stay valid.
+    NotNull<const ProfileChunkedBuffer*> mBuffer;
+  };
+
+  // Class that can create `BlockIterator`s (e.g., for range-for), or just
+  // iterate through entries; lives within a lock guard lifetime.
+  class MOZ_RAII Reader {
+   public:
+    Reader(const Reader&) = delete;
+    Reader& operator=(const Reader&) = delete;
+    Reader(Reader&&) = delete;
+    Reader& operator=(Reader&&) = delete;
+
+#ifdef DEBUG
+    ~Reader() {
+      // No Reader should live outside of a mutexed call.
+      mBuffer.mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
+    // Index of the first block in the whole buffer.
+    [[nodiscard]] ProfileBufferBlockIndex BufferRangeStart() const {
+      mBuffer.mMutex.AssertCurrentThreadOwns();
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mBuffer.mRangeStart);
+    }
+
+    // Index past the last block in the whole buffer.
+    [[nodiscard]] ProfileBufferBlockIndex BufferRangeEnd() const {
+      mBuffer.mMutex.AssertCurrentThreadOwns();
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mBuffer.mRangeEnd);
+    }
+
+    // Iterators to the first and past-the-last blocks.
+    // Compatible with range-for (see `ForEach` below as example).
+    [[nodiscard]] BlockIterator begin() const {
+      return BlockIterator(mBuffer, mChunks0, mChunks1, nullptr);
+    }
+    // Note that a `BlockIterator` at the `end()` should not be dereferenced, as
+    // there is no actual block there!
+    [[nodiscard]] BlockIterator end() const {
+      return BlockIterator(mBuffer, nullptr, nullptr, nullptr);
+    }
+
+    // Get a `BlockIterator` at the given `ProfileBufferBlockIndex`, clamped to
+    // the stored range. Note that a `BlockIterator` at the `end()` should not
+    // be dereferenced, as there is no actual block there!
+    [[nodiscard]] BlockIterator At(ProfileBufferBlockIndex aBlockIndex) const {
+      if (aBlockIndex < BufferRangeStart()) {
+        // Anything before the range (including null ProfileBufferBlockIndex) is
+        // clamped at the beginning.
+        return begin();
+      }
+      // Otherwise we at least expect the index to be valid (pointing exactly at
+      // a live block, or just past the end.)
+      return BlockIterator(mBuffer, mChunks0, mChunks1, aBlockIndex);
+    }
+
+    // Run `aCallback(ProfileBufferEntryReader&)` on each entry from first to
+    // last. Callback should not store `ProfileBufferEntryReader`, as it may
+    // become invalid after this thread-safe call.
+    template <typename Callback>
+    void ForEach(Callback&& aCallback) const {
+      for (ProfileBufferEntryReader reader : *this) {
+        aCallback(reader);
+      }
+    }
+
+    // If this reader only points at one chunk with some data, this data will be
+    // exposed as a single entry.
+    [[nodiscard]] ProfileBufferEntryReader SingleChunkDataAsEntry() {
+      const ProfileBufferChunk* onlyNonEmptyChunk = nullptr;
+      for (const ProfileBufferChunk* chunkList : {mChunks0, mChunks1}) {
+        for (const ProfileBufferChunk* chunk = chunkList; chunk;
+             chunk = chunk->GetNext()) {
+          if (chunk->OffsetFirstBlock() != chunk->OffsetPastLastBlock()) {
+            if (onlyNonEmptyChunk) {
+              // More than one non-empty chunk.
+              return ProfileBufferEntryReader();
+            }
+            onlyNonEmptyChunk = chunk;
+          }
+        }
+      }
+      if (!onlyNonEmptyChunk) {
+        // No non-empty chunks.
+        return ProfileBufferEntryReader();
+      }
+      // Here, we have found one chunk that had some data.
+      return ProfileBufferEntryReader(
+          onlyNonEmptyChunk->BufferSpan().FromTo(
+              onlyNonEmptyChunk->OffsetFirstBlock(),
+              onlyNonEmptyChunk->OffsetPastLastBlock()),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+              onlyNonEmptyChunk->RangeStart()),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+              onlyNonEmptyChunk->RangeStart() +
+              (onlyNonEmptyChunk->OffsetPastLastBlock() -
+               onlyNonEmptyChunk->OffsetFirstBlock())));
+    }
+
+   private:
+    friend class ProfileChunkedBuffer;
+
+    explicit Reader(const ProfileChunkedBuffer& aBuffer,
+                    const ProfileBufferChunk* aChunks0,
+                    const ProfileBufferChunk* aChunks1)
+        : mBuffer(aBuffer), mChunks0(aChunks0), mChunks1(aChunks1) {
+      // No Reader should live outside of a mutexed call.
+      mBuffer.mMutex.AssertCurrentThreadOwns();
+    }
+
+    // This Reader should only live inside one of the thread-safe
+    // ProfileChunkedBuffer functions, for this reference to stay valid.
+    const ProfileChunkedBuffer& mBuffer;
+    const ProfileBufferChunk* mChunks0;
+    const ProfileBufferChunk* mChunks1;
+  };
+
+  // In in-session, call `aCallback(ProfileChunkedBuffer::Reader&)` and return
+  // true. Callback should not store `Reader`, because it may become invalid
+  // after this call.
+  // If out-of-session, return false (callback is not invoked).
+  template <typename Callback>
+  [[nodiscard]] auto Read(Callback&& aCallback) const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (MOZ_UNLIKELY(!mChunkManager)) {
+      // Out-of-session.
+      return std::forward<Callback>(aCallback)(static_cast<Reader*>(nullptr));
+    }
+    return mChunkManager->PeekExtantReleasedChunks(
+        [&](const ProfileBufferChunk* aOldestChunk) {
+          Reader reader(*this, aOldestChunk, mCurrentChunk.get());
+          return std::forward<Callback>(aCallback)(&reader);
+        });
+  }
+
+  // Invoke `aCallback(ProfileBufferEntryReader& [, ProfileBufferBlockIndex])`
+  // on each entry, it must read or at least skip everything. Either/both chunk
+  // pointers may be null.
+  template <typename Callback>
+  static void ReadEach(const ProfileBufferChunk* aChunks0,
+                       const ProfileBufferChunk* aChunks1,
+                       Callback&& aCallback) {
+    static_assert(std::is_invocable_v<Callback, ProfileBufferEntryReader&> ||
+                      std::is_invocable_v<Callback, ProfileBufferEntryReader&,
+                                          ProfileBufferBlockIndex>,
+                  "ReadEach callback must take ProfileBufferEntryReader& and "
+                  "optionally a ProfileBufferBlockIndex");
+    detail::InChunkPointer p{aChunks0, aChunks1};
+    while (p) {
+      // The position right before an entry size *is* a block index.
+      const ProfileBufferBlockIndex blockIndex =
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+              p.GlobalRangePosition());
+      Length entrySize = p.ReadEntrySize();
+      if (entrySize == 0) {
+        return;
+      }
+      ProfileBufferEntryReader entryReader = p.EntryReader(entrySize);
+      if (entryReader.RemainingBytes() == 0) {
+        return;
+      }
+      MOZ_ASSERT(entryReader.RemainingBytes() == entrySize);
+      if constexpr (std::is_invocable_v<Callback, ProfileBufferEntryReader&,
+                                        ProfileBufferBlockIndex>) {
+        aCallback(entryReader, blockIndex);
+      } else {
+        Unused << blockIndex;
+        aCallback(entryReader);
+      }
+      MOZ_ASSERT(entryReader.RemainingBytes() == 0);
+    }
+  }
+
+  // Invoke `aCallback(ProfileBufferEntryReader& [, ProfileBufferBlockIndex])`
+  // on each entry, it must read or at least skip everything.
+  template <typename Callback>
+  void ReadEach(Callback&& aCallback) const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (MOZ_UNLIKELY(!mChunkManager)) {
+      // Out-of-session.
+      return;
+    }
+    mChunkManager->PeekExtantReleasedChunks(
+        [&](const ProfileBufferChunk* aOldestChunk) {
+          ReadEach(aOldestChunk, mCurrentChunk.get(),
+                   std::forward<Callback>(aCallback));
+        });
+  }
+
+  // Call `aCallback(Maybe<ProfileBufferEntryReader>&&)` on the entry at
+  // the given ProfileBufferBlockIndex; The `Maybe` will be `Nothing` if
+  // out-of-session, or if that entry doesn't exist anymore, or if we've reached
+  // just past the last entry. Return whatever `aCallback` returns. Callback
+  // should not store `ProfileBufferEntryReader`, because it may become invalid
+  // after this call.
+  // Either/both chunk pointers may be null.
+  template <typename Callback>
+  [[nodiscard]] static auto ReadAt(ProfileBufferBlockIndex aMinimumBlockIndex,
+                                   const ProfileBufferChunk* aChunks0,
+                                   const ProfileBufferChunk* aChunks1,
+                                   Callback&& aCallback) {
+    static_assert(
+        std::is_invocable_v<Callback, Maybe<ProfileBufferEntryReader>&&>,
+        "ReadAt callback must take a Maybe<ProfileBufferEntryReader>&&");
+    Maybe<ProfileBufferEntryReader> maybeEntryReader;
+    if (detail::InChunkPointer p{aChunks0, aChunks1}; p) {
+      // If the pointer position is before the given position, try to advance.
+      if (p.GlobalRangePosition() >=
+              aMinimumBlockIndex.ConvertToProfileBufferIndex() ||
+          p.AdvanceToGlobalRangePosition(
+              aMinimumBlockIndex.ConvertToProfileBufferIndex())) {
+        MOZ_ASSERT(p.GlobalRangePosition() >=
+                   aMinimumBlockIndex.ConvertToProfileBufferIndex());
+        // Here we're pointing at the start of a block, try to read the entry
+        // size. (Entries cannot be empty, so 0 means failure.)
+        if (Length entrySize = p.ReadEntrySize(); entrySize != 0) {
+          maybeEntryReader.emplace(p.EntryReader(entrySize));
+          if (maybeEntryReader->RemainingBytes() == 0) {
+            // An empty entry reader means there was no complete block at the
+            // given index.
+            maybeEntryReader.reset();
+          } else {
+            MOZ_ASSERT(maybeEntryReader->RemainingBytes() == entrySize);
+          }
+        }
+      }
+    }
+#ifdef DEBUG
+    auto assertAllRead = MakeScopeExit([&]() {
+      MOZ_ASSERT(!maybeEntryReader || maybeEntryReader->RemainingBytes() == 0);
+    });
+#endif  // DEBUG
+    return std::forward<Callback>(aCallback)(std::move(maybeEntryReader));
+  }
+
+  // Call `aCallback(Maybe<ProfileBufferEntryReader>&&)` on the entry at
+  // the given ProfileBufferBlockIndex; The `Maybe` will be `Nothing` if
+  // out-of-session, or if that entry doesn't exist anymore, or if we've reached
+  // just past the last entry. Return whatever `aCallback` returns. Callback
+  // should not store `ProfileBufferEntryReader`, because it may become invalid
+  // after this call.
+  template <typename Callback>
+  [[nodiscard]] auto ReadAt(ProfileBufferBlockIndex aBlockIndex,
+                            Callback&& aCallback) const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (MOZ_UNLIKELY(!mChunkManager)) {
+      // Out-of-session.
+      return std::forward<Callback>(aCallback)(Nothing{});
+    }
+    return mChunkManager->PeekExtantReleasedChunks(
+        [&](const ProfileBufferChunk* aOldestChunk) {
+          return ReadAt(aBlockIndex, aOldestChunk, mCurrentChunk.get(),
+                        std::forward<Callback>(aCallback));
+        });
+  }
+
+  // Append the contents of another ProfileChunkedBuffer to this one.
+  ProfileBufferBlockIndex AppendContents(const ProfileChunkedBuffer& aSrc) {
+    ProfileBufferBlockIndex firstBlockIndex;
+    // If we start failing, we'll stop writing.
+    bool failed = false;
+    aSrc.ReadEach([&](ProfileBufferEntryReader& aER) {
+      if (failed) {
+        return;
+      }
+      failed = !Put(aER.RemainingBytes(), [&](ProfileBufferEntryWriter* aEW) {
+        if (!aEW) {
+          return false;
+        }
+        if (!firstBlockIndex) {
+          firstBlockIndex = aEW->CurrentBlockIndex();
+        }
+        aEW->WriteFromReader(aER, aER.RemainingBytes());
+        return true;
+      });
+    });
+    return failed ? nullptr : firstBlockIndex;
   }
 
 #ifdef DEBUG
