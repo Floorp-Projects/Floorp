@@ -851,6 +851,9 @@ void APZCTreeManager::SampleForWebRender(
 
   for (const FixedPositionInfo& info : mFixedPositionInfo) {
     MOZ_ASSERT(info.mFixedPositionAnimationId.isSome());
+    if (!IsFixedToRootContent(info, lock)) {
+      continue;
+    }
 
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
@@ -867,10 +870,14 @@ void APZCTreeManager::SampleForWebRender(
 
   for (const StickyPositionInfo& info : mStickyPositionInfo) {
     MOZ_ASSERT(info.mStickyPositionAnimationId.isSome());
+    SideBits sides = SidesStuckToRootContent(info, lock);
+    if (sides == SideBits::eNone) {
+      continue;
+    }
 
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
-            GetCompositorFixedLayerMargins(lock), info.mFixedPosSides,
+            GetCompositorFixedLayerMargins(lock), sides,
             // For sticky layers, we don't need to factor
             // mGeckoFixedLayerMargins because Gecko doesn't shift the
             // position of sticky elements for dynamic toolbar movements.
