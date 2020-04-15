@@ -243,6 +243,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Disable performance tuning on android.",
         }],
+        [["--conditioned-profile-scenario"], {
+            "dest": "conditioned_profile_scenario",
+            "type": "str",
+            "default": "settled",
+            "help": "Name of profile scenario.",
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -366,6 +372,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.memory_test = self.config.get('memory_test')
         self.cpu_test = self.config.get('cpu_test')
         self.disable_perf_tuning = self.config.get('disable_perf_tuning')
+        self.conditioned_profile_scenario = self.config.get('conditioned_profile_scenario',
+                                                            'settled')
         self.extra_prefs = self.config.get('extra_prefs')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
@@ -524,6 +532,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             kw_options['device-name'] = self.config['device_name']
         if self.config.get('activity') is not None:
             kw_options['activity'] = self.config['activity']
+        if self.config.get('conditioned_profile_scenario') is not None:
+            kw_options['conditioned-profile-scenario'] = \
+                self.config['conditioned_profile_scenario']
 
         kw_options.update(kw)
         if self.host:
