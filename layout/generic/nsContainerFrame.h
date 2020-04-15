@@ -567,6 +567,39 @@ class nsContainerFrame : public nsSplittableFrame {
   bool MoveOverflowToChildList();
 
   /**
+   * Merge a sorted frame list into our overflow list. aList becomes empty after
+   * this call.
+   */
+  void MergeSortedOverflow(nsFrameList& aList);
+
+  /**
+   * Merge a sorted frame list into our excess overflow containers list. aList
+   * becomes empty after this call.
+   */
+  void MergeSortedExcessOverflowContainers(nsFrameList& aList);
+
+  /**
+   * Moves all frames from aSrc into aDest such that the resulting aDest
+   * is still sorted in document content order and continuation order. aSrc
+   * becomes empty after this call.
+   *
+   * Precondition: both |aSrc| and |aDest| must be sorted to begin with.
+   * @param aCommonAncestor a hint for nsLayoutUtils::CompareTreePosition
+   */
+  static void MergeSortedFrameLists(nsFrameList& aDest, nsFrameList& aSrc,
+                                    nsIContent* aCommonAncestor);
+
+  /**
+   * This is intended to be used as a ChildFrameMerger argument for
+   * ReflowOverflowContainerChildren().
+   */
+  static inline void MergeSortedFrameListsFor(nsFrameList& aDest,
+                                              nsFrameList& aSrc,
+                                              nsContainerFrame* aParent) {
+    MergeSortedFrameLists(aDest, aSrc, aParent->GetContent());
+  }
+
+  /**
    * Basically same as MoveOverflowToChildList, except that this is for
    * handling inline children where children of prev-in-flow can be
    * pushed to overflow list even if a next-in-flow exists.
