@@ -16,6 +16,7 @@ add_task(async function setup() {
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
       ["browser.search.separatePrivateDefault", true],
+      ["browser.urlbar.oneOffSearches", true],
       ["browser.urlbar.suggest.searches", true],
     ],
   });

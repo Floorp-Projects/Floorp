@@ -7,6 +7,7 @@ XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
 });
 
 add_task(async function init() {
+  Services.prefs.setBoolPref("browser.urlbar.oneOffSearches", true);
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   // Add a search suggestion engine and move it to the front so that it appears

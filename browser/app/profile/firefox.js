@@ -288,6 +288,8 @@ pref("browser.urlbar.maxCharsForSearchSuggestions", 20);
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
 
+pref("browser.urlbar.oneOffSearches", true);
+
 // If changed to true, copying the entire URL from the location bar will put the
 // human readable (percent-decoded) URL on the clipboard.
 pref("browser.urlbar.decodeURLsOnCopy", false);

@@ -16,6 +16,7 @@ const POPUP_URL_COLOR_BRIGHT = "#74c0ff";
 const POPUP_ACTION_COLOR_BRIGHT = "#30e60b";
 
 const SEARCH_TERM = "urlbar-reflows-" + Date.now();
+const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
@@ -69,12 +70,14 @@ add_task(async function test_popup_url() {
   await extension.startup();
 
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
+  Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:mozilla"
   );
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
+    Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
     await BrowserTestUtils.removeTab(tab);
   });
 
