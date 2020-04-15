@@ -38,7 +38,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DisplayNames",
     "Intl.Segmenter",
     "top-level-await",
-    "logical-assignment-operators",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
@@ -52,6 +51,7 @@ RELEASE_OR_BETA = set([
     "Promise.any",
     "AggregateError",
     "String.prototype.replaceAll",
+    "logical-assignment-operators",
 ])
 
 

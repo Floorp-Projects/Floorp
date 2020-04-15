@@ -1,4 +1,4 @@
-// |reftest| skip -- logical-assignment-operators is not supported
+// |reftest| skip-if(release_or_beta) -- logical-assignment-operators is not released yet
 // Copyright (C) 2020 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
