@@ -262,7 +262,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
           if (NS_WARN_IF(!node)) {
             return NS_ERROR_FAILURE;
           }
-          if (node->IsContent() && IsEditable(node)) {
+          if (node->IsContent() && EditorUtils::IsEditableContent(
+                                       *node->AsContent(), EditorType::HTML)) {
             arrayOfContents.AppendElement(*node->AsContent());
           }
         }
@@ -270,7 +271,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
 
       // If start node is a text node, apply new style to a part of it.
       if (startOfRange.IsInTextNode() &&
-          IsEditable(startOfRange.GetContainer())) {
+          EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+                                         EditorType::HTML)) {
         nsresult rv = SetInlinePropertyOnTextNode(
             MOZ_KnownLive(*startOfRange.GetContainerAsText()),
             startOfRange.Offset(), startOfRange.GetContainer()->Length(),
@@ -297,7 +299,9 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
       }
 
       // Finally, if end node is a text node, apply new style to a part ot it.
-      if (endOfRange.IsInTextNode() && IsEditable(endOfRange.GetContainer())) {
+      if (endOfRange.IsInTextNode() &&
+          EditorUtils::IsEditableContent(*endOfRange.GetContainerAsText(),
+                                         EditorType::HTML)) {
         nsresult rv = SetInlinePropertyOnTextNode(
             MOZ_KnownLive(*endOfRange.GetContainerAsText()), 0,
             endOfRange.Offset(), aProperty, aAttribute, aAttributeValue);
@@ -497,7 +501,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       // Populate the list.
       for (nsCOMPtr<nsIContent> child = aContent.GetFirstChild(); child;
            child = child->GetNextSibling()) {
-        if (IsEditable(child) && !IsEmptyTextNode(*child)) {
+        if (EditorUtils::IsEditableContent(*child, EditorType::HTML) &&
+            !IsEmptyTextNode(*child)) {
           arrayOfNodes.AppendElement(*child);
         }
       }
@@ -649,7 +654,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
   for (nsIContent* content = previousSibling ? previousSibling->GetNextSibling()
                                              : parent->GetFirstChild();
        content && content != nextSibling; content = content->GetNextSibling()) {
-    if (IsEditable(content)) {
+    if (EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
       nodesToSet.AppendElement(*content);
     }
   }
@@ -751,7 +756,8 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
   for (nsIContent* content :
        InclusiveAncestorsOfType<nsIContent>(*aPointToSplit.GetContainer())) {
     if (HTMLEditUtils::IsBlockElement(*content) || !content->GetParent() ||
-        !IsEditable(content->GetParent())) {
+        !EditorUtils::IsEditableContent(*content->GetParent(),
+                                        EditorType::HTML)) {
       break;
     }
     arrayOfParents.AppendElement(*content);
@@ -787,7 +793,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
         }
       }
       // If aProperty is nullptr, we need to split any style.
-      else if (!IsEditable(content) ||
+      else if (!EditorUtils::IsEditableContent(content, EditorType::HTML) ||
                !HTMLEditUtils::IsRemovableInlineStyleElement(
                    *content->AsElement())) {
         continue;
@@ -1009,7 +1015,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
   }
   // XXX Why do we check if aElement is editable only when aProperty is
   //     nullptr?
-  else if (IsEditable(&aElement)) {
+  else if (EditorUtils::IsEditableContent(aElement, EditorType::HTML)) {
     // or removing all styles and the element is a presentation element.
     removeHTMLStyle = HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
   }
@@ -1231,7 +1237,8 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
   for (nsIContent* content :
        InclusiveAncestorsOfType<nsIContent>(*aRange.GetStartContainer())) {
     MOZ_ASSERT(newRangeStart.GetContainer() == content);
-    if (content->IsHTMLElement(nsGkAtoms::body) || !IsEditable(content) ||
+    if (content->IsHTMLElement(nsGkAtoms::body) ||
+        !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
         !IsStartOfContainerOrBeforeFirstEditableChild(newRangeStart)) {
       break;
     }
@@ -1248,7 +1255,8 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
   for (nsIContent* content :
        InclusiveAncestorsOfType<nsIContent>(*aRange.GetEndContainer())) {
     MOZ_ASSERT(newRangeEnd.GetContainer() == content);
-    if (content->IsHTMLElement(nsGkAtoms::body) || !IsEditable(content) ||
+    if (content->IsHTMLElement(nsGkAtoms::body) ||
+        !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
         !IsEndOfContainerOrEqualsOrAfterLastEditableChild(newRangeEnd)) {
       break;
     }
@@ -1399,8 +1407,9 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
       }
 
       // just ignore any non-editable nodes
-      if (content->GetAsText() &&
-          (!IsEditable(content) || IsEmptyTextNode(*content))) {
+      if (content->IsText() &&
+          (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
+           IsEmptyTextNode(*content))) {
         continue;
       }
       if (content->GetAsText()) {
@@ -1837,18 +1846,21 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
         AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
         if (startOfRange.GetContainer() == endOfRange.GetContainer() &&
             startOfRange.IsInTextNode()) {
-          if (!IsEditable(startOfRange.GetContainer())) {
+          if (!EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+                                              EditorType::HTML)) {
             continue;
           }
-          arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+          arrayOfContents.AppendElement(*startOfRange.ContainerAsText());
         } else if (startOfRange.IsInTextNode() && endOfRange.IsInTextNode() &&
                    startOfRange.GetContainer()->GetNextSibling() ==
                        endOfRange.GetContainer()) {
-          if (IsEditable(startOfRange.GetContainer())) {
-            arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+          if (EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+                                             EditorType::HTML)) {
+            arrayOfContents.AppendElement(*startOfRange.ContainerAsText());
           }
-          if (IsEditable(endOfRange.GetContainer())) {
-            arrayOfContents.AppendElement(*endOfRange.GetContainerAsText());
+          if (EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
+                                             EditorType::HTML)) {
+            arrayOfContents.AppendElement(*endOfRange.ContainerAsText());
           }
           if (arrayOfContents.IsEmpty()) {
             continue;
@@ -1857,8 +1869,9 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           // Append first node if it's a text node but selected not entirely.
           if (startOfRange.IsInTextNode() &&
               !startOfRange.IsStartOfContainer() &&
-              IsEditable(startOfRange.GetContainer())) {
-            arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+              EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+                                             EditorType::HTML)) {
+            arrayOfContents.AppendElement(*startOfRange.ContainerAsText());
           }
           // Append all entirely selected nodes.
           ContentSubtreeIterator subtreeIter;
@@ -1868,7 +1881,9 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
               if (NS_WARN_IF(!node)) {
                 return NS_ERROR_FAILURE;
               }
-              if (node->IsContent() && IsEditable(node)) {
+              if (node->IsContent() &&
+                  EditorUtils::IsEditableContent(*node->AsContent(),
+                                                 EditorType::HTML)) {
                 arrayOfContents.AppendElement(*node->AsContent());
               }
             }
@@ -1876,8 +1891,9 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           // Append last node if it's a text node but selected not entirely.
           if (startOfRange.GetContainer() != endOfRange.GetContainer() &&
               endOfRange.IsInTextNode() && !endOfRange.IsEndOfContainer() &&
-              IsEditable(endOfRange.GetContainer())) {
-            arrayOfContents.AppendElement(*endOfRange.GetContainerAsText());
+              EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
+                                             EditorType::HTML)) {
+            arrayOfContents.AppendElement(*endOfRange.ContainerAsText());
           }
         }
 
@@ -2156,25 +2172,25 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       // Iterate range and build up array
       ContentSubtreeIterator subtreeIter;
       if (NS_SUCCEEDED(subtreeIter.Init(range))) {
-        nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
+        nsTArray<OwningNonNull<nsIContent>> arrayOfContents;
         for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
           if (NS_WARN_IF(!subtreeIter.GetCurrentNode()->IsContent())) {
             return NS_ERROR_FAILURE;
           }
-          OwningNonNull<nsIContent> node =
+          OwningNonNull<nsIContent> content =
               *subtreeIter.GetCurrentNode()->AsContent();
 
-          if (IsEditable(node)) {
-            arrayOfNodes.AppendElement(node);
+          if (EditorUtils::IsEditableContent(content, EditorType::HTML)) {
+            arrayOfContents.AppendElement(content);
           }
         }
 
         // Now that we have the list, do the font size change on each node
-        for (auto& node : arrayOfNodes) {
-          // MOZ_KnownLive because 'arrayOfNodes' is guaranteed to keep it
+        for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+          // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it
           // alive.
           nsresult rv = RelativeFontChangeOnNode(
-              aDir == FontSize::incr ? +1 : -1, MOZ_KnownLive(node));
+              aDir == FontSize::incr ? +1 : -1, MOZ_KnownLive(content));
           if (NS_FAILED(rv)) {
             NS_WARNING("HTMLEditor::RelativeFontChangeOnNode() failed");
             return rv;
@@ -2184,18 +2200,21 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       // Now check the start and end parents of the range to see if they need
       // to be separately handled (they do if they are text nodes, due to how
       // the subtree iterator works - it will not have reported them).
-      if (IsTextNode(startNode) && IsEditable(startNode)) {
+      if (IsTextNode(startNode) &&
+          EditorUtils::IsEditableContent(*startNode->AsText(),
+                                         EditorType::HTML)) {
         nsresult rv = RelativeFontChangeOnTextNode(
-            aDir, MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
+            aDir, MOZ_KnownLive(*startNode->AsText()), range->StartOffset(),
             startNode->Length());
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
           return rv;
         }
       }
-      if (IsTextNode(endNode) && IsEditable(endNode)) {
+      if (IsTextNode(endNode) && EditorUtils::IsEditableContent(
+                                     *endNode->AsText(), EditorType::HTML)) {
         nsresult rv = RelativeFontChangeOnTextNode(
-            aDir, MOZ_KnownLive(*endNode->GetAsText()), 0, range->EndOffset());
+            aDir, MOZ_KnownLive(*endNode->AsText()), 0, range->EndOffset());
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
           return rv;

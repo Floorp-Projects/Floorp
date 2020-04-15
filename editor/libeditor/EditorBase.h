@@ -154,6 +154,8 @@ class EditorBase : public nsIEditor,
   typedef dom::Selection Selection;
   typedef dom::Text Text;
 
+  enum class EditorType { Text, HTML };
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditorBase, nsIEditor)
 
@@ -168,6 +170,9 @@ class EditorBase : public nsIEditor,
    * interfaces is done after the construction of the editor class.
    */
   EditorBase();
+
+  bool IsTextEditor() const { return !mIsHTMLEditorClass; }
+  bool IsHTMLEditor() const { return mIsHTMLEditorClass; }
 
   /**
    * Init is to tell the implementation of nsIEditor to begin its services
@@ -214,7 +219,7 @@ class EditorBase : public nsIEditor,
   // @return true, iff at least one of NS_EVENT_BITS_MUTATION_* is set.
   bool MaybeHasMutationEventListeners(
       uint32_t aMutationEventType = 0xFFFFFFFF) const {
-    if (!mIsHTMLEditorClass) {
+    if (IsTextEditor()) {
       // DOM mutation event listeners cannot catch the changes of
       // <input type="text"> nor <textarea>.
       return false;
@@ -1410,11 +1415,11 @@ class EditorBase : public nsIEditor,
   SetTextNodeWithoutTransaction(const nsAString& aString, Text& aTextNode);
 
   /**
-   * DeleteNodeWithTransaction() removes aNode from the DOM tree.
+   * DeleteNodeWithTransaction() removes aContent from the DOM tree.
    *
-   * @param aNode       The node which will be removed form the DOM tree.
+   * @param aContent    The node which will be removed form the DOM tree.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsIContent& aContent);
 
   /**
    * InsertNodeWithTransaction() inserts aContentToInsert before the child
@@ -2098,54 +2103,6 @@ class EditorBase : public nsIEditor,
   virtual bool IsContainer(nsINode* aNode) const;
 
   /**
-   * returns true if aNode is an editable node.
-   */
-  bool IsEditable(nsINode* aNode) const {
-    if (NS_WARN_IF(!aNode)) {
-      return false;
-    }
-
-    if (!aNode->IsContent() || !IsModifiableNode(*aNode) ||
-        EditorBase::IsPaddingBRElementForEmptyEditor(*aNode)) {
-      return false;
-    }
-
-    switch (aNode->NodeType()) {
-      case nsINode::ELEMENT_NODE:
-        // In HTML editors, if we're dealing with an element, then ask it
-        // whether it's editable.
-        return mIsHTMLEditorClass ? aNode->IsEditable() : true;
-      case nsINode::TEXT_NODE:
-        // Text nodes are considered to be editable by both typed of editors.
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Returns true if aNode is a usual element node (not padding <br> element
-   * for empty editor) or a text node.  In other words, returns true if aNode
-   * is a usual element node or visible data node.
-   */
-  bool IsElementOrText(const nsINode& aNode) const {
-    if (aNode.IsText()) {
-      return true;
-    }
-    return aNode.IsElement() &&
-           !EditorBase::IsPaddingBRElementForEmptyEditor(aNode);
-  }
-
-  /**
-   * Returns true if aNode is a <br> element and it's marked as padding for
-   * empty editor.
-   */
-  static bool IsPaddingBRElementForEmptyEditor(const nsINode& aNode) {
-    const dom::HTMLBRElement* brElement = dom::HTMLBRElement::FromNode(&aNode);
-    return brElement && brElement->IsPaddingForEmptyEditor();
-  }
-
-  /**
    * Returns true if aNode is a <br> element and it's marked as padding for
    * empty last line.
    */
@@ -2180,11 +2137,6 @@ class EditorBase : public nsIEditor,
   static bool IsTextNode(nsINode* aNode) {
     return aNode->NodeType() == nsINode::TEXT_NODE;
   }
-
-  /**
-   * IsModifiableNode() checks whether the node is editable or not.
-   */
-  bool IsModifiableNode(const nsINode& aNode) const;
 
   /**
    * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
@@ -2368,6 +2320,10 @@ class EditorBase : public nsIEditor,
    * for someone to derive from the EditorBase later? I don't believe so.
    */
   virtual ~EditorBase();
+
+  MOZ_ALWAYS_INLINE EditorType GetEditorType() const {
+    return mIsHTMLEditorClass ? EditorType::HTML : EditorType::Text;
+  }
 
   int32_t WrapWidth() const { return mWrapColumn; }
 

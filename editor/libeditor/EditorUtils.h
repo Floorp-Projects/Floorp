@@ -12,6 +12,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
 #include "nsAtom.h"
@@ -783,6 +784,8 @@ class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
 
 class EditorUtils final {
  public:
+  using EditorType = EditorBase::EditorType;
+
   /**
    * IsDescendantOf() checks if aNode is a child or a descendant of aParent.
    * aOutPoint is set to the child of aParent.
@@ -793,6 +796,53 @@ class EditorUtils final {
                              EditorRawDOMPoint* aOutPoint = nullptr);
   static bool IsDescendantOf(const nsINode& aNode, const nsINode& aParent,
                              EditorDOMPoint* aOutPoint);
+
+  /**
+   * Returns true if aContent is a <br> element and it's marked as padding for
+   * empty editor.
+   */
+  static bool IsPaddingBRElementForEmptyEditor(const nsIContent& aContent) {
+    const dom::HTMLBRElement* brElement =
+        dom::HTMLBRElement::FromNode(&aContent);
+    return brElement && brElement->IsPaddingForEmptyEditor();
+  }
+
+  /**
+   * IsEditableContent() returns true if aContent's data or children is ediable
+   * for the given editor type.  Be aware, returning true does NOT mean the
+   * node can be removed from its parent node, and returning false does NOT
+   * mean the node cannot be removed from the parent node.
+   * XXX May be the anonymous nodes in TextEditor not editable?  If it's not
+   *     so, we can get rid of aEditorType.
+   */
+  static bool IsEditableContent(const nsIContent& aContent,
+                                EditorType aEditorType) {
+    if ((aEditorType == EditorType::HTML && !aContent.IsEditable()) ||
+        EditorUtils::IsPaddingBRElementForEmptyEditor(aContent)) {
+      return false;
+    }
+
+    // In HTML editors, if we're dealing with an element, then ask it
+    // whether it's editable.
+    if (aContent.IsElement()) {
+      return aEditorType == EditorType::HTML ? aContent.IsEditable() : true;
+    }
+    // Text nodes are considered to be editable by both typed of editors.
+    return aContent.IsText();
+  }
+
+  /**
+   * Returns true if aContent is a usual element node (not padding <br> element
+   * for empty editor) or a text node.  In other words, returns true if
+   * aContent is a usual element node or visible data node.
+   */
+  static bool IsElementOrText(const nsIContent& aContent) {
+    if (aContent.IsText()) {
+      return true;
+    }
+    return aContent.IsElement() &&
+           !EditorUtils::IsPaddingBRElementForEmptyEditor(aContent);
+  }
 
   /**
    * Helper method for `AppendString()` and `AppendSubString()`.  This should

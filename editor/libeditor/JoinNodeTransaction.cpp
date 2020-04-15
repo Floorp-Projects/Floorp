@@ -5,6 +5,7 @@
 
 #include "JoinNodeTransaction.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/EditorBase.h"  // for EditorBase
 #include "mozilla/dom/Text.h"
 #include "nsAString.h"
@@ -49,7 +50,8 @@ bool JoinNodeTransaction::CanDoIt() const {
       NS_WARN_IF(!mEditorBase) || !mLeftContent->GetParentNode()) {
     return false;
   }
-  return mEditorBase->IsModifiableNode(*mLeftContent->GetParentNode());
+  return mEditorBase->IsTextEditor() ||
+         HTMLEditUtils::IsRemovableFromParentNode(*mLeftContent);
 }
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from

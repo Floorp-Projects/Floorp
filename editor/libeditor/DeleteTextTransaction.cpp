@@ -5,6 +5,7 @@
 
 #include "DeleteTextTransaction.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -94,7 +95,8 @@ bool DeleteTextTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mTextNode) || NS_WARN_IF(!mEditorBase)) {
     return false;
   }
-  return mEditorBase->IsModifiableNode(*mTextNode);
+  return mEditorBase->IsTextEditor() ||
+         HTMLEditUtils::IsSimplyEditableNode(*mTextNode);
 }
 
 NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
