@@ -106,7 +106,6 @@ export const prefs = new PrefsHelper("devtools", {
   startPanelSize: ["Int", "debugger.start-panel-size"],
   endPanelSize: ["Int", "debugger.end-panel-size"],
   frameworkGroupingOn: ["Bool", "debugger.ui.framework-grouping-on"],
-  tabsBlackBoxed: ["Json", "debugger.tabsBlackBoxed", []],
   pendingSelectedLocation: ["Json", "debugger.pending-selected-location", {}],
   expressions: ["Json", "debugger.expressions", []],
   fileSearchCaseSensitive: ["Bool", "debugger.file-search-case-sensitive"],
@@ -160,6 +159,7 @@ export const asyncStore = asyncStoreHelper("debugger", {
   tabs: ["tabs", []],
   xhrBreakpoints: ["xhr-breakpoints", []],
   eventListenerBreakpoints: ["event-listener-breakpoints", undefined],
+  tabsBlackBoxed: ["tabsBlackBoxed", []],
 });
 
 export function resetSchemaVersion(): void {
