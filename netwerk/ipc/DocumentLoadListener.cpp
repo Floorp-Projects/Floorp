@@ -259,6 +259,14 @@ DocumentLoadListener::~DocumentLoadListener() {
   LOG(("DocumentLoadListener dtor [this=%p]", this));
 }
 
+net::LastVisitInfo DocumentLoadListener::LastVisitInfo() const {
+  nsCOMPtr<nsIURI> previousURI;
+  uint32_t previousFlags = 0;
+  nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
+                               &previousFlags);
+  return net::LastVisitInfo{previousURI, previousFlags};
+}
+
 already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
     CanonicalBrowsingContext* aBrowsingContext, nsDocShellLoadState* aLoadState,
     uint64_t aOuterWindowId) {
@@ -868,11 +876,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.redirects() = mRedirects;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
   aArgs.properties() = do_QueryObject(mChannel.get());
-  nsCOMPtr<nsIURI> previousURI;
-  uint32_t previousFlags = 0;
-  nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
-                               &previousFlags);
-  aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
+  aArgs.lastVisitInfo() = LastVisitInfo();
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
