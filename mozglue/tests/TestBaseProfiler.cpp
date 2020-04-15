@@ -868,7 +868,8 @@ static void TestChunkedBuffer() {
   // Steal the underlying ProfileBufferChunks from the ProfileChunkedBuffer.
   chunks = cb.GetAllChunks();
   MOZ_RELEASE_ASSERT(!!chunks, "Expected at least one chunk");
-  MOZ_RELEASE_ASSERT(!chunks->GetNext(), "Expected only one chunk");
+  MOZ_RELEASE_ASSERT(!!chunks->GetNext(), "Expected two chunks");
+  MOZ_RELEASE_ASSERT(!chunks->GetNext()->GetNext(), "Expected only two chunks");
   const ProfileChunkedBuffer::Length chunkActualSize = chunks->BufferBytes();
   MOZ_RELEASE_ASSERT(chunkActualSize >= chunkMinSize);
   MOZ_RELEASE_ASSERT(chunks->RangeStart() == 1);

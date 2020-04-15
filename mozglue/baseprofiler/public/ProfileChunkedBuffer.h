@@ -9,6 +9,8 @@
 
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ProfileBufferChunkManager.h"
+#include "mozilla/RefCounted.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 
 #include <cstdio>
@@ -218,6 +220,7 @@ class ProfileChunkedBuffer {
     }
     UniquePtr<ProfileBufferChunk> chunks =
         mChunkManager->GetExtantReleasedChunks();
+    Unused << HandleRequestedChunk_IsPending(lock);
     if (MOZ_LIKELY(!!mCurrentChunk)) {
       mCurrentChunk->MarkDone();
       chunks =
@@ -265,6 +268,17 @@ class ProfileChunkedBuffer {
       chunk->Dump(aFile);
       hasChunks = true;
     }
+    switch (mRequestedChunkHolder->GetState()) {
+      case RequestedChunkRefCountedHolder::State::Unused:
+        fprintf(aFile, " - No request pending.\n");
+        break;
+      case RequestedChunkRefCountedHolder::State::Requested:
+        fprintf(aFile, " - Request pending.\n");
+        break;
+      case RequestedChunkRefCountedHolder::State::Fulfilled:
+        fprintf(aFile, " - Request fulfilled.\n");
+        break;
+    }
     if (!hasChunks) {
       fprintf(aFile, " No chunks.\n");
     }
@@ -276,6 +290,7 @@ class ProfileChunkedBuffer {
       const baseprofiler::detail::BaseProfilerMaybeAutoLock&) {
     UniquePtr<ProfileBufferChunkManager> chunkManager;
     if (mChunkManager) {
+      mRequestedChunkHolder = nullptr;
       mChunkManager->ForgetUnreleasedChunks();
 #ifdef DEBUG
       mChunkManager->DeregisteredFrom(this);
@@ -319,8 +334,11 @@ class ProfileChunkedBuffer {
           mClearedBlockCount += aChunk.BlockCount();
         });
 
-    // We start with one chunk right away.
+    // We start with one chunk right away, and request a following one now
+    // so it should be available before the current chunk is full.
     SetAndInitializeCurrentChunk(mChunkManager->GetChunk(), aLock);
+    mRequestedChunkHolder = MakeRefPtr<RequestedChunkRefCountedHolder>();
+    RequestChunk(aLock);
   }
 
   [[nodiscard]] size_t SizeOfExcludingThis(
@@ -357,6 +375,72 @@ class ProfileChunkedBuffer {
     }
   }
 
+  void RequestChunk(
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock) {
+    if (HandleRequestedChunk_IsPending(aLock)) {
+      // There is already a pending request, don't start a new one.
+      return;
+    }
+
+    // Ensure the `RequestedChunkHolder` knows we're starting a request.
+    mRequestedChunkHolder->StartRequest();
+
+    // Request a chunk, the callback carries a `RefPtr` of the
+    // `RequestedChunkHolder`, so it's guaranteed to live until it's invoked,
+    // even if this `ProfileChunkedBuffer` changes its `ChunkManager` or is
+    // destroyed.
+    mChunkManager->RequestChunk(
+        [requestedChunkHolder = RefPtr<RequestedChunkRefCountedHolder>(
+             mRequestedChunkHolder)](UniquePtr<ProfileBufferChunk> aChunk) {
+          requestedChunkHolder->AddRequestedChunk(std::move(aChunk));
+        });
+  }
+
+  [[nodiscard]] bool HandleRequestedChunk_IsPending(
+      const baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock) {
+    MOZ_ASSERT(!!mChunkManager);
+    MOZ_ASSERT(!!mRequestedChunkHolder);
+
+    if (mRequestedChunkHolder->GetState() ==
+        RequestedChunkRefCountedHolder::State::Unused) {
+      return false;
+    }
+
+    // A request is either in-flight or fulfilled.
+    Maybe<UniquePtr<ProfileBufferChunk>> maybeChunk =
+        mRequestedChunkHolder->GetChunkIfFulfilled();
+    if (maybeChunk.isNothing()) {
+      // Request is still pending.
+      return true;
+    }
+
+    // Since we extracted the provided chunk, the holder should now be unused.
+    MOZ_ASSERT(mRequestedChunkHolder->GetState() ==
+               RequestedChunkRefCountedHolder::State::Unused);
+
+    // Request has been fulfilled.
+    UniquePtr<ProfileBufferChunk>& chunk = *maybeChunk;
+    if (chunk) {
+      // Try to use as current chunk if needed.
+      if (!mCurrentChunk) {
+        SetAndInitializeCurrentChunk(std::move(chunk), aLock);
+        // We've just received a chunk and made it current, request a next chunk
+        // for later.
+        MOZ_ASSERT(!mNextChunks);
+        RequestChunk(aLock);
+        return true;
+      }
+
+      if (!mNextChunks) {
+        mNextChunks = std::move(chunk);
+      } else {
+        mNextChunks->InsertNext(std::move(chunk));
+      }
+    }
+
+    return false;
+  }
+
   // Mutex guarding the following members.
   mutable baseprofiler::detail::BaseProfilerMaybeMutex mMutex;
 
@@ -370,6 +454,73 @@ class ProfileChunkedBuffer {
   UniquePtr<ProfileBufferChunk> mCurrentChunk;
 
   UniquePtr<ProfileBufferChunk> mNextChunks;
+
+  // Class used to transfer requested chunks from a `ChunkManager` to a
+  // `ProfileChunkedBuffer`.
+  // It needs to be ref-counted because the request may be fulfilled
+  // asynchronously, and either side may be destroyed during the request.
+  // It cannot use the `ProfileChunkedBuffer` mutex, because that buffer and its
+  // mutex could be destroyed during the request.
+  class RequestedChunkRefCountedHolder
+      : public external::AtomicRefCounted<RequestedChunkRefCountedHolder> {
+   public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(RequestedChunkRefCountedHolder)
+
+    enum class State { Unused, Requested, Fulfilled };
+
+    // Get the current state. Note that it may change after the function
+    // returns, so it should be used carefully, e.g., `ProfileChunkedBuffer` can
+    // see if a request is pending or fulfilled, to avoid starting another
+    // request.
+    [[nodiscard]] State GetState() const {
+      baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+      return mState;
+    }
+
+    // Must be called by `ProfileChunkedBuffer` when it requests a chunk.
+    // There cannot be more than one request in-flight.
+    void StartRequest() {
+      baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+      MOZ_ASSERT(mState == State::Unused, "Already requested or fulfilled");
+      mState = State::Requested;
+    }
+
+    // Must be called by the `ChunkManager` with a chunk.
+    // If the `ChunkManager` cannot provide a chunk (because of memory limits,
+    // or it gets destroyed), it must call this anyway with a nullptr.
+    void AddRequestedChunk(UniquePtr<ProfileBufferChunk>&& aChunk) {
+      baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+      MOZ_ASSERT(mState == State::Requested);
+      mState = State::Fulfilled;
+      mRequestedChunk = std::move(aChunk);
+    }
+
+    // The `ProfileChunkedBuffer` can try to extract the provided chunk after a
+    // request:
+    // - Nothing -> Request is not fulfilled yet.
+    // - Some(nullptr) -> The `ChunkManager` was not able to provide a chunk.
+    // - Some(chunk) -> Requested chunk.
+    [[nodiscard]] Maybe<UniquePtr<ProfileBufferChunk>> GetChunkIfFulfilled() {
+      Maybe<UniquePtr<ProfileBufferChunk>> maybeChunk;
+      baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+      MOZ_ASSERT(mState == State::Requested || mState == State::Fulfilled);
+      if (mState == State::Fulfilled) {
+        mState = State::Unused;
+        maybeChunk.emplace(std::move(mRequestedChunk));
+      }
+      return maybeChunk;
+    }
+
+   private:
+    // Mutex guarding the following members.
+    mutable baseprofiler::detail::BaseProfilerMutex mRequestMutex;
+    State mState = State::Unused;
+    UniquePtr<ProfileBufferChunk> mRequestedChunk;
+  };
+
+  // Requested-chunk holder, kept alive when in-session, but may also live
+  // longer if a request is in-flight.
+  RefPtr<RequestedChunkRefCountedHolder> mRequestedChunkHolder;
 
   // Range start of the next chunk to become current. Starting at 1 because
   // 0 is a reserved index similar to nullptr.
