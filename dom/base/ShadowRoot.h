@@ -74,7 +74,6 @@ class ShadowRoot final : public DocumentFragment,
   ShadowRootMode Mode() const { return mMode; }
   bool IsClosed() const { return mMode == ShadowRootMode::Closed; }
 
-  void RemoveSheet(StyleSheet&);
   void RemoveSheetFromStyles(StyleSheet&);
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);

@@ -6580,21 +6580,6 @@ void Document::RemoveStyleSheetFromStyleSets(StyleSheet& aSheet) {
   }
 }
 
-void Document::RemoveStyleSheet(StyleSheet& aSheet) {
-  RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(aSheet);
-
-  if (!sheet) {
-    NS_ASSERTION(mInUnlinkOrDeletion, "stylesheet not found");
-    return;
-  }
-
-  if (!mIsGoingAway && sheet->IsApplicable()) {
-    RemoveStyleSheetFromStyleSets(*sheet);
-  }
-
-  sheet->ClearAssociatedDocumentOrShadowRoot();
-}
-
 void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   DocumentOrShadowRoot::InsertSheetAt(aIndex, aSheet);
 

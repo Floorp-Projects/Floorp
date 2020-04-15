@@ -88,6 +88,8 @@ class DocumentOrShadowRoot {
 
   void GetAdoptedStyleSheets(nsTArray<RefPtr<StyleSheet>>&) const;
 
+  void RemoveStyleSheet(StyleSheet&);
+
   Element* GetElementById(const nsAString& aElementId);
 
   /**
@@ -251,8 +253,6 @@ class DocumentOrShadowRoot {
    */
   void CloneAdoptedSheetsFrom(const DocumentOrShadowRoot&);
 
-  // Returns the reference to the sheet, if found in mStyleSheets.
-  already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
 
   void AddSizeOfExcludingThis(nsWindowSizes&) const;
