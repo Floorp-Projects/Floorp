@@ -3729,11 +3729,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
     ModuleBuilder builder(cx, &parser);
 
-    uint32_t len = chars.length();
-    SourceExtent extent = SourceExtent::makeGlobalExtent(len, options);
     ModuleSharedContext modulesc(cx, module, compilationInfo,
-                                 &cx->global()->emptyGlobalScope(), builder,
-                                 extent);
+                                 &cx->global()->emptyGlobalScope(), builder);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;

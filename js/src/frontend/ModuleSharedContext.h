@@ -31,7 +31,7 @@ class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
 
   ModuleSharedContext(JSContext* cx, ModuleObject* module,
                       CompilationInfo& compilationInfo, Scope* enclosingScope,
-                      ModuleBuilder& builder, SourceExtent extent);
+                      ModuleBuilder& builder);
 
   JS::Handle<ModuleObject*> module() const { return module_; }
   Scope* compilationEnclosingScope() const override { return enclosingScope_; }
