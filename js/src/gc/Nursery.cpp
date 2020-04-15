@@ -625,16 +625,15 @@ void* js::Nursery::allocateZeroedBuffer(
   return allocateZeroedBuffer(obj->zone(), nbytes, arena);
 }
 
-void* js::Nursery::reallocateBuffer(JSObject* obj, void* oldBuffer,
+void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
                                     size_t oldBytes, size_t newBytes) {
-  if (!IsInsideNursery(obj)) {
-    return obj->zone()->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes,
-                                             newBytes);
+  if (!IsInsideNursery(cell)) {
+    return zone->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
   }
 
   if (!isInside(oldBuffer)) {
-    void* newBuffer = obj->zone()->pod_realloc<uint8_t>((uint8_t*)oldBuffer,
-                                                        oldBytes, newBytes);
+    void* newBuffer =
+        zone->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
     if (newBuffer && oldBuffer != newBuffer) {
       MOZ_ALWAYS_TRUE(mallocedBuffers.rekeyAs(oldBuffer, newBuffer, newBuffer));
     }
@@ -646,7 +645,7 @@ void* js::Nursery::reallocateBuffer(JSObject* obj, void* oldBuffer,
     return oldBuffer;
   }
 
-  void* newBuffer = allocateBuffer(obj->zone(), newBytes);
+  void* newBuffer = allocateBuffer(zone, newBytes);
   if (newBuffer) {
     PodCopy((uint8_t*)newBuffer, (uint8_t*)oldBuffer, oldBytes);
   }
@@ -661,34 +660,6 @@ void* js::Nursery::allocateBuffer(JS::BigInt* bi, size_t nbytes) {
     return bi->zone()->pod_malloc<uint8_t>(nbytes);
   }
   return allocateBuffer(bi->zone(), nbytes);
-}
-
-void* js::Nursery::reallocateBuffer(JS::BigInt* bi, void* oldDigits,
-                                    size_t oldBytes, size_t newBytes) {
-  if (!IsInsideNursery(bi)) {
-    return bi->zone()->pod_realloc<uint8_t>((uint8_t*)oldDigits, oldBytes,
-                                            newBytes);
-  }
-
-  if (!isInside(oldDigits)) {
-    void* newDigits = bi->zone()->pod_realloc<uint8_t>((uint8_t*)oldDigits,
-                                                       oldBytes, newBytes);
-    if (newDigits && oldDigits != newDigits) {
-      MOZ_ALWAYS_TRUE(mallocedBuffers.rekeyAs(oldDigits, newDigits, newDigits));
-    }
-    return newDigits;
-  }
-
-  // The nursery cannot make use of the returned digits data.
-  if (newBytes < oldBytes) {
-    return oldDigits;
-  }
-
-  void* newDigits = allocateBuffer(bi->zone(), newBytes);
-  if (newDigits) {
-    PodCopy((uint8_t*)newDigits, (uint8_t*)oldDigits, oldBytes);
-  }
-  return newDigits;
 }
 
 void js::Nursery::freeBuffer(void* buffer) {
