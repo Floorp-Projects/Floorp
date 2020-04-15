@@ -10,6 +10,7 @@
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/ProfileBufferChunkManager.h"
+#include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
@@ -1037,6 +1038,13 @@ class ProfileChunkedBuffer {
 #endif  // DEBUG
 
  private:
+  // Used to de/serialize a ProfileChunkedBuffer (e.g., containing a backtrace).
+  friend ProfileBufferEntryWriter::Serializer<ProfileChunkedBuffer>;
+  friend ProfileBufferEntryReader::Deserializer<ProfileChunkedBuffer>;
+  friend ProfileBufferEntryWriter::Serializer<UniquePtr<ProfileChunkedBuffer>>;
+  friend ProfileBufferEntryReader::Deserializer<
+      UniquePtr<ProfileChunkedBuffer>>;
+
   [[nodiscard]] UniquePtr<ProfileBufferChunkManager> ResetChunkManager(
       const baseprofiler::detail::BaseProfilerMaybeAutoLock&) {
     UniquePtr<ProfileBufferChunkManager> chunkManager;
@@ -1492,6 +1500,186 @@ class ProfileChunkedBuffer {
   // callback may be invoked from anywhere, including from inside one of our
   // locked section, so we cannot protect it with a mutex.
   Atomic<uint64_t, MemoryOrdering::ReleaseAcquire> mClearedBlockCount{0};
+};
+
+// ----------------------------------------------------------------------------
+// ProfileChunkedBuffer serialization
+
+// A ProfileChunkedBuffer can hide another one!
+// This will be used to store marker backtraces; They can be read back into a
+// UniquePtr<ProfileChunkedBuffer>.
+// Format: len (ULEB128) | start | end | buffer (len bytes) | pushed | cleared
+// len==0 marks an out-of-session buffer, or empty buffer.
+template <>
+struct ProfileBufferEntryWriter::Serializer<ProfileChunkedBuffer> {
+  static Length Bytes(const ProfileChunkedBuffer& aBuffer) {
+    return aBuffer.Read([&](ProfileChunkedBuffer::Reader* aReader) {
+      if (!aReader) {
+        // Out-of-session, we only need 1 byte to store a length of 0.
+        return ULEB128Size<Length>(0);
+      }
+      ProfileBufferEntryReader reader = aReader->SingleChunkDataAsEntry();
+      const ProfileBufferIndex start =
+          reader.CurrentBlockIndex().ConvertToProfileBufferIndex();
+      const ProfileBufferIndex end =
+          reader.NextBlockIndex().ConvertToProfileBufferIndex();
+      MOZ_ASSERT(end - start <= std::numeric_limits<Length>::max());
+      const Length len = static_cast<Length>(end - start);
+      if (len == 0) {
+        // In-session but empty, also store a length of 0.
+        return ULEB128Size<Length>(0);
+      }
+      // In-session.
+      return static_cast<Length>(ULEB128Size(len) + sizeof(start) + len +
+                                 sizeof(aBuffer.mPushedBlockCount) +
+                                 sizeof(aBuffer.mClearedBlockCount));
+    });
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const ProfileChunkedBuffer& aBuffer) {
+    aBuffer.Read([&](ProfileChunkedBuffer::Reader* aReader) {
+      if (!aReader) {
+        // Out-of-session, only store a length of 0.
+        aEW.WriteULEB128<Length>(0);
+        return;
+      }
+      ProfileBufferEntryReader reader = aReader->SingleChunkDataAsEntry();
+      const ProfileBufferIndex start =
+          reader.CurrentBlockIndex().ConvertToProfileBufferIndex();
+      const ProfileBufferIndex end =
+          reader.NextBlockIndex().ConvertToProfileBufferIndex();
+      MOZ_ASSERT(end - start <= std::numeric_limits<Length>::max());
+      const Length len = static_cast<Length>(end - start);
+      MOZ_ASSERT(len <= aEW.RemainingBytes());
+      if (len == 0) {
+        // In-session but empty, only store a length of 0.
+        aEW.WriteULEB128<Length>(0);
+        return;
+      }
+      // In-session.
+      // Store buffer length, and start index.
+      aEW.WriteULEB128(len);
+      aEW.WriteObject(start);
+      // Write all the bytes.
+      aEW.WriteFromReader(reader, reader.RemainingBytes());
+      // And write stats.
+      aEW.WriteObject(static_cast<uint64_t>(aBuffer.mPushedBlockCount));
+      aEW.WriteObject(static_cast<uint64_t>(aBuffer.mClearedBlockCount));
+    });
+  }
+};
+
+// A serialized ProfileChunkedBuffer can be read into an empty buffer (either
+// out-of-session, or in-session with enough room).
+template <>
+struct ProfileBufferEntryReader::Deserializer<ProfileChunkedBuffer> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       ProfileChunkedBuffer& aBuffer) {
+    // Expect an empty buffer, as we're going to overwrite it.
+    MOZ_ASSERT(aBuffer.GetState().mRangeStart == aBuffer.GetState().mRangeEnd);
+    // Read the stored buffer length.
+    const auto len = aER.ReadULEB128<ProfileChunkedBuffer::Length>();
+    if (len == 0) {
+      // 0-length means an "uninteresting" buffer, just return now.
+      return;
+    }
+    // We have a non-empty buffer to read.
+
+    // Read start and end indices.
+    const auto start = aER.ReadObject<ProfileBufferIndex>();
+    aBuffer.mRangeStart = start;
+    // For now, set the end to be the start (the buffer is still empty). It will
+    // be updated in `ReserveAndPutRaw()` below.
+    aBuffer.mRangeEnd = start;
+
+    if (aBuffer.IsInSession()) {
+      // Output buffer is in-session (i.e., it already has a memory buffer
+      // attached). Make sure the caller allocated enough space.
+      MOZ_RELEASE_ASSERT(aBuffer.BufferLength().value() >= len);
+    } else {
+      // Output buffer is out-of-session, set a new chunk manager that will
+      // provide a single chunk of just the right size.
+      aBuffer.SetChunkManager(MakeUnique<ProfileBufferChunkManagerSingle>(len));
+      MOZ_ASSERT(aBuffer.BufferLength().value() >= len);
+    }
+
+    // Copy bytes into the buffer.
+    aBuffer.ReserveAndPutRaw(
+        len,
+        [&](ProfileBufferEntryWriter* aEW) {
+          MOZ_RELEASE_ASSERT(aEW);
+          aEW->WriteFromReader(aER, len);
+        },
+        0);
+    // Finally copy stats.
+    aBuffer.mPushedBlockCount = aER.ReadObject<uint64_t>();
+    aBuffer.mClearedBlockCount = aER.ReadObject<uint64_t>();
+  }
+
+  // We cannot output a ProfileChunkedBuffer object (not copyable), use
+  // `ReadInto()` or `aER.ReadObject<UniquePtr<BlocksRinbBuffer>>()` instead.
+  static ProfileChunkedBuffer Read(ProfileBufferEntryReader& aER) = delete;
+};
+
+// A ProfileChunkedBuffer is usually refererenced through a UniquePtr, for
+// convenience we support (de)serializing that UniquePtr directly.
+// This is compatible with the non-UniquePtr serialization above, with a null
+// pointer being treated like an out-of-session or empty buffer; and any of
+// these would be deserialized into a null pointer.
+template <>
+struct ProfileBufferEntryWriter::Serializer<UniquePtr<ProfileChunkedBuffer>> {
+  static Length Bytes(const UniquePtr<ProfileChunkedBuffer>& aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      return ULEB128Size<Length>(0);
+    }
+    // Otherwise write the pointed-at ProfileChunkedBuffer (which could be
+    // out-of-session or empty.)
+    return SumBytes(*aBufferUPtr);
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const UniquePtr<ProfileChunkedBuffer>& aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      aEW.WriteULEB128<Length>(0);
+      return;
+    }
+    // Otherwise write the pointed-at ProfileChunkedBuffer (which could be
+    // out-of-session or empty.)
+    aEW.WriteObject(*aBufferUPtr);
+  }
+};
+
+template <>
+struct ProfileBufferEntryReader::Deserializer<UniquePtr<ProfileChunkedBuffer>> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       UniquePtr<ProfileChunkedBuffer>& aBuffer) {
+    aBuffer = Read(aER);
+  }
+
+  static UniquePtr<ProfileChunkedBuffer> Read(ProfileBufferEntryReader& aER) {
+    UniquePtr<ProfileChunkedBuffer> bufferUPtr;
+    // Keep a copy of the reader before reading the length, so we can restart
+    // from here below.
+    ProfileBufferEntryReader readerBeforeLen = aER;
+    // Read the stored buffer length.
+    const auto len = aER.ReadULEB128<ProfileChunkedBuffer::Length>();
+    if (len == 0) {
+      // 0-length means an "uninteresting" buffer, just return nullptr.
+      return bufferUPtr;
+    }
+    // We have a non-empty buffer.
+    // allocate an empty ProfileChunkedBuffer without mutex.
+    bufferUPtr = MakeUnique<ProfileChunkedBuffer>(
+        ProfileChunkedBuffer::ThreadSafety::WithoutMutex);
+    // Rewind the reader before the length and deserialize the contents, using
+    // the non-UniquePtr Deserializer.
+    aER = readerBeforeLen;
+    aER.ReadIntoObject(*bufferUPtr);
+    return bufferUPtr;
+  }
 };
 
 }  // namespace mozilla
