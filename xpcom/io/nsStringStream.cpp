@@ -305,8 +305,23 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   if (aCount > maxCount) {
     aCount = maxCount;
   }
+
+  nsDependentCSubstring tempData;
+  tempData.SetIsVoid(true);
+  if (mData.GetDataFlags() & nsACString::DataFlags::OWNED) {
+    tempData.Assign(std::move(mData));
+    mData.Rebind(tempData.BeginReading(), tempData.EndReading());
+  }
+
   nsresult rv = aWriter(this, aClosure, mData.BeginReading() + mOffset, 0,
                         aCount, aResult);
+
+  if (!mData.IsVoid() && !tempData.IsVoid()) {
+    MOZ_DIAGNOSTIC_ASSERT(mData == tempData, "String was replaced!");
+    mData.SetIsVoid(true);
+    mData.Assign(std::move(tempData));
+  }
+
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*aResult <= aCount,
                  "writer should not write more than we asked it to write");
