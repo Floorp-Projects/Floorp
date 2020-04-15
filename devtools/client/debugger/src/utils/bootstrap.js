@@ -30,9 +30,6 @@ import { persistTabs } from "../utils/tabs";
 
 import type { Panel } from "../client/firefox/types";
 
-// $FlowIgnore
-import { registerStoreObserver } from "devtools/client/shared/redux/subscriber";
-
 let parser;
 
 function renderPanel(component, store, panel: Panel) {
@@ -80,7 +77,7 @@ export function bootstrapStore(
   });
 
   const store = createStore(combineReducers(reducers), initialState);
-  registerStoreObserver(store, updatePrefs);
+  store.subscribe(() => updatePrefs(store.getState()));
 
   const actions = bindActionCreators(
     require("../actions").default,
@@ -131,26 +128,40 @@ export function bootstrapApp(store: any, panel: Panel): void {
   }
 }
 
-function updatePrefs(state: any, oldState: any): void {
-  const hasChanged = selector =>
-    selector(oldState) && selector(oldState) !== selector(state);
+let currentPendingBreakpoints;
+let currentXHRBreakpoints;
+let currentEventBreakpoints;
+let currentTabs;
 
-  if (hasChanged(selectors.getPendingBreakpoints)) {
-    asyncStore.pendingBreakpoints = selectors.getPendingBreakpoints(state);
+function updatePrefs(state: any): void {
+  const previousPendingBreakpoints = currentPendingBreakpoints;
+  const previousXHRBreakpoints = currentXHRBreakpoints;
+  const previousEventBreakpoints = currentEventBreakpoints;
+  const previousTabs = currentTabs;
+  currentPendingBreakpoints = selectors.getPendingBreakpoints(state);
+  currentXHRBreakpoints = selectors.getXHRBreakpoints(state);
+  currentEventBreakpoints = state.eventListenerBreakpoints;
+  currentTabs = selectors.getTabs(state);
+
+  if (
+    previousPendingBreakpoints &&
+    currentPendingBreakpoints !== previousPendingBreakpoints
+  ) {
+    asyncStore.pendingBreakpoints = currentPendingBreakpoints;
   }
 
   if (
-    oldState.eventListenerBreakpoints &&
-    oldState.eventListenerBreakpoints !== state.eventListenerBreakpoints
+    previousEventBreakpoints &&
+    previousEventBreakpoints !== currentEventBreakpoints
   ) {
-    asyncStore.eventListenerBreakpoints = state.eventListenerBreakpoints;
+    asyncStore.eventListenerBreakpoints = currentEventBreakpoints;
   }
 
-  if (hasChanged(selectors.getTabs)) {
-    asyncStore.tabs = persistTabs(selectors.getTabs(state));
+  if (previousTabs && previousTabs !== currentTabs) {
+    asyncStore.tabs = persistTabs(currentTabs);
   }
 
-  if (hasChanged(selectors.getXHRBreakpoints)) {
-    asyncStore.xhrBreakpoints = selectors.getXHRBreakpoints(state);
+  if (currentXHRBreakpoints !== previousXHRBreakpoints) {
+    asyncStore.xhrBreakpoints = currentXHRBreakpoints;
   }
 }
