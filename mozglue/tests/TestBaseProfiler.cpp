@@ -850,6 +850,31 @@ static void TestChunkedBuffer() {
                 "UniquePtr<ProfileBufferChunk>");
   MOZ_RELEASE_ASSERT(!chunks, "Expected no chunks when out-of-session");
 
+  // Use ProfileBufferChunkManagerWithLocalLimit, which will give away
+  // ProfileBufferChunks that can contain 128 bytes, using up to 1KB of memory
+  // (including usable 128 bytes and headers).
+  constexpr size_t bufferMaxSize = 1024;
+  constexpr ProfileChunkedBuffer::Length chunkMinSize = 128;
+  ProfileBufferChunkManagerWithLocalLimit cm(bufferMaxSize, chunkMinSize);
+  cb.SetChunkManager(cm);
+
+  // Let the chunk manager fulfill the initial request for an extra chunk.
+  cm.FulfillChunkRequests();
+
+  MOZ_RELEASE_ASSERT(cm.MaxTotalSize() == bufferMaxSize);
+  MOZ_RELEASE_ASSERT(cb.BufferLength().isSome());
+  MOZ_RELEASE_ASSERT(*cb.BufferLength() == bufferMaxSize);
+
+  // Steal the underlying ProfileBufferChunks from the ProfileChunkedBuffer.
+  chunks = cb.GetAllChunks();
+  MOZ_RELEASE_ASSERT(!!chunks, "Expected at least one chunk");
+  MOZ_RELEASE_ASSERT(!chunks->GetNext(), "Expected only one chunk");
+  const ProfileChunkedBuffer::Length chunkActualSize = chunks->BufferBytes();
+  MOZ_RELEASE_ASSERT(chunkActualSize >= chunkMinSize);
+  MOZ_RELEASE_ASSERT(chunks->RangeStart() == 1);
+  MOZ_RELEASE_ASSERT(chunks->OffsetFirstBlock() == 0);
+  MOZ_RELEASE_ASSERT(chunks->OffsetPastLastBlock() == 0);
+
 #ifdef DEBUG
   // cb.Dump();
 #endif
@@ -860,7 +885,35 @@ static void TestChunkedBuffer() {
   // cb.Dump();
 #endif
 
+  // Reset to out-of-session.
+  cb.ResetChunkManager();
+
+  chunks = cb.GetAllChunks();
+  MOZ_RELEASE_ASSERT(!chunks, "Expected no chunks when out-of-session");
+
   printf("TestChunkedBuffer done\n");
+}
+
+static void TestChunkedBufferSingle() {
+  printf("TestChunkedBufferSingle...\n");
+
+  constexpr ProfileChunkedBuffer::Length chunkMinSize = 128;
+
+  // Create a ProfileChunkedBuffer that will own&use a
+  // ProfileBufferChunkManagerSingle, which will give away one
+  // ProfileBufferChunk that can contain 128 bytes.
+  ProfileChunkedBuffer cbSingle(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+      MakeUnique<ProfileBufferChunkManagerSingle>(chunkMinSize));
+
+  MOZ_RELEASE_ASSERT(cbSingle.BufferLength().isSome());
+  MOZ_RELEASE_ASSERT(*cbSingle.BufferLength() >= chunkMinSize);
+
+#ifdef DEBUG
+  // cbSingle.Dump();
+#endif
+
+  printf("TestChunkedBufferSingle done\n");
 }
 
 static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
@@ -2059,6 +2112,7 @@ void TestProfilerDependencies() {
   TestChunkManagerSingle();
   TestChunkManagerWithLocalLimit();
   TestChunkedBuffer();
+  TestChunkedBufferSingle();
   TestModuloBuffer();
   TestBlocksRingBufferAPI();
   TestBlocksRingBufferUnderlyingBufferChanges();
