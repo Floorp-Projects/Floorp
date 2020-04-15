@@ -6,13 +6,26 @@ const { AddonTestUtils } = ChromeUtils.import(
 
 AddonTestUtils.initMochitest(this);
 
+const server = AddonTestUtils.createHttpServer();
+
 const initialAutoUpdate = AddonManager.autoUpdateDefault;
 registerCleanupFunction(() => {
   AddonManager.autoUpdateDefault = initialAutoUpdate;
 });
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.checkUpdateSecurity", false]],
+  });
+
   Services.telemetry.clearEvents();
+  registerCleanupFunction(() => {
+    const { ExtensionsUI } = ChromeUtils.import(
+      "resource:///modules/ExtensionsUI.jsm"
+    );
+    info("Cleanup any pending notification before exiting the test");
+    ExtensionsUI.pendingNotifications.delete(window);
+  });
 });
 
 function loadDetailView(win, id) {
@@ -159,17 +172,45 @@ add_task(async function testChangeAutoUpdates() {
   ]);
 });
 
-async function setupExtensionWithUpdate(id, { releaseNotes } = {}) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.checkUpdateSecurity", false]],
+function promisePermissionPrompt(addonId) {
+  return BrowserUtils.promiseObserved(
+    "webextension-permission-prompt",
+    subject => {
+      const { info } = subject.wrappedJSObject || {};
+      return !addonId || (info.addon && info.addon.id === addonId);
+    }
+  ).then(({ subject }) => {
+    return subject.wrappedJSObject.info;
   });
+}
 
-  let server = AddonTestUtils.createHttpServer();
+async function handlePermissionPrompt({ addonId, reject = false } = {}) {
+  const info = await promisePermissionPrompt(addonId);
+  // Assert that info.addon and info.icon are defined as expected.
+  is(
+    info.addon && info.addon.id,
+    addonId,
+    "Got the AddonWrapper in the permission prompt info"
+  );
+  ok(info.icon != null, "Got an addon icon in the permission prompt info");
+
+  if (reject) {
+    info.reject();
+  } else {
+    info.resolve();
+  }
+}
+
+async function setupExtensionWithUpdate(
+  id,
+  { releaseNotes, cancelUpdate } = {}
+) {
   let serverHost = `http://localhost:${server.identity.primaryPort}`;
   let updatesPath = `/ext-updates-${id}.json`;
 
   let baseManifest = {
     name: "Updates",
+    icons: { "48": "an-icon.png" },
     applications: {
       gecko: {
         id,
@@ -182,6 +223,11 @@ async function setupExtensionWithUpdate(id, { releaseNotes } = {}) {
     manifest: {
       ...baseManifest,
       version: "2",
+      // Include a permission in the updated extension, to make
+      // sure that we trigger the permission prompt as expected
+      // (and that we can accept or cancel the update by observing
+      // the underlying observerService notification).
+      permissions: ["http://*.example.com/*"],
     },
   });
 
@@ -216,6 +262,8 @@ async function setupExtensionWithUpdate(id, { releaseNotes } = {}) {
       },
     },
   });
+
+  handlePermissionPrompt({ addonId: id, reject: cancelUpdate });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -545,7 +593,7 @@ add_task(async function testReleaseNotesError() {
 
 add_task(async function testUpdateCancelled() {
   let id = "update@mochi.test";
-  let extension = await setupExtensionWithUpdate(id);
+  let extension = await setupExtensionWithUpdate(id, { cancelUpdate: true });
 
   let win = await loadInitialView("extension");
   let doc = win.document;
@@ -567,7 +615,6 @@ add_task(async function testUpdateCancelled() {
   // Force the install to be cancelled.
   let install = card.updateInstall;
   ok(install, "There was an install found");
-  install.promptHandler = Promise.reject().catch(() => {});
 
   await installUpdate(card, "update-cancelled");
 
@@ -747,4 +794,30 @@ add_task(async function testUpdatesShownOnLoad() {
   AddonManager.autoUpdateDefault = true;
   await closeView(win);
   await addon.unload();
+});
+
+add_task(async function testPromptOnBackgroundUpdateCheck() {
+  const id = "test-prompt-on-background-check@mochi.test";
+  const extension = await setupExtensionWithUpdate(id);
+
+  AddonManager.autoUpdateDefault = false;
+
+  const addon = await AddonManager.getAddonByID(id);
+  await AddonTestUtils.promiseFindAddonUpdates(
+    addon,
+    AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
+  );
+  let win = await loadInitialView("extension");
+
+  let card = getAddonCard(win, id);
+
+  const promisePromptInfo = promisePermissionPrompt(id);
+  await installUpdate(card, "update-installed");
+  const promptInfo = await promisePromptInfo;
+  ok(promptInfo, "Got a permission prompt as expected");
+
+  AddonManager.autoUpdateDefault = true;
+
+  await closeView(win);
+  await extension.unload();
 });
