@@ -26,11 +26,6 @@ requestLongerTimeout(2);
 add_task(async function() {
   let browserConsole, webConsole, objInspector;
 
-  // Setting editor mode for both webconsole and browser console as there are more
-  // elements to check.
-  await pushPref("devtools.webconsole.input.editor", true);
-  await pushPref("devtools.browserconsole.input.editor", true);
-
   // Needed for the execute() function below
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
 
@@ -40,13 +35,13 @@ add_task(async function() {
 
   browserConsole = await BrowserConsoleManager.toggleBrowserConsole();
   objInspector = await logObject(browserConsole);
-  testInputRelatedElementsAreVisibile(browserConsole);
+  testJSTermIsVisible(browserConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
   const browserTab = await addTab("data:text/html;charset=utf8,hello world");
   webConsole = await openConsole(browserTab);
   objInspector = await logObject(webConsole);
-  testInputRelatedElementsAreVisibile(webConsole);
+  testJSTermIsVisible(webConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
   await closeConsole(browserTab);
 
@@ -55,11 +50,11 @@ add_task(async function() {
 
   browserConsole = await BrowserConsoleManager.toggleBrowserConsole();
   objInspector = await logObject(browserConsole);
-  testInputRelatedElementsAreNotVisibile(browserConsole);
+  testJSTermIsNotVisible(browserConsole);
 
   webConsole = await openConsole(browserTab);
   objInspector = await logObject(webConsole);
-  testInputRelatedElementsAreVisibile(webConsole);
+  testJSTermIsVisible(webConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
   info("Close webconsole and browser console");
@@ -78,57 +73,11 @@ async function logObject(hud) {
   return node.querySelector(".tree");
 }
 
-function getInputRelatedElements(hud) {
-  const { document } = hud.ui.window;
-
-  return {
-    inputEl: document.querySelector(".jsterm-input-container"),
-    eagerEvaluationEl: document.querySelector(".eager-evaluation-result"),
-    editorResizerEl: document.querySelector(".editor-resizer"),
-    editorToolbarEl: document.querySelector(".webconsole-editor-toolbar"),
-    webConsoleAppEl: document.querySelector(".webconsole-app"),
-  };
-}
-
-function testInputRelatedElementsAreVisibile(hud) {
-  const {
-    inputEl,
-    eagerEvaluationEl,
-    editorResizerEl,
-    editorToolbarEl,
-    webConsoleAppEl,
-  } = getInputRelatedElements(hud);
-
-  isnot(inputEl.style.display, "none", "input is visible");
-  ok(eagerEvaluationEl, "eager evaluation result is in dom");
-  ok(editorResizerEl, "editor resizer is in dom");
-  ok(editorToolbarEl, "editor toolbar is in dom");
-  ok(
-    webConsoleAppEl.classList.contains("jsterm-editor") &&
-      webConsoleAppEl.classList.contains("eager-evaluation"),
-    "webconsole element has expected classes"
+function testJSTermIsVisible(hud) {
+  const inputContainer = hud.ui.window.document.querySelector(
+    ".jsterm-input-container"
   );
-}
-
-function testInputRelatedElementsAreNotVisibile(hud) {
-  const {
-    inputEl,
-    eagerEvaluationEl,
-    editorResizerEl,
-    editorToolbarEl,
-    webConsoleAppEl,
-  } = getInputRelatedElements(hud);
-
-  is(inputEl, null, "input is not in dom");
-  is(eagerEvaluationEl, null, "eager evaluation result is not in dom");
-  is(editorResizerEl, null, "editor resizer is not in dom");
-  is(editorToolbarEl, null, "editor toolbar is not in dom");
-  is(
-    webConsoleAppEl.classList.contains("jsterm-editor") &&
-      webConsoleAppEl.classList.contains("eager-evaluation"),
-    false,
-    "webconsole element does not have eager evaluation nor editor classes"
-  );
+  isnot(inputContainer.style.display, "none", "input is visible");
 }
 
 async function testObjectInspectorPropertiesAreSet(objInspector) {
@@ -154,4 +103,11 @@ async function testObjectInspectorPropertiesAreSet(objInspector) {
 
   is(name, "browser_console_hide_jsterm_test", "name is set correctly");
   is(value, "true", "value is set correctly");
+}
+
+function testJSTermIsNotVisible(hud) {
+  const inputContainer = hud.ui.window.document.querySelector(
+    ".jsterm-input-container"
+  );
+  is(inputContainer, null, "input is not in dom");
 }
