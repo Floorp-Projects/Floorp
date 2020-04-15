@@ -16,6 +16,7 @@ CompiledModules(
     'fetchScopes.js',
     'index.js',
     'inlinePreview.js',
+    'mapDisplayNames.js',
     'mapFrames.js',
     'mapScopes.js',
     'paused.js',
