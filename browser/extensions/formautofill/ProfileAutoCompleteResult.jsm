@@ -196,10 +196,8 @@ class ProfileAutoCompleteResult {
   /**
    * Removes a result from the resultset
    * @param {number} index The index of the result to remove
-   * @param {boolean} removeFromDatabase TRUE for removing data from DataBase
-   *                                     as well.
    */
-  removeValueAt(index, removeFromDatabase) {
+  removeValueAt(index) {
     // There is no plan to support removing profiles via autocomplete.
   }
 }

@@ -195,7 +195,7 @@ let ContentSearch = {
       let { previousFormHistoryResult } = browserData;
       for (let i = 0; i < previousFormHistoryResult.matchCount; i++) {
         if (previousFormHistoryResult.getValueAt(i) === entry) {
-          previousFormHistoryResult.removeValueAt(i, true);
+          previousFormHistoryResult.removeValueAt(i);
           break;
         }
       }

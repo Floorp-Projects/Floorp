@@ -236,15 +236,14 @@ nsAutoCompleteSimpleResult::GetListener(
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex,
-                                          bool aRemoveFromDb) {
+nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex) {
   CHECK_MATCH_INDEX(aRowIndex, false);
 
   nsString value = mMatches[aRowIndex].mValue;
   mMatches.RemoveElementAt(aRowIndex);
 
   if (mListener) {
-    mListener->OnValueRemoved(this, value, aRemoveFromDb);
+    mListener->OnValueRemoved(this, value);
   }
 
   return NS_OK;

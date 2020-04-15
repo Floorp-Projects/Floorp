@@ -161,20 +161,15 @@ FormAutoCompleteResult.prototype = {
   /**
    * Removes a result from the resultset
    * @param {number}  index    the index of the result to remove
-   * @param {boolean} removeFromDatabase
    */
-  removeValueAt(index, removeFromDatabase) {
+  removeValueAt(index) {
     this._checkIndexBounds(index);
     // Forward the removeValueAt call to the underlying result if we have one
     // Note: this assumes that the form history results were added to the top
     // of our arrays.
-    if (
-      removeFromDatabase &&
-      this._formHistResult &&
-      index < this._formHistResult.matchCount
-    ) {
+    if (this._formHistResult && index < this._formHistResult.matchCount) {
       // Delete the history result from the DB
-      this._formHistResult.removeValueAt(index, true);
+      this._formHistResult.removeValueAt(index);
     }
     this._values.splice(index, 1);
     this._labels.splice(index, 1);

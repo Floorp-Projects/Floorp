@@ -799,16 +799,6 @@ function Search(
     Ci.nsIAutoCompleteSimpleResult
   );
   result.setSearchString(searchString);
-  result.setListener({
-    onValueRemoved(result, spec, removeFromDB) {
-      if (removeFromDB) {
-        PlacesUtils.history.remove(spec).catch(Cu.reportError);
-      }
-    },
-    QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIAutoCompleteSimpleResultListener,
-    ]),
-  });
   // Will be set later, if needed.
   result.setDefaultIndex(-1);
   this._result = result;

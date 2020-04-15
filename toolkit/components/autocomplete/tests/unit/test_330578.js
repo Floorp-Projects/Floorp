@@ -7,12 +7,10 @@
 var gResultListener = {
   _lastResult: null,
   _lastValue: "",
-  _lastRemoveFromDb: false,
 
-  onValueRemoved(aResult, aValue, aRemoveFromDb) {
+  onValueRemoved(aResult, aValue) {
     this._lastResult = aResult;
     this._lastValue = aValue;
-    this._lastRemoveFromDb = aRemoveFromDb;
   },
 };
 
@@ -26,20 +24,18 @@ function run_test() {
   result.appendMatch("c", "");
   result.setListener(gResultListener);
   Assert.equal(result.matchCount, 3);
-  result.removeValueAt(0, true);
+  result.removeValueAt(0);
   Assert.equal(result.matchCount, 2);
   Assert.equal(gResultListener._lastResult, result);
   Assert.equal(gResultListener._lastValue, "a");
-  Assert.equal(gResultListener._lastRemoveFromDb, true);
 
-  result.removeValueAt(0, false);
+  result.removeValueAt(0);
   Assert.equal(result.matchCount, 1);
   Assert.equal(gResultListener._lastValue, "b");
-  Assert.equal(gResultListener._lastRemoveFromDb, false);
 
   // check that we don't get notified if the listener is unset
   result.setListener(null);
-  result.removeValueAt(0, true); // "c"
+  result.removeValueAt(0); // "c"
   Assert.equal(result.matchCount, 0);
   Assert.equal(gResultListener._lastValue, "b");
 }

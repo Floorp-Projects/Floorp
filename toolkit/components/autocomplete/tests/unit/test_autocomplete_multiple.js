@@ -100,7 +100,7 @@ AutoCompleteResult.prototype = {
     return this.getValueAt(aIndex);
   },
 
-  removeValueAt(aRowIndex, aRemoveFromDb) {},
+  removeValueAt(aRowIndex) {},
 
   // nsISupports implementation
   QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),
