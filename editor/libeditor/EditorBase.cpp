@@ -4140,27 +4140,6 @@ NS_IMETHODIMP EditorBase::ResetModificationCount() {
 }
 
 // static
-bool EditorBase::AreNodesSameType(nsIContent& aNode1,
-                                  nsIContent& aNode2) const {
-  if (aNode1.NodeInfo()->NameAtom() != aNode2.NodeInfo()->NameAtom()) {
-    return false;
-  }
-  if (!AsHTMLEditor() || !AsHTMLEditor()->IsCSSEnabled()) {
-    return true;
-  }
-  // If this is an HTMLEditor in CSS mode and they are <span> elements,
-  // let's check their styles.
-  if (!aNode1.IsHTMLElement(nsGkAtoms::span)) {
-    return true;
-  }
-  if (!aNode1.IsElement() || !aNode2.IsElement()) {
-    return false;
-  }
-  return CSSEditUtils::ElementsSameStyle(aNode1.AsElement(),
-                                         aNode2.AsElement());
-}
-
-// static
 nsIContent* EditorBase::GetNodeAtRangeOffsetPoint(
     const RawRangeBoundary& aPoint) {
   if (NS_WARN_IF(!aPoint.IsSet())) {
@@ -4335,70 +4314,6 @@ SplitNodeResult EditorBase::SplitNodeDeepWithTransaction(
   }
 
   return SplitNodeResult(NS_ERROR_FAILURE);
-}
-
-EditorDOMPoint EditorBase::JoinNodesDeepWithTransaction(
-    nsIContent& aLeftNode, nsIContent& aRightNode) {
-  // While the rightmost children and their descendants of the left node match
-  // the leftmost children and their descendants of the right node, join them
-  // up.
-
-  nsCOMPtr<nsIContent> leftNodeToJoin = &aLeftNode;
-  nsCOMPtr<nsIContent> rightNodeToJoin = &aRightNode;
-  nsCOMPtr<nsINode> parentNode = aRightNode.GetParentNode();
-
-  EditorDOMPoint ret;
-  EditorType editorType = GetEditorType();
-  while (leftNodeToJoin && rightNodeToJoin && parentNode &&
-         AreNodesSameType(*leftNodeToJoin, *rightNodeToJoin)) {
-    uint32_t length = leftNodeToJoin->Length();
-
-    // Do the join
-    nsresult rv = JoinNodesWithTransaction(*leftNodeToJoin, *rightNodeToJoin);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::JoinNodesWithTransaction() failed");
-      return EditorDOMPoint();
-    }
-
-    ret.Set(rightNodeToJoin, length);
-
-    if (parentNode->GetAsText()) {
-      // We've joined all the way down to text nodes, we're done!
-      return ret;
-    }
-
-    // Get new left and right nodes, and begin anew
-    parentNode = rightNodeToJoin;
-    rightNodeToJoin = parentNode->GetChildAt_Deprecated(length);
-    if (rightNodeToJoin) {
-      leftNodeToJoin = rightNodeToJoin->GetPreviousSibling();
-    } else {
-      leftNodeToJoin = nullptr;
-    }
-
-    // Skip over non-editable nodes
-    while (leftNodeToJoin &&
-           !EditorUtils::IsEditableContent(*leftNodeToJoin, editorType)) {
-      leftNodeToJoin = leftNodeToJoin->GetPreviousSibling();
-    }
-    if (!leftNodeToJoin) {
-      return ret;
-    }
-
-    while (rightNodeToJoin &&
-           !EditorUtils::IsEditableContent(*rightNodeToJoin, editorType)) {
-      rightNodeToJoin = rightNodeToJoin->GetNextSibling();
-    }
-    if (!rightNodeToJoin) {
-      return ret;
-    }
-  }
-
-  if (NS_WARN_IF(!ret.IsSet())) {
-    return EditorDOMPoint();
-  }
-
-  return ret;
 }
 
 nsresult EditorBase::EnsureNoPaddingBRElementForEmptyEditor() {

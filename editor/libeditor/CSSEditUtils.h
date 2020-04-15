@@ -299,18 +299,17 @@ class CSSEditUtils final {
   bool IsCSSPrefChecked() const;
 
   /**
-   * ElementsSameStyle compares two elements and checks if they have the same
-   * specified CSS declarations in the STYLE attribute.
-   * The answer is always false if at least one of them carries an ID or a
-   * class.
+   * DoElementsHaveSameStyle compares two elements and checks if they have the
+   * same specified CSS declarations in the STYLE attribute. The answer is
+   * always false if at least one of them carries an ID or a class.
    *
-   * @param aFirstNode           [IN] A DOM node.
-   * @param aSecondNode          [IN] A DOM node.
+   * @param aElement             [IN] A DOM node.
+   * @param aOtherElement        [IN] A DOM node.
    * @return                     true if the two elements are considered to
    *                             have same styles.
    */
-  static bool ElementsSameStyle(dom::Element* aFirstNode,
-                                dom::Element* aSecondNode);
+  static bool DoElementsHaveSameStyle(const dom::Element& aElement,
+                                      const dom::Element& aOtherElement);
 
   /**
    * Get the specified inline styles (style attribute) for an element.
@@ -320,7 +319,7 @@ class CSSEditUtils final {
    *                              style attribute.
    * @param aLength         [OUT] The number of declarations in aCssDecl.
    */
-  static nsresult GetInlineStyles(dom::Element* aElement,
+  static nsresult GetInlineStyles(const dom::Element& aElement,
                                   nsICSSDeclaration** aCssDecl,
                                   uint32_t* aLength);
 
