@@ -3136,10 +3136,8 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
 
   // Ceil instead of rounding here, so we can actually guarantee showing all the
   // content.
-  auto devOuterSize = LayoutDeviceIntSize::FromAppUnitsToOutside(
-      shellArea, presContext->AppUnitsPerDevPixel());
-  *aWidth = devOuterSize.width;
-  *aHeight = devOuterSize.height;
+  *aWidth = std::ceil(presContext->AppUnitsToFloatDevPixels(shellArea.width));
+  *aHeight = std::ceil(presContext->AppUnitsToFloatDevPixels(shellArea.height));
 
   return NS_OK;
 }
