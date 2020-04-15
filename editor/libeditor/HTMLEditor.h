@@ -859,21 +859,6 @@ class HTMLEditor final : public TextEditor,
                                          int32_t* outOffset = 0);
 
   /**
-   * NodeIsBlockStatic() returns true if aElement is an element node and
-   * should be treated as a block.
-   */
-  static bool NodeIsBlockStatic(const nsINode& aElement);
-
-  /**
-   * NodeIsInlineStatic() returns true if aElement is an element node but
-   * shouldn't be treated as a block or aElement is not an element.
-   * XXX This looks odd.  For example, how about a comment node?
-   */
-  static bool NodeIsInlineStatic(const nsINode& aElement) {
-    return !NodeIsBlockStatic(aElement);
-  }
-
-  /**
    * extracts an element from the normal flow of the document and
    * positions it, and puts it back in the normal flow.
    * @param aElement [IN] the element
@@ -892,9 +877,6 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RelativeChangeElementZIndex(
       Element& aElement, int32_t aChange, int32_t* aReturn);
-
-  virtual bool IsBlockNode(nsINode* aNode) const override;
-  using EditorBase::IsBlockNode;
 
   /**
    * returns true if aParentTag can contain a child of type aChildTag.
@@ -1690,14 +1672,7 @@ class HTMLEditor final : public TextEditor,
    * IsEmptyInlineNode() returns true if aContent is an inline node and it does
    * not have meaningful content.
    */
-  bool IsEmptyInlineNode(nsIContent& aContent) const {
-    MOZ_ASSERT(IsEditActionDataAvailable());
-
-    if (!HTMLEditor::NodeIsInlineStatic(aContent) || !IsContainer(&aContent)) {
-      return false;
-    }
-    return IsEmptyNode(aContent);
-  }
+  bool IsEmptyInlineNode(nsIContent& aContent) const;
 
   /**
    * IsEmptyOneHardLine() returns true if aArrayOfContents does not represent

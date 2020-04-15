@@ -747,13 +747,20 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
   // IsCSSEnabled().
   bool useCSS = aProperty != nsGkAtoms::tt || IsCSSEnabled();
 
+  AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfParents;
+  for (nsIContent* content :
+       InclusiveAncestorsOfType<nsIContent>(*aPointToSplit.GetContainer())) {
+    if (HTMLEditUtils::IsBlockElement(*content) || !content->GetParent() ||
+        !IsEditable(content->GetParent())) {
+      break;
+    }
+    arrayOfParents.AppendElement(*content);
+  }
+
   // Split any matching style nodes above the point.
   SplitNodeResult result(aPointToSplit);
   MOZ_ASSERT(!result.Handled());
-  for (nsCOMPtr<nsIContent> content = aPointToSplit.GetContainerAsContent();
-       !IsBlockNode(content) && content->GetParent() &&
-       IsEditable(content->GetParent());
-       content = content->GetParent()) {
+  for (OwningNonNull<nsIContent>& content : arrayOfParents) {
     bool isSetByCSS = false;
     if (useCSS &&
         CSSEditUtils::IsCSSEditableProperty(content, aProperty, aAttribute)) {
@@ -793,7 +800,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
     //     as handled with setting only previous or next node.  If its parent
     //     is a block, we do nothing but return as handled.
     SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-        *content, result.SplitPoint(),
+        MOZ_KnownLive(content), result.SplitPoint(),
         SplitAtEdges::eAllowToCreateEmptyContainer);
     if (splitNodeResult.Failed()) {
       NS_WARNING("EditorBase::SplitNodeDeepWithTransaction() failed");

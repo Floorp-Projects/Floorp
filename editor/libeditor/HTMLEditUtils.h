@@ -19,6 +19,20 @@ class HTMLEditUtils final {
   using Selection = dom::Selection;
 
  public:
+  /**
+   * IsBlockElement() returns true if aContent is an element and it should
+   * be treated as a block.  (This does not refer style information.)
+   */
+  static bool IsBlockElement(const nsIContent& aContent);
+  /**
+   * IsInlineElement() returns true if aElement is an element node but
+   * shouldn't be treated as a block or aElement is not an element.
+   * XXX This looks odd.  For example, how about a comment node?
+   */
+  static bool IsInlineElement(const nsIContent& aContent) {
+    return !IsBlockElement(aContent);
+  }
+
   static bool IsInlineStyle(nsINode* aNode);
   /**
    * IsRemovableInlineStyleElement() returns true if aElement is an inline
