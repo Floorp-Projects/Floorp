@@ -94,6 +94,7 @@ EXPORTS.mozilla += [
     'public/ProfileBufferChunkManagerWithLocalLimit.h',
     'public/ProfileBufferEntrySerialization.h',
     'public/ProfileBufferIndex.h',
+    'public/ProfileChunkedBuffer.h',
 ]
 
 if CONFIG['MOZ_VTUNE']:
