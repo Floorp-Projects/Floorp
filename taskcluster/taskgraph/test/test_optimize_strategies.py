@@ -6,8 +6,11 @@ from __future__ import absolute_import
 import time
 
 import pytest
+from datetime import datetime
 from mozunit import main
+from time import mktime
 
+from taskgraph.optimize.backstop import Backstop
 from taskgraph.optimize.bugbug import BugBugPushSchedules, BugbugTimeoutException, platform
 from taskgraph.task import Task
 
@@ -15,9 +18,12 @@ from taskgraph.task import Task
 @pytest.fixture(scope='module')
 def params():
     return {
+        'branch': 'integration/autoland',
         'head_repository': 'https://hg.mozilla.org/integration/autoland',
         'head_rev': 'abcdef',
-        'branch': 'integration/autoland',
+        'project': 'autoland',
+        'pushlog_id': 1,
+        'pushdate': mktime(datetime.now().timetuple()),
     }
 
 
@@ -149,6 +155,33 @@ def test_bugbug_timeout(monkeypatch, responses, params, tasks):
     opt = BugBugPushSchedules(platform.all, 0.5)
     with pytest.raises(BugbugTimeoutException):
         opt.should_remove_task(tasks[0], params, None)
+
+
+def test_backstop(params, tasks):
+    all_labels = {t.label for t in tasks}
+    opt = Backstop(10, 60)  # every 10th push or 1 hour
+
+    # If there's no previous push date, run tasks
+    params['pushlog_id'] = 8
+    scheduled = {t.label for t in tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == all_labels
+
+    # Only multiples of 10 schedule tasks. Pushdate from push 8 was cached.
+    params['pushlog_id'] = 9
+    params['pushdate'] += 3599
+    scheduled = {t.label for t in tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == set()
+
+    params['pushlog_id'] = 10
+    params['pushdate'] += 1
+    scheduled = {t.label for t in tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == all_labels
+
+    # Tasks are also scheduled if an hour has passed.
+    params['pushlog_id'] = 11
+    params['pushdate'] += 3600
+    scheduled = {t.label for t in tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == all_labels
 
 
 if __name__ == '__main__':
