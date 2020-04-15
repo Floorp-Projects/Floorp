@@ -1604,21 +1604,21 @@ bool GfxInfoBase::BuildFeatureStateLog(JSContext* aCx,
 void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   JS::Rooted<JSObject*> obj(aCx);
 
-  gfx::FeatureStatus gpuProcess =
-      gfxConfig::GetValue(gfx::Feature::GPU_PROCESS);
+  gfx::FeatureState& gpuProcess =
+      gfxConfig::GetFeature(gfx::Feature::GPU_PROCESS);
   InitFeatureObject(aCx, aObj, "gpuProcess", gpuProcess, &obj);
 
-  gfx::FeatureStatus wrQualified =
-      gfxConfig::GetValue(gfx::Feature::WEBRENDER_QUALIFIED);
+  gfx::FeatureState& wrQualified =
+      gfxConfig::GetFeature(gfx::Feature::WEBRENDER_QUALIFIED);
   InitFeatureObject(aCx, aObj, "wrQualified", wrQualified, &obj);
 
-  gfx::FeatureStatus webrender = gfxConfig::GetValue(gfx::Feature::WEBRENDER);
+  gfx::FeatureState& webrender = gfxConfig::GetFeature(gfx::Feature::WEBRENDER);
   InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
 
   // Only include AL if the platform attempted to use it.
-  gfx::FeatureStatus advancedLayers =
-      gfxConfig::GetValue(gfx::Feature::ADVANCED_LAYERS);
-  if (advancedLayers != FeatureStatus::Unused) {
+  gfx::FeatureState& advancedLayers =
+      gfxConfig::GetFeature(gfx::Feature::ADVANCED_LAYERS);
+  if (advancedLayers.GetValue() != FeatureStatus::Unused) {
     InitFeatureObject(aCx, aObj, "advancedLayers", advancedLayers, &obj);
 
     if (gfxConfig::UseFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING)) {
@@ -1631,17 +1631,23 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
 bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aContainer,
                                     const char* aName,
-                                    mozilla::gfx::FeatureStatus& aFeatureStatus,
+                                    mozilla::gfx::FeatureState& aFeatureState,
                                     JS::MutableHandle<JSObject*> aOutObj) {
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {
     return false;
   }
 
-  // Set "status".
-  const char* status = FeatureStatusToString(aFeatureStatus);
+  nsCString status;
+  if (aFeatureState.GetValue() == FeatureStatus::Blacklisted) {
+    status.AppendPrintf("%s:%s",
+                        FeatureStatusToString(aFeatureState.GetValue()),
+                        aFeatureState.GetFailureId().get());
+  } else {
+    status.Append(FeatureStatusToString(aFeatureState.GetValue()));
+  }
 
-  JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status));
+  JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status.get()));
   JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
   JS_SetProperty(aCx, obj, "status", val);
 
