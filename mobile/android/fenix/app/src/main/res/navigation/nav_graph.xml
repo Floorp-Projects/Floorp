@@ -7,26 +7,24 @@
 
     <action
         android:id="@+id/action_global_home"
-        app:destination="@id/nav_graph"
-        app:popUpToInclusive="true" />
+        app:popUpTo="@id/homeFragment"
+        app:popUpToInclusive="false" />
 
     <action
         android:id="@+id/action_global_browser"
         app:destination="@id/browserFragment"
-        app:popUpTo="@id/nav_graph"
+        app:popUpTo="@id/homeFragment"
         app:popUpToInclusive="false" />
 
     <action
         android:id="@+id/action_global_external_app_browser"
         app:destination="@id/externalAppBrowserFragment"
-        app:popUpTo="@id/nav_graph"
-        app:popUpToInclusive="true" />
+        app:popUpTo="@id/homeFragment"
+        app:popUpToInclusive="false" />
 
     <action
         android:id="@+id/action_global_search"
-        app:destination="@id/searchFragment"
-        app:popUpTo="@id/nav_graph"
-        app:popUpToInclusive="true" />
+        app:destination="@id/searchFragment" />
 
     <action android:id="@+id/action_global_shareFragment" app:destination="@id/shareFragment" />
     <action android:id="@+id/action_global_crash_reporter" app:destination="@id/crashReporterFragment" />
