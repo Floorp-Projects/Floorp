@@ -81,8 +81,8 @@ test(MyArray, {
     closed: true,
 });
 
-// ES 2017 draft 7.4.6 step 3.
-// if GetMethod fails, the thrown value should be used.
+// ES 2021 draft 7.4.6 step 5.
+// if GetMethod fails, the thrown value should be ignored.
 test(MyArray, {
     nextVal: { value: 1, done: false },
     modifier: (iterator, iterable) => {
@@ -93,7 +93,7 @@ test(MyArray, {
             }
         });
     },
-    exceptionVal: "return getter throws",
+    exceptionVal: "defineProperty throws",
     closed: true,
 });
 test(MyArray, {
@@ -106,7 +106,7 @@ test(MyArray, {
             }
         });
     },
-    exceptionType: TypeError,
+    exceptionVal: "defineProperty throws",
     closed: true,
 });
 test(MyArray, {
@@ -120,7 +120,7 @@ test(MyArray, {
             }
         });
     },
-    exceptionType: TypeError,
+    exceptionVal: "defineProperty throws",
     closed: true,
 });
 

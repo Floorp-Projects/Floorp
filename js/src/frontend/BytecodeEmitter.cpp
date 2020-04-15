@@ -2857,17 +2857,49 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
       ".close() on iterators is prohibited in self-hosted code because it "
       "can run user-modifiable iteration code");
 
-  // Generate inline logic corresponding to IteratorClose (ES 7.4.6).
+  // Generate inline logic corresponding to IteratorClose (ES2021 7.4.6) and
+  // AsyncIteratorClose (ES2021 7.4.7). Steps numbers apply to both operations.
   //
   // Callers need to ensure that the iterator object is at the top of the
   // stack.
+
+  // For non-Throw completions, we emit the equivalent of:
+  //
+  // var returnMethod = GetMethod(iterator, "return");
+  // if (returnMethod !== undefined) {
+  //   var innerResult = [Await] Call(returnMethod, iterator);
+  //   CheckIsObj(innerResult);
+  // }
+  //
+  // Whereas for Throw completions, we emit:
+  //
+  // try {
+  //   var returnMethod = GetMethod(iterator, "return");
+  //   if (returnMethod !== undefined) {
+  //     [Await] Call(returnMethod, iterator);
+  //   }
+  // } catch {}
+
+  Maybe<TryEmitter> tryCatch;
+
+  if (completionKind == CompletionKind::Throw) {
+    tryCatch.emplace(this, TryEmitter::Kind::TryCatch,
+                     TryEmitter::ControlKind::NonSyntactic);
+
+    if (!tryCatch->emitTry()) {
+      //            [stack] ... ITER
+      return false;
+    }
+  }
 
   if (!emit1(JSOp::Dup)) {
     //              [stack] ... ITER ITER
     return false;
   }
 
-  // Step 3.
+  // Steps 1-2 are assertions, step 3 is implicit.
+
+  // Step 4.
   //
   // Get the "return" method.
   if (!emitAtomOp(JSOp::CallProp, cx->names().return_)) {
@@ -2875,7 +2907,7 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     return false;
   }
 
-  // Step 4.
+  // Step 5.
   //
   // Do nothing if "return" is undefined or null.
   InternalIfEmitter ifReturnMethodIsDefined(this);
@@ -2889,126 +2921,39 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     return false;
   }
 
-  if (completionKind == CompletionKind::Throw) {
-    // 7.4.6 IteratorClose ( iterator, completion )
-    //   ...
-    //   3. Let return be ? GetMethod(iterator, "return").
-    //   4. If return is undefined, return Completion(completion).
-    //   5. Let innerResult be Call(return, iterator, « »).
-    //   6. If completion.[[Type]] is throw, return Completion(completion).
-    //   7. If innerResult.[[Type]] is throw, return
-    //      Completion(innerResult).
-    //
-    // For CompletionKind::Normal case, JSOp::Call for step 5 checks if RET
-    // is callable, and throws if not.  Since step 6 doesn't match and
-    // error handling in step 3 and step 7 can be merged.
-    //
-    // For CompletionKind::Throw case, an error thrown by JSOp::Call for
-    // step 5 is ignored by try-catch.  So we should check if RET is
-    // callable here, outside of try-catch, and the throw immediately if
-    // not.
-    CheckIsCallableKind kind = CheckIsCallableKind::IteratorReturn;
-    if (!emitCheckIsCallable(kind)) {
-      //            [stack] ... ITER RET
-      return false;
-    }
-  }
-
-  // Steps 5, 8.
+  // Steps 5.c, 7.
   //
-  // Call "return" if it is not undefined or null, and check that it returns
-  // an Object.
+  // Call the "return" method.
   if (!emit1(JSOp::Swap)) {
     //              [stack] ... RET ITER
     return false;
   }
 
-  Maybe<TryEmitter> tryCatch;
-
-  if (completionKind == CompletionKind::Throw) {
-    tryCatch.emplace(this, TryEmitter::Kind::TryCatch,
-                     TryEmitter::ControlKind::NonSyntactic);
-
-    // Mutate stack to balance stack for try-catch.
-    if (!emit1(JSOp::Undefined)) {
-      //            [stack] ... RET ITER UNDEF
-      return false;
-    }
-    if (!tryCatch->emitTry()) {
-      //            [stack] ... RET ITER UNDEF
-      return false;
-    }
-    if (!emitDupAt(2, 2)) {
-      //            [stack] ... RET ITER UNDEF RET
-      return false;
-    }
-  }
-
   if (!emitCall(JSOp::Call, 0)) {
-    //              [stack] ... ... RESULT
+    //              [stack] ... RESULT
     return false;
   }
 
+  // 7.4.7 AsyncIteratorClose, step 5.d.
   if (iterKind == IteratorKind::Async) {
     if (completionKind != CompletionKind::Throw) {
       // Await clobbers rval, so save the current rval.
       if (!emit1(JSOp::GetRval)) {
-        //          [stack] ... ... RESULT RVAL
+        //          [stack] ... RESULT RVAL
         return false;
       }
       if (!emit1(JSOp::Swap)) {
-        //          [stack] ... ... RVAL RESULT
+        //          [stack] ... RVAL RESULT
         return false;
       }
     }
+
     if (!emitAwaitInScope(currentScope)) {
-      //            [stack] ... ... RVAL? RESULT
-      return false;
-    }
-  }
-
-  if (completionKind == CompletionKind::Throw) {
-    if (!emit1(JSOp::Swap)) {
-      //            [stack] ... RET ITER RESULT UNDEF
-      return false;
-    }
-    if (!emit1(JSOp::Pop)) {
-      //            [stack] ... RET ITER RESULT
-      return false;
-    }
-
-    if (!tryCatch->emitCatch()) {
-      //            [stack] ... RET ITER RESULT EXC
-      return false;
-    }
-
-    // Just ignore the exception thrown by call and await.
-    if (!emit1(JSOp::Pop)) {
-      //            [stack] ... RET ITER RESULT
-      return false;
-    }
-
-    if (!tryCatch->emitEnd()) {
-      //            [stack] ... RET ITER RESULT
-      return false;
-    }
-
-    // Restore stack.
-    if (!emit2(JSOp::Unpick, 2)) {
-      //            [stack] ... RESULT RET ITER
-      return false;
-    }
-    if (!emitPopN(2)) {
-      //            [stack] ... RESULT
-      return false;
-    }
-  } else {
-    if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) {
       //            [stack] ... RVAL? RESULT
       return false;
     }
 
-    if (iterKind == IteratorKind::Async) {
+    if (completionKind != CompletionKind::Throw) {
       if (!emit1(JSOp::Swap)) {
         //          [stack] ... RESULT RVAL
         return false;
@@ -3017,6 +2962,17 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
         //          [stack] ... RESULT
         return false;
       }
+    }
+  }
+
+  // Step 6 (Handled in caller).
+
+  // Step 8.
+  if (completionKind != CompletionKind::Throw) {
+    // Check that the "return" result is an object.
+    if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) {
+      //            [stack] ... RESULT
+      return false;
     }
   }
 
@@ -3033,6 +2989,26 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
   if (!ifReturnMethodIsDefined.emitEnd()) {
     return false;
   }
+
+  if (completionKind == CompletionKind::Throw) {
+    if (!tryCatch->emitCatch()) {
+      //            [stack] ... ITER EXC
+      return false;
+    }
+
+    // Just ignore the exception thrown by call and await.
+    if (!emit1(JSOp::Pop)) {
+      //            [stack] ... ITER
+      return false;
+    }
+
+    if (!tryCatch->emitEnd()) {
+      //            [stack] ... ITER
+      return false;
+    }
+  }
+
+  // Step 9 (Handled in caller).
 
   return emit1(JSOp::Pop);
   //                [stack] ...
