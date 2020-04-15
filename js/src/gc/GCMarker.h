@@ -487,7 +487,17 @@ class GCMarker : public JSTracer {
   /* Track the state of marking. */
   MainThreadOrGCTaskData<MarkingState> state;
 
+ public:
+  /*
+   * Whether weakmaps can be marked incrementally.
+   *
+   * JSGC_INCREMENTAL_WEAKMAP_ENABLED
+   * pref: javascript.options.mem.incremental_weakmap
+   */
+  MainThreadOrGCTaskData<bool> incrementalWeakMapMarkingEnabled;
+
 #ifdef DEBUG
+ private:
   /* Count of arenas that are currently in the stack. */
   MainThreadOrGCTaskData<size_t> markLaterArenas;
 

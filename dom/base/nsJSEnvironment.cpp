@@ -2598,6 +2598,11 @@ void nsJSContext::EnsureStatics() {
                                        (void*)JSGC_COMPACTING_ENABLED);
 
   Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackBool,
+      "javascript.options.mem.incremental_weakmap",
+      (void*)JSGC_INCREMENTAL_WEAKMAP_ENABLED);
+
+  Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_high_frequency_time_limit_ms",
       (void*)JSGC_HIGH_FREQUENCY_TIME_LIMIT);

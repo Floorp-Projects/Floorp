@@ -346,6 +346,14 @@ typedef enum JSGCParamKey {
    * Default: MallocGrowthFactor
    */
   JSGC_MALLOC_GROWTH_FACTOR = 36,
+
+  /**
+   * Whether incremental weakmap marking is enabled.
+   *
+   * Pref: javascript.options.mem.incremental_weakmap
+   * Default: IncrementalWeakMarkEnabled
+   */
+  JSGC_INCREMENTAL_WEAKMAP_ENABLED = 37,
 } JSGCParamKey;
 
 /*
