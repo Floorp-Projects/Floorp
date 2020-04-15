@@ -285,11 +285,6 @@ translate-exceptions =
     .label = Exceptions…
     .accesskey = x
 
-# Variables: 
-#    $localeName (string) - Localized name of the locale to be used.
-use-system-locale = 
-   .label = Use your operating system settings for “{ $localeName }” to format dates, times, numbers, and measurements.
-
 check-user-spelling =
     .label = Check your spelling as you type
     .accesskey = t
