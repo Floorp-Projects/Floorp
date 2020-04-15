@@ -589,9 +589,6 @@ pref("media.plugins.enabled", true);
 // 16 = Force hardware decoding
 pref("media.stagefright.omxcodec.flags", 0);
 
-// Coalesce touch events to prevent them from flooding the event queue
-pref("dom.event.touch.coalescing.enabled", false);
-
 pref("layers.enable-tiles", true);
 
 // Enable the dynamic toolbar
