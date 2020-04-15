@@ -82,5 +82,13 @@ bool XRRenderState::IsCompositionDisabled() const {
   return mCompositionDisabled;
 }
 
+void XRRenderState::SessionEnded() {
+  if (mBaseLayer) {
+    mBaseLayer->SessionEnded();
+    mBaseLayer = nullptr;
+  }
+  mOutputCanvas = nullptr;
+}
+
 }  // namespace dom
 }  // namespace mozilla

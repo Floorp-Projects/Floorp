@@ -415,6 +415,14 @@ void XRSession::ExitPresentInternal() {
     mXRSystem->SessionEnded(this);
   }
 
+  if (mActiveRenderState) {
+    mActiveRenderState->SessionEnded();
+  }
+
+  if (mPendingRenderState) {
+    mPendingRenderState->SessionEnded();
+  }
+
   mDisplayPresentation = nullptr;
   if (!mEnded) {
     mEnded = true;
