@@ -24,16 +24,15 @@ namespace IPC {
   DEFINE_IPC_SERIALIZER_ENUM_GUARD(something, something##_Sentinel)
 
 DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUPowerPreference);
-DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUAddressMode);
-DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUCompareFunction);
-DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUFilterMode);
 DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::webgpu::SerialBindGroupEntryType);
 
+DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUAddressMode);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBindingType);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBlendFactor);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBlendOperation);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUCompareFunction);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUCullMode);
+DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUFilterMode);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUFrontFace);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUIndexFormat);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUInputStepMode);
@@ -58,11 +57,12 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUDeviceDescriptor,
                                   mExtensions, mLimits);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUBufferDescriptor, mSize,
                                   mUsage);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUSamplerDescriptor,
-                                  mAddressModeU, mAddressModeV, mAddressModeW,
-                                  mMagFilter, mMinFilter, mMipmapFilter,
-                                  mLodMinClamp, mLodMaxClamp, mCompare);
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUSamplerDescriptor,
+                                  address_mode_u, address_mode_v,
+                                  address_mode_w, mag_filter, min_filter,
+                                  mipmap_filter, lod_min_clamp, lod_max_clamp,
+                                  compare);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
                                   height, depth);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUOrigin3d, x, y, z);
