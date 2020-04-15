@@ -420,16 +420,8 @@ NeckoParent::AllocPDocumentChannelParent(
     context = aContext.get_canonical();
   }
 
-  nsCOMPtr<nsIPrincipal> requestingPrincipal;
-  // We only have the requesting principal in case of TYPE_SUBDOCUMENT.
-  // If we don't have an embedder window global, then it is probably a race and
-  // we will deal with that later in the code path.
-  if (context && !aContext.IsDiscarded() && context->GetParent()) {
-    if (RefPtr<WindowGlobalParent> embedderWGP =
-            context->GetParentWindowGlobal()) {
-      requestingPrincipal = embedderWGP->DocumentPrincipal();
-    }
-  }
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+      GetRequestingPrincipal(Some(args.loadInfo()));
 
   nsCOMPtr<nsILoadContext> loadContext;
   const char* error = CreateChannelLoadContext(

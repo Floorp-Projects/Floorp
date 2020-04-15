@@ -22,7 +22,6 @@
 #include "nsIContentParent.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/net/CookieJarSettings.h"
 
 class nsIPrincipal;
 class nsIURI;
@@ -163,18 +162,6 @@ class WindowGlobalParent final : public WindowContext,
 
   nsIContentParent* GetContentParent();
 
-  nsICookieJarSettings* CookieJarSettings() { return mCookieJarSettings; }
-
-  bool DocumentHasLoaded() { return mDocumentHasLoaded; }
-
-  bool DocumentHasUserInteracted() { return mDocumentHasUserInteracted; }
-
-  uint32_t SandboxFlags() { return mSandboxFlags; }
-
-  bool GetDocumentBlockAllMixedContent() { return mBlockAllMixedContent; }
-
-  bool GetDocumentUpgradeInsecureRequests() { return mUpgradeInsecureRequests; }
-
  protected:
   const nsAString& GetRemoteType() override;
   JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Parent; }
@@ -187,14 +174,6 @@ class WindowGlobalParent final : public WindowContext,
       const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
       nsDocShellLoadState* aLoadState);
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
-  mozilla::ipc::IPCResult RecvUpdateDocumentPrincipal(
-      nsIPrincipal* aNewDocumentPrincipal);
-  mozilla::ipc::IPCResult RecvUpdateDocumentHasLoaded(bool aDocumentHasLoaded);
-  mozilla::ipc::IPCResult RecvUpdateDocumentHasUserInteracted(
-      bool aDocumentHasUserInteracted);
-  mozilla::ipc::IPCResult RecvUpdateSandboxFlags(uint32_t aSandboxFlags);
-  mozilla::ipc::IPCResult RecvUpdateDocumentCspSettings(
-      bool aBlockAllMixedContent, bool aUpgradeInsecureRequests);
   mozilla::ipc::IPCResult RecvUpdateDocumentTitle(const nsString& aTitle);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
     mIsInitialDocument = aIsInitialDocument;
@@ -210,8 +189,6 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvGetContentBlockingEvents(
       GetContentBlockingEventsResolver&& aResolver);
-  mozilla::ipc::IPCResult RecvUpdateCookieJarSettings(
-      const CookieJarSettingsArgs& aCookieJarSettingsArgs);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -246,13 +223,6 @@ class WindowGlobalParent final : public WindowContext,
   ContentBlockingLog mContentBlockingLog;
 
   Maybe<ClientInfo> mClientInfo;
-  // Fields being mirrored from the corresponding document
-  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
-  uint32_t mSandboxFlags;
-  bool mDocumentHasLoaded;
-  bool mDocumentHasUserInteracted;
-  bool mBlockAllMixedContent;
-  bool mUpgradeInsecureRequests;
 };
 
 }  // namespace dom

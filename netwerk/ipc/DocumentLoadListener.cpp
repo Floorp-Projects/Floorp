@@ -40,7 +40,6 @@
 #include "nsIOService.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "nsICookieService.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -260,6 +259,9 @@ DocumentLoadListener::~DocumentLoadListener() {
 already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
     CanonicalBrowsingContext* aBrowsingContext, nsDocShellLoadState* aLoadState,
     uint64_t aOuterWindowId) {
+  OriginAttributes attrs;
+  mLoadContext->GetOriginAttributes(attrs);
+
   // TODO: Block copied from nsDocShell::DoURILoad, refactor out somewhere
   bool inheritPrincipal = false;
 
@@ -289,20 +291,20 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  if (aBrowsingContext->GetParent()) {
-    // Build LoadInfo for TYPE_SUBDOCUMENT
-    RefPtr<LoadInfo> loadInfo =
-        new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
-                     aOuterWindowId, securityFlags, sandboxFlags);
-    return loadInfo.forget();
-  }
-  // Build LoadInfo for TYPE_DOCUMENT
-  OriginAttributes attrs;
-  mLoadContext->GetOriginAttributes(attrs);
   RefPtr<LoadInfo> loadInfo =
       new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(), attrs,
                    aOuterWindowId, securityFlags, sandboxFlags);
   return loadInfo.forget();
+}
+
+already_AddRefed<WindowGlobalParent> GetParentEmbedderWindowGlobal(
+    CanonicalBrowsingContext* aBrowsingContext) {
+  RefPtr<WindowGlobalParent> parent =
+      aBrowsingContext->GetEmbedderWindowGlobal();
+  if (parent && parent->BrowsingContext() == aBrowsingContext->GetParent()) {
+    return parent.forget();
+  }
+  return nullptr;
 }
 
 // parent-process implementation of
@@ -312,7 +314,8 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
     CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURIBeingLoaded) {
   CanonicalBrowsingContext* bc = aBrowsingContext;
   RefPtr<WindowGlobalParent> prev;
-  while (RefPtr<WindowGlobalParent> parent = bc->GetParentWindowGlobal()) {
+  while (RefPtr<WindowGlobalParent> parent =
+             GetParentEmbedderWindowGlobal(bc)) {
     CanonicalBrowsingContext* parentBC = parent->BrowsingContext();
 
     nsIPrincipal* parentPrincipal = parent->DocumentPrincipal();
@@ -337,10 +340,11 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
 }
 
 bool DocumentLoadListener::Open(
-    nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags, uint32_t aCacheKey,
-    const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
-    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
-    uint64_t aOuterWindowId, bool aHasGesture, nsresult* aRv) {
+    nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+    nsLoadFlags aLoadFlags, uint32_t aCacheKey, const uint64_t& aChannelId,
+    const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
+    Maybe<ClientInfo>&& aInfo, uint64_t aOuterWindowId, bool aHasGesture,
+    nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -349,21 +353,19 @@ bool DocumentLoadListener::Open(
   OriginAttributes attrs;
   mLoadContext->GetOriginAttributes(attrs);
 
-  RefPtr<WindowGlobalParent> embedderWGP =
-      browsingContext->GetParentWindowGlobal();
-  if (browsingContext->GetParent() && !embedderWGP) {
-    // this is a race, bug 1331295
-    NS_WARNING(
-        "We don't have an embedder WindowGlobalParent, probably because of a "
-        "race");
-    return false;
-  }
-
   // If this is a top-level load, then rebuild the LoadInfo from scratch,
   // since the goal is to be able to initiate loads in the parent, where the
   // content process won't have provided us with an existing one.
-  RefPtr<LoadInfo> loadInfo =
-      CreateLoadInfo(browsingContext, aLoadState, aOuterWindowId);
+  // TODO: Handle TYPE_SUBDOCUMENT LoadInfo construction, and stop passing
+  // aLoadInfo across IPC.
+  RefPtr<LoadInfo> loadInfo = aLoadInfo;
+  if (!browsingContext->GetParent()) {
+    // If we're a top level load, then we should have not got an existing
+    // LoadInfo, or if we did, it should be TYPE_DOCUMENT.
+    MOZ_ASSERT(!aLoadInfo || aLoadInfo->InternalContentPolicyType() ==
+                                 nsIContentPolicy::TYPE_DOCUMENT);
+    loadInfo = CreateLoadInfo(browsingContext, aLoadState, aOuterWindowId);
+  }
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           browsingContext, aLoadState, loadInfo, mParentChannelListener,
