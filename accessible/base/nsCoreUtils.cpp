@@ -435,12 +435,12 @@ XULTreeElement* nsCoreUtils::GetTree(nsIContent* aContent) {
 }
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
-    XULTreeElement* aTree) {
+    XULTreeElement* aTree, FlushType aFlushType) {
   if (!aTree) {
     return nullptr;
   }
 
-  RefPtr<nsTreeColumns> cols = aTree->GetColumns();
+  RefPtr<nsTreeColumns> cols = aTree->GetColumns(aFlushType);
   if (!cols) {
     return nullptr;
   }

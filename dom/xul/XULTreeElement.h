@@ -41,7 +41,7 @@ class XULTreeElement final : public nsXULElement {
   nsTreeBodyFrame* GetTreeBodyFrame(FlushType = FlushType::Frames);
   nsTreeBodyFrame* GetCachedTreeBodyFrame() { return mTreeBody; }
 
-  already_AddRefed<nsTreeColumns> GetColumns();
+  already_AddRefed<nsTreeColumns> GetColumns(FlushType = FlushType::Frames);
 
   already_AddRefed<nsITreeView> GetView(CallerType /* unused */) {
     return GetView();

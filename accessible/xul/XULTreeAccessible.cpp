@@ -904,7 +904,7 @@ XULTreeItemAccessible::XULTreeItemAccessible(
     : XULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView,
                                 aRow) {
   mStateFlags |= eNoKidsFromDOM;
-  mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
+  mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree, FlushType::None);
   GetCellName(mColumn, mCachedName);
 }
 
