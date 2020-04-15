@@ -240,15 +240,15 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
             ]
 
 
-# Generate jit/MOpcodes.h from jit/MIR.h
-GeneratedFile('MOpcodes.h',
+# Generate jit/MOpcodesGenerated.h from jit/MIR.h
+GeneratedFile('MOpcodesGenerated.h',
               script='GenerateOpcodeFiles.py',
               entry_point='generate_mir_header',
               inputs=['MIR.h'])
 
-# Generate jit/LOpcodes.h from jit/LIR.h, jit/shared/LIR-shared.h, and
+# Generate jit/LOpcodesGenerated.h from jit/LIR.h, jit/shared/LIR-shared.h, and
 # platform-specific LIR files.
-GeneratedFile('LOpcodes.h',
+GeneratedFile('LOpcodesGenerated.h',
               script='GenerateOpcodeFiles.py',
               entry_point='generate_lir_header',
               inputs=lir_inputs)
