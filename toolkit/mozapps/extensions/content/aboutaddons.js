@@ -1335,6 +1335,9 @@ class AddonPageHeader extends HTMLElement {
     this.heading.hidden = viewType === "detail";
     this.backButton.hidden = viewType !== "detail" && viewType !== "shortcuts";
 
+    let { contentWindow } = getBrowserElement();
+    this.backButton.disabled = !contentWindow.history.state?.previousView;
+
     if (viewType !== "detail") {
       document.l10n.setAttributes(this.heading, `${viewType}-heading`);
     }
