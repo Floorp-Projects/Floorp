@@ -173,9 +173,9 @@ already_AddRefed<Element> XULTreeElement::GetTreeBody() {
   return nullptr;
 }
 
-already_AddRefed<nsTreeColumns> XULTreeElement::GetColumns() {
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) {
+already_AddRefed<nsTreeColumns> XULTreeElement::GetColumns(
+    FlushType aFlushType) {
+  if (nsTreeBodyFrame* body = GetTreeBodyFrame(aFlushType)) {
     return body->Columns();
   }
   return nullptr;
