@@ -14,14 +14,21 @@ them.
 Visual Studio Code
 ------------------
 
-For general information on using VS Code, see their `home page <https://code.visualstudio.com/>`__, `repo <https://github.com/Microsoft/vscode/>`__ and `guide to working with C++ <https://code.visualstudio.com/docs/languages/cpp>`__.
+For general information on using VS Code, see their
+`home page <https://code.visualstudio.com/>`__,
+`repo <https://github.com/Microsoft/vscode/>`__ and
+`guide to working with C++ <https://code.visualstudio.com/docs/languages/cpp>`__.
 
-For IntelliSense to work properly, a :ref:`compilation database <CompileDB back-end / compileflags>` as described below is required. When it is present when you open the mozilla source code folder, it will be automatically detected and Visual Studio Code will ask you if it should use it, which you should confirm.
+For IntelliSense to work properly, a
+:ref:`compilation database <CompileDB back-end / compileflags>` as described
+below is required. When it is present when you open the mozilla source code
+folder, it will be automatically detected and Visual Studio Code will ask you
+if it should use it, which you should confirm.
 
 VS Code provides number of extensions for JavaScript, Rust, etc.
 
 Useful preferences
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 When setting the preference
 
