@@ -3509,19 +3509,35 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::CommonAncestor(
 
 bool APZCTreeManager::IsFixedToRootContent(
     const HitTestingTreeNode* aNode) const {
-  mTreeLock.AssertCurrentThreadIn();
+  MutexAutoLock lock(mMapLock);
+  return IsFixedToRootContent(aNode, lock);
+}
+
+bool APZCTreeManager::IsFixedToRootContent(
+    const HitTestingTreeNode* aNode,
+    const MutexAutoLock& aProofOfMapLock) const {
   ScrollableLayerGuid::ViewID fixedTarget = aNode->GetFixedPosTarget();
   if (fixedTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return false;
   }
-  RefPtr<AsyncPanZoomController> targetApzc =
-      GetTargetAPZC(aNode->GetLayersId(), fixedTarget);
+  auto it =
+      mApzcMap.find(ScrollableLayerGuid(aNode->GetLayersId(), 0, fixedTarget));
+  if (it == mApzcMap.end()) {
+    return false;
+  }
+  RefPtr<AsyncPanZoomController> targetApzc = it->second.apzc;
   return targetApzc && targetApzc->IsRootContent();
 }
 
 bool APZCTreeManager::IsStuckToRootContentAtBottom(
     const HitTestingTreeNode* aNode) const {
-  mTreeLock.AssertCurrentThreadIn();
+  MutexAutoLock lock(mMapLock);
+  return IsStuckToRootContentAtBottom(aNode, lock);
+}
+
+bool APZCTreeManager::IsStuckToRootContentAtBottom(
+    const HitTestingTreeNode* aNode,
+    const MutexAutoLock& aProofOfMapLock) const {
   ScrollableLayerGuid::ViewID stickyTarget = aNode->GetStickyPosTarget();
   if (stickyTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return false;
@@ -3532,8 +3548,12 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
     return false;
   }
 
-  RefPtr<AsyncPanZoomController> stickyTargetApzc =
-      GetTargetAPZC(aNode->GetLayersId(), stickyTarget);
+  auto it =
+      mApzcMap.find(ScrollableLayerGuid(aNode->GetLayersId(), 0, stickyTarget));
+  if (it == mApzcMap.end()) {
+    return false;
+  }
+  RefPtr<AsyncPanZoomController> stickyTargetApzc = it->second.apzc;
   if (!stickyTargetApzc || !stickyTargetApzc->IsRootContent()) {
     return false;
   }
