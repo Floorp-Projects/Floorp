@@ -70,6 +70,7 @@ NS_INTERFACE_MAP_BEGIN(ParentChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAuthPromptProvider, mBrowsingContext)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIRemoteWindowContext, mBrowsingContext)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
@@ -444,6 +445,23 @@ NS_IMETHODIMP
 ParentChannelListener::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
   *aUsePrivateBrowsing = mUsePrivateBrowsing;
   return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// ParentChannelListener::nsIThreadRetargetableStreamListener
+//
+
+NS_IMETHODIMP
+ParentChannelListener::CheckListenerChain() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+      do_QueryInterface(mNextListener);
+  if (!listener) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return listener->CheckListenerChain();
 }
 
 }  // namespace net
