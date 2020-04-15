@@ -31,8 +31,8 @@ namespace apz {
   return (fabs(aAngle - (M_PI / 2)) < aThreshold);
 }
 
-/* static */ gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin,
-                                      gfxFloat aMax) {
+/*static*/ gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin,
+                                    gfxFloat aMax) {
   if (aTranslation > 0) {
     return std::max(0.0, std::min(aMax, aTranslation) - std::max(aMin, 0.0));
   }
@@ -40,17 +40,24 @@ namespace apz {
   return std::min(0.0, std::max(aMin, aTranslation) - std::min(aMax, 0.0));
 }
 
-/* static */ bool IsStuckAtBottom(gfxFloat aTranslation,
-                                  const LayerRectAbsolute& aInnerRange,
-                                  const LayerRectAbsolute& aOuterRange) {
-  gfxFloat diff =
-      (IntervalOverlap(aTranslation, aOuterRange.Y(), aOuterRange.YMost()) -
-       IntervalOverlap(aTranslation, aInnerRange.Y(), aInnerRange.YMost())) -
-      aTranslation;
+/*static*/ bool IsStuckAtBottom(gfxFloat aTranslation,
+                                const LayerRectAbsolute& aInnerRange,
+                                const LayerRectAbsolute& aOuterRange) {
+  // The item will be stuck at the bottom if the async scroll delta is in
+  // the range [aOuterRange.Y(), aInnerRange.Y()]. Since the translation
+  // is negated with repect to the async scroll delta (i.e. scrolling down
+  // produces a positive scroll delta and negative translation), we invert it
+  // and check to see if it falls in the specified range.
+  return aOuterRange.Y() <= -aTranslation && -aTranslation <= aInnerRange.Y();
+}
 
-  // `inner.YMost() < 0` means the sticky layer is stuck at top of the target
-  // scroll layer?
-  return diff == 0.0f && aInnerRange.YMost() >= 0;
+/*static*/ bool IsStuckAtTop(gfxFloat aTranslation,
+                             const LayerRectAbsolute& aInnerRange,
+                             const LayerRectAbsolute& aOuterRange) {
+  // Same as IsStuckAtBottom, except we want to check for the range
+  // [aInnerRange.YMost(), aOuterRange.YMost()].
+  return aInnerRange.YMost() <= -aTranslation &&
+         -aTranslation <= aOuterRange.YMost();
 }
 
 }  // namespace apz
