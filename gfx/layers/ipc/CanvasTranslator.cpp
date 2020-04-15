@@ -151,7 +151,7 @@ ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
 }
 
 void CanvasTranslator::StartTranslation() {
-  if (!TranslateRecording() && !GetIPCChannel()->Unsound_IsClosed()) {
+  if (!TranslateRecording() && GetIPCChannel()->CanSend()) {
     MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
         NewRunnableMethod("CanvasTranslator::StartTranslation", this,
                           &CanvasTranslator::StartTranslation)));
@@ -194,7 +194,7 @@ bool CanvasTranslator::TranslateRecording() {
         [&](RecordedEvent* recordedEvent) -> bool {
           // Make sure that the whole event was read from the stream.
           if (!mStream->good()) {
-            if (GetIPCChannel()->Unsound_IsClosed()) {
+            if (!GetIPCChannel()->CanSend()) {
               // The other side has closed only warn about read failure.
               gfxWarning() << "Failed to read event type: "
                            << recordedEvent->GetType();
@@ -245,7 +245,7 @@ bool CanvasTranslator::TranslateRecording() {
   case _typeenum: {                                                    \
     auto e = _class(*mStream);                                         \
     if (!mStream->good()) {                                            \
-      if (GetIPCChannel()->Unsound_IsClosed()) {                       \
+      if (!GetIPCChannel()->CanSend()) {                               \
         /* The other side has closed only warn about read failure. */  \
         gfxWarning() << "Failed to read event type: " << _typeenum;    \
       } else {                                                         \
