@@ -1,16 +1,51 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+    // This logic is duplicated in the allprojects block: I don't know how to fix that.
     repositories {
-        google()
-        jcenter()
+        maven {
+            url "https://nightly.maven.mozilla.org/maven2"
+            content {
+                // Improve performance: only check moz maven for mozilla deps.
+                includeGroupByRegex RepoMatching.mozilla
+            }
+        }
+        maven {
+            url "https://maven.mozilla.org/maven2"
+            content {
+                // Improve performance: only check moz maven for mozilla deps.
+                includeGroupByRegex RepoMatching.mozilla
+            }
+        }
+        google() {
+            content {
+                // Improve performance: only check google maven for mozilla deps.
+                includeGroupByRegex RepoMatching.androidx
+                includeGroupByRegex RepoMatching.comGoogleAndroid
+                includeGroupByRegex RepoMatching.comGoogleFirebase
+                includeGroupByRegex RepoMatching.comAndroid
+            }
+        }
+        jcenter() {
+            content {
+                // Improve security: don't search deps with known repos.
+                excludeGroupByRegex RepoMatching.mozilla
+                excludeGroupByRegex RepoMatching.androidx
+                excludeGroupByRegex RepoMatching.comGoogleAndroid
+                excludeGroupByRegex RepoMatching.comGoogleFirebase
+                excludeGroupByRegex RepoMatching.comAndroid
+            }
+        }
     }
+
     dependencies {
         classpath Deps.tools_androidgradle
         classpath Deps.tools_kotlingradle
         classpath Deps.androidx_safeargs
         classpath Deps.allopen
         classpath Deps.osslicenses_plugin
+
+        classpath "org.mozilla.components:tooling-glean-gradle:${Versions.mozilla_android_components}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -22,19 +57,43 @@ plugins {
 }
 
 allprojects {
+    // This logic is duplicated in the buildscript block: I don't know how to fix that.
     repositories {
-        google()
         maven {
             url "https://nightly.maven.mozilla.org/maven2"
+            content {
+                // Improve performance: only check moz maven for mozilla deps.
+                includeGroupByRegex RepoMatching.mozilla
+            }
         }
         maven {
             url "https://maven.mozilla.org/maven2"
+            content {
+                // Improve performance: only check moz maven for mozilla deps.
+                includeGroupByRegex RepoMatching.mozilla
+            }
         }
-        maven {
-            url "https://repo.leanplum.com/"
+        google() {
+            content {
+                // Improve performance: only check google maven for google deps.
+                includeGroupByRegex RepoMatching.androidx
+                includeGroupByRegex RepoMatching.comGoogleAndroid
+                includeGroupByRegex RepoMatching.comGoogleFirebase
+                includeGroupByRegex RepoMatching.comAndroid
+            }
         }
-        jcenter()
+        jcenter() {
+            content {
+                // Improve security: don't search deps with known repos.
+                excludeGroupByRegex RepoMatching.mozilla
+                excludeGroupByRegex RepoMatching.androidx
+                excludeGroupByRegex RepoMatching.comGoogleAndroid
+                excludeGroupByRegex RepoMatching.comGoogleFirebase
+                excludeGroupByRegex RepoMatching.comAndroid
+            }
+        }
     }
+
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.allWarningsAsErrors = true

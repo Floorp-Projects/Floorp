@@ -213,3 +213,25 @@ object Deps {
     const val junitParams = "org.junit.jupiter:junit-jupiter-params:${Versions.junit}"
     const val junitEngine = "org.junit.jupiter:junit-jupiter-engine:${Versions.junit}"
 }
+
+/**
+ * Functionality to limit specific dependencies to specific repositories. These are typically expected to be used by
+ * dependency group name (i.e. with `include/excludeGroup`). For additional info, see:
+ * https://docs.gradle.org/current/userguide/declaring_repositories.html#sec::matching_repositories_to_dependencies
+ *
+ * Note: I wanted to nest this in Deps but for some reason gradle can't find it so it's top-level now. :|
+ */
+object RepoMatching {
+    const val mozilla = "org\\.mozilla\\..*"
+    const val androidx = "androidx\\..*"
+    const val comAndroid = "com\\.android\\..*"
+    const val comGoogleFirebase = "com\\.google\\.firebase"
+
+    /**
+     * A matcher for com.google.android.* with one exception: the espresso-contrib dependency includes the
+     * accessibility-test-framework dependency, which is not available in the google repo. As such, we must
+     * explicitly exclude it from this regex so it can be found on jcenter. Note that the transitive dependency
+     * com.google.guava is also not available on google's repo.
+     */
+    const val comGoogleAndroid = "com\\.google\\.android\\.(?!apps\\.common\\.testing\\.accessibility\\.framework).*"
+}
