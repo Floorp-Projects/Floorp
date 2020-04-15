@@ -1364,6 +1364,9 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
       break;
+    case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
+      marker.incrementalWeakMapMarkingEnabled = value != 0;
+      break;
     default:
       if (!tunables.setParameter(key, value, lock)) {
         return false;
@@ -1396,6 +1399,10 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
+      break;
+    case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
+      marker.incrementalWeakMapMarkingEnabled =
+          TuningDefaults::IncrementalWeakMapMarkingEnabled;
       break;
     default:
       tunables.resetParameter(key, lock);
@@ -1472,6 +1479,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.maxEmptyChunkCount();
     case JSGC_COMPACTING_ENABLED:
       return compactingEnabled;
+    case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
+      return marker.incrementalWeakMapMarkingEnabled;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
       return tunables.nurseryFreeThresholdForIdleCollection();
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
@@ -4217,14 +4226,19 @@ void GCRuntime::updateMemoryCountersOnGCStart() {
 }
 
 template <class ZoneIterT>
-IncrementalProgress GCRuntime::markWeakReferences(gcstats::PhaseKind phase,
-                                                  SliceBudget& budget) {
+IncrementalProgress GCRuntime::markWeakReferences(
+    gcstats::PhaseKind phase, SliceBudget& incrementalBudget) {
   gcstats::AutoPhase ap1(stats(), phase);
+
+  auto unlimited = SliceBudget::unlimited();
+  SliceBudget& budget =
+      marker.incrementalWeakMapMarkingEnabled ? incrementalBudget : unlimited;
 
   // We may have already entered weak marking mode.
   if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
     for (ZoneIterT zone(this); !zone.done(); zone.next()) {
       if (zone->enterWeakMarkingMode(&marker, budget) == NotFinished) {
+        MOZ_ASSERT(marker.incrementalWeakMapMarkingEnabled);
         marker.leaveWeakMarkingMode();
         return NotFinished;
       }
@@ -4247,6 +4261,7 @@ IncrementalProgress GCRuntime::markWeakReferences(gcstats::PhaseKind phase,
   bool markedAny = true;
   while (markedAny) {
     if (!marker.markUntilBudgetExhausted(budget)) {
+      MOZ_ASSERT(marker.incrementalWeakMapMarkingEnabled);
       return NotFinished;
     }
 

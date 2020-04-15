@@ -2597,7 +2597,9 @@ GCMarker::GCMarker(JSRuntime* rt)
       markQueue(rt),
       queuePos(0)
 #endif
-{
+      ,
+      incrementalWeakMapMarkingEnabled(
+          TuningDefaults::IncrementalWeakMapMarkingEnabled) {
   setTraceWeakEdges(false);
 }
 
@@ -2764,6 +2766,19 @@ bool GCMarker::enterWeakMarkingMode() {
 IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
                                                    SliceBudget& budget) {
   MOZ_ASSERT(marker->isWeakMarking());
+
+  if (!marker->incrementalWeakMapMarkingEnabled) {
+    // Do not rely on the information about not-yet-marked weak keys that have
+    // been collected by barriers. Rebuild the full table here.
+    mozilla::Unused << gcWeakKeys().clear();
+
+    for (WeakMapBase* m : gcWeakMapList()) {
+      if (m->mapColor) {
+        mozilla::Unused << m->markEntries(marker);
+      }
+    }
+    return IncrementalProgress::Finished;
+  }
 
   // gcWeakKeys contains the keys from all weakmaps marked so far, or at least
   // the keys that might still need to be marked through. Scan through
