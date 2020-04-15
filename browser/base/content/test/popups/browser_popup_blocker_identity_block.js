@@ -70,14 +70,14 @@ add_task(async function check_blocked_popup_indicator() {
   });
 
   // Wait for popup block.
-  await BrowserTestUtils.waitForCondition(() =>
+  await TestUtils.waitForCondition(() =>
     gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
   );
 
   // Check if blocked popup indicator text is visible in the identity popup. It should be visible.
   document.getElementById("identity-icon").click();
   await openIdentityPopup();
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => document.getElementById("blocked-popup-indicator-item") !== null
   );
 
@@ -104,7 +104,7 @@ add_task(async function check_popup_showing() {
   });
 
   // Wait for popup block.
-  await BrowserTestUtils.waitForCondition(() =>
+  await TestUtils.waitForCondition(() =>
     gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
   );
 
@@ -122,7 +122,7 @@ add_task(async function check_popup_showing() {
   text.click();
 
   await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => popup.linkedBrowser.currentURI.spec != "about:blank"
   );
 
@@ -152,7 +152,7 @@ add_task(async function check_permission_state_change() {
   });
 
   // Wait for popup block.
-  await BrowserTestUtils.waitForCondition(() =>
+  await TestUtils.waitForCondition(() =>
     gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
   );
 
@@ -182,7 +182,7 @@ add_task(async function check_permission_state_change() {
     }),
     BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen"),
   ]);
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => popup.linkedBrowser.currentURI.spec != "about:blank"
   );
 
