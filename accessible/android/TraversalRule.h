@@ -45,6 +45,8 @@ class TraversalRule final : public PivotRule {
 
   uint16_t SectionMatch(Accessible* aAccessible);
 
+  uint16_t LandmarkMatch(Accessible* aAccessible);
+
   int32_t mGranularity;
 };
 

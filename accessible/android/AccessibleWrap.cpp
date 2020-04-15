@@ -23,6 +23,7 @@
 #include "nsIAccessibleAnnouncementEvent.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
+#include "nsWhitespaceTokenizer.h"
 #include "RootAccessible.h"
 
 #include "mozilla/a11y/PDocAccessibleChild.h"
@@ -541,6 +542,20 @@ void AccessibleWrap::GetRoleDescription(role aRole,
     if (NS_SUCCEEDED(rv) &&
         LocalizeString("headingLevel", aRoleDescription, formatString)) {
       return;
+    }
+  }
+
+  if ((aRole == roles::LANDMARK || aRole == roles::REGION) && aAttributes) {
+    nsAutoString xmlRoles;
+    if (NS_SUCCEEDED(aAttributes->GetStringProperty(
+            NS_LITERAL_CSTRING("xml-roles"), xmlRoles))) {
+      nsWhitespaceTokenizer tokenizer(xmlRoles);
+      while (tokenizer.hasMoreTokens()) {
+        if (LocalizeString(NS_ConvertUTF16toUTF8(tokenizer.nextToken()).get(),
+                           aRoleDescription)) {
+          return;
+        }
+      }
     }
   }
 
