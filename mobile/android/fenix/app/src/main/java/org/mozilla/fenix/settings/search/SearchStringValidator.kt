@@ -10,9 +10,12 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import java.io.IOException
+import java.net.HttpURLConnection
 
 object SearchStringValidator {
     enum class Result { Success, CannotReach }
+
+    private const val QUERY_PARAM = "1"
 
     fun isSearchStringValid(client: Client, searchString: String): Result {
         val request = createRequest(searchString)
@@ -26,15 +29,23 @@ object SearchStringValidator {
 
         // read the response stream to ensure the body is closed correctly. workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1603114
         response.body.string()
-        return if (response.isSuccess) Result.Success else Result.CannotReach
+        return if (response.isSuccess ||
+            isTestQueryParamNotFound(response.status)) Result.Success else Result.CannotReach
     }
 
     private fun createRequest(searchString: String): Request {
         // we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
-        val encodedTestQuery = Uri.encode("testSearchEngineValidation")
+        val encodedTestQuery = Uri.encode(QUERY_PARAM)
 
         val normalizedHttpsSearchUrlStr = searchString.toNormalizedUrl()
         val searchUrl = normalizedHttpsSearchUrlStr.replace("%s".toRegex(), encodedTestQuery)
         return Request(searchUrl)
     }
+
+    /**
+     * There is no universal query param, so a site returning 404 doesn't mean the user input is wrong,
+     * it means that the website's search functionality doesn't find our test param, but it's reachable.
+     */
+    private fun isTestQueryParamNotFound(status: Int): Boolean =
+        status == HttpURLConnection.HTTP_NOT_FOUND
 }
