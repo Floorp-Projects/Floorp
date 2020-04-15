@@ -52,13 +52,10 @@ class WidgetTouchEvent;
 // platform lacks eMouseLongTap. Turn on this preference
 // "layout.accessiblecaret.use_long_tap_injector" for the fake long-tap events.
 //
-// State transition diagram:
-// https://hg.mozilla.org/mozilla-central/raw-file/default/layout/base/doc/AccessibleCaretEventHubStates.png
-// Source code of the diagram:
-// https://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.dot
-//
-// Please see the wiki page for more information.
-// https://wiki.mozilla.org/AccessibleCaret
+// Please see the in-tree document for state transition diagram and more
+// information.
+// HTML: https://firefox-source-docs.mozilla.org/layout/AccessibleCaret.html
+// Source rst: layout/docs/AccessibleCaret.rst
 //
 class AccessibleCaretEventHub : public nsIReflowObserver,
                                 public nsIScrollObserver,

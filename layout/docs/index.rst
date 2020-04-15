@@ -10,4 +10,5 @@ contains general information about layout and the layout team at Mozilla.
 .. toctree::
    :maxdepth: 1
 
-.. Add the file name of the subdocument (without .rst) here.
+   AccessibleCaret
+
