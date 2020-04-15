@@ -236,7 +236,7 @@ extern const uint32_t ArgLengths[];
   _(GuardSpecificObject, Id, Field)                                            \
   _(GuardSpecificAtom, Id, Field)                                              \
   _(GuardSpecificSymbol, Id, Field)                                            \
-  _(GuardSpecificInt32Immediate, Id, Int32, Byte)                              \
+  _(GuardSpecificInt32Immediate, Id, Int32)                                    \
   _(GuardSpecificNativeFunction, Id, Word)                                     \
   _(GuardMagicValue, Id, Byte)                                                 \
   _(GuardFrameHasNoArgumentsObject, None)                                      \
@@ -1082,12 +1082,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(expected), StubField::Type::Symbol);
   }
 
-  void guardSpecificInt32Immediate(
-      Int32OperandId operand, int32_t expected,
-      Assembler::Condition cond = Assembler::Equal) {
+  void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificInt32Immediate, operand);
     writeInt32Immediate(expected);
-    buffer_.writeByte(uint32_t(cond));
   }
 
   void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
