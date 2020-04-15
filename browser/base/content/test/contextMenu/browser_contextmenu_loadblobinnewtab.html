@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+</head>
+
+<body onload="add_content()">
+  <p>This example creates a typed array containing the ASCII codes for the space character through the letter Z, then
+    converts it to an object URL.A link to open that object URL is created. Click the link to see the decoded object
+    URL.</p>
+  <br />
+  <br />
+  <a id='blob-url-link'>Open the array URL</a>
+  <br />
+  <br />
+  <a id='blob-url-referrer-link'>Open the URL that fetches the URL above</a>
+
+  <script>
+    function typedArrayToURL(typedArray, mimeType) {
+      return URL.createObjectURL(new Blob([typedArray.buffer], { type: mimeType }))
+    }
+
+    function add_content() {
+      const bytes = new Uint8Array(59);
+
+      for (let i = 0;i < 59;i++) {
+        bytes[i] = 32 + i;
+      }
+
+      const url = typedArrayToURL(bytes, 'text/plain');
+      document.getElementById('blob-url-link').href = url;
+
+      const ref_url = URL.createObjectURL(new Blob([`
+      <script>
+        fetch("${url}", {headers: {'Content-Type': 'text/plain'}})
+        .then((response) => {
+          response.text().then((textData) => {
+            var pre = document.createElement("pre");
+            pre.textContent = textData.trim();
+            document.body.appendChild(pre);
+          });
+        });
+        <\/script>
+        `], { type: 'text/html' }));
+
+      document.getElementById('blob-url-referrer-link').href = ref_url;
+    };
+
+  </script>
+
+</body>
+
+</html>
