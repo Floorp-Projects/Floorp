@@ -741,7 +741,14 @@ this.downloads = class extends ExtensionAPI {
               return target;
             }
 
-            const window = Services.wm.getMostRecentWindow("navigator:browser");
+            if (!("windowTracker" in global)) {
+              return target;
+            }
+
+            // Use windowTracker to find a window, rather than Services.wm,
+            // so that this doesn't break where navigator:browser isn't the
+            // main window (e.g. Thunderbird).
+            const window = global.windowTracker.getTopWindow().window;
             const basename = OS.Path.basename(target);
             const ext = basename.match(/\.([^.]+)$/);
 
