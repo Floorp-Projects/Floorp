@@ -42,6 +42,21 @@ XRRigidTransform::XRRigidTransform(nsISupports* aParent,
                               aOrientation.z, aOrientation.w);
 }
 
+XRRigidTransform::XRRigidTransform(nsISupports* aParent,
+                                   const gfx::Matrix4x4Double& aTransform)
+    : mParent(aParent), mMatrixArray(nullptr) {
+  mozilla::HoldJSObjects(this);
+  gfx::PointDouble3D position;
+  gfx::PointDouble3D scale;
+  gfx::QuaternionDouble orientation;
+
+  aTransform.Decompose(position, orientation, scale);
+
+  mPosition = new DOMPoint(aParent, position.x, position.y, position.z, 1.0f);
+  mOrientation = new DOMPoint(aParent, orientation.x, orientation.y,
+                              orientation.z, orientation.w);
+}
+
 XRRigidTransform::~XRRigidTransform() { mozilla::DropJSObjects(this); }
 
 /* static */ already_AddRefed<XRRigidTransform> XRRigidTransform::Constructor(

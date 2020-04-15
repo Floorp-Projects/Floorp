@@ -40,7 +40,8 @@ JSObject* XRSpace::WrapObject(JSContext* aCx,
 XRSession* XRSpace::GetSession() const { return mSession; }
 
 gfx::QuaternionDouble XRSpace::GetEffectiveOriginOrientation() const {
-  gfx::QuaternionDouble orientation = mNativeOrigin->GetOrientation() * mOriginOffsetOrientation;
+  gfx::QuaternionDouble orientation =
+      mNativeOrigin->GetOrientation() * mOriginOffsetOrientation;
   return orientation;
 }
 
@@ -50,6 +51,13 @@ gfx::PointDouble3D XRSpace::GetEffectiveOriginPosition() const {
   position = mOriginOffsetOrientation.RotatePoint(position);
   position += mOriginOffsetPosition;
   return position;
+}
+
+gfx::Matrix4x4Double XRSpace::GetEffectiveOriginTransform() const {
+  gfx::Matrix4x4Double transform;
+  transform.SetRotationFromQuaternion(GetEffectiveOriginOrientation());
+  transform.PostTranslate(GetEffectiveOriginPosition());
+  return transform;
 }
 
 bool XRSpace::IsPositionEmulated() const {
