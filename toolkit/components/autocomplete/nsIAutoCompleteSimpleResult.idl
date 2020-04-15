@@ -115,9 +115,6 @@ interface nsIAutoCompleteSimpleResultListener : nsISupports
    *        The result from which aValue has been removed.
    * @param aValue
    *        The removed value.
-   * @param aRemoveFromDb
-   *        Whether the value should be removed from persistent storage as well.
    */
-  void onValueRemoved(in nsIAutoCompleteSimpleResult aResult, in AString aValue,
-                      in boolean aRemoveFromDb);
+  void onValueRemoved(in nsIAutoCompleteSimpleResult aResult, in AString aValue);
 };

@@ -1313,7 +1313,7 @@ add_task(async function test_all_patterns() {
       );
 
       Assert.throws(
-        () => actual.removeValueAt(pattern.items.length, true),
+        () => actual.removeValueAt(pattern.items.length),
         /Index out of range\./
       );
     }
