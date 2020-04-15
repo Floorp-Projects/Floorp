@@ -1,15 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 $schema: moz://mozilla.org/schemas/glean/pings/1-0-0
 
 activation:
-  description: >
-    This ping is intended to provide a measure of the activation of mobile products.
-    It's generated when Fenix starts, right after Glean is initialized. It doesn't
-    include the client_id, since it might be reporting an hashed version of the
-    Google Advertising ID.
+  description: |
+    This ping is intended to provide a measure of the activation of mobile
+    products. It's generated when Fenix starts, right after Glean is
+    initialized. It doesn't include the client_id, since it might be reporting
+    an hashed version of the Google Advertising ID.
   include_client_id: false
   bugs:
     - 1538011
@@ -20,7 +20,7 @@ activation:
     - fenix-core@mozilla.com
 
 installation:
-  description: >
+  description: |
     This ping is intended to capture the source of the installation
   include_client_id: true
   bugs:

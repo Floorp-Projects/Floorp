@@ -1,8 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-
+---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 no_lint:
@@ -11,137 +10,158 @@ no_lint:
 events:
   app_opened:
     type: event
-    description: >
+    description: |
       A user opened the app
     extra_keys:
       source:
-        description: "The method used to open Fenix. Possible values are: `app_icon`, `custom_tab` or `link`"
+        description: |
+          The method used to open Fenix. Possible values are: `app_icon`,
+          `custom_tab` or `link`
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/968
+      - https://github.com/mozilla-mobile/fenix/issues/968
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - telemetry-client-dev@mozilla.com
-    - fenix-core@mozilla.com
+      - telemetry-client-dev@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   search_bar_tapped:
     type: event
-    description: >
+    description: |
       A user tapped the search bar
     extra_keys:
       source:
-        description: "The view the user was on when they initiated the search (For example: `Home` or `Browser`)"
+        description: |
+          The view the user was on when they initiated the search (For example:
+          `Home` or `Browser`)
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/959
+      - https://github.com/mozilla-mobile/fenix/issues/959
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   entered_url:
     type: event
-    description: >
+    description: |
       A user entered a url
     extra_keys:
       autocomplete:
-        description: "A boolean that tells us whether the URL was autofilled by an Autocomplete suggestion"
+        description: |
+          A boolean that tells us whether the URL was autofilled by an
+          Autocomplete suggestion
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/959
+      - https://github.com/mozilla-mobile/fenix/issues/959
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   performed_search:
     type: event
-    description: >
+    description: |
       A user performed a search
     extra_keys:
       source:
-        description: >
-          A string that tells us how the user performed the search. Possible values are:
+        description: |
+          A string that tells us how the user performed the search. Possible
+          values are:
+
           * default.action
           * default.suggestion
           * shortcut.action
           * shortcut.suggestion
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/959
+      - https://github.com/mozilla-mobile/fenix/issues/959
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
-    - https://github.com/mozilla-mobile/fenix/pull/1677
+      - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/1677
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   browser_menu_action:
     type: event
-    description: >
+    description: |
       A browser menu item was tapped
     extra_keys:
       item:
-        description: >
-          A string containing the name of the item the user tapped. These items include:
-          Settings, Library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
-          Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button, Quit,
-          Reader Mode On, Reader Mode Off, Open In app, Add To Top Sites, Add-ons Manager
+        description: |
+          A string containing the name of the item the user tapped. These items
+          include:
+
+            Settings, Library, Help, Desktop Site toggle on/off, Find in Page,
+            New Tab, Private Tab, Share, Report Site Issue, Back/Forward button,
+            Reload Button, Quit, Reader Mode On, Reader Mode Off, Open In app,
+            Add To Top Sites, Add-ons Manager
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1024
+      - https://github.com/mozilla-mobile/fenix/issues/1024
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
-    - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
-    - https://github.com/mozilla-mobile/fenix/pull/6310
+      - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+      - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
+      - https://github.com/mozilla-mobile/fenix/pull/6310
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   total_uri_count:
     type: counter
-    description: >
-      A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.
+    description: |
+      A counter of URIs visited by the user in the current session, including
+      page reloads. This does not include background page requests and URIs from
+      embedded pages or private browsing.
     send_in_pings:
-    - baseline
-    - metrics
+      - baseline
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1301
-    - https://github.com/mozilla-mobile/fenix/issues/4456
+      - https://github.com/mozilla-mobile/fenix/issues/1301
+      - https://github.com/mozilla-mobile/fenix/issues/4456
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1785
-    - https://github.com/mozilla-mobile/fenix/pull/8314
+      - https://github.com/mozilla-mobile/fenix/pull/1785
+      - https://github.com/mozilla-mobile/fenix/pull/8314
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
+    no_lint:
+      - BASELINE_PING
   preference_toggled:
     type: event
-    description: >
+    description: |
       A user toggled a boolean preference in settings
     extra_keys:
       preference_key:
-        description: "The preference key for the boolean (true/false) preference the user toggled. We currently track:
-          show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
-          search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, open_links_in_a_private_tab (bug in implementation https://github.com/mozilla-mobile/fenix/issues/7384),
+        description: |
+          The preference key for the boolean (true/false) preference the user
+          toggled.
+
+          We currently track: show_search_suggestions, remote_debugging,
+          telemetry, tracking_protection, search_bookmarks,
+          search_browsing_history, show_clipboard_suggestions,
+          show_search_shortcuts, open_links_in_a_private_tab (bug in
+          implementation https://github.com/mozilla-mobile/fenix/issues/7384),
           pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history,
-          and pref_key_show_search_suggestions_in_private"
+          and pref_key_show_search_suggestions_in_private.
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/975
-    - https://github.com/mozilla-mobile/fenix/issues/5094
-    - https://github.com/mozilla-mobile/fenix/issues/5737
-    - https://github.com/mozilla-mobile/fenix/issues/5586
-    - https://github.com/mozilla-mobile/fenix/issues/6396
-    - https://github.com/mozilla-mobile/fenix/issues/6070
+      - https://github.com/mozilla-mobile/fenix/issues/975
+      - https://github.com/mozilla-mobile/fenix/issues/5094
+      - https://github.com/mozilla-mobile/fenix/issues/5737
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+      - https://github.com/mozilla-mobile/fenix/issues/6396
+      - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1896
-    - https://github.com/mozilla-mobile/fenix/pull/5704
-    - https://github.com/mozilla-mobile/fenix/pull/5886
-    - https://github.com/mozilla-mobile/fenix/pull/5975
-    - https://github.com/mozilla-mobile/fenix/pull/6352
-    - https://github.com/mozilla-mobile/fenix/pull/6601
-    - https://github.com/mozilla-mobile/fenix/pull/6746
+      - https://github.com/mozilla-mobile/fenix/pull/1896
+      - https://github.com/mozilla-mobile/fenix/pull/5704
+      - https://github.com/mozilla-mobile/fenix/pull/5886
+      - https://github.com/mozilla-mobile/fenix/pull/5975
+      - https://github.com/mozilla-mobile/fenix/pull/6352
+      - https://github.com/mozilla-mobile/fenix/pull/6601
+      - https://github.com/mozilla-mobile/fenix/pull/6746
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   whats_new_tapped:
     type: event
-    description: >
+    description: |
         A user opened the "what's new" page button
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5021
@@ -152,13 +172,14 @@ events:
     expires: "2020-09-01"
   opened_link:
     type: event
-    description: >
-        A user opened a link with Fenix
+    description: |
+      A user opened a link with Fenix
     extra_keys:
       mode:
-        description: "The mode the link was opened in. Either 'PRIVATE' or 'NORMAL'"
+        description: |
+          The mode the link was opened in. Either 'PRIVATE' or 'NORMAL'.
     bugs:
-     - https://github.com/mozilla-mobile/fenix/issues/5737
+      - https://github.com/mozilla-mobile/fenix/issues/5737
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5975
     notification_emails:
@@ -168,11 +189,12 @@ events:
 search_shortcuts:
   selected:
     type: event
-    description: >
+    description: |
       A user selected a search shortcut engine to use
     extra_keys:
       engine:
-        description: "The name of the built-in search engine the user selected as a string"
+        description: |
+          The name of the built-in search engine the user selected as a string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/793
     data_reviews:
@@ -184,11 +206,12 @@ search_shortcuts:
 toolbar_settings:
   changed_position:
     type: event
-    description: >
+    description: |
       The user selected a new position for the toolbar
     extra_keys:
       position:
-        description: "A string that indicates the new position of the toolbar TOP or BOTTOM"
+        description: |
+          A string that indicates the new position of the toolbar TOP or BOTTOM
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6054
     data_reviews:
@@ -200,105 +223,108 @@ toolbar_settings:
 crash_reporter:
   opened:
     type: event
-    description: >
+    description: |
       The crash reporter was displayed
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1040
+      - https://github.com/mozilla-mobile/fenix/issues/1040
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+      - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       The crash reporter was closed
     extra_keys:
       crash_submitted:
-        description: "A boolean that tells us whether or not the user submitted a crash report"
+        description: |
+          A boolean that tells us whether or not the user submitted a crash
+          report
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1040
+      - https://github.com/mozilla-mobile/fenix/issues/1040
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+      - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 context_menu:
   item_tapped:
     type: event
-    description: >
+    description: |
       A user tapped an item in the browsers context menu
     extra_keys:
       named:
-        description: >
-          The name of the item that was tapped. Available items are
+        description: |
+          The name of the item that was tapped. Available items are:
+
           ```
           open_in_new_tab, open_in_private_tab, open_image_in_new_tab,
           save_image, share_link, copy_link, copy_image_location
           ```
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/957
+      - https://github.com/mozilla-mobile/fenix/issues/957
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 find_in_page:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the find in page UI
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1036
+      - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       A user closed the find in page UI
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1036
+      - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   searched_page:
     type: event
-    description: >
+    description: |
       A user searched the page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1036
+      - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 metrics:
   default_browser:
     type: boolean
     lifetime: application
-    description: >
+    description: |
       Is Fenix the default browser?
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/960
+      - https://github.com/mozilla-mobile/fenix/issues/960
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   top_sites_count:
     type: counter
     lifetime: application
-    description: >
+    description: |
       A counter that indicates how many top sites a user has
     send_in_pings:
       - metrics
@@ -312,7 +338,7 @@ metrics:
   has_top_sites:
     type: boolean
     lifetime: application
-    description: >
+    description: |
       A boolean that indicates if the user has top sites
     send_in_pings:
       - metrics
@@ -325,65 +351,73 @@ metrics:
     expires: "2020-09-01"
   search_count:
     type: labeled_counter
-    description: >
+    description: |
       The labels for this counter are `<search-engine-name>.<source>`.
 
-      If the search engine is bundled with Fenix `search-engine-name` will be the name of the search engine. If it's a
-      custom search engine (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value will be `custom`.
+      If the search engine is bundled with Fenix `search-engine-name` will be
+      the name of the search engine. If it's a custom search engine (defined:
+      https://github.com/mozilla-mobile/fenix/issues/1607) the value will be
+      `custom`.
 
-      `source` will be: `action`, `suggestion`, `widget` or `shortcut` (depending on the source from which the search started).
-      Also added the `other` option for the source but it should never enter on this case.
+      `source` will be: `action`, `suggestion`, `widget` or `shortcut`
+      (depending on the source from which the search started). Also added the
+      `other` option for the source but it should never enter on this case.
     send_in_pings:
-    - metrics
-    - baseline
+      - metrics
+      - baseline
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1158
-    - https://github.com/mozilla-mobile/fenix/issues/6556
+      - https://github.com/mozilla-mobile/fenix/issues/1158
+      - https://github.com/mozilla-mobile/fenix/issues/6556
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1677
-    - https://github.com/mozilla-mobile/fenix/pull/5216
-    - https://github.com/mozilla-mobile/fenix/pull/7310
+      - https://github.com/mozilla-mobile/fenix/pull/1677
+      - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/7310
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
+    no_lint:
+      - BASELINE_PING
   mozilla_products:
     type: string_list
     lifetime: application
-    description: >
-      A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
-       Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
-       Fenix, Focus, and Lockwise.
+    description: |
+      A list of all the Mozilla products installed on device. We currently scan
+      for: Firefox, Firefox Beta, Firefox Aurora, Firefox Nightly, Firefox
+      Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug, Fenix,
+      Focus, and Lockwise.
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1192
+      - https://github.com/mozilla-mobile/fenix/issues/1192
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1953/
-    - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/1953/
+      - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   default_moz_browser:
     type: string
     lifetime: application
-    description: >
-      The name of the default browser on device if and only if it's a Mozilla owned product
+    description: |
+      The name of the default browser on device if and only if it's a Mozilla
+      owned product
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1192
+      - https://github.com/mozilla-mobile/fenix/issues/1192
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1953/
-    - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/1953/
+      - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   adjust_campaign:
     type: string
     lifetime: application
-    description: >
-      A string containing the Adjust campaign ID from which the user installed Fenix. This will not
-      send on the first session the user runs. If the install is organic, this will be empty.
+    description: |
+      A string containing the Adjust campaign ID from which the user installed
+      Fenix. This will not send on the first session the user runs. If the
+      install is organic, this will be empty.
     send_in_pings:
       - metrics
     bugs:
@@ -397,9 +431,10 @@ metrics:
   adjust_ad_group:
     type: string
     lifetime: application
-    description: >
-      A string containing the Adjust ad group ID from which the user installed Fenix. This will not
-      send on the first session the user runs. If the install is organic, this will be empty.
+    description: |
+      A string containing the Adjust ad group ID from which the user installed
+      Fenix. This will not send on the first session the user runs. If the
+      install is organic, this will be empty.
     send_in_pings:
       - metrics
     bugs:
@@ -413,9 +448,10 @@ metrics:
   adjust_creative:
     type: string
     lifetime: application
-    description: >
-      A string containing the Adjust creative ID from which the user installed Fenix. This will not
-      send on the first session the user runs. If the install is organic, this will be empty.
+    description: |
+      A string containing the Adjust creative ID from which the user installed
+      Fenix. This will not send on the first session the user runs. If the
+      install is organic, this will be empty.
     send_in_pings:
       - metrics
     bugs:
@@ -429,9 +465,10 @@ metrics:
   adjust_network:
     type: string
     lifetime: application
-    description: >
-      A string containing the Adjust network ID from which the user installed Fenix. This will not
-      send on the first session the user runs. If the install is organic, this will be empty.
+    description: |
+      A string containing the Adjust network ID from which the user installed
+      Fenix. This will not send on the first session the user runs. If the
+      install is organic, this will be empty.
     send_in_pings:
       - metrics
     bugs:
@@ -446,7 +483,7 @@ metrics:
   toolbar_position:
     type: string
     lifetime: application
-    description: >
+    description: |
       A string that indicates the new position of the toolbar TOP or BOTTOM
     send_in_pings:
       - metrics
@@ -463,184 +500,184 @@ search.default_engine:
   code:
     type: string
     lifetime: application
-    description: >
+    description: |
       If the search engine is pre-loaded with Fenix this value
       will be the search engine identifier. If it's a custom search engine
       (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
       value will be "custom"
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/800
+      - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1606
-    - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/1606
+      - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   name:
     type: string
     lifetime: application
-    description: >
+    description: |
       If the search engine is pre-loaded with Fenix this value
       will be the search engine name. If it's a custom search engine
       (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
       value will be "custom"
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/800
+      - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1606
-    - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/1606
+      - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   submission_url:
     type: string
     lifetime: application
-    description: >
-      If the search engine is pre-loaded with Fenix this value
-      will be he base URL we use to build the search query for the search engine.
-      For example: https://mysearchengine.com/?query=%s. If it's a custom search engine
-      (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
-      value will be "custom"
+    description: |
+      If the search engine is pre-loaded with Fenix this value will be he base
+      URL we use to build the search query for the search engine. For example:
+      https://mysearchengine.com/?query=%s. If it's a custom search engine
+      (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value
+      will be "custom"
     send_in_pings:
-    - metrics
+      - metrics
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/800
+      - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1606
-    - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/1606
+      - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 bookmarks_management:
   open_in_new_tab:
     type: event
-    description: >
+    description: |
       A user opened a bookmark in a new tab.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   open_in_new_tabs:
     type: event
-    description: >
+    description: |
       A user opened multiple bookmarks at once in new tabs.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   open_in_private_tab:
     type: event
-    description: >
+    description: |
       A user opened a bookmark in a new private tab.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   open_in_private_tabs:
     type: event
-    description: >
+    description: |
       A user opened multiple bookmarks at once in new private tabs.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   edited:
     type: event
-    description: >
+    description: |
       A user edited the title and/or URL of an existing bookmark.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   moved:
     type: event
-    description: >
+    description: |
       A user moved an existing bookmark or folder to another folder.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   removed:
     type: event
-    description: >
+    description: |
       A user removed a bookmark item.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   multi_removed:
     type: event
-    description: >
+    description: |
       A user removed multiple bookmarks at once.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   shared:
     type: event
-    description: >
+    description: |
       A user shared a bookmark.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   copied:
     type: event
-    description: >
+    description: |
       A user copied a bookmark.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   folder_add:
     type: event
-    description: >
+    description: |
       A user added a new bookmark folder.
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/974
+      - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1708
+      - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   folder_remove:
     type: event
-    description: >
+    description: |
       A user removed a bookmark folder.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/3174
@@ -653,193 +690,198 @@ bookmarks_management:
 custom_tab:
   closed:
     type: event
-    description: >
+    description: |
       A user closed the custom tab
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/977
+      - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1697
+      - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   action_button:
     type: event
-    description: >
+    description: |
       A user pressed the action button provided by the launching app
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/977
+      - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1697
+      - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   menu:
     type: event
-    description: >
+    description: |
       A user opened the custom tabs menu
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/977
+      - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1697
+      - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 activation:
   identifier:
     type: string
     lifetime: ping
-    description: >
+    description: |
       A hashed and salted version of the Google Advertising ID from the device.
       This will never be sent in a ping that also contains the client_id.
     send_in_pings:
-    - activation
+      - activation
     bugs:
-    - https://bugzilla.mozilla.org/1538011
-    - https://bugzilla.mozilla.org/1501822
+      - https://bugzilla.mozilla.org/1538011
+      - https://bugzilla.mozilla.org/1501822
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+      - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   activation_id:
     type: uuid
     lifetime: user
-    description: >
+    description: |
       An alternate identifier, not correlated with the client_id, generated once
       and only sent with the activation ping.
     send_in_pings:
-    - activation
+      - activation
     bugs:
-    - https://bugzilla.mozilla.org/1538011
+      - https://bugzilla.mozilla.org/1538011
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+      - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
+    no_lint:
+      - USER_LIFETIME_EXPIRATION
 
 qr_scanner:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the QR scanner
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1857
+      - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   prompt_displayed:
     type: event
-    description: >
-      A user scanned a QR code, causing a confirmation prompt to display asking if they want to navigate to the page
+    description: |
+      A user scanned a QR code, causing a confirmation prompt to display asking
+      if they want to navigate to the page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1857
+      - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   navigation_allowed:
     type: event
-    description: >
-      A user tapped "allow" on the prompt, directing the user to the website scanned
+    description: |
+      A user tapped "allow" on the prompt, directing the user to the website
+      scanned
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1857
+      - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   navigation_denied:
     type: event
-    description: >
-      A user tapped "deny" on the prompt, putting the user back to the scanning view
+    description: |
+      A user tapped "deny" on the prompt, putting the user back to the scanning
+      view
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1857
+      - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 library:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the library
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/976
+      - https://github.com/mozilla-mobile/fenix/issues/976
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       A user closed the library
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/976
+      - https://github.com/mozilla-mobile/fenix/issues/976
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   selected_item:
     type: event
-    description: >
+    description: |
       A user selected a library item
     extra_keys:
       item:
         description: "The library item the user selected"
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/976
+      - https://github.com/mozilla-mobile/fenix/issues/976
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 error_page:
   visited_error:
     type: event
-    description: >
+    description: |
       A user encountered an error page
     extra_keys:
       error_type:
         description: "The error type of the error page encountered"
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1242
+      - https://github.com/mozilla-mobile/fenix/issues/1242
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
+      - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 sync_auth:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the sync authentication page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       A user closed the sync page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   use_email:
     type: event
@@ -865,19 +907,21 @@ sync_auth:
     expires: "2020-09-01"
   sign_in:
     type: event
-    description: >
-      A user pressed the sign in button on the sync authentication page and was successfully signed in to FxA
+    description: |
+      A user pressed the sign in button on the sync authentication page and was
+      successfully signed in to FxA
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   sign_out:
     type: event
-    description: >
-      A user pressed the sign out button on the sync account page and was successfully signed out of FxA
+    description: |
+      A user pressed the sign out button on the sync account page and was
+      successfully signed out of FxA
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
@@ -887,7 +931,7 @@ sync_auth:
     expires: "2020-09-01"
   sign_up:
     type: event
-    description: >
+    description: |
       User registered a new Firefox Account, and was signed into it
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4971
@@ -898,8 +942,9 @@ sync_auth:
     expires: "2020-09-01"
   paired:
     type: event
-    description: >
-      User signed into FxA by pairing with a different Firefox browser, using a QR code
+    description: |
+      User signed into FxA by pairing with a different Firefox browser, using a
+      QR code
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
@@ -909,8 +954,9 @@ sync_auth:
     expires: "2020-09-01"
   auto_login:
     type: event
-    description: >
-      User signed into FxA via an account shared from another locally installed Mozilla application (e.g. Fennec)
+    description: |
+      User signed into FxA via an account shared from another locally installed
+      Mozilla application (e.g. Fennec)
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
@@ -920,8 +966,9 @@ sync_auth:
     expires: "2020-09-01"
   recovered:
     type: event
-    description: >
-      Account manager automatically recovered FxA authentication state without direct user involvement
+    description: |
+      Account manager automatically recovered FxA authentication state without
+      direct user involvement
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
@@ -931,8 +978,9 @@ sync_auth:
     expires: "2020-09-01"
   other_external:
     type: event
-    description: >
-      User authenticated via FxA using an unknown mechanism. "Known" mechanisms are currently sign-in, sign-up and pairing
+    description: |
+      User authenticated via FxA using an unknown mechanism. "Known" mechanisms
+      are currently sign-in, sign-up and pairing
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
@@ -942,53 +990,53 @@ sync_auth:
     expires: "2020-09-01"
   scan_pairing:
     type: event
-    description: >
+    description: |
       A user pressed the scan pairing button on the sync authentication page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 sync_account:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the sync account page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       A user closed the sync account page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   sync_now:
     type: event
-    description: >
+    description: |
       A user pressed the sync now button on the sync account page
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1190
+      - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
   send_tab:
     type: event
-    description: >
+    description: |
       A user sent the current tab to another FxA device
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4908
@@ -999,7 +1047,7 @@ sync_account:
     expires: "2020-09-01"
   sign_in_to_send_tab:
     type: event
-    description: >
+    description: |
       A user pressed the "sign in to send tab" button inside the share tab menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4908
@@ -1012,7 +1060,7 @@ sync_account:
 history:
   opened:
     type: event
-    description: >
+    description: |
       A user opened the history screen
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2362
@@ -1023,7 +1071,7 @@ history:
     expires: "2020-09-01"
   removed:
     type: event
-    description: >
+    description: |
       A user removed a history item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2362
@@ -1034,7 +1082,7 @@ history:
     expires: "2020-09-01"
   removed_all:
     type: event
-    description: >
+    description: |
       A user removed all history items
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2362
@@ -1045,7 +1093,7 @@ history:
     expires: "2020-09-01"
   shared:
     type: event
-    description: >
+    description: |
       A user shared a history item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2362
@@ -1056,7 +1104,7 @@ history:
     expires: "2020-09-01"
   opened_item:
     type: event
-    description: >
+    description: |
       A user opened a history item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2362
@@ -1113,7 +1161,7 @@ tip:
 reader_mode:
   available:
     type: event
-    description: >
+    description: |
       Reader mode is available for the current page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2267
@@ -1124,7 +1172,7 @@ reader_mode:
     expires: "2020-09-01"
   opened:
     type: event
-    description: >
+    description: |
       A user opened reader mode
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2267
@@ -1135,7 +1183,7 @@ reader_mode:
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       A user closed reader mode
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2267
@@ -1146,7 +1194,7 @@ reader_mode:
     expires: "2020-09-01"
   appearance:
     type: event
-    description: >
+    description: |
       A user tapped the appearance button
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/2267
@@ -1159,7 +1207,7 @@ reader_mode:
 collections:
   renamed:
     type: event
-    description: >
+    description: |
       A user renamed a collection
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1170,7 +1218,7 @@ collections:
     expires: "2020-09-01"
   tab_restored:
     type: event
-    description: >
+    description: |
       A user restored a tab from collection tab list
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1181,7 +1229,7 @@ collections:
     expires: "2020-09-01"
   all_tabs_restored:
     type: event
-    description: >
+    description: |
       A user tapped "open tabs" from collection menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1192,7 +1240,7 @@ collections:
     expires: "2020-09-01"
   tab_removed:
     type: event
-    description: >
+    description: |
       A user tapped remove tab from collection tab list
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1203,7 +1251,7 @@ collections:
     expires: "2020-09-01"
   shared:
     type: event
-    description: >
+    description: |
       A user tapped share collection
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1214,7 +1262,7 @@ collections:
     expires: "2020-09-01"
   removed:
     type: event
-    description: >
+    description: |
       A user tapped delete collection from collection menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1225,7 +1273,7 @@ collections:
     expires: "2020-09-01"
   saved:
     type: event
-    description: >
+    description: |
       A user saved a list of tabs to a new collection
     extra_keys:
       tabs_open:
@@ -1241,7 +1289,7 @@ collections:
     expires: "2020-09-01"
   tabs_added:
     type: event
-    description: >
+    description: |
       A user saved a list of tabs to an existing collection
     extra_keys:
       tabs_open:
@@ -1257,8 +1305,9 @@ collections:
     expires: "2020-09-01"
   tab_select_opened:
     type: event
-    description: >
-      A user opened the select tabs screen (the first step of the collection creation flow)
+    description: |
+      A user opened the select tabs screen (the first step of the collection
+      creation flow)
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
@@ -1268,7 +1317,7 @@ collections:
     expires: "2020-09-01"
   add_tab_button:
     type: event
-    description: >
+    description: |
       A user tapped the "add tab" button in the three dot menu of collections
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1279,7 +1328,7 @@ collections:
     expires: "2020-09-01"
   long_press:
     type: event
-    description: >
+    description: |
       A user long pressed on a tab, triggering the collection creation screen
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1290,9 +1339,10 @@ collections:
     expires: "2020-09-01"
   save_button:
     type: event
-    description: >
-      A user pressed the "save to collection" button on either the home or browser screen, triggering the
-      collection creation screen to open (tab_select_opened)
+    description: |
+      A user pressed the "save to collection" button on either the home or
+      browser screen, triggering the collection creation screen to open
+      (tab_select_opened)
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
@@ -1302,12 +1352,12 @@ collections:
     expires: "2020-09-01"
     extra_keys:
       from_screen:
-        description: >
-          A string representing the screen from which the user pressed the save button.
-          Currently one of: `browserMenu`, `homeMenu` or `home`
+        description: |
+          A string representing the screen from which the user pressed the save
+          button. Currently one of: `browserMenu`, `homeMenu` or `home`
   rename_button:
     type: event
-    description: >
+    description: |
       A user pressed the "rename collection" button in the three dot menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
@@ -1320,9 +1370,9 @@ collections:
 search_widget:
   new_tab_button:
     type: event
-    description: >
-      A user pressed anywhere from the Firefox logo until the start of the microphone icon, opening a
-      new tab search screen.
+    description: |
+      A user pressed anywhere from the Firefox logo until the start of the
+      microphone icon, opening a new tab search screen.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
@@ -1332,7 +1382,7 @@ search_widget:
     expires: "2020-09-01"
   voice_button:
     type: event
-    description: >
+    description: |
       A user pressed the microphone icon, opening a new voice search screen.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4457
@@ -1345,7 +1395,7 @@ search_widget:
 private_browsing_mode:
   garbage_icon:
     type: event
-    description: >
+    description: |
       A user pressed the garbage can icon on the private browsing home page,
       deleting all private tabs.
     bugs:
@@ -1357,9 +1407,9 @@ private_browsing_mode:
     expires: "2020-09-01"
   snackbar_undo:
     type: event
-    description: >
-      A user pressed the "undo" button in the snackbar that is shown when the garbage icon is
-      tapped.
+    description: |
+      A user pressed the "undo" button in the snackbar that is shown when the
+      garbage icon is tapped.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1369,7 +1419,7 @@ private_browsing_mode:
     expires: "2020-09-01"
   notification_tapped:
     type: event
-    description: >
+    description: |
       A user pressed the private browsing mode notification itself.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
@@ -1380,7 +1430,7 @@ private_browsing_mode:
     expires: "2020-09-01"
   notification_open:
     type: event
-    description: >
+    description: |
       A user pressed the private browsing mode notification's "Open" button.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
@@ -1391,8 +1441,9 @@ private_browsing_mode:
     expires: "2020-09-01"
   notification_delete:
     type: event
-    description: >
-      A user pressed the private browsing mode notification's "Delete and Open" button.
+    description: |
+      A user pressed the private browsing mode notification's "Delete and Open"
+      button.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1404,8 +1455,9 @@ private_browsing_mode:
 tracking_protection:
   exception_added:
     type: event
-    description: >
-      A user added a tracking protection exception through the TP toggle in the panel.
+    description: |
+      A user added a tracking protection exception through the TP toggle in the
+      panel.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
@@ -1415,7 +1467,7 @@ tracking_protection:
     expires: "2020-09-01"
   panel_settings:
     type: event
-    description: >
+    description: |
       A user opened tracking protection settings from the panel.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
@@ -1426,7 +1478,7 @@ tracking_protection:
     expires: "2020-09-01"
   etp_shield:
     type: event
-    description: >
+    description: |
       A user pressed the tracking protection shield icon in toolbar.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
@@ -1437,8 +1489,9 @@ tracking_protection:
     expires: "2020-09-01"
   etp_tracker_list:
     type: event
-    description: >
-      A user pressed into a list of categorized trackers in tracking protection panel.
+    description: |
+      A user pressed into a list of categorized trackers in tracking protection
+      panel.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
@@ -1448,7 +1501,7 @@ tracking_protection:
     expires: "2020-09-01"
   etp_settings:
     type: event
-    description: >
+    description: |
       A user opened tracking protection settings through settings.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
@@ -1459,8 +1512,9 @@ tracking_protection:
     expires: "2020-09-01"
   etp_setting_changed:
     type: event
-    description: >
-      A user changed their tracking protection level setting to either strict or standard.
+    description: |
+      A user changed their tracking protection level setting to either strict or
+      standard.
     extra_keys:
       etp_setting:
         description: "The new setting for ETP: strict, standard"
@@ -1475,7 +1529,7 @@ tracking_protection:
 private_browsing_shortcut:
   create_shortcut:
     type: event
-    description: >
+    description: |
       A user pressed the "Add private browsing shortcut" button in settings.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
@@ -1486,8 +1540,9 @@ private_browsing_shortcut:
     expires: "2020-09-01"
   cfr_add_shortcut:
     type: event
-    description: >
-      A user pressed the "Add shortcut" button when the contextual feature recommender appeared.
+    description: |
+      A user pressed the "Add shortcut" button when the contextual feature
+      recommender appeared.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1497,8 +1552,9 @@ private_browsing_shortcut:
     expires: "2020-09-01"
   cfr_cancel:
     type: event
-    description: >
-      A user pressed the "No thanks" button when the contextual feature recommender appeared.
+    description: |
+      A user pressed the "No thanks" button when the contextual feature
+      recommender appeared.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1508,8 +1564,9 @@ private_browsing_shortcut:
     expires: "2020-09-01"
   pinned_shortcut_priv:
     type: event
-    description: >
-      A user pressed the pinned private shortcut in Android home screen, opening up a new private search.
+    description: |
+      A user pressed the pinned private shortcut in Android home screen, opening
+      up a new private search.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1519,8 +1576,9 @@ private_browsing_shortcut:
     expires: "2020-09-01"
   static_shortcut_tab:
     type: event
-    description: >
-      A user pressed the long-press shortcut "Open new tab", opening up a new search.
+    description: |
+      A user pressed the long-press shortcut "Open new tab", opening up a new
+      search.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1530,8 +1588,9 @@ private_browsing_shortcut:
     expires: "2020-09-01"
   static_shortcut_priv:
     type: event
-    description: >
-      A user pressed the long-press shortcut "Open new private tab", opening up a new private search.
+    description: |
+      A user pressed the long-press shortcut "Open new private tab", opening up
+      a new private search.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
@@ -1543,7 +1602,7 @@ private_browsing_shortcut:
 tab:
   media_play:
     type: event
-    description: >
+    description: |
       A user pressed the play icon on a tab from the home screen
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5197
@@ -1556,7 +1615,7 @@ tab:
       - COMMON_PREFIX
   media_pause:
     type: event
-    description: >
+    description: |
       A user pressed the pause icon on a tab from the home screen
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5197
@@ -1569,7 +1628,7 @@ tab:
 media_notification:
   play:
     type: event
-    description: >
+    description: |
       A user pressed the play icon on the media notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5197
@@ -1580,7 +1639,7 @@ media_notification:
     expires: "2020-09-01"
   pause:
     type: event
-    description: >
+    description: |
       A user pressed the pause icon on the media notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5197
@@ -1593,7 +1652,7 @@ media_notification:
 media_state:
   play:
     type: event
-    description: >
+    description: |
       Media started playing.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5705
@@ -1604,7 +1663,7 @@ media_state:
     expires: "2020-09-01"
   pause:
     type: event
-    description: >
+    description: |
       Media playback was paused.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5705
@@ -1615,7 +1674,7 @@ media_state:
     expires: "2020-09-01"
   stop:
     type: event
-    description: >
+    description: |
       Media playback has ended.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5705
@@ -1628,7 +1687,7 @@ media_state:
 logins:
   open_logins:
     type: event
-    description: >
+    description: |
       A user accessed Logins in Settings
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5586
@@ -1639,7 +1698,7 @@ logins:
     expires: "2020-09-01"
   open_individual_login:
     type: event
-    description: >
+    description: |
       A user accessed an individual login in saved logins
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5586
@@ -1650,7 +1709,7 @@ logins:
     expires: "2020-09-01"
   copy_login:
     type: event
-    description: >
+    description: |
       A user copied a piece of a login in saved logins
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5586
@@ -1661,7 +1720,7 @@ logins:
     expires: "2020-09-01"
   view_password_login:
     type: event
-    description: >
+    description: |
       A user viewed a password in an individual saved login
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5586
@@ -1672,11 +1731,13 @@ logins:
     expires: "2020-09-01"
   save_logins_setting_changed:
     type: event
-    description: >
+    description: |
       A user changed their setting for asking to save logins
     extra_keys:
       setting:
-        description: "The new setting for saving logins the user selected. Either `ask_to_save` or `never_save`"
+        description: |
+          The new setting for saving logins the user selected. Either
+          `ask_to_save` or `never_save`
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
@@ -1688,7 +1749,7 @@ logins:
 download_notification:
   resume:
     type: event
-    description: >
+    description: |
       A user resumed a download in the download notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
@@ -1699,7 +1760,7 @@ download_notification:
     expires: "2020-09-01"
   pause:
     type: event
-    description: >
+    description: |
       A user paused a download in the download notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
@@ -1710,7 +1771,7 @@ download_notification:
     expires: "2020-09-01"
   cancel:
     type: event
-    description: >
+    description: |
       A user cancelled a download in the download notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
@@ -1721,8 +1782,9 @@ download_notification:
     expires: "2020-09-01"
   try_again:
     type: event
-    description: >
-      A user tapped on try again when a download fails in the download notification
+    description: |
+      A user tapped on try again when a download fails in the download
+      notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
@@ -1732,7 +1794,7 @@ download_notification:
     expires: "2020-09-01"
   open:
     type: event
-    description: >
+    description: |
       A user opened a downloaded file in the download notification
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
@@ -1743,7 +1805,7 @@ download_notification:
     expires: "2020-09-01"
   in_app_open:
     type: event
-    description: >
+    description: |
       A user opened a downloaded file in the in-app notification link
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
@@ -1754,8 +1816,9 @@ download_notification:
     expires: "2020-09-01"
   in_app_try_again:
     type: event
-    description: >
-      A user tapped on try again when a download fails in the in-app notification link
+    description: |
+      A user tapped on try again when a download fails in the in-app
+      notification link
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
@@ -1767,7 +1830,7 @@ download_notification:
 user_specified_search_engines:
   custom_engine_added:
     type: event
-    description: >
+    description: |
       A user added a new custom search engine
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5884
@@ -1776,9 +1839,11 @@ user_specified_search_engines:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+    no_lint:
+      - COMMON_PREFIX
   custom_engine_deleted:
     type: event
-    description: >
+    description: |
       A user deleted a custom search engine
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5884
@@ -1792,20 +1857,20 @@ user_specified_search_engines:
 search_suggestions:
   enable_in_private:
     type: event
-    description: >
+    description: |
       A user enabled receiving search suggestions in private sessions
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6746
     notification_emails:
-     - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: "2020-09-01"
 
 top_sites:
   open_in_new_tab:
     type: event
-    description: >
+    description: |
       A user opens a new tab based on a top site item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6757
@@ -1816,7 +1881,7 @@ top_sites:
     expires: "2020-09-01"
   open_in_private_tab:
     type: event
-    description: >
+    description: |
       A user opens a new private tab based on a top site item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6757
@@ -1827,7 +1892,7 @@ top_sites:
     expires: "2020-09-01"
   remove:
     type: event
-    description: >
+    description: |
       A user removes a top site item
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6757
@@ -1840,7 +1905,7 @@ top_sites:
 about_page:
   support_tapped:
     type: event
-    description: >
+    description: |
       A user tapped on "Support" item from About page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6834
@@ -1851,7 +1916,7 @@ about_page:
     expires: "2020-09-01"
   privacy_notice_tapped:
     type: event
-    description: >
+    description: |
       A user tapped on "Privacy notice" item from About page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6834
@@ -1862,7 +1927,7 @@ about_page:
     expires: "2020-09-01"
   rights_tapped:
     type: event
-    description: >
+    description: |
       A user tapped on "Know your rights" item from About page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6834
@@ -1873,7 +1938,7 @@ about_page:
     expires: "2020-09-01"
   licensing_tapped:
     type: event
-    description: >
+    description: |
       A user tapped on "Licensing information" item from About page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6834
@@ -1884,7 +1949,7 @@ about_page:
     expires: "2020-09-01"
   libraries_tapped:
     type: event
-    description: >
+    description: |
       A user tapped on "Libraries that we use" item from About page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6834
@@ -1897,11 +1962,13 @@ about_page:
 app_theme:
   dark_theme_selected:
     type: event
-    description: >
+    description: |
       A user selected Dark Theme
     extra_keys:
       source:
-        description: "The source from where dark theme was selected. The source can be 'SETTINGS' or 'ONBOARDING'"
+        description: |
+          The source from where dark theme was selected. The source can be
+          'SETTINGS' or 'ONBOARDING'
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7289
     data_reviews:
@@ -1913,7 +1980,7 @@ app_theme:
 pocket:
   pocket_top_site_clicked:
     type: event
-    description: >
+    description: |
       A user clicked on the trending Pocket top site
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8126
@@ -1922,9 +1989,12 @@ pocket:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+    no_lint:
+      - COMMON_PREFIX
+
   pocket_top_site_removed:
     type: event
-    description: >
+    description: |
       A user removed the trending Pocket top site
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8126
@@ -1936,23 +2006,23 @@ pocket:
 
 installation:
   campaign:
-   type: string
-   send_in_pings:
-     - installation
-   description: >
-     The name of the campaign that is responsible for this installation.
-   bugs:
-     - https://github.com/mozilla-mobile/fenix/issues/7295
-   data_reviews:
-     - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
-   notification_emails:
-     - fenix-core@mozilla.com
-   expires: "2020-09-01"
+    type: string
+    send_in_pings:
+      - installation
+    description: |
+      The name of the campaign that is responsible for this installation.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7295
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
   network:
     type: string
     send_in_pings:
       - installation
-    description: >
+    description: |
       The name of the Network that sourced this installation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
@@ -1965,7 +2035,7 @@ installation:
     type: string
     send_in_pings:
       - installation
-    description: >
+    description: |
       The name of the AdGroup that was used to source this installation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
@@ -1978,7 +2048,7 @@ installation:
     send_in_pings:
       - installation
     type: string
-    description: >
+    description: |
       The identifier of the creative material that the user interacted with.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
@@ -1991,7 +2061,7 @@ installation:
     send_in_pings:
       - installation
     type: datetime
-    description: >
+    description: |
       The date and time of the installation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
@@ -2048,7 +2118,7 @@ browser.search:
 addons:
   open_addons_in_settings:
     type: event
-    description: >
+    description: |
       A user accessed "Add-ons" from the Settings
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6174
@@ -2059,7 +2129,7 @@ addons:
     expires: "2020-09-01"
   open_addon_in_toolbar_menu:
     type: event
-    description: >
+    description: |
       A user interacted with an installed add-on in the toolbar menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6174
@@ -2070,7 +2140,7 @@ addons:
     expires: "2020-09-01"
   has_installed_addons:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has installed add-ons on the device.
     send_in_pings:
       - metrics
@@ -2083,7 +2153,7 @@ addons:
     expires: "2020-09-01"
   has_enabled_addons:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled add-ons on the device.
     send_in_pings:
       - metrics
@@ -2101,15 +2171,16 @@ startup.timeline:
       - startup-timeline
     type: timespan
     time_unit: nanosecond
-    description: >
-      The duration the Android framework takes to start before letting us run code in
-      `*Application.init`. This is calculated from `appInitTimestamp - processStartTimestamp`.
-      `processStartTimestamp` is derived from the clock tick time unit, which is expected to be
-      less granular than nanoseconds. Therefore, we convert and round our timestamps to clock ticks
-      before computing the difference and convert back to nanoseconds to report.
+    description: |
+      The duration the Android framework takes to start before letting us run
+      code in `*Application.init`. This is calculated from `appInitTimestamp -
+      processStartTimestamp`. `processStartTimestamp` is derived from the clock
+      tick time unit, which is expected to be less granular than nanoseconds.
+      Therefore, we convert and round our timestamps to clock ticks before
+      computing the difference and convert back to nanoseconds to report.
 
-      For debugging purposes, `clock_ticks_per_second`, which may vary between devices, is also
-      reported as a metric.
+      For debugging purposes, `clock_ticks_per_second`, which may vary between
+      devices, is also reported as a metric
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
@@ -2122,9 +2193,10 @@ startup.timeline:
     send_in_pings:
       - startup-timeline
     type: boolean
-    description: >
-      An error when attempting to record `framework_start` - the application init timestamp returned
-      a negative value - which is likely indicative of a bug in the implementation.
+    description: |
+      An error when attempting to record `framework_start` - the application
+      init timestamp returned a negative value - which is likely indicative of a
+      bug in the implementation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
@@ -2137,9 +2209,10 @@ startup.timeline:
     send_in_pings:
       - startup-timeline
     type: counter
-    description: >
-      The number of clock tick time units that occur in one second on this particular device. This
-      value is expected to be used in conjunction with the `framework_start` metric.
+    description: |
+      The number of clock tick time units that occur in one second on this
+      particular device. This value is expected to be used in conjunction with
+      the `framework_start` metric.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
