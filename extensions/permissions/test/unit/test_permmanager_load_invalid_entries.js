@@ -3,6 +3,7 @@
 var DEBUG_TEST = false;
 
 function run_test() {
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
   // Setup a profile directory.
   var dir = do_get_profile();
 
