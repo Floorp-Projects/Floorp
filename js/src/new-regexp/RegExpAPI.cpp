@@ -505,6 +505,13 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
     return RegExpRunStatus_Error;
   }
 
+  static_assert(RegExpRunStatus_Error ==
+                v8::internal::RegExp::kInternalRegExpException);
+  static_assert(RegExpRunStatus_Success ==
+                v8::internal::RegExp::kInternalRegExpSuccess);
+  static_assert(RegExpRunStatus_Success_NotFound ==
+                v8::internal::RegExp::kInternalRegExpFailure);
+
   RegExpRunStatus status =
       (RegExpRunStatus) IrregexpInterpreter::MatchForCallFromRuntime(
           cx->isolate, wrappedRegExp, wrappedInput, registers.begin(),
