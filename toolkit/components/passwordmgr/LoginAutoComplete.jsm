@@ -414,7 +414,7 @@ LoginAutoCompleteResult.prototype = {
     return this.getValueAt(index);
   },
 
-  removeValueAt(index, removeFromDB) {
+  removeValueAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
@@ -425,9 +425,7 @@ LoginAutoCompleteResult.prototype = {
       this.defaultIndex--;
     }
 
-    if (removeFromDB) {
-      removedItem.removeFromStorage();
-    }
+    removedItem.removeFromStorage();
   },
 };
 

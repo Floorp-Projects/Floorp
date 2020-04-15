@@ -82,8 +82,6 @@ interface nsIAutoCompleteResult : nsISupports
 
   /**
    * Remove the value at the given index from the autocomplete results.
-   * If removeFromDb is set to true, the value should be removed from
-   * persistent storage as well.
    */
-  void removeValueAt(in long rowIndex, in boolean removeFromDb);
+  void removeValueAt(in long rowIndex);
 };

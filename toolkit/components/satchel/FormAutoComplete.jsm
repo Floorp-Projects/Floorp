@@ -687,14 +687,12 @@ FormAutoCompleteResult.prototype = {
     return this.getValueAt(index);
   },
 
-  removeValueAt(index, removeFromDB) {
+  removeValueAt(index) {
     this._checkIndexBounds(index);
 
     let [removedEntry] = this.entries.splice(index, 1);
 
-    if (removeFromDB) {
-      this.client.remove(removedEntry.text, removedEntry.guid);
-    }
+    this.client.remove(removedEntry.text, removedEntry.guid);
   },
 };
 
