@@ -5713,6 +5713,19 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
         emittingRunOnceLambda && !funbox->shouldSuppressRunOnce();
     funbox->setTreatAsRunOnce(isRunOnceLambda);
 
+    // Mark functions which are expected to only have one instance as singletons
+    // functions. These function instances will then always have a unique script
+    // of which they are the canonical function. This improves type-inferrence
+    // precision. CloneFunctionObject will make a deep clone of the function and
+    // script as needed if our prediction is wrong.
+    //
+    // NOTE: This heuristic is arbitrary, but some debugger tests rely on the
+    //       current behaviour and need to be updated if the condiditons change.
+    bool isSingleton = checkRunOnceContext();
+    if (!funbox->setTypeForScriptedFunction(cx, isSingleton)) {
+      return false;
+    }
+
     if (!funbox->emitBytecode) {
       return fe.emitLazy();
       //            [stack] FUN?
