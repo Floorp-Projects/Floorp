@@ -61,10 +61,6 @@ class PrimaryPanes extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error) {
-    console.log(error);
-  }
-
   showPane = (selectedPane: SelectedPrimaryPaneTabType) => {
     this.props.setPrimaryPaneTab(selectedPane);
   };
