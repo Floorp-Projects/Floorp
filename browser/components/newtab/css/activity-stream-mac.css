@@ -3999,7 +3999,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 
 .onboardingMessageImage {
   height: 112px;
-  width: 140px;
+  width: 180px;
   background-size: auto 140px;
   background-position: center center;
   background-repeat: no-repeat;
@@ -4009,10 +4009,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       height: 75px;
       min-width: 80px;
       background-size: 140px; } }
-  @media (min-width: 1122px) {
-    .onboardingMessageImage {
-      width: 140px;
-      background-size: auto 140px; } }
 
 .EOYSnippetForm {
   margin: 10px 0 8px;
@@ -4304,10 +4300,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   border-radius: 4px;
   box-shadow: var(--newtab-card-shadow);
   font-size: 13px;
-  padding: 20px 40px 60px; }
+  padding: 20px 20px 60px; }
   @media (max-width: 865px) {
     .trailheadCard {
-      padding: 20px 40px; } }
+      padding: 20px; } }
   @media (min-width: 1122px) {
     .trailheadCard {
       font-size: 15px; } }
