@@ -721,6 +721,9 @@ class BrowserParent final : public PBrowserParent,
   bool GetDocShellIsActive();
   void SetDocShellIsActive(bool aDocShellIsActive);
 
+  bool GetSuspendMediaWhenInactive() const;
+  void SetSuspendMediaWhenInactive(bool aSuspendMediaWhenInactive);
+
   bool GetHasPresented();
   bool GetHasLayers();
   bool GetRenderLayers();
@@ -1008,6 +1011,10 @@ class BrowserParent final : public PBrowserParent,
   // (for something that isn't the initial about:blank) and then start
   // allowing future events.
   bool mSuspendedProgressEvents : 1;
+
+  // True if the media in the remote docshell should be suspended when the
+  // remote docshell is inactive.
+  bool mSuspendMediaWhenInactive : 1;
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
