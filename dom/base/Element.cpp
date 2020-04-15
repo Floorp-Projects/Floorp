@@ -2322,31 +2322,34 @@ nsresult Element::SetAttrAndNotify(
     }
   }
 
-  CustomElementDefinition* definition = GetCustomElementDefinition();
-  // Only custom element which is in `custom` state could get the
-  // CustomElementDefinition.
-  if (definition && definition->IsInObservedAttributeList(aName)) {
-    RefPtr<nsAtom> oldValueAtom;
-    if (oldValue) {
-      oldValueAtom = oldValue->GetAsAtom();
-    } else {
-      // If there is no old value, get the value of the uninitialized
-      // attribute that was swapped with aParsedValue.
-      oldValueAtom = aParsedValue.GetAsAtom();
+  const CustomElementData* data = GetCustomElementData();
+  if (data && data->mState == CustomElementData::State::eCustom) {
+    CustomElementDefinition* definition = data->GetCustomElementDefinition();
+    MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
+
+    if (definition->IsInObservedAttributeList(aName)) {
+      RefPtr<nsAtom> oldValueAtom;
+      if (oldValue) {
+        oldValueAtom = oldValue->GetAsAtom();
+      } else {
+        // If there is no old value, get the value of the uninitialized
+        // attribute that was swapped with aParsedValue.
+        oldValueAtom = aParsedValue.GetAsAtom();
+      }
+      RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+
+      LifecycleCallbackArgs args = {nsDependentAtomString(aName),
+                                    aModType == MutationEvent_Binding::ADDITION
+                                        ? VoidString()
+                                        : nsDependentAtomString(oldValueAtom),
+                                    nsDependentAtomString(newValueAtom),
+                                    (ns.IsEmpty() ? VoidString() : ns)};
+
+      nsContentUtils::EnqueueLifecycleCallback(
+          Document::eAttributeChanged, this, &args, nullptr, definition);
     }
-    RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
-    nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-
-    LifecycleCallbackArgs args = {nsDependentAtomString(aName),
-                                  aModType == MutationEvent_Binding::ADDITION
-                                      ? VoidString()
-                                      : nsDependentAtomString(oldValueAtom),
-                                  nsDependentAtomString(newValueAtom),
-                                  (ns.IsEmpty() ? VoidString() : ns)};
-
-    nsContentUtils::EnqueueLifecycleCallback(Document::eAttributeChanged, this,
-                                             &args, nullptr, definition);
   }
 
   if (aCallAfterSetAttr) {
@@ -2514,19 +2517,22 @@ void Element::PostIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
 nsresult Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValueOrString& aValue,
                                          bool aNotify) {
-  // Only custom element which is in `custom` state could get the
-  // CustomElementDefinition.
-  CustomElementDefinition* definition = GetCustomElementDefinition();
-  if (definition && definition->IsInObservedAttributeList(aName)) {
-    nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+  const CustomElementData* data = GetCustomElementData();
+  if (data && data->mState == CustomElementData::State::eCustom) {
+    CustomElementDefinition* definition = data->GetCustomElementDefinition();
+    MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
 
-    nsAutoString value(aValue.String());
-    LifecycleCallbackArgs args = {nsDependentAtomString(aName), value, value,
-                                  (ns.IsEmpty() ? VoidString() : ns)};
+    if (definition->IsInObservedAttributeList(aName)) {
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
 
-    nsContentUtils::EnqueueLifecycleCallback(Document::eAttributeChanged, this,
-                                             &args, nullptr, definition);
+      nsAutoString value(aValue.String());
+      LifecycleCallbackArgs args = {nsDependentAtomString(aName), value, value,
+                                    (ns.IsEmpty() ? VoidString() : ns)};
+
+      nsContentUtils::EnqueueLifecycleCallback(
+          Document::eAttributeChanged, this, &args, nullptr, definition);
+    }
   }
 
   return NS_OK;
@@ -2622,20 +2628,23 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
 
-  CustomElementDefinition* definition = GetCustomElementDefinition();
-  // Only custom element which is in `custom` state could get the
-  // CustomElementDefinition.
-  if (definition && definition->IsInObservedAttributeList(aName)) {
-    nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+  const CustomElementData* data = GetCustomElementData();
+  if (data && data->mState == CustomElementData::State::eCustom) {
+    CustomElementDefinition* definition = data->GetCustomElementDefinition();
+    MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
 
-    RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
-    LifecycleCallbackArgs args = {
-        nsDependentAtomString(aName), nsDependentAtomString(oldValueAtom),
-        VoidString(), (ns.IsEmpty() ? VoidString() : ns)};
+    if (definition->IsInObservedAttributeList(aName)) {
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
 
-    nsContentUtils::EnqueueLifecycleCallback(Document::eAttributeChanged, this,
-                                             &args, nullptr, definition);
+      RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
+      LifecycleCallbackArgs args = {
+          nsDependentAtomString(aName), nsDependentAtomString(oldValueAtom),
+          VoidString(), (ns.IsEmpty() ? VoidString() : ns)};
+
+      nsContentUtils::EnqueueLifecycleCallback(
+          Document::eAttributeChanged, this, &args, nullptr, definition);
+    }
   }
 
   rv = AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify);
