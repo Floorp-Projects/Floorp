@@ -18,7 +18,7 @@ add_task(async function() {
     },
     manifest: { applications: { gecko: { id: ID1 } } },
     files: {
-      "page.js": function () {
+      "page.js": function() {
         browser.runtime.onMessage.addListener((msg, sender) => {
           browser.test.sendMessage("received-page", { msg, sender });
         });
