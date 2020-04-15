@@ -3558,9 +3558,6 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
     return false;
   }
 
-  // These inner/outer ranges include the scroll offset at the last paint so we
-  // don't need to care the scroll offset itself here, we just need the
-  // translation from the last scroll offset.
   ParentLayerPoint translation =
       stickyTargetApzc
           ->GetCurrentAsyncTransform(

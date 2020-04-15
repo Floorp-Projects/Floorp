@@ -164,11 +164,18 @@ bool IsCloseToVertical(float aAngle, float aThreshold);
 // and the interval [aMin, aMax].
 gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax);
 
-// Returns true is the given inner/outer scroll range is stuck at bottom with
-// the given |aTranslation|.
+// Returns true if a sticky layer with async translation |aTranslation| is
+// stuck with a bottom margin. The inner/outer ranges are produced by the main
+// thread at the last paint, and so |aTranslation| only needs to be the
+// async translation from the last paint.
 bool IsStuckAtBottom(gfxFloat aTranslation,
                      const LayerRectAbsolute& aInnerRange,
                      const LayerRectAbsolute& aOuterRange);
+
+// Returns true if a sticky layer with async translation |aTranslation| is
+// stuck with a top margin.
+bool IsStuckAtTop(gfxFloat aTranslation, const LayerRectAbsolute& aInnerRange,
+                  const LayerRectAbsolute& aOuterRange);
 
 }  // namespace apz
 
