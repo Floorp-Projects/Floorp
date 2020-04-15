@@ -121,6 +121,7 @@ class RegExpShared : public gc::TenuredCell {
 #ifdef ENABLE_NEW_REGEXP
   RegExpShared::Kind kind_ = Kind::Unparsed;
   GCPtrAtom patternAtom_;
+  uint32_t maxRegisters_ = 0;
 #else
   bool canStringMatch = false;
 #endif
@@ -183,11 +184,19 @@ class RegExpShared : public gc::TenuredCell {
 
   // Use simple string matching for this regexp.
   void useAtomMatch(HandleAtom pattern);
+
+  // Use the regular expression engine for this regexp.
+  void useRegExpMatch(size_t parenCount);
+
   void setByteCode(ByteCode* code, bool latin1) {
     compilation(latin1).byteCode = code;
   }
   ByteCode* getByteCode(bool latin1) const {
     return compilation(latin1).byteCode;
+  }
+  uint32_t getMaxRegisters() const { return maxRegisters_; }
+  void updateMaxRegisters(uint32_t numRegisters) {
+    maxRegisters_ = std::max(maxRegisters_, numRegisters);
   }
 
 #endif
