@@ -64,6 +64,24 @@ class GenericGroup:
             },
         ],
         [
+            # XXX this should live in mozperftest.metrics
+            ["--metrics"],
+            {
+                "nargs": "*",
+                "default": [],
+                "help": "The metrics that should be retrieved from the data.",
+            },
+        ],
+        [
+            # XXX this should live in mozperftest.metrics
+            ["--metrics"],
+            {
+                "nargs": "*",
+                "default": [],
+                "help": "The metrics that should be retrieved from the data.",
+            },
+        ],
+        [
             ["--extra-options"],
             {"type": str, "default": "", "help": "Extra options passed through"},
         ],
