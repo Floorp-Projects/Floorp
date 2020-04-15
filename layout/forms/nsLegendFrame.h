@@ -8,6 +8,7 @@
 #define nsLegendFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLLegendElement.h"
 #include "nsBlockFrame.h"
 
 class nsLegendFrame final : public nsBlockFrame {
@@ -29,7 +30,7 @@ class nsLegendFrame final : public nsBlockFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  HTMLLegendElement::LegendAlignValue GetLogicalAlign(
+  mozilla::dom::HTMLLegendElement::LegendAlignValue GetLogicalAlign(
       mozilla::WritingMode aCBWM);
 };
 
