@@ -40,7 +40,6 @@ using namespace mozilla::unicode;  // for Unicode property lookup
 
 gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont* aFont)
     : gfxFontShaper(aFont),
-      mHBFace(aFont->GetFontEntry()->GetHBFace()),
       mHBFont(nullptr),
       mBuffer(nullptr),
       mCallbackData(),
@@ -75,7 +74,6 @@ gfxHarfBuzzShaper::~gfxHarfBuzzShaper() {
   hb_blob_destroy(mLocaTable);
   hb_blob_destroy(mGlyfTable);
   hb_font_destroy(mHBFont);
-  hb_face_destroy(mHBFace);
   hb_buffer_destroy(mBuffer);
 }
 
@@ -1189,18 +1187,30 @@ bool gfxHarfBuzzShaper::Initialize() {
   hb_buffer_set_cluster_level(mBuffer,
                               HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
 
-  mHBFont = hb_font_create(mHBFace);
-  if (mFont->GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'F', 'F', ' '))) {
-    hb_ot_font_set_funcs(mHBFont);
+  mHBFont = CreateHBFont(mFont, sHBFontFuncs, &mCallbackData);
+
+  return true;
+}
+
+hb_font_t* gfxHarfBuzzShaper::CreateHBFont(gfxFont* aFont,
+                                           hb_font_funcs_t* aFontFuncs,
+                                           FontCallbackData* aCallbackData) {
+  hb_face_t* hbFace = aFont->GetFontEntry()->GetHBFace();
+  hb_font_t* result = hb_font_create(hbFace);
+  hb_face_destroy(hbFace);
+
+  if (!aFontFuncs || !aCallbackData ||
+      aFont->GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'F', 'F', ' '))) {
+    hb_ot_font_set_funcs(result);
   } else {
-    hb_font_set_funcs(mHBFont, sHBFontFuncs, &mCallbackData, nullptr);
+    hb_font_set_funcs(result, aFontFuncs, aCallbackData, nullptr);
   }
-  hb_font_set_ppem(mHBFont, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
-  uint32_t scale = FloatToFixed(mFont->GetAdjustedSize());  // 16.16 fixed-point
-  hb_font_set_scale(mHBFont, scale, scale);
+  hb_font_set_ppem(result, aFont->GetAdjustedSize(), aFont->GetAdjustedSize());
+  uint32_t scale = FloatToFixed(aFont->GetAdjustedSize());  // 16.16 fixed-point
+  hb_font_set_scale(result, scale, scale);
 
   AutoTArray<gfxFontVariation, 8> vars;
-  entry->GetVariationsForStyle(vars, *mFont->GetStyle());
+  aFont->GetFontEntry()->GetVariationsForStyle(vars, *aFont->GetStyle());
   if (vars.Length() > 0) {
     // Fortunately, the hb_variation_t struct is compatible with our
     // gfxFontVariation, so we can simply cast here.
@@ -1211,10 +1221,10 @@ bool gfxHarfBuzzShaper::Initialize() {
                 offsetof(hb_variation_t, value),
         "Gecko vs HarfBuzz struct mismatch!");
     auto hbVars = reinterpret_cast<const hb_variation_t*>(vars.Elements());
-    hb_font_set_variations(mHBFont, hbVars, vars.Length());
+    hb_font_set_variations(result, hbVars, vars.Length());
   }
 
-  return true;
+  return result;
 }
 
 bool gfxHarfBuzzShaper::LoadHmtxTable() {
