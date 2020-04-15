@@ -10,11 +10,15 @@ import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.view.Surface
 import org.hamcrest.Matchers.*
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoResult.OnExceptionListener
+import org.mozilla.geckoview.GeckoResult.fromException
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
@@ -23,11 +27,13 @@ import kotlin.math.max
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
-import org.mozilla.geckoview.GeckoSession
+import java.lang.NullPointerException
 
 
 private const val SCREEN_HEIGHT = 800
 private const val SCREEN_WIDTH = 800
+private const val BIG_SCREEN_HEIGHT = 999999
+private const val BIG_SCREEN_WIDTH = 999999
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -308,5 +314,18 @@ class ScreenshotTest : BaseSessionTest() {
                             .size(SCREEN_WIDTH/4, SCREEN_WIDTH/4)
                             .capture(), BitmapFactory.decodeResource(res, R.drawable.colors_br_scaled))
         }
+    }
+
+    @WithDisplay(height = BIG_SCREEN_HEIGHT, width = BIG_SCREEN_WIDTH)
+    @Test
+    fun giantScreenshot() {
+        sessionRule.session.loadTestPath(COLORS_HTML_PATH)
+        sessionRule.display?.screenshot()!!.source(0,0, BIG_SCREEN_WIDTH, BIG_SCREEN_HEIGHT)
+                .size(BIG_SCREEN_WIDTH, BIG_SCREEN_HEIGHT)
+                .capture()
+                .exceptionally(OnExceptionListener<Throwable> { error: Throwable ->
+                    Assert.assertTrue(error is OutOfMemoryError)
+                    fromException(error)
+                })
     }
 }
