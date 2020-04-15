@@ -275,27 +275,6 @@ addonsManager:
     record_in_processes: ["main"]
     bug_numbers: [1544927, 1580561, 1590736]
     release_channel_collection: opt-out
-  blocklistUpdateError:
-    description: >
-      Event recorded when a blocklist update fails to complete successfully.
-      The object represents the kind of blocklist that failed to update,
-      the value identifies the error type (one of CHECK_CERT_ERROR, DOWNLOAD_ERROR,
-      INVALID_XML_ERROR, INVALID_BLOCKLIST_URL, MISSING_BLOCKLIST_SERVER_URL,
-      UNEXPECTED_STATUS_CODE, WRITE_FILE_ERROR)
-    objects:
-      - xml
-    extra_keys:
-      status_code: included when error is DOWNLOAD_ERROR and UNEXPECTED_STATUS_CODE
-    notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "77"
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
-      - "thunderbird"
-    record_in_processes: ["main"]
-    bug_numbers: [1572711, 1607744]
-    release_channel_collection: opt-out
 
 form_autocomplete:
   show:
