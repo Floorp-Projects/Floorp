@@ -135,6 +135,12 @@ export type PauseAction =
       +frames: Frame[],
       +selectedFrameId: string,
     |}
+  | {|
+      +type: "MAP_FRAME_DISPLAY_NAMES",
+      +cx: ThreadContext,
+      +thread: string,
+      +frames: Frame[],
+    |}
   | PromiseAction<
       {|
         +type: "ADD_SCOPES",

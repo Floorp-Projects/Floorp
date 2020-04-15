@@ -19,6 +19,7 @@ import { closeActiveSearch, updateActiveFileSearch } from "../ui";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
+import { mapDisplayNames } from "../pause";
 import { setBreakableLines } from ".";
 
 import { prefs } from "../../utils/prefs";
@@ -187,8 +188,12 @@ export function selectLocation(
       dispatch(closeTab(cx, loadedSource));
     }
 
-    dispatch(setSymbols({ cx, source: loadedSource }));
+    await dispatch(setSymbols({ cx, source: loadedSource }));
     dispatch(setInScopeLines(cx));
+
+    if (cx.isPaused) {
+      await dispatch(mapDisplayNames(cx));
+    }
 
     // If a new source is selected update the file search results
     const newSource = getSelectedSource(getState());

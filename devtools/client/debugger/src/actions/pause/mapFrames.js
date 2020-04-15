@@ -4,17 +4,9 @@
 
 // @flow
 
-import {
-  getFrames,
-  getSymbols,
-  getSource,
-  getSourceFromId,
-  getSelectedFrame,
-} from "../../selectors";
+import { getFrames, getSource, getSelectedFrame } from "../../selectors";
 
 import assert from "../../utils/assert";
-import { findClosestFunction } from "../../utils/ast";
-import { setSymbols } from "../sources/symbols";
 
 import type { Frame, OriginalFrame, ThreadContext } from "../../types";
 import type { State } from "../../reducers/types";
@@ -62,38 +54,6 @@ function updateFrameLocations(
   return Promise.all(
     frames.map(frame => updateFrameLocation(frame, sourceMaps))
   );
-}
-
-export function mapDisplayNames(
-  frames: Frame[],
-  getState: () => State
-): Frame[] {
-  return frames.map(frame => {
-    if (frame.isOriginal) {
-      return frame;
-    }
-
-    const source = getSource(getState(), frame.location.sourceId);
-
-    if (!source) {
-      return frame;
-    }
-
-    const symbols = getSymbols(getState(), source);
-
-    if (!symbols || !symbols.functions) {
-      return frame;
-    }
-
-    const originalFunction = findClosestFunction(symbols, frame.location);
-
-    if (!originalFunction) {
-      return frame;
-    }
-
-    const originalDisplayName = originalFunction.name;
-    return { ...frame, originalDisplayName };
-  });
 }
 
 function isWasmOriginalSourceFrame(
@@ -169,19 +129,6 @@ async function expandFrames(
   return result;
 }
 
-async function updateFrameSymbols(
-  cx: ThreadContext,
-  frames: Frame[],
-  { dispatch, getState }
-) {
-  await Promise.all(
-    frames.map(frame => {
-      const source = getSourceFromId(getState(), frame.location.sourceId);
-      return dispatch(setSymbols({ cx, source }));
-    })
-  );
-}
-
 /**
  * Map call stack frame locations and display names to originals.
  * e.g.
@@ -200,10 +147,8 @@ export function mapFrames(cx: ThreadContext) {
     }
 
     let mappedFrames = await updateFrameLocations(frames, sourceMaps);
-    await updateFrameSymbols(cx, mappedFrames, thunkArgs);
 
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
-    mappedFrames = mapDisplayNames(mappedFrames, getState);
 
     const selectedFrameId = getSelectedFrameId(
       getState(),

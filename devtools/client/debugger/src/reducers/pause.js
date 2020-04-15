@@ -226,6 +226,11 @@ function update(
       return updateThreadState({ frames, selectedFrameId });
     }
 
+    case "MAP_FRAME_DISPLAY_NAMES": {
+      const { frames } = action;
+      return updateThreadState({ frames });
+    }
+
     case "ADD_SCOPES": {
       const { frame, status, value } = action;
       const selectedFrameId = frame.id;
