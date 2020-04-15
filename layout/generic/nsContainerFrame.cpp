@@ -1489,6 +1489,119 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
   }
 }
 
+bool nsContainerFrame::PushIncompleteChildren(
+    const FrameHashtable& aPushedItems, const FrameHashtable& aIncompleteItems,
+    const FrameHashtable& aOverflowIncompleteItems) {
+  MOZ_ASSERT(IsFlexOrGridContainer(),
+             "Only Grid / Flex containers can call this!");
+
+  if (aPushedItems.IsEmpty() && aIncompleteItems.IsEmpty() &&
+      aOverflowIncompleteItems.IsEmpty()) {
+    return false;
+  }
+
+  // Iterate the children in normal document order and append them (or a NIF)
+  // to one of the following frame lists according to their status.
+  nsFrameList pushedList;
+  nsFrameList incompleteList;
+  nsFrameList overflowIncompleteList;
+  auto* fc = PresShell()->FrameConstructor();
+  for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child;) {
+    MOZ_ASSERT((aPushedItems.Contains(child) ? 1 : 0) +
+                       (aIncompleteItems.Contains(child) ? 1 : 0) +
+                       (aOverflowIncompleteItems.Contains(child) ? 1 : 0) <=
+                   1,
+               "child should only be in one of these sets");
+    // Save the next-sibling so we can continue the loop if |child| is moved.
+    nsIFrame* next = child->GetNextSibling();
+    if (aPushedItems.Contains(child)) {
+      MOZ_ASSERT(child->GetParent() == this);
+      StealFrame(child);
+      pushedList.AppendFrame(nullptr, child);
+    } else if (aIncompleteItems.Contains(child)) {
+      nsIFrame* childNIF = child->GetNextInFlow();
+      if (!childNIF) {
+        childNIF = fc->CreateContinuingFrame(child, this);
+        incompleteList.AppendFrame(nullptr, childNIF);
+      } else {
+        auto* parent = childNIF->GetParent();
+        MOZ_ASSERT(parent != this || !mFrames.ContainsFrame(childNIF),
+                   "child's NIF shouldn't be in the same principal list");
+        // If child's existing NIF is an overflow container, convert it to an
+        // actual NIF, since now |child| has non-overflow stuff to give it.
+        // Or, if it's further away then our next-in-flow, then pull it up.
+        if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) ||
+            (parent != this && parent != GetNextInFlow())) {
+          parent->StealFrame(childNIF);
+          childNIF->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+          if (parent == this) {
+            incompleteList.AppendFrame(nullptr, childNIF);
+          } else {
+            // If childNIF already lives on the next fragment, then we
+            // don't need to reparent it, since we know it's destined to end
+            // up there anyway.  Just move it to its parent's overflow list.
+            if (parent == GetNextInFlow()) {
+              nsFrameList toMove(childNIF, childNIF);
+              parent->MergeSortedOverflow(toMove);
+            } else {
+              ReparentFrame(childNIF, parent, this);
+              incompleteList.AppendFrame(nullptr, childNIF);
+            }
+          }
+        }
+      }
+    } else if (aOverflowIncompleteItems.Contains(child)) {
+      nsIFrame* childNIF = child->GetNextInFlow();
+      if (!childNIF) {
+        childNIF = fc->CreateContinuingFrame(child, this);
+        childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+        overflowIncompleteList.AppendFrame(nullptr, childNIF);
+      } else {
+        DebugOnly<nsContainerFrame*> lastParent = this;
+        auto* nif = static_cast<nsContainerFrame*>(GetNextInFlow());
+        // If child has any non-overflow-container NIFs, convert them to
+        // overflow containers, since that's all |child| needs now.
+        while (childNIF &&
+               !childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+          auto* parent = childNIF->GetParent();
+          parent->StealFrame(childNIF);
+          childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+          if (parent == this) {
+            overflowIncompleteList.AppendFrame(nullptr, childNIF);
+          } else {
+            if (!nif || parent == nif) {
+              nsFrameList toMove(childNIF, childNIF);
+              parent->MergeSortedExcessOverflowContainers(toMove);
+            } else {
+              ReparentFrame(childNIF, parent, nif);
+              nsFrameList toMove(childNIF, childNIF);
+              nif->MergeSortedExcessOverflowContainers(toMove);
+            }
+            // We only need to reparent the first childNIF (or not at all if
+            // its parent is our NIF).
+            nif = nullptr;
+          }
+          lastParent = parent;
+          childNIF = childNIF->GetNextInFlow();
+        }
+      }
+    }
+    child = next;
+  }
+
+  // Merge the results into our respective overflow child lists.
+  if (!pushedList.IsEmpty()) {
+    MergeSortedOverflow(pushedList);
+  }
+  if (!incompleteList.IsEmpty()) {
+    MergeSortedOverflow(incompleteList);
+  }
+  if (!overflowIncompleteList.IsEmpty()) {
+    MergeSortedExcessOverflowContainers(overflowIncompleteList);
+  }
+  return true;
+}
+
 bool nsContainerFrame::MoveOverflowToChildList() {
   bool result = false;
 
