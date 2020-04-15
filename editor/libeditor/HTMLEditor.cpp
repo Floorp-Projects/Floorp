@@ -2093,7 +2093,7 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
 
   // is the selection collapsed?
   nsIContent* contentToExamine;
-  if (SelectionRefPtr()->IsCollapsed() || IsTextNode(startContainer)) {
+  if (SelectionRefPtr()->IsCollapsed() || startContainer->IsText()) {
     if (NS_WARN_IF(!startContainer->IsContent())) {
       return NS_ERROR_FAILURE;
     }
@@ -2148,7 +2148,7 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
     }
   } else {
     // no, we are querying the text background for the Text Highlight button
-    if (IsTextNode(contentToExamine)) {
+    if (contentToExamine->IsText()) {
       // if the node of interest is a text node, let's climb a level
       contentToExamine = contentToExamine->GetParent();
     }
