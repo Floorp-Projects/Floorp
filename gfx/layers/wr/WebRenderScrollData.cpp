@@ -133,8 +133,16 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
   printf_stderr("  scrollbar type: %d animation: %" PRIx64 "\n",
                 (int)mScrollbarData.mScrollbarLayerType,
                 mScrollbarAnimationId.valueOr(0));
-  printf_stderr("  fixed pos container: %" PRIu64 "\n",
-                mFixedPosScrollContainerId);
+  printf_stderr("  fixed container: %" PRIu64 " animation %" PRIx64 "\n",
+                mFixedPosScrollContainerId,
+                mFixedPositionAnimationId.valueOr(0));
+  printf_stderr("  sticky container: %" PRIu64 " animation %" PRIx64
+                " inner: %s outer: %s\n",
+                mStickyPosScrollContainerId,
+                mStickyPositionAnimationId.valueOr(0),
+                Stringify(mStickyScrollRangeInner).c_str(),
+                Stringify(mStickyScrollRangeOuter).c_str());
+  printf_stderr("  fixed/sticky side bits: 0x%x\n", (int)mFixedPositionSides);
 }
 
 WebRenderScrollData::WebRenderScrollData()
