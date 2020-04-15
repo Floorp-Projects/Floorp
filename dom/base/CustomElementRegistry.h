@@ -103,7 +103,7 @@ struct CustomElementData {
   AutoTArray<UniquePtr<CustomElementReaction>, 3> mReactionQueue;
 
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
-  CustomElementDefinition* GetCustomElementDefinition();
+  CustomElementDefinition* GetCustomElementDefinition() const;
   nsAtom* GetCustomElementType() const { return mType; }
   void AttachedInternals();
   bool HasAttachedInternals() const { return mIsAttachedInternals; }
