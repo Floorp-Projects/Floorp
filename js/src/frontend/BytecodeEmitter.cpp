@@ -4126,6 +4126,9 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
 
     // Emit the compound assignment op if there is one.
     if (isCompound) {
+      if (!newSrcNote(SrcNoteType::AssignOp)) {
+        return false;
+      }
       if (!emit1(compoundOp)) {
         //          [stack] ENV? VAL
         return false;
