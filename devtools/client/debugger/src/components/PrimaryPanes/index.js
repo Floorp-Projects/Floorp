@@ -206,14 +206,11 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  {
-    setPrimaryPaneTab: actions.setPrimaryPaneTab,
-    setActiveSearch: actions.setActiveSearch,
-    closeActiveSearch: actions.closeActiveSearch,
-    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
-  }
-);
+const connector = connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+  setPrimaryPaneTab: actions.setPrimaryPaneTab,
+  setActiveSearch: actions.setActiveSearch,
+  closeActiveSearch: actions.closeActiveSearch,
+  clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+});
 
 export default connector(PrimaryPanes);
