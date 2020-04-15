@@ -127,7 +127,9 @@ class IssueItem extends PureComponent {
       dom.a(
         {
           className: "compatibility-issue-item__mdn-link devtools-monospace",
-          href: url,
+          href:
+            url +
+            "?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default",
           title: url,
           onClick: e => this._onLinkClicked(e),
         },
