@@ -13,6 +13,7 @@ const {
   COMPLICATED_URL,
 } = require("../head");
 const { reloadConsoleAndLog } = require("./webconsole-helpers");
+const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 const EXPECTED_MESSAGES = [
   {
@@ -27,6 +28,7 @@ const EXPECTED_MESSAGES = [
   {
     text: `Some cookies are misusing the “sameSite“ attribute, so it won’t work as expected`,
     visibleWhenFissionEnabled: true,
+    nightlyOnly: true,
   },
   {
     text: `InvalidStateError: XMLHttpRequest state must be OPENED.`,
@@ -43,8 +45,9 @@ const EXPECTED_MESSAGES = [
     visibleWhenFissionEnabled: false,
   },
 ].filter(
-  ({ visibleWhenFissionEnabled }) =>
-    !isFissionEnabled() || visibleWhenFissionEnabled
+  ({ visibleWhenFissionEnabled, nightlyOnly }) =>
+    (!isFissionEnabled() || visibleWhenFissionEnabled) &&
+    (!nightlyOnly || AppConstants.NIGHTLY_BUILD)
 );
 
 module.exports = async function() {
