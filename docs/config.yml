@@ -9,6 +9,7 @@ categories:
     source_doc:
         - browser
         - dom
+        - layout
         - gfx
         - devtools
         - toolkit
@@ -50,6 +51,7 @@ redirects:
     contributing/mercurial.html: contributing/vcs/mercurial.html
     contributing/mercurial_bundles.html: contributing/vcs/mercurial_bundles.html
     dom/dom: dom
+    layout/layout: layout
     gfx/gfx: gfx
     intl/l10n/l10n: l10n
     modules/libpref/libpref: modules/libpref
