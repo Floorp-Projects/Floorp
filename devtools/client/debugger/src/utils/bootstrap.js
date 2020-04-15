@@ -159,4 +159,8 @@ function updatePrefs(state: any, oldState: any): void {
   if (hasChanged(selectors.getXHRBreakpoints)) {
     asyncStore.xhrBreakpoints = selectors.getXHRBreakpoints(state);
   }
+
+  if (hasChanged(selectors.getBlackBoxList)) {
+    asyncStore.tabsBlackBoxed = selectors.getBlackBoxList(state);
+  }
 }

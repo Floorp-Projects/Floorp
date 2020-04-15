@@ -221,8 +221,8 @@ function checkPendingBreakpoints(cx: Context, sourceId: SourceId) {
 }
 
 function restoreBlackBoxedSources(cx: Context, sources: Source[]) {
-  return async ({ dispatch }: ThunkArgs) => {
-    const tabs = getBlackBoxList();
+  return async ({ dispatch, getState }: ThunkArgs) => {
+    const tabs = getBlackBoxList(getState());
     if (tabs.length == 0) {
       return;
     }
