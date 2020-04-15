@@ -62,8 +62,10 @@ class XRWebGLLayer final : public nsWrapperCache {
   void StartAnimationFrame();
   void EndAnimationFrame();
   HTMLCanvasElement* GetCanvas();
+  void SessionEnded();
 
  private:
+  void DeleteFramebuffer();
   virtual ~XRWebGLLayer();
   nsCOMPtr<nsISupports> mParent;
 
