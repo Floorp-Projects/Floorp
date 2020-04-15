@@ -18,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -151,6 +152,49 @@ class AudioFocusTest {
         audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_GAIN)
 
         verify(media.controller).play()
+        verifyNoMoreInteractions(media.controller)
+    }
+
+    @Test
+    fun `Will not resume after transient focus loss`() {
+        doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+            .`when`(audioManager).requestAudioFocus(any())
+
+        val media = createMockMediaElement()
+
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PAUSED,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
+
+        verifyNoMoreInteractions(media.controller)
+
+        audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+
+        verify(media.controller, never()).pause()
+        verifyNoMoreInteractions(media.controller)
+
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PAUSED,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            )
+        )).joinBlocking()
+
+        audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+
+        verify(media.controller, never()).play()
         verifyNoMoreInteractions(media.controller)
     }
 

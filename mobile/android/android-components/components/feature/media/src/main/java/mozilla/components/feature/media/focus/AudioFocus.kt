@@ -12,6 +12,7 @@ import mozilla.components.feature.media.ext.getActiveElements
 import mozilla.components.feature.media.ext.pause
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
+import mozilla.components.feature.media.ext.playing
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -93,9 +94,9 @@ internal class AudioFocus(
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                resumeOnFocusGain = true
-                playDelayed = false
                 state.pauseIfPlaying()
+                resumeOnFocusGain = state.playing()
+                playDelayed = false
             }
 
             else -> {
