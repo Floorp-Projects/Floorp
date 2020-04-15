@@ -1118,9 +1118,9 @@ imgCacheQueue::const_iterator imgCacheQueue::end() const {
 }
 
 nsresult imgLoader::CreateNewProxyForRequest(
-    imgRequest* aRequest, nsILoadGroup* aLoadGroup, Document* aLoadingDocument,
-    imgINotificationObserver* aObserver, nsLoadFlags aLoadFlags,
-    imgRequestProxy** _retval) {
+    imgRequest* aRequest, nsIURI* aURI, nsILoadGroup* aLoadGroup,
+    Document* aLoadingDocument, imgINotificationObserver* aObserver,
+    nsLoadFlags aLoadFlags, imgRequestProxy** _retval) {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::CreateNewProxyForRequest",
                        "imgRequest", aRequest);
 
@@ -1136,11 +1136,8 @@ nsresult imgLoader::CreateNewProxyForRequest(
    */
   proxyRequest->SetLoadFlags(aLoadFlags);
 
-  nsCOMPtr<nsIURI> uri;
-  aRequest->GetURI(getter_AddRefs(uri));
-
   // init adds itself to imgRequest's list of observers
-  nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, aLoadingDocument, uri,
+  nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, aLoadingDocument, aURI,
                                    aObserver);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1680,7 +1677,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
   // If we're currently in the middle of validating this request, just hand
   // back a proxy to it; the required work will be done for us.
   if (request->GetValidator()) {
-    rv = CreateNewProxyForRequest(request, aLoadGroup, aLoadingDocument,
+    rv = CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
                                   aObserver, aLoadFlags, aProxyRequest);
     if (NS_FAILED(rv)) {
       return false;
@@ -1719,7 +1716,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
   }
 
   RefPtr<imgRequestProxy> req;
-  rv = CreateNewProxyForRequest(request, aLoadGroup, aLoadingDocument,
+  rv = CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
                                 aObserver, aLoadFlags, getter_AddRefs(req));
   if (NS_FAILED(rv)) {
     return false;
@@ -2309,7 +2306,7 @@ nsresult imgLoader::LoadImage(
     request->SetLoadId(aLoadingDocument);
 
     LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
-    rv = CreateNewProxyForRequest(request, aLoadGroup, aLoadingDocument,
+    rv = CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
                                   aObserver, requestFlags, _retval);
     if (NS_FAILED(rv)) {
       return rv;
@@ -2488,7 +2485,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
     *listener = nullptr;  // give them back a null nsIStreamListener
 
-    rv = CreateNewProxyForRequest(request, loadGroup, aLoadingDocument,
+    rv = CreateNewProxyForRequest(request, uri, loadGroup, aLoadingDocument,
                                   aObserver, requestFlags, _retval);
     static_cast<imgRequestProxy*>(*_retval)->NotifyListener();
   } else {
@@ -2529,8 +2526,9 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // Try to add the new request into the cache.
     PutIntoCache(originalURIKey, entry);
 
-    rv = CreateNewProxyForRequest(request, loadGroup, aLoadingDocument,
-                                  aObserver, requestFlags, _retval);
+    rv = CreateNewProxyForRequest(request, originalURI, loadGroup,
+                                  aLoadingDocument, aObserver, requestFlags,
+                                  _retval);
 
     // Explicitly don't notify our proxy, because we're loading off the
     // network, and necko (or things called from necko, such as
