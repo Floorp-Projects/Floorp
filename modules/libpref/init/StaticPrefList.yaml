@@ -2397,7 +2397,7 @@
 # This pref enables the featurePolicy header support.
 - name: dom.security.featurePolicy.header.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.security.respect_document_nosniff
@@ -2410,10 +2410,10 @@
   value: false
   mirror: always
 
-# Expose the 'policy' attribute in document and HTMLIFrameElement
+# Expose the 'featurePolicy' attribute in document and HTMLIFrameElement
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # For testing purposes only: Flipping this pref to true allows
