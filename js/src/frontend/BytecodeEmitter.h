@@ -142,8 +142,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // True while emitting a lambda which is only expected to run once.
   bool emittingRunOnceLambda = false;
 
-  bool isRunOnceLambda();
-
   enum EmitterMode {
     Normal,
 
