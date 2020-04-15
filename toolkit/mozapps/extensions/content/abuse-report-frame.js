@@ -271,7 +271,7 @@
   // If the html about:addons and the abuse report are both enabled, register
   // the custom XUL WebComponent and append it to the XUL stack element
   // (if not registered the element will be just a dummy hidden box)
-  if (ABUSE_REPORT_ENABLED) {
+  if (ABUSE_REPORT_ENABLED && AbuseReporter.openDialogDisabled) {
     customElements.define(
       "addon-abuse-report-xulframe",
       AddonAbuseReportsXULFrame
