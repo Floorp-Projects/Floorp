@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 
+#include "jit/JitCommon.h"
 #include "new-regexp/regexp-bytecode-generator.h"
 #include "new-regexp/regexp-compiler.h"
 #include "new-regexp/regexp-interpreter.h"
@@ -28,6 +29,7 @@ namespace js {
 namespace irregexp {
 
 using mozilla::AssertedCast;
+using mozilla::Maybe;
 using mozilla::PointerRangeSize;
 
 using frontend::TokenStream;
@@ -35,6 +37,7 @@ using frontend::TokenStreamAnyChars;
 
 using v8::internal::FlatStringReader;
 using v8::internal::HandleScope;
+using v8::internal::InputOutputData;
 using v8::internal::IrregexpInterpreter;
 using v8::internal::NativeRegExpMacroAssembler;
 using v8::internal::RegExpBytecodeGenerator;
@@ -44,6 +47,7 @@ using v8::internal::RegExpError;
 using v8::internal::RegExpMacroAssembler;
 using v8::internal::RegExpNode;
 using v8::internal::RegExpParser;
+using v8::internal::SMRegExpMacroAssembler;
 using v8::internal::Zone;
 
 using V8HandleString = v8::internal::Handle<v8::internal::String>;
@@ -142,8 +146,7 @@ static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
 template <typename CharT>
 static void ReportSyntaxError(TokenStreamAnyChars& ts,
                               RegExpCompileData& result, CharT* start,
-                              size_t length,
-                              ...) {
+                              size_t length, ...) {
   gc::AutoSuppressGC suppressGC(ts.context());
   uint32_t errorNumber = ErrorNumber(result.error);
 
@@ -302,8 +305,7 @@ static void SampleCharacters(HandleLinearString input,
   int length = sample_subject.length();
 
   int half_way = (length - kSampleSize) / 2;
-  for (int i = std::max(0, half_way);
-       i < length && chars_sampled < kSampleSize;
+  for (int i = std::max(0, half_way); i < length && chars_sampled < kSampleSize;
        i++, chars_sampled++) {
     compiler.frequency_collator()->CountCharacter(sample_subject.Get(i));
   }
@@ -427,11 +429,27 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     return false;
   }
 
-  // Note: This code looks weird because in a future patch we will add
-  // support for native compilation, which will initialize `masm` with
-  // a different subclass of RegExpMacroAssembler.
+  bool useNativeCode = re->markedForTierUp();
+
+  MOZ_ASSERT_IF(useNativeCode, IsNativeRegExpEnabled());
+
+  Maybe<jit::JitContext> jctx;
+  Maybe<js::jit::StackMacroAssembler> stack_masm;
   UniquePtr<RegExpMacroAssembler> masm;
-  masm = MakeUnique<RegExpBytecodeGenerator>(cx->isolate, &zone);
+  if (useNativeCode) {
+    NativeRegExpMacroAssembler::Mode mode =
+        isLatin1 ? NativeRegExpMacroAssembler::LATIN1
+                 : NativeRegExpMacroAssembler::UC16;
+    // If we are compiling native code, we need a macroassembler,
+    // which needs a jit context.
+    jctx.emplace(cx, nullptr);
+    stack_masm.emplace();
+    uint32_t num_capture_registers = re->pairCount() * 2;
+    masm = MakeUnique<SMRegExpMacroAssembler>(cx, stack_masm.ref(), &zone, mode,
+                                              num_capture_registers);
+  } else {
+    masm = MakeUnique<RegExpBytecodeGenerator>(cx->isolate, &zone);
+  }
   if (!masm) {
     ReportOutOfMemory(cx);
     return false;
@@ -472,6 +490,12 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
   RegExpCompiler::CompilationResult result = compiler.Assemble(
       cx->isolate, masm.get(), data.node, data.capture_count, wrappedPattern);
+  if (JS::Value(result.code).isUndefined()) {
+    // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
+    MOZ_ASSERT(useNativeCode);
+    ReportOutOfMemory(cx);
+    return false;
+  }
   if (!result.Succeeded()) {
     MOZ_ASSERT(result.error == RegExpError::kTooLarge);
     JS_ReportErrorASCII(cx, "regexp too big");
@@ -479,13 +503,47 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   }
 
   re->updateMaxRegisters(result.num_registers);
-  ByteArray bytecode =
-    v8::internal::ByteArray::cast(result.code).takeOwnership(cx->isolate);
-  uint32_t length = bytecode->length;
-  re->setByteCode(bytecode.release(), isLatin1);
-  js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
+  if (useNativeCode) {
+    // Transfer ownership of the tables from the macroassembler to the
+    // RegExpShared.
+    SMRegExpMacroAssembler::TableVector& tables =
+        static_cast<SMRegExpMacroAssembler*>(masm.get())->tables();
+    for (uint32_t i = 0; i < tables.length(); i++) {
+      if (!re->addTable(std::move(tables[i]))) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+    }
+    re->setJitCode(v8::internal::Code::cast(result.code).inner(), isLatin1);
+  } else {
+    // Transfer ownership of the bytecode from the HandleScope to the
+    // RegExpShared.
+    ByteArray bytecode =
+        v8::internal::ByteArray::cast(result.code).takeOwnership(cx->isolate);
+    uint32_t length = bytecode->length;
+    re->setByteCode(bytecode.release(), isLatin1);
+    js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
+  }
 
   return true;
+}
+
+template <typename CharT>
+RegExpRunStatus ExecuteRaw(jit::JitCode* code, const CharT* chars,
+                           size_t length, size_t startIndex,
+                           VectorMatchPairs* matches) {
+  InputOutputData data(chars, chars + length, startIndex, matches);
+
+  static_assert(RegExpRunStatus_Error ==
+                v8::internal::RegExp::kInternalRegExpException);
+  static_assert(RegExpRunStatus_Success ==
+                v8::internal::RegExp::kInternalRegExpSuccess);
+  static_assert(RegExpRunStatus_Success_NotFound ==
+                v8::internal::RegExp::kInternalRegExpFailure);
+
+  typedef int (*RegExpCodeSignature)(InputOutputData*);
+  auto function = reinterpret_cast<RegExpCodeSignature>(code->raw());
+  return (RegExpRunStatus) CALL_GENERATED_1(function, &data);
 }
 
 RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
@@ -513,9 +571,13 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
                 v8::internal::RegExp::kInternalRegExpFailure);
 
   RegExpRunStatus status =
-      (RegExpRunStatus) IrregexpInterpreter::MatchForCallFromRuntime(
+      (RegExpRunStatus)IrregexpInterpreter::MatchForCallFromRuntime(
           cx->isolate, wrappedRegExp, wrappedInput, registers.begin(),
           numRegisters, startIndex);
+
+  MOZ_ASSERT(status == RegExpRunStatus_Error ||
+             status == RegExpRunStatus_Success ||
+             status == RegExpRunStatus_Success_NotFound);
 
   // Copy results out of registers
   if (status == RegExpRunStatus_Success) {
@@ -532,6 +594,20 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
 RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
                         HandleLinearString input, size_t startIndex,
                         VectorMatchPairs* matches) {
+  bool latin1 = input->hasLatin1Chars();
+  jit::JitCode* jitCode = re->getJitCode(latin1);
+  bool isCompiled = !!jitCode;
+
+  if (isCompiled) {
+    JS::AutoCheckCannotGC nogc;
+    if (latin1) {
+      return ExecuteRaw(jitCode, input->latin1Chars(nogc), input->length(),
+                        startIndex, matches);
+    }
+    return ExecuteRaw(jitCode, input->twoByteChars(nogc), input->length(),
+                      startIndex, matches);
+  }
+
   return Interpret(cx, re, input, startIndex, matches);
 }
 

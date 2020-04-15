@@ -896,20 +896,17 @@ class JSRegExp : public HeapObject {
   // ******************************************************
   // Methods that are called from inside the implementation
   // ******************************************************
-  void TierUpTick() { /*inner()->tierUpTick();*/ }
-  bool MarkedForTierUp() const {
-    return false; /*inner()->markedForTierUp();*/
+  void TierUpTick() { inner()->tierUpTick(); }
+
+  Object Code(bool is_latin1) const {
+    return Object(JS::PrivateGCThingValue(inner()->getJitCode(is_latin1)));
   }
   Object Bytecode(bool is_latin1) const {
     return Object(JS::PrivateValue(inner()->getByteCode(is_latin1)));
   }
 
-  // TODO: hook these up
-  Object Code(bool is_latin1) const { return Object(JS::UndefinedValue()); }
-
-  uint32_t BacktrackLimit() const {
-    return 0; /*inner()->backtrackLimit();*/
-  }
+  // TODO: should we expose this?
+  uint32_t BacktrackLimit() const { return 0; }
 
   static JSRegExp cast(Object object) {
     JSRegExp regexp;
