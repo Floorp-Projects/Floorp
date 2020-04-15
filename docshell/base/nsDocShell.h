@@ -1060,6 +1060,12 @@ class nsDocShell final : public nsDocLoader,
   // this docshell.
   uint32_t DetermineContentType();
 
+  // If this is an iframe, and the embedder is OOP, then notifes the
+  // embedder that loading has finished and we shouldn't be blocking
+  // load of the embedder. Only called when we fail to load, as we wait
+  // for the load event of our Document before notifying success.
+  void UnblockEmbedderLoadEventForFailure();
+
   struct SameDocumentNavigationState {
     nsAutoCString mCurrentHash;
     nsAutoCString mNewHash;
