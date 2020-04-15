@@ -173,10 +173,10 @@ body {
   border-radius: 4px;
   box-shadow: var(--newtab-card-shadow);
   font-size: 13px;
-  padding: 20px 40px 60px; }
+  padding: 20px 20px 60px; }
   @media (max-width: 866px) {
     .welcomeCard {
-      padding: 20px 40px; } }
+      padding: 20px; } }
   @media (min-width: 1122px) {
     .welcomeCard {
       font-size: 15px; } }
@@ -223,7 +223,7 @@ body {
 
 .onboardingMessageImage {
   height: 112px;
-  width: 140px;
+  width: 180px;
   background-size: auto 140px;
   background-position: center center;
   background-repeat: no-repeat;
@@ -233,10 +233,6 @@ body {
       height: 75px;
       min-width: 80px;
       background-size: 140px; } }
-  @media (min-width: 1122px) {
-    .onboardingMessageImage {
-      width: 140px;
-      background-size: auto 140px; } }
 
 .start-button {
   border: 0;
