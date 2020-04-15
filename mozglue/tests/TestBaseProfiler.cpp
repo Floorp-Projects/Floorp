@@ -13,6 +13,7 @@
 #include "mozilla/ProfileBufferChunk.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
+#include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/Vector.h"
 
 #ifdef MOZ_BASE_PROFILER
@@ -829,6 +830,37 @@ static void TestChunkManagerWithLocalLimit() {
 #endif  // DEBUG
 
   printf("TestChunkManagerWithLocalLimit done\n");
+}
+
+static void TestChunkedBuffer() {
+  printf("TestChunkedBuffer...\n");
+
+  ProfileBufferBlockIndex blockIndex;
+  MOZ_RELEASE_ASSERT(!blockIndex);
+  MOZ_RELEASE_ASSERT(blockIndex == nullptr);
+
+  // Create an out-of-session ProfileChunkedBuffer.
+  ProfileChunkedBuffer cb(ProfileChunkedBuffer::ThreadSafety::WithMutex);
+
+  MOZ_RELEASE_ASSERT(cb.BufferLength().isNothing());
+
+  auto chunks = cb.GetAllChunks();
+  static_assert(std::is_same_v<decltype(chunks), UniquePtr<ProfileBufferChunk>>,
+                "ProfileChunkedBuffer::GetAllChunks() should return a "
+                "UniquePtr<ProfileBufferChunk>");
+  MOZ_RELEASE_ASSERT(!chunks, "Expected no chunks when out-of-session");
+
+#ifdef DEBUG
+  // cb.Dump();
+#endif
+
+  cb.Clear();
+
+#ifdef DEBUG
+  // cb.Dump();
+#endif
+
+  printf("TestChunkedBuffer done\n");
 }
 
 static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
@@ -2026,6 +2058,7 @@ void TestProfilerDependencies() {
   TestChunk();
   TestChunkManagerSingle();
   TestChunkManagerWithLocalLimit();
+  TestChunkedBuffer();
   TestModuloBuffer();
   TestBlocksRingBufferAPI();
   TestBlocksRingBufferUnderlyingBufferChanges();
