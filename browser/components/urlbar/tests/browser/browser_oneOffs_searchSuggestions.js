@@ -19,10 +19,7 @@ const serverInfo = {
 add_task(async function init() {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.oneOffSearches", true],
-      ["browser.urlbar.suggest.searches", true],
-    ],
+    set: [["browser.urlbar.suggest.searches", true]],
   });
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME

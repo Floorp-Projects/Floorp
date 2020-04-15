@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -1304,7 +1303,7 @@ class UrlbarView {
   }
 
   _enableOrDisableOneOffSearches(enable = true) {
-    if (enable && UrlbarPrefs.get("oneOffSearches")) {
+    if (enable) {
       this.oneOffSearchButtons.telemetryOrigin = "urlbar";
       this.oneOffSearchButtons.style.display = "";
       this.oneOffSearchButtons.textbox = this.input.inputField;

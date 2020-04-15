@@ -8,8 +8,6 @@
  * around the results list.
  */
 
-const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
-
 function repeat(limit, func) {
   for (let i = 0; i < limit; i++) {
     func(i);
@@ -57,14 +55,12 @@ function assertSelected_one_off(index) {
 
 add_task(async function() {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
-  Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:mozilla"
   );
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
-    Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
     BrowserTestUtils.removeTab(tab);
   });
 
