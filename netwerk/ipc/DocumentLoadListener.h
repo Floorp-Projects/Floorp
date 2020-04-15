@@ -96,11 +96,11 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
-  bool Open(nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
-            nsLoadFlags aLoadFlags, uint32_t aCacheKey,
-            const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
-            nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-            uint64_t aOuterWindowId, bool aHasGesture, nsresult* aRv);
+  bool Open(nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
+            uint32_t aCacheKey, const uint64_t& aChannelId,
+            const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
+            Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
+            bool aHasGesture, nsresult* aRv);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -214,8 +214,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                         nsTArray<ParentEndpoint>&& aStreamFilterEndpoints);
 
   // Construct a LoadInfo object to use for the internal channel.
-  // TODO: This currently only supports creating top window TYPE_DOCUMENT
-  // LoadInfos
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);

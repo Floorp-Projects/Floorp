@@ -59,7 +59,12 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
       mDocumentURI(aInit.documentURI()),
       mInProcess(aInProcess),
       mIsInitialDocument(false),
-      mHasBeforeUnload(false) {
+      mHasBeforeUnload(false),
+      mSandboxFlags(0),
+      mDocumentHasLoaded(false),
+      mDocumentHasUserInteracted(false),
+      mBlockAllMixedContent(false),
+      mUpgradeInsecureRequests(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
 
   MOZ_RELEASE_ASSERT(
@@ -249,9 +254,43 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   return IPC_OK();
 }
 
+IPCResult WindowGlobalParent::RecvUpdateDocumentPrincipal(
+    nsIPrincipal* aNewDocumentPrincipal) {
+  if (!mDocumentPrincipal->Equals(aNewDocumentPrincipal)) {
+    return IPC_FAIL(this,
+                    "Trying to reuse WindowGlobalParent but the principal of "
+                    "the new document does not match the old one");
+  }
+  mDocumentPrincipal = aNewDocumentPrincipal;
+  return IPC_OK();
+}
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
     const nsString& aTitle) {
   mDocumentTitle = aTitle;
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvUpdateDocumentHasLoaded(
+    bool aDocumentHasLoaded) {
+  mDocumentHasLoaded = aDocumentHasLoaded;
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvUpdateDocumentHasUserInteracted(
+    bool aDocumentHasUserInteracted) {
+  mDocumentHasUserInteracted = aDocumentHasUserInteracted;
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvUpdateSandboxFlags(uint32_t aSandboxFlags) {
+  mSandboxFlags = aSandboxFlags;
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvUpdateDocumentCspSettings(
+    bool aBlockAllMixedContent, bool aUpgradeInsecureRequests) {
+  mBlockAllMixedContent = aBlockAllMixedContent;
+  mUpgradeInsecureRequests = aUpgradeInsecureRequests;
   return IPC_OK();
 }
 
@@ -460,6 +499,13 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvGetContentBlockingEvents(
   uint32_t events = GetContentBlockingLog()->GetContentBlockingEventsInLog();
   aResolver(events);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateCookieJarSettings(
+    const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
+  net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs,
+                                      getter_AddRefs(mCookieJarSettings));
   return IPC_OK();
 }
 

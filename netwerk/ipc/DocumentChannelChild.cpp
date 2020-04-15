@@ -73,20 +73,19 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   gHttpHandler->OnOpeningDocumentRequest(this);
 
+  if (!GetDocShell() || !GetDocShell()->GetBrowsingContext() ||
+      GetDocShell()->GetBrowsingContext()->IsDiscarded()) {
+    return NS_ERROR_FAILURE;
+  }
+
   DocumentChannelCreationArgs args;
 
   args.loadState() = mLoadState->Serialize();
-  Maybe<LoadInfoArgs> maybeArgs;
-  rv = LoadInfoToLoadInfoArgs(mLoadInfo, &maybeArgs);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_DIAGNOSTIC_ASSERT(maybeArgs);
-
-  args.loadInfo() = *maybeArgs;
   args.loadFlags() = mLoadFlags;
   args.cacheKey() = mCacheKey;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
-  args.outerWindowId() = mLoadInfo->GetOuterWindowID();
+  args.outerWindowId() = GetDocShell()->GetOuterWindowID();
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {
@@ -105,11 +104,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
   if (MissingRequiredBrowserChild(browserChild, "documentchannel")) {
     return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  if (!GetDocShell() || !GetDocShell()->GetBrowsingContext() ||
-      GetDocShell()->GetBrowsingContext()->IsDiscarded()) {
-    return NS_ERROR_FAILURE;
   }
 
   args.hasValidTransientUserAction() =
