@@ -2589,7 +2589,9 @@ GCMarker::GCMarker(JSRuntime* rt)
       mainStackColor(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false),
-      state(MarkingState::NotActive)
+      state(MarkingState::NotActive),
+      incrementalWeakMapMarkingEnabled(
+          TuningDefaults::IncrementalWeakMapMarkingEnabled)
 #ifdef DEBUG
       ,
       markLaterArenas(0),
@@ -2597,9 +2599,7 @@ GCMarker::GCMarker(JSRuntime* rt)
       markQueue(rt),
       queuePos(0)
 #endif
-      ,
-      incrementalWeakMapMarkingEnabled(
-          TuningDefaults::IncrementalWeakMapMarkingEnabled) {
+{
   setTraceWeakEdges(false);
 }
 
