@@ -170,7 +170,7 @@ section:not(.active) {
 }
 
 .no-search-results-image {
-  background-image: url("chrome://browser/skin/preferences/no-search-results.svg");
+  background-image: url("chrome://browser/skin/preferences/in-content/no-search-results.svg");
   width: 380px;
   height: 293px;
 }
