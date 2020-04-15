@@ -10,6 +10,8 @@ const TEST_URI = "data:text/html;charset=utf8,";
 add_task(async function() {
   await addTab(TEST_URI);
 
+  await pushPref("devtools.chrome.enabled", true);
+
   info("Open the Browser Console");
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
