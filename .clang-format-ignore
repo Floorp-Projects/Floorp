@@ -59,6 +59,9 @@ tools/clang-tidy/test/.*
 # We are testing the incorrect formatting.
 tools/lint/test/files/file-whitespace/
 
+# Test reformatting
+tools/lint/test/files/clang-format/
+
 # Contains an XML definition and formatting would break the layout
 widget/gtk/MPRISInterfaceDescription.h
 
