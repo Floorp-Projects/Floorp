@@ -17,6 +17,11 @@ class MatchPairs;
 namespace v8 {
 namespace internal {
 
+class ByteArrayData {
+ public:
+  uint32_t length;
+  uint8_t* data();
+};
 class Isolate;
 class RegExpStack;
 class RegExpStackScope;
@@ -50,6 +55,8 @@ namespace irregexp {
 using Isolate = v8::internal::Isolate;
 using RegExpStack = v8::internal::RegExpStack;
 using RegExpStackScope = v8::internal::RegExpStackScope;
+using ByteArrayData = v8::internal::ByteArrayData;
+using ByteArray = js::UniquePtr<v8::internal::ByteArrayData, JS::FreePolicy>;
 using InputOutputData = v8::internal::InputOutputData;
 
 } // namespace irregexp

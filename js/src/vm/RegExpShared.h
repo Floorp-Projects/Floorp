@@ -23,6 +23,9 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
 #include "js/Vector.h"
+#ifdef ENABLE_NEW_REGEXP
+#  include "new-regexp/RegExpTypes.h"
+#endif
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 
@@ -74,7 +77,13 @@ class RegExpShared : public gc::TenuredCell {
   enum ForceByteCodeEnum { DontForceByteCode, ForceByteCode };
   enum class Kind { Unparsed, Atom, RegExp };
 
+#ifdef ENABLE_NEW_REGEXP
+  using ByteCode = js::irregexp::ByteArrayData;
+  using JitCodeTable = js::irregexp::ByteArray;
+#else
+  using ByteCode = uint8_t;
   using JitCodeTable = UniquePtr<uint8_t[], JS::FreePolicy>;
+#endif
   using JitCodeTables = Vector<JitCodeTable, 0, SystemAllocPolicy>;
 
  private:
@@ -83,7 +92,7 @@ class RegExpShared : public gc::TenuredCell {
 
   struct RegExpCompilation {
     WeakHeapPtr<jit::JitCode*> jitCode;
-    uint8_t* byteCode = nullptr;
+    ByteCode* byteCode = nullptr;
 
     bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
       return byteCode || (force == DontForceByteCode && jitCode);
@@ -91,8 +100,12 @@ class RegExpShared : public gc::TenuredCell {
 
     size_t byteCodeLength() const {
       MOZ_ASSERT(byteCode);
+#ifdef ENABLE_NEW_REGEXP
+      return byteCode->length;
+#else
       auto header = reinterpret_cast<RegExpByteCodeHeader*>(byteCode);
       return header->length;
+#endif
     }
   };
 
@@ -170,8 +183,14 @@ class RegExpShared : public gc::TenuredCell {
 
   // Use simple string matching for this regexp.
   void useAtomMatch(HandleAtom pattern);
-#endif
+  void setByteCode(ByteCode* code, bool latin1) {
+    compilation(latin1).byteCode = code;
+  }
+  ByteCode* getByteCode(bool latin1) const {
+    return compilation(latin1).byteCode;
+  }
 
+#endif
 
   JSAtom* getSource() const { return headerAndSource.ptr(); }
 
