@@ -146,6 +146,9 @@ class Scopes extends PureComponent<Props, State> {
 
     const addSetWatchpointLabel = L10N.getStr("watchpoints.setWatchpoint");
     const addGetWatchpointLabel = L10N.getStr("watchpoints.getWatchpoint");
+    const addGetOrSetWatchpointLabel = L10N.getStr(
+      "watchpoints.getOrSetWatchpoint"
+    );
     const watchpointsSubmenuLabel = L10N.getStr("watchpoints.submenu");
 
     const addSetWatchpointItem = {
@@ -162,12 +165,23 @@ class Scopes extends PureComponent<Props, State> {
       click: () => addWatchpoint(item, "get"),
     };
 
+    const addGetOrSetWatchpointItem = {
+      id: "node-menu-add-get-watchpoint",
+      label: addGetOrSetWatchpointLabel,
+      disabled: false,
+      click: () => addWatchpoint(item, "getorset"),
+    };
+
     const watchpointsSubmenuItem = {
       id: "node-menu-watchpoints",
       label: watchpointsSubmenuLabel,
       disabled: false,
       click: () => addWatchpoint(item, "set"),
-      submenu: [addSetWatchpointItem, addGetWatchpointItem],
+      submenu: [
+        addSetWatchpointItem,
+        addGetWatchpointItem,
+        addGetOrSetWatchpointItem,
+      ],
     };
 
     const menuItems = [watchpointsSubmenuItem];
@@ -191,7 +205,10 @@ class Scopes extends PureComponent<Props, State> {
       <button
         className={`remove-${watchpoint}-watchpoint`}
         title={L10N.getStr("watchpoints.removeWatchpointTooltip")}
-        onClick={() => removeWatchpoint(item)}
+        onClick={e => {
+          e.stopPropagation();
+          removeWatchpoint(item);
+        }}
       />
     );
   };

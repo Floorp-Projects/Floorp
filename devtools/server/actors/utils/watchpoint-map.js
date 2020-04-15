@@ -75,6 +75,21 @@ class WatchpointMap {
       });
     }
 
+    if (watchpointType === "getorset") {
+      objActor.obj.defineProperty(property, {
+        configurable: desc.configurable,
+        enumerable: desc.enumerable,
+        set: objActor.obj.makeDebuggeeValue(v => {
+          maybeHandlePause("setWatchpoint");
+          setValue(v);
+        }),
+        get: objActor.obj.makeDebuggeeValue(() => {
+          maybeHandlePause("getWatchpoint");
+          return getValue();
+        }),
+      });
+    }
+
     return desc;
   }
 
