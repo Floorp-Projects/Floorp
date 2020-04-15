@@ -2076,7 +2076,7 @@ void nsDocShell::TriggerParentCheckDocShellIsEmpty() {
       !GetBrowsingContext()->GetParent()->IsInProcess()) {
     if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
       mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-          /*aFireLoadAtEmbeddingElement*/ false);
+          EmbedderElementEventType::NoEvent);
     }
   }
 }
@@ -3345,7 +3345,7 @@ void nsDocShell::UnblockEmbedderLoadEventForFailure() {
   RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
   if (browserChild) {
     mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-        /*aFireLoadAtEmbeddingElement*/ false);
+        EmbedderElementEventType::NoEvent);
   }
 }
 

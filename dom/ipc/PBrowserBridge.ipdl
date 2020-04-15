@@ -21,6 +21,7 @@ using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct nsRect from "nsRect.h";
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using nsIntRect from "nsRect.h";
+using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -60,7 +61,7 @@ child:
    * Called once this PBrowserBridge's OOP subdoc no longer blocks its
    * embedding element's and embedding doc's 'load' events.
    */
-  async MaybeFireEmbedderLoadEvents(bool aFireLoadAtEmbeddingElement);
+  async MaybeFireEmbedderLoadEvents(EmbedderElementEventType aFireEventAtEmbeddingElement);
 
   async ScrollRectIntoView(nsRect aRect, ScrollAxis aVertical,
                            ScrollAxis aHorizontal, ScrollFlags aScrollFlags,

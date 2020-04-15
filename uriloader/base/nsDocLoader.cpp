@@ -806,7 +806,7 @@ void nsDocLoader::NotifyDoneWithOnload(nsDocLoader* aParent) {
   if (bc->IsContentSubframe() && !bc->GetParent()->IsInProcess()) {
     if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
       mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-          /*aFireLoadAtEmbeddingElement*/ false);
+          dom::EmbedderElementEventType::NoEvent);
     }
   }
 }
