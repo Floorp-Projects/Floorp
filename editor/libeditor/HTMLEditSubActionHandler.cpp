@@ -1114,7 +1114,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
   for (int32_t i = arrayOfContents.Length() - 1; i >= 0; i--) {
     auto& content = arrayOfContents[i];
     nsAutoString format;
-    if (HTMLEditor::NodeIsBlockStatic(content) &&
+    if (HTMLEditUtils::IsBlockElement(content) &&
         !HTMLEditUtils::IsFormatNode(content)) {
       // XXX This RemoveObject() call has already been commented out and
       //     the above comment explained we're trying to replace non-format
@@ -1158,7 +1158,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
     }
     // Ignore non-format block node since its children have been appended
     // the list above so that we'll handle this descendants later.
-    else if (HTMLEditor::NodeIsBlockStatic(content)) {
+    else if (HTMLEditUtils::IsBlockElement(content)) {
       continue;
     }
     // If we meet an inline node, let's get its parent format.
@@ -1195,7 +1195,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
 void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
     Element& aNonFormatBlockElement) {
-  MOZ_ASSERT(HTMLEditor::NodeIsBlockStatic(aNonFormatBlockElement));
+  MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aNonFormatBlockElement));
   MOZ_ASSERT(!HTMLEditUtils::IsFormatNode(&aNonFormatBlockElement));
 
   // We only need to place any one inline inside this node onto
@@ -1205,7 +1205,7 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
   bool foundInline = false;
   for (nsIContent* childContent = aNonFormatBlockElement.GetFirstChild();
        childContent; childContent = childContent->GetNextSibling()) {
-    bool isBlock = HTMLEditor::NodeIsBlockStatic(*childContent);
+    bool isBlock = HTMLEditUtils::IsBlockElement(*childContent);
     bool isFormat = HTMLEditUtils::IsFormatNode(childContent);
     // If the child is a non-format block element, let's check its children
     // recursively.
@@ -2148,7 +2148,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   IgnoredErrorResult ignoredError;
   SelectionRefPtr()->SetInterlinePosition(
       !(nextSiblingOfBRElement &&
-        HTMLEditor::NodeIsBlockStatic(*nextSiblingOfBRElement)),
+        HTMLEditUtils::IsBlockElement(*nextSiblingOfBRElement)),
       ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
                        "Selection::SetInterlinePosition() failed, but ignored");
@@ -2273,7 +2273,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   // We need to examine the content both before the br we just added and also
   // just after it.  If we don't have another br or block boundary adjacent,
   // then we will need a 2nd br added to achieve blank line that user expects.
-  if (HTMLEditor::NodeIsInlineStatic(*citeNode)) {
+  if (HTMLEditUtils::IsInlineElement(*citeNode)) {
     // Use DOM point which we tried to collapse to.
     EditorDOMPoint pointToCreateNewBRElement(atBRElement);
 
@@ -3538,9 +3538,13 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
 
+  if (!aPointToInsert.GetContainerAsContent()) {
+    return NS_OK;
+  }
+
   // If container of the point is not in a block, we don't need to put a
   // `<br>` element here.
-  if (!HTMLEditor::NodeIsBlockStatic(*aPointToInsert.GetContainer())) {
+  if (!HTMLEditUtils::IsBlockElement(*aPointToInsert.ContainerAsContent())) {
     return NS_OK;
   }
 
@@ -4042,7 +4046,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
       offset = aPointToInsert.GetContainer()->Length();
     }
     // get the node to act on
-    if (HTMLEditor::NodeIsBlockStatic(content)) {
+    if (HTMLEditUtils::IsBlockElement(content)) {
       // For block nodes, move their contents only, then delete block.
       result |=
           MoveChildren(MOZ_KnownLive(*content->AsElement()),
@@ -4798,7 +4802,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
 
     // If we're currently handling contents of a list item and current node
     // is not a block element, move current node into the list item.
-    if (HTMLEditor::NodeIsInlineStatic(content) && prevListItem) {
+    if (HTMLEditUtils::IsInlineElement(content) && prevListItem) {
       nsresult rv = MoveNodeToEndWithTransaction(*content, *prevListItem);
       if (NS_WARN_IF(Destroyed())) {
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -4851,7 +4855,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     }
     // If current node is not a block element, new list item should have
     // following inline nodes too.
-    if (HTMLEditor::NodeIsInlineStatic(content)) {
+    if (HTMLEditUtils::IsInlineElement(content)) {
       prevListItem = newListItemElement;
     } else {
       prevListItem = nullptr;
@@ -5512,7 +5516,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
 
     // Not a list item.
 
-    if (HTMLEditor::NodeIsBlockStatic(*content)) {
+    if (HTMLEditUtils::IsBlockElement(content)) {
       nsresult rv = ChangeMarginStart(MOZ_KnownLive(*content->AsElement()),
                                       ChangeMargin::Increase);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -6044,7 +6048,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
 
     // If we're using CSS and the node is a block element, check its start
     // margin whether it's indented with CSS.
-    if (useCSS && HTMLEditor::NodeIsBlockStatic(content)) {
+    if (useCSS && HTMLEditUtils::IsBlockElement(content)) {
       nsStaticAtom& marginProperty =
           MarginPropertyAtomForIndent(MOZ_KnownLive(content));
       if (NS_WARN_IF(Destroyed())) {
@@ -6604,7 +6608,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
 
 bool HTMLEditor::IsEmptyBlockElement(Element& aElement,
                                      IgnoreSingleBR aIgnoreSingleBR) const {
-  if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
+  if (!HTMLEditUtils::IsBlockElement(aElement)) {
     return false;
   }
   return IsEmptyNode(aElement, aIgnoreSingleBR == IgnoreSingleBR::Yes);
@@ -6834,7 +6838,7 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
       // we are, so it's safe to consume it.
       if (nsIContent* nextEditableSibling =
               GetNextHTMLSibling(pointToInsertDiv.GetChild())) {
-        if (!HTMLEditor::NodeIsBlockStatic(*nextEditableSibling)) {
+        if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertDiv);
           nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
           if (NS_WARN_IF(Destroyed())) {
@@ -7157,7 +7161,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // If the editing host is an inline element, bail out early.
-  if (HTMLEditor::NodeIsInlineStatic(aEditingHostElement)) {
+  if (HTMLEditUtils::IsInlineElement(aEditingHostElement)) {
     return EditActionIgnored();
   }
 
@@ -7682,7 +7686,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
            GetPreviousEditableHTMLNodeInBlock(point);
        previousEditableContent && previousEditableContent->GetParentNode() &&
        !IsVisibleBRElement(previousEditableContent) &&
-       !HTMLEditor::NodeIsBlockStatic(*previousEditableContent);
+       !HTMLEditUtils::IsBlockElement(*previousEditableContent);
        previousEditableContent = GetPreviousEditableHTMLNodeInBlock(point)) {
     point.Set(previousEditableContent);
     // XXX Why don't we check \n in pre-formated text node here?
@@ -7766,7 +7770,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   //     new <div> element.
   for (nsIContent* nextEditableContent = GetNextEditableHTMLNodeInBlock(point);
        nextEditableContent &&
-       !HTMLEditor::NodeIsBlockStatic(*nextEditableContent) &&
+       !HTMLEditUtils::IsBlockElement(*nextEditableContent) &&
        nextEditableContent->GetParent();
        nextEditableContent = GetNextEditableHTMLNodeInBlock(point)) {
     point.SetAfter(nextEditableContent);
@@ -8273,7 +8277,7 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
     case EditSubAction::eOutdent:
       for (int32_t i = aArrayOfContents.Length() - 1; i >= 0; i--) {
         OwningNonNull<nsIContent>& content = aArrayOfContents[i];
-        if (HTMLEditor::NodeIsInlineStatic(content) && IsContainer(content) &&
+        if (HTMLEditUtils::IsInlineElement(content) && IsContainer(content) &&
             !EditorBase::IsTextNode(content)) {
           AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfInlineContents;
           // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
@@ -8464,7 +8468,7 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
 nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!aNode.IsContent() || HTMLEditor::NodeIsBlockStatic(aNode)) {
+  if (!aNode.IsContent() || HTMLEditUtils::IsBlockElement(*aNode.AsContent())) {
     return nullptr;
   }
 
@@ -8487,14 +8491,20 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
     return nullptr;
   }
 
-  // Looks for the highest inline parent in the editing host.
-  nsIContent* content = aNode.AsContent();
-  for (nsIContent* parent = content->GetParent();
-       parent && parent != host && HTMLEditor::NodeIsInlineStatic(*parent);
-       parent = parent->GetParent()) {
-    content = parent;
+  if (!aNode.GetParent()) {
+    return aNode.AsContent();
   }
-  return content;
+
+  // Looks for the highest inline parent in the editing host.
+  nsIContent* topMostInlineContent = aNode.AsContent();
+  for (nsIContent* content :
+       InclusiveAncestorsOfType<nsIContent>(*aNode.GetParent())) {
+    if (content == host || !HTMLEditUtils::IsInlineElement(*content)) {
+      break;
+    }
+    topMostInlineContent = content;
+  }
+  return topMostInlineContent;
 }
 
 // static
@@ -9341,7 +9351,7 @@ nsresult HTMLEditor::RemoveBlockContainerElements(
       continue;
     }
 
-    if (HTMLEditor::NodeIsInlineStatic(content)) {
+    if (HTMLEditUtils::IsInlineElement(content)) {
       if (curBlock) {
         // If so, is this node a descendant?
         if (EditorUtils::IsDescendantOf(*content, *curBlock)) {
@@ -9418,7 +9428,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
   nsCOMPtr<Element> curBlock;
   for (auto& content : aArrayOfContents) {
     EditorDOMPoint atContent(content);
-    if (NS_WARN_IF(!atContent.GetContainerAsContent())) {
+    if (NS_WARN_IF(!atContent.IsInContentNode())) {
       // If given node has been removed from the document, let's ignore it
       // since the following code may need its parent replace it with new
       // block.
@@ -9429,7 +9439,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
 
     // Is it already the right kind of block, or an uneditable block?
     if (content->IsHTMLElement(&aBlockTag) ||
-        (!IsEditable(content) && HTMLEditor::NodeIsBlockStatic(content))) {
+        (!IsEditable(content) && HTMLEditUtils::IsBlockElement(content))) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
       // Do nothing to this block
@@ -9587,7 +9597,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       continue;
     }
 
-    if (HTMLEditor::NodeIsInlineStatic(content)) {
+    if (HTMLEditUtils::IsInlineElement(content)) {
       // If content is inline, pull it into curBlock.  Note: it's assumed that
       // consecutive inline nodes in aNodeArray are actually members of the
       // same block parent.  This happens to be true now as a side effect of
@@ -10133,7 +10143,7 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   //     content is a block, does this do right thing?
   if (nsIContent* previousEditableContentInBlockAtCaret =
           GetPriorHTMLSibling(atCaret.GetChild())) {
-    if (HTMLEditor::NodeIsBlockStatic(*previousEditableContentInBlockAtCaret)) {
+    if (HTMLEditUtils::IsBlockElement(*previousEditableContentInBlockAtCaret)) {
       IgnoredErrorResult ignoredError;
       SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
       NS_WARNING_ASSERTION(
@@ -10149,7 +10159,7 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   //     content is a block, does this do right thing?
   if (nsIContent* nextEditableContentInBlockAtCaret =
           GetNextHTMLSibling(atCaret.GetChild())) {
-    if (HTMLEditor::NodeIsBlockStatic(*nextEditableContentInBlockAtCaret)) {
+    if (HTMLEditUtils::IsBlockElement(*nextEditableContentInBlockAtCaret)) {
       IgnoredErrorResult ignoredError;
       SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
       NS_WARNING_ASSERTION(
@@ -10809,7 +10819,7 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
     Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
+  if (!HTMLEditUtils::IsBlockElement(aElement)) {
     return NS_OK;
   }
 
@@ -10830,7 +10840,7 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
 nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
+  if (!HTMLEditUtils::IsBlockElement(aElement)) {
     return NS_OK;
   }
 
@@ -10915,7 +10925,7 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
       continue;
     }
 
-    if (!HTMLEditor::NodeIsBlockStatic(*content) &&
+    if (!HTMLEditUtils::IsBlockElement(*content) &&
         !content->IsHTMLElement(nsGkAtoms::hr)) {
       continue;
     }
@@ -10987,7 +10997,7 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return NS_OK;
   }
 
-  if (HTMLEditor::NodeIsBlockStatic(*firstEditableChild) ||
+  if (HTMLEditUtils::IsBlockElement(*firstEditableChild) ||
       firstEditableChild->IsHTMLElement(nsGkAtoms::br)) {
     return NS_OK;
   }
@@ -10998,7 +11008,7 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return NS_OK;
   }
 
-  if (HTMLEditor::NodeIsBlockStatic(*previousEditableContent) ||
+  if (HTMLEditUtils::IsBlockElement(*previousEditableContent) ||
       previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     return NS_OK;
   }
@@ -11023,7 +11033,7 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return NS_OK;
   }
 
-  if (HTMLEditor::NodeIsBlockStatic(*firstEditableContent) ||
+  if (HTMLEditUtils::IsBlockElement(*firstEditableContent) ||
       firstEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     return NS_OK;
   }
@@ -11034,7 +11044,7 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return NS_OK;
   }
 
-  if (HTMLEditor::NodeIsBlockStatic(*nextEditableContent) ||
+  if (HTMLEditUtils::IsBlockElement(*nextEditableContent) ||
       nextEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     return NS_OK;
   }
@@ -11053,7 +11063,7 @@ nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,
                                           const nsAString& aAlignType,
                                           EditTarget aEditTarget) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(HTMLEditor::NodeIsBlockStatic(aBlockOrHRElement) ||
+  MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aBlockOrHRElement) ||
              aBlockOrHRElement.IsHTMLElement(nsGkAtoms::hr));
   MOZ_ASSERT(IsCSSEnabled() ||
              HTMLEditUtils::SupportsAlignAttr(aBlockOrHRElement));

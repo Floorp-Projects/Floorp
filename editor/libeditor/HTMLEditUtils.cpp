@@ -5,25 +5,47 @@
 
 #include "HTMLEditUtils.h"
 
-#include "mozilla/ArrayUtils.h"   // for ArrayLength
-#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"   // for EditAction
-#include "mozilla/EditorBase.h"   // for EditorBase
+#include "mozilla/ArrayUtils.h"  // for ArrayLength
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
+#include "mozilla/EditAction.h"  // for EditAction
+#include "mozilla/EditorBase.h"  // for EditorBase
+#include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/Element.h"  // for Element, nsINode
 #include "nsAString.h"            // for nsAString::IsEmpty
-#include "nsCOMPtr.h"             // for nsCOMPtr, operator==, etc.
+#include "nsAtom.h"               // for nsAtom
 #include "nsCaseTreatment.h"
-#include "nsDebug.h"    // for NS_ASSERTION, etc.
-#include "nsError.h"    // for NS_SUCCEEDED
-#include "nsGkAtoms.h"  // for nsGkAtoms, nsGkAtoms::a, etc.
+#include "nsCOMPtr.h"        // for nsCOMPtr, operator==, etc.
+#include "nsDebug.h"         // for NS_ASSERTION, etc.
+#include "nsElementTable.h"  // for nsHTMLElement
+#include "nsError.h"         // for NS_SUCCEEDED
+#include "nsGkAtoms.h"       // for nsGkAtoms, nsGkAtoms::a, etc.
 #include "nsHTMLTags.h"
-#include "nsAtom.h"              // for nsAtom
-#include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsLiteralString.h"     // for NS_LITERAL_STRING
+#include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsString.h"            // for nsAutoString
-#include "mozilla/dom/HTMLAnchorElement.h"
 
 namespace mozilla {
+
+bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent) {
+  if (!aContent.IsElement()) {
+    return false;
+  }
+  if (aContent.IsHTMLElement(nsGkAtoms::br)) {  // shortcut for TextEditor
+    MOZ_ASSERT(!nsHTMLElement::IsBlock(nsHTMLTags::AtomTagToId(nsGkAtoms::br)));
+    return false;
+  }
+  // We want to treat these as block nodes even though nsHTMLElement says
+  // they're not.
+  if (aContent.IsAnyOfHTMLElements(
+          nsGkAtoms::body, nsGkAtoms::head, nsGkAtoms::tbody, nsGkAtoms::thead,
+          nsGkAtoms::tfoot, nsGkAtoms::tr, nsGkAtoms::th, nsGkAtoms::td,
+          nsGkAtoms::dt, nsGkAtoms::dd)) {
+    return true;
+  }
+
+  return nsHTMLElement::IsBlock(
+      nsHTMLTags::AtomTagToId(aContent.NodeInfo()->NameAtom()));
+}
 
 /**
  * IsInlineStyle() returns true if aNode is an inline style.

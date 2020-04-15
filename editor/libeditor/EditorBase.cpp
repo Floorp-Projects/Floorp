@@ -19,6 +19,7 @@
 #include "DeleteTextTransaction.h"            // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"         // for EditAggregateTransaction
 #include "EditorEventListener.h"              // for EditorEventListener
+#include "HTMLEditUtils.h"                    // for HTMLEditUtils
 #include "InsertNodeTransaction.h"            // for InsertNodeTransaction
 #include "InsertTextTransaction.h"            // for InsertTextTransaction
 #include "JoinNodeTransaction.h"              // for JoinNodeTransaction
@@ -3778,7 +3779,8 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
   // If we are at the beginning of the node, or it is a text node, then just
   // look before it.
   if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
-    if (aNoBlockCrossing && IsBlockNode(aPoint.GetContainer())) {
+    if (aNoBlockCrossing && aPoint.IsInContentNode() &&
+        HTMLEditUtils::IsBlockElement(*aPoint.ContainerAsContent())) {
       // If we aren't allowed to cross blocks, don't look before this block.
       return nullptr;
     }
@@ -3835,15 +3837,14 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
 
   // if the container is a text node, use its location instead
   if (point.IsInTextNode()) {
-    point.Set(point.GetContainer());
-    bool advanced = point.AdvanceOffset();
-    if (NS_WARN_IF(!advanced)) {
+    point.SetAfter(point.GetContainer());
+    if (NS_WARN_IF(!point.IsSet())) {
       return nullptr;
     }
   }
 
   if (point.GetChild()) {
-    if (aNoBlockCrossing && IsBlockNode(point.GetChild())) {
+    if (aNoBlockCrossing && HTMLEditUtils::IsBlockElement(*point.GetChild())) {
       return point.GetChild();
     }
 
@@ -3869,7 +3870,8 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the next one.
-  if (aNoBlockCrossing && IsBlockNode(point.GetContainer())) {
+  if (aNoBlockCrossing && point.IsInContentNode() &&
+      HTMLEditUtils::IsBlockElement(*point.ContainerAsContent())) {
     // don't cross out of parent block
     return nullptr;
   }
@@ -3892,7 +3894,7 @@ nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
     nsIContent* sibling =
         aGoForward ? cur->GetNextSibling() : cur->GetPreviousSibling();
     if (sibling) {
-      if (bNoBlockCrossing && IsBlockNode(sibling)) {
+      if (bNoBlockCrossing && HTMLEditUtils::IsBlockElement(*sibling)) {
         // don't look inside prevsib, since it is a block
         return sibling;
       }
@@ -3915,7 +3917,9 @@ nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
                  "We started with a proper descendant of root, and should stop "
                  "if we ever hit the root, so we better have a descendant of "
                  "root now!");
-    if (IsEditorRoot(parent) || (bNoBlockCrossing && IsBlockNode(parent))) {
+    if (IsEditorRoot(parent) ||
+        (bNoBlockCrossing && parent->IsContent() &&
+         HTMLEditUtils::IsBlockElement(*parent->AsContent()))) {
       return nullptr;
     }
 
@@ -3958,19 +3962,19 @@ nsIContent* EditorBase::GetRightmostChild(nsINode* aCurrentNode,
   if (NS_WARN_IF(!aCurrentNode)) {
     return nullptr;
   }
-  nsIContent* cur = aCurrentNode->GetLastChild();
-  if (!cur) {
+  nsIContent* content = aCurrentNode->GetLastChild();
+  if (!content) {
     return nullptr;
   }
   for (;;) {
-    if (bNoBlockCrossing && IsBlockNode(cur)) {
-      return cur;
+    if (bNoBlockCrossing && HTMLEditUtils::IsBlockElement(*content)) {
+      return content;
     }
-    nsIContent* next = cur->GetLastChild();
-    if (!next) {
-      return cur;
+    nsIContent* nextContent = content->GetLastChild();
+    if (!nextContent) {
+      return content;
     }
-    cur = next;
+    content = nextContent;
   }
 
   MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
@@ -3982,31 +3986,23 @@ nsIContent* EditorBase::GetLeftmostChild(nsINode* aCurrentNode,
   if (NS_WARN_IF(!aCurrentNode)) {
     return nullptr;
   }
-  nsIContent* cur = aCurrentNode->GetFirstChild();
-  if (!cur) {
+  nsIContent* content = aCurrentNode->GetFirstChild();
+  if (!content) {
     return nullptr;
   }
   for (;;) {
-    if (bNoBlockCrossing && IsBlockNode(cur)) {
-      return cur;
+    if (bNoBlockCrossing && HTMLEditUtils::IsBlockElement(*content)) {
+      return content;
     }
-    nsIContent* next = cur->GetFirstChild();
+    nsIContent* next = content->GetFirstChild();
     if (!next) {
-      return cur;
+      return content;
     }
-    cur = next;
+    content = next;
   }
 
   MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
   return nullptr;
-}
-
-bool EditorBase::IsBlockNode(nsINode* aNode) const {
-  // stub to be overridden in HTMLEditor.
-  // screwing around with the class hierarchy here in order
-  // to not duplicate the code in GetNextNode/GetPrevNode
-  // across both EditorBase/HTMLEditor.
-  return false;
 }
 
 bool EditorBase::CanContain(nsINode& aParent, nsIContent& aChild) const {
@@ -4448,7 +4444,8 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
        rootChild = rootChild->GetNextSibling()) {
     if (EditorBase::IsPaddingBRElementForEmptyEditor(*rootChild) ||
-        !isRootEditable || IsEditable(rootChild) || IsBlockNode(rootChild)) {
+        !isRootEditable || IsEditable(rootChild) ||
+        HTMLEditUtils::IsBlockElement(*rootChild)) {
       return NS_OK;
     }
   }

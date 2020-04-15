@@ -214,6 +214,12 @@ class EditorDOMPointBase final {
   bool IsContainerEmpty() const { return mParent && !mParent->Length(); }
 
   /**
+   * IsInContentNode() returns true if the container is a subclass of
+   * nsIContent.
+   */
+  bool IsInContentNode() const { return mParent && mParent->IsContent(); }
+
+  /**
    * IsInDataNode() returns true if the container node is a data node including
    * text node.
    */
