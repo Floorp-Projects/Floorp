@@ -58,6 +58,9 @@ uint16_t TraversalRule::Match(Accessible* aAccessible) {
     case java::SessionAccessibility::HTML_GRANULARITY_HEADING:
       result |= HeadingMatch(aAccessible);
       break;
+    case java::SessionAccessibility::HTML_GRANULARITY_LANDMARK:
+      result |= LandmarkMatch(aAccessible);
+      break;
     default:
       result |= DefaultMatch(aAccessible);
       break;
@@ -144,6 +147,14 @@ uint16_t TraversalRule::SectionMatch(Accessible* aAccessible) {
   roles::Role role = aAccessible->Role();
   if (role == roles::HEADING || role == roles::LANDMARK ||
       aAccessible->LandmarkRole()) {
+    return nsIAccessibleTraversalRule::FILTER_MATCH;
+  }
+
+  return nsIAccessibleTraversalRule::FILTER_IGNORE;
+}
+
+uint16_t TraversalRule::LandmarkMatch(Accessible* aAccessible) {
+  if (aAccessible->LandmarkRole()) {
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
 
