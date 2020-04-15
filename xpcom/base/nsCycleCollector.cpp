@@ -1169,6 +1169,7 @@ class nsCycleCollector : public nsIMemoryReporter {
   bool Collect(ccType aCCType, SliceBudget& aBudget,
                nsICycleCollectorListener* aManualListener,
                bool aPreferShorterSlices = false);
+  MOZ_CAN_RUN_SCRIPT
   void Shutdown(bool aDoCollect);
 
   bool IsIdle() const { return mIncrementalPhase == IdlePhase; }
@@ -1183,6 +1184,7 @@ class nsCycleCollector : public nsIMemoryReporter {
 
  private:
   void CheckThreadSafety();
+  MOZ_CAN_RUN_SCRIPT
   void ShutdownCollect();
 
   void FixGrayBits(bool aForceGC, TimeLog& aTimeLog);
@@ -3944,8 +3946,12 @@ void nsCycleCollector_shutdown(bool aDoCollect) {
     MOZ_ASSERT(data->mCollector);
     AUTO_PROFILER_LABEL("nsCycleCollector_shutdown", OTHER);
 
-    data->mCollector->Shutdown(aDoCollect);
-    data->mCollector = nullptr;
+    {
+      RefPtr<nsCycleCollector> collector = data->mCollector;
+      collector->Shutdown(aDoCollect);
+      data->mCollector = nullptr;
+    }
+
     if (data->mContext) {
       // Run any remaining tasks that may have been enqueued via
       // RunInStableState or DispatchToMicroTask during the final cycle
