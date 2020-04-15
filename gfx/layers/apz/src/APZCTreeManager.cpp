@@ -3510,18 +3510,18 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::CommonAncestor(
 bool APZCTreeManager::IsFixedToRootContent(
     const HitTestingTreeNode* aNode) const {
   MutexAutoLock lock(mMapLock);
-  return IsFixedToRootContent(aNode, lock);
+  return IsFixedToRootContent(FixedPositionInfo(aNode), lock);
 }
 
 bool APZCTreeManager::IsFixedToRootContent(
-    const HitTestingTreeNode* aNode,
+    const FixedPositionInfo& aFixedInfo,
     const MutexAutoLock& aProofOfMapLock) const {
-  ScrollableLayerGuid::ViewID fixedTarget = aNode->GetFixedPosTarget();
+  ScrollableLayerGuid::ViewID fixedTarget = aFixedInfo.mFixedPosTarget;
   if (fixedTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return false;
   }
   auto it =
-      mApzcMap.find(ScrollableLayerGuid(aNode->GetLayersId(), 0, fixedTarget));
+      mApzcMap.find(ScrollableLayerGuid(aFixedInfo.mLayersId, 0, fixedTarget));
   if (it == mApzcMap.end()) {
     return false;
   }
@@ -3532,24 +3532,24 @@ bool APZCTreeManager::IsFixedToRootContent(
 bool APZCTreeManager::IsStuckToRootContentAtBottom(
     const HitTestingTreeNode* aNode) const {
   MutexAutoLock lock(mMapLock);
-  return IsStuckToRootContentAtBottom(aNode, lock);
+  return IsStuckToRootContentAtBottom(StickyPositionInfo(aNode), lock);
 }
 
 bool APZCTreeManager::IsStuckToRootContentAtBottom(
-    const HitTestingTreeNode* aNode,
+    const StickyPositionInfo& aStickyInfo,
     const MutexAutoLock& aProofOfMapLock) const {
-  ScrollableLayerGuid::ViewID stickyTarget = aNode->GetStickyPosTarget();
+  ScrollableLayerGuid::ViewID stickyTarget = aStickyInfo.mStickyPosTarget;
   if (stickyTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return false;
   }
 
   // We support the dynamic toolbar at top and bottom.
-  if ((aNode->GetFixedPosSides() & SideBits::eTopBottom) == SideBits::eNone) {
+  if ((aStickyInfo.mFixedPosSides & SideBits::eTopBottom) == SideBits::eNone) {
     return false;
   }
 
-  auto it =
-      mApzcMap.find(ScrollableLayerGuid(aNode->GetLayersId(), 0, stickyTarget));
+  auto it = mApzcMap.find(
+      ScrollableLayerGuid(aStickyInfo.mLayersId, 0, stickyTarget));
   if (it == mApzcMap.end()) {
     return false;
   }
@@ -3567,8 +3567,9 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
               AsyncPanZoomController::eForHitTesting,
               AsyncTransformComponents{AsyncTransformComponent::eLayout})
           .mTranslation;
-  return apz::IsStuckAtBottom(translation.y, aNode->GetStickyScrollRangeInner(),
-                              aNode->GetStickyScrollRangeOuter());
+  return apz::IsStuckAtBottom(translation.y,
+                              aStickyInfo.mStickyScrollRangeInner,
+                              aStickyInfo.mStickyScrollRangeOuter);
 }
 
 LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
@@ -4001,12 +4002,18 @@ APZCTreeManager::FixedPositionInfo::FixedPositionInfo(
     const HitTestingTreeNode* aNode) {
   mFixedPositionAnimationId = aNode->GetFixedPositionAnimationId();
   mFixedPosSides = aNode->GetFixedPosSides();
+  mFixedPosTarget = aNode->GetFixedPosTarget();
+  mLayersId = aNode->GetLayersId();
 }
 
 APZCTreeManager::StickyPositionInfo::StickyPositionInfo(
     const HitTestingTreeNode* aNode) {
   mStickyPositionAnimationId = aNode->GetStickyPositionAnimationId();
   mFixedPosSides = aNode->GetFixedPosSides();
+  mStickyPosTarget = aNode->GetStickyPosTarget();
+  mLayersId = aNode->GetLayersId();
+  mStickyScrollRangeInner = aNode->GetStickyScrollRangeInner();
+  mStickyScrollRangeOuter = aNode->GetStickyScrollRangeOuter();
 }
 
 }  // namespace layers
