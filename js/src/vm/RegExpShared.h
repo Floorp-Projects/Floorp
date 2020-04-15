@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
+#include "jit/JitOptions.h"
 #include "js/AllocPolicy.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
@@ -47,6 +48,17 @@ enum RegExpRunStatus : int32_t {
   RegExpRunStatus_Success_NotFound = 0,
 };
 
+#ifdef ENABLE_NEW_REGEXP
+
+inline bool IsNativeRegExpEnabled() {
+#  ifdef JS_CODEGEN_NONE
+  return false;
+#  else
+  return jit::JitOptions.nativeRegExp;
+#  endif
+}
+
+#else
 /*
  * Layout of the reg exp bytecode header.
  */
@@ -54,6 +66,7 @@ struct RegExpByteCodeHeader {
   uint32_t length;        // Number of instructions.
   uint32_t numRegisters;  // Number of registers used.
 };
+#endif  // ENABLE_NEW_REGEXP
 
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
@@ -130,6 +143,7 @@ class RegExpShared : public gc::TenuredCell {
   RegExpShared::Kind kind_ = Kind::Unparsed;
   GCPtrAtom patternAtom_;
   uint32_t maxRegisters_ = 0;
+  uint32_t ticks_ = 0;
 #else
   bool canStringMatch = false;
 #endif
@@ -195,11 +209,20 @@ class RegExpShared : public gc::TenuredCell {
   // Use the regular expression engine for this regexp.
   void useRegExpMatch(size_t parenCount);
 
+  void tierUpTick();
+  bool markedForTierUp();
+
   void setByteCode(ByteCode* code, bool latin1) {
     compilation(latin1).byteCode = code;
   }
   ByteCode* getByteCode(bool latin1) const {
     return compilation(latin1).byteCode;
+  }
+  void setJitCode(jit::JitCode* code, bool latin1) {
+    compilation(latin1).jitCode = code;
+  }
+  jit::JitCode* getJitCode(bool latin1) const {
+    return compilation(latin1).jitCode;
   }
   uint32_t getMaxRegisters() const { return maxRegisters_; }
   void updateMaxRegisters(uint32_t numRegisters) {
