@@ -167,7 +167,6 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         self.update_vcs_version(commit, vendor_dir, glue_dir)
         self.log(logging.INFO, 'add_remove_files', {},
                  '''Registering changes with version control.''')
-        self.repository.add_remove_files(vendor_dir)
-        self.repository.add_remove_files(glue_dir)
+        self.repository.add_remove_files(vendor_dir, glue_dir)
         self.log(logging.INFO, 'done', {'revision': revision},
                  '''Update to dav1d version '{revision}' ready to commit.''')
