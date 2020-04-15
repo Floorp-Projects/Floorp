@@ -7,6 +7,8 @@
 #ifndef jit_WarpBuilder_h
 #define jit_WarpBuilder_h
 
+#include <initializer_list>
+
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
@@ -142,7 +144,7 @@ class MOZ_STACK_CLASS WarpBuilder {
 
   MOZ_MUST_USE bool buildCacheIR(BytecodeLocation loc,
                                  const WarpCacheIR* snapshot,
-                                 MDefinition* input);
+                                 std::initializer_list<MDefinition*> inputs);
 
   MOZ_MUST_USE bool buildEnvironmentChain();
   MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,
