@@ -3087,9 +3087,11 @@ void gfxPlatform::InitWebRenderConfig() {
   // for avoiding a problem like Bug 1618370.
   // XXX Is there a better check for Bug 1618370?
   if (!DeviceManagerDx::Get()->CheckHardwareStretchingSupport()) {
+    /*
     featureComp.Disable(
         FeatureStatus::Unavailable, "No hardware stretching support",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_HARDWARE_STRETCHING"));
+    */
   }
 
 #endif
