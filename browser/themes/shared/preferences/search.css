@@ -16,7 +16,7 @@
 }
 
 .searchBarHiddenImage {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-bar.svg");
+  list-style-image: url("chrome://browser/skin/preferences/no-search-bar.svg");
 }
 
 #searchBarShownRadio {
@@ -25,7 +25,7 @@
 }
 
 .searchBarShownImage {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/search-bar.svg");
+  list-style-image: url("chrome://browser/skin/preferences/search-bar.svg");
 }
 
 #defaultEngine,
