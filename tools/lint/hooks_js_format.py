@@ -48,10 +48,7 @@ def run_js_format(hooktype, changedFiles):
         # don't prevent commits, just display the eslint and prettier results
         subprocess.call(js_format_cmd)
 
-        # Add the modified files back to the repo (expect a string)
-        # one by one (fails otherwise, see bug #1541409)
-        for f in path_list:
-            vcs.add_remove_files(f)
+        vcs.add_remove_files(*path_list)
 
         return False
     print("warning: '{}' is not a valid js-format hooktype".format(hooktype))
