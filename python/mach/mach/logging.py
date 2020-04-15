@@ -28,9 +28,9 @@ def _wrap_stdstream(fh):
         encoding = sys.getdefaultencoding()
         encoding = 'utf-8' if encoding in ('ascii', 'charmap') else encoding
         if six.PY2:
-            return codecs.getwriter(encoding)(sys.stdout, errors='replace')
+            return codecs.getwriter(encoding)(fh, errors='replace')
         else:
-            return codecs.getwriter(encoding)(sys.stdout.buffer,
+            return codecs.getwriter(encoding)(fh.buffer,
                                               errors='replace')
     else:
         return fh
