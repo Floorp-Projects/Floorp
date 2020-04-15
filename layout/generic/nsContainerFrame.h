@@ -631,6 +631,24 @@ class nsContainerFrame : public nsSplittableFrame {
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
   /**
+   * Iterate our children in our principal child list in the normal document
+   * order, and append them (or their next-in-flows) to either our overflow list
+   * or excess overflow container list according to their presence in
+   * aPushedItems, aIncompleteItems, or aOverflowIncompleteItems.
+   *
+   * Note: This method is only intended for Grid / Flex containers.
+   * aPushedItems, aIncompleteItems, and aOverflowIncompleteItems are expected
+   * to contain only Grid / Flex items. That is, they should contain only
+   * in-flow children.
+   *
+   * @return true if any items are moved; false otherwise.
+   */
+  using FrameHashtable = nsTHashtable<nsPtrHashKey<nsIFrame>>;
+  bool PushIncompleteChildren(const FrameHashtable& aPushedItems,
+                              const FrameHashtable& aIncompleteItems,
+                              const FrameHashtable& aOverflowIncompleteItems);
+
+  /**
    * Reparent floats whose placeholders are inline descendants of aFrame from
    * whatever block they're currently parented by to aOurBlock.
    * @param aReparentSiblings if this is true, we follow aFrame's

@@ -41,7 +41,6 @@ using namespace mozilla;
 
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 typedef nsGridContainerFrame::TrackSize TrackSize;
-typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
 typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
 typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
 
@@ -6874,121 +6873,24 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     }
   }
 
-  if (!pushedItems.IsEmpty() || !incompleteItems.IsEmpty() ||
-      !overflowIncompleteItems.IsEmpty()) {
-    if (aStatus.IsComplete()) {
-      aStatus.SetOverflowIncomplete();
-      aStatus.SetNextInFlowNeedsReflow();
-    }
-    // Iterate the children in normal document order and append them (or a NIF)
-    // to one of the following frame lists according to their status.
-    nsFrameList pushedList;
-    nsFrameList incompleteList;
-    nsFrameList overflowIncompleteList;
-    auto* fc = PresShell()->FrameConstructor();
-    for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child;) {
-      MOZ_ASSERT((pushedItems.Contains(child) ? 1 : 0) +
-                         (incompleteItems.Contains(child) ? 1 : 0) +
-                         (overflowIncompleteItems.Contains(child) ? 1 : 0) <=
-                     1,
-                 "child should only be in one of these sets");
-      // Save the next-sibling so we can continue the loop if |child| is moved.
-      nsIFrame* next = child->GetNextSibling();
-      if (pushedItems.Contains(child)) {
-        MOZ_ASSERT(child->GetParent() == this);
-        StealFrame(child);
-        pushedList.AppendFrame(nullptr, child);
-      } else if (incompleteItems.Contains(child)) {
-        nsIFrame* childNIF = child->GetNextInFlow();
-        if (!childNIF) {
-          childNIF = fc->CreateContinuingFrame(child, this);
-          incompleteList.AppendFrame(nullptr, childNIF);
-        } else {
-          auto parent =
-              static_cast<nsGridContainerFrame*>(childNIF->GetParent());
-          MOZ_ASSERT(parent != this || !mFrames.ContainsFrame(childNIF),
-                     "child's NIF shouldn't be in the same principal list");
-          // If child's existing NIF is an overflow container, convert it to an
-          // actual NIF, since now |child| has non-overflow stuff to give it.
-          // Or, if it's further away then our next-in-flow, then pull it up.
-          if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) ||
-              (parent != this && parent != GetNextInFlow())) {
-            parent->StealFrame(childNIF);
-            childNIF->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-            if (parent == this) {
-              incompleteList.AppendFrame(nullptr, childNIF);
-            } else {
-              // If childNIF already lives on the next grid fragment, then we
-              // don't need to reparent it, since we know it's destined to end
-              // up there anyway.  Just move it to its parent's overflow list.
-              if (parent == GetNextInFlow()) {
-                nsFrameList toMove(childNIF, childNIF);
-                parent->MergeSortedOverflow(toMove);
-              } else {
-                ReparentFrame(childNIF, parent, this);
-                incompleteList.AppendFrame(nullptr, childNIF);
-              }
-            }
-          }
-        }
-      } else if (overflowIncompleteItems.Contains(child)) {
-        nsIFrame* childNIF = child->GetNextInFlow();
-        if (!childNIF) {
-          childNIF = fc->CreateContinuingFrame(child, this);
-          childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-          overflowIncompleteList.AppendFrame(nullptr, childNIF);
-        } else {
-          DebugOnly<nsGridContainerFrame*> lastParent = this;
-          auto nif = static_cast<nsGridContainerFrame*>(GetNextInFlow());
-          // If child has any non-overflow-container NIFs, convert them to
-          // overflow containers, since that's all |child| needs now.
-          while (childNIF &&
-                 !childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-            auto parent =
-                static_cast<nsGridContainerFrame*>(childNIF->GetParent());
-            parent->StealFrame(childNIF);
-            childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-            if (parent == this) {
-              overflowIncompleteList.AppendFrame(nullptr, childNIF);
-            } else {
-              if (!nif || parent == nif) {
-                nsFrameList toMove(childNIF, childNIF);
-                parent->MergeSortedExcessOverflowContainers(toMove);
-              } else {
-                ReparentFrame(childNIF, parent, nif);
-                nsFrameList toMove(childNIF, childNIF);
-                nif->MergeSortedExcessOverflowContainers(toMove);
-              }
-              // We only need to reparent the first childNIF (or not at all if
-              // its parent is our NIF).
-              nif = nullptr;
-            }
-            lastParent = parent;
-            childNIF = childNIF->GetNextInFlow();
-          }
-        }
-      }
-      child = next;
-    }
-
-    // Merge the results into our respective overflow child lists.
-    if (!pushedList.IsEmpty()) {
-      MergeSortedOverflow(pushedList);
-      AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
-      // NOTE since we messed with our child list here, we intentionally
-      // make aState.mIter invalid to avoid any use of it after this point.
-      aState.mIter.Invalidate();
-    }
-    if (!incompleteList.IsEmpty()) {
-      MergeSortedOverflow(incompleteList);
-      // NOTE since we messed with our child list here, we intentionally
-      // make aState.mIter invalid to avoid any use of it after this point.
-      aState.mIter.Invalidate();
-    }
-    if (!overflowIncompleteList.IsEmpty()) {
-      MergeSortedExcessOverflowContainers(overflowIncompleteList);
-    }
+  const bool childrenMoved = PushIncompleteChildren(
+      pushedItems, incompleteItems, overflowIncompleteItems);
+  if (childrenMoved && aStatus.IsComplete()) {
+    aStatus.SetOverflowIncomplete();
+    aStatus.SetNextInFlowNeedsReflow();
   }
+  if (!pushedItems.IsEmpty()) {
+    AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+    // NOTE since we messed with our child list here, we intentionally
+    // make aState.mIter invalid to avoid any use of it after this point.
+    aState.mIter.Invalidate();
+  }
+  if (!incompleteItems.IsEmpty()) {
+    // NOTE since we messed with our child list here, we intentionally
+    // make aState.mIter invalid to avoid any use of it after this point.
+    aState.mIter.Invalidate();
+  }
+
   return aBSize;
 }
 
