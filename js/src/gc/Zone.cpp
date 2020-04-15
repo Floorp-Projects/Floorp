@@ -475,6 +475,13 @@ void Zone::discardJitCode(JSFreeOp* fop,
   }
 }
 
+void JS::Zone::delegatePreWriteBarrierInternal(JSObject* obj,
+                                               JSObject* delegate) {
+  MOZ_ASSERT(js::gc::detail::GetDelegate(obj) == delegate);
+  MOZ_ASSERT(needsIncrementalBarrier());
+  GCMarker::fromTracer(barrierTracer())->severWeakDelegate(obj, delegate);
+}
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 void JS::Zone::checkUniqueIdTableAfterMovingGC() {
   for (auto r = uniqueIds().all(); !r.empty(); r.popFront()) {

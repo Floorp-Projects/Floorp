@@ -47,6 +47,10 @@ struct WeakMarkable {
 
   WeakMarkable(WeakMapBase* weakmapArg, Cell* keyArg)
       : weakmap(weakmapArg), key(keyArg) {}
+
+  bool operator==(const WeakMarkable& other) const {
+    return weakmap == other.weakmap && key == other.key;
+  }
 };
 
 using WeakEntryVector = Vector<WeakMarkable, 2, js::SystemAllocPolicy>;
@@ -320,6 +324,16 @@ class GCMarker : public JSTracer {
   }
 
   void delayMarkingChildren(gc::Cell* cell);
+
+  // Remove <map,toRemove> from the weak keys table indexed by 'key'.
+  void forgetWeakKey(js::gc::WeakKeyTable& weakKeys, WeakMapBase* map,
+                     gc::Cell* keyOrDelegate, gc::Cell* keyToRemove);
+
+  // Purge all mention of 'map' from the weak keys table.
+  void forgetWeakMap(WeakMapBase* map, Zone* zone);
+
+  // 'delegate' is no longer the delegate of 'key'.
+  void severWeakDelegate(JSObject* key, JSObject* delegate);
 
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
