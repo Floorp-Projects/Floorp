@@ -1,0 +1,89 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const RESOURCE_LINK =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "browser_contextmenu_loadblobinnewtab.html";
+
+const blobDataAsString = `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ`;
+
+// Helper method to open link in new tab and return the content of the first <pre> under <body>
+// Link is selected by using string argument 'selector' as id
+async function open_in_new_tab_and_return_content(selector) {
+  const loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
+  await loaded;
+
+  let generatedBlobURL = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    { selector },
+    async args => {
+      return content.document.getElementById(args.selector).href;
+    }
+  );
+
+  const contextMenu = document.getElementById("contentAreaContextMenu");
+  is(contextMenu.state, "closed", "checking if context menu is closed");
+
+  let awaitPopupShown = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#" + selector,
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
+  await awaitPopupShown;
+
+  let awaitPopupHidden = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+
+  const openPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    generatedBlobURL,
+    false
+  );
+
+  document.getElementById("context-openlinkintab").doCommand();
+
+  await openPromise;
+
+  let newTab = await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[1]);
+
+  contextMenu.hidePopup();
+  await awaitPopupHidden;
+
+  let blobDataFromContent = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    async function() {
+      return content.document.body.firstElementChild.innerText.trim();
+    }
+  );
+
+  await BrowserTestUtils.removeTab(newTab);
+
+  return blobDataFromContent;
+}
+
+add_task(async function test_rightclick_open_bloburl_in_new_tab() {
+  let blobDataFromLoadedPage = await open_in_new_tab_and_return_content(
+    "blob-url-link"
+  );
+  is(blobDataFromLoadedPage, blobDataAsString, "Should be the same");
+});
+
+add_task(async function test_rightclick_open_bloburl_referrer_in_new_tab() {
+  let blobDataFromLoadedPage = await open_in_new_tab_and_return_content(
+    "blob-url-referrer-link"
+  );
+  is(blobDataFromLoadedPage, blobDataAsString, "Should be the same");
+});
