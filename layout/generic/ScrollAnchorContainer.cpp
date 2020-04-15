@@ -539,10 +539,15 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 
   const bool isAnonBox = aFrame->Style()->IsAnonBox();
 
-  // See if this frame could have its own anchor node.
-  nsIScrollableFrame* scrollable = do_QueryFrame(aFrame);
-  const bool isScrollableWithAnchor =
-      scrollable && scrollable->Anchor()->CanMaintainAnchor();
+  // See if this frame has or could maintain its own anchor node.
+  const bool isScrollableWithAnchor = [&] {
+    nsIScrollableFrame* scrollable = do_QueryFrame(aFrame);
+    if (!scrollable) {
+      return false;
+    }
+    auto* anchor = scrollable->Anchor();
+    return anchor->AnchorNode() || anchor->CanMaintainAnchor();
+  }();
 
   // We don't allow scroll anchors to be selected inside of nested scrollable
   // frames which maintain an anchor node as it's not clear how an anchor

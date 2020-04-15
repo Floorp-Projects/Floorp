@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+<script>
+window.requestIdleCallback(() => {
+  try{ c.style.cssText="margin-top:78%" }catch(e){}
+  try{ b.style.cssText="padding-right:100em" }catch(e){}
+  try{ b.scrollIntoView() }catch(e){}
+  try{ b.setAttribute('style', "filter:opacity()drop-shadow(2px 8vmax hsl(2,9%,6%))opacity(") }catch(e){}
+  try{ b.scrollIntoView() }catch(e){}
+  try{ a.setAttribute('style', "") }catch(e){}
+  try{ a.offsetHeight }catch(e){}
+  try{ a.textContent="" }catch(e){}
+  requestIdleCallback(() => {
+    document.documentElement.className = "";
+  })
+})
+</script>
+<style>
+:last-of-type {
+  overflow-y:-moz-hidden-unscrollable;
+}
+</style>
+<body id='a'>
+e
+<samp id='b'>
+</samp>
+<canvas id='c'/>
