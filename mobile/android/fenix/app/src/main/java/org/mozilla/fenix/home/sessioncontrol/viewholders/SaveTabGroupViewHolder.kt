@@ -6,7 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.save_tab_group_button.view.*
+import kotlinx.android.synthetic.main.save_to_collection_button.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -27,6 +27,6 @@ class SaveTabGroupViewHolder(
 
     companion object {
         const val TELEMETRY_HOME_IDENTIFIER = "home"
-        const val LAYOUT_ID = R.layout.save_tab_group_button
+        const val LAYOUT_ID = R.layout.save_to_collection_button
     }
 }

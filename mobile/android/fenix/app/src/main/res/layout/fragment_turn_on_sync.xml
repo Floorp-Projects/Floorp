@@ -56,34 +56,19 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signInScanButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:layout_marginTop="16dp"
-            android:letterSpacing="0"
+            style="@style/PositiveButton"
             android:text="@string/sign_in_ready_for_scan"
-            android:textAllCaps="false"
-            android:textColor="?contrastText"
-            android:textStyle="bold"
-            app:backgroundTint="?accent"
+            android:layout_marginVertical="16dp"
             app:icon="@drawable/ic_qr"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:iconTint="?contrastText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/signInInstructions"
-            app:fontFamily="@font/metropolis_semibold" />
+            app:layout_constraintTop_toBottomOf="@id/signInInstructions" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signInEmailButton"
-            style="@style/ThemeIndependentMaterialGreyButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:layout_marginTop="8dp"
+            style="@style/NeutralButton"
             android:text="@string/sign_in_with_email"
+            android:layout_margin="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/signInScanButton" />

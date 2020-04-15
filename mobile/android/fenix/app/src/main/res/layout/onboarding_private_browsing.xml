@@ -46,32 +46,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/open_settings_button" />
 
-    <FrameLayout
+    <Button
         android:id="@+id/open_settings_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        style="@style/NeutralOnboardingButton"
         android:layout_marginTop="16dp"
-        android:background="@drawable/button_background"
-        android:backgroundTint="?neutralFaded"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:padding="10dp"
+        android:text="@string/onboarding_private_browsing_button"
         app:layout_constraintTop_toBottomOf="@id/description_text_always"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:clickable="false"
-            android:focusable="false"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="@string/onboarding_private_browsing_button"
-            android:textColor="?primaryText"
-            android:textSize="14sp"
-            app:fontFamily="@font/metropolis_regular" />
-    </FrameLayout>
+        app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

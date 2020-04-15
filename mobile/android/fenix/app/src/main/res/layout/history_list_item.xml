@@ -10,14 +10,11 @@
         android:orientation="vertical">
 
     <com.google.android.material.button.MaterialButton
-            android:id="@+id/delete_button"
-            style="@style/ThemeIndependentMaterialGreyButtonDestructive"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="@string/history_delete_all"
-            app:rippleColor="?secondaryText"
-            android:visibility="gone" />
+        android:id="@+id/delete_button"
+        style="@style/DestructiveButton"
+        android:layout_marginHorizontal="16dp"
+        android:text="@string/history_delete_all"
+        android:visibility="gone" />
 
     <TextView
             android:id="@+id/header_title"
@@ -27,7 +24,6 @@
             android:textColor="?primaryText"
             android:paddingStart="20dp"
             android:paddingEnd="0dp"
-            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             tools:text="Header"
             android:visibility="gone" />

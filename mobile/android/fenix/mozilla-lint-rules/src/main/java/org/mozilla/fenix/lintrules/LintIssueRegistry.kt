@@ -14,6 +14,7 @@ import com.android.tools.lint.detector.api.Issue
 class LintIssueRegistry : IssueRegistry() {
     override val api: Int = com.android.tools.lint.detector.api.CURRENT_API
     override val issues: List<Issue> = listOf(
+        ButtonStyleXmlDetector.ISSUE_XML_STYLE,
         AndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE

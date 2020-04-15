@@ -180,18 +180,39 @@
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 
-    <style name="ThemeIndependentMaterialGreyButton" parent="Widget.MaterialComponents.Button.TextButton">
+    <!-- UI button styling -->
+    <style name="NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="iconTint">@color/button_text_color</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:background">@drawable/rounded_button_background</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="backgroundTint">@color/grey_button_color</item>
         <item name="android:textColor">@color/button_text_color</item>
         <item name="rippleColor">?secondaryText</item>
+        <item name="android:letterSpacing">0</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
-    <style name="ThemeIndependentMaterialGreyButtonDestructive" parent="ThemeIndependentMaterialGreyButton">
+    <!-- Ideally we should consolidate this with NeutralButton in the future -->
+    <style name="NeutralOnboardingButton" parent="NeutralButton">
+        <item name="backgroundTint">?neutralFaded</item>
+        <item name="android:textColor">?primaryText</item>
+    </style>
+
+    <style name="DestructiveButton" parent="NeutralButton">
+        <item name="iconTint">@color/destructive_button_text_color</item>
         <item name="android:textColor">@color/destructive_button_text_color</item>
-        <item name="fontFamily">@font/metropolis_semibold</item>
+    </style>
+
+    <style name="PositiveButton" parent="NeutralButton">
+        <item name="backgroundTint">?accent</item>
+        <item name="iconTint">?contrastText</item>
+        <item name="android:textColor">?contrastText</item>
     </style>
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">

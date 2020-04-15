@@ -3,17 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/PositiveButton"
     android:id="@+id/finish_button"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    android:background="@drawable/onboarding_button_background"
-    android:backgroundTint="@color/onboarding_card_icon"
-    android:clickable="true"
-    android:focusable="true"
-    android:gravity="center"
-    android:text="@string/onboarding_finish"
-    android:textAllCaps="false"
-    android:textColor="?contrastText"
-    android:textSize="16sp"
-    android:textStyle="bold" />
+    android:text="@string/onboarding_finish" />

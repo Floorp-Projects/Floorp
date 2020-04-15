@@ -68,7 +68,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/learn_button"
-        style="@style/ThemeIndependentMaterialGreyButton"
+        style="@style/NeutralButton"
         android:padding="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -79,7 +79,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/connect_button"
-        style="@style/ThemeIndependentMaterialGreyButton"
+        style="@style/NeutralButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"

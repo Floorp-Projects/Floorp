@@ -78,10 +78,8 @@
                 app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_site_permissions" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/delete_data"
-                style="@style/ThemeIndependentMaterialGreyButtonDestructive"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="12dp"
+                style="@style/DestructiveButton"
+                android:layout_marginHorizontal="16dp"
                 android:text="@string/preferences_delete_browsing_data_button" />
         </LinearLayout>
     </ScrollView>

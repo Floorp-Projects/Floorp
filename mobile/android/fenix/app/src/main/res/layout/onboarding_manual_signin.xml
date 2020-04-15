@@ -23,20 +23,9 @@
         tools:text="@string/onboarding_firefox_account_header" />
 
     <Button
+        style="@style/NeutralButton"
         android:id="@+id/turn_on_sync_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/button_background"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:padding="10dp"
         android:text="@string/onboarding_firefox_account_sign_in"
-        android:textAllCaps="false"
-        android:textColor="@color/button_text_color"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:backgroundTint="@color/foundation_light_theme"
-        style="@style/MetropolisButton" />
+        app:backgroundTint="@color/foundation_light_theme" />
 </LinearLayout>
