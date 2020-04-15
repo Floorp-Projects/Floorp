@@ -6442,6 +6442,12 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
       StartListeningMediaControlEventIfNeeded();
     }
   }
+  if (StaticPrefs::media_testing_only_events()) {
+    auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
+        this, NS_LITERAL_STRING("MozMediaSuspendChanged"), CanBubble::eYes,
+        ChromeOnlyDispatch::eYes);
+    dispatcher->PostDOMEvent();
+  }
 }
 
 bool HTMLMediaElement::IsBeingDestroyed() {
@@ -7191,6 +7197,10 @@ float HTMLMediaElement::ComputedVolume() const {
 
 bool HTMLMediaElement::ComputedMuted() const {
   return (mMuted & MUTED_BY_AUDIO_CHANNEL);
+}
+
+bool HTMLMediaElement::IsSuspendedByInactiveDocOrDocShell() const {
+  return mSuspendedByInactiveDocOrDocshell;
 }
 
 bool HTMLMediaElement::IsCurrentlyPlaying() const {
