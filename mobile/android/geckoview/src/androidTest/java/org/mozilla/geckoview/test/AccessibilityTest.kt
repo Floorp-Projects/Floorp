@@ -1656,4 +1656,31 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Should fail to move a11y focus before web content", performedAction, equalTo(false))
     }
 
+    @Test fun testTextEntry() {
+        loadTestPage("test-text-entry-node")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("document.querySelector('input[aria-label=Name]').focus()")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) {}
+        })
+
+        mainSession.evaluateJS("document.querySelector('input[aria-label=Name]').value = 'Tobiasas'")
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onTextChanged(event: AccessibilityEvent) {}
+
+            @AssertCalled(count = 1)
+            override fun onTextSelectionChanged(event: AccessibilityEvent) {}
+
+            // Don't fire a11y focus for collapsed caret changes.
+            // This will interfere with on screen keyboards and throw a11y focus
+            // back and fourth.
+            @AssertCalled(count = 0)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {}
+        })
+    }
+
 }
