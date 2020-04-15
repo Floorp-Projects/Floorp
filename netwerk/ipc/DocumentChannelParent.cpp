@@ -39,13 +39,19 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
 
+  RefPtr<class LoadInfo> loadInfo;
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(Some(aArgs.loadInfo()),
+                                                     getter_AddRefs(loadInfo));
+
   Maybe<ClientInfo> clientInfo;
   if (aArgs.initialClientInfo().isSome()) {
     clientInfo.emplace(ClientInfo(aArgs.initialClientInfo().ref()));
   }
 
-  nsresult rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = NS_ERROR_UNEXPECTED;
+  if (!mParent->Open(loadState, loadInfo, aArgs.loadFlags(), aArgs.cacheKey(),
                      aArgs.channelId(), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
                      aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),

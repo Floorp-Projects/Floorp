@@ -425,6 +425,7 @@ struct CookieStruct
 
 struct DocumentChannelCreationArgs {
   DocShellLoadStateInit loadState;
+  LoadInfoArgs loadInfo;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
   uint32_t loadFlags;

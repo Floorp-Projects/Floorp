@@ -1847,14 +1847,6 @@ class Document : public nsINode,
     return window ? window->WindowID() : 0;
   }
 
-  /**
-   * Return WindowGlobalChild that is associated with the inner window.
-   */
-  WindowGlobalChild* GetWindowGlobalChild() {
-    return GetInnerWindow() ? GetInnerWindow()->GetWindowGlobalChild()
-                            : nullptr;
-  }
-
   bool IsTopLevelWindowInactive() const;
 
   /**

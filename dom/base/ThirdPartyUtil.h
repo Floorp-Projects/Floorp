@@ -14,7 +14,6 @@
 #include "nsEffectiveTLDService.h"
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 
 class nsIURI;
 class nsPIDOMWindowOuter;
@@ -28,9 +27,6 @@ class ThirdPartyUtil final : public mozIThirdPartyUtil {
 
   static void Startup();
   static ThirdPartyUtil* GetInstance();
-
-  nsresult IsThirdPartyGlobal(mozilla::dom::WindowGlobalParent* aWindowGlobal,
-                              bool* aResult);
 
  private:
   ~ThirdPartyUtil();

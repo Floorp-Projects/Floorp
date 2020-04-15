@@ -12,7 +12,6 @@ include protocol PBrowserBridge;
 
 include DOMTypes;
 include ClientIPCTypes;
-include NeckoChannelParams;
 
 using JSWindowActorMessageKind from "mozilla/dom/JSWindowActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
@@ -83,27 +82,6 @@ parent:
 
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
-
-  // We expose frameAncestors to web-extensions and they extract URIs from the
-  // principals collected. In order to be compatible with that API, we need to
-  // update the document's principal. This is only allowed if the principals are
-  // `equals` to each other.
-  async UpdateDocumentPrincipal(nsIPrincipal aPrincipal);
-
-  // Update document's `documentHasLoaded` bit in this WindowGlobal.
-  async UpdateDocumentHasLoaded(bool aDocumentHasLoaded);
-
-  // Update document's 'documentHasUserInteracted' bit in this WindowGlobal.
-  async UpdateDocumentHasUserInteracted(bool aDocumentHasUserInteracted);
-
-  // Update document's sandbox flags in this WindowGlobal.
-  async UpdateSandboxFlags(uint32_t aSandboxFlags);
-
-  // Update document csp's fields in this WindowGlobal.
-  async UpdateDocumentCspSettings(bool aBlockAllMixedContent, bool aUpgradeInsecureRequests);
-
-  // Update document's cookie settings in this WindowGlobal.
-  async UpdateCookieJarSettings(CookieJarSettingsArgs cookieJarSettings);
 
   // Update the title of the document in this WindowGlobal.
   async UpdateDocumentTitle(nsString aTitle);

@@ -156,14 +156,6 @@ CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
   return WindowGlobalParent::GetByInnerWindowId(windowId);
 }
 
-already_AddRefed<WindowGlobalParent>
-CanonicalBrowsingContext::GetParentWindowGlobal() const {
-  if (GetParent()) {
-    return GetEmbedderWindowGlobal();
-  }
-  return nullptr;
-}
-
 nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   if (mSessionHistory) {
     return mSessionHistory;
