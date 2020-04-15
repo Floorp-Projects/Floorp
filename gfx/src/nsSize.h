@@ -26,10 +26,6 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
       float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   inline mozilla::gfx::IntSize ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
-  inline mozilla::gfx::IntSize ScaleToOutsidePixels(
-      float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
-  inline mozilla::gfx::IntSize ToOutsidePixels(nscoord aAppUnitsPerPixel) const;
-
   /**
    * Return this size scaled to a different appunits per pixel (APP) ratio.
    * @param aFromAPP the APP to scale from
@@ -48,22 +44,9 @@ inline mozilla::gfx::IntSize nsSize::ScaleToNearestPixels(
                      aYScale));
 }
 
-inline mozilla::gfx::IntSize nsSize::ScaleToOutsidePixels(
-    float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const {
-  return mozilla::gfx::IntSize(
-      NSToIntCeil(NSAppUnitsToDoublePixels(width, aAppUnitsPerPixel) * aXScale),
-      NSToIntCeil(NSAppUnitsToDoublePixels(height, aAppUnitsPerPixel) *
-                  aYScale));
-}
-
 inline mozilla::gfx::IntSize nsSize::ToNearestPixels(
     nscoord aAppUnitsPerPixel) const {
   return ScaleToNearestPixels(1.0f, 1.0f, aAppUnitsPerPixel);
-}
-
-inline mozilla::gfx::IntSize nsSize::ToOutsidePixels(
-    nscoord aAppUnitsPerPixel) const {
-  return ScaleToOutsidePixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
 inline nsSize nsSize::ScaleToOtherAppUnits(int32_t aFromAPP,
