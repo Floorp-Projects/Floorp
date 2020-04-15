@@ -5,6 +5,7 @@
 
 #include "HTMLEditUtils.h"
 
+#include "CSSEditUtils.h"        // for CSSEditUtils
 #include "mozilla/ArrayUtils.h"  // for ArrayLength
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
 #include "mozilla/EditAction.h"  // for EditAction
@@ -25,6 +26,26 @@
 #include "nsString.h"            // for nsAutoString
 
 namespace mozilla {
+
+bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
+                                        const nsIContent& aRightContent,
+                                        StyleDifference aStyleDifference) {
+  if (aLeftContent.NodeInfo()->NameAtom() !=
+      aRightContent.NodeInfo()->NameAtom()) {
+    return false;
+  }
+  if (aStyleDifference == StyleDifference::Ignore ||
+      !aLeftContent.IsElement()) {
+    return true;
+  }
+  if (aStyleDifference == StyleDifference::CompareIfSpanElements &&
+      !aLeftContent.IsHTMLElement(nsGkAtoms::span)) {
+    return true;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(aRightContent.IsElement());
+  return CSSEditUtils::DoElementsHaveSameStyle(*aLeftContent.AsElement(),
+                                               *aRightContent.AsElement());
+}
 
 bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent) {
   if (!aContent.IsElement()) {

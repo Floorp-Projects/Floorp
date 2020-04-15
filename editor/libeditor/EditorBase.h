@@ -1903,21 +1903,6 @@ class EditorBase : public nsIEditor,
                                SplitAtEdges aSplitAtEdges);
 
   /**
-   * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
-   * First, they are joined simply, then, new right node is assumed as the
-   * child at length of the left node before joined and new left node is
-   * assumed as its previous sibling.  Then, they will be joined again.
-   * And then, these steps are repeated.
-   *
-   * @param aLeftNode   The node which will be removed form the tree.
-   * @param aRightNode  The node which will be inserted the contents of
-   *                    aLeftNode.
-   * @return            The point of the first child of the last right node.
-   */
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint
-  JoinNodesDeepWithTransaction(nsIContent& aLeftNode, nsIContent& aRightNode);
-
-  /**
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
    * for empty editor if there is.
    */
@@ -2125,14 +2110,6 @@ class EditorBase : public nsIEditor,
    * Returns true when inserting text should be a part of current composition.
    */
   bool ShouldHandleIMEComposition() const;
-
-  /**
-   * AreNodesSameType() returns true if aNode1 and aNode2 are same type.
-   * If the instance is TextEditor, only their names are checked.
-   * If the instance is HTMLEditor in CSS mode and both of them are <span>
-   * element, their styles are also checked.
-   */
-  bool AreNodesSameType(nsIContent& aNode1, nsIContent& aNode2) const;
 
   static bool IsTextNode(nsINode* aNode) {
     return aNode->NodeType() == nsINode::TEXT_NODE;
