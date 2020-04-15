@@ -54,10 +54,15 @@ add_task(async function test_About_Welcome_Tab_Close() {
  */
 add_task(async function test_About_Welcome_Location_Change() {
   await openAboutWelcomeTab();
+  let currentWindow =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
 
-  let AWP = new AboutWelcomeParent();
-  Assert.ok(AWP.AboutWelcomeObserver, "AboutWelcomeObserver is not null");
+  let aboutWelcomeActor = await currentWindow.getActor("AboutWelcome");
 
+  Assert.ok(
+    aboutWelcomeActor.AboutWelcomeObserver,
+    "AboutWelcomeObserver is not null"
+  );
   await BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     "http://example.com/#foo"
@@ -68,8 +73,8 @@ add_task(async function test_About_Welcome_Location_Change() {
   );
 
   Assert.equal(
-    AWP.AboutWelcomeObserver.terminateReason,
-    AWP.AboutWelcomeObserver.AWTerminate.ADDRESS_BAR_NAVIGATED,
+    aboutWelcomeActor.AboutWelcomeObserver.terminateReason,
+    aboutWelcomeActor.AboutWelcomeObserver.AWTerminate.ADDRESS_BAR_NAVIGATED,
     "Terminated due to location uri changed"
   );
 });

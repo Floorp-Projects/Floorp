@@ -25,6 +25,30 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 class AboutWelcomeChild extends JSWindowActorChild {
   actorCreated() {
     this.exportFunctions();
+    this.initWebProgressListener();
+  }
+
+  initWebProgressListener() {
+    const webProgress = this.manager.browsingContext.top.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+
+    const listener = {
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+      ]),
+    };
+
+    listener.onLocationChange = (aWebProgress, aRequest, aLocation, aFlags) => {
+      log.debug(`onLocationChange handled: ${aWebProgress.DOMWindow}`);
+      this.AWSendToParent("LOCATION_CHANGED");
+    };
+
+    webProgress.addProgressListener(
+      listener,
+      Ci.nsIWebProgress.NOTIFY_LOCATION
+    );
   }
 
   /**

@@ -42,7 +42,13 @@ const AWTerminate = {
 
 class AboutWelcomeObserver {
   constructor() {
+    Services.obs.addObserver(this, "quit-application");
+
     this.win = Services.focus.activeWindow;
+    if (!this.win) {
+      return;
+    }
+
     this.terminateReason = AWTerminate.UNKNOWN;
 
     this.onWindowClose = () => {
@@ -55,8 +61,6 @@ class AboutWelcomeObserver {
 
     this.win.addEventListener("TabClose", this.onTabClose, { once: true });
     this.win.addEventListener("unload", this.onWindowClose, { once: true });
-    this.win.gBrowser.addTabsProgressListener(this);
-    Services.obs.addObserver(this, "quit-application");
   }
 
   observe(aSubject, aTopic, aData) {
@@ -67,10 +71,6 @@ class AboutWelcomeObserver {
     }
   }
 
-  onLocationChange() {
-    this.terminateReason = AWTerminate.ADDRESS_BAR_NAVIGATED;
-  }
-
   // Added for testing
   get AWTerminate() {
     return AWTerminate;
@@ -78,10 +78,13 @@ class AboutWelcomeObserver {
 
   stop() {
     log.debug(`Terminate reason is ${this.terminateReason}`);
+    Services.obs.removeObserver(this, "quit-application");
+    if (!this.win) {
+      return;
+    }
     this.win.removeEventListener("TabClose", this.onTabClose);
     this.win.removeEventListener("unload", this.onWindowClose);
-    this.win.gBrowser.removeTabsProgressListener(this);
-    Services.obs.removeObserver(this, "quit-application");
+    this.win = null;
   }
 }
 
@@ -140,6 +143,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
       case "AWPage:TELEMETRY_EVENT":
         Telemetry.sendTelemetry(data);
+        break;
+      case "AWPage:LOCATION_CHANGED":
+        this.AboutWelcomeObserver.terminateReason =
+          AWTerminate.ADDRESS_BAR_NAVIGATED;
         break;
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
