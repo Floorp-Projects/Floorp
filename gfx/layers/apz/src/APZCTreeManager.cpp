@@ -487,15 +487,11 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
 
           // GetFixedPositionAnimationId is only set when webrender is enabled.
           if (node->GetFixedPositionAnimationId().isSome()) {
-            state.mFixedPositionInfo.emplace_back(
-                *(node->GetFixedPositionAnimationId()),
-                node->GetFixedPosSides());
+            state.mFixedPositionInfo.emplace_back(node);
           }
           // GetStickyPositionAnimationId is only set when webrender is enabled.
           if (node->GetStickyPositionAnimationId().isSome()) {
-            state.mStickyPositionInfo.emplace_back(
-                *(node->GetStickyPositionAnimationId()),
-                node->GetFixedPosSides());
+            state.mStickyPositionInfo.emplace_back(node);
           }
           if (apzc && node->IsPrimaryHolder()) {
             state.mScrollTargets[apzc->GetGuid()] = node;
@@ -854,6 +850,8 @@ void APZCTreeManager::SampleForWebRender(
   }
 
   for (const FixedPositionInfo& info : mFixedPositionInfo) {
+    MOZ_ASSERT(info.mFixedPositionAnimationId.isSome());
+
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
             GetCompositorFixedLayerMargins(lock), info.mFixedPosSides,
@@ -864,10 +862,12 @@ void APZCTreeManager::SampleForWebRender(
             translation, PixelCastJustification::ScreenIsParentLayerForRoot));
 
     transforms.AppendElement(
-        wr::ToWrTransformProperty(info.mFixedPositionAnimationId, transform));
+        wr::ToWrTransformProperty(*info.mFixedPositionAnimationId, transform));
   }
 
   for (const StickyPositionInfo& info : mStickyPositionInfo) {
+    MOZ_ASSERT(info.mStickyPositionAnimationId.isSome());
+
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
             GetCompositorFixedLayerMargins(lock), info.mFixedPosSides,
@@ -881,7 +881,7 @@ void APZCTreeManager::SampleForWebRender(
             translation, PixelCastJustification::ScreenIsParentLayerForRoot));
 
     transforms.AppendElement(
-        wr::ToWrTransformProperty(info.mStickyPositionAnimationId, transform));
+        wr::ToWrTransformProperty(*info.mStickyPositionAnimationId, transform));
   }
 
   aTxn.AppendTransformProperties(transforms);
@@ -3996,6 +3996,18 @@ APZCTreeManager::GetAndroidDynamicToolbarAnimator() {
   return mToolbarAnimator;
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
+
+APZCTreeManager::FixedPositionInfo::FixedPositionInfo(
+    const HitTestingTreeNode* aNode) {
+  mFixedPositionAnimationId = aNode->GetFixedPositionAnimationId();
+  mFixedPosSides = aNode->GetFixedPosSides();
+}
+
+APZCTreeManager::StickyPositionInfo::StickyPositionInfo(
+    const HitTestingTreeNode* aNode) {
+  mStickyPositionAnimationId = aNode->GetStickyPositionAnimationId();
+  mFixedPosSides = aNode->GetFixedPosSides();
+}
 
 }  // namespace layers
 }  // namespace mozilla
