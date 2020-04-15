@@ -28,6 +28,7 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   _(GuardShape)                       \
   _(GuardToObject)                    \
   _(GuardToString)                    \
+  _(GuardToInt32Index)                \
   _(LoadEnclosingEnvironment)         \
   _(LoadDynamicSlotResult)            \
   _(LoadFixedSlotResult)              \
@@ -35,6 +36,7 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   _(LoadEnvironmentDynamicSlotResult) \
   _(LoadInt32ArrayLengthResult)       \
   _(LoadStringLengthResult)           \
+  _(LoadDenseElementResult)           \
   _(TypeMonitorResult)                \
   _(ReturnFromIC)
 
