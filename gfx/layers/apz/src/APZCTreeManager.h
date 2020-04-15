@@ -667,9 +667,24 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(
       AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
+
+  // Returns true if |aNode| is a fixed layer that is fixed to the root content
+  // APZC.
+  // The map lock is required within these functions; if the map lock is already
+  // being held by the caller, the second overload should be used. If the map
+  // lock is not being held at the call site, the first overload should be used.
   bool IsFixedToRootContent(const HitTestingTreeNode* aNode) const;
+  bool IsFixedToRootContent(const HitTestingTreeNode* aNode,
+                            const MutexAutoLock& aProofOfMapLock) const;
+
   // Returns true that |aNode| is stuck to the root content at bottom.
+  // The map lock is required within these functions; if the map lock is already
+  // being held by the caller, the second overload should be used. If the map
+  // lock is not being held at the call site, the first overload should be used.
   bool IsStuckToRootContentAtBottom(const HitTestingTreeNode* aNode) const;
+  bool IsStuckToRootContentAtBottom(const HitTestingTreeNode* aNode,
+                                    const MutexAutoLock& aProofOfMapLock) const;
+
   /**
    * Perform hit testing for a touch-start event.
    *
