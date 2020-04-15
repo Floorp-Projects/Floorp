@@ -28,7 +28,6 @@ void VRDisplayPresentation::UpdateLayers(
 }
 
 void VRDisplayPresentation::UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer) {
-  DestroyLayers();
   VRManagerChild* manager = VRManagerChild::Get();
   if (!manager) {
     // This should not happen, but let's log it and avoid a crash in case
@@ -41,16 +40,20 @@ void VRDisplayPresentation::UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer) {
   nsCOMPtr<nsIEventTarget> target =
       canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
 
-  RefPtr<VRLayerChild> vrLayer =
-      static_cast<VRLayerChild*>(manager->CreateVRLayer(
-          mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
+  if (mLayers.Length() == 0) {
+    // WebXR uses a single layer for now.
+    RefPtr<VRLayerChild> vrLayer =
+        static_cast<VRLayerChild*>(manager->CreateVRLayer(
+            mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
+    mLayers.AppendElement(vrLayer);
+  }
+  RefPtr<VRLayerChild> vrLayer = mLayers[0];
 
   Rect leftBounds(0.0, 0.0, 0.5, 1.0);
   Rect rightBounds(0.5, 0.0, 0.5, 1.0);
 
   vrLayer->Initialize(canvasElement, leftBounds, rightBounds);
   vrLayer->SetXRFramebuffer(aLayer->GetFramebuffer());
-  mLayers.AppendElement(vrLayer);
 }
 
 uint32_t VRDisplayPresentation::GetGroup() const { return mGroup; }
