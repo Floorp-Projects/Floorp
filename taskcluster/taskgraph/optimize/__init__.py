@@ -369,7 +369,7 @@ import_sibling_modules()
 
 
 # Register composite strategies.
-register_strategy('test', args=('skip-unless-schedules', 'seta'))(Any)
+register_strategy('test', args=(Any('skip-unless-schedules', 'seta'), 'backstop'))(All)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
 register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Any)
