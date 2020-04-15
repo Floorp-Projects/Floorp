@@ -263,12 +263,21 @@ class OptimizationStrategy(object):
 class CompositeStrategy(OptimizationStrategy):
 
     def __init__(self, *substrategies, **kwargs):
-        missing = set(substrategies) - set(registry.keys())
+        self.substrategies = []
+        missing = set()
+        for sub in substrategies:
+            if isinstance(sub, six.text_type):
+                if sub not in registry.keys():
+                    missing.add(sub)
+                    continue
+                sub = registry[sub]
+
+            self.substrategies.append(sub)
+
         if missing:
             raise TypeError("substrategies aren't registered: {}".format(
                 ",  ".join(sorted(missing))))
 
-        self.substrategies = [registry[sub] for sub in substrategies]
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
             self.split_args = lambda arg: [arg] * len(substrategies)
