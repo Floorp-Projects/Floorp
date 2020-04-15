@@ -278,9 +278,5 @@ bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, MBasicBlock* current,
                                 const MDefinitionStackVector& inputs,
                                 TranspilerOutput& output) {
   WarpCacheIRTranspiler transpiler(mirGen, current, snapshot, output);
-  if (!transpiler.transpile(inputs)) {
-    return false;
-  }
-
-  return true;
+  return transpiler.transpile(inputs);
 }
