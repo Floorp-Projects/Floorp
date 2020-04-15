@@ -175,7 +175,6 @@ TextureFilter gl_filter_to_texture_filter(int type) {
 }
 
 struct Texture {
-  int levels = 0;
   GLenum internal_format = 0;
   int width = 0;
   int height = 0;
@@ -236,8 +235,7 @@ struct Texture {
 
   bool allocate(bool force = false, int min_width = 0, int min_height = 0) {
     if ((!buf || force) && should_free()) {
-      size_t size =
-          layer_stride(bpp(), min_width, min_height) * max(depth, 1) * levels;
+      size_t size = layer_stride(bpp(), min_width, min_height) * max(depth, 1);
       if (!buf || size > buf_size) {
         char* new_buf = (char*)realloc(buf, size + sizeof(Float));
         assert(new_buf);
@@ -1188,13 +1186,13 @@ static GLenum remap_internal_format(GLenum format) {
 
 void TexStorage3D(GLenum target, GLint levels, GLenum internal_format,
                   GLsizei width, GLsizei height, GLsizei depth) {
+  assert(levels == 1);
   Texture& t = ctx->textures[ctx->get_binding(target)];
   internal_format = remap_internal_format(internal_format);
   bool changed = false;
   if (t.width != width || t.height != height || t.depth != depth ||
-      t.levels != levels || t.internal_format != internal_format) {
+      t.internal_format != internal_format) {
     changed = true;
-    t.levels = levels;
     t.internal_format = internal_format;
     t.width = width;
     t.height = height;
@@ -1204,16 +1202,15 @@ void TexStorage3D(GLenum target, GLint levels, GLenum internal_format,
   t.allocate(changed);
 }
 
-static void set_tex_storage(Texture& t, GLint levels, GLenum internal_format,
+static void set_tex_storage(Texture& t, GLenum internal_format,
                             GLsizei width, GLsizei height,
                             bool should_free = true, void* buf = nullptr,
                             GLsizei min_width = 0, GLsizei min_height = 0) {
   internal_format = remap_internal_format(internal_format);
   bool changed = false;
-  if (t.width != width || t.height != height || t.levels != levels ||
+  if (t.width != width || t.height != height ||
       t.internal_format != internal_format) {
     changed = true;
-    t.levels = levels;
     t.internal_format = internal_format;
     t.width = width;
     t.height = height;
@@ -1232,8 +1229,9 @@ static void set_tex_storage(Texture& t, GLint levels, GLenum internal_format,
 
 void TexStorage2D(GLenum target, GLint levels, GLenum internal_format,
                   GLsizei width, GLsizei height) {
+  assert(levels == 1);
   Texture& t = ctx->textures[ctx->get_binding(target)];
-  set_tex_storage(t, levels, internal_format, width, height);
+  set_tex_storage(t, internal_format, width, height);
 }
 
 GLenum internal_format_for_data(GLenum format, GLenum ty) {
@@ -1296,6 +1294,7 @@ static void* get_pixel_unpack_buffer_data(void* data) {
 void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                    GLsizei width, GLsizei height, GLenum format, GLenum ty,
                    void* data) {
+  if (level != 0) { assert(false); return; }
   data = get_pixel_unpack_buffer_data(data);
   if (!data) return;
   Texture& t = ctx->textures[ctx->get_binding(target)];
@@ -1326,7 +1325,7 @@ void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 void TexImage2D(GLenum target, GLint level, GLint internal_format,
                 GLsizei width, GLsizei height, GLint border, GLenum format,
                 GLenum ty, void* data) {
-  assert(level == 0);
+  if (level != 0) { assert(false); return; }
   assert(border == 0);
   TexStorage2D(target, 1, internal_format, width, height);
   TexSubImage2D(target, 0, 0, 0, width, height, format, ty, data);
@@ -1335,6 +1334,7 @@ void TexImage2D(GLenum target, GLint level, GLint internal_format,
 void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                    GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                    GLenum format, GLenum ty, void* data) {
+  if (level != 0) { assert(false); return; }
   data = get_pixel_unpack_buffer_data(data);
   if (!data) return;
   Texture& t = ctx->textures[ctx->get_binding(target)];
@@ -1373,7 +1373,7 @@ void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 void TexImage3D(GLenum target, GLint level, GLint internal_format,
                 GLsizei width, GLsizei height, GLsizei depth, GLint border,
                 GLenum format, GLenum ty, void* data) {
-  assert(level == 0);
+  if (level != 0) { assert(false); return; }
   assert(border == 0);
   TexStorage3D(target, 1, internal_format, width, height, depth);
   TexSubImage3D(target, 0, 0, 0, 0, width, height, depth, format, ty, data);
@@ -1472,7 +1472,7 @@ void RenderbufferStorage(GLenum target, GLenum internal_format, GLsizei width,
       internal_format = GL_DEPTH_COMPONENT16;
       break;
   }
-  set_tex_storage(ctx->textures[r.texture], 1, internal_format, width, height);
+  set_tex_storage(ctx->textures[r.texture], internal_format, width, height);
 }
 
 void VertexAttribPointer(GLuint index, GLint size, GLenum type, bool normalized,
@@ -1808,7 +1808,7 @@ void InitDefaultFramebuffer(int width, int height) {
   Texture& colortex = ctx->textures[fb.color_attachment];
   if (colortex.width != width || colortex.height != height) {
     colortex.cleanup();
-    set_tex_storage(colortex, 1, GL_RGBA8, width, height);
+    set_tex_storage(colortex, GL_RGBA8, width, height);
   }
   if (!fb.depth_attachment) {
     GenTextures(1, &fb.depth_attachment);
@@ -1816,7 +1816,7 @@ void InitDefaultFramebuffer(int width, int height) {
   Texture& depthtex = ctx->textures[fb.depth_attachment];
   if (depthtex.width != width || depthtex.height != height) {
     depthtex.cleanup();
-    set_tex_storage(depthtex, 1, GL_DEPTH_COMPONENT16, width, height);
+    set_tex_storage(depthtex, GL_DEPTH_COMPONENT16, width, height);
   }
 }
 
@@ -1842,7 +1842,7 @@ void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
                       GLsizei height, void* buf, GLsizei min_width,
                       GLsizei min_height) {
   Texture& t = ctx->textures[texid];
-  set_tex_storage(t, 1, internal_format, width, height, !buf, buf, min_width,
+  set_tex_storage(t, internal_format, width, height, !buf, buf, min_width,
                   min_height);
 }
 
