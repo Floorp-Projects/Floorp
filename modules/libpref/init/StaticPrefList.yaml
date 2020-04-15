@@ -3989,7 +3989,7 @@
   value: 10
   mirror: once
 
-- name: gfx.vsync.use-waitforvblank
+- name: gfx.vsync.force-disable-waitforvblank
   type: RelaxedAtomicBool
   value: false
   mirror: always
