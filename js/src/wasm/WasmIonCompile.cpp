@@ -184,7 +184,8 @@ class FunctionCompiler {
       return false;
     }
 
-    for (size_t i = args.length(); i < locals_.length(); i++) {
+    for (size_t i = args.lengthWithoutStackResults(); i < locals_.length();
+         i++) {
       MInstruction* ins = nullptr;
       switch (locals_[i].kind()) {
         case ValType::I32:
