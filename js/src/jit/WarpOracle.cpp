@@ -670,6 +670,8 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
       default:
         // Unsupported opcode.
+        JitSpew(JitSpew_WarpTranspiler, "unsupported CacheIR opcode: %s",
+                CacheIrOpNames[uint8_t(op)]);
         return Ok();
     }
   }
