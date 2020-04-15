@@ -10,21 +10,26 @@
 #include "SerializedLoadContext.h"
 #include "mozIThirdPartyUtil.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/ParentProcessDocumentChannel.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentSecurityManager.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsHttpHandler.h"
 #include "nsIInputStreamChannel.h"
+#include "nsNetUtil.h"
 #include "nsQueryObject.h"
+#include "nsSandboxFlags.h"
 #include "nsSerializationHelper.h"
 #include "nsStreamListenerWrapper.h"
 #include "nsStringStream.h"
@@ -77,6 +82,48 @@ DocumentChannel::AsyncOpen(nsIStreamListener* aListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void DocumentChannel::ShutdownListeners(nsresult aStatusCode) {
+  LOG(("DocumentChannel ShutdownListeners [this=%p, status=%" PRIx32 "]",
+       this, static_cast<uint32_t>(aStatusCode)));
+  mStatus = aStatusCode;
+
+  nsCOMPtr<nsIStreamListener> listener = mListener;
+  if (listener) {
+    listener->OnStartRequest(this);
+  }
+
+  mIsPending = false;
+
+  listener = mListener;  // it might have changed!
+  if (listener) {
+    listener->OnStopRequest(this, aStatusCode);
+  }
+  mListener = nullptr;
+  mCallbacks = nullptr;
+
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
+    mLoadGroup = nullptr;
+  }
+
+  DeleteIPDL();
+}
+
+void DocumentChannel::DisconnectChildListeners(
+    const nsresult& aStatus, const nsresult& aLoadGroupStatus) {
+  MOZ_ASSERT(NS_FAILED(aStatus));
+  mStatus = aLoadGroupStatus;
+  // Make sure we remove from the load group before
+  // setting mStatus, as existing tests expect the
+  // status to be successful when we disconnect.
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, nullptr, aStatus);
+    mLoadGroup = nullptr;
+  }
+
+  ShutdownListeners(aStatus);
+}
+
 nsDocShell* DocumentChannel::GetDocShell() {
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
@@ -93,6 +140,48 @@ nsDocShell* DocumentChannel::GetDocShell() {
   return nsDocShell::Cast(docshell);
 }
 
+// Changes here should also be made in
+// E10SUtils.documentChannelPermittedForURI().
+static bool URIUsesDocChannel(nsIURI* aURI) {
+  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
+    return false;
+  }
+
+  nsCString spec = aURI->GetSpecOrDefault();
+  return !spec.EqualsLiteral("about:printpreview") &&
+         !spec.EqualsLiteral("about:crashcontent");
+}
+
+/* static */
+already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
+    nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+    nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks,
+    uint32_t aCacheKey, uint32_t aSandboxFlags) {
+  RefPtr<DocumentChannel> channel;
+  if (XRE_IsContentProcess()) {
+    channel =
+        new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags, aCacheKey);
+  } else {
+    channel = new ParentProcessDocumentChannel(aLoadState, aLoadInfo,
+                                               aLoadFlags, aCacheKey);
+  }
+  channel->SetNotificationCallbacks(aNotificationCallbacks);
+  return channel.forget();
+}
+
+bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState,
+                                            uint32_t aSandboxFlags) {
+  MOZ_ASSERT(aLoadState);
+  // We want to use DocumentChannel if we're using a supported scheme, or if
+  // we're a sandboxed srcdoc load. Non-sandboxed srcdoc loads need to share
+  // the same principal object as their outer document (and must load in the
+  // same process), which breaks if we serialize to the parent process.
+  return StaticPrefs::browser_tabs_documentchannel() &&
+         (aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC)
+              ? (aSandboxFlags & SANDBOXED_ORIGIN)
+              : URIUsesDocChannel(aLoadState->URI()));
+}
+
 //-----------------------------------------------------------------------------
 // DocumentChannel::nsITraceableChannel
 //-----------------------------------------------------------------------------
@@ -100,6 +189,8 @@ nsDocShell* DocumentChannel::GetDocShell() {
 NS_IMETHODIMP
 DocumentChannel::SetNewListener(nsIStreamListener* aListener,
                                 nsIStreamListener** _retval) {
+  LOG(("DocumentChannel SetNewListener [this=%p, aListener=%p]", this,
+       aListener));
   NS_ENSURE_ARG_POINTER(aListener);
 
   nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
