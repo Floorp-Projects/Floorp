@@ -153,6 +153,28 @@ HandlerService.prototype = {
       } catch (ex) {}
     }
 
+    // Now drop any entries without a uriTemplate, or with a broken one.
+    // The Array.from calls ensure we can safely delete things without
+    // affecting the iterator.
+    for (let [scheme, handlerObject] of Array.from(Object.entries(schemes))) {
+      let handlers = Array.from(Object.entries(handlerObject));
+      let validHandlers = 0;
+      for (let [key, obj] of handlers) {
+        if (
+          !obj.uriTemplate ||
+          !obj.uriTemplate.startsWith("https://") ||
+          !obj.uriTemplate.toLowerCase().includes("%s")
+        ) {
+          delete handlerObject[key];
+        } else {
+          validHandlers++;
+        }
+      }
+      if (!validHandlers) {
+        delete schemes[scheme];
+      }
+    }
+
     // Now, we're going to cheat. Terribly. The idiologically correct way
     // of implementing the following bit of code would be to fetch the
     // handler info objects from the protocol service, manipulate those,
@@ -164,7 +186,7 @@ HandlerService.prototype = {
     // equivalent of appending into the database. So let's just go do that:
     for (let scheme of Object.keys(schemes)) {
       let existingSchemeInfo = this._store.data.schemes[scheme];
-      if (!this._store.data.schemes[scheme]) {
+      if (!existingSchemeInfo) {
         // Haven't seen this scheme before. Default to asking which app the
         // user wants to use:
         existingSchemeInfo = {
