@@ -2105,7 +2105,7 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       return NS_OK;
     }
     OwningNonNull<nsINode> selectedNode = *firstRange->GetStartContainer();
-    if (IsTextNode(selectedNode)) {
+    if (selectedNode->IsText()) {
       if (NS_WARN_IF(!selectedNode->GetParentNode())) {
         return NS_OK;
       }
@@ -2149,7 +2149,9 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
     // Check for easy case: both range endpoints in same text node
     nsCOMPtr<nsINode> startNode = range->GetStartContainer();
     nsCOMPtr<nsINode> endNode = range->GetEndContainer();
-    if (startNode == endNode && IsTextNode(startNode)) {
+    MOZ_ASSERT(startNode);
+    MOZ_ASSERT(endNode);
+    if (startNode == endNode && startNode->IsText()) {
       nsresult rv = RelativeFontChangeOnTextNode(
           aDir, MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
           range->EndOffset());
@@ -2200,9 +2202,8 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       // Now check the start and end parents of the range to see if they need
       // to be separately handled (they do if they are text nodes, due to how
       // the subtree iterator works - it will not have reported them).
-      if (IsTextNode(startNode) &&
-          EditorUtils::IsEditableContent(*startNode->AsText(),
-                                         EditorType::HTML)) {
+      if (startNode->IsText() && EditorUtils::IsEditableContent(
+                                     *startNode->AsText(), EditorType::HTML)) {
         nsresult rv = RelativeFontChangeOnTextNode(
             aDir, MOZ_KnownLive(*startNode->AsText()), range->StartOffset(),
             startNode->Length());
@@ -2211,8 +2212,8 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
           return rv;
         }
       }
-      if (IsTextNode(endNode) && EditorUtils::IsEditableContent(
-                                     *endNode->AsText(), EditorType::HTML)) {
+      if (endNode->IsText() && EditorUtils::IsEditableContent(
+                                   *endNode->AsText(), EditorType::HTML)) {
         nsresult rv = RelativeFontChangeOnTextNode(
             aDir, MOZ_KnownLive(*endNode->AsText()), 0, range->EndOffset());
         if (NS_FAILED(rv)) {
