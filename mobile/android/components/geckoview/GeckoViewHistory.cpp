@@ -488,43 +488,10 @@ void GeckoViewHistory::QueryVisitedState(
 void GeckoViewHistory::HandleVisitedState(
     const nsTArray<VisitedURI>& aVisitedURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (aVisitedURIs.IsEmpty()) {
-    return;
-  }
 
-  nsTArray<ContentParent*> cplist;
-  ContentParent::GetAll(cplist);
-  if (!cplist.IsEmpty()) {
-    nsTArray<VisitedQueryResult> visitedURIs(aVisitedURIs.Length());
-    for (const VisitedURI& visitedURI : aVisitedURIs) {
-      if (!visitedURI.mVisited &&
-          !StaticPrefs::layout_css_notify_of_unvisited()) {
-        continue;
-      }
-
-      VisitedQueryResult& result = *visitedURIs.AppendElement();
-      result.uri() = visitedURI.mURI;
-      result.visited() = visitedURI.mVisited;
-    }
-    if (visitedURIs.IsEmpty()) {
-      return;
-    }
-    for (ContentParent* cp : cplist) {
-      Unused << NS_WARN_IF(!cp->SendNotifyVisited(visitedURIs));
-    }
-  }
-
-  // We might still have child processes even if e10s is disabled, so always
-  // check if we're tracking any links in the parent, and notify them if so.
-  if (!mTrackedURIs.IsEmpty()) {
-    for (const VisitedURI& visitedURI : aVisitedURIs) {
-      if (!visitedURI.mVisited &&
-          !StaticPrefs::layout_css_notify_of_unvisited()) {
-        continue;
-      }
-      auto status = visitedURI.mVisited ? VisitedStatus::Visited
-                                        : VisitedStatus::Unvisited;
-      NotifyVisited(visitedURI.mURI, status);
-    }
+  for (const VisitedURI& visitedURI : aVisitedURIs) {
+    auto status =
+        visitedURI.mVisited ? VisitedStatus::Visited : VisitedStatus::Unvisited;
+    NotifyVisited(visitedURI.mURI, status);
   }
 }
