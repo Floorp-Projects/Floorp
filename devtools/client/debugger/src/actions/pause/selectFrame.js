@@ -33,7 +33,9 @@ export function selectFrame(cx: ThreadContext, frame: Frame) {
       frame,
     });
 
-    dispatch(selectLocation(cx, frame.location));
+    // It's important that we wait for selectLocation to finish because
+    // we rely on the source being loaded and symbols fetched below.
+    await dispatch(selectLocation(cx, frame.location));
 
     dispatch(evaluateExpressions(cx));
     dispatch(fetchScopes(cx));
