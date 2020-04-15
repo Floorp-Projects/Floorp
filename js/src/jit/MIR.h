@@ -25,7 +25,7 @@
 #include "jit/InlineList.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/MacroAssembler.h"
-#include "jit/MOpcodes.h"
+#include "jit/MOpcodesGenerated.h"
 #include "jit/TIOracle.h"
 #include "jit/TypePolicy.h"
 #include "js/HeapAPI.h"
@@ -1085,7 +1085,7 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
   virtual MIRType typePolicySpecialization() = 0;
 };
 
-// Note: GenerateOpcodeFiles.py generates MOpcodes.h based on the
+// Note: GenerateOpcodeFiles.py generates MOpcodesGenerated.h based on the
 // INSTRUCTION_HEADER* macros.
 #define INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode) \
   static const Opcode classOpcode = Opcode::opcode;   \
