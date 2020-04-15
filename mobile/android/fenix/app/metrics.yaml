@@ -2007,7 +2007,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-10-01"
+    expires: "2020-07-15"
   framework_start_error:
     send_in_pings:
       - startup-timeline
@@ -2022,7 +2022,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-10-01"
+    expires: "2020-07-15"
   clock_ticks_per_second:
     send_in_pings:
       - startup-timeline
@@ -2037,4 +2037,4 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-10-01"
+    expires: "2020-07-15"
