@@ -7036,6 +7036,10 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
       writer.int32ModResult(lhsIntId, rhsIntId);
       trackAttached("BinaryArith.StringInt32.Mod");
       break;
+    case JSOp::Pow:
+      writer.int32PowResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringInt32.Pow");
+      break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachStringInt32Arith");
   }
