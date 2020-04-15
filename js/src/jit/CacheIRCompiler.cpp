@@ -1989,15 +1989,13 @@ bool CacheIRCompiler::emitGuardSpecificInt32Immediate() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register reg = allocator.useRegister(masm, reader.int32OperandId());
   int32_t ival = reader.int32Immediate();
-  Assembler::Condition cond = (Assembler::Condition)reader.readByte();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  masm.branch32(Assembler::InvertCondition(cond), reg, Imm32(ival),
-                failure->label());
+  masm.branch32(Assembler::NotEqual, reg, Imm32(ival), failure->label());
   return true;
 }
 
