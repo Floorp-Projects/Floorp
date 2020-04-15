@@ -2582,11 +2582,11 @@ def generate_nsgkatomconsts_h(output, *ignore):
     pseudo_count = 0
     anon_box_count = 0
     for i, atom in enumerate(STATIC_ATOMS):
-        if atom.atom_type is "PseudoElementAtom":
+        if atom.atom_type == "PseudoElementAtom":
             if pseudo_index is None:
                 pseudo_index = i
             pseudo_count += 1
-        elif atom.atom_type is "NonInheritingAnonBoxAtom" or atom.atom_type is "InheritingAnonBoxAtom":
+        elif atom.atom_type == "NonInheritingAnonBoxAtom" or atom.atom_type == "InheritingAnonBoxAtom":
             if anon_box_index is None:
                 anon_box_index = i
             anon_box_count += 1
