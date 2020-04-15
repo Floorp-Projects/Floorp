@@ -135,7 +135,7 @@
   skin/classic/browser/preferences/in-content/sync.svg         (../shared/incontentprefs/sync.svg)
   skin/classic/browser/preferences/in-content/tab.svg          (../shared/incontentprefs/tab.svg)
 * skin/classic/browser/preferences/in-content/containers.css   (../shared/incontentprefs/containers.css)
-* skin/classic/browser/preferences/containers.css              (../shared/preferences/containers.css)
+* skin/classic/browser/preferences/containers-dialog.css       (../shared/preferences/containers-dialog.css)
   skin/classic/browser/fxa/fxa-spinner.svg                     (../shared/fxa/fxa-spinner.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
