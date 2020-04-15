@@ -131,7 +131,7 @@ static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
     return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
   }
   T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
-      obj, oldBuffer, oldCount * sizeof(T), newCount * sizeof(T)));
+      obj->zone(), obj, oldBuffer, oldCount * sizeof(T), newCount * sizeof(T)));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
@@ -154,12 +154,12 @@ static inline JS::BigInt::Digit* AllocateBigIntDigits(JSContext* cx,
 }
 
 static inline JS::BigInt::Digit* ReallocateBigIntDigits(
-    JSContext* cx, JS::BigInt* obj, JS::BigInt::Digit* oldDigits,
+    JSContext* cx, JS::BigInt* bi, JS::BigInt::Digit* oldDigits,
     uint32_t oldLength, uint32_t newLength) {
   if (cx->isHelperThreadContext()) {
     MOZ_ASSERT(!cx->nursery().isInside(oldDigits));
-    return obj->zone()->pod_realloc<JS::BigInt::Digit>(oldDigits, oldLength,
-                                                       newLength);
+    return bi->zone()->pod_realloc<JS::BigInt::Digit>(oldDigits, oldLength,
+                                                      newLength);
   }
 
   size_t oldBytes =
@@ -167,8 +167,8 @@ static inline JS::BigInt::Digit* ReallocateBigIntDigits(
   size_t newBytes =
       RoundUp(newLength * sizeof(JS::BigInt::Digit), sizeof(Value));
 
-  auto* buffer = static_cast<JS::BigInt::Digit*>(
-      cx->nursery().reallocateBuffer(obj, oldDigits, oldBytes, newBytes));
+  auto* buffer = static_cast<JS::BigInt::Digit*>(cx->nursery().reallocateBuffer(
+      bi->zone(), bi, oldDigits, oldBytes, newBytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
