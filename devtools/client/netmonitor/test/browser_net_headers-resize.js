@@ -7,9 +7,20 @@
  * Tests resizing of columns in NetMonitor.
  */
 add_task(async function() {
+  await testForGivenDir("ltr");
+
+  await testForGivenDir("rtl");
+});
+
+async function testForGivenDir(dir) {
+  await pushPref("intl.uidirection", dir === "rtl" ? 1 : -1);
+
   // Reset visibleColumns so we only get the default ones
   // and not all that are set in head.js
   Services.prefs.clearUserPref("devtools.netmonitor.visibleColumns");
+  const initialColumnData = Services.prefs.getCharPref(
+    "devtools.netmonitor.columnsData"
+  );
   let visibleColumns = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
   );
@@ -38,7 +49,7 @@ add_task(async function() {
   info("Resize file & check changed prefs...");
   const fileHeader = document.querySelector(`#requests-list-file-header-box`);
 
-  resizeColumn(fileHeader, 20, parentWidth);
+  resizeColumn(fileHeader, 20, parentWidth, dir);
 
   // after resize - get fresh prefs for tests
   let columnsData = JSON.parse(
@@ -58,7 +69,7 @@ add_task(async function() {
   const oldColumnsData = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.columnsData")
   );
-  resizeWaterfallColumn(waterfallHeader, 30, parentWidth); // 30 fails currently!
+  resizeWaterfallColumn(waterfallHeader, 30, parentWidth, dir); // 30 fails currently!
 
   // after resize - get fresh prefs for tests
   columnsData = JSON.parse(
@@ -88,7 +99,7 @@ add_task(async function() {
     "transferred",
   ]);
 
-  resizeWaterfallColumn(waterfallHeader, 50, parentWidth);
+  resizeWaterfallColumn(waterfallHeader, 50, parentWidth, dir);
   // after resize - get fresh prefs for tests
   columnsData = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.columnsData")
@@ -110,7 +121,7 @@ add_task(async function() {
   const domainHeader = document.querySelector(
     `#requests-list-domain-header-box`
   );
-  resizeColumn(domainHeader, 50, parentWidth);
+  resizeColumn(domainHeader, 50, parentWidth, dir);
 
   // after resize - get fresh prefs for tests
   columnsData = JSON.parse(
@@ -126,8 +137,12 @@ add_task(async function() {
   checkSumOfVisibleColumns(columnsData, visibleColumns);
 
   // Done: clean up.
+  Services.prefs.setCharPref(
+    "devtools.netmonitor.columnsData",
+    initialColumnData
+  );
   return teardown(monitor);
-});
+}
 
 async function hideMoreColumns(monitor, arr) {
   for (let i = 0; i < arr.length; i++) {
@@ -141,11 +156,13 @@ async function showMoreColumns(monitor, arr) {
   }
 }
 
-function resizeColumn(columnHeader, newPercent, parentWidth) {
+function resizeColumn(columnHeader, newPercent, parentWidth, dir) {
   const newWidthInPixels = (newPercent * parentWidth) / 100;
   const win = columnHeader.ownerDocument.defaultView;
-  const mouseDown = columnHeader.getBoundingClientRect().width;
-  const mouseMove = newWidthInPixels;
+  const currentWidth = columnHeader.getBoundingClientRect().width;
+  const mouseDown = dir === "rtl" ? 0 : currentWidth;
+  const mouseMove =
+    dir === "rtl" ? currentWidth - newWidthInPixels : newWidthInPixels;
 
   EventUtils.synthesizeMouse(
     columnHeader,
@@ -170,12 +187,19 @@ function resizeColumn(columnHeader, newPercent, parentWidth) {
   );
 }
 
-function resizeWaterfallColumn(columnHeader, newPercent, parentWidth) {
+function resizeWaterfallColumn(columnHeader, newPercent, parentWidth, dir) {
   const newWidthInPixels = (newPercent * parentWidth) / 100;
   const win = columnHeader.ownerDocument.defaultView;
-  const mouseDown = columnHeader.getBoundingClientRect().left;
+  const mouseDown =
+    dir === "rtl"
+      ? columnHeader.getBoundingClientRect().right
+      : columnHeader.getBoundingClientRect().left;
   const mouseMove =
-    mouseDown + (columnHeader.getBoundingClientRect().width - newWidthInPixels);
+    dir === "rtl"
+      ? mouseDown +
+        (newWidthInPixels - columnHeader.getBoundingClientRect().width)
+      : mouseDown +
+        (columnHeader.getBoundingClientRect().width - newWidthInPixels);
 
   EventUtils.synthesizeMouse(
     columnHeader.parentElement,
