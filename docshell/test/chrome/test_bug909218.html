@@ -95,7 +95,7 @@ var RequestWatcher = {
     // We may also see, eg, chrome://global/skin/icons/resizer.svg, so
     // skip chrome:// URLs too.
     if (req.name.startsWith("about:") || req.name.startsWith("resource:") ||
-        req.name.startsWith("chrome:") || req.name.startsWith("documentchannel:")) {
+      req.name.startsWith("chrome:")) {
       return;
     }
     is(req.loadFlags & TEST_FLAGS, TEST_FLAGS, "request " + req.name + " has the expected flags");
