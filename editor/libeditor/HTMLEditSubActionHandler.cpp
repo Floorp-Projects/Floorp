@@ -1441,7 +1441,7 @@ EditActionResult HTMLEditor::HandleInsertText(
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
 
   // dont put text in places that can't have it
-  if (!EditorBase::IsTextNode(pointToInsert.GetContainer()) &&
+  if (!pointToInsert.IsInTextNode() &&
       !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
     NS_WARNING("Selection start container couldn't have text nodes");
     return EditActionHandled(NS_ERROR_FAILURE);
@@ -7870,7 +7870,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
 
     // Check for newlines in pre-formatted text nodes.
     if (EditorBase::IsPreformatted(nextEditableContent) &&
-        EditorBase::IsTextNode(nextEditableContent)) {
+        nextEditableContent->IsText()) {
       nsAutoString textContent;
       nextEditableContent->GetAsText()->GetData(textContent);
       int32_t newlinePos = textContent.FindChar(nsCRT::LF);
@@ -8366,7 +8366,7 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
       for (int32_t i = aArrayOfContents.Length() - 1; i >= 0; i--) {
         OwningNonNull<nsIContent>& content = aArrayOfContents[i];
         if (HTMLEditUtils::IsInlineElement(content) && IsContainer(content) &&
-            !EditorBase::IsTextNode(content)) {
+            !content->IsText()) {
           AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfInlineContents;
           // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
           // alive.
@@ -9030,7 +9030,7 @@ nsresult HTMLEditor::SplitParagraph(
   // selection to beginning of right hand para;
   // look inside any containers that are up front.
   nsCOMPtr<nsIContent> child = GetLeftmostChild(&aParentDivOrP, true);
-  if (EditorBase::IsTextNode(child) || IsContainer(child)) {
+  if (child && (child->IsText() || IsContainer(child))) {
     nsresult rv = CollapseSelectionToStartOf(*child);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -10149,8 +10149,7 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
       lastEditableContent = &aElement;
     }
     EditorRawDOMPoint endPoint;
-    if (EditorBase::IsTextNode(lastEditableContent) ||
-        IsContainer(lastEditableContent)) {
+    if (lastEditableContent->IsText() || IsContainer(lastEditableContent)) {
       endPoint.SetToEndOf(lastEditableContent);
     } else {
       endPoint.SetAfter(lastEditableContent);
@@ -10170,8 +10169,7 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
     firstEditableContent = &aElement;
   }
   EditorRawDOMPoint atStartOfBlock;
-  if (EditorBase::IsTextNode(firstEditableContent) ||
-      IsContainer(firstEditableContent)) {
+  if (firstEditableContent->IsText() || IsContainer(firstEditableContent)) {
     atStartOfBlock.Set(firstEditableContent);
   } else {
     atStartOfBlock.Set(firstEditableContent, 0);
@@ -10376,7 +10374,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   if (nsIContent* previousEditableContentInBlock =
           GetPreviousEditableHTMLNodeInBlock(point)) {
     if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br) ||
-        EditorBase::IsTextNode(previousEditableContentInBlock) ||
+        previousEditableContentInBlock->IsText() ||
         HTMLEditUtils::IsImage(previousEditableContentInBlock) ||
         previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::hr)) {
       return NS_OK;
@@ -10386,7 +10384,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   // `<hr>`, current caret position is fine.
   if (nsIContent* nextEditableContentInBlock =
           GetNextEditableHTMLNodeInBlock(point)) {
-    if (EditorBase::IsTextNode(nextEditableContentInBlock) ||
+    if (nextEditableContentInBlock->IsText() ||
         nextEditableContentInBlock->IsAnyOfHTMLElements(
             nsGkAtoms::br, nsGkAtoms::img, nsGkAtoms::hr)) {
       return NS_OK;
@@ -10440,7 +10438,7 @@ nsIContent* HTMLEditor::FindNearEditableContent(
   // but don't cross any breaks, images, or table elements.
   // XXX This comment sounds odd.  editableContent may have already crossed
   //     breaks and/or images if they are non-editable.
-  while (editableContent && !EditorBase::IsTextNode(editableContent) &&
+  while (editableContent && !editableContent->IsText() &&
          !editableContent->IsHTMLElement(nsGkAtoms::br) &&
          !HTMLEditUtils::IsImage(editableContent)) {
     if (aDirection == nsIEditor::ePrevious) {

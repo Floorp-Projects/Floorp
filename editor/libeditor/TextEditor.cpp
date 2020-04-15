@@ -1490,7 +1490,7 @@ NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
   EditorType editorType = GetEditorType();
   for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
     nsINode* currentNode = postOrderIter.GetCurrentNode();
-    if (IsTextNode(currentNode) &&
+    if (currentNode && currentNode->IsText() &&
         EditorUtils::IsEditableContent(*currentNode->AsText(), editorType)) {
       totalLength += currentNode->Length();
     }

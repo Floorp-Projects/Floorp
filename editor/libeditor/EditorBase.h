@@ -2111,10 +2111,6 @@ class EditorBase : public nsIEditor,
    */
   bool ShouldHandleIMEComposition() const;
 
-  static bool IsTextNode(nsINode* aNode) {
-    return aNode->NodeType() == nsINode::TEXT_NODE;
-  }
-
   /**
    * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
    * assuming that the container is the node itself if it's a text node, or

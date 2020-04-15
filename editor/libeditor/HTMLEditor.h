@@ -4383,7 +4383,7 @@ class HTMLEditor final : public TextEditor,
    * any visible characters.
    */
   bool IsEmptyTextNode(nsINode& aNode) const {
-    return EditorBase::IsTextNode(&aNode) && IsEmptyNode(aNode);
+    return aNode.IsText() && IsEmptyNode(aNode);
   }
 
   MOZ_CAN_RUN_SCRIPT bool IsSimpleModifiableNode(nsIContent* aContent,
