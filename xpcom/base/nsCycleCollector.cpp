@@ -3342,14 +3342,19 @@ void nsCycleCollector::CleanupAfterCollection() {
 
 void nsCycleCollector::ShutdownCollect() {
   FinishAnyIncrementalGCInProgress();
-  JS::ShutdownAsyncTasks(CycleCollectedJSContext::Get()->Context());
+  CycleCollectedJSContext* ccJSContext = CycleCollectedJSContext::Get();
+  JS::ShutdownAsyncTasks(ccJSContext->Context());
 
   SliceBudget unlimitedBudget = SliceBudget::unlimited();
   uint32_t i;
-  for (i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
-    if (!Collect(ShutdownCC, unlimitedBudget, nullptr)) {
-      break;
-    }
+  bool collectedAny = true;
+  for (i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS && collectedAny; ++i) {
+    collectedAny = Collect(ShutdownCC, unlimitedBudget, nullptr);
+    // Run any remaining tasks that may have been enqueued via RunInStableState
+    // or DispatchToMicroTask. These can hold alive CCed objects, and we want to
+    // clear them out before we run the CC again or finish shutting down.
+    ccJSContext->PerformMicroTaskCheckPoint(true);
+    ccJSContext->ProcessStableStateQueue();
   }
   NS_WARNING_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
 }
@@ -3952,13 +3957,6 @@ void nsCycleCollector_shutdown(bool aDoCollect) {
       data->mCollector = nullptr;
     }
 
-    if (data->mContext) {
-      // Run any remaining tasks that may have been enqueued via
-      // RunInStableState or DispatchToMicroTask during the final cycle
-      // collection.
-      data->mContext->ProcessStableStateQueue();
-      data->mContext->PerformMicroTaskCheckPoint(true);
-    }
     if (!data->mContext) {
       delete data;
       sCollectorData.set(nullptr);
