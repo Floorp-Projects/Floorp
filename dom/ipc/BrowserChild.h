@@ -725,9 +725,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive);
 
-  mozilla::ipc::IPCResult RecvSetSuspendMediaWhenInactive(
-      const bool& aSuspendMediaWhenInactive);
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvRenderLayers(
       const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch);
@@ -825,8 +822,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                           const uint64_t& aInputBlockId);
 
   void InternalSetDocShellIsActive(bool aIsActive);
-
-  void InternalSetSuspendMediaWhenInactive(bool aSuspendMediaWhenInactive);
 
   bool CreateRemoteLayerManager(
       mozilla::layers::PCompositorBridgeChild* aCompositorChild);
@@ -947,7 +942,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // states temporarily as "pending", and only apply them once the DocShell
   // is no longer blocked.
   bool mPendingDocShellIsActive;
-  bool mPendingSuspendMediaWhenInactive;
   bool mPendingDocShellReceivedMessage;
   bool mPendingRenderLayers;
   bool mPendingRenderLayersReceivedMessage;

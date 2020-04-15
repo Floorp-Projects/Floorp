@@ -7026,12 +7026,6 @@
   value: false
   mirror: always
 
-# Turn on this pref can enable test-only events for media element.
-- name: media.testing-only-events
-  type: bool
-  value: false
-  mirror: always
-
 - name: media.useAudioChannelService.testing
   type: bool
   value: false

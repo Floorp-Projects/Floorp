@@ -874,15 +874,6 @@ child:
     async SetDocShellIsActive(bool aIsActive);
 
     /**
-     * Update docshell's flag which is used to determine if the media in that
-     * docshell should be suspended when the docshell is inactive.
-     *
-     * @param aSuspendMediaWhenInactive
-     *        If the media should be suspended when docshell is inactive.
-     */
-    async SetSuspendMediaWhenInactive(bool aSuspendMediaWhenInactive);
-
-    /**
      * If aEnabled is true, tells the child to paint and upload layers to
      * the compositor. If aEnabled is false, the child stops painting and
      * clears the layers from the compositor.
