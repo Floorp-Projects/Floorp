@@ -41,7 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {
