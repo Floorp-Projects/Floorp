@@ -5492,6 +5492,18 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
   }
 }
 
+void ContentParent::TransmitBlobDataIfBlobURL(nsIURI* aURI,
+                                              nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aPrincipal);
+
+  if (!IsBlobURI(aURI)) {
+    return;
+  }
+
+  TransmitBlobURLsForPrincipal(aPrincipal);
+}
+
 void ContentParent::EnsurePermissionsByKey(const nsCString& aKey,
                                            const nsCString& aOrigin) {
   // NOTE: Make sure to initialize the permission manager before updating the
