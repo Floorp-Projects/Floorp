@@ -13,10 +13,27 @@ try:
 except ImportError:
     blessings = None
 
+import codecs
 import json
 import logging
+import six
 import sys
 import time
+
+
+# stdout and stderr may not necessarily be set up to write Unicode output, so
+# reconfigure them if necessary.
+def _wrap_stdstream(fh):
+    if fh in (sys.stderr, sys.stdout):
+        encoding = sys.getdefaultencoding()
+        encoding = 'utf-8' if encoding in ('ascii', 'charmap') else encoding
+        if six.PY2:
+            return codecs.getwriter(encoding)(sys.stdout, errors='replace')
+        else:
+            return codecs.getwriter(encoding)(sys.stdout.buffer,
+                                              errors='replace')
+    else:
+        return fh
 
 
 def format_seconds(total):
@@ -176,7 +193,8 @@ class LoggingManager(object):
             # Sometimes blessings fails to set up the terminal. In that case,
             # silently fail.
             try:
-                terminal = blessings.Terminal(stream=sys.stdout)
+                terminal = blessings.Terminal(
+                    stream=_wrap_stdstream(sys.stdout))
 
                 if terminal.is_a_tty:
                     self._terminal = terminal
@@ -203,6 +221,7 @@ class LoggingManager(object):
                              write_interval=False, write_times=True):
         """Enable logging to the terminal."""
 
+        fh = _wrap_stdstream(fh)
         formatter = StructuredHumanFormatter(self.start_time,
                                              write_interval=write_interval,
                                              write_times=write_times)
