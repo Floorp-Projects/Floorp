@@ -10,7 +10,6 @@ const {
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const ToolboxProvider = require("devtools/client/framework/store-provider");
-const Services = require("Services");
 
 const actions = require("devtools/client/webconsole/actions/index");
 const { configureStore } = require("devtools/client/webconsole/store");
@@ -120,9 +119,6 @@ class WebConsoleWrapper {
         hideShowContentMessagesCheckbox:
           !webConsoleUI.isBrowserConsole &&
           !webConsoleUI.isBrowserToolboxConsole,
-        inputEnabled:
-          !webConsoleUI.isBrowserConsole ||
-          Services.prefs.getBoolPref("devtools.chrome.enabled"),
       });
 
       // Render the root Application component.

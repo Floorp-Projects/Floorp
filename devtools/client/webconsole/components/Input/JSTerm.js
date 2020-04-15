@@ -117,7 +117,6 @@ class JSTerm extends Component {
       autocomplete: PropTypes.bool,
       showEvaluationContextSelector: PropTypes.bool,
       autocompletePopupPosition: PropTypes.string,
-      inputEnabled: PropTypes.bool,
     };
   }
 
@@ -1381,7 +1380,10 @@ class JSTerm extends Component {
   }
 
   render() {
-    if (!this.props.inputEnabled) {
+    if (
+      this.props.webConsoleUI.isBrowserConsole &&
+      !Services.prefs.getBoolPref("devtools.chrome.enabled")
+    ) {
       return null;
     }
 
