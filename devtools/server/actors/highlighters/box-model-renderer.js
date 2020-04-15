@@ -10,10 +10,6 @@ const {
   moveInfobar,
 } = require("devtools/server/actors/highlighters/utils/markup");
 
-const {
-  HighlighterRenderer,
-} = require("devtools/server/actors/highlighters/highlighter-renderer");
-
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
 const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
@@ -24,8 +20,8 @@ const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const GUIDE_STROKE_WIDTH = 1;
 
 /**
- * The BoxModelHighlighterRenderer receives node coordinates from the
- * BoxModelHighlighterObserver and draws the box model regions on top of a node.
+ * The BoxModelHighlighterRenderer receives node coordinates from observers which monitor
+ * the node position and geometry, then draws the box model regions on top of the node.
  * If the node is a block box, then each region will be displayed as 1 polygon.
  * If the node is an inline box though, each region may be represented by 1 or
  * more polygons, depending on how many line boxes the inline element has.
@@ -62,29 +58,15 @@ const GUIDE_STROKE_WIDTH = 1;
  *   </div>
  * </div>
  */
-class BoxModelHighlighterRenderer extends HighlighterRenderer {
-  constructor(mm, prefix) {
-    super();
-    // @override Highlighter type name.
-    this.typeName = this.constructor.name.replace("Renderer", "");
+class BoxModelHighlighterRenderer {
+  constructor() {
     // String used to prefix ids and classnames of highlighter nodes.
     this.ID_CLASS_PREFIX = "box-model-";
-
-    // If there is a message manager and connection prefix, it means the observer lives
-    // in the content process so we need to setup a communication system with it.
-    // Otherwise, both renderer and observer live in the parent process and there is no
-    // need for a message-based communication system.
-    if (mm && prefix) {
-      this.setMessageManager(mm, prefix);
-      this.init(false);
-    } else {
-      this.init(true);
-    }
   }
 
   /**
    * Update the rendering of the box model highlighter, inforbar and guides for a node
-   * using quad coordinates, node information and options from the BoxModelHighlighterObserver.
+   * using quad coordinates, node information and options.
    *
    * @override
    *
@@ -725,32 +707,3 @@ class BoxModelHighlighterRenderer extends HighlighterRenderer {
 }
 
 exports.BoxModelHighlighterRenderer = BoxModelHighlighterRenderer;
-
-/**
- * Setup function that runs in parent process and sets up the rendering part of the
- * box model highlighter and the communication channel with the observer part
- * of the box model highlighter which lives in the content process.
- *
- *
- * @param  {Object} options.mm
- *         Message manager that corresponds to the current content tab.
- * @param  {String} options.prefix
- *         Unique prefix for message manager messages.
- *         This is the devtools-server-connection prefix.
- * @return {Object}
- *         Defines event listeners for when client disconnects or browser gets
- *         swapped.
- */
-function setupParentProcess({ mm, prefix }) {
-  let renderer = new BoxModelHighlighterRenderer(mm, prefix);
-
-  return {
-    onBrowserSwap: newMM => renderer.setMessageManager(newMM, prefix),
-    onDisconnected: () => {
-      renderer.destroy();
-      renderer = null;
-    },
-  };
-}
-
-exports.setupParentProcess = setupParentProcess;
