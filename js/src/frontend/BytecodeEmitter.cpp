@@ -1535,12 +1535,12 @@ bool BytecodeEmitter::isInLoop() {
   return findInnermostNestableControl<LoopControl>();
 }
 
-bool BytecodeEmitter::checkSingletonContext() {
-  return sc->treatAsRunOnce() && !sc->isFunctionBox() && !isInLoop();
+bool BytecodeEmitter::checkRunOnceContext() {
+  return sc->treatAsRunOnce() && !isInLoop();
 }
 
-bool BytecodeEmitter::checkRunOnceContext() {
-  return checkSingletonContext() || (!isInLoop() && isRunOnceLambda());
+bool BytecodeEmitter::checkSingletonContext() {
+  return sc->isTopLevelContext() && checkRunOnceContext();
 }
 
 bool BytecodeEmitter::needsImplicitThis() {
@@ -2188,15 +2188,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt) {
   }
 
   return true;
-}
-
-bool BytecodeEmitter::isRunOnceLambda() {
-  if (emitterMode == LazyFunction) {
-    return sc->treatAsRunOnce();
-  }
-
-  return parent && parent->emittingRunOnceLambda &&
-         !sc->asFunctionBox()->shouldSuppressRunOnce();
 }
 
 bool BytecodeEmitter::allocateResumeIndex(BytecodeOffset offset,
