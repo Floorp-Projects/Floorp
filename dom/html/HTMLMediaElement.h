@@ -701,14 +701,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void OnVisibilityChange(Visibility aNewVisibility);
 
-  // Begin testing only methods
+  // These are used for testing only
   float ComputedVolume() const;
   bool ComputedMuted() const;
-
-  // Return true if the media has been suspended media due to an inactive
-  // document or prohibiting by the docshell.
-  bool IsSuspendedByInactiveDocOrDocShell() const;
-  // End testing only methods
 
   void SetMediaInfo(const MediaInfo& aInfo);
 
@@ -1630,11 +1625,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek = false;
 
-  // True if this element is suspended because the document is inactive or the
-  // inactive docshell is not allowing media to play.
-  bool mSuspendedByInactiveDocOrDocshell = false;
+  // True if this element is suspended because the document is inactive.
+  bool mSuspendedForInactiveDocument = false;
 
-  // True if event delivery is suspended (mSuspendedByInactiveDocOrDocshell
+  // True if event delivery is suspended (mSuspendedForInactiveDocument
   // must also be true).
   bool mEventDeliveryPaused = false;
 
@@ -1903,10 +1897,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // resolved/rejected at AsyncResolveSeekDOMPromiseIfExists()/
   // AsyncRejectSeekDOMPromiseIfExists() methods.
   RefPtr<dom::Promise> mSeekDOMPromise;
-
-  // Return true if the docshell is inactive and explicitly wants to stop media
-  // playing in that shell.
-  bool ShouldBeSuspendedByInactiveDocShell() const;
 
   // For debugging bug 1407148.
   void AssertReadyStateIsNothing();

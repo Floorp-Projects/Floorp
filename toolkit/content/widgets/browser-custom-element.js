@@ -513,28 +513,6 @@
       return popupAnchor;
     }
 
-    set suspendMediaWhenInactive(val) {
-      if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          frameLoader.remoteTab.suspendMediaWhenInactive = val;
-        }
-      } else if (this.docShell) {
-        this.docShell.suspendMediaWhenInactive = val;
-      }
-    }
-
-    get suspendMediaWhenInactive() {
-      if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          return frameLoader.remoteTab.suspendMediaWhenInactive;
-        }
-        return false;
-      }
-      return this.docShell && this.docShell.suspendMediaWhenInactive;
-    }
-
     set docShellIsActive(val) {
       if (this.isRemoteBrowser) {
         let { frameLoader } = this;
