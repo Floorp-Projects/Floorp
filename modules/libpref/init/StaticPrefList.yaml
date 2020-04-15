@@ -1369,7 +1369,7 @@
 # Is support for AudioWorklet enabled?
 - name: dom.audioworklet.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for Navigator.getBattery enabled?
@@ -3119,7 +3119,7 @@
 
 - name: dom.worklet.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Enable content type normalization of XHR uploads via MIME Sniffing standard
