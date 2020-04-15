@@ -247,6 +247,9 @@ skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T2.js
 skip script test262/language/expressions/prefix-increment/S11.4.4_A5_T5.js
 skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T1.js
 skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
+skip script test262/language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js
+skip script test262/language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js
+skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js

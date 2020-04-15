@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- logical-assignment-operators is not supported
+// |reftest| skip-if(release_or_beta) error:SyntaxError -- logical-assignment-operators is not released yet
 'use strict';
 // Copyright (C) 2020 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
