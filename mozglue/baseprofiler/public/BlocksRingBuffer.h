@@ -132,7 +132,14 @@ class BlocksRingBuffer {
     mMaybeUnderlyingBuffer.emplace(aExternalBuffer, aLength);
   }
 
+  // This cannot change during the lifetime of this buffer, so there's no need
+  // to lock.
   bool IsThreadSafe() const { return mMutex.IsActivated(); }
+
+  [[nodiscard]] bool IsInSession() const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    return !!mMaybeUnderlyingBuffer;
+  }
 
   // Lock the buffer mutex and run the provided callback.
   // This can be useful when the caller needs to explicitly lock down this

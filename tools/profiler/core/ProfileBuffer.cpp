@@ -24,21 +24,21 @@ ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity)
           MakeUnique<BlocksRingBuffer::Byte[]>(WorkerBufferBytes.Value())) {
   // Only ProfileBuffer should control this buffer, and it should be empty when
   // there is no ProfileBuffer using it.
-  MOZ_ASSERT(mEntries.BufferLength().isNothing());
+  MOZ_ASSERT(!mEntries.IsInSession());
   // Allocate the requested capacity.
   mEntries.Set(aCapacity);
 }
 
 ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer) : mEntries(aBuffer) {
   // Assume the given buffer is not empty.
-  MOZ_ASSERT(mEntries.BufferLength().isSome());
+  MOZ_ASSERT(mEntries.IsInSession());
 }
 
 ProfileBuffer::~ProfileBuffer() {
   // Only ProfileBuffer controls this buffer, and it should be empty when there
   // is no ProfileBuffer using it.
   mEntries.Reset();
-  MOZ_ASSERT(mEntries.BufferLength().isNothing());
+  MOZ_ASSERT(!mEntries.IsInSession());
 }
 
 /* static */
