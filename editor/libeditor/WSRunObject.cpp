@@ -5,6 +5,8 @@
 
 #include "WSRunObject.h"
 
+#include "HTMLEditUtils.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -13,6 +15,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/dom/AncestorIterator.h"
 
 #include "nsAString.h"
 #include "nsCRT.h"
@@ -672,11 +675,13 @@ nsIContent* WSRunScanner::GetEditableBlockParentOrTopmotEditableInlineContent(
   //     it's not collapsed only when inserting composition string so that
   //     it's possible but shouldn't occur actually.
   nsIContent* editableBlockParentOrTopmotEditableInlineContent = nullptr;
-  for (nsIContent* content = aContent;
-       content && mHTMLEditor->IsEditable(content);
-       content = content->GetParent()) {
+  for (nsIContent* content : InclusiveAncestorsOfType<nsIContent>(*aContent)) {
+    if (!mHTMLEditor->IsEditable(content)) {
+      break;
+    }
     editableBlockParentOrTopmotEditableInlineContent = content;
-    if (IsBlockNode(editableBlockParentOrTopmotEditableInlineContent)) {
+    if (HTMLEditUtils::IsBlockElement(
+            *editableBlockParentOrTopmotEditableInlineContent)) {
       break;
     }
   }
@@ -742,7 +747,7 @@ nsresult WSRunScanner::GetWSNodes() {
     nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(
         start, editableBlockParentOrTopmotEditableInlineContent);
     if (priorNode) {
-      if (IsBlockNode(priorNode)) {
+      if (HTMLEditUtils::IsBlockElement(*priorNode)) {
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         mStartReason = WSType::OtherBlockBoundary;
@@ -848,7 +853,7 @@ nsresult WSRunScanner::GetWSNodes() {
     nsCOMPtr<nsIContent> nextNode =
         GetNextWSNode(end, editableBlockParentOrTopmotEditableInlineContent);
     if (nextNode) {
-      if (IsBlockNode(nextNode)) {
+      if (HTMLEditUtils::IsBlockElement(*nextNode)) {
         // we encountered a new block.  therefore no more ws.
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
@@ -1116,8 +1121,13 @@ nsIContent* WSRunScanner::GetPreviousWSNodeInner(nsINode* aStartNode,
     priorNode = curParent->GetPreviousSibling();
     curNode = curParent;
   }
+
+  if (!priorNode) {
+    return nullptr;
+  }
+
   // We have a prior node.  If it's a block, return it.
-  if (IsBlockNode(priorNode)) {
+  if (HTMLEditUtils::IsBlockElement(*priorNode)) {
     return priorNode;
   }
   if (mHTMLEditor->IsContainer(priorNode)) {
@@ -1155,7 +1165,7 @@ nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
     return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
-  if (NS_WARN_IF(!aPoint.GetContainerAsContent())) {
+  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
     return nullptr;
   }
 
@@ -1165,7 +1175,7 @@ nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
   }
 
   // We have a prior node.  If it's a block, return it.
-  if (IsBlockNode(priorNode)) {
+  if (HTMLEditUtils::IsBlockElement(*priorNode)) {
     return priorNode;
   }
   if (mHTMLEditor->IsContainer(priorNode)) {
@@ -1214,8 +1224,13 @@ nsIContent* WSRunScanner::GetNextWSNodeInner(nsINode* aStartNode,
     nextNode = curParent->GetNextSibling();
     curNode = curParent;
   }
+
+  if (!nextNode) {
+    return nullptr;
+  }
+
   // We have a next node.  If it's a block, return it.
-  if (IsBlockNode(nextNode)) {
+  if (HTMLEditUtils::IsBlockElement(*nextNode)) {
     return nextNode;
   }
   if (mHTMLEditor->IsContainer(nextNode)) {
@@ -1243,7 +1258,7 @@ nsIContent* WSRunScanner::GetNextWSNode(const EditorDOMPoint& aPoint,
     return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
-  if (NS_WARN_IF(!aPoint.GetContainerAsContent())) {
+  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
     return nullptr;
   }
 
@@ -1259,7 +1274,7 @@ nsIContent* WSRunScanner::GetNextWSNode(const EditorDOMPoint& aPoint,
   }
 
   // We have a next node.  If it's a block, return it.
-  if (IsBlockNode(nextNode)) {
+  if (HTMLEditUtils::IsBlockElement(*nextNode)) {
     return nextNode;
   }
   if (mHTMLEditor->IsContainer(nextNode)) {
@@ -1914,43 +1929,53 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
           aRun->EndsByBRElement()) {
         rightCheck = true;
       }
-      if ((aRun->EndsByBlockBoundary()) &&
-          (IsBlockNode(GetEditableBlockParentOrTopmotEditableInlineContent(
-               mScanStartPoint.GetContainerAsContent())) ||
-           IsBlockNode(mScanStartPoint.GetContainerAsContent()))) {
-        // We are at a block boundary.  Insert a <br>.  Why?  Well, first note
-        // that the br will have no visible effect since it is up against a
-        // block boundary.  |foo<br><p>bar| renders like |foo<p>bar| and
-        // similarly |<p>foo<br></p>bar| renders like |<p>foo</p>bar|.  What
-        // this <br> addition gets us is the ability to convert a trailing nbsp
-        // to a space.  Consider: |<body>foo. '</body>|, where ' represents
-        // selection.  User types space attempting to put 2 spaces after the
-        // end of their sentence.  We used to do this as: |<body>foo.
-        // &nbsp</body>|  This caused problems with soft wrapping: the nbsp
-        // would wrap to the next line, which looked attrocious.  If you try to
-        // do: |<body>foo.&nbsp </body>| instead, the trailing space is
-        // invisible because it is against a block boundary.  If you do:
-        // |<body>foo.&nbsp&nbsp</body>| then you get an even uglier soft
-        // wrapping problem, where foo is on one line until you type the final
-        // space, and then "foo  " jumps down to the next line.  Ugh.  The best
-        // way I can find out of this is to throw in a harmless <br> here,
-        // which allows us to do: |<body>foo.&nbsp <br></body>|, which doesn't
-        // cause foo to jump lines, doesn't cause spaces to show up at the
-        // beginning of soft wrapped lines, and lets the user see 2 spaces when
-        // they type 2 spaces.
-
-        RefPtr<Element> brElement =
-            MOZ_KnownLive(mHTMLEditor)
-                .InsertBRElementWithTransaction(aRun->EndPoint());
-        if (!brElement) {
-          NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-          return NS_ERROR_FAILURE;
+      if (aRun->EndsByBlockBoundary() && mScanStartPoint.IsInContentNode()) {
+        bool insertBRElement = HTMLEditUtils::IsBlockElement(
+            *mScanStartPoint.ContainerAsContent());
+        if (!insertBRElement) {
+          nsIContent* blockParentOrTopmostEditableInlineContent =
+              GetEditableBlockParentOrTopmotEditableInlineContent(
+                  mScanStartPoint.ContainerAsContent());
+          insertBRElement = blockParentOrTopmostEditableInlineContent &&
+                            HTMLEditUtils::IsBlockElement(
+                                *blockParentOrTopmostEditableInlineContent);
         }
+        if (insertBRElement) {
+          // We are at a block boundary.  Insert a <br>.  Why?  Well, first note
+          // that the br will have no visible effect since it is up against a
+          // block boundary.  |foo<br><p>bar| renders like |foo<p>bar| and
+          // similarly |<p>foo<br></p>bar| renders like |<p>foo</p>bar|.  What
+          // this <br> addition gets us is the ability to convert a trailing
+          // nbsp to a space.  Consider: |<body>foo. '</body>|, where '
+          // represents selection.  User types space attempting to put 2 spaces
+          // after the end of their sentence.  We used to do this as:
+          // |<body>foo. &nbsp</body>|  This caused problems with soft wrapping:
+          // the nbsp would wrap to the next line, which looked attrocious.  If
+          // you try to do: |<body>foo.&nbsp </body>| instead, the trailing
+          // space is invisible because it is against a block boundary.  If you
+          // do:
+          // |<body>foo.&nbsp&nbsp</body>| then you get an even uglier soft
+          // wrapping problem, where foo is on one line until you type the final
+          // space, and then "foo  " jumps down to the next line.  Ugh.  The
+          // best way I can find out of this is to throw in a harmless <br>
+          // here, which allows us to do: |<body>foo.&nbsp <br></body>|, which
+          // doesn't cause foo to jump lines, doesn't cause spaces to show up at
+          // the beginning of soft wrapped lines, and lets the user see 2 spaces
+          // when they type 2 spaces.
 
-        atPreviousCharOfEndOfRun = GetPreviousCharPoint(aRun->EndPoint());
-        atPreviousCharOfPreviousCharOfEndOfRun =
-            GetPreviousCharPointFromPointInText(atPreviousCharOfEndOfRun);
-        rightCheck = true;
+          RefPtr<Element> brElement =
+              MOZ_KnownLive(mHTMLEditor)
+                  .InsertBRElementWithTransaction(aRun->EndPoint());
+          if (!brElement) {
+            NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+            return NS_ERROR_FAILURE;
+          }
+
+          atPreviousCharOfEndOfRun = GetPreviousCharPoint(aRun->EndPoint());
+          atPreviousCharOfPreviousCharOfEndOfRun =
+              GetPreviousCharPointFromPointInText(atPreviousCharOfEndOfRun);
+          rightCheck = true;
+        }
       }
     }
     if (leftCheck && rightCheck) {
