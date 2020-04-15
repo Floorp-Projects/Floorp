@@ -41,10 +41,10 @@ using RootedRegExpShared = JS::Rooted<RegExpShared*>;
 using HandleRegExpShared = JS::Handle<RegExpShared*>;
 using MutableHandleRegExpShared = JS::MutableHandle<RegExpShared*>;
 
-enum RegExpRunStatus {
-  RegExpRunStatus_Error,
-  RegExpRunStatus_Success,
-  RegExpRunStatus_Success_NotFound
+enum RegExpRunStatus : int32_t {
+  RegExpRunStatus_Error = -1,
+  RegExpRunStatus_Success = 1,
+  RegExpRunStatus_Success_NotFound = 0,
 };
 
 /*
