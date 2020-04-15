@@ -35,11 +35,8 @@ XPCOMUtils.defineLazyServiceGetter(
  * TouchBarInput.
  * @param {string} commandName
  *        A XUL command.
- * @param {string} [telemetryKey]
- *        A string describing the command, sent for telemetry purposes.
- *        Intended to be shorter and more readable than the XUL command.
  */
-function execCommand(commandName, telemetryKey) {
+function execCommand(commandName) {
   if (!TouchBarHelper.window) {
     return;
   }
@@ -47,15 +44,6 @@ function execCommand(commandName, telemetryKey) {
   if (command) {
     command.doCommand();
   }
-
-  if (!telemetryKey) {
-    return;
-  }
-
-  let telemetry = Services.telemetry.getHistogramById(
-    "TOUCHBAR_BUTTON_PRESSES"
-  );
-  telemetry.add(telemetryKey);
 }
 
 /**
@@ -92,19 +80,19 @@ var gBuiltInInputs = {
     title: "back",
     image: "chrome://browser/skin/back.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Back", "Back"),
+    callback: () => execCommand("Browser:Back"),
   },
   Forward: {
     title: "forward",
     image: "chrome://browser/skin/forward.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Forward", "Forward"),
+    callback: () => execCommand("Browser:Forward"),
   },
   Reload: {
     title: "reload",
     image: "chrome://browser/skin/reload.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Reload", "Reload"),
+    callback: () => execCommand("Browser:Reload"),
   },
   Home: {
     title: "home",
@@ -113,29 +101,25 @@ var gBuiltInInputs = {
     callback: () => {
       let win = BrowserWindowTracker.getTopWindow();
       win.BrowserHome();
-      let telemetry = Services.telemetry.getHistogramById(
-        "TOUCHBAR_BUTTON_PRESSES"
-      );
-      telemetry.add("Home");
     },
   },
   Fullscreen: {
     title: "fullscreen",
     image: "chrome://browser/skin/fullscreen.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("View:FullScreen", "Fullscreen"),
+    callback: () => execCommand("View:FullScreen"),
   },
   Find: {
     title: "find",
     image: "chrome://browser/skin/search-glass.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("cmd_find", "Find"),
+    callback: () => execCommand("cmd_find"),
   },
   NewTab: {
     title: "new-tab",
     image: "chrome://browser/skin/add.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("cmd_newNavigatorTabNoEvent", "NewTab"),
+    callback: () => execCommand("cmd_newNavigatorTabNoEvent"),
   },
   Sidebar: {
     title: "open-sidebar",
@@ -144,23 +128,19 @@ var gBuiltInInputs = {
     callback: () => {
       let win = BrowserWindowTracker.getTopWindow();
       win.SidebarUI.toggle();
-      let telemetry = Services.telemetry.getHistogramById(
-        "TOUCHBAR_BUTTON_PRESSES"
-      );
-      telemetry.add("Sidebar");
     },
   },
   AddBookmark: {
     title: "add-bookmark",
     image: "chrome://browser/skin/bookmark-hollow.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:AddBookmarkAs", "AddBookmark"),
+    callback: () => execCommand("Browser:AddBookmarkAs"),
   },
   ReaderView: {
     title: "reader-view",
     image: "chrome://browser/skin/readerMode.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("View:ReaderView", "ReaderView"),
+    callback: () => execCommand("View:ReaderView"),
     disabled: true, // Updated when the page is found to be Reader View-able.
   },
   OpenLocation: {
@@ -168,7 +148,7 @@ var gBuiltInInputs = {
     title: "open-location",
     image: "chrome://browser/skin/search-glass.svg",
     type: kInputTypes.MAIN_BUTTON,
-    callback: () => execCommand("Browser:OpenLocation", "OpenLocation"),
+    callback: () => execCommand("Browser:OpenLocation"),
   },
   // This is a special-case `type: kInputTypes.SCRUBBER` element.
   // Scrubbers are not yet generally implemented.
@@ -177,7 +157,7 @@ var gBuiltInInputs = {
     title: "share",
     image: "chrome://browser/skin/share.svg",
     type: kInputTypes.SCRUBBER,
-    callback: () => execCommand("cmd_share", "Share"),
+    callback: () => execCommand("cmd_share"),
   },
   SearchPopover: {
     title: "search-popover",
@@ -455,10 +435,6 @@ class TouchBarHelper {
             "chrome://browser/skin/fullscreen-exit.svg";
           gBuiltInInputs.OpenLocation.callback = () => {
             TouchBarHelper.window.windowUtils.exitFullscreen();
-            let telemetry = Services.telemetry.getHistogramById(
-              "TOUCHBAR_BUTTON_PRESSES"
-            );
-            telemetry.add("OpenLocation");
           };
         } else {
           gBuiltInInputs.OpenLocation.title = "open-location";
