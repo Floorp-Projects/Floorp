@@ -9169,7 +9169,7 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
 
   ArgTypeVector args(argTypes, results.stackResults());
   uint32_t naturalArgCount = argTypes.length();
-  uint32_t abiArgCount = args.length();
+  uint32_t abiArgCount = args.lengthWithStackResults();
   startCallArgs(StackArgAreaSizeUnaligned(args), baselineCall);
 
   // Args are deeper on the stack than the stack result area, if any.
