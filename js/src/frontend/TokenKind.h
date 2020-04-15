@@ -224,6 +224,9 @@
   RANGE(AssignmentStart, Assign)                                       \
   MACRO(AddAssign, "'+='")                                             \
   MACRO(SubAssign, "'-='")                                             \
+  MACRO(CoalesceAssign, "'\?\?='") /* avoid trigraphs warning */       \
+  MACRO(OrAssign, "'||='")                                             \
+  MACRO(AndAssign, "'&&='")                                            \
   MACRO(BitOrAssign, "'|='")                                           \
   MACRO(BitXorAssign, "'^='")                                          \
   MACRO(BitAndAssign, "'&='")                                          \

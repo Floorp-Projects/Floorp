@@ -507,6 +507,16 @@ bool BytecodeEmitter::emitPickN(uint8_t n) {
   return emit2(JSOp::Pick, n);
 }
 
+bool BytecodeEmitter::emitUnpickN(uint8_t n) {
+  MOZ_ASSERT(n != 0);
+
+  if (n == 1) {
+    return emit1(JSOp::Swap);
+  }
+
+  return emit2(JSOp::Unpick, n);
+}
+
 bool BytecodeEmitter::emitCheckIsObj(CheckIsObjectKind kind) {
   return emit2(JSOp::CheckIsObj, uint8_t(kind));
 }
@@ -1182,6 +1192,9 @@ restart:
     case ParseNodeKind::AssignExpr:
     case ParseNodeKind::AddAssignExpr:
     case ParseNodeKind::SubAssignExpr:
+    case ParseNodeKind::CoalesceAssignExpr:
+    case ParseNodeKind::OrAssignExpr:
+    case ParseNodeKind::AndAssignExpr:
     case ParseNodeKind::BitOrAssignExpr:
     case ParseNodeKind::BitXorAssignExpr:
     case ParseNodeKind::BitAndAssignExpr:
@@ -4065,6 +4078,11 @@ static inline JSOp CompoundAssignmentParseNodeKindToJSOp(ParseNodeKind pnk) {
       return JSOp::Mod;
     case ParseNodeKind::PowAssignExpr:
       return JSOp::Pow;
+    case ParseNodeKind::CoalesceAssignExpr:
+    case ParseNodeKind::OrAssignExpr:
+    case ParseNodeKind::AndAssignExpr:
+      // Short-circuit assignment operators are handled elsewhere.
+      [[fallthrough]];
     default:
       MOZ_CRASH("unexpected compound assignment op");
   }
@@ -4337,6 +4355,238 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     default:
       MOZ_ASSERT(0);
   }
+  return true;
+}
+
+bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
+  JSOp op;
+  switch (node->getKind()) {
+    case ParseNodeKind::CoalesceAssignExpr:
+      op = JSOp::Coalesce;
+      break;
+    case ParseNodeKind::OrAssignExpr:
+      op = JSOp::Or;
+      break;
+    case ParseNodeKind::AndAssignExpr:
+      op = JSOp::And;
+      break;
+    default:
+      MOZ_CRASH("Unexpected ParseNodeKind");
+  }
+
+  ParseNode* lhs = node->left();
+  ParseNode* rhs = node->right();
+
+  // |name| is used within NameOpEmitter, so its lifetime must surpass |noe|.
+  RootedAtom name(cx);
+
+  // Select the appropriate emitter based on the left-hand side.
+  Maybe<NameOpEmitter> noe;
+  Maybe<PropOpEmitter> poe;
+  Maybe<ElemOpEmitter> eoe;
+
+  int32_t depth = bytecodeSection().stackDepth();
+
+  // Number of values pushed onto the stack in addition to the lhs value.
+  int32_t numPushed;
+
+  // Evaluate the left-hand side expression and compute any stack values needed
+  // for the assignment.
+  switch (lhs->getKind()) {
+    case ParseNodeKind::Name: {
+      name = lhs->as<NameNode>().name();
+      noe.emplace(this, name, NameOpEmitter::Kind::CompoundAssignment);
+
+      if (!noe->prepareForRhs()) {
+        //          [stack] ENV? LHS
+        return false;
+      }
+
+      numPushed = noe->emittedBindOp();
+      break;
+    }
+
+    case ParseNodeKind::DotExpr: {
+      PropertyAccess* prop = &lhs->as<PropertyAccess>();
+      bool isSuper = prop->isSuper();
+
+      poe.emplace(this, PropOpEmitter::Kind::CompoundAssignment,
+                  isSuper ? PropOpEmitter::ObjKind::Super
+                          : PropOpEmitter::ObjKind::Other);
+
+      if (!poe->prepareForObj()) {
+        return false;
+      }
+
+      if (isSuper) {
+        UnaryNode* base = &prop->expression().as<UnaryNode>();
+        if (!emitGetThisForSuperBase(base)) {
+          //        [stack] THIS SUPERBASE
+          return false;
+        }
+      } else {
+        if (!emitTree(&prop->expression())) {
+          //        [stack] OBJ
+          return false;
+        }
+      }
+
+      if (!poe->emitGet(prop->key().atom())) {
+        //          [stack] # if Super
+        //          [stack] THIS SUPERBASE LHS
+        //          [stack] # otherwise
+        //          [stack] OBJ LHS
+        return false;
+      }
+
+      if (!poe->prepareForRhs()) {
+        //          [stack] # if Super
+        //          [stack] THIS SUPERBASE LHS
+        //          [stack] # otherwise
+        //          [stack] OBJ LHS
+        return false;
+      }
+
+      numPushed = 1 + isSuper;
+      break;
+    }
+
+    case ParseNodeKind::ElemExpr: {
+      PropertyByValue* elem = &lhs->as<PropertyByValue>();
+      bool isSuper = elem->isSuper();
+
+      eoe.emplace(this, ElemOpEmitter::Kind::CompoundAssignment,
+                  isSuper ? ElemOpEmitter::ObjKind::Super
+                          : ElemOpEmitter::ObjKind::Other);
+
+      if (!emitElemObjAndKey(elem, isSuper, *eoe)) {
+        //          [stack] # if Super
+        //          [stack] THIS KEY
+        //          [stack] # otherwise
+        //          [stack] OBJ KEY
+        return false;
+      }
+
+      if (!eoe->emitGet()) {
+        //          [stack] # if Super
+        //          [stack] THIS KEY SUPERBASE LHS
+        //          [stack] # otherwise
+        //          [stack] OBJ KEY LHS
+        return false;
+      }
+
+      if (!eoe->prepareForRhs()) {
+        //          [stack] # if Super
+        //          [stack] THIS KEY SUPERBASE LHS
+        //          [stack] # otherwise
+        //          [stack] OBJ KEY LHS
+        return false;
+      }
+
+      numPushed = 2 + isSuper;
+      break;
+    }
+
+    default:
+      MOZ_CRASH();
+  }
+
+  MOZ_ASSERT(bytecodeSection().stackDepth() == depth + numPushed + 1);
+
+  // Test for the short-circuit condition.
+  JumpList jump;
+  if (!emitJump(op, &jump)) {
+    //              [stack] ... LHS
+    return false;
+  }
+
+  // The short-circuit condition wasn't fulfilled, pop the left-hand side value
+  // which was kept on the stack.
+  if (!emit1(JSOp::Pop)) {
+    //              [stack] ...
+    return false;
+  }
+
+  // TODO: Open spec issue about setting inferred function names.
+  // <https://github.com/tc39/proposal-logical-assignment/issues/23>
+  if (!emitTree(rhs)) {
+    //              [stack] ... RHS
+    return false;
+  }
+
+  // Perform the actual assignment.
+  switch (lhs->getKind()) {
+    case ParseNodeKind::Name: {
+      if (!noe->emitAssignment()) {
+        //          [stack] RHS
+        return false;
+      }
+      break;
+    }
+
+    case ParseNodeKind::DotExpr: {
+      PropertyAccess* prop = &lhs->as<PropertyAccess>();
+
+      if (!poe->emitAssignment(prop->key().atom())) {
+        //          [stack] RHS
+        return false;
+      }
+      break;
+    }
+
+    case ParseNodeKind::ElemExpr: {
+      if (!eoe->emitAssignment()) {
+        //          [stack] RHS
+        return false;
+      }
+      break;
+    }
+
+    default:
+      MOZ_CRASH();
+  }
+
+  MOZ_ASSERT(bytecodeSection().stackDepth() == depth + 1);
+
+  // Join with the short-circuit jump and pop anything left on the stack.
+  if (numPushed > 0) {
+    JumpList jumpAroundPop;
+    if (!emitJump(JSOp::Goto, &jumpAroundPop)) {
+      //            [stack] RHS
+      return false;
+    }
+
+    if (!emitJumpTargetAndPatch(jump)) {
+      //            [stack] ... LHS
+      return false;
+    }
+
+    // Reconstruct the stack depth after the jump.
+    bytecodeSection().setStackDepth(depth + 1 + numPushed);
+
+    // Move the left-hand side value to the bottom and pop the rest.
+    if (!emitUnpickN(numPushed)) {
+      //            [stack] LHS ...
+      return false;
+    }
+    if (!emitPopN(numPushed)) {
+      //            [stack] LHS
+      return false;
+    }
+
+    if (!emitJumpTargetAndPatch(jumpAroundPop)) {
+      //            [stack] LHS | RHS
+      return false;
+    }
+  } else {
+    if (!emitJumpTargetAndPatch(jump)) {
+      //            [stack] LHS | RHS
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(bytecodeSection().stackDepth() == depth + 1);
+
   return true;
 }
 
@@ -10076,6 +10326,14 @@ bool BytecodeEmitter::emitTree(
       }
       break;
     }
+
+    case ParseNodeKind::CoalesceAssignExpr:
+    case ParseNodeKind::OrAssignExpr:
+    case ParseNodeKind::AndAssignExpr:
+      if (!emitShortCircuitAssignment(&pn->as<AssignmentNode>())) {
+        return false;
+      }
+      break;
 
     case ParseNodeKind::ConditionalExpr:
       if (!emitConditionalExpression(pn->as<ConditionalExpression>(),
