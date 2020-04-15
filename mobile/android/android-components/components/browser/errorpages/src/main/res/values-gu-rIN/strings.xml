@@ -44,11 +44,37 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">કનેક્શન વિક્ષેપિત થયું હતું</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>બ્રાઉઝર સફળતાપૂર્વક કનેક્ટ થયું, પરંતુ માહિતી સ્થાનાંતરણ કરતી વખતે કનેક્શન અવરોધિત થયું. મેહરબાની કરી ને ફરી થી પ્રયાસ કરો.</p>
+      <ul>
+        <li>સાઇટ અસ્થાયી રૂપે અનુપલબ્ધ અથવા ખૂબ વ્યસ્ત હોઈ શકે છે. થોડીવારમાં ફરી પ્રયાસ કરો.</li>
+        <li>જો તમે કોઈપણ પૃષ્ઠોને લોડ કરવામાં અસમર્થ છો, તો તમારા ઉપકરણનો ડેટા અથવા Wi-Fi કનેક્શન તપાસો.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">જોડાણ નો સમય સમાપ્ત થઇ ગયો છે</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>વિનંતી કરેલી સાઇટએ કનેક્શન વિનંતીનો જવાબ આપ્યો નથી અને બ્રાઉઝરે જવાબની રાહ જોવી બંધ કરી દીધી છે.</p>
+      <ul>
+        <li>શું સર્વર વધુ માંગ અથવા અસ્થાયી આઉટેજ અનુભવી શકે છે? પછીથી ફરી પ્રયાસ કરો.</li>
+        <li>શું તમે અન્ય સાઇટ્સ બ્રાઉઝ કરવામાં અસમર્થ છો? કમ્પ્યુટરનું નેટવર્ક કનેક્શન તપાસો.</li>
+        <li>શું તમારું કમ્પ્યુટર અથવા નેટવર્ક firewall અથવા પ્રોક્સી દ્વારા સુરક્ષિત છે? ખોટી સેટિંગ્સ વેબ બ્રાઉઝિંગમાં દખલ કરી શકે છે.</li>
+        <li>હજી મુશ્કેલી આવી રહી છે? સહાય માટે તમારા નેટવર્ક એડમિનિસ્ટ્રેટર અથવા ઇન્ટરનેટ પ્રદાતાની સલાહ લો.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">કનેક્ટ કરવામાં અસમર્થ</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+         <li>સાઇટ અસ્થાયી રૂપે અનુપલબ્ધ અથવા ખૂબ વ્યસ્ત હોઈ શકે છે. થોડીક ક્ષણોમાં ફરી પ્રયાસ કરો.</li>
+         <li>જો તમે કોઈપણ પૃષ્ઠોને લોડ કરવામાં અસમર્થ છો, તો તમારા મોબાઇલ ઉપકરણનો ડેટા અથવા Wi-Fi કનેક્શન તપાસો.</li>
+       </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">સર્વર તરફથી અનપેક્ષિત પ્રતિસાદ</string>
