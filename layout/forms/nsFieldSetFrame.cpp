@@ -14,6 +14,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Maybe.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
@@ -385,7 +386,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
                              ReflowOutput& aDesiredSize,
                              const ReflowInput& aReflowInput,
                              nsReflowStatus& aStatus) {
-  using LegendAlignValue = HTMLLegendElement::LegendAlignValue;
+  using LegendAlignValue = mozilla::dom::HTMLLegendElement::LegendAlignValue;
 
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
