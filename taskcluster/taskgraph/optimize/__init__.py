@@ -14,10 +14,8 @@ See ``taskcluster/docs/optimization.rst`` for more information.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import defaultdict
 
-import six
 from slugid import nice as slugid
 
 from taskgraph.graph import Graph
@@ -33,8 +31,6 @@ def register_strategy(name, args=()):
     def wrap(cls):
         if name not in registry:
             registry[name] = cls(*args)
-            if not hasattr(registry[name], 'description'):
-                registry[name].description = name
         return cls
     return wrap
 
@@ -259,95 +255,44 @@ class OptimizationStrategy(object):
         return False
 
 
-@six.add_metaclass(ABCMeta)
-class CompositeStrategy(OptimizationStrategy):
-
+class Either(OptimizationStrategy):
+    """Given one or more optimization strategies, remove a task if any of them
+    says to, and replace with a task if any finds a replacement (preferring the
+    earliest).  By default, each substrategy gets the same arg, but split_args
+    can return a list of args for each strategy, if desired."""
     def __init__(self, *substrategies, **kwargs):
-        self.substrategies = []
-        missing = set()
-        for sub in substrategies:
-            if isinstance(sub, six.text_type):
-                if sub not in registry.keys():
-                    missing.add(sub)
-                    continue
-                sub = registry[sub]
-
-            self.substrategies.append(sub)
-
+        missing = set(substrategies) - set(registry.keys())
         if missing:
             raise TypeError("substrategies aren't registered: {}".format(
                 ",  ".join(sorted(missing))))
 
+        self.description = "-or-".join(substrategies)
+        self.substrategies = [registry[sub] for sub in substrategies]
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
             self.split_args = lambda arg: [arg] * len(substrategies)
         if kwargs:
             raise TypeError("unexpected keyword args")
 
-    @abstractproperty
-    def description(self):
-        """A textual description of the combined substrategies."""
-        pass
-
-    @abstractmethod
-    def reduce(self, results):
-        """Given all substrategy results as a generator, return the overall
-        result."""
-        pass
-
-    def _generate_results(self, fname, task, params, arg):
+    def _for_substrategies(self, arg, fn):
         for sub, arg in zip(self.substrategies, self.split_args(arg)):
-            yield getattr(sub, fname)(task, params, arg)
-
-    def should_remove_task(self, *args):
-        results = self._generate_results('should_remove_task', *args)
-        return self.reduce(results)
-
-    def should_replace_task(self, *args):
-        results = self._generate_results('should_replace_task', *args)
-        return self.reduce(results)
-
-
-class Any(CompositeStrategy):
-    """Given one or more optimization strategies, remove or replace a task if any of them
-    says to.
-
-    Replacement will use the value returned by the first strategy that says to replace.
-    """
-
-    @property
-    def description(self):
-        return "-or-".join([s.description for s in self.substrategies])
-
-    @classmethod
-    def reduce(cls, results):
-        for rv in results:
+            rv = fn(sub, arg)
             if rv:
                 return rv
         return False
 
+    def should_remove_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg,
+            lambda sub, arg: sub.should_remove_task(task, params, arg))
 
-class All(CompositeStrategy):
-    """Given one or more optimization strategies, remove or replace a task if all of them
-    says to.
-
-    Replacement will use the value returned by the first strategy passed in.
-    Note the values used for replacement need not be the same, as long as they
-    all say to replace.
-    """
-    @property
-    def description(self):
-        return "-and-".join([s.description for s in self.substrategies])
-
-    @classmethod
-    def reduce(cls, results):
-        rvs = list(results)
-        if all(rvs):
-            return rvs[0]
-        return False
+    def should_replace_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg,
+            lambda sub, arg: sub.should_replace_task(task, params, arg))
 
 
-class Alias(CompositeStrategy):
+class Alias(Either):
     """Provides an alias to an existing strategy.
 
     This can be useful to swap strategies in and out without needing to modify
@@ -356,23 +301,16 @@ class Alias(CompositeStrategy):
     def __init__(self, strategy):
         super(Alias, self).__init__(strategy)
 
-    @property
-    def description(self):
-        return self.substrategies[0].description
-
-    def reduce(self, results):
-        return next(results)
-
 
 # Trigger registration in sibling modules.
 import_sibling_modules()
 
 
 # Register composite strategies.
-register_strategy('test', args=(Any('skip-unless-schedules', 'seta'), 'backstop'))(All)
+register_strategy('test', args=('skip-unless-schedules', 'seta'))(Either)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
-register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Any)
+register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Either)
 
 
 class experimental(object):
@@ -385,12 +323,12 @@ class experimental(object):
     """
 
     relevant_tests = {
-        'test': Any('skip-unless-schedules', 'skip-unless-has-relevant-tests'),
+        'test': Either('skip-unless-schedules', 'skip-unless-has-relevant-tests'),
     }
     """Runs task containing tests in the same directories as modified files."""
 
     seta = {
-        'test': Any('skip-unless-schedules', 'seta'),
+        'test': Either('skip-unless-schedules', 'seta'),
     }
     """Provides a stable history of SETA's performance in the event we make it
     non-default in the future. Only useful as a benchmark."""
@@ -400,22 +338,22 @@ class experimental(object):
         learning to determine which tasks to run."""
 
         all = {
-            'test': Any('skip-unless-schedules', 'bugbug-all'),
+            'test': Either('skip-unless-schedules', 'bugbug-all'),
         }
         """Doesn't limit platforms, medium confidence threshold."""
 
         all_low = {
-            'test': Any('skip-unless-schedules', 'bugbug-all-low'),
+            'test': Either('skip-unless-schedules', 'bugbug-all-low'),
         }
         """Doesn't limit platforms, low confidence threshold."""
 
         all_high = {
-            'test': Any('skip-unless-schedules', 'bugbug-all-high'),
+            'test': Either('skip-unless-schedules', 'bugbug-all-high'),
         }
         """Doesn't limit platforms, high confidence threshold."""
 
         debug = {
-            'test': Any('skip-unless-schedules', 'bugbug-debug'),
+            'test': Either('skip-unless-schedules', 'bugbug-debug'),
         }
         """Restricts tests to debug platforms."""
 

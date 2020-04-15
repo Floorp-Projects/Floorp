@@ -6,18 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-import pytest
 from taskgraph import graph, optimize
-from taskgraph.optimize import OptimizationStrategy, All, Any
+from taskgraph.optimize import OptimizationStrategy
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.task import Task
 from mozunit import main
 from slugid import nice as slugid
-
-
-@pytest.fixture
-def set_monkeypatch(request, monkeypatch):
-    request.cls.monkeypatch = monkeypatch
 
 
 class Remove(OptimizationStrategy):
@@ -32,7 +26,6 @@ class Replace(OptimizationStrategy):
         return taskid
 
 
-@pytest.mark.usefixtures("set_monkeypatch")
 class TestOptimize(unittest.TestCase):
 
     strategies = {
@@ -76,11 +69,11 @@ class TestOptimize(unittest.TestCase):
             ('t3', 't1', 'dep2'),
             ('t2', 't1', 'dep'))
 
-    def assert_remove_tasks(self, graph, exp_removed, do_not_optimize=set(), strategies=None):
-        strategies = strategies or self.strategies
+    def assert_remove_tasks(self, graph, exp_removed, do_not_optimize=set()):
+        optimize.registry = self.strategies
         got_removed = optimize.remove_tasks(
             target_task_graph=graph,
-            optimizations=optimize._get_optimizations(graph, strategies),
+            optimizations=optimize._get_optimizations(graph, self.strategies),
             params={},
             do_not_optimize=do_not_optimize)
         self.assertEqual(got_removed, exp_removed)
@@ -97,29 +90,6 @@ class TestOptimize(unittest.TestCase):
             t2={'remove': None},
             t3={'remove': None})
         self.assert_remove_tasks(graph, {'t1', 't2', 't3'})
-
-    def test_composite_strategies_any(self):
-        self.monkeypatch.setattr(optimize, 'registry', self.strategies)
-        strategies = self.strategies.copy()
-        strategies['any'] = Any('never', 'remove')
-
-        graph = self.make_triangle(
-            t1={'any': None},
-            t2={'any': None},
-            t3={'any': None})
-
-        self.assert_remove_tasks(graph, {'t1', 't2', 't3'}, strategies=strategies)
-
-    def test_composite_strategies_all(self):
-        self.monkeypatch.setattr(optimize, 'registry', self.strategies)
-        strategies = self.strategies.copy()
-        strategies['all'] = All('never', 'remove')
-
-        graph = self.make_triangle(
-            t1={'all': None},
-            t2={'all': None},
-            t3={'all': None})
-        self.assert_remove_tasks(graph, set(), strategies=strategies)
 
     def test_remove_tasks_blocked(self):
         "Removable tasks that are depended on by non-removable tasks are not removed"
