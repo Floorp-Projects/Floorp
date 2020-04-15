@@ -19,6 +19,7 @@ job-defaults:
                     RUSTFMT: /build/rust/bin/rustfmt
                     RUSTUP_HOME: /build/rust
                     CARGO_HOME: /build/rust
+                    CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
             default:
                 max-run-time: 3600
     treeherder:
@@ -181,6 +182,9 @@ mozlint:
     run:
         using: python-test
         subsuite: mozlint
+    fetches:
+        toolchain:
+            - linux64-clang-tidy
     when:
         files-changed:
             - 'python/mozlint/**'
