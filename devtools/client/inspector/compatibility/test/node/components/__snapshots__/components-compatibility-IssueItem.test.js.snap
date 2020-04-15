@@ -10,7 +10,7 @@ exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
   >
     <a
       className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
       title="test-url"
     >
@@ -35,7 +35,7 @@ exports[`IssueItem component renders an experimental issue of CSS property 1`] =
   >
     <a
       className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
       title="test-url"
     >
@@ -60,7 +60,7 @@ exports[`IssueItem component renders an issue which has both deprecated and expe
   >
     <a
       className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
       title="test-url"
     >
@@ -85,7 +85,7 @@ exports[`IssueItem component renders an issue which has nodes that caused this i
   >
     <a
       className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
       title="test-url"
     >
@@ -117,7 +117,7 @@ exports[`IssueItem component renders an unsupported issue of CSS property 1`] = 
   >
     <a
       className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
       title="test-url"
     >
