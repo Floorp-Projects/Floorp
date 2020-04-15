@@ -4107,7 +4107,20 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   // Deal with non-name assignments.
   uint8_t offset = 1;
 
+  // Purpose of anonFunctionName:
+  //
+  // In normal name assignments (`f = function(){}`), an anonymous function gets
+  // an inferred name based on the left-hand side name node.
+  //
+  // In normal property assignments (`obj.x = function(){}`), the anonymous
+  // function does not have a computed name, and rhs->isDirectRHSAnonFunction()
+  // will be false (and anonFunctionName will not be used). However, in field
+  // initializers (`class C { x = function(){} }`), field initialization is
+  // implemented via a property or elem assignment (where we are now), and
+  // rhs->isDirectRHSAnonFunction() is set - so we'll assign the name of the
+  // function.
   RootedAtom anonFunctionName(cx);
+
   switch (lhs->getKind()) {
     case ParseNodeKind::Name: {
       name = lhs->as<NameNode>().name();
@@ -4266,14 +4279,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       break;
   }
 
-  // Purpose of anonFunctionName:
-  // In normal property assignments (`obj.x = function(){}`), the anonymous
-  // function does not have a computed name, and rhs->isDirectRHSAnonFunction()
-  // will be false (and anonFunctionName will not be used). However, in field
-  // initializers (`class C { x = function(){} }`), field initialization is
-  // implemented via a property or elem assignment (where we are now), and
-  // rhs->isDirectRHSAnonFunction() is set - so we'll assign the name of the
-  // function.
   if (rhs) {
     if (!emitAssignmentRhs(rhs, anonFunctionName)) {
       //            [stack] ... VAL? RHS
