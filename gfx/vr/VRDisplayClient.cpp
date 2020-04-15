@@ -103,13 +103,9 @@ void VRDisplayClient::MakePresentationGenerationCurrent() {
   mLastPresentingGeneration = mDisplayInfo.mDisplayState.presentingGeneration;
 }
 
-gfx::VRAPIMode VRDisplayClient::GetXRAPIMode() const {
-  return mAPIMode;
-}
+gfx::VRAPIMode VRDisplayClient::GetXRAPIMode() const { return mAPIMode; }
 
-void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) {
-  mAPIMode = aMode;
-}
+void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) { mAPIMode = aMode; }
 
 void VRDisplayClient::FireEvents() {
   RefPtr<VRManagerChild> vm = VRManagerChild::Get();
@@ -150,8 +146,9 @@ void VRDisplayClient::FireEvents() {
     StartFrame();
   }
 
-  // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad attribute
-  // MUST NOT be included in the array returned by navigator.getGamepads().
+  // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad
+  // attribute MUST NOT be included in the array returned by
+  // navigator.getGamepads().
   if (mAPIMode == VRAPIMode::WebVR) {
     FireGamepadEvents();
   }
@@ -233,7 +230,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 2;
       aControllerState.numAxes = 2;
       break;
-    case VRControllerType::HTCViveFocusPlus:
+    case VRControllerType::HTCViveFocusPlus: {
       aControllerState.buttonPressed = ShiftButtonBitForNewSlot(0, 2) |
                                        ShiftButtonBitForNewSlot(1, 0) |
                                        ShiftButtonBitForNewSlot(2, 1);
@@ -242,7 +239,38 @@ void VRDisplayClient::GamepadMappingForWebVR(
                                        ShiftButtonBitForNewSlot(2, 1, true);
       aControllerState.numButtons = 3;
       aControllerState.numAxes = 2;
+
+      static Matrix4x4 focusPlusTransform;
+      Matrix4x4 originalMtx;
+      if (focusPlusTransform.IsIdentity()) {
+        focusPlusTransform.RotateX(0.70f);
+        focusPlusTransform.PostTranslate(0.0f, 0.0f, -0.01f);
+        focusPlusTransform.Inverse();
+      }
+      originalMtx.SetRotationFromQuaternion(
+          gfx::Quaternion(aControllerState.pose.orientation[0],
+                          aControllerState.pose.orientation[1],
+                          aControllerState.pose.orientation[2],
+                          aControllerState.pose.orientation[3]));
+      originalMtx.PostTranslate(aControllerState.pose.position[0],
+                                aControllerState.pose.position[1],
+                                aControllerState.pose.position[2]);
+      originalMtx = focusPlusTransform * originalMtx;
+
+      gfx::Quaternion quat;
+      gfx::Point3D pos, scale;
+      originalMtx.Decompose(pos, quat, scale);
+
+      aControllerState.pose.position[0] = pos.x;
+      aControllerState.pose.position[1] = pos.y;
+      aControllerState.pose.position[2] = pos.z;
+
+      aControllerState.pose.orientation[0] = quat.x;
+      aControllerState.pose.orientation[1] = quat.y;
+      aControllerState.pose.orientation[2] = quat.z;
+      aControllerState.pose.orientation[3] = quat.w;
       break;
+    }
     case VRControllerType::OculusGo:
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(1, 0);
@@ -267,7 +295,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
       break;
-    case VRControllerType::OculusTouch2:
+    case VRControllerType::OculusTouch2: {
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(0, 3) | ShiftButtonBitForNewSlot(1, 0) |
           ShiftButtonBitForNewSlot(2, 1) | ShiftButtonBitForNewSlot(3, 4) |
@@ -282,7 +310,39 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.axisValue[1] = aControllerState.axisValue[3];
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
+
+      static Matrix4x4 touch2Transform;
+      Matrix4x4 originalMtx;
+
+      if (touch2Transform.IsIdentity()) {
+        touch2Transform.RotateX(0.77f);
+        touch2Transform.PostTranslate(0.0f, 0.0f, 0.025f);
+        touch2Transform.Inverse();
+      }
+      originalMtx.SetRotationFromQuaternion(
+          gfx::Quaternion(aControllerState.pose.orientation[0],
+                          aControllerState.pose.orientation[1],
+                          aControllerState.pose.orientation[2],
+                          aControllerState.pose.orientation[3]));
+      originalMtx.PostTranslate(aControllerState.pose.position[0],
+                                aControllerState.pose.position[1],
+                                aControllerState.pose.position[2]);
+      originalMtx = touch2Transform * originalMtx;
+
+      gfx::Quaternion quat;
+      gfx::Point3D pos, scale;
+      originalMtx.Decompose(pos, quat, scale);
+
+      aControllerState.pose.position[0] = pos.x;
+      aControllerState.pose.position[1] = pos.y;
+      aControllerState.pose.position[2] = pos.z;
+
+      aControllerState.pose.orientation[0] = quat.x;
+      aControllerState.pose.orientation[1] = quat.y;
+      aControllerState.pose.orientation[2] = quat.z;
+      aControllerState.pose.orientation[3] = quat.w;
       break;
+    }
     case VRControllerType::ValveIndex:
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(1, 0) | ShiftButtonBitForNewSlot(2, 1) |
