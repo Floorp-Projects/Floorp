@@ -139,46 +139,46 @@ defaults
 # reference pages for first 4 scroll offsets are the same as the baseline
 # case.
 defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) fuzzy(0-1,0-120000)
-fails-if(webrender) == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
-fails               == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref-t.html
-fails               == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref-t.html
-fails               == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref-t.html
-fails               == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref-t.html
-fails               == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html
-fails               == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref-t.html
+                     == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref.html
+                     == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref.html
+                     == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref.html
+                     == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref.html
+                     == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref.html
+                     == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref.html
+                     == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
+                     == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
+                     == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
+fails-if(!webrender) == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref-t.html
 defaults
 
 # Same as above block of tests, except with the dynamic toolbar margin
 # at the bottom of the page. This time the -1 and -2 scroll offsets are
 # impacted.
 defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) fuzzy(0-1,0-120000)
-fails-if(webrender) == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref-b.html
-fails-if(webrender) == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref-b.html
-fails               == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html
-fails               == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref-b.html
-fails               == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref-b.html
-fails               == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref-b.html
-fails               == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
-fails               == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref.html
-fails-if(webrender) == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref.html
+                     == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref-b.html
+                     == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref-b.html
+fails-if(!webrender) == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html
+fails-if(!webrender) == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref-b.html
+fails-if(!webrender) == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref-b.html
+fails-if(!webrender) == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref-b.html
+fails-if(!webrender) == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
+fails-if(!webrender) == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
+                     == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
+                     == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
+                     == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref.html
+                     == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref.html
+                     == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref.html
+                     == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref.html
+                     == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref.html
+                     == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref.html
 defaults
