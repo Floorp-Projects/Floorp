@@ -15,6 +15,12 @@ function stopReloadMutationCallback() {
   );
 }
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.prefersReducedMotion", 0]],
+  });
+});
+
 add_task(async function checkDontShowStopOnNewTab() {
   let stopReloadContainer = document.getElementById("stop-reload-button");
   let stopReloadContainerObserver = new MutationObserver(
