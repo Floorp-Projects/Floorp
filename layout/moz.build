@@ -41,3 +41,5 @@ if CONFIG['MOZ_LAYOUT_DEBUGGER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['tools/layout-debug']
 
 CRASHTEST_MANIFESTS += ['../testing/crashtest/crashtests.list']
+
+SPHINX_TREES['/layout'] = 'docs'
