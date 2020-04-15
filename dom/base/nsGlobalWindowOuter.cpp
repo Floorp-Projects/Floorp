@@ -1750,7 +1750,8 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
   // We should never create windows with an expanded principal.
   // If we have a system principal, make sure we're not using it for a content
   // docshell.
-  // NOTE: Please keep this logic in sync with AppWindow::Initialize().
+  // NOTE: Please keep this logic in sync with
+  // nsAppShellService::JustCreateTopWindow
   if (nsContentUtils::IsExpandedPrincipal(newWindowPrincipal) ||
       (newWindowPrincipal->IsSystemPrincipal() &&
        GetDocShell()->ItemType() != nsIDocShellTreeItem::typeChrome)) {
