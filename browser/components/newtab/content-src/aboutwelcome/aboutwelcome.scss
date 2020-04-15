@@ -8,7 +8,6 @@
 $break-point-medium: 610px;
 $break-point-large: 866px;
 $break-point-widest: 1122px;
-$onboarding-card-image-width: 140px;
 
 html {
   height: 100%;
@@ -131,10 +130,10 @@ body {
   border-radius: 4px;
   box-shadow: var(--newtab-card-shadow);
   font-size: 13px;
-  padding: 20px 40px 60px;
+  padding: 20px 20px 60px;
 
   @media (max-width: $break-point-large) {
-    padding: 20px 40px;
+    padding: 20px;
   }
 
   @media (min-width: $break-point-widest) {
@@ -196,8 +195,8 @@ body {
 
 .onboardingMessageImage {
   height: 112px;
-  width: $onboarding-card-image-width;
-  background-size: auto $onboarding-card-image-width;
+  width: 180px;
+  background-size: auto 140px;
   background-position: center center;
   background-repeat: no-repeat;
   display: inline-block;
@@ -205,12 +204,7 @@ body {
   @media (max-width: $break-point-large) {
     height: 75px;
     min-width: 80px;
-    background-size: $onboarding-card-image-width;
-  }
-
-  @media (min-width: $break-point-widest) {
-    width: $onboarding-card-image-width;
-    background-size: auto $onboarding-card-image-width;
+    background-size: 140px;
   }
 }
 
