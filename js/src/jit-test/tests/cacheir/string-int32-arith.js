@@ -13,6 +13,9 @@ function test(zero, one) {
     assertEq(one / 1, 1);
     assertEq(10 % one, 0);
     assertEq(one % 1, 0);
+
+    assertEq(10 ** one, 10);
+    assertEq(one ** 4, 1);
 }
 
 for (var i = 0; i < 10; i++) {
