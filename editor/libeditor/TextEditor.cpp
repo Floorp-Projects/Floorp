@@ -755,7 +755,7 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirectionAndAmount,
   if (atNewStartOfSelection.IsInTextNode() &&
       !atNewStartOfSelection.GetContainer()->Length()) {
     nsresult rv = DeleteNodeWithTransaction(
-        MOZ_KnownLive(*atNewStartOfSelection.GetContainer()));
+        MOZ_KnownLive(*atNewStartOfSelection.ContainerAsText()));
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
@@ -1487,9 +1487,11 @@ NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
   DebugOnly<nsresult> rvIgnored = postOrderIter.Init(rootElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "PostContentIterator::Init() failed, but ignored");
+  EditorType editorType = GetEditorType();
   for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
     nsINode* currentNode = postOrderIter.GetCurrentNode();
-    if (IsTextNode(currentNode) && IsEditable(currentNode)) {
+    if (IsTextNode(currentNode) &&
+        EditorUtils::IsEditableContent(*currentNode->AsText(), editorType)) {
       totalLength += currentNode->Length();
     }
   }
@@ -1566,7 +1568,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       // performance hit here.
       nsIContent* leftMostChild = GetLeftmostChild(mRootElement);
       if (leftMostChild &&
-          EditorBase::IsPaddingBRElementForEmptyEditor(*leftMostChild)) {
+          EditorUtils::IsPaddingBRElementForEmptyEditor(*leftMostChild)) {
         mPaddingBRElementForEmptyEditor =
             static_cast<HTMLBRElement*>(leftMostChild);
       } else {
@@ -1649,7 +1651,7 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       Element* brElement =
           nodeList->Length() == 1 ? nodeList->Item(0) : nullptr;
       if (brElement &&
-          EditorBase::IsPaddingBRElementForEmptyEditor(*brElement)) {
+          EditorUtils::IsPaddingBRElementForEmptyEditor(*brElement)) {
         mPaddingBRElementForEmptyEditor =
             static_cast<HTMLBRElement*>(brElement);
       } else {

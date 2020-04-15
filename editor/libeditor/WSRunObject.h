@@ -412,6 +412,8 @@ class MOZ_STACK_CLASS WSRunScanner {
   Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
+  using EditorType = EditorBase::EditorType;
+
   // WSFragment represents a single run of ws (all leadingws, or all normalws,
   // or all trailingws, or all leading+trailingws).  Note that this single run
   // may still span multiple nodes.

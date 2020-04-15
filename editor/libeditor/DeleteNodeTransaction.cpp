@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteNodeTransaction.h"
+
+#include "HTMLEditUtils.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/SelectionState.h"  // RangeUpdater
 #include "nsDebug.h"
@@ -40,10 +42,11 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 bool DeleteNodeTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mContentToDelete) || NS_WARN_IF(!mEditorBase) ||
-      !mParentNode || !mEditorBase->IsModifiableNode(*mParentNode)) {
+      !mParentNode) {
     return false;
   }
-  return true;
+  return mEditorBase->IsTextEditor() ||
+         HTMLEditUtils::IsSimplyEditableNode(*mParentNode);
 }
 
 NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
@@ -51,7 +54,7 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  if (!mEditorBase->AsHTMLEditor() && mContentToDelete->IsText()) {
+  if (mEditorBase->IsTextEditor() && mContentToDelete->IsText()) {
     uint32_t length = mContentToDelete->AsText()->TextLength();
     if (length > 0) {
       mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
@@ -93,7 +96,7 @@ DeleteNodeTransaction::UndoTransaction() {
     NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
   }
-  if (!editorBase->AsHTMLEditor() && contentToDelete->IsText()) {
+  if (editorBase->IsTextEditor() && contentToDelete->IsText()) {
     uint32_t length = contentToDelete->AsText()->TextLength();
     if (length > 0) {
       nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
@@ -113,7 +116,7 @@ NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
     return NS_OK;
   }
 
-  if (!mEditorBase->AsHTMLEditor() && mContentToDelete->IsText()) {
+  if (mEditorBase->IsTextEditor() && mContentToDelete->IsText()) {
     uint32_t length = mContentToDelete->AsText()->TextLength();
     if (length > 0) {
       mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);

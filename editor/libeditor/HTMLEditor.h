@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/CSSEditUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/TextEditor.h"
@@ -685,13 +686,13 @@ class HTMLEditor final : public TextEditor,
       EDirection aAction, EStripWrappers aStripWrappers) override;
 
   /**
-   * DeleteNodeWithTransaction() removes aNode from the DOM tree if it's
+   * DeleteNodeWithTransaction() removes aContent from the DOM tree if it's
    * modifiable.  Note that this is not an override of same method of
    * EditorBase.
    *
-   * @param aNode       The node to be removed from the DOM tree.
+   * @param aContent    The node to be removed from the DOM tree.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsIContent& aContent);
 
   /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode if
@@ -759,7 +760,6 @@ class HTMLEditor final : public TextEditor,
   RemoveBlockContainerWithTransaction(Element& aElement);
 
   virtual Element* GetEditorRoot() const override;
-  using EditorBase::IsEditable;
   MOZ_CAN_RUN_SCRIPT virtual nsresult RemoveAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute,
       bool aSuppressTransaction) override;
@@ -1685,8 +1685,8 @@ class HTMLEditor final : public TextEditor,
     }
 
     bool brElementHasFound = false;
-    for (auto& content : aArrayOfContents) {
-      if (!IsEditable(content)) {
+    for (OwningNonNull<nsIContent>& content : aArrayOfContents) {
+      if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
         continue;
       }
       if (content->IsHTMLElement(nsGkAtoms::br)) {
@@ -2015,11 +2015,11 @@ class HTMLEditor final : public TextEditor,
       SelectAllOfCurrentList aSelectAllOfCurrentList);
 
   /**
-   * If aNode is a text node that contains only collapsed whitespace or empty
+   * If aContent is a text node that contains only collapsed whitespace or empty
    * and editable.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteNodeIfInvisibleAndEditableTextNode(nsINode& aNode);
+  DeleteNodeIfInvisibleAndEditableTextNode(nsIContent& aContent);
 
   /**
    * If aPoint follows invisible `<br>` element, returns the invisible `<br>`
@@ -4675,6 +4675,8 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
   bool IsMixed() const { return mIsMixed; }
 
  private:
+  using EditorType = EditorBase::EditorType;
+
   /**
    * AppendDescendantFormatNodesAndFirstInlineNode() appends descendant
    * format blocks and first inline child node in aNonFormatBlockElement to
@@ -4708,13 +4710,13 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
 }  // namespace mozilla
 
 mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() {
-  return static_cast<mozilla::EditorBase*>(this)->mIsHTMLEditorClass
+  return static_cast<mozilla::EditorBase*>(this)->IsHTMLEditor()
              ? static_cast<mozilla::HTMLEditor*>(this)
              : nullptr;
 }
 
 const mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() const {
-  return static_cast<const mozilla::EditorBase*>(this)->mIsHTMLEditorClass
+  return static_cast<const mozilla::EditorBase*>(this)->IsHTMLEditor()
              ? static_cast<const mozilla::HTMLEditor*>(this)
              : nullptr;
 }

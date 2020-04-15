@@ -1841,7 +1841,9 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       return EditorDOMPoint();
     }
 
-    if (!IsEditable(pointToInsert.GetContainer())) {
+    if (!pointToInsert.IsInContentNode() ||
+        !EditorUtils::IsEditableContent(*pointToInsert.ContainerAsContent(),
+                                        EditorType::HTML)) {
       // There's no suitable place to put the node in this editing host.  Maybe
       // someone is trying to put block content in a span.  So just put it
       // where we were originally asked.
@@ -3365,18 +3367,15 @@ nsresult HTMLEditor::DeleteSelectionWithTransaction(
   return rv;
 }
 
-nsresult HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode) {
-  if (NS_WARN_IF(!aNode.IsContent())) {
-    return NS_ERROR_INVALID_ARG;
-  }
+nsresult HTMLEditor::DeleteNodeWithTransaction(nsIContent& aContent) {
   // Do nothing if the node is read-only.
   // XXX This is not a override method of EditorBase's method.  This might
   //     cause not called accidentally.  We need to investigate this issue.
-  if (NS_WARN_IF(!IsModifiableNode(*aNode.AsContent()) &&
-                 !EditorBase::IsPaddingBRElementForEmptyEditor(aNode))) {
+  if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aContent) &&
+                 !EditorUtils::IsPaddingBRElementForEmptyEditor(aContent))) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = EditorBase::DeleteNodeWithTransaction(aNode);
+  nsresult rv = EditorBase::DeleteNodeWithTransaction(aContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DeleteNodeWithTransaction() failed");
   return rv;
@@ -3396,7 +3395,7 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  while (nsCOMPtr<nsINode> child = aElement.GetLastChild()) {
+  while (nsCOMPtr<nsIContent> child = aElement.GetLastChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
@@ -3510,7 +3509,7 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
 }
 
 NS_IMETHODIMP HTMLEditor::DeleteNode(nsINode* aNode) {
-  if (NS_WARN_IF(!aNode)) {
+  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!aNode->IsContent())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -3522,7 +3521,7 @@ NS_IMETHODIMP HTMLEditor::DeleteNode(nsINode* aNode) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = DeleteNodeWithTransaction(*aNode);
+  rv = DeleteNodeWithTransaction(MOZ_KnownLive(*aNode->AsContent()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::DeleteNodeWithTransaction() failed");
   return rv;
@@ -3531,7 +3530,7 @@ NS_IMETHODIMP HTMLEditor::DeleteNode(nsINode* aNode) {
 nsresult HTMLEditor::DeleteTextWithTransaction(Text& aTextNode,
                                                uint32_t aOffset,
                                                uint32_t aLength) {
-  if (NS_WARN_IF(!IsModifiableNode(aTextNode))) {
+  if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aTextNode))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3551,7 +3550,8 @@ nsresult HTMLEditor::InsertTextWithTransaction(
   }
 
   // Do nothing if the node is read-only
-  if (NS_WARN_IF(!IsModifiableNode(*aPointToInsert.GetContainer()))) {
+  if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(
+          *aPointToInsert.GetContainer()))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3694,7 +3694,7 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
   }
   // We don't need to handle our own modifications
   else if (!GetTopLevelEditSubAction() && container->IsEditable()) {
-    if (EditorBase::IsPaddingBRElementForEmptyEditor(*aChild)) {
+    if (EditorUtils::IsPaddingBRElementForEmptyEditor(*aChild)) {
       // Ignore insertion of the padding <br> element.
       return;
     }
@@ -3747,7 +3747,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentRemoved(
     // We don't need to handle our own modifications
   } else if (!GetTopLevelEditSubAction() &&
              aChild->GetParentNode()->IsEditable()) {
-    if (aChild && EditorBase::IsPaddingBRElementForEmptyEditor(*aChild)) {
+    if (aChild && EditorUtils::IsPaddingBRElementForEmptyEditor(*aChild)) {
       // Ignore removal of the padding <br> element for empty editor.
       return;
     }
@@ -3958,10 +3958,11 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
   }
   AutoTArray<OwningNonNull<Text>, 8> textNodes;
   subtreeIter.AppendNodesToArray(
-      +[](nsINode& aNode, void* aSelf) -> bool {
-        return static_cast<HTMLEditor*>(aSelf)->IsEditable(&aNode);
+      +[](nsINode& aNode, void*) -> bool {
+        return EditorUtils::IsEditableContent(*aNode.AsText(),
+                                              EditorType::HTML);
       },
-      textNodes, this);
+      textNodes);
 
   // now that I have a list of text nodes, collapse adjacent text nodes
   // NOTE: assumption that JoinNodes keeps the righthand node
@@ -4108,24 +4109,28 @@ nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
                                             SkipWhitespace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
-  nsIContent* node = aNode->GetPreviousSibling();
-  while (node && (!IsEditable(node) || SkippableWhitespace(node, aSkipWS))) {
-    node = node->GetPreviousSibling();
+  nsIContent* content = aNode->GetPreviousSibling();
+  while (content &&
+         (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
+          SkippableWhitespace(content, aSkipWS))) {
+    content = content->GetPreviousSibling();
   }
 
-  return node;
+  return content;
 }
 
 nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
                                            SkipWhitespace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
-  nsIContent* node = aNode->GetNextSibling();
-  while (node && (!IsEditable(node) || SkippableWhitespace(node, aSkipWS))) {
-    node = node->GetNextSibling();
+  nsIContent* content = aNode->GetNextSibling();
+  while (content &&
+         (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
+          SkippableWhitespace(content, aSkipWS))) {
+    content = content->GetNextSibling();
   }
 
-  return node;
+  return content;
 }
 
 nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
@@ -4225,28 +4230,25 @@ bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
 }
 
 nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) const {
-  nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
-
-  while (child && !IsEditable(child)) {
+  nsIContent* child = aNode.GetFirstChild();
+  while (child && !EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
     child = child->GetNextSibling();
   }
-
   return child;
 }
 
 nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
-  nsCOMPtr<nsIContent> child = aNode.GetLastChild();
-
-  while (child && !IsEditable(child)) {
+  nsIContent* child = aNode.GetLastChild();
+  while (child && !EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
     child = child->GetPreviousSibling();
   }
-
   return child;
 }
 
 nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
-  nsCOMPtr<nsIContent> child = GetLeftmostChild(&aNode);
-  while (child && (!IsEditable(child) || child->HasChildren())) {
+  nsIContent* child = GetLeftmostChild(&aNode);
+  while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
+                   child->HasChildren())) {
     child = GetNextEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
@@ -4260,7 +4262,8 @@ nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
 
 nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
   nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
-  while (child && (!IsEditable(child) || child->HasChildren())) {
+  while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
+                   child->HasChildren())) {
     child = GetPreviousEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
@@ -4370,7 +4373,7 @@ bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
   for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild(); child;
        child = child->GetNextSibling()) {
     // Is the child editable and non-empty?  if so, return false
-    if (EditorBase::IsEditable(child)) {
+    if (EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
       if (Text* text = child->GetAsText()) {
         // break out if we find we aren't empty
         if (!(aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
@@ -4690,7 +4693,8 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
           if (NS_WARN_IF(!node)) {
             return NS_ERROR_FAILURE;
           }
-          if (node->IsContent() && IsEditable(node)) {
+          if (node->IsContent() && EditorUtils::IsEditableContent(
+                                       *node->AsContent(), EditorType::HTML)) {
             arrayOfContents.AppendElement(*node->AsContent());
           }
         }
@@ -4702,7 +4706,8 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       // If start node is a text node, set background color of its parent
       // block.
       if (startOfRange.IsInTextNode() &&
-          IsEditable(startOfRange.GetContainer())) {
+          EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+                                         EditorType::HTML)) {
         RefPtr<Element> blockParent =
             GetBlockNodeParent(startOfRange.GetContainer());
         if (blockParent && handledBlockParent != blockParent) {
@@ -4731,7 +4736,9 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
 
       // Finally, if end node is a text node, set background color of its
       // parent block.
-      if (endOfRange.IsInTextNode() && IsEditable(endOfRange.GetContainer())) {
+      if (endOfRange.IsInTextNode() &&
+          EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
+                                         EditorType::HTML)) {
         RefPtr<Element> blockParent =
             GetBlockNodeParent(endOfRange.GetContainer());
         if (blockParent && handledBlockParent != blockParent) {
@@ -4801,7 +4808,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
 
   // First, clear out aNewBlock.  Contract is that we want only the styles
   // from aPreviousBlock.
-  for (nsCOMPtr<nsINode> child = newBlock->GetFirstChild(); child;
+  for (nsCOMPtr<nsIContent> child = newBlock->GetFirstChild(); child;
        child = newBlock->GetFirstChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
     if (NS_FAILED(rv)) {

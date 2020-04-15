@@ -669,14 +669,14 @@ nsIContent* WSRunScanner::GetEditableBlockParentOrTopmotEditableInlineContent(
   if (NS_WARN_IF(!aContent)) {
     return nullptr;
   }
-  NS_ASSERTION(mHTMLEditor->IsEditable(aContent),
+  NS_ASSERTION(EditorUtils::IsEditableContent(*aContent, EditorType::HTML),
                "Given content is not editable");
   // XXX What should we do if scan range crosses block boundary?  Currently,
   //     it's not collapsed only when inserting composition string so that
   //     it's possible but shouldn't occur actually.
   nsIContent* editableBlockParentOrTopmotEditableInlineContent = nullptr;
   for (nsIContent* content : InclusiveAncestorsOfType<nsIContent>(*aContent)) {
-    if (!mHTMLEditor->IsEditable(content)) {
+    if (!EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
       break;
     }
     editableBlockParentOrTopmotEditableInlineContent = content;
