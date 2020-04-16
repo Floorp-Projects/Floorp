@@ -37,8 +37,7 @@ SplitNodeTransaction::SplitNodeTransaction(
     EditorBase& aEditorBase,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
     : mEditorBase(&aEditorBase), mStartOfRightContent(aStartOfRightContent) {
-  MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsSet());
-  MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.GetContainerAsContent());
+  MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
@@ -51,7 +50,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mStartOfRightContent.IsSet())) {
+  if (NS_WARN_IF(!mEditorBase) ||
+      NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   MOZ_ASSERT(mStartOfRightContent.IsSetAndValid());
@@ -120,7 +120,7 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
 NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNewLeftContent) ||
       NS_WARN_IF(!mContainerParentNode) ||
-      NS_WARN_IF(!mStartOfRightContent.IsSet())) {
+      NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -128,11 +128,10 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   // XXX Perhaps, we should reset mStartOfRightNode with current first child
   //     of the right node.
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<nsINode> containerNode = *mStartOfRightContent.GetContainer();
-  OwningNonNull<nsINode> newLeftContent = *mNewLeftContent;
-  OwningNonNull<nsINode> containerParentNode = *mContainerParentNode;
-  nsresult rv = editorBase->DoJoinNodes(containerNode, newLeftContent,
-                                        containerParentNode);
+  OwningNonNull<nsIContent> containerContent =
+      *mStartOfRightContent.ContainerAsContent();
+  OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
+  nsresult rv = editorBase->DoJoinNodes(containerContent, newLeftContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::DoJoinNodes() failed");
   return rv;
 }
@@ -143,7 +142,8 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
  */
 NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mNewLeftContent) || NS_WARN_IF(!mContainerParentNode) ||
-      NS_WARN_IF(!mStartOfRightContent.IsSet()) || NS_WARN_IF(!mEditorBase)) {
+      NS_WARN_IF(!mStartOfRightContent.IsInContentNode()) ||
+      NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

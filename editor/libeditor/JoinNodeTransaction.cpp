@@ -63,7 +63,7 @@ NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
   }
 
   // Get the parent node
-  nsCOMPtr<nsINode> leftContentParent = mLeftContent->GetParentNode();
+  nsINode* leftContentParent = mLeftContent->GetParentNode();
   if (NS_WARN_IF(!leftContentParent)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -80,9 +80,9 @@ NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
   mOffset = mLeftContent->Length();
 
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<nsINode> leftNode = *mLeftContent;
-  OwningNonNull<nsINode> rightNode = *mRightContent;
-  nsresult rv = editorBase->DoJoinNodes(rightNode, leftNode, leftContentParent);
+  OwningNonNull<nsIContent> leftContent = *mLeftContent;
+  OwningNonNull<nsIContent> rightContent = *mRightContent;
+  nsresult rv = editorBase->DoJoinNodes(rightContent, leftContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::DoJoinNodes() failed");
   return rv;
 }

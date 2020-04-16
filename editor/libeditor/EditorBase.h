@@ -1865,20 +1865,18 @@ class EditorBase : public nsIEditor,
                                       ErrorResult& aError);
 
   /**
-   * DoJoinNodes() merges contents in aNodeToJoin to aNodeToKeep and remove
-   * aNodeToJoin from the DOM tree.  aNodeToJoin and aNodeToKeep must have
-   * same parent, aParent.  Additionally, if one of aNodeToJoin or aNodeToKeep
-   * is a text node, the other must be a text node.
+   * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and
+   * remove aContentToJoin from the DOM tree.  aContentToJoin and aContentToKeep
+   * must have same parent, aParent.  Additionally, if one of aContentToJoin or
+   * aContentToKeep is a text node, the other must be a text node.
    *
-   * @param aNodeToKeep   The node that will remain after the join.
-   * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
-   *                      There is no requirement that the two nodes be of the
-   *                      same type.
-   * @param aParent       The parent of aNodeToKeep
+   * @param aContentToKeep  The node that will remain after the join.
+   * @param aContentToJoin  The node that will be joined with aContentToKeep.
+   *                        There is no requirement that the two nodes be of the
+   *                        same type.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult DoJoinNodes(nsINode* aNodeToKeep,
-                                          nsINode* aNodeToJoin,
-                                          nsINode* aParent);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
 
   /**
    * SplitNodeDeepWithTransaction() splits aMostAncestorToSplit deeply.
@@ -1925,12 +1923,6 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MarkElementDirty(Element& aElement);
 
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
-
-  /**
-   * Set outOffset to the offset of aChild in the parent.
-   * Returns the parent of aChild.
-   */
-  static nsINode* GetNodeLocation(nsINode* aChild, int32_t* aOffset);
 
   /**
    * Get the previous node.
@@ -2482,15 +2474,6 @@ class EditorBase : public nsIEditor,
    *                            call SetAncestorLimit() with this node.
    */
   virtual void InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit);
-
-  /**
-   * Return the offset of aChild in aParent.  Asserts fatally if parent or
-   * child is null, or parent is not child's parent.
-   * FYI: aChild must not be being removed from aParent.  In such case, these
-   *      methods may return wrong index if aChild doesn't have previous
-   *      sibling or next sibling.
-   */
-  static int32_t GetChildOffset(nsINode* aChild, nsINode* aParent);
 
   /**
    * Creates a range with just the supplied node and appends that to the
