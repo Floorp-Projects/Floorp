@@ -90,7 +90,7 @@ pub fn invalidated_descendants<E>(element: E, child: E)
 where
     E: TElement,
 {
-    if !child.has_data() {
+    if child.get_data().is_none() {
         return;
     }
 

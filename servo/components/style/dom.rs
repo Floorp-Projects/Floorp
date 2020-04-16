@@ -22,7 +22,7 @@ use crate::shared_lock::Locked;
 use crate::stylist::CascadeData;
 use crate::traversal_flags::TraversalFlags;
 use crate::{Atom, LocalName, Namespace, WeakAtom};
-use atomic_refcell::{AtomicRef, AtomicRefMut};
+use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use selectors::matching::{ElementSelectorFlags, QuirksMode, VisitedHandlingMode};
 use selectors::sink::Push;
 use selectors::Element as SelectorsElement;
@@ -697,14 +697,18 @@ pub trait TElement:
     /// Unsafe following the same reasoning as ensure_data.
     unsafe fn clear_data(&self);
 
-    /// Whether there is an ElementData container.
-    fn has_data(&self) -> bool;
+    /// Gets a reference to the ElementData container.
+    fn get_data(&self) -> Option<&AtomicRefCell<ElementData>>;
 
     /// Immutably borrows the ElementData.
-    fn borrow_data(&self) -> Option<AtomicRef<ElementData>>;
+    fn borrow_data(&self) -> Option<AtomicRef<ElementData>> {
+        self.get_data().map(|x| x.borrow())
+    }
 
     /// Mutably borrows the ElementData.
-    fn mutate_data(&self) -> Option<AtomicRefMut<ElementData>>;
+    fn mutate_data(&self) -> Option<AtomicRefMut<ElementData>> {
+        self.get_data().map(|x| x.borrow_mut())
+    }
 
     /// Whether we should skip any root- or item-based display property
     /// blockification on this element.  (This function exists so that Gecko

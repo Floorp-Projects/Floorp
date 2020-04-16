@@ -11,6 +11,7 @@ use crate::values::specified::length::Length as SpecifiedLength;
 use crate::values::specified::length::LengthPercentage as SpecifiedLengthPercentage;
 use crate::values::{computed, CSSFloat};
 use crate::Zero;
+use app_units::Au;
 use euclid;
 use euclid::default::{Rect, Transform3D};
 use std::fmt::{self, Write};
@@ -328,7 +329,7 @@ where
 /// Convert a length type into the absolute lengths.
 pub trait ToAbsoluteLength {
     /// Returns the absolute length as pixel value.
-    fn to_pixel_length(&self, containing_len: Option<ComputedLength>) -> Result<CSSFloat, ()>;
+    fn to_pixel_length(&self, containing_len: Option<Au>) -> Result<CSSFloat, ()>;
 }
 
 impl ToAbsoluteLength for SpecifiedLength {
@@ -336,7 +337,7 @@ impl ToAbsoluteLength for SpecifiedLength {
     // parsing a transform list of DOMMatrix because we want to return a DOM Exception
     // if there is relative length.
     #[inline]
-    fn to_pixel_length(&self, _containing_len: Option<ComputedLength>) -> Result<CSSFloat, ()> {
+    fn to_pixel_length(&self, _containing_len: Option<Au>) -> Result<CSSFloat, ()> {
         match *self {
             SpecifiedLength::NoCalc(len) => len.to_computed_pixel_length_without_context(),
             SpecifiedLength::Calc(ref calc) => calc.to_computed_pixel_length_without_context(),
@@ -349,7 +350,7 @@ impl ToAbsoluteLength for SpecifiedLengthPercentage {
     // parsing a transform list of DOMMatrix because we want to return a DOM Exception
     // if there is relative length.
     #[inline]
-    fn to_pixel_length(&self, _containing_len: Option<ComputedLength>) -> Result<CSSFloat, ()> {
+    fn to_pixel_length(&self, _containing_len: Option<Au>) -> Result<CSSFloat, ()> {
         use self::SpecifiedLengthPercentage::*;
         match *self {
             Length(len) => len.to_computed_pixel_length_without_context(),
@@ -361,16 +362,16 @@ impl ToAbsoluteLength for SpecifiedLengthPercentage {
 
 impl ToAbsoluteLength for ComputedLength {
     #[inline]
-    fn to_pixel_length(&self, _containing_len: Option<ComputedLength>) -> Result<CSSFloat, ()> {
+    fn to_pixel_length(&self, _containing_len: Option<Au>) -> Result<CSSFloat, ()> {
         Ok(self.px())
     }
 }
 
 impl ToAbsoluteLength for ComputedLengthPercentage {
     #[inline]
-    fn to_pixel_length(&self, containing_len: Option<ComputedLength>) -> Result<CSSFloat, ()> {
+    fn to_pixel_length(&self, containing_len: Option<Au>) -> Result<CSSFloat, ()> {
         match containing_len {
-            Some(relative_len) => Ok(self.resolve(relative_len).px()),
+            Some(relative_len) => Ok(self.to_pixel_length(relative_len).px()),
             // If we don't have reference box, we cannot resolve the used value,
             // so only retrieve the length part. This will be used for computing
             // distance without any layout info.
@@ -387,10 +388,7 @@ pub trait ToMatrix {
     fn is_3d(&self) -> bool;
 
     /// Return the equivalent 3d matrix.
-    fn to_3d_matrix(
-        &self,
-        reference_box: Option<&Rect<ComputedLength>>,
-    ) -> Result<Transform3D<f64>, ()>;
+    fn to_3d_matrix(&self, reference_box: Option<&Rect<Au>>) -> Result<Transform3D<f64>, ()>;
 }
 
 /// A little helper to deal with both specified and computed angles.
@@ -436,10 +434,7 @@ where
     /// However, for specified TransformOperation, we will return Err(()) if there is any relative
     /// lengths because the only caller, DOMMatrix, doesn't accept relative lengths.
     #[inline]
-    fn to_3d_matrix(
-        &self,
-        reference_box: Option<&Rect<ComputedLength>>,
-    ) -> Result<Transform3D<f64>, ()> {
+    fn to_3d_matrix(&self, reference_box: Option<&Rect<Au>>) -> Result<Transform3D<f64>, ()> {
         use self::TransformOperation::*;
         use std::f64;
 
@@ -542,7 +537,7 @@ impl<T: ToMatrix> Transform<T> {
     #[cfg_attr(rustfmt, rustfmt_skip)]
     pub fn to_transform_3d_matrix(
         &self,
-        reference_box: Option<&Rect<ComputedLength>>
+        reference_box: Option<&Rect<Au>>
     ) -> Result<(Transform3D<CSSFloat>, bool), ()> {
         let cast_3d_transform = |m: Transform3D<f64>| -> Transform3D<CSSFloat> {
             use std::{f32, f64};
@@ -562,7 +557,7 @@ impl<T: ToMatrix> Transform<T> {
     /// Same as Transform::to_transform_3d_matrix but a f64 version.
     pub fn to_transform_3d_matrix_f64(
         &self,
-        reference_box: Option<&Rect<ComputedLength>>,
+        reference_box: Option<&Rect<Au>>,
     ) -> Result<(Transform3D<f64>, bool), ()> {
         // We intentionally use Transform3D<f64> during computation to avoid error propagation
         // because using f32 to compute triangle functions (e.g. in create_rotation()) is not

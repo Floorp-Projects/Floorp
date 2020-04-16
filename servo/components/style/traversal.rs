@@ -694,7 +694,9 @@ where
     if let Some(ref values) = data.styles.primary {
         for image in &values.get_background().background_image.0 {
             let (name, arguments) = match *image {
-                Image::PaintWorklet(ref worklet) => (&worklet.name, &worklet.arguments),
+                Image::PaintWorklet(ref worklet) => {
+                    (&worklet.name, &worklet.arguments)
+                },
                 _ => continue,
             };
             let painter = match context.shared.registered_speculative_painters.get(name) {
@@ -843,7 +845,7 @@ where
                 //
                 // By consequence, any element without data has no descendants with
                 // data.
-                if kid.has_data() {
+                if kid.get_data().is_some() {
                     kid.clear_data();
                     parents.push(kid);
                 }
