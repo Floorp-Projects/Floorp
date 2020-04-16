@@ -16,6 +16,8 @@ const L10N = new LocalizationHelper(
 
 /**
  * Tooltip displayed for when a CSS property is selected/highlighted.
+ * TODO: For now, the tooltip content only shows "No Associated Rule". In Bug 1528288,
+ * we will be implementing content for showing the source CSS rule.
  */
 class RulePreviewTooltip {
   constructor(doc) {
@@ -34,12 +36,12 @@ class RulePreviewTooltip {
 
     this.message = doc.createElementNS(XHTML_NS, "span");
     this.message.className = "rule-preview-tooltip-message";
-
-    this.footer = doc.createElementNS(XHTML_NS, "span");
-    this.footer.className = "rule-preview-tooltip-source-rule-footer";
-    this.footer.textContent = L10N.getStr(
-      "rulePreviewTooltip.jumpToRuleShortcut"
+    this.message.textContent = L10N.getStr(
+      "rulePreviewTooltip.noAssociatedRule"
     );
+    this.container.appendChild(this.message);
+
+    // TODO: Implement structure for showing the source CSS rule.
 
     this._tooltip.panel.innerHTML = "";
     this._tooltip.panel.appendChild(this.container);
@@ -47,19 +49,12 @@ class RulePreviewTooltip {
   }
 
   /**
-   * Shows the tooltip on a given element. The tooltip will display
-   * the source CSS rule.
+   * Shows the tooltip on a given element.
    *
    * @param  {Element} element
    *         The target element to show the tooltip with.
-   * @param  {String} ruleText
-   *         The source CSS rule to show in the tooltip.
    */
-  show(element, ruleText) {
-    this.message.textContent = ruleText;
-    this.container.appendChild(this.message);
-    this.container.appendChild(this.footer);
-
+  show(element) {
     element.addEventListener("mouseout", () => this._tooltip.hide());
     this._tooltip.show(element);
   }
@@ -68,7 +63,6 @@ class RulePreviewTooltip {
     this._tooltip.destroy();
     this.container = null;
     this.message = null;
-    this.footer = null;
   }
 }
 

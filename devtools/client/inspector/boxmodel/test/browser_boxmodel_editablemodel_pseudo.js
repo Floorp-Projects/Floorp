@@ -68,7 +68,7 @@ async function checkValueInBoxModel(selector, expectedValue, doc) {
     "Should have the right value in the box model."
   );
 
-  EventUtils.sendMouseEvent({ type: "click" }, span, doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(span, {}, doc.defaultView);
   const editor = doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, expectedValue, "Should have the right value in the editor.");
