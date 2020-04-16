@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>Test having multiple video.rAF callbacks in flight for a single element.</title>
+<title>Test having multiple video.rVFC callbacks in flight for a single element.</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/common/media.js"></script>
@@ -12,12 +12,12 @@ async_test(function(t) {
     let firstTime;
     let firstMetadata;
 
-    video.requestAnimationFrame(t.step_func((time, metadata) => {
+    video.requestVideoFrameCallback(t.step_func((time, metadata) => {
       firstTime = time;
       firstMetadata = metadata;
     }));
 
-    video.requestAnimationFrame(t.step_func_done((time, metadata) => {
+    video.requestVideoFrameCallback(t.step_func_done((time, metadata) => {
       assert_equals(firstTime, time);
       assert_object_equals(firstMetadata, metadata);
     }));
@@ -32,18 +32,18 @@ async_test(function(t) {
 
     let secondCallbackId;
 
-    video.requestAnimationFrame(
-      t.step_func(_ => { video.cancelAnimationFrame(secondCallbackId); })
+    video.requestVideoFrameCallback(
+      t.step_func(_ => { video.cancelVideoFrameCallback(secondCallbackId); })
     );
 
-    secondCallbackId = video.requestAnimationFrame(
+    secondCallbackId = video.requestVideoFrameCallback(
       t.step_func(_ => {
         assert_unreached("Cancelled callbacks shouldn't be executed")
       })
     );
 
     // NOTE: This callback should be executed last.
-    video.requestAnimationFrame(
+    video.requestVideoFrameCallback(
       t.step_func_done()
     );
 
