@@ -83,6 +83,20 @@ class SearchEngineTest {
     }
 
     @Test
+    fun `get engine template`() {
+        val searchUri = Uri.parse("https://mozilla.org/search/?q={searchTerms}")
+        val suggestionsUri = Uri.parse("https://mozilla.org/search/suggestions?q={searchTerms}")
+        val searchEngine = SearchEngine(
+            "mozsearch",
+            "Mozilla Search",
+            mock(Bitmap::class.java),
+            listOf(searchUri),
+            suggestionsUri)
+
+        assertEquals("https://mozilla.org/search/?q=%s", searchEngine.getSearchTemplate())
+    }
+
+    @Test
     fun `Build search suggestion URL`() {
         val searchUri = Uri.parse("https://mozilla.org/search/?q={searchTerms}")
         val suggestionsUri = Uri.parse("https://mozilla.org/search/suggestions?q={searchTerms}")

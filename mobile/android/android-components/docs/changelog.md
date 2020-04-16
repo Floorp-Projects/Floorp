@@ -36,6 +36,9 @@ permalink: /changelog/
 * **browser-tabstray**
   * The iconView is no longer required in the template.
 
+* **browser-search**
+  * Added `getSearchTemplate` to reconstruct the user-entered search engine url template
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)
