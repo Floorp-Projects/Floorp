@@ -14,4 +14,4 @@ skip_on(android,device) == color_targets(3) alpha_targets(1) stacking-context-cl
 fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
 color_targets(1) alpha_targets(0) == clip-out-rotation.yaml blank.yaml # Unexpected color targets, see bug 1580795
 == clipped-occlusion.yaml clipped-occlusion-ref.yaml
-== clip-thin-rotated.yaml clip-thin-rotated-ref.yaml
+== clip-empty-inner-rect.yaml clip-empty-inner-rect-ref.yaml
