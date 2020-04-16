@@ -372,6 +372,7 @@ class ManageCreditCards extends ManageRecords {
     if (
       !creditCard ||
       (await FormAutofillUtils.ensureLoggedIn(reauthPasswordPromptMessage))
+        .authenticated
     ) {
       let decryptedCCNumObj = {};
       if (creditCard && creditCard["cc-number-encrypted"]) {

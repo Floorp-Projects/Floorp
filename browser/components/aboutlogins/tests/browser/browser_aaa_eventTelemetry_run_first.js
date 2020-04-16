@@ -82,10 +82,13 @@ add_task(async function test_telemetry_events() {
       copyButton.click();
     });
     await reauthObserved;
-    await LoginTestUtils.telemetry.waitForEventCount(4);
+    // When reauth is observed an extra telemetry event will be recorded
+    // for the reauth, hence the event count increasing by 2 here, and later
+    // in the test as well.
+    await LoginTestUtils.telemetry.waitForEventCount(5);
   }
   let nextTelemetryEventCount = OSKeyStoreTestUtils.canTestOSKeyStoreLogin()
-    ? 5
+    ? 6
     : 4;
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
@@ -107,6 +110,7 @@ add_task(async function test_telemetry_events() {
     let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
       loginResult: true,
     });
+    nextTelemetryEventCount++; // An extra event is observed for the reauth event.
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       let loginItem = content.document.querySelector("login-item");
       let revealCheckbox = loginItem.shadowRoot.querySelector(
@@ -127,15 +131,14 @@ add_task(async function test_telemetry_events() {
     });
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-      loginResult: true,
-    });
+    // Don't force the auth timeout here to check that `auth_skipped: true` is set as
+    // in `extra`.
+    nextTelemetryEventCount++; // An extra event is observed for the reauth event.
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       let loginItem = content.document.querySelector("login-item");
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
     });
-    await reauthObserved;
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
@@ -238,10 +241,13 @@ add_task(async function test_telemetry_events() {
     [true, "pwmgr", "open_management", "direct"],
     [true, "pwmgr", "select", "existing_login", null, { breached: "true" }],
     [true, "pwmgr", "copy", "username", null, { breached: "true" }],
+    [testOSAuth, "pwmgr", "reauthenticate", "os_auth", "success"],
     [testOSAuth, "pwmgr", "copy", "password", null, { breached: "true" }],
     [true, "pwmgr", "open_site", "existing_login", null, { breached: "true" }],
+    [testOSAuth, "pwmgr", "reauthenticate", "os_auth", "success"],
     [testOSAuth, "pwmgr", "show", "password", null, { breached: "true" }],
     [testOSAuth, "pwmgr", "hide", "password", null, { breached: "true" }],
+    [testOSAuth, "pwmgr", "reauthenticate", "os_auth", "success_no_prompt"],
     [testOSAuth, "pwmgr", "edit", "existing_login", null, { breached: "true" }],
     [testOSAuth, "pwmgr", "save", "existing_login", null, { breached: "true" }],
     [true, "pwmgr", "delete", "existing_login", null, { breached: "true" }],

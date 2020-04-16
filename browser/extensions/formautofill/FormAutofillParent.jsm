@@ -341,7 +341,7 @@ class FormAutofillParent extends JSWindowActorParent {
         break;
       }
       case "FormAutofill:SaveCreditCard": {
-        if (!(await FormAutofillUtils.ensureLoggedIn())) {
+        if (!(await FormAutofillUtils.ensureLoggedIn()).authenticated) {
           log.warn("User canceled encryption login");
           return undefined;
         }
@@ -690,7 +690,7 @@ class FormAutofillParent extends JSWindowActorParent {
         return;
       }
 
-      if (!(await FormAutofillUtils.ensureLoggedIn())) {
+      if (!(await FormAutofillUtils.ensureLoggedIn()).authenticated) {
         log.warn("User canceled encryption login");
         return;
       }

@@ -137,7 +137,7 @@ class AboutLoginsChild extends JSWindowActorChild {
         break;
       }
       case "AboutLoginsRecordTelemetryEvent": {
-        let { method, object, extra = {} } = event.detail;
+        let { method, object, extra = {}, value = null } = event.detail;
 
         if (method == "open_management") {
           let { docShell } = this.browsingContext;
@@ -163,7 +163,7 @@ class AboutLoginsChild extends JSWindowActorChild {
             TELEMETRY_EVENT_CATEGORY,
             method,
             object,
-            null,
+            value,
             extra
           );
         } catch (ex) {
@@ -198,7 +198,26 @@ class AboutLoginsChild extends JSWindowActorChild {
     switch (message.name) {
       case "AboutLogins:MasterPasswordResponse":
         if (masterPasswordPromise) {
-          masterPasswordPromise.resolve(message.data);
+          masterPasswordPromise.resolve(message.data.result);
+          try {
+            let {
+              method,
+              object,
+              extra = {},
+              value = null,
+            } = message.data.telemetryEvent;
+            Services.telemetry.recordEvent(
+              TELEMETRY_EVENT_CATEGORY,
+              method,
+              object,
+              value,
+              extra
+            );
+          } catch (ex) {
+            Cu.reportError(
+              "AboutLoginsChild: error recording telemetry event: " + ex.message
+            );
+          }
         }
         break;
       case "AboutLogins:Setup":

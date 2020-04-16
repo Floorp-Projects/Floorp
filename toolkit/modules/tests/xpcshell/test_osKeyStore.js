@@ -34,7 +34,11 @@ const testText = "test string";
 let cipherText;
 
 add_task(async function test_encrypt_decrypt() {
-  Assert.equal(await OSKeyStore.ensureLoggedIn(), true, "Started logged in.");
+  Assert.equal(
+    (await OSKeyStore.ensureLoggedIn()).authenticated,
+    true,
+    "Started logged in."
+  );
 
   cipherText = await OSKeyStore.encrypt(testText);
   Assert.notEqual(testText, cipherText);
@@ -67,7 +71,7 @@ add_task(async function test_reauth() {
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn("test message"),
+    (await OSKeyStore.ensureLoggedIn("test message")).authenticated,
     false,
     "Reauth cancelled."
   );
@@ -82,7 +86,7 @@ add_task(async function test_reauth() {
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
   Assert.equal(
-    await OSKeyStore.ensureLoggedIn("test message"),
+    (await OSKeyStore.ensureLoggedIn("test message")).authenticated,
     true,
     "Reauth logged in."
   );
