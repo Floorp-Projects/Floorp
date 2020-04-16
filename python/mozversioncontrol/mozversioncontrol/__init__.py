@@ -387,7 +387,7 @@ class HgRepository(Repository):
             args = ['--config', 'extensions.automv='] + args
         self._run(*args)
 
-    def forget_add_remove_files(self, paths):
+    def forget_add_remove_files(self, *paths):
         self._run('forget', *paths)
 
     def get_files_in_working_directory(self):
@@ -505,10 +505,10 @@ class GitRepository(Repository):
                           '--oneline', '--pretty=format:', compare).splitlines()
         return [f for f in files if f]
 
-    def add_remove_files(self, paths):
+    def add_remove_files(self, *paths):
         self._run('add', *paths)
 
-    def forget_add_remove_files(self, paths):
+    def forget_add_remove_files(self, *paths):
         self._run('reset', *paths)
 
     def get_files_in_working_directory(self):
