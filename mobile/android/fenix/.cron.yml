@@ -19,7 +19,10 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-gp
           target-tasks-method: nightly-on-google-play
-      when: []  # Manual push only
+      when:
+          - {weekday: Monday, hour: 6, minute: 0}
+          - {weekday: Wednesday, hour: 6, minute: 0}
+          - {weekday: Friday, hour: 6, minute: 0}
     - name: fennec-beta
       job:
           type: decision-task
