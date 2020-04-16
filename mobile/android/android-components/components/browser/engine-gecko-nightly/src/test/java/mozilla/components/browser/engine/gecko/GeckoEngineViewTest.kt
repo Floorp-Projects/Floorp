@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
@@ -279,5 +280,14 @@ class GeckoEngineViewTest {
         })
 
         verify(geckoSession).selectionActionDelegate = null
+    }
+
+    @Test
+    fun `setVisibility is propagated to gecko view`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+
+        engineView.visibility = View.GONE
+        verify(engineView.currentGeckoView)?.visibility = View.GONE
     }
 }

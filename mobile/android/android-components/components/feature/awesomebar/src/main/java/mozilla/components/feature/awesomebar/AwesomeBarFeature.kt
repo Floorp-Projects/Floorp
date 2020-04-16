@@ -153,8 +153,8 @@ class AwesomeBarFeature(
     }
 
     private fun showAwesomeBar() {
-        awesomeBar.asView().visibility = View.VISIBLE
         engineView?.asView()?.visibility = View.GONE
+        awesomeBar.asView().visibility = View.VISIBLE
     }
 
     private fun hideAwesomeBar() {
