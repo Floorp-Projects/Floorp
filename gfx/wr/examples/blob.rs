@@ -48,7 +48,7 @@ fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
 fn render_blob(
     commands: Arc<ImageRenderingCommands>,
     descriptor: &api::BlobImageDescriptor,
-    tile: Option<TileOffset>,
+    tile: TileOffset,
 ) -> api::BlobImageResult {
     let color = *commands;
 
@@ -62,10 +62,7 @@ fn render_blob(
 
     // Generate a per-tile pattern to see it in the demo. For a real use case it would not
     // make sense for the rendered content to depend on its tile.
-    let tile_checker = match tile {
-        Some(tile) => (tile.x % 2 == 0) != (tile.y % 2 == 0),
-        None => true,
-    };
+    let tile_checker = (tile.x % 2 == 0) != (tile.y % 2 == 0);
 
     let [w, h] = descriptor.rect.size.to_array();
     let offset = descriptor.rect.origin;
@@ -137,7 +134,7 @@ impl CheckerboardRenderer {
 
 impl api::BlobImageHandler for CheckerboardRenderer {
     fn add(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>,
-           _visible_rect: &DeviceIntRect, _: Option<api::TileSize>) {
+           _visible_rect: &DeviceIntRect, _: api::TileSize) {
         self.image_cmds
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
