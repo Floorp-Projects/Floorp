@@ -718,7 +718,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
 
   revoke() {
     let map = this.childApiManager.listeners.get(this.path);
-    for (let listener of map.keys()) {
+    for (let listener of map.listeners.keys()) {
       this.removeListener(listener);
     }
 

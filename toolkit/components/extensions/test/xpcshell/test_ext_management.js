@@ -3,9 +3,131 @@
 "use strict";
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    false
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
+  });
   await ExtensionTestUtils.startAddonManager();
+});
+
+add_task(async function test_management_permission() {
+  async function background() {
+    const permObj = { permissions: ["management"] };
+
+    let hasPerm = await browser.permissions.contains(permObj);
+    browser.test.assertTrue(!hasPerm, "does not have management permission");
+    browser.test.assertTrue(
+      !!browser.management,
+      "management namespace exists"
+    );
+    // These require permission
+    let requires_permission = [
+      "getAll",
+      "get",
+      "install",
+      "setEnabled",
+      "onDisabled",
+      "onEnabled",
+      "onInstalled",
+      "onUninstalled",
+    ];
+
+    async function testAvailable() {
+      // These are always available regardless of permission.
+      for (let fn of ["getSelf", "uninstallSelf"]) {
+        browser.test.assertTrue(
+          !!browser.management[fn],
+          `management.${fn} exists`
+        );
+      }
+
+      let hasPerm = await browser.permissions.contains(permObj);
+      for (let fn of requires_permission) {
+        browser.test.assertEq(
+          hasPerm,
+          !!browser.management[fn],
+          `management.${fn} does not exist`
+        );
+      }
+    }
+
+    await testAvailable();
+
+    browser.test.onMessage.addListener(async msg => {
+      browser.test.log("test with permission");
+
+      // get permission
+      await browser.permissions.request(permObj);
+      let hasPerm = await browser.permissions.contains(permObj);
+      browser.test.assertTrue(
+        hasPerm,
+        "management permission.request accepted"
+      );
+      await testAvailable();
+
+      browser.management.onInstalled.addListener(() => {
+        browser.test.fail("onInstalled listener invoked");
+      });
+
+      browser.test.log("test without permission");
+      // remove permission
+      await browser.permissions.remove(permObj);
+      hasPerm = await browser.permissions.contains(permObj);
+      browser.test.assertFalse(
+        hasPerm,
+        "management permission.request removed"
+      );
+      await testAvailable();
+
+      browser.test.sendMessage("done");
+    });
+
+    browser.test.sendMessage("started");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "management@test",
+        },
+      },
+      optional_permissions: ["management"],
+    },
+    background,
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("started");
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request");
+  });
+  await extension.awaitMessage("done");
+
+  // Verify the onInstalled listener does not get used.
+  // The listener will make the test fail if fired.
+  let ext2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "on-installed@test",
+        },
+      },
+      optional_permissions: ["management"],
+    },
+    useAddonManager: "temporary",
+  });
+  await ext2.startup();
+  await ext2.unload();
+
+  await extension.unload();
 });
 
 add_task(async function test_management_getAll() {
