@@ -203,7 +203,11 @@ class DefaultToolbarMenu(
             menuToolbar
         )
 
-        if (shouldReverseItems) { menuItems.reversed() } else { menuItems }
+        if (shouldReverseItems) {
+            menuItems.reversed()
+        } else {
+            menuItems
+        }
     }
 
     private val addons = BrowserMenuImageText(
@@ -355,16 +359,39 @@ class DefaultToolbarMenu(
     @ColorRes
     private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
 
+    private var currentSessionObserver: Pair<Session, Session.Observer>? = null
+
     private fun registerForIsBookmarkedUpdates() {
-        val observer = object : Session.Observer {
+        session?.let {
+            registerForUrlChanges(it)
+        }
+
+        val sessionManagerObserver = object : SessionManager.Observer {
+            override fun onSessionSelected(session: Session) {
+                // Unregister any old session observer before registering a new session observer
+                currentSessionObserver?.let {
+                    it.first.unregister(it.second)
+                }
+                currentUrlIsBookmarked = false
+                updateCurrentUrlIsBookmarked(session.url)
+                registerForUrlChanges(session)
+            }
+        }
+
+        sessionManager.register(sessionManagerObserver, lifecycleOwner)
+    }
+
+    private fun registerForUrlChanges(session: Session) {
+        val sessionObserver = object : Session.Observer {
             override fun onUrlChanged(session: Session, url: String) {
                 currentUrlIsBookmarked = false
                 updateCurrentUrlIsBookmarked(url)
             }
         }
 
-        session?.url?.let { updateCurrentUrlIsBookmarked(it) }
-        session?.register(observer, lifecycleOwner)
+        currentSessionObserver = Pair(session, sessionObserver)
+        updateCurrentUrlIsBookmarked(session.url)
+        session.register(sessionObserver, lifecycleOwner)
     }
 
     private fun updateCurrentUrlIsBookmarked(newUrl: String) {
