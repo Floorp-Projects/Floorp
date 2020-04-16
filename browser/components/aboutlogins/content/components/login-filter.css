@@ -6,7 +6,6 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.4;
-
   background-image: url("chrome://browser/skin/search-glass.svg");
   background-position: 8px center;
   background-repeat: no-repeat;
@@ -27,8 +26,4 @@
 :host(:dir(rtl)) .filter {
   background-position-x: right 8px;
   padding-right: 32px;
-}
-
-.filter:focus {
-  fill-opacity: 0.8;
 }
