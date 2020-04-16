@@ -53,14 +53,6 @@ JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 // crash will be annotated with the name of the actor and the message.
 struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
   AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
-                                   const nsString& aMessageName) {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::JSActorName, aActorName);
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::JSActorMessage,
-        NS_LossyConvertUTF16toASCII(aMessageName));
-  }
-  AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
                                    const nsCString& aMessageName) {
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::JSActorName,
                                        aActorName);
@@ -68,19 +60,21 @@ struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
         CrashReporter::Annotation::JSActorMessage, aMessageName);
   }
   ~AutoAnnotateMessageInCaseOfCrash() {
-    CrashReporter::RemoveCrashReportAnnotation(CrashReporter::Annotation::JSActorMessage);
-    CrashReporter::RemoveCrashReportAnnotation(CrashReporter::Annotation::JSActorName);
+    CrashReporter::RemoveCrashReportAnnotation(
+        CrashReporter::Annotation::JSActorMessage);
+    CrashReporter::RemoveCrashReportAnnotation(
+        CrashReporter::Annotation::JSActorName);
   }
 };
 
 void JSWindowActor::StartDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(mCName,
+  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          NS_LITERAL_CSTRING("<WillDestroy>"));
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSWindowActor::AfterDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(mCName,
+  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          NS_LITERAL_CSTRING("<DidDestroy>"));
   InvokeCallback(CallbackFunction::DidDestroy);
   // Clear out & reject mPendingQueries
@@ -161,7 +155,7 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
     return true;
   }
 
-  nsAutoString messageName(aMetadata.actorName());
+  nsAutoString messageName(NS_ConvertUTF8toUTF16(aMetadata.actorName()));
   messageName.AppendLiteral("::");
   messageName.Append(aMetadata.messageName());
 
@@ -176,10 +170,9 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
   return false;
 }
 
-void JSWindowActor::SetName(const nsAString& aName) {
+void JSWindowActor::SetName(const nsACString& aName) {
   MOZ_ASSERT(mName.IsEmpty(), "Cannot set name twice!");
   mName = aName;
-  mCName = NS_LossyConvertUTF16toASCII(aName);
 }
 
 static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
@@ -275,7 +268,9 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData,
                                       ipc::StructuredCloneData&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  AutoAnnotateMessageInCaseOfCrash guard(mCName, aMetadata.messageName());
+  AutoAnnotateMessageInCaseOfCrash guard(
+      /* aActorName = */ mName,
+      NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
 
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
@@ -473,17 +468,15 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
   IgnoredErrorResult error;
   data.Write(aCx, aValue, error);
   if (NS_WARN_IF(error.Failed())) {
-    // We failed to serialize the message over IPC. Report this error to the
-    // console, and send a reject reply.
-    nsAutoString msg;
+    nsAutoCString msg;
     msg.Append(mActor->Name());
     msg.Append(':');
-    msg.Append(mMessageName);
+    msg.Append(NS_LossyConvertUTF16toASCII(mMessageName));
     msg.AppendLiteral(": message reply cannot be cloned.");
 
-    auto exc = MakeRefPtr<Exception>(
-        NS_ConvertUTF16toUTF8(msg), NS_ERROR_FAILURE,
-        NS_LITERAL_CSTRING("DataCloneError"), nullptr, nullptr);
+    auto exc = MakeRefPtr<Exception>(msg, NS_ERROR_FAILURE,
+                                     NS_LITERAL_CSTRING("DataCloneError"),
+                                     nullptr, nullptr);
 
     JS::Rooted<JS::Value> val(aCx);
     if (ToJSValue(aCx, exc, &val)) {

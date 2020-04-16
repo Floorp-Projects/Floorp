@@ -30,7 +30,7 @@ class WindowGlobalActor : public nsISupports {
   // Load the module for the named Window Actor and contruct it.
   // This method will not initialize the actor or set its manager,
   // which is handled by callers.
-  void ConstructActor(const nsAString& aName, JS::MutableHandleObject aActor,
+  void ConstructActor(const nsACString& aName, JS::MutableHandleObject aActor,
                       ErrorResult& aRv);
   virtual nsIURI* GetDocumentURI() = 0;
   virtual const nsAString& GetRemoteType() = 0;

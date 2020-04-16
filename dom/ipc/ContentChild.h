@@ -408,7 +408,7 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
       nsTArray<JSWindowActorInfo>&& aInfos);
 
-  mozilla::ipc::IPCResult RecvUnregisterJSWindowActor(const nsString& aName);
+  mozilla::ipc::IPCResult RecvUnregisterJSWindowActor(const nsCString& aName);
 
   mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed();
 
