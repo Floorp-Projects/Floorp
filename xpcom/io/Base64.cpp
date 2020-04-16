@@ -184,7 +184,7 @@ nsresult EncodeInputStream(nsIInputStream* aInputStream, T& aDest,
   state.c[2] = '\0';
   state.buffer = aOffset + aDest.BeginWriting();
 
-  while (1) {
+  while (true) {
     uint32_t read = 0;
 
     rv = aInputStream->ReadSegments(&EncodeInputStream_Encoder<T>,
