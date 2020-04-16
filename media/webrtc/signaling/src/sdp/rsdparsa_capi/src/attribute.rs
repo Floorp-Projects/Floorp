@@ -425,9 +425,6 @@ pub struct RustSdpAttributeFmtpParameters {
     // telephone-event
     pub dtmf_tones: StringView,
 
-    // RTX
-    pub rtx: Option<RtxFmtpParameters>,
-
     // Red
     pub encodings: *const Vec<u8>,
 
@@ -453,7 +450,6 @@ impl<'a> From<&'a SdpAttributeFmtpParameters> for RustSdpAttributeFmtpParameters
             max_fr: other.max_fr,
             maxplaybackrate: other.maxplaybackrate,
             dtmf_tones: StringView::from(other.dtmf_tones.as_str()),
-            rtx: other.rtx,
             encodings: &other.encodings,
             unknown_tokens: &other.unknown_tokens,
         }
