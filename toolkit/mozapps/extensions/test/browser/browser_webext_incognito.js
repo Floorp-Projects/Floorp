@@ -284,8 +284,6 @@ add_task(async function test_badge_and_toggle_incognito() {
     ],
     { methods: ["action"] }
   );
-
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });
 
 add_task(async function test_addon_preferences_button() {

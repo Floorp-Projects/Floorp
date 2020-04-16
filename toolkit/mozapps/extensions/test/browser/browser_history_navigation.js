@@ -21,10 +21,6 @@ AddonTestUtils.initMochitest(this);
 const MAIN_URL = `https://example.com/${RELATIVE_DIR}discovery.html`;
 const DISCOAPI_URL = `http://example.com/${RELATIVE_DIR}/discovery/api_response_empty.json`;
 
-// Clearing this pref is currently done from a cleanup function registered
-// by the head.js file.
-Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
-
 var gProvider = new MockProvider();
 gProvider.createAddons([
   {

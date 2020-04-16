@@ -68,8 +68,6 @@ function test() {
 }
 
 function end_test() {
-  Services.prefs.clearUserPref(PREF_UPDATE_REQUIREBUILTINCERTS);
-
   var cos = Cc["@mozilla.org/security/certoverride;1"].getService(
     Ci.nsICertOverrideService
   );
@@ -190,8 +188,10 @@ add_test(function() {
 
 // Runs tests without requiring built-in certificates and no certificate
 // exceptions.
-add_test(function() {
-  Services.prefs.setBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, false);
+add_test(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_UPDATE_REQUIREBUILTINCERTS, false]],
+  });
 
   // Tests that a simple update.json retrieval works as expected.
   add_update_test(HTTP, null, SUCCESS);
@@ -258,8 +258,10 @@ add_test(() => {
 });
 
 // Runs tests with built-in certificates required and all certificate exceptions.
-add_test(function() {
-  Services.prefs.clearUserPref(PREF_UPDATE_REQUIREBUILTINCERTS);
+add_test(async function() {
+  await SpecialPowers.pushPrefEnv({
+    clear: [[PREF_UPDATE_REQUIREBUILTINCERTS]],
+  });
 
   // Tests that a simple update.json retrieval works as expected.
   add_update_test(HTTP, null, SUCCESS);
@@ -322,8 +324,10 @@ add_test(function() {
 
 // Runs tests without requiring built-in certificates and all certificate
 // exceptions.
-add_test(function() {
-  Services.prefs.setBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, false);
+add_test(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_UPDATE_REQUIREBUILTINCERTS, false]],
+  });
 
   // Tests that a simple update.json retrieval works as expected.
   add_update_test(HTTP, null, SUCCESS);
