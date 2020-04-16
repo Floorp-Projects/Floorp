@@ -249,6 +249,23 @@ class HTMLEditUtils final {
     return GetAncestorBlockElement(aContent, aAncestorLimiter);
   }
 
+  /**
+   * GetClosestAncestorTableElement() returns the nearest inclusive ancestor
+   * <table> element of aContent.
+   */
+  static Element* GetClosestAncestorTableElement(const nsIContent& aContent) {
+    if (!aContent.GetParent()) {
+      return nullptr;
+    }
+    for (Element* element : dom::InclusiveAncestorsOfType<Element>(
+             const_cast<nsIContent&>(aContent))) {
+      if (HTMLEditUtils::IsTable(element)) {
+        return element;
+      }
+    }
+    return nullptr;
+  }
+
   static EditAction GetEditActionForInsert(const nsAtom& aTagName);
   static EditAction GetEditActionForRemoveList(const nsAtom& aTagName);
   static EditAction GetEditActionForInsert(const Element& aElement);

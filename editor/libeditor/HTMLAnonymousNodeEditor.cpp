@@ -383,9 +383,10 @@ nsresult HTMLEditor::RefreshEditingUI() {
       // the element container of the selection is not an image, so we'll show
       // the resizers around the table
       // XXX There may be a bug.  cellElement may be not in <table> in invalid
-      //     tree.  So, perhaps, GetEnclosingTable() returns nullptr, we should
-      //     not set focusTagAtom to nsGkAtoms::table.
-      focusElement = GetEnclosingTable(cellElement);
+      //     tree.  So, perhaps, GetClosestAncestorTableElement() returns
+      //     nullptr, we should not set focusTagAtom to nsGkAtoms::table.
+      focusElement =
+          HTMLEditUtils::GetClosestAncestorTableElement(*cellElement);
       focusTagAtom = nsGkAtoms::table;
     }
   }
