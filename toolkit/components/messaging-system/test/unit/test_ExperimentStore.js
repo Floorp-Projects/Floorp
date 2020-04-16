@@ -9,6 +9,8 @@ add_task(async function test_getExperimentForGroup() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: { slug: "variant", groups: ["green"] },
   });
+
+  await store.init();
   store.addExperiment(ExperimentFakes.experiment("bar"));
   store.addExperiment(experiment);
 
@@ -21,6 +23,8 @@ add_task(async function test_getExperimentForGroup() {
 
 add_task(async function test_hasExperimentForGroups() {
   const store = ExperimentFakes.store();
+
+  await store.init();
   store.addExperiment(
     ExperimentFakes.experiment("foo", {
       branch: { slug: "variant", groups: ["green"] },
@@ -70,6 +74,8 @@ add_task(async function test_hasExperimentForGroups() {
 
 add_task(async function test_getAll_getAllActive() {
   const store = ExperimentFakes.store();
+
+  await store.init();
   ["foo", "bar", "baz"].forEach(slug =>
     store.addExperiment(ExperimentFakes.experiment(slug, { active: false }))
   );
@@ -90,6 +96,8 @@ add_task(async function test_getAll_getAllActive() {
 add_task(async function test_addExperiment() {
   const store = ExperimentFakes.store();
   const exp = ExperimentFakes.experiment("foo");
+
+  await store.init();
   store.addExperiment(exp);
 
   Assert.equal(store.get("foo"), exp, "should save experiment by slug");
@@ -100,6 +108,8 @@ add_task(async function test_updateExperiment() {
     ExperimentFakes.experiment("foo", { value: true, active: true })
   );
   const store = ExperimentFakes.store();
+
+  await store.init();
   store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
 
