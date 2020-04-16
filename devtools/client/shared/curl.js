@@ -119,7 +119,7 @@ const Curl = {
       ["PUT", "POST", "PATCH"].includes(data.method)
     ) {
       postDataText = data.postDataText;
-      addPostData("--data");
+      addPostData("--data-raw");
       addPostData(utils.writePostDataTextParams(postDataText));
       ignoredHeaders.add("content-length");
     }
