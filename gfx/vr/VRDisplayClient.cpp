@@ -41,7 +41,9 @@ VRDisplayClient::VRDisplayClient(const VRDisplayInfo& aDisplayInfo)
       mLastEventFrameId(0),
       mLastPresentingGeneration(0),
       mLastEventControllerState{},
-      mAPIMode(VRAPIMode::WebXR) {
+      // For now WebVR is default to prevent a VRDisplay restore bug in WebVR
+      // compatibility mode. See Bug 1630512
+      mAPIMode(VRAPIMode::WebVR) {
   MOZ_COUNT_CTOR(VRDisplayClient);
 }
 
