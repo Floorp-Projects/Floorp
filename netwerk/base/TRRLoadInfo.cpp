@@ -607,6 +607,18 @@ TRRLoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetHasValidUserGestureActivation(
+    bool* aHasValidUserGestureActivation) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetHasValidUserGestureActivation(
+    bool aHasValidUserGestureActivation) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
   *aResult = mInternalContentPolicyType;
   return NS_OK;

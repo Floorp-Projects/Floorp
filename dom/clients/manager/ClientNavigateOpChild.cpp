@@ -258,6 +258,8 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   loadState->SetSourceBrowsingContext(docShell->GetBrowsingContext());
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
+  loadState->SetHasValidUserGestureActivation(
+      doc->HasValidTransientUserGestureActivation());
   rv = docShell->LoadURI(loadState, false);
   if (NS_FAILED(rv)) {
     /// There are tests that try sending file:/// and mixed-content URLs

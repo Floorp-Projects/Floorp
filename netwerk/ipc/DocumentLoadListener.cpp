@@ -289,19 +289,22 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
+  RefPtr<LoadInfo> loadInfo;
   if (aBrowsingContext->GetParent()) {
     // Build LoadInfo for TYPE_SUBDOCUMENT
-    RefPtr<LoadInfo> loadInfo =
-        new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
-                     aOuterWindowId, securityFlags, sandboxFlags);
-    return loadInfo.forget();
+    loadInfo = new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
+                            aOuterWindowId, securityFlags, sandboxFlags);
+  } else {
+    // Build LoadInfo for TYPE_DOCUMENT
+    OriginAttributes attrs;
+    mLoadContext->GetOriginAttributes(attrs);
+    loadInfo = new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
+                            attrs, aOuterWindowId, securityFlags, sandboxFlags);
   }
-  // Build LoadInfo for TYPE_DOCUMENT
-  OriginAttributes attrs;
-  mLoadContext->GetOriginAttributes(attrs);
-  RefPtr<LoadInfo> loadInfo =
-      new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(), attrs,
-                   aOuterWindowId, securityFlags, sandboxFlags);
+
+  loadInfo->SetHasValidUserGestureActivation(
+      aLoadState->HasValidUserGestureActivation());
+
   return loadInfo.forget();
 }
 

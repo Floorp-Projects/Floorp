@@ -106,6 +106,7 @@ LoadInfo::LoadInfo(
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
@@ -380,6 +381,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
@@ -484,6 +486,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
@@ -777,6 +780,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mCspNonce(rhs.mCspNonce),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
+      mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mParserCreatedScript(rhs.mParserCreatedScript),
       mHasStoragePermission(rhs.mHasStoragePermission),
@@ -817,9 +821,10 @@ LoadInfo::LoadInfo(
     bool aDocumentHasLoaded,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
-    uint32_t aHttpsOnlyStatus, bool aAllowDeprecatedSystemRequests,
-    bool aParserCreatedScript, bool aHasStoragePermission,
-    uint32_t aRequestBlockingReason, nsINode* aLoadingContext)
+    uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
+    bool aAllowDeprecatedSystemRequests, bool aParserCreatedScript,
+    bool aHasStoragePermission, uint32_t aRequestBlockingReason,
+    nsINode* aLoadingContext)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -876,6 +881,7 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
+      mHasValidUserGestureActivation(aHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
@@ -1722,6 +1728,20 @@ LoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
 NS_IMETHODIMP
 LoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
   mHttpsOnlyStatus = aHttpsOnlyStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetHasValidUserGestureActivation(
+    bool* aHasValidUserGestureActivation) {
+  *aHasValidUserGestureActivation = mHasValidUserGestureActivation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetHasValidUserGestureActivation(
+    bool aHasValidUserGestureActivation) {
+  mHasValidUserGestureActivation = aHasValidUserGestureActivation;
   return NS_OK;
 }
 

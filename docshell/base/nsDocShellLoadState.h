@@ -177,6 +177,10 @@ class nsDocShellLoadState final {
 
   void SetFirstParty(bool aFirstParty);
 
+  bool HasValidUserGestureActivation() const;
+
+  void SetHasValidUserGestureActivation(bool HasValidUserGestureActivation);
+
   const nsCString& TypeHint() const;
 
   void SetTypeHint(const nsCString& aTypeHint);
@@ -354,6 +358,9 @@ class nsDocShellLoadState final {
 
   // Is this a First Party Load?
   bool mFirstParty;
+
+  // Is this load triggered by a user gesture?
+  bool mHasValidUserGestureActivation;
 
   // A hint as to the content-type of the resulting data. If no hint, IsVoid()
   // should return true.
