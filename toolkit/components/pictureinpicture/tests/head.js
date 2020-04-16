@@ -14,6 +14,7 @@ const TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
 const TEST_PAGE = TEST_ROOT + "test-page.html";
 const TEST_PAGE_2 = TEST_ROOT_2 + "test-page.html";
 const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
+const TEST_PAGE_WITH_SOUND = TEST_ROOT + "test-page-with-sound.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ID = "pictureInPictureToggleButton";
 const HOVER_VIDEO_OPACITY = 0.8;
