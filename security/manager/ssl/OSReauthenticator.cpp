@@ -85,8 +85,10 @@ std::unique_ptr<char[]> GetUserTokenInfo() {
 static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
                                           const nsAString& aCaptionText,
                                           const WindowsHandle& hwndParent,
-                                          /* out */ bool& reauthenticated) {
+                                          /* out */ bool& reauthenticated,
+                                          /* out */ bool& isBlankPassword) {
   reauthenticated = false;
+  isBlankPassword = false;
 
   // Check if the user has a blank password before proceeding
   DWORD usernameLength = CREDUI_MAX_USERNAME_LENGTH + 1;
@@ -104,6 +106,7 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
         CloseHandle(logonUserHandle);
       }
       reauthenticated = true;
+      isBlankPassword = true;
       return NS_OK;
     }
   }
@@ -231,13 +234,14 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
 static nsresult ReauthenticateUser(const nsAString& prompt,
                                    const nsAString& caption,
                                    const WindowsHandle& hwndParent,
-                                   /* out */ bool& reauthenticated) {
+                                   /* out */ bool& reauthenticated,
+                                   /* out */ bool& isBlankPassword) {
   reauthenticated = false;
 #if defined(XP_WIN)
-  return ReauthenticateUserWindows(prompt, caption, hwndParent,
-                                   reauthenticated);
+  return ReauthenticateUserWindows(prompt, caption, hwndParent, reauthenticated,
+                                   isBlankPassword);
 #elif defined(XP_MACOSX)
-  return ReauthenticateUserMacOS(prompt, reauthenticated);
+  return ReauthenticateUserMacOS(prompt, reauthenticated, isBlankPassword);
 #endif  // Reauthentication is not implemented for this platform.
   return NS_OK;
 }
@@ -248,15 +252,19 @@ static void BackgroundReauthenticateUser(RefPtr<Promise>& aPromise,
                                          const WindowsHandle& hwndParent) {
   nsAutoCString recovery;
   bool reauthenticated;
+  bool isBlankPassword;
   nsresult rv = ReauthenticateUser(aMessageText, aCaptionText, hwndParent,
-                                   reauthenticated);
+                                   reauthenticated, isBlankPassword);
+  nsTArray<bool> results(2);
+  results.AppendElement(reauthenticated);
+  results.AppendElement(isBlankPassword);
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "BackgroundReauthenticateUserResolve",
-      [rv, reauthenticated, aPromise = std::move(aPromise)]() {
+      [rv, results = std::move(results), aPromise = std::move(aPromise)]() {
         if (NS_FAILED(rv)) {
           aPromise->MaybeReject(rv);
         } else {
-          aPromise->MaybeResolve(reauthenticated);
+          aPromise->MaybeResolve(results);
         }
       }));
   NS_DispatchToMainThread(runnable.forget());
