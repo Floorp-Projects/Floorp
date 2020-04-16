@@ -8,6 +8,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.VisibleForTesting
@@ -32,8 +33,9 @@ private const val SMALL_ELEVATION_CHANGE = 0.01f
  * - On showing a [Snackbar] position it above the [BrowserToolbar].
  * - Snap the [BrowserToolbar] to be hidden or visible when the user stops scrolling.
  */
+@Suppress("TooManyFunctions")
 class BrowserToolbarBottomBehavior(
-    context: Context?,
+    val context: Context?,
     attrs: AttributeSet?
 ) : CoordinatorLayout.Behavior<BrowserToolbar>(context, attrs) {
     // This implementation is heavily based on this blog article:
@@ -51,7 +53,14 @@ class BrowserToolbarBottomBehavior(
     /**
      * Reference to [EngineView] used to check user's [android.view.MotionEvent]s.
      */
-    private var engineView: EngineView? = null
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var engineView: EngineView? = null
+
+    /**
+     * Reference to the actual [BrowserToolbar] that we'll animate.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal lateinit var browserToolbar: BrowserToolbar
 
     /**
      * Depending on how user's touch was consumed by EngineView / current website,
@@ -66,6 +75,9 @@ class BrowserToolbarBottomBehavior(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val shouldScroll: Boolean
         get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var gesturesDetector: BrowserGestureDetector = createGestureDetector()
 
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
@@ -105,22 +117,18 @@ class BrowserToolbarBottomBehavior(
         }
     }
 
-    override fun onNestedPreScroll(
-        coordinatorLayout: CoordinatorLayout,
+    override fun onInterceptTouchEvent(
+        parent: CoordinatorLayout,
         child: BrowserToolbar,
-        target: View,
-        dx: Int,
-        dy: Int,
-        consumed: IntArray,
-        type: Int
-    ) {
-        if (shouldScroll) {
-            super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
-            child.translationY = max(0f, min(child.height.toFloat(), child.translationY + dy))
-        }
+        ev: MotionEvent
+    ): Boolean {
+        gesturesDetector.handleTouchEvent(ev)
+        return false // allow events to be passed to below listeners
     }
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: BrowserToolbar, dependency: View): Boolean {
+        browserToolbar = child
+
         engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
 
         if (dependency is Snackbar.SnackbarLayout) {
@@ -145,6 +153,20 @@ class BrowserToolbarBottomBehavior(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun snapToolbarVertically() {
+        if (snapAnimator.isStarted) {
+            snapAnimator.end()
+        } else {
+            browserToolbar.translationY =
+                if (browserToolbar.translationY >= browserToolbar.height / 2) {
+                    browserToolbar.height.toFloat()
+                } else {
+                    0f
+                }
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun positionSnackbar(child: View, snackbarLayout: Snackbar.SnackbarLayout) {
         val params = snackbarLayout.layoutParams as CoordinatorLayout.LayoutParams
 
@@ -160,6 +182,37 @@ class BrowserToolbarBottomBehavior(
         // out from under the toolbar.
         snackbarLayout.elevation = child.elevation - SMALL_ELEVATION_CHANGE
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun tryToScrollVertically(distance: Float) {
+        if (shouldScroll) {
+            browserToolbar.translationY =
+                max(0f, min(browserToolbar.height.toFloat(), browserToolbar.translationY + distance))
+        }
+    }
+
+    /**
+     * Helper function to ease testing.
+     * (Re)Initializes the [BrowserGestureDetector] in a new context.
+     *
+     * Useful in spied behaviors, to ensure callbacks are of the spy and not of the initially created object
+     * if the passed in argument is the result of [createGestureDetector].
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun initGesturesDetector(detector: BrowserGestureDetector) {
+        gesturesDetector = detector
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createGestureDetector() =
+        BrowserGestureDetector(context!!, BrowserGestureDetector.GesturesListener(
+            onVerticalScroll = ::tryToScrollVertically,
+            onScaleBegin = {
+                // Scale shouldn't animate the toolbar but a small y translation is still possible
+                // because of a previous scroll. Try to be swift about such an in progress animation.
+                snapToolbarVertically()
+            }
+        ))
 }
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
