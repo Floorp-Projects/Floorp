@@ -41,7 +41,7 @@ class COMPtrHolder {
 
   Interface* Get() const { return mPtr.get(); }
 
-  MOZ_MUST_USE Interface* Release() { return mPtr.release(); }
+  [[nodiscard]] Interface* Release() { return mPtr.release(); }
 
   void Set(COMPtrType&& aPtr) { mPtr = std::forward<COMPtrType>(aPtr); }
 
