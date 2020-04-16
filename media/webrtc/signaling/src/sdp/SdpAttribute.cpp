@@ -1046,6 +1046,7 @@ static bool ShouldSerializeChannels(SdpRtpmapAttributeList::CodecType type) {
     case SdpRtpmapAttributeList::kRed:
     case SdpRtpmapAttributeList::kUlpfec:
     case SdpRtpmapAttributeList::kTelephoneEvent:
+    case SdpRtpmapAttributeList::kRtx:
       return false;
     case SdpRtpmapAttributeList::kOtherCodec:
       return true;
