@@ -273,10 +273,18 @@ void XRInputSource::Update(XRSession* aSession) {
         mSelectAction = ActionState::ActionState_Releasing;
       } else if (mSelectAction <= ActionState::ActionState_Releasing &&
                  controllerState.triggerValue[selectIndex] < endThreshold) {
+        // For a select btn which only has pressed and unpressed status.
+        if (mSelectAction == ActionState::ActionState_Pressed) {
+          DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+        }
         DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
         mSelectAction = ActionState::ActionState_Released;
       }
     } else if (mSelectAction <= ActionState::ActionState_Releasing) {
+      // For a select btn which only has pressed and unpressed status.
+      if (mSelectAction == ActionState::ActionState_Pressed) {
+        DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+      }
       DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
       mSelectAction = ActionState::ActionState_Released;
     }
@@ -300,10 +308,18 @@ void XRInputSource::Update(XRSession* aSession) {
         mSqueezeAction = ActionState::ActionState_Releasing;
       } else if (mSqueezeAction <= ActionState::ActionState_Releasing &&
                  controllerState.triggerValue[squeezeIndex] < endThreshold) {
+        // For a squeeze btn which only has pressed and unpressed status.
+        if (mSqueezeAction == ActionState::ActionState_Pressed) {
+          DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+        }
         DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
         mSqueezeAction = ActionState::ActionState_Released;
       }
     } else if (mSqueezeAction <= ActionState::ActionState_Releasing) {
+      // For a squeeze btn which only has pressed and unpressed status.
+      if (mSqueezeAction == ActionState::ActionState_Pressed) {
+        DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+      }
       DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
       mSqueezeAction = ActionState::ActionState_Released;
     }
