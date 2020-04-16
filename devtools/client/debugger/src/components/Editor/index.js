@@ -39,7 +39,6 @@ import {
   getThreadContext,
   getSkipPausing,
   getInlinePreview,
-  getSelectedFrame,
   getHighlightedCalls,
 } from "../../selectors";
 
@@ -91,7 +90,6 @@ import type {
   SourceLocation,
   SourceWithContent,
   ThreadContext,
-  Frame,
   HighlightedCalls as highlightedCallsType,
 } from "../../types";
 
@@ -115,7 +113,6 @@ export type Props = {
   isPaused: boolean,
   skipPausing: boolean,
   inlinePreviewEnabled: boolean,
-  selectedFrame: ?Frame,
   highlightedCalls: ?highlightedCallsType,
 
   // Actions
@@ -339,8 +336,8 @@ class Editor extends PureComponent<Props, State> {
   commandKeyDown = (e: KeyboardEvent) => {
     const { key } = e;
     if (this.props.isPaused && key === "Meta") {
-      const { cx, selectedFrame, highlightCalls } = this.props;
-      highlightCalls(cx, selectedFrame);
+      const { cx, highlightCalls } = this.props;
+      highlightCalls(cx);
     }
   };
 
@@ -723,7 +720,6 @@ const mapStateToProps = state => {
     isPaused: getIsPaused(state, getCurrentThread(state)),
     skipPausing: getSkipPausing(state),
     inlinePreviewEnabled: getInlinePreview(state),
-    selectedFrame: getSelectedFrame(state, getCurrentThread(state)),
     highlightedCalls: getHighlightedCalls(state, getCurrentThread(state)),
   };
 };
