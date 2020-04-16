@@ -28,3 +28,14 @@ fuzzy-if(Android&&webrender,0-128,0-10) == flexbox-empty-2d.html flexbox-empty-2
 == flexbox-unbreakable-child-1d.html      flexbox-unbreakable-child-1-ref.html
 == flexbox-unbreakable-child-1d-wrap.html flexbox-unbreakable-child-1-ref.html
 == flexbox-unbreakable-child-2.html       flexbox-unbreakable-child-2-ref.html
+
+# Tests for how we fragment a flex container with one unbreakable child and
+# "box-decoration-break: clone"
+== flexbox-unbreakable-child-3a.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3a-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3b.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3b-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3c.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3c-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3d.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3d-wrap.html flexbox-unbreakable-child-3-ref.html
