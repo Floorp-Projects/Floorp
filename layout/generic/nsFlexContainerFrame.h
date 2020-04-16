@@ -9,6 +9,8 @@
 #ifndef nsFlexContainerFrame_h___
 #define nsFlexContainerFrame_h___
 
+#include <tuple>
+
 #include "mozilla/dom/FlexBinding.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
@@ -490,17 +492,18 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             established yet. If the latter, this will be
    *                             updated with an ascent derived from the first
    *                             flex item (if there are any flex items).
+   * @return nscoord the maximum block-end edge of children of this fragment in
+   *                 flex container's coordinate space.
+   * @return bool true if the children are all complete; false otherwise.
    */
-  void ReflowChildren(const ReflowInput& aReflowInput,
-                      const nscoord aContentBoxMainSize,
-                      const nscoord aContentBoxCrossSize,
-                      const mozilla::LogicalSize& aAvailableSizeForItems,
-                      const mozilla::LogicalMargin& aBorderPadding,
-                      const nscoord aConsumedBSize,
-                      nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-                      nsTArray<nsIFrame*>& aPlaceholders,
-                      const FlexboxAxisTracker& aAxisTracker,
-                      bool aHasLineClampEllipsis);
+  std::tuple<nscoord, bool> ReflowChildren(
+      const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
+      const nscoord aContentBoxCrossSize,
+      const mozilla::LogicalSize& aAvailableSizeForItems,
+      const mozilla::LogicalMargin& aBorderPadding,
+      const nscoord aConsumedBSize, nscoord& aFlexContainerAscent,
+      nsTArray<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any

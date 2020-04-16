@@ -4325,10 +4325,13 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  ReflowChildren(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
-                 availableSizeForItems, borderPadding, consumedBSize,
-                 flexContainerAscent, lines, placeholders, axisTracker,
-                 hasLineClampEllipsis);
+  const auto [maxBlockEndEdgeOfChildren, areChildrenComplete] = ReflowChildren(
+      aReflowInput, contentBoxMainSize, contentBoxCrossSize,
+      availableSizeForItems, borderPadding, consumedBSize, flexContainerAscent,
+      lines, placeholders, axisTracker, hasLineClampEllipsis);
+
+  Unused << maxBlockEndEdgeOfChildren;
+  Unused << areChildrenComplete;
 
   ComputeFinalSize(aReflowOutput, aReflowInput, aStatus, contentBoxMainSize,
                    contentBoxCrossSize, flexContainerAscent, lines,
@@ -4897,7 +4900,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   }
 }
 
-void nsFlexContainerFrame::ReflowChildren(
+std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
     const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
     const nscoord aContentBoxCrossSize,
     const LogicalSize& aAvailableSizeForItems,
@@ -4926,6 +4929,9 @@ void nsFlexContainerFrame::ReflowChildren(
           ? (aLines.LastElement().IsEmpty() ? nullptr
                                             : &aLines.LastElement().LastItem())
           : (aLines[0].IsEmpty() ? nullptr : &aLines[0].FirstItem());
+
+  // The block-end of children is relative to the flex container's border-box.
+  nscoord maxBlockEndEdgeOfChildren = containerContentBoxOrigin.B(flexWM);
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
@@ -4992,6 +4998,10 @@ void nsFlexContainerFrame::ReflowChildren(
         }
       }
 
+      maxBlockEndEdgeOfChildren =
+          std::max(maxBlockEndEdgeOfChildren,
+                   itemNormalBPos + item.Frame()->BSize(flexWM));
+
       // If the item has auto margins, and we were tracking the UsedMargin
       // property, set the property to the computed margin values.
       if (item.HasAnyAutoMargin()) {
@@ -5016,6 +5026,9 @@ void nsFlexContainerFrame::ReflowChildren(
     ReflowPlaceholders(aReflowInput, aPlaceholders, containerContentBoxOrigin,
                        containerSize);
   }
+
+  // XXX: Children are always complete for now.
+  return {maxBlockEndEdgeOfChildren, true};
 }
 
 void nsFlexContainerFrame::ComputeFinalSize(
