@@ -97,11 +97,11 @@ class InstalledAddonDetailsFragment : Fragment() {
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {
+                            this.addon = it
                             switch.isClickable = true
                             switch.setText(R.string.mozac_feature_addons_enabled)
                             view.settings.isVisible = shouldSettingsBeVisible()
                             view.remove_add_on.isEnabled = true
-                            this.addon = it
                             showSnackBar(
                                 view,
                                 getString(
