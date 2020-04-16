@@ -202,4 +202,13 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun clearSelection() {
         currentSelection?.clearSelection()
     }
+
+    override fun setVisibility(visibility: Int) {
+        // GeckoView doesn't react to onVisibilityChanged so we need to propagate ourselves for now:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1630775
+        // We do this to prevent the content from resizing when the view is not visible:
+        // https://github.com/mozilla-mobile/android-components/issues/6664
+        currentGeckoView.visibility = visibility
+        super.setVisibility(visibility)
+    }
 }
