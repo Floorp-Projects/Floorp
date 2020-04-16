@@ -1071,6 +1071,7 @@ class SdpRtpmapAttributeList : public SdpAttribute {
     kRed,
     kUlpfec,
     kTelephoneEvent,
+    kRtx,
     kOtherCodec
   };
 
@@ -1153,6 +1154,9 @@ inline std::ostream& operator<<(std::ostream& os,
     case SdpRtpmapAttributeList::kTelephoneEvent:
       os << "telephone-event";
       break;
+    case SdpRtpmapAttributeList::kRtx:
+      os << "rtx";
+      break;
     default:
       MOZ_ASSERT(false);
       os << "?";
@@ -1206,6 +1210,36 @@ class SdpFmtpAttributeList : public SdpAttribute {
     }
 
     std::vector<uint8_t> encodings;
+  };
+
+  class RtxParameters : public Parameters {
+   public:
+    uint8_t apt;
+    Maybe<uint32_t> rtx_time;
+
+    RtxParameters(const uint8_t aApt, const Maybe<uint32_t>& aRtxTime)
+        : Parameters(SdpRtpmapAttributeList::kRtx),
+          apt(aApt),
+          rtx_time(aRtxTime) {}
+
+    virtual ~RtxParameters() {}
+
+    virtual Parameters* Clone() const override {
+      return new RtxParameters(*this);
+    }
+
+    virtual void Serialize(std::ostream& os) const override {
+      os << "apt=" << apt;
+      rtx_time.apply([&](const auto& time) { os << ";rtx-time=" << time; });
+    }
+
+    virtual bool CompareEq(const Parameters& aOther) const override {
+      if (aOther.codec_type != codec_type) {
+        return false;
+      }
+      auto other = static_cast<const RtxParameters&>(aOther);
+      return other.apt = apt && other.rtx_time == rtx_time;
+    }
   };
 
   class H264Parameters : public Parameters {
