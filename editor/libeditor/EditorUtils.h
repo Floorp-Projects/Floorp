@@ -808,6 +808,16 @@ class EditorUtils final {
   }
 
   /**
+   * Returns true if aContent is a <br> element and it's marked as padding for
+   * empty last line.
+   */
+  static bool IsPaddingBRElementForEmptyLastLine(const nsIContent& aContent) {
+    const dom::HTMLBRElement* brElement =
+        dom::HTMLBRElement::FromNode(&aContent);
+    return brElement && brElement->IsPaddingForEmptyLastLine();
+  }
+
+  /**
    * IsEditableContent() returns true if aContent's data or children is ediable
    * for the given editor type.  Be aware, returning true does NOT mean the
    * node can be removed from its parent node, and returning false does NOT
