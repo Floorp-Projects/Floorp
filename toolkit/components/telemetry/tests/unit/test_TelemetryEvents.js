@@ -294,23 +294,11 @@ add_task(async function test_recording() {
   checkEventSummary(Object.values(summaries), true);
 
   // The following should not result in any recorded events.
-  Assert.throws(
-    () => Telemetry.recordEvent("unknown.category", "test1", "object1"),
-    /Error: Unknown event: \["unknown.category", "test1", "object1"\]/,
-    "Should throw on unknown category."
-  );
+  Telemetry.recordEvent("unknown.category", "test1", "object1");
   checkRecordingFailure(0 /* UnknownEvent */);
-  Assert.throws(
-    () => Telemetry.recordEvent("telemetry.test", "unknown", "object1"),
-    /Error: Unknown event: \["telemetry.test", "unknown", "object1"\]/,
-    "Should throw on unknown method."
-  );
+  Telemetry.recordEvent("telemetry.test", "unknown", "object1");
   checkRecordingFailure(0 /* UnknownEvent */);
-  Assert.throws(
-    () => Telemetry.recordEvent("telemetry.test", "test1", "unknown"),
-    /Error: Unknown event: \["telemetry.test", "test1", "unknown"\]/,
-    "Should throw on unknown object."
-  );
+  Telemetry.recordEvent("telemetry.test", "test1", "unknown");
   checkRecordingFailure(0 /* UnknownEvent */);
 
   let checkEvents = (events, expectedEvents) => {
@@ -632,11 +620,7 @@ add_task(async function test_dynamicEvents() {
   Telemetry.recordEvent("telemetry.test.dynamic", "test4", "object1", null);
 
   // Test recording an unknown event.
-  Assert.throws(
-    () => Telemetry.recordEvent("telemetry.test.dynamic", "unknown", "unknown"),
-    /Error: Unknown event: \["telemetry\.test\.dynamic", "unknown", "unknown"\]/,
-    "Should throw when recording an unknown dynamic event."
-  );
+  Telemetry.recordEvent("telemetry.test.dynamic", "unknown", "unknown");
   checkRecordingFailure(0 /* UnknownEvent */);
 
   // Now check that the snapshot contains the expected data.
