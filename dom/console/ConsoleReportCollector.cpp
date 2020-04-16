@@ -69,8 +69,10 @@ void ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
     nsCOMPtr<nsIURI> uri;
     if (!report.mSourceFileURI.IsEmpty()) {
       nsresult rv = NS_NewURI(getter_AddRefs(uri), report.mSourceFileURI);
-      MOZ_ALWAYS_SUCCEEDS(rv);
       if (NS_FAILED(rv)) {
+        NS_WARNING(nsPrintfCString("Failed to transform %s to uri",
+                                   report.mSourceFileURI.get())
+                       .get());
         continue;
       }
     }
