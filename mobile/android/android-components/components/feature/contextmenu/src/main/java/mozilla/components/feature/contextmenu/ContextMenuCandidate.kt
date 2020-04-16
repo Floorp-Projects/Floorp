@@ -366,7 +366,7 @@ private fun HitResult.isIntent(): Boolean =
         getLink().startsWith("intent"))
 
 private fun HitResult.canOpenInExternalApp(appLinksUseCases: AppLinksUseCases): Boolean {
-    if (isLink() || isIntent()) {
+    if (isLink() || isIntent() || isVideoAudio()) {
         val redirect = appLinksUseCases.appLinkRedirectIncludeInstall(getLink())
         return redirect.hasExternalApp() || redirect.hasMarketplaceIntent()
     }
