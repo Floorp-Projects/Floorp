@@ -132,5 +132,10 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   mMapping.reset();
 }
 
+void Buffer::Destroy() {
+  // TODO: we don't have to implement it right now, but it's used by the
+  // examples
+}
+
 }  // namespace webgpu
 }  // namespace mozilla

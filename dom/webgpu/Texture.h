@@ -42,6 +42,7 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
  public:
   already_AddRefed<TextureView> CreateView(
       const dom::GPUTextureViewDescriptor& aDesc);
+  void Destroy();
 };
 
 }  // namespace webgpu

@@ -212,7 +212,7 @@ interface GPUBuffer {
     [Throws]
     void unmap();
 
-    //void destroy();
+    void destroy();
 };
 GPUBuffer includes GPUObjectBase;
 
@@ -305,7 +305,7 @@ interface GPUTexture {
     [NewObject]
     GPUTextureView createView(optional GPUTextureViewDescriptor descriptor = {});
 
-    //void destroy();
+    void destroy();
 };
 GPUTexture includes GPUObjectBase;
 
@@ -551,8 +551,8 @@ dictionary GPUDepthStencilStateDescriptor {
     boolean depthWriteEnabled = false;
     GPUCompareFunction depthCompare = "always";
 
-    required GPUStencilStateFaceDescriptor stencilFront;
-    required GPUStencilStateFaceDescriptor stencilBack;
+    GPUStencilStateFaceDescriptor stencilFront = {};
+    GPUStencilStateFaceDescriptor stencilBack = {};
 
     u32 stencilReadMask = 0xFFFFFFFF;
     u32 stencilWriteMask = 0xFFFFFFFF;
