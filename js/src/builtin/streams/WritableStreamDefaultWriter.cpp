@@ -42,6 +42,7 @@ using JS::Value;
 
 using js::ClassSpec;
 using js::GetErrorMessage;
+using js::PromiseObject;
 using js::ReturnPromiseRejectedWithPendingError;
 using js::UnwrapAndTypeCheckArgument;
 using js::UnwrapAndTypeCheckThis;
@@ -502,7 +503,7 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_write(JSContext* cx,
   }
 
   // Step 3: Return this.[[readyPromise]].
-  JSObject* promise =
+  PromiseObject* promise =
       WritableStreamDefaultWriterWrite(cx, unwrappedWriter, args.get(0));
   if (!promise) {
     return false;
