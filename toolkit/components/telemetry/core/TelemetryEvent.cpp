@@ -904,10 +904,12 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
   // Trigger warnings or errors where needed.
   switch (res) {
     case RecordEventResult::UnknownEvent: {
-      JS_ReportErrorASCII(cx, R"(Unknown event: ["%s", "%s", "%s"])",
+      nsPrintfCString msg(R"(Unknown event: ["%s", "%s", "%s"])",
                           PromiseFlatCString(aCategory).get(),
                           PromiseFlatCString(aMethod).get(),
                           PromiseFlatCString(aObject).get());
+      LogToBrowserConsole(nsIScriptError::errorFlag,
+                          NS_ConvertUTF8toUTF16(msg));
       return NS_OK;
     }
     case RecordEventResult::InvalidExtraKey: {
