@@ -17,13 +17,8 @@ CacheControlParser::CacheControlParser(nsACString const& aHeader)
       mMaxStale(0),
       mMinFreshSet(false),
       mMinFresh(0),
-      mStaleWhileRevalidateSet(false),
-      mStaleWhileRevalidate(0),
       mNoCache(false),
-      mNoStore(false),
-      mPublic(false),
-      mPrivate(false),
-      mImmutable(false) {
+      mNoStore(false) {
   SkipWhites();
   if (!CheckEOF()) {
     Directive();
@@ -42,14 +37,6 @@ void CacheControlParser::Directive() {
     mMaxStaleSet = SecondsValue(&mMaxStale, PR_UINT32_MAX);
   } else if (CheckWord("min-fresh")) {
     mMinFreshSet = SecondsValue(&mMinFresh);
-  } else if (CheckWord("stale-while-revalidate")) {
-    mStaleWhileRevalidateSet = SecondsValue(&mStaleWhileRevalidate);
-  } else if (CheckWord("public")) {
-    mPublic = true;
-  } else if (CheckWord("private")) {
-    mPrivate = true;
-  } else if (CheckWord("immutable")) {
-    mImmutable = true;
   } else {
     IgnoreDirective();
   }
@@ -116,20 +103,9 @@ bool CacheControlParser::MinFresh(uint32_t* seconds) {
   return mMinFreshSet;
 }
 
-bool CacheControlParser::StaleWhileRevalidate(uint32_t* seconds) {
-  *seconds = mStaleWhileRevalidate;
-  return mStaleWhileRevalidateSet;
-}
-
 bool CacheControlParser::NoCache() { return mNoCache; }
 
 bool CacheControlParser::NoStore() { return mNoStore; }
-
-bool CacheControlParser::Public() { return mPublic; }
-
-bool CacheControlParser::Private() { return mPrivate; }
-
-bool CacheControlParser::Immutable() { return mImmutable; }
 
 }  // namespace net
 }  // namespace mozilla
