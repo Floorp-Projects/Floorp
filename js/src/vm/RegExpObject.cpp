@@ -50,7 +50,6 @@ using JS::AutoStableStringChars;
 using JS::CompileOptions;
 using JS::RegExpFlag;
 using JS::RegExpFlags;
-using js::frontend::TokenStream;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
@@ -298,8 +297,7 @@ RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
 RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
                                    RegExpFlags flags, NewObjectKind newKind) {
   CompileOptions dummyOptions(cx);
-  TokenStream dummyTokenStream(cx, dummyOptions, (const char16_t*)nullptr, 0,
-                               nullptr);
+  frontend::DummyTokenStream dummyTokenStream(cx, dummyOptions);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP
@@ -1149,7 +1147,7 @@ bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
   }
 
   CompileOptions options(cx);
-  frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+  frontend::DummyTokenStream dummyTokenStream(cx, options);
 
   /* Parse the pattern. The RegExpCompileData is allocated in LifoAlloc and
    * will only be live while LifoAllocScope is on stack. */

@@ -215,7 +215,7 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     ScriptSourceObject* sourceObject)
     : Base(cx, options, foldConstants, compilationInfo, syntaxParser,
            lazyOuterFunction, sourceObject),
-      tokenStream(cx, options, units, length) {}
+      tokenStream(cx, &compilationInfo, options, units, length) {}
 
 template <typename Unit>
 void Parser<SyntaxParseHandler, Unit>::setAwaitHandling(
