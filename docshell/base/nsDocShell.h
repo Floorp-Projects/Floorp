@@ -569,18 +569,6 @@ class nsDocShell final : public nsDocLoader,
     return uint32_t(aTimeUsec / PR_USEC_PER_SEC);
   }
 
-  static const nsCString FrameTypeToString(uint32_t aFrameType) {
-    switch (aFrameType) {
-      case FRAME_TYPE_BROWSER:
-        return NS_LITERAL_CSTRING("browser");
-      case FRAME_TYPE_REGULAR:
-        return NS_LITERAL_CSTRING("regular");
-      default:
-        NS_ERROR("Unknown frame type");
-        return EmptyCString();
-    }
-  }
-
   virtual ~nsDocShell();
 
   //
@@ -1009,7 +997,6 @@ class nsDocShell final : public nsDocLoader,
   bool IsPrintingOrPP(bool aDisplayErrorDialog = true);
   bool IsNavigationAllowed(bool aDisplayPrintErrorDialog = true,
                            bool aCheckIfUnloadFired = true);
-  uint32_t GetInheritedFrameType();
   nsIScrollableFrame* GetRootScrollFrame();
   nsIChannel* GetCurrentDocChannel();
   nsresult EnsureScriptEnvironment();
@@ -1228,9 +1215,6 @@ class nsDocShell final : public nsDocLoader,
   uint32_t mLoadType;
   uint32_t mDefaultLoadFlags;
   uint32_t mFailedLoadType;
-
-  // Are we a regular frame, a browser frame, or an app frame?
-  FrameType mFrameType;
 
   // This represents the CSS display-mode we are currently using. This is mostly
   // used for media queries.
