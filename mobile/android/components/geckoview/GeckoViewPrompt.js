@@ -379,10 +379,14 @@ PromptFactory.prototype = {
   // nsIPromptService methods proxy to our Prompt class
   callProxy(aMethod, aArguments) {
     let prompt = new PromptDelegate(aArguments[0]);
-    return prompt[aMethod].apply(
-      prompt,
-      Array.prototype.slice.call(aArguments, 1)
-    );
+    let promptArgs;
+    if (aArguments[0] instanceof BrowsingContext) {
+      // Called by BrowsingContext prompt method, strip modalType.
+      [, , /*browsingContext*/ /*modalType*/ ...promptArgs] = aArguments;
+    } else {
+      [, /*domWindow*/ ...promptArgs] = aArguments;
+    }
+    return prompt[aMethod].apply(prompt, promptArgs);
   },
 
   /* ----------  nsIPromptService  ---------- */
@@ -390,44 +394,86 @@ PromptFactory.prototype = {
   alert() {
     return this.callProxy("alert", arguments);
   },
+  alertBC() {
+    return this.callProxy("alert", arguments);
+  },
   alertCheck() {
+    return this.callProxy("alertCheck", arguments);
+  },
+  alertCheckBC() {
     return this.callProxy("alertCheck", arguments);
   },
   confirm() {
     return this.callProxy("confirm", arguments);
   },
+  confirmBC() {
+    return this.callProxy("confirm", arguments);
+  },
   confirmCheck() {
+    return this.callProxy("confirmCheck", arguments);
+  },
+  confirmCheckBC() {
     return this.callProxy("confirmCheck", arguments);
   },
   confirmEx() {
     return this.callProxy("confirmEx", arguments);
   },
+  confirmExBC() {
+    return this.callProxy("confirmEx", arguments);
+  },
   prompt() {
+    return this.callProxy("prompt", arguments);
+  },
+  promptBC() {
     return this.callProxy("prompt", arguments);
   },
   promptUsernameAndPassword() {
     return this.callProxy("promptUsernameAndPassword", arguments);
   },
+  promptUsernameAndPasswordBC() {
+    return this.callProxy("promptUsernameAndPassword", arguments);
+  },
   promptPassword() {
     return this.callProxy("promptPassword", arguments);
   },
+  promptPasswordBC() {
+    return this.callProxy("promptPassword", arguments);
+  },
   select() {
+    return this.callProxy("select", arguments);
+  },
+  selectBC() {
     return this.callProxy("select", arguments);
   },
 
   promptAuth() {
     return this.callProxy("promptAuth", arguments);
   },
+  promptAuthBC() {
+    return this.callProxy("promptAuth", arguments);
+  },
   asyncPromptAuth() {
+    return this.callProxy("asyncPromptAuth", arguments);
+  },
+  asyncPromptAuthBC() {
     return this.callProxy("asyncPromptAuth", arguments);
   },
 };
 
-function PromptDelegate(aDomWin) {
-  this._domWin = aDomWin;
+function PromptDelegate(aParent) {
+  if (aParent) {
+    if (aParent instanceof Window) {
+      this._domWin = aParent;
+    } else if (aParent.window) {
+      this._domWin = aParent.window;
+    } else {
+      this._domWin =
+        aParent.embedderElement && aParent.embedderElement.ownerGlobal;
+    }
+  }
 
-  if (aDomWin) {
-    this._dispatcher = GeckoViewUtils.getDispatcherForWindow(aDomWin);
+  if (this._domWin) {
+    this._dispatcher = GeckoViewUtils.getDispatcherForWindow(this._domWin);
   }
 
   if (!this._dispatcher) {
