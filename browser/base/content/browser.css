@@ -529,14 +529,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-box-flex: 1;
 }
 
-#appMenu_historyMenu > .bookmark-item,
-#appMenu-library-recentlyClosedTabs > .panel-subview-body > .bookmark-item,
-#appMenu-library-recentlyClosedWindows > .panel-subview-body > .bookmark-item,
-#appMenu-library-recentHighlights > .bookmark-item,
-#panelMenu_bookmarksMenu > .bookmark-item {
-  max-width: none;
-}
-
 %ifdef XP_MACOSX
 :root[inFullscreen="true"] {
   padding-top: 0; /* override drawintitlebar="true" */
