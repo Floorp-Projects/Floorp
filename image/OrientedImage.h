@@ -83,12 +83,9 @@ class OrientedImage : public ImageWrapper {
   /**
    * Returns a SourceSurface that is the result of rotating and flipping
    * aSurface according to aOrientation.
-   *
-   * @param aSize The size of aSurface.
    */
   static already_AddRefed<SourceSurface> OrientSurface(Orientation aOrientation,
-                                                       SourceSurface* aSurface,
-                                                       const nsIntSize& aSize);
+                                                       SourceSurface* aSurface);
 
  protected:
   OrientedImage(Image* aImage, Orientation aOrientation)
