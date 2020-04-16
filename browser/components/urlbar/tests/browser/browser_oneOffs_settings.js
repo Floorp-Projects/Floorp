@@ -11,9 +11,6 @@
 let gMaxResults;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.oneOffSearches", true]],
-  });
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   registerCleanupFunction(async function() {
