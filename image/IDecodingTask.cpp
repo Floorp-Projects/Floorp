@@ -65,8 +65,7 @@ void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
   // calls we make off-main-thread and the notifications that RasterImage
   // actually receives, which would cause bugs.
   Progress progress = aDecoder->TakeProgress();
-  UnorientedIntRect invalidRect =
-      UnorientedIntRect::FromUnknownRect(aDecoder->TakeInvalidRect());
+  IntRect invalidRect = aDecoder->TakeInvalidRect();
   Maybe<uint32_t> frameCount = aDecoder->TakeCompleteFrameCount();
   DecoderFlags decoderFlags = aDecoder->GetDecoderFlags();
   SurfaceFlags surfaceFlags = aDecoder->GetSurfaceFlags();
@@ -101,8 +100,7 @@ void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
   ImageMetadata metadata = aDecoder->GetImageMetadata();
   DecoderTelemetry telemetry = aDecoder->Telemetry();
   Progress progress = aDecoder->TakeProgress();
-  UnorientedIntRect invalidRect =
-      UnorientedIntRect::FromUnknownRect(aDecoder->TakeInvalidRect());
+  IntRect invalidRect = aDecoder->TakeInvalidRect();
   Maybe<uint32_t> frameCount = aDecoder->TakeCompleteFrameCount();
   DecoderFlags decoderFlags = aDecoder->GetDecoderFlags();
   SurfaceFlags surfaceFlags = aDecoder->GetSurfaceFlags();

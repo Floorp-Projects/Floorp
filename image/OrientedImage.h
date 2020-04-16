@@ -63,39 +63,13 @@ class OrientedImage : public ImageWrapper {
                                     gfx::SamplingFilter aSamplingFilter,
                                     uint32_t aFlags) override;
 
-  /**
-   * Computes a matrix that applies the rotation and reflection specified by
-   * aOrientation, or that matrix's inverse if aInvert is true.
-   *
-   * @param aSize The scaled size of the inner image. (When outside code
-   * specifies the scaled size, as with imgIContainer::Draw and its aSize
-   * parameter, it's necessary to swap the width and height if
-   * mOrientation.SwapsWidthAndHeight() is true.)
-   *
-   * @param aInvert If true, compute the inverse of the orientation matrix.
-   * Prefer this approach to OrientationMatrix(..).Invert(), because it's more
-   * numerically accurate.
-   */
-  static gfxMatrix OrientationMatrix(Orientation aOrientation,
-                                     const nsIntSize& aSize,
-                                     bool aInvert = false);
-
-  /**
-   * Returns a SourceSurface that is the result of rotating and flipping
-   * aSurface according to aOrientation.
-   */
-  static already_AddRefed<SourceSurface> OrientSurface(Orientation aOrientation,
-                                                       SourceSurface* aSurface);
-
  protected:
   OrientedImage(Image* aImage, Orientation aOrientation)
       : ImageWrapper(aImage), mOrientation(aOrientation) {}
 
   virtual ~OrientedImage() {}
 
-  gfxMatrix OrientationMatrix(const nsIntSize& aSize, bool aInvert = false) {
-    return OrientationMatrix(mOrientation, aSize, aInvert);
-  }
+  gfxMatrix OrientationMatrix(const nsIntSize& aSize, bool aInvert = false);
 
  private:
   Orientation mOrientation;

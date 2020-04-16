@@ -562,10 +562,6 @@ class ImageSurfaceCache {
       MOZ_ASSERT_UNREACHABLE("Expected valid native size!");
       return aSize;
     }
-    if (image->GetOrientation().SwapsWidthAndHeight() &&
-        image->HandledOrientation()) {
-      std::swap(factorSize.width, factorSize.height);
-    }
 
     if (mIsVectorImage) {
       // Ensure the aspect ratio matches the native size before forcing the

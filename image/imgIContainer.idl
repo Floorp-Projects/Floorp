@@ -624,12 +624,6 @@ interface imgIContainer : nsISupports
   [notxpcom] Orientation getOrientation();
 
   /*
-   * Returns whether the image handles the orientation returned by
-   * getOrientation() itself.
-   */
-  [notxpcom] bool handledOrientation();
-
-  /*
    * Returns the delay, in ms, between the first and second frame. If this
    * returns 0, there is no delay between first and second frame (i.e., this
    * image could render differently whenever it draws).

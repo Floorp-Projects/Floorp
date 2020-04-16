@@ -72,14 +72,6 @@ already_AddRefed<imgIContainer> ImageOps::Orient(imgIContainer* aImage,
 }
 
 /* static */
-already_AddRefed<imgIContainer> ImageOps::Unorient(imgIContainer* aImage) {
-  Orientation orientation = aImage->GetOrientation().Reversed();
-  nsCOMPtr<imgIContainer> orientedImage =
-      new OrientedImage(static_cast<Image*>(aImage), orientation);
-  return orientedImage.forget();
-}
-
-/* static */
 already_AddRefed<imgIContainer> ImageOps::CreateFromDrawable(
     gfxDrawable* aDrawable) {
   nsCOMPtr<imgIContainer> drawableImage = new DynamicImage(aDrawable);
