@@ -25,7 +25,7 @@ namespace mozilla {
 namespace dom {
 
 struct JSWindowActorMessageMeta {
-  nsString actorName;
+  nsCString actorName;
   nsString messageName;
   uint64_t queryId;
   JSWindowActorMessageKind kind;
