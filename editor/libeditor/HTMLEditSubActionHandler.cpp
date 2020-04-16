@@ -1442,7 +1442,8 @@ EditActionResult HTMLEditor::HandleInsertText(
 
   // dont put text in places that can't have it
   if (!pointToInsert.IsInTextNode() &&
-      !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
+      !HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(),
+                                     *nsGkAtoms::textTagName)) {
     NS_WARNING("Selection start container couldn't have text nodes");
     return EditActionHandled(NS_ERROR_FAILURE);
   }
@@ -1706,27 +1707,6 @@ EditActionResult HTMLEditor::HandleInsertText(
   return EditActionHandled(rv);
 }
 
-bool HTMLEditor::CanContainParagraph(Element& aElement) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (CanContainTag(aElement, *nsGkAtoms::p)) {
-    return true;
-  }
-
-  // Even if the element cannot have a <p> element as a child, it can contain
-  // <p> element as a descendant if it's one of the following elements.
-  if (aElement.IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul, nsGkAtoms::dl,
-                                   nsGkAtoms::table, nsGkAtoms::thead,
-                                   nsGkAtoms::tbody, nsGkAtoms::tfoot,
-                                   nsGkAtoms::tr)) {
-    return true;
-  }
-
-  // XXX Otherwise, Chromium checks the CSS box is a block, but we don't do it
-  //     for now.
-  return false;
-}
-
 EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   if (NS_WARN_IF(!mInitSucceeded)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
@@ -1857,7 +1837,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // insert a <br> element.
   else if (editingHost == blockParent) {
     insertBRElement = separator == ParagraphSeparator::br ||
-                      !CanContainParagraph(*editingHost);
+                      !HTMLEditUtils::CanElementContainParagraph(*editingHost);
   }
   // If the nearest block parent is a single-line container declared in
   // the execCommand spec and not the editing host, we should separate the
@@ -1872,7 +1852,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     for (Element* blockAncestor = blockParent; blockAncestor && insertBRElement;
          blockAncestor =
              HTMLEditor::GetBlockNodeParent(blockAncestor, editingHost)) {
-      insertBRElement = !CanContainParagraph(*blockAncestor);
+      insertBRElement =
+          !HTMLEditUtils::CanElementContainParagraph(*blockAncestor);
     }
   }
 
@@ -3572,7 +3553,8 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   }
 
   // If we cannot insert a `<br>` element here, do nothing.
-  if (!CanContainTag(*aPointToInsert.GetContainer(), *nsGkAtoms::br)) {
+  if (!HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(),
+                                     *nsGkAtoms::br)) {
     return NS_OK;
   }
 
@@ -4191,7 +4173,7 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildren(
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   // Check if this node can go into the destination node
-  if (CanContain(*aPointToInsert.GetContainer(), aContent)) {
+  if (HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(), aContent)) {
     // If it can, move it there.
     uint32_t offsetAtInserting = aPointToInsert.Offset();
     nsresult rv = MoveNodeWithTransaction(aContent, aPointToInsert);
@@ -4550,8 +4532,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     }
 
     // Make sure we can put a list here.
-    if (!CanContainTag(*atStartOfSelection.GetContainer(),
-                       aListElementTagName)) {
+    if (!HTMLEditUtils::CanNodeContain(*atStartOfSelection.GetContainer(),
+                                       aListElementTagName)) {
       return EditActionCanceled();
     }
 
@@ -5618,7 +5600,8 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
 
     if (!curQuote) {
       // First, check that our element can contain a div.
-      if (!CanContainTag(*atContent.GetContainer(), *nsGkAtoms::div)) {
+      if (!HTMLEditUtils::CanNodeContain(*atContent.GetContainer(),
+                                         *nsGkAtoms::div)) {
         return NS_OK;  // cancelled
       }
 
@@ -5883,7 +5866,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
 
     if (!curQuote) {
       // First, check that our element can contain a blockquote.
-      if (!CanContainTag(*atContent.GetContainer(), *nsGkAtoms::blockquote)) {
+      if (!HTMLEditUtils::CanNodeContain(*atContent.GetContainer(),
+                                         *nsGkAtoms::blockquote)) {
         return NS_OK;  // cancelled
       }
 
@@ -7085,7 +7069,8 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
     // node doesn't go in div we used earlier.
     if (!createdDivElement || transitionList[indexOfTransitionList]) {
       // First, check that our element can contain a div.
-      if (!CanContainTag(*atContent.GetContainer(), *nsGkAtoms::div)) {
+      if (!HTMLEditUtils::CanNodeContain(*atContent.GetContainer(),
+                                         *nsGkAtoms::div)) {
         // XXX Why do we return NS_OK here rather than returning error or
         //     doing continue?
         return NS_OK;
@@ -9805,7 +9790,7 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
-    if (CanContainTag(*pointToInsert.GetContainer(), aTag)) {
+    if (HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(), aTag)) {
       // Found an ancestor node which can contain the element.
       break;
     }
@@ -10275,7 +10260,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
     if (blockElement &&
         EditorUtils::IsEditableContent(*blockElement, EditorType::HTML) &&
         IsEmptyNode(*blockElement, false, false) &&
-        CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
+        HTMLEditUtils::CanNodeContain(*point.GetContainer(), *nsGkAtoms::br)) {
       Element* bodyOrDocumentElement = GetRoot();
       if (NS_WARN_IF(!bodyOrDocumentElement)) {
         return NS_ERROR_FAILURE;

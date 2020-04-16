@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "nsGkAtoms.h"
+#include "nsHTMLTags.h"
 
 class nsAtom;
 
@@ -96,8 +97,77 @@ class HTMLEditUtils final {
   static bool IsMailCite(nsINode* aNode);
   static bool IsFormWidget(nsINode* aNode);
   static bool SupportsAlignAttr(nsINode& aNode);
-  static bool CanContain(int32_t aParent, int32_t aChild);
   static bool IsContainer(int32_t aTag);
+
+  static bool CanNodeContain(const nsINode& aParent, const nsIContent& aChild) {
+    switch (aParent.NodeType()) {
+      case nsINode::ELEMENT_NODE:
+      case nsINode::DOCUMENT_FRAGMENT_NODE:
+        return HTMLEditUtils::CanNodeContain(*aParent.NodeInfo()->NameAtom(),
+                                             aChild);
+    }
+    return false;
+  }
+
+  static bool CanNodeContain(const nsINode& aParent, nsAtom& aChildNodeName) {
+    switch (aParent.NodeType()) {
+      case nsINode::ELEMENT_NODE:
+      case nsINode::DOCUMENT_FRAGMENT_NODE:
+        return HTMLEditUtils::CanNodeContain(*aParent.NodeInfo()->NameAtom(),
+                                             aChildNodeName);
+    }
+    return false;
+  }
+
+  static bool CanNodeContain(nsAtom& aParentNodeName,
+                             const nsIContent& aChild) {
+    switch (aChild.NodeType()) {
+      case nsINode::TEXT_NODE:
+      case nsINode::ELEMENT_NODE:
+      case nsINode::DOCUMENT_FRAGMENT_NODE:
+        return HTMLEditUtils::CanNodeContain(aParentNodeName,
+                                             *aChild.NodeInfo()->NameAtom());
+    }
+    return false;
+  }
+
+  // XXX Only this overload does not check the node type.  Therefore, only this
+  //     treat Document, Comment, CDATASection, etc.
+  static bool CanNodeContain(nsAtom& aParentNodeName, nsAtom& aChildNodeName) {
+    nsHTMLTag childTagEnum;
+    // XXX Should this handle #cdata-section too?
+    if (&aChildNodeName == nsGkAtoms::textTagName) {
+      childTagEnum = eHTMLTag_text;
+    } else {
+      childTagEnum = nsHTMLTags::AtomTagToId(&aChildNodeName);
+    }
+
+    nsHTMLTag parentTagEnum = nsHTMLTags::AtomTagToId(&aParentNodeName);
+    return HTMLEditUtils::CanNodeContain(parentTagEnum, childTagEnum);
+  }
+
+  /**
+   * CanElementContainParagraph() returns true if aElement can have a <p>
+   * element as its child or its descendant.
+   */
+  static bool CanElementContainParagraph(const Element& aElement) {
+    if (HTMLEditUtils::CanNodeContain(aElement, *nsGkAtoms::p)) {
+      return true;
+    }
+
+    // Even if the element cannot have a <p> element as a child, it can contain
+    // <p> element as a descendant if it's one of the following elements.
+    if (aElement.IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
+                                     nsGkAtoms::dl, nsGkAtoms::table,
+                                     nsGkAtoms::thead, nsGkAtoms::tbody,
+                                     nsGkAtoms::tfoot, nsGkAtoms::tr)) {
+      return true;
+    }
+
+    // XXX Otherwise, Chromium checks the CSS box is a block, but we don't do it
+    //     for now.
+    return false;
+  }
 
   /**
    * See execCommand spec:
@@ -114,6 +184,9 @@ class HTMLEditUtils final {
                                                const nsAtom* aAttribute,
                                                bool aToSetStyle);
   static EditAction GetEditActionForAlignment(const nsAString& aAlignType);
+
+ private:
+  static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
 };
 
 /**
