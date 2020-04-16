@@ -107,8 +107,9 @@ use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTi
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use std::{iter, ops, u32};
 use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
+use euclid::approxeq::ApproxEq;
+use std::{iter, ops, u32};
 
 // Type definitions for interning clip nodes.
 
@@ -1573,23 +1574,24 @@ pub fn projected_rect_contains(
         target_rect.bottom_right(),
         target_rect.bottom_left(),
     ];
-
     // iterate the edges of the transformed polygon
     for (a, b) in points
         .iter()
         .cloned()
         .zip(points[1..].iter().cloned().chain(iter::once(points[0])))
     {
-        // check if every destination point is on the right of the edge
-        for &c in target_points.iter() {
-            if (b - a).cross(c - a) < 0.0 {
-                return None
-            }
+        // If this edge is redundant, it's a weird, case, and we shouldn't go
+        // length in trying to take the fast path (e.g. when the whole rectangle is a point).
+        // If any of edges of the target rectangle crosses the edge, it's not completely
+        // inside our transformed polygon either.
+        if a.approx_eq(&b) || target_points.iter().any(|&c| (b - a).cross(c - a) < 0.0) {
+            return None
         }
     }
 
     Some(())
 }
+
 
 // Add a clip node into the list of clips to be processed
 // for the current clip chain. Returns false if the clip
@@ -1649,4 +1651,23 @@ fn add_clip_node_to_current_chain(
     });
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::projected_rect_contains;
+    use euclid::{Transform3D, rect};
+
+    #[test]
+    fn test_empty_projected_rect() {
+        assert_eq!(
+            None,
+            projected_rect_contains(
+                &rect(10.0, 10.0, 0.0, 0.0),
+                &Transform3D::identity(),
+                &rect(20.0, 20.0, 10.0, 10.0),
+            ),
+            "Empty rectangle is considered to include a non-empty!"
+        );
+    }
 }
