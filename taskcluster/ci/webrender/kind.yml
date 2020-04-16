@@ -336,6 +336,8 @@ jobs:
         fetches:
             webrender-wrench-android-debug:
                 - 'wrench-debug.apk'
+                - android-sdk-linux
+                - linux64-minidump-stackwalk
         run:
             using: run-task
             tooltool-downloads: internal
@@ -376,6 +378,8 @@ jobs:
         fetches:
             webrender-wrench-android-release:
                 - 'wrench-release.apk'
+                - android-sdk-linux
+                - linux64-minidump-stackwalk
         run:
             using: run-task
             tooltool-downloads: internal
