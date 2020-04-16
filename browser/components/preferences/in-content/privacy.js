@@ -1952,7 +1952,7 @@ var gPrivacyPane = {
         window,
         false
       );
-      if (!loggedIn) {
+      if (!loggedIn.authenticated) {
         return;
       }
     }

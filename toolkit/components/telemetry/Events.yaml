@@ -607,16 +607,35 @@ pwmgr:
     record_in_processes: [main, content]
     release_channel_collection: opt-out
     expiry_version: never
+  reauthenticate:
+    description: >
+      Measure how often users are asked to authenticate with their Operating System or Master Password to gain access to stored passwords.
+      Possible values are as follows,
+        "success_no_prompt" should be used when the feature is enabled but no prompt is given to the user because they have recently authenticated.
+        "success_disabled" is used when the feature is disabled.
+        "success_unsupported_platform" should be set when the user attempts to authenticate on an unsupported platform.
+    objects: [
+      "master_password",
+      "os_auth",
+    ]
+    methods: ["reauthenticate"]
+    bug_numbers:
+      - 1628029
+    expiry_version: never
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: [content]
   mgmt_interaction:
     description: >
-      These events record interactions on the about:logins page. Sort methods have an accompanying
-      value that specifies what order the list of logins is sorted with: {last_changed, last_used, title}.
+      These events record interactions on the about:logins page.
     extra_keys:
       breached: >
         Whether the login is marked as breached or not. If a login is both breached and vulnerable, it will only be reported as breached.
       vulnerable: >
         Whether the login is marked as vulnerable or not. If a login is both breached and vulnerable, it will only be reported as breached.
-      sort_key: The key that is used for sorting the login-list
+      sort_key: The key that is used for sorting the login-list. Should only be set with the "sort" method.
     objects: [
       "existing_login",
       "list",
@@ -643,13 +662,12 @@ pwmgr:
     bug_numbers:
       - 1548463
       - 1600958
+      - 1549115
     expiry_version: never
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
     products:
       - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: [content]
   autocomplete_field:
     objects: ["generatedpassword"]
