@@ -356,7 +356,7 @@ static Maybe<ScrollableLayerGuid::ViewID> IsFixedOrSticky(Layer* aLayer) {
 
 void AsyncCompositionManager::AlignFixedAndStickyLayers(
     Layer* aTransformedSubtreeRoot, Layer* aStartTraversalAt,
-    ScrollableLayerGuid::ViewID aTransformScrollId,
+    SideBits aStuckSides, ScrollableLayerGuid::ViewID aTransformScrollId,
     const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
     const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
     const ScreenMargin& aFixedLayerMargins, ClipPartsCache& aClipPartsCache,
@@ -375,7 +375,7 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
   if (!needsAsyncTransformUnapplied) {
     for (Layer* child = layer->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child,
+      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child, aStuckSides,
                                 aTransformScrollId, aPreviousTransformForRoot,
                                 aCurrentTransformForRoot, aFixedLayerMargins,
                                 aClipPartsCache, aGeckoFixedLayerMargins);
@@ -383,14 +383,14 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
     return;
   }
 
-  AdjustFixedOrStickyLayer(aTransformedSubtreeRoot, layer, aTransformScrollId,
-                           aPreviousTransformForRoot, aCurrentTransformForRoot,
-                           aFixedLayerMargins, aClipPartsCache,
-                           aGeckoFixedLayerMargins);
+  AdjustFixedOrStickyLayer(aTransformedSubtreeRoot, layer, aStuckSides,
+                           aTransformScrollId, aPreviousTransformForRoot,
+                           aCurrentTransformForRoot, aFixedLayerMargins,
+                           aClipPartsCache, aGeckoFixedLayerMargins);
 }
 
 void AsyncCompositionManager::AdjustFixedOrStickyLayer(
-    Layer* aTransformedSubtreeRoot, Layer* aFixedOrSticky,
+    Layer* aTransformedSubtreeRoot, Layer* aFixedOrSticky, SideBits aStuckSides,
     ScrollableLayerGuid::ViewID aTransformScrollId,
     const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
     const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
@@ -451,10 +451,9 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
 
   SideBits sideBits = layer->GetFixedPositionSides();
   if (layer->GetIsStickyPosition()) {
-    // We only support the dynamic toolbar at the bottom.
-    // For fixed position, `ComputeFixedmarginsOffset` gives correct results
-    // even for eTop, but for sticky position it doesn't.
-    sideBits &= SideBits::eBottom;
+    // For sticky items, it may be that only some of the sides are actively
+    // stuck. Only take into account those sides.
+    sideBits &= aStuckSides;
   }
 
   // Offset the layer's anchor point to make sure fixed position content
@@ -545,7 +544,7 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
     // translation.
     for (Layer* child = layer->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child,
+      AlignFixedAndStickyLayers(aTransformedSubtreeRoot, child, aStuckSides,
                                 aTransformScrollId, aPreviousTransformForRoot,
                                 newTransform, aFixedLayerMargins,
                                 aClipPartsCache, aGeckoFixedLayerMargins);
@@ -1128,10 +1127,11 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
             LayerToParentLayerMatrix4x4 transformWithoutOverscrollOrOmta =
                 layer->GetTransformTyped() *
                 CompleteAsyncTransform(AdjustForClip(asyncTransform, layer));
-            AlignFixedAndStickyLayers(
-                layer, layer, metrics.GetScrollId(), oldTransform,
-                transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                clipPartsCache, sampler->GetGeckoFixedLayerMargins());
+            AlignFixedAndStickyLayers(layer, layer, SideBits::eBottom,
+                                      metrics.GetScrollId(), oldTransform,
+                                      transformWithoutOverscrollOrOmta,
+                                      fixedLayerMargins, clipPartsCache,
+                                      sampler->GetGeckoFixedLayerMargins());
 
             // Combine the local clip with the ancestor scrollframe clip. This
             // is not included in the async transform above, since the ancestor
@@ -1260,7 +1260,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                                 IsStuckToZoomContainerAtBottom(layer))) {
             LayerToParentLayerMatrix4x4 emptyTransform;
             ScreenMargin marginsForFixedLayer = GetFixedLayerMargins();
-            AdjustFixedOrStickyLayer(zoomContainer, layer,
+            AdjustFixedOrStickyLayer(zoomContainer, layer, SideBits::eBottom,
                                      sampler->GetGuid(*zoomedMetrics).mScrollId,
                                      emptyTransform, emptyTransform,
                                      marginsForFixedLayer, clipPartsCache,
