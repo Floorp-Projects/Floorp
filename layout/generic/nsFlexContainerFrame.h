@@ -502,13 +502,19 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aItem           The flex item to be reflowed.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
+   * @param aAvailableSize  The available size to reflow the child frame (in the
+   *                        child frame's writing-mode).
    * @param aContainerSize  The flex container's size (required by some methods
    *                        that we call, to interpret aFramePos correctly).
+   * @return the child frame's reflow status.
    */
-  void ReflowFlexItem(const FlexboxAxisTracker& aAxisTracker,
-                      const ReflowInput& aReflowInput, const FlexItem& aItem,
-                      mozilla::LogicalPoint& aFramePos,
-                      const nsSize& aContainerSize, bool aHasLineClampEllipsis);
+  nsReflowStatus ReflowFlexItem(const FlexboxAxisTracker& aAxisTracker,
+                                const ReflowInput& aReflowInput,
+                                const FlexItem& aItem,
+                                mozilla::LogicalPoint& aFramePos,
+                                const mozilla::LogicalSize& aAvailableSize,
+                                const nsSize& aContainerSize,
+                                bool aHasLineClampEllipsis);
 
   /**
    * Helper-function to perform a "dummy reflow" on all our nsPlaceholderFrame
