@@ -93,7 +93,9 @@ add_task(async function checkSecurity() {
 
   var pref = "extensions.checkUpdateSecurity";
   info("Setting " + pref + " pref to false");
-  Services.prefs.setBoolPref(pref, false);
+  await SpecialPowers.pushPrefEnv({
+    set: [[pref, false]],
+  });
 
   let id = "test-security@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({

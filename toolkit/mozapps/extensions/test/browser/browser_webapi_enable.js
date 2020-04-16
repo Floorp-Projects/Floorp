@@ -1,8 +1,9 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_addon_listener.html`;
 
-Services.prefs.setBoolPref("extensions.webapi.testing", true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("extensions.webapi.testing");
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webapi.testing", true]],
+  });
 });
 
 async function getListenerEvents(browser) {
