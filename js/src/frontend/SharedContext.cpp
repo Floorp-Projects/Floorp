@@ -77,8 +77,8 @@ void SharedContext::computeInWith(Scope* scope) {
 EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
                                      CompilationInfo& compilationInfo,
                                      Scope* enclosingScope,
-                                     Directives directives)
-    : SharedContext(cx, Kind::Eval, compilationInfo, directives),
+                                     Directives directives, SourceExtent extent)
+    : SharedContext(cx, Kind::Eval, compilationInfo, directives, extent),
       enclosingScope_(cx, enclosingScope),
       bindings(cx) {
   computeAllowSyntax(enclosingScope);
@@ -118,12 +118,11 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
-                         uint32_t toStringStart,
-                         CompilationInfo& compilationInfo,
+                         SourceExtent extent, CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* explicitName,
                          FunctionFlags flags, size_t index)
-    : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives),
+    : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
       traceLink_(traceListHead),
       emitLink_(nullptr),
       enclosingScope_(),
@@ -132,7 +131,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       extraVarScopeBindings_(nullptr),
       funcDataIndex_(index),
       functionNode(nullptr),
-      extent{0, 0, toStringStart, 0, 1, 0},
       length(0),
       hasDestructuringArgs(false),
       hasParameterExprs(false),
@@ -327,8 +325,10 @@ void FunctionBox::clobberFunction(JSFunction* function) {
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          CompilationInfo& compilationInfo,
                                          Scope* enclosingScope,
-                                         ModuleBuilder& builder)
-    : SharedContext(cx, Kind::Module, compilationInfo, Directives(true)),
+                                         ModuleBuilder& builder,
+                                         SourceExtent extent)
+    : SharedContext(cx, Kind::Module, compilationInfo, Directives(true),
+                    extent),
       module_(cx, module),
       enclosingScope_(cx, enclosingScope),
       bindings(cx),
