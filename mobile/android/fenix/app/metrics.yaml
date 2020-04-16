@@ -2003,7 +2003,7 @@ startup.timeline:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/9788#issuecomment-610648980
+      - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -2018,7 +2018,7 @@ startup.timeline:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/9788#issuecomment-610648980
+      - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -2033,7 +2033,7 @@ startup.timeline:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/9788#issuecomment-610648980
+      - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
