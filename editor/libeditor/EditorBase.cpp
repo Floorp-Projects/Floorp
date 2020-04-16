@@ -2753,7 +2753,7 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() {
 
 EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
     const EditorRawDOMPoint& aPoint) {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
+  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
     return aPoint;
   }
 
@@ -2817,7 +2817,8 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
   // Sometimes, aNode is the padding <br> element itself.  In that case, we'll
   // adjust the insertion point to the previous text node, if one exists, or
   // to the parent anonymous DIV.
-  if (EditorBase::IsPaddingBRElementForEmptyLastLine(*aPoint.GetContainer()) &&
+  if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
+          *aPoint.ContainerAsContent()) &&
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsText()) {
@@ -2827,10 +2828,10 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
       return EditorRawDOMPoint(previousSibling, previousSibling->Length());
     }
 
-    nsINode* parentOfContainer = aPoint.GetContainer()->GetParentNode();
+    nsINode* parentOfContainer = aPoint.GetContainerParent();
     if (parentOfContainer && parentOfContainer == rootElement) {
-      return EditorRawDOMPoint(parentOfContainer,
-                               aPoint.GetContainerAsContent(), 0);
+      return EditorRawDOMPoint(parentOfContainer, aPoint.ContainerAsContent(),
+                               0);
     }
   }
 

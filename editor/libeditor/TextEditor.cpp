@@ -2120,7 +2120,8 @@ nsresult TextEditor::SelectEntireDocument() {
     childNode = childNode->GetPreviousSibling();
   }
 
-  if (childNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*childNode)) {
+  if (childNode &&
+      EditorUtils::IsPaddingBRElementForEmptyLastLine(*childNode)) {
     ErrorResult error;
     MOZ_KnownLive(SelectionRefPtr())
         ->SetStartAndEndInLimiter(RawRangeBoundary(anonymousDivElement, 0u),
@@ -2222,7 +2223,7 @@ nsresult TextEditor::EnsurePaddingBRElementForEmptyEditor() {
   RefPtr<HTMLBRElement> brElement =
       HTMLBRElement::FromNodeOrNull(mRootElement->GetFirstChild());
   if (!brElement ||
-      !EditorBase::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+      !EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
     return NS_OK;
   }
 
