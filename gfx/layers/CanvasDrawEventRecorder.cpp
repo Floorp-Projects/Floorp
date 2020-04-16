@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "nsThreadUtils.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -487,6 +489,20 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
   memcpy(aOut, mBuf + bufPos, aSize);
   readCount += aSize;
   mWrite->returnCount = readCount;
+}
+
+void CanvasDrawEventRecorder::RecordSourceSurfaceDestruction(
+    gfx::SourceSurface* aSurface) {
+  // We must only record things on the main thread and surfaces that have been
+  // recorded can sometimes be destroyed off the main thread.
+  if (NS_IsMainThread()) {
+    DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(aSurface);
+    return;
+  }
+
+  NS_DispatchToMainThread(NewRunnableMethod<gfx::SourceSurface*>(
+      "DrawEventRecorderPrivate::RecordSourceSurfaceDestruction", this,
+      &DrawEventRecorderPrivate::RecordSourceSurfaceDestruction, aSurface));
 }
 
 }  // namespace layers

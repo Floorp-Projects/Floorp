@@ -48,6 +48,13 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
       dataSurf->GetFormat()));
 }
 
+void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(
+    SourceSurface* aSurface) {
+  RemoveSourceSurface(aSurface);
+  RemoveStoredObject(aSurface);
+  RecordEvent(RecordedSourceSurfaceDestruction(ReferencePtr(aSurface)));
+}
+
 void DrawEventRecorderFile::RecordEvent(const RecordedEvent& aEvent) {
   aEvent.RecordToStream(mOutputStream);
 
