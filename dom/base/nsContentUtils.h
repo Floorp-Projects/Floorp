@@ -131,8 +131,6 @@ class HTMLEditor;
 class PresShell;
 class TextEditor;
 
-enum class StorageAccess;
-
 struct InputEventOptions;
 
 namespace dom {
