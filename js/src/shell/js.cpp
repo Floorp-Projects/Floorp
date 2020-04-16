@@ -982,11 +982,9 @@ static MOZ_MUST_USE bool RunBinAST(JSContext* cx, const char* filename,
 
 #endif  // JS_BUILD_BINAST
 
-static bool InitModuleLoader(JSContext* cx, HandleObject global) {
+static bool InitModuleLoader(JSContext* cx) {
   // Decompress and evaluate the embedded module loader source to initialize
   // the module loader for the current compartment.
-
-  JSAutoRealm ar(cx, global);
 
   uint32_t srcLen = moduleloader::GetRawScriptsSize();
   auto src = cx->make_pod_array<char>(srcLen);
@@ -6647,10 +6645,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!InitModuleLoader(cx, global)) {
-    return false;
-  }
-
   RootedObject wrapped(cx, ToWindowProxyIfWindow(global));
   if (!JS_WrapObject(cx, &wrapped)) {
     return false;
@@ -10339,7 +10333,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
     return false;
   }
 
-  if (!InitModuleLoader(cx, cx->global())) {
+  if (!InitModuleLoader(cx)) {
     return false;
   }
 
