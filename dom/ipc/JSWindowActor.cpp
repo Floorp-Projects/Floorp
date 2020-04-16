@@ -7,6 +7,7 @@
 #include "mozilla/dom/JSWindowActor.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
@@ -18,6 +19,7 @@
 #include "js/Promise.h"
 #include "xpcprivate.h"
 #include "nsASCIIMask.h"
+#include "nsICrashReporter.h"
 
 namespace mozilla {
 namespace dom {
@@ -47,11 +49,39 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
 
 JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 
+// RAII class to ensure that, if we crash while handling a message, the
+// crash will be annotated with the name of the actor and the message.
+struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
+  AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
+                                   const nsString& aMessageName) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::JSActorName, aActorName);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::JSActorMessage,
+        NS_LossyConvertUTF16toASCII(aMessageName));
+  }
+  AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
+                                   const nsCString& aMessageName) {
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::JSActorName,
+                                       aActorName);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::JSActorMessage, aMessageName);
+  }
+  ~AutoAnnotateMessageInCaseOfCrash() {
+    CrashReporter::RemoveCrashReportAnnotation(CrashReporter::Annotation::JSActorMessage);
+    CrashReporter::RemoveCrashReportAnnotation(CrashReporter::Annotation::JSActorName);
+  }
+};
+
 void JSWindowActor::StartDestroy() {
+  AutoAnnotateMessageInCaseOfCrash guard(mCName,
+                                         NS_LITERAL_CSTRING("<WillDestroy>"));
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSWindowActor::AfterDestroy() {
+  AutoAnnotateMessageInCaseOfCrash guard(mCName,
+                                         NS_LITERAL_CSTRING("<DidDestroy>"));
   InvokeCallback(CallbackFunction::DidDestroy);
   // Clear out & reject mPendingQueries
   RejectPendingQueries();
@@ -149,6 +179,7 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
 void JSWindowActor::SetName(const nsAString& aName) {
   MOZ_ASSERT(mName.IsEmpty(), "Cannot set name twice!");
   mName = aName;
+  mCName = NS_LossyConvertUTF16toASCII(aName);
 }
 
 static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
@@ -244,6 +275,7 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData,
                                       ipc::StructuredCloneData&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  AutoAnnotateMessageInCaseOfCrash guard(mCName, aMetadata.messageName());
 
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
