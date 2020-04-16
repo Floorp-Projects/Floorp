@@ -69,6 +69,8 @@ NS_IMPL_CYCLE_COLLECTION_WEAK(nsTypeAheadFind, mFoundLink, mFoundEditable,
                               mStartPointRange, mEndPointRange, mSoundInterface,
                               mFind, mFoundRange)
 
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
 nsTypeAheadFind::nsTypeAheadFind()
@@ -462,15 +464,14 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
         RangeStartsInsideLink(returnRange, &isInsideLink, &isStartingLink);
       }
 
-      bool usesIndependentSelection = false;
+      bool usesIndependentSelection;
       // Check actual visibility of the range, and generate some
       // side effects (like updating mStartPointRange and
       // setting usesIndependentSelection) that we'll need whether
       // or not the range is visible.
       bool canSeeRange = IsRangeVisible(returnRange, aIsFirstVisiblePreferred,
-                                        false, &usesIndependentSelection);
-
-      mStartPointRange = returnRange->CloneRange();
+                                        false, getter_AddRefs(mStartPointRange),
+                                        &usesIndependentSelection);
 
       // If we can't see the range, we still might be able to scroll
       // it into view if usesIndependentSelection is true. If both are
@@ -478,9 +479,41 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
       if ((!canSeeRange && !usesIndependentSelection) ||
           (aIsLinksOnly && !isInsideLink) ||
           (mStartLinksOnlyPref && aIsLinksOnly && !isStartingLink)) {
-        // We want to jump over this range, so collapse to the start if we're
-        // finding backwards and vice versa.
-        mStartPointRange->Collapse(findPrev);
+        // ------ Failure ------
+        // At this point mStartPointRange got updated to the first
+        // visible range in the viewport.  We _may_ be able to just
+        // start there, if it's not taking us in the wrong direction.
+        if (findPrev) {
+          // We can continue at the end of mStartPointRange if its end is before
+          // the start of returnRange or coincides with it.  Otherwise, we need
+          // to continue at the start of returnRange.
+          IgnoredErrorResult rv;
+          int16_t compareResult = mStartPointRange->CompareBoundaryPoints(
+              Range_Binding::START_TO_END, *returnRange, rv);
+          if (!rv.Failed() && compareResult <= 0) {
+            // OK to start at the end of mStartPointRange
+            mStartPointRange->Collapse(false);
+          } else {
+            // Start at the beginning of returnRange
+            mStartPointRange = returnRange->CloneRange();
+            mStartPointRange->Collapse(true);
+          }
+        } else {
+          // We can continue at the start of mStartPointRange if its start is
+          // after the end of returnRange or coincides with it.  Otherwise, we
+          // need to continue at the end of returnRange.
+          IgnoredErrorResult rv;
+          int16_t compareResult = mStartPointRange->CompareBoundaryPoints(
+              Range_Binding::END_TO_START, *returnRange, rv);
+          if (!rv.Failed() && compareResult >= 0) {
+            // OK to start at the start of mStartPointRange
+            mStartPointRange->Collapse(true);
+          } else {
+            // Start at the end of returnRange
+            mStartPointRange = returnRange->CloneRange();
+            mStartPointRange->Collapse(false);
+          }
+        }
         continue;
       }
 
@@ -788,7 +821,11 @@ nsresult nsTypeAheadFind::GetSearchContainers(
   }
 
   if (!currentSelectionRange) {
-    mStartPointRange = mSearchRange->CloneRange();
+    // Ensure visible range, move forward if necessary
+    // This ignores the return value, but uses the side effect of
+    // IsRangeVisible. It returns the first visible range after searchRange
+    IsRangeVisible(mSearchRange, aIsFirstVisiblePreferred, true,
+                   getter_AddRefs(mStartPointRange), nullptr);
     // We want to search in the visible selection range. That means that the
     // start point needs to be the end if we're looking backwards, or vice
     // versa.
@@ -830,7 +867,7 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
   uint32_t startOffset = aRange->StartOffset();
 
   nsCOMPtr<nsIContent> startContent =
-      nsIContent::FromNodeOrNull(aRange->GetStartContainer());
+      do_QueryInterface(aRange->GetStartContainer());
   if (!startContent) {
     MOZ_ASSERT_UNREACHABLE("startContent should never be null");
     return;
@@ -1111,17 +1148,116 @@ nsTypeAheadFind::GetFoundRange(nsRange** aFoundRange) {
 NS_IMETHODIMP
 nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
                                 bool* aResult) {
-  *aResult = IsRangeVisible(aRange, aMustBeInViewPort, false, nullptr);
+  RefPtr<nsRange> ignored;
+  *aResult = IsRangeVisible(aRange, aMustBeInViewPort, false,
+                            getter_AddRefs(ignored), nullptr);
   return NS_OK;
+}
+
+enum class RectVisibility {
+  Visible,
+  AboveViewport,
+  BelowViewport,
+  LeftOfViewport,
+  RightOfViewport,
+};
+
+/**
+ * Determine if a rectangle specified in the frame's coordinate system
+ * intersects "enough" with the viewport to be considered visible. This
+ * is not a strict test against the viewport -- it's a test against
+ * the intersection of the viewport and the frame's ancestor scrollable
+ * frames. If it doesn't intersect enough, return a value indicating
+ * which direction the frame's topmost ancestor scrollable frame would
+ * need to be scrolled to bring the frame into view.
+ * @param aFrame frame that aRect coordinates are specified relative to
+ * @param aRect rectangle in twips to test for visibility
+ * @param aMinTwips is the minimum distance in from the edge of the
+ *                  visible area that an object must be to be counted
+ *                  visible
+ * @return RectVisibility::Visible if the rect is visible
+ *         RectVisibility::AboveViewport
+ *         RectVisibility::BelowViewport
+ *         RectVisibility::LeftOfViewport
+ *         RectVisibility::RightOfViewport rectangle is outside the
+ *         topmost ancestor scrollable frame in the specified direction
+ */
+static RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
+                                        nscoord aMinTwips) {
+  PresShell* ps = aFrame->PresShell();
+  nsIFrame* rootFrame = ps->GetRootFrame();
+  MOZ_DIAGNOSTIC_ASSERT(
+      rootFrame,
+      "How can someone have a frame for this presshell when there's no root?");
+  nsIScrollableFrame* sf = ps->GetRootScrollFrameAsScrollable();
+  nsRect scrollPortRect;
+  if (sf) {
+    scrollPortRect = sf->GetScrollPortRect();
+    nsIFrame* f = do_QueryFrame(sf);
+    scrollPortRect += f->GetOffsetTo(rootFrame);
+  } else {
+    scrollPortRect = nsRect(nsPoint(0, 0), rootFrame->GetSize());
+  }
+
+  // scrollPortRect has the viewport visible area relative to rootFrame.
+  nsRect visibleAreaRect(scrollPortRect);
+  // Find the intersection of this and the frame's ancestor scrollable
+  // frames. We walk the whole ancestor chain to find all the scrollable
+  // frames.
+  nsIScrollableFrame* scrollAncestorFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(
+          aFrame, nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  while (scrollAncestorFrame) {
+    nsRect scrollAncestorRect = scrollAncestorFrame->GetScrollPortRect();
+    nsIFrame* f = do_QueryFrame(scrollAncestorFrame);
+    scrollAncestorRect += f->GetOffsetTo(rootFrame);
+
+    visibleAreaRect = visibleAreaRect.Intersect(scrollAncestorRect);
+
+    // Continue up the chain.
+    scrollAncestorFrame = nsLayoutUtils::GetNearestScrollableFrame(
+        f->GetParent(), nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  }
+
+  // aRect is in the aFrame coordinate space, so bring it into rootFrame
+  // coordinate space.
+  nsRect r = aRect + aFrame->GetOffsetTo(rootFrame);
+  // If aRect is entirely visible then we don't need to ensure that
+  // at least aMinTwips of it is visible
+  if (visibleAreaRect.Contains(r)) {
+    return RectVisibility::Visible;
+  }
+
+  nsRect insetRect = visibleAreaRect;
+  insetRect.Deflate(aMinTwips, aMinTwips);
+  if (r.YMost() <= insetRect.y) {
+    return RectVisibility::AboveViewport;
+  }
+  if (r.y >= insetRect.YMost()) {
+    return RectVisibility::BelowViewport;
+  }
+  if (r.XMost() <= insetRect.x) {
+    return RectVisibility::LeftOfViewport;
+  }
+  if (r.x >= insetRect.XMost()) {
+    return RectVisibility::RightOfViewport;
+  }
+  return RectVisibility::Visible;
 }
 
 bool nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
                                      bool aGetTopVisibleLeaf,
+                                     nsRange** aFirstVisibleRange,
                                      bool* aUsesIndependentSelection) {
+  NS_ASSERTION(aRange && aFirstVisibleRange, "params are invalid");
+
   // We need to know if the range start is visible.
-  // Otherwise, return the first visible range start in aFirstVisibleRange
-  nsCOMPtr<nsIContent> content =
-      nsIContent::FromNodeOrNull(aRange->GetStartContainer());
+  // Otherwise, return the first visible range start
+  // in aFirstVisibleRange
+
+  *aFirstVisibleRange = aRange->CloneRange().take();
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aRange->GetStartContainer());
   if (!content) {
     return false;
   }
@@ -1142,7 +1278,139 @@ bool nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
         (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
   }
 
-  return aMustBeInViewPort ? IsRangeRendered(aRange) : true;
+  // ---- We have a frame ----
+
+  // Get the next in flow frame that contains the range start
+  int32_t startFrameOffset, endFrameOffset;
+  uint32_t startRangeOffset = aRange->StartOffset();
+  while (true) {
+    frame->GetOffsets(startFrameOffset, endFrameOffset);
+    if (static_cast<int32_t>(startRangeOffset) < endFrameOffset) {
+      break;
+    }
+
+    nsIFrame* nextContinuationFrame = frame->GetNextContinuation();
+    if (nextContinuationFrame)
+      frame = nextContinuationFrame;
+    else
+      break;
+  }
+
+  // Set up the variables we need, return true if we can't get at them all
+  const uint16_t kMinPixels = 12;
+  nscoord minDistance = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
+
+  // Get the bounds of the current frame, relative to the current view.
+  // We don't use the more accurate AccGetBounds, because that is
+  // more expensive and the STATE_OFFSCREEN flag that this is used
+  // for only needs to be a rough indicator
+  RectVisibility rectVisibility = RectVisibility::AboveViewport;
+
+  if (!aGetTopVisibleLeaf && !frame->GetRect().IsEmpty()) {
+    rectVisibility =
+        GetRectVisibility(frame, frame->GetRectRelativeToSelf(), minDistance);
+
+    if (rectVisibility == RectVisibility::Visible) {
+      // The primary frame of the range is visible, but we don't yet know if
+      // any of the rects of the range itself are visible. Check to see if at
+      // least one of the rects is visible.
+      bool atLeastOneRangeRectVisible = false;
+
+      nsIFrame* containerFrame =
+          nsLayoutUtils::GetContainingBlockForClientRect(frame);
+      RefPtr<DOMRectList> rects = aRange->GetClientRects(true, true);
+      for (uint32_t i = 0; i < rects->Length(); ++i) {
+        RefPtr<DOMRect> rect = rects->Item(i);
+        nsRect r(nsPresContext::CSSPixelsToAppUnits((float)rect->X()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Y()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Width()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
+
+        // r is relative to containerFrame; transform it back to frame, so we
+        // can do a proper visibility check that is cropped to all of frame's
+        // ancestor scroll frames.
+        nsLayoutUtils::TransformResult res =
+            nsLayoutUtils::TransformRect(containerFrame, frame, r);
+        if (res == nsLayoutUtils::TransformResult::TRANSFORM_SUCCEEDED) {
+          RectVisibility rangeRectVisibility =
+              GetRectVisibility(frame, r, minDistance);
+
+          if (rangeRectVisibility == RectVisibility::Visible) {
+            atLeastOneRangeRectVisible = true;
+            break;
+          }
+        }
+      }
+
+      if (atLeastOneRangeRectVisible) {
+        // This is an early exit case, where we return true if and only if
+        // the range is actually rendered.
+        return IsRangeRendered(aRange);
+      }
+    }
+  }
+
+  // Below this point, we know the range is not in the viewport.
+
+  if (!aMustBeInViewPort) {
+    // This is an early exit case because we don't care that that range
+    // is out of viewport, so we return that the range is "visible".
+    return true;
+  }
+
+  // The range isn't in the viewport, but we could scroll it into view.
+  // Move range forward to first visible point,
+  // this speeds us up a lot in long documents
+  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
+  if (trav)
+    trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                            frame->PresContext(), frame, eLeaf,
+                            false,  // aVisual
+                            false,  // aLockInScrollView
+                            false,  // aFollowOOFs
+                            false   // aSkipPopupChecks
+    );
+
+  if (!frameTraversal) {
+    return false;
+  }
+
+  while (rectVisibility == RectVisibility::AboveViewport) {
+    frameTraversal->Next();
+    frame = frameTraversal->CurrentItem();
+    if (!frame) {
+      return false;
+    }
+
+    // We don't really want to start on NAC, because we may skip iterating
+    // actual non-anonymous children that matter.
+    while (frame->GetContent() &&
+           frame->GetContent()->IsInNativeAnonymousSubtree()) {
+      frame = frame->GetParent();
+    }
+
+    if (frame->GetRect().IsEmpty()) {
+      continue;
+    }
+
+    rectVisibility = GetRectVisibility(
+        frame, nsRect(nsPoint(0, 0), frame->GetSize()), minDistance);
+  }
+
+  if (frame) {
+    nsINode* firstVisibleNode = frame->GetContent();
+
+    if (firstVisibleNode) {
+      frame->GetOffsets(startFrameOffset, endFrameOffset);
+      (*aFirstVisibleRange)
+          ->SetStart(*firstVisibleNode, startFrameOffset, IgnoreErrors());
+      (*aFirstVisibleRange)
+          ->SetEnd(*firstVisibleNode, endFrameOffset, IgnoreErrors());
+    }
+  }
+
+  return false;
 }
 
 NS_IMETHODIMP
@@ -1154,7 +1422,7 @@ nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
 bool nsTypeAheadFind::IsRangeRendered(nsRange* aRange) {
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
   nsCOMPtr<nsIContent> content =
-      nsIContent::FromNodeOrNull(aRange->GetClosestCommonInclusiveAncestor());
+      do_QueryInterface(aRange->GetClosestCommonInclusiveAncestor());
   if (!content) {
     return false;
   }

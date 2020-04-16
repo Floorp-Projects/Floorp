@@ -84,14 +84,6 @@ let runTests = t.step_func_done(function() {
     </div>
   `);
 
-  testFindable(true, "This text should be visible", `
-    <style>:root { overflow: hidden }</style>
-    <div style="overflow: auto;">
-      <div style="height: 300vh"></div>
-      This text should be visible
-    </div>
-  `);
-
   testFindable(true, "Shadow text", function(document) {
     let div = document.createElement("div");
     div.attachShadow({ mode: "open" }).innerHTML = `
