@@ -247,6 +247,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
     aEvent.RecordToStream(mOutputStream);
   }
 
+  void RecordSourceSurfaceDestruction(gfx::SourceSurface* aSurface) final;
+
   void Flush() final {}
 
   void ReturnRead(char* aOut, size_t aSize) {
