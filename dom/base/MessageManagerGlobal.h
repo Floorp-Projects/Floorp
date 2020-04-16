@@ -59,14 +59,13 @@ class MessageManagerGlobal {
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                         JS::Handle<JS::Value> aObj,
                         JS::Handle<JSObject*> aObjects,
-                        nsIPrincipal* aPrincipal,
                         JS::Handle<JS::Value> aTransfers, ErrorResult& aError) {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NOT_INITIALIZED);
       return;
     }
     mMessageManager->SendAsyncMessage(aCx, aMessageName, aObj, aObjects,
-                                      aPrincipal, aTransfers, aError);
+                                      aTransfers, aError);
   }
   already_AddRefed<ProcessMessageManager> GetProcessMessageManager(
       mozilla::ErrorResult& aError) {
@@ -88,25 +87,25 @@ class MessageManagerGlobal {
   // SyncMessageSender
   void SendSyncMessage(JSContext* aCx, const nsAString& aMessageName,
                        JS::Handle<JS::Value> aObj,
-                       JS::Handle<JSObject*> aObjects, nsIPrincipal* aPrincipal,
+                       JS::Handle<JSObject*> aObjects,
                        nsTArray<JS::Value>& aResult, ErrorResult& aError) {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NOT_INITIALIZED);
       return;
     }
-    mMessageManager->SendSyncMessage(aCx, aMessageName, aObj, aObjects,
-                                     aPrincipal, aResult, aError);
+    mMessageManager->SendSyncMessage(aCx, aMessageName, aObj, aObjects, aResult,
+                                     aError);
   }
   void SendRpcMessage(JSContext* aCx, const nsAString& aMessageName,
                       JS::Handle<JS::Value> aObj,
-                      JS::Handle<JSObject*> aObjects, nsIPrincipal* aPrincipal,
+                      JS::Handle<JSObject*> aObjects,
                       nsTArray<JS::Value>& aResult, ErrorResult& aError) {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NOT_INITIALIZED);
       return;
     }
-    mMessageManager->SendRpcMessage(aCx, aMessageName, aObj, aObjects,
-                                    aPrincipal, aResult, aError);
+    mMessageManager->SendRpcMessage(aCx, aMessageName, aObj, aObjects, aResult,
+                                    aError);
   }
 
   // MessageManagerGlobal
