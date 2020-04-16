@@ -3294,10 +3294,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   AutoSaveRestoreContainsBlendMode autoRestoreBlendMode(*aBuilder);
   aBuilder->SetContainsBlendMode(false);
 
-  bool backdropFilterEnabled =
-      StaticPrefs::layout_css_backdrop_filter_enabled();
   bool usingBackdropFilter =
-      backdropFilterEnabled && effects->HasBackdropFilters() &&
+      effects->HasBackdropFilters() &&
       nsDisplayBackdropFilters::CanCreateWebRenderCommands(aBuilder, this);
 
   if (usingBackdropFilter) {
@@ -3566,8 +3564,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->Check();
     aBuilder->DisplayCaret(this, set.Outlines());
 
-    insertBackdropRoot = backdropFilterEnabled &&
-                         aBuilder->ContainsBackdropFilter() &&
+    insertBackdropRoot = aBuilder->ContainsBackdropFilter() &&
                          FormsBackdropRoot(disp, effects, StyleSVGReset());
 
     // Blend modes are a real pain for retained display lists. We build a blend
