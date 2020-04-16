@@ -48,7 +48,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
  public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
                      const VideoInfo& aConfig, KnowsCompositor* aAllocator,
-                     ImageContainer* aImageContainer, bool aLowLatency);
+                     ImageContainer* aImageContainer, bool aLowLatency,
+                     bool aDisableHardwareDecoding);
 
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() override;
@@ -109,6 +110,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
   AVBufferRef* mVAAPIDeviceContext;
+  const bool mDisableHardwareDecoding;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
