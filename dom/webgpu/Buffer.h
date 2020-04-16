@@ -51,6 +51,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
  public:
   already_AddRefed<dom::Promise> MapReadAsync(ErrorResult& aRv);
   void Unmap(JSContext* aCx, ErrorResult& aRv);
+  void Destroy();
 };
 
 }  // namespace webgpu
