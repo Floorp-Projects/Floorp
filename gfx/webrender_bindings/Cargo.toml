@@ -13,7 +13,7 @@ num_cpus = "1.7.0"
 tracy-rs = "0.1"
 euclid = { version = "0.20.8", features = ["serde"] }
 app_units = "0.7"
-gleam = "0.10.0"
+gleam = "0.11.0"
 log = "0.4"
 nsstring = { path = "../../xpcom/rust/nsstring" }
 bincode = "1.0"

@@ -2166,4 +2166,77 @@ impl Gl for GlesFns {
             );
         }
     }
+
+    // GL_ANGLE_copy_texture_3d
+    fn copy_texture_3d_angle(
+        &self,
+        source_id: GLuint,
+        source_level: GLint,
+        dest_target: GLenum,
+        dest_id: GLuint,
+        dest_level: GLint,
+        internal_format: GLint,
+        dest_type: GLenum,
+        unpack_flip_y: GLboolean,
+        unpack_premultiply_alpha: GLboolean,
+        unpack_unmultiply_alpha: GLboolean,
+    ) {
+        unsafe {
+            self.ffi_gl_.CopyTexture3DANGLE(
+                source_id,
+                source_level,
+                dest_target,
+                dest_id,
+                dest_level,
+                internal_format,
+                dest_type,
+                unpack_flip_y,
+                unpack_premultiply_alpha,
+                unpack_unmultiply_alpha,
+            );
+        }
+    }
+
+    fn copy_sub_texture_3d_angle(
+        &self,
+        source_id: GLuint,
+        source_level: GLint,
+        dest_target: GLenum,
+        dest_id: GLuint,
+        dest_level: GLint,
+        x_offset: GLint,
+        y_offset: GLint,
+        z_offset: GLint,
+        x: GLint,
+        y: GLint,
+        z: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        unpack_flip_y: GLboolean,
+        unpack_premultiply_alpha: GLboolean,
+        unpack_unmultiply_alpha: GLboolean,
+    ) {
+        unsafe {
+            self.ffi_gl_.CopySubTexture3DANGLE(
+                source_id,
+                source_level,
+                dest_target,
+                dest_id,
+                dest_level,
+                x_offset,
+                y_offset,
+                z_offset,
+                x,
+                y,
+                z,
+                width,
+                height,
+                depth,
+                unpack_flip_y,
+                unpack_premultiply_alpha,
+                unpack_unmultiply_alpha,
+            );
+        }
+    }
 }
