@@ -2381,8 +2381,7 @@ class WebRenderMaskData : public WebRenderUserData {
   explicit WebRenderMaskData(RenderRootStateManager* aManager,
                              nsDisplayItem* aItem)
       : WebRenderUserData(aManager, aItem),
-        mMaskStyle(nsStyleImageLayers::LayerType::Mask),
-        mShouldHandleOpacity(false) {
+        mMaskStyle(nsStyleImageLayers::LayerType::Mask) {
     MOZ_COUNT_CTOR(WebRenderMaskData);
   }
   virtual ~WebRenderMaskData() {
@@ -2407,7 +2406,6 @@ class WebRenderMaskData : public WebRenderUserData {
   nsPoint mMaskOffset;
   nsStyleImageLayers mMaskStyle;
   gfx::Size mScale;
-  bool mShouldHandleOpacity;
 };
 
 Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
@@ -2452,13 +2450,10 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
   nsPoint maskOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
 
   nsRect dirtyRect;
-  // If this mask item is being painted for the first time, some members of
-  // WebRenderMaskData are still default initialized. This is intentional.
   if (aMaskItem->IsInvalid(dirtyRect) ||
       !itemRect.IsEqualInterior(maskData->mItemRect) ||
       !(aMaskItem->Frame()->StyleSVGReset()->mMask == maskData->mMaskStyle) ||
-      maskOffset != maskData->mMaskOffset || !sameScale ||
-      aMaskItem->ShouldHandleOpacity() != maskData->mShouldHandleOpacity) {
+      maskOffset != maskData->mMaskOffset || !sameScale) {
     IntSize size = itemRect.Size().ToUnknownSize();
 
     std::vector<RefPtr<ScaledFont>> fonts;
@@ -2552,7 +2547,6 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       maskData->mMaskOffset = maskOffset;
       maskData->mScale = scale;
       maskData->mMaskStyle = aMaskItem->Frame()->StyleSVGReset()->mMask;
-      maskData->mShouldHandleOpacity = aMaskItem->ShouldHandleOpacity();
     }
   }
 
