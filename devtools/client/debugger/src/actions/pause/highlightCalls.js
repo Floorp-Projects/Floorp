@@ -4,8 +4,13 @@
 
 // @flow
 
-import { getSymbols, getSource } from "../../selectors";
-import type { ThreadContext, Frame } from "../../types";
+import {
+  getSymbols,
+  getSource,
+  getSelectedFrame,
+  getCurrentThread,
+} from "../../selectors";
+import type { ThreadContext } from "../../types";
 import type { ThunkArgs } from "../types";
 
 // a is an ast location with start and end positions (line and column).
@@ -23,9 +28,18 @@ function inHouseContainsPosition(a: Object, b: Object) {
   return startsBefore && endsAfter;
 }
 
-export function highlightCalls(cx: ThreadContext, frame: ?Frame) {
+export function highlightCalls(cx: ThreadContext) {
   return async function({ dispatch, getState, parser, client }: ThunkArgs) {
-    if (!frame || !cx) {
+    if (!cx) {
+      return;
+    }
+
+    const frame = await getSelectedFrame(
+      getState(),
+      getCurrentThread(getState())
+    );
+
+    if (!frame) {
       return;
     }
 
