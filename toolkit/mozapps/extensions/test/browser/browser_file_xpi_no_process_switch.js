@@ -17,6 +17,10 @@ function promiseInstallNotification(aBrowser) {
         return;
       }
 
+      if (gBrowser.selectedBrowser !== aBrowser) {
+        return;
+      }
+
       PopupNotifications.panel.removeEventListener("popupshown", popupshown);
       ok(true, `Got ${ADDON_INSTALL_ID} popup for browser`);
       event.target.firstChild.secondaryButton.click();
@@ -24,19 +28,6 @@ function promiseInstallNotification(aBrowser) {
     }
 
     PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
-
-function waitForAnyNewTabAndInstallNotification() {
-  return new Promise(resolve => {
-    gBrowser.tabContainer.addEventListener(
-      "TabOpen",
-      function(openEvent) {
-        let newTab = openEvent.target;
-        resolve([newTab, promiseInstallNotification(newTab.linkedBrowser)]);
-      },
-      { once: true }
-    );
   });
 }
 
@@ -84,7 +75,10 @@ async function testOpenedAndDraggedXPI(aBrowser) {
 
   // No process switch for two XPI file:// URIs dragged to tab.
   promiseNotification = promiseInstallNotification(aBrowser);
-  let promiseTabAndNotification = waitForAnyNewTabAndInstallNotification();
+  let promiseNewTab = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabOpen"
+  );
   effect = EventUtils.synthesizeDrop(
     tab,
     tab,
@@ -95,30 +89,22 @@ async function testOpenedAndDraggedXPI(aBrowser) {
     "move"
   );
   is(effect, "move", "Drag should be accepted");
-  let [newTab, newTabInstallNotification] = await promiseTabAndNotification;
-  await new Promise(resolve => {
-    let observer = {
-      observe(subject, topic, data) {
-        Services.obs.removeObserver(observer, topic);
-        let browser = subject.wrappedJSObject.target;
-        if (browser == newTab.linkedBrowser) {
-          BrowserTestUtils.switchTab(gBrowser, newTab).then(resolve);
-          return;
-        }
-        promiseNotification.then(resolve);
-      },
-    };
-    Services.obs.addObserver(observer, "webextension-permission-prompt");
-  });
-  if (gBrowser.selectedTab != newTab) {
-    await BrowserTestUtils.switchTab(gBrowser, newTab);
-  }
-  await newTabInstallNotification;
-  if (gBrowser.selectedTab != tab) {
-    await BrowserTestUtils.switchTab(gBrowser, tab);
-  }
+  // When drag'n'dropping two XPIs, one is loaded in the current tab while the
+  // other one is loaded in a new tab.
+  let { target: newTab } = await promiseNewTab;
+  // This is the prompt for the first XPI in the current tab.
   await promiseNotification;
+
+  let promiseSecondNotification = promiseInstallNotification(
+    newTab.linkedBrowser
+  );
+
+  // We switch to the second tab and wait for the prompt for the second XPI.
+  BrowserTestUtils.switchTab(gBrowser, newTab);
+  await promiseSecondNotification;
+
   BrowserTestUtils.removeTab(newTab);
+
   await CheckBrowserInPid(
     aBrowser,
     browserPid,
