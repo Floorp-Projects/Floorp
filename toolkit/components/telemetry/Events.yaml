@@ -654,7 +654,6 @@ pwmgr:
       "filter",
       "hide",
       "learn_more_breach",
-      "learn_more_vulnerable",
       "new",
       "open_site",
       "save",
@@ -666,7 +665,6 @@ pwmgr:
       - 1548463
       - 1600958
       - 1549115
-      - 1628165
     expiry_version: never
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
