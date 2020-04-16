@@ -3987,38 +3987,6 @@ nsIContent* EditorBase::GetLeftmostChild(nsINode* aCurrentNode,
   return nullptr;
 }
 
-bool EditorBase::CanContain(nsINode& aParent, nsIContent& aChild) const {
-  switch (aParent.NodeType()) {
-    case nsINode::ELEMENT_NODE:
-    case nsINode::DOCUMENT_FRAGMENT_NODE:
-      return TagCanContain(*aParent.NodeInfo()->NameAtom(), aChild);
-  }
-  return false;
-}
-
-bool EditorBase::CanContainTag(nsINode& aParent, nsAtom& aChildTag) const {
-  switch (aParent.NodeType()) {
-    case nsINode::ELEMENT_NODE:
-    case nsINode::DOCUMENT_FRAGMENT_NODE:
-      return TagCanContainTag(*aParent.NodeInfo()->NameAtom(), aChildTag);
-  }
-  return false;
-}
-
-bool EditorBase::TagCanContain(nsAtom& aParentTag, nsIContent& aChild) const {
-  switch (aChild.NodeType()) {
-    case nsINode::TEXT_NODE:
-    case nsINode::ELEMENT_NODE:
-    case nsINode::DOCUMENT_FRAGMENT_NODE:
-      return TagCanContainTag(aParentTag, *aChild.NodeInfo()->NameAtom());
-  }
-  return false;
-}
-
-bool EditorBase::TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const {
-  return true;
-}
-
 bool EditorBase::IsRoot(nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;

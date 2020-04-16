@@ -233,13 +233,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
-
-  // Don't put text in places that can't have it.
-  if (!pointToInsert.IsInTextNode() &&
-      !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
-    NS_WARNING("Insertion point couldn't have text nodes");
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
+  MOZ_ASSERT(!pointToInsert.IsContainerHTMLElement(nsGkAtoms::br));
 
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
@@ -433,6 +427,7 @@ void TextEditor::HandleNewLinesInStringForSingleLineEditor(
 EditActionResult TextEditor::HandleInsertText(
     EditSubAction aEditSubAction, const nsAString& aInsertionString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsTextEditor());
   MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText ||
              aEditSubAction == EditSubAction::eInsertTextComingFromIME);
 
@@ -530,14 +525,7 @@ EditActionResult TextEditor::HandleInsertText(
   if (NS_WARN_IF(!atStartOfSelection.IsSetAndValid())) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
-
-  // don't put text in places that can't have it
-  if (!atStartOfSelection.IsInTextNode() &&
-      !CanContainTag(*atStartOfSelection.GetContainer(),
-                     *nsGkAtoms::textTagName)) {
-    NS_WARNING("Selection start container couldn't have text nodes");
-    return EditActionHandled(NS_ERROR_FAILURE);
-  }
+  MOZ_ASSERT(!atStartOfSelection.IsContainerHTMLElement(nsGkAtoms::br));
 
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {

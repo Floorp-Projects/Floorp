@@ -582,11 +582,14 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
 
     ELEM(userdefined, true, false, GROUP_NONE, GROUP_FLOW_ELEMENT)};
 
-bool HTMLEditUtils::CanContain(int32_t aParent, int32_t aChild) {
-  NS_ASSERTION(aParent > eHTMLTag_unknown && aParent <= eHTMLTag_userdefined,
-               "aParent out of range!");
-  NS_ASSERTION(aChild > eHTMLTag_unknown && aChild <= eHTMLTag_userdefined,
-               "aChild out of range!");
+bool HTMLEditUtils::CanNodeContain(nsHTMLTag aParentTagId,
+                                   nsHTMLTag aChildTagId) {
+  NS_ASSERTION(
+      aParentTagId > eHTMLTag_unknown && aParentTagId <= eHTMLTag_userdefined,
+      "aParentTagId out of range!");
+  NS_ASSERTION(
+      aChildTagId > eHTMLTag_unknown && aChildTagId <= eHTMLTag_userdefined,
+      "aChildTagId out of range!");
 
 #ifdef DEBUG
   static bool checked = false;
@@ -601,36 +604,36 @@ bool HTMLEditUtils::CanContain(int32_t aParent, int32_t aChild) {
 #endif
 
   // Special-case button.
-  if (aParent == eHTMLTag_button) {
+  if (aParentTagId == eHTMLTag_button) {
     static const nsHTMLTag kButtonExcludeKids[] = {
         eHTMLTag_a,     eHTMLTag_fieldset, eHTMLTag_form,    eHTMLTag_iframe,
         eHTMLTag_input, eHTMLTag_select,   eHTMLTag_textarea};
 
     uint32_t j;
     for (j = 0; j < ArrayLength(kButtonExcludeKids); ++j) {
-      if (kButtonExcludeKids[j] == aChild) {
+      if (kButtonExcludeKids[j] == aChildTagId) {
         return false;
       }
     }
   }
 
   // Deprecated elements.
-  if (aChild == eHTMLTag_bgsound) {
+  if (aChildTagId == eHTMLTag_bgsound) {
     return false;
   }
 
   // Bug #67007, dont strip userdefined tags.
-  if (aChild == eHTMLTag_userdefined) {
+  if (aChildTagId == eHTMLTag_userdefined) {
     return true;
   }
 
-  const ElementInfo& parent = kElements[aParent - 1];
-  if (aParent == aChild) {
+  const ElementInfo& parent = kElements[aParentTagId - 1];
+  if (aParentTagId == aChildTagId) {
     return parent.mCanContainSelf;
   }
 
-  const ElementInfo& child = kElements[aChild - 1];
-  return (parent.mCanContainGroups & child.mGroup) != 0;
+  const ElementInfo& child = kElements[aChildTagId - 1];
+  return !!(parent.mCanContainGroups & child.mGroup);
 }
 
 bool HTMLEditUtils::IsContainer(int32_t aTag) {

@@ -880,12 +880,6 @@ class HTMLEditor final : public TextEditor,
       Element& aElement, int32_t aChange, int32_t* aReturn);
 
   /**
-   * returns true if aParentTag can contain a child of type aChildTag.
-   */
-  virtual bool TagCanContainTag(nsAtom& aParentTag,
-                                nsAtom& aChildTag) const override;
-
-  /**
    * Returns true if aNode is a container.
    */
   virtual bool IsContainer(nsINode* aNode) const override;
@@ -1305,12 +1299,6 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   SplitMailCiteElements(const EditorDOMPoint& aPointToSplit);
-
-  /**
-   * CanContainParagraph() returns true if aElement can have a <p> element as
-   * its child or its descendant.
-   */
-  bool CanContainParagraph(Element& aElement) const;
 
   /**
    * InsertBRElement() inserts a <br> element into aInsertToBreak.
