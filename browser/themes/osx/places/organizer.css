@@ -138,7 +138,7 @@
 
 /* organize button */
 #organizeButton {
-  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  list-style-image: url("chrome://browser/skin/settings.svg");
 }
 
 /* view button */

@@ -265,7 +265,7 @@ toolbar[brighttext] {
 }
 
 #preferences-button {
-  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  list-style-image: url("chrome://browser/skin/settings.svg");
 }
 
 #PanelUI-menu-button {
