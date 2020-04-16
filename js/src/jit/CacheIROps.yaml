@@ -1,0 +1,1288 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# [SMDOC] CacheIR Opcodes
+# =======================
+# This file defines all CacheIR opcodes and their operands.
+#
+# Each op has the following attributes:
+#
+# name
+# ====
+# Opcode name. Convention is to use a name ending in *Result for ops that store
+# to the IC's output register.
+#
+# shared
+# ======
+# If true, Baseline and Ion use the same CacheIRCompiler code for this op.
+# If false, the op must be implemented in both BaselineCacheIRCompiler and
+# IonCacheIRCompiler.
+#
+# operands
+# ========
+# List of operands. There are three kinds:
+#
+# - Id (ObjId, ValId, ...): refers to either an IC input or a value defined by
+#   a previous CacheIR instruction. This is encoded as integer in the bytecode
+#   stream.
+#
+# - Field (ObjectField, StringField, ...): specific value is stored in the stub
+#   data and the bytecode stream stores the offset of this field. This means the
+#   CacheIR is not specialized for particular values and code can be shared.
+#
+# - Immediate (BoolImm, Int32Imm, JSOpImm, ...): a value baked directly into
+#   the bytecode stream. This is useful for bits of state that need to be
+#   available to all CacheIR compilers/transpilers.
+
+- name: GuardToObject
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsObjectOrNull
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsNullOrUndefined
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsNotNullOrUndefined
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsNull
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsUndefined
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardToBoolean
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardToString
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardToSymbol
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardToBigInt
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardIsNumber
+  shared: true
+  operands:
+    val: ValId
+
+- name: GuardToInt32
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardToInt32Index
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardToTypedArrayIndex
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardToInt32ModUint32
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardToUint8Clamped
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: GuardType
+  shared: true
+  operands:
+    val: ValId
+    type: ValueTypeImm
+
+- name: GuardShape
+  shared: false
+  operands:
+    obj: ObjId
+    shape: ShapeField
+
+- name: GuardGroup
+  shared: false
+  operands:
+    obj: ObjId
+    group: GroupField
+
+- name: GuardProto
+  shared: false
+  operands:
+    obj: ObjId
+    proto: ObjectField
+
+# Guard per GuardClassKind.
+- name: GuardClass
+  shared: true
+  operands:
+    obj: ObjId
+    kind: GuardClassKindImm
+
+# Guard on an arbitrary JSClass.
+- name: GuardAnyClass
+  shared: false
+  operands:
+    obj: ObjId
+    clasp: RawWordField
+
+# Add a reference to a global in the compartment to keep it alive.
+- name: GuardCompartment
+  shared: false
+  operands:
+    obj: ObjId
+    global: ObjectField
+    compartment: RawWordField
+
+- name: GuardIsExtensible
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: GuardIsNativeObject
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: GuardIsProxy
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: GuardHasProxyHandler
+  shared: false
+  operands:
+    obj: ObjId
+    handler: RawWordField
+
+- name: GuardNotDOMProxy
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: GuardSpecificObject
+  shared: false
+  operands:
+    obj: ObjId
+    expected: ObjectField
+
+- name: GuardSpecificAtom
+  shared: false
+  operands:
+    str: StrId
+    expected: StringField
+
+- name: GuardSpecificSymbol
+  shared: false
+  operands:
+    sym: SymId
+    expected: SymbolField
+
+- name: GuardSpecificInt32Immediate
+  shared: true
+  operands:
+    integer: Int32Id
+    expected: Int32Imm
+
+- name: GuardSpecificNativeFunction
+  shared: true
+  operands:
+    obj: ObjId
+    native: JSNativeImm
+
+- name: GuardMagicValue
+  shared: true
+  operands:
+    val: ValId
+    magic: JSWhyMagicImm
+
+- name: GuardFrameHasNoArgumentsObject
+  shared: false
+  operands:
+
+- name: GuardNoDenseElements
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: GuardAndGetIndexFromString
+  shared: true
+  operands:
+    str: StrId
+    result: Int32Id
+
+- name: GuardAndGetInt32FromString
+  shared: true
+  operands:
+    str: StrId
+    result: Int32Id
+
+- name: GuardAndGetNumberFromString
+  shared: true
+  operands:
+    str: StrId
+    result: NumId
+
+- name: GuardAndGetNumberFromBoolean
+  shared: true
+  operands:
+    boolean: Int32Id
+    result: NumId
+
+- name: GuardAndGetIterator
+  shared: false
+  operands:
+    obj: ObjId
+    iter: ObjectField
+    enumeratorsAddr: RawWordField
+    result: ObjId
+
+- name: GuardHasGetterSetter
+  shared: false
+  operands:
+    obj: ObjId
+    shape: ShapeField
+
+- name: GuardGroupHasUnanalyzedNewScript
+  shared: true
+  operands:
+    group: GroupField
+
+- name: GuardIndexIsNonNegative
+  shared: true
+  operands:
+    index: Int32Id
+
+- name: GuardIndexGreaterThanArrayLength
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: GuardIndexIsValidUpdateOrAdd
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: GuardIndexGreaterThanDenseInitLength
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: GuardTagNotEqual
+  shared: true
+  operands:
+    lhs: ValTagId
+    rhs: ValTagId
+
+- name: GuardXrayExpandoShapeAndDefaultProto
+  shared: true
+  operands:
+    obj: ObjId
+    hasShapeWrapper: BoolImm
+    shapeWrapper: ObjectField
+
+# Guard rhs[slot] == prototypeObject.
+- name: GuardFunctionPrototype
+  shared: true
+  operands:
+    rhs: ObjId
+    proto: ObjId
+    slot: RawWordField
+
+- name: GuardNoAllocationMetadataBuilder
+  shared: true
+  operands:
+
+- name: GuardObjectGroupNotPretenured
+  shared: true
+  operands:
+    group: GroupField
+
+- name: GuardFunctionHasJitEntry
+  shared: true
+  operands:
+    fun: ObjId
+    constructing: BoolImm
+
+- name: GuardFunctionIsNative
+  shared: true
+  operands:
+    fun: ObjId
+
+- name: GuardFunctionIsConstructor
+  shared: true
+  operands:
+    fun: ObjId
+
+- name: GuardNotClassConstructor
+  shared: true
+  operands:
+    fun: ObjId
+
+- name: GuardFunApply
+  shared: false
+  operands:
+    argc: Int32Id
+    flags: CallFlagsImm
+
+- name: LoadObject
+  shared: true
+  operands:
+    result: ObjId
+    obj: ObjectField
+
+- name: LoadProto
+  shared: true
+  operands:
+    obj: ObjId
+    result: ObjId
+
+- name: LoadEnclosingEnvironment
+  shared: true
+  operands:
+    obj: ObjId
+    result: ObjId
+
+- name: LoadWrapperTarget
+  shared: true
+  operands:
+    obj: ObjId
+    result: ObjId
+
+- name: LoadValueTag
+  shared: true
+  operands:
+    val: ValId
+    result: ValTagId
+
+- name: LoadArgumentFixedSlot
+  shared: false
+  operands:
+    result: ValId
+    slotIndex: ByteImm
+
+- name: LoadArgumentDynamicSlot
+  shared: false
+  operands:
+    result: ValId
+    argc: Int32Id
+    slotIndex: ByteImm
+
+- name: TruncateDoubleToUInt32
+  shared: true
+  operands:
+    val: ValId
+    result: Int32Id
+
+- name: MegamorphicLoadSlotResult
+  shared: true
+  operands:
+    obj: ObjId
+    name: StringField
+    handleMissing: BoolImm
+
+- name: MegamorphicLoadSlotByValueResult
+  shared: true
+  operands:
+    obj: ObjId
+    id: ValId
+    handleMissing: BoolImm
+
+- name: MegamorphicStoreSlot
+  shared: true
+  operands:
+    obj: ObjId
+    name: StringField
+    rhs: ValId
+    needsTypeBarrier: BoolImm
+
+- name: MegamorphicSetElement
+  shared: false
+  operands:
+    obj: ObjId
+    id: ValId
+    rhs: ValId
+    strict: BoolImm
+
+- name: MegamorphicHasPropResult
+  shared: true
+  operands:
+    obj: ObjId
+    id: ValId
+    hasOwn: BoolImm
+
+# See CacheIR.cpp 'DOM proxies' comment.
+- name: LoadDOMExpandoValue
+  shared: true
+  operands:
+    obj: ObjId
+    result: ValId
+
+- name: LoadDOMExpandoValueGuardGeneration
+  shared: false
+  operands:
+    obj: ObjId
+    expandoAndGeneration: RawWordField
+    generation: DOMExpandoGenerationField
+    result: ValId
+
+- name: LoadDOMExpandoValueIgnoreGeneration
+  shared: true
+  operands:
+    obj: ObjId
+    result: ValId
+
+- name: GuardDOMExpandoMissingOrGuardShape
+  shared: false
+  operands:
+    expando: ValId
+    shape: ShapeField
+
+- name: StoreFixedSlot
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+
+- name: StoreDynamicSlot
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+
+- name: AddAndStoreFixedSlot
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+    changeGroup: BoolImm
+    newGroup: GroupField
+    newShape): ShapeField
+
+- name: AddAndStoreDynamicSlot
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+    changeGroup: BoolImm
+    newGroup: GroupField
+    newShape): ShapeField
+
+- name: AllocateAndStoreDynamicSlot
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+    changeGroup: BoolImm
+    newGroup: GroupField
+    newShape): ShapeField
+    numNewSlots: RawWordField
+
+- name: StoreTypedObjectReferenceProperty
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    layout: TypedThingLayoutImm
+    type: ReferenceTypeImm
+    rhs: ValId
+
+- name: StoreTypedObjectScalarProperty
+  shared: true
+  operands:
+    obj: ObjId
+    offset: RawWordField
+    layout: TypedThingLayoutImm
+    type: ScalarTypeImm
+    rhs: ValId
+
+- name: StoreDenseElement
+  shared: false
+  operands:
+    obj: ObjId
+    index: Int32Id
+    rhs: ValId
+
+- name: StoreDenseElementHole
+  shared: false
+  operands:
+    obj: ObjId
+    index: Int32Id
+    rhs: ValId
+    handleAdd: BoolImm
+
+- name: ArrayPush
+  shared: false
+  operands:
+    obj: ObjId
+    rhs: ValId
+
+- name: ArrayJoinResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: StoreTypedElement
+  shared: true
+  operands:
+    obj: ObjId
+    layout: TypedThingLayoutImm
+    elementType: ScalarTypeImm
+    index: Int32Id
+    rhs: AnyId
+    handleOOB: BoolImm
+
+- name: CallNativeSetter
+  shared: false
+  operands:
+    obj: ObjId
+    setter: ObjectField
+    rhs: ValId
+
+- name: CallScriptedSetter
+  shared: false
+  operands:
+    obj: ObjId
+    setter: ObjectField
+    rhs: ValId
+    sameRealm: BoolImm
+
+- name: CallSetArrayLength
+  shared: false
+  operands:
+    obj: ObjId
+    strict: BoolImm
+    rhs: ValId
+
+- name: CallProxySet
+  shared: false
+  operands:
+    obj: ObjId
+    rhs: ValId
+    id: IdField
+    strict: BoolImm
+
+- name: CallProxySetByValue
+  shared: false
+  operands:
+    obj: ObjId
+    id: ValId
+    rhs: ValId
+    strict: BoolImm
+
+- name: CallAddOrUpdateSparseElementHelper
+  shared: false
+  operands:
+    obj: ObjId
+    id: Int32Id
+    rhs: ValId
+    strict: BoolImm
+
+- name: CallInt32ToString
+  shared: true
+  operands:
+    input: Int32Id
+    result: StrId
+
+- name: CallNumberToString
+  shared: true
+  operands:
+    input: NumId
+    result: StrId
+
+- name: BooleanToString
+  shared: true
+  operands:
+    input: Int32Id
+    result: StrId
+
+- name: CallScriptedFunction
+  shared: false
+  operands:
+    callee: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+
+- name: CallNativeFunction
+  shared: false
+  operands:
+    callee: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+#ifdef JS_SIMULATOR
+    rawTarget: RawWordField
+#else
+    ignoresReturnValue: BoolImm
+#endif
+
+- name: CallClassHook
+  shared: false
+  operands:
+    callee: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+    target: RawWordField
+
+# Meta ops generate no code, but contain data for BaselineInspector.
+- name: MetaTwoByte
+  shared: true
+  operands:
+    kind: MetaTwoByteKindImm
+    offset: FieldOffset
+    templateObject: ObjectField
+
+- name: LoadFixedSlotResult
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+
+- name: LoadDynamicSlotResult
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+
+- name: LoadTypedObjectResult
+  shared: true
+  operands:
+    obj: ObjId
+    layout: TypedThingLayoutImm
+    typeDescr: ByteImm
+    offset: RawWordField
+
+- name: LoadDenseElementResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadDenseElementHoleResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: CallGetSparseElementResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadDenseElementExistsResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadTypedElementExistsResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+    layout: TypedThingLayoutImm
+
+- name: LoadDenseElementHoleExistsResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadTypedElementResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+    layout: TypedThingLayoutImm
+    elementType: ScalarTypeImm
+    handleOOB: BoolImm
+
+- name: LoadInt32ArrayLengthResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: LoadArgumentsObjectArgResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadArgumentsObjectLengthResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: LoadFunctionLengthResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: LoadStringCharResult
+  shared: true
+  operands:
+    str: StrId
+    index: Int32Id
+
+- name: LoadStringLengthResult
+  shared: true
+  operands:
+    str: StrId
+
+- name: LoadFrameCalleeResult
+  shared: false
+  operands:
+
+- name: LoadFrameNumActualArgsResult
+  shared: false
+  operands:
+
+- name: LoadFrameArgumentResult
+  shared: false
+  operands:
+    index: Int32Id
+
+- name: LoadEnvironmentFixedSlotResult
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+
+- name: LoadEnvironmentDynamicSlotResult
+  shared: false
+  operands:
+    obj: ObjId
+    offset: RawWordField
+
+- name: LoadObjectResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: LoadInt32Result
+  shared: true
+  operands:
+    val: Int32Id
+
+- name: LoadDoubleResult
+  shared: true
+  operands:
+    val: NumId
+
+- name: CallScriptedGetterResult
+  shared: false
+  operands:
+    obj: ObjId
+    getter: ObjectField
+    sameRealm: BoolImm
+
+- name: CallScriptedGetterByValueResult
+  shared: false
+  operands:
+    val: ValId
+    getter: ObjectField
+    samerealm: BoolImm
+
+- name: CallNativeGetterResult
+  shared: false
+  operands:
+    obj: ObjId
+    getter: ObjectField
+
+- name: CallNativeGetterByValueResult
+  shared: false
+  operands:
+    val: ValId
+    getter: ObjectField
+
+- name: CallProxyGetResult
+  shared: false
+  operands:
+    obj: ObjId
+    id: IdField
+
+- name: CallProxyGetByValueResult
+  shared: true
+  operands:
+    obj: ObjId
+    id: ValId
+
+- name: CallProxyHasPropResult
+  shared: true
+  operands:
+    obj: ObjId
+    id: ValId
+    hasOwn: BoolImm
+
+- name: CallObjectHasSparseElementResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: CallNativeGetElementResult
+  shared: true
+  operands:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadUndefinedResult
+  shared: true
+  operands:
+
+- name: LoadBooleanResult
+  shared: true
+  operands:
+    val: BoolImm
+
+- name: LoadStringResult
+  shared: false
+  operands:
+    str: StringField
+
+- name: LoadInstanceOfObjectResult
+  shared: true
+  operands:
+    lhs: ValId
+    proto: ObjId
+
+- name: LoadTypeOfObjectResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: DoubleAddResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: DoubleSubResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: DoubleMulResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: DoubleDivResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: DoubleModResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: DoublePowResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+
+- name: Int32AddResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32SubResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32MulResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32DivResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32ModResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32PowResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: BigIntAddResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntSubResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntMulResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntDivResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntModResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntPowResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: Int32BitOrResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32BitXorResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32BitAndResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32LeftShiftResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32RightShiftResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+
+- name: Int32URightShiftResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+    allowDouble: BoolImm
+
+- name: Int32NotResult
+  shared: true
+  operands:
+    input: Int32Id
+
+- name: BigIntBitOrResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntBitXorResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntBitAndResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntLeftShiftResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntRightShiftResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+
+- name: BigIntNotResult
+  shared: true
+  operands:
+    input: BigIntId
+
+- name: Int32NegationResult
+  shared: true
+  operands:
+    input: Int32Id
+
+- name: DoubleNegationResult
+  shared: true
+  operands:
+    input: NumId
+
+- name: BigIntNegationResult
+  shared: true
+  operands:
+    input: BigIntId
+
+- name: Int32IncResult
+  shared: true
+  operands:
+    input: Int32Id
+
+- name: Int32DecResult
+  shared: true
+  operands:
+    input: Int32Id
+
+- name: DoubleIncResult
+  shared: true
+  operands:
+    input: NumId
+
+- name: DoubleDecResult
+  shared: true
+  operands:
+    input: NumId
+
+- name: BigIntIncResult
+  shared: true
+  operands:
+    input: BigIntId
+
+- name: BigIntDecResult
+  shared: true
+  operands:
+    input: BigIntId
+
+- name: LoadInt32TruthyResult
+  shared: true
+  operands:
+    input: ValId
+
+- name: LoadDoubleTruthyResult
+  shared: true
+  operands:
+    input: ValId
+
+- name: LoadStringTruthyResult
+  shared: true
+  operands:
+    str: StrId
+
+- name: LoadObjectTruthyResult
+  shared: true
+  operands:
+    obj: ObjId
+
+- name: LoadBigIntTruthyResult
+  shared: true
+  operands:
+    bi: BigIntId
+
+- name: LoadValueResult
+  shared: false
+  operands:
+    val: ValueField
+
+- name: LoadNewObjectFromTemplateResult
+  shared: true
+  operands:
+    templateObject: ObjectField
+    disambiguationIdHi: UInt32Imm
+    disambiguationIdLo: UInt32Imm
+
+- name: CallStringConcatResult
+  shared: true
+  operands:
+    lhs: StrId
+    rhs: StrId
+
+- name: CallStringObjectConcatResult
+  shared: false
+  operands:
+    lhs: ValId
+    rhs: ValId
+
+- name: CallIsSuspendedGeneratorResult
+  shared: true
+  operands:
+    val: ValId
+
+- name: CompareStringResult
+  shared: false
+  operands:
+    lhs: StrId
+    rhs: StrId
+    op: JSOpImm
+
+- name: CompareObjectResult
+  shared: true
+  operands:
+    lhs: ObjId
+    rhs: ObjId
+    op: JSOpImm
+
+- name: CompareSymbolResult
+  shared: true
+  operands:
+    lhs: SymId
+    rhs: SymId
+    op: JSOpImm
+
+- name: CompareInt32Result
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: Int32Id
+    op: JSOpImm
+
+- name: CompareDoubleResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: NumId
+    op: JSOpImm
+
+- name: CompareBigIntResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: BigIntId
+    op: JSOpImm
+
+- name: CompareBigIntInt32Result
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: Int32Id
+    op: JSOpImm
+
+- name: CompareInt32BigIntResult
+  shared: true
+  operands:
+    lhs: Int32Id
+    rhs: BigIntId
+    op: JSOpImm
+
+- name: CompareBigIntNumberResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: NumId
+    op: JSOpImm
+
+- name: CompareNumberBigIntResult
+  shared: true
+  operands:
+    lhs: NumId
+    rhs: BigIntId
+    op: JSOpImm
+
+- name: CompareBigIntStringResult
+  shared: true
+  operands:
+    lhs: BigIntId
+    rhs: StrId
+    op: JSOpImm
+
+- name: CompareStringBigIntResult
+  shared: true
+  operands:
+    lhs: StrId
+    rhs: BigIntId
+    op: JSOpImm
+
+- name: CompareObjectUndefinedNullResult
+  shared: true
+  operands:
+    obj: ObjId
+    op: JSOpImm
+
+- name: CallPrintString
+  shared: true
+  operands:
+    str: StaticStringImm
+
+- name: Breakpoint
+  shared: true
+  operands:
+
+- name: TypeMonitorResult
+  shared: false
+  operands:
+
+- name: ReturnFromIC
+  shared: false
+  operands:
+
+- name: WrapResult
+  shared: true
+  operands:

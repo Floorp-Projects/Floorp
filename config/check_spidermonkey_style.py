@@ -64,6 +64,7 @@ included_inclnames_to_ignore = set([
     'frontend/smoosh_generated.h',        # generated in $OBJDIR
     'gc/StatsPhasesGenerated.h',         # generated in $OBJDIR
     'gc/StatsPhasesGenerated.inc',       # generated in $OBJDIR
+    'jit/CacheIROpsGenerated.h',         # generated in $OBJDIR
     'jit/LOpcodesGenerated.h',           # generated in $OBJDIR
     'jit/MOpcodesGenerated.h',           # generated in $OBJDIR
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
