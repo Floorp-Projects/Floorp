@@ -439,10 +439,6 @@ class ScriptStencil {
  public:
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
-  // See `BaseScript::{lineno_,column_}`.
-  unsigned lineno = 0;
-  unsigned column = 0;
-
   // See `initAtomMap` method.
   uint32_t natoms = 0;
 
