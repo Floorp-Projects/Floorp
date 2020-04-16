@@ -55,17 +55,11 @@ p {
 }
 
 .logo {
-  background: url("chrome://branding/content/about-logo.png") no-repeat center center;
+  background: url("chrome://branding/content/icon128.png") no-repeat center center;
   background-size: 96px;
   display: inline-block;
   height: 96px;
   width: 96px;
-}
-
-@media (min-resolution: 2x) {
-  .logo {
-    background-image: url('chrome://branding/content/about-logo@2x.png');
-  }
 }
 
 .wordmark {
