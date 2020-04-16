@@ -99,8 +99,7 @@ Test swapFrameLoaders with different frame types and remoteness
 
   add_task(async function() {
     await SpecialPowers.pushPrefEnv(
-      { "set": [["dom.mozBrowserFramesEnabled", true],
-                ["network.disable.ipc.security", true]] });
+      { "set": [["network.disable.ipc.security", true]] });
   });
 
   add_task(async function() {
