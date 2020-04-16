@@ -31,10 +31,8 @@ static void RecordingSourceSurfaceUserDataFunc(void* aUserData) {
   RecordingSourceSurfaceUserData* userData =
       static_cast<RecordingSourceSurfaceUserData*>(aUserData);
 
-  userData->recorder->RemoveSourceSurface((SourceSurface*)userData->refPtr);
-  userData->recorder->RemoveStoredObject(userData->refPtr);
-  userData->recorder->RecordEvent(
-      RecordedSourceSurfaceDestruction(ReferencePtr(userData->refPtr)));
+  userData->recorder->RecordSourceSurfaceDestruction(
+      static_cast<SourceSurface*>(userData->refPtr));
 
   delete userData;
 }
