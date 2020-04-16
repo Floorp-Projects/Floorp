@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1586290176418">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1586977183602">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3774,6 +3774,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="baf700c9-b165-4569-a247-8ced9b94fab1" id="{ab2186b0-8c0b-4921-a2d4-95e6e05c0e3c}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1c016cb6-d9b3-4a24-a887-1649b3ac2134" id="/^((spylog@cfsoft\.com)|(\{7cb9bddc-8c0e-4b4e-92df-3735e3db909a\})|(\{8c64047e-20da-45f2-998d-f852e0886c70\})|(\{684a1175-31b9-478a-845f-ab332d0c0ec3\})|(vni@vietbacsecurity\.com)|(\{95e9e74d-4318-4f14-939d-24ec61ed6657\})|(blockpopup@vietbacsecurity\.com)|(blocallpopup@vietbacsecurity\.com)|(Vanga@vietbacsecurity\.com)|(sontung@vietbacsecurity\.com)|(TiengViet@vietbacsecurity\.com)|(Pomodorotimer@vietbacsecurity\.com)|(Clock@vietbacsecurity\.com)|(alarmclock@vietbacsecurity\.com)|(gotiengviet@vietbacsecurity\.com)|(location@vietbacsecurity\.com)|(Amlich@vietbacsecurity\.com)|(lich@vietbacsecurity\.com)|(lichx@vietbacsecurity\.com)|(Bitcoin@vietbacsecurity\.com)|(thoitiet@vietbacsecurity\.com)|(Bitcointovnd@vietbacsecurity\.com)|(font@vietbacsecurity\.com)|(porn@vietbacsecurity\.com)|(TiengVietkhongdau@vietbacsecurity\.com)|(Calendar@vietbacsecurity\.com)|(007@vietbacsecurity\.com)|(spymyself@vietbacsecurity\.com)|(youtubedl@vietbacsecurity\.com)|(adminaaa@vietbacsecurity\.com)|(adminaaaq@vietbacsecurity\.com)|(adminaaan@vietbacsecurity\.com)|(adminaaank@vietbacsecurity\.com)|(admindsa@vietbacsecurity\.com)|(admindsak@vietbacsecurity\.com)|(admdin@vietbacsecurity\.com)|(admins@vietbacsecurity\.com)|(cotuong@vietbacsecurity\.com)|(\{a127afcb-7284-40aa-aac2-cbe0fdd4491d\})|(\{9c07f8ad-57dc-459f-b07c-96900e8a3806\})|(\{c2c59ff7-83e6-4988-8c1d-473d8ac76bba\})|(\{8f0e655a-22ee-43bb-97fc-80af74a4dc34\})|(\{49253a6c-eeb9-465c-bcf9-258f731dad9e\})|(\{c5542677-064b-4fce-876b-3e1ba30371a4\})|(\{7b786f87-2016-4752-a781-5f8b4c63241e\})|(\{4b768602-8729-4852-8587-d55169ce67e9\})|(\{04c37c01-32bd-4e4a-94bf-36d8175b0555\})|(\{743aeddb-e150-40e0-8091-e8b52e7225a4\})|(\{1b7f9ca4-0a14-4ef9-8ec3-3cd05efb683c\})|(\{e843a1e9-21a2-43ad-a1ff-34e430eae000\})|(\{92a420a0-5075-4126-8318-2ce8b4ef8746\})|(\{f204e4e2-c9d0-4a12-bbdf-20ae0346171e\})|(\{045504f3-13d3-420d-a8a2-74e6e548f5f8\})|(\{44c67012-6467-4925-9284-1ad3785e02fd\})|(\{709baa43-e321-4d09-80ad-bf41c93d49d5\})|(\{7679dbca-1b6e-4e9a-ae70-8fab1e541051\})|(\{46d6f718-bbf8-42de-85bf-07c7e2ee3db1\})|(\{9b4d83fa-395f-4c86-a897-7927ce9383e3\})|(chudaibi@vietbacsecurity\.com)|(\{f55e480d-37ff-403c-9601-1380c8119b7a\})|(\{1c52bac9-b511-47e6-9492-51832b6d73ae\})|(\{f09be92f-8d2a-4294-b787-dee323ca52ef\})|(\{14e65683-b5ee-4e41-8083-c8138b0a30ed\})|(\{1c65312f-bbf4-4447-9fe5-433234eb4562\})|(\{f7d105c4-d341-4d17-b0ee-257cb1473a07\})|(\{12b5579f-eb13-4399-a902-2f36c3ad3447\})|(\{e3d1a35f-50eb-4125-9b0f-d26a59f88823\})|(minh@41batrieu\.com)|(\{abb3fe45-b511-4d21-aa0c-0cd1fed6dffb\})|(tocao@vietbacsecurity\.com)|(\{87cb22c4-7395-4658-bf65-a2c27c8f1e8c\})|(\{9324c255-2e6e-4b27-b4fa-5af7f6e167c6\})|(\{02d3a0c5-1f60-4824-b37f-9dc2c67ef9f2\})|(\{711e1a95-bc52-44de-bb17-ea24ed493e65\})|(\{c2fff0c1-601f-42e4-878f-c1cdd624c279\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="17d89613-a8c6-4e49-a5c7-e9eac64133f1" id="/^((\{39262546-d73e-4259-ba57-b772473106a3\})|(\{f6e51fb0-9724-4c86-aa95-12d20c77a7fa\})|(\{805466a4-90a7-48a3-85bb-bad244244a85\})|(\{60cfdc21-74c4-42bb-9b9f-9688f1a22e17\})|(\{c96f35f7-9ca8-4119-8d08-aaf1f5231fa7\})|(\{057b25cd-d923-4faf-828b-47d36f069a40\})|(\{1c5a9f06-a63b-49c4-9d66-563c7a9ed059\})|(\{61e204ba-f49f-41e4-8d38-0cbf003e3ea8\})|(\{139b5a73-e8ae-496a-b0eb-2bc4de518fc6\})|(\{59b82710-8c63-4d82-bc16-64f6bda5cd20\})|(\{bfe32796-ee0b-4271-a5d2-81938374395f\})|(\{ef5353b7-cf92-40e9-8f5c-93210015b15f\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="6a02c6a6-ef2e-4b46-ab67-49157ed9e49c" id="/^((\{329fc2d4-30d7-48b7-8247-4a4bb7682da8\})|(\{5738de0c-38f0-4e38-a01e-8553ec09235c\})|(\{bc775a74-c002-4e99-bf4d-ad9a806263dd\})|(\{1272ff2b-0339-4d10-9297-cb0e90a2be0e\})|(\{e5771c28-c725-43b0-b8d4-5d4acd072b7d\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
