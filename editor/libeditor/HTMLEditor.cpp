@@ -3650,11 +3650,18 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
 
   if (ShouldReplaceRootElement()) {
     UpdateRootElement();
-    nsContentUtils::AddScriptRunner(NewRunnableMethod(
-        "HTMLEditor::NotifyRootChanged", this, &HTMLEditor::NotifyRootChanged));
+    if (mPendingRootElementUpdatedRunner) {
+      return;
+    }
+    mPendingRootElementUpdatedRunner = NewRunnableMethod(
+        "HTMLEditor::NotifyRootChanged", this, &HTMLEditor::NotifyRootChanged);
+    nsContentUtils::AddScriptRunner(
+        do_AddRef(mPendingRootElementUpdatedRunner));
+    return;
   }
+
   // We don't need to handle our own modifications
-  else if (!GetTopLevelEditSubAction() && container->IsEditable()) {
+  if (!GetTopLevelEditSubAction() && container->IsEditable()) {
     if (EditorUtils::IsPaddingBRElementForEmptyEditor(*aChild)) {
       // Ignore insertion of the padding <br> element.
       return;
@@ -3703,11 +3710,18 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentRemoved(
 
   if (SameCOMIdentity(aChild, mRootElement)) {
     mRootElement = nullptr;
-    nsContentUtils::AddScriptRunner(NewRunnableMethod(
-        "HTMLEditor::NotifyRootChanged", this, &HTMLEditor::NotifyRootChanged));
-    // We don't need to handle our own modifications
-  } else if (!GetTopLevelEditSubAction() &&
-             aChild->GetParentNode()->IsEditable()) {
+    if (mPendingRootElementUpdatedRunner) {
+      return;
+    }
+    mPendingRootElementUpdatedRunner = NewRunnableMethod(
+        "HTMLEditor::NotifyRootChanged", this, &HTMLEditor::NotifyRootChanged);
+    nsContentUtils::AddScriptRunner(
+        do_AddRef(mPendingRootElementUpdatedRunner));
+    return;
+  }
+
+  // We don't need to handle our own modifications
+  if (!GetTopLevelEditSubAction() && aChild->GetParentNode()->IsEditable()) {
     if (aChild && EditorUtils::IsPaddingBRElementForEmptyEditor(*aChild)) {
       // Ignore removal of the padding <br> element for empty editor.
       return;
@@ -5124,6 +5138,10 @@ bool HTMLEditor::ShouldReplaceRootElement() const {
 }
 
 void HTMLEditor::NotifyRootChanged() {
+  MOZ_ASSERT(mPendingRootElementUpdatedRunner,
+             "HTMLEditor::NotifyRootChanged() should be called via a runner");
+  mPendingRootElementUpdatedRunner = nullptr;
+
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
@@ -5339,6 +5357,10 @@ nsHTMLDocument* HTMLEditor::GetHTMLDocument() const {
 }
 
 nsresult HTMLEditor::OnModifyDocument() {
+  MOZ_ASSERT(mPendingDocumentModifiedRunner,
+             "HTMLEditor::OnModifyDocument() should be called via a runner");
+  mPendingDocumentModifiedRunner = nullptr;
+
   if (IsEditActionDataAvailable()) {
     return OnModifyDocumentInternal();
   }
@@ -5357,6 +5379,7 @@ nsresult HTMLEditor::OnModifyDocument() {
 
 nsresult HTMLEditor::OnModifyDocumentInternal() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!mPendingDocumentModifiedRunner);
 
   // EnsureNoPaddingBRElementForEmptyEditor() below may cause a flush, which
   // could destroy the editor

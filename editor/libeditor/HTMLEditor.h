@@ -54,6 +54,7 @@ class ListItemElementSelectionState;
 class MoveNodeResult;
 class ParagraphStateAtSelection;
 class ResizerSelectionListener;
+class Runnable;
 class SplitRangeOffFromNodeResult;
 class SplitRangeOffResult;
 class WSRunObject;
@@ -4441,6 +4442,9 @@ class HTMLEditor final : public TextEditor,
   mutable RefPtr<RangeItem> mSelectedRangeForTopLevelEditSubAction;
   // Used by TopLevelEditSubActionData::mChangedRange.
   mutable RefPtr<nsRange> mChangedRangeForTopLevelEditSubAction;
+
+  RefPtr<Runnable> mPendingRootElementUpdatedRunner;
+  RefPtr<Runnable> mPendingDocumentModifiedRunner;
 
   bool mCRInParagraphCreatesParagraph;
 
