@@ -16,8 +16,7 @@ async function openAboutWelcomeTab() {
   await setAboutWelcomePref(true);
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:welcome",
-    false
+    "about:welcome"
   );
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(tab);
@@ -54,10 +53,10 @@ add_task(async function test_About_Welcome_Tab_Close() {
  */
 add_task(async function test_About_Welcome_Location_Change() {
   await openAboutWelcomeTab();
-  let currentWindow =
+  let windowGlobalParent =
     gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
 
-  let aboutWelcomeActor = await currentWindow.getActor("AboutWelcome");
+  let aboutWelcomeActor = await windowGlobalParent.getActor("AboutWelcome");
 
   Assert.ok(
     aboutWelcomeActor.AboutWelcomeObserver,
