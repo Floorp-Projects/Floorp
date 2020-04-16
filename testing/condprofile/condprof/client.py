@@ -12,6 +12,8 @@ import tempfile
 import shutil
 import time
 
+from mozprofile.prefs import Preferences
+
 from condprof import check_install  # NOQA
 from condprof import progress
 from condprof.util import download_file, TASK_CLUSTER, logger, ArchiveNotFound
@@ -34,6 +36,36 @@ RETRY_PAUSE = 30
 
 class ProfileNotFoundError(Exception):
     pass
+
+
+def _check_profile(profile_dir):
+    """Checks for prefs we need to remove or set.
+    """
+    to_remove = ("gfx.blacklist.", "marionette.")
+
+    def _keep_pref(name, value):
+        for item in to_remove:
+            if not name.startswith(item):
+                continue
+            logger.info("Removing pref %s: %s" % (name, value))
+            return False
+        return True
+
+    def _clean_pref_file(name):
+        js_file = os.path.join(profile_dir, name)
+        prefs = Preferences.read_prefs(js_file)
+        cleaned_prefs = dict([pref for pref in prefs if _keep_pref(*pref)])
+        if name == "prefs.js":
+            # When we start Firefox, forces startupScanScopes to SCOPE_PROFILE (1)
+            # otherwise, side loading will be deactivated and the
+            # Raptor web extension won't be able to run.
+            cleaned_prefs["extensions.startupScanScopes"] = 1
+
+        with open(js_file, "w") as f:
+            Preferences.write(f, cleaned_prefs)
+
+    _clean_pref_file("prefs.js")
+    _clean_pref_file("user.js")
 
 
 def get_profile(
@@ -109,6 +141,8 @@ def get_profile(
             finally:
                 if not download_cache:
                     shutil.rmtree(download_dir)
+
+            _check_profile(target_dir)
             logger.info("Success, we have a profile to work with")
             return target_dir
         except Exception:
