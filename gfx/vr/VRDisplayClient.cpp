@@ -245,24 +245,26 @@ void VRDisplayClient::GamepadMappingForWebVR(
       static Matrix4x4 focusPlusTransform;
       Matrix4x4 originalMtx;
       if (focusPlusTransform.IsIdentity()) {
-        focusPlusTransform.RotateX(0.70f);
-        focusPlusTransform.PostTranslate(0.0f, 0.0f, -0.01f);
+        focusPlusTransform.RotateX(-0.70f);
+        focusPlusTransform.PostTranslate(0.0f, 0.0f, 0.01f);
         focusPlusTransform.Inverse();
       }
-      originalMtx.SetRotationFromQuaternion(
-          gfx::Quaternion(aControllerState.pose.orientation[0],
-                          aControllerState.pose.orientation[1],
-                          aControllerState.pose.orientation[2],
-                          aControllerState.pose.orientation[3]));
-      originalMtx.PostTranslate(aControllerState.pose.position[0],
-                                aControllerState.pose.position[1],
-                                aControllerState.pose.position[2]);
+      gfx::Quaternion quat(aControllerState.pose.orientation[0],
+                           aControllerState.pose.orientation[1],
+                           aControllerState.pose.orientation[2],
+                           aControllerState.pose.orientation[3]);
+      // We need to invert its quaternion here because we did an invertion
+      // in FxR WaveVR delegate.
+      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx._41 = aControllerState.pose.position[0];
+      originalMtx._42 = aControllerState.pose.position[1];
+      originalMtx._43 = aControllerState.pose.position[2];
       originalMtx = focusPlusTransform * originalMtx;
 
-      gfx::Quaternion quat;
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);
 
+      quat.Invert();
       aControllerState.pose.position[0] = pos.x;
       aControllerState.pose.position[1] = pos.y;
       aControllerState.pose.position[2] = pos.z;
@@ -317,24 +319,26 @@ void VRDisplayClient::GamepadMappingForWebVR(
       Matrix4x4 originalMtx;
 
       if (touch2Transform.IsIdentity()) {
-        touch2Transform.RotateX(0.77f);
-        touch2Transform.PostTranslate(0.0f, 0.0f, 0.025f);
+        touch2Transform.RotateX(-0.77f);
+        touch2Transform.PostTranslate(0.0f, 0.0f, -0.025f);
         touch2Transform.Inverse();
       }
-      originalMtx.SetRotationFromQuaternion(
-          gfx::Quaternion(aControllerState.pose.orientation[0],
-                          aControllerState.pose.orientation[1],
-                          aControllerState.pose.orientation[2],
-                          aControllerState.pose.orientation[3]));
-      originalMtx.PostTranslate(aControllerState.pose.position[0],
-                                aControllerState.pose.position[1],
-                                aControllerState.pose.position[2]);
+      gfx::Quaternion quat(aControllerState.pose.orientation[0],
+                           aControllerState.pose.orientation[1],
+                           aControllerState.pose.orientation[2],
+                           aControllerState.pose.orientation[3]);
+      // We need to invert its quaternion here because we did an invertion
+      // in FxR OculusVR delegate.
+      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx._41 = aControllerState.pose.position[0];
+      originalMtx._42 = aControllerState.pose.position[1];
+      originalMtx._43 = aControllerState.pose.position[2];
       originalMtx = touch2Transform * originalMtx;
 
-      gfx::Quaternion quat;
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);
 
+      quat.Invert();
       aControllerState.pose.position[0] = pos.x;
       aControllerState.pose.position[1] = pos.y;
       aControllerState.pose.position[2] = pos.z;
