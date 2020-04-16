@@ -52,6 +52,7 @@ toolkit.jar:
   skin/classic/global/pictureinpicture/play.svg            (../../shared/pictureinpicture/play.svg)
   skin/classic/global/icons/identity-icon.svg              (../../shared/icons/identity-icon.svg)
   skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
+  skin/classic/global/icons/settings.svg                   (../../shared/icons/settings.svg)
   skin/classic/global/icons/shortcut.svg                   (../../shared/icons/shortcut.svg)
   skin/classic/global/icons/spinner-arrow-down.svg         (../../shared/icons/spinner-arrow-down.svg)
   skin/classic/global/icons/spinner-arrow-up.svg           (../../shared/icons/spinner-arrow-up.svg)

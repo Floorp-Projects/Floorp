@@ -344,7 +344,7 @@ addon-card:not([expanded]) .addon-description {
 }
 
 .page-options-menu > .more-options-button {
-  background-image: url("chrome://mozapps/skin/extensions/utilities.svg");
+  background-image: url("chrome://global/skin/icons/settings.svg");
   width: 32px;
   height: 32px;
 }

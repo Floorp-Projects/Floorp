@@ -182,7 +182,7 @@ body {
   .icon.icon-new-window-private {
     background-image: url("chrome://browser/skin/privateBrowsing.svg"); }
   .icon.icon-settings {
-    background-image: url("chrome://browser/skin/settings.svg"); }
+    background-image: url("chrome://global/skin/icons/settings.svg"); }
   .icon.icon-pin {
     background-image: url("../data/content/assets/glyph-pin-16.svg"); }
     .icon.icon-pin:dir(rtl) {
@@ -3216,7 +3216,7 @@ main {
   .ds-privacy-modal .modal-link.modal-link-privacy::before {
     background-image: url("../data/content/assets/glyph-info-16.svg"); }
   .ds-privacy-modal .modal-link.modal-link-manage::before {
-    background-image: url("chrome://browser/skin/settings.svg"); }
+    background-image: url("chrome://global/skin/icons/settings.svg"); }
 
 .ds-privacy-modal p {
   line-height: 24px; }
