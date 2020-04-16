@@ -4856,8 +4856,25 @@ void nsFlexContainerFrame::ReflowChildren(
       // to clear out a -webkit-line-clamp ellipsis, we can just reposition it
       // as-needed.
       if (item.NeedsFinalReflow()) {
-        ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
-                       containerSize, aHasLineClampEllipsis);
+        // The available size must be in item's writing-mode.
+        const WritingMode itemWM = item.GetWritingMode();
+        LogicalSize availableSize = aReflowInput.ComputedSize(itemWM);
+
+        // XXX: Unconditionally give our children unconstrained block-size until
+        // we support flex item fragmentation.
+        availableSize.BSize(itemWM) = NS_UNCONSTRAINEDSIZE;
+
+        const nsReflowStatus childReflowStatus =
+            ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
+                           availableSize, containerSize, aHasLineClampEllipsis);
+
+        // XXXdholbert Once we do pagination / splitting, we'll need to actually
+        // handle incomplete childReflowStatuses. But for now, we give our kids
+        // unconstrained available height, which means they should always
+        // complete.
+        MOZ_ASSERT(childReflowStatus.IsComplete(),
+                   "We gave flex item unconstrained available height, so it "
+                   "should be complete");
       } else {
         MoveFlexItemToFinalPosition(aReflowInput, item, framePos,
                                     containerSize);
@@ -5026,16 +5043,14 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   PositionChildViews(aItem.Frame());
 }
 
-void nsFlexContainerFrame::ReflowFlexItem(
+nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const FlexboxAxisTracker& aAxisTracker, const ReflowInput& aReflowInput,
     const FlexItem& aItem, LogicalPoint& aFramePos,
-    const nsSize& aContainerSize, bool aHasLineClampEllipsis) {
+    const LogicalSize& aAvailableSize, const nsSize& aContainerSize,
+    bool aHasLineClampEllipsis) {
   WritingMode outerWM = aReflowInput.GetWritingMode();
-  WritingMode wm = aItem.Frame()->GetWritingMode();
-  LogicalSize availSize = aReflowInput.ComputedSize(wm);
-  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput childReflowInput(PresContext(), aReflowInput, aItem.Frame(),
-                               availSize);
+                               aAvailableSize);
   childReflowInput.mFlags.mInsideLineClamp = GetLineClampValue() != 0;
   // This is the final reflow of this flex item; if we previously had a
   // -webkit-line-clamp, and we missed our chance to clear the ellipsis
@@ -5124,19 +5139,13 @@ void nsFlexContainerFrame::ReflowFlexItem(
 
   // XXXdholbert Perhaps we should call CheckForInterrupt here; see bug 1495532.
 
-  // XXXdholbert Once we do pagination / splitting, we'll need to actually
-  // handle incomplete childReflowStatuses. But for now, we give our kids
-  // unconstrained available height, which means they should always
-  // complete.
-  MOZ_ASSERT(childReflowStatus.IsComplete(),
-             "We gave flex item unconstrained available height, so it "
-             "should be complete");
-
   FinishReflowChild(aItem.Frame(), PresContext(), childReflowOutput,
                     &childReflowInput, outerWM, aFramePos, aContainerSize,
                     ReflowChildFlags::ApplyRelativePositioning);
 
   aItem.SetAscent(childReflowOutput.BlockStartAscent());
+
+  return childReflowStatus;
 }
 
 void nsFlexContainerFrame::ReflowPlaceholders(

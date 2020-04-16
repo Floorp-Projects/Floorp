@@ -758,8 +758,9 @@ struct ReflowInput : public SizeComputationInput {
    * @param aPresContext Must be equal to aFrame->PresContext().
    * @param aFrame The frame for whose reflow input is being constructed.
    * @param aRenderingContext The rendering context to be used for measurements.
-   * @param aAvailableSpace See comments for availableHeight and availableWidth
-   *        members.
+   * @param aAvailableSpace The available space to reflow aFrame (in aFrame's
+   *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
+   *        members for more information.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
@@ -775,8 +776,9 @@ struct ReflowInput : public SizeComputationInput {
    * @param aParentReflowInput A reference to an ReflowInput object that
    *        is to be the parent of this object.
    * @param aFrame The frame for whose reflow input is being constructed.
-   * @param aAvailableSpace See comments for availableHeight and availableWidth
-   *        members.
+   * @param aAvailableSpace The available space to reflow aFrame (in aFrame's
+   *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
+   *        members for more information.
    * @param aContainingBlockSize An optional size, in app units, specifying
    *        the containing block size to use instead of the default which is
    *        computed by ComputeContainingBlockRectangle().
