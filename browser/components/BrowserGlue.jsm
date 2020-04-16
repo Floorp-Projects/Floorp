@@ -324,7 +324,15 @@ let ACTORS = {
     parent: {
       moduleURI: "resource:///actors/PromptParent.jsm",
     },
-
+    child: {
+      moduleURI: "resource:///actors/PromptChild.jsm",
+      events: {
+        pagehide: {
+          capture: true,
+        },
+      },
+    },
+    includeChrome: true,
     allFrames: true,
   },
 
