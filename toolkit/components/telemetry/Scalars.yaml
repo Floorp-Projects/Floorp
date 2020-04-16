@@ -3337,6 +3337,41 @@ pdf.viewer:
       - 'main'
       - 'content'
 
+# The following section contains scalars for printing.
+printing:
+  error:
+    bug_numbers:
+      - 1630105
+    description: >
+      A counter incremented every time the user encounters an error printing.
+      The result is split into keys which represent the values of
+      error codes related to printing. Possible values are listed in 'keys'.
+      "FAILURE" is a catch-all code for an error we don't recognize.
+    keyed: true
+    keys:
+      - 'GFX_PRINTER_NO_PRINTER_AVAILABLE'
+      - 'GFX_PRINTER_NAME_NOT_FOUND'
+      - 'GFX_PRINTER_COULD_NOT_OPEN_FILE'
+      - 'GFX_PRINTER_STARTDOC'
+      - 'GFX_PRINTER_ENDDOC'
+      - 'GFX_PRINTER_STARTPAGE'
+      - 'GFX_PRINTER_DOC_IS_BUSY'
+      - 'ABORT'
+      - 'NOT_AVAILABLE'
+      - 'NOT_IMPLEMENTED'
+      - 'OUT_OF_MEMORY'
+      - 'UNEXPECTED'
+      - 'FAILURE'
+    expires: never
+    kind: uint
+    notification_emails:
+      - jaws@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains probes that record timestamps.
 timestamps:
   first_paint:
