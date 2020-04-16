@@ -2454,6 +2454,14 @@
   value: false
   mirror: always
 
+# WARNING: Don't ever update that pref manually! It is only used
+# for telemetry purposes and allows to reason about retention of
+# the pref dom.security.https_only_mode from above.
+- name: dom.security.https_only_mode_ever_enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
   type: bool
