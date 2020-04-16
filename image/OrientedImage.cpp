@@ -231,22 +231,17 @@ gfxMatrix OrientedImage::OrientationMatrix(Orientation aOrientation,
                                            bool aInvert /* = false */) {
   MatrixBuilder builder(aInvert);
 
-  // Apply reflection, if present. (This logically happens second, but we
-  // apply it first because these transformations are all premultiplied.) A
-  // translation is necessary to place the image back in the first quadrant.
-  switch (aOrientation.flip) {
-    case Flip::Unflipped:
-      break;
-    case Flip::Horizontal:
-      if (aOrientation.SwapsWidthAndHeight()) {
-        builder.Translate(gfxPoint(aSize.height, 0));
-      } else {
-        builder.Translate(gfxPoint(aSize.width, 0));
-      }
-      builder.Scale(-1.0, 1.0);
-      break;
-    default:
-      MOZ_ASSERT(false, "Invalid flip value");
+  // Apply reflection, if present. (For a regular, non-flipFirst reflection,
+  // this logically happens second, but we apply it first because these
+  // transformations are all premultiplied.) A translation is necessary to place
+  // the image back in the first quadrant.
+  if (aOrientation.flip == Flip::Horizontal && !aOrientation.flipFirst) {
+    if (aOrientation.SwapsWidthAndHeight()) {
+      builder.Translate(gfxPoint(aSize.height, 0));
+    } else {
+      builder.Translate(gfxPoint(aSize.width, 0));
+    }
+    builder.Scale(-1.0, 1.0);
   }
 
   // Apply rotation, if present. Again, a translation is used to place the
@@ -268,6 +263,12 @@ gfxMatrix OrientedImage::OrientationMatrix(Orientation aOrientation,
       break;
     default:
       MOZ_ASSERT(false, "Invalid rotation value");
+  }
+
+  // Apply a flipFirst reflection.
+  if (aOrientation.flip == Flip::Horizontal && aOrientation.flipFirst) {
+    builder.Translate(gfxPoint(aSize.width, 0.0));
+    builder.Scale(-1.0, 1.0);
   }
 
   return builder.Build();
