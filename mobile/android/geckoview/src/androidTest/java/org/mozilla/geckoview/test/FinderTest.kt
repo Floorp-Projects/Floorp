@@ -24,8 +24,7 @@ class FinderTest : BaseSessionTest() {
         var result = sessionRule.waitForResult(mainSession.finder.find("dolore", 0))
 
         assertThat("Should be found", result.found, equalTo(true))
-        // "wrapped" is true for the first found result of a new session.
-        assertThat("Should have wrapped", result.wrapped, equalTo(true))
+        assertThat("Should not have wrapped", result.wrapped, equalTo(false))
         assertThat("Current count should be correct", result.current, equalTo(1))
         assertThat("Total count should be correct", result.total, equalTo(2))
         assertThat("Search string should be correct",
