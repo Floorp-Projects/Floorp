@@ -606,6 +606,42 @@ declare_gl_apis! {
         dest_target: GLenum, dest_id: GLuint, dest_level: GLint,
         x_offset: GLint, y_offset: GLint, x: GLint, y: GLint, width: GLsizei, height: GLsizei,
         unpack_flip_y: GLboolean, unpack_premultiply_alpha: GLboolean, unpack_unmultiply_alpha: GLboolean);
+
+    // GL_ANGLE_copy_texture_3d
+    fn copy_texture_3d_angle(
+        &self,
+        source_id: GLuint,
+        source_level: GLint,
+        dest_target: GLenum,
+        dest_id: GLuint,
+        dest_level: GLint,
+        internal_format: GLint,
+        dest_type: GLenum,
+        unpack_flip_y: GLboolean,
+        unpack_premultiply_alpha: GLboolean,
+        unpack_unmultiply_alpha: GLboolean,
+    );
+
+    fn copy_sub_texture_3d_angle(
+        &self,
+        source_id: GLuint,
+        source_level: GLint,
+        dest_target: GLenum,
+        dest_id: GLuint,
+        dest_level: GLint,
+        x_offset: GLint,
+        y_offset: GLint,
+        z_offset: GLint,
+        x: GLint,
+        y: GLint,
+        z: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        unpack_flip_y: GLboolean,
+        unpack_premultiply_alpha: GLboolean,
+        unpack_unmultiply_alpha: GLboolean,
+    );
 }
 
 //#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]

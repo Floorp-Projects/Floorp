@@ -7,7 +7,7 @@ edition = "2018"
 
 [target.'cfg(windows)'.dependencies]
 euclid = "0.20"
-gleam = "0.10"
+gleam = "0.11"
 mozangle = {version = "0.3.1", features = ["egl"]}
 webrender = {path = "../webrender"}
 winapi = {version = "0.3", features = ["winerror", "d3d11", "dcomp"]}
