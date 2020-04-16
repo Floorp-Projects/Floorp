@@ -627,7 +627,9 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     // block can not contain anything that's visible, such a block only
     // makes sense if it is visible by itself, like a <hr>.  We want to
     // place the caret in front of that block.
-    if (!IsContainer(forwardScanFromPointToPutCaretResult.GetContent())) {
+    if (!forwardScanFromPointToPutCaretResult.GetContent() ||
+        !HTMLEditUtils::IsContainerNode(
+            *forwardScanFromPointToPutCaretResult.GetContent())) {
       pointToPutCaret =
           forwardScanFromPointToPutCaretResult.RawPointAtContent();
       break;
@@ -810,7 +812,8 @@ NS_IMETHODIMP HTMLEditor::NodeIsBlock(nsINode* aNode, bool* aIsBlock) {
 bool HTMLEditor::IsEmptyInlineNode(nsIContent& aContent) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!HTMLEditUtils::IsInlineElement(aContent) || !IsContainer(&aContent)) {
+  if (!HTMLEditUtils::IsInlineElement(aContent) ||
+      !HTMLEditUtils::IsContainerNode(aContent)) {
     return false;
   }
   return IsEmptyNode(aContent);
@@ -1224,10 +1227,11 @@ void HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsINode* aNode) {
 
   nsCOMPtr<nsINode> node = aNode;
 
-  for (nsCOMPtr<nsIContent> child = node->GetFirstChild(); child;
+  for (nsIContent* child = node->GetFirstChild(); child;
        child = child->GetFirstChild()) {
     // Stop if we find a table, don't want to go into nested tables
-    if (HTMLEditUtils::IsTable(child) || !IsContainer(child)) {
+    if (HTMLEditUtils::IsTable(child) ||
+        !HTMLEditUtils::IsContainerNode(*child)) {
       break;
     }
     node = child;
@@ -3763,20 +3767,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentRemoved(
   }
 }
 
-bool HTMLEditor::IsContainer(nsINode* aNode) const {
-  MOZ_ASSERT(aNode);
-
-  int32_t tagEnum;
-  // XXX Should this handle #cdata-section too?
-  if (aNode->IsText()) {
-    tagEnum = eHTMLTag_text;
-  } else {
-    tagEnum = nsHTMLTags::StringTagToId(aNode->NodeName());
-  }
-
-  return HTMLEditUtils::IsContainer(tagEnum);
-}
-
 nsresult HTMLEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -4344,7 +4334,8 @@ bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
   // anchors are containers, named anchors are "empty" but we don't
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.  Form Widgets not empty.
-  if (!IsContainer(&aNode) ||
+  if (!aNode.IsContent() ||
+      !HTMLEditUtils::IsContainerNode(*aNode.AsContent()) ||
       (HTMLEditUtils::IsNamedAnchor(&aNode) ||
        HTMLEditUtils::IsFormWidget(&aNode) ||
        (aListOrCellNotEmpty && (HTMLEditUtils::IsListItem(&aNode) ||

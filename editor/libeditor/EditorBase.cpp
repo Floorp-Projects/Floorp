@@ -1147,15 +1147,16 @@ nsresult EditorBase::CollapseSelectionToEnd() {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsINode* node = rootElement;
-  nsINode* child = node->GetLastChild();
-  while (child && IsContainer(child)) {
-    node = child;
-    child = node->GetLastChild();
+  nsIContent* lastContent = rootElement;
+  for (nsIContent* child = lastContent->GetLastChild();
+       child && (IsTextEditor() || HTMLEditUtils::IsContainerNode(*child));
+       child = child->GetLastChild()) {
+    lastContent = child;
   }
 
-  uint32_t length = node->Length();
-  nsresult rv = SelectionRefPtr()->Collapse(node, static_cast<int32_t>(length));
+  uint32_t length = lastContent->Length();
+  nsresult rv =
+      SelectionRefPtr()->Collapse(lastContent, static_cast<int32_t>(length));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
   return rv;
 }
@@ -4026,10 +4027,6 @@ bool EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const {
   }
 
   return aNode->IsInclusiveDescendantOf(root);
-}
-
-bool EditorBase::IsContainer(nsINode* aNode) const {
-  return aNode ? true : false;
 }
 
 uint32_t EditorBase::CountEditableChildren(nsINode* aNode) {
