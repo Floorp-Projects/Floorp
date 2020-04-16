@@ -41,6 +41,17 @@ struct Orientation {
     return !(*this == aOther);
   }
 
+  static Angle InvertAngle(Angle aAngle) {
+    switch (aAngle) {
+      case Angle::D90:
+        return Angle::D270;
+      case Angle::D270:
+        return Angle::D90;
+      default:
+        return aAngle;
+    }
+  }
+
   Angle rotation;
   Flip flip;
 };

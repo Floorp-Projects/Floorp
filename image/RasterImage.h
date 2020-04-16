@@ -32,6 +32,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -123,6 +124,25 @@ class nsIRequest;
 
 namespace mozilla {
 
+// Pixel values in an image considering orientation metadata, such as the size
+// of an image as seen by consumers of the image.
+//
+// Any public methods on RasterImage that use untyped units are interpreted as
+// oriented pixels.
+struct OrientedPixel {};
+template <>
+struct IsPixel<OrientedPixel> : std::true_type {};
+typedef gfx::IntSizeTyped<OrientedPixel> OrientedIntSize;
+typedef gfx::IntRectTyped<OrientedPixel> OrientedIntRect;
+
+// Pixel values in an image ignoring orientation metadata, such as are stored
+// in surfaces and the raw pixel data in the image.
+struct UnorientedPixel {};
+template <>
+struct IsPixel<UnorientedPixel> : std::true_type {};
+typedef gfx::IntSizeTyped<UnorientedPixel> UnorientedIntSize;
+typedef gfx::IntRectTyped<UnorientedPixel> UnorientedIntRect;
+
 namespace layers {
 class ImageContainer;
 class Image;
@@ -193,11 +213,12 @@ class RasterImage final : public ImageResource,
    *                      these notifications, or DefaultSurfaceFlags() if the
    *                      notifications don't come from a decoder.
    */
-  void NotifyProgress(Progress aProgress,
-                      const gfx::IntRect& aInvalidRect = nsIntRect(),
-                      const Maybe<uint32_t>& aFrameCount = Nothing(),
-                      DecoderFlags aDecoderFlags = DefaultDecoderFlags(),
-                      SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
+  void NotifyProgress(
+      Progress aProgress,
+      const UnorientedIntRect& aInvalidRect = UnorientedIntRect(),
+      const Maybe<uint32_t>& aFrameCount = Nothing(),
+      DecoderFlags aDecoderFlags = DefaultDecoderFlags(),
+      SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
 
   /**
    * Records decoding results, sends out any final notifications, updates the
@@ -220,7 +241,7 @@ class RasterImage final : public ImageResource,
   void NotifyDecodeComplete(
       const DecoderFinalStatus& aStatus, const ImageMetadata& aMetadata,
       const DecoderTelemetry& aTelemetry, Progress aProgress,
-      const gfx::IntRect& aInvalidRect, const Maybe<uint32_t>& aFrameCount,
+      const UnorientedIntRect& aInvalidRect, const Maybe<uint32_t>& aFrameCount,
       DecoderFlags aDecoderFlags, SurfaceFlags aSurfaceFlags);
 
   // Helper method for NotifyDecodeComplete.
@@ -279,15 +300,17 @@ class RasterImage final : public ImageResource,
    * @return a drawable surface, which may be empty if the requested surface
    *         could not be found.
    */
-  LookupResult LookupFrame(const gfx::IntSize& aSize, uint32_t aFlags,
+  LookupResult LookupFrame(const UnorientedIntSize& aSize, uint32_t aFlags,
                            PlaybackType aPlaybackType, bool aMarkUsed);
 
   /// Helper method for LookupFrame().
-  LookupResult LookupFrameInternal(const gfx::IntSize& aSize, uint32_t aFlags,
-                                   PlaybackType aPlaybackType, bool aMarkUsed);
+  LookupResult LookupFrameInternal(const UnorientedIntSize& aSize,
+                                   uint32_t aFlags, PlaybackType aPlaybackType,
+                                   bool aMarkUsed);
 
   ImgDrawResult DrawInternal(DrawableSurface&& aFrameRef, gfxContext* aContext,
-                             const nsIntSize& aSize, const ImageRegion& aRegion,
+                             const UnorientedIntSize& aSize,
+                             const ImageRegion& aRegion,
                              gfx::SamplingFilter aSamplingFilter,
                              uint32_t aFlags, float aOpacity);
 
@@ -316,7 +339,7 @@ class RasterImage final : public ImageResource,
    *
    * Returns true of the decode was run synchronously.
    */
-  bool Decode(const gfx::IntSize& aSize, uint32_t aFlags,
+  bool Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
               PlaybackType aPlaybackType);
 
   /**
@@ -352,19 +375,66 @@ class RasterImage final : public ImageResource,
    * RecoverFromInvalidFrames discards all existing frames and redecodes using
    * the provided @aSize and @aFlags.
    */
-  void RecoverFromInvalidFrames(const nsIntSize& aSize, uint32_t aFlags);
+  void RecoverFromInvalidFrames(const UnorientedIntSize& aSize,
+                                uint32_t aFlags);
 
   void OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded);
 
+  /**
+   * Computes a matrix that applies the rotation and reflection specified by
+   * UsedOrientation(), or that matrix's inverse if aInvert is true.
+   *
+   * See OrientedImage::OrientationMatrix.
+   */
+  gfxMatrix OrientationMatrix(const UnorientedIntSize& aSize,
+                              bool aInvert = false) const;
+
+  /**
+   * The orientation value to honor for this image.
+   *
+   * If the image.honor-orientation-metadata pref is true, then this returns
+   * the orientation from the image's metadata.  Otherwise, it returns an
+   * Orientation that indicates no transformation is needed.
+   */
+  Orientation UsedOrientation() const {
+    return mHandledOrientation ? mOrientation : Orientation();
+  }
+
+  // Functions to convert between oriented and unoriented pixels.
+  UnorientedIntSize ToUnoriented(OrientedIntSize aSize) const {
+    return UsedOrientation().SwapsWidthAndHeight()
+               ? UnorientedIntSize(aSize.height, aSize.width)
+               : UnorientedIntSize(aSize.width, aSize.height);
+  }
+  OrientedIntSize ToOriented(UnorientedIntSize aSize) const {
+    return UsedOrientation().SwapsWidthAndHeight()
+               ? OrientedIntSize(aSize.height, aSize.width)
+               : OrientedIntSize(aSize.width, aSize.height);
+  }
+  OrientedIntRect ToOriented(UnorientedIntRect aRect) const;
+  UnorientedIntRect ToUnoriented(OrientedIntRect aRect) const;
+
  private:  // data
-  nsIntSize mSize;
-  nsTArray<nsIntSize> mNativeSizes;
+  OrientedIntSize mSize;
+  nsTArray<OrientedIntSize> mNativeSizes;
+
+  // The orientation required to correctly orient the image, from the image's
+  // metadata.
+  //
+  // When the image.honor-orientation-metadata pref is enabled, the RasterImage
+  // will handle and apply this orientation itself.
+  //
+  // When the pref is disabled, it is the responsibility of users of the
+  // RasterImage to wrap it in an OrientedImage if desired.
   Orientation mOrientation;
 
   /// If this has a value, we're waiting for SetSize() to send the load event.
   Maybe<Progress> mLoadProgress;
 
   // Hotspot of this image, or (0, 0) if there is no hotspot data.
+  //
+  // We assume (and assert) that no image has both orientation metadata and a
+  // hotspot, so we store this as an untyped point.
   gfx::IntPoint mHotspot;
 
   /// If this image is animated, a FrameAnimator which manages its animation.
@@ -413,6 +483,15 @@ class RasterImage final : public ImageResource,
   // kick off a full decode.
   bool mWantFullDecode : 1;
 
+  // Whether this RasterImage handled orientation of the image.
+  //
+  // This will be set based on the value of the image.honor-orientation-metadata
+  // pref at the time the RasterImage is created.
+  //
+  // NOTE(heycam): Once the image.honor-orientation-metadata pref is removed,
+  // this member (and the UsedOrientation() function) can also be removed.
+  bool mHandledOrientation : 1;
+
   TimeStamp mDrawStartTime;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -421,7 +500,8 @@ class RasterImage final : public ImageResource,
 
   // Determines whether we can downscale during decode with the given
   // parameters.
-  bool CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags);
+  bool CanDownscaleDuringDecode(const UnorientedIntSize& aSize,
+                                uint32_t aFlags);
 
   // Error handling.
   void DoError();
@@ -448,7 +528,7 @@ class RasterImage final : public ImageResource,
 
   bool IsOpaque();
 
-  DrawableSurface RequestDecodeForSizeInternal(const gfx::IntSize& aSize,
+  DrawableSurface RequestDecodeForSizeInternal(const UnorientedIntSize& aSize,
                                                uint32_t aFlags,
                                                uint32_t aWhichFrame);
 
