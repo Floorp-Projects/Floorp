@@ -1072,6 +1072,21 @@ struct nsFlexContainerFrame::StrutInfo {
   nscoord mStrutCrossSize;  // The cross-size of this strut.
 };
 
+// Flex data shared by the flex container frames in a continuation chain, owned
+// by the first-in-flow. The data is initialized at the end of the
+// first-in-flow's Reflow().
+struct nsFlexContainerFrame::SharedFlexData {
+  nsTArray<FlexLine> mLines;
+
+  // The final content main/cross size computed by DoFlexLayout.
+  nscoord mContentBoxMainSize = NS_UNCONSTRAINEDSIZE;
+  nscoord mContentBoxCrossSize = NS_UNCONSTRAINEDSIZE;
+
+  // The frame property under which this struct is stored. Set only on the
+  // first-in-flow.
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, SharedFlexData)
+};
+
 static void BuildStrutInfoFromCollapsedItems(const nsTArray<FlexLine>& aLines,
                                              nsTArray<StrutInfo>& aStruts) {
   MOZ_ASSERT(aStruts.IsEmpty(),
@@ -4259,21 +4274,37 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   AutoTArray<FlexLine, 1> lines;
   AutoTArray<StrutInfo, 1> struts;
   AutoTArray<nsIFrame*, 1> placeholders;
-  DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
-               flexContainerAscent, availableBSizeForContent,
-               columnWrapThreshold, lines, struts, placeholders, axisTracker,
-               mainGapSize, crossGapSize, hasLineClampEllipsis, containerInfo);
 
-  if (!struts.IsEmpty()) {
-    // We're restarting flex layout, with new knowledge of collapsed items.
-    aStatus.Reset();
-    lines.Clear();
-    placeholders.Clear();
+  if (!GetPrevInFlow()) {
     DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
                  flexContainerAscent, availableBSizeForContent,
                  columnWrapThreshold, lines, struts, placeholders, axisTracker,
                  mainGapSize, crossGapSize, hasLineClampEllipsis,
                  containerInfo);
+
+    if (!struts.IsEmpty()) {
+      // We're restarting flex layout, with new knowledge of collapsed items.
+      aStatus.Reset();
+      lines.Clear();
+      placeholders.Clear();
+      DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize,
+                   contentBoxCrossSize, flexContainerAscent,
+                   availableBSizeForContent, columnWrapThreshold, lines, struts,
+                   placeholders, axisTracker, mainGapSize, crossGapSize,
+                   hasLineClampEllipsis, containerInfo);
+    }
+  } else {
+    auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
+
+    // XXX: Pretend we have only one line, with no flex items, and zero main gap
+    // size.
+    lines.AppendElement(FlexLine(0));
+
+    // After we support flex item fragmentation, we'll create flex items here by
+    // using the precomputed SharedFlexData.
+
+    contentBoxMainSize = data->mContentBoxMainSize;
+    contentBoxCrossSize = data->mContentBoxCrossSize;
   }
 
   const LogicalSize contentBoxSize =
@@ -4306,6 +4337,25 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   // Finally update our line and item measurements in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
     UpdateFlexLineAndItemInfo(*containerInfo, lines);
+  }
+
+  // If we are the first-in-flow, we want to store data for our next-in-flows,
+  // or clear the existing data if it is not needed.
+  if (!GetPrevInFlow()) {
+    SharedFlexData* data = GetProperty(SharedFlexData::Prop());
+    if (!aStatus.IsFullyComplete()) {
+      if (!data) {
+        data = new SharedFlexData;
+        SetProperty(SharedFlexData::Prop(), data);
+      }
+      data->mLines = std::move(lines);
+      data->mContentBoxMainSize = contentBoxMainSize;
+      data->mContentBoxCrossSize = contentBoxCrossSize;
+    } else if (data) {
+      // We are fully-complete, so no next-in-flow is needed. Delete the
+      // existing SharedFlexData.
+      RemoveProperty(SharedFlexData::Prop());
+    }
   }
 }
 
