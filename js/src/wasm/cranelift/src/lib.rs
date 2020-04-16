@@ -85,6 +85,9 @@ pub unsafe extern "C" fn cranelift_compile_function(
     let compiler = compiler.as_mut().unwrap();
     let data = data.as_ref().unwrap();
 
+    // Reset the compiler to a clean state.
+    compiler.clear();
+
     if let Err(e) = compiler.translate_wasm(data) {
         error!("Wasm translation error: {}\n", e);
         info!("Translated function: {}", compiler);

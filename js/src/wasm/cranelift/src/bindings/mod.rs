@@ -198,6 +198,7 @@ impl FuncTypeWithId {
 
 /// Thin wrapper for the CraneliftModuleEnvironment structure.
 
+#[derive(Clone, Copy)]
 pub struct ModuleEnvironment<'a> {
     env: &'a CraneliftModuleEnvironment,
 }
