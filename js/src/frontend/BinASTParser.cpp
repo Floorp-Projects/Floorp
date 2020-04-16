@@ -3566,7 +3566,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
   // Validate the RegExp pattern is valid.
   {
     JS::CompileOptions dummyOptions(cx_);
-    TokenStream dummyTokenStream(cx_, dummyOptions, nullptr, 0, nullptr);
+    DummyTokenStream dummyTokenStream(cx_, dummyOptions);
 
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP

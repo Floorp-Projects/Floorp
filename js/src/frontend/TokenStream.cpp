@@ -531,11 +531,11 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
 }
 
 template <typename Unit>
-TokenStreamCharsBase<Unit>::TokenStreamCharsBase(JSContext* cx,
-                                                 const Unit* units,
-                                                 size_t length,
-                                                 size_t startOffset)
-    : TokenStreamCharsShared(cx), sourceUnits(units, length, startOffset) {}
+TokenStreamCharsBase<Unit>::TokenStreamCharsBase(
+    JSContext* cx, CompilationInfo* compilationInfo, const Unit* units,
+    size_t length, size_t startOffset)
+    : TokenStreamCharsShared(cx, compilationInfo),
+      sourceUnits(units, length, startOffset) {}
 
 template <>
 MOZ_MUST_USE bool TokenStreamCharsBase<char16_t>::
@@ -600,9 +600,9 @@ MOZ_MUST_USE bool TokenStreamCharsBase<Utf8Unit>::
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
-    size_t length)
-    : TokenStreamChars<Unit, AnyCharsAccess>(cx, units, length,
+    JSContext* cx, CompilationInfo* compilationInfo,
+    const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
+    : TokenStreamChars<Unit, AnyCharsAccess>(cx, compilationInfo, units, length,
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {

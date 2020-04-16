@@ -5288,7 +5288,7 @@ static bool ParseRegExp(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   CompileOptions options(cx);
-  frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+  frontend::DummyTokenStream dummyTokenStream(cx, options);
 
   // Data lifetime is controlled by LifoAllocScope.
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
