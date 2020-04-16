@@ -46,8 +46,12 @@ function peer(other, polite, fail = null) {
     let makingOffer = false, ignoreOffer = false;
     pc.addEventListener("negotiationneeded", async () => {
       try {
+        assert_equals(pc.signalingState, "stable", "negotiationneeded always fires in stable state");
+        assert_equals(makingOffer, false, "negotiationneeded not already in progress");
         makingOffer = true;
         await pc.setLocalDescription();
+        assert_equals(pc.signalingState, "have-local-offer", "negotiationneeded not racing with onmessage");
+        assert_equals(pc.localDescription.type, "offer", "negotiationneeded SLD worked");
         send(other, {description: pc.localDescription});
       } catch (e) {
         fail(e);
@@ -65,9 +69,15 @@ function peer(other, polite, fail = null) {
           }
           await pc.setRemoteDescription(description);
           if (description.type == "offer") {
+            assert_equals(pc.signalingState, "have-remote-offer", "Remote offer");
+            assert_equals(pc.remoteDescription.type, "offer", "SRD worked");
             await pc.setLocalDescription();
+            assert_equals(pc.signalingState, "stable", "onmessage not racing with negotiationneeded");
+            assert_equals(pc.localDescription.type, "answer", "onmessage SLD worked");
             send(other, {description: pc.localDescription});
           } else {
+            assert_equals(pc.remoteDescription.type, "answer", "Answer was set");
+            assert_equals(pc.signalingState, "stable", "answered");
             pc.dispatchEvent(new Event("negotiated"));
           }
         } else if (candidate) {
