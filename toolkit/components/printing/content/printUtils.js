@@ -279,16 +279,7 @@ var PrintUtils = {
   _originalURL: "",
   _shouldSimplify: false,
 
-  _displayPrintingError(nsresult, isPrinting) {
-    // The nsresults from a printing error are mapped to strings that have
-    // similar names to the errors themselves. For example, for error
-    // NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, the name of the string
-    // for the error message is: PERR_GFX_PRINTER_NO_PRINTER_AVAILABLE. What's
-    // more, if we're in the process of doing a print preview, it's possible
-    // that there are strings specific for print preview for these errors -
-    // if so, the names of those strings have _PP as a suffix. It's possible
-    // that no print preview specific strings exist, in which case it is fine
-    // to fall back to the original string name.
+  _getErrorCodeForNSResult(nsresult) {
     const MSG_CODES = [
       "GFX_PRINTER_NO_PRINTER_AVAILABLE",
       "GFX_PRINTER_NAME_NOT_FOUND",
@@ -304,20 +295,30 @@ var PrintUtils = {
       "UNEXPECTED",
     ];
 
-    // PERR_FAILURE is the catch-all error message if we've gotten one that
-    // we don't recognize.
-    let msgName = "PERR_FAILURE";
-
     for (let code of MSG_CODES) {
       let nsErrorResult = "NS_ERROR_" + code;
       if (Cr[nsErrorResult] == nsresult) {
-        msgName = "PERR_" + code;
-        break;
+        return code;
       }
     }
 
-    let msg, title;
+    // PERR_FAILURE is the catch-all error message if we've gotten one that
+    // we don't recognize.
+    return "FAILURE";
+  },
 
+  _displayPrintingError(nsresult, isPrinting) {
+    // The nsresults from a printing error are mapped to strings that have
+    // similar names to the errors themselves. For example, for error
+    // NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, the name of the string
+    // for the error message is: PERR_GFX_PRINTER_NO_PRINTER_AVAILABLE. What's
+    // more, if we're in the process of doing a print preview, it's possible
+    // that there are strings specific for print preview for these errors -
+    // if so, the names of those strings have _PP as a suffix. It's possible
+    // that no print preview specific strings exist, in which case it is fine
+    // to fall back to the original string name.
+    let msgName = "PERR_" + this._getErrorCodeForNSResult(nsresult);
+    let msg, title;
     if (!isPrinting) {
       // Try first with _PP suffix.
       let ppMsgName = msgName + "_PP";
@@ -347,6 +348,11 @@ var PrintUtils = {
       this._displayPrintingError(
         aMessage.data.nsresult,
         aMessage.data.isPrinting
+      );
+      Services.telemetry.keyedScalarAdd(
+        "printing.error",
+        this._getErrorCodeForNSResult(aMessage.data.nsresult),
+        1
       );
       return undefined;
     }
