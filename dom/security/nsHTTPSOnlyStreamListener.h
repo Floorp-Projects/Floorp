@@ -7,9 +7,8 @@
 #ifndef nsHTTPSOnlyStreamListener_h___
 #define nsHTTPSOnlyStreamListener_h___
 
-#include "mozilla/TimeStamp.h"
-#include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
+#include "nsCOMPtr.h"
 
 /**
  * This event listener gets registered for requests that have been upgraded
@@ -27,21 +26,7 @@ class nsHTTPSOnlyStreamListener : public nsIStreamListener {
  private:
   virtual ~nsHTTPSOnlyStreamListener() = default;
 
-  /**
-   * Records telemetry about the upgraded request.
-   * @param aStatus Request object
-   */
-  void RecordUpgradeTelemetry(nsIRequest* request, nsresult aStatus);
-
-  /**
-   * Logs information to the console if the request failed.
-   * @param request Request object
-   * @param aStatus Status of request
-   */
-  void LogUpgradeFailure(nsIRequest* request, nsresult aStatus);
-
   nsCOMPtr<nsIStreamListener> mListener;
-  mozilla::TimeStamp mCreationStart;
 };
 
 #endif /* nsHTTPSOnlyStreamListener_h___ */
