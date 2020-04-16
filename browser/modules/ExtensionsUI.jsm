@@ -365,10 +365,9 @@ var ExtensionsUI = {
   async showPermissionsPrompt(target, strings, icon, histkey) {
     let { browser, window } = getTabBrowser(target);
 
-    // Wait for any pending prompts in this window to complete before
-    // showing the next one.
+    // Wait for any pending prompts to complete before showing the next one.
     let pending;
-    while ((pending = this.pendingNotifications.get(window))) {
+    while ((pending = this.pendingNotifications.get(browser))) {
       await pending;
     }
 
@@ -455,8 +454,8 @@ var ExtensionsUI = {
       );
     });
 
-    this.pendingNotifications.set(window, promise);
-    promise.finally(() => this.pendingNotifications.delete(window));
+    this.pendingNotifications.set(browser, promise);
+    promise.finally(() => this.pendingNotifications.delete(browser));
     return promise;
   },
 
