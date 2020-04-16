@@ -61,11 +61,8 @@ class nsTypeAheadFind : public nsITypeAheadFind,
   void GetSelection(mozilla::PresShell* aPresShell,
                     nsISelectionController** aSelCon,
                     mozilla::dom::Selection** aDomSel);
-  // *aNewRange may not be collapsed.  If you want to collapse it in a
-  // particular way, you need to do it yourself.
   bool IsRangeVisible(nsRange* aRange, bool aMustBeVisible,
-                      bool aGetTopVisibleLeaf, nsRange** aNewRange,
-                      bool* aUsesIndependentSelection);
+                      bool aGetTopVisibleLeaf, bool* aUsesIndependentSelection);
   bool IsRangeRendered(nsRange* aRange);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult FindItNow(uint32_t aMode, bool aIsLinksOnly,
