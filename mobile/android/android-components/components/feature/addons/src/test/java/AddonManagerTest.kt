@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.Metadata
@@ -618,8 +619,8 @@ class AddonManagerTest {
 
         // Make sure engine error is forwarded to caller
         val installedAddon = addon.copy(installedState = Addon.InstalledState(addon.id, "1.0", "", true))
-        manager.enableAddon(installedAddon, onError = errorCallback)
-        verify(engine).enableWebExtension(eq(extension), any(), any(), onErrorCaptor.capture())
+        manager.enableAddon(installedAddon, source = EnableSource.APP_SUPPORT, onError = errorCallback)
+        verify(engine).enableWebExtension(eq(extension), eq(EnableSource.APP_SUPPORT), any(), onErrorCaptor.capture())
         onErrorCaptor.value.invoke(IllegalStateException("test"))
         assertNotNull(throwable!!)
         assertEquals("test", throwable!!.localizedMessage)
@@ -648,11 +649,11 @@ class AddonManagerTest {
 
         var disabledAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.disableAddon(addon, onSuccess = {
+        manager.disableAddon(addon, source = EnableSource.APP_SUPPORT, onSuccess = {
             disabledAddon = it
         })
 
-        verify(engine).disableWebExtension(eq(extension), any(), onSuccessCaptor.capture(), any())
+        verify(engine).disableWebExtension(eq(extension), eq(EnableSource.APP_SUPPORT), onSuccessCaptor.capture(), any())
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(disabledAddon)
         assertEquals(addon.id, disabledAddon!!.id)

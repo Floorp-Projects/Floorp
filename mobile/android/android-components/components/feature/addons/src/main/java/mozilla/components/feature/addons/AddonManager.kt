@@ -10,6 +10,7 @@ import kotlinx.coroutines.awaitAll
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
@@ -177,11 +178,13 @@ class AddonManager(
      * Enables the provided [Addon].
      *
      * @param addon the [Addon] to enable.
+     * @param source [EnableSource] to indicate why the extension is enabled, default to EnableSource.USER.
      * @param onSuccess (optional) callback invoked with the enabled [Addon].
      * @param onError (optional) callback invoked if there was an error enabling
      */
     fun enableAddon(
         addon: Addon,
+        source: EnableSource = EnableSource.USER,
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { }
     ) {
@@ -194,6 +197,7 @@ class AddonManager(
         val pendingAction = addPendingAddonAction()
         engine.enableWebExtension(
             extension,
+            source = source,
             onSuccess = { ext ->
                 val enabledAddon = addon.copy(installedState = ext.toInstalledState())
                 completePendingAddonAction(pendingAction)
@@ -210,11 +214,13 @@ class AddonManager(
      * Disables the provided [Addon].
      *
      * @param addon the [Addon] to disable.
+     * @param source [EnableSource] to indicate why the addon is disabled, default to EnableSource.USER.
      * @param onSuccess (optional) callback invoked with the enabled [Addon].
      * @param onError (optional) callback invoked if there was an error enabling
      */
     fun disableAddon(
         addon: Addon,
+        source: EnableSource = EnableSource.USER,
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { }
     ) {
@@ -227,6 +233,7 @@ class AddonManager(
         val pendingAction = addPendingAddonAction()
         engine.disableWebExtension(
             extension,
+            source,
             onSuccess = { ext ->
                 val disabledAddon = addon.copy(installedState = ext.toInstalledState())
                 completePendingAddonAction(pendingAction)
