@@ -340,7 +340,7 @@ module.exports = (props: Props) => {
     return null;
   }
 
-  if (shouldRenderRootsInReps(roots)) {
+  if (shouldRenderRootsInReps(roots, props)) {
     return renderRep(roots[0], props);
   }
 

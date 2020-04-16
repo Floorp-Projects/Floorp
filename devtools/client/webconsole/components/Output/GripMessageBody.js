@@ -57,6 +57,7 @@ function GripMessageBody(props) {
     mode = MODE.LONG,
     dispatch,
     maybeScrollToBottom,
+    customFormat = false,
   } = props;
 
   let styleObject;
@@ -71,6 +72,7 @@ function GripMessageBody(props) {
     autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
     mode,
     maybeScrollToBottom,
+    customFormat,
     onCmdCtrlClick: (node, { depth, event, focused, expanded }) => {
       const front = objectInspector.utils.node.getFront(node);
       if (front) {

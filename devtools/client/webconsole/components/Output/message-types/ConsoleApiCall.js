@@ -71,6 +71,10 @@ function ConsoleApiCall(props) {
     serviceContainer,
     type,
     maybeScrollToBottom,
+    // When the object is a parameter of a console.dir call, we always want to show its
+    // properties, like regular object (i.e. not showing the DOM tree for an Element, or
+    // only showing the message + stacktrace for Error object).
+    customFormat: type !== "dir",
   };
 
   if (type === "trace") {
@@ -171,6 +175,7 @@ function formatReps(options = {}) {
     userProvidedStyles,
     type,
     maybeScrollToBottom,
+    customFormat,
   } = options;
 
   return (
@@ -191,6 +196,7 @@ function formatReps(options = {}) {
           loadedObjectEntries,
           type,
           maybeScrollToBottom,
+          customFormat,
         })
       )
       // Interleave spaces.

@@ -14,7 +14,7 @@ const {
 } = require("../../reps/rep");
 import type { Node, Props } from "../types";
 
-function shouldRenderRootsInReps(roots: Array<Node>): boolean {
+function shouldRenderRootsInReps(roots: Array<Node>, props: any = {}): boolean {
   if (roots.length !== 1) {
     return false;
   }
@@ -23,7 +23,8 @@ function shouldRenderRootsInReps(roots: Array<Node>): boolean {
   const name = root && root.name;
   return (
     (name === null || typeof name === "undefined") &&
-    (nodeIsPrimitive(root) || nodeIsError(root))
+    (nodeIsPrimitive(root) ||
+      (nodeIsError(root) && props?.customFormat === true))
   );
 }
 

@@ -25,6 +25,7 @@ describe("Error - Simple error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -48,6 +49,30 @@ describe("Error - Simple error", () => {
       ErrorRep.rep({
         object: stubs.get("MultilineStackError"),
         mode: MODE.SHORT,
+        customFormat: true,
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+  });
+
+  it("renders with error type only when customFormat prop isn't set", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stubs.get("MultilineStackError"),
+        mode: MODE.SHORT,
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+  });
+
+  it("renders with error type only when depth is > 0", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stubs.get("MultilineStackError"),
+        customFormat: true,
+        depth: 1,
       })
     );
 
@@ -76,6 +101,7 @@ describe("Error - Multi line stack error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -105,6 +131,7 @@ describe("Error - Error without stacktrace", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -135,6 +162,7 @@ describe("Error - Eval error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -165,6 +193,7 @@ describe("Error - Internal error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -195,6 +224,7 @@ describe("Error - Range error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -225,6 +255,7 @@ describe("Error - Reference error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -255,6 +286,7 @@ describe("Error - Syntax error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -285,6 +317,7 @@ describe("Error - Type error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -315,6 +348,7 @@ describe("Error - URI error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -344,6 +378,7 @@ describe("Error - DOMException", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -371,6 +406,7 @@ describe("Error - base-loader.js", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -396,6 +432,7 @@ describe("Error - longString stacktrace", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -410,6 +447,7 @@ describe("Error - longString stacktrace - cut-off location", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -426,6 +464,7 @@ describe("Error - stacktrace location click", () => {
       ErrorRep.rep({
         object,
         onViewSourceInDebugger,
+        customFormat: true,
       })
     );
 
@@ -475,6 +514,7 @@ describe("Error - stacktrace location click", () => {
       ErrorRep.rep({
         object,
         onViewSourceInDebugger,
+        customFormat: true,
       })
     );
 
@@ -496,6 +536,7 @@ describe("Error - stacktrace location click", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object,
+        customFormat: true,
       })
     );
 
@@ -525,6 +566,7 @@ describe("Error - renderStacktrace prop", () => {
             )
           );
         },
+        customFormat: true,
       })
     );
     expect(renderedComponent).toMatchSnapshot();
@@ -543,6 +585,7 @@ describe("Error - renderStacktrace prop", () => {
             )
           );
         },
+        customFormat: true,
       })
     );
     expect(renderedComponent).toMatchSnapshot();
@@ -563,6 +606,7 @@ describe("Error - Error with V8-like stack", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -585,6 +629,7 @@ describe("Error - Error with invalid stack", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -607,6 +652,7 @@ describe("Error - Error with undefined-grip stack", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
 
@@ -629,6 +675,7 @@ describe("Error - Error with undefined-grip name", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
     expect(renderedComponent).toMatchSnapshot();
@@ -658,6 +705,7 @@ describe("Error - Error with undefined-grip message", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        customFormat: true,
       })
     );
     expect(renderedComponent).toMatchSnapshot();
