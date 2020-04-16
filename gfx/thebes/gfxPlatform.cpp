@@ -2886,19 +2886,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
       break;
   }
 
-  nsAutoString adapterDeviceID;
-  gfxInfo->GetAdapterDeviceID(adapterDeviceID);
-
-  if (adapterVendorID == u"0x8086") {
-    bool hasBattery = false;
-    gfxInfo->GetHasBattery(&hasBattery);
-    if (hasBattery && !gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
-      featureWebRenderQualified.Disable(FeatureStatus::Blocked,
-        "Battery Intel requires os compositor",
-        NS_LITERAL_CSTRING("INTEL_BATTERY_REQUIRES_DCOMP"));
-    }
-  }
-
   return featureWebRenderQualified;
 }
 
@@ -2924,35 +2911,6 @@ void gfxPlatform::InitWebRenderConfig() {
     }
     return;
   }
-
-  // Initialize WebRender native compositor usage
-  FeatureState& featureComp =
-      gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
-  featureComp.SetDefaultFromPref("gfx.webrender.compositor", true, false);
-
-  if (StaticPrefs::gfx_webrender_compositor_force_enabled_AtStartup()) {
-    featureComp.UserForceEnable("Force enabled by pref");
-  }
-
-  ApplyGfxInfoFeature(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, featureComp);
-
-#ifdef XP_WIN
-  if (!gfxVars::UseWebRenderDCompWin()) {
-    featureComp.Disable(
-        FeatureStatus::Unavailable, "No DirectComposition usage",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
-  }
-
-  // Disable native compositor when hardware stretching is not supported. It is
-  // for avoiding a problem like Bug 1618370.
-  // XXX Is there a better check for Bug 1618370?
-  if (!DeviceManagerDx::Get()->CheckHardwareStretchingSupport() &&
-      HasScaledResolution()) {
-    featureComp.Disable(
-        FeatureStatus::Unavailable, "No hardware stretching support",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_HARDWARE_STRETCHING"));
-  }
-#endif
 
   bool guardedByQualifiedPref = true;
   FeatureState& featureWebRenderQualified =
@@ -3106,6 +3064,36 @@ void gfxPlatform::InitWebRenderConfig() {
       gfxVars::SetUseWebRenderTripleBufferingWin(true);
     }
   }
+#endif
+
+  // Initialize WebRender native compositor usage
+  FeatureState& featureComp =
+      gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
+  featureComp.SetDefaultFromPref("gfx.webrender.compositor", true, false);
+
+  if (StaticPrefs::gfx_webrender_compositor_force_enabled_AtStartup()) {
+    featureComp.UserForceEnable("Force enabled by pref");
+  }
+
+  ApplyGfxInfoFeature(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, featureComp);
+
+#ifdef XP_WIN
+  if (!gfxVars::UseWebRenderDCompWin()) {
+    featureComp.Disable(
+        FeatureStatus::Unavailable, "No DirectComposition usage",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
+  }
+
+  // Disable native compositor when hardware stretching is not supported. It is
+  // for avoiding a problem like Bug 1618370.
+  // XXX Is there a better check for Bug 1618370?
+  if (!DeviceManagerDx::Get()->CheckHardwareStretchingSupport() &&
+      HasScaledResolution()) {
+    featureComp.Disable(
+        FeatureStatus::Unavailable, "No hardware stretching support",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_HARDWARE_STRETCHING"));
+  }
+
 #endif
 
   if (!StaticPrefs::gfx_webrender_picture_caching()) {
