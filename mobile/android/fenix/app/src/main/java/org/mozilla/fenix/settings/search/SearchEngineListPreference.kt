@@ -18,7 +18,10 @@ import androidx.core.view.isVisible
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_icon
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_text
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.overflow_menu
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.radio_button
 import kotlinx.coroutines.MainScope
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.SearchEngineList
@@ -167,7 +170,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val initialEngineList = searchEngineList.copy()
         val initialDefaultEngine = searchEngineList.default
 
-        context.components.search.provider.uninstallSearchEngine(context, engine)
+        context.components.search.provider.uninstallSearchEngine(context, engine, isCustomSearchEngine)
 
         MainScope().allowUndo(
             view = context.getRootView()!!,
@@ -175,7 +178,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
                 .getString(R.string.search_delete_search_engine_success_message, engine.name),
             undoActionTitle = context.getString(R.string.snackbar_deleted_undo),
             onCancel = {
-                context.components.search.provider.installSearchEngine(context, engine)
+                context.components.search.provider.installSearchEngine(context, engine, isCustomSearchEngine)
 
                 searchEngineList = initialEngineList.copy(
                     default = initialDefaultEngine

@@ -135,24 +135,28 @@ open class FenixSearchEngineProvider(
         return installedSearchEngines(context)
     }
 
-    fun installSearchEngine(context: Context, searchEngine: SearchEngine) = runBlocking {
-        val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
-        installedIdentifiers.add(searchEngine.identifier)
-        prefs(context).edit().putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
+    fun installSearchEngine(context: Context, searchEngine: SearchEngine, isCustom: Boolean = false) = runBlocking {
+        if (isCustom) {
+            val searchUrl = searchEngine.getSearchTemplate()
+            CustomSearchEngineStore.addSearchEngine(context, searchEngine.name, searchUrl)
+            reload()
+        } else {
+            val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
+            installedIdentifiers.add(searchEngine.identifier)
+            prefs(context).edit()
+                .putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
+        }
     }
 
-    fun uninstallSearchEngine(context: Context, searchEngine: SearchEngine) = runBlocking {
-        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, searchEngine.identifier)
-
+    fun uninstallSearchEngine(context: Context, searchEngine: SearchEngine, isCustom: Boolean = false) = runBlocking {
         if (isCustom) {
             CustomSearchEngineStore.removeSearchEngine(context, searchEngine.identifier)
+            reload()
         } else {
             val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
             installedIdentifiers.remove(searchEngine.identifier)
             prefs(context).edit().putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
         }
-
-        reload()
     }
 
     fun reload() {

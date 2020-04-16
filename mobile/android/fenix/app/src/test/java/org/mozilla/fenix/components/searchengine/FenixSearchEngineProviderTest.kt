@@ -3,6 +3,14 @@ package org.mozilla.fenix.components.searchengine
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
+import android.graphics.Bitmap
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkObject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,6 +35,12 @@ class FenixSearchEngineProviderTest {
     @Before
     fun before() {
         fenixSearchEngineProvider = FakeFenixSearchEngineProvider(testContext)
+        mockkObject(CustomSearchEngineStore)
+        fenixSearchEngineProvider.let {
+            every { CustomSearchEngineStore.loadCustomSearchEngines(testContext) } returns listOf(
+                (it as FakeFenixSearchEngineProvider).mockSearchEngine("my custom site", "my custom site")
+            )
+        }
     }
 
     /*
@@ -36,6 +50,28 @@ class FenixSearchEngineProviderTest {
         - deduping
         - the above after adding/removing
      */
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `add custom engine`() = runBlockingTest {
+        val engineName = "Ecosia"
+        val engineQuery = "www.ecosia.com/%s"
+        val searchEngine: SearchEngine = mockk(relaxed = true)
+        every { searchEngine.getSearchTemplate() } returns engineQuery
+        every { searchEngine.name } returns engineName
+        mockkObject(CustomSearchEngineStore)
+        coEvery {
+            CustomSearchEngineStore.addSearchEngine(
+                testContext,
+                engineName,
+                engineQuery
+            )
+        } just Runs
+
+        fenixSearchEngineProvider.installSearchEngine(testContext, searchEngine, true)
+
+        coVerify { CustomSearchEngineStore.addSearchEngine(testContext, engineName, engineQuery) }
+    }
 
     @Test
     fun `GIVEN sharedprefs does not contain installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
@@ -96,21 +132,17 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
         )
     )
 
-    override var customSearchEngines: Deferred<SearchEngineList>
-        get() {
-            return CompletableDeferred(
-                SearchEngineList(
-                    listOf(
-                        mockSearchEngine("my custom site", "my custom site")
-                    ), default = null
-                )
-            )
-        }
-        set(_) = throw NotImplementedError("Setting not currently supported on this fake")
+    override var customSearchEngines: Deferred<SearchEngineList> = CompletableDeferred(
+        SearchEngineList(
+            listOf(
+                mockSearchEngine("my custom site", "my custom site")
+            ), default = null
+        )
+    )
 
     override fun updateBaseSearchEngines() { }
 
-    private fun mockSearchEngine(
+    fun mockSearchEngine(
         id: String,
         n: String = id
     ): SearchEngine {
