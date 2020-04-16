@@ -1,1182 +1,1281 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head>
-  <title>Modal Prompts Test</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body>
-Prompter tests: modal prompts
-<p id="display"></p>
+  <head>
+    <title>Modal Prompts Test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="prompt_common.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    Prompter tests: modal prompts
+    <p id="display"></p>
 
-<div id="content" style="display: none">
-  <iframe id="iframe"></iframe>
-</div>
+    <div id="content" style="display: none">
+      <iframe id="iframe"></iframe>
+    </div>
 
-<pre id="test">
+    <pre id="test">
 <script class="testbody" type="text/javascript">
 async function runTests() {
-    const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
-    const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
-    let state, action, promptDone;
-    ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
+  const { NetUtil } = SpecialPowers.Cu.import(
+    "resource://gre/modules/NetUtil.jsm"
+  );
+  const { Services } = SpecialPowers.Cu.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  let state, action, promptDone;
+  ok(
+    true,
+    "Running tests (isTabModal=" +
+      isTabModal +
+      ", usePromptService=" +
+      usePromptService +
+      ", useBrowsingContext=" +
+      useBrowsingContext +
+      ")"
+  );
 
-    let prompter, promptArgs;
+  let browsingContext = SpecialPowers.wrap(window).windowGlobalChild
+    .browsingContext;
+
+  let promptArgs;
+
+  let prompter = Cc["@mozilla.org/prompter;1"]
+    .getService(Ci.nsIPromptFactory)
+    .getPrompt(window, Ci.nsIPrompt);
+
+  let checkVal = {};
+  let textVal = {};
+  let passVal = {};
+  let flags;
+  let isOK, clickedButton;
+
+  function doPrompt(funcName) {
+    let subject;
     if (usePromptService) {
-        prompter = Services.prompt;
+      subject = Services.prompt;
+      if (useBrowsingContext) {
+        funcName += "BC";
+        promptArgs.unshift(browsingContext, modalType);
+      } else {
+        promptArgs.unshift(window);
+      }
     } else {
-        prompter = Cc["@mozilla.org/prompter;1"].
-                   getService(Ci.nsIPromptFactory).
-                   getPrompt(window, Ci.nsIPrompt);
-        if (isTabModal) {
-            let bag = prompter.QueryInterface(Ci.nsIWritablePropertyBag2);
-            bag.setPropertyAsBool("allowTabModal", true);
-        }
+      subject = prompter;
+      let bag = prompter.QueryInterface(Ci.nsIWritablePropertyBag2);
+      bag.setPropertyAsUint32("modalType", modalType);
     }
+    return subject[funcName](...promptArgs);
+  }
 
-    let checkVal  = {};
-    let textVal   = {};
-    let passVal   = {};
-    let flags;
-    let isOK, clickedButton;
+  // =====
+  info("Starting test: Alert");
+  state = {
+    msg: "This is the alert text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
 
-    // =====
-    info("Starting test: Alert");
-    state = {
-        msg: "This is the alert text.",
-        title: "TestTitle",
-        iconClass: "alert-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
+  promptDone = handlePrompt(state, action);
 
+  promptArgs = ["TestTitle", "This is the alert text."];
+  doPrompt("alert");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: AlertCheck (null checkbox label, so it's hidden)");
+  state = {
+    msg: "This is the alertCheck text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the alertCheck text.", null, {}];
+  doPrompt("alertCheck");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: AlertCheck");
+  state = {
+    msg: "This is the alertCheck text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the alertCheck text.",
+    "Check me out!",
+    checkVal,
+  ];
+  doPrompt("alertCheck");
+  is(checkVal.value, true, "checkbox was checked");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Confirm (ok)");
+  state = {
+    msg: "This is the confirm text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirm text."];
+  isOK = doPrompt("confirm");
+  is(isOK, true, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Confirm (cancel)");
+  state = {
+    msg: "This is the confirm text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirm text."];
+  isOK = doPrompt("confirm");
+  is(isOK, false, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (ok, null checkbox label)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
+  isOK = doPrompt("confirmCheck");
+  is(isOK, true, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (cancel, null checkbox label)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
+  isOK = doPrompt("confirmCheck");
+  is(isOK, false, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (ok)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("confirmCheck");
+  is(isOK, true, "checked expected retval");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (cancel)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("confirmCheck");
+  is(isOK, false, "checked expected retval");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, no default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "bacon",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "";
+  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+  isOK = doPrompt("prompt");
+  is(isOK, true, "checked expected retval");
+  is(textVal.value, "bacon", "checking expected text value");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "kittens",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "kittens";
+  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+  isOK = doPrompt("prompt");
+  is(isOK, true, "checked expected retval");
+  is(textVal.value, "kittens", "checking expected text value");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "puppies",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "puppies";
+  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+  isOK = doPrompt("prompt");
+  is(isOK, false, "checked expected retval");
+  is(textVal.value, "puppies", "checking expected text value");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, default text modified)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "puppies",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    textField: "bacon",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "puppies";
+  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+  isOK = doPrompt("prompt");
+  is(isOK, false, "checked expected retval");
+  is(textVal.value, "puppies", "checking expected text value");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, with checkbox)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "tribbles",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "tribbles";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the prompt text.",
+    textVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("prompt");
+  is(isOK, true, "checked expected retval");
+  is(textVal.value, "tribbles", "checking expected text value");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, with checkbox)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "tribbles",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "tribbles";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the prompt text.",
+    textVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("prompt");
+  is(isOK, false, "checked expected retval");
+  is(textVal.value, "tribbles", "checking expected text value");
+  is(checkVal.value, false, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  // Just two tests for this, since password manager already tests this extensively.
+  info("Starting test: PromptUsernameAndPassword (ok)");
+  state = {
+    msg: "This is the pUAP text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "usr",
+    passValue: "ssh",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+    textField: "newusr",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "usr";
+  passVal.value = "ssh";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the pUAP text.",
+    textVal,
+    passVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("promptUsernameAndPassword");
+  is(isOK, true, "checked expected retval");
+  is(textVal.value, "newusr", "checking expected text value");
+  is(passVal.value, "newssh", "checking expected pass value");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptUsernameAndPassword (cancel)");
+  state = {
+    msg: "This is the pUAP text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "usr",
+    passValue: "ssh",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+    textField: "newusr",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "usr";
+  passVal.value = "ssh";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the pUAP text.",
+    textVal,
+    passVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("promptUsernameAndPassword");
+  is(isOK, false, "checked expected retval");
+  is(textVal.value, "usr", "checking expected text value");
+  is(passVal.value, "ssh", "checking expected pass value");
+  is(checkVal.value, false, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptPassword (ok)");
+  state = {
+    msg: "This is the promptPassword text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "ssh",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  passVal.value = "ssh";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the promptPassword text.",
+    passVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("promptPassword");
+  is(isOK, true, "checked expected retval");
+  is(passVal.value, "newssh", "checking expected pass value");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptPassword (cancel)");
+  state = {
+    msg: "This is the promptPassword text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "ssh",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  passVal.value = "ssh";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the promptPassword text.",
+    passVal,
+    "Check me out!",
+    checkVal,
+  ];
+  isOK = doPrompt("promptPassword");
+  is(isOK, false, "checked expected retval");
+  is(passVal.value, "ssh", "checking expected pass value");
+  is(checkVal.value, false, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (ok/cancel, ok)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "OK",
+    butt1Label: "Cancel",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    null,
+    null,
+    null,
+    null,
+    {},
+  ];
+  clickedButton = doPrompt("confirmEx");
+  is(clickedButton, 0, "checked expected button num click");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (yes/no, cancel)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "Yes",
+    butt1Label: "No",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    null,
+    null,
+    null,
+    null,
+    {},
+  ];
+  clickedButton = doPrompt("confirmEx");
+  is(clickedButton, 1, "checked expected button num click");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, ok)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    checkVal,
+  ];
+  clickedButton = doPrompt("confirmEx");
+  is(clickedButton, 0, "checked expected button num click");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, cancel)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button1", // Default changed!
+    defButton: "button1",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  flags ^= Ci.nsIPromptService.BUTTON_POS_1_DEFAULT;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    checkVal,
+  ];
+  clickedButton = doPrompt("confirmEx");
+  is(clickedButton, 1, "checked expected button num click");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, button3)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button2", // Default changed!
+    defButton: "button2",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: 2,
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  flags ^= Ci.nsIPromptService.BUTTON_POS_2_DEFAULT;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    checkVal,
+  ];
+  clickedButton = doPrompt("confirmEx");
+  is(clickedButton, 2, "checked expected button num click");
+  is(checkVal.value, true, "expected checkbox setting");
+
+  await promptDone;
+
+  // =====
+  // (skipped for E10S and tabmodal tests: window is required)
+  info("Starting test: Alert, no window");
+  state = {
+    msg: "This is the alert text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+  if (!isTabModal && !isE10S) {
     promptDone = handlePrompt(state, action);
 
     promptArgs = ["TestTitle", "This is the alert text."];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    prompter.alert.apply(null, promptArgs);
+    doPrompt("alert");
 
     await promptDone;
+  }
 
-    // =====
-    info("Starting test: AlertCheck (null checkbox label, so it's hidden)");
-    state = {
-        msg: "This is the alertCheck text.",
-        title: "TestTitle",
-        iconClass: "alert-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
+  // =====
+  // (skipped for tabmodal tests: delay not supported)
+  info("Starting test: ConfirmEx (delay, ok)");
+  state = {
+    msg: "This is the confirmEx delay text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: null, // nothing focused until after delay fires
+    defButton: "button0",
+    butt0Label: "OK",
+    butt1Label: "Cancel",
+    butt0Disabled: true,
+  };
 
+  // OS X doesn't initially focus the button, but rather the infoBody.
+  // The focus stays there even after the button-enable delay has fired.
+  if (isOSX) state.focused = "infoBody";
+
+  action = {
+    buttonClick: "pollOK",
+  };
+  if (!isTabModal) {
     promptDone = handlePrompt(state, action);
 
-    promptArgs = ["TestTitle", "This is the alertCheck text.", null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    prompter.alertCheck.apply(null, promptArgs);
-
-    await promptDone;
-
-    // =====
-    info("Starting test: AlertCheck");
-    state = {
-        msg: "This is the alertCheck text.",
-        title: "TestTitle",
-        iconClass: "alert-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the alertCheck text.", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    prompter.alertCheck.apply(null, promptArgs);
-    is(checkVal.value, true, "checkbox was checked");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Confirm (ok)");
-    state = {
-        msg: "This is the confirm text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    promptArgs = ["TestTitle", "This is the confirm text."];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirm.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Confirm (cancel)");
-    state = {
-        msg: "This is the confirm text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    promptArgs = ["TestTitle", "This is the confirm text."];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirm.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmCheck (ok, null checkbox label)");
-    state = {
-        msg: "This is the confirmCheck text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirmCheck.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmCheck (cancel, null checkbox label)");
-    state = {
-        msg: "This is the confirmCheck text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirmCheck.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmCheck (ok)");
-    state = {
-        msg: "This is the confirmCheck text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirmCheck.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(checkVal.value, true, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmCheck (cancel)");
-    state = {
-        msg: "This is the confirmCheck text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.confirmCheck.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(checkVal.value, true, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (ok, no default text)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        textField: "bacon",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value = "";
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(textVal.value, "bacon", "checking expected text value");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (ok, default text)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "kittens",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value = "kittens";
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(textVal.value, "kittens", "checking expected text value");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (cancel, default text)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "puppies",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value = "puppies";
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(textVal.value, "puppies", "checking expected text value");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (cancel, default text modified)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "puppies",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-        textField: "bacon",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value = "puppies";
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(textVal.value, "puppies", "checking expected text value");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (ok, with checkbox)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "tribbles",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value  = "tribbles";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(textVal.value, "tribbles", "checking expected text value");
-    is(checkVal.value, true, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: Prompt (cancel, with checkbox)");
-    state = {
-        msg: "This is the prompt text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "tribbles",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value  = "tribbles";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.prompt.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(textVal.value, "tribbles", "checking expected text value");
-    is(checkVal.value, false, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    // Just two tests for this, since password manager already tests this extensively.
-    info("Starting test: PromptUsernameAndPassword (ok)");
-    state = {
-        msg: "This is the pUAP text.",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "usr",
-        passValue: "ssh",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-        textField: "newusr",
-        passField: "newssh",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value  = "usr";
-    passVal.value  = "ssh";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.promptUsernameAndPassword.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(textVal.value, "newusr", "checking expected text value");
-    is(passVal.value, "newssh", "checking expected pass value");
-    is(checkVal.value, true, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: PromptUsernameAndPassword (cancel)");
-    state = {
-        msg: "This is the pUAP text.",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "usr",
-        passValue: "ssh",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-        setCheckbox: true,
-        textField: "newusr",
-        passField: "newssh",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    textVal.value  = "usr";
-    passVal.value  = "ssh";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.promptUsernameAndPassword.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(textVal.value, "usr", "checking expected text value");
-    is(passVal.value, "ssh", "checking expected pass value");
-    is(checkVal.value, false, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: PromptPassword (ok)");
-    state = {
-        msg: "This is the promptPassword text.",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "ssh",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "passField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-        passField: "newssh",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    passVal.value  = "ssh";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.promptPassword.apply(null, promptArgs);
-    is(isOK, true, "checked expected retval");
-    is(passVal.value, "newssh", "checking expected pass value");
-    is(checkVal.value, true, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: PromptPassword (cancel)");
-    state = {
-        msg: "This is the promptPassword text.",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "ssh",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "passField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "cancel",
-        setCheckbox: true,
-        passField: "newssh",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    passVal.value  = "ssh";
-    checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    isOK = prompter.promptPassword.apply(null, promptArgs);
-    is(isOK, false, "checked expected retval");
-    is(passVal.value, "ssh", "checking expected pass value");
-    is(checkVal.value, false, "expected checkbox setting");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmEx (ok/cancel, ok)");
-    state = {
-        msg: "This is the confirmEx text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-        butt0Label: "OK",
-        butt1Label: "Cancel",
-    };
-    action = {
-        buttonClick: "ok",
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
-    promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    flags =
+      Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS |
+      Ci.nsIPromptService.BUTTON_DELAY_ENABLE;
+    promptArgs = [
+      "TestTitle",
+      "This is the confirmEx delay text.",
+      flags,
+      null,
+      null,
+      null,
+      null,
+      {},
+    ];
+    clickedButton = doPrompt("confirmEx");
     is(clickedButton, 0, "checked expected button num click");
 
     await promptDone;
+  }
 
-    // =====
-    info("Starting test: ConfirmEx (yes/no, cancel)");
-    state = {
-        msg: "This is the confirmEx text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-        butt0Label: "Yes",
-        butt1Label: "No",
-    };
-    action = {
-        buttonClick: "cancel",
-    };
+  // promptAuth already tested via password manager but do a few specific things here.
+  var channel = NetUtil.newChannel({
+    uri: "http://example.com",
+    loadUsingSystemPrincipal: true,
+  });
 
+  var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+  var authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags: Ci.nsIAuthInformation.AUTH_HOST,
+    authenticationScheme: "basic",
+    realm: "",
+  };
+
+  // =====
+  // (promptAuth is only accessible from the prompt service)
+  info("Starting test: promptAuth with empty realm");
+  state = {
+    msg: "http://example.com is requesting your username and password.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+    textField: "username",
+    passField: "password",
+  };
+  if (usePromptService) {
     promptDone = handlePrompt(state, action);
 
-    flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
-    promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    clickedButton = prompter.confirmEx.apply(null, promptArgs);
-    is(clickedButton, 1, "checked expected button num click");
-
-    await promptDone;
-
-    // =====
-    info("Starting test: ConfirmEx (buttons from args, checkbox, ok)");
-    state = {
-        msg: "This is the confirmEx text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-        butt0Label: "butt0",
-        butt1Label: "butt1",
-        butt2Label: "butt2",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-    };
-
-    promptDone = handlePrompt(state, action);
-
-    let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-            b * Ci.nsIPromptService.BUTTON_POS_1 +
-            b * Ci.nsIPromptService.BUTTON_POS_0;
     checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
-                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    clickedButton = prompter.confirmEx.apply(null, promptArgs);
-    is(clickedButton, 0, "checked expected button num click");
+    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    isOK = doPrompt("promptAuth");
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
     is(checkVal.value, true, "expected checkbox setting");
 
     await promptDone;
+  }
 
-    // =====
-    info("Starting test: ConfirmEx (buttons from args, checkbox, cancel)");
-    state = {
-        msg: "This is the confirmEx text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button1", // Default changed!
-        defButton: "button1",
-        butt0Label: "butt0",
-        butt1Label: "butt1",
-        butt2Label: "butt2",
-    };
-    action = {
-        buttonClick: "cancel",
-        setCheckbox: true,
-    };
-
+  // =====
+  // (promptAuth is only accessible from the prompt service)
+  info("Starting test: promptAuth with long realm");
+  state = {
+    msg:
+      "http://example.com is requesting your username and password. The site " +
+      "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+      "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+      "abcdefghi \u2026\u201d",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+    textField: "username",
+    passField: "password",
+  };
+  if (usePromptService) {
     promptDone = handlePrompt(state, action);
 
-    b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-            b * Ci.nsIPromptService.BUTTON_POS_1 +
-            b * Ci.nsIPromptService.BUTTON_POS_0;
-    flags ^= Ci.nsIPromptService.BUTTON_POS_1_DEFAULT;
     checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
-                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    clickedButton = prompter.confirmEx.apply(null, promptArgs);
-    is(clickedButton, 1, "checked expected button num click");
+    var longString = "";
+    for (var i = 0; i < 20; i++) longString += "abcdefghi "; // 200 chars long
+    authinfo.realm = longString;
+    authinfo.username = "";
+    authinfo.password = "";
+    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    isOK = doPrompt("promptAuth");
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
     is(checkVal.value, true, "expected checkbox setting");
 
     await promptDone;
+  }
 
-    // =====
-    info("Starting test: ConfirmEx (buttons from args, checkbox, button3)");
-    state = {
-        msg: "This is the confirmEx text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "button2", // Default changed!
-        defButton: "button2",
-        butt0Label: "butt0",
-        butt1Label: "butt1",
-        butt2Label: "butt2",
-    };
-    action = {
-        buttonClick: 2,
-        setCheckbox: true,
-    };
-
+  info("Starting test: promptAuth for a cross-origin and a empty realm");
+  authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags:
+      Ci.nsIAuthInformation.AUTH_HOST |
+      Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
+    authenticationScheme: "basic",
+    realm: "",
+  };
+  state = {
+    msg:
+      "http://example.com is requesting your username and password. " +
+      "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "username",
+    passField: "password",
+  };
+  if (usePromptService) {
     promptDone = handlePrompt(state, action);
-
-    b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-            b * Ci.nsIPromptService.BUTTON_POS_1 +
-            b * Ci.nsIPromptService.BUTTON_POS_0;
-    flags ^= Ci.nsIPromptService.BUTTON_POS_2_DEFAULT;
     checkVal.value = false;
-    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
-                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
-    if (usePromptService)
-        promptArgs.unshift(window);
-    clickedButton = prompter.confirmEx.apply(null, promptArgs);
-    is(clickedButton, 2, "checked expected button num click");
-    is(checkVal.value, true, "expected checkbox setting");
+    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    isOK = doPrompt("promptAuth");
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+    is(checkVal.value, false, "expected checkbox setting");
 
     await promptDone;
+  }
 
-    // =====
-    // (skipped for E10S and tabmodal tests: window is required)
-    info("Starting test: Alert, no window");
-    state = {
-        msg: "This is the alert text.",
-        title: "TestTitle",
-        iconClass: "alert-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: "button0",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-    };
-    if (!isTabModal && !isE10S) {
-        promptDone = handlePrompt(state, action);
+  info("Starting test: promptAuth for a cross-origin with realm");
+  authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags:
+      Ci.nsIAuthInformation.AUTH_HOST |
+      Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
+    authenticationScheme: "basic",
+    realm: "Something!!!",
+  };
+  state = {
+    msg:
+      "http://example.com is requesting your username and password. " +
+      "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "username",
+    passField: "password",
+  };
+  if (usePromptService) {
+    promptDone = handlePrompt(state, action);
 
-        promptArgs = ["TestTitle", "This is the alert text."];
-        if (usePromptService)
-          promptArgs.unshift(null);
-        prompter.alert.apply(null, promptArgs);
+    checkVal.value = false;
+    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    isOK = doPrompt("promptAuth");
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+    is(checkVal.value, false, "expected checkbox setting");
 
-        await promptDone;
-    }
-
-
-    // =====
-    // (skipped for tabmodal tests: delay not supported)
-    info("Starting test: ConfirmEx (delay, ok)");
-    state = {
-        msg: "This is the confirmEx delay text.",
-        title: "TestTitle",
-        iconClass: "question-icon",
-        titleHidden: true,
-        textHidden: true,
-        passHidden: true,
-        checkHidden: true,
-        textValue: "",
-        passValue: "",
-        checkMsg: "",
-        checked: false,
-        focused: null, // nothing focused until after delay fires
-        defButton: "button0",
-        butt0Label: "OK",
-        butt1Label: "Cancel",
-        butt0Disabled: true,
-    };
-
-    // OS X doesn't initially focus the button, but rather the infoBody.
-    // The focus stays there even after the button-enable delay has fired.
-    if (isOSX)
-        state.focused = "infoBody";
-
-    action = {
-        buttonClick: "pollOK",
-    };
-    if (!isTabModal) {
-        promptDone = handlePrompt(state, action);
-
-        flags = (Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS | Ci.nsIPromptService.BUTTON_DELAY_ENABLE);
-        promptArgs = ["TestTitle", "This is the confirmEx delay text.", flags, null, null, null, null, {}];
-        if (usePromptService)
-            promptArgs.unshift(window);
-        clickedButton = prompter.confirmEx.apply(null, promptArgs);
-        is(clickedButton, 0, "checked expected button num click");
-
-        await promptDone;
-    }
-
-    // promptAuth already tested via password manager but do a few specific things here.
-    var channel = NetUtil.newChannel({
-        uri: "http://example.com",
-        loadUsingSystemPrincipal: true,
-    });
-
-    var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
-    var authinfo = {
-        username: "",
-        password: "",
-        domain: "",
-        flags: Ci.nsIAuthInformation.AUTH_HOST,
-        authenticationScheme: "basic",
-        realm: "",
-    };
-
-
-    // =====
-    // (promptAuth is only accessible from the prompt service)
-    info("Starting test: promptAuth with empty realm");
-    state = {
-        msg: "http://example.com is requesting your username and password.",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-        textField: "username",
-        passField: "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-
-        checkVal.value = false;
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, true, "expected checkbox setting");
-
-        await promptDone;
-    }
-
-
-    // =====
-    // (promptAuth is only accessible from the prompt service)
-    info("Starting test: promptAuth with long realm");
-    state = {
-        msg: "http://example.com is requesting your username and password. The site " +
-              "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
-              "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
-              "abcdefghi \u2026\u201d",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: true,
-        textField: "username",
-        passField: "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-
-        checkVal.value = false;
-        var longString = "";
-        for (var i = 0; i < 20; i++)
-            longString += "abcdefghi "; // 200 chars long
-        authinfo.realm = longString;
-        authinfo.username = "";
-        authinfo.password = "";
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, true, "expected checkbox setting");
-
-        await promptDone;
-    }
-
-    info("Starting test: promptAuth for a cross-origin and a empty realm");
-    authinfo = {
-        username: "",
-        password: "",
-        domain: "",
-        flags: Ci.nsIAuthInformation.AUTH_HOST |
-               Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
-        authenticationScheme: "basic",
-        realm: "",
-    };
-    state = {
-        msg: "http://example.com is requesting your username and password. " +
-              "WARNING: Your password will not be sent to the website you are currently visiting!",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: false,
-        textField: "username",
-        passField: "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-        checkVal.value = false;
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, false, "expected checkbox setting");
-
-        await promptDone;
-    }
-
-    info("Starting test: promptAuth for a cross-origin with realm");
-    authinfo = {
-        username: "",
-        password: "",
-        domain: "",
-        flags: Ci.nsIAuthInformation.AUTH_HOST | Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
-        authenticationScheme: "basic",
-        realm: "Something!!!",
-    };
-    state = {
-        msg: "http://example.com is requesting your username and password. " +
-              "WARNING: Your password will not be sent to the website you are currently visiting!",
-        title: "TestTitle",
-        iconClass: "authentication-icon question-icon",
-        titleHidden: true,
-        textHidden: false,
-        passHidden: false,
-        checkHidden: false,
-        textValue: "",
-        passValue: "",
-        checkMsg: "Check me out!",
-        checked: false,
-        focused: "textField",
-        defButton: "button0",
-    };
-    action = {
-        buttonClick: "ok",
-        setCheckbox: false,
-        textField: "username",
-        passField: "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-
-        checkVal.value = false;
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, false, "expected checkbox setting");
-
-        await promptDone;
-    }
+    await promptDone;
+  }
 }
 
 let usePromptService;
-
-/*
- * Run the body of the 3 times:
- * - 1st pass: with window-modal prompts, using nsIPromptService
- * - 2nd pass: still window-modal, using nsIPrompt directly (via nsIPromptFactory)
- * - 3rd pass: with tab-modal prompts. Can't opt into these via * nsIPromptService.
- */
+let useBrowsingContext;
+let modalType;
 
 add_task(async function runPromptTests() {
   info("Process type: " + SpecialPowers.Services.appinfo.processType);
 
-  isTabModal = false; usePromptService = true;
-  info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
+  // Prompt service with dom window parent only supports window prompts
+  usePromptService = true;
+  useBrowsingContext = false;
+  isTabModal = false;
+  modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
   await runTests();
 
-  isTabModal = false; usePromptService = false;
-  info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-  await runTests();
-
+  let modalTypes = [Ci.nsIPrompt.MODAL_TYPE_WINDOW];
+  // if tab/content prompts are disabled by pref, only test window prompts
   if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
-      isTabModal = true; usePromptService = false;
-      info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-      await runTests();
+    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_TAB);
+    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_CONTENT);
+  }
+
+  for (let type of modalTypes) {
+    modalType = type;
+    isTabModal = type !== Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+
+    // Prompt service with browsing context
+    usePromptService = true;
+    useBrowsingContext = true;
+    await runTests();
+
+    // nsIPrompt
+    // modalType is set via nsIWritablePropertyBag (legacy)
+    usePromptService = false;
+    useBrowsingContext = false;
+    await runTests();
   }
 });
-
 </script>
 </pre>
-</body>
+  </body>
 </html>
