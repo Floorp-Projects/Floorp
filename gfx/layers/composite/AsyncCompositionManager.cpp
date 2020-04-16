@@ -1127,7 +1127,9 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
             LayerToParentLayerMatrix4x4 transformWithoutOverscrollOrOmta =
                 layer->GetTransformTyped() *
                 CompleteAsyncTransform(AdjustForClip(asyncTransform, layer));
-            AlignFixedAndStickyLayers(layer, layer, SideBits::eBottom,
+            // See bug 1630274 for why we pass eNone here; fixing that bug will
+            // probably end up changing this to be more correct.
+            AlignFixedAndStickyLayers(layer, layer, SideBits::eNone,
                                       metrics.GetScrollId(), oldTransform,
                                       transformWithoutOverscrollOrOmta,
                                       fixedLayerMargins, clipPartsCache,
@@ -1210,30 +1212,25 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                    rootContent.mLayersId == currentLayersId;
           };
 
-          auto IsStuckToZoomContainerAtBottom = [&](Layer* aLayer) {
+          auto SidesStuckToZoomContainer = [&](Layer* aLayer) -> SideBits {
+            SideBits result = SideBits::eNone;
             if (!zoomedMetrics) {
-              return false;
+              return result;
             }
             if (!aLayer->GetIsStickyPosition()) {
-              return false;
-            }
-
-            // Currently we only support the dyanmic toolbar at bottom.
-            if ((aLayer->GetFixedPositionSides() & SideBits::eBottom) ==
-                SideBits::eNone) {
-              return false;
+              return result;
             }
 
             ScrollableLayerGuid::ViewID targetId =
                 aLayer->GetStickyScrollContainerId();
             if (targetId == ScrollableLayerGuid::NULL_SCROLL_ID) {
-              return false;
+              return result;
             }
 
             ScrollableLayerGuid rootContent = sampler->GetGuid(*zoomedMetrics);
             if (rootContent.mScrollId != targetId ||
                 rootContent.mLayersId != currentLayersId) {
-              return false;
+              return result;
             }
 
             ParentLayerPoint translation =
@@ -1242,9 +1239,17 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                         *zoomedMetrics, {AsyncTransformComponent::eLayout})
                     .mTranslation;
 
-            return apz::IsStuckAtBottom(translation.y,
-                                        aLayer->GetStickyScrollRangeInner(),
-                                        aLayer->GetStickyScrollRangeOuter());
+            if (apz::IsStuckAtBottom(translation.y,
+                                     aLayer->GetStickyScrollRangeInner(),
+                                     aLayer->GetStickyScrollRangeOuter())) {
+              result |= SideBits::eBottom;
+            }
+            if (apz::IsStuckAtTop(translation.y,
+                                  aLayer->GetStickyScrollRangeInner(),
+                                  aLayer->GetStickyScrollRangeOuter())) {
+              result |= SideBits::eTop;
+            }
+            return result;
           };
 
           // Layers fixed to the RCD-RSF no longer need
@@ -1254,13 +1259,14 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
           // account for dynamic toolbar transitions. This is also handled by
           // AdjustFixedOrStickyLayer(), so we now call it with empty transforms
           // to get it to perform just the fixed margins adjustment.
+          SideBits stuckSides = SidesStuckToZoomContainer(layer);
           if (zoomedMetrics && ((layer->GetIsFixedPosition() &&
                                  !layer->GetParent()->GetIsFixedPosition() &&
                                  IsFixedToZoomContainer(layer)) ||
-                                IsStuckToZoomContainerAtBottom(layer))) {
+                                stuckSides != SideBits::eNone)) {
             LayerToParentLayerMatrix4x4 emptyTransform;
             ScreenMargin marginsForFixedLayer = GetFixedLayerMargins();
-            AdjustFixedOrStickyLayer(zoomContainer, layer, SideBits::eBottom,
+            AdjustFixedOrStickyLayer(zoomContainer, layer, stuckSides,
                                      sampler->GetGuid(*zoomedMetrics).mScrollId,
                                      emptyTransform, emptyTransform,
                                      marginsForFixedLayer, clipPartsCache,
