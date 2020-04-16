@@ -463,7 +463,7 @@ lucetc-source:
     fetch:
         type: git
         repo: https://github.com/PLSysSec/lucet_sandbox_compiler/
-        revision: 5e870faf6f95d79d11efc813e56370ad124bbed5
+        revision: a0a1ce981638109f1f76cd1eecf17a0436a20055
 
 dump-syms:
     description: dump_syms source code
