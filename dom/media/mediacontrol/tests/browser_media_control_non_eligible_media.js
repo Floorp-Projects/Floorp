@@ -9,6 +9,7 @@ const gNonEligibleElementIds = [
   "silent-audio-track",
   "no-audio-track",
   "short-duration",
+  "inaudible-captured-media",
 ];
 
 /**
@@ -69,6 +70,10 @@ function startNonEligibleMedia(tab, elementId) {
     }
     if (Id == "volume-0") {
       video.volume = 0.0;
+    }
+    if (Id == "inaudible-captured-media") {
+      const context = new content.AudioContext();
+      context.createMediaElementSource(video);
     }
     return video.play();
   });
