@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>Test repeatedly chaining video.rAF() callbacks.</title>
+<title>Test repeatedly chaining video.rVFC() callbacks.</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/common/media.js"></script>
@@ -10,19 +10,19 @@ async_test(function(t) {
     let video = document.createElement('video');
 
     let firstTime;
-    video.requestAnimationFrame(t.step_func((time) => {
+    video.requestVideoFrameCallback(t.step_func((time) => {
       firstTime = time;
 
       // Queue up a callback and make sure it's not immediately executed.
       let secondTime;
-      video.requestAnimationFrame(t.step_func((time) => {
+      video.requestVideoFrameCallback(t.step_func((time) => {
         secondTime = time;
         assert_greater_than(secondTime, firstTime, "Callbacks should be executed on the next frame");
       }))
 
       // Queue up a second callback, and make sure it's called at the same time
       // as the one we just queued up.
-      video.requestAnimationFrame(t.step_func_done((time) => {
+      video.requestVideoFrameCallback(t.step_func_done((time) => {
         assert_equals(time, secondTime, "Callbacks queued together should be called at the same time");
       }))
 
@@ -47,15 +47,15 @@ async_test(function(t) {
       if (--numberOfCallsLeft) {
         t.done()
       } else {
-        video.requestAnimationFrame(t.step_func(frameNumberVerifier));
+        video.requestVideoFrameCallback(t.step_func(frameNumberVerifier));
       }
     }
 
-    video.requestAnimationFrame(t.step_func(frameNumberVerifier));
+    video.requestVideoFrameCallback(t.step_func(frameNumberVerifier));
 
     video.src = getVideoURI('/media/movie_5');
     video.play();
 
-}, 'Test chaining calls to video.rAF.');
+}, 'Test chaining calls to video.rVFC.');
 </script>
 </html>
