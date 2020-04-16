@@ -12,7 +12,7 @@
 
 [package]
 name = "webrtc-sdp"
-version = "0.3.4"
+version = "0.3.5"
 authors = ["Nils Ohlmeier <github@ohlmeier.org>"]
 description = "This create parses strings in the format of the Session Description Protocol according to RFC4566. It specifically supports the subset of features required to support WebRTC according to the JSEP draft."
 readme = "README.md"
