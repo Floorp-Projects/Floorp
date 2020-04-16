@@ -489,6 +489,7 @@ class RTCPeerConnection {
 
     this._pc = new this._win.PeerConnectionImpl();
     this._operations = [];
+    this._updateNegotiationNeededOnEmptyChain = false;
 
     this.__DOM_IMPL__._innerObject = this;
     const observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
@@ -569,6 +570,9 @@ class RTCPeerConnection {
         this._operations.shift();
         if (this._operations.length) {
           this._operations[0]();
+        } else if (this._updateNegotiationNeededOnEmptyChain) {
+          this._updateNegotiationNeededOnEmptyChain = false;
+          this.updateNegotiationNeeded();
         }
       };
       p.then(doNextOperation, doNextOperation);
@@ -1463,27 +1467,33 @@ class RTCPeerConnection {
   }
 
   updateNegotiationNeeded() {
+    if (this._operations.length) {
+      this._updateNegotiationNeededOnEmptyChain = true;
+      return;
+    }
     this._queueTaskWithClosedCheck(() => {
-      this._chain(async () => {
-        if (this._closed || this.signalingState != "stable") {
-          return;
-        }
+      if (this._operations.length) {
+        this._updateNegotiationNeededOnEmptyChain = true;
+        return;
+      }
+      if (this.signalingState != "stable") {
+        return;
+      }
 
-        let negotiationNeeded =
-          this._impl.checkNegotiationNeeded() ||
-          this._localUfragsToReplace.size > 0;
-        if (!negotiationNeeded) {
-          this._negotiationNeeded = false;
-          return;
-        }
+      const negotiationNeeded =
+        this._impl.checkNegotiationNeeded() ||
+        this._localUfragsToReplace.size > 0;
+      if (!negotiationNeeded) {
+        this._negotiationNeeded = false;
+        return;
+      }
 
-        if (this._negotiationNeeded) {
-          return;
-        }
+      if (this._negotiationNeeded) {
+        return;
+      }
 
-        this._negotiationNeeded = true;
-        this.dispatchEvent(new this._win.Event("negotiationneeded"));
-      });
+      this._negotiationNeeded = true;
+      this.dispatchEvent(new this._win.Event("negotiationneeded"));
     });
   }
 
