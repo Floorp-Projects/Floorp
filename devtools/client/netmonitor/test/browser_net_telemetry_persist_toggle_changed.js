@@ -10,11 +10,21 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+function togglePersistLogsOption(monitor) {
+  clickSettingsMenuItem(monitor, "persist-logs");
+}
+
+function ensurePersistLogsCheckedState(monitor, isChecked) {
+  openSettingsMenu(monitor);
+  const persistNode = getSettingsMenuItem(monitor, "persist-logs");
+  return !!persistNode?.getAttribute("aria-checked") === isChecked;
+}
+
 add_task(async function() {
   const { monitor } = await initNetMonitor(SINGLE_GET_URL, { requestCount: 1 });
   info("Starting test... ");
 
-  const { document, store, windowRequire } = monitor.panelWin;
+  const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -25,18 +35,13 @@ add_task(async function() {
   // Ensure no events have been logged
   TelemetryTestUtils.assertNumberOfEvents(0);
 
-  // Get log persistence toggle button
-  const logPersistToggle = document.getElementById(
-    "devtools-persistlog-checkbox"
-  );
-
   // Click on the toggle - "true" and make sure it was set to correct value
-  logPersistToggle.click();
-  await waitUntil(() => logPersistToggle.checked === true);
+  togglePersistLogsOption(monitor);
+  await waitUntil(() => ensurePersistLogsCheckedState(monitor, true));
 
   // Click a second time - "false" and make sure it was set to correct value
-  logPersistToggle.click();
-  await waitUntil(() => logPersistToggle.checked === false);
+  togglePersistLogsOption(monitor);
+  await waitUntil(() => ensurePersistLogsCheckedState(monitor, false));
 
   const expectedEvents = [
     {

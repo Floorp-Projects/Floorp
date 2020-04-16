@@ -71,7 +71,6 @@ const TOOLBAR_TOGGLE_RECORDING = L10N.getStr(
 );
 const TOOLBAR_SEARCH = L10N.getStr("netmonitor.toolbar.search");
 const TOOLBAR_BLOCKING = L10N.getStr("netmonitor.toolbar.requestBlocking");
-const TOOLBAR_HAR_BUTTON = L10N.getStr("netmonitor.label.har");
 const LEARN_MORE_TITLE = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.learnMore"
 );
@@ -86,12 +85,6 @@ const TOOLBAR_FILTER_LABELS = FILTER_TAGS.concat("all").reduce(
     }),
   {}
 );
-const ENABLE_PERSISTENT_LOGS_TOOLTIP = L10N.getStr(
-  "netmonitor.toolbar.enablePersistentLogs.tooltip"
-);
-const ENABLE_PERSISTENT_LOGS_LABEL = L10N.getStr(
-  "netmonitor.toolbar.enablePersistentLogs.label"
-);
 const DISABLE_CACHE_TOOLTIP = L10N.getStr(
   "netmonitor.toolbar.disableCache.tooltip"
 );
@@ -99,13 +92,23 @@ const DISABLE_CACHE_LABEL = L10N.getStr(
   "netmonitor.toolbar.disableCache.label"
 );
 
-// Menu
-loader.lazyRequireGetter(
-  this,
-  "showMenu",
-  "devtools/client/shared/components/menu/utils",
-  true
+const MenuButton = createFactory(
+  require("devtools/client/shared/components/menu/MenuButton")
 );
+
+loader.lazyGetter(this, "MenuItem", function() {
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuItem")
+  );
+});
+
+loader.lazyGetter(this, "MenuList", function() {
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuList")
+  );
+});
+
+// Menu
 loader.lazyRequireGetter(
   this,
   "HarMenuUtils",
@@ -412,26 +415,6 @@ class Toolbar extends Component {
   }
 
   /**
-   * Render a Persistlog checkbox.
-   */
-  renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs) {
-    return label(
-      {
-        className: "devtools-checkbox-label devtools-persistlog-checkbox",
-        title: ENABLE_PERSISTENT_LOGS_TOOLTIP,
-      },
-      input({
-        id: "devtools-persistlog-checkbox",
-        className: "devtools-checkbox",
-        type: "checkbox",
-        checked: persistentLogsEnabled,
-        onChange: togglePersistentLogs,
-      }),
-      ENABLE_PERSISTENT_LOGS_LABEL
-    );
-  }
-
-  /**
    * Render a Cache checkbox.
    */
   renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache) {
@@ -464,61 +447,6 @@ class Toolbar extends Component {
   }
 
   /**
-   * Render drop down button with HAR related actions.
-   */
-  renderHarButton() {
-    return button(
-      {
-        id: "devtools-har-button",
-        title: TOOLBAR_HAR_BUTTON,
-        className: "devtools-button devtools-dropdown-button",
-        onClick: evt => {
-          this.showHarMenu(evt.target);
-        },
-      },
-      dom.span({ className: "title" }, "HAR")
-    );
-  }
-
-  showHarMenu(menuButton) {
-    const {
-      actions,
-      connector,
-      displayedRequests,
-      openSplitConsole,
-    } = this.props;
-
-    const menuItems = [];
-
-    menuItems.push({
-      id: "request-list-context-import-har",
-      label: L10N.getStr("netmonitor.context.importHar"),
-      accesskey: L10N.getStr("netmonitor.context.importHar.accesskey"),
-      click: () => HarMenuUtils.openHarFile(actions, openSplitConsole),
-    });
-
-    menuItems.push("-");
-
-    menuItems.push({
-      id: "request-list-context-save-all-as-har",
-      label: L10N.getStr("netmonitor.context.saveAllAsHar"),
-      accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      disabled: !displayedRequests.length,
-      click: () => HarMenuUtils.saveAllAsHar(displayedRequests, connector),
-    });
-
-    menuItems.push({
-      id: "request-list-context-copy-all-as-har",
-      label: L10N.getStr("netmonitor.context.copyAllAsHar"),
-      accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      disabled: !displayedRequests.length,
-      click: () => HarMenuUtils.copyAllAsHar(displayedRequests, connector),
-    });
-
-    showMenu(menuItems, { button: menuButton });
-  }
-
-  /**
    * Render filter Searchbox.
    */
   renderFilterBox(setRequestFilterText) {
@@ -536,14 +464,78 @@ class Toolbar extends Component {
     });
   }
 
+  renderSettingsMenuButton() {
+    return MenuButton(
+      {
+        menuId: "netmonitor-settings-menu-button",
+        toolboxDoc: document,
+        className: "devtools-button netmonitor-settings-menu-button",
+        title: L10N.getStr("netmonitor.settings.menuTooltip"),
+      },
+      // We pass the children in a function so we don't require the MenuItem and MenuList
+      // components until we need to display them (i.e. when the button is clicked).
+      () => this.renderSettingsMenuItems()
+    );
+  }
+
+  renderSettingsMenuItems() {
+    const {
+      actions,
+      connector,
+      displayedRequests,
+      openSplitConsole,
+      persistentLogsEnabled,
+      togglePersistentLogs,
+    } = this.props;
+
+    const menuItems = [
+      MenuItem({
+        key: "netmonitor-settings-persist-item",
+        className: "menu-item netmonitor-settings-persist-item",
+        type: "checkbox",
+        checked: persistentLogsEnabled,
+        label: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label"),
+        tooltip: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip"),
+        onClick: () => togglePersistentLogs(),
+      }),
+      MenuItem({ role: "menuseparator", key: "har-separator", label: "" }),
+      MenuItem({
+        key: "request-list-context-import-har",
+        className: "menu-item netmonitor-settings-import-har-item",
+        label: L10N.getStr("netmonitor.har.importHarDialogTitle"),
+        tooltip: L10N.getStr("netmonitor.settings.importHarTooltip"),
+        accesskey: L10N.getStr("netmonitor.context.importHar.accesskey"),
+        onClick: () => HarMenuUtils.openHarFile(actions, openSplitConsole),
+      }),
+      MenuItem({
+        key: "request-list-context-save-all-as-har",
+        className: "menu-item netmonitor-settings-save-har-item",
+        label: L10N.getStr("netmonitor.context.saveAllAsHar"),
+        accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
+        tooltip: L10N.getStr("netmonitor.settings.saveHarTooltip"),
+        disabled: !displayedRequests.length,
+        onClick: () => HarMenuUtils.saveAllAsHar(displayedRequests, connector),
+      }),
+      MenuItem({
+        key: "request-list-context-copy-all-as-har",
+        className: "menu-item netmonitor-settings-copy-har-item",
+        label: L10N.getStr("netmonitor.context.copyAllAsHar"),
+        accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
+        tooltip: L10N.getStr("netmonitor.settings.copyHarTooltip"),
+        disabled: !displayedRequests.length,
+        onClick: () => HarMenuUtils.copyAllAsHar(displayedRequests, connector),
+      }),
+    ];
+
+    return MenuList({ id: "netmonitor-settings-menu-list" }, menuItems);
+  }
+
   render() {
     const {
       toggleRecording,
       clearRequests,
       requestFilterTypes,
       setRequestFilterText,
-      togglePersistentLogs,
-      persistentLogsEnabled,
       toggleBrowserCache,
       browserCacheDisabled,
       recording,
@@ -568,14 +560,11 @@ class Toolbar extends Component {
             this.renderSeparator(),
             this.renderFilterButtons(requestFilterTypes),
             this.renderSeparator(),
-            this.renderPersistlogCheckbox(
-              persistentLogsEnabled,
-              togglePersistentLogs
-            ),
             this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
             this.renderSeparator(),
             this.renderThrottlingMenu(),
-            this.renderHarButton()
+            this.renderSeparator(),
+            this.renderSettingsMenuButton()
           )
         )
       : span(
@@ -590,14 +579,11 @@ class Toolbar extends Component {
             this.renderSearchButton(toggleSearchPanel),
             this.renderBlockingButton(toggleSearchPanel),
             this.renderSeparator(),
-            this.renderPersistlogCheckbox(
-              persistentLogsEnabled,
-              togglePersistentLogs
-            ),
             this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
             this.renderSeparator(),
             this.renderThrottlingMenu(),
-            this.renderHarButton()
+            this.renderSeparator(),
+            this.renderSettingsMenuButton()
           ),
           span(
             { className: "devtools-toolbar devtools-input-toolbar" },
