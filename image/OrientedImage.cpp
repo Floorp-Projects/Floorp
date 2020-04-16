@@ -76,7 +76,7 @@ Maybe<AspectRatio> OrientedImage::GetIntrinsicRatio() {
 }
 
 already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
-    Orientation aOrientation, SourceSurface* aSurface, const nsIntSize& aSize) {
+    Orientation aOrientation, SourceSurface* aSurface) {
   MOZ_ASSERT(aSurface);
 
   // If the image does not require any re-orientation, return aSurface itself.
@@ -85,13 +85,14 @@ already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
   }
 
   // Determine the size of the new surface.
-  nsIntSize targetSize = aSize;
+  nsIntSize originalSize = aSurface->GetSize();
+  nsIntSize targetSize = originalSize;
   if (aOrientation.SwapsWidthAndHeight()) {
     swap(targetSize.width, targetSize.height);
   }
 
   // Create our drawable.
-  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(aSurface, aSize);
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(aSurface, originalSize);
 
   // Determine an appropriate format for the surface.
   gfx::SurfaceFormat surfaceFormat = IsOpaque(aSurface->GetFormat())
@@ -110,9 +111,9 @@ already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
   // Draw.
   RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
   MOZ_ASSERT(ctx);  // already checked the draw target above
-  ctx->Multiply(OrientationMatrix(aOrientation, aSize));
-  gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(aSize),
-                             ImageRegion::Create(aSize), surfaceFormat,
+  ctx->Multiply(OrientationMatrix(aOrientation, originalSize));
+  gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(originalSize),
+                             ImageRegion::Create(originalSize), surfaceFormat,
                              SamplingFilter::LINEAR);
 
   return target->Snapshot();
@@ -120,22 +121,13 @@ already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
 
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
-  nsresult rv;
-
   // Get a SourceSurface for the inner image then orient it according to
   // mOrientation.
   RefPtr<SourceSurface> innerSurface =
       InnerImage()->GetFrame(aWhichFrame, aFlags);
   NS_ENSURE_TRUE(innerSurface, nullptr);
 
-  // Get the underlying dimensions.
-  IntSize size;
-  rv = InnerImage()->GetWidth(&size.width);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  rv = InnerImage()->GetHeight(&size.height);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return OrientSurface(mOrientation, innerSurface, size);
+  return OrientSurface(mOrientation, innerSurface);
 }
 
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
