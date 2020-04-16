@@ -38,12 +38,43 @@ you might find that this isn't working on large source code files, but triggerin
 VIM
 ---
 
+AutoCompletion
+~~~~~~~~~~~~~~
+
 There's C++ and Rust auto-completion support for VIM via
 `YouCompleteMe <https://github.com/ycm-core/YouCompleteMe/>`__.
 
 As long as that is installed and you have run :code:`./mach build` or
 :code:`./mach configure`, it should work out of the box. Configuration for this lives
 in :code:`.ycm_extra_conf` at the root of the repo.
+
+ESLint
+~~~~~~
+
+The easiest way to integrate ESLint with VIM is using the `Syntastic plugin
+<https://github.com/vim-syntastic/syntastic>`__.
+
+:code:`mach eslint --setup` installs a specific ESLint version and some ESLint
+plugins into the repositories' :code:`node_modules`.
+
+You need something like this in your :code:`.vimrc` to run the checker
+automatically on save:
+
+.. code::
+
+    autocmd FileType javascript,html,xhtml let b:syntastic_checkers = ['javascript/eslint']
+
+You need to have :code:`eslint` in your :code:`PATH`, which you can get with
+:code:`npm install -g eslint`. You need at least version 6.0.0.
+
+You can also use something like `eslint_d
+<https://github.com/mantoni/eslint_d.js#editor-integration>`__ which should
+also do that automatically:
+
+.. code::
+
+    let g:syntastic_javascript_eslint_exec = 'eslint_d'
+
 
 Eclipse
 -------
