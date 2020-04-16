@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title></title>
+    <style>
+    #mask {
+      clip-path: circle(50%);
+      width: 100px;
+      height: 100px;
+      opacity: 0.9;
+    }
+
+    #content {
+      width: 100px;
+      height: 100px;
+      background-color: green;
+    }
+  </style>
+</head>
+
+<body>
+    <div id="mask">
+        <div id="content"></div>
+    </div>
+
+    <script type="text/javascript">
+    function step1() {
+      document.querySelector("#mask").style.opacity = 0.1;
+      window.requestAnimationFrame(() => window.requestAnimationFrame(step2));
+    };
+
+    function step2() {
+      document.querySelector("#mask").style.opacity = 0.5;
+      document.documentElement.removeAttribute("class");
+    }
+
+    window.addEventListener("MozReftestInvalidate", step1);
+    </script>
+</body>
+</html>
