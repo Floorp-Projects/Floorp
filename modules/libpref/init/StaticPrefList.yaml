@@ -4367,7 +4367,7 @@
 # APIs on HTMLImageElement.
 - name: image.honor_orientation_metadata.natural_size
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # The threshold for inferring that changes to an <img> element's |src|
