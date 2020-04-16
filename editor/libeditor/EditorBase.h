@@ -2055,14 +2055,6 @@ class EditorBase : public nsIEditor,
                                bool bNoBlockCrossing = false) const;
 
   /**
-   * Returns true if aParent can contain a child of type aTag.
-   */
-  bool CanContain(nsINode& aParent, nsIContent& aChild) const;
-  bool CanContainTag(nsINode& aParent, nsAtom& aTag) const;
-  bool TagCanContain(nsAtom& aParentTag, nsIContent& aChild) const;
-  virtual bool TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const;
-
-  /**
    * Returns true if aNode is our root node.
    */
   bool IsRoot(nsINode* inNode) const;

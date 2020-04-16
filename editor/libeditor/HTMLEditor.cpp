@@ -583,10 +583,11 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     // container element.
     if (forwardScanFromPointToPutCaretResult.ReachedSpecialContent() &&
         forwardScanFromPointToPutCaretResult.GetContent() &&
-        TagCanContainTag(*forwardScanFromPointToPutCaretResult.GetContent()
-                              ->NodeInfo()
-                              ->NameAtom(),
-                         *nsGkAtoms::textTagName)) {
+        HTMLEditUtils::CanNodeContain(
+            *forwardScanFromPointToPutCaretResult.GetContent()
+                 ->NodeInfo()
+                 ->NameAtom(),
+            *nsGkAtoms::textTagName)) {
       pointToPutCaret =
           forwardScanFromPointToPutCaretResult.RawPointAfterContent();
       continue;
@@ -1827,7 +1828,7 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   // Search up the parent chain to find a suitable container.
   EditorDOMPoint pointToInsert(aPointToInsert);
   MOZ_ASSERT(pointToInsert.IsSet());
-  while (!CanContain(*pointToInsert.GetContainer(), aNode)) {
+  while (!HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(), aNode)) {
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert.
     if (pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
@@ -3760,19 +3761,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentRemoved(
         NS_SUCCEEDED(rv),
         "HTMLEditor::OnDocumentModified() failed, but ignored");
   }
-}
-
-bool HTMLEditor::TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const {
-  int32_t childTagEnum;
-  // XXX Should this handle #cdata-section too?
-  if (&aChildTag == nsGkAtoms::textTagName) {
-    childTagEnum = eHTMLTag_text;
-  } else {
-    childTagEnum = nsHTMLTags::AtomTagToId(&aChildTag);
-  }
-
-  int32_t parentTagEnum = nsHTMLTags::AtomTagToId(&aParentTag);
-  return HTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
 }
 
 bool HTMLEditor::IsContainer(nsINode* aNode) const {
