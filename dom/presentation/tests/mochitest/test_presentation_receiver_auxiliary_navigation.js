@@ -82,6 +82,7 @@ SpecialPowers.pushPermissions(
           ["dom.presentation.enabled", true],
           ["dom.presentation.controller.enabled", true],
           ["dom.presentation.receiver.enabled", true],
+          ["dom.mozBrowserFramesEnabled", true],
           ["network.disable.ipc.security", true],
           ["dom.presentation.session_transport.data_channel.enable", false],
         ],

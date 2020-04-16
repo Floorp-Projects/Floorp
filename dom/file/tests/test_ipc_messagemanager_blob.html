@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for OOP Blobs in MessageManager</title>
+  <script src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <script type="application/javascript">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    const childFrameURL = "file_ipc_messagemanager_blob.html";
+
+    function childFrameScript() {
+      "use strict";
+
+      Cu.importGlobalProperties(["Blob"]);
+
+      addMessageListener("test:ipcClonedMessage", function(message) {
+        if (!Blob.isInstance(message.json)) {
+          sendAsyncMessage(message.name, message.json);
+          return;
+        }
+
+        let reader = new FileReader();
+        reader.addEventListener("load", function() {
+          let response = reader.result == "this is a great success!" ?
+                         message.json :
+                         "error";
+          sendAsyncMessage(message.name, response);
+        });
+        reader.readAsText(message.json);
+      });
+    }
+
+    function runTests() {
+      function done() {
+        SpecialPowers.removePermission("browser", document);
+        SimpleTest.finish();
+      }
+
+      ok("Browser prefs set.");
+
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.src = childFrameURL;
+
+      iframe.addEventListener("mozbrowserloadend", function() {
+        ok(true, "Got iframe load event.");
+
+        const blobString = "this is a great success!";
+
+        const messages = [
+          "hi!",
+          "",
+          2,
+          -.04,
+          3432987324987239872948732982,
+          true,
+          false,
+          null,
+          0,
+
+          // Make sure this one is always last.
+          new Blob(["this ", "is ", "a ", "great ", "success!"],
+                   {"type" : "text\/plain"}),
+        ];
+        let receivedMessageIndex = 0;
+
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.addMessageListener("test:ipcClonedMessage", SpecialPowers.wrapCallback(function(message) {
+          let data = message.json;
+
+          if (SpecialPowers.call_Instanceof(data, Blob)) {
+            is(receivedMessageIndex, messages.length - 1, "Blob is last");
+            is (data.size,
+                messages[receivedMessageIndex].size,
+                "Correct blob size");
+            is (data.type,
+                messages[receivedMessageIndex].type,
+                "Correct blob type");
+
+            let result1, result2;
+
+            let reader1 = new FileReader();
+            reader1.onload = function() {
+              result1 = reader1.result == blobString ? reader1.result : "bad1";
+              if (result2) {
+                is(result1, result2, "Same results");
+                done();
+              }
+            };
+
+            let reader2 = new FileReader();
+            reader2.onload = function() {
+              result2 = reader2.result == blobString ? reader2.result : "bad2";
+              if (result1) {
+                is(result1, result2, "Same results");
+                done();
+              }
+            };
+
+            SpecialPowers.wrap(reader1).readAsText(data);
+            reader2.readAsText(messages[receivedMessageIndex]);
+            return;
+          }
+
+          is(message.json,
+             messages[receivedMessageIndex++],
+             "Got correct round-tripped response");
+        }));
+        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+                           false);
+
+        for (let message of messages) {
+          mm.sendAsyncMessage("test:ipcClonedMessage", message);
+        }
+      });
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+      info("Got load event.");
+
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["network.disable.ipc.security", true],
+          ["browser.pagethumbnails.capturing_disabled", true]
+        ]
+      }, runTests);
+    });
+  </script>
+</body>
+</html>

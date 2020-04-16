@@ -955,6 +955,7 @@ nsresult ContentChild::ProvideWindowCommon(
     PopupIPCTabContext context;
     openerTabId = aTabOpener->GetTabId();
     context.opener() = openerTabId;
+    context.isMozBrowserElement() = aTabOpener->IsMozBrowserElement();
     ipcContext = MakeUnique<IPCTabContext>(context);
   } else {
     // It's possible to not have a BrowserChild opener in the case
@@ -992,11 +993,12 @@ nsresult ContentChild::ProvideWindowCommon(
   MutableTabContext newTabContext;
   if (aTabOpener) {
     newTabContext.SetTabContext(
-        aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
-        browsingContext->OriginAttributesRef(), aTabOpener->PresentationURL(),
-        aTabOpener->MaxTouchPoints());
+        aTabOpener->IsMozBrowserElement(), aTabOpener->ChromeOuterWindowID(),
+        aTabOpener->ShowFocusRings(), browsingContext->OriginAttributesRef(),
+        aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
   } else {
     newTabContext.SetTabContext(
+        /* isMozBrowserElement */ false,
         /* chromeOuterWindowID */ 0,
         /* showFocusRings */ UIStateChangeType_NoChange,
         browsingContext->OriginAttributesRef(),
@@ -2354,7 +2356,7 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
 
 mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
     const nsString& aMsg, nsTArray<CpowEntry>&& aCpows,
-    const ClonedMessageData& aData) {
+    const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentChild::RecvAsyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentChild::RecvAsyncMessage", aMsg, aData);
@@ -2365,8 +2367,8 @@ mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
   if (cpm) {
     StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);
-    cpm->ReceiveMessage(cpm, nullptr, aMsg, false, &data, &cpows, nullptr,
-                        IgnoreErrors());
+    cpm->ReceiveMessage(cpm, nullptr, aMsg, false, &data, &cpows, aPrincipal,
+                        nullptr, IgnoreErrors());
   }
   return IPC_OK();
 }
