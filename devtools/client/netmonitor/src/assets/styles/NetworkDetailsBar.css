@@ -307,8 +307,6 @@
 
 .network-monitor .raw-headers-toggle-input > input {
   display: inline-block;
-  align-items: center;
-  background: var(--toggle-track-color);
   width: 2em;
   vertical-align: bottom;
 }
