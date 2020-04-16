@@ -49,7 +49,7 @@ nsresult BrowserBridgeParent::InitWithProcess(
         true, principal->OriginAttributesRef().mFirstPartyDomain);
   }
 
-  tabContext.SetTabContext(false, Manager()->ChromeOuterWindowID(),
+  tabContext.SetTabContext(Manager()->ChromeOuterWindowID(),
                            Manager()->ShowFocusRings(), attrs, aPresentationURL,
                            Manager()->GetMaxTouchPoints());
 
