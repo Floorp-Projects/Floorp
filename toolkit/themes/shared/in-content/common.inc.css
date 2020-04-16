@@ -1112,11 +1112,11 @@ html|*.help-icon {
 }
 
 .preferences-icon {
-  background-image: url("chrome://global/skin/icons/settings.svg");
+  background-image: url("chrome://browser/skin/preferences/general.svg");
 }
 
 .addons-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+  list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.svg");
   /* The add-ons icon doesn't have much (any?) margin, so make it a bit smaller. */
   width: 14px;
   height: 14px;

@@ -212,7 +212,7 @@
 }
 
 .search-setting-button-compact > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  list-style-image: url("chrome://browser/skin/settings.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: .6;
