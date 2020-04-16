@@ -2521,7 +2521,7 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // the BlockBorderBackgrounds list.
   nsDisplayListSet childLists(tempLists, tempLists.BlockBorderBackgrounds());
 
-  typedef CSSOrderAwareFrameIterator::OrderState OrderState;
+  using OrderState = CSSOrderAwareFrameIterator::OrderState;
   OrderState orderState =
       HasAnyStateBits(NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
           ? OrderState::eKnownOrdered
@@ -3842,28 +3842,27 @@ void nsFlexContainerFrame::GenerateFlexLines(
       curLine = ConstructNewFlexLine();
     }
 
-    FlexItem* item;
     if (useMozBoxCollapseBehavior &&
         (StyleVisibility::Collapse ==
          childFrame->StyleVisibility()->mVisible)) {
       // Legacy visibility:collapse behavior: make a 0-sized strut. (No need to
       // bother with aStruts and remembering cross size.)
-      item = curLine->Items().EmplaceBack(
-          childFrame, 0, aReflowInput.GetWritingMode(), aAxisTracker);
+      curLine->Items().EmplaceBack(childFrame, 0, aReflowInput.GetWritingMode(),
+                                   aAxisTracker);
     } else if (nextStrutIdx < aStruts.Length() &&
                aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
       // Use the simplified "strut" FlexItem constructor:
-      item = curLine->Items().EmplaceBack(
-          childFrame, aStruts[nextStrutIdx].mStrutCrossSize,
-          aReflowInput.GetWritingMode(), aAxisTracker);
+      curLine->Items().EmplaceBack(childFrame,
+                                   aStruts[nextStrutIdx].mStrutCrossSize,
+                                   aReflowInput.GetWritingMode(), aAxisTracker);
       nextStrutIdx++;
     } else {
-      item = GenerateFlexItemForChild(*curLine, childFrame, aReflowInput,
-                                      aAxisTracker, aHasLineClampEllipsis);
+      GenerateFlexItemForChild(*curLine, childFrame, aReflowInput, aAxisTracker,
+                               aHasLineClampEllipsis);
     }
 
-    // Check if we need to wrap |item| to a new line, i.e. check if the newly
-    // appended outer hypothetical main size pushes our line over the threshold.
+    // Check if we need to wrap the newly appended item to a new line, i.e. if
+    // its outer hypothetical main size pushes our line over the threshold.
     // But we don't wrap if the line-length is unconstrained, nor do we wrap if
     // this was the first item on the line.
     if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&
@@ -3876,8 +3875,10 @@ void nsFlexContainerFrame::GenerateFlexLines(
       // table with "table-layout:fixed". So we use AddChecked() rather than
       // (possibly-overflowing) normal addition, to be sure we don't make the
       // wrong judgement about whether the item fits on this line.
-      nscoord newOuterSize = AddChecked(
-          curLine->TotalOuterHypotheticalMainSize(), item->OuterMainSize());
+      nscoord newOuterSize =
+          AddChecked(curLine->TotalOuterHypotheticalMainSize(),
+                     curLine->Items().LastElement().OuterMainSize());
+
       // Account for gap between this line's previous item and this item
       newOuterSize = AddChecked(newOuterSize, aMainGapSize);
       if (newOuterSize == nscoord_MAX || newOuterSize > wrapThreshold) {
@@ -3888,8 +3889,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
         FlexLine& prevLine = aLines[aLines.Length() - 2];
 
         // Move the item from the end of prevLine to the end of curLine.
-        item =
-            curLine->Items().AppendElement(prevLine.Items().PopLastElement());
+        curLine->Items().AppendElement(prevLine.Items().PopLastElement());
       }
     }
 
