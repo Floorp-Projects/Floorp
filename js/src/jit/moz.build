@@ -252,3 +252,9 @@ GeneratedFile('LOpcodesGenerated.h',
               script='GenerateOpcodeFiles.py',
               entry_point='generate_lir_header',
               inputs=lir_inputs)
+
+# Generate jit/CacheIROpsGenerated.h from jit/CacheIROps.yaml
+GeneratedFile('CacheIROpsGenerated.h',
+              script='GenerateCacheIRFiles.py',
+              entry_point='generate_cacheirops_header',
+              inputs=['CacheIROps.yaml'])
