@@ -930,8 +930,6 @@ bitflags!{
         const RENDER_TASKS = 0b0001;
         ///
         const TEXTURE_CACHE = 0b00001;
-        ///
-        const RASTERIZED_BLOBS = 0b000001;
     }
 }
 

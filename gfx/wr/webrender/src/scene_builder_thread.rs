@@ -21,7 +21,7 @@ use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::LineDecoration;
 use crate::prim_store::picture::Picture;
 use crate::prim_store::text_run::TextRun;
-use crate::resource_cache::{AsyncBlobImageInfo, FontInstanceMap};
+use crate::resource_cache::FontInstanceMap;
 use crate::render_backend::DocumentView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
@@ -58,7 +58,7 @@ pub struct Transaction {
     pub epoch_updates: Vec<(PipelineId, Epoch)>,
     pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
-    pub blob_rasterizer: Option<(Box<dyn AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
+    pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
@@ -84,7 +84,7 @@ impl Transaction {
     }
 
     fn rasterize_blobs(&mut self, is_low_priority: bool) {
-        if let Some((ref mut rasterizer, _)) = self.blob_rasterizer {
+        if let Some(ref mut rasterizer) = self.blob_rasterizer {
             let mut rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
             // try using the existing allocation if our current list is empty
             if self.rasterized_blobs.is_empty() {
@@ -103,7 +103,7 @@ pub struct BuiltTransaction {
     pub built_scene: Option<BuiltScene>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    pub blob_rasterizer: Option<(Box<dyn AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
+    pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
     pub notifications: Vec<NotificationRequest>,
