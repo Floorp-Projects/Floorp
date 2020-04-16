@@ -158,7 +158,7 @@ class AndroidMixin(object):
         if "deprecated_sdk_path" in self.config:
             sdk_path = os.path.abspath(os.path.join(avd_home_dir, '..'))
         else:
-            sdk_path = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'android-sdk-linux')
+            sdk_path = os.path.join(self.abs_dirs['abs_work_dir'], 'android-sdk-linux')
         if os.path.exists(sdk_path):
             env['ANDROID_SDK_HOME'] = sdk_path
             self.info("Found sdk at %s" % sdk_path)
