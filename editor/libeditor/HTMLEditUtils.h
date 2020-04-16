@@ -97,7 +97,6 @@ class HTMLEditUtils final {
   static bool IsMailCite(nsINode* aNode);
   static bool IsFormWidget(nsINode* aNode);
   static bool SupportsAlignAttr(nsINode& aNode);
-  static bool IsContainer(int32_t aTag);
 
   static bool CanNodeContain(const nsINode& aParent, const nsIContent& aChild) {
     switch (aParent.NodeType()) {
@@ -170,6 +169,22 @@ class HTMLEditUtils final {
   }
 
   /**
+   * IsContainerNode() returns true if aContent is a container node.
+   */
+  static bool IsContainerNode(const nsIContent& aContent) {
+    nsHTMLTag tagEnum;
+    // XXX Should this handle #cdata-section too?
+    if (aContent.IsText()) {
+      tagEnum = eHTMLTag_text;
+    } else {
+      // XXX Why don't we use nsHTMLTags::AtomTagToId?  Are there some
+      //     difference?
+      tagEnum = nsHTMLTags::StringTagToId(aContent.NodeName());
+    }
+    return HTMLEditUtils::IsContainerNode(tagEnum);
+  }
+
+  /**
    * See execCommand spec:
    * https://w3c.github.io/editing/execCommand.html#non-list-single-line-container
    * https://w3c.github.io/editing/execCommand.html#single-line-container
@@ -187,6 +202,7 @@ class HTMLEditUtils final {
 
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
+  static bool IsContainerNode(nsHTMLTag aTagId);
 };
 
 /**

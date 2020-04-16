@@ -2067,11 +2067,6 @@ class EditorBase : public nsIEditor,
   bool IsDescendantOfEditorRoot(nsINode* aNode) const;
 
   /**
-   * Returns true if aNode is a container.
-   */
-  virtual bool IsContainer(nsINode* aNode) const;
-
-  /**
    * Counts number of editable child nodes.
    */
   uint32_t CountEditableChildren(nsINode* aNode);

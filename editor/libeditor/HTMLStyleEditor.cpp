@@ -889,7 +889,9 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   RefPtr<HTMLBRElement> brElement;
   // But don't try to split non-containers like `<br>`, `<hr>` and `<img>`
   // element.
-  if (!IsContainer(atStartOfNextNode.GetContainer())) {
+  if (!atStartOfNextNode.IsInContentNode() ||
+      !HTMLEditUtils::IsContainerNode(
+          *atStartOfNextNode.ContainerAsContent())) {
     // If it's a `<br>` element, let's move it into new node later.
     brElement = HTMLBRElement::FromNode(atStartOfNextNode.GetContainer());
     if (!atStartOfNextNode.GetContainerParentAsContent()) {

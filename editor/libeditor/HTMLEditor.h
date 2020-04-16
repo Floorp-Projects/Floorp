@@ -880,11 +880,6 @@ class HTMLEditor final : public TextEditor,
       Element& aElement, int32_t aChange, int32_t* aReturn);
 
   /**
-   * Returns true if aNode is a container.
-   */
-  virtual bool IsContainer(nsINode* aNode) const override;
-
-  /**
    * Join together any adjacent editable text nodes in the range.
    */
   MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange& aRange);

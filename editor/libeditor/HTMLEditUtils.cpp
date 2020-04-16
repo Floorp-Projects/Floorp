@@ -636,11 +636,11 @@ bool HTMLEditUtils::CanNodeContain(nsHTMLTag aParentTagId,
   return !!(parent.mCanContainGroups & child.mGroup);
 }
 
-bool HTMLEditUtils::IsContainer(int32_t aTag) {
-  NS_ASSERTION(aTag > eHTMLTag_unknown && aTag <= eHTMLTag_userdefined,
-               "aTag out of range!");
+bool HTMLEditUtils::IsContainerNode(nsHTMLTag aTagId) {
+  NS_ASSERTION(aTagId > eHTMLTag_unknown && aTagId <= eHTMLTag_userdefined,
+               "aTagId out of range!");
 
-  return kElements[aTag - 1].mIsContainer;
+  return kElements[aTagId - 1].mIsContainer;
 }
 
 bool HTMLEditUtils::IsNonListSingleLineContainer(nsINode& aNode) {

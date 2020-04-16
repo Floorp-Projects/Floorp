@@ -691,7 +691,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // If the container is a text node or a container element except `<table>`
   // element, put caret a end of it.
   if (containerContent->IsText() ||
-      (IsContainer(containerContent) &&
+      (HTMLEditUtils::IsContainerNode(*containerContent) &&
        !HTMLEditUtils::IsTable(containerContent))) {
     pointToPutCaret.SetToEndOf(containerContent);
   }
