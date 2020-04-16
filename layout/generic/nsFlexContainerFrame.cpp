@@ -4244,7 +4244,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
-  const nscoord availableBSizeForContent = availableSizeForItems.BSize(wm);
   const nscoord columnWrapThreshold = availableSizeForItems.BSize(wm);
 
   nscoord contentBoxMainSize =
@@ -4276,6 +4275,16 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   AutoTArray<nsIFrame*, 1> placeholders;
 
   if (!GetPrevInFlow()) {
+    // When fragmenting a single-line flex container, or a multi-line
+    // row-oriented flex container, we want to run the flex algorithm without
+    // regards to pagination in order to compute the flex container's desired
+    // content-box size. https://drafts.csswg.org/css-flexbox-1/#pagination-algo
+    //
+    // XXX: We do want to consider pagination when fragmenting a multi-line
+    // column-oriented flex container, so we'll presumably need to use a
+    // constrained availableBSizeForContent value for that case.
+    const nscoord availableBSizeForContent = NS_UNCONSTRAINEDSIZE;
+
     DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
                  flexContainerAscent, availableBSizeForContent,
                  columnWrapThreshold, lines, struts, placeholders, axisTracker,
@@ -4314,6 +4323,24 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const nscoord effectiveContentBSize =
       contentBoxSize.BSize(wm) - consumedBSize;
 
+  // XXX: DoFlexLayout() calls ComputeMainSize() and ComputeCrossSize() that can
+  // set aStatus to incomplete in one of their codepaths if the
+  // aAvailableBSizeForContent is constrained. However, when fragmenting a
+  // single-line flex container or a multi-line row-oriented flex container, we
+  // want to run the flex algorithm without regards to pagination, so we pass
+  // unconstrained available block-size to DoFlexLayout(). Thus, aStatus
+  // shouldn't be modified. This assertion is to ensure that aStatus remains
+  // clean.
+  //
+  // TODO: We should remove aStatus parameter from DoFlexLayout(),
+  // ComputeMainSize(), and ComputeCrossSize() if it is proven not needed after
+  // completing the support of flex item fragmentation. After that, this
+  // assertion can be removed as well.
+  MOZ_ASSERT(
+      aStatus.IsEmpty(),
+      "DoFlexLayout shouldn't modify aStatus if it is given unconstrained "
+      "page size!");
+
   // Check if we may need a next-in-flow. If so, we'll need to skip block-end
   // border and padding.
   const bool mayNeedNextInFlow =
@@ -4330,12 +4357,10 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       availableSizeForItems, borderPadding, consumedBSize, flexContainerAscent,
       lines, placeholders, axisTracker, hasLineClampEllipsis);
 
-  Unused << maxBlockEndEdgeOfChildren;
-  Unused << areChildrenComplete;
-
-  ComputeFinalSize(aReflowOutput, aReflowInput, aStatus, contentBoxMainSize,
-                   contentBoxCrossSize, flexContainerAscent, lines,
-                   axisTracker);
+  ComputeFinalSize(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
+                   borderPadding, consumedBSize, mayNeedNextInFlow,
+                   maxBlockEndEdgeOfChildren, areChildrenComplete,
+                   flexContainerAscent, lines, axisTracker);
 
   // Finally update our line and item measurements in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
@@ -5033,31 +5058,68 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
 void nsFlexContainerFrame::ComputeFinalSize(
     ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
-    nsReflowStatus& aStatus, const nscoord aContentBoxMainSize,
-    const nscoord aContentBoxCrossSize, nscoord aFlexContainerAscent,
+    nsReflowStatus& aStatus, const LogicalSize& aContentBoxSize,
+    const LogicalMargin& aBorderPadding, const nscoord aConsumedBSize,
+    const bool aMayNeedNextInFlow, const nscoord aMaxBlockEndEdgeOfChildren,
+    const bool aAreChildrenComplete, nscoord aFlexContainerAscent,
     nsTArray<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker) {
-  // XXXTYLin: Can we prepare side-skipped border and padding in Reflow() and
-  // pass it down here?
   const WritingMode flexWM = aReflowInput.GetWritingMode();
-  LogicalMargin containerBP = aReflowInput.ComputedLogicalBorderPadding();
-
-  // Unconditionally skip block-end border & padding for now, regardless of
-  // writing-mode/GetLogicalSkipSides.  We add it lower down, after we've
-  // established baseline and decided whether bottom border-padding fits (if
-  // we're fragmented).
-  const nscoord blockEndContainerBP = containerBP.BEnd(flexWM);
-  const LogicalSides skipSides =
-      GetLogicalSkipSides(&aReflowInput) | LogicalSides(eLogicalSideBitsBEnd);
-  containerBP.ApplySkipSides(skipSides);
 
   // Compute flex container's reflow-output measurements (in its own
-  // writing-mode), starting w/ content-box size & growing from there:
-  LogicalSize reflowOutputInFlexWM =
-      aAxisTracker.LogicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
-                                                    aContentBoxCrossSize);
-  // Add border/padding (w/ skipSides already applied):
-  reflowOutputInFlexWM.ISize(flexWM) += containerBP.IStartEnd(flexWM);
-  reflowOutputInFlexWM.BSize(flexWM) += containerBP.BStartEnd(flexWM);
+  // writing-mode).
+  LogicalSize reflowOutputInFlexWM(flexWM);
+  reflowOutputInFlexWM.ISize(flexWM) =
+      aContentBoxSize.ISize(flexWM) + aBorderPadding.IStartEnd(flexWM);
+
+  // Unconditionally skip adding block-end border and padding for now. We add it
+  // lower down, after we've established baseline and decided whether bottom
+  // border-padding fits (if we're fragmented).
+  const nscoord effectiveContentBSizeWithBStartBP =
+      aContentBoxSize.BSize(flexWM) - aConsumedBSize +
+      aBorderPadding.BStart(flexWM);
+  nscoord blockEndContainerBP = aBorderPadding.BEnd(flexWM);
+
+  if (aMayNeedNextInFlow) {
+    // We assume our status should be reported as incomplete because we may need
+    // a next-in-flow.
+    bool isStatusIncomplete = true;
+
+    const nscoord availableBSizeMinusBEndBP =
+        aReflowInput.AvailableBSize() - aBorderPadding.BEnd(flexWM);
+
+    if (aMaxBlockEndEdgeOfChildren <= availableBSizeMinusBEndBP) {
+      // Consume all the available block-size.
+      reflowOutputInFlexWM.BSize(flexWM) = availableBSizeMinusBEndBP;
+    } else {
+      // This case happens if we have some tall unbreakable children exceeding
+      // the available block-size.
+      reflowOutputInFlexWM.BSize(flexWM) = std::min(
+          effectiveContentBSizeWithBStartBP, aMaxBlockEndEdgeOfChildren);
+
+      if (aMaxBlockEndEdgeOfChildren >= effectiveContentBSizeWithBStartBP) {
+        // Some unbreakable children force us to consume all of our content
+        // block-size, and make us complete.
+        isStatusIncomplete = false;
+
+        // We also potentially need to get the unskipped block-end border and
+        // padding (if we assumed it'd be skipped as part of our tentative
+        // assumption that we'd be complete).
+        if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+            StyleBoxDecorationBreak::Slice) {
+          blockEndContainerBP =
+              aReflowInput.ComputedLogicalBorderPadding().BEnd(flexWM);
+        }
+      }
+    }
+
+    if (isStatusIncomplete) {
+      aStatus.SetIncomplete();
+    }
+  } else {
+    // Our own effective content-box block-size can fit within the available
+    // block-size.
+    reflowOutputInFlexWM.BSize(flexWM) = effectiveContentBSizeWithBStartBP;
+  }
 
   if (aFlexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
@@ -5086,27 +5148,39 @@ void nsFlexContainerFrame::ComputeFinalSize(
     aReflowOutput.SetBlockStartAscent(aFlexContainerAscent);
   }
 
-  // Now: If we're complete, add bottom border/padding to desired height (which
-  // we skipped via skipSides) -- unless that pushes us over available height,
-  // in which case we become incomplete (unless we already weren't asking for
-  // any height, in which case we stay complete to avoid looping forever).
-  // NOTE: If we're auto-height, we allow our bottom border/padding to push us
-  // over the available height without requesting a continuation, for
-  // consistency with the behavior of "display:block" elements.
-  if (aStatus.IsComplete()) {
-    nscoord desiredBSizeWithBEndBP =
-        reflowOutputInFlexWM.BSize(flexWM) + blockEndContainerBP;
+  // Now, we account for how the block-end border and padding (if any) impacts
+  // our desired size. If adding it pushes us over the available block-size,
+  // then we become incomplete (unless we already weren't asking for any
+  // block-size, in which case we stay complete to avoid looping forever).
+  //
+  // NOTE: If we have auto block-size, we allow our block-end border and padding
+  // to push us over the available block-size without requesting a continuation,
+  // for consistency with the behavior of "display:block" elements.
+  const nscoord effectiveContentBSizeWithBStartEndBP =
+      reflowOutputInFlexWM.BSize(flexWM) + blockEndContainerBP;
 
-    if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE ||
-        reflowOutputInFlexWM.BSize(flexWM) == 0 ||
-        desiredBSizeWithBEndBP <= aReflowInput.AvailableBSize() ||
-        aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
-      // Update desired height to include block-end border/padding
-      reflowOutputInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
-    } else {
-      // We couldn't fit bottom border/padding, so we'll need a continuation.
-      aStatus.SetIncomplete();
+  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+      effectiveContentBSizeWithBStartEndBP > aReflowInput.AvailableBSize() &&
+      reflowOutputInFlexWM.BSize(flexWM) != 0 &&
+      aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+    // We couldn't fit with the block-end border and padding included, so we'll
+    // need a continuation.
+    aStatus.SetIncomplete();
+
+    if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+        StyleBoxDecorationBreak::Slice) {
+      blockEndContainerBP = 0;
     }
+  }
+
+  // The variable "blockEndContainerBP" now accurately reflects how much (if
+  // any) block-end border and padding we want for this frame, so we can proceed
+  // to add it in.
+  reflowOutputInFlexWM.BSize(flexWM) += blockEndContainerBP;
+
+  if (aStatus.IsComplete() && !aAreChildrenComplete) {
+    aStatus.SetOverflowIncomplete();
+    aStatus.SetNextInFlowNeedsReflow();
   }
 
   // Calculate the container baselines so that our parent can baseline-align us.
