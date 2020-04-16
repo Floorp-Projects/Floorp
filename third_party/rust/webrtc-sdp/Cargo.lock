@@ -140,7 +140,7 @@ dependencies = [
 
 [[package]]
 name = "webrtc-sdp"
-version = "0.3.5"
+version = "0.3.4"
 dependencies = [
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.102 (registry+https://github.com/rust-lang/crates.io-index)",

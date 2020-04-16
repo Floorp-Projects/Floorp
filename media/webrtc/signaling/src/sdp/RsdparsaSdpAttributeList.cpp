@@ -680,9 +680,6 @@ std::tuple<SdpRtpmapAttributeList::CodecType, FmtDefaults> strToCodecType(
   } else if (!nsCRT::strcasecmp(name.c_str(), "telephone-event")) {
     codec = SdpRtpmapAttributeList::kTelephoneEvent;
     defaults = {1};
-  } else if (!nsCRT::strcasecmp(name.c_str(), "rtx")) {
-    codec = SdpRtpmapAttributeList::kRtx;
-    defaults = {0};
   }
   return std::make_tuple(codec, defaults);
 }
@@ -780,16 +777,11 @@ void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
 
       fmtpParameters.reset(
           new SdpFmtpAttributeList::RedParameters(std::move(redParameters)));
-    } else if (codecName == "RTX") {
-      MOZ_ASSERT(rustFmtpParameters.rtx);
-      rustFmtpParameters.rtx.apply([&](const auto& aRtx) {
-        fmtpParameters.reset(
-            new SdpFmtpAttributeList::RtxParameters(aRtx.apt, aRtx.rtx_time));
-      });
     } else {
       // The parameter set is unknown so skip it
       continue;
     }
+
     fmtpList->PushEntry(std::to_string(payloadType), std::move(fmtpParameters));
   }
   SetAttribute(fmtpList.release());
