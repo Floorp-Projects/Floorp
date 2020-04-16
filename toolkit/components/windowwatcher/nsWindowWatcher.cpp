@@ -1147,6 +1147,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     loadState = new nsDocShellLoadState(uriToLoad);
 
     loadState->SetSourceBrowsingContext(parentBC);
+    loadState->SetHasValidUserGestureActivation(
+        parentBC && parentBC->HasValidTransientUserGestureActivation());
 
     if (subjectPrincipal) {
       loadState->SetTriggeringPrincipal(subjectPrincipal);

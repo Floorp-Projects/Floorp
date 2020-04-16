@@ -103,6 +103,8 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
   if (referrerInfo) {
     loadState->SetReferrerInfo(referrerInfo);
   }
+  loadState->SetHasValidUserGestureActivation(
+      doc->HasValidTransientUserGestureActivation());
 
   return loadState.forget();
 }
@@ -130,7 +132,10 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
       nsContentUtils::CallerInnerWindow();
   if (sourceWindow) {
-    loadState->SetSourceBrowsingContext(sourceWindow->GetBrowsingContext());
+    RefPtr<BrowsingContext> sourceBC = sourceWindow->GetBrowsingContext();
+    loadState->SetSourceBrowsingContext(sourceBC);
+    loadState->SetHasValidUserGestureActivation(
+        sourceBC && sourceBC->HasValidTransientUserGestureActivation());
   }
 
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);

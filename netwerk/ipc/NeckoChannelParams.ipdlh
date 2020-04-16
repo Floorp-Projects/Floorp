@@ -146,6 +146,7 @@ struct LoadInfoArgs
   nsString                    cspNonce;
   bool                        skipContentSniffing;
   uint32_t                    httpsOnlyStatus;
+  bool                        hasValidUserGestureActivation;
   bool                        allowDeprecatedSystemRequests;
   bool                        parserCreatedScript;
   bool                        isFromProcessingFrameAttributes;
@@ -188,6 +189,12 @@ struct ParentLoadInfoForwarderArgs
   bool skipContentSniffing;
 
   uint32_t httpsOnlyStatus;
+
+  // Returns true if at the time of the loadinfo construction the document
+  // that triggered this load has the bit hasValidTransientUserGestureActivation
+  // set or the load was triggered from External. (Mostly this bool is used
+  // in the context of Sec-Fetch-User.)
+  bool hasValidUserGestureActivation;
 
   // The SystemPrincipal is disallowed to make requests to the public web
   // and all requests will be cancelled. Setting this flag to true prevents

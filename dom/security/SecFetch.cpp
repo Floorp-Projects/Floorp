@@ -288,12 +288,24 @@ void SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
 }
 
 void SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
-  // TODO: Bug 1621987: Implement Sec-Fetch-User
+  nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
+  nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
 
-  // nsAutoCString user("?1");
-  // nsresult rv = aHTTPChannel->SetRequestHeader(
-  //     NS_LITERAL_CSTRING("Sec-Fetch-User"), user, false);
-  // Unused << NS_WARN_IF(NS_FAILED(rv));
+  // sec-fetch-user only applies to loads of type document or subdocument
+  if (externalType != nsIContentPolicy::TYPE_DOCUMENT &&
+      externalType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    return;
+  }
+
+  // sec-fetch-user only applies if the request is user triggered
+  if (!loadInfo->GetHasValidUserGestureActivation()) {
+    return;
+  }
+
+  nsAutoCString user("?1");
+  nsresult rv = aHTTPChannel->SetRequestHeader(
+      NS_LITERAL_CSTRING("Sec-Fetch-User"), user, false);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 void SecFetch::AddSecFetchHeader(nsIHttpChannel* aHTTPChannel) {

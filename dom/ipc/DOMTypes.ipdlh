@@ -255,6 +255,7 @@ struct DocShellLoadStateInit
   nsIURI BaseURI;
   uint32_t LoadFlags;
   bool FirstParty;
+  bool HasValidUserGestureActivation;
   nsCString TypeHint;
   nsString FileName;
   bool IsFromProcessingFrameAttributes;

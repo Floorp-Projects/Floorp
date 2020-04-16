@@ -546,6 +546,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
@@ -747,6 +748,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
       loadInfoArgs.httpsOnlyStatus(),
+      loadInfoArgs.hasValidUserGestureActivation(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
       loadInfoArgs.parserCreatedScript(), loadInfoArgs.hasStoragePermission(),
       loadInfoArgs.requestBlockingReason(), loadingContext);
@@ -787,6 +789,7 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(),
       aLoadInfo->GetBypassCORSChecks(), ipcController, tainting,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
@@ -825,6 +828,10 @@ nsresult MergeParentLoadInfoForwarder(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHttpsOnlyStatus(aForwarderArgs.httpsOnlyStatus());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetHasValidUserGestureActivation(
+      aForwarderArgs.hasValidUserGestureActivation());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetAllowDeprecatedSystemRequests(

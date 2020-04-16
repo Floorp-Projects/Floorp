@@ -3937,6 +3937,9 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
   loadState->SetLoadType(LOAD_ERROR_PAGE);
   loadState->SetFirstParty(true);
   loadState->SetSourceBrowsingContext(mBrowsingContext);
+  loadState->SetHasValidUserGestureActivation(
+      mBrowsingContext &&
+      mBrowsingContext->HasValidTransientUserGestureActivation());
 
   return InternalLoad(loadState, nullptr, nullptr);
 }
@@ -4041,6 +4044,9 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     loadState->SetSrcdocData(srcdoc);
     loadState->SetSourceBrowsingContext(mBrowsingContext);
     loadState->SetBaseURI(baseURI);
+    loadState->SetHasValidUserGestureActivation(
+        mBrowsingContext &&
+        mBrowsingContext->HasValidTransientUserGestureActivation());
     rv = InternalLoad(loadState, nullptr, nullptr);
   }
 
@@ -5115,6 +5121,8 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   loadState->SetTriggeringPrincipal(principal);
   if (doc) {
     loadState->SetCsp(doc->GetCsp());
+    loadState->SetHasValidUserGestureActivation(
+        doc->HasValidTransientUserGestureActivation());
   }
 
   loadState->SetPrincipalIsExplicit(true);
@@ -8273,6 +8281,9 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       loadState->SetForceAllowDataURI(
           aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
 
+      loadState->SetHasValidUserGestureActivation(
+          aLoadState->HasValidUserGestureActivation());
+
       rv = win->Open(NS_ConvertUTF8toUTF16(spec),
                      aLoadState->Target(),  // window name
                      EmptyString(),         // Features
@@ -9757,6 +9768,15 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                          Maybe<mozilla::dom::ClientInfo>(),
                          Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
                          sandboxFlags);
+
+  // in case this docshell load was triggered by a valid transient user gesture,
+  // or also the load originates from external, then we pass that information on
+  // to the loadinfo, which allows e.g. setting Sec-Fetch-User request headers.
+  if (mBrowsingContext->HasValidTransientUserGestureActivation() ||
+      aLoadState->HasValidUserGestureActivation() ||
+      aLoadState->HasLoadFlags(LOAD_FLAGS_FROM_EXTERNAL)) {
+    loadInfo->SetHasValidUserGestureActivation(true);
+  }
 
   /* Get the cache Key from SH */
   uint32_t cacheKey = 0;
@@ -12203,6 +12223,9 @@ nsresult nsDocShell::OnLinkClickSync(
   loadState->SetFirstParty(true);
   loadState->SetSourceBrowsingContext(mBrowsingContext);
   loadState->SetIsFormSubmission(aContent->IsHTMLElement(nsGkAtoms::form));
+  loadState->SetHasValidUserGestureActivation(
+      mBrowsingContext &&
+      mBrowsingContext->HasValidTransientUserGestureActivation());
   nsresult rv = InternalLoad(loadState, aDocShell, aRequest);
 
   if (NS_SUCCEEDED(rv)) {
