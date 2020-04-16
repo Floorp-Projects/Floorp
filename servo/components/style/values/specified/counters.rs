@@ -12,7 +12,7 @@ use crate::values::generics::counters::CounterPair;
 #[cfg(feature = "gecko")]
 use crate::values::generics::CounterStyle;
 use crate::values::specified::url::SpecifiedImageUrl;
-#[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
+#[cfg(feature = "gecko")]
 use crate::values::specified::Attr;
 use crate::values::specified::Integer;
 use crate::values::CustomIdent;
@@ -134,7 +134,7 @@ impl Parse for Content {
         let mut content = vec![];
         let mut has_alt_content = false;
         loop {
-            #[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
+            #[cfg(feature = "gecko")]
             {
                 if let Ok(url) = input.try(|i| SpecifiedImageUrl::parse(context, i)) {
                     content.push(generics::ContentItem::Url(url));
@@ -163,7 +163,7 @@ impl Parse for Content {
                             let style = Content::parse_counter_style(context, input);
                             Ok(generics::ContentItem::Counters(name, separator, style))
                         }),
-                        #[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
+                        #[cfg(feature = "gecko")]
                         "attr" => input.parse_nested_block(|input| {
                             Ok(generics::ContentItem::Attr(Attr::parse_function(context, input)?))
                         }),

@@ -122,18 +122,7 @@ impl ToComputedValue for LineHeight {
 }
 
 /// A generic value for the `text-overflow` property.
-#[derive(
-    Clone,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
+#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
 #[repr(C, u8)]
 pub enum TextOverflowSide {
     /// Clip inline content.
@@ -228,7 +217,7 @@ impl ToComputedValue for TextOverflow {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, Serialize, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[value_info(other_values = "none,underline,overline,line-through,blink")]
     #[repr(C)]
     /// Specified keyword values for the text-decoration-line property.
@@ -252,12 +241,6 @@ bitflags! {
         /// a red text decoration
         #[cfg(feature = "gecko")]
         const COLOR_OVERRIDE = 0x10;
-    }
-}
-
-impl Default for TextDecorationLine {
-    fn default() -> Self {
-        TextDecorationLine::NONE
     }
 }
 
@@ -698,19 +681,7 @@ pub enum TextEmphasisStyle {
 }
 
 /// Fill mode for the text-emphasis-style property
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    MallocSizeOf,
-    Parse,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToCss,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
 #[repr(u8)]
 pub enum TextEmphasisFillMode {
     /// `filled`

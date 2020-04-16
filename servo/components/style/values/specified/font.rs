@@ -20,6 +20,7 @@ use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
 use crate::values::specified::{NoCalcLength, NonNegativeNumber, Number, Percentage};
 use crate::values::CustomIdent;
 use crate::Atom;
+use byteorder::{BigEndian, ByteOrder};
 use cssparser::{Parser, Token};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -60,7 +61,7 @@ macro_rules! system_font_methods {
                 None
             }
         }
-    };
+    }
 }
 
 const DEFAULT_SCRIPT_MIN_SIZE_PT: u32 = 8;
@@ -2046,9 +2047,19 @@ impl FontLanguageOverride {
     #[inline]
     pub fn compute_non_system(&self) -> computed::FontLanguageOverride {
         match *self {
-            FontLanguageOverride::Normal => computed::FontLanguageOverride::zero(),
+            FontLanguageOverride::Normal => computed::FontLanguageOverride(0),
             FontLanguageOverride::Override(ref lang) => {
-                computed::FontLanguageOverride::from_str(lang)
+                if lang.is_empty() || lang.len() > 4 {
+                    return computed::FontLanguageOverride(0);
+                }
+                let mut bytes = [b' '; 4];
+                for (byte, lang_byte) in bytes.iter_mut().zip(lang.as_bytes()) {
+                    if !lang_byte.is_ascii() {
+                        return computed::FontLanguageOverride(0);
+                    }
+                    *byte = *lang_byte;
+                }
+                computed::FontLanguageOverride(BigEndian::read_u32(&bytes))
             },
             FontLanguageOverride::System(..) => unreachable!(),
         }
@@ -2069,10 +2080,19 @@ impl ToComputedValue for FontLanguageOverride {
     }
     #[inline]
     fn from_computed_value(computed: &computed::FontLanguageOverride) -> Self {
-        if *computed == computed::FontLanguageOverride::zero() {
+        if computed.0 == 0 {
             return FontLanguageOverride::Normal;
         }
-        FontLanguageOverride::Override(computed.to_str(&mut [0; 4]).into())
+        let mut buf = [0; 4];
+        BigEndian::write_u32(&mut buf, computed.0);
+        FontLanguageOverride::Override(
+            if cfg!(debug_assertions) {
+                String::from_utf8(buf.to_vec()).unwrap()
+            } else {
+                unsafe { String::from_utf8_unchecked(buf.to_vec()) }
+            }
+            .into_boxed_str(),
+        )
     }
 }
 
