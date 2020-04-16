@@ -523,7 +523,7 @@ async function testThrowingGetter(oi) {
 
   node = findObjectInspectorNode(oi, "myThrowingGetter");
   ok(
-    node.textContent.includes(`myThrowingGetter: Error: "myError"`),
+    node.textContent.includes(`myThrowingGetter: Error`),
     "throwing getter does show the error"
   );
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");

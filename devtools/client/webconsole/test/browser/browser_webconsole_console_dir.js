@@ -87,6 +87,46 @@ add_task(async function() {
     el => el.textContent
   );
   is(JSON.stringify(propertiesNodes), JSON.stringify(objectPropertiesNames));
+
+  info("console.dir on an error object");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    const err = new Error("myErrorMessage");
+    err.myCustomProperty = "myCustomPropertyValue";
+    content.wrappedJSObject.console.dir(err);
+  });
+  dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 2));
+  objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
+  is(
+    objectInspectors.length,
+    1,
+    "There is the expected number of object inspectors"
+  );
+  const [errorOi] = objectInspectors;
+  let errorOiNodes = errorOi.querySelectorAll(".node");
+  // The tree can be collapsed since the properties are fetched asynchronously.
+  if (errorOiNodes.length === 1) {
+    // If this is the case, we wait for the properties to be fetched and displayed.
+    await waitForNodeMutation(errorOi, {
+      childList: true,
+    });
+    errorOiNodes = errorOi.querySelectorAll(".node");
+  }
+
+  propertiesNodes = [...errorOi.querySelectorAll(".object-label")].map(
+    el => el.textContent
+  );
+  is(
+    JSON.stringify(propertiesNodes),
+    JSON.stringify([
+      "columnNumber",
+      "fileName",
+      "lineNumber",
+      "message",
+      "myCustomProperty",
+      "stack",
+      "<prototype>",
+    ])
+  );
 });
 
 function findConsoleDir(node, index) {
