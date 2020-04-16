@@ -1304,7 +1304,7 @@ class UrlbarView {
   }
 
   _enableOrDisableOneOffSearches(enable = true) {
-    if (enable && UrlbarPrefs.get("oneOffSearches")) {
+    if (enable) {
       this.oneOffSearchButtons.telemetryOrigin = "urlbar";
       this.oneOffSearchButtons.style.display = "";
       this.oneOffSearchButtons.textbox = this.input.inputField;
