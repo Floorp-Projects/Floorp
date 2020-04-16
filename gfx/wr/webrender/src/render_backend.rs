@@ -1005,9 +1005,6 @@ impl RenderBackend {
                                 txn.rasterized_blobs.take(),
                                 &mut profile_counters.resources.texture_cache,
                             );
-                            if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
-                                self.resource_cache.set_blob_rasterizer(rasterizer, info);
-                            }
 
                             self.update_document(
                                 txn.document_id,
