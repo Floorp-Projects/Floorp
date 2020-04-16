@@ -8,9 +8,9 @@
 # taskcluster/scripts/misc/repack-node.sh. Later we'll get the ESLint builder
 # to use the linux64-node toolchain directly.
 
-wget --progress=dot:mega https://nodejs.org/dist/latest-v10.x/node-v10.19.0-linux-x64.tar.xz
+wget -O node.xz --progress=dot:mega https://nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64.tar.xz
 
-echo '34127c7c6b1ba02d6d4dc3a926f38a5fb88bb37fc7f051349005ce331c7a53c6  node-v10.19.0-linux-x64.tar.xz' | sha256sum -c
-tar -C /usr/local -xJ --strip-components 1 < node-v10.19.0-linux-x64.tar.xz
+echo '34127c7c6b1ba02d6d4dc3a926f38a5fb88bb37fc7f051349005ce331c7a53c6  node.xz' | sha256sum -c
+tar -C /usr/local -xJ --strip-components 1 < node.xz
 node -v  # verify
 npm -v
