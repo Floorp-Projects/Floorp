@@ -329,6 +329,32 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.ret();
 }
 
+// Push AllRegs in a way that is compatible with RegisterDump, regardless of
+// what PushRegsInMask might do to reduce the set size.
+static void DumpAllRegs(MacroAssembler& masm) {
+  if (JitSupportsSimd()) {
+    masm.PushRegsInMask(AllRegs);
+  } else {
+    // When SIMD isn't supported, PushRegsInMask reduces the set of float
+    // registers to be double-sized, while the RegisterDump expects each of
+    // the float registers to have the maximal possible size
+    // (Simd128DataSize). To work around this, we just spill the double
+    // registers by hand here, using the register dump offset directly.
+    for (GeneralRegisterBackwardIterator iter(AllRegs.gprs()); iter.more();
+         ++iter) {
+      masm.Push(*iter);
+    }
+
+    masm.reserveStack(sizeof(RegisterDump::FPUArray));
+    for (FloatRegisterBackwardIterator iter(AllRegs.fpus()); iter.more();
+         ++iter) {
+      FloatRegister reg = *iter;
+      Address spillAddress(StackPointer, reg.getRegisterDumpOffsetInBytes());
+      masm.storeDouble(reg, spillAddress);
+    }
+  }
+}
+
 void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   // See explanatory comment in x86's JitRuntime::generateInvalidator.
 
@@ -337,7 +363,7 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   masm.addq(Imm32(sizeof(uintptr_t)), rsp);
 
   // Push registers such that we can access them from [base + code].
-  masm.PushRegsInMask(AllRegs);
+  DumpAllRegs(masm);
 
   masm.movq(rsp, rax);  // Argument to jit::InvalidationBailout.
 
@@ -520,28 +546,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm) {
 
 static void PushBailoutFrame(MacroAssembler& masm, Register spArg) {
   // Push registers such that we can access them from [base + code].
-  if (JitSupportsSimd()) {
-    masm.PushRegsInMask(AllRegs);
-  } else {
-    // When SIMD isn't supported, PushRegsInMask reduces the set of float
-    // registers to be double-sized, while the RegisterDump expects each of
-    // the float registers to have the maximal possible size
-    // (Simd128DataSize). To work around this, we just spill the double
-    // registers by hand here, using the register dump offset directly.
-    for (GeneralRegisterBackwardIterator iter(AllRegs.gprs()); iter.more();
-         ++iter) {
-      masm.Push(*iter);
-    }
-
-    masm.reserveStack(sizeof(RegisterDump::FPUArray));
-    for (FloatRegisterBackwardIterator iter(AllRegs.fpus()); iter.more();
-         ++iter) {
-      FloatRegister reg = *iter;
-      Address spillAddress(StackPointer, reg.getRegisterDumpOffsetInBytes());
-      masm.storeDouble(reg, spillAddress);
-    }
-  }
-
+  DumpAllRegs(masm);
   // Get the stack pointer into a register, pre-alignment.
   masm.movq(rsp, spArg);
 }
