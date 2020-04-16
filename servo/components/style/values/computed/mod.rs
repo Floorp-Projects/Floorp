@@ -22,6 +22,8 @@ use crate::properties;
 use crate::properties::{ComputedValues, LonghandId, StyleBuilder};
 use crate::rule_cache::RuleCacheConditions;
 use crate::{ArcSlice, Atom};
+#[cfg(feature = "servo")]
+use crate::Prefix;
 use euclid::default::Size2D;
 use servo_arc::Arc;
 use std::cell::RefCell;
@@ -499,9 +501,7 @@ trivial_to_computed_value!(u32);
 trivial_to_computed_value!(usize);
 trivial_to_computed_value!(Atom);
 #[cfg(feature = "servo")]
-trivial_to_computed_value!(html5ever::Namespace);
-#[cfg(feature = "servo")]
-trivial_to_computed_value!(html5ever::Prefix);
+trivial_to_computed_value!(Prefix);
 trivial_to_computed_value!(String);
 trivial_to_computed_value!(Box<str>);
 trivial_to_computed_value!(crate::OwnedStr);
