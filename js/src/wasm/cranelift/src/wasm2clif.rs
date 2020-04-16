@@ -259,11 +259,13 @@ const FN_POST_BARRIER: InstanceCall = InstanceCall {
 
 pub const TRAP_THROW_REPORTED: u16 = 1;
 
-/// A `TargetIsa` and `ModuleEnvironment` joined so we can implement `FuncEnvironment`.
-pub struct TransEnv<'a, 'b, 'c> {
-    isa: &'a dyn TargetIsa,
-    env: &'b bindings::ModuleEnvironment<'b>,
-    static_env: &'c bindings::StaticEnvironment,
+/// A translation context that implements `FuncEnvironment` for the specific Spidermonkey
+/// translation bits.
+pub struct TransEnv<'static_env, 'module_env> {
+    env: bindings::ModuleEnvironment<'module_env>,
+    static_env: &'static_env bindings::StaticEnvironment,
+
+    target_frontend_config: TargetFrontendConfig,
 
     /// Information about the function pointer tables `self.env` knowns about. Indexed by table
     /// index.
@@ -307,16 +309,16 @@ pub struct TransEnv<'a, 'b, 'c> {
     realm_addr: PackedOption<ir::GlobalValue>,
 }
 
-impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
+impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
     pub fn new(
-        isa: &'a dyn TargetIsa,
-        env: &'b bindings::ModuleEnvironment,
-        static_env: &'c bindings::StaticEnvironment,
+        isa: &dyn TargetIsa,
+        env: bindings::ModuleEnvironment<'module_env>,
+        static_env: &'static_env bindings::StaticEnvironment,
     ) -> Self {
         TransEnv {
-            isa,
             env,
             static_env,
+            target_frontend_config: isa.frontend_config(),
             tables: PrimaryMap::new(),
             signatures: HashMap::new(),
             func_gvs: SecondaryMap::new(),
@@ -327,6 +329,20 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             cx_addr: None.into(),
             realm_addr: None.into(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.tables.clear();
+        self.signatures.clear();
+        self.func_gvs.clear();
+        self.vmctx_gv = None.into();
+        self.instance_gv = None.into();
+        self.interrupt_gv = None.into();
+        for entry in self.symbolic.iter_mut() {
+            *entry = None.into();
+        }
+        self.cx_addr = None.into();
+        self.realm_addr = None.into();
     }
 
     /// Get the `vmctx` global value.
@@ -645,17 +661,16 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
     }
 }
 
-impl<'a, 'b, 'c> TargetEnvironment for TransEnv<'a, 'b, 'c> {
+impl<'static_env, 'module_env> TargetEnvironment for TransEnv<'static_env, 'module_env> {
     fn target_config(&self) -> TargetFrontendConfig {
-        self.isa.frontend_config()
+        self.target_frontend_config
     }
-
     fn pointer_type(&self) -> ir::Type {
         POINTER_TYPE
     }
 }
 
-impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
+impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module_env> {
     fn make_global(
         &mut self,
         func: &mut ir::Function,

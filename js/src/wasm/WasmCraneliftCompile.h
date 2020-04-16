@@ -36,6 +36,8 @@ MOZ_MUST_USE bool CraneliftCompileFunctions(
     const ModuleEnvironment& env, LifoAlloc& lifo,
     const FuncCompileInputVector& inputs, CompiledCode* code,
     UniqueChars* error);
+
+void CraneliftFreeReusableData(void* data);
 #else
 MOZ_MUST_USE inline bool CraneliftPlatformSupport() { return false; }
 
@@ -45,6 +47,8 @@ MOZ_MUST_USE inline bool CraneliftCompileFunctions(
     UniqueChars* error) {
   MOZ_CRASH("Should not happen");
 }
+
+void CraneliftFreeReusableData(void* data) {}
 #endif
 
 }  // namespace wasm

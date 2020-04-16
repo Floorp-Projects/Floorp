@@ -73,9 +73,9 @@ impl CompiledFunc {
         }
     }
 
-    fn reset(self: &mut Self, frame_pushed: StackSize, contains_calls: bool) {
-        self.frame_pushed = frame_pushed;
-        self.contains_calls = contains_calls;
+    fn clear(&mut self) {
+        self.frame_pushed = 0;
+        self.contains_calls = false;
         self.metadata.clear();
         self.rodata_relocs.clear();
         self.code_buffer.clear();
@@ -87,32 +87,57 @@ impl CompiledFunc {
 
 /// A batch compiler holds on to data structures that can be recycled for multiple function
 /// compilations.
-pub struct BatchCompiler<'a, 'b> {
-    static_environ: &'a bindings::StaticEnvironment,
-    environ: bindings::ModuleEnvironment<'b>,
+pub struct BatchCompiler<'static_env, 'module_env> {
+    // Attributes that are constant accross multiple compilations.
+    static_environ: &'static_env bindings::StaticEnvironment,
+    environ: bindings::ModuleEnvironment<'module_env>,
     isa: Box<dyn TargetIsa>,
-    context: Context,
+
+    // Stateless attributes.
+    func_translator: FuncTranslator,
     dummy_module_state: ModuleTranslationState,
-    trans: FuncTranslator,
+
+    // Mutable attributes.
+    /// Cranelift overall context.
+    context: Context,
+
+    /// Temporary storage for trap relocations before they're moved back to the CompiledFunc.
+    trap_relocs: Traps,
+
+    /// The translation from wasm to clif environment.
+    trans_env: TransEnv<'static_env, 'module_env>,
+
+    /// Results of the current compilation.
     pub current_func: CompiledFunc,
 }
 
-impl<'a, 'b> BatchCompiler<'a, 'b> {
+impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
     pub fn new(
-        static_environ: &'a bindings::StaticEnvironment,
-        environ: bindings::ModuleEnvironment<'b>,
+        static_environ: &'static_env bindings::StaticEnvironment,
+        environ: bindings::ModuleEnvironment<'module_env>,
     ) -> DashResult<Self> {
-        // TODO: The target ISA could be shared by multiple batch compilers across threads.
+        let isa = make_isa(static_environ)?;
+        let trans_env = TransEnv::new(&*isa, environ, static_environ);
         Ok(BatchCompiler {
             static_environ,
             environ,
-            isa: make_isa(static_environ)?,
-            context: Context::new(),
+            isa,
+            func_translator: FuncTranslator::new(),
             // TODO for Cranelift to support multi-value, feed it the real type section here.
             dummy_module_state: ModuleTranslationState::new(),
-            trans: FuncTranslator::new(),
+            context: Context::new(),
+            trap_relocs: Traps::new(),
+            trans_env,
             current_func: CompiledFunc::new(),
         })
+    }
+
+    /// Clears internal data structures.
+    pub fn clear(&mut self) {
+        self.context.clear();
+        self.trap_relocs.clear();
+        self.trans_env.clear();
+        self.current_func.clear();
     }
 
     pub fn compile(&mut self, stackmaps: bindings::Stackmaps) -> CodegenResult<()> {
@@ -123,10 +148,6 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
     /// Translate the WebAssembly code to Cranelift IR.
     pub fn translate_wasm(&mut self, func: &bindings::FuncCompileInput) -> WasmResult<()> {
-        self.context.clear();
-
-        let tenv = &mut TransEnv::new(&*self.isa, &self.environ, self.static_environ);
-
         // Set up the signature before translating the WebAssembly byte code.
         // The translator refers to it.
         let index = FuncIndex::new(func.index as usize);
@@ -135,12 +156,12 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             init_sig(&self.environ, self.static_environ.call_conv(), index)?;
         self.context.func.name = wasm_function_name(index);
 
-        self.trans.translate(
+        self.func_translator.translate(
             &self.dummy_module_state,
             func.bytecode(),
             func.offset_in_module as usize,
             &mut self.context.func,
-            tenv,
+            &mut self.trans_env,
         )?;
 
         info!("Translated wasm function {}.", func.index);
@@ -159,7 +180,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             total_size, frame_pushed
         );
 
-        self.current_func.reset(frame_pushed, contains_calls);
+        self.current_func.frame_pushed = frame_pushed;
+        self.current_func.contains_calls = contains_calls;
 
         // TODO: If we can get a pointer into `size` pre-allocated bytes of memory, we wouldn't
         // have to allocate and copy here.
@@ -176,7 +198,6 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         }
 
         {
-            let mut traps = Traps::new();
             let mut relocs = Relocations::new(
                 &mut self.current_func.metadata,
                 &mut self.current_func.rodata_relocs,
@@ -188,12 +209,14 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
                     &*self.isa,
                     code_buffer.as_mut_ptr(),
                     &mut relocs,
-                    &mut traps,
+                    &mut self.trap_relocs,
                     &mut NullStackmapSink {},
                 )
             };
 
-            self.current_func.metadata.append(&mut traps.metadata);
+            self.current_func
+                .metadata
+                .append(&mut self.trap_relocs.metadata);
         }
 
         if self.static_environ.ref_types_enabled {
@@ -260,7 +283,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
     }
 }
 
-impl<'a, 'b> fmt::Display for BatchCompiler<'a, 'b> {
+impl<'static_env, 'module_env> fmt::Display for BatchCompiler<'static_env, 'module_env> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.context.func.display(self.isa.as_ref()))
     }
@@ -431,6 +454,9 @@ impl Traps {
         Self {
             metadata: Vec::new(),
         }
+    }
+    fn clear(&mut self) {
+        self.metadata.clear();
     }
 }
 
