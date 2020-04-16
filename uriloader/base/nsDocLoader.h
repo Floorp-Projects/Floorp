@@ -86,16 +86,13 @@ class nsDocLoader : public nsIDocumentLoader,
 
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
-  // Turn off clang-format to work around [[nodiscard]] bug 1629756.
-  // clang-format off
-  NS_DECL_NSISUPPORTSPRIORITY
+  NS_DECL_NSISUPPORTSPRIORITY;  // semicolon for clang-format bug 1629756
 
   // Implementation specific methods...
 
   // Remove aChild from our childlist.  This nulls out the child's mParent
   // pointer.
   [[nodiscard]] nsresult RemoveChildLoader(nsDocLoader* aChild);
-  // clang-format on
 
   // Add aChild to our child list.  This will set aChild's mParent pointer to
   // |this|.
