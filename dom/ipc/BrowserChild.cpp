@@ -201,7 +201,7 @@ void BrowserChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
       mBrowserChildMessageManager);
   RefPtr<nsFrameMessageManager> mm = kungFuDeathGrip->GetMessageManager();
   mm->ReceiveMessage(static_cast<EventTarget*>(kungFuDeathGrip), nullptr,
-                     aMessageName, false, &data, nullptr, nullptr, nullptr,
+                     aMessageName, false, &data, nullptr, nullptr,
                      IgnoreErrors());
 }
 
@@ -2198,7 +2198,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
 
 mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
     const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
-    nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
+    const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserChild::RecvAsyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserChild::RecvAsyncMessage", aMessage, aData);
@@ -2224,8 +2224,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
   StructuredCloneData data;
   UnpackClonedMessageDataForChild(aData, data);
   mm->ReceiveMessage(static_cast<EventTarget*>(mBrowserChildMessageManager),
-                     nullptr, aMessage, false, &data, &cpows, aPrincipal,
-                     nullptr, IgnoreErrors());
+                     nullptr, aMessage, false, &data, &cpows, nullptr,
+                     IgnoreErrors());
   return IPC_OK();
 }
 
@@ -2952,10 +2952,12 @@ void BrowserChild::SetTabId(const TabId& aTabId) {
   NestedBrowserChildMap()[mUniqueId] = this;
 }
 
-bool BrowserChild::DoSendBlockingMessage(
-    JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData,
-    JS::Handle<JSObject*> aCpows, nsIPrincipal* aPrincipal,
-    nsTArray<StructuredCloneData>* aRetVal, bool aIsSync) {
+bool BrowserChild::DoSendBlockingMessage(JSContext* aCx,
+                                         const nsAString& aMessage,
+                                         StructuredCloneData& aData,
+                                         JS::Handle<JSObject*> aCpows,
+                                         nsTArray<StructuredCloneData>* aRetVal,
+                                         bool aIsSync) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
@@ -2968,19 +2970,16 @@ bool BrowserChild::DoSendBlockingMessage(
     }
   }
   if (aIsSync) {
-    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows, aPrincipal,
-                           aRetVal);
+    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows, aRetVal);
   }
 
-  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows, aPrincipal,
-                        aRetVal);
+  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows, aRetVal);
 }
 
 nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
                                           const nsAString& aMessage,
                                           StructuredCloneData& aData,
-                                          JS::Handle<JSObject*> aCpows,
-                                          nsIPrincipal* aPrincipal) {
+                                          JS::Handle<JSObject*> aCpows) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -2992,7 +2991,7 @@ nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
       return NS_ERROR_UNEXPECTED;
     }
   }
-  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows, aPrincipal, data)) {
+  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows, data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
