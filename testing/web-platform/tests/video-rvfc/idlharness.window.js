@@ -4,7 +4,7 @@
 'use strict';
 
 idl_test(
-  ['video-raf'],
+  ['video-rvfc'],
   ['html', 'dom'],
   idl_array => {
     idl_array.add_objects({
