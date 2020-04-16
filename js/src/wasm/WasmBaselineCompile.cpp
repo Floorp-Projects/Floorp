@@ -4282,14 +4282,14 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  Stk captureStackResult(const ABIResult& result, uint32_t stackResultBytes) {
+  Stk captureStackResult(const ABIResult& result, StackHeight resultsBase,
+                         uint32_t stackResultBytes) {
     MOZ_ASSERT(result.onStack());
-    uint32_t offs = fr.locateStackResult(result, controlItem().stackHeight,
-                                         stackResultBytes);
+    uint32_t offs = fr.locateStackResult(result, resultsBase, stackResultBytes);
     return Stk::StackResult(result.type(), offs);
   }
 
-  void pushBlockResults(ResultType type) {
+  void pushResults(ResultType type, StackHeight resultsBase) {
     if (type.empty()) {
       return;
     }
@@ -4301,13 +4301,12 @@ class BaseCompiler final : public BaseCompilerInterface {
       iter.next();
     }
     uint32_t stackResultBytes = iter.stackBytesConsumedSoFar();
-
     for (iter.switchToPrev(); !iter.done(); iter.prev()) {
       const ABIResult& result = iter.cur();
       if (!result.onStack()) {
         break;
       }
-      Stk v = captureStackResult(result, stackResultBytes);
+      Stk v = captureStackResult(result, resultsBase, stackResultBytes);
       push(v);
       if (v.kind() == Stk::MemRef) {
         stackMapGenerator_.memRefsOnStk++;
@@ -4335,6 +4334,14 @@ class BaseCompiler final : public BaseCompilerInterface {
           break;
       }
     }
+  }
+
+  void pushBlockResults(ResultType type) {
+    pushResults(type, controlItem().stackHeight);
+  }
+
+  void pushCallResults(ResultType type, const StackResultsLoc& loc) {
+    pushResults(type, fr.stackResultsBase(loc.bytes()));
   }
 
   // A combination of popBlockResults + pushBlockResults, to shuffle the top
@@ -9261,13 +9268,14 @@ bool BaseCompiler::pushStackResultsForCall(const ResultType& type, RegPtr temp,
   uint32_t bytes = i.stackBytesConsumedSoFar();
 
   // Reserve space for the stack results.
-  uint32_t height = fr.prepareStackResultArea(fr.stackHeight(), bytes);
+  StackHeight resultsBase = fr.stackHeight();
+  uint32_t height = fr.prepareStackResultArea(resultsBase, bytes);
 
   // Push Stk values onto the value stack, and zero out Ref values.
   for (i.switchToPrev(); !i.done(); i.prev()) {
     const ABIResult& result = i.cur();
     if (result.onStack()) {
-      Stk v = captureStackResult(result, bytes);
+      Stk v = captureStackResult(result, resultsBase, bytes);
       push(v);
       if (v.kind() == Stk::MemRef) {
         stackMapGenerator_.memRefsOnStk++;
@@ -9372,7 +9380,7 @@ bool BaseCompiler::emitCall() {
   popValueStackBy(numArgs);
 
   captureResultRegisters(resultType);
-  pushBlockResults(resultType);
+  pushCallResults(resultType, results);
 
   return true;
 }
@@ -9429,7 +9437,7 @@ bool BaseCompiler::emitCallIndirect() {
   popValueStackBy(numArgs);
 
   captureResultRegisters(resultType);
-  pushBlockResults(resultType);
+  pushCallResults(resultType, results);
 
   return true;
 }
