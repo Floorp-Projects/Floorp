@@ -312,7 +312,7 @@ bool js::WritableStreamDefaultWriterRelease(
  * Streams spec, 4.6.9.
  * WritableStreamDefaultWriterWrite ( writer, chunk )
  */
-JSObject* js::WritableStreamDefaultWriterWrite(
+PromiseObject* js::WritableStreamDefaultWriterWrite(
     JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     Handle<Value> chunk) {
   cx->check(chunk);
@@ -351,7 +351,8 @@ JSObject* js::WritableStreamDefaultWriterWrite(
   }
 
   auto RejectWithStoredError =
-      [](JSContext* cx, Handle<WritableStream*> unwrappedStream) -> JSObject* {
+      [](JSContext* cx,
+         Handle<WritableStream*> unwrappedStream) -> PromiseObject* {
     Rooted<Value> storedError(cx, unwrappedStream->storedError());
     if (!cx->compartment()->wrap(cx, &storedError)) {
       return nullptr;
