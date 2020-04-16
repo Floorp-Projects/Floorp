@@ -544,6 +544,23 @@ impl fmt::Display for SdpAttributeExtmap {
     }
 }
 
+#[derive(Clone, Copy)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+pub struct RtxFmtpParameters {
+    pub apt: u8,
+    pub rtx_time: Option<u32>,
+}
+
+impl fmt::Display for RtxFmtpParameters {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(rtx_time) = self.rtx_time {
+            write!(f, "apt={};rtx-time={}", self.apt, rtx_time)
+        } else {
+            write!(f, "apt={}", self.apt)
+        }
+    }
+}
+
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpAttributeFmtpParameters {
@@ -577,9 +594,8 @@ pub struct SdpAttributeFmtpParameters {
     // telephone-event
     pub dtmf_tones: String,
 
-    // Rtx
-    pub apt: u8,
-    pub rtx_time: u32,
+    // RTX
+    pub rtx: Option<RtxFmtpParameters>,
 
     // Unknown
     pub unknown_tokens: Vec<String>,
@@ -587,6 +603,9 @@ pub struct SdpAttributeFmtpParameters {
 
 impl fmt::Display for SdpAttributeFmtpParameters {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(ref rtx) = self.rtx {
+            return write!(f, "{}", rtx);
+        }
         write!(
             f,
             "{parameters}{red}{dtmf}{unknown}",
@@ -1982,8 +2001,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
         maxplaybackrate: 48000,
         encodings: Vec::new(),
         dtmf_tones: "".to_string(),
-        apt: 0,
-        rtx_time: 0,
+        rtx: None,
         unknown_tokens: Vec::new(),
     };
 
@@ -2064,8 +2082,21 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                         parameters.useinbandfec = parse_bool(parameter_val, "useinbandfec")?
                     }
                     "CBR" => parameters.cbr = parse_bool(parameter_val, "cbr")?,
-                    "APT" => parameters.apt = parameter_val.parse::<u8>()?,
-                    "RTX-TIME" => parameters.rtx_time = parameter_val.parse::<u32>()?,
+                    "APT" => {
+                        parameters.rtx = Some(RtxFmtpParameters {
+                            apt: parameter_val.parse::<u8>()?,
+                            rtx_time: None,
+                        })
+                    }
+                    "RTX-TIME" => {
+                        if let Some(ref mut rtx) = parameters.rtx {
+                            rtx.rtx_time = Some(parameter_val.parse::<u32>()?)
+                        } else {
+                            return Err(SdpParserInternalError::Generic(
+                                "RTX codec must have an APT field".to_string(),
+                            ));
+                        }
+                    }
                     _ => parameters
                         .unknown_tokens
                         .push((*parameter_token).to_string()),
@@ -3591,8 +3622,8 @@ mod tests {
         assert!(
             parse_attribute("fmtp:8 x-google-start-bitrate=800; maxplaybackrate=48000;").is_ok()
         );
-        assert!(parse_attribute("fmtp:97 apt=96").is_ok());
-        assert!(parse_attribute("fmtp:97 apt=96;rtx-time=3000").is_ok());
+        check_parse_and_serialize("fmtp:97 apt=96");
+        check_parse_and_serialize("fmtp:97 apt=96;rtx-time=3000");
     }
 
     #[test]
