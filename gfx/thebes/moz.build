@@ -155,6 +155,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PrintTargetWindows.h',
     ]
     SOURCES += [
+        'DisplayConfigWindows.cpp',
         'gfxDWriteCommon.cpp',
         'gfxDWriteFonts.cpp',
         'gfxGDIFont.cpp',

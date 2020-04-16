@@ -64,6 +64,7 @@
 
 #if defined(XP_WIN)
 #  include "gfxWindowsPlatform.h"
+#  include "DisplayConfigWindows.h"
 #elif defined(XP_MACOSX)
 #  include "gfxPlatformMac.h"
 #  include "gfxQuartzSurface.h"
@@ -3086,12 +3087,11 @@ void gfxPlatform::InitWebRenderConfig() {
   // Disable native compositor when hardware stretching is not supported. It is
   // for avoiding a problem like Bug 1618370.
   // XXX Is there a better check for Bug 1618370?
-  if (!DeviceManagerDx::Get()->CheckHardwareStretchingSupport()) {
-    /*
+  if (!DeviceManagerDx::Get()->CheckHardwareStretchingSupport() &&
+      HasScaledResolution()) {
     featureComp.Disable(
         FeatureStatus::Unavailable, "No hardware stretching support",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_HARDWARE_STRETCHING"));
-    */
   }
 
 #endif
