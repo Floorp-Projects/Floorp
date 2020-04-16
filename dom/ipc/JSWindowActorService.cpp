@@ -94,7 +94,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
 }
 
 already_AddRefed<JSWindowActorProtocol>
-JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
+JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
                                          const WindowActorOptions& aOptions,
                                          ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
@@ -395,16 +395,15 @@ already_AddRefed<JSWindowActorService> JSWindowActorService::GetSingleton() {
 }
 
 void JSWindowActorService::RegisterWindowActor(
-    const nsAString& aName, const WindowActorOptions& aOptions,
+    const nsACString& aName, const WindowActorOptions& aOptions,
     ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
   auto entry = mDescriptors.LookupForAdd(aName);
   if (entry) {
-    aRv.ThrowNotSupportedError(
-        nsPrintfCString("'%s' actor is already registered.",
-                        NS_ConvertUTF16toUTF8(aName).get()));
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "'%s' actor is already registered.", PromiseFlatCString(aName).get()));
     return;
   }
 
@@ -434,8 +433,8 @@ void JSWindowActorService::RegisterWindowActor(
   proto->AddObservers();
 }
 
-void JSWindowActorService::UnregisterWindowActor(const nsAString& aName) {
-  nsAutoString name(aName);
+void JSWindowActorService::UnregisterWindowActor(const nsACString& aName) {
+  nsAutoCString name(aName);
 
   RefPtr<JSWindowActorProtocol> proto;
   if (mDescriptors.Remove(aName, getter_AddRefs(proto))) {
@@ -507,7 +506,7 @@ void JSWindowActorService::UnregisterChromeEventTarget(EventTarget* aTarget) {
 }
 
 already_AddRefed<JSWindowActorProtocol> JSWindowActorService::GetProtocol(
-    const nsAString& aName) {
+    const nsACString& aName) {
   return mDescriptors.Get(aName);
 }
 

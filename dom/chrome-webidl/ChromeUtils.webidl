@@ -441,10 +441,10 @@ partial namespace ChromeUtils {
    * See JSWindowActor.webidl for WindowActorOptions fields documentation.
    */
   [ChromeOnly, Throws]
-  void registerWindowActor(DOMString aName, optional WindowActorOptions aOptions = {});
+  void registerWindowActor(UTF8String aName, optional WindowActorOptions aOptions = {});
 
   [ChromeOnly]
-  void unregisterWindowActor(DOMString aName);
+  void unregisterWindowActor(UTF8String aName);
 
   [ChromeOnly]
   // aError should a nsresult.
