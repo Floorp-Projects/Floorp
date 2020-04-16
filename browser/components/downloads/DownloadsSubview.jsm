@@ -502,20 +502,6 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     }
   }
 
-  static get markup() {
-    return `
-      <image class="toolbarbutton-icon" validate="always"/>
-      <vbox class="toolbarbutton-text" flex="1">
-        <label crop="end"/>
-        <label class="status-text status-full" crop="end"/>
-        <label class="status-text status-open" crop="end"/>
-        <label class="status-text status-retry" crop="end"/>
-        <label class="status-text status-show" crop="end"/>
-      </vbox>
-      <toolbarbutton class="action-button"/>
-    `;
-  }
-
   // DownloadElementShell
   connect() {
     let document = this.element.ownerDocument;
@@ -524,9 +510,17 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     );
     if (!downloadsSubviewItemFragment) {
       let MozXULElement = document.defaultView.MozXULElement;
-      downloadsSubviewItemFragment = MozXULElement.parseXULToFragment(
-        this.markup
-      );
+      downloadsSubviewItemFragment = MozXULElement.parseXULToFragment(`
+        <image class="toolbarbutton-icon" validate="always"/>
+        <vbox class="toolbarbutton-text" flex="1">
+          <label crop="end"/>
+          <label class="status-text status-full" crop="end"/>
+          <label class="status-text status-open" crop="end"/>
+          <label class="status-text status-retry" crop="end"/>
+          <label class="status-text status-show" crop="end"/>
+        </vbox>
+        <toolbarbutton class="action-button"/>
+      `);
       gDownloadsSubviewItemFragments.set(
         document,
         downloadsSubviewItemFragment
