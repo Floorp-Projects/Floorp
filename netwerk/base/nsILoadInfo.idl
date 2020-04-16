@@ -458,6 +458,14 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute unsigned long httpsOnlyStatus;
 
   /**
+   * Returns true if at the time of the loadinfo construction the document
+   * that triggered this load has the bit hasValidTransientUserGestureActivation
+   * set or the load was triggered from External. (Mostly this bool is used
+   * in the context of Sec-Fetch-User.)
+   */
+  [infallible] attribute boolean hasValidUserGestureActivation;
+
+  /**
    * We disallow the SystemPrincipal to initiate requests to
    * the public web. This flag is to allow exceptions.
    */

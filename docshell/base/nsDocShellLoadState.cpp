@@ -42,6 +42,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
       mSrcdocData(VoidString()),
       mLoadFlags(0),
       mFirstParty(false),
+      mHasValidUserGestureActivation(false),
       mTypeHint(VoidCString()),
       mFileName(VoidString()),
       mIsFromProcessingFrameAttributes(false) {
@@ -64,6 +65,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mTarget = aLoadState.Target();
   mLoadFlags = aLoadState.LoadFlags();
   mFirstParty = aLoadState.FirstParty();
+  mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
   mTypeHint = aLoadState.TypeHint();
   mFileName = aLoadState.FileName();
   mIsFromProcessingFrameAttributes =
@@ -265,6 +267,8 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
 
   loadState->SetLoadFlags(extraFlags);
   loadState->SetFirstParty(true);
+  loadState->SetHasValidUserGestureActivation(
+      aLoadURIOptions.mHasValidUserGestureActivation);
   loadState->SetPostDataStream(postData);
   loadState->SetHeadersStream(aLoadURIOptions.mHeaders);
   loadState->SetBaseURI(aLoadURIOptions.mBaseURI);
@@ -492,6 +496,15 @@ void nsDocShellLoadState::SetFirstParty(bool aFirstParty) {
   mFirstParty = aFirstParty;
 }
 
+bool nsDocShellLoadState::HasValidUserGestureActivation() const {
+  return mHasValidUserGestureActivation;
+}
+
+void nsDocShellLoadState::SetHasValidUserGestureActivation(
+    bool aHasValidUserGestureActivation) {
+  mHasValidUserGestureActivation = aHasValidUserGestureActivation;
+}
+
 const nsCString& nsDocShellLoadState::TypeHint() const { return mTypeHint; }
 
 void nsDocShellLoadState::SetTypeHint(const nsCString& aTypeHint) {
@@ -662,6 +675,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.Target() = mTarget;
   loadState.LoadFlags() = mLoadFlags;
   loadState.FirstParty() = mFirstParty;
+  loadState.HasValidUserGestureActivation() = mHasValidUserGestureActivation;
   loadState.TypeHint() = mTypeHint;
   loadState.FileName() = mFileName;
   loadState.IsFromProcessingFrameAttributes() =
