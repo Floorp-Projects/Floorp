@@ -2023,7 +2023,6 @@ class nsDisplayListBuilder {
   bool mPartialBuildFailed;
   bool mIsInActiveDocShell;
   bool mBuildAsyncZoomContainer;
-  bool mBuildBackdropRootContainer;
   bool mContainsBackdropFilter;
 
   nsRect mHitTestArea;
