@@ -758,6 +758,21 @@ security:
       - 'geckoview'
     record_in_processes:
       - main
+  https_only_mode_enabled:
+    bug_numbers:
+      - 1620244
+    description: >
+      Measures user retention of the HTTPS-Only Mode.
+      0 = never enabled, 1 = enabled, 2 = disabled (but was enabled)
+    expires: never
+    kind: uint
+    notification_emails:
+      - julianwels@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 pwmgr:
   potentially_breached_passwords:

@@ -1970,6 +1970,26 @@ BrowserGlue.prototype = {
     });
   },
 
+  _monitorHTTPSOnlyPref() {
+    const PREF_ENABLED = "dom.security.https_only_mode";
+    const PREF_WAS_ENABLED = "dom.security.https_only_mode_ever_enabled";
+    const _checkHTTPSOnlyPref = async () => {
+      const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
+      const was_enabled = Services.prefs.getBoolPref(PREF_WAS_ENABLED, false);
+      let value = 0;
+      if (enabled) {
+        value = 1;
+        Services.prefs.setBoolPref(PREF_WAS_ENABLED, true);
+      } else if (was_enabled) {
+        value = 2;
+      }
+      Services.telemetry.scalarSet("security.https_only_mode_enabled", value);
+    };
+
+    Services.prefs.addObserver(PREF_ENABLED, _checkHTTPSOnlyPref);
+    _checkHTTPSOnlyPref();
+  },
+
   _showNewInstallModal() {
     // Allow other observers of the same topic to run while we open the dialog.
     Services.tm.dispatchToMainThread(() => {
@@ -2057,6 +2077,7 @@ BrowserGlue.prototype = {
 
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
+    this._monitorHTTPSOnlyPref();
 
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService
