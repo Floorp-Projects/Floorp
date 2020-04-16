@@ -69,12 +69,6 @@ add_task(async function starButtonCtrlClick() {
   let url = "http://example.com/browser_page_action_star_button";
   await BrowserTestUtils.withNewTab(url, async () => {
     StarUI._createPanelIfNeeded();
-    // The button ignores activation while the bookmarked status is being
-    // updated. So, wait for it to finish updating.
-    await TestUtils.waitForCondition(
-      () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
-    );
-
     const popup = document.getElementById("editBookmarkPanel");
     const starButtonBox = document.getElementById("star-button-box");
 
