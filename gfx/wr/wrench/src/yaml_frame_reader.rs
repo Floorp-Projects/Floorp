@@ -111,7 +111,16 @@ impl LocalExternalImageHandler {
             ImageData::Raw(ref data) => {
                 let gl = device.gl();
                 let texture_ids = gl.gen_textures(1);
-                let format_desc = device.gl_describe_format(desc.format);
+                let format_desc = if desc.format == ImageFormat::BGRA8 {
+                    // Force BGRA8 data to RGBA8 layout to avoid potential
+                    // need for usage of texture-swizzle.
+                    webrender::FormatDesc {
+                        external: gl::BGRA,
+                        .. device.gl_describe_format(ImageFormat::RGBA8)
+                    }
+                } else {
+                    device.gl_describe_format(desc.format)
+                };
 
                 LocalExternalImageHandler::init_gl_texture(
                     texture_ids[0],
