@@ -58,6 +58,15 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   return true;
 }
 
+bool CompiledCode::swapCranelift(MacroAssembler& masm,
+                                 CraneliftReusableData& data) {
+  if (!swap(masm)) {
+    return false;
+  }
+  std::swap(data, craneliftReusableData);
+  return true;
+}
+
 // ****************************************************************************
 // ModuleGenerator
 

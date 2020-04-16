@@ -53,6 +53,15 @@ struct FuncCompileInput {
 
 typedef Vector<FuncCompileInput, 8, SystemAllocPolicy> FuncCompileInputVector;
 
+void CraneliftFreeReusableData(void* ptr);
+
+struct CraneliftReusableDataDtor {
+  void operator()(void* ptr) { CraneliftFreeReusableData(ptr); }
+};
+
+using CraneliftReusableData =
+    mozilla::UniquePtr<void*, CraneliftReusableDataDtor>;
+
 // CompiledCode contains the resulting code and metadata for a set of compiled
 // input functions or stubs.
 
@@ -65,8 +74,11 @@ struct CompiledCode {
   SymbolicAccessVector symbolicAccesses;
   jit::CodeLabelVector codeLabels;
   StackMaps stackMaps;
+  CraneliftReusableData craneliftReusableData;
 
   MOZ_MUST_USE bool swap(jit::MacroAssembler& masm);
+  MOZ_MUST_USE bool swapCranelift(jit::MacroAssembler& masm,
+                                  CraneliftReusableData& craneliftData);
 
   void clear() {
     bytes.clear();
@@ -77,6 +89,7 @@ struct CompiledCode {
     symbolicAccesses.clear();
     codeLabels.clear();
     stackMaps.clear();
+    // The cranelift reusable data resets itself lazily.
     MOZ_ASSERT(empty());
   }
 

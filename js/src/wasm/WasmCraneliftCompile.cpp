@@ -283,13 +283,13 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 // them together, as well as makes sure that the compiler is properly destroyed
 // when it exits scope.
 
-class AutoCranelift {
+class CraneliftContext {
   CraneliftStaticEnvironment staticEnv_;
   CraneliftModuleEnvironment env_;
   CraneliftCompiler* compiler_;
 
  public:
-  explicit AutoCranelift(const ModuleEnvironment& env)
+  explicit CraneliftContext(const ModuleEnvironment& env)
       : env_(env), compiler_(nullptr) {
     staticEnv_.ref_types_enabled = env.refTypesEnabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
@@ -309,7 +309,7 @@ class AutoCranelift {
     compiler_ = cranelift_compiler_create(&staticEnv_, &env_);
     return !!compiler_;
   }
-  ~AutoCranelift() {
+  ~CraneliftContext() {
     if (compiler_) {
       cranelift_compiler_destroy(compiler_);
     }
@@ -434,11 +434,6 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
   MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Cranelift);
   MOZ_ASSERT(!env.isAsmJS());
 
-  AutoCranelift compiler(env);
-  if (!compiler.init()) {
-    return false;
-  }
-
   TempAllocator alloc(&lifo);
   JitContext jitContext(&alloc);
   WasmMacroAssembler masm(alloc);
@@ -446,9 +441,21 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 
   // Swap in already-allocated empty vectors to avoid malloc/free.
   MOZ_ASSERT(code->empty());
-  if (!code->swap(masm)) {
+
+  CraneliftReusableData reusableContext;
+  if (!code->swapCranelift(masm, reusableContext)) {
     return false;
   }
+
+  if (!reusableContext) {
+    auto context = MakeUnique<CraneliftContext>(env);
+    if (!context || !context->init()) {
+      return false;
+    }
+    reusableContext.reset((void**)context.release());
+  }
+
+  CraneliftContext* compiler = (CraneliftContext*)reusableContext.get();
 
   // Disable instruction spew if we're going to disassemble after code
   // generation, or the output will be a mess.
@@ -478,7 +485,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 
     CraneliftCompiledFunc clifFunc;
 
-    if (!cranelift_compile_function(compiler, &clifInput, &clifFunc)) {
+    if (!cranelift_compile_function(*compiler, &clifInput, &clifFunc)) {
       *error = JS_smprintf("Cranelift error in clifFunc #%u", clifInput.index);
       return false;
     }
@@ -543,7 +550,14 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     }
   }
 
-  return code->swap(masm);
+  return code->swapCranelift(masm, reusableContext);
+}
+
+void wasm::CraneliftFreeReusableData(void* ptr) {
+  CraneliftContext* compiler = (CraneliftContext*)ptr;
+  if (compiler) {
+    js_delete(compiler);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
