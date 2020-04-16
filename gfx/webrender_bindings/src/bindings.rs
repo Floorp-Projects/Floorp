@@ -3639,8 +3639,8 @@ extern "C" {
         format: ImageFormat,
         render_rect: &LayoutIntRect,
         visible_rect: &DeviceIntRect,
-        tile_size: Option<&u16>,
-        tile_offset: Option<&TileOffset>,
+        tile_size: u16,
+        tile_offset: &TileOffset,
         dirty_rect: Option<&LayoutIntRect>,
         output: MutByteSlice,
     ) -> bool;
