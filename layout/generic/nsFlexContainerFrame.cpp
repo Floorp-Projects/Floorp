@@ -4042,6 +4042,35 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
                        aReflowInput.ComputedMaxBSize());
 }
 
+LogicalSize nsFlexContainerFrame::ComputeAvailableSizeForItems(
+    const ReflowInput& aReflowInput,
+    const mozilla::LogicalMargin& aBorderPadding) const {
+  const WritingMode wm = GetWritingMode();
+  nscoord availableBSize = aReflowInput.AvailableBSize();
+
+  if (availableBSize != NS_UNCONSTRAINEDSIZE) {
+    // Available block-size is constrained. Subtract block-start border and
+    // padding from it.
+    availableBSize -= aBorderPadding.BStart(wm);
+
+    if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+        StyleBoxDecorationBreak::Clone) {
+      // We have box-decoration-break:clone. Subtract block-end border and
+      // padding from the available block-size as well.
+      availableBSize -= aBorderPadding.BEnd(wm);
+    }
+
+    // Available block-size can became negative after subtracting block-axis
+    // border and padding. Per spec, to guarantee progress, fragmentainers are
+    // assumed to have a minimum block size of 1px regardless of their used
+    // size. https://drafts.csswg.org/css-break/#breaking-rules
+    availableBSize =
+        std::max(nsPresContext::CSSPixelsToAppUnits(1), availableBSize);
+  }
+
+  return LogicalSize(wm, aReflowInput.ComputedISize(), availableBSize);
+}
+
 void FlexLine::PositionItemsInMainAxis(
     const StyleContentDistribution& aJustifyContent,
     nscoord aContentBoxMainSize, const FlexboxAxisTracker& aAxisTracker) {
@@ -4191,18 +4220,16 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   // be filled out for use by devtools.
   ComputedFlexContainerInfo* containerInfo = CreateOrClearFlexContainerInfo();
 
-  // If we're being fragmented into a constrained BSize, then subtract off
-  // borderpadding BStart from that constrained BSize, to get the available
-  // BSize for our content box. (No need to subtract the borderpadding BStart
-  // if we're already skipping it via GetLogicalSkipSides, though.)
-  nscoord availableBSizeForContent = aReflowInput.AvailableBSize();
-  if (availableBSizeForContent != NS_UNCONSTRAINEDSIZE &&
-      !(GetLogicalSkipSides(&aReflowInput).BStart())) {
-    availableBSizeForContent -=
-        aReflowInput.ComputedLogicalBorderPadding().BStart(wm);
-    // (Don't let that push availableBSizeForContent below zero, though):
-    availableBSizeForContent = std::max(availableBSizeForContent, 0);
-  }
+  // We assume we are the last fragment by using
+  // PreReflowBlockLevelLogicalSkipSides(). We will skip block-end
+  // border/padding when we know our content-box size after DoFlexLayout.
+  LogicalMargin borderPadding =
+      aReflowInput.ComputedLogicalBorderPadding().ApplySkipSides(
+          PreReflowBlockLevelLogicalSkipSides());
+
+  const LogicalSize availableSizeForItems =
+      ComputeAvailableSizeForItems(aReflowInput, borderPadding);
+  const nscoord availableBSizeForContent = availableSizeForItems.BSize(wm);
 
   nscoord contentBoxMainSize =
       GetMainSizeFromReflowInput(aReflowInput, axisTracker);
@@ -4247,7 +4274,26 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                  hasLineClampEllipsis, containerInfo);
   }
 
+  const LogicalSize contentBoxSize =
+      axisTracker.LogicalSizeFromFlexRelativeSizes(contentBoxMainSize,
+                                                   contentBoxCrossSize);
+  const nscoord consumedBSize = ConsumedBSize(wm);
+  const nscoord effectiveContentBSize =
+      contentBoxSize.BSize(wm) - consumedBSize;
+
+  // Check if we may need a next-in-flow. If so, we'll need to skip block-end
+  // border and padding.
+  const bool mayNeedNextInFlow =
+      effectiveContentBSize > availableSizeForItems.BSize(wm);
+  if (mayNeedNextInFlow) {
+    if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+        StyleBoxDecorationBreak::Slice) {
+      borderPadding.BEnd(wm) = 0;
+    }
+  }
+
   ReflowChildren(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
+                 availableSizeForItems, borderPadding, consumedBSize,
                  flexContainerAscent, lines, placeholders, axisTracker,
                  hasLineClampEllipsis);
 
@@ -4800,31 +4846,23 @@ void nsFlexContainerFrame::DoFlexLayout(
 
 void nsFlexContainerFrame::ReflowChildren(
     const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
-    const nscoord aContentBoxCrossSize, nscoord& aFlexContainerAscent,
-    nsTArray<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
-    const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis) {
+    const nscoord aContentBoxCrossSize,
+    const LogicalSize& aAvailableSizeForItems,
+    const LogicalMargin& aBorderPadding, const nscoord aConsumedBSize,
+    nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
+    nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
+    bool aHasLineClampEllipsis) {
   // Before giving each child a final reflow, calculate the origin of the
   // flex container's content box (with respect to its border-box), so that
   // we can compute our flex item's final positions.
   WritingMode flexWM = aReflowInput.GetWritingMode();
-  LogicalMargin containerBP = aReflowInput.ComputedLogicalBorderPadding();
-
-  // Unconditionally skip block-end border & padding for now, regardless of
-  // writing-mode/GetLogicalSkipSides.  We add it lower down, after we've
-  // established baseline and decided whether bottom border-padding fits (if
-  // we're fragmented).
-  const LogicalSides skipSides =
-      GetLogicalSkipSides(&aReflowInput) | LogicalSides(eLogicalSideBitsBEnd);
-  containerBP.ApplySkipSides(skipSides);
-
   const LogicalPoint containerContentBoxOrigin(
-      flexWM, containerBP.IStart(flexWM), containerBP.BStart(flexWM));
+      flexWM, aBorderPadding.IStart(flexWM), aBorderPadding.BStart(flexWM));
 
   // Determine flex container's border-box size (used in positioning children):
   LogicalSize logSize = aAxisTracker.LogicalSizeFromFlexRelativeSizes(
       aContentBoxMainSize, aContentBoxCrossSize);
-  // XXXTYLin: Should we add containerBP.Size(flexWM) to logSize instead?
-  logSize += aReflowInput.ComputedLogicalBorderPadding().Size(flexWM);
+  logSize += aBorderPadding.Size(flexWM);
   nsSize containerSize = logSize.GetPhysicalSize(flexWM);
 
   // If the flex container has no baseline-aligned items, it will use this item
@@ -4847,6 +4885,9 @@ void nsFlexContainerFrame::ReflowChildren(
       // (i.e. its frame rect), instead of the container's content-box:
       framePos += containerContentBoxOrigin;
 
+      // XXX: We need to subtract aConsumedBSize from framePos.B(flewm) after we
+      // support flex item fragmentation.
+
       // (Intentionally snapshotting this before ApplyRelativePositioning, to
       // maybe use for setting the flex container's baseline.)
       const nscoord itemNormalBPos = framePos.B(flexWM);
@@ -4857,8 +4898,11 @@ void nsFlexContainerFrame::ReflowChildren(
       // as-needed.
       if (item.NeedsFinalReflow()) {
         // The available size must be in item's writing-mode.
+        // XXX: The correct available block-size is from the position where the
+        // flex item is placed to the end of the available block-size.
         const WritingMode itemWM = item.GetWritingMode();
-        LogicalSize availableSize = aReflowInput.ComputedSize(itemWM);
+        LogicalSize availableSize =
+            aAvailableSizeForItems.ConvertTo(itemWM, flexWM);
 
         // XXX: Unconditionally give our children unconstrained block-size until
         // we support flex item fragmentation.
@@ -4867,6 +4911,10 @@ void nsFlexContainerFrame::ReflowChildren(
         const nsReflowStatus childReflowStatus =
             ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
                            availableSize, containerSize, aHasLineClampEllipsis);
+
+        // XXX: Silence the unused childReflowStatus warning in opt build for
+        // now.
+        Unused << childReflowStatus;
 
         // XXXdholbert Once we do pagination / splitting, we'll need to actually
         // handle incomplete childReflowStatuses. But for now, we give our kids
