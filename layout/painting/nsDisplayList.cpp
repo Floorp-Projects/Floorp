@@ -1225,7 +1225,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mPartialBuildFailed(false),
       mIsInActiveDocShell(false),
       mBuildAsyncZoomContainer(false),
-      mBuildBackdropRootContainer(false),
       mContainsBackdropFilter(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
@@ -1454,16 +1453,9 @@ void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
-void nsDisplayListBuilder::UpdateShouldBuildBackdropRootContainer() {
-  mBuildBackdropRootContainer =
-      StaticPrefs::layout_css_backdrop_filter_enabled();
-}
-
 // Certain prefs may cause display list items to be added or removed when they
 // are toggled. In those cases, we need to fully rebuild the display list.
 bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
-  bool shouldRebuild = false;
-
   // If we transition between wrapping the RCD-RSF contents into an async
   // zoom container vs. not, we need to rebuild the display list. This only
   // happens when the zooming or container scrolling prefs are toggled
@@ -1471,19 +1463,10 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   bool didBuildAsyncZoomContainer = mBuildAsyncZoomContainer;
   UpdateShouldBuildAsyncZoomContainer();
   if (didBuildAsyncZoomContainer != mBuildAsyncZoomContainer) {
-    shouldRebuild = true;
+    return true;
   }
 
-  // If backdrop-filter is enabled, backdrop root containers are added to the
-  // display list. When the pref is toggled these containers may be added or
-  // removed, so the display list should be rebuilt.
-  bool didBuildBackdropRootContainer = mBuildBackdropRootContainer;
-  UpdateShouldBuildBackdropRootContainer();
-  if (didBuildBackdropRootContainer != mBuildBackdropRootContainer) {
-    shouldRebuild = true;
-  }
-
-  return shouldRebuild;
+  return false;
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
