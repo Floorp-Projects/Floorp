@@ -102,7 +102,7 @@ fuzzy-if(!webrender,111-112,600-600) pref(apz.allow_zooming,true) == async-scrol
 skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-fixed-bottom-1.html dynamic-toolbar-fixed-bottom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-sticky-bottom-1.html dynamic-toolbar-sticky-bottom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) == dynamic-toolbar-fixed-top-1.html dynamic-toolbar-fixed-top-1-ref.html
-skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) fails-if(geckoview&&!webrender) == dynamic-toolbar-sticky-top-1.html dynamic-toolbar-sticky-top-1-ref.html # bug 1627326 for geckoview&&!webrender
+skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) == dynamic-toolbar-sticky-top-1.html dynamic-toolbar-sticky-top-1-ref.html # bug 1627326 for geckoview&&!webrender
 
 # The next block of tests are based on a single test page which has three
 # sticky items (one sticky to the top, one sticky to the bottom, and one sticky
@@ -151,12 +151,12 @@ defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-ma
                      == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
                      == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
                      == dynamic-toolbar-sticky-4c.html dynamic-toolbar-sticky-4-ref.html
-fails-if(!webrender) == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref-t.html
-fails-if(!webrender) == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref-t.html
-fails-if(!webrender) == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref-t.html
-fails-if(!webrender) == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref-t.html
-fails-if(!webrender) == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html
-fails-if(!webrender) == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref-t.html
+                     == dynamic-toolbar-sticky-5a.html dynamic-toolbar-sticky-5-ref-t.html
+                     == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref-t.html
+                     == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref-t.html
+                     == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref-t.html
+fails-if(!webrender) == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html  # bug 1630274 for non-WR
+                     == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref-t.html
 defaults
 
 # Same as above block of tests, except with the dynamic toolbar margin
@@ -165,12 +165,12 @@ defaults
 defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) fuzzy(0-1,0-120000)
                      == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref-b.html
                      == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref-b.html
-fails-if(!webrender) == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html
-fails-if(!webrender) == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref-b.html
-fails-if(!webrender) == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref-b.html
-fails-if(!webrender) == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref-b.html
-fails-if(!webrender) == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
-fails-if(!webrender) == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
+fails-if(!webrender) == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html # bug 1630274 for non-WR
+                     == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref-b.html
+                     == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref-b.html
+                     == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref-b.html
+                     == dynamic-toolbar-sticky-3a.html dynamic-toolbar-sticky-3-ref.html
+                     == dynamic-toolbar-sticky-3b.html dynamic-toolbar-sticky-3-ref.html
                      == dynamic-toolbar-sticky-3c.html dynamic-toolbar-sticky-3-ref.html
                      == dynamic-toolbar-sticky-4a.html dynamic-toolbar-sticky-4-ref.html
                      == dynamic-toolbar-sticky-4b.html dynamic-toolbar-sticky-4-ref.html
