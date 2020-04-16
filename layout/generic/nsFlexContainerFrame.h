@@ -274,6 +274,19 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             any baseline-aligned flex items in the first
    *                             flex line, if any such items exist. Otherwise,
    *                             nscoord_MIN.
+   * @param aAvailableBSizeForContent the fragmentainer's available block-size
+   *                                  for our content, when we run the flex
+   *                                  layout algorithm. This may be
+   *                                  unconstrained, even in a context where the
+   *                                  flex container is ultimately being
+   *                                  fragmented, because flex container
+   *                                  fragmentation usually starts out by
+   *                                  performing flex layout without regard to
+   *                                  pagination.
+   * @param aColumnWrapThreshold the block-size threshold to wrap to a new line.
+   *                             Used only by multi-line column-oriented flex
+   *                             container if the available block-size is
+   *                             constrained.
    */
   void DoFlexLayout(const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
                     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
@@ -455,12 +468,30 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void SizeItemInCrossAxis(ReflowInput& aChildReflowInput, FlexItem& aItem);
 
   /**
-   * This method computes flex container's final size and baseline.
+   * This method computes the metrics to be reported via the flex container's
+   * ReflowOutput output parameter.
    *
-   * @param aContentBoxMainSize the final content-box main-size of the flex
-   *                            container.
-   * @param aContentBoxCrossSize the final content-box cross-size of the flex
-   *                             container.
+   * @param aContentBoxSize the final content-box size for the flex container as
+   *                        a whole, converted from the flex container's
+   *                        main/cross sizes. The main/cross sizes are computed
+   *                        by DoFlexLayout() if this frame is the
+   *                        first-in-flow, or are the stored ones in
+   *                        SharedFlexData if this frame is a not the
+   *                        first-in-flow.
+   * @param aBorderPadding the border and padding for this frame (possibly with
+   *                       some sides skipped as-appropriate, if we're in a
+   *                       continuation chain).
+   * @param aConsumedBSize the sum of our content-box block-size consumed by our
+   *                       prev-in-flows.
+   * @param aMayNeedNextInFlow true if we may need a next-in-flow because our
+   *                           effective content-box block-size exceeds the
+   *                           available block-size.
+   * @param aMaxBlockEndEdgeOfChildren the maximum block-end edge of the
+   *                                   children of this fragment in this frame's
+   *                                   coordinate space (as returned by
+   *                                   ReflowChildren()).
+   * @param aAreChildrenComplete true if all the children being reflowed are
+   *                             complete; false otherwise.
    * @param aFlexContainerAscent the flex container's ascent, if one has been
    *                             determined from its children. (If there are no
    *                             children, pass nscoord_MIN to synthesize a
@@ -468,9 +499,12 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    */
   void ComputeFinalSize(
       ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
-      nsReflowStatus& aStatus, const nscoord aContentBoxMainSize,
-      const nscoord aContentBoxCrossSize, nscoord aFlexContainerAscent,
-      nsTArray<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker);
+      nsReflowStatus& aStatus, const mozilla::LogicalSize& aContentBoxSize,
+      const mozilla::LogicalMargin& aBorderPadding,
+      const nscoord aConsumedBSize, const bool aMayNeedNextInFlow,
+      const nscoord aMaxBlockEndEdgeOfChildren, const bool aAreChildrenComplete,
+      nscoord aFlexContainerAscent, nsTArray<FlexLine>& aLines,
+      const FlexboxAxisTracker& aAxisTracker);
 
   /**
    * Perform a final Reflow for our child frames.
