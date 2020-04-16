@@ -185,7 +185,7 @@ nested(upto inside_cpow) sync refcounted protocol PBrowser
 
 both:
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       ClonedMessageData aData);
+                       nsIPrincipal aPrincipal, ClonedMessageData aData);
 
 parent:
 #ifdef ACCESSIBILITY
@@ -256,11 +256,11 @@ parent:
     async Event(RemoteDOMEvent aEvent);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
-                     CpowEntry[] aCpows)
+                     CpowEntry[] aCpows, nsIPrincipal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                                        CpowEntry[] aCpows)
+                                        CpowEntry[] aCpows, nsIPrincipal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     /**

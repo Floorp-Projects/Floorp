@@ -351,7 +351,8 @@ class ContentParent final
 
   virtual nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
                                       StructuredCloneData& aData,
-                                      JS::Handle<JSObject*> aCpows) override;
+                                      JS::Handle<JSObject*> aCpows,
+                                      nsIPrincipal* aPrincipal) override;
 
   /** Notify that a tab is beginning its destruction sequence. */
   void NotifyTabDestroying();
@@ -1029,14 +1030,17 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals);
+      nsTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+      nsTArray<StructuredCloneData>* aRetvals);
 
   mozilla::ipc::IPCResult RecvRpcMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals);
+      nsTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+      nsTArray<StructuredCloneData>* aRetvals);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
                                            nsTArray<CpowEntry>&& aCpows,
+                                           const IPC::Principal& aPrincipal,
                                            const ClonedMessageData& aData);
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we don't have MOZ_CAN_RUN_SCRIPT bits

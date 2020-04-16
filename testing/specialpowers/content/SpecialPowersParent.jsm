@@ -71,55 +71,6 @@ function doPrefEnvOp(fn) {
   }
 }
 
-async function createWindowlessBrowser({ isPrivate = false } = {}) {
-  const {
-    promiseDocumentLoaded,
-    promiseEvent,
-    promiseObserved,
-  } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionUtils.jsm"
-  ).ExtensionUtils;
-
-  let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
-
-  if (isPrivate) {
-    let loadContext = windowlessBrowser.docShell.QueryInterface(
-      Ci.nsILoadContext
-    );
-    loadContext.usePrivateBrowsing = true;
-  }
-
-  let chromeShell = windowlessBrowser.docShell.QueryInterface(
-    Ci.nsIWebNavigation
-  );
-
-  const system = Services.scriptSecurityManager.getSystemPrincipal();
-  chromeShell.createAboutBlankContentViewer(system, system);
-  chromeShell.useGlobalHistory = false;
-  chromeShell.loadURI("chrome://extensions/content/dummy.xhtml", {
-    triggeringPrincipal: system,
-  });
-
-  await promiseObserved(
-    "chrome-document-global-created",
-    win => win.document == chromeShell.document
-  );
-
-  let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
-
-  let browser = chromeDoc.createXULElement("browser");
-  browser.setAttribute("type", "content");
-  browser.setAttribute("disableglobalhistory", "true");
-  browser.setAttribute("remote", "true");
-
-  let promise = promiseEvent(browser, "XULFrameLoaderCreated");
-  chromeDoc.documentElement.appendChild(browser);
-
-  await promise;
-
-  return { windowlessBrowser, browser };
-}
-
 // Supplies the unique IDs for tasks created by SpecialPowers.spawn(),
 // used to bounce assertion messages back down to the correct child.
 let nextTaskID = 1;
@@ -870,7 +821,6 @@ class SpecialPowersParent extends JSWindowActorParent {
         );
 
         Object.assign(sb.sandbox, {
-          createWindowlessBrowser,
           sendAsyncMessage: (name, message) => {
             this.sendAsyncMessage("SPChromeScriptMessage", {
               id,

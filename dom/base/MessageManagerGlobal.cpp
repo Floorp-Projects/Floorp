@@ -37,6 +37,14 @@ void MessageManagerGlobal::Dump(const nsAString& aStr) {
   fflush(stdout);
 }
 
+void MessageManagerGlobal::PrivateNoteIntentionalCrash(ErrorResult& aError) {
+  if (XRE_IsContentProcess()) {
+    NoteIntentionalCrash("tab");
+    return;
+  }
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 void MessageManagerGlobal::Atob(const nsAString& aAsciiString,
                                 nsAString& aBase64Data, ErrorResult& aError) {
   aError = nsContentUtils::Atob(aAsciiString, aBase64Data);
