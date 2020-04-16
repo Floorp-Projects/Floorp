@@ -3747,7 +3747,7 @@ bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
 
 void nsFlexContainerFrame::GenerateFlexLines(
     const ReflowInput& aReflowInput, nscoord aContentBoxMainSize,
-    nscoord aAvailableBSizeForContent, const nsTArray<StrutInfo>& aStruts,
+    nscoord aColumnWrapThreshold, const nsTArray<StrutInfo>& aStruts,
     const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
     bool aHasLineClampEllipsis, nsTArray<nsIFrame*>& aPlaceholders, /* out */
     nsTArray<FlexLine>& aLines /* out */) {
@@ -3787,8 +3787,8 @@ void nsFlexContainerFrame::GenerateFlexLines(
     // we may need to wrap to a new flex line sooner (before we grow past the
     // available BSize, potentially running off the end of the page).
     if (aAxisTracker.IsColumnOriented() &&
-        aAvailableBSizeForContent != NS_UNCONSTRAINEDSIZE) {
-      wrapThreshold = std::min(wrapThreshold, aAvailableBSizeForContent);
+        aColumnWrapThreshold != NS_UNCONSTRAINEDSIZE) {
+      wrapThreshold = std::min(wrapThreshold, aColumnWrapThreshold);
     }
   }
 
@@ -4230,6 +4230,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
   const nscoord availableBSizeForContent = availableSizeForItems.BSize(wm);
+  const nscoord columnWrapThreshold = availableSizeForItems.BSize(wm);
 
   nscoord contentBoxMainSize =
       GetMainSizeFromReflowInput(aReflowInput, axisTracker);
@@ -4259,9 +4260,9 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   AutoTArray<StrutInfo, 1> struts;
   AutoTArray<nsIFrame*, 1> placeholders;
   DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
-               flexContainerAscent, availableBSizeForContent, lines, struts,
-               placeholders, axisTracker, mainGapSize, crossGapSize,
-               hasLineClampEllipsis, containerInfo);
+               flexContainerAscent, availableBSizeForContent,
+               columnWrapThreshold, lines, struts, placeholders, axisTracker,
+               mainGapSize, crossGapSize, hasLineClampEllipsis, containerInfo);
 
   if (!struts.IsEmpty()) {
     // We're restarting flex layout, with new knowledge of collapsed items.
@@ -4269,9 +4270,10 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     lines.Clear();
     placeholders.Clear();
     DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
-                 flexContainerAscent, availableBSizeForContent, lines, struts,
-                 placeholders, axisTracker, mainGapSize, crossGapSize,
-                 hasLineClampEllipsis, containerInfo);
+                 flexContainerAscent, availableBSizeForContent,
+                 columnWrapThreshold, lines, struts, placeholders, axisTracker,
+                 mainGapSize, crossGapSize, hasLineClampEllipsis,
+                 containerInfo);
   }
 
   const LogicalSize contentBoxSize =
@@ -4627,18 +4629,19 @@ void nsFlexContainerFrame::DoFlexLayout(
     const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
     nscoord& aFlexContainerAscent, nscoord aAvailableBSizeForContent,
-    nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
-    nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    nscoord aColumnWrapThreshold, nsTArray<FlexLine>& aLines,
+    nsTArray<StrutInfo>& aStruts, nsTArray<nsIFrame*>& aPlaceholders,
+    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
+    nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.IsEmpty(), "Caller should pass an empty array for lines!");
   MOZ_ASSERT(aPlaceholders.IsEmpty(),
              "Caller should pass an empty array for placeholders!");
 
-  GenerateFlexLines(aReflowInput, aContentBoxMainSize,
-                    aAvailableBSizeForContent, aStruts, aAxisTracker,
-                    aMainGapSize, aHasLineClampEllipsis, aPlaceholders, aLines);
+  GenerateFlexLines(aReflowInput, aContentBoxMainSize, aColumnWrapThreshold,
+                    aStruts, aAxisTracker, aMainGapSize, aHasLineClampEllipsis,
+                    aPlaceholders, aLines);
 
   if ((aLines.Length() == 1 && aLines[0].IsEmpty()) ||
       aReflowInput.mStyleDisplay->IsContainLayout()) {
