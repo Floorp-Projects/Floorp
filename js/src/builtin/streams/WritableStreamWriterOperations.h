@@ -19,6 +19,7 @@ class JS_PUBLIC_API JSObject;
 
 namespace js {
 
+class PromiseObject;
 class WritableStreamDefaultWriter;
 
 extern JSObject* WritableStreamDefaultWriterAbort(
@@ -43,7 +44,7 @@ extern MOZ_MUST_USE bool WritableStreamDefaultWriterGetDesiredSize(
 extern MOZ_MUST_USE bool WritableStreamDefaultWriterRelease(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter);
 
-extern JSObject* WritableStreamDefaultWriterWrite(
+extern PromiseObject* WritableStreamDefaultWriterWrite(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     JS::Handle<JS::Value> chunk);
 
