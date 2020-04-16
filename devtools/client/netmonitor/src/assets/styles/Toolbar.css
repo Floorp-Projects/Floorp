@@ -43,6 +43,10 @@
   background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg");
 }
 
+.devtools-button.netmonitor-settings-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
 .devtools-button.requests-list-blocking-button:empty::before {
   fill: var(--theme-body-color);
 }
@@ -55,16 +59,11 @@
   fill: var(--timing-blocked-color);
 }
 
-/* HAR button */
-
-#devtools-har-button {
-  margin-inline-end: 10px;
-}
-
 /* Throttling Button */
 
 #network-throttling-menu {
   margin-inline-start: 10px;
+  margin-inline-end: 10px;
 }
 
 .devtools-toolbar .devtools-checkbox {
@@ -79,12 +78,19 @@
   white-space: nowrap;
 }
 
-.devtools-toolbar .devtools-checkbox-label.devtools-persistlog-checkbox {
-  margin-inline-start: 4px;
-}
-
 .devtools-toolbar .devtools-checkbox-label.devtools-cache-checkbox {
   margin-inline-end: 7px;
+}
+
+/* Options menu */
+
+#netmonitor-settings-menu-button.tooltip-container[type="doorhanger"] .menuitem > .command[role="menuseparator"] {
+  padding-top: 0;
+  margin-bottom: 6px;
+}
+
+#netmonitor-settings-menu-button.tooltip-container[type="doorhanger"] .menuitem > .command[disabled] {
+  opacity: 0.5;
 }
 
 /* Hide filter input learn more link if there is not enough
