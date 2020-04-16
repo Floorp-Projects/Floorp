@@ -2420,8 +2420,7 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
  */
 static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
                                      nsACString& aAppVersion,
-                                     nsACString& aAppBuildID,
-                                     nsACString& aPlatformBuildID) {
+                                     nsACString& aAppBuildID) {
   int32_t underscorePos = aCompatVersion.FindChar('_');
   int32_t slashPos = aCompatVersion.FindChar('/');
 
@@ -2433,78 +2432,12 @@ static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
     // Fall back to just using the entire string as the version.
     aAppVersion = aCompatVersion;
     aAppBuildID.Truncate(0);
-    aPlatformBuildID.Truncate(0);
     return;
   }
 
   aAppVersion = Substring(aCompatVersion, 0, underscorePos);
   aAppBuildID = Substring(aCompatVersion, underscorePos + 1,
                           slashPos - (underscorePos + 1));
-  aPlatformBuildID = Substring(aCompatVersion, slashPos + 1);
-}
-
-/**
- * Compares two build IDs. Returns 0 if they match, < 0 if newID is considered
- * newer than oldID and > 0 if the oldID is considered newer than newID.
- */
-static int32_t CompareBuildIDs(nsACString& oldID, nsACString& newID) {
-  // For Mozilla builds the build ID is a numeric date string. But it is too
-  // large a number for the version comparator to handle so try to just compare
-  // them as integer values first.
-
-  // ToInteger64 succeeds if the strings contain trailing non-digits so first
-  // check that all the characters are digits.
-  bool isNumeric = true;
-  const char* pos = oldID.BeginReading();
-  const char* end = oldID.EndReading();
-  while (pos != end) {
-    if (!IsAsciiDigit(*pos)) {
-      isNumeric = false;
-      break;
-    }
-    pos++;
-  }
-
-  if (isNumeric) {
-    pos = newID.BeginReading();
-    end = newID.EndReading();
-    while (pos != end) {
-      if (!IsAsciiDigit(*pos)) {
-        isNumeric = false;
-        break;
-      }
-      pos++;
-    }
-  }
-
-  if (isNumeric) {
-    nsresult rv;
-    CheckedInt<uint64_t> oldVal = oldID.ToInteger64(&rv);
-
-    if (NS_SUCCEEDED(rv) && oldVal.isValid()) {
-      CheckedInt<uint64_t> newVal = newID.ToInteger64(&rv);
-
-      if (NS_SUCCEEDED(rv) && newVal.isValid()) {
-        // We have simple numbers for both IDs.
-        if (oldVal.value() == newVal.value()) {
-          return 0;
-        }
-
-        if (oldVal.value() > newVal.value()) {
-          return 1;
-        }
-
-        return -1;
-      }
-    }
-  }
-
-  // If either could not be parsed as a number then something (likely a Linux
-  // distribution could have modified the build ID in some way. We don't know
-  // what format this may be so let's just fall back to assuming that it's a
-  // valid toolkit version.
-  return CompareVersions(PromiseFlatCString(oldID).get(),
-                         PromiseFlatCString(newID).get());
 }
 
 /**
@@ -2514,50 +2447,29 @@ static int32_t CompareBuildIDs(nsACString& oldID, nsACString& newID) {
  */
 int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
                               const nsACString& aNewCompatVersion) {
-  // Quick path for the common case.
+  // The simple case,
   if (aOldCompatVersion.Equals(aNewCompatVersion)) {
-    gLastAppVersion.Assign(gAppData->version);
-    gLastAppBuildID.Assign(gAppData->buildID);
-
     return 0;
   }
-
-  // The versions differ for some reason so we will only ever return false from
-  // here onwards. We just have to figure out if this is a downgrade or not.
 
   // Hardcode the case where the last run was in safe mode (Bug 1556612). We
   // cannot tell if this is a downgrade or not so just assume it isn't and let
   // the user proceed.
   if (aOldCompatVersion.EqualsLiteral("Safe Mode")) {
-    gLastAppVersion.SetIsVoid(true);
-    gLastAppBuildID.SetIsVoid(true);
-
     return -1;
   }
 
-  nsCString oldPlatformBuildID;
-  ExtractCompatVersionInfo(aOldCompatVersion, gLastAppVersion, gLastAppBuildID,
-                           oldPlatformBuildID);
+  // Extract the major version part from the version string and only use that
+  // for version comparison.
+  int32_t index = aOldCompatVersion.FindChar('.');
+  const nsACString& oldMajorVersion = Substring(
+      aOldCompatVersion, 0, index < 0 ? aOldCompatVersion.Length() : index);
+  index = aNewCompatVersion.FindChar('.');
+  const nsACString& newMajorVersion = Substring(
+      aNewCompatVersion, 0, index < 0 ? aNewCompatVersion.Length() : index);
 
-  nsCString newVersion;
-  nsCString newAppBuildID;
-  nsCString newPlatformBuildID;
-  ExtractCompatVersionInfo(aNewCompatVersion, newVersion, newAppBuildID,
-                           newPlatformBuildID);
-
-  // In most cases the app version will differ and this is an easy check.
-  int32_t result = CompareVersions(gLastAppVersion.get(), newVersion.get());
-  if (result != 0) {
-    return result;
-  }
-
-  // Fall back to build ID comparison.
-  result = CompareBuildIDs(gLastAppBuildID, newAppBuildID);
-  if (result != 0) {
-    return result;
-  }
-
-  return CompareBuildIDs(oldPlatformBuildID, newPlatformBuildID);
+  return CompareVersions(PromiseFlatCString(oldMajorVersion).get(),
+                         PromiseFlatCString(newMajorVersion).get());
 }
 
 /**
@@ -2593,11 +2505,17 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return false;
   }
 
-  int32_t result = CompareCompatVersions(aLastVersion, aVersion);
-  if (result != 0) {
-    *aIsDowngrade = result > 0;
+  int32_t comparison = CompareCompatVersions(aLastVersion, aVersion);
+  if (comparison != 0) {
+    *aIsDowngrade = comparison > 0;
+    ExtractCompatVersionInfo(aLastVersion, gLastAppVersion, gLastAppBuildID);
+
     return false;
   }
+
+  gLastAppVersion.Assign(gAppData->version);
+  gLastAppBuildID.Assign(gAppData->buildID);
+  *aIsDowngrade = false;
 
   nsAutoCString buf;
   rv = parser.GetString("Compatibility", "LastOSABI", buf);
