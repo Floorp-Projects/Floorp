@@ -234,7 +234,7 @@ a.hidden,
   padding-inline: 24px 3px;
   -moz-context-properties: fill;
   fill: currentColor;
-  background: url("chrome://global/skin/icons/settings.svg") no-repeat 3px;
+  background: url("chrome://browser/skin/settings.svg") no-repeat 3px;
   font-size: 0.75em;
   cursor: default;
   width: max-content;

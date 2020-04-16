@@ -134,7 +134,7 @@
   border-width: 0;
   border-radius: 20px;
   min-width: 0;
-  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline-end: 4px;
