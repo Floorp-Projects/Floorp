@@ -275,6 +275,13 @@ var _attemptConnect = async function({ host, port, encryption }) {
   } else {
     s = socketTransportService.createTransport([], host, port, null);
   }
+
+  // Force disabling IPV6 if we aren't explicitely connecting to an IPv6 address
+  // It fails intermitently on MacOS when opening the Browser Toolbox (bug 1615412)
+  if (!host.includes(":")) {
+    s.connectionFlags |= Ci.nsISocketTransport.DISABLE_IPV6;
+  }
+
   // By default the CONNECT socket timeout is very long, 65535 seconds,
   // so that if we race to be in CONNECT state while the server socket is still
   // initializing, the connection is stuck in connecting state for 18.20 hours!
