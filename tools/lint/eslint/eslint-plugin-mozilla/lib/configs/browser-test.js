@@ -41,6 +41,7 @@ module.exports = {
     is: false,
     isnot: false,
     ok: false,
+    privateNoteIntentionalCrash: false,
     record: false,
     registerCleanupFunction: false,
     requestLongerTimeout: false,

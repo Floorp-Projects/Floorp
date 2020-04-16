@@ -87,6 +87,7 @@ class MessageManagerCallback {
   virtual bool DoSendBlockingMessage(JSContext* aCx, const nsAString& aMessage,
                                      StructuredCloneData& aData,
                                      JS::Handle<JSObject*> aCpows,
+                                     nsIPrincipal* aPrincipal,
                                      nsTArray<StructuredCloneData>* aRetVal,
                                      bool aIsSync) {
     return true;
@@ -94,7 +95,8 @@ class MessageManagerCallback {
 
   virtual nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
                                       StructuredCloneData& aData,
-                                      JS::Handle<JSObject*> aCpows) {
+                                      JS::Handle<JSObject*> aCpows,
+                                      nsIPrincipal* aPrincipal) {
     return NS_OK;
   }
 
@@ -191,9 +193,11 @@ class nsFrameMessageManager : public nsIMessageSender {
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                         JS::Handle<JS::Value> aObj,
                         JS::Handle<JSObject*> aObjects,
+                        nsIPrincipal* aPrincipal,
                         JS::Handle<JS::Value> aTransfers,
                         mozilla::ErrorResult& aError) {
-    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, aTransfers, aError);
+    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, aPrincipal,
+                         aTransfers, aError);
   }
   already_AddRefed<mozilla::dom::ProcessMessageManager>
   GetProcessMessageManager(mozilla::ErrorResult& aError);
@@ -203,17 +207,19 @@ class nsFrameMessageManager : public nsIMessageSender {
   // SyncMessageSender
   void SendSyncMessage(JSContext* aCx, const nsAString& aMessageName,
                        JS::Handle<JS::Value> aObj,
-                       JS::Handle<JSObject*> aObjects,
+                       JS::Handle<JSObject*> aObjects, nsIPrincipal* aPrincipal,
                        nsTArray<JS::Value>& aResult,
                        mozilla::ErrorResult& aError) {
-    SendMessage(aCx, aMessageName, aObj, aObjects, true, aResult, aError);
+    SendMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, true, aResult,
+                aError);
   }
   void SendRpcMessage(JSContext* aCx, const nsAString& aMessageName,
                       JS::Handle<JS::Value> aObj,
-                      JS::Handle<JSObject*> aObjects,
+                      JS::Handle<JSObject*> aObjects, nsIPrincipal* aPrincipal,
                       nsTArray<JS::Value>& aResult,
                       mozilla::ErrorResult& aError) {
-    SendMessage(aCx, aMessageName, aObj, aObjects, false, aResult, aError);
+    SendMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, false, aResult,
+                aError);
   }
 
   // GlobalProcessScriptLoader
@@ -232,10 +238,11 @@ class nsFrameMessageManager : public nsIMessageSender {
                       const nsAString& aMessage, bool aIsSync,
                       StructuredCloneData* aCloneData,
                       mozilla::jsipc::CpowHolder* aCpows,
+                      nsIPrincipal* aPrincipal,
                       nsTArray<StructuredCloneData>* aRetVal,
                       mozilla::ErrorResult& aError) {
     ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync,
-                   aCloneData, aCpows, aRetVal, aError);
+                   aCloneData, aCpows, aPrincipal, aRetVal, aError);
   }
 
   void Disconnect(bool aRemoveFromParent = true);
@@ -248,7 +255,8 @@ class nsFrameMessageManager : public nsIMessageSender {
   nsresult DispatchAsyncMessageInternal(JSContext* aCx,
                                         const nsAString& aMessage,
                                         StructuredCloneData& aData,
-                                        JS::Handle<JSObject*> aCpows);
+                                        JS::Handle<JSObject*> aCpows,
+                                        nsIPrincipal* aPrincipal);
   bool IsGlobal() { return mGlobal; }
   bool IsBroadcaster() { return mIsBroadcaster; }
   bool IsChrome() { return mChrome; }
@@ -287,18 +295,20 @@ class nsFrameMessageManager : public nsIMessageSender {
   void DispatchAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                             JS::Handle<JS::Value> aObj,
                             JS::Handle<JSObject*> aObjects,
+                            nsIPrincipal* aPrincipal,
                             JS::Handle<JS::Value> aTransfers,
                             mozilla::ErrorResult& aError);
 
   void SendMessage(JSContext* aCx, const nsAString& aMessageName,
                    JS::Handle<JS::Value> aObj, JS::Handle<JSObject*> aObjects,
-                   bool aIsSync, nsTArray<JS::Value>& aResult,
-                   mozilla::ErrorResult& aError);
+                   nsIPrincipal* aPrincipal, bool aIsSync,
+                   nsTArray<JS::Value>& aResult, mozilla::ErrorResult& aError);
 
   void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
                       bool aTargetClosed, const nsAString& aMessage,
                       bool aIsSync, StructuredCloneData* aCloneData,
                       mozilla::jsipc::CpowHolder* aCpows,
+                      nsIPrincipal* aPrincipal,
                       nsTArray<StructuredCloneData>* aRetVal,
                       mozilla::ErrorResult& aError);
 
@@ -366,7 +376,8 @@ class nsSameProcessAsyncMessageBase {
 
   nsSameProcessAsyncMessageBase(JS::RootingContext* aRootingCx,
                                 JS::Handle<JSObject*> aCpows);
-  nsresult Init(const nsAString& aMessage, StructuredCloneData& aData);
+  nsresult Init(const nsAString& aMessage, StructuredCloneData& aData,
+                nsIPrincipal* aPrincipal);
 
   void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
                       nsFrameMessageManager* aManager);
@@ -377,6 +388,7 @@ class nsSameProcessAsyncMessageBase {
   nsString mMessage;
   StructuredCloneData mData;
   JS::PersistentRooted<JSObject*> mCpows;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 #ifdef DEBUG
   bool mCalledInit;
 #endif
@@ -419,6 +431,7 @@ class nsMessageManagerScriptExecutor {
   bool Init();
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   AutoTArray<JS::Heap<JSObject*>, 2> mAnonymousGlobalScopes;
 
   // Returns true if this is a process message manager. There should only be a

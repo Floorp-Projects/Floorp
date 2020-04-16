@@ -55,7 +55,7 @@
       frame1.docShell.chromeEventHandler.removeAttribute("crashedPageTitle");
 
       SimpleTest.is(frame1.contentDocument.documentURI,
-                    "about:restartrequired?e=restartrequired&u=http%3A//www.example.com/1&c=UTF-8&d=%20",
+                    "about:restartrequired?e=restartrequired&u=http%3A//www.example.com/1&c=UTF-8&f=regular&d=%20",
                     "Correct about:restartrequired displayed for page with title.");
 
       errorPageReady = waitForErrorPage(frame2);
@@ -64,7 +64,7 @@
       await errorPageReady;
 
       SimpleTest.is(frame2.contentDocument.documentURI,
-                    "about:restartrequired?e=restartrequired&u=http%3A//www.example.com/2&c=UTF-8&d=%20",
+                    "about:restartrequired?e=restartrequired&u=http%3A//www.example.com/2&c=UTF-8&f=regular&d=%20",
                     "Correct about:restartrequired displayed for page with no title.");
 
       SimpleTest.finish();

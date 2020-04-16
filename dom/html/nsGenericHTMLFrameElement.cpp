@@ -255,6 +255,17 @@ ScrollbarPreference nsGenericHTMLFrameElement::MapScrollingAttribute(
   return ScrollbarPreference::Auto;
 }
 
+static bool PrincipalAllowsBrowserFrame(nsIPrincipal* aPrincipal) {
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      mozilla::services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  nsresult rv = permMgr->TestPermissionFromPrincipal(
+      aPrincipal, NS_LITERAL_CSTRING("browser"), &permission);
+  NS_ENSURE_SUCCESS(rv, false);
+  return permission == nsIPermissionManager::ALLOW_ACTION;
+}
+
 /* virtual */
 nsresult nsGenericHTMLFrameElement::AfterSetAttr(
     int32_t aNameSpaceID, nsAtom* aName, const nsAttrValue* aValue,
@@ -285,9 +296,9 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
         }
       }
     } else if (aName == nsGkAtoms::mozbrowser) {
-      mReallyIsBrowser =
-          !!aValue && StaticPrefs::dom_mozBrowserFramesEnabled() &&
-          XRE_IsParentProcess() && NodePrincipal()->IsSystemPrincipal();
+      mReallyIsBrowser = !!aValue &&
+                         StaticPrefs::dom_mozBrowserFramesEnabled() &&
+                         PrincipalAllowsBrowserFrame(NodePrincipal());
     }
   }
 

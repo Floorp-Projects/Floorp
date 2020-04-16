@@ -195,6 +195,11 @@ dictionary ReceiveMessageArgument
 
   sequence<MessagePort> ports;
 
+  /**
+   * Principal for the window app.
+   */
+  required Principal? principal;
+
   FrameLoader targetFrameLoader;
 };
 
@@ -311,6 +316,7 @@ interface mixin MessageSenderMixin {
   void sendAsyncMessage(optional DOMString? messageName = null,
                         optional any obj,
                         optional object? objects = null,
+                        optional Principal? principal = null,
                         optional any transfers);
 
   /**
@@ -351,7 +357,8 @@ interface mixin SyncMessageSenderMixin
   [Throws]
   sequence<any> sendSyncMessage(optional DOMString? messageName = null,
                                 optional any obj,
-                                optional object? objects = null);
+                                optional object? objects = null,
+                                optional Principal? principal = null);
 
   /**
    * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
@@ -365,7 +372,8 @@ interface mixin SyncMessageSenderMixin
   [Throws]
   sequence<any> sendRpcMessage(optional DOMString? messageName = null,
                                optional any obj,
-                               optional object? objects = null);
+                               optional object? objects = null,
+                               optional Principal? principal = null);
 };
 
 /**
@@ -387,6 +395,13 @@ interface mixin MessageManagerGlobal
    * Print a string to stdout.
    */
   void dump(DOMString str);
+
+  /**
+   * If leak detection is enabled, print a note to the leak log that this
+   * process will intentionally crash.
+   */
+  [Throws]
+  void privateNoteIntentionalCrash();
 
   /**
    * Ascii base64 data to binary data and vice versa
