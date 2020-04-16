@@ -72,8 +72,10 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
     return nullptr;
   }
 
+  SourceExtent extent =
+      SourceExtent::makeGlobalExtent(srcBuf.length(), options);
   frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                         compilationInfo.directives);
+                                         compilationInfo.directives, extent);
   return frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 
@@ -482,8 +484,10 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
       return false;
     }
 
+    SourceExtent extent =
+        SourceExtent::makeGlobalExtent(srcBuf.length(), options);
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationInfo.directives);
+                                           compilationInfo.directives, extent);
     script = frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
     if (!script) {
       return false;
