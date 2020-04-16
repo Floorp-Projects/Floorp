@@ -69,9 +69,6 @@ class SmooshScriptStencil : public ScriptStencil {
         compilationInfo_(compilationInfo) {}
 
   MOZ_MUST_USE bool init(JSContext* cx) {
-    lineno = result_.lineno;
-    column = result_.column;
-
     natoms = result_.atoms.len;
 
     ngcthings = result_.gcthings.len;

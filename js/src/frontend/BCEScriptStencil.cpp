@@ -21,9 +21,6 @@ BCEScriptStencil::BCEScriptStencil(
 }
 
 void BCEScriptStencil::init() {
-  lineno = bce_.firstLine;
-  column = bce_.firstColumn;
-
   natoms = bce_.perScriptData().atomIndices()->count();
 
   ngcthings = bce_.perScriptData().gcThingList().length();
