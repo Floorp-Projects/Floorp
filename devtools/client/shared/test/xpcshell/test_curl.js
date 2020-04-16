@@ -81,6 +81,10 @@ add_task(async function() {
     "content-type header present in curl output"
   );
   ok(!inParams(curlParams, "--data"), "no data param in GET curl output");
+  ok(
+    !inParams(curlParams, "--data-raw"),
+    "no raw data param in GET curl output"
+  );
 });
 
 // Test `Curl.generateCommand` URL glob handling
@@ -140,9 +144,12 @@ add_task(async function() {
     exactHeaderInParams(curlParams, "Content-Type: text/plain"),
     "content-type header present in curl output"
   );
-  ok(inParams(curlParams, "--data"), '"--data" param present in curl output');
   ok(
-    inParams(curlParams, `--data ${quote(request.postDataText)}`),
+    inParams(curlParams, "--data-raw"),
+    '"--data-raw" param present in curl output'
+  );
+  ok(
+    inParams(curlParams, `--data-raw ${quote(request.postDataText)}`),
     "proper payload data present in output"
   );
 });
