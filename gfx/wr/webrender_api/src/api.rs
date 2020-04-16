@@ -20,6 +20,7 @@ use crate::{display_item as di, font};
 use crate::color::{ColorU, ColorF};
 use crate::display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
 use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
+use crate::image::DEFAULT_TILE_SIZE;
 use crate::units::*;
 
 /// Width and height in device pixels of image tiles.
@@ -99,7 +100,7 @@ impl fmt::Debug for ResourceUpdate {
                 &i.descriptor.size
             )),
             ResourceUpdate::AddBlobImage(ref i) => f.write_fmt(format_args!(
-                "ResourceUpdate::AddBlobImage size({:?})",
+                "ResourceUFpdate::AddBlobImage size({:?})",
                 &i.descriptor.size
             )),
             ResourceUpdate::UpdateBlobImage(i) => f.write_fmt(format_args!(
@@ -445,7 +446,7 @@ impl Transaction {
         descriptor: ImageDescriptor,
         data: Arc<BlobImageData>,
         visible_rect: DeviceIntRect,
-        tiling: Option<TileSize>,
+        tile_size: Option<TileSize>,
     ) {
         self.resource_updates.push(
             ResourceUpdate::AddBlobImage(AddBlobImage {
@@ -453,7 +454,7 @@ impl Transaction {
                 descriptor,
                 data,
                 visible_rect,
-                tiling,
+                tile_size: tile_size.unwrap_or(DEFAULT_TILE_SIZE),
             })
         );
     }
@@ -695,13 +696,12 @@ pub struct AddBlobImage {
     /// This means that blob images can be updated to insert/remove content
     /// in any direction to support panning and zooming.
     pub visible_rect: DeviceIntRect,
-    /// An optional tiling scheme to apply when rasterizing the blob-image
+    /// The blob image's tile size to apply when rasterizing the blob-image
     /// and when storing its rasterized data on the GPU.
     /// Applies to both width and heights of the tiles.
     ///
-    /// Note that WebRender may internally chose to tile large blob-images
-    /// even if this member is set to `None`.
-    pub tiling: Option<TileSize>,
+    /// All blob images are tiled.
+    pub tile_size: TileSize,
 }
 
 /// Updates an already existing blob-image resource.

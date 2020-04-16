@@ -37,7 +37,8 @@ fn premul(x: u8, a: u8) -> u8 {
 fn render_blob(
     color: ColorU,
     descriptor: &BlobImageDescriptor,
-    tile: Option<(TileSize, TileOffset)>,
+    tile: TileOffset,
+    _tile_size: TileSize,
     dirty_rect: &BlobDirtyRect,
 ) -> BlobImageResult {
     // Allocate storage for the result. Right now the resource cache expects the
@@ -48,10 +49,7 @@ fn render_blob(
 
     // Generate a per-tile pattern to see it in the demo. For a real use case it would not
     // make sense for the rendered content to depend on its tile.
-    let tile_checker = match tile {
-        Some((_, tile)) => (tile.x % 2 == 0) != (tile.y % 2 == 0),
-        None => true,
-    };
+    let tile_checker = (tile.x % 2 == 0) != (tile.y % 2 == 0);
 
     let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect);
 
@@ -116,7 +114,7 @@ impl BlobCallbacks {
 }
 
 pub struct CheckerboardRenderer {
-    image_cmds: HashMap<BlobImageKey, (ColorU, Option<TileSize>)>,
+    image_cmds: HashMap<BlobImageKey, (ColorU, TileSize)>,
     callbacks: Arc<Mutex<BlobCallbacks>>,
 }
 
@@ -131,7 +129,7 @@ impl CheckerboardRenderer {
 
 impl BlobImageHandler for CheckerboardRenderer {
     fn add(&mut self, key: BlobImageKey, cmds: Arc<BlobImageData>,
-           _visible_rect: &DeviceIntRect, tile_size: Option<TileSize>) {
+           _visible_rect: &DeviceIntRect, tile_size: TileSize) {
         self.image_cmds
             .insert(key, (deserialize_blob(&cmds[..]).unwrap(), tile_size));
     }
@@ -174,12 +172,13 @@ struct Command {
     request: BlobImageRequest,
     color: ColorU,
     descriptor: BlobImageDescriptor,
-    tile: Option<(TileSize, TileOffset)>,
+    tile: TileOffset,
+    tile_size: TileSize,
     dirty_rect: BlobDirtyRect,
 }
 
 struct Rasterizer {
-    image_cmds: HashMap<BlobImageKey, (ColorU, Option<TileSize>)>,
+    image_cmds: HashMap<BlobImageKey, (ColorU, TileSize)>,
 }
 
 impl AsyncBlobImageRasterizer for Rasterizer {
@@ -192,12 +191,11 @@ impl AsyncBlobImageRasterizer for Rasterizer {
             |item| {
                 let (color, tile_size) = self.image_cmds[&item.request.key];
 
-                let tile = item.request.tile.map(|tile| (tile_size.unwrap(), tile));
-
                 Command {
                     request: item.request,
                     color,
-                    tile,
+                    tile_size,
+                    tile: item.request.tile,
                     descriptor: item.descriptor,
                     dirty_rect: item.dirty_rect,
                 }
@@ -205,7 +203,7 @@ impl AsyncBlobImageRasterizer for Rasterizer {
         ).collect();
 
         requests.iter().map(|cmd| {
-            (cmd.request, render_blob(cmd.color, &cmd.descriptor, cmd.tile, &cmd.dirty_rect))
+            (cmd.request, render_blob(cmd.color, &cmd.descriptor, cmd.tile, cmd.tile_size, &cmd.dirty_rect))
         }).collect()
     }
 }
