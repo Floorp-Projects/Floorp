@@ -96,7 +96,7 @@ export default class LoginItem extends HTMLElement {
 
     this.render();
 
-    this._breachAlertLink.addEventListener("click", this);
+    this._breachAlertLearnMoreLink.addEventListener("click", this);
     this._cancelButton.addEventListener("click", this);
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
@@ -110,6 +110,7 @@ export default class LoginItem extends HTMLElement {
     this._originInput.addEventListener("auxclick", this);
     this._originDisplayInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
+    this._vulnerableAlertLearnMoreLink.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -492,14 +493,17 @@ export default class LoginItem extends HTMLElement {
         if (classList.contains("origin-input")) {
           this._handleOriginClick();
         }
-        if (classList.contains("alert-link")) {
+        if (classList.contains("alert-learn-more-link")) {
           if (event.currentTarget.closest(".breach-alert")) {
             this._recordTelemetryEvent({
               object: "existing_login",
               method: "learn_more_breach",
             });
           } else if (event.currentTarget.closest(".vulnerable-alert")) {
-            // TODO: Add telemetry event
+            this._recordTelemetryEvent({
+              object: "existing_login",
+              method: "learn_more_vulnerable",
+            });
           }
         }
         break;

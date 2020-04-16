@@ -63,6 +63,29 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(2);
 
+  // Need to change the learn-more to a local address for testing.
+  const FAKE_LEARN_MORE_URL = "https://learn-more.example.com/";
+  let promiseNewTab = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    FAKE_LEARN_MORE_URL
+  );
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [FAKE_LEARN_MORE_URL],
+    async function(fakeLearnMoreUrl) {
+      let loginItem = content.document.querySelector("login-item");
+      let learnMoreLink = loginItem.shadowRoot.querySelector(
+        ".alert-learn-more-link"
+      );
+      learnMoreLink.href = fakeLearnMoreUrl;
+      learnMoreLink.click();
+    }
+  );
+  let newTab = await promiseNewTab;
+  ok(true, "New tab opened to " + FAKE_LEARN_MORE_URL);
+  BrowserTestUtils.removeTab(newTab);
+  await LoginTestUtils.telemetry.waitForEventCount(3);
+
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
@@ -70,7 +93,7 @@ add_task(async function test_telemetry_events() {
     );
     copyButton.click();
   });
-  await LoginTestUtils.telemetry.waitForEventCount(3);
+  await LoginTestUtils.telemetry.waitForEventCount(4);
 
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
     let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
@@ -85,13 +108,13 @@ add_task(async function test_telemetry_events() {
     // When reauth is observed an extra telemetry event will be recorded
     // for the reauth, hence the event count increasing by 2 here, and later
     // in the test as well.
-    await LoginTestUtils.telemetry.waitForEventCount(5);
+    await LoginTestUtils.telemetry.waitForEventCount(6);
   }
   let nextTelemetryEventCount = OSKeyStoreTestUtils.canTestOSKeyStoreLogin()
-    ? 6
-    : 4;
+    ? 7
+    : 5;
 
-  let promiseNewTab = BrowserTestUtils.waitForNewTab(
+  promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
     TEST_LOGIN3.origin + "/"
   );
@@ -100,7 +123,7 @@ add_task(async function test_telemetry_events() {
     let originInput = loginItem.shadowRoot.querySelector(".origin-input");
     originInput.click();
   });
-  let newTab = await promiseNewTab;
+  newTab = await promiseNewTab;
   ok(true, "New tab opened to " + TEST_LOGIN3.origin);
   BrowserTestUtils.removeTab(newTab);
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
@@ -240,6 +263,14 @@ add_task(async function test_telemetry_events() {
   let expectedEvents = [
     [true, "pwmgr", "open_management", "direct"],
     [true, "pwmgr", "select", "existing_login", null, { breached: "true" }],
+    [
+      true,
+      "pwmgr",
+      "learn_more_breach",
+      "existing_login",
+      null,
+      { breached: "true" },
+    ],
     [true, "pwmgr", "copy", "username", null, { breached: "true" }],
     [testOSAuth, "pwmgr", "reauthenticate", "os_auth", "success"],
     [testOSAuth, "pwmgr", "copy", "password", null, { breached: "true" }],
