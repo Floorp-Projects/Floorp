@@ -432,6 +432,22 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                            nscoord aAvailableBSizeForContent, bool* aIsDefinite,
                            nsReflowStatus& aStatus) const;
 
+  /**
+   * Compute the size of the available space that we'll give to our children to
+   * reflow into. In particular, compute the available size that we would give
+   * to a hypothetical child placed at the IStart/BStart corner of this flex
+   * container's content-box.
+   *
+   * @param aReflowInput the flex container's reflow input.
+   * @param aBorderPadding the border and padding of this frame with the
+   *                       assumption that this is the last fragment.
+   *
+   * @return the size of the available space for our children to reflow into.
+   */
+  mozilla::LogicalSize ComputeAvailableSizeForItems(
+      const ReflowInput& aReflowInput,
+      const mozilla::LogicalMargin& aBorderPadding) const;
+
   void SizeItemInCrossAxis(ReflowInput& aChildReflowInput, FlexItem& aItem);
 
   /**
@@ -459,6 +475,13 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                            container.
    * @param aContentBoxCrossSize the final content-box cross-size of the flex
    *                             container.
+   * @param aAvailableSizeForItems the size of the available space for our
+   *                               children to reflow into.
+   * @param aBorderPadding the border and padding for this frame (possibly with
+   *                       some sides skipped as-appropriate, if we're in a
+   *                       continuation chain).
+   * @param aConsumedBSize the sum of our content block-size consumed by our
+   *                       prev-in-flows.
    * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
    *                             container ascent computed in DoFlexLayout; or,
    *                             nscoord_MIN if the ascent hasn't been
@@ -469,6 +492,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void ReflowChildren(const ReflowInput& aReflowInput,
                       const nscoord aContentBoxMainSize,
                       const nscoord aContentBoxCrossSize,
+                      const mozilla::LogicalSize& aAvailableSizeForItems,
+                      const mozilla::LogicalMargin& aBorderPadding,
+                      const nscoord aConsumedBSize,
                       nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
                       nsTArray<nsIFrame*>& aPlaceholders,
                       const FlexboxAxisTracker& aAxisTracker,
