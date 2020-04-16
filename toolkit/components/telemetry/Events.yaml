@@ -614,6 +614,7 @@ pwmgr:
         "success_no_prompt" should be used when the feature is enabled but no prompt is given to the user because they have recently authenticated.
         "success_disabled" is used when the feature is disabled.
         "success_unsupported_platform" should be set when the user attempts to authenticate on an unsupported platform.
+        "success_no_password" should be used when the user doesn't have an OS password set.
     objects: [
       "master_password",
       "os_auth",
@@ -621,6 +622,7 @@ pwmgr:
     methods: ["reauthenticate"]
     bug_numbers:
       - 1628029
+      - 1623745
     expiry_version: never
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out

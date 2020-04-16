@@ -195,13 +195,20 @@ var OSKeyStore = {
         unlockPromise = osReauthenticator
           .asyncReauthenticateUser(reauth, dialogCaption, parentWindow)
           .then(reauthResult => {
-            if (typeof reauthResult == "boolean" && !reauthResult) {
+            if (typeof reauthResult[0] == "boolean" && !reauthResult[0]) {
               throw new Components.Exception(
                 "User canceled OS reauth entry",
                 Cr.NS_ERROR_FAILURE
               );
             }
-            return { authenticated: true, auth_details: "success" };
+            let result = {
+              authenticated: true,
+              auth_details: "success",
+            };
+            if (reauthResult.length == 2 && reauthResult[1]) {
+              result.auth_details += "_no_password";
+            }
+            return result;
           });
       } else {
         log.debug("ensureLoggedIn: Skipping reauth on unsupported platforms");
