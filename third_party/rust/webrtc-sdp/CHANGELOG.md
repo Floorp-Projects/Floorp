@@ -1,4 +1,7 @@
 # Changelog
+## [0.3.5] - 2020-04-07
+### Fixed
+- RTX apt can now be zero
 ## [0.3.4] - 2020-03-31
 ### Fixed
 - Fixed new clippy warnings in stable
