@@ -1036,9 +1036,10 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   }
 
   // find enclosing table
-  RefPtr<Element> table = GetEnclosingTable(cellElement);
+  RefPtr<Element> table =
+      HTMLEditUtils::GetClosestAncestorTableElement(*cellElement);
   if (!table) {
-    NS_WARNING("HTMLEditor::GetEnclosingTable() failed");
+    NS_WARNING("HTMLEditor::GetClosestAncestorTableElement() failed");
     return EditActionIgnored();
   }
 
@@ -1066,7 +1067,8 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
 
     nsCOMPtr<nsINode> node = postOrderIter.GetCurrentNode();
     if (node && HTMLEditUtils::IsTableCell(node) &&
-        GetEnclosingTable(node) == table) {
+        HTMLEditUtils::GetClosestAncestorTableElement(*node->AsElement()) ==
+            table) {
       aKeyboardEvent->PreventDefault();
       CollapseSelectionToDeepestNonTableFirstChild(node);
       return EditActionHandled(
@@ -3854,24 +3856,6 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionToStartOf() failed");
   return NS_SUCCEEDED(rv);
-}
-
-/**
- * GetEnclosingTable() finds ancestor who is a table, if any.
- */
-Element* HTMLEditor::GetEnclosingTable(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-
-  if (!aNode->GetParent()) {
-    return nullptr;
-  }
-  for (Element* element :
-       InclusiveAncestorsOfType<Element>(*aNode->AsContent())) {
-    if (HTMLEditUtils::IsTable(element)) {
-      return element;
-    }
-  }
-  return nullptr;
 }
 
 /**
