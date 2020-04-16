@@ -276,7 +276,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
                     nscoord& aFlexContainerAscent,
                     nscoord aAvailableBSizeForContent,
-                    nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
+                    nscoord aColumnWrapThreshold, nsTArray<FlexLine>& aLines,
+                    nsTArray<StrutInfo>& aStruts,
                     nsTArray<nsIFrame*>& aPlaceholders,
                     const FlexboxAxisTracker& aAxisTracker,
                     nscoord aMainGapSize, nscoord aCrossGapSize,
@@ -391,7 +392,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    */
   void GenerateFlexLines(const ReflowInput& aReflowInput,
                          nscoord aContentBoxMainSize,
-                         nscoord aAvailableBSizeForContent,
+                         nscoord aColumnWrapThreshold,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize, bool aHasLineClampEllipsis,
