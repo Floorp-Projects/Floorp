@@ -720,11 +720,14 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
         return NS_ERROR_FAILURE;
       }
 
-      nsCOMPtr<nsINode> node = selection->GetRangeAt(0)->GetStartContainer();
-      MOZ_ASSERT(node);
+      nsINode* startContainer = selection->GetRangeAt(0)->GetStartContainer();
+      MOZ_ASSERT(startContainer);
+      if (!startContainer->IsContent()) {
+        break;
+      }
 
-      nsCOMPtr<Element> blockParent = GetBlock(*node);
-
+      Element* blockParent = HTMLEditUtils::GetInclusiveAncestorBlockElement(
+          *startContainer->AsContent());
       if (!blockParent) {
         break;
       }
@@ -817,57 +820,6 @@ bool HTMLEditor::IsEmptyInlineNode(nsIContent& aContent) const {
     return false;
   }
   return IsEmptyNode(aContent);
-}
-
-/**
- * GetBlockNodeParent returns enclosing block level ancestor, if any.
- */
-Element* HTMLEditor::GetBlockNodeParent(nsINode* aNode,
-                                        nsINode* aAncestorLimiter) {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(!aAncestorLimiter || aNode == aAncestorLimiter ||
-                 EditorUtils::IsDescendantOf(*aNode, *aAncestorLimiter),
-             "aNode isn't in aAncestorLimiter");
-
-  // The caller has already reached the limiter.
-  if (aNode == aAncestorLimiter) {
-    return nullptr;
-  }
-
-  if (!aNode->GetParent()) {
-    return nullptr;
-  }
-
-  for (Element* element :
-       InclusiveAncestorsOfType<Element>(*aNode->GetParent())) {
-    if (HTMLEditUtils::IsBlockElement(*element)) {
-      return element;
-    }
-    // Now, we have reached the limiter, there is no block in its ancestors.
-    if (element == aAncestorLimiter) {
-      return nullptr;
-    }
-  }
-
-  return nullptr;
-}
-
-/**
- * Returns the node if it's a block, otherwise GetBlockNodeParent
- */
-Element* HTMLEditor::GetBlock(nsINode& aNode, nsINode* aAncestorLimiter) {
-  MOZ_ASSERT(!aAncestorLimiter || &aNode == aAncestorLimiter ||
-                 EditorUtils::IsDescendantOf(aNode, *aAncestorLimiter),
-             "aNode isn't in aAncestorLimiter");
-
-  if (!aNode.IsContent()) {
-    return nullptr;
-  }
-
-  if (HTMLEditUtils::IsBlockElement(*aNode.AsContent())) {
-    return aNode.AsElement();
-  }
-  return GetBlockNodeParent(&aNode, aAncestorLimiter);
 }
 
 /**
@@ -2118,7 +2070,8 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   if (aBlockLevel) {
     // we are querying the block background (and not the text background), let's
     // climb to the block container
-    Element* blockParent = GetBlock(*contentToExamine);
+    Element* blockParent =
+        HTMLEditUtils::GetInclusiveAncestorBlockElement(*contentToExamine);
     if (NS_WARN_IF(!blockParent)) {
       return NS_OK;
     }
@@ -3338,7 +3291,8 @@ nsresult HTMLEditor::DeleteSelectionWithTransaction(
   // Don't strip wrappers if this is the only wrapper in the block.  Then we'll
   // add a <br> later, so it won't be an empty wrapper in the end.
   // XXX Looks like that we should specify editing host as limiter.
-  Element* blockElement = HTMLEditor::GetBlock(content);
+  Element* blockElement =
+      HTMLEditUtils::GetInclusiveAncestorBlockElement(content);
   if (!blockElement) {
     return NS_OK;
   }
@@ -3908,10 +3862,13 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
 Element* HTMLEditor::GetEnclosingTable(nsINode* aNode) {
   MOZ_ASSERT(aNode);
 
-  for (nsCOMPtr<Element> block = GetBlockNodeParent(aNode); block;
-       block = GetBlockNodeParent(block)) {
-    if (HTMLEditUtils::IsTable(block)) {
-      return block;
+  if (!aNode->GetParent()) {
+    return nullptr;
+  }
+  for (Element* element :
+       InclusiveAncestorsOfType<Element>(*aNode->AsContent())) {
+    if (HTMLEditUtils::IsTable(element)) {
+      return element;
     }
   }
   return nullptr;
@@ -4611,10 +4568,11 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
         // If the range is in a text node, set background color of its parent
         // block.
         if (startOfRange.IsInTextNode()) {
-          if (RefPtr<Element> blockParent =
-                  GetBlockNodeParent(startOfRange.GetContainer())) {
+          if (RefPtr<Element> blockElement =
+                  HTMLEditUtils::GetAncestorBlockElement(
+                      *startOfRange.ContainerAsText())) {
             mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-                blockParent, nullptr, nsGkAtoms::bgcolor, &aColor, false);
+                blockElement, nullptr, nsGkAtoms::bgcolor, &aColor, false);
             if (NS_WARN_IF(Destroyed())) {
               return NS_ERROR_EDITOR_DESTROYED;
             }
@@ -4644,10 +4602,11 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
           if (NS_WARN_IF(startOfRange.IsInDataNode())) {
             continue;
           }
-          if (RefPtr<Element> blockParent =
-                  GetBlock(*startOfRange.GetChild())) {
+          if (RefPtr<Element> blockElement =
+                  HTMLEditUtils::GetInclusiveAncestorBlockElement(
+                      *startOfRange.GetChild())) {
             mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-                blockParent, nullptr, nsGkAtoms::bgcolor, &aColor, false);
+                blockElement, nullptr, nsGkAtoms::bgcolor, &aColor, false);
             if (NS_WARN_IF(Destroyed())) {
               return NS_ERROR_EDITOR_DESTROYED;
             }
@@ -4687,12 +4646,12 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       if (startOfRange.IsInTextNode() &&
           EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
                                          EditorType::HTML)) {
-        RefPtr<Element> blockParent =
-            GetBlockNodeParent(startOfRange.GetContainer());
-        if (blockParent && handledBlockParent != blockParent) {
-          handledBlockParent = blockParent;
+        RefPtr<Element> blockElement = HTMLEditUtils::GetAncestorBlockElement(
+            *startOfRange.ContainerAsText());
+        if (blockElement && handledBlockParent != blockElement) {
+          handledBlockParent = blockElement;
           mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-              blockParent, nullptr, nsGkAtoms::bgcolor, &aColor, false);
+              blockElement, nullptr, nsGkAtoms::bgcolor, &aColor, false);
           if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4701,12 +4660,13 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
 
       // Then, set background color of each block or block parent of all nodes
       // in the range entirely.
-      for (auto& content : arrayOfContents) {
-        RefPtr<Element> blockParent = GetBlock(content);
-        if (blockParent && handledBlockParent != blockParent) {
-          handledBlockParent = blockParent;
+      for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+        RefPtr<Element> blockElement =
+            HTMLEditUtils::GetInclusiveAncestorBlockElement(content);
+        if (blockElement && handledBlockParent != blockElement) {
+          handledBlockParent = blockElement;
           mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-              blockParent, nullptr, nsGkAtoms::bgcolor, &aColor, false);
+              blockElement, nullptr, nsGkAtoms::bgcolor, &aColor, false);
           if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4718,11 +4678,11 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       if (endOfRange.IsInTextNode() &&
           EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
                                          EditorType::HTML)) {
-        RefPtr<Element> blockParent =
-            GetBlockNodeParent(endOfRange.GetContainer());
-        if (blockParent && handledBlockParent != blockParent) {
+        RefPtr<Element> blockElement = HTMLEditUtils::GetAncestorBlockElement(
+            *endOfRange.ContainerAsText());
+        if (blockElement && handledBlockParent != blockElement) {
           mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-              blockParent, nullptr, nsGkAtoms::bgcolor, &aColor, false);
+              blockElement, nullptr, nsGkAtoms::bgcolor, &aColor, false);
           if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }

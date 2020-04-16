@@ -771,21 +771,6 @@ class HTMLEditor final : public TextEditor,
   using EditorBase::SetAttributeOrEquivalent;
 
   /**
-   * GetBlockNodeParent() returns parent or nearest ancestor of aNode if
-   * there is a block parent.  If aAncestorLimiter is not nullptr,
-   * this stops looking for the result.
-   */
-  static Element* GetBlockNodeParent(nsINode* aNode,
-                                     nsINode* aAncestorLimiter = nullptr);
-
-  /**
-   * GetBlock() returns aNode itself, or parent or nearest ancestor of aNode
-   * if there is a block parent.  If aAncestorLimiter is not nullptr,
-   * this stops looking for the result.
-   */
-  static Element* GetBlock(nsINode& aNode, nsINode* aAncestorLimiter = nullptr);
-
-  /**
    * Returns container element of ranges in Selection.  If Selection is
    * collapsed, returns focus container node (or its parent element).
    * If Selection selects only one element node, returns the element node.
