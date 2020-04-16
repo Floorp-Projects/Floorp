@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- Testcase for how we fragment a flex container with a single unbreakable
+     child, with the flex container having "flex-direction: column-reverse" and
+     "box-decoration-break: clone".
+-->
+<html>
+  <head>
+    <style>
+    .multicol {
+      height: 10px;
+      width: 100px;
+      column-width: 30px;
+      column-fill: auto;
+      border: 2px solid orange;
+      margin-bottom: 15px; /* (just for spacing between testcases) */
+    }
+    .flexContainer {
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-end;
+      background: teal;
+      border: 1px dashed black;
+      box-decoration-break: clone;
+    }
+    .item {
+      width: 100%;
+      height: 20px;
+      flex: none;
+    }
+    </style>
+  </head>
+  <body>
+    <!-- auto-height container: -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <img src="" class="item">
+      </div>
+    </div>
+
+    <!-- fixed-height container, smaller than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px">
+        <img src="" class="item">
+      </div>
+    </div>
+
+    <!-- fixed-height container, between available height and child height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 15px">
+        <img src="" class="item">
+      </div>
+    </div>
+
+    <!-- fixed-height container, same as child height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 20px">
+        <img src="" class="item">
+      </div>
+    </div>
+
+    <!-- fixed-height container, larger than child height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 24px">
+        <img src="" class="item">
+      </div>
+    </div>
+  </body>
+</html>
