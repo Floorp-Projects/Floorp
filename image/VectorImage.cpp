@@ -651,6 +651,9 @@ Maybe<AspectRatio> VectorImage::GetIntrinsicRatio() {
 NS_IMETHODIMP_(Orientation)
 VectorImage::GetOrientation() { return Orientation(); }
 
+NS_IMETHODIMP_(bool)
+VectorImage::HandledOrientation() { return false; }
+
 //******************************************************************************
 NS_IMETHODIMP
 VectorImage::GetType(uint16_t* aType) {

@@ -135,6 +135,9 @@ nsresult ImageWrapper::GetHotspotY(int32_t* aY) {
 NS_IMETHODIMP_(Orientation)
 ImageWrapper::GetOrientation() { return mInnerImage->GetOrientation(); }
 
+NS_IMETHODIMP_(bool)
+ImageWrapper::HandledOrientation() { return mInnerImage->HandledOrientation(); }
+
 NS_IMETHODIMP
 ImageWrapper::GetType(uint16_t* aType) { return mInnerImage->GetType(aType); }
 
