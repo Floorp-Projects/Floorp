@@ -142,25 +142,25 @@ function testWriteEmptyPostDataTextParams(data) {
 function testDataArgumentOnGeneratedCommand(data) {
   const curlCommand = Curl.generateCommand(data);
   ok(
-    curlCommand.includes("--data"),
-    "Should return a curl command with --data"
+    curlCommand.includes("--data-raw"),
+    "Should return a curl command with --data-raw"
   );
 }
 
 function testDataEscapeOnGeneratedCommand(data) {
-  const paramsWin = `--data "{""param1"":""value1"",""param2"":""value2""}"`;
-  const paramsPosix = `--data '{"param1":"value1","param2":"value2"}'`;
+  const paramsWin = `--data-raw "{""param1"":""value1"",""param2"":""value2""}"`;
+  const paramsPosix = `--data-raw '{"param1":"value1","param2":"value2"}'`;
 
   let curlCommand = Curl.generateCommand(data, "WINNT");
   ok(
     curlCommand.includes(paramsWin),
-    "Should return a curl command with --data escaped for Windows systems"
+    "Should return a curl command with --data-raw escaped for Windows systems"
   );
 
   curlCommand = Curl.generateCommand(data, "Linux");
   ok(
     curlCommand.includes(paramsPosix),
-    "Should return a curl command with --data escaped for Posix systems"
+    "Should return a curl command with --data-raw escaped for Posix systems"
   );
 }
 
