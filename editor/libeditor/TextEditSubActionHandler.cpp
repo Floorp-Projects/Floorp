@@ -330,8 +330,10 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_OK;
   }
 
-  nsINode* nextNode = selectionStartPoint.GetContainer()->GetNextSibling();
-  if (!nextNode || !EditorBase::IsPaddingBRElementForEmptyLastLine(*nextNode)) {
+  nsIContent* nextContent =
+      selectionStartPoint.GetContainer()->GetNextSibling();
+  if (!nextContent ||
+      !EditorUtils::IsPaddingBRElementForEmptyLastLine(*nextContent)) {
     return NS_OK;
   }
 
@@ -654,11 +656,11 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     }
     if (firstChild->IsText()) {
       if (!firstChild->GetNextSibling() ||
-          !EditorBase::IsPaddingBRElementForEmptyLastLine(
+          !EditorUtils::IsPaddingBRElementForEmptyLastLine(
               *firstChild->GetNextSibling())) {
         return EditActionIgnored();
       }
-    } else if (!EditorBase::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
+    } else if (!EditorUtils::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
       return EditActionIgnored();
     }
   }
@@ -875,7 +877,7 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
   if (NS_WARN_IF(isInput && firstChildExceptText) ||
       NS_WARN_IF(isTextarea && !firstChildExceptText) ||
       NS_WARN_IF(isTextarea &&
-                 !EditorBase::IsPaddingBRElementForEmptyLastLine(
+                 !EditorUtils::IsPaddingBRElementForEmptyLastLine(
                      *firstChildExceptText) &&
                  !firstChildExceptText->IsXULElement(nsGkAtoms::scrollbar))) {
     return EditActionIgnored();

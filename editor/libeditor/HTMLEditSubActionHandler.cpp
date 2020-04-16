@@ -1297,7 +1297,7 @@ nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
   nsCOMPtr<nsIContent> previousEditableContent =
       GetPreviousEditableHTMLNode(atSelectionStart);
   if (!previousEditableContent ||
-      !EditorBase::IsPaddingBRElementForEmptyLastLine(
+      !EditorUtils::IsPaddingBRElementForEmptyLastLine(
           *previousEditableContent)) {
     return NS_OK;
   }
@@ -8837,7 +8837,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       // is there a BR prior to it?
       brContent = GetPriorHTMLSibling(atStartOfSelection.GetContainer());
       if (!brContent || !IsVisibleBRElement(brContent) ||
-          EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
+          EditorUtils::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         brContent = nullptr;
       }
@@ -8846,7 +8846,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       // is there a BR after to it?
       brContent = GetNextHTMLSibling(atStartOfSelection.GetContainer());
       if (!brContent || !IsVisibleBRElement(brContent) ||
-          EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
+          EditorUtils::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.SetAfter(atStartOfSelection.GetContainer());
         NS_WARNING_ASSERTION(
             pointToInsertBR.IsSet(),
@@ -8880,20 +8880,20 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   } else {
     // not in a text node.
     // is there a BR prior to it?
-    nsCOMPtr<nsIContent> nearNode =
+    nsCOMPtr<nsIContent> nearContent =
         GetPreviousEditableHTMLNode(atStartOfSelection);
-    if (!nearNode || !IsVisibleBRElement(nearNode) ||
-        EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
+    if (!nearContent || !IsVisibleBRElement(nearContent) ||
+        EditorUtils::IsPaddingBRElementForEmptyLastLine(*nearContent)) {
       // is there a BR after it?
-      nearNode = GetNextEditableHTMLNode(atStartOfSelection);
-      if (!nearNode || !IsVisibleBRElement(nearNode) ||
-          EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
+      nearContent = GetNextEditableHTMLNode(atStartOfSelection);
+      if (!nearContent || !IsVisibleBRElement(nearContent) ||
+          EditorUtils::IsPaddingBRElementForEmptyLastLine(*nearContent)) {
         pointToInsertBR = atStartOfSelection;
         splitAfterNewBR = true;
       }
     }
-    if (!pointToInsertBR.IsSet() && nearNode->IsHTMLElement(nsGkAtoms::br)) {
-      brContent = nearNode;
+    if (!pointToInsertBR.IsSet() && nearContent->IsHTMLElement(nsGkAtoms::br)) {
+      brContent = nearContent;
     }
   }
   if (pointToInsertBR.IsSet()) {
@@ -10340,7 +10340,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
       // padding `<br>` element, we need to set interline position.
       else if (nsIContent* nextEditableContentInBlock =
                    GetNextEditableHTMLNodeInBlock(*previousEditableContent)) {
-        if (EditorBase::IsPaddingBRElementForEmptyLastLine(
+        if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
                 *nextEditableContentInBlock)) {
           // Make it stick to the padding `<br>` element so that it will be
           // on blank line.
