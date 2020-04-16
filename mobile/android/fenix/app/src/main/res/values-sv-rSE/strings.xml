@@ -981,6 +981,8 @@
     <string name="sign_in_with_email">Använd e-post istället</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox kommer sluta att synka med ditt konto, men kommer inte att radera din surfdata på den här enheten.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s kommer att sluta synkronisera med ditt konto, men tar inte bort någon av dina surfdata på den här enheten.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Koppla från</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->

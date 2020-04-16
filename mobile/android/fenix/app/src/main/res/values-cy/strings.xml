@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview Preifat</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Preifat)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s Preifat</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Preifat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Rhagor o opsiynau</string>
@@ -292,10 +292,11 @@
     <string name="sync_last_synced_summary">Cydweddu diwethaf: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Cydweddu diwethaf: byth</string>
+
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s ar %s %s</string>
+    <string name="default_device_name_2">%1$s o %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -962,6 +963,8 @@
     <string name="sign_in_with_email">Defnyddiwch e-bost yn lle hynny</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Bydd Firefox yn peidio cydweddu eich cyfrif ond ni fydd yn dileu eich data pori ar y ddyfais hon.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Bydd %s yn peidio â chydweddu eich cyfrif ond ni fydd yn dileu eich data pori ar y ddyfais hon.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Datgysylltu</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->

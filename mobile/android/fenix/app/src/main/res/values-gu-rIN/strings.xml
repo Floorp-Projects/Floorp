@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">ખાનગી Firefox પૂર્વાવલોકન</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox પૂર્વાવલોકન (ખાનગી)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">વધુ વિકલ્પ</string>
@@ -267,10 +263,6 @@
     <string name="sync_last_synced_summary">છેલ્લે સમન્વયિત: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">છેલ્લે સમન્વયિત: ક્યારેય નહીં</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s %s પર %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -894,6 +886,131 @@
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">પ્રમાણભૂત ટ્રેકિંગ સુરક્ષા દ્વારા શું અવરોધિત છે</string>
 
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">સખત</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">સખત (મૂળભૂત)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">મજબૂત ટ્રેકિંગ સુરક્ષા અને ઝડપી પ્રદર્શન, પરંતુ કેટલીક સાઇટ્સ યોગ્ય રીતે કાર્ય કરી શકશે નહીં.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">સખત (ભલામણ કરેલ)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">મજબૂત સુરક્ષા, પરંતુ કેટલીક સાઇટ્સ અથવા સામગ્રી તૂટી જવાનું કારણ બની શકે છે.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">સખત ટ્રેકિંગ સુરક્ષા દ્વારા શું અવરોધિત છે</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">કૂકીઝ</string>
+    <string name="enhanced_tracking_protection_blocked">અવરોધિત</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">મંજૂર</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">સોશિયલ મીડિયા ટ્રેકર્સ</string>
+
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">વેબ પર તમારી બ્રાઉઝિંગ પ્રવૃત્તિને ટ્રેક કરવાની સોશિયલ નેટવર્ક્સની ક્ષમતાને મર્યાદિત કરે છે.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ક્રોસ-સાઇટ ટ્રેકિંગ કૂકીઝ</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">જાહેરાત નેટવર્ક્સ અને વિશ્લેષણાત્મક કંપનીઓ ઘણી સાઇટ્સ પર તમારા બ્રાઉઝિંગ ડેટાને કમ્પાઇલ કરવા માટે ઉપયોગમાં લેતી કૂકીઝને અવરોધિત કરે છે.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Cryptominers</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ડિજિટલ ચલણની ખાણ મેળવવા માટે તમારા ઉપકરણની ઍક્સેસ મેળવતા દૂષિત સ્ક્રિપ્ટોને રોકે છે.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">ફિંગરપ્રિન્ટર્સ</string>
+
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">તમારા ઉપકરણ વિશેની વિશિષ્ટ રીતે ઓળખી શકાય તેવી માહિતી કે જે ટ્રેકિંગ હેતુ માટે ઉપયોગમાં લઈ શકાય તેનો સંગ્રહ કરવાથી અટકાવે છે.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ટ્રેકિંગ સામગ્રી</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">અમે ઉપયોગ કરીએ છીએ તે ઓપન સોર્સ લાઇબ્રેરીઓ</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s માં નવું શું છે</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS પુસ્તકાલયો</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">આધાર</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">ગોપનીયતા સૂચના</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">તમારા અધિકારો જાણો</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">પરવાના માહિતી</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">અમે ઉપયોગ કરીએ છીએ તે પુસ્તકાલયો</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ટેબ</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ટૅબ્સ</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">નકલ કરો</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">પેસ્ટ કરો અને જાઓ</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">પેસ્ટ કરો</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ક્લિપબોર્ડ પર નકલ કરી દેવામાં આવ્યુ છે</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">મુખ્ય સ્ક્રીન પર ઉમેરો</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">રદ કરો</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">ઉમેરો</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">શોર્ટકટ નામ</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">લોગિન્સ અને પાસવર્ડ્સ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">લોગિન્સ અને પાસવર્ડ્સ સાચવો</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">સાચવવાનું કહો</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">ક્યારેય સાચવો નહીં</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">સ્વતઃ ભરો</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">લોગિન સમન્વયિત કરો</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">ચાલુ કરો</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">બંધ કરો</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">ફરી કનેક્ટ કરો</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">સમન્વયન માટે સાઇન ઇન કરો</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">સાચવેલા લૉગિન્સ</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">અપવાદો</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">લોગિન અને પાસવર્ડ્સ કે જે સાચવેલ નથી તે અહીં બતાવવામાં આવશે.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">આ સાઇટ્સ માટે લોગિન અને પાસવર્ડ્સ સાચવવામાં આવશે નહીં.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">લોગિન્સ શોધો</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">મૂળાક્ષરો મુજબ</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">તાજેતરમાં વપરાયેલ</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">સાઈટ</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">વપરાશકર્તા નામ</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">પાસવર્ડ</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">તમારો પિન ફરીથી દાખલ કરો</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">તમારા સાચવેલા લોગિનને જોવા માટે અનલૉક કરો</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">આ જોડાણ સુરક્ષિત નથી. અહીં દાખલ કરેલા લોગિન્સ સાથે ચેડા થઈ શકે છે.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->

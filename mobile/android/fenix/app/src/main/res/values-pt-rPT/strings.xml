@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview Privado</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Privado)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s privado</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (privado)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Mais opções</string>
@@ -295,7 +295,7 @@
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s em %s %s</string>
+    <string name="default_device_name_2">%1$s no %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -965,9 +965,11 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Inicie sessão com a sua câmara</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Em vez disso, utilizar o e-mail</string>
+    <string name="sign_in_with_email">Como alternativa, utilizar o e-mail</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">O Firefox irá parar a sincronização com a sua conta, mas não irá apagar quaisquer dados de navegação seus neste dispositivo.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">O %s irá suspender a sincronização com a sua conta, mas não irá eliminar quaisquer dados de navegação seus neste dispositivo.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Desassociar</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview (anonymní)</string>
-
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (anonymní)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Anonymní %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (anonymní)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Více možností</string>
@@ -207,6 +206,8 @@
     <string name="preferences_private_browsing_options">Anonymní prohlížení</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Otevírat odkazy v anonymních panelech</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Povolit pořizování snímků obrazovky v anonymním prohlížení</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Přidat anonymní prohlížení na plochu</string>
     <!-- Preference for accessibility -->
@@ -298,7 +299,7 @@
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s na %s %s</string>
+    <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -980,7 +981,9 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Použít raději e-mail</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox ukončí synchronizaci s tímto účtem, ale neodstraní žádná soukromá data uložená na tomto zařízení.</string>
+    <string name="sign_out_confirmation_message">Firefox ukončí synchronizaci s vaším účtem, ale nesmaže z tohoto zařízení žádná vaše data.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ukončí synchronizaci s vaším účtem, ale nesmaže z tohoto zařízení žádná vaše data.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Odpojit</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
