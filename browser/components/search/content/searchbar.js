@@ -227,9 +227,6 @@
     }
 
     updateDisplay() {
-      let uri = this.currentEngine.iconURI;
-      this.setIcon(this, uri ? uri.spec : "");
-
       this._textbox.title = this._stringBundle.getFormattedString("searchtip", [
         this.currentEngine.name,
       ]);
