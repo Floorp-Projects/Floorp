@@ -27,6 +27,52 @@ function handlePromptWhenItAppears(action, isTabModal, isSelect) {
   }, 100);
 }
 
+function checkTabModal(prompt, browser) {
+  let doc = browser.ownerDocument;
+
+  let { bottom: toolboxBottom } = doc
+    .getElementById("navigator-toolbox")
+    .getBoundingClientRect();
+
+  let { mainContainer } = prompt.ui;
+
+  let { x, y } = mainContainer.getBoundingClientRect();
+  ok(y > 0, "Container should have y > 0");
+  // Inset by 1px since the corner point doesn't return the frame due to the
+  // border-radius.
+  is(
+    doc.elementFromPoint(x + 1, y + 1).parentNode,
+    mainContainer,
+    "Check tabmodalprompt is visible"
+  );
+
+  info("Click to the left of the dialog over the content area");
+  isnot(
+    doc.elementFromPoint(x - 10, y + 50),
+    browser,
+    "Check clicks on the content area don't go to the browser"
+  );
+  is(
+    doc.elementFromPoint(x - 10, y + 50).parentNode,
+    prompt.element,
+    "Check clicks on the content area go to the prompt dialog background"
+  );
+
+  if (prompt.args.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB) {
+    ok(
+      y <= toolboxBottom - 5,
+      "Dialog should overlap the toolbox by at least 5px"
+    );
+  } else {
+    ok(y >= toolboxBottom, "Dialog must not overlap with toolbox.");
+  }
+
+  ok(
+    browser.hasAttribute("tabmodalPromptShowing"),
+    "Check browser has @tabmodalPromptShowing"
+  );
+}
+
 function handlePrompt(action, isTabModal, isSelect) {
   let ui;
 
@@ -40,6 +86,7 @@ function handlePrompt(action, isTabModal, isSelect) {
     }
 
     ui = prompts[0].Dialog.ui;
+    checkTabModal(prompts[0], gBrowser.selectedBrowser);
   } else {
     let doc = getDialogDoc();
     if (!doc) {

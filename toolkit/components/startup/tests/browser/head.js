@@ -28,11 +28,8 @@ function waitForOnBeforeUnloadDialog(browser, callback) {
       SimpleTest.waitForCondition(
         () => Services.focus.activeWindow == browser.ownerGlobal,
         function() {
-          let stack = browser.parentNode;
-          let dialogs = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
-          let { button0, button1 } = browser.tabModalPromptBox.prompts.get(
-            dialogs[0]
-          ).ui;
+          let prompt = browser.tabModalPromptBox.listPrompts()[0];
+          let { button0, button1 } = prompt.ui;
           callback(button0, button1);
         },
         "Waited too long for window with dialog to focus"
