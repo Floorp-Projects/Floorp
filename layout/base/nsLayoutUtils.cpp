@@ -7201,8 +7201,19 @@ already_AddRefed<imgIContainer> nsLayoutUtils::OrientImage(
   MOZ_ASSERT(aContainer, "Should have an image container");
   nsCOMPtr<imgIContainer> img(aContainer);
 
-  if (aOrientation == StyleImageOrientation::FromImage) {
-    img = ImageOps::Orient(img, img->GetOrientation());
+  bool handledOrientation = img->HandledOrientation();
+
+  switch (aOrientation) {
+    case StyleImageOrientation::FromImage:
+      if (!handledOrientation) {
+        img = ImageOps::Orient(img, img->GetOrientation());
+      }
+      break;
+    case StyleImageOrientation::None:
+      if (handledOrientation) {
+        img = ImageOps::Unorient(img);
+      }
+      break;
   }
 
   return img.forget();

@@ -1867,11 +1867,13 @@ OrientedIntRect RasterImage::ToOriented(UnorientedIntRect aRect) const {
   IntRect rect = aRect.ToUnknownRect();
   auto size = ToUnoriented(mSize);
 
+  MOZ_ASSERT(!UsedOrientation().flipFirst,
+             "flipFirst should only be used by OrientedImage");
+
   // UsedOrientation() specifies the transformation from a correctly oriented
   // image to the pixels stored in the file, so we need to rotate by the
   // negation of the given angle.
   Angle angle = Orientation::InvertAngle(UsedOrientation().rotation);
-
   Rotate(rect, size.ToUnknownSize(), angle);
   Flip(rect, size.ToUnknownSize(), UsedOrientation().flip);
 
@@ -1883,6 +1885,9 @@ UnorientedIntRect RasterImage::ToUnoriented(OrientedIntRect aRect) const {
 
   Flip(rect, mSize.ToUnknownSize(), UsedOrientation().flip);
   Rotate(rect, mSize.ToUnknownSize(), UsedOrientation().rotation);
+
+  MOZ_ASSERT(!UsedOrientation().flipFirst,
+             "flipFirst should only be used by OrientedImage");
 
   return UnorientedIntRect::FromUnknownRect(rect);
 }
