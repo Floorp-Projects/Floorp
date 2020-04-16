@@ -4354,6 +4354,15 @@
   value: true
   mirror: always
 
+# Whether to honor orientation metadata (such as JPEG EXIF tags) by default.
+# When this pref is enabled, all images used by the platform will be correctly
+# re-oriented, except for content images (HTML <img> and CSS generated content
+# images) with image-orientation:none.
+- name: image.honor-orientation-metadata
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Honor image orientation metadata in the naturalWidth and naturalHeight
 # APIs on HTMLImageElement.
 - name: image.honor_orientation_metadata.natural_size
