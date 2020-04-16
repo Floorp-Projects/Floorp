@@ -57,11 +57,9 @@ const testPathUpgradeable = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
 );
-// DNS errors are not logged as HTTPS-Only Mode upgrade failures, so we have to
-// upgrade to a domain that exists but fails.
 const testPathNotUpgradeable = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://nocert.example.com"
+  "http://mochi.test:8888"
 );
 const kTestURISuccess = testPathUpgradeable + "file_console_logging.html";
 const kTestURIFail = testPathNotUpgradeable + "file_console_logging.html";
