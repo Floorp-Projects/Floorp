@@ -38,6 +38,11 @@ fuzzy(0-1,0-1) == image-orientation-explicit-none.html image-orientation-ref.htm
 # Tests for image-orientation:from-image used on generated content:
 fuzzy(0-1,0-1) == image-orientation-generated-content.html image-orientation-generated-content-ref.html
 
+# Tests that image-orientation does not apply to decorative images:
+fuzzy(0-1,0-1) == image-orientation-background.html?from-image   image-orientation-ref.html?none
+== image-orientation-border-image.html?from-image            image-orientation-border-image.html?none
+== image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?none
+
 fuzzy(0-1,0-1) == image-orientation-dynamic.html image-orientation-dynamic-ref.html
 
 # <img srcset> tests
