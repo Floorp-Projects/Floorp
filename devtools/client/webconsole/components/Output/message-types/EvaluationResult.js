@@ -79,6 +79,7 @@ function EvaluationResult(props) {
       type,
       helperType,
       maybeScrollToBottom,
+      customFormat: true,
     });
   }
 

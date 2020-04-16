@@ -2708,14 +2708,14 @@ const {
   }
 } = __webpack_require__(24);
 
-function shouldRenderRootsInReps(roots) {
+function shouldRenderRootsInReps(roots, props = {}) {
   if (roots.length !== 1) {
     return false;
   }
 
   const root = roots[0];
   const name = root && root.name;
-  return (name === null || typeof name === "undefined") && (nodeIsPrimitive(root) || nodeIsError(root));
+  return (name === null || typeof name === "undefined") && (nodeIsPrimitive(root) || nodeIsError(root) && (props === null || props === void 0 ? void 0 : props.customFormat) === true);
 }
 
 function renderRep(item, props) {
@@ -3099,11 +3099,30 @@ ErrorRep.propTypes = {
   // An optional function that will be used to render the Error stacktrace.
   renderStacktrace: PropTypes.func
 };
+/**
+ * Render an Error object.
+ * The customFormat prop allows to print a simplified view of the object, with only the
+ * message and the stacktrace, e.g.:
+ *      Error: "blah"
+ *          <anonymous> debugger eval code:1
+ *
+ * The customFormat prop will only be taken into account if the mode isn't tiny and the
+ * depth is 0. This is because we don't want error in previews or in object to be
+ * displayed unlike other objects:
+ *      - Object { err: Error }
+ *      - ▼ {
+ *            err: Error: "blah"
+ *        }
+ */
 
 function ErrorRep(props) {
-  const object = props.object;
+  const {
+    object,
+    mode,
+    depth
+  } = props;
   const preview = object.preview;
-  const mode = props.mode;
+  const customFormat = props.customFormat && mode !== MODE.TINY && !depth;
   let name;
 
   if (preview && preview.name && typeof preview.name === "string" && preview.kind) {
@@ -3125,20 +3144,26 @@ function ErrorRep(props) {
 
   const content = [];
 
-  if (mode === MODE.TINY || typeof preview.message !== "string") {
+  if (!customFormat) {
+    content.push(span({
+      className: "objectTitle"
+    }, name));
+  } else if (typeof preview.message !== "string") {
     content.push(name);
   } else {
     content.push(`${name}: "${preview.message}"`);
   }
 
-  if (preview.stack && mode !== MODE.TINY && mode !== MODE.SHORT) {
+  const renderStack = preview.stack && customFormat;
+
+  if (renderStack) {
     const stacktrace = props.renderStacktrace ? props.renderStacktrace(parseStackString(preview.stack)) : getStacktraceElements(props, preview);
     content.push(stacktrace);
   }
 
   return span({
     "data-link-actor-id": object.actor,
-    className: "objectBox-stackTrace"
+    className: `objectBox-stackTrace ${customFormat ? "reps-custom-format" : ""}`
   }, content);
 }
 /**
@@ -7884,7 +7909,7 @@ module.exports = props => {
     return null;
   }
 
-  if (shouldRenderRootsInReps(roots)) {
+  if (shouldRenderRootsInReps(roots, props)) {
     return renderRep(roots[0], props);
   }
 

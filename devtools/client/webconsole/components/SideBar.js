@@ -77,6 +77,7 @@ class SideBar extends Component {
       mode: reps.MODE.SHORT,
       autoFocusRoot: true,
       pathPrefix: "WebConsoleSidebar",
+      customFormat: false,
     });
 
     return [
