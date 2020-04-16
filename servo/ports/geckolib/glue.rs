@@ -300,7 +300,7 @@ pub extern "C" fn Servo_TraverseSubtree(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
 
-    let was_initial_style = element.has_data();
+    let was_initial_style = !element.has_data();
 
     if needs_animation_only_restyle {
         debug!(
