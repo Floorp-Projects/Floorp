@@ -91,11 +91,13 @@
     </style>
 
     <style name="DialogButtonStyleLight" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
         <item name="android:textColor">?accentBright</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="DialogButtonStyleDark" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
         <item name="android:textColor">?accentHighContrast</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
