@@ -1,5 +1,8 @@
 // Preferences file used by the raptor harness
 /* globals user_pref */
+// prevents normandy from running updates during the tests
+user_pref("app.normandy.enabled", false);
+
 user_pref("dom.performance.time_to_non_blank_paint.enabled", true);
 user_pref("dom.performance.time_to_contentful_paint.enabled", true);
 user_pref("dom.performance.time_to_dom_content_flushed.enabled", true);

@@ -134,6 +134,7 @@ def main(args=sys.argv[1:]):
             no_conditioned_profile=args.no_conditioned_profile,
             disable_perf_tuning=args.disable_perf_tuning,
             conditioned_profile_scenario=args.conditioned_profile_scenario,
+            project=args.project
         )
     except Exception:
         traceback.print_exc()

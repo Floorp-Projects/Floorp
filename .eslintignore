@@ -177,6 +177,7 @@ services/fxaccounts/FxAccountsPairingChannel.js
 servo/
 
 # Test files that we don't want to lint (preprocessed, minified etc)
+testing/condprofile/condprof/tests/profile
 testing/marionette/atom.js
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js

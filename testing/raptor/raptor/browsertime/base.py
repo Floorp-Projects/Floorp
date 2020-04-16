@@ -223,7 +223,7 @@ class Browsertime(Perftest):
             ])
 
         # have browsertime use our newly-created conditioned-profile path
-        if not self.no_condprof:
+        if self.using_condprof:
             self.profile.profile = self.conditioned_profile_dir
 
         if self.config["gecko_profile"]:
