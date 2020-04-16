@@ -14,7 +14,6 @@
   skin/classic/mozapps/extensions/category-recent.svg        (../../shared/extensions/category-recent.svg)
   skin/classic/mozapps/extensions/category-available.svg     (../../shared/extensions/category-available.svg)
   skin/classic/mozapps/extensions/extension.svg              (../../shared/extensions/extension.svg)
-  skin/classic/mozapps/extensions/utilities.svg              (../../shared/extensions/utilities.svg)
   skin/classic/mozapps/extensions/recommended.svg            (../../shared/extensions/recommended.svg)
 #ifndef ANDROID
   skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)

@@ -7,7 +7,7 @@
 var EXPORTED_SYMBOLS = ["Tabs"];
 
 const CUST_TAB = "chrome://browser/skin/customize.svg";
-const PREFS_TAB = "chrome://browser/skin/settings.svg";
+const PREFS_TAB = "chrome://global/skin/icons/settings.svg";
 const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20favicon</title>`;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -159,7 +159,7 @@ async function allTabTitlesDisplayed(browserWindow) {
     "about:addons": "Add-ons Manager",
     "about:privatebrowsing": "about:privatebrowsing",
   };
-  specToTitleMap[PREFS_TAB] = "browser/skin/settings.svg";
+  specToTitleMap[PREFS_TAB] = "global/skin/icons/settings.svg";
   specToTitleMap[CUST_TAB] = "browser/skin/customize.svg";
   specToTitleMap[DEFAULT_FAVICON_TAB] = "No favicon";
 
