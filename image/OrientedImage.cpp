@@ -75,37 +75,33 @@ Maybe<AspectRatio> OrientedImage::GetIntrinsicRatio() {
   return ratio;
 }
 
-NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
-OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
-  nsresult rv;
+already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
+    Orientation aOrientation, SourceSurface* aSurface, const nsIntSize& aSize) {
+  MOZ_ASSERT(aSurface);
 
-  if (mOrientation.IsIdentity()) {
-    return InnerImage()->GetFrame(aWhichFrame, aFlags);
+  // If the image does not require any re-orientation, return aSurface itself.
+  if (aOrientation.IsIdentity()) {
+    return do_AddRef(aSurface);
   }
 
-  // Get the underlying dimensions.
-  IntSize size;
-  rv = InnerImage()->GetWidth(&size.width);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  rv = InnerImage()->GetHeight(&size.height);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  RefPtr<SourceSurface> innerSurface =
-      InnerImage()->GetFrame(aWhichFrame, aFlags);
-  NS_ENSURE_TRUE(innerSurface, nullptr);
+  // Determine the size of the new surface.
+  nsIntSize targetSize = aSize;
+  if (aOrientation.SwapsWidthAndHeight()) {
+    swap(targetSize.width, targetSize.height);
+  }
 
   // Create our drawable.
-  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(innerSurface, size);
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(aSurface, aSize);
 
   // Determine an appropriate format for the surface.
-  gfx::SurfaceFormat surfaceFormat = IsOpaque(innerSurface->GetFormat())
+  gfx::SurfaceFormat surfaceFormat = IsOpaque(aSurface->GetFormat())
                                          ? gfx::SurfaceFormat::OS_RGBX
                                          : gfx::SurfaceFormat::OS_RGBA;
 
-  // Create a surface to draw into.
+  // Create the new surface to draw into.
   RefPtr<DrawTarget> target =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          size, surfaceFormat);
+          targetSize, surfaceFormat);
   if (!target || !target->IsValid()) {
     NS_ERROR("Could not create a DrawTarget");
     return nullptr;
@@ -114,12 +110,32 @@ OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
   // Draw.
   RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
   MOZ_ASSERT(ctx);  // already checked the draw target above
-  ctx->Multiply(OrientationMatrix(size));
-  gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(size),
-                             ImageRegion::Create(size), surfaceFormat,
+  ctx->Multiply(OrientationMatrix(aOrientation, aSize));
+  gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(aSize),
+                             ImageRegion::Create(aSize), surfaceFormat,
                              SamplingFilter::LINEAR);
 
   return target->Snapshot();
+}
+
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
+OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
+  nsresult rv;
+
+  // Get a SourceSurface for the inner image then orient it according to
+  // mOrientation.
+  RefPtr<SourceSurface> innerSurface =
+      InnerImage()->GetFrame(aWhichFrame, aFlags);
+  NS_ENSURE_TRUE(innerSurface, nullptr);
+
+  // Get the underlying dimensions.
+  IntSize size;
+  rv = InnerImage()->GetWidth(&size.width);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  rv = InnerImage()->GetHeight(&size.height);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return OrientSurface(mOrientation, innerSurface, size);
 }
 
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
@@ -218,31 +234,19 @@ struct MatrixBuilder {
   bool mInvert;
 };
 
-/*
- * OrientationMatrix() computes a matrix that applies the rotation and
- * reflection specified by mOrientation, or that matrix's inverse if aInvert is
- * true.
- *
- * @param aSize The scaled size of the inner image. (When outside code specifies
- *              the scaled size, as with imgIContainer::Draw and its aSize
- *              parameter, it's necessary to swap the width and height if
- *              mOrientation.SwapsWidthAndHeight() is true.)
- * @param aInvert If true, compute the inverse of the orientation matrix. Prefer
- *                this approach to OrientationMatrix(..).Invert(), because it's
- *                more numerically accurate.
- */
-gfxMatrix OrientedImage::OrientationMatrix(const nsIntSize& aSize,
+gfxMatrix OrientedImage::OrientationMatrix(Orientation aOrientation,
+                                           const nsIntSize& aSize,
                                            bool aInvert /* = false */) {
   MatrixBuilder builder(aInvert);
 
   // Apply reflection, if present. (This logically happens second, but we
   // apply it first because these transformations are all premultiplied.) A
   // translation is necessary to place the image back in the first quadrant.
-  switch (mOrientation.flip) {
+  switch (aOrientation.flip) {
     case Flip::Unflipped:
       break;
     case Flip::Horizontal:
-      if (mOrientation.SwapsWidthAndHeight()) {
+      if (aOrientation.SwapsWidthAndHeight()) {
         builder.Translate(gfxPoint(aSize.height, 0));
       } else {
         builder.Translate(gfxPoint(aSize.width, 0));
@@ -255,7 +259,7 @@ gfxMatrix OrientedImage::OrientationMatrix(const nsIntSize& aSize,
 
   // Apply rotation, if present. Again, a translation is used to place the
   // image back in the first quadrant.
-  switch (mOrientation.rotation) {
+  switch (aOrientation.rotation) {
     case Angle::D0:
       break;
     case Angle::D90:
