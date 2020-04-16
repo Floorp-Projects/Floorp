@@ -81,6 +81,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
             args=[
                 "--profile",
                 self.remote_profile,
+                "--allow-downgrade",
                 "use_multiprocess",
                 self.config["e10s"],
             ],
@@ -127,6 +128,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
         extra_args = [
             "-profile", self.remote_profile,
+            "--allow-downgrade",
             "--es", "env0",
             "LOG_VERBOSE=1",
             "--es", "env1",
