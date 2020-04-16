@@ -119,11 +119,27 @@ this.VideoControlsWidget = class {
    * media.videocontrols.picture-in-picture.video-toggle.always-show pref, which
    * is mostly used for testing.
    *
-   * @param {Object} prefs The preferences set that was passed to the UAWidget.
-   * @param {Element} someVideo The <video> to test.
+   * @param {Object} prefs
+   *   The preferences set that was passed to the UAWidget.
+   * @param {Element} someVideo
+   *   The <video> to test.
+   * @param {Object} reflowedDimensions
+   *   An object representing the reflowed dimensions of the <video>. Properties
+   *   are:
+   *
+   *     videoWidth (Number):
+   *       The width of the video in pixels.
+   *
+   *     videoHeight (Number):
+   *       The height of the video in pixels.
+   *
    * @return {Boolean}
    */
-  static shouldShowPictureInPictureToggle(prefs, someVideo) {
+  static shouldShowPictureInPictureToggle(
+    prefs,
+    someVideo,
+    reflowedDimensions
+  ) {
     if (
       prefs["media.videocontrols.picture-in-picture.video-toggle.always-show"]
     ) {
@@ -141,8 +157,8 @@ this.VideoControlsWidget = class {
 
     const MIN_VIDEO_DIMENSION = 140; // pixels
     if (
-      someVideo.videoWidth < MIN_VIDEO_DIMENSION ||
-      someVideo.videoHeight < MIN_VIDEO_DIMENSION
+      reflowedDimensions.videoWidth < MIN_VIDEO_DIMENSION ||
+      reflowedDimensions.videoHeight < MIN_VIDEO_DIMENSION
     ) {
       return false;
     }
@@ -528,7 +544,8 @@ this.VideoControlsImplWidget = class {
           !this.isShowingPictureInPictureMessage &&
           VideoControlsWidget.shouldShowPictureInPictureToggle(
             this.prefs,
-            this.video
+            this.video,
+            this.reflowedDimensions
           )
         ) {
           this.pictureInPictureToggleButton.removeAttribute("hidden");
@@ -862,6 +879,7 @@ this.VideoControlsImplWidget = class {
             this.updateReflowedDimensions();
             this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = false;
             this.adjustControlSize();
+            this.updatePictureInPictureToggleDisplay();
             break;
           case "fullscreenchange":
             this.onFullscreenChange();
@@ -2931,6 +2949,11 @@ this.NoControlsDesktopImplWidget = class {
             }
             break;
           }
+          case "resizevideocontrols": {
+            this.updateReflowedDimensions();
+            this.updatePictureInPictureToggleDisplay();
+            break;
+          }
           case "durationchange":
           // Intentional fall-through
           case "loadedmetadata": {
@@ -2945,7 +2968,8 @@ this.NoControlsDesktopImplWidget = class {
           this.pipToggleEnabled &&
           VideoControlsWidget.shouldShowPictureInPictureToggle(
             this.prefs,
-            this.video
+            this.video,
+            this.reflowedDimensions
           )
         ) {
           this.pictureInPictureToggleButton.removeAttribute("hidden");
@@ -2990,6 +3014,7 @@ this.NoControlsDesktopImplWidget = class {
 
         this.video.addEventListener("loadedmetadata", this);
         this.video.addEventListener("durationchange", this);
+        this.videocontrols.addEventListener("resizevideocontrols", this);
       },
 
       terminate() {
@@ -2999,6 +3024,21 @@ this.NoControlsDesktopImplWidget = class {
 
         this.video.removeEventListener("loadedmetadata", this);
         this.video.removeEventListener("durationchange", this);
+        this.videocontrols.removeEventListener("resizevideocontrols", this);
+      },
+
+      updateReflowedDimensions() {
+        this.reflowedDimensions.videoHeight = this.video.clientHeight;
+        this.reflowedDimensions.videoWidth = this.video.clientWidth;
+        this.reflowedDimensions.videocontrolsWidth = this.videocontrols.clientWidth;
+      },
+
+      reflowedDimensions: {
+        // Set the dimensions to intrinsic <video> dimensions before the first
+        // update.
+        videoHeight: 150,
+        videoWidth: 300,
+        videocontrolsWidth: 0,
       },
 
       get pipToggleEnabled() {
