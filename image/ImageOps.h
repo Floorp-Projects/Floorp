@@ -80,15 +80,6 @@ class ImageOps {
                                                 Orientation aOrientation);
 
   /**
-   * Creates a version of an existing image which undoes any rotation and/or
-   * flipping that it has automatically handled.
-   *
-   * This only undoes the effect of a RasterImage's automatic orientation
-   * handling.
-   */
-  static already_AddRefed<imgIContainer> Unorient(imgIContainer* aImage);
-
-  /**
    * Creates an image from a gfxDrawable.
    *
    * @param aDrawable      The gfxDrawable.
