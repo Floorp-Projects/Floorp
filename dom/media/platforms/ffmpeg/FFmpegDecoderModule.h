@@ -49,7 +49,9 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
         mLib, aParams.mTaskQueue, aParams.VideoConfig(),
         aParams.mKnowsCompositor, aParams.mImageContainer,
-        aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency));
+        aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency),
+        aParams.mOptions.contains(
+            CreateDecoderParams::Option::HardwareDecoderNotAllowed));
     return decoder.forget();
   }
 

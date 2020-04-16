@@ -270,10 +270,11 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue, const VideoInfo& aConfig,
     KnowsCompositor* aAllocator, ImageContainer* aImageContainer,
-    bool aLowLatency)
+    bool aLowLatency, bool aDisableHardwareDecoding)
     : FFmpegDataDecoder(aLib, aTaskQueue, GetCodecId(aConfig.mMimeType)),
 #ifdef MOZ_WAYLAND_USE_VAAPI
       mVAAPIDeviceContext(nullptr),
+      mDisableHardwareDecoding(aDisableHardwareDecoding),
 #endif
       mImageAllocator(aAllocator),
       mImageContainer(aImageContainer),
@@ -289,9 +290,11 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   MediaResult rv;
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  rv = InitVAAPIDecoder();
-  if (NS_SUCCEEDED(rv)) {
-    return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  if (!mDisableHardwareDecoding) {
+    rv = InitVAAPIDecoder();
+    if (NS_SUCCEEDED(rv)) {
+      return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+    }
   }
 #endif
 
