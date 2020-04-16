@@ -1598,6 +1598,8 @@ static AbortReasonOr<WarpSnapshot*> CreateWarpSnapshot(JSContext* cx,
   // BuildMIR.
   gc::AutoSuppressGC suppressGC(cx);
 
+  SpewBeginFunction(mirGen, script);
+
   WarpOracle oracle(cx, *mirGen, script);
 
   AbortReasonOr<WarpSnapshot*> result = oracle.createSnapshot();
