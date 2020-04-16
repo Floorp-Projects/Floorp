@@ -61,7 +61,7 @@ add_task(async function() {
   ok(!checkbox.checked, "Checkbox shouldn't be checked");
   // tick box and accept dialog
   checkbox.checked = true;
-  let ourPrompt = openedTab.linkedBrowser.tabModalPromptBox.prompts.get(
+  let ourPrompt = openedTab.linkedBrowser.tabModalPromptBox.getPrompt(
     ourPromptElement
   );
   ourPrompt.onButtonClick(0);
