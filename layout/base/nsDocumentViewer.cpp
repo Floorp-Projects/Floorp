@@ -82,7 +82,7 @@
 #include "nsStyleSheetService.h"
 #include "nsILoadContext.h"
 #include "mozilla/ThrottledEventQueue.h"
-#include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "imgIContainer.h"  // image animation mode constants
 
 #include "nsSandboxFlags.h"
@@ -1336,16 +1336,15 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
 
     // Ask the user if it's ok to unload the current page
 
-    nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShell);
+    nsCOMPtr<nsIPromptService> promptService =
+        do_GetService("@mozilla.org/embedcomp/prompt-service;1");
 
-    if (prompt) {
-      nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
-      if (promptBag) {
-        bool isTabModalPromptAllowed;
-        GetIsTabModalPromptAllowed(&isTabModalPromptAllowed);
-        promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"),
-                                     isTabModalPromptAllowed);
-      }
+    if (promptService) {
+      bool isTabModalPromptAllowed;
+      GetIsTabModalPromptAllowed(&isTabModalPromptAllowed);
+      uint32_t modalType = isTabModalPromptAllowed
+                               ? nsIPromptService::MODAL_TYPE_CONTENT
+                               : nsIPromptService::MODAL_TYPE_WINDOW;
 
       nsAutoString title, message, stayLabel, leaveLabel;
       rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
@@ -1377,18 +1376,20 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
       // bool values through XPConnect.
       bool dummy = false;
       int32_t buttonPressed = 0;
-      uint32_t buttonFlags =
-          (nsIPrompt::BUTTON_POS_0_DEFAULT |
-           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) |
-           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1));
+      uint32_t buttonFlags = (nsIPromptService::BUTTON_POS_0_DEFAULT |
+                              (nsIPromptService::BUTTON_TITLE_IS_STRING *
+                               nsIPromptService::BUTTON_POS_0) |
+                              (nsIPromptService::BUTTON_TITLE_IS_STRING *
+                               nsIPromptService::BUTTON_POS_1));
 
       nsAutoSyncOperation sync(mDocument);
       mInPermitUnloadPrompt = true;
       mozilla::Telemetry::Accumulate(
           mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
-      rv = prompt->ConfirmEx(title.get(), message.get(), buttonFlags,
-                             leaveLabel.get(), stayLabel.get(), nullptr,
-                             nullptr, &dummy, &buttonPressed);
+      rv = promptService->ConfirmExBC(docShell->GetBrowsingContext(), modalType,
+                                      title.get(), message.get(), buttonFlags,
+                                      leaveLabel.get(), stayLabel.get(),
+                                      nullptr, nullptr, &dummy, &buttonPressed);
       mInPermitUnloadPrompt = false;
 
       // If the prompt aborted, we tell our consumer that it is not allowed
