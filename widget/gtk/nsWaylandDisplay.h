@@ -47,7 +47,6 @@ class nsWaylandDisplay {
 
   bool Matches(wl_display* aDisplay);
 
-  MessageLoop* GetDispatcherThreadLoop() { return mDispatcherThreadLoop; }
   wl_display* GetDisplay() { return mDisplay; };
   wl_event_queue* GetEventQueue() { return mEventQueue; };
   wl_compositor* GetCompositor(void) { return mCompositor; };
@@ -73,7 +72,8 @@ class nsWaylandDisplay {
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
   void SetIdleInhibitManager(zwp_idle_inhibit_manager_v1* aIdleInhibitManager);
 
-  void Shutdown();
+  MessageLoop* GetThreadLoop() { return mThreadLoop; }
+  void ShutdownThreadLoop();
 
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
@@ -97,7 +97,7 @@ class nsWaylandDisplay {
  private:
   bool ConfigureGbm();
 
-  MessageLoop* mDispatcherThreadLoop;
+  MessageLoop* mThreadLoop;
   PRThread* mThreadId;
   wl_display* mDisplay;
   wl_event_queue* mEventQueue;

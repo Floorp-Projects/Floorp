@@ -48,18 +48,20 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
 #define MAX_DISPLAY_CONNECTIONS 5
 
 static nsWaylandDisplay* gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
-static StaticMutex gWaylandDisplaysMutex;
+static StaticMutex gWaylandDisplayArrayMutex;
+static StaticMutex gWaylandThreadLoopMutex;
 
 void WaylandDisplayShutdown() {
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
   for (auto& display : gWaylandDisplays) {
     if (display) {
-      display->Shutdown();
+      display->ShutdownThreadLoop();
     }
   }
 }
 
 static void ReleaseDisplaysAtExit() {
+  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
   for (int i = 0; i < MAX_DISPLAY_CONNECTIONS; i++) {
     delete gWaylandDisplays[i];
     gWaylandDisplays[i] = nullptr;
@@ -78,11 +80,15 @@ static void DispatchDisplay(nsWaylandDisplay* aDisplay) {
 // global objects as we need (wl_display, wl_shm) and operates wl_event_queue on
 // compositor (not the main) thread.
 void WaylandDispatchDisplays() {
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  StaticMutexAutoLock arrayLock(gWaylandDisplayArrayMutex);
   for (auto& display : gWaylandDisplays) {
-    if (display && display->GetDispatcherThreadLoop()) {
-      display->GetDispatcherThreadLoop()->PostTask(NewRunnableFunction(
-          "WaylandDisplayDispatch", &DispatchDisplay, display));
+    if (display) {
+      StaticMutexAutoLock loopLock(gWaylandThreadLoopMutex);
+      MessageLoop* loop = display->GetThreadLoop();
+      if (loop) {
+        loop->PostTask(NewRunnableFunction("WaylandDisplayDispatch",
+                                           &DispatchDisplay, display));
+      }
     }
   }
 }
@@ -119,7 +125,7 @@ nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
     }
   }
 
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
   return WaylandDisplayGetLocked(aGdkDisplay, lock);
 }
 
@@ -401,7 +407,7 @@ class nsWaylandDisplayLoopObserver : public MessageLoop::DestructionObserver {
   explicit nsWaylandDisplayLoopObserver(nsWaylandDisplay* aWaylandDisplay)
       : mDisplay(aWaylandDisplay){};
   virtual void WillDestroyCurrentMessageLoop() override {
-    mDisplay->Shutdown();
+    mDisplay->ShutdownThreadLoop();
     mDisplay = nullptr;
     delete this;
   }
@@ -411,7 +417,7 @@ class nsWaylandDisplayLoopObserver : public MessageLoop::DestructionObserver {
 };
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
-    : mDispatcherThreadLoop(nullptr),
+    : mThreadLoop(nullptr),
       mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
       mEventQueue(nullptr),
@@ -440,11 +446,11 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     wl_display_roundtrip(mDisplay);
     wl_display_roundtrip(mDisplay);
   } else {
-    mDispatcherThreadLoop = MessageLoop::current();
-    MOZ_ASSERT(mDispatcherThreadLoop);
-    if (mDispatcherThreadLoop) {
+    mThreadLoop = MessageLoop::current();
+    MOZ_ASSERT(mThreadLoop);
+    if (mThreadLoop) {
       auto observer = new nsWaylandDisplayLoopObserver(this);
-      mDispatcherThreadLoop->AddDestructionObserver(observer);
+      mThreadLoop->AddDestructionObserver(observer);
     }
     mEventQueue = wl_display_create_queue(mDisplay);
     wl_proxy_set_queue((struct wl_proxy*)mRegistry, mEventQueue);
@@ -453,9 +459,9 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   }
 }
 
-void nsWaylandDisplay::Shutdown() {
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
-  mDispatcherThreadLoop = nullptr;
+void nsWaylandDisplay::ShutdownThreadLoop() {
+  StaticMutexAutoLock lock(gWaylandThreadLoopMutex);
+  mThreadLoop = nullptr;
 }
 
 nsWaylandDisplay::~nsWaylandDisplay() {
