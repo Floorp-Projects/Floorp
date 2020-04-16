@@ -7,6 +7,8 @@
 #define _RUSTSDPINC_H_
 
 #include "nsError.h"
+#include "mozilla/Maybe.h"
+#include "signaling/src/sdp/RsdparsaSdpInc.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -193,6 +195,11 @@ struct RustSdpAttributeImageAttr {
   RustSdpAttributeImageAttrSetList recv;
 };
 
+struct RustRtxFmtpParameters {
+  uint8_t apt;
+  mozilla::Maybe<uint32_t> rtx_time;
+};
+
 struct RustSdpAttributeFmtpParameters {
   // H264
   uint32_t packetization_mode;
@@ -217,6 +224,9 @@ struct RustSdpAttributeFmtpParameters {
 
   // telephone-event
   StringView dtmf_tones;
+
+  // RTX
+  mozilla::Maybe<RustRtxFmtpParameters> rtx;
 
   // Red codecs
   U8Vec* encodings;
