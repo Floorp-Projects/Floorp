@@ -22,8 +22,11 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     margin-bottom: 49px;
 
     .logo {
-      background: url('chrome://branding/content/icon128.png') no-repeat center center;
+      background: url('chrome://branding/content/about-logo.png') no-repeat center;
       background-size: $logo-size;
+      @media (min-resolution: 2x) {
+        background-image: url('chrome://branding/content/about-logo@2x.png');
+      }
       display: inline-block;
       height: $logo-size;
       width: $logo-size;
