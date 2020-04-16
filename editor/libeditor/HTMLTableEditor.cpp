@@ -3863,19 +3863,18 @@ nsresult HTMLEditor::GetCellContext(Element** aTable, Element** aCell,
   }
   if (aCellParent) {
     // Get the immediate parent of the cell
-    nsCOMPtr<nsINode> cellParent = cell->GetParentNode();
-    // Cell has to have a parent, so fail if not found
-    if (NS_WARN_IF(!cellParent)) {
+    EditorRawDOMPoint atCellElement(cell);
+    if (NS_WARN_IF(!atCellElement.IsSet())) {
       return NS_ERROR_FAILURE;
     }
 
     if (aCellOffset) {
-      *aCellOffset = GetChildOffset(cell, cellParent);
+      *aCellOffset = atCellElement.Offset();
     }
 
     // Now it's safe to hand over the reference to cellParent, since
     // we don't need it anymore.
-    cellParent.forget(aCellParent);
+    *aCellParent = do_AddRef(atCellElement.GetContainer()).take();
   }
 
   return NS_OK;
