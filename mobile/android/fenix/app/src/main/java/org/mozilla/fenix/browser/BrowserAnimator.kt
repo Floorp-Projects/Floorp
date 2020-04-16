@@ -89,6 +89,7 @@ class BrowserAnimator(
             viewLifeCycleScope?.launch(Dispatchers.Main) {
                 delay(ANIMATION_DELAY)
                 captureEngineViewAndDrawStatically {
+                    unwrappedSwipeRefresh?.alpha = 0f
                     browserZoomInValueAnimator.start()
                 }
             }
@@ -112,18 +113,6 @@ class BrowserAnimator(
     }
 
     /**
-     * Triggers the *fade out* browser animation to run.
-     */
-    fun beginFadeOut() {
-        viewLifeCycleScope?.launch(Dispatchers.Main) {
-            captureEngineViewAndDrawStatically {
-                unwrappedEngineView?.asView()?.visibility = View.GONE
-                browserFadeInValueAnimator.reverse()
-            }
-        }
-    }
-
-    /**
      * Makes the swipeRefresh background a screenshot of the engineView in its current state.
      * This allows us to "animate" the engineView.
      */
@@ -136,11 +125,12 @@ class BrowserAnimator(
                     if (!fragment.isAdded()) { return@captureThumbnail }
 
                     unwrappedSwipeRefresh?.apply {
-                        alpha = 0f
                         // If the bitmap is null, the best we can do to reduce the flash is set transparent
                         background = bitmap?.toDrawable(context.resources)
                             ?: ColorDrawable(Color.TRANSPARENT)
                     }
+
+                    unwrappedEngineView?.asView()?.visibility = View.GONE
 
                     onComplete()
                 }
