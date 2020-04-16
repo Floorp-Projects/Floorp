@@ -20,6 +20,9 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.migration.SupportedAddonsChecker.Frequency
@@ -81,7 +84,7 @@ class DefaultSupportedAddonsChecker(
     override fun registerForChecks() {
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
                 CHECKER_UNIQUE_PERIODIC_WORK_NAME,
-                ExistingPeriodicWorkPolicy.REPLACE,
+                ExistingPeriodicWorkPolicy.KEEP,
                 createPeriodicWorkerRequest()
         )
         logger.info("Register check for new supported add-ons")
@@ -152,6 +155,14 @@ internal class SupportedAddonsWorker(
 
             val newSupportedAddons = addonManager.getAddons().filter { addon ->
                 addon.isSupported() && addon.isDisabledAsUnsupported()
+            }
+
+            withContext(Dispatchers.Main) {
+                newSupportedAddons.forEach {
+                    addonManager.enableAddon(it, source = EnableSource.APP_SUPPORT, onError = { error ->
+                        GlobalAddonDependencyProvider.onCrash?.invoke(error)
+                    })
+                }
             }
 
             if (newSupportedAddons.isNotEmpty()) {
