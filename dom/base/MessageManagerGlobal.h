@@ -110,7 +110,6 @@ class MessageManagerGlobal {
 
   // MessageManagerGlobal
   void Dump(const nsAString& aStr);
-  void PrivateNoteIntentionalCrash(ErrorResult& aError);
   void Atob(const nsAString& aAsciiString, nsAString& aBase64Data,
             ErrorResult& aError);
   void Btoa(const nsAString& aBase64Data, nsAString& aAsciiString,
