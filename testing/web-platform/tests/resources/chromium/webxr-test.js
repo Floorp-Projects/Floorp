@@ -76,6 +76,10 @@ class ChromeXRTest {
     document.body.appendChild(button);
     test_driver.click(button);
   }
+
+  Debug(name, msg) {
+    console.log(new Date().toISOString() + ' DEBUG[' + name + '] ' + msg);
+  }
 }
 
 // Mocking class definitions
