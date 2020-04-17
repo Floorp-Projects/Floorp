@@ -21,6 +21,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
@@ -86,6 +87,10 @@ class ToolbarView(
             elevation = TOOLBAR_ELEVATION_IN_DP.dpToPx(resources.displayMetrics).toFloat()
 
             setOnUrlCommitListener {
+                // We're hiding the keyboard as early as possible to prevent the engine view
+                // from resizing in case the BrowserFragment is being displayed before the
+                // keyboard is gone: https://github.com/mozilla-mobile/fenix/issues/8399
+                hideKeyboard()
                 interactor.onUrlCommitted(it)
                 false
             }
