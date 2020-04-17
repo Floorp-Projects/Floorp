@@ -5516,7 +5516,7 @@
 # Is the initial value for the image-orientation property 'from-image'?
 - name: layout.css.image-orientation.initial-from-image
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
