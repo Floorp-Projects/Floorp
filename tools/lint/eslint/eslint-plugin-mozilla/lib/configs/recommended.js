@@ -134,6 +134,7 @@ module.exports = {
     "mozilla/use-chromeutils-generateqi": "error",
     "mozilla/use-chromeutils-import": "error",
     "mozilla/use-default-preference-values": "error",
+    "mozilla/use-finally": "error",
     "mozilla/use-includes-instead-of-indexOf": "error",
     "mozilla/use-ownerGlobal": "error",
     "mozilla/use-returnValue": "error",
