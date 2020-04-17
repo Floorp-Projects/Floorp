@@ -83,7 +83,7 @@ interface mixin NavigatorContentUtils {
   // content handler registration
   [Throws, ChromeOnly]
   void checkProtocolHandlerAllowed(DOMString scheme, URI handlerURI, URI documentURI);
-  [Throws, Func="nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext"]
+  [Throws, SecureContext]
   void registerProtocolHandler(DOMString scheme, DOMString url, DOMString title);
   // NOT IMPLEMENTED
   //void unregisterProtocolHandler(DOMString scheme, DOMString url);
