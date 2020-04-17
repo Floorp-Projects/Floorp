@@ -48,7 +48,7 @@ MOZ_MUST_USE inline bool CraneliftCompileFunctions(
   MOZ_CRASH("Should not happen");
 }
 
-void CraneliftFreeReusableData(void* data) {}
+inline void CraneliftFreeReusableData(void* data) {}
 #endif
 
 }  // namespace wasm
