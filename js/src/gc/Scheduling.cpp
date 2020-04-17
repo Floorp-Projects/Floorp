@@ -43,7 +43,6 @@ GCSchedulingTunables::GCSchedulingTunables()
       gcMaxNurseryBytes_(JS::DefaultNurseryMaxBytes),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
       nonIncrementalFactor_(TuningDefaults::NonIncrementalFactor),
-      avoidInterruptFactor_(TuningDefaults::AvoidInterruptFactor),
       zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
       dynamicHeapGrowthEnabled_(TuningDefaults::DynamicHeapGrowthEnabled),
       highFrequencyThreshold_(
@@ -148,14 +147,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       nonIncrementalFactor_ = newFactor;
-      break;
-    }
-    case JSGC_AVOID_INTERRUPT_FACTOR: {
-      float newFactor = value / 100.0f;
-      if (newFactor < 1.0f) {
-        return false;
-      }
-      avoidInterruptFactor_ = newFactor;
       break;
     }
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
@@ -311,9 +302,6 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
       break;
     case JSGC_NON_INCREMENTAL_FACTOR:
       nonIncrementalFactor_ = TuningDefaults::NonIncrementalFactor;
-      break;
-    case JSGC_AVOID_INTERRUPT_FACTOR:
-      avoidInterruptFactor_ = TuningDefaults::AvoidInterruptFactor;
       break;
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       setMinEmptyChunkCount(TuningDefaults::MinEmptyChunkCount);

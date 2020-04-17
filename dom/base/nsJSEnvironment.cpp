@@ -2650,10 +2650,6 @@ void nsJSContext::EnsureStatics() {
       SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_non_incremental_factor",
       (void*)JSGC_NON_INCREMENTAL_FACTOR);
-  Preferences::RegisterCallbackAndCall(
-      SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_avoid_interrupt_factor",
-      (void*)JSGC_AVOID_INTERRUPT_FACTOR);
 
   Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
                                        "dom.cycle_collector.incremental");
