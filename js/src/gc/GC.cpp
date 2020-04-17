@@ -3205,9 +3205,7 @@ void js::gc::BackgroundDecommitTask::run() {
   }
 }
 
-void GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks) {
-  freeBlocks.freeAll();
-
+void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
   if (zones.isEmpty()) {
     return;
   }
@@ -3302,11 +3300,9 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
   do {
     ZoneList zones;
     zones.transferFrom(backgroundSweepZones.ref());
-    LifoAlloc freeLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    freeLifoAlloc.transferFrom(&lifoBlocksToFree.ref());
 
     AutoUnlockHelperThreadState unlock(lock);
-    sweepBackgroundThings(zones, freeLifoAlloc);
+    sweepBackgroundThings(zones);
 
     // The main thread may call queueZonesAndStartBackgroundSweep() while this
     // is running so we must check there is no more work after releasing the
