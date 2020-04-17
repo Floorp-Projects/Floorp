@@ -16,15 +16,19 @@ const { ExperimentFakes } = ChromeUtils.import(
  */
 add_task(async function test_onStartup_setExperimentActive_called() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
+  const experiments = [];
   sandbox.stub(manager, "setExperimentActive");
+  sandbox.stub(manager.store, "init").resolves();
+  sandbox.stub(manager.store, "getAll").returns(experiments);
 
   const active = ["foo", "bar"].map(ExperimentFakes.experiment);
 
   const inactive = ["baz", "qux"].map(slug =>
     ExperimentFakes.experiment(slug, { active: false })
   );
-  [...active, ...inactive].forEach(exp => manager.store.addExperiment(exp));
+
+  [...active, ...inactive].forEach(exp => experiments.push(exp));
 
   await manager.onStartup();
 
@@ -54,12 +58,13 @@ add_task(async function test_onStartup_setExperimentActive_called() {
  */
 add_task(async function test_onRecipe_track_slug() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
 
+  await manager.onStartup();
   // The first time a recipe has seen;
   await manager.onRecipe(fooRecipe);
 
@@ -72,12 +77,13 @@ add_task(async function test_onRecipe_track_slug() {
 
 add_task(async function test_onRecipe_enroll() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
 
+  await manager.onStartup();
   await manager.onRecipe(fooRecipe);
 
   Assert.equal(
@@ -94,11 +100,13 @@ add_task(async function test_onRecipe_enroll() {
 
 add_task(async function test_onRecipe_update() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
+
+  await manager.onStartup();
 
   await manager.onRecipe(fooRecipe);
   // Call again after recipe has already been enrolled
@@ -113,9 +121,11 @@ add_task(async function test_onRecipe_update() {
 
 add_task(async function test_onRecipe_isEnrollmentPaused() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
+
+  await manager.onStartup();
 
   const pausedRecipe = ExperimentFakes.recipe("xyz", {
     isEnrollmentPaused: true,
@@ -152,15 +162,16 @@ add_task(async function test_onRecipe_isEnrollmentPaused() {
 
 add_task(async function test_onFinalize_unenroll() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "unenroll");
+
+  await manager.onStartup();
 
   // Add an experiment to the store without calling .onRecipe
   // This simulates an enrollment having happened in the past.
   manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
   // Simulate adding some other recipes
-  await manager.onStartup();
   await manager.onRecipe(ExperimentFakes.recipe("bar"));
   await manager.onRecipe(ExperimentFakes.recipe("baz"));
 

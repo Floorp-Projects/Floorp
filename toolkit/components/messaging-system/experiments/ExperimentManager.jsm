@@ -40,9 +40,9 @@ const DEFAULT_EXPERIMENT_TYPE = "messaging_experiment";
  * and sending experiment-related Telemetry.
  */
 class _ExperimentManager {
-  constructor({ id = "experimentmanager", storeId } = {}) {
+  constructor({ id = "experimentmanager", store } = {}) {
     this.id = id;
-    this.store = new ExperimentStore(storeId);
+    this.store = store || new ExperimentStore();
     this.slugsSeenInThisSession = new Set();
     this.log = LogManager.getLogger("ExperimentManager");
   }
@@ -51,6 +51,7 @@ class _ExperimentManager {
    * Runs on startup, including before first run
    */
   async onStartup() {
+    await this.store.init();
     const restoredExperiments = this.store.getAllActive();
 
     for (const experiment of restoredExperiments) {
