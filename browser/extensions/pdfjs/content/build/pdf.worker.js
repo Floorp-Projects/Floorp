@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.5.80';
-const pdfjsBuild = '852730385';
+const pdfjsVersion = '2.5.95';
+const pdfjsBuild = 'c218e94f6';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.5.80';
+    const workerVersion = '2.5.95';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3978,7 +3978,7 @@ class Catalog {
       NumCopies: Number.isInteger
     };
     const obj = this.catDict.get("ViewerPreferences");
-    const prefs = Object.create(null);
+    let prefs = null;
 
     if ((0, _primitives.isDict)(obj)) {
       for (const key in ViewerPreferencesValidators) {
@@ -4100,6 +4100,10 @@ class Catalog {
         }
 
         if (prefValue !== undefined) {
+          if (!prefs) {
+            prefs = Object.create(null);
+          }
+
           prefs[key] = prefValue;
         } else {
           (0, _util.info)(`Bad value in ViewerPreferences for "${key}".`);
@@ -12407,37 +12411,39 @@ var JpegImage = function JpegImageClosure() {
 
     var h, v;
 
-    while (mcu < mcuExpected) {
+    while (mcu <= mcuExpected) {
       var mcuToRead = resetInterval ? Math.min(mcuExpected - mcu, resetInterval) : mcuExpected;
 
-      for (i = 0; i < componentsLength; i++) {
-        components[i].pred = 0;
-      }
-
-      eobrun = 0;
-
-      if (componentsLength === 1) {
-        component = components[0];
-
-        for (n = 0; n < mcuToRead; n++) {
-          decodeBlock(component, decodeFn, mcu);
-          mcu++;
+      if (mcuToRead > 0) {
+        for (i = 0; i < componentsLength; i++) {
+          components[i].pred = 0;
         }
-      } else {
-        for (n = 0; n < mcuToRead; n++) {
-          for (i = 0; i < componentsLength; i++) {
-            component = components[i];
-            h = component.h;
-            v = component.v;
 
-            for (j = 0; j < v; j++) {
-              for (k = 0; k < h; k++) {
-                decodeMcu(component, decodeFn, mcu, j, k);
+        eobrun = 0;
+
+        if (componentsLength === 1) {
+          component = components[0];
+
+          for (n = 0; n < mcuToRead; n++) {
+            decodeBlock(component, decodeFn, mcu);
+            mcu++;
+          }
+        } else {
+          for (n = 0; n < mcuToRead; n++) {
+            for (i = 0; i < componentsLength; i++) {
+              component = components[i];
+              h = component.h;
+              v = component.v;
+
+              for (j = 0; j < v; j++) {
+                for (k = 0; k < h; k++) {
+                  decodeMcu(component, decodeFn, mcu, j, k);
+                }
               }
             }
-          }
 
-          mcu++;
+            mcu++;
+          }
         }
       }
 
@@ -12446,18 +12452,15 @@ var JpegImage = function JpegImageClosure() {
 
       if (!fileMarker) {
         break;
-      } else if (fileMarker.invalid) {
-        (0, _util.warn)("decodeScan - unexpected MCU data, current marker is: " + fileMarker.invalid);
+      }
+
+      if (fileMarker.invalid) {
+        const partialMsg = mcuToRead > 0 ? "unexpected" : "excessive";
+        (0, _util.warn)(`decodeScan - ${partialMsg} MCU data, current marker is: ${fileMarker.invalid}`);
         offset = fileMarker.offset;
       }
 
-      var marker = fileMarker && fileMarker.marker;
-
-      if (!marker || marker <= 0xff00) {
-        throw new JpegError("decodeScan - a valid marker was not found.");
-      }
-
-      if (marker >= 0xffd0 && marker <= 0xffd7) {
+      if (fileMarker.marker >= 0xffd0 && fileMarker.marker <= 0xffd7) {
         offset += 2;
       } else {
         break;
@@ -12467,7 +12470,7 @@ var JpegImage = function JpegImageClosure() {
     fileMarker = findNextFileMarker(data, offset);
 
     if (fileMarker && fileMarker.invalid) {
-      (0, _util.warn)("decodeScan - unexpected Scan data, current marker is: " + fileMarker.invalid);
+      (0, _util.warn)(`decodeScan - unexpected Scan data, current marker is: ${fileMarker.invalid}`);
       offset = fileMarker.offset;
     }
 
@@ -22308,7 +22311,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
           }
 
-          if (code > 0 && Number.isInteger(code)) {
+          if (code > 0 && code <= 0x10ffff && Number.isInteger(code)) {
             if (baseEncodingName && code === +charcode) {
               const baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
 
