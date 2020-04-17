@@ -197,7 +197,8 @@ TEST_SUITES = {
     'web-platform-tests': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []},
+        'build_flavor': 'web-platform-tests',
+        'kwargs': {'subsuite': 'testharness'},
         'task_regex': ['web-platform-tests($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
