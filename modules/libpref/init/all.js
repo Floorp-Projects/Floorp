@@ -240,9 +240,6 @@ pref("browser.cache.offline.capacity",         512000);
 // Don't show "Open with" option on download dialog if true.
 pref("browser.download.forbid_open_with", false);
 
-// Insecure registerProtocolHandler is disabled by default
-pref("dom.registerProtocolHandler.insecure.enabled", false);
-
 // Whether or not indexedDB experimental features are enabled.
 pref("dom.indexedDB.experimental", false);
 // Enable indexedDB logging.

@@ -8,8 +8,6 @@
 <p id="display"></p>
 <iframe id="test"></iframe>
 <script type="text/javascript">
-<![CDATA[
-
 var unsafeBidiChars = [
   "\xe2\x80\xaa", // LRE
   "\xe2\x80\xab", // RLE
@@ -37,10 +35,7 @@ function sanitize(name) {
   return replace(name, "_");
 }
 
-const INSECURE_REGISTER_PREF = "dom.registerProtocolHandler.insecure.enabled";
-
 add_task(async function() {
-  SpecialPowers.setBoolPref(INSECURE_REGISTER_PREF, false);
   let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
   let chromeScript = SpecialPowers.loadChromeScript(url);
 
@@ -70,12 +65,8 @@ add_task(async function() {
   chromeScript.sendAsyncMessage("unregister");
   await promise;
 
-  SpecialPowers.clearUserPref(INSECURE_REGISTER_PREF);
-
   chromeScript.destroy();
 });
-
-]]>
 </script>
 </body>
 </html>
