@@ -45,10 +45,55 @@
 using namespace glsl;
 
 struct IntRect {
-  int x;
-  int y;
-  int width;
-  int height;
+  int x0;
+  int y0;
+  int x1;
+  int y1;
+
+  int width() const { return x1 - x0; }
+  int height() const { return y1 - y0; }
+  bool is_empty() const { return width() <= 0 || height() <= 0; }
+
+  bool same_size(const IntRect& o) const {
+    return width() == o.width() && height() == o.height();
+  }
+
+  bool contains(const IntRect& o) const {
+    return o.x0 >= x0 && o.y0 >= y0 && o.x1 <= x1 && o.y1 <= y1;
+  }
+
+  IntRect& intersect(const IntRect& o) {
+    x0 = max(x0, o.x0);
+    y0 = max(y0, o.y0);
+    x1 = min(x1, o.x1);
+    y1 = min(y1, o.y1);
+    return *this;
+  }
+
+  // Scale from source-space to dest-space, optionally rounding inward
+  IntRect& scale(int srcWidth, int srcHeight, int dstWidth, int dstHeight,
+                 bool roundIn = false) {
+    x0 = (x0 * dstWidth + (roundIn ? srcWidth - 1 : 0)) / srcWidth;
+    y0 = (y0 * dstHeight + (roundIn ? srcHeight - 1 : 0)) / srcHeight;
+    x1 = (x1 * dstWidth) / srcWidth;
+    y1 = (y1 * dstHeight) / srcHeight;
+    return *this;
+  }
+
+  // Flip the rect's Y coords around inflection point at Y=offset
+  void invert_y(int offset) {
+    y0 = offset - y0;
+    y1 = offset - y1;
+    swap(y0, y1);
+  }
+
+  IntRect& offset(int dx, int dy) {
+    x0 += dx;
+    y0 += dy;
+    x1 += dx;
+    y1 += dy;
+    return *this;
+  }
 };
 
 struct VertexAttrib {
@@ -199,6 +244,13 @@ struct Texture {
   }
   void set_should_free(bool val) { set_flag(SHOULD_FREE, val); }
 
+  // Delayed-clearing state. When a clear of an FB is requested, we don't
+  // immediately clear each row, as the rows may be subsequently overwritten
+  // by draw calls, allowing us to skip the work of clearing the affected rows
+  // either fully or partially. Instead, we keep a bit vector of rows that need
+  // to be cleared later and save the value they need to be cleared with so
+  // that we can clear these rows individually when they are touched by draws.
+  // This currently only works for 2D textures, but not on texture arrays.
   int delay_clear = 0;
   uint32_t clear_val = 0;
   uint32_t* cleared_rows = nullptr;
@@ -237,6 +289,8 @@ struct Texture {
     if ((!buf || force) && should_free()) {
       size_t size = layer_stride(bpp(), min_width, min_height) * max(depth, 1);
       if (!buf || size > buf_size) {
+        // Allocate with a SIMD register-sized tail of padding at the end so we
+        // can safely read or write past the end of the texture with SIMD ops.
         char* new_buf = (char*)realloc(buf, size + sizeof(Float));
         assert(new_buf);
         if (new_buf) {
@@ -260,6 +314,39 @@ struct Texture {
   }
 
   ~Texture() { cleanup(); }
+
+  IntRect bounds() const { return IntRect{0, 0, width, height}; }
+
+  // Find the valid sampling bounds relative to the requested region
+  IntRect sample_bounds(const IntRect& req, bool invertY = false) const {
+    IntRect bb = bounds().intersect(req).offset(-req.x0, -req.y0);
+    if (invertY) bb.invert_y(req.height());
+    return bb;
+  }
+
+  // Get a pointer for sampling at the given offset
+  char* sample_ptr(int x, int y, int z, int bpp, size_t stride) const {
+    return buf + (height * z + y) * stride + x * bpp;
+  }
+
+  char* sample_ptr(int x, int y, int z, int bpp) const {
+    return sample_ptr(x, y, z, bpp, stride(bpp));
+  }
+
+  char* sample_ptr(int x, int y, int z) const {
+    return sample_ptr(x, y, z, bpp());
+  }
+
+  // Get a pointer for sampling the requested region and limit to the provided
+  // sampling bounds
+  char* sample_ptr(const IntRect& req, const IntRect& bounds, int z,
+                   bool invertY = false) const {
+    // Offset the sample pointer by the clamped bounds
+    int x = req.x0 + bounds.x0;
+    // Invert the Y offset if necessary
+    int y = invertY ? req.y1 - 1 - bounds.y0 : req.y0 + bounds.y0;
+    return sample_ptr(x, y, z);
+  }
 };
 
 #define MAX_ATTRIBS 16
@@ -374,7 +461,7 @@ struct ObjectStore {
 
   O* find(size_t i) const { return i < size ? objects[i] : nullptr; }
 
-  template <typename T> void on_erase(T* o, ...) {}
+  template <typename T> void on_erase(T*, ...) {}
   template <typename T> void on_erase(T* o, decltype(&T::on_erase)) {
     o->on_erase();
   }
@@ -512,6 +599,10 @@ struct Context {
   Texture& get_texture(sampler2DRect, int unit) {
     return textures[texture_units[unit].texture_rectangle_binding];
   }
+
+  IntRect apply_scissor(IntRect bb) const {
+    return scissortest ? bb.intersect(scissor) : bb;
+  }
 };
 static Context* ctx = nullptr;
 static ProgramImpl* program_impl = nullptr;
@@ -523,7 +614,7 @@ static void prepare_texture(Texture& t, const IntRect* skip = nullptr);
 
 template <typename S>
 static inline void init_depth(S* s, Texture& t) {
-  s->depth = t.depth;
+  s->depth = max(t.depth, 1);
   s->height_stride = s->stride * t.height;
 }
 
@@ -715,10 +806,7 @@ void UseProgram(GLuint program) {
 }
 
 void SetViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-  ctx->viewport.x = x;
-  ctx->viewport.y = y;
-  ctx->viewport.width = width;
-  ctx->viewport.height = height;
+  ctx->viewport = IntRect{x, y, x + width, y + height};
 }
 
 void Enable(GLenum cap) {
@@ -941,10 +1029,7 @@ void DepthFunc(GLenum func) {
 }
 
 void SetScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
-  ctx->scissor.x = x;
-  ctx->scissor.y = y;
-  ctx->scissor.width = width;
-  ctx->scissor.height = height;
+  ctx->scissor = IntRect{x, y, x + width, y + height};
 }
 
 void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
@@ -1208,12 +1293,13 @@ static void set_tex_storage(Texture& t, GLenum internal_format,
                             GLsizei min_width = 0, GLsizei min_height = 0) {
   internal_format = remap_internal_format(internal_format);
   bool changed = false;
-  if (t.width != width || t.height != height ||
+  if (t.width != width || t.height != height || t.depth != 0 ||
       t.internal_format != internal_format) {
     changed = true;
     t.internal_format = internal_format;
     t.width = width;
     t.height = height;
+    t.depth = 0;
   }
   if (t.should_free() != should_free || buf != nullptr) {
     if (t.should_free()) {
@@ -1298,7 +1384,7 @@ void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   data = get_pixel_unpack_buffer_data(data);
   if (!data) return;
   Texture& t = ctx->textures[ctx->get_binding(target)];
-  IntRect skip = {xoffset, yoffset, width, height};
+  IntRect skip = {xoffset, yoffset, xoffset + width, yoffset + height};
   prepare_texture(t, &skip);
   assert(xoffset + width <= t.width);
   assert(yoffset + height <= t.height);
@@ -1309,7 +1395,7 @@ void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   int bpp = t.bpp();
   if (!bpp || !t.buf) return;
   size_t dest_stride = t.stride(bpp);
-  char* dest = t.buf + yoffset * dest_stride + xoffset * bpp;
+  char* dest = t.sample_ptr(xoffset, yoffset, 0, bpp, dest_stride);
   char* src = (char*)data;
   for (int y = 0; y < height; y++) {
     if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
@@ -1356,8 +1442,7 @@ void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   assert(zoffset + depth <= t.depth);
   size_t dest_stride = t.stride(bpp);
   for (int z = 0; z < depth; z++) {
-    char* dest = t.buf + ((zoffset + z) * t.height + yoffset) * dest_stride +
-                 xoffset * bpp;
+    char* dest = t.sample_ptr(xoffset, yoffset, zoffset + z, bpp, dest_stride);
     for (int y = 0; y < height; y++) {
       if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
         copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
@@ -1598,11 +1683,14 @@ void Uniform1i(GLint location, GLint V0) {
   }
 }
 void Uniform4fv(GLint location, GLsizei count, const GLfloat* v) {
+  assert(count == 1);
   vertex_shader->set_uniform_4fv(location, v);
   fragment_shader->set_uniform_4fv(location, v);
 }
 void UniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose,
                       const GLfloat* value) {
+  assert(count == 1);
+  assert(!transpose);
   vertex_shader->set_uniform_matrix4fv(location, value);
   fragment_shader->set_uniform_matrix4fv(location, value);
 }
@@ -1610,6 +1698,8 @@ void UniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose,
 void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
                           GLuint texture, GLint level) {
   assert(target == GL_READ_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER);
+  assert(textarget == GL_TEXTURE_2D || textarget == GL_TEXTURE_RECTANGLE);
+  assert(level == 0);
   Framebuffer& fb = ctx->framebuffers[ctx->get_binding(target)];
   if (attachment == GL_COLOR_ATTACHMENT0) {
     fb.color_attachment = texture;
@@ -1623,8 +1713,8 @@ void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
 
 void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture,
                              GLint level, GLint layer) {
-  assert(level == 0);
   assert(target == GL_READ_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER);
+  assert(level == 0);
   Framebuffer& fb = ctx->framebuffers[ctx->get_binding(target)];
   if (attachment == GL_COLOR_ATTACHMENT0) {
     fb.color_attachment = texture;
@@ -1677,54 +1767,86 @@ inline void fill_n<uint32_t>(uint32_t* dst, size_t n, uint32_t val) {
 }
 #endif
 
+static inline uint32_t clear_chunk(uint8_t value) {
+  return uint32_t(value) * 0x01010101U;
+}
+
+static inline uint32_t clear_chunk(uint16_t value) {
+  return uint32_t(value) | (uint32_t(value) << 16);
+}
+
+static inline uint32_t clear_chunk(uint32_t value) {
+  return value;
+}
+
 template <typename T>
-static void clear_buffer(Texture& t, T value, int x0, int x1, int y0, int y1,
-                         int layer = 0, int skip_start = 0, int skip_end = 0) {
-  if (!t.buf) return;
-  skip_start = max(skip_start, x0);
-  skip_end = max(skip_end, skip_start);
-  size_t stride = t.stride(sizeof(T));
-  if (x1 - x0 == t.width && y1 - y0 > 1 && skip_start >= skip_end) {
-    x1 += (stride / sizeof(T)) * (y1 - y0 - 1);
-    y1 = y0 + 1;
+static inline void clear_row(T* buf, size_t len, T value, uint32_t chunk) {
+  const size_t N = sizeof(uint32_t) / sizeof(T);
+  // fill any leading unaligned values
+  if (N > 1) {
+    size_t align = (-(intptr_t)buf & (sizeof(uint32_t) - 1)) / sizeof(T);
+    if (align <= len) {
+      fill_n(buf, align, value);
+      len -= align;
+      buf += align;
+    }
   }
-  char* buf = t.buf + stride * (t.height * layer + y0) + x0 * sizeof(T);
-  uint32_t chunk =
-      sizeof(T) == 1
-          ? uint32_t(value) * 0x01010101U
-          : (sizeof(T) == 2 ? uint32_t(value) | (uint32_t(value) << 16)
-                            : value);
-  for (int y = y0; y < y1; y++) {
-    if (x0 < skip_start) {
-      fill_n((uint32_t*)buf, (skip_start - x0) / (4 / sizeof(T)), chunk);
-      if (sizeof(T) < 4) {
-        fill_n((T*)buf + ((skip_start - x0) & ~(4 / sizeof(T) - 1)),
-               (skip_start - x0) & (4 / sizeof(T) - 1), value);
-      }
+  // fill as many aligned chunks as possible
+  fill_n((uint32_t*)buf, len / N, chunk);
+  // fill any remaining values
+  if (N > 1) {
+    fill_n(buf + (len & ~(N - 1)), len & (N - 1), value);
+  }
+}
+
+template <typename T>
+static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
+                         int skip_start = 0, int skip_end = 0) {
+  if (!t.buf) return;
+  skip_start = max(skip_start, bb.x0);
+  skip_end = max(skip_end, skip_start);
+  assert(sizeof(T) == t.bpp());
+  size_t stride = t.stride(sizeof(T));
+  // When clearing multiple full-width rows, collapse them into a single
+  // large "row" to avoid redundant setup from clearing each row individually.
+  if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end) {
+    bb.x1 += (stride / sizeof(T)) * (bb.height() - 1);
+    bb.y1 = bb.y0 + 1;
+  }
+  T* buf = (T*)t.sample_ptr(bb.x0, bb.y0, layer, sizeof(T), stride);
+  uint32_t chunk = clear_chunk(value);
+  for (int rows = bb.height(); rows > 0; rows--) {
+    if (bb.x0 < skip_start) {
+      clear_row(buf, skip_start - bb.x0, value, chunk);
     }
-    if (skip_end < x1) {
-      T* skip_buf = (T*)buf + (skip_end - x0);
-      fill_n((uint32_t*)skip_buf, (x1 - skip_end) / (4 / sizeof(T)), chunk);
-      if (sizeof(T) < 4) {
-        fill_n(skip_buf + ((x1 - skip_end) & ~(4 / sizeof(T) - 1)),
-               (x1 - skip_end) & (4 / sizeof(T) - 1), value);
-      }
+    if (skip_end < bb.x1) {
+      clear_row(buf + (skip_end - bb.x0), bb.x1 - skip_end, value, chunk);
     }
-    buf += stride;
+    buf += stride / sizeof(T);
   }
 }
 
 template <typename T>
 static inline void clear_buffer(Texture& t, T value, int layer = 0) {
-  int x0 = 0, y0 = 0, x1 = t.width, y1 = t.height;
-  if (ctx->scissortest) {
-    x0 = max(x0, ctx->scissor.x);
-    y0 = max(y0, ctx->scissor.y);
-    x1 = min(x1, ctx->scissor.x + ctx->scissor.width);
-    y1 = min(y1, ctx->scissor.y + ctx->scissor.height);
+  IntRect bb = ctx->apply_scissor(t.bounds());
+  if (bb.width() > 0) {
+    clear_buffer<T>(t, value, layer, bb);
   }
-  if (x1 - x0 > 0) {
-    clear_buffer<T>(t, value, x0, x1, y0, y1, layer);
+}
+
+template <typename T>
+static inline void force_clear_row(Texture& t, int y, int skip_start = 0,
+                                   int skip_end = 0) {
+  assert(t.buf != nullptr);
+  assert(sizeof(T) == t.bpp());
+  assert(skip_start <= skip_end);
+  T* buf = (T*)t.sample_ptr(0, y, 0, sizeof(T));
+  uint32_t chunk = clear_chunk((T)t.clear_val);
+  if (skip_start > 0) {
+    clear_row<T>(buf, skip_start, t.clear_val, chunk);
+  }
+  if (skip_end < t.width) {
+    clear_row<T>(buf + skip_end, t.width - skip_end, t.clear_val, chunk);
   }
 }
 
@@ -1738,10 +1860,10 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
   int skip_start = 0;
   int skip_end = 0;
   if (skip) {
-    y0 = min(max(skip->y, 0), t.height);
-    y1 = min(max(skip->y + skip->height, y0), t.height);
-    skip_start = min(max(skip->x, 0), t.width);
-    skip_end = min(max(skip->x + skip->width, skip_start), t.width);
+    y0 = clamp(skip->y0, 0, t.height);
+    y1 = clamp(skip->y1, y0, t.height);
+    skip_start = clamp(skip->x0, 0, t.width);
+    skip_end = clamp(skip->x1, skip_start, t.width);
     if (skip_start <= 0 && skip_end >= t.width && y0 <= 0 && y1 >= t.height) {
       t.disable_delayed_clear();
       return;
@@ -1757,7 +1879,8 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
       while (mask) {
         int count = __builtin_ctz(mask);
         if (count > 0) {
-          clear_buffer<T>(t, t.clear_val, 0, t.width, start, start + count, 0,
+          clear_buffer<T>(t, t.clear_val, 0,
+                          IntRect{0, start, t.width, start + count},
                           skip_start, skip_end);
           t.delay_clear -= count;
           start += count;
@@ -1769,7 +1892,8 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
       }
       int count = (i + 1) * 32 - start;
       if (count > 0) {
-        clear_buffer<T>(t, t.clear_val, 0, t.width, start, start + count, 0,
+        clear_buffer<T>(t, t.clear_val, 0,
+                        IntRect{0, start, t.width, start + count},
                         skip_start, skip_end);
         t.delay_clear -= count;
       }
@@ -1832,10 +1956,7 @@ void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
   }
   *width = colortex.width;
   *height = colortex.height;
-  return colortex.buf
-             ? colortex.buf +
-                   (fb->layer ? fb->layer * colortex.layer_stride() : 0)
-             : nullptr;
+  return colortex.buf ? colortex.sample_ptr(0, 0, fb->layer) : nullptr;
 }
 
 void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
@@ -1855,9 +1976,7 @@ GLenum CheckFramebufferStatus(GLenum target) {
 }
 
 static inline bool clear_requires_scissor(Texture& t) {
-  return ctx->scissortest &&
-         (ctx->scissor.x > 0 || ctx->scissor.y > 0 ||
-          ctx->scissor.width < t.width || ctx->scissor.height < t.height);
+  return ctx->scissortest && !ctx->scissor.contains(t.bounds());
 }
 
 void Clear(GLbitfield mask) {
@@ -1866,13 +1985,17 @@ void Clear(GLbitfield mask) {
     Texture& t = ctx->textures[fb.color_attachment];
     if (t.internal_format == GL_RGBA8) {
       uint32_t color = ctx->clearcolor;
+      // If the clear would require a scissor, force clear anything outside
+      // the scissor, and then immediately clear anything inside the scissor.
       if (clear_requires_scissor(t)) {
         force_clear<uint32_t>(t, &ctx->scissor);
         clear_buffer<uint32_t>(t, color, fb.layer);
       } else if (t.depth > 1) {
+        // Delayed clear is not supported on texture arrays.
         t.disable_delayed_clear();
         clear_buffer<uint32_t>(t, color, fb.layer);
       } else {
+        // Do delayed clear for 2D texture without scissor.
         t.enable_delayed_clear(color);
       }
     } else if (t.internal_format == GL_R8) {
@@ -1948,7 +2071,7 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
   int bpp = t.bpp();
   char* dest = (char*)data;
   size_t src_stride = t.stride(bpp);
-  char* src = t.buf + (t.height * fb->layer + y) * src_stride + x * bpp;
+  char* src = t.sample_ptr(x, y, fb->layer, bpp, src_stride);
   for (; height > 0; height--) {
     if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
       copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
@@ -1965,6 +2088,7 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
                       GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY,
                       GLint dstZ, GLsizei srcWidth, GLsizei srcHeight,
                       GLsizei srcDepth) {
+  assert(srcLevel == 0 && dstLevel == 0);
   if (srcTarget == GL_RENDERBUFFER) {
     Renderbuffer& rb = ctx->renderbuffers[srcName];
     srcName = rb.texture;
@@ -1978,35 +2102,28 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
   prepare_texture(srctex);
   Texture& dsttex = ctx->textures[dstName];
   if (!dsttex.buf) return;
-  IntRect skip = {dstX, dstY, srcWidth, abs(srcHeight)};
+  IntRect skip = {dstX, dstY, dstX + srcWidth, dstY + srcHeight};
   prepare_texture(dsttex, &skip);
   assert(srctex.internal_format == dsttex.internal_format);
+  assert(srcWidth >= 0);
+  assert(srcHeight >= 0);
+  assert(srcDepth >= 0);
   assert(srcX + srcWidth <= srctex.width);
   assert(srcY + srcHeight <= srctex.height);
   assert(srcZ + srcDepth <= max(srctex.depth, 1));
   assert(dstX + srcWidth <= dsttex.width);
-  assert(max(dstY, dstY + srcHeight) <= dsttex.height);
+  assert(dstY + srcHeight <= dsttex.height);
   assert(dstZ + srcDepth <= max(dsttex.depth, 1));
   int bpp = srctex.bpp();
   int src_stride = srctex.stride(bpp);
   int dest_stride = dsttex.stride(bpp);
   for (int z = 0; z < srcDepth; z++) {
-    char* dest = dsttex.buf +
-                 (dsttex.height * (dstZ + z) + dstY) * dest_stride + dstX * bpp;
-    char* src = srctex.buf + (srctex.height * (srcZ + z) + srcY) * src_stride +
-                srcX * bpp;
-    if (srcHeight < 0) {
-      for (int y = srcHeight; y < 0; y++) {
-        dest -= dest_stride;
-        memcpy(dest, src, srcWidth * bpp);
-        src += src_stride;
-      }
-    } else {
-      for (int y = 0; y < srcHeight; y++) {
-        memcpy(dest, src, srcWidth * bpp);
-        dest += dest_stride;
-        src += src_stride;
-      }
+    char* dest = dsttex.sample_ptr(dstX, dstY, dstZ + z, bpp, dest_stride);
+    char* src = srctex.sample_ptr(srcX, srcY, srcZ + z, bpp, src_stride);
+    for (int y = 0; y < srcHeight; y++) {
+      memcpy(dest, src, srcWidth * bpp);
+      dest += dest_stride;
+      src += src_stride;
     }
   }
 }
@@ -2014,6 +2131,7 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
 void CopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLint x, GLint y, GLsizei width,
                        GLsizei height) {
+  assert(level == 0);
   Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
   if (!fb) return;
   CopyImageSubData(fb->color_attachment, GL_TEXTURE_3D, 0, x, y, fb->layer,
@@ -2023,142 +2141,12 @@ void CopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 
 void CopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint x, GLint y, GLsizei width, GLsizei height) {
+  assert(level == 0);
   Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
   if (!fb) return;
   CopyImageSubData(fb->color_attachment, GL_TEXTURE_2D_ARRAY, 0, x, y,
                    fb->layer, ctx->get_binding(target), GL_TEXTURE_2D_ARRAY, 0,
                    xoffset, yoffset, 0, width, height, 1);
-}
-
-} // extern "C"
-
-template <typename P>
-static void scale_row(Texture& dsttex, P* dst, int dstX, int dstWidth,
-                      Texture& srctex, const P* src, int srcX, int srcWidth) {
-  int frac = 0;
-  // limit to valid dest region
-  int x0 = max(-dstX, 0);
-  int x1 = min(dsttex.width - dstX, dstWidth);
-  // limit to valid source region
-  if (srcX < 0) {
-    x0 = max(x0, (-srcX * dstWidth + srcWidth - 1) / srcWidth);
-  }
-  if (srcX + srcWidth > srctex.width) {
-    x1 = min(x1, ((srctex.width - srcX) * dstWidth) / srcWidth);
-  }
-  // skip to clamped start
-  if (x0 > 0) {
-    dst += x0;
-    src += (x0 * srcWidth) / dstWidth;
-  }
-  for (P* end = dst + (x1 - x0); dst < end; dst++) {
-    *dst = *src;
-    // Step source according to width ratio.
-    for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
-      src++;
-    }
-  }
-}
-
-static void scale_blit(GLuint srcName, GLint srcX, GLint srcY, GLint srcZ,
-                       GLsizei srcWidth, GLsizei srcHeight,
-                       GLuint dstName, GLint dstX, GLint dstY, GLint dstZ,
-                       GLsizei dstWidth, GLsizei dstHeight) {
-  Texture& srctex = ctx->textures[srcName];
-  if (!srctex.buf) return;
-  prepare_texture(srctex);
-  Texture& dsttex = ctx->textures[dstName];
-  if (!dsttex.buf) return;
-  IntRect skip = {dstX, dstY, dstWidth, abs(dstHeight)};
-  prepare_texture(dsttex, &skip);
-  assert(srctex.internal_format == dsttex.internal_format);
-  assert(srcHeight >= 0);
-  assert(srcZ < max(srctex.depth, 1));
-  assert(dstZ < max(dsttex.depth, 1));
-  int bpp = srctex.bpp();
-  int srcStride = srctex.stride(bpp);
-  int destStride = dsttex.stride(bpp);
-  char* dest = dsttex.buf + (dsttex.height * dstZ + dstY) * destStride +
-               dstX * bpp;
-  char* src = srctex.buf + (srctex.height * srcZ + srcY) * srcStride +
-              srcX * bpp;
-  if (dstHeight < 0) {
-    dest -= destStride;
-    destStride = -destStride;
-    dstHeight = -dstHeight;
-  }
-  int frac = 0;
-  int y0 = 0;
-  int y1 = dstHeight;
-  // limit rows to within valid dest region
-  if (destStride < 0) {
-    y0 = max(y0, dstY - dsttex.height);
-    y1 = min(y1, dstY);
-  } else {
-    y0 = max(y0, -dstY);
-    y1 = min(y1, dsttex.height - dstY);
-  }
-  // limit rows to valid source region
-  if (srcY < 0) {
-    y0 = max(y0, (-srcY * dstHeight + srcHeight - 1) / srcHeight);
-  }
-  if (srcY + srcHeight > srctex.height) {
-    y1 = min(y1, ((srctex.height - srcY) * dstHeight) / srcHeight);
-  }
-  // skip to clamped start
-  if (y0 > 0) {
-    dest += y0 * destStride;
-    src += ((y0 * srcHeight) / dstHeight) * srcStride;
-  }
-  for (int y = y0; y < y1; y++) {
-    if (srcWidth == dstWidth) {
-      // No scaling, so just do a fast copy.
-      // clamp to valid dest and source regions
-      int x0 = max(max(-srcX, -dstX), 0);
-      int x1 = min(min(srctex.width - srcX, dsttex.width - dstX), srcWidth);
-      if (x0 < x1) {
-        memcpy(dest + x0 * bpp, src + x0 * bpp, (x1 - x0) * bpp);
-      }
-    } else {
-      // Do scaling with different source and dest widths.
-      switch (bpp) {
-        case 1:
-          scale_row(dsttex, (uint8_t*)dest, dstX, dstWidth,
-                    srctex, (uint8_t*)src, srcX, srcWidth);
-          break;
-        case 2:
-          scale_row(dsttex, (uint16_t*)dest, dstX, dstWidth,
-                    srctex, (uint16_t*)src, srcX, srcWidth);
-          break;
-        case 4:
-          scale_row(dsttex, (uint32_t*)dest, dstX, dstWidth,
-                    srctex, (uint32_t*)src, srcX, srcWidth);
-          break;
-      }
-    }
-    dest += destStride;
-    // Step source according to height ratio.
-    for (frac += srcHeight; frac >= dstHeight; frac -= dstHeight) {
-      src += srcStride;
-    }
-  }
-}
-
-extern "C" {
-
-void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                     GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                     GLbitfield mask, GLenum filter) {
-  assert(mask == GL_COLOR_BUFFER_BIT);
-  Framebuffer* srcfb = get_framebuffer(GL_READ_FRAMEBUFFER);
-  if (!srcfb) return;
-  Framebuffer* dstfb = get_framebuffer(GL_DRAW_FRAMEBUFFER);
-  if (!dstfb) return;
-  // TODO: support linear filtering
-  scale_blit(srcfb->color_attachment, srcX0, srcY0, srcfb->layer,
-             srcX1 - srcX0, srcY1 - srcY0,
-             dstfb->color_attachment, dstX0, dstY0, dstfb->layer,
-             dstX1 - dstX0, dstY1 - dstY0);
 }
 
 }  // extern "C"
@@ -2704,18 +2692,8 @@ struct ClipRect {
   float x1;
   float y1;
 
-  ClipRect(Texture& t) : x0(0), y0(0), x1(t.width), y1(t.height) {
-    if (ctx->scissortest) {
-      scissor(ctx->scissor);
-    }
-  }
-
-  void scissor(const IntRect& scissor) {
-    x0 = max(x0, float(scissor.x));
-    y0 = max(y0, float(scissor.y));
-    x1 = min(x1, float(scissor.x + scissor.width));
-    y1 = min(y1, float(scissor.y + scissor.height));
-  }
+  ClipRect(const IntRect& i) : x0(i.x0), y0(i.y0), x1(i.x1), y1(i.y1) {}
+  ClipRect(Texture& t) : ClipRect(ctx->apply_scissor(t.bounds())) {}
 
   template <typename P>
   bool overlaps(int nump, const P* p) const {
@@ -2794,11 +2772,9 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
   Interpolants ro = interp_outs[r0i];
   Interpolants rom = (interp_outs[r1i] - ro) * rk;
   ro = ro + rom * (y - r0.y);
-  P* fbuf = (P*)colortex.buf + (layer * colortex.height + int(y)) *
-                                   colortex.stride(sizeof(P)) / sizeof(P);
+  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
-      (uint16_t*)depthtex.buf +
-      int(y) * depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
+    (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
   while (y < clipRect.y1) {
     if (y > l1.y) {
       l0i = l1i;
@@ -2856,15 +2832,13 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
             mask |= 1 << (yi & 31);
             depthtex.delay_clear--;
             if (use_discard) {
-              clear_buffer<uint16_t>(depthtex, depthtex.clear_val, 0,
-                                     depthtex.width, yi, yi + 1);
+              force_clear_row<uint16_t>(depthtex, yi);
             } else {
               if (startx > 0 || endx < depthtex.width) {
-                clear_buffer<uint16_t>(depthtex, depthtex.clear_val, 0,
-                                       depthtex.width, yi, yi + 1, 0, startx,
-                                       endx);
+                force_clear_row<uint16_t>(depthtex, yi, startx, endx);
               }
-              clear_buffer<uint16_t>(depthtex, z, startx, endx, yi, yi + 1);
+              clear_buffer<uint16_t>(depthtex, z, 0,
+                                     IntRect{startx, yi, endx, yi + 1});
               use_depth = false;
             }
           } else {
@@ -2879,11 +2853,9 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
           mask |= 1 << (yi & 31);
           colortex.delay_clear--;
           if (use_depth || blend_key || use_discard) {
-            clear_buffer<P>(colortex, colortex.clear_val, 0, colortex.width, yi,
-                            yi + 1, layer);
+            force_clear_row<P>(colortex, yi);
           } else if (startx > 0 || endx < colortex.width) {
-            clear_buffer<P>(colortex, colortex.clear_val, 0, colortex.width, yi,
-                            yi + 1, layer, startx, endx);
+            force_clear_row<P>(colortex, yi, startx, endx);
           }
         }
       }
@@ -3026,11 +2998,9 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   Interpolants ro = interp_outs[r0i] * r0.w;
   Interpolants rom = (interp_outs[r1i] * r1.w - ro) * rk;
   ro = ro + rom * (y - r0.y);
-  P* fbuf = (P*)colortex.buf + (layer * colortex.height + int(y)) *
-                                   colortex.stride(sizeof(P)) / sizeof(P);
+  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
-      (uint16_t*)depthtex.buf +
-      int(y) * depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
+    (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
   while (y < clipRect.y1) {
     if (y > l1.y) {
       l0i = l1i;
@@ -3074,8 +3044,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         if ((mask & (1 << (yi & 31))) == 0) {
           mask |= 1 << (yi & 31);
           depthtex.delay_clear--;
-          clear_buffer<uint16_t>(depthtex, depthtex.clear_val, 0,
-                                 depthtex.width, yi, yi + 1);
+          force_clear_row<uint16_t>(depthtex, yi);
         }
       }
       if (colortex.delay_clear) {
@@ -3085,11 +3054,9 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
           mask |= 1 << (yi & 31);
           colortex.delay_clear--;
           if (use_depth || blend_key || use_discard) {
-            clear_buffer<P>(colortex, colortex.clear_val, 0, colortex.width, yi,
-                            yi + 1, layer);
+            force_clear_row<P>(colortex, yi);
           } else if (startx > 0 || endx < colortex.width) {
-            clear_buffer<P>(colortex, colortex.clear_val, 0, colortex.width, yi,
-                            yi + 1, layer, startx, endx);
+            force_clear_row<P>(colortex, yi, startx, endx);
           }
         }
       }
@@ -3205,10 +3172,10 @@ static void draw_perspective(int nump, Texture& colortex, int layer,
 
   Point3D p[6];
   vec4 pos = vertex_shader->gl_Position;
-  vec3_scalar scale(ctx->viewport.width * 0.5f, ctx->viewport.height * 0.5f,
-                    0.5f);
-  vec3_scalar offset(ctx->viewport.x, ctx->viewport.y, 0.0f);
-  offset += scale;
+  vec3_scalar scale =
+    vec3_scalar(ctx->viewport.width(), ctx->viewport.height(), 1) * 0.5f;
+  vec3_scalar offset =
+    vec3_scalar(ctx->viewport.x0, ctx->viewport.y0, 0.0f) + scale;
   if (test_none(pos.z < -pos.w || pos.z > pos.w)) {
     Float w = 1.0f / pos.w;
     vec3 screen = pos.sel(X, Y, Z) * w * scale + offset;
@@ -3268,9 +3235,9 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   vec4 pos = vertex_shader->gl_Position;
   float w = 1.0f / pos.w.x;
   vec2 screen =
-      (pos.sel(X, Y) * w + 1) *
-          vec2_scalar(ctx->viewport.width * 0.5f, ctx->viewport.height * 0.5f) +
-      vec2_scalar(ctx->viewport.x, ctx->viewport.y);
+      (pos.sel(X, Y) * w + 1) * 0.5f *
+          vec2_scalar(ctx->viewport.width(), ctx->viewport.height()) +
+      vec2_scalar(ctx->viewport.x0, ctx->viewport.y0);
   Point2D p[4] = {{screen.x.x, screen.y.x},
                   {screen.x.y, screen.y.y},
                   {screen.x.z, screen.y.z},
@@ -3446,6 +3413,218 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
 #endif
 }
 
+} // extern "C"
+
+template <typename P>
+static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
+                             int span) {
+  int frac = 0;
+  for (P* end = dst + span; dst < end; dst++) {
+    *dst = *src;
+    // Step source according to width ratio.
+    for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
+      src++;
+    }
+  }
+}
+
+static void scale_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
+                       Texture& dsttex, const IntRect& dstReq, int dstZ,
+                       bool invertY) {
+  // Cache scaling ratios
+  int srcWidth = srcReq.width();
+  int srcHeight = srcReq.height();
+  int dstWidth = dstReq.width();
+  int dstHeight = dstReq.height();
+  // Compute valid dest bounds
+  IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
+  // Compute valid source bounds
+  // Scale source to dest, rounding inward to avoid sampling outside source
+  IntRect srcBounds = srctex.sample_bounds(srcReq)
+    .scale(srcWidth, srcHeight, dstWidth, dstHeight, true);
+  // Limit dest sampling bounds to overlap source bounds
+  dstBounds.intersect(srcBounds);
+  // Check if sampling bounds are empty
+  if (dstBounds.is_empty()) {
+    return;
+  }
+  // Compute final source bounds from clamped dest sampling bounds
+  srcBounds = IntRect(dstBounds)
+    .scale(dstWidth, dstHeight, srcWidth, srcHeight);
+  // Calculate source and dest pointers from clamped offsets
+  int bpp = srctex.bpp();
+  int srcStride = srctex.stride(bpp);
+  int destStride = dsttex.stride(bpp);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
+  char* src = srctex.sample_ptr(srcReq, srcBounds, srcZ);
+  // Inverted Y must step downward along dest rows
+  if (invertY) {
+    destStride = -destStride;
+  }
+  int span = dstBounds.width();
+  int frac = 0;
+  for (int rows = dstBounds.height(); rows > 0; rows--) {
+    if (srcWidth == dstWidth) {
+      // No scaling, so just do a fast copy.
+      memcpy(dest, src, span * bpp);
+    } else {
+      // Do scaling with different source and dest widths.
+      switch (bpp) {
+        case 1:
+          scale_row((uint8_t*)dest, dstWidth, (uint8_t*)src, srcWidth, span);
+          break;
+        case 2:
+          scale_row((uint16_t*)dest, dstWidth, (uint16_t*)src, srcWidth, span);
+          break;
+        case 4:
+          scale_row((uint32_t*)dest, dstWidth, (uint32_t*)src, srcWidth, span);
+          break;
+        default:
+          assert(false);
+          break;
+      }
+    }
+    dest += destStride;
+    // Step source according to height ratio.
+    for (frac += srcHeight; frac >= dstHeight; frac -= dstHeight) {
+      src += srcStride;
+    }
+  }
+}
+
+static void linear_row(uint32_t* dest, int span, const vec2_scalar& srcUV,
+                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+  vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
+  for (; span >= 4; span -= 4) {
+    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    unaligned_store(dest, srcpx);
+    dest += 4;
+    uv.x += 4 * srcDU;
+  }
+  if (span > 0) {
+    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    auto mask = span_mask_RGBA8(span);
+    auto dstpx = unaligned_load<PackedRGBA8>(dest);
+    unaligned_store(dest, (mask & dstpx) | (~mask & srcpx));
+  }
+}
+
+static void linear_row(uint8_t* dest, int span, const vec2_scalar& srcUV,
+                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+  vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
+  for (; span >= 4; span -= 4) {
+    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
+    unaligned_store(dest, pack(srcpx));
+    dest += 4;
+    uv.x += 4 * srcDU;
+  }
+  if (span > 0) {
+    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
+    auto mask = span_mask_R8(span);
+    auto dstpx = unpack(unaligned_load<PackedR8>(dest));
+    unaligned_store(dest, pack((mask & dstpx) | (~mask & srcpx)));
+  }
+}
+
+static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
+                        Texture& dsttex, const IntRect& dstReq, int dstZ,
+                        bool invertY) {
+  assert(srctex.internal_format == GL_RGBA8 ||
+         srctex.internal_format == GL_R8);
+  // Compute valid dest bounds
+  IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
+  // Check if sampling bounds are empty
+  if (dstBounds.is_empty()) {
+    return;
+  }
+  // Initialize sampler for source texture
+  sampler2DArray_impl sampler;
+  init_sampler(&sampler, srctex);
+  init_depth(&sampler, srctex);
+  sampler.filter = TextureFilter::LINEAR;
+  // Compute source UVs
+  int srcZOffset = srcZ * sampler.height_stride;
+  vec2_scalar srcUV(srcReq.x0, srcReq.y0);
+  vec2_scalar srcDUV(float(srcReq.width()) / dstReq.width(),
+                     float(srcReq.height()) / dstReq.height());
+  // Scale source UVs by linear-interpolation precision
+  srcUV *= 128.0f;
+  srcDUV *= 128.0f;
+  // Skip to clamped source start
+  srcUV += srcDUV * vec2_scalar(dstBounds.x0, dstBounds.y0);
+  // Calculate dest pointer from clamped offsets
+  int bpp = dsttex.bpp();
+  int destStride = dsttex.stride(bpp);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
+  // Inverted Y must step downward along dest rows
+  if (invertY) {
+    destStride = -destStride;
+  }
+  int span = dstBounds.width();
+  for (int rows = dstBounds.height(); rows > 0; rows--) {
+    switch (bpp) {
+      case 1:
+        linear_row((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                   &sampler);
+        break;
+      case 4:
+        linear_row((uint32_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                   &sampler);
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    dest += destStride;
+    srcUV.y += srcDUV.y;
+  }
+}
+
+extern "C" {
+
+void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                     GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+                     GLbitfield mask, GLenum filter) {
+  assert(mask == GL_COLOR_BUFFER_BIT);
+  Framebuffer* srcfb = get_framebuffer(GL_READ_FRAMEBUFFER);
+  if (!srcfb || srcfb->layer < 0) return;
+  Framebuffer* dstfb = get_framebuffer(GL_DRAW_FRAMEBUFFER);
+  if (!dstfb || dstfb->layer < 0) return;
+  Texture& srctex = ctx->textures[srcfb->color_attachment];
+  if (!srctex.buf || srcfb->layer >= max(srctex.depth, 1)) return;
+  Texture& dsttex = ctx->textures[dstfb->color_attachment];
+  if (!dsttex.buf || dstfb->layer >= max(dsttex.depth, 1)) return;
+  if (srctex.internal_format != dsttex.internal_format) {
+    assert(false);
+    return;
+  }
+  // Force flipped Y onto dest coordinates
+  if (srcY1 < srcY0) {
+    swap(srcY0, srcY1);
+    swap(dstY0, dstY1);
+  }
+  bool invertY = dstY1 < dstY0;
+  if (invertY) {
+    swap(dstY0, dstY1);
+  }
+  IntRect srcReq = {srcX0, srcY0, srcX1, srcY1};
+  IntRect dstReq = {dstX0, dstY0, dstX1, dstY1};
+  if (srcReq.is_empty() || dstReq.is_empty()) {
+    return;
+  }
+  prepare_texture(srctex);
+  prepare_texture(dsttex, &dstReq);
+  if (!srcReq.same_size(dstReq) && filter == GL_LINEAR &&
+      (srctex.internal_format == GL_RGBA8 ||
+       srctex.internal_format == GL_R8)) {
+    linear_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
+                invertY);
+  } else {
+    scale_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
+               invertY);
+  }
+}
+
 void Finish() {}
 
 void MakeCurrent(void* ctx_ptr) {
@@ -3503,12 +3682,11 @@ void Composite(GLuint srcId, GLint srcX, GLint srcY, GLsizei srcWidth,
   if (dstY + srcHeight > dsttex.height) {
     srcHeight = dsttex.height - dstY;
   }
-  IntRect skip = {dstX, dstY, srcWidth, srcHeight};
+  IntRect skip = {dstX, dstY, dstX + srcWidth, dstY + srcHeight};
   prepare_texture(dsttex, &skip);
-  char* dest = dsttex.buf +
-               (flip ? dsttex.height - 1 - dstY : dstY) * dest_stride +
-               dstX * bpp;
-  char* src = srctex.buf + srcY * src_stride + srcX * bpp;
+  char* dest = dsttex.sample_ptr(dstX, flip ? dsttex.height - 1 - dstY : dstY,
+                                 fb.layer, bpp, dest_stride);
+  char* src = srctex.sample_ptr(srcX, srcY, 0, bpp, src_stride);
   if (flip) {
     dest_stride = -dest_stride;
   }

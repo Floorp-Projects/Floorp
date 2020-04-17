@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 template <typename S>
-void textureLinearCommit4(S sampler, ivec2 i, int zoffset, uint32_t* buf) {
+static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i, int zoffset) {
   assert(sampler->format == TextureFormat::RGBA8);
   ivec2 frac = i & 0x7F;
   i >>= 7;
 
   I32 row0 = clampCoord(i.x, sampler->width) +
              clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
-  I32 row1 = row0 + ((i.y > 0 && i.y < int32_t(sampler->height) - 1) &
+  I32 row1 = row0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
                      I32(sampler->stride));
   I16 fracx =
-      CONVERT(frac.x & (i.x > 0 && i.x < int32_t(sampler->width) - 1), I16);
+      CONVERT(frac.x & (i.x >= 0 && i.x < int32_t(sampler->width) - 1), I16);
   I16 fracy = CONVERT(frac.y, I16);
 
   auto a0 =
@@ -48,12 +48,18 @@ void textureLinearCommit4(S sampler, ivec2 i, int zoffset, uint32_t* buf) {
   auto cdh = combine(highHalf(c0), highHalf(d0));
   cdl += ((cdh - cdl) * fracx.zzzzwwww) >> 7;
 
-  commit_span(buf, pack(combine(HalfRGBA8(abl), HalfRGBA8(cdl))));
+  return pack(combine(HalfRGBA8(abl), HalfRGBA8(cdl)));
 }
 
 template <typename S>
-void textureLinearCommit8(S sampler, ivec2_scalar i, int zoffset,
-                          uint32_t* buf) {
+static inline void textureLinearCommit4(S sampler, ivec2 i, int zoffset,
+                                        uint32_t* buf) {
+  commit_span(buf, textureLinearPackedRGBA8(sampler, i, zoffset));
+}
+
+template <typename S>
+static void textureLinearCommit8(S sampler, ivec2_scalar i, int zoffset,
+                                 uint32_t* buf) {
   assert(sampler->format == TextureFormat::RGBA8);
   ivec2_scalar frac = i & 0x7F;
   i >>= 7;
@@ -64,8 +70,8 @@ void textureLinearCommit8(S sampler, ivec2_scalar i, int zoffset,
                  clampCoord(i.y, sampler->height) * sampler->stride + zoffset];
   uint32_t* row1 =
       row0 +
-      ((i.y > 0 && i.y < int32_t(sampler->height) - 1) ? sampler->stride : 0);
-  int16_t fracx = i.x > 0 && i.x < int32_t(sampler->width) - 1 ? frac.x : 0;
+      ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) ? sampler->stride : 0);
+  int16_t fracx = i.x >= 0 && i.x < int32_t(sampler->width) - 1 ? frac.x : 0;
   int16_t fracy = frac.y;
 
   U32 pix0 = unaligned_load<U32>(row0);
