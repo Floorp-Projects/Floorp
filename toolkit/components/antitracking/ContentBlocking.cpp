@@ -747,9 +747,20 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return true;
   }
 
-  return AntiTrackingUtils::CheckStoragePermission(
-      parentPrincipal, type, nsContentUtils::IsInPrivateBrowsing(document),
-      aRejectedReason, blockedReason);
+  RefPtr<WindowContext> wc = aWindow->GetWindowContext();
+  if (!wc) {
+    LOG(("Failed to obtain the window context from the window."));
+    *aRejectedReason = blockedReason;
+    return false;
+  }
+
+  bool allowed = wc->GetHasStoragePermission();
+
+  if (!allowed) {
+    *aRejectedReason = blockedReason;
+  }
+
+  return allowed;
 }
 
 bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
@@ -1016,11 +1027,14 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  auto checkPermission = [parentPrincipal, type, privateBrowsingId,
-                          aRejectedReason, blockedReason]() -> bool {
-    return AntiTrackingUtils::CheckStoragePermission(
-        parentPrincipal, type, !!privateBrowsingId, aRejectedReason,
-        blockedReason);
+  auto checkPermission = [loadInfo, aRejectedReason, blockedReason]() -> bool {
+    bool allowed = loadInfo->GetHasStoragePermission();
+
+    if (!allowed) {
+      *aRejectedReason = blockedReason;
+    }
+
+    return allowed;
   };
 
   // Call HasStorageAccessGranted() in the top-level inner window to check
