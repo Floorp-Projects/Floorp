@@ -16,21 +16,49 @@ ChromeUtils.defineModuleGetter(
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+
 class SharedDataMap {
-  constructor(sharedDataKey) {
+  constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
     this._sharedDataKey = sharedDataKey;
-    this._isParent = IS_MAIN_PROCESS;
-    this._isReady = this.isParent;
+    this._isParent = options.isParent;
+    this._isReady = false;
     this._readyDeferred = PromiseUtils.defer();
-    this._map = null;
+    this._data = null;
 
     if (this.isParent) {
-      this._map = new Map();
-      this._syncToChildren({ flush: true });
-      this._checkIfReady();
+      // Lazy-load JSON file that backs Storage instances.
+      XPCOMUtils.defineLazyGetter(this, "_store", () => {
+        const path =
+          options.path || // Only used in tests
+          OS.Path.join(OS.Constants.Path.profileDir, `${sharedDataKey}.json`);
+        const store = new JSONFile({ path });
+        return store;
+      });
     } else {
       this._syncFromParent();
       Services.cpmm.sharedData.addEventListener("change", this);
+    }
+  }
+
+  async init(runSync = false) {
+    if (!this._isReady && this.isParent) {
+      if (runSync) {
+        this._store.ensureDataReady();
+      } else {
+        await this._store.load();
+      }
+      this._data = this._store.data;
+      this._syncToChildren({ flush: true });
+      this._checkIfReady();
     }
   }
 
@@ -47,7 +75,7 @@ class SharedDataMap {
   }
 
   get(key) {
-    return this._map.get(key);
+    return this._data[key];
   }
 
   set(key, value) {
@@ -56,32 +84,29 @@ class SharedDataMap {
         "Setting values from within a content process is not allowed"
       );
     }
-    this._map.set(key, value);
+    this._store.data[key] = value;
+    this._store.saveSoon();
     this._syncToChildren();
   }
 
   has(key) {
-    return this._map.has(key);
-  }
-
-  toObject() {
-    return Object.fromEntries(this._map);
+    return Boolean(this._data[key]);
   }
 
   _syncToChildren({ flush = false } = {}) {
-    Services.ppmm.sharedData.set(this.sharedDataKey, this._map);
+    Services.ppmm.sharedData.set(this.sharedDataKey, this._data);
     if (flush) {
       Services.ppmm.sharedData.flush();
     }
   }
 
   _syncFromParent() {
-    this._map = Services.cpmm.sharedData.get(this.sharedDataKey);
+    this._data = Services.cpmm.sharedData.get(this.sharedDataKey);
     this._checkIfReady();
   }
 
   _checkIfReady() {
-    if (!this._isReady && this._map) {
+    if (!this._isReady && this._data) {
       this._isReady = true;
       this._readyDeferred.resolve();
     }
