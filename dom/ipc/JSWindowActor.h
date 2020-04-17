@@ -130,6 +130,9 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   };
 
   nsCOMPtr<nsISupports> mWrappedJS;
+  // A ASCII-encoded version of the name, cached to avoid converting UTF-16 =>
+  // UTF-8 at every message.
+  nsCString mCName;
   nsString mName;
   nsRefPtrHashtable<nsUint64HashKey, Promise> mPendingQueries;
   uint64_t mNextQueryId;
