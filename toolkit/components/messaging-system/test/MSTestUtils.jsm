@@ -13,22 +13,15 @@ const { ExperimentStore } = ChromeUtils.import(
 const { NormandyUtils } = ChromeUtils.import(
   "resource://normandy/lib/NormandyUtils.jsm"
 );
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
-);
-const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
 const EXPORTED_SYMBOLS = ["ExperimentFakes"];
 
 const ExperimentFakes = {
-  manager(store) {
-    return new _ExperimentManager({ store: store || this.store() });
+  manager() {
+    return new _ExperimentManager({ storeId: "FakeStore" });
   },
   store() {
-    return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
-  },
-  childStore() {
-    return new ExperimentStore("FakeStore", { isParent: false });
+    return new ExperimentStore("FakeStore");
   },
   experiment(slug, props = {}) {
     return {

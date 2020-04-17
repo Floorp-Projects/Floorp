@@ -6,7 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["ExperimentAPI"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -14,12 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentStore:
     "resource://messaging-system/experiments/ExperimentStore.jsm",
-  ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
 });
-
-const IS_MAIN_PROCESS =
-  Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
 const ExperimentAPI = {
   /**
@@ -58,5 +52,5 @@ const ExperimentAPI = {
 };
 
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
-  return IS_MAIN_PROCESS ? ExperimentManager.store : new ExperimentStore();
+  return new ExperimentStore();
 });

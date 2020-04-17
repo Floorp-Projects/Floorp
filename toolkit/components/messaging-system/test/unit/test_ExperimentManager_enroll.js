@@ -14,8 +14,6 @@ add_task(async function test_add_to_store() {
   const manager = ExperimentFakes.manager();
   const recipe = ExperimentFakes.recipe("foo");
 
-  await manager.onStartup();
-
   await manager.enroll(recipe);
   const experiment = manager.store.get("foo");
 
@@ -34,13 +32,9 @@ add_task(async function test_add_to_store() {
 add_task(
   async function test_setExperimentActive_sendEnrollmentTelemetry_called() {
     const manager = ExperimentFakes.manager();
-    const sandbox = sinon.createSandbox();
+    const sandbox = sinon.sandbox.create();
     sandbox.spy(manager, "setExperimentActive");
     sandbox.spy(manager, "sendEnrollmentTelemetry");
-
-    await manager.onStartup();
-
-    await manager.onStartup();
 
     await manager.enroll(ExperimentFakes.recipe("foo"));
     const experiment = manager.store.get("foo");
@@ -66,10 +60,8 @@ add_task(
  */
 add_task(async function test_failure_name_conflict() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.createSandbox();
+  const sandbox = sinon.sandbox.create();
   sandbox.spy(manager, "sendFailureTelemetry");
-
-  await manager.onStartup();
 
   // simulate adding a previouly enrolled experiment
   manager.store.addExperiment(ExperimentFakes.experiment("foo"));
@@ -93,10 +85,8 @@ add_task(async function test_failure_name_conflict() {
 
 add_task(async function test_failure_group_conflict() {
   const manager = ExperimentFakes.manager();
-  const sandbox = sinon.createSandbox();
+  const sandbox = sinon.sandbox.create();
   sandbox.spy(manager, "sendFailureTelemetry");
-
-  await manager.onStartup();
 
   // Two conflicting branches that both have the group "pink"
   // These should not be allowed to exist simultaneously.
