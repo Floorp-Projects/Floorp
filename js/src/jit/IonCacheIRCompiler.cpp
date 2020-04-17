@@ -2016,16 +2016,16 @@ bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitMegamorphicSetElement() {
+bool IonCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
+                                                   ValOperandId idId,
+                                                   ValOperandId rhsId,
+                                                   bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ConstantOrRegister idVal =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  bool strict = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister idVal = allocator.useConstantOrRegister(masm, idId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   allocator.discardStack(masm);
   prepareVMCall(masm, save);
@@ -2107,10 +2107,11 @@ bool IonCacheIRCompiler::emitGuardAndGetIterator() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape() {
+bool IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape(
+    ValOperandId expandoId, uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  Shape* shape = shapeStubField(reader.stubOffset());
+  ValueOperand val = allocator.useValueRegister(masm, expandoId);
+  Shape* shape = shapeStubField(shapeOffset);
 
   AutoScratchRegister objScratch(allocator, masm);
 
@@ -2318,6 +2319,7 @@ bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot() {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitGuardFunApply() {
+bool IonCacheIRCompiler::emitGuardFunApply(Int32OperandId argcId,
+                                           CallFlags flags) {
   MOZ_CRASH("Call ICs not used in ion");
 }
