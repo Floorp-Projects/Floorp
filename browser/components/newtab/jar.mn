@@ -11,6 +11,7 @@ browser.jar:
   res/activity-stream/vendor/Redux.jsm (./vendor/Redux.jsm)
   res/activity-stream/vendor/react.js (./vendor/react.js)
   res/activity-stream/vendor/react-dom.js (./vendor/react-dom.js)
+  res/activity-stream/vendor/react-dom-server.js (./vendor/react-dom-server.js)
 #ifndef RELEASE_OR_BETA
   res/activity-stream/vendor/react-dev.js (./vendor/react-dev.js)
   res/activity-stream/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
