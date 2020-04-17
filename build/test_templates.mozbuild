@@ -9,7 +9,6 @@ def GeneratedTestCertificate(name):
     if not CONFIG['COMPILE_ENVIRONMENT']:
         return
     GeneratedFile(name, script='/security/manager/ssl/tests/unit/pycert.py',
-                  py2=True,
                   inputs=['%s.certspec' % name])
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/bad_certs' ->

@@ -108,6 +108,5 @@ mozilla.pth:third_party/python/cbor2
 mozilla.pth:third_party/python/pyasn1
 mozilla.pth:third_party/python/pyasn1-modules
 mozilla.pth:third_party/python/rsa
-mozilla.pth:third_party/python/PyECC
 mozilla.pth:toolkit/components/telemetry/tests/marionette/harness
 optional:packages.txt:comm/build/virtualenv_packages.txt
