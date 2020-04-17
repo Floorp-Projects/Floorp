@@ -1861,9 +1861,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsExtensible() {
+bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -1940,9 +1940,9 @@ bool CacheIRCompiler::emitGuardFunctionPrototype() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsNativeObject() {
+bool CacheIRCompiler::emitGuardIsNativeObject(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -1954,9 +1954,9 @@ bool CacheIRCompiler::emitGuardIsNativeObject() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsProxy() {
+bool CacheIRCompiler::emitGuardIsProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -1968,9 +1968,9 @@ bool CacheIRCompiler::emitGuardIsProxy() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNotDOMProxy() {
+bool CacheIRCompiler::emitGuardNotDOMProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
