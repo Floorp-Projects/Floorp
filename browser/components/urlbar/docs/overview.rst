@@ -52,6 +52,12 @@ It is augmented as it progresses through the system, with various information:
                 // with the search service.
     currentPage: // {string} url of the page that was loaded when the search
                  // began.
+    allowSearchSuggestions: // {boolean} Whether to allow search suggestions.
+                            // This is a veto, meaning that when false,
+                            // suggestions will not be fetched, but when true,
+                            // some other condition may still prohibit
+                            // suggestions, like private browsing mode. Defaults
+                            // to true.
 
     // Properties added by the Model.
     results; // {array} list of UrlbarResult objects.

@@ -120,6 +120,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
+    if (!queryContext.allowSearchSuggestions) {
+      return false;
+    }
+
     if (
       queryContext.isPrivate &&
       !UrlbarPrefs.get("browser.search.suggest.enabled.private")
@@ -251,9 +255,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     if (leadingRestrictionToken === UrlbarTokenizer.RESTRICT.SEARCH) {
       query = substringAfter(query, leadingRestrictionToken).trim();
     }
-
-    // Limit the string sent for search suggestions to a maximum length.
-    query = query.substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
 
     // Find our search engine. It may have already been set with an alias.
     let engine;
