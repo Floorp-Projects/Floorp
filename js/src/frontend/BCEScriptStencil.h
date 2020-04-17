@@ -27,9 +27,9 @@ struct BytecodeEmitter;
 class BCEScriptStencil : public ScriptStencil {
   BytecodeEmitter& bce_;
 
-  bool getNeedsFunctionEnvironmentObjects() const;
+  bool getNeedsFunctionEnvironmentObjects(BytecodeEmitter& bce) const;
 
-  void init();
+  void init(BytecodeEmitter& bce);
 
  public:
   BCEScriptStencil(BytecodeEmitter& bce,
