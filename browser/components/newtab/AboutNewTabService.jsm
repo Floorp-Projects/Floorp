@@ -359,6 +359,7 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
             `${BASE_URL}vendor/redux.js`,
             `${BASE_URL}vendor/react-redux.js`,
             `${BASE_URL}data/content/activity-stream.bundle.js`,
+            `${BASE_URL}data/content/newtab-render.js`,
           ];
 
           for (let script of scripts) {

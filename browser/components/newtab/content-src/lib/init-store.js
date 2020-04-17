@@ -135,9 +135,10 @@ export const queueEarlyMessageMiddleware = ({ getState }) => {
  * @param  {object} intialState (optional) The initial state of the store, if desired
  * @return {object}          A redux store
  */
-export function initStore(reducers) {
+export function initStore(reducers, initialState) {
   const store = createStore(
     mergeStateReducer(combineReducers(reducers)),
+    initialState,
     global.RPMAddMessageListener &&
       applyMiddleware(
         rehydrationMiddleware,

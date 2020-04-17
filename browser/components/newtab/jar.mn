@@ -23,6 +23,7 @@ browser.jar:
   res/activity-stream/data/content/assets/ (./data/content/assets/*)
   res/activity-stream/data/content/tippytop/ (./data/content/tippytop/*)
   res/activity-stream/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
+  res/activity-stream/data/content/newtab-render.js (./data/content/newtab-render.js)
 #ifdef XP_MACOSX
   res/activity-stream/css/activity-stream.css (./css/activity-stream-mac.css)
 #elifdef XP_WIN
