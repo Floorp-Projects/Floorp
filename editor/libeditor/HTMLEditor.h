@@ -12,7 +12,6 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
-#include "mozilla/StyleSheet.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
@@ -20,11 +19,9 @@
 
 #include "nsAttrName.h"
 #include "nsCOMPtr.h"
-#include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIEditorMailSupport.h"
-#include "nsIEditorStyleSheets.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
@@ -88,7 +85,6 @@ class HTMLEditor final : public TextEditor,
                          public nsIHTMLAbsPosEditor,
                          public nsITableEditor,
                          public nsIHTMLInlineTableEditor,
-                         public nsIEditorStyleSheets,
                          public nsStubMutationObserver,
                          public nsIEditorMailSupport {
  public:
@@ -121,9 +117,6 @@ class HTMLEditor final : public TextEditor,
 
   // nsIHTMLInlineTableEditor methods (implemented in HTMLInlineTableEditor.cpp)
   NS_DECL_NSIHTMLINLINETABLEEDITOR
-
-  // nsIEditorStyleSheets methods
-  NS_DECL_NSIEDITORSTYLESHEETS
 
   // nsIEditorMailSupport methods
   NS_DECL_NSIEDITORMAILSUPPORT
@@ -3451,63 +3444,6 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT void CollapseSelectionToDeepestNonTableFirstChild(
       nsINode* aNode);
-
-  /**
-   * Returns TRUE if sheet was loaded, false if it wasn't.
-   */
-  bool EnableExistingStyleSheet(const nsAString& aURL);
-
-  /**
-   * GetStyleSheetForURL() returns a pointer to StyleSheet which was added
-   * with AddOverrideStyleSheetInternal().  If it's not found, returns nullptr.
-   *
-   * @param aURL        URL to the style sheet.
-   */
-  StyleSheet* GetStyleSheetForURL(const nsAString& aURL);
-
-  /**
-   * Add a url + known style sheet to the internal lists.
-   */
-  nsresult AddNewStyleSheetToList(const nsAString& aURL,
-                                  StyleSheet* aStyleSheet);
-
-  /**
-   * Removes style sheet from the internal lists.
-   *
-   * @param aURL        URL to the style sheet.
-   * @return            If the URL is in the internal list, returns the
-   *                    removed style sheet.  Otherwise, i.e., not found,
-   *                    nullptr.
-   */
-  already_AddRefed<StyleSheet> RemoveStyleSheetFromList(const nsAString& aURL);
-
-  /**
-   * Add and apply the style sheet synchronously.
-   *
-   * @param aURL        URL to the style sheet.
-   */
-  nsresult AddOverrideStyleSheetInternal(const nsAString& aURL);
-
-  /**
-   * Remove the style sheet from this editor synchronously.
-   *
-   * @param aURL        URL to the style sheet.
-   * @return            Even if there is no specified style sheet in the
-   *                    internal lists, this returns NS_OK.
-   */
-  nsresult RemoveOverrideStyleSheetInternal(const nsAString& aURL);
-
-  /**
-   * Enable or disable the style sheet synchronously.
-   * aURL is just a key to specify a style sheet in the internal array.
-   * I.e., the style sheet has already been registered with
-   * AddOverrideStyleSheetInternal().
-   *
-   * @param aURL        URL to the style sheet.
-   * @param aEnable     true if enable the style sheet.  false if disable it.
-   */
-  void EnableStyleSheetInternal(const nsAString& aURL, bool aEnable);
-
   /**
    * MaybeCollapseSelectionAtFirstEditableNode() may collapse selection at
    * proper position to staring to edit.  If there is a non-editable node
@@ -4455,10 +4391,6 @@ class HTMLEditor final : public TextEditor,
   // then, it'll be referred and incremented by
   // GetNextSelectedTableCellElement().
   mutable uint32_t mSelectedCellIndex;
-
-  // Maintain a list of associated style sheets and their urls.
-  nsTArray<nsString> mStyleSheetURLs;
-  nsTArray<RefPtr<StyleSheet>> mStyleSheets;
 
   // resizing
   bool mIsObjectResizingEnabled;

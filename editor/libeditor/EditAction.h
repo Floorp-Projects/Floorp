@@ -300,15 +300,6 @@ enum class EditAction {
   // eIncreaseOrDecreaseZIndex indicates to change z-index of an element.
   eIncreaseOrDecreaseZIndex,
 
-  // eAddOverrideStyleSheet indicates to add override style sheet.
-  eAddOverrideStyleSheet,
-
-  // eRemoveOverrideStyleSheet indicates to remove override style sheet.
-  eRemoveOverrideStyleSheet,
-
-  // eEnableStyleSheet indicates to apply a style sheet.
-  eEnableStyleSheet,
-
   // eEnableOrDisableCSS indicates to enable or disable CSS mode of HTMLEditor.
   eEnableOrDisableCSS,
 
