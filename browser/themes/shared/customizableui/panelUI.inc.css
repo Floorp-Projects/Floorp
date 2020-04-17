@@ -1854,11 +1854,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   text-decoration: underline;
 }
 
-#protections-popup-message .protections-popup-content {
-  display: block;
-  margin: 12px 0;
-}
-
 panelview[mainview] #PanelUI-whatsNew-content {
   height: 43em;
 }
@@ -1873,21 +1868,11 @@ panelview[mainview] #PanelUI-whatsNew-content {
   padding: 0;
 }
 
-/* The following 2 rules show a 1 pixel line separator between What's New
- * messages while at the same time ensuring that the first message (which has
- * a date header) will not show the separator
- */
-#PanelUI-whatsNew .whatsNew-message-body::before {
+#PanelUI-whatsNew .whatsNew-message:not(:first-child)::before {
   content: "";
   display: block;
   height: 1px;
-  width: 104%;
-  margin-inline-start: -2%;
   background: var(--panel-separator-color);
-}
-
-#PanelUI-whatsNew .whatsNew-message-date + .whatsNew-message-body::before {
-  display: none;
 }
 
 #PanelUI-whatsNew .whatsNew-message-date {
@@ -1923,18 +1908,17 @@ panelview[mainview] #PanelUI-whatsNew-content {
   inset-inline-end: 6px;
   height: 32px;
   position: absolute;
-  top: 16px;
+  top: 10px;
   width: 32px;
 }
 
 #PanelUI-whatsNew .whatsNew-message-title,
 #protections-popup-message .whatsNew-message-title {
-  display: block;
   padding-inline-end: 46px;
   font-size: 1.3em;
   font-weight: 600;
   line-height: 1.4em;
-  margin: 8px 0 2px;
+  margin: 2px 0;
 }
 
 #PanelUI-whatsNew .whatsNew-message-title-large {
@@ -1948,11 +1932,6 @@ panelview[mainview] #PanelUI-whatsNew-content {
   font-size: .8em;
   color: #949494;
   font-weight: normal;
-}
-
-#PanelUI-whatsNew .whatsNew-message-content {
-  display: block;
-  margin: 13px 0;
 }
 
 #PanelUI-whatsNew .text-link {
