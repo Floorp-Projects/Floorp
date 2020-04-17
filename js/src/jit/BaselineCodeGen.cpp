@@ -50,6 +50,9 @@ using mozilla::AssertedCast;
 using mozilla::Maybe;
 
 namespace js {
+
+class PlainObject;
+
 namespace jit {
 
 BaselineCompilerHandler::BaselineCompilerHandler(JSContext* cx,
@@ -6390,7 +6393,7 @@ bool BaselineCodeGen<Handler>::emit_ObjWithProto() {
   prepareVMCall();
   pushArg(R0);
 
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  using Fn = PlainObject* (*)(JSContext*, HandleValue);
   if (!callVM<Fn, js::ObjectWithProtoOperation>()) {
     return false;
   }

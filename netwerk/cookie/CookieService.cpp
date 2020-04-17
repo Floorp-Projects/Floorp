@@ -41,7 +41,8 @@ namespace net {
 static StaticRefPtr<CookieService> gCookieService;
 
 constexpr auto CONSOLE_SAMESITE_CATEGORY = NS_LITERAL_CSTRING("cookieSameSite");
-constexpr auto CONSOLE_GENERIC_CATEGORY = NS_LITERAL_CSTRING("cookies");
+constexpr auto CONSOLE_OVERSIZE_CATEGORY =
+    NS_LITERAL_CSTRING("cookiesOversize");
 
 constexpr auto SAMESITE_MDN_URL = NS_LITERAL_STRING(
     "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite");
@@ -877,7 +878,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
     params.AppendElement(size);
 
     LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_GENERIC_CATEGORY,
+                        CONSOLE_OVERSIZE_CATEGORY,
                         NS_LITERAL_CSTRING("CookieOversize"), params);
     return newCookie;
   }
@@ -1282,7 +1283,7 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
       } else {
         LogMessageToConsole(
             aChannel, aHostURI, nsIScriptError::infoFlag,
-            CONSOLE_GENERIC_CATEGORY,
+            CONSOLE_SAMESITE_CATEGORY,
             NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
             AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
       }
@@ -1653,7 +1654,7 @@ bool CookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
     params.AppendElement(size);
 
     LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_GENERIC_CATEGORY,
+                        CONSOLE_OVERSIZE_CATEGORY,
                         NS_LITERAL_CSTRING("CookiePathOversize"), params);
     return false;
   }

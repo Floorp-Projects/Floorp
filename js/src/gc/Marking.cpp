@@ -49,6 +49,7 @@
 #include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/PlainObject-inl.h"  // js::PlainObject
 #include "vm/Realm-inl.h"
 #include "vm/StringType-inl.h"
 

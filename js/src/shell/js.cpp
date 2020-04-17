@@ -6637,6 +6637,17 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     if (v.isBoolean()) {
       creationOptions.setCoopAndCoepEnabled(v.toBoolean());
     }
+
+    // On the web, the SharedArrayBuffer constructor is not installed as a
+    // global property in pages that aren't isolated in a separate process (and
+    // thus can't allow the structured cloning of shared memory).  Specify false
+    // for this option to reproduce this behavior.
+    if (!JS_GetProperty(cx, opts, "defineSharedArrayBufferConstructor", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setDefineSharedArrayBufferConstructor(v.toBoolean());
+    }
   }
 
   if (!CheckRealmOptions(cx, options, principals.get())) {

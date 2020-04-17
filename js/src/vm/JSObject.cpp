@@ -75,6 +75,7 @@
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/ObjectGroup-inl.h"
+#include "vm/PlainObject-inl.h"  // js::CopyInitializerObject
 #include "vm/Realm-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
@@ -753,20 +754,6 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 /* * */
 
-/*
- * Get the GC kind to use for scripted 'new' on the given class.
- * FIXME bug 547327: estimate the size from the allocation site.
- */
-static inline gc::AllocKind NewObjectGCKind(const JSClass* clasp) {
-  if (clasp == &ArrayObject::class_) {
-    return gc::AllocKind::OBJECT8;
-  }
-  if (clasp == &JSFunction::class_) {
-    return gc::AllocKind::OBJECT2;
-  }
-  return gc::AllocKind::OBJECT4;
-}
-
 static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                                   gc::AllocKind kind, NewObjectKind newKind,
                                   uint32_t initialShapeFlags = 0) {
@@ -1035,133 +1022,6 @@ JSObject* js::CreateThis(JSContext* cx, const JSClass* newclasp,
   return NewObjectWithClassProto(cx, newclasp, proto, kind);
 }
 
-static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
-                                                       HandleObjectGroup group,
-                                                       NewObjectKind newKind) {
-  TypeNewScript* maybeNewScript;
-  {
-    AutoSweepObjectGroup sweep(group);
-    maybeNewScript = group->newScript(sweep);
-  }
-
-  if (maybeNewScript) {
-    if (maybeNewScript->analyzed()) {
-      // The definite properties analysis has been performed for this
-      // group, so get the shape and alloc kind to use from the
-      // TypeNewScript's template.
-      RootedPlainObject templateObject(cx, maybeNewScript->templateObject());
-      MOZ_ASSERT(templateObject->group() == group);
-
-      RootedPlainObject res(cx,
-                            CopyInitializerObject(cx, templateObject, newKind));
-      if (!res) {
-        return nullptr;
-      }
-
-      if (newKind == SingletonObject) {
-        Rooted<TaggedProto> proto(
-            cx, TaggedProto(templateObject->staticPrototype()));
-        if (!JSObject::splicePrototype(cx, res, proto)) {
-          return nullptr;
-        }
-      } else {
-        res->setGroup(group);
-      }
-      return res;
-    }
-
-    // The initial objects registered with a TypeNewScript can't be in the
-    // nursery.
-    if (newKind == GenericObject) {
-      newKind = TenuredObject;
-    }
-
-    // Not enough objects with this group have been created yet, so make a
-    // plain object and register it with the group. Use the maximum number
-    // of fixed slots, as is also required by the TypeNewScript.
-    gc::AllocKind allocKind = GuessObjectGCKind(NativeObject::MAX_FIXED_SLOTS);
-    PlainObject* res =
-        NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
-    if (!res) {
-      return nullptr;
-    }
-
-    // Make sure group->newScript is still there.
-    AutoSweepObjectGroup sweep(group);
-    if (newKind != SingletonObject && group->newScript(sweep)) {
-      group->newScript(sweep)->registerNewObject(res);
-    }
-
-    return res;
-  }
-
-  gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-
-  if (newKind == SingletonObject) {
-    Rooted<TaggedProto> protoRoot(cx, group->proto());
-    return NewObjectWithGivenTaggedProto<PlainObject>(cx, protoRoot, allocKind,
-                                                      newKind);
-  }
-  return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
-}
-
-JSObject* js::CreateThisForFunctionWithProto(
-    JSContext* cx, HandleFunction callee, HandleObject newTarget,
-    HandleObject proto, NewObjectKind newKind /* = GenericObject */) {
-  MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
-
-  RootedObject res(cx);
-
-  // Ion may call this with a cross-realm callee.
-  mozilla::Maybe<AutoRealm> ar;
-  if (cx->realm() != callee->realm()) {
-    MOZ_ASSERT(cx->compartment() == callee->compartment());
-    ar.emplace(cx, callee);
-  }
-
-  if (proto) {
-    RootedObjectGroup group(
-        cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
-                                         TaggedProto(proto), newTarget));
-    if (!group) {
-      return nullptr;
-    }
-
-    {
-      AutoSweepObjectGroup sweep(group);
-      if (group->newScript(sweep) && !group->newScript(sweep)->analyzed()) {
-        bool regenerate;
-        if (!group->newScript(sweep)->maybeAnalyze(cx, group, &regenerate)) {
-          return nullptr;
-        }
-        if (regenerate) {
-          // The script was analyzed successfully and may have changed
-          // the new type table, so refetch the group.
-          group = ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
-                                               TaggedProto(proto), newTarget);
-          AutoSweepObjectGroup sweepNewGroup(group);
-          MOZ_ASSERT(group && group->newScript(sweepNewGroup));
-        }
-      }
-    }
-
-    res = CreateThisForFunctionWithGroup(cx, group, newKind);
-  } else {
-    res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
-  }
-
-  if (res) {
-    MOZ_ASSERT(res->nonCCWRealm() == callee->realm());
-    JSScript* script = JSFunction::getOrCreateScript(cx, callee);
-    if (!script) {
-      return nullptr;
-    }
-    jit::JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(res));
-  }
-
-  return res;
-}
-
 bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
                                      JSProtoKey intrinsicDefaultProto,
                                      MutableHandleObject proto) {
@@ -1205,35 +1065,6 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
     }
   }
   return true;
-}
-
-JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
-                                    HandleObject newTarget,
-                                    NewObjectKind newKind) {
-  MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
-
-  RootedObject proto(cx);
-  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
-    return nullptr;
-  }
-
-  JSObject* obj =
-      CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
-
-  if (obj && newKind == SingletonObject) {
-    RootedPlainObject nobj(cx, &obj->as<PlainObject>());
-
-    /* Reshape the singleton before passing it as the 'this' value. */
-    NativeObject::clear(cx, nobj);
-
-    JSScript* calleeScript = callee->nonLazyScript();
-    jit::JitScript::MonitorThisType(cx, calleeScript,
-                                    TypeSet::ObjectType(nobj));
-
-    return nobj;
-  }
-
-  return obj;
 }
 
 /* static */

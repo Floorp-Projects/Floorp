@@ -15,6 +15,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
@@ -148,7 +150,7 @@ async function createWebSocket(transport, input, output) {
   const transportProvider = {
     setListener(upgradeListener) {
       // onTransportAvailable callback shouldn't be called synchronously
-      Services.tm.dispatchToMainThread(() => {
+      executeSoon(() => {
         upgradeListener.onTransportAvailable(transport, input, output);
       });
     },

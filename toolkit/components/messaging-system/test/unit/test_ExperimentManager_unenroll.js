@@ -28,6 +28,8 @@ registerCleanupFunction(() => {
  */
 add_task(async function test_set_inactive() {
   const manager = ExperimentFakes.manager();
+
+  await manager.onStartup();
   manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
   manager.unenroll("foo", { reason: "some-reason" });
@@ -43,6 +45,8 @@ add_task(async function test_setExperimentInactive_called() {
   globalSandbox.reset();
   const manager = ExperimentFakes.manager();
   const experiment = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
   manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", { reason: "some-reason" });
@@ -57,6 +61,8 @@ add_task(async function test_send_unenroll_event() {
   globalSandbox.reset();
   const manager = ExperimentFakes.manager();
   const experiment = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
   manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", { reason: "some-reason" });
@@ -82,6 +88,8 @@ add_task(async function test_undefined_reason() {
   globalSandbox.reset();
   const manager = ExperimentFakes.manager();
   const experiment = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
   manager.store.addExperiment(experiment);
 
   manager.unenroll("foo");

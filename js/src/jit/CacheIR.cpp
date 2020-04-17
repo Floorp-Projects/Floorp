@@ -14,6 +14,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRSpewer.h"
 #include "jit/InlinableNatives.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -7069,7 +7070,7 @@ void NewObjectIRGenerator::trackAttached(const char* name) {
 
 AttachDecision NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
-  if (templateObject_->as<PlainObject>().hasDynamicSlots()) {
+  if (templateObject_->as<NativeObject>().hasDynamicSlots()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }

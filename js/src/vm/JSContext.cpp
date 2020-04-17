@@ -62,6 +62,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"  // StringToNewUTF8CharsZ

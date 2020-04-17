@@ -164,16 +164,16 @@ class AutoIPCStream {
   bool Serialize(nsIInputStream* aStream, net::SocketProcessChild* aManager);
 
   // Serialize the input stream.
-  MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
-                              dom::ContentParent* aManager);
+  [[nodiscard]] bool Serialize(nsIInputStream* aStream,
+                               dom::ContentParent* aManager);
 
   // Serialize the input stream.
-  MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
-                              PBackgroundParent* aManager);
+  [[nodiscard]] bool Serialize(nsIInputStream* aStream,
+                               PBackgroundParent* aManager);
 
   // Serialize the input stream.
-  MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
-                              net::SocketProcessParent* aManager);
+  [[nodiscard]] bool Serialize(nsIInputStream* aStream,
+                               net::SocketProcessParent* aManager);
 
   // Get the IPCStream as a non-optional value.  This will
   // assert if a stream has not been serialized or if it has already been taken.

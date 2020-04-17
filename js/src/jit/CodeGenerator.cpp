@@ -58,6 +58,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/MatchPairs.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringType.h"
@@ -7393,9 +7394,9 @@ void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
     pushArg(ToRegister(callee));
   }
 
-  using Fn = JSObject* (*)(JSContext * cx, HandleFunction callee,
-                           HandleObject newTarget, HandleObject proto,
-                           NewObjectKind newKind);
+  using Fn = PlainObject* (*)(JSContext * cx, HandleFunction callee,
+                              HandleObject newTarget, HandleObject proto,
+                              NewObjectKind newKind);
   callVM<Fn, CreateThisForFunctionWithProto>(lir);
 }
 
@@ -13931,7 +13932,7 @@ void CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir) {
 void CodeGenerator::visitObjectWithProto(LObjectWithProto* lir) {
   pushArg(ToValue(lir, LObjectWithProto::PrototypeValue));
 
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  using Fn = PlainObject* (*)(JSContext*, HandleValue);
   callVM<Fn, js::ObjectWithProtoOperation>(lir);
 }
 

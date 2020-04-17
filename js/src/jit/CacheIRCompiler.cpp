@@ -2459,13 +2459,14 @@ bool CacheIRCompiler::emitDoublePowResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32AddResult() {
+bool CacheIRCompiler::emitInt32AddResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2478,12 +2479,13 @@ bool CacheIRCompiler::emitInt32AddResult() {
 
   return true;
 }
-bool CacheIRCompiler::emitInt32SubResult() {
+bool CacheIRCompiler::emitInt32SubResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3109,11 +3111,12 @@ bool CacheIRCompiler::emitLoadStringLengthResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadStringCharResult() {
+bool CacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
+                                               Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register str = allocator.useRegister(masm, strId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
   AutoScratchRegister scratch2(allocator, masm);
 
@@ -4331,12 +4334,12 @@ bool CacheIRCompiler::emitCompareSymbolResult() {
   return emitComparePointerResultShared(true);
 }
 
-bool CacheIRCompiler::emitCompareInt32Result() {
+bool CacheIRCompiler::emitCompareInt32Result(JSOp op, Int32OperandId lhsId,
+                                             Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register left = allocator.useRegister(masm, reader.int32OperandId());
-  Register right = allocator.useRegister(masm, reader.int32OperandId());
-  JSOp op = reader.jsop();
+  Register left = allocator.useRegister(masm, lhsId);
+  Register right = allocator.useRegister(masm, rhsId);
 
   Label ifTrue, done;
   masm.branch32(JSOpToCondition(op, /* signed = */ true), left, right, &ifTrue);
@@ -5645,13 +5648,14 @@ bool CacheIRCompiler::emitCallNativeGetElementResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitCallProxyHasPropResult() {
+bool CacheIRCompiler::emitCallProxyHasPropResult(ObjOperandId objId,
+                                                 ValOperandId idId,
+                                                 bool hasOwn) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoCallVM callvm(masm, this, allocator);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  bool hasOwn = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand idVal = allocator.useValueRegister(masm, idId);
 
   callvm.prepare();
 

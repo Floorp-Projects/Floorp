@@ -28,6 +28,7 @@ class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepObjectGroup;
 class CompilerConstraintList;
 class ObjectGroupRealm;
+class PlainObject;
 
 namespace gc {
 void MergeRealms(JS::Realm* source, JS::Realm* target);

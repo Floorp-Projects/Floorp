@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = [
   "DOMContentLoadedPromise",
   "EventPromise",
+  "executeSoon",
   "MessagePromise",
   "PollPromise",
 ];
@@ -76,11 +77,25 @@ function EventPromise(
     listener.addEventListener(
       type,
       event => {
-        Services.tm.dispatchToMainThread(() => resolve(event));
+        executeSoon(() => resolve(event));
       },
       options
     );
   });
+}
+
+/**
+ * Wait for the next tick in the event loop to execute a callback.
+ *
+ * @param {function} fn
+ *     Function to be executed.
+ */
+function executeSoon(fn) {
+  if (typeof fn != "function") {
+    throw new TypeError();
+  }
+
+  Services.tm.dispatchToMainThread(fn);
 }
 
 function DOMContentLoadedPromise(window, options = { mozSystemGroup: true }) {

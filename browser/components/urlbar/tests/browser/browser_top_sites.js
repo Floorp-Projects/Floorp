@@ -42,6 +42,9 @@ add_task(async function topSitesShown() {
     "The test suite browser should have 6 Top Sites."
   );
   await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
     EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
   });
   Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
@@ -86,6 +89,9 @@ add_task(async function selectSearchTopSite() {
     true
   );
   await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
     EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -149,6 +155,9 @@ add_task(async function topSitesBookmarksAndTabs() {
   );
 
   await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
     EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
   });
   Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
@@ -188,6 +197,54 @@ add_task(async function topSitesBookmarksAndTabs() {
   });
 });
 
+add_task(async function topSitesKeywordNavigationPageproxystate() {
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Sanity check initial state"
+  );
+
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
+    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
+  });
+  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  let count = UrlbarTestUtils.getResultCount(window);
+  Assert.equal(count, 7, "The number of results should be the expected one.");
+
+  for (let i = 0; i < count; ++i) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    Assert.equal(
+      gURLBar.getAttribute("pageproxystate"),
+      "invalid",
+      "Moving through results"
+    );
+  }
+  for (let i = 0; i < count; ++i) {
+    EventUtils.synthesizeKey("KEY_ArrowUp");
+    Assert.equal(
+      gURLBar.getAttribute("pageproxystate"),
+      "invalid",
+      "Moving through results"
+    );
+  }
+
+  // Double ESC should restore state.
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
+  EventUtils.synthesizeKey("KEY_Escape");
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Double ESC should restore state"
+  );
+});
+
 add_task(async function topSitesDisabled() {
   // Disable top sites.
   await SpecialPowers.pushPrefEnv({
@@ -204,6 +261,9 @@ add_task(async function topSitesDisabled() {
 
   // Open the view.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
     EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
   });
   Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
