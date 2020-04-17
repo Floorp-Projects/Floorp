@@ -12,7 +12,7 @@ add_task(async function test_asyncReauthenticateUser() {
     "@mozilla.org/security/osreauthenticator;1"
   ].getService(Ci.nsIOSReauthenticator);
   ok(reauthenticator, "nsIOSReauthenticator should be available");
-  const EXPECTED = true; // Change this variable to suit your needs while testing.
+  const EXPECTED = false; // Change this variable to suit your needs while testing.
   ok(
     (
       await reauthenticator.asyncReauthenticateUser(
