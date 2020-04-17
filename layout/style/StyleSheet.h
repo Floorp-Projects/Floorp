@@ -84,10 +84,10 @@ enum class StyleSheetState : uint8_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
 
 class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
-  StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentToUse,
+  StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
              dom::CSSImportRule* aOwnerRuleToUse,
              dom::DocumentOrShadowRoot* aDocOrShadowRootToUse,
-             nsINode* aOwningNodeToUse);
+             dom::Document* aConstructorDocToUse, nsINode* aOwningNodeToUse);
 
   virtual ~StyleSheet();
 

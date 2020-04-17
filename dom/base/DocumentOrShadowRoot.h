@@ -269,8 +269,10 @@ class DocumentOrShadowRoot {
   nsTArray<RefPtr<StyleSheet>> mStyleSheets;
   RefPtr<StyleSheetList> mDOMStyleSheets;
 
-  // Style sheets that are adopted by assinging to the `adoptedStyleSheets`
-  // WebIDL atribute. These can only be constructed stylesheets.
+  /**
+   * Style sheets that are adopted by assinging to the `adoptedStyleSheets`
+   * WebIDL atribute. These can only be constructed stylesheets.
+   */
   nsTArray<RefPtr<StyleSheet>> mAdoptedStyleSheets;
 
   /*
