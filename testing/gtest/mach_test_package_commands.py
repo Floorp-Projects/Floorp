@@ -15,7 +15,7 @@ from mach.decorators import (
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None
-log = None
+logger = None
 
 
 def run_gtest(context, **kwargs):
@@ -23,8 +23,8 @@ def run_gtest(context, **kwargs):
 
     if not kwargs.get('log'):
         kwargs['log'] = setup_logging('gtest', kwargs, {'mach': sys.stdout})
-    global log
-    log = kwargs['log']
+    global logger
+    logger = kwargs['log']
 
     args = Namespace(**kwargs)
 
@@ -42,14 +42,14 @@ def run_gtest_desktop(context, args):
     utility_path = context.bin_dir
     cwd = os.path.join(context.package_root, 'gtest')
 
-    log.info("mach calling run_gtest with prog=%s xre_path=%s cwd=%s utility_path=%s" %
-             (prog, xre_path, cwd, utility_path))
+    logger.info("mach calling run_gtest with prog=%s xre_path=%s cwd=%s utility_path=%s" %
+                (prog, xre_path, cwd, utility_path))
     # The gtest option parser ignores some options normally passed to the mozharness
     # command, so some hacking is required, for now:
     extra_args = [arg for arg in args.args if not arg.startswith('-')]
     if extra_args:
         os.environ['GTEST_FILTER'] = extra_args[0]
-        log.info("GTEST_FILTER=%s" % extra_args[0])
+        logger.info("GTEST_FILTER=%s" % extra_args[0])
 
     import rungtests
     tester = rungtests.GTests()
@@ -67,13 +67,13 @@ def run_gtest_android(context, args):
     cwd = os.path.join(context.package_root, 'gtest')
     libxul_path = os.path.join(cwd, 'gtest_bin', 'gtest', 'libxul.so')
 
-    log.info("mach calling android run_gtest with package=%s cwd=%s libxul=%s" %
-             (args.package, cwd, libxul_path))
+    logger.info("mach calling android run_gtest with package=%s cwd=%s libxul=%s" %
+                (args.package, cwd, libxul_path))
     # The remote gtest option parser ignores some options normally passed to the mozharness
     # command, so some hacking is required, for now:
     extra_args = [arg for arg in args.args if not arg.startswith('-')]
     test_filter = extra_args[0] if extra_args else None
-    log.info("test filter=%s" % test_filter)
+    logger.info("test filter=%s" % test_filter)
 
     import remotegtests
     tester = remotegtests.RemoteGTests()
