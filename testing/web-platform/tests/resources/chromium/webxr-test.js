@@ -921,9 +921,9 @@ class MockRuntime {
     const neg = XRMathHelper.neg;
 
     //1. Calculate plane normal in world coordinates.
-    const point_A = face[0];
-    const point_B = face[1];
-    const point_C = face[2];
+    const point_A = face.vertices[0];
+    const point_B = face.vertices[1];
+    const point_C = face.vertices[2];
 
     const edge_AB = sub(point_B, point_A);
     const edge_AC = sub(point_C, point_A);
