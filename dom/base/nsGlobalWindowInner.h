@@ -391,9 +391,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   static bool IsRequestIdleCallbackEnabled(JSContext* aCx,
                                            JSObject* /* unused */);
 
-  static bool RegisterProtocolHandlerAllowedForContext(JSContext* /* unused */,
-                                                       JSObject* aObj);
-
   static bool DeviceSensorsEnabled(JSContext* /* unused */, JSObject* aObj);
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
