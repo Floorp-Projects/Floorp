@@ -402,16 +402,17 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardSpecificSymbol() {
+bool BaselineCacheIRCompiler::emitGuardSpecificSymbol(SymbolOperandId symId,
+                                                      uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register sym = allocator.useRegister(masm, reader.symbolOperandId());
+  Register sym = allocator.useRegister(masm, symId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  Address addr(stubAddress(reader.stubOffset()));
+  Address addr(stubAddress(expectedOffset));
   masm.branchPtr(Assembler::NotEqual, addr, sym, failure->label());
   return true;
 }

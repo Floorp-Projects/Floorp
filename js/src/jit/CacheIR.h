@@ -502,7 +502,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeInt32Immediate(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
   void writeUint32Immediate(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
   void writePointer(void* ptr) { buffer_.writeRawPointer(ptr); }
 
@@ -555,6 +554,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     assertSameCompartment(obj);
     addStubField(uintptr_t(obj), StubField::Type::JSObject);
   }
+  void writeStringField(JSString* str) {
+    MOZ_ASSERT(str);
+    addStubField(uintptr_t(str), StubField::Type::String);
+  }
+  void writeSymbolField(JS::Symbol* sym) {
+    MOZ_ASSERT(sym);
+    addStubField(uintptr_t(sym), StubField::Type::Symbol);
+  }
   void writeRawWordField(const void* ptr) {
     addStubField(uintptr_t(ptr), StubField::Type::RawWord);
   }
@@ -568,7 +575,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                   "GuardClassKind must fit in a byte");
     buffer_.writeByte(uint8_t(kind));
   }
+  void writeJSWhyMagicImm(JSWhyMagic whyMagic) {
+    static_assert(JS_WHY_MAGIC_COUNT <= UINT8_MAX,
+                  "JSWhyMagic must fit in uint8_t");
+    buffer_.writeByte(uint8_t(whyMagic));
+  }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
+
+  void writeInt32Imm(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
+
+  void writeJSNativeImm(JSNative native) {
+    writePointer(JS_FUNC_TO_DATA_PTR(void*, native));
+  }
 
   CacheIRWriter(const CacheIRWriter&) = delete;
   CacheIRWriter& operator=(const CacheIRWriter&) = delete;
@@ -809,11 +827,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardFunctionIsConstructor, obj);
   }
 
-  void guardSpecificNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
-    writeOpWithOperandId(CacheOp::GuardSpecificNativeFunction, obj);
-    writePointer(JS_FUNC_TO_DATA_PTR(void*, nativeFunc));
-  }
-
   FieldOffset guardSpecificObject(ObjOperandId obj, JSObject* expected) {
     assertSameCompartment(expected);
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
@@ -829,25 +842,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   FieldOffset guardSpecificAtom(StringOperandId str, JSAtom* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
     return addStubField(uintptr_t(expected), StubField::Type::String);
-  }
-
-  void guardSpecificSymbol(SymbolOperandId sym, JS::Symbol* expected) {
-    writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
-    addStubField(uintptr_t(expected), StubField::Type::Symbol);
-  }
-
-  void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected) {
-    writeOpWithOperandId(CacheOp::GuardSpecificInt32Immediate, operand);
-    writeInt32Immediate(expected);
-  }
-
-  void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
-    writeOpWithOperandId(CacheOp::GuardMagicValue, val);
-    buffer_.writeByte(uint32_t(magic));
-  }
-
-  void guardFrameHasNoArgumentsObject() {
-    writeOp(CacheOp::GuardFrameHasNoArgumentsObject);
   }
 
   Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
