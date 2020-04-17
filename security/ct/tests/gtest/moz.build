@@ -9,11 +9,7 @@ def STHTestFile(name):
     if not CONFIG['COMPILE_ENVIRONMENT']:
         return
 
-    GENERATED_FILES += [name]
-    props = GENERATED_FILES[name]
-    props.script = 'createSTHTestData.py'
-    props.inputs = ['%s.tbs' % name]
-    props.py2 = True
+    GeneratedFile(name, script='createSTHTestData.py', inputs=['%s.tbs' % name])
 
 STHTestFile('valid-sth.inc')
 STHTestFile('valid-with-extension-sth.inc')

@@ -13,13 +13,14 @@ from base64 import b64encode
 from cbor2 import dumps
 from cbor2.types import CBORTag
 from hashlib import sha1, sha256
-import StringIO
 import argparse
+from io import StringIO
 import os
 import pycert
 import pycms
 import pykey
 import re
+import six
 import zipfile
 
 
@@ -144,8 +145,8 @@ def getCert(subject, keyName, issuerName, ee, issuerKey=""):
             'extension:keyUsage:cRLSign,keyCertSign'
     if issuerKey:
         certSpecification += '\nissuerKey:%s' % issuerKey
-    certSpecificationStream = StringIO.StringIO()
-    print >>certSpecificationStream, certSpecification
+    certSpecificationStream = StringIO()
+    print(certSpecification, file=certSpecificationStream)
     certSpecificationStream.seek(0)
     return pycert.Certificate(certSpecificationStream)
 
@@ -202,7 +203,7 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
 
     with zipfile.ZipFile(outputFile, 'w', zipfile.ZIP_DEFLATED) as outZip:
         for (fullPath, internalPath) in walkDirectory(appDirectory):
-            with open(fullPath) as inputFile:
+            with open(fullPath, 'rb') as inputFile:
                 contents = inputFile.read()
             outZip.writestr(internalPath, contents)
 
@@ -233,20 +234,21 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
             mfContents = '\n'.join(mfEntries)
             sfContents = 'Signature-Version: 1.0\n'
             for (hashFunc, name) in signatureHashes:
-                base64hash = b64encode(hashFunc(mfContents).digest())
+                base64hash = b64encode(
+                    hashFunc(six.ensure_binary(mfContents)).digest())
                 sfContents += '%s-Digest-Manifest: %s\n' % (name, base64hash)
 
             cmsSpecification = ''
             for name in pkcs7Hashes:
                 hashFunc, _ = hashNameToFunctionAndIdentifier(name)
-                cmsSpecification += '%s:%s\n' % (name,
-                                                 hashFunc(sfContents).hexdigest())
+                cmsSpecification += '%s:%s\n' % (
+                    name, hashFunc(six.ensure_binary(sfContents)).hexdigest())
             cmsSpecification += 'signer:\n' + \
                 'issuer:%s\n' % issuerName + \
                 'subject:xpcshell signed app test signer\n' + \
                 'extension:keyUsage:digitalSignature'
-            cmsSpecificationStream = StringIO.StringIO()
-            print >>cmsSpecificationStream, cmsSpecification
+            cmsSpecificationStream = StringIO()
+            print(cmsSpecification, file=cmsSpecificationStream)
             cmsSpecificationStream.seek(0)
             cms = pycms.CMS(cmsSpecificationStream)
             p7 = cms.toDER()
