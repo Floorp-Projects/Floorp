@@ -30,13 +30,11 @@ gfx::PointDouble3D XRNativeOriginLocalFloor::GetPosition() {
   if (!mInitialPositionValid || standing != mStandingTransform) {
     const gfx::VRHMDSensorState& sensorState = mDisplay->GetSensorState();
     gfx::PointDouble3D origin;
-    if (sensorState.flags & VRDisplayCapabilityFlags::Cap_Position) {
-      mInitialPosition.x = sensorState.pose.position[0];
-      mInitialPosition.y = -mFloorRandom - standing._42;
-      mInitialPosition.z = sensorState.pose.position[2];
-      mInitialPositionValid = true;
-      mStandingTransform = standing;
-    }
+    mInitialPosition.x = sensorState.pose.position[0];
+    mInitialPosition.y = -mFloorRandom - standing._42;
+    mInitialPosition.z = sensorState.pose.position[2];
+    mInitialPositionValid = true;
+    mStandingTransform = standing;
   }
   return mInitialPosition;
 }
