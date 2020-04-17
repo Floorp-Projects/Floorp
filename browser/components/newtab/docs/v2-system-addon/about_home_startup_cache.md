@@ -48,7 +48,7 @@ When the `AboutRedirector` in the "privileged about content process" notices tha
 
 If, at this point, nothing has been streamed from the parent, we fall back to loading the dynamic `about:home` document. This might occur if the cache doesn't exist yet, or if we were too slow to pull it off of the disk.
 
-The `AboutHomeStartupCacheChild` will also be responsible for updating the cache over time. [Bug 1614502](https://bugzilla.mozilla.org/show_bug.cgi?id=1614502) tracks that work, and this documentation will be updated once it lands with details on how the cached documents are generated.
+The `AboutHomeStartupCacheChild` will also be responsible for updating the cache over time. The `AboutHomeStartupCacheChild` will periodically request the most up-to-date state for `about:home` from the parent process, and then generate document markup using ReactDOMServer within a `ChromeWorker`. After that's generated, the "privileged about content process" will send up `nsIInputStream` instances for both the markup and the script for the initial page state. The `AboutHomeStartupCache` singleton inside of `BrowserGlue` is responsible for receiving those `nsIInputStream`'s and persisting them in the HTTP cache for the next start.
 
 ## What is cached?
 

@@ -56,10 +56,18 @@ const PREF_SEPARATE_ABOUT_WELCOME = "browser.aboutwelcome.enabled";
 const SEPARATE_ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "BasePromiseWorker",
+  "resource://gre/modules/PromiseWorker.jsm"
+);
+
 const TOPIC_APP_QUIT = "quit-application-granted";
 const TOPIC_CONTENT_DOCUMENT_INTERACTIVE = "content-document-interactive";
 
 const BASE_URL = "resource://activity-stream/";
+const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
+
 const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
 
 const IS_PRIVILEGED_PROCESS =
@@ -82,6 +90,8 @@ const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
  */
 const AboutHomeStartupCacheChild = {
   _initted: false,
+  STATE_RESPONSE_MESSAGE: "AboutHomeStartupCache:State:Response",
+  STATE_REQUEST_MESSAGE: "AboutHomeStartupCache:State:Request",
 
   /**
    * Called via a process script very early on in the process lifetime. This
@@ -176,35 +186,83 @@ const AboutHomeStartupCacheChild = {
     return channel;
   },
 
-  /**
-   * This is a manual testing function that is currently not called from
-   * anywhere, and will be removed once bug 1614502 lands. The function
-   * writes a document and script to the cache.
-   */
-  populateCache() {
-    let pageInputStream = Cc[
-      "@mozilla.org/io/string-input-stream;1"
-    ].createInstance(Ci.nsIStringInputStream);
+  getAboutHomeState() {
+    return new Promise(resolve => {
+      Services.cpmm.addMessageListener(this.STATE_RESPONSE_MESSAGE, m => {
+        Services.cpmm.removeMessageListener(this.STATE_RESPONSE_MESSAGE, this);
+        resolve(m.data.state);
+      });
 
-    let cacheDate = new Date().toISOString();
-    pageInputStream.data = `<html>
-  <body>
-    <p>Cached at: ${cacheDate}</p>
-    <p>Seen at: <span id="seen"></span></p>
-  </body>
-  <script src='about:home?jscache'></script>
-</html>`;
-
-    let scriptInputStream = Cc[
-      "@mozilla.org/io/string-input-stream;1"
-    ].createInstance(Ci.nsIStringInputStream);
-
-    scriptInputStream.data = `document.getElementById("seen").textContent = new Date().toISOString();`;
-
-    Services.cpmm.sendAsyncMessage("AboutHomeStartupCache:PopulateCache", {
-      pageInputStream,
-      scriptInputStream,
+      Services.cpmm.sendAsyncMessage(this.STATE_REQUEST_MESSAGE);
     });
+  },
+
+  _constructionPromise: null,
+
+  /**
+   * This function gets the state information required to generate
+   * the about:home cache markup and script, and then generates that
+   * markup in script asynchronously. Once that's done, a message
+   * is sent to the parent process with the nsIInputStream's for the
+   * markup and script contents.
+   *
+   * If a cache is already in the midst of being constructed, this
+   * does not queue a new construction job - instead, the returned
+   * Promise will resolve as soon as the currently processing
+   * construction job completes. However, once the construction job
+   * is done, subsequent calls will start a new job.
+   *
+   * @return Promise
+   * @resolves
+   *   After the message with the nsIInputStream's have been sent to
+   *   the parent.
+   */
+  constructAndSendCache() {
+    if (!IS_PRIVILEGED_PROCESS) {
+      throw new Error("Wrong process type.");
+    }
+
+    if (this._constructionPromise) {
+      return this._constructionPromise;
+    }
+
+    return (this._constructionPromise = (async () => {
+      try {
+        let worker = this.getOrCreateWorker();
+        let state = await this.getAboutHomeState();
+
+        let { page, script } = await worker.post("construct", [state]);
+
+        let pageInputStream = Cc[
+          "@mozilla.org/io/string-input-stream;1"
+        ].createInstance(Ci.nsIStringInputStream);
+
+        pageInputStream.setUTF8Data(page);
+
+        let scriptInputStream = Cc[
+          "@mozilla.org/io/string-input-stream;1"
+        ].createInstance(Ci.nsIStringInputStream);
+
+        scriptInputStream.setUTF8Data(script);
+
+        Services.cpmm.sendAsyncMessage("AboutHomeStartupCache:PopulateCache", {
+          pageInputStream,
+          scriptInputStream,
+        });
+      } finally {
+        this._constructionPromise = null;
+      }
+    })());
+  },
+
+  _cacheWorker: null,
+  getOrCreateWorker() {
+    if (this._cacheWorker) {
+      return this._cacheWorker;
+    }
+
+    this._cacheWorker = new BasePromiseWorker(CACHE_WORKER_URL);
+    return this._cacheWorker;
   },
 };
 
@@ -326,6 +384,15 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
           return;
         }
 
+        if (win.location.protocol !== "about:") {
+          // If we're somehow not an about: page, explode - something has gone
+          // horribly wrong.
+          let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+          debug.abort("AboutNewTabService.jsm", 0);
+          // And return just in case something went wrong trying to explode.
+          return;
+        }
+
         // We use win.location.pathname instead of win.location.toString()
         // because we want to account for URLs that contain the location hash
         // property or query strings (e.g. about:newtab#foo, about:home?bar).
@@ -333,6 +400,17 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
         // by the view-source:// scheme, so we should probably just bail out
         // and do nothing.
         if (!ACTIVITY_STREAM_PAGES.has(win.location.pathname)) {
+          return;
+        }
+
+        // In the event that the document that was loaded here was the cached
+        // about:home document, then there's nothing further to do - the page
+        // will load its scripts itself.
+        //
+        // Note that it's okay to waive the xray wrappers here since we know
+        // from the above condition that we're on one of our about: pages,
+        // plus we're in the privileged about content process.
+        if (ChromeUtils.waiveXrays(win).__FROM_STARTUP_CACHE__) {
           return;
         }
 

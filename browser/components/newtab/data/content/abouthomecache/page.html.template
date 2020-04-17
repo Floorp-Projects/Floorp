@@ -1,0 +1,53 @@
+#if 0
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This template file is used to construct the cached about:home document.
+# The following template strings are used:
+#
+# {{ CACHE_TIME }}:
+#   A date string representing when the cache was generated.
+#
+# {{ MARKUP }}:
+#   The generated DOM content from ReactDOMServer for the cache.
+#
+# Also note the final script load of about:home?jscache. This loads the cached
+# script, which does the important work of telling React how to connect the
+# cached page state to the pre-existing DOM that's being rendered.
+#
+#endif
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
+    <title data-l10n-id="newtab-page-title"></title>
+    <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/branding/brandings.ftl" />
+    <link rel="localization" href="browser/newtab/newtab.ftl" />
+    <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
+    <link rel="stylesheet" href="resource://activity-stream/css/activity-stream.css" />
+  </head>
+  <!-- Cached: {{ CACHE_TIME }} -->
+  <body class="activity-stream">
+    <div id="header-asrouter-container" role="presentation"></div>
+    <div id="root">
+      {{ MARKUP }}
+    </div>
+    <div id="footer-asrouter-container" role="presentation"></div>
+    <script src="chrome://browser/content/contentSearchUI.js"></script>
+    <script src="chrome://browser/content/contentSearchHandoffUI.js"></script>
+    <script src="chrome://browser/content/contentTheme.js"></script>
+    <script src="resource://activity-stream/vendor/react.js"></script>
+    <script src="resource://activity-stream/vendor/react-dom.js"></script>
+    <script src="resource://activity-stream/vendor/prop-types.js"></script>
+    <script src="resource://activity-stream/vendor/redux.js"></script>
+    <script src="resource://activity-stream/vendor/react-redux.js"></script>
+    <script src="resource://activity-stream/vendor/react-transition-group.js"></script>
+    <script src="resource://activity-stream/data/content/activity-stream.bundle.js"></script>
+    <script src="about:home?jscache"></script>
+  </body>
+</html>

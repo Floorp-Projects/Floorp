@@ -1,0 +1,18 @@
+#if 0
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This template file is used to construct the script that is loaded by the
+# cached about:home document. It is loaded in the cached about:home document
+# by loading about:home?jscache.
+#
+# The only template string used in this file is {{ STATE }}, which can only
+# be used once. {{ STATE }} will be replaced with the state of about:home
+# at the time that the cache was generated, which is needed by React in order
+# to make the cached document interactive.
+#
+#endif
+window.__FROM_STARTUP_CACHE__ = true;
+window.NewtabRenderUtils.renderCache({{ STATE }});
