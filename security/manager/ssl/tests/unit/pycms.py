@@ -30,8 +30,8 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import tag, univ
 from pyasn1_modules import rfc2315, rfc2459
-import StringIO
 import base64
+from io import StringIO
 import pycert
 import pykey
 import sys
@@ -61,11 +61,11 @@ class CMS(object):
     def __init__(self, paramStream):
         self.sha1 = ''
         self.sha256 = ''
-        signerSpecification = StringIO.StringIO()
+        signerSpecification = StringIO()
         readingSignerSpecification = False
         for line in paramStream.readlines():
             if readingSignerSpecification:
-                print >>signerSpecification, line.strip()
+                print(line.strip(), file=signerSpecification)
             elif line.strip() == 'signer:':
                 readingSignerSpecification = True
             elif line.startswith('sha1:'):

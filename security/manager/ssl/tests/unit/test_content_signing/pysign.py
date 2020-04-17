@@ -17,13 +17,19 @@ cat test.txt | python pysign.py > test.txt.signature
 
 import base64
 import binascii
-import ecc
+import hashlib
+import os
+import six
+import sys
+
+import ecdsa
+
+# For pykey
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pykey
 
-from sys import stdin
+data = sys.stdin.buffer.read()
 
-data = stdin.read()
-
-key = ecc.Key.Key.decode(binascii.unhexlify(pykey.ECCKey.secp384r1Encoded))
-sig = key.sign("Content-Signature:\00" + data, 'sha384')
+key = pykey.ECCKey('secp384r1')
+sig = key.signRaw(b'Content-Signature:\00' + data, pykey.HASH_SHA384)
 print base64.b64encode(sig).replace('+', '-').replace('/', '_')

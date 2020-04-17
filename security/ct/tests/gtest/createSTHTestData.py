@@ -79,7 +79,7 @@ def getTwoByteLenAsHex(callLenOnMe):
     length = len(callLenOnMe)
     if length > 65535:
         raise InputTooLongError(length)
-    return binascii.hexlify(chr(length / 256) + chr(length % 256))
+    return bytes([length // 256, length % 256]).hex()
 
 
 def createSTH(configStream):
@@ -112,7 +112,7 @@ def createSTH(configStream):
     signature = sign(signingKey, hashAlgorithm, toSign)
     lengthBytesHex = getTwoByteLenAsHex(binascii.unhexlify(signature))
     sth = prefix + toSign + lengthBytesHex + signature
-    spkiHex = binascii.hexlify(encoder.encode(spki.asSubjectPublicKeyInfo()))
+    spkiHex = encoder.encode(spki.asSubjectPublicKeyInfo()).hex()
     return ('const char* kSTHHex = "%s";\nconst char* kSPKIHex = "%s";\n' %
             (sth, spkiHex))
 
