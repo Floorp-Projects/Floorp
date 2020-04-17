@@ -385,7 +385,10 @@ void ExecutionRunnable::RunOnWorkletThread() {
   workletThread->EnsureCycleCollectedJSContext(mParentRuntime);
 
   WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
-  MOZ_ASSERT(globalScope);
+  if (!globalScope) {
+    mResult = NS_ERROR_DOM_UNKNOWN_ERR;
+    return;
+  }
 
   AutoEntryScript aes(globalScope, "Worklet");
   JSContext* cx = aes.cx();
