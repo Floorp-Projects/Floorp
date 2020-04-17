@@ -7,11 +7,12 @@
 #include "mozilla/dom/Report.h"
 #include "mozilla/dom/ReportBody.h"
 #include "mozilla/dom/ReportingBinding.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Report, mWindow, mBody)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Report, mGlobal, mBody)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Report)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Report)
 
@@ -20,16 +21,16 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Report)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Report::Report(nsPIDOMWindowInner* aWindow, const nsAString& aType,
+Report::Report(nsIGlobalObject* aGlobal, const nsAString& aType,
                const nsAString& aURL, ReportBody* aBody)
-    : mWindow(aWindow), mType(aType), mURL(aURL), mBody(aBody) {
-  MOZ_ASSERT(aWindow);
+    : mGlobal(aGlobal), mType(aType), mURL(aURL), mBody(aBody) {
+  MOZ_ASSERT(aGlobal);
 }
 
 Report::~Report() = default;
 
 already_AddRefed<Report> Report::Clone() {
-  RefPtr<Report> report = new Report(mWindow, mType, mURL, mBody);
+  RefPtr<Report> report = new Report(mGlobal, mType, mURL, mBody);
   return report.forget();
 }
 

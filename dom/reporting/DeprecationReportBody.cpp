@@ -12,18 +12,18 @@ namespace mozilla {
 namespace dom {
 
 DeprecationReportBody::DeprecationReportBody(
-    nsPIDOMWindowInner* aWindow, const nsAString& aId,
+    nsIGlobalObject* aGlobal, const nsAString& aId,
     const Nullable<uint64_t>& aDate, const nsAString& aMessage,
     const nsAString& aSourceFile, const Nullable<uint32_t>& aLineNumber,
     const Nullable<uint32_t>& aColumnNumber)
-    : ReportBody(aWindow),
+    : ReportBody(aGlobal),
       mId(aId),
       mDate(aDate),
       mMessage(aMessage),
       mSourceFile(aSourceFile),
       mLineNumber(aLineNumber),
       mColumnNumber(aColumnNumber) {
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aGlobal);
 }
 
 DeprecationReportBody::~DeprecationReportBody() = default;
