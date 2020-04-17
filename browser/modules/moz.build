@@ -163,6 +163,11 @@ if CONFIG['MOZ_ASAN_REPORTER']:
         'AsanReporter.jsm',
     ]
 
+if CONFIG['NIGHTLY_BUILD']:
+    EXTRA_JS_MODULES += [
+        'DelegatedCredsExperiment.jsm',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXTRA_JS_MODULES += [
         'Windows8WindowFrameColor.jsm',
