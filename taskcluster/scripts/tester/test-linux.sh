@@ -233,6 +233,6 @@ fi
 # Run a custom mach command (this is typically used by action tasks to run
 # harnesses in a particular way)
 if [ "$CUSTOM_MACH_COMMAND" ]; then
-    eval "'$WORKSPACE/build/tests/mach' ${CUSTOM_MACH_COMMAND}"
+    eval "'$WORKSPACE/build/tests/mach' ${CUSTOM_MACH_COMMAND} ${@}"
     exit $?
 fi
