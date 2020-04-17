@@ -466,17 +466,19 @@ function makeVisitMatch(input, url, extra = {}) {
   if (extra.heuristic) {
     style.push("heuristic");
   }
+  let displaySpec = Services.textToSubURI.unEscapeURIForUI(url);
   return {
     uri: makeActionURI("visiturl", params),
-    title: extra.title || url,
+    title: extra.title || displaySpec,
     style,
   };
 }
 
 function makeSwitchToTabMatch(url, extra = {}) {
+  let displaySpec = Services.textToSubURI.unEscapeURIForUI(url);
   return {
     uri: makeActionURI("switchtab", { url }),
-    title: extra.title || url,
+    title: extra.title || displaySpec,
     style: ["action", "switchtab"],
   };
 }
