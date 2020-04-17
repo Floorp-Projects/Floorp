@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
+    - toolchain
     - build
 
 transforms:
@@ -20,6 +21,7 @@ job-defaults:
         tier: 2
     run:
         using: run-task
+        cwd: fetches/condprofile
         checkout: false
         tooltool-downloads: public
     scopes:
@@ -27,10 +29,6 @@ job-defaults:
     worker:
         taskcluster-proxy: true
         max-run-time: 10800
-        env:
-            MOZ_FETCHES_DIR: fetches
-            CONDPROF_ARCHIVES: /builds/worker/archive
-            CONDPROF_ROOT: fetches/condprofile
 jobs:
     windows2012-64-firefox:
         worker-type: b-win2012
@@ -42,17 +40,19 @@ jobs:
             product: firefox
             job-name: condprof-win64
         dependencies:
-            build-win64/opt: build-win64/opt
+            build: build-win64-shippable/opt
         fetches:
-            build-win64/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
                 - artifact: target.zip
+            toolchain:
+                - win64-geckodriver
         run:
-            using: run-task
             command: >-
-                cd %CONDPROF_ROOT% &&
-                python3.exe condprof/main.py --geckodriver z:/%USERNAME%/fetches/bin/geckodriver.exe --firefox firefox/firefox.exe z:/%USERNAME%/archive
+                python3.exe condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
+                --firefox ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -68,19 +68,20 @@ jobs:
             product: firefox
             job-name: condprof-linux64
         dependencies:
-            build-linux/opt: build-linux-shippable/opt
+            build: build-linux64-shippable/opt
         fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
                 - artifact: target.tar.bz2
+            toolchain:
+                - linux64-geckodriver
         run:
-            using: run-task
             command: >-
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3.7 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3.7 condprof/main.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
+                virtualenv/virtualenv.py -p python3.7 . &&
+                bin/python3.7 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+                ../../archive
         worker:
             docker-image: {in-tree: condprof}
             artifacts:
@@ -93,23 +94,25 @@ jobs:
         treeherder:
             symbol: condprof(firefox)
             platform: macosx1014-64/opt
-        dependencies:
-            build-macosx64/opt: build-macosx64-shippable/opt
-        fetches:
-            build-macosx64/opt:
-                - artifact: target.common.tests.tar.gz
-                - artifact: target.condprof.tests.tar.gz
-                - artifact: target.dmg
         index:
             product: firefox
             job-name: condprof-macosx64
+        dependencies:
+            build: build-macosx64-shippable/opt
+        fetches:
+            build:
+                - artifact: target.condprof.tests.tar.gz
+                - artifact: target.dmg
+                  extract: false
+            toolchain:
+                - macosx64-geckodriver
         run:
-            using: run-task
             command: >-
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                cd $CONDPROF_ROOT &&
-                bin/python3 condprof/main.py --firefox $MOZ_FETCHES_DIR/target.dmg ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --firefox ${MOZ_FETCHES_DIR}/target.dmg
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -125,23 +128,24 @@ jobs:
             product: firefox
             job-name: condprof-g5-geckoview_example
         dependencies:
-            build-linux/opt: build-linux-shippable/opt
-            build-android-api-16/opt: build-android-api-16/opt
+            build: build-android-api-16/pgo
         fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
-            build-android-api-16/opt:
                 - artifact: geckoview_example.apk
+                  extract: false
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
-            using: run-task
             command: >-
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name g5 --firefox org.mozilla.geckoview_example ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name g5
+                --firefox org.mozilla.geckoview_example
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -157,21 +161,24 @@ jobs:
             product: firefox
             job-name: condprof-g5-fenix.performancetest
         dependencies:
-            build-linux/opt: build-linux-shippable/opt
+            build: build-linux64-shippable/opt
         fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
             command: >-
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.performance-test.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name g5 --firefox org.mozilla.fenix.performancetest ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name g5
+                --firefox org.mozilla.fenix.performancetest
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -187,21 +194,23 @@ jobs:
             product: firefox
             job-name: condprof-g5-firefox
         dependencies:
-            build-linux/opt: build-linux-shippable/opt
+            build: build-linux64-shippable/opt
         fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
             command: >-
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-api-16-release-opt/artifacts/public/build/target.apk &&
                 adb install -r target.apk &&
-                rm -rf target.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name g5 --firefox org.mozilla.firefox ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name g5
+                --firefox org.mozilla.firefox
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -213,25 +222,28 @@ jobs:
         treeherder:
             symbol: condprof(fenix)
             platform: android-hw-p2-8-0-android-aarch64/opt
-        dependencies:
-            build-linux/opt: build-linux-shippable/opt
-        fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
-                - artifact: target.condprof.tests.tar.gz
         index:
             product: firefox
             job-name: condprof-p2_aarch64-fenix.performancetest
+        dependencies:
+            build: build-android-api-16/pgo
+        fetches:
+            build:
+                - artifact: target.condprof.tests.tar.gz
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
             command: >-
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.performance-test.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.fenix.performancetest ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name p2_aarch64
+                --firefox org.mozilla.fenix.performancetest
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -243,27 +255,28 @@ jobs:
         treeherder:
             symbol: condprof(geckoview)
             platform: android-hw-p2-8-0-android-aarch64/opt
-        dependencies:
-            build-linux/opt: build-linux-shippable/opt
-            build-android-api-16/opt: build-android-api-16/opt
         index:
             product: firefox
             job-name: condprof-p2_aarch64-geckoview_example
+        dependencies:
+            build: build-android-api-16/pgo
         fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
+            build:
                 - artifact: target.condprof.tests.tar.gz
-            build-android-api-16/opt:
                 - artifact: geckoview_example.apk
+                  extract: false
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
-            using: run-task
             command: >-
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.geckoview_example ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name p2_aarch64
+                --firefox org.mozilla.geckoview_example
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -275,25 +288,28 @@ jobs:
         treeherder:
             symbol: condprof(fennec68)
             platform: android-hw-p2-8-0-android-aarch64/opt
-        dependencies:
-            build-linux/opt: build-linux-shippable/opt
-        fetches:
-            build-linux/opt:
-                - artifact: target.common.tests.tar.gz
-                - artifact: target.condprof.tests.tar.gz
         index:
             product: firefox
             job-name: condprof-p2_aarch64-firefox
+        dependencies:
+            build: build-linux64-shippable/opt
+        fetches:
+            build:
+                - artifact: target.condprof.tests.tar.gz
+            toolchain:
+                - linux64-geckodriver
         run:
             run-as-root: true
             command: >-
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-aarch64-release-opt/artifacts/public/build/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
-                cd $CONDPROF_ROOT &&
-                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/main.py --device-name p2_aarch64 --firefox org.mozilla.firefox ../../archive
+                virtualenv/virtualenv.py -p python3 . &&
+                bin/python3 condprof/main.py
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name p2_aarch64
+                --firefox org.mozilla.firefox
+                ../../archive
         worker:
             artifacts:
                 - name: public/condprof
