@@ -641,47 +641,7 @@ void nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox,
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
   aFlexes = 0;
-  nsBoxSize* currentBox = nullptr;
-
-#if 0
-  nsBoxSize* start = aBoxSizes;
-
-  while(child)
-  {
-    // ok if we started with a list move down the list
-    // until we reach the end. Then start looking at childen.
-    // This feature is used extensively for Grid.
-    nscoord flex = 0;
-
-    if (!start) {
-      if (!currentBox) {
-        aBoxSizes      = new (aState) nsBoxSize();
-        currentBox      = aBoxSizes;
-      } else {
-        currentBox->next      = new (aState) nsBoxSize();
-        currentBox      = currentBox->next;
-      }
-
-
-      flex = child->GetXULFlex();
-
-      currentBox->flex = flex;
-      currentBox->collapsed = child->IsXULCollapsed();
-    } else {
-      flex = start->flex;
-      start = start->next;
-    }
-
-    if (flex > 0)
-       aFlexes++;
-
-    child = GetNextXULBox(child);
-  }
-#endif
-
-  // get pref, min, max
-  child = nsBox::GetChildXULBox(aBox);
-  currentBox = aBoxSizes;
+  nsBoxSize* currentBox = aBoxSizes;
   nsBoxSize* last = nullptr;
 
   nscoord maxFlex = 0;
