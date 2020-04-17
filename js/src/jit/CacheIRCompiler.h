@@ -784,6 +784,8 @@ class MOZ_RAII CacheIRCompiler {
   CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
 #undef DEFINE_SHARED_OP
 
+  CACHE_IR_COMPILER_SHARED_GENERATED
+
   void emitLoadStubField(StubFieldOffset val, Register dest);
   void emitLoadStubFieldConstant(StubFieldOffset val, Register dest);
   Address emitAddressFromStubField(StubFieldOffset val, Register base);

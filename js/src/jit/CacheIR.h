@@ -543,6 +543,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(offset);
   }
 
+  void writeShapeField(Shape* shape) {
+    MOZ_ASSERT(shape);
+    addStubField(uintptr_t(shape), StubField::Type::Shape);
+  }
+  void writeGroupField(ObjectGroup* group) {
+    MOZ_ASSERT(group);
+    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
+  }
+  void writeJSOpImm(JSOp op) {
+    static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
+    buffer_.writeByte(uint8_t(op));
+  }
+  void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
+
   CacheIRWriter(const CacheIRWriter&) = delete;
   CacheIRWriter& operator=(const CacheIRWriter&) = delete;
 
@@ -705,12 +719,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardIsUndefined, val);
   }
 
-  void guardShape(ObjOperandId obj, Shape* shape) {
-    MOZ_ASSERT(shape);
-    writeOpWithOperandId(CacheOp::GuardShape, obj);
-    addStubField(uintptr_t(shape), StubField::Type::Shape);
-  }
-
   void guardShapeForClass(ObjOperandId obj, Shape* shape) {
     // Guard shape to ensure that object class is unchanged. This is true
     // for all shapes.
@@ -759,13 +767,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
  public:
-  // Use (or create) a specialization below to clarify what constaint the
-  // group guard is implying.
-  void guardGroup(ObjOperandId obj, ObjectGroup* group) {
-    writeOpWithOperandId(CacheOp::GuardGroup, obj);
-    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
-  }
-
+  // Instead of calling guardGroup manually, use (or create) a specialization
+  // below to clarify what constraint the group guard is implying.
   void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
     MOZ_ASSERT(!group->hasUncacheableProto());
     guardGroup(obj, group);
@@ -1414,16 +1417,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhsId);
   }
 
-  void int32AddResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32SubResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32SubResult, lhs);
-    writeOperandId(rhs);
-  }
-
   void int32MulResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32MulResult, lhs);
     writeOperandId(rhs);
@@ -1670,11 +1663,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::LoadStringLengthResult, str);
   }
 
-  void loadStringCharResult(StringOperandId str, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadStringCharResult, str);
-    writeOperandId(index);
-  }
-
   void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
@@ -1705,13 +1693,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void callProxyGetByValueResult(ObjOperandId obj, ValOperandId idVal) {
     writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
     writeOperandId(idVal);
-  }
-
-  void callProxyHasPropResult(ObjOperandId obj, ValOperandId idVal,
-                              bool hasOwn) {
-    writeOpWithOperandId(CacheOp::CallProxyHasPropResult, obj);
-    writeOperandId(idVal);
-    buffer_.writeByte(uint32_t(hasOwn));
   }
 
   void callObjectHasSparseElementResult(ObjOperandId obj,
@@ -1830,12 +1811,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint8_t(op));
   }
 
-  void compareInt32Result(JSOp op, Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareInt32Result, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
   void compareDoubleResult(JSOp op, NumberOperandId lhs, NumberOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
     writeOperandId(rhs);
@@ -1897,8 +1872,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void breakpoint() { writeOp(CacheOp::Breakpoint); }
   void typeMonitorResult() { writeOp(CacheOp::TypeMonitorResult); }
-  void returnFromIC() { writeOp(CacheOp::ReturnFromIC); }
   void wrapResult() { writeOp(CacheOp::WrapResult); }
+
+  CACHE_IR_WRITER_GENERATED
 };
 
 class CacheIRStubInfo;
