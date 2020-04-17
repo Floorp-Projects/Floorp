@@ -341,12 +341,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY customizeMode.autoHideDownloadsButton.label "Auto-hide">
 
-<!ENTITY getUserMedia.selectCamera.label "Camera to share:">
-<!ENTITY getUserMedia.selectCamera.accesskey "C">
-<!ENTITY getUserMedia.selectMicrophone.label "Microphone to share:">
-<!ENTITY getUserMedia.selectMicrophone.accesskey "M">
-<!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
-
 <!ENTITY contentBlocking.trackingProtection4.label "Tracking Content">
 
 <!ENTITY contentBlocking.manageSettings2.label "Manage Protection Settings">

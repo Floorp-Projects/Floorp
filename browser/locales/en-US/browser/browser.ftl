@@ -218,3 +218,13 @@ browser-window-restore-button =
   .tooltiptext = Restore
 browser-window-close-button =
   .tooltiptext = Close
+
+## WebRTC Pop-up notifications
+
+popup-select-camera =
+.value = Camera to share:
+.accesskey = C
+popup-select-microphone =
+.value = Microphone to share:
+.accesskey = M
+popup-all-windows-shared = All visible windows on your screen will be shared.

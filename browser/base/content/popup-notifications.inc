@@ -10,8 +10,7 @@
 
     <popupnotification id="webRTC-shareDevices-notification" hidden="true">
       <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
-        <label value="&getUserMedia.selectCamera.label;"
-               accesskey="&getUserMedia.selectCamera.accesskey;"
+        <label data-l10n-id="popup-select-camera"
                control="webRTC-selectCamera-menulist"/>
         <menulist id="webRTC-selectCamera-menulist">
           <menupopup id="webRTC-selectCamera-menupopup"/>
@@ -25,7 +24,7 @@
                   oncommand="webrtcUI.updateWarningLabel(this);">
           <menupopup id="webRTC-selectWindow-menupopup"/>
         </menulist>
-        <description id="webRTC-all-windows-shared" hidden="true">&getUserMedia.allWindowsShared.message;</description>
+        <description id="webRTC-all-windows-shared" hidden="true" data-l10n-id="popup-all-windows-shared"></description>
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-preview" hidden="true">
@@ -37,8 +36,7 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
-        <label value="&getUserMedia.selectMicrophone.label;"
-               accesskey="&getUserMedia.selectMicrophone.accesskey;"
+        <label data-l10n-id="popup-select-microphone"
                control="webRTC-selectMicrophone-menulist"/>
         <menulist id="webRTC-selectMicrophone-menulist">
           <menupopup id="webRTC-selectMicrophone-menupopup"/>
@@ -59,7 +57,6 @@
         <checkbox id="password-notification-visibilityToggle" hidden="true"/>
       </popupnotificationcontent>
     </popupnotification>
-
 
     <popupnotification id="addon-progress-notification" is="addon-progress-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
