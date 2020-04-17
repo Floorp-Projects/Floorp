@@ -16,6 +16,20 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def resolve_keys(config, tasks):
+    for task in tasks:
+        resolve_keyed_by(
+            task,
+            'scopes',
+            item_name=task["name"],
+            **{
+                'level': config.params["level"],
+            }
+        )
+        yield task
+
+
+@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         product = "Fenix"

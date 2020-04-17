@@ -24,7 +24,13 @@ job-template:
     description: Mark Fenix as shipped in ship-it
     worker-type: ship-it
     scopes:
-        - project:releng:ship-it:action:mark-as-shipped
+        by-level:
+            '3':
+                - project:releng:ship-it:action:mark-as-shipped
+                - project:releng:ship-it:server:production
+            default:
+                - project:releng:ship-it:action:mark-as-shipped
+                - project:releng:ship-it:server:staging
     worker: {}
 
     treeherder:
