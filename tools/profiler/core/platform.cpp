@@ -2327,6 +2327,40 @@ static void StreamPages(PSLockRef aLock, SpliceableJSONWriter& aWriter) {
 }
 
 #if defined(GP_OS_android)
+template <int N>
+static bool StartsWith(const nsACString& string, const char (&prefix)[N]) {
+  if (N - 1 > string.Length()) {
+    return false;
+  }
+  return memcmp(string.Data(), prefix, N - 1) == 0;
+}
+
+static JS::ProfilingCategoryPair InferJavaCategory(nsACString& aName) {
+  if (aName.EqualsLiteral("android.os.MessageQueue.nativePollOnce()")) {
+    return JS::ProfilingCategoryPair::IDLE;
+  }
+  if (aName.EqualsLiteral("java.lang.Object.wait()")) {
+    return JS::ProfilingCategoryPair::JAVA_BLOCKED;
+  }
+  if (StartsWith(aName, "android.") || StartsWith(aName, "com.android.")) {
+    return JS::ProfilingCategoryPair::JAVA_ANDROID;
+  }
+  if (StartsWith(aName, "mozilla.") || StartsWith(aName, "org.mozilla.")) {
+    return JS::ProfilingCategoryPair::JAVA_MOZILLA;
+  }
+  if (StartsWith(aName, "java.") || StartsWith(aName, "sun.") ||
+      StartsWith(aName, "com.sun.")) {
+    return JS::ProfilingCategoryPair::JAVA_LANGUAGE;
+  }
+  if (StartsWith(aName, "kotlin.") || StartsWith(aName, "kotlinx.")) {
+    return JS::ProfilingCategoryPair::JAVA_KOTLIN;
+  }
+  if (StartsWith(aName, "androidx.")) {
+    return JS::ProfilingCategoryPair::JAVA_ANDROIDX;
+  }
+  return JS::ProfilingCategoryPair::OTHER;
+}
+
 static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
     BlocksRingBuffer& bufferManager) {
   // locked_profiler_start uses sample count is 1000 for Java thread.
@@ -2345,7 +2379,6 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
 
     buffer->AddThreadIdEntry(0);
     buffer->AddEntry(ProfileBufferEntry::Time(sampleTime));
-    bool parentFrameWasIdleFrame = false;
     int frameId = 0;
     while (true) {
       jni::String::LocalRef frameName =
@@ -2355,22 +2388,9 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
       }
       nsCString frameNameString = frameName->ToCString();
 
-      // Compute a category pair for the frame:
-      //  - IDLE for the wait function android.os.MessageQueue.nativePollOnce()
-      //  - OTHER for any function that's directly called by that wait function
-      //  - no category on everything else
-      Maybe<JS::ProfilingCategoryPair> categoryPair;
-      if (frameNameString.EqualsLiteral(
-              "android.os.MessageQueue.nativePollOnce()")) {
-        categoryPair = Some(JS::ProfilingCategoryPair::IDLE);
-        parentFrameWasIdleFrame = true;
-      } else if (parentFrameWasIdleFrame) {
-        categoryPair = Some(JS::ProfilingCategoryPair::OTHER);
-        parentFrameWasIdleFrame = false;
-      }
-
+      auto categoryPair = InferJavaCategory(frameNameString);
       buffer->CollectCodeLocation("", frameNameString.get(), 0, 0, Nothing(),
-                                  Nothing(), categoryPair);
+                                  Nothing(), Some(categoryPair));
     }
     sampleId++;
   }
