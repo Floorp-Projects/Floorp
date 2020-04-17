@@ -125,7 +125,7 @@ bool FunctionEmitter::emitAgain() {
   // If there are parameter expressions, the var name could be a
   // parameter.
   if (!lhsLoc && bce_->sc->isFunctionBox() &&
-      bce_->sc->asFunctionBox()->hasExtraBodyVarScope()) {
+      bce_->sc->asFunctionBox()->functionHasExtraBodyVarScope()) {
     lhsLoc = bce_->locationOfNameBoundInScope(
         name_, bce_->varEmitterScope->enclosingInFrame());
   }
@@ -502,7 +502,7 @@ bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
 bool FunctionScriptEmitter::emitExtraBodyVarScope() {
   //                [stack]
 
-  if (!funbox_->hasExtraBodyVarScope()) {
+  if (!funbox_->functionHasExtraBodyVarScope()) {
     return true;
   }
 
