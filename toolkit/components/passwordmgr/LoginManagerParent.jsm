@@ -826,6 +826,25 @@ class LoginManagerParent extends JSWindowActorParent {
     );
   }
 
+  /**
+   * Performs validation of inputs against already-saved logins in order to determine whether and
+   * how these inputs can be stored. Depending on validation, will either no-op or show a 'save'
+   * or 'update' dialog to the user.
+   *
+   * This is called after any of the following:
+   *   - The user edits a password
+   *   - A generated password is filled
+   *   - The user edits a username (when a matching password field has already been filled)
+   *
+   * @param {Element} browser
+   * @param {string} options.origin
+   * @param {string} options.formActionOrigin
+   * @param {string?} options.autoFilledLoginGuid
+   * @param {Object} options.newPasswordField
+   * @param {Object?} options.usernameField
+   * @param {Element?} options.oldPasswordField
+   * @param {boolean} [options.triggeredByFillingGenerated = false]
+   */
   async _onPasswordEditedOrGenerated(
     browser,
     {

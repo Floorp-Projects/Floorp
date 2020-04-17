@@ -39,6 +39,30 @@ function addSingleLogin() {
   });
 }
 
+/**
+ *  For any test including the character "!", generate a version of that test for every known munge
+ *  character.
+ **/
+ function generateTestCases(test) {
+  const MUNGE_CHARS = ["*", ".", "•"];
+
+  let nothingToReplace = Object.values(test).every(value => typeof value !== "string" || !value.includes("!"));
+  if (nothingToReplace) {
+    return test;
+  };
+
+  return MUNGE_CHARS.map(char => {
+    let newTest = {};
+    for (let [propName, val] of Object.entries(test)) {
+      if (typeof val === "string") {
+        newTest[propName] = val.replace(/!/g, char);
+      } else {
+        newTest[propName] = val;
+      }
+  };
+  return newTest;
+})};
+
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginFrame").addEventListener("load", (evt) => {
@@ -83,61 +107,43 @@ add_task(async function setup() {
 const DEFAULT_ORIGIN = "https://example.com";
 const ORG_ORIGIN = "https://example.org";
 
-const TESTCASES = [
-  {
-    testName: "test_middleAsteriskMaskedUsername",
-    username: "so***ne",
-    expected: null,
-  },
-  {
-    testName: "test_middleBulletMaskedUsername",
-    username: "so•••ne",
-    expected: null,
-  },
-  {
-    testName: "test_startAsteriskMaskedUsername",
-    username: "***eone",
-    expected: null,
-  },
-  {
-    testName: "test_startBulletMaskedUsername",
-    username: "•••eone",
-    expected: null,
-  },
-  {
-    testName: "test_endAsteriskMaskedUsername",
-    username: "some***",
-    expected: null,
-  },
-  {
-    testName: "test_endBulletMaskedUsername",
-    username: "some•••",
-    expected: null,
-  },
-  {
-    testName: "test_okAsteriskUsername",
-    username: "obelixand*",
-    expected: "obelixand*",
-  },
-  {
-    testName: "test_okBulletUsername",
-    username: "•time",
-    expected: "•time",
-  },
-  {
-    testName: "test_okAsteriskUsername2",
-    username: "**username**",
-    expected: "**username**",
-  },
-  {
-    testName: "test_okBulletUsername2",
-    username: "••user••",
-    expected: "••user••",
-  },
-];
-
 add_task(async function test_new_logins() {
-  for (let tc of TESTCASES) {
+  const TEST_CASES = [
+  // ! is replaced with characters commonly used for munging
+  {
+    testName: "test_middle!MaskedUsername",
+    username: "so!!!ne",
+    expected: null,
+  },
+  {
+    testName: "test_start!MaskedUsername",
+    username: "!!!eone",
+    expected: null,
+  },
+  {
+    testName: "test_end!MaskedUsername",
+    username: "some!!!",
+    expected: null,
+  },
+  {
+    testName: "test_ok!Username",
+    username: "obelixand!",
+    expected: "obelixand!",
+  },
+  {
+    testName: "test_ok!Username2",
+    username: "!!username!!",
+    expected: "!!username!!",
+  },
+  {
+    // We should only consider a username munged if it repeats of the same character
+    testName: "test_combinedMungeCharacters",
+    username: "*.•*.•*.•*.•*.•*.•",
+    expected: "*.•*.•*.•*.•*.•*.•",
+  },
+].flatMap(generateTestCases);
+
+  for (let tc of TEST_CASES) {
     info("Starting testcase: " + JSON.stringify(tc));
     await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
       <input  type="text"       name="uname" value="${tc.username}">
@@ -163,6 +169,70 @@ add_task(async function test_new_logins() {
     } else {
       is(submittedResult.usernameField.value, tc.expected, "Check usernameField");
     }
+  }
+});
+
+add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
+  const TEST_CASES = [
+  {
+      testName: "test_passFullyMungedBy!",
+      password: "!!!!!!!!!",
+      shouldShowPrompt: false,
+    },
+    {
+      testName: "test_passStartsMungedBy!",
+      password: "!!!!!!!butThenAPassword",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_passEndsMungedBy!",
+      password: "aRealPasswordAndThen!!!!!!!",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_passMostlyMungedBy!",
+      password: "!!!a!!!!",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_combinedMungedCharacters",
+      password: "*.•*.•*.•*.•",
+      shouldShowPrompt: true,
+    },
+  ].flatMap(generateTestCases);
+
+  for (let tc of TEST_CASES) {
+    info("Starting testcase: " + tc.testName)
+    await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
+      <input  type="text"       name="uname" value="username">
+      <input  type="password"   name="pword" value="${tc.password}">
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>`);
+
+    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [tc], function(testcase) {
+      let doc = this.content.document;
+      Assert.equal(doc.querySelector("[name='pword']").value, testcase.password, "Checking for filled password");
+    });
+
+    let formSubmitListener = SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+      return new Promise(resolve => {
+        this.content.windowRoot.addEventListener(
+            "PasswordManager:onFormSubmit",
+            event => {
+              info(`PasswordManager:onFormSubmit called. Event: ${JSON.stringify(event)}`);
+              resolve(event.detail.messageSent);
+            }
+          );
+      });
+    });
+
+    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+      this.content.document.getElementById("submitBtn").click();
+    });
+
+    let dialogRequested = await formSubmitListener;
+
+    is(dialogRequested, tc.shouldShowPrompt, "Verify 'show save/update prompt' message sent to parent process");
   }
 });
 
