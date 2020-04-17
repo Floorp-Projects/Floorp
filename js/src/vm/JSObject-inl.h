@@ -379,6 +379,12 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
 
 inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
                                       const JSClass* clasp) {
+  if (newKind == NurseryAllocatedProxy) {
+    MOZ_ASSERT(clasp->isProxy());
+    MOZ_ASSERT(clasp->hasFinalize());
+    MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
+    return gc::DefaultHeap;
+  }
   if (newKind != GenericObject) {
     return gc::TenuredHeap;
   }
@@ -408,38 +414,32 @@ JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                         NewObjectKind newKind,
                                         uint32_t initialShapeFlags = 0);
 
-template <NewObjectKind NewKind>
 inline JSObject* NewObjectWithGivenTaggedProto(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto) {
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
+    NewObjectKind newKind = GenericObject, uint32_t initialShapeFlags = 0) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind, 0);
+  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind,
+                                       initialShapeFlags);
 }
-
-namespace detail {
-
-template <typename T, NewObjectKind NewKind>
-inline T* NewObjectWithGivenTaggedProtoForKind(JSContext* cx,
-                                               Handle<TaggedProto> proto) {
-  JSObject* obj =
-      NewObjectWithGivenTaggedProto<NewKind>(cx, &T::class_, proto);
-  return obj ? &obj->as<T>() : nullptr;
-}
-
-}  // namespace detail
 
 template <typename T>
 inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
-                                        Handle<TaggedProto> proto) {
-
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, GenericObject>(cx,
-                                                                        proto);
+                                        Handle<TaggedProto> proto,
+                                        NewObjectKind newKind = GenericObject,
+                                        uint32_t initialShapeFlags = 0) {
+  JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, newKind,
+                                                initialShapeFlags);
+  return obj ? &obj->as<T>() : nullptr;
 }
 
 template <typename T>
-inline T* NewSingletonObjectWithGivenTaggedProtoAndKind(
-    JSContext* cx, Handle<TaggedProto> proto, gc::AllocKind allocKind) {
-  JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto,
-                                                allocKind, SingletonObject, 0);
+inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
+                                        Handle<TaggedProto> proto,
+                                        gc::AllocKind allocKind,
+                                        NewObjectKind newKind = GenericObject,
+                                        uint32_t initialShapeFlags = 0) {
+  JSObject* obj = NewObjectWithGivenTaggedProto(
+      cx, &T::class_, proto, allocKind, newKind, initialShapeFlags);
   return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -452,40 +452,40 @@ inline JSObject* NewObjectWithGivenProto(
 
 inline JSObject* NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp,
                                          HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<GenericObject>(cx, clasp,
-                                                      AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       GenericObject);
 }
 
 inline JSObject* NewTenuredObjectWithGivenProto(JSContext* cx,
                                                 const JSClass* clasp,
                                                 HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<TenuredObject>(cx, clasp,
-                                                      AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       TenuredObject);
 }
 
 inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
                                                   const JSClass* clasp,
                                                   HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<SingletonObject>(cx, clasp,
-                                                        AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       SingletonObject);
 }
 
 template <typename T>
 inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, GenericObject>(
-      cx, AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
+                                          GenericObject);
 }
 
 template <typename T>
 inline T* NewSingletonObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, SingletonObject>(
-      cx, AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
+                                          SingletonObject);
 }
 
 template <typename T>
 inline T* NewTenuredObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, TenuredObject>(
-      cx, AsTaggedProto(proto));
+  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
+                                          TenuredObject);
 }
 
 template <typename T>

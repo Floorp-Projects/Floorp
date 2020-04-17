@@ -1150,6 +1150,89 @@ JS_FRIEND_API bool JS_CopyPropertiesFrom(JSContext* cx, HandleObject target,
   return true;
 }
 
+static bool CopyProxyObject(JSContext* cx, Handle<ProxyObject*> from,
+                            Handle<ProxyObject*> to) {
+  MOZ_ASSERT(from->getClass() == to->getClass());
+
+  if (from->is<WrapperObject>() &&
+      (Wrapper::wrapperHandler(from)->flags() & Wrapper::CROSS_COMPARTMENT)) {
+    to->setCrossCompartmentPrivate(GetProxyPrivate(from));
+  } else {
+    RootedValue v(cx, GetProxyPrivate(from));
+    if (!cx->compartment()->wrap(cx, &v)) {
+      return false;
+    }
+    to->setSameCompartmentPrivate(v);
+  }
+
+  MOZ_ASSERT(from->numReservedSlots() == to->numReservedSlots());
+
+  RootedValue v(cx);
+  for (size_t n = 0; n < from->numReservedSlots(); n++) {
+    v = GetProxyReservedSlot(from, n);
+    if (!cx->compartment()->wrap(cx, &v)) {
+      return false;
+    }
+    SetProxyReservedSlot(to, n, v);
+  }
+
+  return true;
+}
+
+JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
+                          Handle<js::TaggedProto> proto) {
+  if (!obj->isNative() && !obj->is<ProxyObject>()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_CANT_CLONE_OBJECT);
+    return nullptr;
+  }
+
+  RootedObject clone(cx);
+  if (obj->isNative()) {
+    // CloneObject is used to create the target object for JSObject::swap() and
+    // swap() requires its arguments are tenured, so ensure tenure allocation.
+    clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto,
+                                          NewObjectKind::TenuredObject);
+    if (!clone) {
+      return nullptr;
+    }
+
+    if (clone->is<JSFunction>() &&
+        (obj->compartment() != clone->compartment())) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_CANT_CLONE_OBJECT);
+      return nullptr;
+    }
+
+    if (obj->as<NativeObject>().hasPrivate()) {
+      clone->as<NativeObject>().setPrivate(
+          obj->as<NativeObject>().getPrivate());
+    }
+  } else {
+    auto* handler = GetProxyHandler(obj);
+
+    // Same as above, require tenure allocation of the clone. This means for
+    // proxy objects we need to reject nursery allocatable proxies.
+    if (handler->canNurseryAllocate()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_CANT_CLONE_OBJECT);
+      return nullptr;
+    }
+
+    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto,
+                             obj->getClass());
+    if (!clone) {
+      return nullptr;
+    }
+
+    if (!CopyProxyObject(cx, obj.as<ProxyObject>(), clone.as<ProxyObject>())) {
+      return nullptr;
+    }
+  }
+
+  return clone;
+}
+
 static bool GetScriptArrayObjectElements(
     HandleArrayObject arr, MutableHandle<GCVector<Value>> values) {
   MOZ_ASSERT(!arr->isSingleton());
