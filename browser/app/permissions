@@ -22,5 +22,4 @@ origin	install	1	https://addons.mozilla.org
 origin	remote-troubleshooting	1	https://support.mozilla.org
 
 # addon install
-origin	install	1	https://private-network.firefox.com
 origin	install	1	https://fpn.firefox.com
