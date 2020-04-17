@@ -128,13 +128,16 @@ add_task(async function test_restrictions() {
 
 async function get_results(test) {
   let controller = UrlbarTestUtils.newMockController();
-  let queryContext = createContext(test.searchString, {
+  let options = {
     allowAutofill: false,
     isPrivate: false,
     maxResults: 10,
     sources: test.sources,
-    engineName: test.engineName,
-  });
+  };
+  if (test.engineName) {
+    options.engineName = test.engineName;
+  }
+  let queryContext = createContext(test.searchString, options);
   await controller.startQuery(queryContext);
   return queryContext.results;
 }

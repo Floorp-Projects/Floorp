@@ -935,6 +935,11 @@ class UrlbarInput {
           "usercontextid"
         ),
         currentPage: this.window.gBrowser.currentURI.spec,
+        allowSearchSuggestions:
+          !event ||
+          !UrlbarUtils.isPasteEvent(event) ||
+          !event.data ||
+          event.data.length <= UrlbarPrefs.get("maxCharsForSearchSuggestions"),
       })
     );
   }

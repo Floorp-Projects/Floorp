@@ -810,6 +810,11 @@ class UrlbarQueryContext {
    *   If sources is restricting to just SEARCH, this property can be used to
    *   pick a specific search engine, by setting it to the name under which the
    *   engine is registered with the search service.
+   * @param {boolean} [options.allowSearchSuggestions]
+   *   Whether to allow search suggestions.  This is a veto, meaning that when
+   *   false, suggestions will not be fetched, but when true, some other
+   *   condition may still prohibit suggestions, like private browsing mode.
+   *   Defaults to true.
    */
   constructor(options = {}) {
     this._checkRequiredOptions(options, [
@@ -826,19 +831,25 @@ class UrlbarQueryContext {
     }
 
     // Manage optional properties of options.
-    for (let [prop, checkFn] of [
+    for (let [prop, checkFn, defaultValue] of [
       ["providers", v => Array.isArray(v) && v.length],
       ["sources", v => Array.isArray(v) && v.length],
       ["engineName", v => typeof v == "string" && !!v.length],
       ["currentPage", v => typeof v == "string" && !!v.length],
+      ["allowSearchSuggestions", v => true, true],
     ]) {
-      if (options[prop]) {
+      if (prop in options) {
         if (!checkFn(options[prop])) {
           throw new Error(`Invalid value for option "${prop}"`);
         }
         this[prop] = options[prop];
+      } else if (defaultValue !== undefined) {
+        this[prop] = defaultValue;
       }
     }
+
+    this.allowSearchSuggestions =
+      "allowSearchSuggestions" in this ? !!this.allowSearchSuggestions : true;
 
     this.lastResultCount = 0;
     this.userContextId =

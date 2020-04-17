@@ -281,9 +281,9 @@ pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             true);
 
-// Limit the number of characters sent to the current search engine to fetch
-// suggestions.
-pref("browser.urlbar.maxCharsForSearchSuggestions", 20);
+// As a user privacy measure, don't fetch search suggestions if a pasted string
+// is longer than this.
+pref("browser.urlbar.maxCharsForSearchSuggestions", 100);
 
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
