@@ -173,6 +173,28 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     return !!this._active;
   },
 
+  get markup() {
+    return `
+    <hbox class="downloadMainArea" flex="1" align="center">
+      <stack>
+        <image class="downloadTypeIcon" validate="always"/>
+        <image class="downloadBlockedBadge" />
+      </stack>
+      <vbox class="downloadContainer" flex="1" pack="center">
+        <description class="downloadTarget" crop="center"/>
+        <description class="downloadDetails downloadDetailsNormal"
+                     crop="end"/>
+        <description class="downloadDetails downloadDetailsHover"
+                     crop="end"/>
+        <description class="downloadDetails downloadDetailsButtonHover"
+                     crop="end"/>
+      </vbox>
+    </hbox>
+    <toolbarseparator />
+    <button class="downloadButton"/>
+    `;
+  },
+
   connect() {
     let document = this.element.ownerDocument;
     let downloadListItemFragment = gDownloadListItemFragments.get(document);
@@ -182,25 +204,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     // actions based on the check if originaltarget was not a button.
     if (!downloadListItemFragment) {
       let MozXULElement = document.defaultView.MozXULElement;
-      downloadListItemFragment = MozXULElement.parseXULToFragment(`
-        <hbox class="downloadMainArea" flex="1" align="center">
-          <stack>
-            <image class="downloadTypeIcon" validate="always"/>
-            <image class="downloadBlockedBadge" />
-          </stack>
-          <vbox class="downloadContainer" flex="1" pack="center">
-            <description class="downloadTarget" crop="center"/>
-            <description class="downloadDetails downloadDetailsNormal"
-                         crop="end"/>
-            <description class="downloadDetails downloadDetailsHover"
-                         crop="end"/>
-            <description class="downloadDetails downloadDetailsButtonHover"
-                         crop="end"/>
-          </vbox>
-        </hbox>
-        <toolbarseparator />
-        <button class="downloadButton"/>
-      `);
+      downloadListItemFragment = MozXULElement.parseXULToFragment(this.markup);
       gDownloadListItemFragments.set(document, downloadListItemFragment);
     }
     this.element.setAttribute("active", true);
