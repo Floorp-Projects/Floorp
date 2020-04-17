@@ -38,7 +38,6 @@ struct RemoteObject
     bool isCallable;
     bool isConstructor;
     bool isDOMObject;
-    nsCString objectTag;
 };
 
 union ObjectVariant
