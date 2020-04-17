@@ -5,12 +5,32 @@ import json
 import os
 import statistics
 
-from mozperftest.base import MachEnvironment
+from mozperftest.layers import Layer
 from mozperftest.metrics.common import CommonMetricsSingleton
 from mozperftest.metrics.utils import write_json, filter_metrics
 
 
-class Perfherder(MachEnvironment):
+class Perfherder(Layer):
+    name = "perfherder"
+
+    arguments = {
+        "--perfherder": {
+            "action": "store_true",
+            "default": False,
+            "help": "Output data in the perfherder format.",
+        },
+        "--prefix": {
+            "type": str,
+            "default": "",
+            "help": "Prefix the output files with this string.",
+        },
+        "--metrics": {
+            "nargs": "*",
+            "default": [],
+            "help": "The metrics that should be retrieved from the data.",
+        },
+    }
+
     def __call__(self, metadata):
         """Processes the given results into a perfherder-formatted data blob.
 
@@ -26,7 +46,8 @@ class Perfherder(MachEnvironment):
             into a perfherder-data blob.
         :param flavor str: The flavor that is being processed.
         """
-        if not metadata.get_arg("perfherder"):
+
+        if not self.get_arg("perfherder"):
             return
 
         # Get the common requirements for metrics (i.e. output path,
@@ -34,8 +55,8 @@ class Perfherder(MachEnvironment):
         cm = CommonMetricsSingleton(
             metadata.get_result(),
             self.warning,
-            output=metadata.get_arg("output"),
-            prefix=metadata.get_arg("prefix"),
+            output=self.get_arg("output"),
+            prefix=self.get_arg("prefix"),
         )
         res = cm.get_standardized_data(
             group_name="firefox", transformer="SingleJsonRetriever"
@@ -43,7 +64,7 @@ class Perfherder(MachEnvironment):
         _, results = res["file-output"], res["data"]
 
         # Filter out unwanted metrics
-        results = filter_metrics(results, metadata.get_arg("metrics"))
+        results = filter_metrics(results, self.get_arg("metrics"))
         if not results:
             self.warning("No results left after filtering")
             return metadata

@@ -3,30 +3,37 @@ import os
 import mozunit
 import json
 
-from mozperftest.metrics import pick_metrics
-from mozperftest.tests.support import get_running_env
+from mozperftest.tests.support import get_running_env, temp_file
+from mozperftest.environment import METRICS
 
 HERE = os.path.dirname(__file__)
 
 
 def test_metrics():
-    mach_cmd, metadata = get_running_env()
+    mach_cmd, metadata, env = get_running_env()
     runs = []
 
     def _run_process(*args, **kw):
         runs.append((args, kw))
 
     mach_cmd.run_process = _run_process
-    metadata["mach_args"] = {"tests": [os.path.join(HERE, "example.js")]}
-    metadata["results"] = os.path.join(HERE, "browsertime-results")
+    metrics = env.layers[METRICS]
+    env.set_arg("tests", [os.path.join(HERE, "example.js")])
 
-    with pick_metrics("script", mach_cmd) as env:
-        env(metadata)
+    # XXX why do I have to set defaults?
+    env.set_arg("prefix", "")
+    env.set_arg("perfherder", True)
 
-    with open(metadata["output"]) as f:
-        output = json.loads(f.read())
+    metadata.set_result(os.path.join(HERE, "browsertime-results"))
 
-    os.remove(metadata["output"])
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m:
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
     # XXX more checks
     assert output["suites"][0]["value"] > 0
 

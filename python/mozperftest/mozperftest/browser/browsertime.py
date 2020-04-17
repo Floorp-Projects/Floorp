@@ -64,8 +64,10 @@ host_fetches = {
 
 
 class BrowsertimeRunner(NodeRunner):
-    def __init__(self, mach_cmd):
-        super(BrowsertimeRunner, self).__init__(mach_cmd)
+    name = "browsertime (%s)" % NodeRunner.name
+
+    def __init__(self, env, mach_cmd):
+        super(BrowsertimeRunner, self).__init__(env, mach_cmd)
         self.topsrcdir = mach_cmd.topsrcdir
         self._mach_context = mach_cmd._mach_context
         self.virtualenv_manager = mach_cmd.virtualenv_manager
@@ -418,8 +420,8 @@ class BrowsertimeRunner(NodeRunner):
         # keep the object around
         # see https://bugzilla.mozilla.org/show_bug.cgi?id=1625118
         profile = self.get_profile(metadata)
-        test_script = metadata.get_arg("tests")[0]
-        output = metadata.get_arg("output")
+        test_script = self.get_arg("tests")[0]
+        output = self.get_arg("output")
         if output is not None:
             p = pathlib.Path(output)
             p = p / "browsertime-results"
@@ -436,13 +438,15 @@ class BrowsertimeRunner(NodeRunner):
             result_dir,
             "--firefox.profileTemplate",
             profile.profile,
-            "-vvv",
             "--iterations",
             "1",
             test_script,
         ]
 
-        extra_options = metadata.get_arg("extra_options")
+        if self.get_arg("verbose"):
+            args += ["-vvv"]
+
+        extra_options = self.get_arg("extra_options")
         if extra_options:
             for option in extra_options.split(","):
                 option = option.strip()
