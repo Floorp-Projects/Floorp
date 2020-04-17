@@ -73,8 +73,7 @@ StyleSheetList* DocumentOrShadowRoot::StyleSheets() {
 }
 
 void DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
-  aSheet.SetAssociatedDocumentOrShadowRoot(
-      this, StyleSheet::OwnedByDocumentOrShadowRoot);
+  aSheet.SetAssociatedDocumentOrShadowRoot(this);
   mStyleSheets.InsertElementAt(aIndex, &aSheet);
 }
 

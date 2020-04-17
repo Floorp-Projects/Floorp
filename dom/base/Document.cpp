@@ -6692,8 +6692,7 @@ nsresult Document::LoadAdditionalStyleSheet(additionalSheetType aType,
 
   RefPtr<StyleSheet> sheet = result.unwrap();
 
-  sheet->SetAssociatedDocumentOrShadowRoot(
-      this, StyleSheet::OwnedByDocumentOrShadowRoot);
+  sheet->SetAssociatedDocumentOrShadowRoot(this);
   MOZ_ASSERT(sheet->IsApplicable());
 
   return AddAdditionalStyleSheet(aType, sheet);
