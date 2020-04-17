@@ -244,7 +244,7 @@ struct JSWindowActorEventDecl
 
 struct JSWindowActorInfo
 {
-  nsString name;
+  nsCString name;
   bool allFrames;
   nsCString? url;
 
@@ -618,7 +618,7 @@ child:
     /**
      * Unregister a previously registered JSWindowActor in the child process.
      */
-    async UnregisterJSWindowActor(nsString name);
+    async UnregisterJSWindowActor(nsCString name);
 
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,

@@ -205,7 +205,7 @@ nsresult nsWindowRoot::GetControllerForCommand(const char* aCommand,
           // At this point, it is known that a child process is focused, so ask
           // its Controllers actor if the command is supported.
           nsCOMPtr<nsIController> controller =
-              do_QueryActor(u"Controllers", canonicalFocusedBC);
+              do_QueryActor("Controllers", canonicalFocusedBC);
           if (controller) {
             bool supported;
             controller->SupportsCommand(aCommand, &supported);
