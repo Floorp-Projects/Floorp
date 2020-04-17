@@ -2515,6 +2515,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->GetWindowGlobalChild()
         ->WindowContext()
         ->SetCookieJarSettings(Some(cookieJarSettings));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetHasStoragePermission(aDocument->HasStoragePermission());
   }
 
   mHasStorageAccess = false;
@@ -2548,10 +2552,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           ContentBlocking::ShouldAllowAccessFor(newInnerWindow, uri, nullptr);
     }
   }
-
-  newInnerWindow->GetWindowGlobalChild()
-      ->WindowContext()
-      ->SetHasStoragePermission(aDocument->HasStoragePermission());
 
   return NS_OK;
 }
