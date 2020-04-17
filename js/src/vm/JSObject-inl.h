@@ -437,13 +437,10 @@ inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
 }
 
 template <typename T>
-inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
-                                        Handle<TaggedProto> proto,
-                                        gc::AllocKind allocKind,
-                                        NewObjectKind newKind = GenericObject,
-                                        uint32_t initialShapeFlags = 0) {
-  JSObject* obj = NewObjectWithGivenTaggedProto(
-      cx, &T::class_, proto, allocKind, newKind, initialShapeFlags);
+inline T* NewSingletonObjectWithGivenTaggedProtoAndKind(
+    JSContext* cx, Handle<TaggedProto> proto, gc::AllocKind allocKind) {
+  JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto,
+                                                allocKind, SingletonObject, 0);
   return obj ? &obj->as<T>() : nullptr;
 }
 
