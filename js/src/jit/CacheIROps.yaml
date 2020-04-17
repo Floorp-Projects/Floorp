@@ -1004,24 +1004,28 @@
 
 - name: Int32MulResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32DivResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32ModResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32PowResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
@@ -1064,36 +1068,42 @@
 
 - name: Int32BitOrResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitXorResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitAndResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32LeftShiftResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32RightShiftResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32URightShiftResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
@@ -1101,6 +1111,7 @@
 
 - name: Int32NotResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: Int32Id
 
