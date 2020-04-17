@@ -1606,7 +1606,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
 
-  tmp->TraverseHostObjectURIs(cb);
+  tmp->TraverseObjectsInGlobal(cb);
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mBrowserDOMWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1649,7 +1649,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
     tmp->mBrowsingContext = nullptr;
   }
 
-  tmp->UnlinkHostObjectURIs();
+  tmp->UnlinkObjectsInGlobal();
 
   if (tmp->IsChromeWindow()) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mBrowserDOMWindow)

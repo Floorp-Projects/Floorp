@@ -4930,6 +4930,8 @@ void WorkerPrivate::MemoryPressureInternal() {
     if (performance) {
       performance->MemoryPressure();
     }
+
+    data->mScope->RemoveReportRecords();
   }
 
   if (data->mDebuggerScope) {

@@ -11,10 +11,10 @@ namespace mozilla {
 namespace dom {
 
 FeaturePolicyViolationReportBody::FeaturePolicyViolationReportBody(
-    nsPIDOMWindowInner* aWindow, const nsAString& aFeatureId,
+    nsIGlobalObject* aGlobal, const nsAString& aFeatureId,
     const nsAString& aSourceFile, const Nullable<int32_t>& aLineNumber,
     const Nullable<int32_t>& aColumnNumber, const nsAString& aDisposition)
-    : ReportBody(aWindow),
+    : ReportBody(aGlobal),
       mFeatureId(aFeatureId),
       mSourceFile(aSourceFile),
       mLineNumber(aLineNumber),
