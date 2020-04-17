@@ -66,13 +66,8 @@ def generate_cacheirops_header(c_out, yaml_path):
         _(CompareObjectUndefinedNullResult, Id, Byte)\
         ...
 
-    It also contains a list of "shared" ops (implemented in the CacheIRCompiler
-    base class):
-
-        #define CACHE_IR_SHARED_OPS(_)\
-        _(GuardToObject)\
-        _(GuardIsObjectOrNull)\
-        ...
+    It also contains lists of shared and unshared ops. See the 'shared'
+    attribute in the YAML file.
     """
 
     data = load_yaml(yaml_path)
@@ -123,6 +118,7 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     ops_items = []
     ops_shared = []
+    ops_unshared = []
     for op in data:
         name = op['name']
 
@@ -140,6 +136,8 @@ def generate_cacheirops_header(c_out, yaml_path):
 
         if shared:
             ops_shared.append('_({})'.format(name))
+        else:
+            ops_unshared.append('_({})'.format(name))
 
     contents = '#define CACHE_IR_OPS(_)\\\n'
     contents += '\\\n'.join(ops_items)
@@ -147,6 +145,10 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     contents += '#define CACHE_IR_SHARED_OPS(_)\\\n'
     contents += '\\\n'.join(ops_shared)
+    contents += '\n\n'
+
+    contents += '#define CACHE_IR_UNSHARED_OPS(_)\\\n'
+    contents += '\\\n'.join(ops_unshared)
     contents += '\n\n'
 
     generate_header(c_out, 'jit_CacheIROpsGenerated_h', contents)

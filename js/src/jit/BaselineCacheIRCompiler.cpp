@@ -52,13 +52,6 @@ BaselineCacheIRCompiler::BaselineCacheIRCompiler(
       makesGCCalls_(false),
       kind_(stubKind) {}
 
-#define DEFINE_SHARED_OP(op)                 \
-  bool BaselineCacheIRCompiler::emit##op() { \
-    return CacheIRCompiler::emit##op();      \
-  }
-CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
-#undef DEFINE_SHARED_OP
-
 // AutoStubFrame methods
 AutoStubFrame::AutoStubFrame(BaselineCacheIRCompiler& compiler)
     : compiler(compiler)
