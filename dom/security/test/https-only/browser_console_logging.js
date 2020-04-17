@@ -19,7 +19,7 @@ let tests = [
     ],
   },
   {
-    description: "Top-Level upgrade failure should get logged",
+    description: "iFrame upgrade failure should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.error,
     expectIncludes: [
       "Upgrading insecure request",
@@ -57,9 +57,11 @@ const testPathUpgradeable = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
 );
+// DNS errors are not logged as HTTPS-Only Mode upgrade failures, so we have to
+// upgrade to a domain that exists but fails.
 const testPathNotUpgradeable = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://mochi.test:8888"
+  "http://self-signed.example.com"
 );
 const kTestURISuccess = testPathUpgradeable + "file_console_logging.html";
 const kTestURIFail = testPathNotUpgradeable + "file_console_logging.html";
@@ -82,11 +84,7 @@ add_task(async function() {
   xhr.open("GET", kTestURIExempt, true);
   xhr.channel.loadInfo.httpsOnlyStatus |= Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
   xhr.send();
-  // Wait for logging of 1 and 2
-  await BrowserTestUtils.waitForCondition(() => tests.length === 1);
-  // 3. Failing upgrade to https://
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, kTestURIFail);
-  // Wait for logging of 3
+
   await BrowserTestUtils.waitForCondition(() => tests.length === 0);
 
   // Clean up
