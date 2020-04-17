@@ -46,6 +46,14 @@ DocumentEventsListener.prototype = {
       return;
     }
 
+    const packet = {
+      from: this.console.actorID,
+      type: "documentEvent",
+      name: "dom-loading",
+      time: window.performance.timing.navigationStart,
+    };
+    this.console.conn.send(packet);
+
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
       window.addEventListener("DOMContentLoaded", this.onContentLoaded, {
