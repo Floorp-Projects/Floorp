@@ -1,0 +1,21 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!ENTITY  updateWizard.title              "Software Update">
+
+<!ENTITY  details.link                    "Details">
+
+<!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
+                                           and downloading the latest version:">
+                                           
+<!ENTITY  finishedPage.title              "Update Ready to Install">
+
+<!ENTITY  finishedBackgroundPage.text     "A security and stability update for &brandShortName; has been
+                                           downloaded and is ready to be installed.">
+<!ENTITY  finishedBackground.name         "Update:">
+<!-- LOCALIZATION NOTE (finishedBackground.more): This string describes the button labels defined by restartNowButton and restartLaterButton in updates.properties. -->
+<!ENTITY  finishedBackground.moreElevated "This update requires administrator privileges. The update will be
+                                           installed the next time &brandShortName; starts. You can restart
+                                           &brandShortName; now, continue working and restart later, or decline this
+                                           update.">
+
