@@ -67,7 +67,7 @@
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
-#include "vm/PlainObject-inl.h"  // js::CopyInitializerObject
+#include "vm/PlainObject-inl.h"  // js::CopyInitializerObject, js::CreateThis
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 

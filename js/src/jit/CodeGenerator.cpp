@@ -7394,9 +7394,9 @@ void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
     pushArg(ToRegister(callee));
   }
 
-  using Fn = JSObject* (*)(JSContext * cx, HandleFunction callee,
-                           HandleObject newTarget, HandleObject proto,
-                           NewObjectKind newKind);
+  using Fn = PlainObject* (*)(JSContext * cx, HandleFunction callee,
+                              HandleObject newTarget, HandleObject proto,
+                              NewObjectKind newKind);
   callVM<Fn, CreateThisForFunctionWithProto>(lir);
 }
 
