@@ -19,11 +19,19 @@ enum class Flip : uint8_t { Unflipped, Horizontal };
  * A struct that describes an image's orientation as a rotation optionally
  * followed by a reflection. This may be used to be indicate an image's inherent
  * orientation or a desired orientation for the image.
+ *
+ * When flipFirst = true, this indicates that the reflection is applied before
+ * the rotation. (This is used by OrientedImage to represent the inverse of an
+ * underlying image's Orientation.)
  */
 struct Orientation {
   explicit Orientation(Angle aRotation = Angle::D0,
-                       Flip mFlip = Flip::Unflipped)
-      : rotation(aRotation), flip(mFlip) {}
+                       Flip aFlip = Flip::Unflipped, bool aFlipFirst = false)
+      : rotation(aRotation), flip(aFlip), flipFirst(aFlipFirst) {}
+
+  Orientation Reversed() const {
+    return Orientation(InvertAngle(rotation), flip, !flipFirst);
+  }
 
   bool IsIdentity() const {
     return (rotation == Angle::D0) && (flip == Flip::Unflipped);
@@ -34,7 +42,8 @@ struct Orientation {
   }
 
   bool operator==(const Orientation& aOther) const {
-    return (rotation == aOther.rotation) && (flip == aOther.flip);
+    return rotation == aOther.rotation && flip == aOther.flip &&
+           flipFirst == aOther.flipFirst;
   }
 
   bool operator!=(const Orientation& aOther) const {
@@ -54,6 +63,7 @@ struct Orientation {
 
   Angle rotation;
   Flip flip;
+  bool flipFirst;
 };
 
 }  // namespace image
