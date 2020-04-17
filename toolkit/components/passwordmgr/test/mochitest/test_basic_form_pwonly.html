@@ -68,12 +68,26 @@ runInParent(() => {
     <button type='reset'> Reset </button>
 </form>
 
-<!-- 4 password fields, should be ignored. -->
+<!-- simple form: no username field, 5 password fields -->
 <form id='form4' action='http://mochi.test:1111/formtest.js'> 4
     <input type='password' name='pname1' value=''>
     <input type='password' name='pname2' value=''>
     <input type='password' name='pname3' value=''>
     <input type='password' name='pname4' value=''>
+    <input type='password' name='pname5' value=''>
+
+    <button type='submit'>Submit</button>
+    <button type='reset'> Reset </button>
+</form>
+
+<!-- 6 password fields, should be ignored. -->
+<form id='form5' action='http://mochi.test:1111/formtest.js'> 4
+    <input type='password' name='pname1' value=''>
+    <input type='password' name='pname2' value=''>
+    <input type='password' name='pname3' value=''>
+    <input type='password' name='pname4' value=''>
+    <input type='password' name='pname5' value=''>
+    <input type='password' name='pname6' value=''>
 
     <button type='submit'>Submit</button>
     <button type='reset'> Reset </button>
@@ -82,7 +96,7 @@ runInParent(() => {
 
 
 <!-- 1 username field -->
-<form id='form5' action='http://mochi.test:1111/formtest.js'> 5
+<form id='form6' action='http://mochi.test:1111/formtest.js'> 5
     <input type='text'     name='uname' value=''>
     <input type='password' name='pname' value=''>
 
@@ -92,7 +106,7 @@ runInParent(() => {
 
 
 <!-- 1 username field, with a value set -->
-<form id='form6' action='http://mochi.test:1111/formtest.js'> 6
+<form id='form7' action='http://mochi.test:1111/formtest.js'> 6
     <input type='text'     name='uname' value='someuser'>
     <input type='password' name='pname' value=''>
 
@@ -110,7 +124,7 @@ password-only, the other is username+password)
 
 
 <!-- 1 username field, with value set. Fill in the matching U+P login -->
-<form id='form7' action='formtest.js'> 7
+<form id='form8' action='formtest.js'> 7
     <input type='text'     name='uname' value='testuser'>
     <input type='password' name='pname' value=''>
 
@@ -119,7 +133,7 @@ password-only, the other is username+password)
 </form>
 
 <!-- 1 username field, with value set. Don't fill in U+P login-->
-<form id='form8' action='formtest.js'> 8
+<form id='form9' action='formtest.js'> 8
     <input type='text'     name='uname' value='someuser'>
     <input type='password' name='pname' value=''>
 
@@ -130,7 +144,7 @@ password-only, the other is username+password)
 
 
 <!-- 1 username field, too small for U+P login -->
-<form id='form9' action='formtest.js'> 9
+<form id='form10' action='formtest.js'> 9
     <input type='text'     name='uname' value='' maxlength="4">
     <input type='password' name='pname' value=''>
 
@@ -139,7 +153,7 @@ password-only, the other is username+password)
 </form>
 
 <!-- 1 username field, too small for U+P login -->
-<form id='form10' action='formtest.js'> 10
+<form id='form11' action='formtest.js'> 10
     <input type='text'     name='uname' value='' maxlength="0">
     <input type='password' name='pname' value=''>
 
@@ -148,7 +162,7 @@ password-only, the other is username+password)
 </form>
 
 <!-- 1 username field, too small for U+P login -->
-<form id='form11' action='formtest.js'> 11
+<form id='form12' action='formtest.js'> 11
     <input type='text'     name='uname' value=''>
     <input type='password' name='pname' value='' maxlength="4">
 
@@ -157,7 +171,7 @@ password-only, the other is username+password)
 </form>
 
 <!-- 1 username field, too small for either login -->
-<form id='form12' action='formtest.js'> 12
+<form id='form13' action='formtest.js'> 12
     <input type='text'     name='uname' value=''>
     <input type='password' name='pname' value='' maxlength="1">
 
@@ -166,7 +180,7 @@ password-only, the other is username+password)
 </form>
 
 <!-- 1 username field, too small for either login -->
-<form id='form13' action='formtest.js'> 13
+<form id='form14' action='formtest.js'> 13
     <input type='text'     name='uname' value=''>
     <input type='password' name='pname' value='' maxlength="0">
 
@@ -186,20 +200,21 @@ function startTest() {
   checkForm(1, "1234");
   checkForm(2, "1234", "");
   checkForm(3, "1234", "", "");
-  checkUnmodifiedForm(4);
+  checkForm(4, "1234");
+  checkUnmodifiedForm(5);
 
-  checkForm(5, "", "1234");
-  checkForm(6, "someuser", "");
+  checkForm(6, "", "1234");
+  checkForm(7, "someuser", "");
 
-  checkForm(7, "testuser", "testpass");
-  checkForm(8, "someuser", "");
+  checkForm(8, "testuser", "testpass");
+  checkForm(9, "someuser", "");
 
-  checkForm(9, "", "1234");
   checkForm(10, "", "1234");
   checkForm(11, "", "1234");
+  checkForm(12, "", "1234");
 
-  checkUnmodifiedForm(12);
   checkUnmodifiedForm(13);
+  checkUnmodifiedForm(14);
 
   SimpleTest.finish();
 }
