@@ -1610,12 +1610,14 @@ bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitMegamorphicSetElement() {
+bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
+                                                        ValOperandId idId,
+                                                        ValOperandId rhsId,
+                                                        bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  bool strict = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand idVal = allocator.useValueRegister(masm, idId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
   allocator.discardStack(masm);
 
@@ -1735,12 +1737,13 @@ bool BaselineCacheIRCompiler::emitGuardAndGetIterator() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape() {
+bool BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape(
+    ValOperandId expandoId, uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, expandoId);
   AutoScratchRegister shapeScratch(allocator, masm);
   AutoScratchRegister objScratch(allocator, masm);
-  Address shapeAddr(stubAddress(reader.stubOffset()));
+  Address shapeAddr(stubAddress(shapeOffset));
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2205,12 +2208,12 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardFunApply() {
+bool BaselineCacheIRCompiler::emitGuardFunApply(Int32OperandId argcId,
+                                                CallFlags flags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
+  Register argcReg = allocator.useRegister(masm, argcId);
   AutoScratchRegister scratch(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
-  CallFlags flags = reader.callFlags();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

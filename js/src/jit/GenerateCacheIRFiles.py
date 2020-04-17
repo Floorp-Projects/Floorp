@@ -70,6 +70,7 @@ operand_writer_info = {
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
     'ObjectField': ('JSObject*', 'writeObjectField'),
     'StringField': ('JSString*', 'writeStringField'),
+    'PropertyNameField': ('PropertyName*', 'writeStringField'),
     'SymbolField': ('JS::Symbol*', 'writeSymbolField'),
     'RawWordField': ('const void*', 'writeRawWordField'),
 
@@ -77,6 +78,7 @@ operand_writer_info = {
     'BoolImm': ('bool', 'writeBoolImm'),
     'GuardClassKindImm': ('GuardClassKind', 'writeGuardClassKindImm'),
     'JSWhyMagicImm': ('JSWhyMagic', 'writeJSWhyMagicImm'),
+    'CallFlagsImm': ('CallFlags', 'writeCallFlagsImm'),
     'Int32Imm': ('int32_t', 'writeInt32Imm'),
     'JSNativeImm': ('JSNative', 'writeJSNativeImm'),
 }
@@ -126,6 +128,7 @@ operand_compiler_info = {
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'ObjectField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'StringField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'PropertyNameField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'SymbolField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'RawWordField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
@@ -133,6 +136,7 @@ operand_compiler_info = {
     'BoolImm': ('bool', '', 'reader.readBool()'),
     'GuardClassKindImm': ('GuardClassKind', '', 'reader.guardClassKind()'),
     'JSWhyMagicImm': ('JSWhyMagic', '', 'reader.whyMagic()'),
+    'CallFlagsImm': ('CallFlags', '', 'reader.callFlags()'),
     'Int32Imm': ('int32_t', '', 'reader.int32Immediate()'),
     'JSNativeImm': ('JSNative', '', 'reinterpret_cast<JSNative>(reader.pointer())'),
 }
@@ -214,6 +218,7 @@ def generate_cacheirops_header(c_out, yaml_path):
         'GroupField': 'Field',
         'ObjectField': 'Field',
         'StringField': 'Field',
+        'PropertyNameField': 'Field',
         'SymbolField': 'Field',
         'RawWordField': 'Field',
         'DOMExpandoGenerationField': 'Field',

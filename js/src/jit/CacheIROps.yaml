@@ -373,21 +373,25 @@
 
 - name: GuardFunctionIsNative
   shared: true
+  gen_boilerplate: true
   operands:
     fun: ObjId
 
 - name: GuardFunctionIsConstructor
   shared: true
+  gen_boilerplate: true
   operands:
     fun: ObjId
 
 - name: GuardNotClassConstructor
   shared: true
+  gen_boilerplate: true
   operands:
     fun: ObjId
 
 - name: GuardFunApply
   shared: false
+  gen_boilerplate: true
   operands:
     argc: Int32Id
     flags: CallFlagsImm
@@ -443,13 +447,15 @@
 
 - name: MegamorphicLoadSlotResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
-    name: StringField
+    name: PropertyNameField
     handleMissing: BoolImm
 
 - name: MegamorphicLoadSlotByValueResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -457,14 +463,16 @@
 
 - name: MegamorphicStoreSlot
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
-    name: StringField
+    name: PropertyNameField
     rhs: ValId
     needsTypeBarrier: BoolImm
 
 - name: MegamorphicSetElement
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -473,6 +481,7 @@
 
 - name: MegamorphicHasPropResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -501,6 +510,7 @@
 
 - name: GuardDOMExpandoMissingOrGuardShape
   shared: false
+  gen_boilerplate: true
   operands:
     expando: ValId
     shape: ShapeField
