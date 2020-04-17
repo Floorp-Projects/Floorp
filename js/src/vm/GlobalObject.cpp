@@ -385,9 +385,6 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
                    "shouldn't be defining SharedArrayBuffer if shared memory "
                    "is disabled");
 
-        fprintf(stderr, "defineSharedArrayBufferConstructor: %d\n",
-                static_cast<int>(options.defineSharedArrayBufferConstructor()));
-
         shouldReallyDefine = options.defineSharedArrayBufferConstructor();
       }
 
