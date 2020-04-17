@@ -1525,7 +1525,7 @@ class nsTArray_Impl
 
   template <class Item, typename ActualAlloc = Alloc>
   elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               mozilla::Span<const Item> aSpan) {
+                               mozilla::Span<Item> aSpan) {
     return ReplaceElementsAt<Item, ActualAlloc>(
         aStart, aCount, aSpan.Elements(), aSpan.Length());
   }
@@ -1542,7 +1542,7 @@ class nsTArray_Impl
   template <class Item>
   [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
                                              size_type aCount,
-                                             mozilla::Span<const Item> aSpan,
+                                             mozilla::Span<Item> aSpan,
                                              const mozilla::fallible_t&) {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aSpan);
   }
@@ -1597,8 +1597,7 @@ class nsTArray_Impl
   }
 
   template <class Item, typename ActualAlloc = Alloc>
-  elem_type* InsertElementsAt(index_type aIndex,
-                              mozilla::Span<const Item> aSpan) {
+  elem_type* InsertElementsAt(index_type aIndex, mozilla::Span<Item> aSpan) {
     return ReplaceElementsAt<Item, ActualAlloc>(aIndex, 0, aSpan.Elements(),
                                                 aSpan.Length());
   }
@@ -1613,7 +1612,7 @@ class nsTArray_Impl
 
   template <class Item>
   [[nodiscard]] elem_type* InsertElementsAt(index_type aIndex,
-                                            mozilla::Span<const Item> aSpan,
+                                            mozilla::Span<Item> aSpan,
                                             const mozilla::fallible_t&) {
     return InsertElementsAt<Item, FallibleAlloc>(aIndex, aSpan);
   }
@@ -1743,7 +1742,7 @@ class nsTArray_Impl
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen);
 
   template <class Item, typename ActualAlloc = Alloc>
-  elem_type* AppendElements(mozilla::Span<const Item> aSpan) {
+  elem_type* AppendElements(mozilla::Span<Item> aSpan) {
     return AppendElements<Item, ActualAlloc>(aSpan.Elements(), aSpan.Length());
   }
 
@@ -1762,7 +1761,7 @@ class nsTArray_Impl
 
   template <class Item>
   /* [[nodiscard]] */
-  elem_type* AppendElements(mozilla::Span<const Item> aSpan,
+  elem_type* AppendElements(mozilla::Span<Item> aSpan,
                             const mozilla::fallible_t&) {
     return AppendElements<Item, FallibleAlloc>(aSpan.Elements(),
                                                aSpan.Length());
