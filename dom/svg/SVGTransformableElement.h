@@ -36,8 +36,7 @@ class SVGTransformableElement : public SVGElement {
   SVGElement* GetNearestViewportElement();
   SVGElement* GetFarthestViewportElement();
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<SVGRect> GetBBox(const SVGBoundingBoxOptions& aOptions,
-                                    ErrorResult& rv);
+  already_AddRefed<SVGRect> GetBBox(const SVGBoundingBoxOptions&);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
   already_AddRefed<SVGMatrix> GetTransformToElement(
