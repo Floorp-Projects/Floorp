@@ -952,6 +952,8 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
 
       if (httpStatus == 300 || httpStatus == 301 || httpStatus == 302 ||
           httpStatus == 303 || httpStatus == 307 || httpStatus == 308) {
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_DNS_TRR_REDIRECTED::Redirected);
         nsresult rv = SyncProcessRedirection(httpStatus);
         if (NS_SUCCEEDED(rv)) {
           return rv;
@@ -961,6 +963,8 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
         DoNotifyListener();
         return rv;
       }
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_DNS_TRR_REDIRECTED::None);
     } else {
       NS_WARNING("No response head in OnStartRequest");
     }

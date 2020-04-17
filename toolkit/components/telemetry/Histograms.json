@@ -4031,6 +4031,16 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com"]
   },
+  "DNS_TRR_REDIRECTED": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "81",
+    "kind": "categorical",
+    "labels": ["Redirected", "None"],
+    "description": "How often TRR (Trusted Recursive Resolver) requests are redirected",
+    "bug_numbers": [1624996],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
+  },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
