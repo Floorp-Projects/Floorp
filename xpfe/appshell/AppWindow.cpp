@@ -1610,7 +1610,7 @@ void AppWindow::StaggerPosition(int32_t& aRequestedX, int32_t& aRequestedY,
           break;
         }
       }
-    } while (1);
+    } while (true);
   } while (keepTrying);
 }
 
