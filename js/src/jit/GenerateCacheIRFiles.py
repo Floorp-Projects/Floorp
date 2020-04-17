@@ -67,9 +67,12 @@ operand_writer_info = {
 
     'ShapeField': ('Shape*', 'writeShapeField'),
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
+    'ObjectField': ('JSObject*', 'writeObjectField'),
+    'RawWordField': ('const void*', 'writeRawWordField'),
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
+    'GuardClassKindImm': ('GuardClassKind', 'writeGuardClassKindImm'),
 }
 
 
@@ -114,9 +117,12 @@ operand_compiler_info = {
 
     'ShapeField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'ObjectField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'RawWordField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
-    'BoolImm': ('bool', '', 'reader.readBool()')
+    'BoolImm': ('bool', '', 'reader.readBool()'),
+    'GuardClassKindImm': ('GuardClassKind', '', 'reader.guardClassKind()'),
 }
 
 
