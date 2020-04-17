@@ -190,6 +190,7 @@ class WebRenderBridgeParent final
       const LayersObserverEpoch& aChildEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
+  mozilla::ipc::IPCResult RecvInvalidateRenderedFrame() override;
   mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvCapture() override;
   mozilla::ipc::IPCResult RecvSetTransactionLogging(const bool&) override;
@@ -283,10 +284,18 @@ class WebRenderBridgeParent final
   void ScheduleGenerateFrameAllRenderRoots();
 
   /**
+   * Invalidate rendered frame.
+   *
+   * WebRender could skip frame rendering if there is no update.
+   * This function is used to force invalidating even when there is no update.
+   */
+  void InvalidateRenderedFrame();
+
+  /**
    * Schedule forced frame rendering at next composite timing.
    *
    * WebRender could skip frame rendering if there is no update.
-   * This function is used to force rendering even when there is not update.
+   * This function is used to force rendering even when there is no update.
    */
   void ScheduleForcedGenerateFrame();
 

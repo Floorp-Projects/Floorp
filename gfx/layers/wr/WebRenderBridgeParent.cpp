@@ -2111,6 +2111,14 @@ wr::Epoch WebRenderBridgeParent::UpdateWebRender(
   return GetNextWrEpoch();  // Update webrender epoch
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvInvalidateRenderedFrame() {
+  // This function should only get called in the root WRBP
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+
+  InvalidateRenderedFrame();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
   // Caller of LayerManager::ScheduleComposite() expects that it trigger
   // composite. Then we do not want to skip generate frame.
@@ -2118,7 +2126,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
   return IPC_OK();
 }
 
-void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
+void WebRenderBridgeParent::InvalidateRenderedFrame() {
   if (mDestroyed) {
     return;
   }
@@ -2130,7 +2138,14 @@ void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
       Api(renderRoot)->SendTransaction(fastTxn);
     }
   }
+}
 
+void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
+  if (mDestroyed) {
+    return;
+  }
+
+  InvalidateRenderedFrame();
   ScheduleGenerateFrameAllRenderRoots();
 }
 
