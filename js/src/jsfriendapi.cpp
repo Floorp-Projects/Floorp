@@ -572,10 +572,9 @@ JS_FRIEND_API void JS_SetSetUseCounterCallback(
 }
 
 JS_FRIEND_API JSObject* JS_CloneObject(JSContext* cx, HandleObject obj,
-                                       HandleObject protoArg) {
+                                       HandleObject proto) {
   // |obj| might be in a different compartment.
-  cx->check(protoArg);
-  Rooted<TaggedProto> proto(cx, TaggedProto(protoArg.get()));
+  cx->check(proto);
   return CloneObject(cx, obj, proto);
 }
 
