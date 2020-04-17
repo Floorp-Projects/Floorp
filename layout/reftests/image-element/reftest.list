@@ -49,5 +49,5 @@ HTTP == invalidate-1.html invalidate-1-ref.html
 == empty-src.html no-src.html
 == broken-icon.html invalid-src.html
 fails == invalid-src.html invalid-src-2.html # bug 1506804
-
 fuzzy-if(skiaContent,0-1,0-30000) == mask-image-element.html mask-image-element-ref.html
+pref(image.honor-orientation-metadata,true) pref(layout.css.image-orientation.initial-from-image,true) == orientation-1.html orientation-1-ref.html
