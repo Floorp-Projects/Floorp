@@ -159,17 +159,6 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
-
-        val sessionObserver = BrowserSessionsObserver(
-            sessionManager,
-            requireComponents.core.store,
-            singleSessionObserver
-        ) {
-            emitSessionChanges()
-        }
-
-        lifecycle.addObserver(sessionObserver)
-
         if (!onboarding.userHasBeenOnboarded()) {
             requireComponents.analytics.metrics.track(Event.OpenedAppFirstRun)
         }
@@ -182,6 +171,16 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val activity = activity as HomeActivity
+
+        val sessionObserver = BrowserSessionsObserver(
+            sessionManager,
+            requireComponents.core.store,
+            singleSessionObserver
+        ) {
+            emitSessionChanges()
+        }
+
+        viewLifecycleOwner.lifecycle.addObserver(sessionObserver)
 
         currentMode = CurrentMode(
             view.context,
