@@ -38,6 +38,9 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
             symbols_path=self.config["symbols_path"],
         )
 
+        # Force Firefox to immediately exit for content crashes
+        self.runner.env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
+
         if self.config["enable_webrender"]:
             self.runner.env["MOZ_WEBRENDER"] = "1"
             self.runner.env["MOZ_ACCELERATED"] = "1"
