@@ -394,12 +394,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // True if any of this sheet's ancestors were created through the
   // Constructable StyleSheets API
   bool SelfOrAncestorIsConstructed() const {
-    for (auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
-      if (sheet->IsConstructed()) {
-        return true;
-      }
-    }
-    return false;
+    return OutermostSheet().IsConstructed();
   }
 
   // Ture if the sheet's constructor document matches the given document
@@ -471,6 +466,18 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
  private:
   void SetModifiedRules() {
     mState |= State::ModifiedRules | State::ModifiedRulesForDevtools;
+  }
+
+  const StyleSheet& OutermostSheet() const {
+    auto* current = this;
+    while (current->mParentSheet) {
+      MOZ_ASSERT(!current->mDocumentOrShadowRoot,
+                 "Shouldn't be set on child sheets");
+      MOZ_ASSERT(!current->mConstructorDocument,
+                 "Shouldn't be set on child sheets");
+      current = current->mParentSheet;
+    }
+    return *current;
   }
 
   StyleSheetInfo& Inner() {
