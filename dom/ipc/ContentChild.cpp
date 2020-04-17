@@ -2653,7 +2653,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInitJSWindowActorInfos(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUnregisterJSWindowActor(
-    const nsString& aName) {
+    const nsCString& aName) {
   RefPtr<JSWindowActorService> actSvc = JSWindowActorService::GetSingleton();
   actSvc->UnregisterWindowActor(aName);
   return IPC_OK();

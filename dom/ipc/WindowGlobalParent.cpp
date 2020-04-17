@@ -414,7 +414,7 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 }
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
-    const nsAString& aName, ErrorResult& aRv) {
+    const nsACString& aName, ErrorResult& aRv) {
   if (!CanSend()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -671,7 +671,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   // Destroy our JSWindowActors, and reject any pending queries.
-  nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> windowActors;
+  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> windowActors;
   mWindowActors.SwapElements(windowActors);
   for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->RejectPendingQueries();
