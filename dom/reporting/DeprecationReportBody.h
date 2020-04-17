@@ -14,7 +14,7 @@ namespace dom {
 
 class DeprecationReportBody final : public ReportBody {
  public:
-  DeprecationReportBody(nsIGlobalObject* aGlobal, const nsAString& aId,
+  DeprecationReportBody(nsPIDOMWindowInner* aWindow, const nsAString& aId,
                         const Nullable<uint64_t>& aDate,
                         const nsAString& aMessage, const nsAString& aSourceFile,
                         const Nullable<uint32_t>& aLineNumber,

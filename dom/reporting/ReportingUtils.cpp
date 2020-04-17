@@ -12,35 +12,27 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsAtom.h"
-#include "nsIGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
 
 /* static */
-void ReportingUtils::Report(nsIGlobalObject* aGlobal, nsAtom* aType,
+void ReportingUtils::Report(nsPIDOMWindowInner* aWindow, nsAtom* aType,
                             const nsAString& aGroupName, const nsAString& aURL,
                             ReportBody* aBody) {
-  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aBody);
 
   nsDependentAtomString type(aType);
 
   RefPtr<mozilla::dom::Report> report =
-      new mozilla::dom::Report(aGlobal, type, aURL, aBody);
-  aGlobal->BroadcastReport(report);
-
-  if (!NS_IsMainThread()) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
-  if (!window) {
-    return;
-  }
+      new mozilla::dom::Report(aWindow, type, aURL, aBody);
+  aWindow->BroadcastReport(report);
 
   // Send the report to the server.
-  ReportDeliver::Record(window, type, aGroupName, aURL, aBody);
+  ReportDeliver::Record(aWindow, type, aGroupName, aURL, aBody);
 }
 
 }  // namespace dom
