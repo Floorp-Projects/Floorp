@@ -6,13 +6,15 @@ import sys
 
 import mozpack.path as mozpath
 
-from mozperftest.base import MachEnvironment
+from mozperftest.layers import Layer
 from mozperftest.utils import silence
 
 
-class NodeRunner(MachEnvironment):
-    def __init__(self, mach_cmd):
-        super(NodeRunner, self).__init__(mach_cmd)
+class NodeRunner(Layer):
+    name = "node"
+
+    def __init__(self, env, mach_cmd):
+        super(NodeRunner, self).__init__(env, mach_cmd)
         self.topsrcdir = mach_cmd.topsrcdir
         self._mach_context = mach_cmd._mach_context
         self.python_path = mach_cmd.virtualenv_manager.python_path

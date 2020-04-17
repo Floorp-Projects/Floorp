@@ -3,29 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import mozlog
 
-from mozperftest.browser import pick_browser
-from mozperftest.system import pick_system
-from mozperftest.metrics import pick_metrics
-from mozperftest.argparser import PerftestArgumentParser
-from mozperftest.metadata import Metadata
-
+from mozperftest.argparser import PerftestArgumentParser  # noqa
+from mozperftest.metadata import Metadata  # noqa
+from mozperftest.environment import MachEnvironment  # noqa
 
 logger = mozlog.commandline.setup_logging("mozperftest", {})
-
-
-def get_parser():
-    return PerftestArgumentParser()
-
-
-def get_metadata(mach_cmd, flavor, **kwargs):
-    return Metadata(mach_cmd, flavor, **kwargs)
-
-
-def get_env(mach_cmd, flavor="script", test_objects=None, resolve_tests=True, **kwargs):
-    # XXX do something with flavors, etc
-    if flavor != "script":
-        raise NotImplementedError(flavor)
-
-    return [
-        layer(flavor, mach_cmd) for layer in (pick_system, pick_browser, pick_metrics)
-    ]

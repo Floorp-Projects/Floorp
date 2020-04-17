@@ -5,6 +5,8 @@
 import mozunit
 import os
 import mock
+import tempfile
+import shutil
 
 from mach.registrar import Registrar
 
@@ -12,24 +14,22 @@ Registrar.categories = {"testing": []}
 Registrar.commands_by_category = {"testing": set()}
 
 
+from mozperftest.environment import MachEnvironment
 from mozperftest.mach_commands import Perftest
 
 
-def get_env(*args):
-    class FakeModule:
-        def __enter__(self):
-            return self
+class TestMachEnvironment(MachEnvironment):
+    def run(self, metadata):
+        return metadata
 
-        def __exit__(self, *args, **kw):
-            pass
+    def __enter__(self):
+        pass
 
-        def __call__(self, metadata):
-            return metadata
-
-    return FakeModule(), FakeModule(), FakeModule()
+    def __exit__(self, type, value, traceback):
+        pass
 
 
-@mock.patch("mozperftest.get_env", new=get_env)
+@mock.patch("mozperftest.MachEnvironment", new=TestMachEnvironment)
 def test_command():
     from mozbuild.base import MozbuildObject
 
@@ -40,9 +40,13 @@ def test_command():
         cwd = os.getcwd()
         settings = {}
         log_manager = {}
+        state_dir = tempfile.mkdtemp()
 
-    test = Perftest(context())
-    test.run_perftest()
+    try:
+        test = Perftest(context())
+        test.run_perftest()
+    finally:
+        shutil.rmtree(context.state_dir)
 
 
 if __name__ == "__main__":
