@@ -97,7 +97,8 @@ function StreamCopier(input, output, length) {
   // or fail scenarios, but also emit events (due to the EventEmitter)
   // for other states, like progress.
   this.then = this._deferred.promise.then.bind(this._deferred.promise);
-  this.then(this._destroy, this._destroy);
+  this.finally = this._deferred.promise.finally.bind(this._deferred.promise);
+  this.finally(this._destroy);
 
   // Stream ready callback starts as |_copy|, but may switch to |_flush|
   // at end if flushing would block the output stream.

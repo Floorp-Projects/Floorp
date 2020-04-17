@@ -1033,7 +1033,7 @@ ParentAPIManager = {
       let remove = () => {
         listenerPromises.delete(promise);
       };
-      promise.then(remove, remove);
+      promise.finally(remove);
     }
 
     let handler = await promise;

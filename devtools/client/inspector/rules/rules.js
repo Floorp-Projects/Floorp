@@ -1891,9 +1891,7 @@ RuleViewTool.prototype = {
 
     if (selectElement) {
       const done = this.inspector.updating("rule-view");
-      this.view
-        .selectElement(this.inspector.selection.nodeFront)
-        .then(done, done);
+      this.view.selectElement(this.inspector.selection.nodeFront).finally(done);
     }
   },
 

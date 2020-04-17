@@ -88,7 +88,7 @@ GeckoViewPermission.prototype = {
     };
 
     if (dispatcher) {
-      this.getAppPermissions(dispatcher, perms).then(callback, callback);
+      this.getAppPermissions(dispatcher, perms).finally(callback);
     } else {
       // No dispatcher; just bail.
       callback();

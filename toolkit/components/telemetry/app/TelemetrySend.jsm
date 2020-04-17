@@ -469,7 +469,7 @@ var SendScheduler = {
     if (!this._sendTask) {
       this._sendTask = this._doSendTask();
       let clear = () => (this._sendTask = null);
-      this._sendTask.then(clear, clear);
+      this._sendTask.finally(clear);
     } else if (immediately) {
       CancellableTimeout.cancelTimeout();
     }
@@ -1521,7 +1521,7 @@ var TelemetrySendImpl = {
    */
   _trackPendingPingTask(promise) {
     let clear = () => this._pendingPingActivity.delete(promise);
-    promise.then(clear, clear);
+    promise.finally(clear);
     this._pendingPingActivity.add(promise);
   },
 

@@ -31,7 +31,7 @@ var run_promise_tests = function run_promise_tests(tests, cb) {
       });
     };
     let result = test();
-    result.then(next, next);
+    result.finally(next);
   };
   return loop(0);
 };

@@ -856,7 +856,7 @@ var TelemetryStorageImpl = {
     // Make sure to clear |_cleanArchiveTask| once done.
     let clear = () => (this._cleanArchiveTask = null);
     // Since there's no archive cleaning task running, start it.
-    this._cleanArchiveTask = this._cleanArchive().then(clear, clear);
+    this._cleanArchiveTask = this._cleanArchive().finally(clear);
     return this._cleanArchiveTask;
   },
 
@@ -1541,7 +1541,7 @@ var TelemetryStorageImpl = {
    */
   _trackPendingPingSaveTask(promise) {
     let clear = () => this._activePendingPingSaves.delete(promise);
-    promise.then(clear, clear);
+    promise.finally(clear);
     this._activePendingPingSaves.add(promise);
   },
 

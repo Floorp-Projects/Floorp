@@ -150,7 +150,7 @@ var ClientIDImpl = {
 
     this._loadClientIdTask = this._doLoadClientID();
     let clear = () => (this._loadClientIdTask = null);
-    this._loadClientIdTask.then(clear, clear);
+    this._loadClientIdTask.finally(clear);
     return this._loadClientIdTask;
   },
 
@@ -330,7 +330,7 @@ var ClientIDImpl = {
     // Asynchronous calls to getClientID will also be blocked on this.
     this._removeClientIdTask = this._doRemoveClientID();
     let clear = () => (this._removeClientIdTask = null);
-    this._removeClientIdTask.then(clear, clear);
+    this._removeClientIdTask.finally(clear);
 
     await this._removeClientIdTask;
 
