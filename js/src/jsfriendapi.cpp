@@ -571,89 +571,12 @@ JS_FRIEND_API void JS_SetSetUseCounterCallback(
   cx->runtime()->setUseCounterCallback(cx->runtime(), callback);
 }
 
-static bool CopyProxyObject(JSContext* cx, Handle<ProxyObject*> from,
-                            Handle<ProxyObject*> to) {
-  MOZ_ASSERT(from->getClass() == to->getClass());
-
-  if (from->is<WrapperObject>() &&
-      (Wrapper::wrapperHandler(from)->flags() & Wrapper::CROSS_COMPARTMENT)) {
-    to->setCrossCompartmentPrivate(GetProxyPrivate(from));
-  } else {
-    RootedValue v(cx, GetProxyPrivate(from));
-    if (!cx->compartment()->wrap(cx, &v)) {
-      return false;
-    }
-    to->setSameCompartmentPrivate(v);
-  }
-
-  MOZ_ASSERT(from->numReservedSlots() == to->numReservedSlots());
-
-  RootedValue v(cx);
-  for (size_t n = 0; n < from->numReservedSlots(); n++) {
-    v = GetProxyReservedSlot(from, n);
-    if (!cx->compartment()->wrap(cx, &v)) {
-      return false;
-    }
-    SetProxyReservedSlot(to, n, v);
-  }
-
-  return true;
-}
-
 JS_FRIEND_API JSObject* JS_CloneObject(JSContext* cx, HandleObject obj,
-                                       HandleObject proto) {
+                                       HandleObject protoArg) {
   // |obj| might be in a different compartment.
-  cx->check(proto);
-
-  if (!obj->isNative() && !obj->is<ProxyObject>()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_CANT_CLONE_OBJECT);
-    return nullptr;
-  }
-
-  RootedObject clone(cx);
-  if (obj->isNative()) {
-    // JS_CloneObject is used to create the target object for JSObject::swap().
-    // swap() requires its arguments are tenured, so ensure tenure allocation.
-    clone = NewTenuredObjectWithGivenProto(cx, obj->getClass(), proto);
-    if (!clone) {
-      return nullptr;
-    }
-
-    if (clone->is<JSFunction>() &&
-        (obj->compartment() != clone->compartment())) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_CANT_CLONE_OBJECT);
-      return nullptr;
-    }
-
-    if (obj->as<NativeObject>().hasPrivate()) {
-      clone->as<NativeObject>().setPrivate(
-          obj->as<NativeObject>().getPrivate());
-    }
-  } else {
-    auto* handler = GetProxyHandler(obj);
-
-    // Same as above, require tenure allocation of the clone. This means for
-    // proxy objects we need to reject nursery allocatable proxies.
-    if (handler->canNurseryAllocate()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_CANT_CLONE_OBJECT);
-      return nullptr;
-    }
-
-    clone = ProxyObject::New(cx, handler, JS::NullHandleValue,
-                             AsTaggedProto(proto), obj->getClass());
-    if (!clone) {
-      return nullptr;
-    }
-
-    if (!CopyProxyObject(cx, obj.as<ProxyObject>(), clone.as<ProxyObject>())) {
-      return nullptr;
-    }
-  }
-
-  return clone;
+  cx->check(protoArg);
+  Rooted<TaggedProto> proto(cx, TaggedProto(protoArg.get()));
+  return CloneObject(cx, obj, proto);
 }
 
 // We don't want jsfriendapi.h to depend on GenericPrinter,
