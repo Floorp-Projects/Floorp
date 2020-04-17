@@ -1,5 +1,6 @@
 {
   "default": {
+    "searchDefault": "Plain",
     "visibleDefaultEngines": [
       "plainengine", "special-engine"
     ]
@@ -10,8 +11,15 @@
     ]
   },
   "an": {
+    "searchDefault": "Multilocale AN",
     "visibleDefaultEngines": [
       "plainengine", "special-engine", "multilocale-an"
+    ]
+  },
+  "tr": {
+    "searchDefault": "Special",
+    "visibleDefaultEngines": [
+      "plainengine", "special-engine"
     ]
   }
 }

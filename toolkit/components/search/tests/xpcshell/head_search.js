@@ -365,6 +365,7 @@ async function withGeoServer(
   testFn,
   {
     visibleDefaultEngines = null,
+    searchDefault = null,
     geoLookupData = null,
     preGeolookupPromise = Promise.resolve,
     cohort = null,
@@ -379,7 +380,7 @@ async function withGeoServer(
   srv.registerPathHandler("/lookup_defaults", (metadata, response) => {
     let data = {
       interval: intval200,
-      settings: { searchDefault: kTestEngineName },
+      settings: { searchDefault: searchDefault ?? kTestEngineName },
     };
     if (cohort) {
       data.cohort = cohort;
