@@ -755,7 +755,7 @@ class GCRuntime {
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
   void startBackgroundFree();
   void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
-  void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks);
+  void sweepBackgroundThings(ZoneList& zones);
   void assertBackgroundSweepingFinished();
   bool shouldCompact();
   void beginCompactPhase();
