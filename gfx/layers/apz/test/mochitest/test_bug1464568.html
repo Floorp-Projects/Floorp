@@ -20,7 +20,7 @@
       // inside an iframe which means we have no control over the root APZC.
       window.onload = () => {
         runSubtestsSeriallyInFreshWindows(subtests)
-        .finally(SimpleTest.finish);
+        .then(SimpleTest.finish, SimpleTest.finish);
       };
     }
   </script>

@@ -30,7 +30,7 @@ function grabHistogramsFromContent(
   };
   return BrowserTestUtils.waitForCondition(() => {
     return counter_before != gather()[0];
-  }).finally(gather);
+  }).then(gather, gather);
 }
 
 var check_use_counter_worker = async function(

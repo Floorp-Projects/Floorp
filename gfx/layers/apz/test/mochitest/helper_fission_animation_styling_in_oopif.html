@@ -16,7 +16,7 @@ FissionTestHelper.startTestPromise
   .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
   .then(runAsyncContinuation(test))
-  .finally(FissionTestHelper.subtestDone);
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
 
 async function setup_in_oopif() {
   const setup = function() {

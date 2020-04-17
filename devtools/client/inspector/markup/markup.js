@@ -750,7 +750,7 @@ MarkupView.prototype = {
     this._briefBoxModelPromise = new Promise(resolve => {
       _resolve = resolve;
       this._briefBoxModelTimer = setTimeout(() => {
-        this._hideBoxModel().finally(resolve);
+        this._hideBoxModel().then(resolve, resolve);
       }, NEW_SELECTION_HIGHLIGHTER_TIMER);
     });
     this._briefBoxModelPromise.resolve = _resolve;

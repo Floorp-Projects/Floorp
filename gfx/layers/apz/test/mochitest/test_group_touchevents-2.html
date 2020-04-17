@@ -56,7 +56,7 @@ if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
     runSubtestsSeriallyInFreshWindows(subtests)
-    .finally(SimpleTest.finish);
+    .then(SimpleTest.finish, SimpleTest.finish);
   };
 }
 
