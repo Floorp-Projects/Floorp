@@ -580,7 +580,7 @@ void GeckoChildProcessHost::PrepareLaunch() {
       mEnableSandboxLogging || !!PR_GetEnv("MOZ_SANDBOX_LOGGING");
 
   if (ShouldHaveDirectoryService() && mProcessType == GeckoProcessType_GPU) {
-    mozilla::Unused << NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP,
+    mozilla::Unused << NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                               getter_AddRefs(mProfileDir));
   }
 #  endif
