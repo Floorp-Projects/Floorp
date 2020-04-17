@@ -430,6 +430,20 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     return null;
   }
 
+  /**
+   * Stores passed arguments, and returns whether or not they match the args given the last time
+   * this method was called with the same [formLikeRoot]. This is used to avoid sending duplicate
+   * messages to the parent.
+   *
+   * @param {Element} formLikeRoot
+   * @param {string} usernameValue
+   * @param {string} passwordValue
+   * @param {boolean?} [dismissed=false]
+   * @param {boolean?} [triggeredByFillingGenerated=false] whether or not this call was triggered by a generated
+   *        password being filled into a form-like element.
+   *
+   * @returns {boolean} true if args match the most recently passed values
+   */
   _compareAndUpdatePreviouslySentValues(
     formLikeRoot,
     usernameValue,
@@ -1452,6 +1466,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     );
   }
 
+  /**
+   * Extracts and validates information from a form-like element on the page.  If validation is
+   * successful, sends a message to the parent process requesting that it show a dialog.
+   *
+   * If validation fails, this method is a noop.
+   *
+   * @param {LoginForm} form
+   * @param {string} messageName used to categorize the type of message sent to the parent process.
+   * @param {Element?} options.targetField
+   * @param {boolean} options.isSubmission if true, this function call was prompted by a form submission.
+   * @param {boolean?} options.triggeredByFillingGenerated whether or not this call was triggered by a
+   *        generated password being filled into a form-like element.
+   */
   _maybeSendFormInteractionMessage(
     form,
     messageName,
@@ -1466,152 +1493,167 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let logMessagePrefix = isSubmission ? "form submission" : "field edit";
     let dismissedPrompt = !isSubmission;
 
-    // when filling a generated password, we do still want to message the parent
-    if (
-      !triggeredByFillingGenerated &&
-      PrivateBrowsingUtils.isContentWindowPrivate(win) &&
-      !LoginHelper.privateBrowsingCaptureEnabled
-    ) {
-      // We won't do anything in private browsing mode anyway,
-      // so there's no need to perform further checks.
-      log(`(${logMessagePrefix} ignored in private browsing mode)`);
-      return;
-    }
-
-    // If password saving is disabled globally, bail out now.
-    if (!LoginHelper.enabled) {
-      return;
-    }
-
-    let origin = LoginHelper.getLoginOrigin(doc.documentURI);
-    if (!origin) {
-      log(`(${logMessagePrefix} ignored -- invalid origin)`);
-      return;
-    }
-
-    let formActionOrigin = LoginHelper.getFormActionOrigin(form);
-
-    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
-
-    // Get the appropriate fields from the form.
-    let [
-      usernameField,
-      newPasswordField,
-      oldPasswordField,
-    ] = this._getFormFields(form, true, recipes);
-
-    // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
-    if (
-      passwordField &&
-      passwordField != newPasswordField &&
-      passwordField != oldPasswordField
-    ) {
-      newPasswordField = passwordField;
-    }
-
-    // Need at least 1 valid password field to do anything.
-    if (newPasswordField == null) {
-      return;
-    }
-
-    if (usernameField && usernameField.value.match(/[•\*]{3,}/)) {
-      log(
-        `usernameField.value "${usernameField.value}" looks munged, setting to null`
-      );
-      usernameField = null;
-    }
-
-    // Check for autocomplete=off attribute. We don't use it to prevent
-    // autofilling (for existing logins), but won't save logins when it's
-    // present and the storeWhenAutocompleteOff pref is false.
-    // XXX spin out a bug that we don't update timeLastUsed in this case?
-    if (
-      (this._isAutocompleteDisabled(form) ||
-        this._isAutocompleteDisabled(usernameField) ||
-        this._isAutocompleteDisabled(newPasswordField) ||
-        this._isAutocompleteDisabled(oldPasswordField)) &&
-      !LoginHelper.storeWhenAutocompleteOff
-    ) {
-      log(`(${logMessagePrefix} ignored -- autocomplete=off found)`);
-      return;
-    }
-
-    // Don't try to send DOM nodes over IPC.
-    let mockUsername = usernameField
-      ? { name: usernameField.name, value: usernameField.value }
-      : null;
-    let mockPassword = {
-      name: newPasswordField.name,
-      value: newPasswordField.value,
-    };
-    let mockOldPassword = oldPasswordField
-      ? { name: oldPasswordField.name, value: oldPasswordField.value }
-      : null;
-
-    let usernameValue = usernameField ? usernameField.value : null;
-    // Dismiss prompt if the username field is a credit card number AND
-    // if the password field is a three digit number. Also dismiss prompt if
-    // the password is a credit card number and the password field has attribute
-    // autocomplete="cc-number".
-    let newPasswordFieldValue = newPasswordField.value;
-    if (
-      (!dismissedPrompt &&
-        CreditCard.isValidNumber(usernameValue) &&
-        newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
-      (CreditCard.isValidNumber(newPasswordFieldValue) &&
-        newPasswordField.getAutocompleteInfo().fieldName == "cc-number")
-    ) {
-      dismissedPrompt = true;
-    }
-
-    let docState = this.stateForDocument(doc);
-    let fieldsModified = this._formHasModifiedFields(form);
-    if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
-      if (targetField) {
-        throw new Error("No user input on targetField");
+    let detail = { messageSent: false };
+    try {
+      // when filling a generated password, we do still want to message the parent
+      if (
+        !triggeredByFillingGenerated &&
+        PrivateBrowsingUtils.isContentWindowPrivate(win) &&
+        !LoginHelper.privateBrowsingCaptureEnabled
+      ) {
+        // We won't do anything in private browsing mode anyway,
+        // so there's no need to perform further checks.
+        log(`(${logMessagePrefix} ignored in private browsing mode)`);
+        return;
       }
-      // we know no fields in this form had user modifications, so don't prompt
-      log(
-        `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
-      );
-      return;
+
+      // If password saving is disabled globally, bail out now.
+      if (!LoginHelper.enabled) {
+        return;
+      }
+
+      let origin = LoginHelper.getLoginOrigin(doc.documentURI);
+      if (!origin) {
+        log(`(${logMessagePrefix} ignored -- invalid origin)`);
+        return;
+      }
+
+      let formActionOrigin = LoginHelper.getFormActionOrigin(form);
+
+      let recipes = LoginRecipesContent.getRecipes(this, origin, win);
+
+      // Get the appropriate fields from the form.
+      let [
+        usernameField,
+        newPasswordField,
+        oldPasswordField,
+      ] = this._getFormFields(form, true, recipes);
+
+      // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
+      if (
+        passwordField &&
+        passwordField != newPasswordField &&
+        passwordField != oldPasswordField
+      ) {
+        newPasswordField = passwordField;
+      }
+
+      // Need at least 1 valid password field to do anything.
+      if (newPasswordField == null) {
+        return;
+      }
+
+      let fullyMungedPattern = /^\*+$|^•+$|^\.+$/;
+      // Check `isSubmission` to allow munged passwords in dismissed by default doorhangers (since
+      // they are initiated by the user) in case this matches their actual password.
+      if (isSubmission && newPasswordField?.value.match(fullyMungedPattern)) {
+        log("new password looks munged. Not sending prompt");
+        return;
+      }
+
+      if (usernameField && usernameField.value.match(/\.{3,}|\*{3,}|•{3,}/)) {
+        log(
+          `usernameField.value "${usernameField.value}" looks munged, setting to null`
+        );
+        usernameField = null;
+      }
+
+      // Check for autocomplete=off attribute. We don't use it to prevent
+      // autofilling (for existing logins), but won't save logins when it's
+      // present and the storeWhenAutocompleteOff pref is false.
+      // XXX spin out a bug that we don't update timeLastUsed in this case?
+      if (
+        (this._isAutocompleteDisabled(form) ||
+          this._isAutocompleteDisabled(usernameField) ||
+          this._isAutocompleteDisabled(newPasswordField) ||
+          this._isAutocompleteDisabled(oldPasswordField)) &&
+        !LoginHelper.storeWhenAutocompleteOff
+      ) {
+        log(`(${logMessagePrefix} ignored -- autocomplete=off found)`);
+        return;
+      }
+
+      // Don't try to send DOM nodes over IPC.
+      let mockUsername = usernameField
+        ? { name: usernameField.name, value: usernameField.value }
+        : null;
+      let mockPassword = {
+        name: newPasswordField.name,
+        value: newPasswordField.value,
+      };
+      let mockOldPassword = oldPasswordField
+        ? { name: oldPasswordField.name, value: oldPasswordField.value }
+        : null;
+
+      let usernameValue = usernameField ? usernameField.value : null;
+      // Dismiss prompt if the username field is a credit card number AND
+      // if the password field is a three digit number. Also dismiss prompt if
+      // the password is a credit card number and the password field has attribute
+      // autocomplete="cc-number".
+      let newPasswordFieldValue = newPasswordField.value;
+      if (
+        (!dismissedPrompt &&
+          CreditCard.isValidNumber(usernameValue) &&
+          newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
+        (CreditCard.isValidNumber(newPasswordFieldValue) &&
+          newPasswordField.getAutocompleteInfo().fieldName == "cc-number")
+      ) {
+        dismissedPrompt = true;
+      }
+
+      if (
+        this._compareAndUpdatePreviouslySentValues(
+          form.rootElement,
+          usernameValue,
+          newPasswordField.value,
+          dismissedPrompt
+        )
+      ) {
+        log(
+          `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
+        );
+        return;
+      }
+
+      let docState = this.stateForDocument(doc);
+      let fieldsModified = this._formHasModifiedFields(form);
+      if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
+        if (targetField) {
+          throw new Error("No user input on targetField");
+        }
+        // we know no fields in this form had user modifications, so don't prompt
+        log(
+          `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
+        );
+        return;
+      }
+
+      let { login: autoFilledLogin } =
+        docState.fillsByRootElement.get(form.rootElement) || {};
+      let browsingContextId = win.windowGlobalChild.browsingContext.id;
+
+      detail = {
+        origin,
+        browsingContextId,
+        formActionOrigin,
+        autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
+        usernameField: mockUsername,
+        newPasswordField: mockPassword,
+        oldPasswordField: mockOldPassword,
+        dismissedPrompt,
+        triggeredByFillingGenerated,
+        messageSent: true,
+      };
+
+      this.sendAsyncMessage(messageName, detail);
+    } catch (ex) {
+      Cu.reportError(ex);
+      throw ex;
+    } finally {
+      detail.form = form;
+      const evt = new CustomEvent(messageName, { detail });
+      win.windowRoot.dispatchEvent(evt);
     }
-
-    if (
-      this._compareAndUpdatePreviouslySentValues(
-        form.rootElement,
-        usernameValue,
-        newPasswordField.value,
-        dismissedPrompt
-      )
-    ) {
-      log(
-        `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
-      );
-      return;
-    }
-
-    let { login: autoFilledLogin } =
-      docState.fillsByRootElement.get(form.rootElement) || {};
-    let browsingContextId = win.windowGlobalChild.browsingContext.id;
-
-    let detail = {
-      origin,
-      browsingContextId,
-      formActionOrigin,
-      autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
-      usernameField: mockUsername,
-      newPasswordField: mockPassword,
-      oldPasswordField: mockOldPassword,
-      dismissedPrompt,
-      triggeredByFillingGenerated,
-    };
-
-    this.sendAsyncMessage(messageName, detail);
-
-    detail.form = form;
-    const evt = new CustomEvent(messageName, { detail });
-    win.windowRoot.dispatchEvent(evt);
   }
 
   _maybeStopTreatingAsGeneratedPasswordField(event) {
