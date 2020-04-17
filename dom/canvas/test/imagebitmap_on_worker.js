@@ -153,6 +153,6 @@ onmessage = function(event) {
     doneTask();
   } else if (event.data.type == "testBug1239300") {
     var promise = testBug1239300();
-    promise.then(doneTask, doneTask);
+    promise.finally(doneTask);
   }
 };

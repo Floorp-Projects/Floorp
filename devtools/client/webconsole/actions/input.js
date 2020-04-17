@@ -87,8 +87,6 @@ function evaluateExpression(expression, from = "input") {
 
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
-    const onSettled = res => res;
-
     const response = await client
       .evaluateJSAsync(expression, {
         frameActor: await webConsoleUI.getFrameActor(),
@@ -96,7 +94,7 @@ function evaluateExpression(expression, from = "input") {
         selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
         mapped,
       })
-      .then(onSettled, onSettled);
+      .catch(e => e);
 
     return dispatch(onExpressionEvaluated(response));
   };

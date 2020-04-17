@@ -24,13 +24,13 @@ class Scheduler {
 
   dequeue() {
     const self = this;
-    const recursive = resolve => {
+    const recursive = () => {
       self.dequeue();
     };
     this.busy = true;
     const next = this.queue.shift();
     if (next) {
-      next().then(recursive, recursive);
+      next().finally(recursive);
     } else {
       this.busy = false;
     }

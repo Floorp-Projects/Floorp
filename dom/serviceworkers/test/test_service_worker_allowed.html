@@ -55,7 +55,7 @@
       Promise.all([
           testPermissiveHeader(),
           testPreciseHeader(),
-      ]).then(SimpleTest.finish, SimpleTest.finish);
+      ]).finally(SimpleTest.finish);
     }, (x) => {
       ok(false, "Registration should not succeed, but it did");
       SimpleTest.finish();

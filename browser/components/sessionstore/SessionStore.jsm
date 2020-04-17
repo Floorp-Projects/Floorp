@@ -2235,7 +2235,7 @@ var SessionStoreInternal = {
                 deferred.resolve();
               }
             }, topic);
-            deferred.promise.then(cleanup, cleanup);
+            deferred.promise.finally(cleanup);
             return deferred;
           };
 
@@ -6158,10 +6158,7 @@ var SessionStoreInternal = {
     );
     // Ensure that the timer is both canceled once we are done with it
     // and not garbage-collected until then.
-    deferred.promise.then(
-      () => timer.cancel(),
-      () => timer.cancel()
-    );
+    deferred.promise.finally(() => timer.cancel());
     return deferred;
   },
 

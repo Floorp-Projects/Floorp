@@ -115,7 +115,7 @@ function tryActors(reachables, completed) {
         executeSoon(completed, "tryActors callback " + completed.name);
       }
     };
-    promise.then(callback, callback);
+    promise.catch(e => e).then(callback);
   }
 }
 
