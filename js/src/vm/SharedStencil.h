@@ -274,6 +274,12 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
 
   // Whether this script contains a direct eval statement.
   HasDirectEval = 1 << 24,
+
+  // An extra VarScope is used as the body scope instead of the normal
+  // FunctionScope. This is needed when parameter expressions are used AND the
+  // function has var bindings or a sloppy-direct-eval. For example,
+  //    `function(x = eval("")) { var y; }`
+  FunctionHasExtraBodyVarScope = 1 << 25,
   // ----
 
   // Bytecode Emitter Flags
@@ -284,9 +290,7 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // True if the script has a non-syntactic scope on its dynamic scope chain.
   // That is, there are objects about which we know nothing between the
   // outermost syntactic scope and the global.
-  HasNonSyntacticScope = 1 << 25,
-
-  FunctionHasExtraBodyVarScope = 1 << 26,
+  HasNonSyntacticScope = 1 << 26,
 
   // Whether this function needs a call object or named lambda environment.
   NeedsFunctionEnvironmentObjects = 1 << 27,
