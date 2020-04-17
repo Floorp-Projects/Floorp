@@ -12,6 +12,9 @@
 #include "jit/JitAllocPolicy.h"
 
 namespace js {
+
+class PlainObject;
+
 namespace jit {
 
 class MBasicBlock;
@@ -160,7 +163,7 @@ MCompare* ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block,
 
 MOZ_MUST_USE bool AnalyzeNewScriptDefiniteProperties(
     JSContext* cx, DPAConstraintInfo& constraintInfo, HandleFunction fun,
-    ObjectGroup* group, HandlePlainObject baseobj,
+    ObjectGroup* group, Handle<PlainObject*> baseobj,
     Vector<TypeNewScriptInitializer>* initializerList);
 
 MOZ_MUST_USE bool AnalyzeArgumentsUsage(JSContext* cx, JSScript* script);

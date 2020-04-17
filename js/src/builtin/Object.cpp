@@ -26,6 +26,7 @@
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 

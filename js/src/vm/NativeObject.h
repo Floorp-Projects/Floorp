@@ -1492,19 +1492,6 @@ class NativeObject : public JSObject {
   static size_t offsetOfSlots() { return offsetof(NativeObject, slots_); }
 };
 
-// Object class for plain native objects created using '{}' object literals,
-// 'new Object()', 'Object.create', etc.
-class PlainObject : public NativeObject {
- public:
-  static const JSClass class_;
-
-  static inline JS::Result<PlainObject*, JS::OOM&> createWithTemplate(
-      JSContext* cx, Handle<PlainObject*> templateObject);
-
-  /* Return the allocKind we would use if we were to tenure this object. */
-  inline js::gc::AllocKind allocKindForTenure() const;
-};
-
 inline void NativeObject::privateWriteBarrierPre(void** oldval) {
   JS::shadow::Zone* shadowZone = this->shadowZoneFromAnyThread();
   if (shadowZone->needsIncrementalBarrier() && *oldval &&
@@ -1651,12 +1638,6 @@ bool IsPackedArray(JSObject* obj);
 
 extern void AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj,
                                              ObjectGroup* oldGroup);
-
-// Specializations of 7.3.23 CopyDataProperties(...) for NativeObjects.
-extern bool CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
-                                     HandleNativeObject from,
-                                     HandlePlainObject excludedItems,
-                                     bool* optimized);
 
 // Initialize an object's reserved slot with a private value pointing to
 // malloc-allocated memory and associate the memory with the object.

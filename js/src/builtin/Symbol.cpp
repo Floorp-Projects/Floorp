@@ -9,6 +9,7 @@
 #include "js/Symbol.h"
 #include "js/PropertySpec.h"
 #include "util/StringBuffer.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SymbolType.h"
 
 #include "vm/JSObject-inl.h"

@@ -31,7 +31,7 @@
 #include "vm/ArrayBufferViewObject.h"  // js::ArrayBufferViewObject
 #include "vm/JSContext.h"              // JSContext, CHECK_THREAD
 #include "vm/JSObject.h"               // JSObject
-#include "vm/NativeObject.h"           // js::PlainObject
+#include "vm/PlainObject.h"            // js::PlainObject
 #include "vm/PromiseObject.h"          // js::PromiseObject
 
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapStreamFromReader

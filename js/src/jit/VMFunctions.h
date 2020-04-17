@@ -24,6 +24,7 @@ class WithScope;
 class InlineTypedObject;
 class AbstractGeneratorObject;
 class AsyncFunctionGeneratorObject;
+class PlainObject;
 class RegExpObject;
 class TypedArrayObject;
 

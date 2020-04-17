@@ -19,6 +19,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "util/CheckedArithmetic.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 

@@ -49,6 +49,7 @@
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/PIC.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
@@ -66,6 +67,7 @@
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
+#include "vm/PlainObject-inl.h"  // js::CopyInitializerObject
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -975,7 +977,7 @@ bool js::CheckClassHeritageOperation(JSContext* cx, HandleValue heritage) {
   return false;
 }
 
-JSObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
+PlainObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
   if (!val.isObjectOrNull()) {
     ReportValueError(cx, JSMSG_NOT_OBJORNULL, -1, val, nullptr);
     return nullptr;

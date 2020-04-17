@@ -11,6 +11,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayObject-inl.h"

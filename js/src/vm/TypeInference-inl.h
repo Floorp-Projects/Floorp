@@ -29,6 +29,7 @@
 #include "vm/NativeObject.h"
 #include "vm/NumberObject.h"
 #include "vm/ObjectGroup.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/StringObject.h"
