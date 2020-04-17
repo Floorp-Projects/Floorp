@@ -553,18 +553,6 @@ JavaStackTrace:
     uncaught Java exception.
   type: string
 
-JSActorMessage:
-  description: >
-    If an actor is currently treating a message, this is the name of the message.
-    Otherwise, empty.
-  type: string
-
-JSActorName:
-  description: >
-    If an actor is currently treating a message, this is the name of the actor.
-    Otherwise, empty.
-  type: string
-
 JSLargeAllocationFailure:
   description: >
     A large allocation couldn't be satisfied, check the JSOutOfMemory

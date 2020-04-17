@@ -37,7 +37,7 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
                           outerWindowId);
 }
 
-void WindowGlobalActor::ConstructActor(const nsACString& aName,
+void WindowGlobalActor::ConstructActor(const nsAString& aName,
                                        JS::MutableHandleObject aActor,
                                        ErrorResult& aRv) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
@@ -113,17 +113,19 @@ void WindowGlobalActor::ConstructActor(const nsACString& aName,
 
   // Load the specific property from our module.
   JS::RootedValue ctor(cx);
-  nsAutoCString ctorName(aName);
-  ctorName.AppendASCII(actorType == JSWindowActor::Type::Parent ? "Parent"
-                                                                : "Child");
-  if (!JS_GetProperty(cx, exports, ctorName.get(), &ctor)) {
+  nsAutoString ctorName(aName);
+  ctorName.Append(actorType == JSWindowActor::Type::Parent
+                      ? NS_LITERAL_STRING("Parent")
+                      : NS_LITERAL_STRING("Child"));
+  if (!JS_GetUCProperty(cx, exports, ctorName.get(), ctorName.Length(),
+                        &ctor)) {
     aRv.NoteJSContextException(cx);
     return;
   }
 
   if (NS_WARN_IF(!ctor.isObject())) {
     nsPrintfCString message("Could not find actor constructor '%s'",
-                            ctorName.get());
+                            NS_ConvertUTF16toUTF8(ctorName).get());
     aRv.ThrowNotFoundError(message);
     return;
   }

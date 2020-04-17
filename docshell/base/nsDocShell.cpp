@@ -2011,7 +2011,7 @@ nsDocShell::GetLoadURIDelegate(nsILoadURIDelegate** aLoadURIDelegate) {
 
 already_AddRefed<nsILoadURIDelegate> nsDocShell::GetLoadURIDelegate() {
   if (nsCOMPtr<nsILoadURIDelegate> result =
-          do_QueryActor("LoadURIDelegate", GetWindow())) {
+          do_QueryActor(u"LoadURIDelegate", GetWindow())) {
     return result.forget();
   }
 

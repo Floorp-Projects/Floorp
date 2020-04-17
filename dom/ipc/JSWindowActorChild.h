@@ -52,7 +52,7 @@ class JSWindowActorChild final : public JSWindowActor {
   }
 
   WindowGlobalChild* GetManager() const;
-  void Init(const nsACString& aName, WindowGlobalChild* aManager);
+  void Init(const nsAString& aName, WindowGlobalChild* aManager);
   void StartDestroy();
   void AfterDestroy();
   Document* GetDocument(ErrorResult& aRv);

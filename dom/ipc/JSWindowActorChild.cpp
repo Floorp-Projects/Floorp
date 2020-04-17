@@ -30,7 +30,7 @@ JSObject* JSWindowActorChild::WrapObject(JSContext* aCx,
 
 WindowGlobalChild* JSWindowActorChild::GetManager() const { return mManager; }
 
-void JSWindowActorChild::Init(const nsACString& aName,
+void JSWindowActorChild::Init(const nsAString& aName,
                               WindowGlobalChild* aManager) {
   MOZ_ASSERT(!mManager, "Cannot Init() a JSWindowActorChild twice!");
   SetName(aName);
