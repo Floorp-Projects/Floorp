@@ -10,10 +10,6 @@
 <?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
 
 <!DOCTYPE window [
-<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/updates.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%updateDTD;
-%brandDTD;
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
 #include ../../../../browser/base/content/browser-doctype.inc
 #endif
@@ -23,7 +19,8 @@
         type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="&updateWizard.title;"
+        data-l10n-id="elevation-update-wizard"
+        data-l10n-attrs="title"
         style="width: auto; height: auto"
         onload="gUpdateElevationDialog.onLoad();">
 <dialog id="updates"
@@ -33,6 +30,11 @@
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
+
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="toolkit/updates/elevation.ftl"/>
+</linkset>
 
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
 #include ../../../../browser/base/content/macWindow.inc.xhtml
@@ -47,23 +49,23 @@
     <hbox class="update-header" flex="1">
       <vbox class="update-header-box-1">
         <vbox class="update-header-box-text">
-          <label class="update-header-label">&finishedPage.title;</label>
+          <label class="update-header-label" data-l10n-id="elevation-finished-page"/>
         </vbox>
       </vbox>
     </hbox>
     <vbox class="update-content" flex="1">
-      <label>&finishedBackgroundPage.text;</label>
+      <label data-l10n-id="elevation-finished-background-page"/>
       <separator/>
       <hbox align="center">
-        <label>&finishedBackground.name;</label>
+        <label data-l10n-id="elevation-finished-background"/>
         <label id="updateFinishedName" flex="1" crop="right" value=""/>
         <label id="detailsLinkLabel" disabled="true" is="text-link"
-               value="&details.link;"
+               data-l10n-id="elevation-details-link-label"
                onclick="gUpdateElevationDialog.openUpdateURL(event);"/>
       </hbox>
       <spacer flex="1"/>
-      <label id="finishedBackgroundMoreElevated">&finishedBackground.moreElevated;</label>
-      <label id="finishedBackgroundMoreElevatedLink">&errorManual.label;</label>
+      <label id="finishedBackgroundMoreElevated" data-l10n-id="elevation-more-elevated"/>
+      <label data-l10n-id="elevation-error-manual"/>
       <hbox>
         <label id="manualLinkLabel" is="text-link" value=""
                onclick="gUpdateElevationDialog.openUpdateURL(event);"/>
