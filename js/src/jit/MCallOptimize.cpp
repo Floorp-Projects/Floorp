@@ -31,6 +31,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/SharedArrayObject.h"

@@ -21,6 +21,8 @@
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
 #                    generate relative filenames.
 
+from __future__ import print_function
+
 import buildconfig
 import errno
 import sys
@@ -29,12 +31,9 @@ import os
 import re
 import shutil
 import textwrap
-import fnmatch
 import subprocess
 import time
 import ctypes
-import concurrent.futures
-import multiprocessing
 
 from optparse import OptionParser
 
@@ -51,6 +50,7 @@ from mozpack.manifests import (
 )
 
 # Utility classes
+
 
 class VCSFileInfo:
     """ A base class for version-controlled file information. Ensures that the
@@ -131,30 +131,30 @@ class VCSFileInfo:
 #   svn+ssh://user@foo.com/bar
 #   svn+ssh://user:pass@foo.com/bar
 #
-rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
+rootRegex = re.compile(r"^\S+?:/+(?:[^\s/]*@)?(\S+)$")
+
 
 def read_output(*args):
     (stdout, _) = subprocess.Popen(
         args=args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
     return stdout.rstrip()
 
+
 class HGRepoInfo:
     def __init__(self, path):
         self.path = path
 
-        rev = os.environ.get('MOZ_SOURCE_CHANGESET')
+        rev = os.environ.get("MOZ_SOURCE_CHANGESET")
         if not rev:
-            rev = read_output('hg', '-R', path,
-                              'parent', '--template={node}')
+            rev = read_output("hg", "-R", path, "parent", "--template={node}")
 
         # Look for the default hg path. If MOZ_SOURCE_REPO is set, we
         # don't bother asking hg.
-        hg_root = os.environ.get('MOZ_SOURCE_REPO')
+        hg_root = os.environ.get("MOZ_SOURCE_REPO")
         if hg_root:
             root = hg_root
         else:
-            root = read_output('hg', '-R', path,
-                               'showconfig', 'paths.default')
+            root = read_output("hg", "-R", path, "showconfig", "paths.default")
             if not root:
                 print("Failed to get HG Repo for %s" % path, file=sys.stderr)
         cleanroot = None
@@ -162,13 +162,17 @@ class HGRepoInfo:
             match = rootRegex.match(root)
             if match:
                 cleanroot = match.group(1)
-                if cleanroot.endswith('/'):
+                if cleanroot.endswith("/"):
                     cleanroot = cleanroot[:-1]
         if cleanroot is None:
-            print(textwrap.dedent("""\
+            print(
+                textwrap.dedent(
+                    """\
             Could not determine repo info for %s.  This is either not a clone of the web-based
-            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % path,
-                  sys.stderr)
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt."""
+                ) % path,
+                sys.stderr,
+            )
             sys.exit(1)
         self.rev = rev
         self.root = root
@@ -176,6 +180,7 @@ class HGRepoInfo:
 
     def GetFileInfo(self, file):
         return HGFileInfo(file, self)
+
 
 class HGFileInfo(VCSFileInfo):
     def __init__(self, file, repo):
@@ -197,12 +202,14 @@ class HGFileInfo(VCSFileInfo):
             return "hg:%s:%s:%s" % (self.clean_root, self.file, self.revision)
         return self.file
 
+
 class GitRepoInfo:
     """
     Info about a local git repository. Does not currently
     support discovering info about a git clone, the info must be
     provided out-of-band.
     """
+
     def __init__(self, path, rev, root):
         self.path = path
         cleanroot = None
@@ -210,19 +217,25 @@ class GitRepoInfo:
             match = rootRegex.match(root)
             if match:
                 cleanroot = match.group(1)
-                if cleanroot.endswith('/'):
+                if cleanroot.endswith("/"):
                     cleanroot = cleanroot[:-1]
         if cleanroot is None:
-            print(textwrap.dedent("""\
+            print(
+                textwrap.dedent(
+                    """\
             Could not determine repo info for %s (%s).  This is either not a clone of a web-based
-            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % (path, root),
-                  file=sys.stderr)
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt."""
+                )
+                % (path, root),
+                file=sys.stderr,
+            )
             sys.exit(1)
         self.rev = rev
         self.cleanroot = cleanroot
 
     def GetFileInfo(self, file):
         return GitFileInfo(file, self)
+
 
 class GitFileInfo(VCSFileInfo):
     def __init__(self, file, repo):
@@ -244,21 +257,24 @@ class GitFileInfo(VCSFileInfo):
             return "git:%s:%s:%s" % (self.clean_root, self.file, self.revision)
         return self.file
 
+
 # Utility functions
+
 
 # A cache of files for which VCS info has already been determined. Used to
 # prevent extra filesystem activity or process launching.
 vcsFileInfoCache = {}
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
+
     def realpath(path):
-        '''
+        """
         Normalize a path using `GetFinalPathNameByHandleW` to get the
         path with all components in the case they exist in on-disk, so
         that making links to a case-sensitive server (hg.mozilla.org) works.
 
         This function also resolves any symlinks in the path.
-        '''
+        """
         # Return the original path if something fails, which can happen for paths that
         # don't exist on this system (like paths from the CRT).
         result = path
@@ -278,23 +294,23 @@ if platform.system() == 'Windows':
                                                     0x02000000,
                                                     None)
         if handle != -1:
-            size = ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle,
-                                                                    None,
-                                                                    0,
-                                                                    0)
+            size = ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle, None, 0, 0)
             buf = ctypes.create_unicode_buffer(size)
-            if ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle,
-                                                                buf,
-                                                                size,
-                                                                0) > 0:
+            if (
+                ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle, buf, size, 0)
+                > 0
+            ):
                 # The return value of GetFinalPathNameByHandleW uses the
                 # '\\?\' prefix.
                 result = buf.value[4:]
             ctypes.windll.kernel32.CloseHandle(handle)
         return result
+
+
 else:
     # Just use the os.path version otherwise.
     realpath = os.path.realpath
+
 
 def IsInDir(file, dir):
     # the lower() is to handle win32+vc8, where
@@ -302,15 +318,17 @@ def IsInDir(file, dir):
     # but the srcdir can be mixed case
     return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
 
+
 def GetVCSFilenameFromSrcdir(file, srcdir):
     if srcdir not in Dumper.srcdirRepoInfo:
         # Not in cache, so find it adnd cache it
-        if os.path.isdir(os.path.join(srcdir, '.hg')):
+        if os.path.isdir(os.path.join(srcdir, ".hg")):
             Dumper.srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
         else:
             # Unknown VCS or file is not in a repo.
             return None
     return Dumper.srcdirRepoInfo[srcdir].GetFileInfo(file)
+
 
 def GetVCSFilename(file, srcdirs):
     """Given a full path to a file, and the top source directory,
@@ -323,11 +341,11 @@ def GetVCSFilename(file, srcdirs):
     cvs:cvs.mozilla.org/cvsroot:mozilla/browser/app/nsBrowserApp.cpp:1.36
     2) the unmodified root information if it exists"""
     (path, filename) = os.path.split(file)
-    if path == '' or filename == '':
+    if path == "" or filename == "":
         return (file, None)
 
     fileInfo = None
-    root = ''
+    root = ""
     if file in vcsFileInfoCache:
         # Already cached this info, use it.
         fileInfo = vcsFileInfoCache[file]
@@ -347,27 +365,26 @@ def GetVCSFilename(file, srcdirs):
     # we want forward slashes on win32 paths
     return (file.replace("\\", "/"), root)
 
+
 def validate_install_manifests(install_manifest_args):
     args = []
     for arg in install_manifest_args:
-        bits = arg.split(',')
+        bits = arg.split(",")
         if len(bits) != 2:
             raise ValueError('Invalid format for --install-manifest: '
                              'specify manifest,target_dir')
         manifest_file, destination = [os.path.abspath(b) for b in bits]
         if not os.path.isfile(manifest_file):
-            raise IOError(errno.ENOENT, 'Manifest file not found',
-                          manifest_file)
+            raise IOError(errno.ENOENT, "Manifest file not found", manifest_file)
         if not os.path.isdir(destination):
-            raise IOError(errno.ENOENT, 'Install directory not found',
-                          destination)
+            raise IOError(errno.ENOENT, "Install directory not found", destination)
         try:
             manifest = InstallManifest(manifest_file)
         except UnreadableInstallManifest:
-            raise IOError(errno.EINVAL, 'Error parsing manifest file',
-                          manifest_file)
+            raise IOError(errno.EINVAL, "Error parsing manifest file", manifest_file)
         args.append((manifest, destination))
     return args
+
 
 def make_file_mapping(install_manifests):
     file_mapping = {}
@@ -376,27 +393,29 @@ def make_file_mapping(install_manifests):
         reg = FileRegistry()
         manifest.populate_registry(reg)
         for dst, src in reg:
-            if hasattr(src, 'path'):
+            if hasattr(src, "path"):
                 # Any paths that get compared to source file names need to go through realpath.
                 abs_dest = realpath(os.path.join(destination, dst))
                 file_mapping[abs_dest] = realpath(src.path)
     return file_mapping
 
+
 @memoize
 def get_generated_file_s3_path(filename, rel_path, bucket):
     """Given a filename, return a path formatted similarly to
     GetVCSFilename but representing a file available in an s3 bucket."""
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         path = get_filename_with_digest(rel_path, f.read())
-        return 's3:{bucket}:{path}:'.format(bucket=bucket, path=path)
+        return "s3:{bucket}:{path}:".format(bucket=bucket, path=path)
 
 
 def GetPlatformSpecificDumper(**kwargs):
     """This function simply returns a instance of a subclass of Dumper
     that is appropriate for the current platform."""
-    return {'WINNT': Dumper_Win32,
-            'Linux': Dumper_Linux,
-            'Darwin': Dumper_Mac}[buildconfig.substs['OS_ARCH']](**kwargs)
+    return {"WINNT": Dumper_Win32, "Linux": Dumper_Linux, "Darwin": Dumper_Mac}[
+        buildconfig.substs["OS_ARCH"]
+    ](**kwargs)
+
 
 def SourceIndex(fileStream, outputPath, vcs_root):
     """Takes a list of files, writes info to a data block in a .stream file"""
@@ -404,11 +423,22 @@ def SourceIndex(fileStream, outputPath, vcs_root):
     # Create the srcsrv data block that indexes the pdb file
     result = True
     pdbStreamFile = open(outputPath, "w")
-    pdbStreamFile.write('''SRCSRV: ini ------------------------------------------------\r\nVERSION=2\r\nINDEXVERSION=2\r\nVERCTRL=http\r\nSRCSRV: variables ------------------------------------------\r\nHGSERVER=''')
+    pdbStreamFile.write('SRCSRV: ini ------------------------------------------------\r'
+                        + '\nVERSION=2\r\nINDEXVERSION=2\r'
+                        + '\nVERCTRL=http\r'
+                        + '\nSRCSRV: variables ------------------------------------------\r'
+                        + '\nHGSERVER=')
     pdbStreamFile.write(vcs_root)
-    pdbStreamFile.write('''\r\nSRCSRVVERCTRL=http\r\nHTTP_EXTRACT_TARGET=%hgserver%/raw-file/%var3%/%var2%\r\nSRCSRVTRG=%http_extract_target%\r\nSRCSRV: source files ---------------------------------------\r\n''')
-    pdbStreamFile.write(fileStream) # can't do string interpolation because the source server also uses this and so there are % in the above
-    pdbStreamFile.write("SRCSRV: end ------------------------------------------------\r\n\n")
+    pdbStreamFile.write('\r\nSRCSRVVERCTRL=http\r'
+                        + '\nHTTP_EXTRACT_TARGET=%hgserver%/raw-file/%var3%/%var2%\r'
+                        + '\nSRCSRVTRG=%http_extract_target%\r'
+                        + '\nSRCSRV: source files ---------------------------------------\r\n''')
+    pdbStreamFile.write(fileStream)
+    # can't do string interpolation because the source server also uses this
+    # so there are % in the above
+    pdbStreamFile.write(
+        "SRCSRV: end ------------------------------------------------\r\n\n"
+    )
     pdbStreamFile.close()
     return result
 
@@ -428,25 +458,30 @@ class Dumper:
     You don't want to use this directly if you intend to process files.
     Instead, call GetPlatformSpecificDumper to get an instance of a
     subclass."""
+
     srcdirRepoInfo = {}
 
-    def __init__(self, dump_syms, symbol_path,
-                 archs=None,
-                 srcdirs=[],
-                 copy_debug=False,
-                 vcsinfo=False,
-                 srcsrv=False,
-                 generated_files=None,
-                 s3_bucket=None,
-                 file_mapping=None):
+    def __init__(
+        self,
+        dump_syms,
+        symbol_path,
+        archs=None,
+        srcdirs=[],
+        copy_debug=False,
+        vcsinfo=False,
+        srcsrv=False,
+        generated_files=None,
+        s3_bucket=None,
+        file_mapping=None,
+    ):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
         if archs is None:
             # makes the loop logic simpler
-            self.archs = ['']
+            self.archs = [""]
         else:
-            self.archs = ['-a %s' % a for a in archs.split()]
+            self.archs = ["-a %s" % a for a in archs.split()]
         # Any paths that get compared to source file names need to go through realpath.
         self.srcdirs = [realpath(s) for s in srcdirs]
         self.copy_debug = copy_debug
@@ -457,12 +492,12 @@ class Dumper:
         self.file_mapping = file_mapping or {}
         # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
         # source paths to start with "/rust/<sha>/".
-        rust_sha = buildconfig.substs['RUSTC_COMMIT']
-        rust_srcdir = '/rustc/' + rust_sha
+        rust_sha = buildconfig.substs["RUSTC_COMMIT"]
+        rust_srcdir = "/rustc/" + rust_sha
         self.srcdirs.append(rust_srcdir)
-        Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(rust_srcdir,
-                                                         rust_sha,
-                                                         'https://github.com/rust-lang/rust/')
+        Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(
+            rust_srcdir, rust_sha, "https://github.com/rust-lang/rust/"
+        )
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -472,7 +507,7 @@ class Dumper:
         """Utility function, returns the output of file(1)"""
         # we use -L to read the targets of symlinks,
         # and -b to print just the content, not the filename
-        return read_output('file', '-Lb', file)
+        return read_output("file", "-Lb", file)
 
     # This is a no-op except on Win32
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
@@ -497,25 +532,27 @@ class Dumper:
 
         # tries to get the vcs root from the .mozconfig first - if it's not set
         # the tinderbox vcs path will be assigned further down
-        vcs_root = os.environ.get('MOZ_SOURCE_REPO')
+        vcs_root = os.environ.get("MOZ_SOURCE_REPO")
         for arch_num, arch in enumerate(self.archs):
-            self.ProcessFileWork(file, arch_num, arch, vcs_root, dsymbundle,
-                                 count_ctors=count_ctors)
+            self.ProcessFileWork(
+                file, arch_num, arch, vcs_root, dsymbundle, count_ctors=count_ctors
+            )
 
     def dump_syms_cmdline(self, file, arch, dsymbundle=None):
-        '''
+        """
         Get the commandline used to invoke dump_syms.
-        '''
+        """
         # The Mac dumper overrides this.
         return [self.dump_syms, file]
 
-    def ProcessFileWork(self, file, arch_num, arch, vcs_root, dsymbundle=None,
-                        count_ctors=False):
+    def ProcessFileWork(
+        self, file, arch_num, arch, vcs_root, dsymbundle=None, count_ctors=False
+    ):
         ctors = 0
         t_start = time.time()
         print("Processing file: %s" % file, file=sys.stderr)
 
-        sourceFileStream = ''
+        sourceFileStream = ""
         code_id, code_file = None, None
         try:
             cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
@@ -529,14 +566,11 @@ class Dumper:
                 # strip off .pdb extensions, and append .sym
                 sym_file = re.sub("\.pdb$", "", debug_file) + ".sym"
                 # we do want forward slashes here
-                rel_path = os.path.join(debug_file,
-                                        guid,
-                                        sym_file).replace("\\", "/")
-                full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                          rel_path))
+                rel_path = os.path.join(debug_file, guid, sym_file).replace("\\", "/")
+                full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
                 try:
                     os.makedirs(os.path.dirname(full_path))
-                except OSError: # already exists
+                except OSError:  # already exists
                     pass
                 f = open(full_path, "w")
                 f.write(module_line)
@@ -553,18 +587,26 @@ class Dumper:
                         if self.vcsinfo:
                             gen_path = self.generated_files.get(filename)
                             if gen_path and self.s3_bucket:
-                                filename = get_generated_file_s3_path(filename, gen_path, self.s3_bucket)
-                                rootname = ''
+                                filename = get_generated_file_s3_path(
+                                    filename, gen_path, self.s3_bucket
+                                )
+                                rootname = ""
                             else:
-                                (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
-                            # sets vcs_root in case the loop through files were to end on an empty rootname
+                                (filename, rootname) = GetVCSFilename(
+                                    filename, self.srcdirs
+                                )
+                            # sets vcs_root in case the loop through files were to end
+                            # on an empty rootname
                             if vcs_root is None:
-                              if rootname:
-                                 vcs_root = rootname
+                                if rootname:
+                                    vcs_root = rootname
                         # gather up files with hg for indexing
                         if filename.startswith("hg"):
-                            (ver, checkout, source_file, revision) = filename.split(":", 3)
-                            sourceFileStream += sourcepath + "*" + source_file + '*' + revision + "\r\n"
+                            (ver, checkout, source_file, revision) = filename.split(
+                                ":", 3
+                            )
+                            sourceFileStream += sourcepath + "*" + source_file
+                            sourceFileStream += "*" + revision + "\r\n"
                         f.write("FILE %s %s\n" % (index, filename))
                     elif line.startswith("INFO CODE_ID "):
                         # INFO CODE_ID code_id code_file
@@ -578,7 +620,7 @@ class Dumper:
                         if count_ctors and line.startswith("FUNC "):
                             # Static initializers, as created by clang and gcc
                             # have symbols that start with "_GLOBAL_sub"
-                            if '_GLOBAL__sub_' in line:
+                            if "_GLOBAL__sub_" in line:
                                 ctors += 1
                             # MSVC creates `dynamic initializer for '...'`
                             # symbols.
@@ -590,18 +632,18 @@ class Dumper:
                 f.close()
                 retcode = proc.wait()
                 if retcode != 0:
-                    raise RuntimeError(
-                        "dump_syms failed with error code %d" % retcode)
+                    raise RuntimeError("dump_syms failed with error code %d" % retcode)
                 # we output relative paths so callers can get a list of what
                 # was generated
                 print(rel_path)
                 if self.srcsrv and vcs_root:
                     # add source server indexing to the pdb file
-                    self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
+                    self.SourceServerIndexing(
+                        debug_file, guid, sourceFileStream, vcs_root
+                    )
                 # only copy debug the first time if we have multiple architectures
                 if self.copy_debug and arch_num == 0:
-                    self.CopyDebug(file, debug_file, guid,
-                                   code_file, code_id)
+                    self.CopyDebug(file, debug_file, guid, code_file, code_id)
         except StopIteration:
             pass
         except Exception as e:
@@ -616,42 +658,48 @@ class Dumper:
 
             perfherder_data = {
                 "framework": {"name": "build_metrics"},
-                "suites": [{
-                    "name": "compiler_metrics",
-                    "subtests": [{
-                        "name": "num_static_constructors",
-                        "value": ctors,
-                        "alertChangeType": "absolute",
-                        "alertThreshold": 3
-                    }]}
-                ]
+                "suites": [
+                    {
+                        "name": "compiler_metrics",
+                        "subtests": [
+                            {
+                                "name": "num_static_constructors",
+                                "value": ctors,
+                                "alertChangeType": "absolute",
+                                "alertThreshold": 3,
+                            }
+                        ],
+                    }
+                ],
             }
-            perfherder_extra_options = os.environ.get('PERFHERDER_EXTRA_OPTIONS', '')
+            perfherder_extra_options = os.environ.get("PERFHERDER_EXTRA_OPTIONS", "")
             for opt in perfherder_extra_options.split():
-                for suite in perfherder_data['suites']:
-                    if opt not in suite.get('extraOptions', []):
-                        suite.setdefault('extraOptions', []).append(opt)
+                for suite in perfherder_data["suites"]:
+                    if opt not in suite.get("extraOptions", []):
+                        suite.setdefault("extraOptions", []).append(opt)
 
-            if 'asan' not in perfherder_extra_options.lower():
-                print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
-                    file=sys.stderr)
+            if "asan" not in perfherder_extra_options.lower():
+                print(
+                    "PERFHERDER_DATA: %s" % json.dumps(perfherder_data), file=sys.stderr
+                )
 
         elapsed = time.time() - t_start
-        print('Finished processing %s in %.2fs' % (file, elapsed),
-              file=sys.stderr)
+        print("Finished processing %s in %.2fs" % (file, elapsed), file=sys.stderr)
+
 
 # Platform-specific subclasses.  For the most part, these just have
 # logic to determine what files to extract symbols from.
 
+
 def locate_pdb(path):
-    '''Given a path to a binary, attempt to locate the matching pdb file with simple heuristics:
+    """Given a path to a binary, attempt to locate the matching pdb file with simple heuristics:
     * Look for a pdb file with the same base name next to the binary
     * Look for a pdb file with the same base name in the cwd
 
     Returns the path to the pdb file if it exists, or None if it could not be located.
-    '''
+    """
     path, ext = os.path.splitext(path)
-    pdb = path + '.pdb'
+    pdb = path + ".pdb"
     if os.path.isfile(pdb):
         return pdb
     # If there's no pdb next to the file, see if there's a pdb with the same root name
@@ -662,6 +710,7 @@ def locate_pdb(path):
     if os.path.isfile(pdb):
         return pdb
     return None
+
 
 class Dumper_Win32(Dumper):
     fixedFilenameCaseCache = {}
@@ -674,47 +723,44 @@ class Dumper_Win32(Dumper):
                 return True
         return False
 
-
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         file = locate_pdb(file)
+
         def compress(path):
-            compressed_file = path[:-1] + '_'
+            compressed_file = path[:-1] + "_"
             # ignore makecab's output
-            makecab = buildconfig.substs['MAKECAB']
-            wine = buildconfig.substs.get('WINE')
-            if wine and makecab.lower().endswith('.exe'):
+            makecab = buildconfig.substs["MAKECAB"]
+            wine = buildconfig.substs.get("WINE")
+            if wine and makecab.lower().endswith(".exe"):
                 cmd = [wine, makecab]
             else:
                 cmd = [makecab]
             success = subprocess.call(
                 cmd + ["-D", "CompressionType=MSZIP", path, compressed_file],
-                stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+                stdout=open(os.devnull, "w"),
+                stderr=subprocess.STDOUT,
+            )
             if success == 0 and os.path.exists(compressed_file):
                 os.unlink(path)
                 return True
             return False
 
-        rel_path = os.path.join(debug_file,
-                                guid,
-                                debug_file).replace("\\", "/")
-        full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                  rel_path))
+        rel_path = os.path.join(debug_file, guid, debug_file).replace("\\", "/")
+        full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
         shutil.copyfile(file, full_path)
         if compress(full_path):
-            print(rel_path[:-1] + '_')
+            print(rel_path[:-1] + "_")
         else:
             print(rel_path)
 
         # Copy the binary file as well
         if code_file and code_id:
-            full_code_path = os.path.join(os.path.dirname(file),
-                                          code_file)
+            full_code_path = os.path.join(os.path.dirname(file), code_file)
             if os.path.exists(full_code_path):
-                rel_path = os.path.join(code_file,
-                                        code_id,
-                                        code_file).replace("\\", "/")
-                full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                          rel_path))
+                rel_path = os.path.join(code_file, code_id, code_file).replace(
+                    "\\", "/"
+                )
+                full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
                 try:
                     os.makedirs(os.path.dirname(full_path))
                 except OSError as e:
@@ -722,7 +768,7 @@ class Dumper_Win32(Dumper):
                         raise
                 shutil.copyfile(full_code_path, full_path)
                 if compress(full_path):
-                    print(rel_path[:-1] + '_')
+                    print(rel_path[:-1] + "_")
                 else:
                     print(rel_path)
 
@@ -734,21 +780,29 @@ class Dumper_Win32(Dumper):
         result = SourceIndex(sourceFileStream, stream_output_path, vcs_root)
         if self.copy_debug:
             pdbstr = buildconfig.substs["PDBSTR"]
-            wine = buildconfig.substs.get('WINE')
+            wine = buildconfig.substs.get("WINE")
             if wine:
                 cmd = [wine, pdbstr]
             else:
                 cmd = [pdbstr]
-            subprocess.call(cmd + ["-w", "-p:" + os.path.basename(debug_file),
-                             "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
-                            cwd=os.path.dirname(stream_output_path))
+            subprocess.call(
+                cmd
+                + [
+                    "-w",
+                    "-p:" + os.path.basename(debug_file),
+                    "-i:" + os.path.basename(streamFilename),
+                    "-s:srcsrv",
+                ],
+                cwd=os.path.dirname(stream_output_path),
+            )
             # clean up all the .stream files when done
             os.remove(stream_output_path)
         return result
 
 
 class Dumper_Linux(Dumper):
-    objcopy = os.environ['OBJCOPY'] if 'OBJCOPY' in os.environ else 'objcopy'
+    objcopy = os.environ["OBJCOPY"] if "OBJCOPY" in os.environ else "objcopy"
+
     def ShouldProcess(self, file):
         """This function will allow processing of files that are
         executable, or end with the .so extension, and additionally
@@ -766,14 +820,21 @@ class Dumper_Linux(Dumper):
         # .gnu_debuglink section, and objcopy doesn't want to add one in
         # such cases, so we make it remove it any existing one first.
         file_dbg = file + ".dbg"
-        if subprocess.call([self.objcopy, '--only-keep-debug', file, file_dbg]) == 0 and \
-           subprocess.call([self.objcopy, '--remove-section', '.gnu_debuglink',
-                            '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
-            rel_path = os.path.join(debug_file,
-                                    guid,
-                                    debug_file + ".dbg")
-            full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                      rel_path))
+        if (
+            subprocess.call([self.objcopy, "--only-keep-debug", file, file_dbg]) == 0
+            and subprocess.call(
+                [
+                    self.objcopy,
+                    "--remove-section",
+                    ".gnu_debuglink",
+                    "--add-gnu-debuglink=%s" % file_dbg,
+                    file,
+                ]
+            )
+            == 0
+        ):
+            rel_path = os.path.join(debug_file, guid, debug_file + ".dbg")
+            full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
             shutil.move(file_dbg, full_path)
             # gzip the shipped debug files
             os.system("gzip -4 -f %s" % full_path)
@@ -782,13 +843,14 @@ class Dumper_Linux(Dumper):
             if os.path.isfile(file_dbg):
                 os.unlink(file_dbg)
 
+
 class Dumper_Solaris(Dumper):
     def RunFileCommand(self, file):
         """Utility function, returns the output of file(1)"""
         try:
             output = os.popen("file " + file).read()
-            return output.split('\t')[1];
-        except:
+            return output.split("\t")[1]
+        except Exception:
             return ""
 
     def ShouldProcess(self, file):
@@ -799,6 +861,7 @@ class Dumper_Solaris(Dumper):
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
+
 
 class Dumper_Mac(Dumper):
     def ShouldProcess(self, file):
@@ -811,23 +874,23 @@ class Dumper_Mac(Dumper):
         return False
 
     def ProcessFile(self, file, count_ctors=False):
-        print("Starting Mac pre-processing on file: %s" % file,
-              file=sys.stderr)
+        print("Starting Mac pre-processing on file: %s" % file, file=sys.stderr)
         dsymbundle = self.GenerateDSYM(file)
         if dsymbundle:
             # kick off new jobs per-arch with our new list of files
-            Dumper.ProcessFile(self, file, dsymbundle=dsymbundle,
-                               count_ctors=count_ctors)
+            Dumper.ProcessFile(
+                self, file, dsymbundle=dsymbundle, count_ctors=count_ctors
+            )
 
     def dump_syms_cmdline(self, file, arch, dsymbundle=None):
-        '''
+        """
         Get the commandline used to invoke dump_syms.
-        '''
+        """
         # dump_syms wants the path to the original binary and the .dSYM
         # in order to dump all the symbols.
         if dsymbundle:
             # This is the .dSYM bundle.
-            return [self.dump_syms] + arch.split() + ['-g', dsymbundle, file]
+            return [self.dump_syms] + arch.split() + ["-g", dsymbundle, file]
         return Dumper.dump_syms_cmdline(self, file, arch)
 
     def GenerateDSYM(self, file):
@@ -835,13 +898,12 @@ class Dumper_Mac(Dumper):
         by dsymutil(1), so run dsymutil here and pass the bundle name
         down to the superclass method instead."""
         t_start = time.time()
-        print("Running Mac pre-processing on file: %s" % (file,),
-              file=sys.stderr)
+        print("Running Mac pre-processing on file: %s" % (file,), file=sys.stderr)
 
         dsymbundle = file + ".dSYM"
         if os.path.exists(dsymbundle):
             shutil.rmtree(dsymbundle)
-        dsymutil = buildconfig.substs['DSYMUTIL']
+        dsymutil = buildconfig.substs["DSYMUTIL"]
         # dsymutil takes --arch=foo instead of -a foo like everything else
         cmd = ([dsymutil] +
                [a.replace('-a ', '--arch=') for a in self.archs if a] +
@@ -852,7 +914,7 @@ class Dumper_Mac(Dumper):
                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         dsymout, dsymerr = dsymutil_proc.communicate()
         if dsymutil_proc.returncode != 0:
-            raise RuntimeError('Error running dsymutil: %s' % dsymerr)
+            raise RuntimeError("Error running dsymutil: %s" % dsymerr)
 
         # Regular dsymutil won't produce a .dSYM for files without symbols.
         if not os.path.exists(dsymbundle):
@@ -867,20 +929,21 @@ class Dumper_Mac(Dumper):
         # So we check for the error message and bail if it appears.  If it
         # doesn't, we carefully check the bundled DWARF to see if dump_syms
         # will be OK with it.
-        if 'warning: no debug symbols in' in dsymerr:
+        if "warning: no debug symbols in" in dsymerr:
             print(dsymerr, file=sys.stderr)
             return False
 
-        contents_dir = os.path.join(dsymbundle, 'Contents', 'Resources', 'DWARF')
+        contents_dir = os.path.join(dsymbundle, "Contents", "Resources", "DWARF")
         if not os.path.exists(contents_dir):
-            print("No DWARF information in .dSYM bundle %s" % (dsymbundle,),
-                  file=sys.stderr)
+            print(
+                "No DWARF information in .dSYM bundle %s" % (dsymbundle,),
+                file=sys.stderr,
+            )
             return False
 
         files = os.listdir(contents_dir)
         if len(files) != 1:
-            print("Unexpected files in .dSYM bundle %s" % (files,),
-                  file=sys.stderr)
+            print("Unexpected files in .dSYM bundle %s" % (files,), file=sys.stderr)
             return False
 
         otool_out = subprocess.check_output([buildconfig.substs['OTOOL'],
@@ -893,8 +956,7 @@ class Dumper_Mac(Dumper):
             return False
 
         elapsed = time.time() - t_start
-        print('Finished processing %s in %.2fs' % (file, elapsed),
-              file=sys.stderr)
+        print("Finished processing %s in %.2fs" % (file, elapsed), file=sys.stderr)
         return dsymbundle
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
@@ -903,51 +965,88 @@ class Dumper_Mac(Dumper):
         into a .tar.bz2 because the debug symbols are pretty huge, and
         also because it's a bundle, so it's a directory. |file| here is the
         the original filename."""
-        dsymbundle = file + '.dSYM'
-        rel_path = os.path.join(debug_file,
-                                guid,
-                                os.path.basename(dsymbundle) + ".tar.bz2")
-        full_path = os.path.abspath(os.path.join(self.symbol_path,
-                                                  rel_path))
-        success = subprocess.call(["tar", "cjf", full_path, os.path.basename(dsymbundle)],
-                                  cwd=os.path.dirname(dsymbundle),
-                                  stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+        dsymbundle = file + ".dSYM"
+        rel_path = os.path.join(
+            debug_file, guid, os.path.basename(dsymbundle) + ".tar.bz2"
+        )
+        full_path = os.path.abspath(os.path.join(self.symbol_path, rel_path))
+        success = subprocess.call(
+            ["tar", "cjf", full_path, os.path.basename(dsymbundle)],
+            cwd=os.path.dirname(dsymbundle),
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.STDOUT,
+        )
         if success == 0 and os.path.exists(full_path):
             print(rel_path)
 
+
 # Entry point if called as a standalone program
+
+
 def main():
-    parser = OptionParser(usage="usage: %prog [options] <dump_syms binary> <symbol store path> <debug info files>")
-    parser.add_option("-c", "--copy",
-                      action="store_true", dest="copy_debug", default=False,
-                      help="Copy debug info files into the same directory structure as symbol files")
-    parser.add_option("-a", "--archs",
-                      action="store", dest="archs",
-                      help="Run dump_syms -a <arch> for each space separated cpu architecture in ARCHS (only on OS X)")
-    parser.add_option("-s", "--srcdir",
-                      action="append", dest="srcdir", default=[],
-                      help="Use SRCDIR to determine relative paths to source files")
-    parser.add_option("-v", "--vcs-info",
-                      action="store_true", dest="vcsinfo",
-                      help="Try to retrieve VCS info for each FILE listed in the output")
-    parser.add_option("-i", "--source-index",
-                      action="store_true", dest="srcsrv", default=False,
-                      help="Add source index information to debug files, making them suitable for use in a source server.")
-    parser.add_option("--install-manifest",
-                      action="append", dest="install_manifests",
-                      default=[],
-                      help="""Use this install manifest to map filenames back
+    parser = OptionParser(
+        usage="usage: %prog [options] <dump_syms binary> <symbol store path> <debug info files>"
+    )
+    parser.add_option(
+        "-c",
+        "--copy",
+        action="store_true",
+        dest="copy_debug",
+        default=False,
+        help="Copy debug info files into the same directory structure as symbol files"
+    )
+    parser.add_option(
+        "-a",
+        "--archs",
+        action="store",
+        dest="archs",
+        help="Run dump_syms -a <arch> for each space separated"
+        + "cpu architecture in ARCHS (only on OS X)")
+    parser.add_option(
+        "-s",
+        "--srcdir",
+        action="append",
+        dest="srcdir",
+        default=[],
+        help="Use SRCDIR to determine relative paths to source files",
+    )
+    parser.add_option(
+        "-v",
+        "--vcs-info",
+        action="store_true",
+        dest="vcsinfo",
+        help="Try to retrieve VCS info for each FILE listed in the output",
+    )
+    parser.add_option(
+        "-i",
+        "--source-index",
+        action="store_true",
+        dest="srcsrv",
+        default=False,
+        help="Add source index information to debug files, making them suitable"
+        + " for use in a source server.",
+    )
+    parser.add_option(
+        "--install-manifest",
+        action="append",
+        dest="install_manifests",
+        default=[],
+        help="""Use this install manifest to map filenames back
 to canonical locations in the source repository. Specify
-<install manifest filename>,<install destination> as a comma-separated pair.
-""")
-    parser.add_option("--count-ctors",
-                      action="store_true", dest="count_ctors", default=False,
-                      help="Count static initializers")
+<install manifest filename>,<install destination> as a comma-separated pair."""
+    )
+    parser.add_option(
+        "--count-ctors",
+        action="store_true",
+        dest="count_ctors",
+        default=False,
+        help="Count static initializers",
+    )
     (options, args) = parser.parse_args()
 
-    #check to see if the pdbstr.exe exists
+    # check to see if the pdbstr.exe exists
     if options.srcsrv:
-        if 'PDBSTR' not in buildconfig.substs:
+        if "PDBSTR" not in buildconfig.substs:
             print("pdbstr was not found by configure.\n", file=sys.stderr)
             sys.exit(1)
 
@@ -962,21 +1061,26 @@ to canonical locations in the source repository. Specify
         exit(1)
     file_mapping = make_file_mapping(manifests)
     # Any paths that get compared to source file names need to go through realpath.
-    generated_files = {realpath(os.path.join(buildconfig.topobjdir, f)): f
-                       for (f, _) in get_generated_sources()}
+    generated_files = {
+        realpath(os.path.join(buildconfig.topobjdir, f)): f
+        for (f, _) in get_generated_sources()
+    }
     _, bucket = get_s3_region_and_bucket()
-    dumper = GetPlatformSpecificDumper(dump_syms=args[0],
-                                       symbol_path=args[1],
-                                       copy_debug=options.copy_debug,
-                                       archs=options.archs,
-                                       srcdirs=options.srcdir,
-                                       vcsinfo=options.vcsinfo,
-                                       srcsrv=options.srcsrv,
-                                       generated_files=generated_files,
-                                       s3_bucket=bucket,
-                                       file_mapping=file_mapping)
+    dumper = GetPlatformSpecificDumper(
+        dump_syms=args[0],
+        symbol_path=args[1],
+        copy_debug=options.copy_debug,
+        archs=options.archs,
+        srcdirs=options.srcdir,
+        vcsinfo=options.vcsinfo,
+        srcsrv=options.srcsrv,
+        generated_files=generated_files,
+        s3_bucket=bucket,
+        file_mapping=file_mapping,
+    )
 
     dumper.Process(args[2], options.count_ctors)
+
 
 # run main if run directly
 if __name__ == "__main__":

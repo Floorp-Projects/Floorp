@@ -26,6 +26,7 @@
 #include "unicode/ulistformatter.h"
 #include "unicode/utypes.h"
 #include "vm/JSContext.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Runtime.h"  // js::ReportAllocationOverflow
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"

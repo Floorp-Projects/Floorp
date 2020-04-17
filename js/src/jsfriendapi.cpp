@@ -31,6 +31,7 @@
 #include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"

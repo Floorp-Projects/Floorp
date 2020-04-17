@@ -55,6 +55,7 @@
 #include "vm/NativeObject.h"              // for NativeObject, JSObject::is
 #include "vm/ObjectGroup.h"               // for GenericObject, NewObjectKind
 #include "vm/ObjectOperations.h"          // for DefineProperty
+#include "vm/PlainObject.h"               // for js::PlainObject
 #include "vm/PromiseObject.h"             // for js::PromiseObject
 #include "vm/Realm.h"                     // for AutoRealm, ErrorCopier, Realm
 #include "vm/Runtime.h"                   // for JSAtomState

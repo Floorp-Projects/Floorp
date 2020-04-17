@@ -334,6 +334,7 @@ UNIFIED_SOURCES += [
     'vm/OffThreadPromiseRuntimeState.cpp',
     'vm/OffThreadScriptCompilation.cpp',
     'vm/PIC.cpp',
+    'vm/PlainObject.cpp',
     'vm/Printer.cpp',
     'vm/Probes.cpp',
     'vm/PromiseLookup.cpp',

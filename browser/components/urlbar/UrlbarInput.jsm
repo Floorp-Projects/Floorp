@@ -777,6 +777,11 @@ class UrlbarInput {
   setValueFromResult(result = null, event = null) {
     let canonizedUrl;
 
+    // Usually this is set by a previous input event, but in certain cases, like
+    // when opening Top Sites on a loaded page, it wouldn't happen. To avoid
+    // confusing the user, we always enforce it when a result changes our value.
+    this.setPageProxyState("invalid", true);
+
     if (!result) {
       // This usually happens when there's no selected results (the user cycles
       // through results and there was no heuristic), and we reset the input

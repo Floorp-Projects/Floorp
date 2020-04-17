@@ -111,6 +111,7 @@ static void CloseLiveIteratorIon(JSContext* cx,
   MaybeReadFallback recover(cx, cx->activation()->asJit(), &frame.frame(),
                             MaybeReadFallback::Fallback_DoNothing);
   Value v = si.maybeRead(recover);
+  MOZ_RELEASE_ASSERT(v.isObject());
   RootedObject iterObject(cx, &v.toObject());
 
   if (isDestructuring) {

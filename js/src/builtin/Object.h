@@ -14,6 +14,8 @@
 
 namespace js {
 
+class PlainObject;
+
 // Object constructor native. Exposed only so the JIT can know its address.
 MOZ_MUST_USE bool obj_construct(JSContext* cx, unsigned argc, JS::Value* vp);
 
@@ -22,7 +24,7 @@ PlainObject* ObjectCreateImpl(JSContext* cx, HandleObject proto,
                               HandleObjectGroup group = nullptr);
 
 PlainObject* ObjectCreateWithTemplate(JSContext* cx,
-                                      HandlePlainObject templateObj);
+                                      Handle<PlainObject*> templateObj);
 
 // Object methods exposed so they can be installed in the self-hosting global.
 MOZ_MUST_USE bool obj_propertyIsEnumerable(JSContext* cx, unsigned argc,

@@ -125,15 +125,56 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  // Determines whether 1) the global Atomic property is defined and atomic
+  // operations are supported, and 2) whether shared-memory operations are
+  // supported.
   bool getSharedMemoryAndAtomicsEnabled() const;
   RealmCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
 
-  // When these prefs (COOP and COEP) are not enabled, shared memory objects
-  // (e.g. SAB) are not allowed to be postMessage()'ed. And we want to provide
-  // a clear warning message to users/developer so that they would have an idea
-  // if the implementations of the COOP and COEP headers are finished or not. So
-  // that they would know if they can fix the SAB by deploying the COOP and
-  // COEP headers or not.
+  // Determines (if getSharedMemoryAndAtomicsEnabled() is true) whether the
+  // global SharedArrayBuffer property is defined.  If the property is not
+  // defined, shared array buffer functionality can only be invoked if the
+  // host/embedding specifically acts to expose it.
+  //
+  // This option defaults to true: embeddings unable to tolerate a global
+  // SharedAraryBuffer property must opt out of it.
+  bool defineSharedArrayBufferConstructor() const {
+    return defineSharedArrayBufferConstructor_;
+  }
+  RealmCreationOptions& setDefineSharedArrayBufferConstructor(bool flag) {
+    defineSharedArrayBufferConstructor_ = flag;
+    return *this;
+  }
+
+  // Structured clone operations support the cloning of shared memory objects
+  // (SharedArrayBuffer or or a shared WASM Memory object) *optionally* -- at
+  // the discretion of the embedder code that performs the cloning.  When a
+  // structured clone operation encounters a shared memory object and cloning
+  // shared memory objects has not been enabled, the clone fails and an
+  // error is thrown.
+  //
+  // In the web embedding context, shared memory object cloning is disabled
+  // either because
+  //
+  //   1) *no* way of supporting it is available (because the
+  //      Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP
+  //      headers are not respected to force the page into its own process), or
+  //   2) the aforementioned HTTP headers don't specify that the page should be
+  //      opened in its own process.
+  //
+  // These two scenarios demand different error messages, and this option can be
+  // used to specify which scenario is in play.
+  //
+  // In the former case, if COOP/COEP support is not enabled, set this option to
+  // false.  (This is the default.)
+  //
+  // In the latter case, if COOP/COEP weren't used to force this page into its
+  // own process, set this option to true.
+  //
+  // (Embeddings that are not the web and do not wish to support structured
+  // cloning of shared memory objects will get a "bad" web-centric error message
+  // no matter what.  At present, SpiderMonkey does not offer a way for such
+  // embeddings to use an embedding-specific error message.)
   bool getCoopAndCoepEnabled() const;
   RealmCreationOptions& setCoopAndCoepEnabled(bool flag);
 
@@ -216,6 +257,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool preserveJitCode_ = false;
   bool cloneSingletons_ = false;
   bool sharedMemoryAndAtomics_ = false;
+  bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
   bool streams_ = false;
   bool readableByteStreams_ = false;
