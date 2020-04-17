@@ -551,9 +551,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(group);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
+  void writeObjectField(JSObject* obj) {
+    assertSameCompartment(obj);
+    addStubField(uintptr_t(obj), StubField::Type::JSObject);
+  }
+  void writeRawWordField(const void* ptr) {
+    addStubField(uintptr_t(ptr), StubField::Type::RawWord);
+  }
+
   void writeJSOpImm(JSOp op) {
     static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
     buffer_.writeByte(uint8_t(op));
+  }
+  void writeGuardClassKindImm(GuardClassKind kind) {
+    static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),
+                  "GuardClassKind must fit in a byte");
+    buffer_.writeByte(uint8_t(kind));
   }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
@@ -788,24 +801,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardGroup(obj, group);
   }
 
-  void guardProto(ObjOperandId obj, JSObject* proto) {
-    assertSameCompartment(proto);
-    writeOpWithOperandId(CacheOp::GuardProto, obj);
-    addStubField(uintptr_t(proto), StubField::Type::JSObject);
-  }
-
-  void guardClass(ObjOperandId obj, GuardClassKind kind) {
-    static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),
-                  "GuardClassKind must fit in a byte");
-    writeOpWithOperandId(CacheOp::GuardClass, obj);
-    buffer_.writeByte(uint32_t(kind));
-  }
-
-  void guardAnyClass(ObjOperandId obj, const JSClass* clasp) {
-    writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
-    addStubField(uintptr_t(clasp), StubField::Type::RawWord);
-  }
-
   void guardFunctionIsNative(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardFunctionIsNative, obj);
   }
@@ -866,16 +861,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
     writeOpWithOperandId(CacheOp::GuardMagicValue, val);
     buffer_.writeByte(uint32_t(magic));
-  }
-
-  void guardCompartment(ObjOperandId obj, JSObject* global,
-                        JS::Compartment* compartment) {
-    assertSameCompartment(global);
-    writeOpWithOperandId(CacheOp::GuardCompartment, obj);
-    // Add a reference to a global in the compartment to keep it alive.
-    addStubField(uintptr_t(global), StubField::Type::JSObject);
-    // Use RawWord, because compartments never move and it can't be GCed.
-    addStubField(uintptr_t(compartment), StubField::Type::RawWord);
   }
 
   void guardIsExtensible(ObjOperandId obj) {

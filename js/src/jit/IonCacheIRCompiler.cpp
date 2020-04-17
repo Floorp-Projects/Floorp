@@ -628,10 +628,11 @@ bool IonCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardProto() {
+bool IonCacheIRCompiler::emitGuardProto(ObjOperandId objId,
+                                        uint32_t protoOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSObject* proto = objectStubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  JSObject* proto = objectStubField(protoOffset);
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -646,11 +647,13 @@ bool IonCacheIRCompiler::emitGuardProto() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardCompartment() {
+bool IonCacheIRCompiler::emitGuardCompartment(ObjOperandId objId,
+                                              uint32_t globalOffset,
+                                              uint32_t compartmentOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSObject* globalWrapper = objectStubField(reader.stubOffset());
-  JS::Compartment* compartment = compartmentStubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  JSObject* globalWrapper = objectStubField(globalOffset);
+  JS::Compartment* compartment = compartmentStubField(compartmentOffset);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -670,13 +673,13 @@ bool IonCacheIRCompiler::emitGuardCompartment() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardAnyClass() {
+bool IonCacheIRCompiler::emitGuardAnyClass(ObjOperandId objId,
+                                           uint32_t claspOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
-  const JSClass* clasp = classStubField(reader.stubOffset());
+  const JSClass* clasp = classStubField(claspOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
