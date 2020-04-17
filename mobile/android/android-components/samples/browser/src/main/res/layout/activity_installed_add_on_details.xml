@@ -69,11 +69,25 @@
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_permissions" />
 
+        <Switch
+            android:id="@+id/allow_in_private_browsing_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_below="@+id/permissions"
+            android:background="?android:attr/selectableItemBackground"
+            android:checked="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/mozac_feature_addons_settings_allow_in_private_browsing"
+            android:padding="16dp"
+            android:textSize="18sp"/>
+
         <Button
                 android:id="@+id/remove_add_on"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/permissions"
+                android:layout_below="@+id/allow_in_private_browsing_switch"
                 android:layout_marginTop="16dp"
                 android:textColor="@color/photonRed50"
                 android:text="@string/mozac_feature_addons_remove" />

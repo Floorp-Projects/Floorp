@@ -25,6 +25,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -32,6 +33,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.inOrder
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -328,6 +330,45 @@ class WebExtensionToolbarFeatureTest {
         val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
         inOrder.verify(toolbar).addPageAction(pageActionCaptor.capture())
         assertEquals(actionExt2, pageActionCaptor.value.action)
+    }
+
+    @Test
+    fun `renderWebExtensionActions depends on allowedInPrivateBrowsing and whether the current tab is private`() {
+        val toolbar: Toolbar = mock()
+        val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar)
+        val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+
+        val actionExt1 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val tabSessionState = TabSessionState(
+            content = mock(),
+            extensionState = emptyMap()
+        )
+
+        whenever(tabSessionState.content.private).thenReturn(true)
+        val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        browserExtensions["1"] =
+                WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+        val browserState = BrowserState(extensions = browserExtensions)
+        webExtToolbarFeature.renderWebExtensionActions(browserState, tabSessionState)
+        verify(toolbar, never()).addBrowserAction(browserActionCaptor.capture())
+
+        val browserExtensionsAllowedInPrivateBrowsing = HashMap<String, WebExtensionState>()
+        browserExtensionsAllowedInPrivateBrowsing["1"] =
+                WebExtensionState(id = "1", allowedInPrivateBrowsing = true, name = "extensionA", browserAction = actionExt1)
+        val browserStateAllowedInPrivateBrowsing = BrowserState(extensions = browserExtensionsAllowedInPrivateBrowsing)
+        webExtToolbarFeature.renderWebExtensionActions(browserStateAllowedInPrivateBrowsing, tabSessionState)
+        verify(toolbar, times(1)).addBrowserAction(browserActionCaptor.capture())
+        assertEquals(actionExt1, browserActionCaptor.value.action)
     }
 
     private fun getWebExtensionToolbarFeature(

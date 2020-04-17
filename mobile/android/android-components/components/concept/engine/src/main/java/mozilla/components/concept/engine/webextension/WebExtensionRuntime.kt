@@ -132,4 +132,21 @@ interface WebExtensionRuntime {
     fun registerWebExtensionDelegate(
         webExtensionDelegate: WebExtensionDelegate
     ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
+
+    /**
+     * Sets whether the provided [WebExtension] should be allowed to run in private browsing or not.
+     *
+     * @param extension the [WebExtension] instance to modify.
+     * @param allowed true if this extension should be allowed to run in private browsing pages, false otherwise.
+     * @param onSuccess (optional) callback invoked with modified [WebExtension] instance.
+     * @param onError (optional) callback invoked if there was an error setting private browsing preference
+     * the installed extensions. This callback is invoked with an [UnsupportedOperationException]
+     * in case the engine doesn't have web extension support.
+     */
+    fun setAllowedInPrivateBrowsing(
+        extension: WebExtension,
+        allowed: Boolean,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { }
+    ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
 }

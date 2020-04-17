@@ -47,6 +47,11 @@ internal object WebExtensionReducer {
                     it.copy(enabled = action.enabled)
                 }
             }
+            is WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction -> {
+                state.updateWebExtensionState(action.extensionId) {
+                    it.copy(allowedInPrivateBrowsing = action.allowed)
+                }
+            }
             is WebExtensionAction.UpdateBrowserAction -> {
                 state.updateWebExtensionState(action.extensionId) {
                     it.copy(browserAction = action.browserAction)

@@ -239,6 +239,13 @@ object WebExtensionSupport {
                 store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false))
             }
 
+            override fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) {
+                installedExtensions[extension.id] = extension
+                store.dispatch(WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(
+                    extension.id, extension.isAllowedInPrivateBrowsing()
+                ))
+            }
+
             override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
                 // Our current installation flow has us approve permissions before we call
                 // install on the engine. Therefore we can just approve the permission request
@@ -403,5 +410,12 @@ object WebExtensionSupport {
         onCloseTabOverride?.invoke(webExtension, id) ?: store.dispatch(TabListAction.RemoveTabAction(id))
     }
 
-    private fun WebExtension.toState() = WebExtensionState(id, url, getMetadata()?.name, isEnabled())
+    private fun WebExtension.toState() =
+        WebExtensionState(
+            id,
+            url,
+            getMetadata()?.name,
+            isEnabled(),
+            isAllowedInPrivateBrowsing()
+        )
 }

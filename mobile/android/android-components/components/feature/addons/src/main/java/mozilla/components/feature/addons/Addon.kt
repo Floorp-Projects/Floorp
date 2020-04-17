@@ -89,6 +89,8 @@ data class Addon(
      * to true.
      * @property optionsPageUrl the URL of the page displaying the
      * options page (options_ui in the extension's manifest).
+     * @property allowedInPrivateBrowsing true if this addon should be allowed to run in private
+     * browsing pages, false otherwise.
      */
     @Parcelize
     data class InstalledState(
@@ -98,7 +100,8 @@ data class Addon(
         val openOptionsPageInTab: Boolean = false,
         val enabled: Boolean = false,
         val supported: Boolean = true,
-        val disabledAsUnsupported: Boolean = false
+        val disabledAsUnsupported: Boolean = false,
+        val allowedInPrivateBrowsing: Boolean = false
     ) : Parcelable
 
     /**
@@ -130,6 +133,11 @@ data class Addon(
      * both [isSupported] and [isDisabledAsUnsupported] can be true.
      */
     fun isDisabledAsUnsupported() = installedState?.disabledAsUnsupported == true
+
+    /**
+     * Returns whether or not this [Addon] is allowed in private browsing mode.
+     */
+    fun isAllowedInPrivateBrowsing() = installedState?.allowedInPrivateBrowsing == true
 
     /**
      * Returns a copy of this [Addon] containing only translations (description,

@@ -87,10 +87,12 @@ class WebExtensionSupportTest {
         whenever(ext1.url).thenReturn("url1")
         whenever(ext1.getMetadata()).thenReturn(ext1Meta)
         whenever(ext1.isEnabled()).thenReturn(true)
+        whenever(ext1.isAllowedInPrivateBrowsing()).thenReturn(true)
 
         whenever(ext2.id).thenReturn("2")
         whenever(ext2.url).thenReturn("url2")
         whenever(ext2.isEnabled()).thenReturn(false)
+        whenever(ext2.isAllowedInPrivateBrowsing()).thenReturn(false)
 
         val engine: Engine = mock()
         val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
@@ -117,11 +119,11 @@ class WebExtensionSupportTest {
         val actionCaptor = argumentCaptor<WebExtensionAction.InstallWebExtensionAction>()
         verify(store, times(2)).dispatch(actionCaptor.capture())
         assertEquals(
-            WebExtensionState(ext1.id, ext1.url, "ext1", true),
+            WebExtensionState(ext1.id, ext1.url, "ext1", true, true),
             actionCaptor.allValues[0].extension
         )
         assertEquals(
-            WebExtensionState(ext2.id, ext2.url, null, false),
+            WebExtensionState(ext2.id, ext2.url, null, false, false),
             actionCaptor.allValues[1].extension
         )
     }

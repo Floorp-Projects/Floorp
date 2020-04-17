@@ -73,6 +73,10 @@ class WebExtensionBrowserMenu internal constructor(
             val extensions = state.extensions.values.toList()
             extensions.filter { it.enabled }.sortedBy { it.name }
                 .forEach { extension ->
+                    if (!extension.allowedInPrivateBrowsing && tab?.content?.private == true) {
+                        return@forEach
+                    }
+
                     extension.browserAction?.let { browserAction ->
                         addOrUpdateAction(
                             extension = extension,

@@ -156,6 +156,11 @@ abstract class WebExtension(
      * Checks whether or not this extension is enabled.
      */
     abstract fun isEnabled(): Boolean
+
+    /**
+     * Checks whether or not this extension is allowed in private browsing.
+     */
+    abstract fun isAllowedInPrivateBrowsing(): Boolean
 }
 
 /**

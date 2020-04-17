@@ -43,6 +43,13 @@ interface WebExtensionDelegate {
     fun onDisabled(extension: WebExtension) = Unit
 
     /**
+     * Invoked when a web extension in private browsing allowed is set.
+     *
+     * @param extension the modified [WebExtension] instance.
+     */
+    fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) = Unit
+
+    /**
      * Invoked when a web extension attempts to open a new tab via
      * browser.tabs.create. Note that browser.tabs.update and browser.tabs.remove
      * can only be observed using session-specific handlers,

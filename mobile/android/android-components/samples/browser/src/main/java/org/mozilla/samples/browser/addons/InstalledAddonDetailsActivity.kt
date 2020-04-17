@@ -20,6 +20,7 @@ import org.mozilla.samples.browser.R
 /**
  * An activity to show the details of a installed add-on.
  */
+@Suppress("LargeClass")
 class InstalledAddonDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +39,8 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         bindDetails(addon)
 
         bindPermissions(addon)
+
+        bindAllowInPrivateBrowsingSwitch(addon)
 
         bindRemoveButton(addon)
     }
@@ -119,6 +122,20 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
             val intent = Intent(this, PermissionsDetailsActivity::class.java)
             intent.putExtra("add_on", addon)
             this.startActivity(intent)
+        }
+    }
+
+    private fun bindAllowInPrivateBrowsingSwitch(addon: Addon) {
+        val switch = findViewById<Switch>(R.id.allow_in_private_browsing_switch)
+        switch.isChecked = addon.isAllowedInPrivateBrowsing()
+        switch.setOnCheckedChangeListener { _, isChecked ->
+            this.components.addonManager.setAddonAllowedInPrivateBrowsing(
+                addon,
+                isChecked,
+                onSuccess = {
+                    switch.isChecked = isChecked
+                }
+            )
         }
     }
 
