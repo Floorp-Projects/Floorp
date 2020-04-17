@@ -13,6 +13,8 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.telemetry.glean.config.Configuration
+import mozilla.telemetry.glean.net.HttpResponse
+import mozilla.telemetry.glean.net.RecoverableFailure
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -115,7 +117,7 @@ class ConceptFetchHttpUploaderTest {
 
         val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-        assertTrue(uploader.upload(testPath, testPing, emptyList()))
+        assertEquals(HttpResponse(200), uploader.upload(testPath, testPing, emptyList()))
     }
     @Test
     fun `upload() returns false for server errors (5xx)`() {
@@ -126,7 +128,7 @@ class ConceptFetchHttpUploaderTest {
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            assertFalse(uploader.upload(testPath, testPing, emptyList()))
+            assertEquals(HttpResponse(responseCode), uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -139,7 +141,7 @@ class ConceptFetchHttpUploaderTest {
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            assertTrue(uploader.upload(testPath, testPing, emptyList()))
+            assertEquals(HttpResponse(responseCode), uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -152,7 +154,7 @@ class ConceptFetchHttpUploaderTest {
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            assertTrue(uploader.upload(testPath, testPing, emptyList()))
+            assertEquals(HttpResponse(responseCode), uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -163,7 +165,7 @@ class ConceptFetchHttpUploaderTest {
         val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
 
         val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
-        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
+        assertEquals(HttpResponse(200), client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -181,7 +183,7 @@ class ConceptFetchHttpUploaderTest {
         val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
 
         val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
-        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
+        assertEquals(HttpResponse(200), client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -200,7 +202,7 @@ class ConceptFetchHttpUploaderTest {
         val client = ConceptFetchHttpUploader(lazy { OkHttpClient() })
 
         val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
-        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
+        assertEquals(HttpResponse(200), client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -250,7 +252,7 @@ class ConceptFetchHttpUploaderTest {
         // Trigger the connection.
         val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
         val submissionUrl = testConfig.serverEndpoint + testPath
-        assertTrue(client.upload(submissionUrl, testPing, emptyList()))
+        assertEquals(HttpResponse(200), client.upload(submissionUrl, testPing, emptyList()))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -274,7 +276,7 @@ class ConceptFetchHttpUploaderTest {
 
         // And IOException during upload is a failed upload that we should retry. The client should
         // return false in this case.
-        assertFalse(uploader.upload("path", "ping", emptyList()))
+        assertEquals(RecoverableFailure, uploader.upload("path", "ping", emptyList()))
     }
 
     @Test

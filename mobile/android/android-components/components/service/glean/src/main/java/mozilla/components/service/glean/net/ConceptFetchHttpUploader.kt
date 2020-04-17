@@ -10,11 +10,12 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Header
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.isClientError
-import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.net.HeadersList
 import mozilla.telemetry.glean.net.PingUploader as CorePingUploader
+import mozilla.telemetry.glean.net.UploadResult
+import mozilla.telemetry.glean.net.HttpResponse
+import mozilla.telemetry.glean.net.RecoverableFailure
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -59,14 +60,14 @@ class ConceptFetchHttpUploader(
      *         or faced an unrecoverable error), false if there was a recoverable
      *         error callers can deal with.
      */
-    override fun upload(url: String, data: String, headers: HeadersList): Boolean {
+    override fun upload(url: String, data: String, headers: HeadersList): UploadResult {
         val request = buildRequest(url, data, headers)
 
         return try {
             performUpload(client.value, request)
         } catch (e: IOException) {
             logger.warn("IOException while uploading ping", e)
-            false
+            RecoverableFailure
         }
     }
 
@@ -93,44 +94,10 @@ class ConceptFetchHttpUploader(
     }
 
     @Throws(IOException::class)
-    internal fun performUpload(client: Client, request: Request): Boolean {
+    internal fun performUpload(client: Client, request: Request): UploadResult {
         logger.debug("Submitting ping to: ${request.url}")
         client.fetch(request).use { response ->
-            when {
-                response.isSuccess -> {
-                    // Known success errors (2xx):
-                    // 200 - OK. Request accepted into the pipeline.
-
-                    // We treat all success codes as successful upload even though we only expect 200.
-                    logger.debug("Ping successfully sent (${response.status})")
-                    return true
-                }
-
-                response.isClientError -> {
-                    // Known client (4xx) errors:
-                    // 404 - not found - POST/PUT to an unknown namespace
-                    // 405 - wrong request type (anything other than POST/PUT)
-                    // 411 - missing content-length header
-                    // 413 - request body too large (Note that if we have badly-behaved clients that
-                    //       retry on 4XX, we should send back 202 on body/path too long).
-                    // 414 - request path too long (See above)
-
-                    // Something our client did is not correct. It's unlikely that the client is going
-                    // to recover from this by re-trying again, so we just log and error and report a
-                    // successful upload to the service.
-                    logger.error("Server returned client error code ${response.status} for ${request.url}")
-                    return true
-                }
-
-                else -> {
-                    // Known other errors:
-                    // 500 - internal error
-
-                    // For all other errors we log a warning an try again at a later time.
-                    logger.warn("Server returned response code ${response.status} for ${request.url}")
-                    return false
-                }
-            }
+            return HttpResponse(response.status)
         }
     }
 }
