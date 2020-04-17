@@ -33,13 +33,13 @@ relevant_tests:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.relevant_tests
 
-bugbug_push_schedules:
+bugbug_all:
     description: Runs the bugbug.all optimization strategy instead of the default.
     treeherder:
-        symbol: SS(bugbug_push_schedules)
+        symbol: SS(bugbug_all)
     index:
         product: source
-        job-name: shadow-scheduler-bugbug_push_schedules
+        job-name: shadow-scheduler-bugbug_all
     worker:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.all
