@@ -15,10 +15,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
-import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -28,11 +26,9 @@ import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
-import org.mozilla.fenix.library.bookmarks.SignInView
 
 class SelectBookmarkFolderFragment : Fragment() {
 
@@ -47,20 +43,12 @@ class SelectBookmarkFolderFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_select_bookmark_folder, container, false)
-
-        val signInView = SignInView(view.selectBookmarkLayout, findNavController())
-        sharedViewModel.signedIn.observe(viewLifecycleOwner, signInView)
-
-        return view
+        return inflater.inflate(R.layout.fragment_select_bookmark_folder, container, false)
     }
 
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.bookmark_select_folder_fragment_label))
-
-        val accountManager = requireComponents.backgroundServices.accountManager
-        sharedViewModel.observeAccountManager(accountManager, owner = this)
 
         lifecycleScope.launch(Main) {
             bookmarkNode = withContext(IO) {

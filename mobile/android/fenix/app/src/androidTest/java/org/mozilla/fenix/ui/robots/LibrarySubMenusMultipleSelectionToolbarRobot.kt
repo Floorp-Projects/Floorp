@@ -4,18 +4,22 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.withParent
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.hamcrest.Matchers.allOf
 
 /*
  * Implementation of Robot Pattern for the multiple selection toolbar of History and Bookmarks menus.
@@ -23,6 +27,8 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class LibrarySubMenusMultipleSelectionToolbarRobot {
 
     fun verifyMultiSelectionCheckmark() = assertMultiSelectionCheckmark()
+
+    fun verifyMultiSelectionCheckmark(url: Uri) = assertMultiSelectionCheckmark(url)
 
     fun verifyMultiSelectionCounter() = assertMultiSelectionCounter()
 
@@ -120,6 +126,21 @@ private fun deleteButton() = onView(withText("Delete"))
 
 private fun assertMultiSelectionCheckmark() =
     onView(withId(R.id.checkmark))
+        .check(matches(isDisplayed()))
+
+private fun assertMultiSelectionCheckmark(url: Uri) =
+    onView(
+        allOf(
+            withId(R.id.checkmark),
+            withParent(withParent(withChild(allOf(withId(R.id.url), withText(url.toString()))))),
+
+            // This is used as part of the `multiSelectionToolbarItemsTest` test. Somehow, in the view hierarchy,
+            // the match above is finding two checkmark views - one visible, one hidden, which is throwing off
+            // the matcher. This 'isDisplayed' check is a hacky workaround for this, we're explicitly ignoring
+            // the hidden one. Why are there two to begin with, though?
+            isDisplayed()
+        )
+    )
         .check(matches(isDisplayed()))
 
 private fun assertMultiSelectionCounter() =

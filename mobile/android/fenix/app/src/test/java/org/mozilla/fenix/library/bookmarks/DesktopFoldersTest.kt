@@ -10,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.robolectric.testContext
@@ -27,7 +26,6 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class DesktopFoldersTest {
 
     private lateinit var context: Context
-    private lateinit var bookmarksStorage: PlacesBookmarksStorage
 
     private val basicNode = BookmarkNode(
         type = BookmarkNodeType.FOLDER,
@@ -42,9 +40,7 @@ class DesktopFoldersTest {
     @Before
     fun setup() {
         context = spyk(testContext)
-        bookmarksStorage = mockk()
-        every { context.components.core.bookmarksStorage } returns bookmarksStorage
-        every { context.components.backgroundServices.accountManager.authenticatedAccount() } returns null
+        every { context.components.core.bookmarksStorage } returns mockk()
     }
 
     @Test
@@ -67,15 +63,6 @@ class DesktopFoldersTest {
         assertEquals(testContext.getString(R.string.library_desktop_bookmarks_menu), desktopFolders.withRootTitle(mockNodeWithTitle("menu")).title)
         assertEquals(testContext.getString(R.string.library_desktop_bookmarks_toolbar), desktopFolders.withRootTitle(mockNodeWithTitle("toolbar")).title)
         assertEquals(testContext.getString(R.string.library_desktop_bookmarks_unfiled), desktopFolders.withRootTitle(mockNodeWithTitle("unfiled")).title)
-    }
-
-    @Test
-    fun `withOptionalDesktopFolders mobile node and logged out`() = runBlocking {
-        every { context.components.backgroundServices.accountManager.authenticatedAccount() } returns null
-        val node = basicNode.copy(guid = BookmarkRoot.Mobile.id, title = BookmarkRoot.Mobile.name)
-        val desktopFolders = DesktopFolders(context, showMobileRoot = true)
-
-        assertSame(node, desktopFolders.withOptionalDesktopFolders(node))
     }
 
     @Test

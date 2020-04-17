@@ -8,7 +8,6 @@
     android:id="@+id/bookmark_folders_sign_in"
     style="@style/NeutralButton"
     android:text="@string/bookmark_sign_in_button"
-    android:visibility="gone"
     android:layout_marginHorizontal="16dp"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"

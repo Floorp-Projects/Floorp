@@ -91,7 +91,7 @@ class BookmarksTest {
         }.openLibrary {
         }.openBookmarks {
             verifyBookmarkedURL(defaultWebPage.url)
-            verifyBookmarkFavicon()
+            verifyBookmarkFavicon(defaultWebPage.url)
         }
     }
 
@@ -132,7 +132,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu(defaultWebPage.url) {
         }.clickEdit {
             verifyEditBookmarksView()
             verifyBookmarkNameEditBox()
@@ -152,7 +152,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu(defaultWebPage.url) {
         }.clickCopy {
             verifyCopySnackBarText()
         }
@@ -167,7 +167,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu(defaultWebPage.url) {
         }.clickOpenInNewTab {
             verifyPageContent(defaultWebPage.content)
         }.openHomeScreen {
@@ -184,7 +184,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu(defaultWebPage.url) {
         }.clickOpenInPrivateTab {
             verifyPageContent(defaultWebPage.content)
         }.openHomeScreen {
@@ -201,7 +201,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu(defaultWebPage.url) {
         }.clickDelete {
             verifyDeleteSnackBarText()
         }
@@ -220,7 +220,7 @@ class BookmarksTest {
         }
 
         multipleSelectionToolbar {
-            verifyMultiSelectionCheckmark()
+            verifyMultiSelectionCheckmark(defaultWebPage.url)
             verifyMultiSelectionCounter()
             verifyShareBookmarksButton()
             verifyCloseToolbarButton()

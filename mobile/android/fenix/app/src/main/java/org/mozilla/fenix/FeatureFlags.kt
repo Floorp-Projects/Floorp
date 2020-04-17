@@ -21,11 +21,6 @@ object FeatureFlags {
     const val asFeatureSyncDisabled = false
 
     /**
-     * Disables FxA Application Services Pairing feature
-     */
-    const val asFeatureFxAPairingDisabled = false
-
-    /**
      * Enables dynamic bottom toolbar
      */
     val dynamicBottomToolbar = Config.channel.isNightlyOrDebug

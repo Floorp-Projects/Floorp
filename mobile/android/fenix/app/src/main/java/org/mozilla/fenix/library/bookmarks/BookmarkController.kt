@@ -18,9 +18,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 
 /**
@@ -39,7 +37,6 @@ interface BookmarkController {
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
     fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event)
     fun handleBackPressed()
-    fun handleSigningIn()
 }
 
 @SuppressWarnings("TooManyFunctions")
@@ -53,7 +50,6 @@ class DefaultBookmarkController(
 
     private val activity: HomeActivity = context as HomeActivity
     private val resources: Resources = context.resources
-    private val services: Services = activity.components.services
 
     override fun handleBookmarkTapped(item: BookmarkNode) {
         openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, activity.browsingModeManager.mode)
@@ -102,11 +98,6 @@ class DefaultBookmarkController(
     override fun handleBackPressed() {
         invokePendingDeletion.invoke()
         navController.popBackStack()
-    }
-
-    override fun handleSigningIn() {
-        invokePendingDeletion.invoke()
-        services.launchPairingSignIn(context, navController)
     }
 
     private fun openInNewTab(

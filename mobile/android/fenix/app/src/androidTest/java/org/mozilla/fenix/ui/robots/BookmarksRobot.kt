@@ -38,7 +38,7 @@ class BookmarksRobot {
 
     fun verifyEmptyBookmarksList() = assertEmptyBookmarksList()
 
-    fun verifyBookmarkFavicon() = assertBookmarkFavicon()
+    fun verifyBookmarkFavicon(forUrl: Uri) = assertBookmarkFavicon(forUrl)
 
     fun verifyBookmarkedURL(url: Uri) = assertBookmarkURL(url)
 
@@ -114,6 +114,13 @@ class BookmarksRobot {
             ThreeDotMenuBookmarksRobot().interact()
             return ThreeDotMenuBookmarksRobot.Transition()
         }
+
+        fun openThreeDotMenu(bookmarkUrl: Uri, interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
+            threeDotMenu(bookmarkUrl).click()
+
+            ThreeDotMenuBookmarksRobot().interact()
+            return ThreeDotMenuBookmarksRobot.Transition()
+        }
     }
 }
 
@@ -124,9 +131,14 @@ fun bookmarksMenu(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transitio
 
 private fun goBackButton() = onView(withContentDescription("Navigate up"))
 
-private fun bookmarkFavicon() = onView(withId(R.id.favicon))
+private fun bookmarkFavicon(url: String) = onView(allOf(
+    withId(R.id.favicon),
+    withParent(withParent(
+        withChild(allOf(withId(R.id.url), withText(url))))
+    ))
+)
 
-private fun bookmarkURL() = onView(withId(R.id.url))
+private fun bookmarkURL(url: String) = onView(allOf(withId(R.id.url), withText(url)))
 
 private fun folderTitle() = onView(withId(R.id.title))
 
@@ -136,14 +148,21 @@ private fun addFolderTitleField() = onView(withId(R.id.bookmarkNameEdit))
 
 private fun saveFolderButton() = onView(withId(R.id.confirm_add_folder_button))
 
-private fun threeDotMenu(folderName: String) = onView(
+private fun threeDotMenu(bookmarkUrl: Uri) = onView(
     allOf(
         withId(R.id.overflow_menu),
-        withParent(withChild(allOf(withId(R.id.title), withText(folderName))))
+        withParent(withChild(allOf(withId(R.id.url), withText(bookmarkUrl.toString()))))
     )
 )
 
-private fun threeDotMenu() = onView(withId(R.id.overflow_menu))
+private fun threeDotMenu(bookmarkTitle: String) = onView(
+    allOf(
+        withId(R.id.overflow_menu),
+        withParent(withChild(allOf(withId(R.id.title), withText(bookmarkTitle))))
+    )
+)
+
+private fun threeDotMenu() = onView(withId(R.id.overflow_menu)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun snackBarText() = onView(withId(R.id.snackbar_text))
 
@@ -160,7 +179,7 @@ private fun assertBookmarksView() {
 private fun assertEmptyBookmarksList() =
     onView(withId(R.id.bookmarks_empty_view)).check(matches(withText("No bookmarks here")))
 
-private fun assertBookmarkFavicon() = bookmarkFavicon().check(
+private fun assertBookmarkFavicon(forUrl: Uri) = bookmarkFavicon(forUrl.toString()).check(
     matches(
         withEffectiveVisibility(
             ViewMatchers.Visibility.VISIBLE
@@ -168,7 +187,7 @@ private fun assertBookmarkFavicon() = bookmarkFavicon().check(
     )
 )
 
-private fun assertBookmarkURL(expectedURL: Uri) = bookmarkURL()
+private fun assertBookmarkURL(expectedURL: Uri) = bookmarkURL(expectedURL.toString())
     .check(matches(ViewMatchers.isCompletelyDisplayed()))
     .check(matches(withText(containsString(expectedURL.toString()))))
 

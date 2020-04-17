@@ -257,14 +257,4 @@ class BookmarkControllerTest {
             navController.popBackStack()
         }
     }
-
-    @Test
-    fun `handleSigningIn should trigger 'PairingSignIn`() {
-        controller.handleSigningIn()
-
-        verify {
-            invokePendingDeletion.invoke()
-            services.launchPairingSignIn(homeActivity, navController)
-        }
-    }
 }
