@@ -61,6 +61,7 @@ module.exports = {
     "use-chromeutils-generateqi": require("../lib/rules/use-chromeutils-generateqi"),
     "use-chromeutils-import": require("../lib/rules/use-chromeutils-import"),
     "use-default-preference-values": require("../lib/rules/use-default-preference-values"),
+    "use-finally": require("../lib/rules/use-finally"),
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
     "use-includes-instead-of-indexOf": require("../lib/rules/use-includes-instead-of-indexOf"),
     "use-returnValue": require("../lib/rules/use-returnValue"),
