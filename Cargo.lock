@@ -4757,6 +4757,7 @@ dependencies = [
 name = "updateagent"
 version = "0.1.0"
 dependencies = [
+ "bits_client",
  "cfg-if",
  "chrono",
  "comedy",

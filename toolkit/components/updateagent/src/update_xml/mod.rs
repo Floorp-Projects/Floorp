@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+mod download;
 mod update_url;
 
-use log::info;
+use log::{debug, info};
 use std::ffi::OsString;
 
 pub fn sync_download(
@@ -13,9 +14,13 @@ pub fn sync_download(
     job_name: OsString,
 ) -> Result<(), String> {
     let url = OsString::from(update_url::generate()?);
-    info!("Checking for updates using URL: {:?}", url);
-
-    Err(format!("sync_download not yet implemented. url={:?}", url))
+    info!(
+        "Checking for updates using URL: {:?}.\nSaving to {:?}",
+        url, save_path
+    );
+    download::sync_download_url(download_dir, save_path, job_name, url)?;
+    debug!("XML download successful");
+    Ok(())
 }
 
 pub struct Update {}

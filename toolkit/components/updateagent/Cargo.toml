@@ -7,6 +7,7 @@ autobins = false
 edition = "2018"
 
 [target."cfg(windows)".dependencies]
+bits_client = { path = "../bitsdownload/bits_client"}
 cfg-if = "0.1"
 chrono = "0.4"
 comedy = "0.1"
