@@ -379,11 +379,15 @@ class HomeFragment : Fragment() {
         )
 
         requireComponents.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
-            // By the time this code runs, we may not be attached to a context.
-            if ((this@HomeFragment).context == null) {
+            // By the time this code runs, we may not be attached to a context or have a view lifecycle owner.
+            if ((this@HomeFragment).view?.context == null) {
                 return@runIfReadyOrQueue
             }
-            requireComponents.backgroundServices.accountManager.register(currentMode, owner = this@HomeFragment)
+
+            requireComponents.backgroundServices.accountManager.register(
+                currentMode,
+                owner = this@HomeFragment.viewLifecycleOwner
+            )
             requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
                 override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
                     if (authType != AuthType.Existing) {
@@ -398,7 +402,7 @@ class HomeFragment : Fragment() {
                         }
                     }
                 }
-            }, owner = this@HomeFragment)
+            }, owner = this@HomeFragment.viewLifecycleOwner)
         }
 
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
@@ -618,7 +622,7 @@ class HomeFragment : Fragment() {
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
     private fun createHomeMenu(context: Context, menuButtonView: WeakReference<MenuButton>) = HomeMenu(
-        this,
+        this.viewLifecycleOwner,
         context,
         onItemTapped = {
             when (it) {
