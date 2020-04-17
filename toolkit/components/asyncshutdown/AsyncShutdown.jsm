@@ -288,7 +288,10 @@ function looseTimer(delay) {
   );
   // Ensure that the timer is both canceled once we are done with it
   // and not garbage-collected until then.
-  deferred.promise.finally(() => timer.cancel());
+  deferred.promise.then(
+    () => timer.cancel(),
+    () => timer.cancel()
+  );
   return deferred;
 }
 

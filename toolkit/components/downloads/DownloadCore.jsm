@@ -802,7 +802,7 @@ Download.prototype = {
     if (!this._promiseCanceled) {
       // Start a new cancellation request.
       this._promiseCanceled = new Promise(resolve => {
-        this._currentAttempt.finally(resolve);
+        this._currentAttempt.then(resolve, resolve);
       });
 
       // The download can already be restarted.

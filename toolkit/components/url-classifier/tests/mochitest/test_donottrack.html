@@ -127,7 +127,7 @@ let loop = function loop(index) {
     loop(index + 1);
   };
   let result = executeTest(test);
-  result.finally(next);
+  result.then(next, next);
 };
 
 SimpleTest.waitForExplicitFinish();
