@@ -4757,11 +4757,17 @@ dependencies = [
 name = "updateagent"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "chrono",
  "comedy",
  "failure",
  "log",
+ "percent-encoding",
+ "prefs_parser",
+ "raw-cpuid",
+ "rust-ini",
  "winapi 0.3.7",
+ "wio",
 ]
 
 [[package]]
