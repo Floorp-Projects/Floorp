@@ -814,23 +814,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writePointer(JS_FUNC_TO_DATA_PTR(void*, nativeFunc));
   }
 
-  void guardIsNativeObject(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::GuardIsNativeObject, obj);
-  }
-
-  void guardIsProxy(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::GuardIsProxy, obj);
-  }
-
-  void guardHasProxyHandler(ObjOperandId obj, const void* handler) {
-    writeOpWithOperandId(CacheOp::GuardHasProxyHandler, obj);
-    addStubField(uintptr_t(handler), StubField::Type::RawWord);
-  }
-
-  void guardNotDOMProxy(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
-  }
-
   FieldOffset guardSpecificObject(ObjOperandId obj, JSObject* expected) {
     assertSameCompartment(expected);
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
@@ -861,10 +844,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
     writeOpWithOperandId(CacheOp::GuardMagicValue, val);
     buffer_.writeByte(uint32_t(magic));
-  }
-
-  void guardIsExtensible(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::GuardIsExtensible, obj);
   }
 
   void guardFrameHasNoArgumentsObject() {
