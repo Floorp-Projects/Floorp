@@ -1016,9 +1016,46 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  return AntiTrackingUtils::CheckStoragePermission(
-      parentPrincipal, type, !!privateBrowsingId, aRejectedReason,
-      blockedReason);
+  auto checkPermission = [parentPrincipal, type, privateBrowsingId,
+                          aRejectedReason, blockedReason]() -> bool {
+    return AntiTrackingUtils::CheckStoragePermission(
+        parentPrincipal, type, !!privateBrowsingId, aRejectedReason,
+        blockedReason);
+  };
+
+  // Call HasStorageAccessGranted() in the top-level inner window to check
+  // if the storage permission has been granted by the heuristic or the
+  // StorageAccessAPI. Note that calling the HasStorageAccessGranted() is still
+  // not fission-compatible. This would be modified in Bug 1612376.
+  RefPtr<BrowsingContext> bc;
+  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  if (!bc) {
+    return checkPermission();
+  }
+
+  bc = bc->Top();
+  if (!bc || !bc->IsInProcess()) {
+    return checkPermission();
+  }
+
+  nsGlobalWindowOuter* topWindow =
+      nsGlobalWindowOuter::Cast(bc->GetDOMWindow());
+
+  if (!topWindow) {
+    return checkPermission();
+  }
+
+  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
+  // We use the 'hasStoragePermission' flag to check the storage permission.
+  // However, this flag won't get updated once the permission is granted by
+  // the heuristic or the StorageAccessAPI. So, we need to check the
+  // HasStorageAccessGranted() in order to get the correct storage access before
+  // we check the 'hasStoragePermission' flag.
+  if (topInnerWindow && topInnerWindow->HasStorageAccessGranted(type)) {
+    return true;
+  }
+
+  return checkPermission();
 }
 
 bool ContentBlocking::ShouldAllowAccessFor(
