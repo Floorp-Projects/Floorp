@@ -4059,7 +4059,6 @@ void JSScript::relazify(JSRuntime* rt) {
   //
   // NOTE: Keep in sync with CheckFlagsOnDelazification.
   clearFlag(ImmutableFlags::HasNonSyntacticScope);
-  clearFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
   clearFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
 
   // We should not still be in any side-tables for the debugger or

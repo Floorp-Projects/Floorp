@@ -582,7 +582,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
   // If there are parameter expressions, there is an extra var scope.
-  if (!funbox->hasExtraBodyVarScope()) {
+  if (!funbox->functionHasExtraBodyVarScope()) {
     bce->setVarEmitterScope(this);
   }
 

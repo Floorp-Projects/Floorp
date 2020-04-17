@@ -244,7 +244,6 @@ class SharedContext {
     immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, flag);
   }
 
-
   ImmutableScriptFlags immutableFlags() { return immutableFlags_; }
 
   inline bool allBindingsClosedOver();
@@ -462,12 +461,6 @@ class FunctionBox : public SharedContext {
     return hasExtensibleScope() || isGenerator() || isAsync();
   }
 
-  bool hasExtraBodyVarScope() const {
-    return hasParameterExprs &&
-           (extraVarScopeBindings_ ||
-            needsExtraBodyVarEnvironmentRegardlessOfBindings());
-  }
-
   bool needsExtraBodyVarEnvironmentRegardlessOfBindings() const {
     MOZ_ASSERT(hasParameterExprs);
     return hasExtensibleScope();
@@ -524,6 +517,10 @@ class FunctionBox : public SharedContext {
     hasExprBody_ = true;
   }
 
+  bool functionHasExtraBodyVarScope() {
+    return immutableFlags_.hasFlag(
+        ImmutableFlags::FunctionHasExtraBodyVarScope);
+  }
   bool hasExtensibleScope() const {
     return immutableFlags_.hasFlag(ImmutableFlags::FunHasExtensibleScope);
   }
@@ -585,6 +582,9 @@ class FunctionBox : public SharedContext {
     MOZ_ASSERT_IF(!hasFunction(),
                   functionCreationData().get().flags.isClassConstructor());
     immutableFlags_.setFlag(ImmutableFlags::IsDerivedClassConstructor);
+  }
+  void setFunctionHasExtraBodyVarScope() {
+    immutableFlags_.setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
   }
 
   bool hasSimpleParameterList() const {
