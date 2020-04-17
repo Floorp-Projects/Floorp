@@ -9,11 +9,6 @@
     <!-- Preference for developers -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>
 
-    <!-- About content. The first and second parameters are the name of the application. (For example: Fenix) -->
-    <string name="about_content" translatable="false">
-        %1$s is produced by Mozilla.
-    </string>
-
     <string name="intent_extra_toolbar_color" translatable="false">android.support.customtabs.extra.TOOLBAR_COLOR</string>
     <string name="intent_extra_session" translatable="false">android.support.customtabs.extra.SESSION</string>
     <string name="intent_extra_auth" translatable="false">support.customtabs.extra.AUTH</string>
