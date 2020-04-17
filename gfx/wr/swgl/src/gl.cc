@@ -754,7 +754,7 @@ void load_attrib(T& attrib, VertexAttrib& va, uint16_t* indices, int start,
 
 template <typename T>
 void load_flat_attrib(T& attrib, VertexAttrib& va, uint16_t* indices, int start,
-                      int instance, int count) {
+                      int instance, UNUSED int count) {
   typedef decltype(force_scalar(attrib)) scalar_type;
   if (!va.enabled) {
     attrib = T{0};
@@ -1464,7 +1464,7 @@ void TexImage3D(GLenum target, GLint level, GLint internal_format,
   TexSubImage3D(target, 0, 0, 0, 0, width, height, depth, format, ty, data);
 }
 
-void GenerateMipmap(GLenum target) {
+void GenerateMipmap(UNUSED GLenum target) {
   // TODO: support mipmaps
 }
 
@@ -1637,7 +1637,7 @@ void VertexAttribDivisor(GLuint index, GLuint divisor) {
   va.divisor = divisor;
 }
 
-void BufferData(GLenum target, GLsizeiptr size, void* data, GLenum usage) {
+void BufferData(GLenum target, GLsizeiptr size, void* data, UNUSED GLenum usage) {
   Buffer& b = ctx->buffers[ctx->get_binding(target)];
   if (b.allocate(size)) {
     ctx->validate_vertex_array = true;
@@ -1656,13 +1656,13 @@ void BufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
   }
 }
 
-void* MapBuffer(GLenum target, GLbitfield access) {
+void* MapBuffer(GLenum target, UNUSED GLbitfield access) {
   Buffer& b = ctx->buffers[ctx->get_binding(target)];
   return b.buf;
 }
 
 void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length,
-                     GLbitfield access) {
+                     UNUSED GLbitfield access) {
   Buffer& b = ctx->buffers[ctx->get_binding(target)];
   if (b.buf && offset >= 0 && length > 0 && offset + length <= b.size) {
     return b.buf + offset;
