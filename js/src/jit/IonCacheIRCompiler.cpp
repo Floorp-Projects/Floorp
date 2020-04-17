@@ -570,11 +570,11 @@ JitCode* IonCacheIRCompiler::compile() {
   return newStubCode;
 }
 
-bool IonCacheIRCompiler::emitGuardShape() {
+bool IonCacheIRCompiler::emitGuardShape(ObjOperandId objId,
+                                        uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
-  Shape* shape = shapeStubField(reader.stubOffset());
+  Shape* shape = shapeStubField(shapeOffset);
 
   bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
 
@@ -599,11 +599,11 @@ bool IonCacheIRCompiler::emitGuardShape() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardGroup() {
+bool IonCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
+                                        uint32_t groupOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
-  ObjectGroup* group = groupStubField(reader.stubOffset());
+  ObjectGroup* group = groupStubField(groupOffset);
 
   bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
 

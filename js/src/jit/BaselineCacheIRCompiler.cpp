@@ -193,9 +193,9 @@ JitCode* BaselineCacheIRCompiler::compile() {
   return newStubCode;
 }
 
-bool BaselineCacheIRCompiler::emitGuardShape() {
+bool BaselineCacheIRCompiler::emitGuardShape(ObjOperandId objId,
+                                             uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch1(allocator, masm);
 
@@ -211,7 +211,7 @@ bool BaselineCacheIRCompiler::emitGuardShape() {
     return false;
   }
 
-  Address addr(stubAddress(reader.stubOffset()));
+  Address addr(stubAddress(shapeOffset));
   masm.loadPtr(addr, scratch1);
   if (needSpectreMitigations) {
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratch1, *maybeScratch2,
@@ -224,9 +224,9 @@ bool BaselineCacheIRCompiler::emitGuardShape() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardGroup() {
+bool BaselineCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
+                                             uint32_t groupOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch1(allocator, masm);
 
@@ -242,7 +242,7 @@ bool BaselineCacheIRCompiler::emitGuardGroup() {
     return false;
   }
 
-  Address addr(stubAddress(reader.stubOffset()));
+  Address addr(stubAddress(groupOffset));
   masm.loadPtr(addr, scratch1);
   if (needSpectreMitigations) {
     masm.branchTestObjGroup(Assembler::NotEqual, obj, scratch1, *maybeScratch2,

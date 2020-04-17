@@ -19,6 +19,11 @@
 # If false, the op must be implemented in both BaselineCacheIRCompiler and
 # IonCacheIRCompiler.
 #
+# gen_boilerplate (optional)
+# ==========================
+# If true, generate CacheIRWriter and CacheIRCompiler boilerplate. This
+# attribute is temporary until all ops have been converted.
+#
 # operands
 # ========
 # List of operands. There are three kinds:
@@ -129,12 +134,14 @@
 
 - name: GuardShape
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     shape: ShapeField
 
 - name: GuardGroup
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     group: GroupField
@@ -761,6 +768,7 @@
 
 - name: LoadStringCharResult
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
     index: Int32Id
@@ -850,6 +858,7 @@
 
 - name: CallProxyHasPropResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -930,12 +939,14 @@
 
 - name: Int32AddResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32SubResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
@@ -1199,10 +1210,11 @@
 
 - name: CompareInt32Result
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: Int32Id
     rhs: Int32Id
-    op: JSOpImm
 
 - name: CompareDoubleResult
   shared: true
@@ -1281,6 +1293,7 @@
 
 - name: ReturnFromIC
   shared: false
+  gen_boilerplate: true
   operands:
 
 - name: WrapResult
