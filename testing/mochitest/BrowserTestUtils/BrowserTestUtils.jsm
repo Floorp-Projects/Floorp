@@ -1632,6 +1632,8 @@ var BrowserTestUtils = {
    *        An object with any of the following fields:
    *          crashType: "CRASH_INVALID_POINTER_DEREF" | "CRASH_OOM"
    *            The type of crash. If unspecified, default to "CRASH_INVALID_POINTER_DEREF"
+   *          asyncCrash: bool
+   *            If specified and `true`, cause the crash asynchronously.
    *
    * @returns (Promise)
    * @resolves An Object with key-value pairs representing the data from the
@@ -1779,6 +1781,7 @@ var BrowserTestUtils = {
       "BrowserTestUtils:CrashFrame",
       {
         crashType: options.crashType || "",
+        asyncCrash: options.asyncCrash || false,
       }
     );
 
