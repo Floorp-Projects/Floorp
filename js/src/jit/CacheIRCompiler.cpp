@@ -1889,10 +1889,10 @@ bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardSpecificNativeFunction() {
+bool CacheIRCompiler::emitGuardSpecificNativeFunction(ObjOperandId objId,
+                                                      JSNative native) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSNative nativeFunc = reinterpret_cast<JSNative>(reader.pointer());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -1908,7 +1908,7 @@ bool CacheIRCompiler::emitGuardSpecificNativeFunction() {
   // Ensure function native matches.
   masm.branchPtr(Assembler::NotEqual,
                  Address(obj, JSFunction::offsetOfNativeOrEnv()),
-                 ImmPtr(nativeFunc), failure->label());
+                 ImmPtr(native), failure->label());
   return true;
 }
 
@@ -1984,24 +1984,24 @@ bool CacheIRCompiler::emitGuardNotDOMProxy(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardSpecificInt32Immediate() {
+bool CacheIRCompiler::emitGuardSpecificInt32Immediate(Int32OperandId integerId,
+                                                      int32_t expected) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register reg = allocator.useRegister(masm, reader.int32OperandId());
-  int32_t ival = reader.int32Immediate();
+  Register reg = allocator.useRegister(masm, integerId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  masm.branch32(Assembler::NotEqual, reg, Imm32(ival), failure->label());
+  masm.branch32(Assembler::NotEqual, reg, Imm32(expected), failure->label());
   return true;
 }
 
-bool CacheIRCompiler::emitGuardMagicValue() {
+bool CacheIRCompiler::emitGuardMagicValue(ValOperandId valId,
+                                          JSWhyMagic magic) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  JSWhyMagic magic = reader.whyMagic();
+  ValueOperand val = allocator.useValueRegister(masm, valId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

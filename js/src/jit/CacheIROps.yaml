@@ -223,30 +223,35 @@
 
 - name: GuardSpecificSymbol
   shared: false
+  gen_boilerplate: true
   operands:
     sym: SymId
     expected: SymbolField
 
 - name: GuardSpecificInt32Immediate
   shared: true
+  gen_boilerplate: true
   operands:
     integer: Int32Id
     expected: Int32Imm
 
 - name: GuardSpecificNativeFunction
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     native: JSNativeImm
 
 - name: GuardMagicValue
   shared: true
+  gen_boilerplate: true
   operands:
     val: ValId
     magic: JSWhyMagicImm
 
 - name: GuardFrameHasNoArgumentsObject
   shared: false
+  gen_boilerplate: true
   operands:
 
 - name: GuardNoDenseElements

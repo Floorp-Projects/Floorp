@@ -775,10 +775,11 @@ bool IonCacheIRCompiler::emitGuardSpecificAtom() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardSpecificSymbol() {
+bool IonCacheIRCompiler::emitGuardSpecificSymbol(SymbolOperandId symId,
+                                                 uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register sym = allocator.useRegister(masm, reader.symbolOperandId());
-  JS::Symbol* expected = symbolStubField(reader.stubOffset());
+  Register sym = allocator.useRegister(masm, symId);
+  JS::Symbol* expected = symbolStubField(expectedOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
