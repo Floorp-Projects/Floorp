@@ -1976,34 +1976,6 @@ nsXPCComponents_Utils::IsCrossProcessWrapper(HandleValue obj, bool* out) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetCrossProcessWrapperTag(HandleValue obj,
-                                                 nsACString& out) {
-  if (obj.isPrimitive() || !jsipc::IsWrappedCPOW(&obj.toObject())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  jsipc::GetWrappedCPOWTag(&obj.toObject(), out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::PermitCPOWsInScope(HandleValue obj) {
-  if (!obj.isObject()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  JSObject* scopeObj = js::UncheckedUnwrap(&obj.toObject());
-  JS::Compartment* scopeComp = js::GetObjectCompartment(scopeObj);
-  JS::Compartment* systemComp =
-      js::GetObjectCompartment(xpc::PrivilegedJunkScope());
-  MOZ_RELEASE_ASSERT(scopeComp != systemComp,
-                     "Don't call Cu.PermitCPOWsInScope() on scopes in the "
-                     "shared system compartment");
-  CompartmentPrivate::Get(scopeComp)->allowCPOWs = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext* cx) {
   // Determine the compartment of the given object, if any.
   JS::Compartment* c =

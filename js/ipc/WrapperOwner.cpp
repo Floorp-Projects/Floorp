@@ -29,19 +29,11 @@ struct AuxCPOWData {
   bool isCallable;
   bool isConstructor;
 
-  // The object tag is just some auxilliary information that clients can use
-  // however they see fit.
-  nsCString objectTag;
-
   // The class name for WrapperOwner::className, below.
   nsCString className;
 
-  AuxCPOWData(ObjectId id, bool isCallable, bool isConstructor,
-              const nsACString& objectTag)
-      : id(id),
-        isCallable(isCallable),
-        isConstructor(isConstructor),
-        objectTag(objectTag) {}
+  AuxCPOWData(ObjectId id, bool isCallable, bool isConstructor)
+      : id(id), isCallable(isCallable), isConstructor(isConstructor) {}
 };
 
 WrapperOwner::WrapperOwner() : inactive_(false) {}
@@ -870,16 +862,6 @@ bool IsWrappedCPOW(JSObject* obj) {
   return IsCPOW(unwrapped);
 }
 
-void GetWrappedCPOWTag(JSObject* obj, nsACString& out) {
-  JSObject* unwrapped = js::UncheckedUnwrap(obj, true);
-  MOZ_ASSERT(IsCPOW(unwrapped));
-
-  AuxCPOWData* aux = AuxCPOWDataOf(unwrapped);
-  if (aux) {
-    out = aux->objectTag;
-  }
-}
-
 nsresult InstanceOf(JSObject* proxy, const nsID* id, bool* bp) {
   WrapperOwner* parent = OwnerOf(proxy);
   if (!parent->active()) {
@@ -972,32 +954,10 @@ bool WrapperOwner::ok(JSContext* cx, const ReturnStatus& status,
   return result.succeed();
 }
 
-// CPOWs can have a tag string attached to them, originating in the local
-// process from this function.  It's sent with the CPOW to the remote process,
-// where it can be fetched with Components.utils.getCrossProcessWrapperTag.
-static nsCString GetRemoteObjectTag(JS::Handle<JSObject*> obj) {
-  // OK to use ReflectorToISupportsStatic, because we only care about docshells
-  // and documents here.
-  if (nsCOMPtr<nsISupports> supports = xpc::ReflectorToISupportsStatic(obj)) {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(supports));
-    if (treeItem) {
-      return NS_LITERAL_CSTRING("ContentDocShellTreeItem");
-    }
-
-    nsCOMPtr<dom::Document> doc(do_QueryInterface(supports));
-    if (doc) {
-      return NS_LITERAL_CSTRING("ContentDocument");
-    }
-  }
-
-  return NS_LITERAL_CSTRING("generic");
-}
-
 static RemoteObject MakeRemoteObject(JSContext* cx, ObjectId id,
                                      HandleObject obj) {
   return RemoteObject(id.serialize(), JS::IsCallable(obj),
-                      JS::IsConstructor(obj), dom::IsDOMObject(obj),
-                      GetRemoteObjectTag(obj));
+                      JS::IsConstructor(obj), dom::IsDOMObject(obj));
 }
 
 bool WrapperOwner::toObjectVariant(JSContext* cx, JSObject* objArg,
@@ -1083,8 +1043,8 @@ JSObject* WrapperOwner::fromRemoteObjectVariant(JSContext* cx,
     // Incref once we know the decref will be called.
     incref();
 
-    AuxCPOWData* aux = new AuxCPOWData(
-        objId, objVar.isCallable(), objVar.isConstructor(), objVar.objectTag());
+    AuxCPOWData* aux =
+        new AuxCPOWData(objId, objVar.isCallable(), objVar.isConstructor());
 
     SetProxyReservedSlot(obj, 0, PrivateValue(this));
     SetProxyReservedSlot(obj, 1, PrivateValue(aux));

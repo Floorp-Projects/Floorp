@@ -443,24 +443,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     bool isCrossProcessWrapper(in jsval obj);
 
-    /**
-     * CPOWs can have user data attached to them. This data originates
-     * in the local process via the
-     * nsIRemoteTagService.getRemoteObjectTag method. It's sent along
-     * with the CPOW to the remote process, where it can be fetched
-     * with this function, getCrossProcessWrapperTag.
-     */
-    ACString getCrossProcessWrapperTag(in jsval obj);
-
-    /**
-     * If CPOWs are disabled for browser code via the
-     * dom.ipc.cpows.forbid-unsafe-from-browser preferences, then only
-     * add-ons can use CPOWs. This function allows a non-addon scope
-     * to opt into CPOWs. It's necessary for the implementation of
-     * RemoteAddonsParent.jsm.
-     */
-    void permitCPOWsInScope(in jsval obj);
-
     /*
      * To be called from JS only. This is for Gecko internal use only, and may
      * disappear at any moment.

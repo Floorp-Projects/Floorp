@@ -68,8 +68,6 @@ nsresult InstanceOf(JSObject* obj, const nsID* id, bool* bp);
 bool DOMInstanceOf(JSContext* cx, JSObject* obj, int prototypeID, int depth,
                    bool* bp);
 
-void GetWrappedCPOWTag(JSObject* obj, nsACString& out);
-
 PJavaScriptParent* NewJavaScriptParent();
 
 void ReleaseJavaScriptParent(PJavaScriptParent* parent);
