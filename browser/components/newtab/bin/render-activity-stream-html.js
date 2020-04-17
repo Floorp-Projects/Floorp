@@ -38,6 +38,7 @@ function templateHTML(options) {
     `${options.baseUrl}vendor/react-redux.js`,
     `${options.baseUrl}vendor/react-transition-group.js`,
     `${options.baseUrl}data/content/activity-stream.bundle.js`,
+    `${options.baseUrl}data/content/newtab-render.js`,
   ];
 
   // Add spacing and script tags

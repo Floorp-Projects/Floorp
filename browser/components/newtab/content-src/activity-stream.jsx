@@ -11,38 +11,56 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { reducers } from "common/Reducers.jsm";
 
-const store = initStore(reducers);
-
-new DetectUserSessionStart(store).sendEventOrAddListener();
-
-// If this document has already gone into the background by the time we've reached
-// here, we can deprioritize requesting the initial state until the event loop
-// frees up. If, however, the visibility changes, we then send the request.
-let didRequest = false;
-let requestIdleCallbackId = 0;
-function doRequest() {
-  if (!didRequest) {
-    if (requestIdleCallbackId) {
-      cancelIdleCallback(requestIdleCallbackId);
-    }
-    didRequest = true;
-    store.dispatch(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
-  }
-}
-
-if (document.hidden) {
-  requestIdleCallbackId = requestIdleCallback(doRequest);
-  addEventListener("visibilitychange", doRequest, { once: true });
-} else {
-  doRequest();
-}
-
-ReactDOM.hydrate(
+export const NewTab = ({ store, isFirstrun }) => (
   <Provider store={store}>
-    <Base
-      isFirstrun={global.document.location.href === "about:welcome"}
-      strings={global.gActivityStreamStrings}
-    />
-  </Provider>,
-  document.getElementById("root")
+    <Base isFirstrun={isFirstrun} />
+  </Provider>
 );
+
+export function renderWithoutState() {
+  const store = initStore(reducers);
+  new DetectUserSessionStart(store).sendEventOrAddListener();
+
+  // If this document has already gone into the background by the time we've reached
+  // here, we can deprioritize requesting the initial state until the event loop
+  // frees up. If, however, the visibility changes, we then send the request.
+  let didRequest = false;
+  let requestIdleCallbackId = 0;
+  function doRequest() {
+    if (!didRequest) {
+      if (requestIdleCallbackId) {
+        cancelIdleCallback(requestIdleCallbackId);
+      }
+      didRequest = true;
+      store.dispatch(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
+    }
+  }
+
+  if (document.hidden) {
+    requestIdleCallbackId = requestIdleCallback(doRequest);
+    addEventListener("visibilitychange", doRequest, { once: true });
+  } else {
+    doRequest();
+  }
+
+  ReactDOM.hydrate(
+    <NewTab
+      store={store}
+      isFirstrun={global.document.location.href === "about:welcome"}
+    />,
+    document.getElementById("root")
+  );
+}
+
+export function renderCache(initialState) {
+  const store = initStore(reducers, initialState);
+  new DetectUserSessionStart(store).sendEventOrAddListener();
+
+  ReactDOM.hydrate(
+    <NewTab
+      store={store}
+      isFirstrun={global.document.location.href === "about:welcome"}
+    />,
+    document.getElementById("root")
+  );
+}
