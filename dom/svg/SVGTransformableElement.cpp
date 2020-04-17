@@ -158,20 +158,22 @@ SVGElement* SVGTransformableElement::GetFarthestViewportElement() {
   return SVGContentUtils::GetOuterSVGElement(this);
 }
 
+static already_AddRefed<SVGRect> ZeroBBox(SVGTransformableElement& aOwner) {
+  return MakeAndAddRef<SVGRect>(&aOwner, Rect {0, 0, 0, 0});
+}
+
 already_AddRefed<SVGRect> SVGTransformableElement::GetBBox(
-    const SVGBoundingBoxOptions& aOptions, ErrorResult& rv) {
+    const SVGBoundingBoxOptions& aOptions) {
   nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
 
   if (!frame || (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return ZeroBBox(*this);
   }
   nsSVGDisplayableFrame* svgframe = do_QueryFrame(frame);
 
   if (!svgframe) {
     if (!nsSVGUtils::IsInSVGTextSubtree(frame)) {
-      rv.Throw(NS_ERROR_NOT_IMPLEMENTED);  // XXX: outer svg
-      return nullptr;
+      return ZeroBBox(*this);
     }
 
     // For <tspan>, <textPath>, the frame is an nsInlineFrame or
@@ -188,8 +190,7 @@ already_AddRefed<SVGRect> SVGTransformableElement::GetBBox(
             frame->GetParent(), LayoutFrameType::SVGText));
 
     if (text->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-      rv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
+      return ZeroBBox(*this);
     }
 
     gfxRect rec = text->TransformFrameRectFromTextChild(
