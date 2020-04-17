@@ -848,9 +848,6 @@ class UrlbarQueryContext {
       }
     }
 
-    this.allowSearchSuggestions =
-      "allowSearchSuggestions" in this ? !!this.allowSearchSuggestions : true;
-
     this.lastResultCount = 0;
     this.userContextId =
       options.userContextId ||
