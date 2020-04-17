@@ -506,11 +506,13 @@ add_task(async function test_event_order() {
           type: "input",
           cancelable: false,
           targetIsOption: false,
+          composed: false,
         },
         {
           type: "change",
           cancelable: false,
           targetIsOption: false,
+          composed: false,
         },
       ];
 
@@ -519,26 +521,31 @@ add_task(async function test_event_order() {
           type: "mousedown",
           cancelable: true,
           targetIsOption: true,
+          composed: true,
         },
         {
           type: "mouseup",
           cancelable: true,
           targetIsOption: true,
+          composed: true,
         },
         {
           type: "input",
           cancelable: false,
           targetIsOption: false,
+          composed: false,
         },
         {
           type: "change",
           cancelable: false,
           targetIsOption: false,
+          composed: false,
         },
         {
           type: "click",
           cancelable: true,
           targetIsOption: true,
+          composed: true,
         },
       ];
 
@@ -577,6 +584,11 @@ add_task(async function test_event_order() {
                   event.target.localName,
                   expectation.targetIsOption ? "option" : "select",
                   "Target matches"
+                );
+                Assert.equal(
+                  event.composed,
+                  expectation.composed,
+                  "Composed property should match"
                 );
                 if (!contentExpected.length) {
                   resolve();
