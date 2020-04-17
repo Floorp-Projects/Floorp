@@ -44,12 +44,9 @@ bool Rule::IsKnownLive() const {
     return false;
   }
 
-  if (!sheet->IsKeptAliveByDocument()) {
-    return false;
-  }
-
-  return nsCCUncollectableMarker::InGeneration(
-      GetComposedDoc()->GetMarkedCCGeneration());
+  Document* doc = sheet->GetKeptAliveByDocument();
+  return doc &&
+         nsCCUncollectableMarker::InGeneration(doc->GetMarkedCCGeneration());
 }
 
 void Rule::UnlinkDeclarationWrapper(nsWrapperCache& aDecl) {
