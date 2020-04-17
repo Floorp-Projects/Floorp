@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ReportBody.h"
-#include "nsIGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ReportBody, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ReportBody, mWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReportBody)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReportBody)
 
@@ -19,8 +19,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportBody)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ReportBody::ReportBody(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
-  MOZ_ASSERT(aGlobal);
+ReportBody::ReportBody(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {
+  MOZ_ASSERT(aWindow);
 }
 
 ReportBody::~ReportBody() = default;

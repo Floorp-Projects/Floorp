@@ -60,6 +60,9 @@ class Document;
 class Element;
 class Navigator;
 class Performance;
+class Report;
+class ReportBody;
+class ReportingObserver;
 class Selection;
 class ServiceWorker;
 class ServiceWorkerDescriptor;
@@ -555,6 +558,15 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual nsISerialEventTarget* EventTargetFor(
       mozilla::TaskCategory aCategory) const = 0;
 
+  void RegisterReportingObserver(mozilla::dom::ReportingObserver* aObserver,
+                                 bool aBuffered);
+
+  void UnregisterReportingObserver(mozilla::dom::ReportingObserver* aObserver);
+
+  void BroadcastReport(mozilla::dom::Report* aReport);
+
+  MOZ_CAN_RUN_SCRIPT void NotifyReportingObservers();
+
   void SaveStorageAccessGranted(const nsACString& aPermissionKey);
 
   bool HasStorageAccessGranted(const nsACString& aPermissionKey);
@@ -650,6 +662,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // The event dispatch code sets and unsets this while keeping
   // the event object alive.
   mozilla::dom::Event* mEvent;
+
+  // List of Report objects for ReportingObservers.
+  nsTArray<RefPtr<mozilla::dom::ReportingObserver>> mReportingObservers;
+  nsTArray<RefPtr<mozilla::dom::Report>> mReportRecords;
 
   // This is a list of storage access granted for the current window. These are
   // also set as permissions, but it could happen that we need to access them

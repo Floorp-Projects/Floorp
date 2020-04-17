@@ -14,7 +14,7 @@ namespace dom {
 
 class FeaturePolicyViolationReportBody final : public ReportBody {
  public:
-  FeaturePolicyViolationReportBody(nsIGlobalObject* aGlobal,
+  FeaturePolicyViolationReportBody(nsPIDOMWindowInner* aWindow,
                                    const nsAString& aFeatureId,
                                    const nsAString& aSourceFile,
                                    const Nullable<int32_t>& aLineNumber,

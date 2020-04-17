@@ -9,7 +9,7 @@
 
 #include "nsString.h"
 
-class nsIGlobalObject;
+class nsIPDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -18,7 +18,7 @@ class ReportBody;
 
 class ReportingUtils final {
  public:
-  static void Report(nsIGlobalObject* aGlobal, nsAtom* aType,
+  static void Report(nsPIDOMWindowInner* aWindow, nsAtom* aType,
                      const nsAString& aGroupName, const nsAString& aURL,
                      ReportBody* aBody);
 };

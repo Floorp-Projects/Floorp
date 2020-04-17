@@ -12,7 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsIGlobalObject;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -25,16 +25,16 @@ class ReportBody : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReportBody)
 
-  explicit ReportBody(nsIGlobalObject* aGlobal);
+  explicit ReportBody(nsPIDOMWindowInner* aWindow);
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   virtual void ToJSON(JSONWriter& aJSONWriter) const = 0;
 
  protected:
   virtual ~ReportBody();
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 }  // namespace dom
