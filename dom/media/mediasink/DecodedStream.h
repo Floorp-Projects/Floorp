@@ -63,6 +63,8 @@ class DecodedStream : public MediaSink {
   void Shutdown() override;
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
+  MediaEventSource<bool>& AudibleEvent() { return mAudibleEvent; }
+
  protected:
   virtual ~DecodedStream();
 
@@ -74,6 +76,7 @@ class DecodedStream : public MediaSink {
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   void SendData();
   void NotifyOutput(int64_t aTime);
+  void CheckIsDataAudible(const AudioData* aData);
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -106,6 +109,9 @@ class DecodedStream : public MediaSink {
   media::NullableTimeUnit mStartTime;
   media::TimeUnit mLastOutputTime;
   MediaInfo mInfo;
+  // True when stream is producing audible sound, false when stream is silent.
+  bool mIsAudioDataAudible = false;
+  MediaEventProducer<bool> mAudibleEvent;
 
   MediaQueue<AudioData>& mAudioQueue;
   MediaQueue<VideoData>& mVideoQueue;
