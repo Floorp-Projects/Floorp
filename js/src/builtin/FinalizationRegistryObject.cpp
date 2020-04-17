@@ -12,6 +12,7 @@
 
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

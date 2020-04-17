@@ -20,6 +20,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/Interpreter.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
@@ -31,6 +32,7 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/PlainObject-inl.h"  // js::CreateThis
 #include "vm/StringObject-inl.h"
 #include "vm/TypeInference-inl.h"
 

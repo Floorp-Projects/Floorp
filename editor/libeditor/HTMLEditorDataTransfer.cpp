@@ -441,7 +441,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
 
   // Loop over the node list and paste the nodes:
   RefPtr<Element> blockElement =
-      HTMLEditor::GetBlock(*pointToInsert.GetContainer());
+      pointToInsert.IsInContentNode()
+          ? HTMLEditUtils::GetInclusiveAncestorBlockElement(
+                *pointToInsert.ContainerAsContent())
+          : nullptr;
   EditorDOMPoint lastInsertedPoint;
   nsCOMPtr<nsIContent> insertedContextParentContent;
   for (OwningNonNull<nsIContent>& content : arrayOfTopMostChildContents) {

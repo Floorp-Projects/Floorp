@@ -30,6 +30,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
@@ -1782,9 +1783,15 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
   // Add not yet implemented opcodes at the bottom of the switch!
   switch (op) {
     case JSOp::NopDestructuring:
-    case JSOp::TryDestructuring:
     case JSOp::Lineno:
     case JSOp::Nop:
+      return Ok();
+
+    case JSOp::TryDestructuring:
+      // Set the hasTryBlock flag to turn off optimizations that eliminate dead
+      // resume points operands because the exception handler code for
+      // TryNoteKind::Destructuring is effectively a (specialized) catch-block.
+      graph().setHasTryBlock();
       return Ok();
 
     case JSOp::LoopHead:

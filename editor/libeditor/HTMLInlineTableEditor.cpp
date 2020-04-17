@@ -214,14 +214,19 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
     return NS_OK;
   }
 
+  if (NS_WARN_IF(!mInlineEditedCell)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
+  RefPtr<Element> tableElement =
+      HTMLEditUtils::GetClosestAncestorTableElement(*mInlineEditedCell);
   if (!tableElement) {
-    NS_WARNING("HTMLEditor::GetEnclosingTable() returned nullptr");
+    NS_WARNING("HTMLEditor::GetClosestAncestorTableElement() returned nullptr");
     return NS_ERROR_FAILURE;
   }
   int32_t rowCount, colCount;
@@ -407,9 +412,10 @@ nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
   int32_t centerOfCellX = cellX + cellWidth / 2;
   int32_t centerOfCellY = cellY + cellHeight / 2;
 
-  RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
+  RefPtr<Element> tableElement =
+      HTMLEditUtils::GetClosestAncestorTableElement(*mInlineEditedCell);
   if (!tableElement) {
-    NS_WARNING("HTMLEditor::GetEnclosingTable() returned nullptr");
+    NS_WARNING("HTMLEditor::GetClosestAncestorTableElement() returned nullptr");
     return NS_ERROR_FAILURE;
   }
   int32_t rowCount = 0, colCount = 0;

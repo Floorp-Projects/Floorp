@@ -101,6 +101,25 @@ class MockTimer {
   }
 }
 
+add_test(function test_executeSoon_callback() {
+  // executeSoon() is already defined for xpcshell in head.js. As such import
+  // our implementation into a custom namespace.
+  let sync = {};
+  ChromeUtils.import("chrome://remote/content/Sync.jsm", sync);
+
+  for (let func of ["foo", null, true, [], {}]) {
+    Assert.throws(() => sync.executeSoon(func), /TypeError/);
+  }
+
+  let a;
+  sync.executeSoon(() => {
+    a = 1;
+  });
+  executeSoon(() => equal(1, a));
+
+  run_next_test();
+});
+
 add_test(function test_PollPromise_funcTypes() {
   for (let type of ["foo", 42, null, undefined, true, [], {}]) {
     Assert.throws(() => new PollPromise(type), /TypeError/);

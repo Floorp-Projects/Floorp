@@ -54,6 +54,7 @@ class ListItemElementSelectionState;
 class MoveNodeResult;
 class ParagraphStateAtSelection;
 class ResizerSelectionListener;
+class Runnable;
 class SplitRangeOffFromNodeResult;
 class SplitRangeOffResult;
 class WSRunObject;
@@ -769,21 +770,6 @@ class HTMLEditor final : public TextEditor,
       bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
-
-  /**
-   * GetBlockNodeParent() returns parent or nearest ancestor of aNode if
-   * there is a block parent.  If aAncestorLimiter is not nullptr,
-   * this stops looking for the result.
-   */
-  static Element* GetBlockNodeParent(nsINode* aNode,
-                                     nsINode* aAncestorLimiter = nullptr);
-
-  /**
-   * GetBlock() returns aNode itself, or parent or nearest ancestor of aNode
-   * if there is a block parent.  If aAncestorLimiter is not nullptr,
-   * this stops looking for the result.
-   */
-  static Element* GetBlock(nsINode& aNode, nsINode* aAncestorLimiter = nullptr);
 
   /**
    * Returns container element of ranges in Selection.  If Selection is
@@ -3870,8 +3856,6 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetSelectionAtDocumentStart();
 
-  static Element* GetEnclosingTable(nsINode* aNode);
-
   // Methods for handling plaintext quotations
   MOZ_CAN_RUN_SCRIPT nsresult PasteAsPlaintextQuotation(int32_t aSelectionType);
 
@@ -4458,6 +4442,9 @@ class HTMLEditor final : public TextEditor,
   mutable RefPtr<RangeItem> mSelectedRangeForTopLevelEditSubAction;
   // Used by TopLevelEditSubActionData::mChangedRange.
   mutable RefPtr<nsRange> mChangedRangeForTopLevelEditSubAction;
+
+  RefPtr<Runnable> mPendingRootElementUpdatedRunner;
+  RefPtr<Runnable> mPendingDocumentModifiedRunner;
 
   bool mCRInParagraphCreatesParagraph;
 

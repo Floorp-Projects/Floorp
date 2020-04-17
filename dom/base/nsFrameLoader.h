@@ -111,7 +111,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   static already_AddRefed<nsFrameLoader> Recreate(Element* aOwner,
                                                   BrowsingContext* aContext,
                                                   const nsAString& aRemoteType,
-                                                  bool aNetworkCreated);
+                                                  bool aNetworkCreated,
+                                                  bool aPreserveContext);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
 

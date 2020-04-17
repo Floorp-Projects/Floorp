@@ -218,7 +218,7 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.printdent()
 
         if md.warn_unused:
-            self.write('MOZ_MUST_USE ')
+            self.write('[[nodiscard]] ')
 
         if md.methodspec == MethodSpec.STATIC:
             self.write('static ')

@@ -109,11 +109,6 @@ AutoSaveLiveRegisters::~AutoSaveLiveRegisters() {
 }  // namespace jit
 }  // namespace js
 
-#define DEFINE_SHARED_OP(op) \
-  bool IonCacheIRCompiler::emit##op() { return CacheIRCompiler::emit##op(); }
-CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
-#undef DEFINE_SHARED_OP
-
 void CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm,
                                                   LiveRegisterSet liveRegs,
                                                   Register scratch,
@@ -575,11 +570,11 @@ JitCode* IonCacheIRCompiler::compile() {
   return newStubCode;
 }
 
-bool IonCacheIRCompiler::emitGuardShape() {
+bool IonCacheIRCompiler::emitGuardShape(ObjOperandId objId,
+                                        uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
-  Shape* shape = shapeStubField(reader.stubOffset());
+  Shape* shape = shapeStubField(shapeOffset);
 
   bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
 
@@ -604,11 +599,11 @@ bool IonCacheIRCompiler::emitGuardShape() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardGroup() {
+bool IonCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
+                                        uint32_t groupOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
-  ObjectGroup* group = groupStubField(reader.stubOffset());
+  ObjectGroup* group = groupStubField(groupOffset);
 
   bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
 
