@@ -7,14 +7,22 @@ autobins = false
 edition = "2018"
 
 [target."cfg(windows)".dependencies]
+cfg-if = "0.1"
 chrono = "0.4"
 comedy = "0.1"
 failure = "0.1"
 log = "0.4"
+percent-encoding = "2.1"
+prefs_parser = { path = "../../../modules/libpref/parser" }
+rust-ini = "0.10"
+wio = "0.2"
+
+[target."cfg(all(windows, any(target_arch = \"x86\", target_arch = \"x86_64\")))".dependencies]
+raw-cpuid = "7.0"
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.7"
-features = ["minwindef", "ntdef", "oaidl", "oleauto", "taskschd", "winbase", "winerror", "winnt", "wtypes"]
+features = ["errhandlingapi", "minwindef", "ntdef", "oaidl", "oleauto", "sysinfoapi", "taskschd", "winbase", "winerror", "winnt", "winreg", "wtypes"]
 
 [[bin]]
 name = "updateagent"
