@@ -12,8 +12,11 @@
 #include "js/Result.h"        // JS::OOM, JS::Result
 #include "js/RootingAPI.h"    // JS::Handle
 #include "vm/NativeObject.h"  // js::NativeObject
+#include "vm/ObjectGroup.h"   // js::NewObjectKind
 
 struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSFunction;
+class JS_PUBLIC_API JSObject;
 
 namespace js {
 
@@ -36,6 +39,20 @@ extern bool CopyDataPropertiesNative(JSContext* cx,
                                      JS::Handle<NativeObject*> from,
                                      JS::Handle<PlainObject*> excludedItems,
                                      bool* optimized);
+
+// Specialized call for constructing |this| with a known function callee,
+// and a known prototype.
+extern PlainObject* CreateThisForFunctionWithProto(
+    JSContext* cx, JS::Handle<JSFunction*> callee,
+    JS::Handle<JSObject*> newTarget, JS::Handle<JSObject*> proto,
+    NewObjectKind newKind = GenericObject);
+
+// Specialized call for constructing |this| with a known function callee.
+extern PlainObject* CreateThisForFunction(JSContext* cx,
+                                          JS::Handle<JSFunction*> callee,
+                                          JS::Handle<JSObject*> newTarget,
+                                          NewObjectKind newKind);
+
 }  // namespace js
 
 #endif  // vm_PlainObject_h

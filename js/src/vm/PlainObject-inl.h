@@ -10,15 +10,19 @@
 #include "vm/PlainObject.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
+#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 
 #include "gc/Allocator.h"     // js::gc::InitialHeap
-#include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
+#include "js/RootingAPI.h"    // JS::Handle, JS::Rooted, JS::MutableHandle
+#include "js/Value.h"         // JS::Value, JS_IS_CONSTRUCTING
+#include "vm/JSFunction.h"    // JSFunction
 #include "vm/NativeObject.h"  // js::NativeObject::create
-#include "vm/ObjectGroup.h"   // js::ObjectGroup, js::GenericObject
+#include "vm/ObjectGroup.h"  // js::ObjectGroup, js::GenericObject, js::NewObjectKind
 #include "vm/Shape.h"         // js::Shape
 
 #include "gc/ObjectKind-inl.h"  // js::gc::GetGCObjectKind
 #include "vm/JSObject-inl.h"  // js::GetInitialHeap, js::NewBuiltinClassInstance
+#include "vm/NativeObject-inl.h"  // js::NativeObject::{create,setLastProperty}
 
 /* static */ inline JS::Result<js::PlainObject*, JS::OOM&>
 js::PlainObject::createWithTemplate(JSContext* cx,
@@ -69,6 +73,28 @@ static inline PlainObject* CopyInitializerObject(
   }
 
   return obj;
+}
+
+static MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx,
+                                         JS::Handle<JSFunction*> callee,
+                                         JS::Handle<JSObject*> newTarget,
+                                         NewObjectKind newKind,
+                                         JS::MutableHandle<JS::Value> thisv) {
+  if (callee->constructorNeedsUninitializedThis()) {
+    thisv.setMagic(JS_UNINITIALIZED_LEXICAL);
+    return true;
+  }
+
+  MOZ_ASSERT(thisv.isMagic(JS_IS_CONSTRUCTING));
+
+  PlainObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
+  if (!obj) {
+    return false;
+  }
+
+  MOZ_ASSERT(obj->nonCCWRealm() == callee->realm());
+  thisv.setObject(*obj);
+  return true;
 }
 
 }  // namespace js
