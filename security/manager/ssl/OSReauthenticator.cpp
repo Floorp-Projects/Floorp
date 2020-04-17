@@ -237,6 +237,7 @@ static nsresult ReauthenticateUser(const nsAString& prompt,
                                    /* out */ bool& reauthenticated,
                                    /* out */ bool& isBlankPassword) {
   reauthenticated = false;
+  isBlankPassword = false;
 #if defined(XP_WIN)
   return ReauthenticateUserWindows(prompt, caption, hwndParent, reauthenticated,
                                    isBlankPassword);
