@@ -4,8 +4,21 @@
 
 <hbox class="titlebar-buttonbox-container" skipintoolbarset="true">
   <hbox class="titlebar-buttonbox titlebar-color">
-    <toolbarbutton class="titlebar-button titlebar-min" oncommand="window.minimize();"/>
-    <toolbarbutton class="titlebar-button titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton class="titlebar-button titlebar-close" command="cmd_closeWindow"/>
+    <toolbarbutton class="titlebar-button titlebar-min"
+                   oncommand="window.minimize();"
+                   data-l10n-id="browser-window-minimize-button"
+                   />
+    <toolbarbutton class="titlebar-button titlebar-max"
+                   oncommand="window.maximize();"
+                   data-l10n-id="browser-window-maximize-button"
+                   />
+    <toolbarbutton class="titlebar-button titlebar-restore"
+                   oncommand="window.restore();"
+                   data-l10n-id="browser-window-restore-button"
+                   />
+    <toolbarbutton class="titlebar-button titlebar-close"
+                   command="cmd_closeWindow"
+                   data-l10n-id="browser-window-close-button"
+                   />
   </hbox>
 </hbox>

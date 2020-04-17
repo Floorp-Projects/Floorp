@@ -128,7 +128,7 @@
         list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
       }
 
-      :root[sizemode="maximized"] .titlebar-max {
+      .titlebar-restore {
         list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
       }
 
@@ -145,7 +145,7 @@
       :root[lwtheme-image] .titlebar-max {
         list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
       }
-      :root[lwtheme-image][sizemode="maximized"] .titlebar-max {
+      :root[lwtheme-image] .titlebar-restore {
         list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
       }
       :root[lwtheme-image] .titlebar-close {
@@ -248,7 +248,7 @@
           list-style-image: url(chrome://browser/skin/window-controls/maximize-highcontrast.svg);
         }
 
-        :root[sizemode="maximized"] .titlebar-max {
+        .titlebar-restore {
           list-style-image: url(chrome://browser/skin/window-controls/restore-highcontrast.svg);
         }
 
