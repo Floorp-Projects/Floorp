@@ -17,8 +17,8 @@ const { SharedDataMap } = ChromeUtils.import(
 const DEFAULT_STORE_ID = "ExperimentStoreData";
 
 class ExperimentStore extends SharedDataMap {
-  constructor(sharedDataKey, options) {
-    super(sharedDataKey || DEFAULT_STORE_ID, options);
+  constructor(sharedDataKey) {
+    super(sharedDataKey || DEFAULT_STORE_ID);
   }
 
   /**
@@ -31,7 +31,7 @@ class ExperimentStore extends SharedDataMap {
    * @memberof ExperimentStore
    */
   getExperimentForGroup(group) {
-    for (const experiment of this.getAll()) {
+    for (const [, experiment] of this._map) {
       if (experiment.active && experiment.branch.groups?.includes(group)) {
         return experiment;
       }
@@ -50,7 +50,7 @@ class ExperimentStore extends SharedDataMap {
     if (!groups || !groups.length) {
       return false;
     }
-    for (const experiment of this.getAll()) {
+    for (const [, experiment] of this._map) {
       if (
         experiment.active &&
         experiment.branch.groups?.filter(g => groups.includes(g)).length
@@ -65,7 +65,7 @@ class ExperimentStore extends SharedDataMap {
    * @returns {Enrollment[]}
    */
   getAll() {
-    return Object.values(this._data);
+    return [...this._map.values()];
   }
 
   /**
