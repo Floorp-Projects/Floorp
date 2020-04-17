@@ -63,16 +63,22 @@ operand_writer_info = {
     'ValId': ('ValOperandId', 'writeOperandId'),
     'ObjId': ('ObjOperandId', 'writeOperandId'),
     'StrId': ('StringOperandId', 'writeOperandId'),
+    'SymId': ('SymbolOperandId', 'writeOperandId'),
     'Int32Id': ('Int32OperandId', 'writeOperandId'),
 
     'ShapeField': ('Shape*', 'writeShapeField'),
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
     'ObjectField': ('JSObject*', 'writeObjectField'),
+    'StringField': ('JSString*', 'writeStringField'),
+    'SymbolField': ('JS::Symbol*', 'writeSymbolField'),
     'RawWordField': ('const void*', 'writeRawWordField'),
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
     'GuardClassKindImm': ('GuardClassKind', 'writeGuardClassKindImm'),
+    'JSWhyMagicImm': ('JSWhyMagic', 'writeJSWhyMagicImm'),
+    'Int32Imm': ('int32_t', 'writeInt32Imm'),
+    'JSNativeImm': ('JSNative', 'writeJSNativeImm'),
 }
 
 
@@ -113,16 +119,22 @@ operand_compiler_info = {
     'ValId': ('ValOperandId', 'Id', 'reader.valOperandId()'),
     'ObjId': ('ObjOperandId', 'Id', 'reader.objOperandId()'),
     'StrId': ('StringOperandId', 'Id', 'reader.stringOperandId()'),
+    'SymId': ('SymbolOperandId', 'Id', 'reader.symbolOperandId()'),
     'Int32Id': ('Int32OperandId', 'Id', 'reader.int32OperandId()'),
 
     'ShapeField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'ObjectField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'StringField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'SymbolField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'RawWordField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
     'BoolImm': ('bool', '', 'reader.readBool()'),
     'GuardClassKindImm': ('GuardClassKind', '', 'reader.guardClassKind()'),
+    'JSWhyMagicImm': ('JSWhyMagic', '', 'reader.whyMagic()'),
+    'Int32Imm': ('int32_t', '', 'reader.int32Immediate()'),
+    'JSNativeImm': ('JSNative', '', 'reinterpret_cast<JSNative>(reader.pointer())'),
 }
 
 
