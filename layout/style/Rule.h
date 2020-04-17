@@ -68,13 +68,6 @@ class Rule : public nsISupports, public nsWrapperCache {
 
   StyleSheet* GetStyleSheet() const { return mSheet; }
 
-  // Return the document the rule applies to, if any.
-  //
-  // Suitable for style updates, and that's about it.
-  dom::Document* GetComposedDoc() const {
-    return mSheet ? mSheet->GetComposedDoc() : nullptr;
-  }
-
   // Clear the mSheet pointer on this rule and descendants.
   virtual void DropSheetReference();
 
