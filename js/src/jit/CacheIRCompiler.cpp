@@ -1820,9 +1820,8 @@ bool CacheIRCompiler::emitGuardType() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardClass() {
+bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1832,7 +1831,7 @@ bool CacheIRCompiler::emitGuardClass() {
   }
 
   const JSClass* clasp = nullptr;
-  switch (reader.guardClassKind()) {
+  switch (kind) {
     case GuardClassKind::Array:
       clasp = &ArrayObject::class_;
       break;

@@ -148,6 +148,7 @@
 
 - name: GuardProto
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     proto: ObjectField
@@ -155,6 +156,7 @@
 # Guard per GuardClassKind.
 - name: GuardClass
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     kind: GuardClassKindImm
@@ -162,6 +164,7 @@
 # Guard on an arbitrary JSClass.
 - name: GuardAnyClass
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     clasp: RawWordField
@@ -169,6 +172,7 @@
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     global: ObjectField
