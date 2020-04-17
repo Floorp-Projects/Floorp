@@ -133,9 +133,17 @@ OrientedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 OrientedImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
                               uint32_t aFlags) {
-  // XXX(seth): It'd be nice to support downscale-during-decode for this case,
-  // but right now we just fall back to the intrinsic size.
-  return GetFrame(aWhichFrame, aFlags);
+  // Get a SourceSurface for the inner image then orient it according to
+  // mOrientation.
+  IntSize innerSize = aSize;
+  if (mOrientation.SwapsWidthAndHeight()) {
+    swap(innerSize.width, innerSize.height);
+  }
+  RefPtr<SourceSurface> innerSurface =
+      InnerImage()->GetFrameAtSize(innerSize, aWhichFrame, aFlags);
+  NS_ENSURE_TRUE(innerSurface, nullptr);
+
+  return OrientSurface(mOrientation, innerSurface);
 }
 
 NS_IMETHODIMP_(bool)
