@@ -471,7 +471,7 @@ const nsAString& WindowGlobalChild::GetRemoteType() {
 }
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
-    const nsACString& aName, ErrorResult& aRv) {
+    const nsAString& aName, ErrorResult& aRv) {
   if (!CanSend()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -513,7 +513,7 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   // Destroy our JSWindowActors, and reject any pending queries.
-  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> windowActors;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> windowActors;
   mWindowActors.SwapElements(windowActors);
   for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->RejectPendingQueries();

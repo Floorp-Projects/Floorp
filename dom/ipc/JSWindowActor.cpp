@@ -7,7 +7,6 @@
 #include "mozilla/dom/JSWindowActor.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
@@ -19,7 +18,6 @@
 #include "js/Promise.h"
 #include "xpcprivate.h"
 #include "nsASCIIMask.h"
-#include "nsICrashReporter.h"
 
 namespace mozilla {
 namespace dom {
@@ -49,33 +47,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
 
 JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 
-// RAII class to ensure that, if we crash while handling a message, the
-// crash will be annotated with the name of the actor and the message.
-struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
-  AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
-                                   const nsCString& aMessageName) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::JSActorName,
-                                       aActorName);
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::JSActorMessage, aMessageName);
-  }
-  ~AutoAnnotateMessageInCaseOfCrash() {
-    CrashReporter::RemoveCrashReportAnnotation(
-        CrashReporter::Annotation::JSActorMessage);
-    CrashReporter::RemoveCrashReportAnnotation(
-        CrashReporter::Annotation::JSActorName);
-  }
-};
-
 void JSWindowActor::StartDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         NS_LITERAL_CSTRING("<WillDestroy>"));
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSWindowActor::AfterDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         NS_LITERAL_CSTRING("<DidDestroy>"));
   InvokeCallback(CallbackFunction::DidDestroy);
   // Clear out & reject mPendingQueries
   RejectPendingQueries();
@@ -155,7 +131,7 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
     return true;
   }
 
-  nsAutoString messageName(NS_ConvertUTF8toUTF16(aMetadata.actorName()));
+  nsAutoString messageName(aMetadata.actorName());
   messageName.AppendLiteral("::");
   messageName.Append(aMetadata.messageName());
 
@@ -170,7 +146,7 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
   return false;
 }
 
-void JSWindowActor::SetName(const nsACString& aName) {
+void JSWindowActor::SetName(const nsAString& aName) {
   MOZ_ASSERT(mName.IsEmpty(), "Cannot set name twice!");
   mName = aName;
 }
@@ -268,9 +244,6 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData,
                                       ipc::StructuredCloneData&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  AutoAnnotateMessageInCaseOfCrash guard(
-      /* aActorName = */ mName,
-      NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
 
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
@@ -468,15 +441,17 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
   IgnoredErrorResult error;
   data.Write(aCx, aValue, error);
   if (NS_WARN_IF(error.Failed())) {
-    nsAutoCString msg;
+    // We failed to serialize the message over IPC. Report this error to the
+    // console, and send a reject reply.
+    nsAutoString msg;
     msg.Append(mActor->Name());
     msg.Append(':');
-    msg.Append(NS_LossyConvertUTF16toASCII(mMessageName));
+    msg.Append(mMessageName);
     msg.AppendLiteral(": message reply cannot be cloned.");
 
-    auto exc = MakeRefPtr<Exception>(msg, NS_ERROR_FAILURE,
-                                     NS_LITERAL_CSTRING("DataCloneError"),
-                                     nullptr, nullptr);
+    auto exc = MakeRefPtr<Exception>(
+        NS_ConvertUTF16toUTF8(msg), NS_ERROR_FAILURE,
+        NS_LITERAL_CSTRING("DataCloneError"), nullptr, nullptr);
 
     JS::Rooted<JS::Value> val(aCx);
     if (ToJSValue(aCx, exc, &val)) {

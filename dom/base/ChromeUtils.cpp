@@ -1198,7 +1198,7 @@ void ChromeUtils::ResetLastExternalProtocolIframeAllowed(
 
 /* static */
 void ChromeUtils::RegisterWindowActor(const GlobalObject& aGlobal,
-                                      const nsACString& aName,
+                                      const nsAString& aName,
                                       const WindowActorOptions& aOptions,
                                       ErrorResult& aRv) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1209,7 +1209,7 @@ void ChromeUtils::RegisterWindowActor(const GlobalObject& aGlobal,
 
 /* static */
 void ChromeUtils::UnregisterWindowActor(const GlobalObject& aGlobal,
-                                        const nsACString& aName) {
+                                        const nsAString& aName) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();

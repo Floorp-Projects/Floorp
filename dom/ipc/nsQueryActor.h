@@ -17,7 +17,7 @@
 // only has any use within a child process.
 class MOZ_STACK_CLASS nsQueryActorChild final : public nsCOMPtr_helper {
  public:
-  nsQueryActorChild(const nsLiteralCString aActorName,
+  nsQueryActorChild(const nsLiteralString aActorName,
                     nsPIDOMWindowOuter* aWindow)
       : mActorName(aActorName), mWindow(aWindow) {}
 
@@ -43,21 +43,21 @@ class MOZ_STACK_CLASS nsQueryActorChild final : public nsCOMPtr_helper {
   }
 
  private:
-  const nsLiteralCString mActorName;
+  const nsLiteralString mActorName;
   nsPIDOMWindowOuter* mWindow;
 };
 
 template <size_t length>
-inline nsQueryActorChild do_QueryActor(const char (&aActorName)[length],
+inline nsQueryActorChild do_QueryActor(const char16_t (&aActorName)[length],
                                        nsPIDOMWindowOuter* aWindow) {
-  return nsQueryActorChild(nsLiteralCString(aActorName), aWindow);
+  return nsQueryActorChild(nsLiteralString(aActorName), aWindow);
 }
 
 // This type is used to get an actor given a CanonicalBrowsingContext. It
 // is only useful in the parent process.
 class MOZ_STACK_CLASS nsQueryActorParent final : public nsCOMPtr_helper {
  public:
-  nsQueryActorParent(nsLiteralCString aActorName,
+  nsQueryActorParent(nsLiteralString aActorName,
                      mozilla::dom::CanonicalBrowsingContext* aBrowsingContext)
       : mActorName(aActorName), mBrowsingContext(aBrowsingContext) {}
 
@@ -83,15 +83,15 @@ class MOZ_STACK_CLASS nsQueryActorParent final : public nsCOMPtr_helper {
   }
 
  private:
-  const nsLiteralCString mActorName;
+  const nsLiteralString mActorName;
   mozilla::dom::CanonicalBrowsingContext* mBrowsingContext;
 };
 
 template <size_t length>
 inline nsQueryActorParent do_QueryActor(
-    const char (&aActorName)[length],
+    const char16_t (&aActorName)[length],
     mozilla::dom::CanonicalBrowsingContext* aBrowsingContext) {
-  return nsQueryActorParent(nsLiteralCString(aActorName), aBrowsingContext);
+  return nsQueryActorParent(nsLiteralString(aActorName), aBrowsingContext);
 }
 
 #endif  // defined nsQueryActor_h

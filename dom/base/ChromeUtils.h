@@ -193,12 +193,12 @@ class ChromeUtils {
   static void ResetLastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
 
   static void RegisterWindowActor(const GlobalObject& aGlobal,
-                                  const nsACString& aName,
+                                  const nsAString& aName,
                                   const WindowActorOptions& aOptions,
                                   ErrorResult& aRv);
 
   static void UnregisterWindowActor(const GlobalObject& aGlobal,
-                                    const nsACString& aName);
+                                    const nsAString& aName);
 
   static bool IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                             uint32_t aError);
