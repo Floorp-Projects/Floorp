@@ -42,6 +42,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
@@ -240,7 +241,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     startActivity(intent)
                 }
                 create()
-            }.show()
+            }.show().secure(activity)
             it.settings().incrementShowLoginsSecureWarningSyncCount()
         }
     }
