@@ -6039,6 +6039,13 @@
   value: true
   mirror: always
 
+# Is support for :is() and :where() enabled?
+- name: layout.css.is-where-selectors.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the computed value of line-height: normal returns the `normal`
 # keyword rather than a pixel value based on the first available font.
 #
