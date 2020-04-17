@@ -68,5 +68,5 @@ function check_ogg(v, enabled, finish) {
     .then(verify_opus_support)
     .then(opus_enable)
     .then(opus_disable)
-    .then(unspported_ogg, unspported_ogg);
+    .finally(unspported_ogg);
 }

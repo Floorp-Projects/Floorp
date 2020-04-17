@@ -1124,8 +1124,8 @@ add_task(async function testExtensionControlledProxyConfig() {
   async function closeProxyPanel(panelObj) {
     let dialog = panelObj.panel.document.getElementById("ConnectionsDialog");
     dialog.cancelDialog();
-    let panelClosingEvent = await panelObj.closingPromise;
-    ok(panelClosingEvent, "Proxy panel closed.");
+    await panelObj.closingPromise;
+    is(panelObj.pane.state, "closed", "Proxy panel closed.");
   }
 
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {

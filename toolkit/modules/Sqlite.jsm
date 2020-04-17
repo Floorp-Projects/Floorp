@@ -723,7 +723,7 @@ ConnectionData.prototype = Object.freeze({
   shrinkMemory() {
     this._log.info("Shrinking memory usage.");
     let onShrunk = this._clearIdleShrinkTimer.bind(this);
-    return this.execute("PRAGMA shrink_memory").then(onShrunk, onShrunk);
+    return this.execute("PRAGMA shrink_memory").finally(onShrunk);
   },
 
   discardCachedStatements() {

@@ -41,7 +41,7 @@ if (isParent) {
     registerCleanupFunction(() => {
       return db.drop().then(_ => db.close());
     });
-    setUpServiceInParent(PushService, db).then(run_next_test, run_next_test);
+    setUpServiceInParent(PushService, db).finally(run_next_test);
   });
 }
 
@@ -352,6 +352,6 @@ add_test(function test_subscribe_missing_principal() {
 
 if (isParent) {
   add_test(function tearDown() {
-    tearDownServiceInParent(db).then(run_next_test, run_next_test);
+    tearDownServiceInParent(db).finally(run_next_test);
   });
 }

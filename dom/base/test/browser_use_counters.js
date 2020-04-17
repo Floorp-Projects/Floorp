@@ -177,7 +177,7 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   };
   return BrowserTestUtils.waitForCondition(() => {
     return page_before != gather()[0];
-  }).then(gather, gather);
+  }).finally(gather);
 }
 
 var check_use_counter_iframe = async function(

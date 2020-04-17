@@ -16,7 +16,7 @@ FissionTestHelper.startTestPromise
   .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
   .then(runAsyncContinuation(test))
-  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
+  .finally(FissionTestHelper.subtestDone);
 
 
 // The actual test

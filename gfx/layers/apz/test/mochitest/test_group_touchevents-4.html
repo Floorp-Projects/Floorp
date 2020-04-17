@@ -34,7 +34,7 @@ if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
     runSubtestsSeriallyInFreshWindows(subtests)
-    .then(SimpleTest.finish, SimpleTest.finish);
+    .finally(SimpleTest.finish);
   };
 }
 

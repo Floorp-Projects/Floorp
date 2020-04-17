@@ -47,7 +47,7 @@ if (isApzEnabled()) {
   SimpleTest.expectAssertions(0, 2); // from helper_bug1550510.html, bug 1232856
   window.onload = function() {
     runSubtestsSeriallyInFreshWindows(subtests)
-    .then(SimpleTest.finish, SimpleTest.finish);
+    .finally(SimpleTest.finish);
   };
 }
 

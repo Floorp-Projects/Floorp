@@ -602,8 +602,7 @@ Capture.prototype = {
       return;
     }
 
-    PageThumbs._store(this.url, data.finalURL, data.imageData, true).then(
-      done,
+    PageThumbs._store(this.url, data.finalURL, data.imageData, true).finally(
       done
     );
   },
