@@ -77,14 +77,6 @@ add_task(async function test_with_rs_messages() {
     "The message container was not populated with the expected number of msgs"
   );
 
-  await BrowserTestUtils.waitForCondition(
-    () =>
-      document.querySelector(
-        "#PanelUI-whatsNew-message-container .whatsNew-message-body remote-text"
-      ).shadowRoot.innerHTML,
-    "Ensure messages have content"
-  );
-
   UITour.hideMenu(window, "appMenu");
   // Clean up and remove messages
   ToolbarPanelHub.disableAppmenuButton();

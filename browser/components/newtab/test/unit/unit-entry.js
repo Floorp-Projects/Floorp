@@ -345,7 +345,6 @@ const TEST_GLOBAL = {
     },
     ww: { registerNotification() {}, unregisterNotification() {} },
     appinfo: { appBuildID: "20180710100040", version: "69.0a1" },
-    scriptloader: { loadSubScript: () => {} },
   },
   XPCOMUtils: {
     defineLazyGetter(object, name, f) {
