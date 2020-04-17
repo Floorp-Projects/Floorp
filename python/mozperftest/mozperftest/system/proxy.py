@@ -4,15 +4,21 @@
 import os
 import mozinfo
 from mozproxy import get_playback
-from mozperftest.base import MachEnvironment
+from mozperftest.layers import Layer
 
 
 HERE = os.path.dirname(__file__)
 
 
-class ProxyRunner(MachEnvironment):
-    def __init__(self, mach_cmd):
-        super(ProxyRunner, self).__init__(mach_cmd)
+class ProxyRunner(Layer):
+    name = "proxy"
+
+    arguments = {
+        "--proxy": {"action": "store_true", "default": False, "help": "Use a proxy"}
+    }
+
+    def __init__(self, env, mach_cmd):
+        super(ProxyRunner, self).__init__(env, mach_cmd)
         self.proxy = None
 
     def setup(self):
@@ -20,6 +26,9 @@ class ProxyRunner(MachEnvironment):
 
     def __call__(self, metadata):
         self.metadata = metadata
+        if not self.get_arg("proxy"):
+            return metadata
+
         # replace with artifacts
         config = {
             "run_local": True,

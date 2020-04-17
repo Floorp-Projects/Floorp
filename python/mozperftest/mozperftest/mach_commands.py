@@ -7,9 +7,9 @@ from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
 def get_perftest_parser():
-    from mozperftest import get_parser
+    from mozperftest import PerftestArgumentParser
 
-    return get_parser
+    return PerftestArgumentParser
 
 
 @CommandProvider
@@ -24,19 +24,22 @@ class Perftest(MachCommandBase):
     def run_perftest(
         self, flavor="script", test_objects=None, resolve_tests=True, **kwargs
     ):
-        from mozperftest import get_env, get_metadata
+        from mozperftest import MachEnvironment, Metadata
 
-        system, browser, metrics = get_env(self, flavor, test_objects, resolve_tests)
-        metadata = get_metadata(self, flavor, **kwargs)
-        metadata.run_hook("before_cycles")
-        cycles = metadata.get_arg("cycles", 1)
+        kwargs["test_objects"] = test_objects
+        kwargs["resolve_tests"] = resolve_tests
+        env = MachEnvironment(self, flavor, **kwargs)
+        env.run_hook("before_cycles")
+        cycles = env.get_arg("cycles", 1)
+        metadata = Metadata(self, env, flavor)
         try:
+            # XXX put the cycles inside the browser layer
             for cycle in range(1, cycles + 1):
-                with metadata.frozen() as m, system, browser, metrics:
-                    m.run_hook("before_cycle", cycle=cycle)
+                with env.frozen() as e:
+                    e.run_hook("before_cycle", cycle=cycle)
                     try:
-                        metrics(browser(system(m)))
+                        e.run(metadata)
                     finally:
-                        m.run_hook("after_cycle", cycle=cycle)
+                        e.run_hook("after_cycle", cycle=cycle)
         finally:
-            metadata.run_hook("after_cycles")
+            env.run_hook("after_cycles")

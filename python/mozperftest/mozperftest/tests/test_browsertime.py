@@ -4,8 +4,9 @@ import mozunit
 import mock
 import shutil
 
-from mozperftest.browser import pick_browser
 from mozperftest.tests.support import get_running_env
+from mozperftest.environment import BROWSER
+
 
 HERE = os.path.dirname(__file__)
 
@@ -19,25 +20,19 @@ def fetch(self, url):
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
 def test_browser():
-    mach_cmd, metadata = get_running_env()
-    runs = []
-
-    def _run_process(*args, **kw):
-        runs.append((args, kw))
-
-    mach_cmd.run_process = _run_process
-    metadata.set_arg("tests", [os.path.join(HERE, "example.js")])
+    mach_cmd, metadata, env = get_running_env()
+    browser = env.layers[BROWSER]
+    env.set_arg("tests", [os.path.join(HERE, "example.js")])
 
     try:
-        with pick_browser("script", mach_cmd) as env:
-            env(metadata)
+        with browser as b:
+            b(metadata)
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
 
-    args = runs[0][0]
-    # kwargs = runs[0][1]
+    assert mach_cmd.run_process.call_count == 1
     # XXX more checks
-    assert args[-1][-1] == os.path.join(HERE, "example.js")
+    assert mach_cmd.run_process.call_args[0][-1][-1] == os.path.join(HERE, "example.js")
 
 
 if __name__ == "__main__":

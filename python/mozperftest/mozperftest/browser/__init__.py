@@ -4,7 +4,11 @@
 from mozperftest.browser.browsertime import BrowsertimeRunner
 
 
-def pick_browser(flavor, mach_cmd):
+def get_layers():
+    return (BrowsertimeRunner,)
+
+
+def pick_browser(env, flavor, mach_cmd):
     if flavor == "script":
-        return BrowsertimeRunner(mach_cmd)
+        return BrowsertimeRunner(env, mach_cmd)
     raise NotImplementedError(flavor)
