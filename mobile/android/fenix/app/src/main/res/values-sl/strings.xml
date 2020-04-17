@@ -301,6 +301,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Zaščita pred sledenjem je za te spletne strani izključena</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Vklopi za vsa spletna mesta</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Izjeme vam omogočajo, da onemogočite zaščito pred sledenjem za izbrane strani.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Več o tem</string>
 
@@ -326,6 +328,8 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Vklopi Sync</string>
 
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Skenirajte kodo za seznanjanje v Firefoxu za namizja</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijava</string>
 
@@ -932,6 +936,8 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Vaše pravice</string>
 
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Odprtokodne knjižnice, ki jih uporabljamo</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Kaj je novega v %su</string>
     <!-- Open source licenses page title
@@ -949,6 +955,8 @@
     <string name="about_licensing_information">Podatki o dovoljenjih</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Knjižnice, ki jih uporabljamo</string>
+
+    <string name="about_debug_menu_toast_done">Meni za razhroščevanje je omogočen</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 zavihek</string>
@@ -990,10 +998,18 @@
     <string name="preferences_passwords_autofill">Samodejno izpolnjevanje</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Ponovno poveži</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Prijava v Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Shranjene prijave</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Več o Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Izjeme</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Prijave in gesla za te strani ne bodo shranjene.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Iskanje prijav</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1009,7 +1025,7 @@
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Ponovno vnesite PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Odklenite za ogled  shranjenih prijav</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Odklenite za ogled shranjenih prijav</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">Ta povezava ni varna. Prijave, ki jih vnesete, so lahko prestrežene.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
@@ -1036,8 +1052,12 @@
     <string name="saved_login_reveal_password">Prikaži geslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Skrij geslo</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Odklenite za ogled shranjenih prijav</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Zavarujte svoje prijave in gesla</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih prijav in gesel, če vašo napravo uporablja še kdo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pozneje</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1063,6 +1083,8 @@
     <string name="search_add_custom_engine_name_hint">Ime</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Iskalni niz za uporabo</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Zamenjajte poizvedbo z &quot;%s&quot;. Primer: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Več o tem</string>
 
@@ -1077,6 +1099,8 @@
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Ustvarjeno %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Dobrodošli v popolnoma novem %su</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Posodabljanje %s …</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

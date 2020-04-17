@@ -121,7 +121,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Pesquisar</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">Acompanhar o idioma do dispositivo</string>
+    <string name="default_locale_text">Acompanhar idioma do dispositivo</string>
 
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Pesquisar idioma</string>
@@ -376,7 +376,7 @@
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">No alto</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Na parte de baixo</string>
+    <string name="preference_bottom_toolbar">Embaixo</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -386,7 +386,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Definido pela economia de bateria</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Acompanhar o tema do dispositivo</string>
+    <string name="preference_follow_device_theme">Acompanhar tema do dispositivo</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -795,7 +795,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Dimensionamento automático de fontes</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">O tamanho das fontes de caracteres corresponderá à sua configuração do Android. Desative para gerenciar aqui o tamanho das fontes.</string>
+    <string name="preference_accessibility_auto_size_summary">Acompanhar a configuração de tamanho das fontes de caracteres do Android. Desative para definir aqui o tamanho.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Excluir dados de navegação</string>
@@ -817,7 +817,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">Você será desconectado da maioria dos sites</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Encerra a sessão de acesso da maioria dos sites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Imagens e arquivos em cache</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -829,9 +829,9 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Excluir dados de navegação ao sair</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Excluir automaticamente os dados de navegação quando você seleciona &quot;Sair&quot; no menu principal</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Excluir automaticamente os dados de navegação quando você selecionar &quot;Sair&quot; no menu principal.</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação quando você seleciona \&quot;Sair\&quot; no menu principal</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação quando você selecionar \&quot;Sair\&quot; no menu principal.</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Histórico de navegação</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -901,9 +901,9 @@
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Tome uma posição</string>
+    <string name="onboarding_toolbar_position_header">Escolha uma posição</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Experimente navegar com uma mão usando a barra de ferramentas em baixo, ou a mova para o alto.</string>
+    <string name="onboarding_toolbar_position_description">Experimente navegar com apenas uma mão, usando a barra de ferramentas embaixo, ou a mova para o alto.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegue com privacidade</string>
     <!-- text for the private browsing onboarding card description
@@ -931,10 +931,10 @@
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Escolha seu tema</string>
+    <string name="onboarding_theme_picker_header">Escolha um tema</string>
 
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Economize bateria e poupe sua visão ativando o modo escuro.</string>
+    <string name="onboarding_theme_picker_description1">Se quiser economizar bateria e poupar sua visão, use o modo escuro.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automático</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -984,7 +984,7 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Navegue sem ser seguido</string>
 
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantenha seus dados com você. O %s lhe protege de muitos dos rastreadores mais comuns que seguem o que você faz online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Mantenha seus dados consigo. O %s lhe protege de muitos dos rastreadores mais comuns que seguem o que você faz online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saiba mais</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1039,7 +1039,7 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineradores</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
-    <string name="enhanced_tracking_protection_blocked">Bloqueado</string>
+    <string name="enhanced_tracking_protection_blocked">Bloqueado:</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permitido</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -1062,9 +1062,9 @@
     <string name="etp_tracking_content_title">Conteúdo de rastreamento</string>
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contenham código de rastreamento. Pode afetar algumas funcionalidades de sites.</string>
+    <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contenham código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">O %s está bloqueando rastreadores neste site quando o escudo aparece roxo. Toque nele para ver o que foi bloqueado.</string>
+    <string name="etp_onboarding_message_2">O escudo fica roxo para indicar que o %s está bloqueando rastreadores neste site. Toque no escudo para ver o que foi bloqueado.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">As proteções estão ATIVADAS neste site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
