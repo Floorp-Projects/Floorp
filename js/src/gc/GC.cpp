@@ -3312,9 +3312,7 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
 
 void GCRuntime::waitBackgroundSweepEnd() {
   sweepTask.join();
-
-  // TODO: Improve assertion to work in incremental GC?
-  if (!isIncrementalGCInProgress()) {
+  if (state() != State::Sweep) {
     assertBackgroundSweepingFinished();
   }
 }
