@@ -74,7 +74,7 @@ class WindowGlobalParent final : public WindowContext,
   already_AddRefed<WindowGlobalChild> GetChildActor();
 
   // Get a JS actor object by name.
-  already_AddRefed<JSWindowActorParent> GetActor(const nsACString& aName,
+  already_AddRefed<JSWindowActorParent> GetActor(const nsAString& aName,
                                                  ErrorResult& aRv);
 
   // Get this actor's manager if it is not an in-process actor. Returns
@@ -233,7 +233,7 @@ class WindowGlobalParent final : public WindowContext,
   nsCOMPtr<nsIURI> mDocumentURI;
   nsString mDocumentTitle;
 
-  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> mWindowActors;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
   bool mInProcess;
   bool mIsInitialDocument;
 

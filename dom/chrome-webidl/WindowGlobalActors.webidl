@@ -68,7 +68,7 @@ interface WindowGlobalParent : WindowContext {
    * customize actor creation.
    */
   [Throws]
-  JSWindowActorParent getActor(UTF8String name);
+  JSWindowActorParent getActor(DOMString name);
 
   /**
    * Renders a region of the frame into an image bitmap.
@@ -130,5 +130,5 @@ interface WindowGlobalChild {
    * customize actor creation.
    */
   [Throws]
-  JSWindowActorChild getActor(UTF8String name);
+  JSWindowActorChild getActor(DOMString name);
 };
