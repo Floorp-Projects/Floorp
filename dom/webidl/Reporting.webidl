@@ -8,27 +8,25 @@
  */
 
 [Pref="dom.reporting.enabled",
- Exposed=(Window,Worker)]
+ Exposed=Window]
 interface ReportBody {
-  [Default] object toJSON
-();
 };
 
 [Pref="dom.reporting.enabled",
- Exposed=(Window,Worker)]
+ Exposed=Window]
 interface Report {
-  [Default] object toJSON
-();
   readonly attribute DOMString type;
   readonly attribute DOMString url;
   readonly attribute ReportBody? body;
 };
 
 [Pref="dom.reporting.enabled",
- Exposed=(Window,Worker)]
+ Exposed=Window]
 interface ReportingObserver {
   [Throws]
-  constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options = {});
+  constructor(ReportingObserverCallback callback,
+              optional ReportingObserverOptions options = {});
+
   void observe();
   void disconnect();
   ReportList takeRecords();

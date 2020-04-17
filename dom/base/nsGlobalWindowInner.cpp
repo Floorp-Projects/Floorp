@@ -223,6 +223,8 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/InstallTriggerBinding.h"
+#include "mozilla/dom/Report.h"
+#include "mozilla/dom/ReportingObserver.h"
 #include "mozilla/dom/SharedWorker.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
@@ -325,6 +327,9 @@ static nsGlobalWindowOuter* GetOuterWindowForForwarding(
 // Maximum number of successive dialogs before we prompt users to disable
 // dialogs for this window.
 #define MAX_SUCCESSIVE_DIALOG_COUNT 5
+
+// Max number of Report objects
+#define MAX_REPORT_RECORDS 100
 
 static LazyLogModule gDOMLeakPRLogInner("DOMLeakInner");
 extern mozilla::LazyLogModule gTimeoutLog;
@@ -1129,7 +1134,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     mIndexedDB = nullptr;
   }
 
-  nsIGlobalObject::UnlinkObjectsInGlobal();
+  UnlinkHostObjectURIs();
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
@@ -1359,8 +1364,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportRecords)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportingObservers)
 
-  tmp->TraverseObjectsInGlobal(cb);
+  tmp->TraverseHostObjectURIs(cb);
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mGroupMessageManagers)
@@ -1458,8 +1465,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReportRecords)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReportingObservers)
 
-  tmp->UnlinkObjectsInGlobal();
+  tmp->UnlinkHostObjectURIs();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
 
@@ -4929,8 +4938,8 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
   if (!nsCRT::strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
     if (mPerformance) {
       mPerformance->MemoryPressure();
+      mReportRecords.Clear();
     }
-    RemoveReportRecords();
     return NS_OK;
   }
 
@@ -7325,6 +7334,62 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
     MOZ_ASSERT(mWindowGlobalChild->BrowsingContext() == mBrowsingContext);
   } else {
     mWindowID = nsContentUtils::GenerateWindowId();
+  }
+}
+
+void nsPIDOMWindowInner::RegisterReportingObserver(ReportingObserver* aObserver,
+                                                   bool aBuffered) {
+  MOZ_ASSERT(aObserver);
+
+  if (mReportingObservers.Contains(aObserver)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!mReportingObservers.AppendElement(aObserver, fallible))) {
+    return;
+  }
+
+  if (!aBuffered) {
+    return;
+  }
+
+  for (Report* report : mReportRecords) {
+    aObserver->MaybeReport(report);
+  }
+}
+
+void nsPIDOMWindowInner::UnregisterReportingObserver(
+    ReportingObserver* aObserver) {
+  MOZ_ASSERT(aObserver);
+  mReportingObservers.RemoveElement(aObserver);
+}
+
+void nsPIDOMWindowInner::BroadcastReport(Report* aReport) {
+  MOZ_ASSERT(aReport);
+
+  for (ReportingObserver* observer : mReportingObservers) {
+    observer->MaybeReport(aReport);
+  }
+
+  if (NS_WARN_IF(!mReportRecords.AppendElement(aReport, fallible))) {
+    return;
+  }
+
+  while (mReportRecords.Length() > MAX_REPORT_RECORDS) {
+    mReportRecords.RemoveElementAt(0);
+  }
+}
+
+void nsPIDOMWindowInner::NotifyReportingObservers() {
+  const nsTArray<RefPtr<ReportingObserver>> reportingObservers(
+      mReportingObservers);
+  for (auto& observer : reportingObservers) {
+    // MOZ_KnownLive because 'reportingObservers' is guaranteed to
+    // keep it alive.
+    //
+    // This can go away once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
+    MOZ_KnownLive(observer)->MaybeNotify();
   }
 }
 

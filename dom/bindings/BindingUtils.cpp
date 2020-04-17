@@ -3964,34 +3964,7 @@ static const char* kDeprecatedOperations[] = {
     nullptr};
 #undef DEPRECATED_OPERATION
 
-class GetLocalizedStringRunnable final : public WorkerMainThreadRunnable {
- public:
-  GetLocalizedStringRunnable(WorkerPrivate* aWorkerPrivate,
-                             const nsAutoCString& aKey,
-                             nsAutoString& aLocalizedString)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate, NS_LITERAL_CSTRING("GetLocalizedStringRunnable")),
-        mKey(aKey),
-        mLocalizedString(aLocalizedString) {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-  }
-
-  bool MainThreadRun() override {
-    AssertIsOnMainThread();
-
-    nsresult rv = nsContentUtils::GetLocalizedString(
-        nsContentUtils::eDOM_PROPERTIES, mKey.get(), mLocalizedString);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-    return true;
-  }
-
- private:
-  const nsAutoCString& mKey;
-  nsAutoString& mLocalizedString;
-};
-
-void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
+void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
                        Document::DeprecatedOperations aOperation,
                        const nsAString& aFileName,
                        const Nullable<uint32_t>& aLineNumber,
@@ -4016,42 +3989,43 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
   key.AppendASCII("Warning");
 
   nsAutoString msg;
-  if (NS_IsMainThread()) {
-    rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                            key.get(), msg);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  } else {
-    // nsIStringBundle is thread-safe but its creation is not, and in particular
-    // nsContentUtils doesn't create and store nsIStringBundle objects in a
-    // thread-safe way. Better to call GetLocalizedString() on the main thread.
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (!workerPrivate) {
-      return;
-    }
-
-    RefPtr<GetLocalizedStringRunnable> runnable =
-        new GetLocalizedStringRunnable(workerPrivate, key, msg);
-
-    IgnoredErrorResult ignoredRv;
-    runnable->Dispatch(Canceling, ignoredRv);
-    if (NS_WARN_IF(ignoredRv.Failed())) {
-      return;
-    }
-
-    if (msg.IsEmpty()) {
-      return;
-    }
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                          key.get(), msg);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
 
   RefPtr<DeprecationReportBody> body =
-      new DeprecationReportBody(aGlobal, type, nullptr /* date */, msg,
+      new DeprecationReportBody(aWindow, type, nullptr /* date */, msg,
                                 aFileName, aLineNumber, aColumnNumber);
 
-  ReportingUtils::Report(aGlobal, nsGkAtoms::deprecation,
+  ReportingUtils::Report(aWindow, nsGkAtoms::deprecation,
                          NS_LITERAL_STRING("default"),
                          NS_ConvertUTF8toUTF16(spec), body);
+}
+
+void MaybeReportDeprecation(nsPIDOMWindowInner* aWindow,
+                            Document::DeprecatedOperations aOperation,
+                            const nsAString& aFileName,
+                            const Nullable<uint32_t>& aLineNumber,
+                            const Nullable<uint32_t>& aColumnNumber) {
+  MOZ_ASSERT(aWindow);
+
+  if (!StaticPrefs::dom_reporting_enabled()) {
+    return;
+  }
+
+  if (NS_WARN_IF(!aWindow->GetExtantDoc())) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri = aWindow->GetExtantDoc()->GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
+    return;
+  }
+
+  ReportDeprecation(aWindow, uri, aOperation, aFileName, aLineNumber,
+                    aColumnNumber);
 }
 
 // This runnable is used to write a deprecation message from a worker to the
@@ -4085,71 +4059,6 @@ class DeprecationWarningRunnable final
   }
 };
 
-void MaybeShowDeprecationWarning(const GlobalObject& aGlobal,
-                                 Document::DeprecatedOperations aOperation) {
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(aOperation);
-    }
-    return;
-  }
-
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aGlobal.Context());
-  if (!workerPrivate) {
-    return;
-  }
-
-  RefPtr<DeprecationWarningRunnable> runnable =
-      new DeprecationWarningRunnable(aOperation);
-  runnable->Dispatch(workerPrivate);
-}
-
-void MaybeReportDeprecation(const GlobalObject& aGlobal,
-                            Document::DeprecatedOperations aOperation) {
-  nsCOMPtr<nsIURI> uri;
-
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    if (!window || !window->GetExtantDoc()) {
-      return;
-    }
-
-    uri = window->GetExtantDoc()->GetDocumentURI();
-  } else {
-    WorkerPrivate* workerPrivate =
-        GetWorkerPrivateFromContext(aGlobal.Context());
-    if (!workerPrivate) {
-      return;
-    }
-
-    uri = workerPrivate->GetResolvedScriptURI();
-  }
-
-  if (NS_WARN_IF(!uri)) {
-    return;
-  }
-
-  nsAutoString fileName;
-  Nullable<uint32_t> lineNumber;
-  Nullable<uint32_t> columnNumber;
-  uint32_t line = 0;
-  uint32_t column = 0;
-  if (nsJSUtils::GetCallingLocation(aGlobal.Context(), fileName, &line,
-                                    &column)) {
-    lineNumber.SetValue(line);
-    columnNumber.SetValue(column);
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-
-  ReportDeprecation(global, uri, aOperation, fileName, lineNumber,
-                    columnNumber);
-}
-
 }  // anonymous namespace
 
 void DeprecationWarning(JSContext* aCx, JSObject* aObject,
@@ -4165,8 +4074,38 @@ void DeprecationWarning(JSContext* aCx, JSObject* aObject,
 
 void DeprecationWarning(const GlobalObject& aGlobal,
                         Document::DeprecatedOperations aOperation) {
-  MaybeShowDeprecationWarning(aGlobal, aOperation);
-  MaybeReportDeprecation(aGlobal, aOperation);
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window =
+        do_QueryInterface(aGlobal.GetAsSupports());
+    if (window && window->GetExtantDoc()) {
+      window->GetExtantDoc()->WarnOnceAbout(aOperation);
+
+      nsAutoString fileName;
+      Nullable<uint32_t> lineNumber;
+      Nullable<uint32_t> columnNumber;
+      uint32_t line = 0;
+      uint32_t column = 0;
+      if (nsJSUtils::GetCallingLocation(aGlobal.Context(), fileName, &line,
+                                        &column)) {
+        lineNumber.SetValue(line);
+        columnNumber.SetValue(column);
+      }
+
+      MaybeReportDeprecation(window, aOperation, fileName, lineNumber,
+                             columnNumber);
+    }
+
+    return;
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aGlobal.Context());
+  if (!workerPrivate) {
+    return;
+  }
+
+  RefPtr<DeprecationWarningRunnable> runnable =
+      new DeprecationWarningRunnable(aOperation);
+  runnable->Dispatch(workerPrivate);
 }
 
 namespace binding_detail {
