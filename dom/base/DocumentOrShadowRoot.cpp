@@ -152,7 +152,7 @@ void DocumentOrShadowRoot::SetAdoptedStyleSheets(
   if (commonPrefix != mAdoptedStyleSheets.Length()) {
     StyleSheetSet removedSet(mAdoptedStyleSheets.Length() - commonPrefix);
     for (size_t i = mAdoptedStyleSheets.Length(); i != commonPrefix; --i) {
-      RefPtr<StyleSheet> sheetToRemove = mAdoptedStyleSheets.PopLastElement();
+      StyleSheet* sheetToRemove = mAdoptedStyleSheets.ElementAt(i - 1);
       if (MOZ_UNLIKELY(set.Contains(sheetToRemove))) {
         // Fixing duplicate sheets would require insertions/removals from the
         // style set. We may as well just rebuild the whole thing from scratch.
@@ -821,7 +821,7 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
     tmp->RemoveSheetFromStylesIfApplicable(*sheet);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets);
-  for (RefPtr<StyleSheet>& sheet : tmp->mAdoptedStyleSheets) {
+  for (StyleSheet* sheet : tmp->mAdoptedStyleSheets) {
     sheet->RemoveAdopter(*tmp);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets);
