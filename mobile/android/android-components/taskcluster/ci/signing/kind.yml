@@ -24,15 +24,11 @@ only-for-build-types:
 
 job-template:
     description: Sign component
-    worker-type:
-        by-level:
-            '3': signing
-            default: dep-signing
-    worker:
-        signing-type:
-            by-level:
-                '3': release-signing
-                default: dep-signing
+    index:
+        by-build-type:
+            (release|nightly):
+                type: signing
+            default: {}
     run-on-tasks-for: []
     treeherder:
         job-symbol:
@@ -42,3 +38,12 @@ job-template:
                 nightly: BNs
                 default: Bs
         kind: build
+    worker-type:
+        by-level:
+            '3': signing
+            default: dep-signing
+    worker:
+        signing-type:
+            by-level:
+                '3': release-signing
+                default: dep-signing
