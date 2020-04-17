@@ -244,15 +244,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   void EnsureUniqueInner();
 
-  // style sheet owner info
-  enum AssociationMode : uint8_t {
-    // OwnedByDocumentOrShadowRoot means mDocumentOrShadowRoot owns us (possibly
-    // via a chain of other stylesheets).
-    OwnedByDocumentOrShadowRoot,
-    // NotOwnedByDocument means we're owned by something that might have a
-    // different lifetime than mDocument.
-    NotOwnedByDocumentOrShadowRoot
-  };
+  // Returns the DocumentOrShadowRoot* that owns us, if any.
+  //
+  // TODO(emilio): Maybe rename to GetOwner*() or such? Might be
+  // confusing with nsINode::OwnerDoc and such.
   dom::DocumentOrShadowRoot* GetAssociatedDocumentOrShadowRoot() const;
 
   // Whether this stylesheet is kept alive by the associated or constructor
@@ -267,10 +262,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Non-null iff GetAssociatedDocumentOrShadowRoot is non-null.
   dom::Document* GetAssociatedDocument() const;
 
-  void SetAssociatedDocumentOrShadowRoot(dom::DocumentOrShadowRoot*,
-                                         AssociationMode);
+  void SetAssociatedDocumentOrShadowRoot(dom::DocumentOrShadowRoot*);
   void ClearAssociatedDocumentOrShadowRoot() {
-    SetAssociatedDocumentOrShadowRoot(nullptr, NotOwnedByDocumentOrShadowRoot);
+    SetAssociatedDocumentOrShadowRoot(nullptr);
   }
 
   nsINode* GetOwnerNode() const { return mOwningNode; }
@@ -576,12 +570,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   css::SheetParsingMode mParsingMode;
 
   State mState;
-
-  // mAssociationMode determines whether mDocumentOrShadowRoot directly owns us
-  // (in the sense that if it's known-live then we're known-live).
-  //
-  // Always NotOwnedByDocumentOrShadowRoot when mDocumentOrShadowRoot is null.
-  AssociationMode mAssociationMode;
 
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
