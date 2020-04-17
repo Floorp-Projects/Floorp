@@ -36,7 +36,7 @@
     <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmarkNameEdit"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/bookmark_edit_text_height"
         android:layout_marginBottom="8dp"
         android:drawablePadding="8dp"
         android:ellipsize="none"
@@ -62,7 +62,7 @@
     <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmarkUrlEdit"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/bookmark_edit_text_height"
         android:layout_marginBottom="8dp"
         android:drawablePadding="8dp"
         android:ellipsize="none"

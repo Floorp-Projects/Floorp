@@ -67,6 +67,9 @@
     <!-- ETP Onboarding Popup -->
     <dimen name="etp_onboarding_popup_width">256dp</dimen>
 
+    <!-- Edit  Fragment  -->
+    <dimen name="bookmark_edit_text_height">48dp</dimen>
+
     <!-- Search Fragment -->
     <dimen name="search_fragment_clipboard_item_height">56dp</dimen>
     <dimen name="search_fragment_clipboard_item_horizontal_margin">12dp</dimen>
