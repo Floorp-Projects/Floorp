@@ -83,6 +83,12 @@ SI Bool if_then_else(I32 c, Bool t, Bool e) { return (c & t) | (~c & e); }
 
 SI Bool if_then_else(int32_t c, Bool t, Bool e) { return c ? t : e; }
 
+template <typename T> SI void swap(T& a, T& b) {
+  T t(a);
+  a = b;
+  b = t;
+}
+
 SI int32_t min(int32_t a, int32_t b) { return a < b ? a : b; }
 SI int32_t max(int32_t a, int32_t b) { return a > b ? a : b; }
 
@@ -283,6 +289,12 @@ struct vec2_scalar {
   }
 
   vec2_scalar operator-() { return vec2_scalar(-x, -y); }
+
+  vec2_scalar operator*=(vec2_scalar a) {
+    x *= a.x;
+    y *= a.y;
+    return *this;
+  }
 
   vec2_scalar operator+=(vec2_scalar a) {
     x += a.x;
@@ -2496,10 +2508,10 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
 
   I32 row0 = clampCoord(i.x, sampler->width) +
              clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
-  I32 row1 = row0 + ((i.y > 0 && i.y < int32_t(sampler->height) - 1) &
+  I32 row1 = row0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
                      I32(sampler->stride));
   I16 fracx =
-      CONVERT(frac.x & (i.x > 0 && i.x < int32_t(sampler->width) - 1), I16);
+      CONVERT(frac.x & (i.x >= 0 && i.x < int32_t(sampler->width) - 1), I16);
   I16 fracy = CONVERT(frac.y, I16);
 
   auto a0 =
@@ -2543,6 +2555,43 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
   auto a = highHalf(ba);
   return vec4(b, g, r, a) * (1.0f / 255.0f);
 #endif
+}
+
+template <typename S>
+static U16 textureLinearPackedR8(S sampler, ivec2 i, I32 zoffset) {
+  assert(sampler->format == TextureFormat::R8);
+  ivec2 frac = i & (I32)0x7F;
+  i >>= 7;
+
+  I32 row0 = clampCoord(i.x, sampler->width) +
+             clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
+  I32 row1 = row0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
+                     I32(sampler->stride));
+  I16 fracx =
+      CONVERT(frac.x & (i.x >= 0 && i.x < int32_t(sampler->width) - 1), I16);
+  I16 fracy = CONVERT(frac.y, I16);
+
+  uint8_t* buf = (uint8_t*)sampler->buf;
+  auto a0 = unaligned_load<V2<uint8_t> >(&buf[row0.x]);
+  auto b0 = unaligned_load<V2<uint8_t> >(&buf[row0.y]);
+  auto c0 = unaligned_load<V2<uint8_t> >(&buf[row0.z]);
+  auto d0 = unaligned_load<V2<uint8_t> >(&buf[row0.w]);
+  auto abcd0 = CONVERT(combine(combine(a0, b0), combine(c0, d0)), V8<int16_t>);
+
+  auto a1 = unaligned_load<V2<uint8_t> >(&buf[row1.x]);
+  auto b1 = unaligned_load<V2<uint8_t> >(&buf[row1.y]);
+  auto c1 = unaligned_load<V2<uint8_t> >(&buf[row1.z]);
+  auto d1 = unaligned_load<V2<uint8_t> >(&buf[row1.w]);
+  auto abcd1 = CONVERT(combine(combine(a1, b1), combine(c1, d1)), V8<int16_t>);
+
+  abcd0 += ((abcd1 - abcd0) * fracy.xxyyzzww) >> 7;
+
+  abcd0 = SHUFFLE(abcd0, abcd0, 0, 2, 4, 6, 1, 3, 5, 7);
+  auto abcdl = lowHalf(abcd0);
+  auto abcdh = highHalf(abcd0);
+  abcdl += ((abcdh - abcdl) * fracx) >> 7;
+
+  return U16(abcdl);
 }
 
 template <typename S>
@@ -2609,39 +2658,7 @@ vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
   P.x *= sampler->width * 128.0f;
   P.y *= sampler->height * 128.0f;
   P -= 0.5f * 128.0f;
-  ivec2 i(P);
-  ivec2 frac = i & (I32)0x7F;
-  i >>= 7;
-
-  I32 row0 = clampCoord(i.x, sampler->width) +
-             clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
-  I32 row1 = row0 + ((i.y > 0 && i.y < int32_t(sampler->height) - 1) &
-                     I32(sampler->stride));
-  I16 fracx =
-      CONVERT(frac.x & (i.x > 0 && i.x < int32_t(sampler->width) - 1), I16);
-  I16 fracy = CONVERT(frac.y, I16);
-
-  uint8_t* buf = (uint8_t*)sampler->buf;
-  auto a0 = unaligned_load<V2<uint8_t> >(&buf[row0.x]);
-  auto b0 = unaligned_load<V2<uint8_t> >(&buf[row0.y]);
-  auto c0 = unaligned_load<V2<uint8_t> >(&buf[row0.z]);
-  auto d0 = unaligned_load<V2<uint8_t> >(&buf[row0.w]);
-  auto abcd0 = CONVERT(combine(combine(a0, b0), combine(c0, d0)), V8<int16_t>);
-
-  auto a1 = unaligned_load<V2<uint8_t> >(&buf[row1.x]);
-  auto b1 = unaligned_load<V2<uint8_t> >(&buf[row1.y]);
-  auto c1 = unaligned_load<V2<uint8_t> >(&buf[row1.z]);
-  auto d1 = unaligned_load<V2<uint8_t> >(&buf[row1.w]);
-  auto abcd1 = CONVERT(combine(combine(a1, b1), combine(c1, d1)), V8<int16_t>);
-
-  abcd0 += ((abcd1 - abcd0) * fracy.xxyyzzww) >> 7;
-
-  abcd0 = SHUFFLE(abcd0, abcd0, 0, 2, 4, 6, 1, 3, 5, 7);
-  auto abcdl = lowHalf(abcd0);
-  auto abcdh = highHalf(abcd0);
-  abcdl += ((abcdh - abcdl) * fracx) >> 7;
-
-  Float r = CONVERT(U16(abcdl), Float);
+  Float r = CONVERT(textureLinearPackedR8(sampler, ivec2(P), zoffset), Float);
   return vec4(r * (1.0f / 255.0f), 0.0f, 0.0f, 1.0f);
 #endif
 }
@@ -2656,10 +2673,10 @@ vec4 textureLinearRGBA32F(S sampler, vec2 P, I32 zoffset = 0) {
   vec2 r = P - f;
   ivec2 i(f);
   ivec2 c = clamp2D(i, sampler);
-  r.x = if_then_else(i.x < 0 || i.x > sampler->width - 2, 0.0f, r.x);
+  r.x = if_then_else(i.x >= 0 && i.x < sampler->width - 1, r.x, 0.0f);
   I32 offset0 = c.x * 4 + c.y * sampler->stride + zoffset;
-  I32 offset1 = offset0 + if_then_else(r.y < 0 || r.y > sampler->height - 2, 0,
-                                       sampler->stride);
+  I32 offset1 = offset0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
+                           I32(sampler->stride));
 
   Float c0 = mix(mix(*(Float*)&sampler->buf[offset0.x],
                      *(Float*)&sampler->buf[offset0.x + 4], r.x),
