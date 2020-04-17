@@ -180,27 +180,32 @@
 
 - name: GuardIsExtensible
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: GuardIsNativeObject
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: GuardIsProxy
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: GuardHasProxyHandler
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     handler: RawWordField
 
 - name: GuardNotDOMProxy
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 

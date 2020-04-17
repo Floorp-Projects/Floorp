@@ -321,9 +321,10 @@ bool BaselineCacheIRCompiler::emitGuardAnyClass(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardHasProxyHandler() {
+bool BaselineCacheIRCompiler::emitGuardHasProxyHandler(ObjOperandId objId,
+                                                       uint32_t handlerOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -331,7 +332,7 @@ bool BaselineCacheIRCompiler::emitGuardHasProxyHandler() {
     return false;
   }
 
-  Address testAddr(stubAddress(reader.stubOffset()));
+  Address testAddr(stubAddress(handlerOffset));
   masm.loadPtr(testAddr, scratch);
 
   Address handlerAddr(obj, ProxyObject::offsetOfHandler());

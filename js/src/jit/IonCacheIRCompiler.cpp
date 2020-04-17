@@ -697,10 +697,11 @@ bool IonCacheIRCompiler::emitGuardAnyClass(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardHasProxyHandler() {
+bool IonCacheIRCompiler::emitGuardHasProxyHandler(ObjOperandId objId,
+                                                  uint32_t handlerOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  const void* handler = proxyHandlerStubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  const void* handler = proxyHandlerStubField(handlerOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
