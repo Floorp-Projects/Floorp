@@ -11,6 +11,8 @@
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
+const MAX_CHARS_PREF = "browser.urlbar.maxCharsForSearchSuggestions";
+
 // Must run first.
 add_task(async function prepare() {
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
@@ -38,7 +40,7 @@ add_task(async function clickSuggestion() {
     waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
-  let [idx, suggestion, engineName] = await promiseFirstSuggestion();
+  let [idx, suggestion, engineName] = await getFirstSuggestion();
   Assert.equal(
     engineName,
     "browser_searchSuggestionEngine searchSuggestionEngine.xml",
@@ -68,7 +70,7 @@ async function testPressEnterOnSuggestion(
     waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
-  let [idx, suggestion, engineName] = await promiseFirstSuggestion();
+  let [idx, suggestion, engineName] = await getFirstSuggestion();
   Assert.equal(
     engineName,
     "browser_searchSuggestionEngine searchSuggestionEngine.xml",
@@ -109,7 +111,7 @@ add_task(async function copySuggestionText() {
     waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
-  let [idx, suggestion] = await promiseFirstSuggestion();
+  let [idx, suggestion] = await getFirstSuggestion();
   for (let i = 0; i < idx; ++i) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
@@ -119,7 +121,125 @@ add_task(async function copySuggestionText() {
   });
 });
 
+add_task(async function typeMaxChars() {
+  gURLBar.focus();
+
+  let maxChars = 10;
+  await SpecialPowers.pushPrefEnv({
+    set: [[MAX_CHARS_PREF, maxChars]],
+  });
+
+  // Make a string as long as maxChars and type it.
+  let value = "";
+  for (let i = 0; i < maxChars; i++) {
+    value += String.fromCharCode("a".charCodeAt(0) + i);
+  }
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+
+  // Suggestions should be fetched since we allow them when typing, and the
+  // value so far isn't longer than maxChars anyway.
+  await assertSuggestions([value + "foo", value + "bar"]);
+
+  // Now type some additional chars.  Suggestions should still be fetched since
+  // we allow them when typing.
+  for (let i = 0; i < 3; i++) {
+    let char = String.fromCharCode("z".charCodeAt(0) - i);
+    value += char;
+    EventUtils.synthesizeKey(char);
+    await assertSuggestions([value + "foo", value + "bar"]);
+  }
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function pasteMaxChars() {
+  gURLBar.focus();
+
+  let maxChars = 10;
+  await SpecialPowers.pushPrefEnv({
+    set: [[MAX_CHARS_PREF, maxChars]],
+  });
+
+  // Make a string as long as maxChars and paste it.
+  let value = "";
+  for (let i = 0; i < maxChars; i++) {
+    value += String.fromCharCode("a".charCodeAt(0) + i);
+  }
+  await selectAndPaste(value);
+
+  // Suggestions should be fetched since the pasted string is not longer than
+  // maxChars.
+  await assertSuggestions([value + "foo", value + "bar"]);
+
+  // Now type some additional chars.  Suggestions should still be fetched since
+  // we allow them when typing.
+  for (let i = 0; i < 3; i++) {
+    let char = String.fromCharCode("z".charCodeAt(0) - i);
+    value += char;
+    EventUtils.synthesizeKey(char);
+    await assertSuggestions([value + "foo", value + "bar"]);
+  }
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function pasteMoreThanMaxChars() {
+  gURLBar.focus();
+
+  let maxChars = 10;
+  await SpecialPowers.pushPrefEnv({
+    set: [[MAX_CHARS_PREF, maxChars]],
+  });
+
+  // Make a string longer than maxChars and paste it.
+  let value = "";
+  for (let i = 0; i < 2 * maxChars; i++) {
+    value += String.fromCharCode("a".charCodeAt(0) + i);
+  }
+  await selectAndPaste(value);
+
+  // Suggestions should not be fetched since the value was pasted and it was
+  // longer than maxChars.
+  await assertSuggestions([]);
+
+  // Now type some additional chars.  Suggestions should now be fetched since we
+  // allow them when typing.
+  for (let i = 0; i < 3; i++) {
+    let char = String.fromCharCode("z".charCodeAt(0) - i);
+    value += char;
+    EventUtils.synthesizeKey(char);
+    await assertSuggestions([value + "foo", value + "bar"]);
+  }
+
+  // Paste again.  The string is longer than maxChars, so suggestions should not
+  // be fetched.
+  await selectAndPaste(value);
+  await assertSuggestions([]);
+
+  await SpecialPowers.popPrefEnv();
+});
+
 async function getFirstSuggestion() {
+  let results = await getSuggestionResults();
+  if (!results.length) {
+    return [-1, null, null];
+  }
+  let result = results[0];
+  return [
+    result.index,
+    result.searchParams.suggestion,
+    result.searchParams.engine,
+  ];
+}
+
+async function getSuggestionResults() {
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  let results = [];
   let matchCount = UrlbarTestUtils.getResultCount(window);
   for (let i = 0; i < matchCount; i++) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
@@ -127,13 +247,19 @@ async function getFirstSuggestion() {
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       result.searchParams.suggestion
     ) {
-      return [i, result.searchParams.suggestion, result.searchParams.engine];
+      result.index = i;
+      results.push(result);
     }
   }
-  return [-1, null, null];
+  return results;
 }
 
-async function promiseFirstSuggestion() {
-  await UrlbarTestUtils.promiseSuggestionsPresent(window);
-  return getFirstSuggestion();
+async function assertSuggestions(expectedSuggestions) {
+  let results = await getSuggestionResults();
+  let actualSuggestions = results.map(r => r.searchParams.suggestion);
+  Assert.deepEqual(
+    actualSuggestions,
+    expectedSuggestions,
+    "Expected suggestions"
+  );
 }
