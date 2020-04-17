@@ -628,10 +628,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   void SetBaseURI(nsIURI* aBaseURI);
 
-  nsIURI* GetResolvedScriptURI() const {
-    AssertIsOnMainThread();
-    return mLoadInfo.mResolvedScriptURI;
-  }
+  nsIURI* GetResolvedScriptURI() const { return mLoadInfo.mResolvedScriptURI; }
 
   const nsString& ServiceWorkerCacheName() const {
     MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());

@@ -7,45 +7,36 @@
 #include "mozilla/dom/ReportingObserver.h"
 #include "mozilla/dom/ReportingBinding.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindowInner.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReportingObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReportingObserver)
-  tmp->Shutdown();
+  tmp->Disconnect();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReports)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReportingObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReports)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ReportingObserver)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ReportingObserver)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ReportingObserver)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportingObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ReportingObserver, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ReportingObserver, Release)
 
 /* static */
 already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
     const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,
     const ReportingObserverOptions& aOptions, ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> window =
-      do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(window);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
 
   nsTArray<nsString> types;
   if (aOptions.mTypes.WasPassed()) {
@@ -53,43 +44,23 @@ already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
   }
 
   RefPtr<ReportingObserver> ro =
-      new ReportingObserver(window, aCallback, types, aOptions.mBuffered);
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  aRv = obs->AddObserver(ro, "memory-pressure", true);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+      new ReportingObserver(global, aCallback, types, aOptions.mBuffered);
 
   return ro.forget();
 }
 
-ReportingObserver::ReportingObserver(nsPIDOMWindowInner* aWindow,
+ReportingObserver::ReportingObserver(nsIGlobalObject* aGlobal,
                                      ReportingObserverCallback& aCallback,
                                      const nsTArray<nsString>& aTypes,
                                      bool aBuffered)
-    : mWindow(aWindow),
+    : mGlobal(aGlobal),
       mCallback(&aCallback),
       mTypes(aTypes),
       mBuffered(aBuffered) {
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aGlobal);
 }
 
-ReportingObserver::~ReportingObserver() { Shutdown(); }
-
-void ReportingObserver::Shutdown() {
-  Disconnect();
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, "memory-pressure");
-  }
-}
+ReportingObserver::~ReportingObserver() { Disconnect(); }
 
 JSObject* ReportingObserver::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {
@@ -97,18 +68,36 @@ JSObject* ReportingObserver::WrapObject(JSContext* aCx,
 }
 
 void ReportingObserver::Observe() {
-  mWindow->RegisterReportingObserver(this, mBuffered);
+  mGlobal->RegisterReportingObserver(this, mBuffered);
 }
 
 void ReportingObserver::Disconnect() {
-  if (mWindow) {
-    mWindow->UnregisterReportingObserver(this);
+  if (mGlobal) {
+    mGlobal->UnregisterReportingObserver(this);
   }
 }
 
 void ReportingObserver::TakeRecords(nsTArray<RefPtr<Report>>& aRecords) {
   mReports.SwapElements(aRecords);
 }
+
+namespace {
+
+class ReportRunnable final : public CancelableRunnable {
+ public:
+  explicit ReportRunnable(nsIGlobalObject* aGlobal)
+      : CancelableRunnable("ReportRunnable"), mGlobal(aGlobal) {}
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    mGlobal->NotifyReportingObservers();
+    return NS_OK;
+  }
+
+ private:
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+};
+
+}  // namespace
 
 void ReportingObserver::MaybeReport(Report* aReport) {
   MOZ_ASSERT(aReport);
@@ -135,16 +124,7 @@ void ReportingObserver::MaybeReport(Report* aReport) {
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = mWindow;
-
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ReportingObserver::MaybeReport",
-      // MOZ_CAN_RUN_SCRIPT_BOUNDARY until at least we're able to have
-      // Runnable::Run be MOZ_CAN_RUN_SCRIPT.  But even then, having a boundary
-      // here might make the most sense.
-      [window]()
-          MOZ_CAN_RUN_SCRIPT_BOUNDARY { window->NotifyReportingObservers(); });
-
+  RefPtr<ReportRunnable> r = new ReportRunnable(mGlobal);
   NS_DispatchToCurrentThread(r);
 }
 
@@ -169,13 +149,7 @@ void ReportingObserver::MaybeNotify() {
   callback->Call(reports, *this);
 }
 
-NS_IMETHODIMP
-ReportingObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                           const char16_t* aData) {
-  MOZ_ASSERT(!strcmp(aTopic, "memory-pressure"));
-  mReports.Clear();
-  return NS_OK;
-}
+void ReportingObserver::ForgetReports() { mReports.Clear(); }
 
 }  // namespace dom
 }  // namespace mozilla
