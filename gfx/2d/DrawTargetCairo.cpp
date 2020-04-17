@@ -852,6 +852,12 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                             const DeviceColor& aColor,
                                             const Point& aOffset, Float aSigma,
                                             CompositionOp aOperator) {
+  if (!IsValid() || !aSurface) {
+    gfxCriticalNote << "DrawSurfaceWithShadow with bad surface "
+                    << cairo_surface_status(cairo_get_group_target(mContext));
+    return;
+  }
+
   if (aSurface->GetType() != SurfaceType::CAIRO) {
     return;
   }
