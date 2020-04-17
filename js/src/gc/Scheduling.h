@@ -353,9 +353,6 @@ static const size_t GCMinNurseryBytes = 256 * 1024;
 /* JSGC_NON_INCREMENTAL_FACTOR */
 static const float NonIncrementalFactor = 1.12f;
 
-/* JSGC_AVOID_INTERRUPT_FACTOR */
-static const float AvoidInterruptFactor = 1.0f;
-
 /* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
 
@@ -460,14 +457,6 @@ class GCSchedulingTunables {
    * Multiple of threshold.bytes() which triggers a non-incremental GC.
    */
   UnprotectedData<float> nonIncrementalFactor_;
-
-  /*
-   * JSGC_AVOID_INTERRUPT_FACTOR
-   *
-   * Multiple of threshold.bytes() which triggers a new incremental GC when
-   * doing so would interrupt an ongoing incremental GC.
-   */
-  UnprotectedData<float> avoidInterruptFactor_;
 
   /*
    * Number of bytes to allocate between incremental slices in GCs triggered by
@@ -590,7 +579,6 @@ class GCSchedulingTunables {
   size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
   double nonIncrementalFactor() const { return nonIncrementalFactor_; }
-  double avoidInterruptFactor() const { return avoidInterruptFactor_; }
   size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
   bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
   const mozilla::TimeDuration& highFrequencyThreshold() const {

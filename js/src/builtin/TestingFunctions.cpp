@@ -570,7 +570,6 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("dynamicMarkSlice", JSGC_DYNAMIC_MARK_SLICE, true)                       \
   _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                  \
   _("nonIncrementalFactor", JSGC_NON_INCREMENTAL_FACTOR, true)               \
-  _("avoidInterruptFactor", JSGC_AVOID_INTERRUPT_FACTOR, true)               \
   _("minEmptyChunkCount", JSGC_MIN_EMPTY_CHUNK_COUNT, true)                  \
   _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                  \
   _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                      \

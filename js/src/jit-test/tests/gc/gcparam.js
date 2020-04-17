@@ -48,7 +48,6 @@ testChangeParam("dynamicHeapGrowth");
 testChangeParam("dynamicMarkSlice");
 testChangeParam("allocationThreshold");
 testChangeParam("nonIncrementalFactor");
-testChangeParam("avoidInterruptFactor");
 testChangeParam("minEmptyChunkCount");
 testChangeParam("maxEmptyChunkCount");
 testChangeParam("compactingEnabled");
