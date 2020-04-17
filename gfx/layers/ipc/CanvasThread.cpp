@@ -81,11 +81,6 @@ void CanvasThreadHolder::StaticRelease(
 
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
   if (lockedCanvasThreadHolder.ref()->mRefCnt == 1) {
-    MOZ_ASSERT(lockedCanvasThreadHolder.ref()
-                       ->mCanvasWorkers.forget()
-                       .take()
-                       ->Release() == 0,
-               "There should be no other references to mCanvasWorkers.");
     lockedCanvasThreadHolder.ref() = nullptr;
   }
 }
