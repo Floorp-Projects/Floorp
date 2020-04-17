@@ -1016,9 +1016,19 @@ SearchService.prototype = {
 
     let defaultEngine = this.getEngineByName(defaultEngineName);
     if (!defaultEngine) {
-      // Something unexpected as happened. In order to recover the original default engine,
-      // use the first visible engine which is the best we can do.
-      return this._getSortedEngines(false)[0];
+      // The cache might have an out-of-date value if we've changed locale or
+      // region. Fall back to the value from the configuration as that might be
+      // more accurate.
+      defaultEngineName = privateMode
+        ? this._searchPrivateDefault
+        : this._searchDefault;
+      defaultEngine = this.getEngineByName(defaultEngineName);
+
+      if (!defaultEngine) {
+        // Something unexpected as happened. In order to recover the original default engine,
+        // use the first visible engine which is the best we can do.
+        return this._getSortedEngines(false)[0];
+      }
     }
 
     return defaultEngine;
