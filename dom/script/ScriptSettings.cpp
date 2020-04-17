@@ -487,6 +487,13 @@ void AutoJSAPI::ReportException() {
         // We might be reporting an error in debugger code that ran before the
         // worker's global was created. Use the debugger global instead.
         errorGlobal = GetCurrentThreadWorkerDebuggerGlobal();
+        if (NS_WARN_IF(!errorGlobal)) {
+          // An exception may have been thrown on attempt to create a global
+          // and now there is no realm from which to fetch the exception.
+          // Give up.
+          ClearException();
+          return;
+        }
       }
     }
   }
