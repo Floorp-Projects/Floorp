@@ -2004,12 +2004,10 @@ static JS::RealmCreationOptions& SelectZone(
  * Return the native global and an nsISupports 'holder' that can be used
  * to manage the lifetime of it.
  */
-static nsresult CreateNativeGlobalForInner(JSContext* aCx,
-                                           nsGlobalWindowInner* aNewInner,
-                                           nsIURI* aURI,
-                                           nsIPrincipal* aPrincipal,
-                                           JS::MutableHandle<JSObject*> aGlobal,
-                                           bool aIsSecureContext) {
+static nsresult CreateNativeGlobalForInner(
+    JSContext* aCx, nsGlobalWindowInner* aNewInner, nsIURI* aURI,
+    nsIPrincipal* aPrincipal, JS::MutableHandle<JSObject*> aGlobal,
+    bool aIsSecureContext, bool aDefineSharedArrayBufferConstructor) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aNewInner);
   MOZ_ASSERT(aPrincipal);
@@ -2020,10 +2018,20 @@ static nsresult CreateNativeGlobalForInner(JSContext* aCx,
   MOZ_RELEASE_ASSERT(!nsEP, "DOMWindow with nsEP is not supported");
 
   JS::RealmOptions options;
+  JS::RealmCreationOptions& creationOptions = options.creationOptions();
 
-  SelectZone(aCx, aPrincipal, aNewInner, options.creationOptions());
+  SelectZone(aCx, aPrincipal, aNewInner, creationOptions);
 
-  options.creationOptions().setSecureContext(aIsSecureContext);
+  creationOptions.setSecureContext(aIsSecureContext);
+
+  // Define the SharedArrayBuffer global constructor property only if shared
+  // memory may be used and structured-cloned (e.g. through postMessage).
+  //
+  // When the global constructor property isn't defined, the SharedArrayBuffer
+  // constructor can still be reached through Web Assembly.  Omitting the global
+  // property just prevents feature-tests from being misled.  See bug 1624266.
+  creationOptions.setDefineSharedArrayBufferConstructor(
+      aDefineSharedArrayBufferConstructor);
 
   xpc::InitGlobalObjectOptions(options, aPrincipal);
 
@@ -2209,12 +2217,28 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       mInnerWindow = nullptr;
 
       mCreatingInnerWindow = true;
+
+      // The SharedArrayBuffer global constructor property should not be present
+      // in a fresh global object when shared memory objects aren't allowed
+      // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
+      // act to isolate this page to a separate process).
+      //
+      // We set this value to |true| to replicate pre-existing behavior.  In the
+      // future, bug 1624266 will assign the correct COOP/COEP-respecting value
+      // here.  When that change is made, corresponding code for workers in
+      // WorkerPrivate.cpp must also be updated.  (Ideally both paint and audio
+      // worklets -- bug 1630876 and bug 1630877 -- would be fixed at the same
+      // time, but fixing them has lower priorit because they're not shipping
+      // yet.)
+      bool aDefineSharedArrayBufferConstructor = true;
+
       // Every script context we are initialized with must create a
       // new global.
       rv = CreateNativeGlobalForInner(
           cx, newInnerWindow, aDocument->GetDocumentURI(),
           aDocument->NodePrincipal(), &newInnerGlobal,
-          ComputeIsSecureContext(aDocument));
+          ComputeIsSecureContext(aDocument),
+          aDefineSharedArrayBufferConstructor);
       NS_ASSERTION(
           NS_SUCCEEDED(rv) && newInnerGlobal &&
               newInnerWindow->GetWrapperPreserveColor() == newInnerGlobal,
