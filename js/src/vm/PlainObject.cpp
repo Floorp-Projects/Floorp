@@ -109,8 +109,8 @@ static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
 
   if (newKind == SingletonObject) {
     Rooted<TaggedProto> protoRoot(cx, group->proto());
-    return NewObjectWithGivenTaggedProto<PlainObject>(cx, protoRoot, allocKind,
-                                                      newKind);
+    return NewSingletonObjectWithGivenTaggedProtoAndKind<PlainObject>(
+        cx, protoRoot, allocKind);
   }
   return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
