@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
@@ -77,6 +76,7 @@ import org.mozilla.fenix.components.toolbar.BrowserInteractor
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
+import org.mozilla.fenix.components.toolbar.SwipeRefreshScrollingViewBehavior
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.downloads.DownloadNotificationBottomSheetDialog
 import org.mozilla.fenix.downloads.DownloadService
@@ -174,8 +174,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         val store = context.components.core.store
 
         val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-
-        initializeEngineView(toolbarHeight)
 
         browserAnimator = BrowserAnimator(
             fragment = WeakReference(this),
@@ -510,6 +508,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     view = view
                 )
             }
+
+            initializeEngineView(toolbarHeight)
         }
     }
 
@@ -520,7 +520,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             val behavior = if (requireContext().settings().shouldUseBottomToolbar) {
                 EngineViewBottomBehavior(context, null)
             } else {
-                AppBarLayout.ScrollingViewBehavior(context, null)
+                SwipeRefreshScrollingViewBehavior(requireContext(), null, engineView, browserToolbarView)
             }
 
             (swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior

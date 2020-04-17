@@ -23,7 +23,6 @@ import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
-import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.FeatureFlags
@@ -103,10 +102,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 owner = this,
                 view = view
             )
-
-            consumeFrom(browserFragmentStore) {
-                browserToolbarView.update(it)
-            }
         }
     }
 

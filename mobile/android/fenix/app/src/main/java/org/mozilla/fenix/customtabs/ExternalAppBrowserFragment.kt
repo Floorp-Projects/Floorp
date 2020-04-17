@@ -149,10 +149,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 }
             }
 
-            consumeFrom(browserFragmentStore) {
-                browserToolbarView.update(it)
-            }
-
             consumeFrom(components.core.customTabsStore) { state ->
                 getSessionById()
                     ?.let { session -> session.customTabConfig?.sessionToken }

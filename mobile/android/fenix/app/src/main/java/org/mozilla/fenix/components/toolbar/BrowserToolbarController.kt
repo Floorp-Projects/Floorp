@@ -48,6 +48,7 @@ import org.mozilla.fenix.utils.Do
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
  */
 interface BrowserToolbarController {
+    fun handleScroll(offset: Int)
     fun handleToolbarPaste(text: String)
     fun handleToolbarPasteAndGo(text: String)
     fun handleToolbarItemInteraction(item: ToolbarMenu.Item)
@@ -137,6 +138,10 @@ class DefaultBrowserToolbarController(
                 else -> { }
             }
         }
+    }
+
+    override fun handleScroll(offset: Int) {
+        engineView.setVerticalClipping(offset)
     }
 
     @ExperimentalCoroutinesApi
