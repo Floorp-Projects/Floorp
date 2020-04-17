@@ -543,7 +543,10 @@ RegExpRunStatus ExecuteRaw(jit::JitCode* code, const CharT* chars,
 
   typedef int (*RegExpCodeSignature)(InputOutputData*);
   auto function = reinterpret_cast<RegExpCodeSignature>(code->raw());
-  return (RegExpRunStatus) CALL_GENERATED_1(function, &data);
+  {
+    JS::AutoSuppressGCAnalysis nogc;
+    return (RegExpRunStatus) CALL_GENERATED_1(function, &data);
+  }
 }
 
 RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
