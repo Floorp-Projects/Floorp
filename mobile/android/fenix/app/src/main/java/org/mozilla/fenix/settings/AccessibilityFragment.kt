@@ -67,6 +67,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             // Save the new setting value
             settings.shouldUseAutoSize = useAutoSize
             components.core.engine.settings.automaticFontSizeAdjustment = useAutoSize
+            components.core.engine.settings.fontInflationEnabled = useAutoSize
 
             // If using manual sizing, update the engine settings with the local saved setting
             if (!useAutoSize) {
