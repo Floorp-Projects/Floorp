@@ -50,6 +50,7 @@ namespace js {
 
 class GlobalScope;
 class LexicalEnvironmentObject;
+class PlainObject;
 class RegExpStatics;
 class TypeDescr;
 class TypedObjectModuleObject;
