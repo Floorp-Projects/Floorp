@@ -456,8 +456,8 @@ const JSClass GlobalObject::OffThreadPlaceholderObject::class_ = {
 /* static */ GlobalObject::OffThreadPlaceholderObject*
 GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot) {
   Rooted<OffThreadPlaceholderObject*> placeholder(cx);
-  placeholder = NewObjectWithGivenTaggedProto<OffThreadPlaceholderObject>(
-      cx, AsTaggedProto(nullptr));
+  placeholder =
+      NewObjectWithGivenProto<OffThreadPlaceholderObject>(cx, nullptr);
   if (!placeholder) {
     return nullptr;
   }
