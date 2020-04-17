@@ -490,7 +490,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
   RegExpCompiler::CompilationResult result = compiler.Assemble(
       cx->isolate, masm.get(), data.node, data.capture_count, wrappedPattern);
-  if (JS::Value(result.code).isUndefined()) {
+  if (result.code.value().isUndefined()) {
     // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
     MOZ_ASSERT(useNativeCode);
     ReportOutOfMemory(cx);
