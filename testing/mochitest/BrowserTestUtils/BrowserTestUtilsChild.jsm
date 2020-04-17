@@ -219,6 +219,7 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
         );
 
         let dies = function() {
+          dump("\nEt tu, Brute?\n");
           ChromeUtils.privateNoteIntentionalCrash();
 
           switch (aMessage.data.crashType) {
@@ -242,8 +243,15 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
           }
         };
 
-        dump("\nEt tu, Brute?\n");
-        dies();
+        if (aMessage.data.asyncCrash) {
+          let { setTimeout } = ChromeUtils.import(
+            "resource://gre/modules/Timer.jsm"
+          );
+          // Get out of the stack.
+          setTimeout(dies, 0);
+        } else {
+          dies();
+        }
       }
     }
 
