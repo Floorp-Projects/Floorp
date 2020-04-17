@@ -204,6 +204,7 @@ SelectContentHelper.prototype = {
       view: win,
       bubbles: true,
       cancelable: true,
+      composed: true,
     });
     target.dispatchEvent(mouseEvent);
   },
