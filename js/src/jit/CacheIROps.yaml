@@ -256,6 +256,7 @@
 
 - name: GuardNoDenseElements
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
@@ -293,34 +294,40 @@
 
 - name: GuardHasGetterSetter
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     shape: ShapeField
 
 - name: GuardGroupHasUnanalyzedNewScript
   shared: true
+  gen_boilerplate: true
   operands:
     group: GroupField
 
 - name: GuardIndexIsNonNegative
   shared: true
+  gen_boilerplate: true
   operands:
     index: Int32Id
 
 - name: GuardIndexGreaterThanArrayLength
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: GuardIndexIsValidUpdateOrAdd
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: GuardIndexGreaterThanDenseInitLength
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
@@ -348,15 +355,18 @@
 
 - name: GuardNoAllocationMetadataBuilder
   shared: true
+  gen_boilerplate: true
   operands:
 
 - name: GuardObjectGroupNotPretenured
   shared: true
+  gen_boilerplate: true
   operands:
     group: GroupField
 
 - name: GuardFunctionHasJitEntry
   shared: true
+  gen_boilerplate: true
   operands:
     fun: ObjId
     constructing: BoolImm

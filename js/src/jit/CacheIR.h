@@ -779,20 +779,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(slot, StubField::Type::RawWord);
   }
 
-  void guardNoAllocationMetadataBuilder() {
-    writeOp(CacheOp::GuardNoAllocationMetadataBuilder);
-  }
-
-  void guardObjectGroupNotPretenured(ObjectGroup* group) {
-    writeOp(CacheOp::GuardObjectGroupNotPretenured);
-    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
-  }
-
-  void guardFunctionHasJitEntry(ObjOperandId fun, bool isConstructing) {
-    writeOpWithOperandId(CacheOp::GuardFunctionHasJitEntry, fun);
-    buffer_.writeByte(isConstructing);
-  }
-
   void guardNotClassConstructor(ObjOperandId fun) {
     writeOpWithOperandId(CacheOp::GuardNotClassConstructor, fun);
   }
@@ -883,37 +869,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  void guardHasGetterSetter(ObjOperandId obj, Shape* shape) {
-    writeOpWithOperandId(CacheOp::GuardHasGetterSetter, obj);
-    addStubField(uintptr_t(shape), StubField::Type::Shape);
-  }
-
-  void guardGroupHasUnanalyzedNewScript(ObjectGroup* group) {
-    writeOp(CacheOp::GuardGroupHasUnanalyzedNewScript);
-    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
-  }
-
-  void guardIndexIsNonNegative(Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::GuardIndexIsNonNegative, index);
-  }
-
-  void guardIndexGreaterThanDenseInitLength(ObjOperandId obj,
-                                            Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseInitLength, obj);
-    writeOperandId(index);
-  }
-
-  void guardIndexGreaterThanArrayLength(ObjOperandId obj,
-                                        Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::GuardIndexGreaterThanArrayLength, obj);
-    writeOperandId(index);
-  }
-
-  void guardIndexIsValidUpdateOrAdd(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::GuardIndexIsValidUpdateOrAdd, obj);
-    writeOperandId(index);
-  }
-
   void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
     writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);
     writeOperandId(rhs);
@@ -926,10 +881,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void loadFrameArgumentResult(Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadFrameArgumentResult, index);
-  }
-
-  void guardNoDenseElements(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::GuardNoDenseElements, obj);
   }
 
   ObjOperandId loadObject(JSObject* obj) {

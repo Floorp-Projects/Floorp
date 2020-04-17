@@ -448,10 +448,11 @@ bool BaselineCacheIRCompiler::emitLoadDynamicSlotResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardHasGetterSetter() {
+bool BaselineCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
+                                                       uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Address shapeAddr = stubAddress(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  Address shapeAddr = stubAddress(shapeOffset);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
