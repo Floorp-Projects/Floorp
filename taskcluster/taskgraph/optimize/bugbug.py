@@ -36,11 +36,13 @@ class platform(object):
         return not (task.attributes.get('build_type') == "debug")
 
 
-@register_strategy("bugbug-all", args=(platform.all, 0.5))
-@register_strategy("bugbug-all-low", args=(platform.all, 0.3))
-@register_strategy("bugbug-all-high", args=(platform.all, 0.7))
+@register_strategy("bugbug-all", args=(platform.all, 0.7))
+@register_strategy("bugbug-all-low", args=(platform.all, 0.5))
+@register_strategy("bugbug-all-high", args=(platform.all, 0.9))
 @register_strategy("bugbug-debug", args=(platform.debug, 0.5))
+@register_strategy("bugbug-try", args=(platform.debug, 0.5))
 @register_strategy("bugbug-reduced", args=(platform.all, 0.7, True))
+@register_strategy("bugbug-reduced-high", args=(platform.all, 0.9, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 

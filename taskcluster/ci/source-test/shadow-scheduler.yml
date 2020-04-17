@@ -88,6 +88,17 @@ bugbug_reduced:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.reduced
 
+bugbug_reduced_high:
+    description: Runs the bugbug.reduced optimization strategy (with a low confidence threshold) instead of the default.
+    treeherder:
+        symbol: SS(bugbug_reduced_high)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced_high
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.reduced_high
+
 seta:
     description: Runs the SETA optimization strategy instead of the default.
     treeherder:
