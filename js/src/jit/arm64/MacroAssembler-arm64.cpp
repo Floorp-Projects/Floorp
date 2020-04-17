@@ -19,21 +19,6 @@
 namespace js {
 namespace jit {
 
-void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
-                                    Register dest) {
-#ifdef DEBUG
-  if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-    Label upper32BitsZeroed;
-    movePtr(ImmWord(UINT32_MAX), dest);
-    asMasm().branchPtr(Assembler::BelowOrEqual, src, dest, &upper32BitsZeroed);
-    breakpoint();
-    bind(&upper32BitsZeroed);
-  }
-#endif
-  Orr(ARMRegister(dest, 64), ARMRegister(src, 64),
-      Operand(ImmShiftedTag(type).value));
-}
-
 void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
   ARMRegister dest(output, 32);
   Fcvtns(dest, ARMFPRegister(input, 64));
