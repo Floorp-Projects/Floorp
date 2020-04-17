@@ -98,6 +98,23 @@ TEST(TArray, AppendElementsRvalue)
   ASSERT_TRUE(temp.IsEmpty());
 }
 
+TEST(TArray, AppendElementsSpan)
+{
+  nsTArray<int> array;
+
+  nsTArray<int> temp(DummyArray());
+  Span<int> span = temp;
+  array.AppendElements(span);
+  ASSERT_EQ(DummyArray(), array);
+
+  Span<const int> constSpan = temp;
+  array.AppendElements(constSpan);
+  nsTArray<int> expected;
+  expected.AppendElements(DummyArray());
+  expected.AppendElements(DummyArray());
+  ASSERT_EQ(expected, array);
+}
+
 TEST(TArray, Assign)
 {
   nsTArray<int> array;
