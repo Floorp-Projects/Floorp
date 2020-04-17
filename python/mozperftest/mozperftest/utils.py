@@ -31,12 +31,12 @@ def host_platform():
     raise ValueError("sys.platform is not yet supported: {}".format(sys.platform))
 
 
-def add_option(metadata, name, value):
-    options = metadata.get_arg("extra_options", "")
+def add_option(env, name, value):
+    options = env.get_arg("extra_options", "")
     options += ",%s=%s" % (name, value)
-    metadata.set_arg("extra_options", options)
+    env.set_arg("extra_options", options)
 
 
-def add_options(metadata, options):
+def add_options(env, options):
     for name, value in options:
-        add_option(metadata, name, value)
+        add_option(env, name, value)

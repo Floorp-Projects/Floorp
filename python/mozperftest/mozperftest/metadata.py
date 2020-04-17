@@ -12,6 +12,11 @@ class Metadata:
         self._output = None
         self._env = env
 
+    def run_hook(self, name, **kw):
+        # this bypasses layer restrictions on args,
+        # which is fine since it's user script
+        return self._env.run_hook(name, **kw)
+
     def set_output(self, output):
         self._output = output
 

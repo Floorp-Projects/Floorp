@@ -29,17 +29,10 @@ class Perftest(MachCommandBase):
         kwargs["test_objects"] = test_objects
         kwargs["resolve_tests"] = resolve_tests
         env = MachEnvironment(self, flavor, **kwargs)
-        env.run_hook("before_cycles")
-        cycles = env.get_arg("cycles", 1)
         metadata = Metadata(self, env, flavor)
+        env.run_hook("before_runs")
         try:
-            # XXX put the cycles inside the browser layer
-            for cycle in range(1, cycles + 1):
-                with env.frozen() as e:
-                    e.run_hook("before_cycle", cycle=cycle)
-                    try:
-                        e.run(metadata)
-                    finally:
-                        e.run_hook("after_cycle", cycle=cycle)
+            with env.frozen() as e:
+                e.run(metadata)
         finally:
-            env.run_hook("after_cycles")
+            env.run_hook("after_runs")

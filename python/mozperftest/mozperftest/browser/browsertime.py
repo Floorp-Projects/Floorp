@@ -66,6 +66,10 @@ host_fetches = {
 class BrowsertimeRunner(NodeRunner):
     name = "browsertime (%s)" % NodeRunner.name
 
+    arguments = {
+        "--cycles": {"type": int, "default": 1, "help": "Number of full cycles"}
+    }
+
     def __init__(self, env, mach_cmd):
         super(BrowsertimeRunner, self).__init__(env, mach_cmd)
         self.topsrcdir = mach_cmd.topsrcdir
@@ -417,6 +421,16 @@ class BrowsertimeRunner(NodeRunner):
         return profile
 
     def __call__(self, metadata):
+        cycles = self.get_arg("cycles", 1)
+        for cycle in range(1, cycles + 1):
+            metadata.run_hook("before_cycle", cycle=cycle)
+            try:
+                metadata = self._one_cycle(metadata)
+            finally:
+                metadata.run_hook("after_cycle", cycle=cycle)
+        return metadata
+
+    def _one_cycle(self, metadata):
         # keep the object around
         # see https://bugzilla.mozilla.org/show_bug.cgi?id=1625118
         profile = self.get_profile(metadata)
