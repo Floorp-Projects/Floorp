@@ -32,6 +32,7 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/PlainObject-inl.h"  // js::CreateThis
 #include "vm/StringObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
