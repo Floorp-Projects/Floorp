@@ -40,7 +40,7 @@ var UrlbarTokenizer = {
   REGEXP_HOSTPORT_IPV4: /^(\d{1,3}\.){3,}\d{1,3}(:\d+)?$/,
   // This accepts partial IPv6.
   REGEXP_HOSTPORT_IPV6: /^\[([0-9a-f]{0,4}:){0,7}[0-9a-f]{0,4}\]?$/i,
-  REGEXP_COMMON_EMAIL: /^[\w!#$%&'*+\/=?^`{|}~-]+@[\[\]A-Z0-9.-]+$/i,
+  REGEXP_COMMON_EMAIL: /^[\w!#$%&'*+/=?^`{|}~.-]+@[\[\]A-Z0-9.-]+$/i,
 
   // Regex matching a percent encoded char at the beginning of a string.
   REGEXP_PERCENT_ENCODED_START: /^(%[0-9a-f]{2}){2,}/i,

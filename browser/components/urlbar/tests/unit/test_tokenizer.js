@@ -210,6 +210,13 @@ add_task(async function test_tokenizer() {
       ],
     },
     {
+      desc: "email2",
+      searchString: "test.test@mozilla.co.uk",
+      expectedTokens: [
+        { value: "test.test@mozilla.co.uk", type: UrlbarTokenizer.TYPE.TEXT },
+      ],
+    },
+    {
       desc: "protocol",
       searchString: "http://test",
       expectedTokens: [
