@@ -1625,11 +1625,14 @@ class D3DVsyncSource final : public VsyncSource {
         : mPrevVsync(TimeStamp::Now()),
           mVsyncEnabledLock("D3DVsyncEnabledLock"),
           mVsyncEnabled(false),
-          mWaitVBlankMonitor(NULL) {
+          mWaitVBlankMonitor(NULL),
+          mIsWindows10OrLater(false) {
       mVsyncThread = new base::Thread("WindowsVsyncThread");
       MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
                          "GFX: Could not start Windows vsync thread");
       SetVsyncRate();
+
+      mIsWindows10OrLater = IsWin10OrLater();
     }
 
     void SetVsyncRate() {
@@ -1801,10 +1804,22 @@ class D3DVsyncSource final : public VsyncSource {
         }
 
         HRESULT hr = E_FAIL;
-        if (StaticPrefs::gfx_vsync_use_waitforvblank()) {
+        if (mIsWindows10OrLater &&
+            !StaticPrefs::gfx_vsync_force_disable_waitforvblank()) {
           UpdateVBlankOutput();
           if (mWaitVBlankOutput) {
+            const TimeStamp vblank_begin_wait = TimeStamp::Now();
             hr = mWaitVBlankOutput->WaitForVBlank();
+            if (SUCCEEDED(hr)) {
+              // vblank might return instantly when running headless,
+              // monitor powering off, etc.  Since we're on a dedicated
+              // thread, instant-return should not happen in the normal
+              // case, so catch any odd behavior with a time cutoff:
+              TimeDuration vblank_wait = TimeStamp::Now() - vblank_begin_wait;
+              if (vblank_wait.ToMilliseconds() < 1.0) {
+                hr = E_FAIL;  // fall back on old behavior
+              }
+            }
           }
         }
         if (!SUCCEEDED(hr)) {
@@ -1886,6 +1901,7 @@ class D3DVsyncSource final : public VsyncSource {
 
     HMONITOR mWaitVBlankMonitor;
     RefPtr<IDXGIOutput> mWaitVBlankOutput;
+    bool mIsWindows10OrLater;
   };  // end d3dvsyncdisplay
 
   D3DVsyncSource() { mPrimaryDisplay = new D3DVsyncDisplay(); }
