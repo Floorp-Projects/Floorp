@@ -25,6 +25,7 @@ decorate_task(
     );
     // Override this for the purposes of the test
     action.manager = new _ExperimentManager();
+    await action.manager.onStartup();
     const onRecipeStub = sinon.spy(action.manager, "onRecipe");
 
     const recipe = {
