@@ -159,28 +159,26 @@ Document* StyleSheet::GetAssociatedDocument() const {
 
 dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
     const {
-  for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
-    if (sheet->mDocumentOrShadowRoot) {
-      return sheet->mDocumentOrShadowRoot;
-    }
-    if (sheet->IsConstructed()) {
-      return sheet->mConstructorDocument;
-    }
+  const StyleSheet& outer = OutermostSheet();
+  if (outer.mDocumentOrShadowRoot) {
+    return outer.mDocumentOrShadowRoot;
+  }
+  if (outer.IsConstructed()) {
+    return outer.mConstructorDocument;
   }
   return nullptr;
 }
 
 Document* StyleSheet::GetKeptAliveByDocument() const {
-  for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
-    if (sheet->mDocumentOrShadowRoot) {
-      return sheet->mDocumentOrShadowRoot->AsNode().GetComposedDoc();
-    }
-    if (sheet->IsConstructed()) {
-      for (DocumentOrShadowRoot* adopter : sheet->mAdopters) {
-        MOZ_ASSERT(adopter->AsNode().OwnerDoc() == sheet->mConstructorDocument);
-        if (adopter->AsNode().IsInComposedDoc()) {
-          return sheet->mConstructorDocument.get();
-        }
+  const StyleSheet& outer = OutermostSheet();
+  if (outer.mDocumentOrShadowRoot) {
+    return outer.mDocumentOrShadowRoot->AsNode().GetComposedDoc();
+  }
+  if (outer.IsConstructed()) {
+    for (DocumentOrShadowRoot* adopter : outer.mAdopters) {
+      MOZ_ASSERT(adopter->AsNode().OwnerDoc() == outer.mConstructorDocument);
+      if (adopter->AsNode().IsInComposedDoc()) {
+        return outer.mConstructorDocument.get();
       }
     }
   }
@@ -306,15 +304,14 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
     }
   };
 
-  for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
-    if (sheet->mDocumentOrShadowRoot) {
-      Notify(*sheet->mDocumentOrShadowRoot);
-    }
+  const StyleSheet& sheet = OutermostSheet();
+  if (sheet.mDocumentOrShadowRoot) {
+    Notify(*sheet.mDocumentOrShadowRoot);
+  }
 
-    for (DocumentOrShadowRoot* adopter : sheet->mAdopters) {
-      MOZ_ASSERT(adopter, "adopters should never be null");
-      Notify(*adopter);
-    }
+  for (DocumentOrShadowRoot* adopter : sheet.mAdopters) {
+    MOZ_ASSERT(adopter, "adopters should never be null");
+    Notify(*adopter);
   }
 }
 
