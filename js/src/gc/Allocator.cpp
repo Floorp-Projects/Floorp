@@ -436,7 +436,7 @@ bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
   return true;
 }
 
-bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
+inline bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
 #ifdef JS_GC_ZEAL
   if (needZealousGC()) {
     runDebugGC();
@@ -447,17 +447,6 @@ bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
   // handle that here. Just check in case we need to collect instead.
   if (cx->hasAnyPendingInterrupt()) {
     gcIfRequested();
-  }
-
-  // If we have grown past our non-incremental heap threshold while in the
-  // middle of an incremental GC, we're growing faster than we're GCing, so stop
-  // the world and do a full, non-incremental GC right now, if possible.
-  Zone* zone = cx->zone();
-  if (isIncrementalGCInProgress() &&
-      zone->gcHeapSize.bytes() >
-          zone->gcHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
-    PrepareZoneForGC(cx->zone());
-    gc(GC_NORMAL, JS::GCReason::INCREMENTAL_TOO_SLOW);
   }
 
   return true;
