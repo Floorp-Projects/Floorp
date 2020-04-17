@@ -816,10 +816,11 @@ bool IonCacheIRCompiler::emitLoadDynamicSlotResult() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardHasGetterSetter() {
+bool IonCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
+                                                  uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Shape* shape = shapeStubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  Shape* shape = shapeStubField(shapeOffset);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
