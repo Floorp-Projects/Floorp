@@ -401,7 +401,6 @@ class alignas(8) Value {
 
   static Value fromDouble(double d) { return fromRawBits(bitsFromDouble(d)); }
 
- public:
   /**
    * Returns false if creating a NumberValue containing the given type would
    * be lossy, true otherwise.
@@ -767,7 +766,7 @@ class alignas(8) Value {
     return uint32_t(asBits_);
   }
 
-  uint64_t asRawBits() const { return asBits_; }
+  constexpr uint64_t asRawBits() const { return asBits_; }
 
   JSValueType extractNonDoubleType() const {
     uint32_t type = toTag() & 0xF;

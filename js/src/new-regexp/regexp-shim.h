@@ -486,7 +486,7 @@ class Object {
  public:
   // The default object constructor in V8 stores a nullptr,
   // which has its low bit clear and is interpreted as Smi(0).
-  constexpr Object() : value_(JS::Int32Value(0)) {}
+  constexpr Object() : asBits_(JS::Int32Value(0).asRawBits()) {}
 
   Object(const JS::Value& value) {
     setValue(value);
@@ -502,13 +502,14 @@ class Object {
   }
 
   JS::Value value() const {
-    return value_;
+    return JS::Value::fromRawBits(asBits_);
   }
+
  protected:
   void setValue(const JS::Value& val) {
-    value_ = val;
+    asBits_ = val.asRawBits();
   }
-  JS::Value value_;
+  uint64_t asBits_;
 } JS_HAZ_GC_POINTER;
 
 class Smi : public Object {
