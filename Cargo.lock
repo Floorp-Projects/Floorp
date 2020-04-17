@@ -4769,6 +4769,7 @@ dependencies = [
  "rust-ini",
  "winapi 0.3.7",
  "wio",
+ "xml-rs",
 ]
 
 [[package]]

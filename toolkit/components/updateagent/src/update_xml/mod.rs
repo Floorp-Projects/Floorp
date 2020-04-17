@@ -3,9 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 mod download;
+mod parse;
 mod update_url;
 
 use log::{debug, info};
+pub use parse::{parse_file, Update, UpdatePatchType, UpdateType, UpdateXmlPatch};
 use std::ffi::OsString;
 
 pub fn sync_download(
@@ -21,10 +23,4 @@ pub fn sync_download(
     download::sync_download_url(download_dir, save_path, job_name, url)?;
     debug!("XML download successful");
     Ok(())
-}
-
-pub struct Update {}
-
-pub fn parse_file(path: &OsString) -> Result<Vec<Update>, String> {
-    Err("parse_file not yet implemented".to_string())
 }

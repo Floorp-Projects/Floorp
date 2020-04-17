@@ -17,6 +17,7 @@ percent-encoding = "2.1"
 prefs_parser = { path = "../../../modules/libpref/parser" }
 rust-ini = "0.10"
 wio = "0.2"
+xml-rs = "0.8"
 
 [target."cfg(all(windows, any(target_arch = \"x86\", target_arch = \"x86_64\")))".dependencies]
 raw-cpuid = "7.0"
