@@ -620,9 +620,8 @@ bool mozJSComponentLoader::ReuseGlobal(nsIURI* aURI) {
     return false;
   }
 
-  // BrowserTestUtils.jsm calls Cu.permitCPOWsInScope(this) which sets a
-  // per-compartment flag to permit CPOWs. We don't want to set this flag for
-  // all other JSMs.
+  // XXX For historical reasons, this uses its own global, which should not be
+  // necessary. Bug 1631021 covers removing this.
   if (spec.EqualsASCII("resource://testing-common/BrowserTestUtils.jsm")) {
     return false;
   }
