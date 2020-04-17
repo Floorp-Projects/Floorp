@@ -371,9 +371,31 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
 
     // Fallible operation that modifies the global object.
     if (clasp->specShouldDefineConstructor()) {
-      RootedValue ctorValue(cx, ObjectValue(*ctor));
-      if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
-        return false;
+      bool shouldReallyDefine = true;
+
+      // On the web, it isn't presently possible to expose the global
+      // "SharedArrayBuffer" property unless the page is cross-site-isolated.
+      // Only define this constructor if an option on the realm indicates that
+      // it should be defined.
+      if (key == JSProto_SharedArrayBuffer) {
+        const JS::RealmCreationOptions& options =
+            cx->realm()->creationOptions();
+
+        MOZ_ASSERT(options.getSharedMemoryAndAtomicsEnabled(),
+                   "shouldn't be defining SharedArrayBuffer if shared memory "
+                   "is disabled");
+
+        fprintf(stderr, "defineSharedArrayBufferConstructor: %d\n",
+                static_cast<int>(options.defineSharedArrayBufferConstructor()));
+
+        shouldReallyDefine = options.defineSharedArrayBufferConstructor();
+      }
+
+      if (shouldReallyDefine) {
+        RootedValue ctorValue(cx, ObjectValue(*ctor));
+        if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
+          return false;
+        }
       }
     }
 
