@@ -423,3 +423,9 @@ class experimental(object):
             'test': Any('skip-unless-schedules', 'bugbug-reduced'),
         }
         """Use the reduced set of tasks (and no groups) chosen by bugbug."""
+
+        reduced_high = {
+            'test': Any('skip-unless-schedules', 'bugbug-reduced-high'),
+        }
+        """Use the reduced set of tasks (and no groups) chosen by bugbug, high
+        confidence threshold."""
