@@ -11,19 +11,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 1000;
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gClassifier",
   "@mozilla.org/url-classifier/dbservice;1",
   "nsIURIClassifier"
-);
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gStorageActivityService",
-  "@mozilla.org/storage/activity-service;1",
-  "nsIStorageActivityService"
 );
 
 this.PurgeTrackerService = function() {};
@@ -153,8 +145,6 @@ PurgeTrackerService.prototype = {
       "0"
     );
 
-    let maybeClearPrincipals = new Map();
-
     // TODO We only need the host name and creationTime, this gives too much info. See bug 1610373.
     let cookies = Services.cookies.cookies;
 
@@ -174,32 +164,6 @@ PurgeTrackerService.prototype = {
     );
     cookies = cookies.slice(0, MAX_PURGE_COUNT);
 
-    for (let cookie of cookies) {
-      let httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        "http://" +
-          cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-      let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        "https://" +
-          cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-      maybeClearPrincipals.set(httpPrincipal.origin, httpPrincipal);
-      maybeClearPrincipals.set(httpsPrincipal.origin, httpsPrincipal);
-      saved_date = cookie.creationTime;
-    }
-
-    let startDate = Date.now() - THREE_DAYS_MS;
-    let storagePrincipals = gStorageActivityService.getActiveOrigins(
-      startDate * 1000,
-      Date.now() * 1000
-    );
-
-    for (let principal of storagePrincipals.enumerate()) {
-      maybeClearPrincipals.set(principal.origin, principal);
-    }
-
     let feature = gClassifier.getFeatureByName("tracking-annotation");
     if (!feature) {
       LOG("returning early, feature undefined.");
@@ -212,20 +176,33 @@ PurgeTrackerService.prototype = {
       baseDomainsWithInteraction.add(perm.principal.baseDomain);
     }
 
-    for (let principal of maybeClearPrincipals.values()) {
+    for (let cookie of cookies) {
+      let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        "https://" +
+          cookie.rawHost +
+          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+      );
+
       // Either the interaction permission was never granted or it expired.
-      if (!baseDomainsWithInteraction.has(principal.baseDomain)) {
+      if (!baseDomainsWithInteraction.has(httpsPrincipal.baseDomain)) {
+        let httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          "http://" +
+            cookie.rawHost +
+            ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+        );
+
         // We purge if we also find it is a tracker.
-        let isTracker = await this.isTracker(principal, feature);
+        let isTracker =
+          (await this.isTracker(httpsPrincipal, feature)) ||
+          (await this.isTracker(httpPrincipal, feature));
         if (isTracker) {
           LOG(
             "tracking cookie found with no interaction permission, deleting related data.",
-            principal.origin
+            cookie.rawHost
           );
-
           await new Promise(resolve => {
             Services.clearData.deleteDataFromPrincipal(
-              principal,
+              httpsPrincipal,
               false,
               Ci.nsIClearDataService.CLEAR_ALL_CACHES |
                 Ci.nsIClearDataService.CLEAR_COOKIES |
@@ -240,9 +217,27 @@ PurgeTrackerService.prototype = {
               resolve
             );
           });
-          LOG(`Data deleted from: `, principal.origin);
+          await new Promise(resolve => {
+            Services.clearData.deleteDataFromPrincipal(
+              httpPrincipal,
+              false,
+              Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+                Ci.nsIClearDataService.CLEAR_COOKIES |
+                Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+                Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+                Ci.nsIClearDataService.CLEAR_EME |
+                Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+                Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
+                Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
+                Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
+                Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
+              resolve
+            );
+          });
+          LOG(`Data deleted from: `, cookie.rawHost);
         }
       }
+      saved_date = cookie.creationTime;
     }
 
     Services.prefs.setStringPref(
