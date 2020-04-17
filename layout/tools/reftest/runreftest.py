@@ -483,6 +483,9 @@ class RefTest(object):
         if options.enable_webrender:
             browserEnv["MOZ_WEBRENDER"] = "1"
             browserEnv["MOZ_ACCELERATED"] = "1"
+            # Set MOZ_X_SYNC and GDK_SYNCHRONIZE for investigation; bug 1625250.
+            browserEnv["MOZ_X_SYNC"] = "1"
+            browserEnv["GDK_SYNCHRONIZE"] = "1"
         else:
             browserEnv["MOZ_WEBRENDER"] = "0"
 
