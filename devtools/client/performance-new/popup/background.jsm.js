@@ -178,6 +178,7 @@ const presets = {
       "MediaTimer",
       "MediaPlayback",
       "MediaDecoderStateMachine",
+      "AsyncCubebTask",
     ],
     duration: 0,
   },
