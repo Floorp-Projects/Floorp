@@ -12,6 +12,8 @@ mod event_log;
 mod ole_utils;
 mod task_setup;
 pub mod taskschd;
+mod update_paths;
+mod update_xml;
 
 use std::env;
 use std::ffi::OsString;
@@ -24,6 +26,7 @@ use log::{debug, error, info};
 pub static VENDOR: &str = "Mozilla";
 // Used as the description of the task and the event log application
 pub static DESCRIPTION: &str = "Mozilla Update Agent";
+static BITS_JOB_NAME_PREFIX: &str = "MozillaUpdate ";
 
 fn main() {
     log::set_logger(&event_log::EventLogger).unwrap();
@@ -153,9 +156,18 @@ pub fn fallible_main() -> Result<(), String> {
 }
 
 fn task_action(args: &[OsString]) -> Result<(), String> {
-    // TODO actual task content
-
     info!("task_action({:?})", args);
+
+    let download_dir = update_paths::get_update_directory()?;
+    let xml_path = update_paths::get_download_xml()?;
+    let mut job_name = OsString::from(BITS_JOB_NAME_PREFIX);
+    job_name.push(update_paths::get_install_hash()?);
+
+    update_xml::sync_download(download_dir, xml_path.clone(), job_name)?;
+    let updates = update_xml::parse_file(&xml_path)?;
+    info!("Got {} updates!", updates.len());
+
+    // TODO: Process updates
 
     Ok(())
 }
