@@ -2,7 +2,7 @@
 
 # Frequency
 
-`data class Frequency` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L55)
+`data class Frequency` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/migration/SupportedAddonsChecker.kt#L58)
 
 Indicates how often checks for newly supported add-ons should happen.
 
