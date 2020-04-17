@@ -71,8 +71,8 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
 
   void pushStubCodePointer();
 
-#define DEFINE_OP(op, ...) MOZ_MUST_USE bool emit##op();
-  CACHE_IR_OPS(DEFINE_OP)
+#define DEFINE_OP(op) MOZ_MUST_USE bool emit##op();
+  CACHE_IR_UNSHARED_OPS(DEFINE_OP)
 #undef DEFINE_OP
 };
 

@@ -109,11 +109,6 @@ AutoSaveLiveRegisters::~AutoSaveLiveRegisters() {
 }  // namespace jit
 }  // namespace js
 
-#define DEFINE_SHARED_OP(op) \
-  bool IonCacheIRCompiler::emit##op() { return CacheIRCompiler::emit##op(); }
-CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
-#undef DEFINE_SHARED_OP
-
 void CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm,
                                                   LiveRegisterSet liveRegs,
                                                   Register scratch,
