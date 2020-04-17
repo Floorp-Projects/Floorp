@@ -150,3 +150,84 @@ add_task(async function() {
 
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
+
+/**
+ * Test that quota storage (even without cookies) is considered when purging trackers.
+ */
+add_task(async function() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  let testCases = [
+    { localStorage: true, indexedDB: true },
+    { localStorage: false, indexedDB: true },
+    { localStorage: true, indexedDB: false },
+  ];
+
+  for (let { localStorage, indexedDB } of testCases) {
+    PermissionTestUtils.add(
+      TRACKING_PAGE,
+      "storageAccessAPI",
+      Services.perms.ALLOW_ACTION
+    );
+
+    if (localStorage) {
+      SiteDataTestUtils.addToLocalStorage(TRACKING_PAGE);
+      SiteDataTestUtils.addToLocalStorage(BENIGN_PAGE);
+    }
+
+    if (indexedDB) {
+      await SiteDataTestUtils.addToIndexedDB(TRACKING_PAGE);
+      await SiteDataTestUtils.addToIndexedDB(BENIGN_PAGE);
+    }
+
+    // Purge while storage access permission exists.
+    await PurgeTrackerService.purgeTrackingCookieJars();
+
+    if (localStorage) {
+      ok(
+        SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+        "localStorage should not have been removed while storage access permission exists."
+      );
+    }
+
+    if (indexedDB) {
+      Assert.greater(
+        await SiteDataTestUtils.getQuotaUsage(TRACKING_PAGE),
+        0,
+        `We have data for ${TRACKING_PAGE}`
+      );
+    }
+
+    // Run purge after storage access permission has been removed.
+    PermissionTestUtils.remove(TRACKING_PAGE, "storageAccessAPI");
+    await PurgeTrackerService.purgeTrackingCookieJars();
+
+    if (localStorage) {
+      ok(
+        SiteDataTestUtils.hasLocalStorage(BENIGN_PAGE),
+        "localStorage should not have been removed for benign page."
+      );
+      ok(
+        !SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+        "localStorage should have been removed."
+      );
+    }
+
+    if (indexedDB) {
+      Assert.greater(
+        await SiteDataTestUtils.getQuotaUsage(BENIGN_PAGE),
+        0,
+        "quota storage for benign page was not deleted"
+      );
+      Assert.equal(
+        await SiteDataTestUtils.getQuotaUsage(TRACKING_PAGE),
+        0,
+        "quota storage was deleted"
+      );
+    }
+
+    await SiteDataTestUtils.clear();
+  }
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
