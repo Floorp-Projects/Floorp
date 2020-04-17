@@ -2205,19 +2205,51 @@ WorkerPrivate::WorkerPrivate(
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
 
-    mJSSettings.chrome.realmOptions.behaviors().setClampAndJitterTime(
-        !UsesSystemPrincipal());
-    mJSSettings.content.realmOptions.behaviors().setClampAndJitterTime(
-        !UsesSystemPrincipal());
+    {
+      JS::RealmOptions& chromeRealmOptions = mJSSettings.chrome.realmOptions;
+      JS::RealmOptions& contentRealmOptions = mJSSettings.content.realmOptions;
 
-    mJSSettings.chrome.realmOptions.creationOptions().setToSourceEnabled(
-        UsesSystemPrincipal());
-    mJSSettings.content.realmOptions.creationOptions().setToSourceEnabled(
-        UsesSystemPrincipal());
+      JS::RealmBehaviors& chromeRealmBehaviors = chromeRealmOptions.behaviors();
+      JS::RealmBehaviors& contentRealmBehaviors =
+          contentRealmOptions.behaviors();
 
-    if (mIsSecureContext) {
-      mJSSettings.chrome.realmOptions.creationOptions().setSecureContext(true);
-      mJSSettings.content.realmOptions.creationOptions().setSecureContext(true);
+      bool usesSystemPrincipal = UsesSystemPrincipal();
+
+      // Make timing imprecise in unprivileged code to blunt Spectre timing
+      // attacks.
+      bool clampAndJitterTime = !usesSystemPrincipal;
+      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+
+      JS::RealmCreationOptions& chromeCreationOptions =
+          chromeRealmOptions.creationOptions();
+      JS::RealmCreationOptions& contentCreationOptions =
+          contentRealmOptions.creationOptions();
+
+      // Expose uneval and toSource functions only if this is privileged code.
+      bool toSourceEnabled = usesSystemPrincipal;
+      chromeCreationOptions.setToSourceEnabled(toSourceEnabled);
+      contentCreationOptions.setToSourceEnabled(toSourceEnabled);
+
+      if (mIsSecureContext) {
+        chromeCreationOptions.setSecureContext(true);
+        contentCreationOptions.setSecureContext(true);
+      }
+
+      // The SharedArrayBuffer global constructor property should not be present
+      // in a fresh global object when shared memory objects aren't allowed
+      // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
+      // act to isolate this worker to a separate process).
+      //
+      // Normal pages haven't yet been made to respect COOP/COEP in this regard
+      // yet -- they just always add the property.  This should be changed to
+      // |IsSharedMemoryAllowed()| when bug 1624266 fixes this for normal pages.
+      bool defineSharedArrayBufferConstructor = true;
+
+      chromeCreationOptions.setDefineSharedArrayBufferConstructor(
+          defineSharedArrayBufferConstructor);
+      contentCreationOptions.setDefineSharedArrayBufferConstructor(
+          defineSharedArrayBufferConstructor);
     }
 
     mIsInAutomation = xpc::IsInAutomation();
