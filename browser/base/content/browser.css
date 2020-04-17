@@ -325,6 +325,11 @@ toolbar[customizing] #whats-new-menu-button {
 }
 %endif
 
+:root:not([sizemode=maximized]) .titlebar-restore,
+:root[sizemode=maximized] .titlebar-max {
+  display: none;
+}
+
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar[autohide=true]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {
   visibility: hidden;

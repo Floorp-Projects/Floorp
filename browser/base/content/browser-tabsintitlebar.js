@@ -123,11 +123,3 @@ var TabsInTitlebar;
     },
   };
 } // end private TabsInTitlebar scope
-
-function onTitlebarMaxClick() {
-  if (window.windowState == window.STATE_MAXIMIZED) {
-    window.restore();
-  } else {
-    window.maximize();
-  }
-}

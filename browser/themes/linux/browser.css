@@ -545,11 +545,12 @@ notification[value="translation"] menulist::part(dropmarker) {
     .titlebar-max {
       -moz-appearance: -moz-window-button-maximize;
     }
-    :root[sizemode="maximized"] .titlebar-max {
+    .titlebar-restore {
       -moz-appearance: -moz-window-button-restore;
     }
   }
   @media (-moz-gtk-csd-maximize-button: 0) {
+    .titlebar-restore,
     .titlebar-max {
       display: none;
     }
