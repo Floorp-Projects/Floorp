@@ -27,8 +27,8 @@
 #include "js/Value.h"             // JS::{,Object}Value
 #include "vm/JSContext.h"         // JSContext
 #include "vm/JSObject.h"          // js::GetPrototypeFromBuiltinConstructor
-#include "vm/NativeObject.h"      // js::PlainObject
 #include "vm/ObjectOperations.h"  // js::GetProperty
+#include "vm/PlainObject.h"       // js::PlainObject
 #include "vm/Realm.h"             // JS::Realm
 
 #include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheckThis

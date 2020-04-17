@@ -34,6 +34,7 @@
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Runtime.h"
 
 #include "vm/JSObject-inl.h"

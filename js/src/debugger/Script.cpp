@@ -37,6 +37,7 @@
 #include "vm/JSFunction.h"     // for JSFunction
 #include "vm/JSObject.h"       // for RequireObject, JSObject
 #include "vm/ObjectOperations.h"  // for DefineDataProperty, HasOwnProperty
+#include "vm/PlainObject.h"       // for js::PlainObject
 #include "vm/Realm.h"             // for AutoRealm
 #include "vm/Runtime.h"           // for JSAtomState, JSRuntime
 #include "vm/StringType.h"        // for NameToId, PropertyName, JSAtom

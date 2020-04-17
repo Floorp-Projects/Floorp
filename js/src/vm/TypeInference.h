@@ -35,6 +35,7 @@ class TypeConstraint;
 class TypeZone;
 class CompilerConstraintList;
 class HeapTypeSetKey;
+class PlainObject;
 
 namespace jit {
 

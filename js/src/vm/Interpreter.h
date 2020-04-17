@@ -21,6 +21,7 @@
 namespace js {
 
 class EnvironmentIter;
+class PlainObject;
 
 /*
  * Convert null/undefined |thisv| into the current global object for the
@@ -696,7 +697,7 @@ bool Debug_CheckSelfHosted(JSContext* cx, HandleValue v);
 
 bool CheckClassHeritageOperation(JSContext* cx, HandleValue heritage);
 
-JSObject* ObjectWithProtoOperation(JSContext* cx, HandleValue proto);
+PlainObject* ObjectWithProtoOperation(JSContext* cx, HandleValue proto);
 
 JSObject* FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                 HandleObject parent, HandleObject proto);
