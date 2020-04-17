@@ -163,11 +163,10 @@ Document* StyleSheet::GetAssociatedDocument() const {
 
 dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
     const {
-  if (mDocumentOrShadowRoot) {
-    return mDocumentOrShadowRoot;
-  }
   for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
-    MOZ_ASSERT(!sheet->mDocumentOrShadowRoot);
+    if (sheet->mDocumentOrShadowRoot) {
+      return sheet->mDocumentOrShadowRoot;
+    }
     if (sheet->IsConstructed()) {
       return sheet->mConstructorDocument;
     }
@@ -176,14 +175,11 @@ dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
 }
 
 Document* StyleSheet::GetKeptAliveByDocument() const {
-  // TODO(emilio): Now that we're doing parent walks for both this and
-  // GetAssociatedDocument(), seems we could simplify the association code not
-  // to be propagated to children.
-  if (mAssociationMode == OwnedByDocumentOrShadowRoot) {
-    MOZ_ASSERT(mDocumentOrShadowRoot);
-    return mDocumentOrShadowRoot->AsNode().GetComposedDoc();
-  }
   for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
+    if (sheet->mAssociationMode == OwnedByDocumentOrShadowRoot) {
+      MOZ_ASSERT(sheet->mDocumentOrShadowRoot);
+      return sheet->mDocumentOrShadowRoot->AsNode().GetComposedDoc();
+    }
     if (sheet->IsConstructed()) {
       for (DocumentOrShadowRoot* adopter : sheet->mAdopters) {
         MOZ_ASSERT(adopter->AsNode().OwnerDoc() == sheet->mConstructorDocument);
@@ -221,12 +217,6 @@ void StyleSheet::UnlinkInner() {
   for (StyleSheet* child : ChildSheets()) {
     MOZ_ASSERT(child->mParentSheet == this, "We have a unique inner!");
     child->mParentSheet = nullptr;
-    // We (and child) might still think we're owned by a document, because
-    // unlink order is non-deterministic, so the document's unlink, which would
-    // tell us it doesn't own us anymore, may not have happened yet.  But if
-    // we're being unlinked, clearly we're not owned by a document anymore
-    // conceptually!
-    child->ClearAssociatedDocumentOrShadowRoot();
   }
   Inner().mChildren.Clear();
 }
@@ -321,13 +311,15 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
     }
   };
 
-  if (mDocumentOrShadowRoot) {
-    Notify(*mDocumentOrShadowRoot);
-  }
+  for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
+    if (sheet->mDocumentOrShadowRoot) {
+      Notify(*sheet->mDocumentOrShadowRoot);
+    }
 
-  for (DocumentOrShadowRoot* adopter : mAdopters) {
-    MOZ_ASSERT(adopter, "adopters should never be null");
-    Notify(*adopter);
+    for (DocumentOrShadowRoot* adopter : sheet->mAdopters) {
+      MOZ_ASSERT(adopter, "adopters should never be null");
+      Notify(*adopter);
+    }
   }
 }
 
@@ -431,8 +423,6 @@ void StyleSheetInfo::RemoveSheet(StyleSheet* aSheet) {
     StyleSheet* newParent = mSheets[1];
     for (StyleSheet* child : mChildren) {
       child->mParentSheet = newParent;
-      child->SetAssociatedDocumentOrShadowRoot(newParent->mDocumentOrShadowRoot,
-                                               newParent->mAssociationMode);
     }
   }
 
@@ -500,20 +490,17 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 // too, so no need to do it for each ancestor.
 #define NOTIFY(function_, args_)                                          \
   do {                                                                    \
-    if (auto* shadow = GetContainingShadow()) {                           \
-      shadow->function_ args_;                                            \
-    }                                                                     \
-    /* FIXME(emilio, bug 1630835): This should probably do something      \
-     * for constructed sheets, at least for some notifications. */        \
-    if (mDocumentOrShadowRoot) {                                          \
-      if (auto* doc = mDocumentOrShadowRoot->AsNode().GetComposedDoc()) { \
-        doc->function_ args_;                                             \
-      }                                                                   \
-    }                                                                     \
     StyleSheet* current = this;                                           \
     do {                                                                  \
       for (ServoStyleSet * set : current->mStyleSets) {                   \
         set->function_ args_;                                             \
+      }                                                                   \
+      if (auto* docOrShadow = current->mDocumentOrShadowRoot) {           \
+        if (auto* shadow = ShadowRoot::FromNode(docOrShadow->AsNode())) { \
+          shadow->function_ args_;                                        \
+        } else {                                                          \
+          docOrShadow->AsNode().AsDocument()->function_ args_;            \
+        }                                                                 \
       }                                                                   \
       for (auto* adopter : mAdopters) {                                   \
         if (auto* shadow = ShadowRoot::FromNode(adopter->AsNode())) {     \
@@ -800,14 +787,6 @@ nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
   return NS_OK;
 }
 
-ShadowRoot* StyleSheet::GetContainingShadow() const {
-  auto* docOrShadow = GetAssociatedDocumentOrShadowRoot();
-  if (!docOrShadow) {
-    return nullptr;
-  }
-  return ShadowRoot::FromNode(docOrShadow->AsNode());
-}
-
 void StyleSheet::RuleAdded(css::Rule& aRule) {
   SetModifiedRules();
   NOTIFY(RuleAdded, (*this, aRule));
@@ -902,19 +881,17 @@ void StyleSheet::RemoveFromParent() {
   MOZ_ASSERT(mParentSheet->ChildSheets().Contains(this));
   mParentSheet->Inner().mChildren.RemoveElement(this);
   mParentSheet = nullptr;
-  ClearAssociatedDocumentOrShadowRoot();
 }
 
 void StyleSheet::UnparentChildren() {
+  MOZ_ASSERT(mAssociationMode == NotOwnedByDocumentOrShadowRoot,
+             "How did we get to the destructor, exactly, if we're owned "
+             "by a document?");
   // XXXbz this is a little bogus; see the comment where we
   // declare mChildren in StyleSheetInfo.
   for (StyleSheet* child : ChildSheets()) {
     if (child->mParentSheet == this) {
       child->mParentSheet = nullptr;
-      MOZ_ASSERT(child->mAssociationMode == NotOwnedByDocumentOrShadowRoot,
-                 "How did we get to the destructor, exactly, if we're owned "
-                 "by a document?");
-      child->mDocumentOrShadowRoot = nullptr;
     }
   }
 }
@@ -978,20 +955,12 @@ void StyleSheet::SetAssociatedDocumentOrShadowRoot(
   MOZ_ASSERT(!IsConstructed());
   MOZ_ASSERT(aDocOrShadowRoot ||
              aAssociationMode == NotOwnedByDocumentOrShadowRoot);
+  MOZ_ASSERT(!mParentSheet || !aDocOrShadowRoot,
+             "Shouldn't be set on child sheets");
 
   // not ref counted
   mDocumentOrShadowRoot = aDocOrShadowRoot;
   mAssociationMode = aAssociationMode;
-
-  // Now set the same document on all our child sheets....
-  // XXXbz this is a little bogus; see the comment where we
-  // declare mChildren in StyleSheetInfo.
-  for (StyleSheet* child : ChildSheets()) {
-    if (child->mParentSheet == this) {
-      child->SetAssociatedDocumentOrShadowRoot(aDocOrShadowRoot,
-                                               aAssociationMode);
-    }
-  }
 }
 
 void StyleSheet::AppendStyleSheet(StyleSheet& aSheet) {
@@ -1007,8 +976,6 @@ void StyleSheet::AppendStyleSheetSilently(StyleSheet& aSheet) {
   // This is not reference counted. Our parent tells us when
   // it's going away.
   aSheet.mParentSheet = this;
-  aSheet.SetAssociatedDocumentOrShadowRoot(mDocumentOrShadowRoot,
-                                           mAssociationMode);
 }
 
 size_t StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -1278,7 +1245,6 @@ void StyleSheet::ReparseSheet(const nsACString& aInput, ErrorResult& aRv) {
   // Clean up child sheets list.
   for (StyleSheet* child : ChildSheets()) {
     child->mParentSheet = nullptr;
-    child->ClearAssociatedDocumentOrShadowRoot();
   }
   Inner().mChildren.Clear();
 
