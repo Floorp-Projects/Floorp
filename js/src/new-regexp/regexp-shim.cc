@@ -71,20 +71,20 @@ HandleScope::~HandleScope() {
 
 template <typename T>
 Handle<T>::Handle(T object, Isolate* isolate)
-    : location_(isolate->getHandleLocation(JS::Value(object))) {}
+    : location_(isolate->getHandleLocation(object.value())) {}
 
 template Handle<ByteArray>::Handle(ByteArray b, Isolate* isolate);
-template Handle<HeapObject>::Handle(JS::Value v, Isolate* isolate);
+template Handle<HeapObject>::Handle(const JS::Value& v, Isolate* isolate);
 template Handle<JSRegExp>::Handle(JSRegExp re, Isolate* isolate);
 template Handle<String>::Handle(String s, Isolate* isolate);
 
 template <typename T>
-Handle<T>::Handle(JS::Value value, Isolate* isolate)
+Handle<T>::Handle(const JS::Value& value, Isolate* isolate)
   : location_(isolate->getHandleLocation(value)) {
   T::cast(Object(value)); // Assert that value has the correct type.
 }
 
-JS::Value* Isolate::getHandleLocation(JS::Value value) {
+JS::Value* Isolate::getHandleLocation(const JS::Value& value) {
   js::AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!handleArena_.Append(value)) {
     oomUnsafe.crash("Irregexp handle allocation");
@@ -119,8 +119,8 @@ PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
 
 PseudoHandle<ByteArrayData> ByteArray::takeOwnership(Isolate* isolate) {
   PseudoHandle<ByteArrayData> result =
-    isolate->takeOwnership<ByteArrayData>(value_.toPrivate());
-  value_ = JS::PrivateValue(nullptr);
+    isolate->takeOwnership<ByteArrayData>(value().toPrivate());
+  setValue(JS::PrivateValue(nullptr));
   return result;
 }
 

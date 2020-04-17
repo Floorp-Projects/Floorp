@@ -488,41 +488,47 @@ class Object {
   // which has its low bit clear and is interpreted as Smi(0).
   constexpr Object() : value_(JS::Int32Value(0)) {}
 
-  // Conversions to/from SpiderMonkey types
-  constexpr Object(JS::Value value) : value_(value) {}
-  operator JS::Value() const { return value_; }
+  Object(const JS::Value& value) {
+    setValue(value);
+  }
 
   // Used in regexp-interpreter.cc to check the return value of
   // isolate->stack_guard()->HandleInterrupts(). We want to handle
   // interrupts in the caller, so we always return false from
   // HandleInterrupts and true here.
   inline bool IsException(Isolate*) const {
-    MOZ_ASSERT(!value_.toBoolean());
+    MOZ_ASSERT(!value().toBoolean());
     return true;
   }
 
+  JS::Value value() const {
+    return value_;
+  }
  protected:
+  void setValue(const JS::Value& val) {
+    value_ = val;
+  }
   JS::Value value_;
-};
+} JS_HAZ_GC_POINTER;
 
 class Smi : public Object {
  public:
   static Smi FromInt(int32_t value) {
     Smi smi;
-    smi.value_ = JS::Int32Value(value);
+    smi.setValue(JS::Int32Value(value));
     return smi;
   }
   static inline int32_t ToInt(const Object object) {
-    return JS::Value(object).toInt32();
+    return object.value().toInt32();
   }
 };
 
-// V8::HeapObject ~= JSObject
+// V8::HeapObject ~= GC thing
 class HeapObject : public Object {
  public:
   inline static HeapObject cast(Object object) {
     HeapObject h;
-    h.value_ = JS::Value(object);
+    h.setValue(object.value());
     return h;
   }
 };
@@ -555,7 +561,7 @@ inline uint8_t* ByteArrayData::data() {
 // A fixed-size array of bytes.
 class ByteArray : public HeapObject {
   ByteArrayData* inner() const {
-    return static_cast<ByteArrayData*>(value_.toPrivate());
+    return static_cast<ByteArrayData*>(value().toPrivate());
   }
 public:
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
@@ -572,7 +578,7 @@ public:
 
   static ByteArray cast(Object object) {
     ByteArray b;
-    b.value_ = JS::Value(object);
+    b.setValue(object.value());
     return b;
   }
 };
@@ -621,7 +627,7 @@ class MOZ_NONHEAP_CLASS Handle {
  public:
   Handle() : location_(nullptr) {}
   Handle(T object, Isolate* isolate);
-  Handle(JS::Value value, Isolate* isolate);
+  Handle(const JS::Value& value, Isolate* isolate);
 
   // Constructor for handling automatic up casting.
   template <typename S,
@@ -744,11 +750,11 @@ class AllowHeapAllocation {
 // https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L83-L474
 class String : public HeapObject {
  private:
-  JSString* str() const { return value_.toString(); }
+  JSString* str() const { return value().toString(); }
 
  public:
   String() = default;
-  String(JSString* str) { value_ = JS::StringValue(str); }
+  String(JSString* str) { setValue(JS::StringValue(str)); }
 
   operator JSString*() const { return str(); }
 
@@ -793,7 +799,8 @@ class String : public HeapObject {
 
   inline static String cast(Object object) {
     String s;
-    s.value_ = JS::StringValue(JS::Value(object).toString());
+    MOZ_ASSERT(object.value().isString());
+    s.setValue(object.value());
     return s;
   }
 
@@ -872,7 +879,7 @@ class MOZ_STACK_CLASS FlatStringReader {
 class JSRegExp : public HeapObject {
  public:
   JSRegExp() : HeapObject() {}
-  JSRegExp(js::RegExpShared* re) { value_ = JS::PrivateGCThingValue(re); }
+  JSRegExp(js::RegExpShared* re) { setValue(JS::PrivateGCThingValue(re)); }
 
   // ******************************************************
   // Methods that are called from inside the implementation
@@ -891,8 +898,9 @@ class JSRegExp : public HeapObject {
 
   static JSRegExp cast(Object object) {
     JSRegExp regexp;
-    MOZ_ASSERT(JS::Value(object).toGCThing()->is<js::RegExpShared>());
-    regexp.value_ = JS::PrivateGCThingValue(JS::Value(object).toGCThing());
+    js::gc::Cell* regexpShared = object.value().toGCThing();
+    MOZ_ASSERT(regexpShared->is<js::RegExpShared>());
+    regexp.setValue(JS::PrivateGCThingValue(regexpShared));
     return regexp;
   }
 
@@ -922,7 +930,7 @@ class JSRegExp : public HeapObject {
 
 private:
  js::RegExpShared* inner() const {
-   return value_.toGCThing()->as<js::RegExpShared>();
+   return value().toGCThing()->as<js::RegExpShared>();
  }
 };
 
@@ -1017,7 +1025,7 @@ public:
 
   //********** Handle code **********//
 
-  JS::Value* getHandleLocation(JS::Value value);
+  JS::Value* getHandleLocation(const JS::Value& value);
 
  private:
 
@@ -1078,12 +1086,13 @@ class Code : public HeapObject {
 
   static Code cast(Object object) {
     Code c;
-    MOZ_ASSERT(JS::Value(object).toGCThing()->is<js::jit::JitCode>());
-    c.value_ = JS::PrivateGCThingValue(JS::Value(object).toGCThing());
+    js::gc::Cell* jitCode = object.value().toGCThing();
+    MOZ_ASSERT(jitCode->is<js::jit::JitCode>());
+    c.setValue(JS::PrivateGCThingValue(jitCode));
     return c;
   }
   js::jit::JitCode* inner() {
-    return value_.toGCThing()->as<js::jit::JitCode>();
+    return value().toGCThing()->as<js::jit::JitCode>();
   }
 };
 
