@@ -3431,9 +3431,9 @@ bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardFunctionIsNative() {
+bool CacheIRCompiler::emitGuardFunctionIsNative(ObjOperandId funId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, funId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -3446,9 +3446,9 @@ bool CacheIRCompiler::emitGuardFunctionIsNative() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardFunctionIsConstructor() {
+bool CacheIRCompiler::emitGuardFunctionIsConstructor(ObjOperandId funId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register funcReg = allocator.useRegister(masm, reader.objOperandId());
+  Register funcReg = allocator.useRegister(masm, funId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -3462,8 +3462,8 @@ bool CacheIRCompiler::emitGuardFunctionIsConstructor() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNotClassConstructor() {
-  Register fun = allocator.useRegister(masm, reader.objOperandId());
+bool CacheIRCompiler::emitGuardNotClassConstructor(ObjOperandId funId) {
+  Register fun = allocator.useRegister(masm, funId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -5049,13 +5049,14 @@ bool CacheIRCompiler::emitWrapResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult() {
+bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
+                                                           ValOperandId idId,
+                                                           bool handleMissing) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  bool handleMissing = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand idVal = allocator.useValueRegister(masm, idId);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
@@ -5111,13 +5112,14 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitMegamorphicHasPropResult() {
+bool CacheIRCompiler::emitMegamorphicHasPropResult(ObjOperandId objId,
+                                                   ValOperandId idId,
+                                                   bool hasOwn) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  bool hasOwn = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand idVal = allocator.useValueRegister(masm, idId);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
@@ -5321,13 +5323,14 @@ bool CacheIRCompiler::emitLoadInstanceOfObjectResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitMegamorphicLoadSlotResult() {
+bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
+                                                    uint32_t nameOffset,
+                                                    bool handleMissing) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  StubFieldOffset name(reader.stubOffset(), StubField::Type::String);
-  bool handleMissing = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset name(nameOffset, StubField::Type::String);
 
   AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
   AutoScratchRegister scratch2(allocator, masm);
@@ -5379,12 +5382,14 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitMegamorphicStoreSlot() {
+bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
+                                               uint32_t nameOffset,
+                                               ValOperandId rhsId,
+                                               bool needsTypeBarrier) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  StubFieldOffset name(reader.stubOffset(), StubField::Type::String);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  bool needsTypeBarrier = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset name(nameOffset, StubField::Type::String);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
