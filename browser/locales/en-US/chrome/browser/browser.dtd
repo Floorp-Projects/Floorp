@@ -52,10 +52,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY fullScreenCmd.label "Full Screen">
 
-<!ENTITY fullScreenMinimize.tooltip "Minimize">
-<!ENTITY fullScreenRestore.tooltip "Restore">
-<!ENTITY fullScreenClose.tooltip "Close">
-
 <!ENTITY pictureInPictureHideToggle.label "Hide Picture-in-Picture Toggle">
 <!ENTITY pictureInPictureHideToggle.accesskey "H">
 

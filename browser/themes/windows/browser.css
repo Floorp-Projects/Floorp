@@ -321,7 +321,7 @@
   -moz-appearance: -moz-window-button-maximize;
 }
 
-:root[sizemode="maximized"] .titlebar-max {
+.titlebar-restore {
   -moz-appearance: -moz-window-button-restore;
 }
 
@@ -336,6 +336,7 @@
 }
 
 :root[tabletmode] .titlebar-min,
+:root[tabletmode] .titlebar-restore,
 :root[tabletmode] .titlebar-max {
   display: none;
 }

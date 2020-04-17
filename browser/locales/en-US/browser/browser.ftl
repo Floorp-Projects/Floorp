@@ -207,3 +207,14 @@ identity-enable-mixed-content-blocking =
     .accesskey = E
 identity-more-info-link-text =
     .label = More Information
+
+## Window controls
+
+browser-window-minimize-button =
+  .tooltiptext = Minimize
+browser-window-maximize-button =
+  .tooltiptext = Maximize
+browser-window-restore-button =
+  .tooltiptext = Restore
+browser-window-close-button =
+  .tooltiptext = Close
