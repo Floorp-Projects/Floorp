@@ -5,6 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
@@ -28,13 +29,13 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -85,15 +86,14 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         components.core.store,
                         customTabSessionId
                     ) { uri ->
-                        components.analytics.crashReporter.submitCaughtException(Exception("Unknown scheme error $uri"))
-                        FenixSnackbar.make(
-                            view = view.swipeRefresh,
-                            duration = FenixSnackbar.LENGTH_LONG,
-                            isDisplayedWithBrowserToolbar = true
-                        ).apply {
-                            setText(resources.getString(R.string.unknown_scheme_error_message))
-                            setAppropriateBackground(true)
-                        }.show()
+                        val intent = Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
+                        if (intent.action == Intent.ACTION_VIEW) {
+                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                            intent.component = null
+                            intent.selector = null
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        activity.startActivity(intent)
                     },
                     owner = this,
                     view = view

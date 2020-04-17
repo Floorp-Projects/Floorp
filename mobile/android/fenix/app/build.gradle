@@ -33,9 +33,11 @@ android {
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
         buildConfigField "String", "AMO_COLLECTION", "\"7e8d6dc651b54ab385fb8791bf9dac\""
+        def deepLinkSchemeValue = "fenix-dev"
+        buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
         manifestPlaceholders = [
                 "isRaptorEnabled": "false",
-                "deepLinkScheme": "fenix-dev"
+                "deepLinkScheme": deepLinkSchemeValue
         ]
     }
 
@@ -72,21 +74,29 @@ android {
             applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
-            manifestPlaceholders = ["deepLinkScheme": "fenix-nightly"]
+            def deepLinkSchemeValue = "fenix-nightly"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
         }
         fenixBeta releaseTemplate >> {
             applicationIdSuffix ".fenix.beta"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-            manifestPlaceholders = ["deepLinkScheme": "fenix-beta"]
+            def deepLinkSchemeValue = "fenix-beta"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
         }
         fenixProduction releaseTemplate >> {
             applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-            manifestPlaceholders = ["deepLinkScheme": "fenix"]
+            def deepLinkSchemeValue = "fenix"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
         }
         fennecProduction releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             applicationIdSuffix ".firefox"
+            def deepLinkSchemeValue = "fenix"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = [
                     // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
                     // its sharedUserId for all eternity. See:
@@ -96,12 +106,14 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": "fenix"
+                    "deepLinkScheme": deepLinkSchemeValue
             ]
         }
         fennecBeta releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             applicationIdSuffix ".firefox_beta"
+            def deepLinkSchemeValue = "fenix-beta"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = [
                     // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
                     // its sharedUserId for all eternity. See:
@@ -111,13 +123,15 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": "fenix-beta"
+                    "deepLinkScheme": deepLinkSchemeValue
             ]
         }
         fennecNightly releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             applicationIdSuffix ".fennec_aurora"
+            def deepLinkSchemeValue = "fenix-nightly"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = [
                     // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
                     // its sharedUserId for all eternity. See:
@@ -127,7 +141,7 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.fennec.sharedID",
-                    "deepLinkScheme": "fenix-nightly"
+                    "deepLinkScheme": deepLinkSchemeValue
             ]
         }
     }
