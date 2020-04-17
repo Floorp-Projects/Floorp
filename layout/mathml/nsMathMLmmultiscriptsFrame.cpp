@@ -12,6 +12,7 @@
 #include <algorithm>
 #include "gfxContext.h"
 #include "gfxMathTable.h"
+#include "gfxTextRun.h"
 
 using namespace mozilla;
 

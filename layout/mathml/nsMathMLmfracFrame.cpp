@@ -18,6 +18,7 @@
 #include "mozilla/dom/MathMLElement.h"
 #include <algorithm>
 #include "gfxMathTable.h"
+#include "gfxTextRun.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
