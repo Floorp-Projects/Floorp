@@ -8398,11 +8398,11 @@
 #ifdef MOZ_CODE_COVERAGE
   value: 0
 #else
-  #ifdef NIGHTLY_BUILD
+#  ifdef NIGHTLY_BUILD
   value: 3
-  #else
+#  else
   value: 1
-  #endif
+#  endif
 #endif
   mirror: always
 
@@ -8411,7 +8411,7 @@
 - name: toolkit.shutdown.fastShutdownStage
   type: int32_t
 #if defined(NIGHTLY_BUILD) && !defined(DEBUG) && !defined(MOZ_CODE_COVERAGE) && !defined(MOZ_VALGRIND) && !defined(MOZ_PROFILE_GENERATE)
-  value: 1
+  value: 2
 #else
   value: 0
 #endif
