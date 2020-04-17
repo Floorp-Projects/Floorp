@@ -20,6 +20,8 @@ browser.jar:
   res/activity-stream/vendor/react-transition-group.js (./vendor/react-transition-group.js)
   res/activity-stream/vendor/redux.js (./vendor/redux.js)
   res/activity-stream/vendor/react-redux.js (./vendor/react-redux.js)
+* res/activity-stream/data/content/abouthomecache/page.html.template (./data/content/abouthomecache/page.html.template)
+* res/activity-stream/data/content/abouthomecache/script.js.template (./data/content/abouthomecache/script.js.template)
   res/activity-stream/data/content/assets/ (./data/content/assets/*)
   res/activity-stream/data/content/tippytop/ (./data/content/tippytop/*)
   res/activity-stream/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)

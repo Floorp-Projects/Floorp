@@ -10,6 +10,7 @@ import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
+import { connect } from "react-redux";
 
 // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 export const DefaultMeta = ({
@@ -83,7 +84,7 @@ export const CTAButtonMeta = ({
   </div>
 );
 
-export class DSCard extends React.PureComponent {
+export class _DSCard extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -95,6 +96,12 @@ export class DSCard extends React.PureComponent {
     this.state = {
       isSeen: false,
     };
+
+    // If this is for the about:home startup cache, then we always want
+    // to render the DSCard, regardless of whether or not its been seen.
+    if (props.App.isForStartupCache) {
+      this.state.isSeen = true;
+    }
   }
 
   onLinkClick(event) {
@@ -255,8 +262,12 @@ export class DSCard extends React.PureComponent {
   }
 }
 
-DSCard.defaultProps = {
+_DSCard.defaultProps = {
   windowObj: window, // Added to support unit tests
 };
+
+export const DSCard = connect(state => ({
+  App: state.App,
+}))(_DSCard);
 
 export const PlaceholderDSCard = props => <DSCard placeholder={true} />;

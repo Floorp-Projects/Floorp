@@ -4793,6 +4793,9 @@ var AboutHomeStartupCache = {
   // should load.
   SEND_STREAMS_MESSAGE: "AboutHomeStartupCache:InputStreams",
 
+  STATE_RESPONSE_MESSAGE: "AboutHomeStartupCache:State:Response",
+  STATE_REQUEST_MESSAGE: "AboutHomeStartupCache:State:Request",
+
   // A reference to the nsICacheEntry to read from and write to.
   _cacheEntry: null,
 
@@ -4835,6 +4838,7 @@ var AboutHomeStartupCache = {
 
     Services.obs.addObserver(this, "ipc:content-created");
     Services.ppmm.addMessageListener(this.POPULATE_MESSAGE, this);
+    Services.ppmm.addMessageListener(this.STATE_REQUEST_MESSAGE, this);
 
     this.log = Log.repository.getLogger(this.LOG_NAME);
     this.log.manageLevelFromPref(this.LOG_LEVEL_PREF);
@@ -4864,6 +4868,7 @@ var AboutHomeStartupCache = {
 
     Services.obs.removeObserver(this, "ipc:content-created");
     Services.ppmm.removeMessageListener(this.POPULATE_MESSAGE, this);
+    Services.ppmm.removeMessageListener(this.STATE_REQUEST_MESSAGE, this);
     this._pagePipe = null;
     this._scriptPipe = null;
     this._initted = false;
@@ -5108,9 +5113,18 @@ var AboutHomeStartupCache = {
       return;
     }
 
-    if (message.name == this.POPULATE_MESSAGE) {
-      let { pageInputStream, scriptInputStream } = message.data;
-      this.populateCache(pageInputStream, scriptInputStream);
+    switch (message.name) {
+      case this.POPULATE_MESSAGE: {
+        let { pageInputStream, scriptInputStream } = message.data;
+        this.populateCache(pageInputStream, scriptInputStream);
+        break;
+      }
+      case this.STATE_REQUEST_MESSAGE: {
+        this.log.trace("Parent got request for Activity Stream state object.");
+        let state = AboutNewTab.activityStream.store.getState();
+        message.target.sendAsyncMessage(this.STATE_RESPONSE_MESSAGE, { state });
+        break;
+      }
     }
   },
 

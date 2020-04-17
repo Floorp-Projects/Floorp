@@ -1,5 +1,5 @@
 import {
-  DSCard,
+  _DSCard as DSCard,
   DefaultMeta,
   PlaceholderDSCard,
   CTAButtonMeta,
@@ -15,12 +15,18 @@ import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/Saf
 import { shallow, mount } from "enzyme";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 
+const DEFAULT_PROPS = {
+  App: {
+    isForStartupCache: false,
+  },
+};
+
 describe("<DSCard>", () => {
   let wrapper;
   let sandbox;
 
   beforeEach(() => {
-    wrapper = shallow(<DSCard />);
+    wrapper = shallow(<DSCard {...DEFAULT_PROPS} />);
     wrapper.setState({ isSeen: true });
     sandbox = sinon.createSandbox();
   });
@@ -80,7 +86,7 @@ describe("<DSCard>", () => {
   });
 
   it("should render badges for pocket, bookmark when not a spoc element ", () => {
-    wrapper = mount(<DSCard context_type="bookmark" />);
+    wrapper = mount(<DSCard context_type="bookmark" {...DEFAULT_PROPS} />);
     wrapper.setState({ isSeen: true });
     const contextFooter = wrapper.find(DSContextFooter);
 
@@ -89,7 +95,9 @@ describe("<DSCard>", () => {
 
   it("should render Sponsored Context for a spoc element", () => {
     const context = "Sponsored by Foo";
-    wrapper = mount(<DSCard context_type="bookmark" context={context} />);
+    wrapper = mount(
+      <DSCard context_type="bookmark" context={context} {...DEFAULT_PROPS} />
+    );
     wrapper.setState({ isSeen: true });
     const contextFooter = wrapper.find(DSContextFooter);
 
@@ -102,7 +110,7 @@ describe("<DSCard>", () => {
 
     beforeEach(() => {
       dispatch = sandbox.stub();
-      wrapper = shallow(<DSCard dispatch={dispatch} />);
+      wrapper = shallow(<DSCard dispatch={dispatch} {...DEFAULT_PROPS} />);
       wrapper.setState({ isSeen: true });
     });
 
@@ -191,7 +199,7 @@ describe("<DSCard>", () => {
 
   describe("DSCard with CTA", () => {
     beforeEach(() => {
-      wrapper = mount(<DSCard />);
+      wrapper = mount(<DSCard {...DEFAULT_PROPS} />);
       wrapper.setState({ isSeen: true });
     });
 
@@ -265,7 +273,7 @@ describe("<DSCard>", () => {
   });
   describe("DSCard with Intersection Observer", () => {
     beforeEach(() => {
-      wrapper = shallow(<DSCard />);
+      wrapper = shallow(<DSCard {...DEFAULT_PROPS} />);
     });
 
     it("should render card when seen", () => {
@@ -297,7 +305,7 @@ describe("<DSCard>", () => {
     });
 
     it("should setup observer on componentDidMount", () => {
-      wrapper = mount(<DSCard />);
+      wrapper = mount(<DSCard {...DEFAULT_PROPS} />);
       assert.isTrue(!!wrapper.instance().observer);
     });
   });
@@ -307,7 +315,7 @@ describe("<DSCard>", () => {
       cancelIdleCallback: sinon.stub(),
     };
     beforeEach(() => {
-      wrapper = shallow(<DSCard windowObj={windowStub} />);
+      wrapper = shallow(<DSCard windowObj={windowStub} {...DEFAULT_PROPS} />);
     });
 
     it("should call requestIdleCallback on componentDidMount", () => {
@@ -319,34 +327,45 @@ describe("<DSCard>", () => {
       assert.calledOnce(windowStub.cancelIdleCallback);
     });
   });
+  describe("DSCard when rendered for about:home startup cache", () => {
+    beforeEach(() => {
+      const props = {
+        App: {
+          isForStartupCache: true,
+        },
+      };
+      wrapper = mount(<DSCard {...props} />);
+    });
+
+    it("should be set as isSeen automatically", () => {
+      assert.isTrue(wrapper.instance().state.isSeen);
+    });
+  });
 });
 
 describe("<PlaceholderDSCard> component", () => {
   it("should have placeholder prop", () => {
     const wrapper = shallow(<PlaceholderDSCard />);
-    const card = wrapper.find(DSCard);
-    assert.lengthOf(card, 1);
-
-    const placeholder = wrapper.find(DSCard).prop("placeholder");
+    const placeholder = wrapper.prop("placeholder");
     assert.isTrue(placeholder);
   });
 
   it("should contain placeholder div", () => {
-    const wrapper = shallow(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} {...DEFAULT_PROPS} />);
     wrapper.setState({ isSeen: true });
     const card = wrapper.find("div.ds-card.placeholder");
     assert.lengthOf(card, 1);
   });
 
   it("should not be clickable", () => {
-    const wrapper = shallow(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} {...DEFAULT_PROPS} />);
     wrapper.setState({ isSeen: true });
     const anchor = wrapper.find("SafeAnchor.ds-card-link");
     assert.lengthOf(anchor, 0);
   });
 
   it("should not have context menu", () => {
-    const wrapper = shallow(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} {...DEFAULT_PROPS} />);
     wrapper.setState({ isSeen: true });
     const linkMenu = wrapper.find(DSLinkMenu);
     assert.lengthOf(linkMenu, 0);
