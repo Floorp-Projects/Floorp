@@ -151,7 +151,7 @@ class FaviconLoad {
       this.dataBuffer = null;
       this.stream = null;
     };
-    this._deferred.promise.finally(cleanup);
+    this._deferred.promise.then(cleanup, cleanup);
 
     this.dataBuffer = new StorageStream(STREAM_SEGMENT_SIZE, PR_UINT32_MAX);
 

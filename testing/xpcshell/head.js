@@ -1639,7 +1639,7 @@ try {
 
     let complete = false;
     let doComplete = () => (complete = true);
-    _TelemetryController.testRegisterJsProbes().finally(doComplete);
+    _TelemetryController.testRegisterJsProbes().then(doComplete, doComplete);
     _Services.tm.spinEventLoopUntil(() => complete);
   }
 } catch (e) {

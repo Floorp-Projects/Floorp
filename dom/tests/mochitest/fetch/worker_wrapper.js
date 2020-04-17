@@ -32,15 +32,16 @@ addEventListener("message", function workerWrapperOnMessage(e) {
   var data = e.data;
 
   function runTestAndReportToClient(event) {
-    var done = function() {
+    var done = function(res) {
       client.postMessage({ type: "finish", context });
+      return res;
     };
 
     try {
       // runTest() is provided by the test.
-      var promise = runTest().finally(done);
+      var result = runTest().then(done, done);
       if ("waitUntil" in event) {
-        event.waitUntil(promise);
+        event.waitUntil(result);
       }
     } catch (e) {
       client.postMessage({

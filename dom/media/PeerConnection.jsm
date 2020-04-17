@@ -575,7 +575,7 @@ class RTCPeerConnection {
           this.updateNegotiationNeeded();
         }
       };
-      p.finally(doNextOperation);
+      p.then(doNextOperation, doNextOperation);
     });
     if (this._operations.length == 1) {
       this._operations[0]();

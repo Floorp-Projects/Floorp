@@ -81,7 +81,7 @@ function cleanup() {
 
 function runTest() {
   if (!steps.length) {
-    registration.unregister().finally(cleanup);
+    registration.unregister().then(cleanup, cleanup);
 
     return;
   }

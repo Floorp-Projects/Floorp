@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
     SimpleTest.waitForExplicitFinish();
     window.onload = function() {
       runSubtestsSeriallyInFreshWindows(subtests)
-      .finally(SimpleTest.finish);
+      .then(SimpleTest.finish, SimpleTest.finish);
     };
   }
 
