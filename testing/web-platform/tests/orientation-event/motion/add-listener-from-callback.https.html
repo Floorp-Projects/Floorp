@@ -17,6 +17,9 @@ sensor_test(async (t, sensorProvider) => {
   let firstEventCount = 0;
   let firstPromise = new Promise(resolve => {
     firstListener = (event) => {
+      assert_true(event instanceof DeviceMotionEvent, 'event is DeviceMotionEvent');
+      assert_equals(event.type, 'devicemotion', 'event.type is devicemotion');
+      assert_true(event.target instanceof Window, 'event is fired on the window object');
       checkMotion(event, motionData);
       window.removeEventListener('devicemotion', firstListener);
       if (++firstEventCount == 1) {
