@@ -469,6 +469,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
             sessionManager.register(observer = object : SessionManager.Observer {
                 override fun onSessionSelected(session: Session) {
+                    fullScreenChanged(false)
                     browserToolbarView.expand()
                 }
             }, owner = viewLifecycleOwner)
@@ -577,6 +578,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         super.onPause()
         // If we didn't enter PiP, exit full screen on pause
         if (!enteredPip) {
+            fullScreenChanged(false)
             fullScreenFeature.onBackPressed()
         }
         enteredPip = false
