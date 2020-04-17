@@ -175,18 +175,25 @@ dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
   return nullptr;
 }
 
-Document* StyleSheet::GetComposedDoc() const {
-  return mDocumentOrShadowRoot
-             ? mDocumentOrShadowRoot->AsNode().GetComposedDoc()
-             : nullptr;
-}
-
-bool StyleSheet::IsKeptAliveByDocument() const {
-  if (mAssociationMode != OwnedByDocumentOrShadowRoot) {
-    return false;
+Document* StyleSheet::GetKeptAliveByDocument() const {
+  // TODO(emilio): Now that we're doing parent walks for both this and
+  // GetAssociatedDocument(), seems we could simplify the association code not
+  // to be propagated to children.
+  if (mAssociationMode == OwnedByDocumentOrShadowRoot) {
+    MOZ_ASSERT(mDocumentOrShadowRoot);
+    return mDocumentOrShadowRoot->AsNode().GetComposedDoc();
   }
-
-  return !!GetComposedDoc();
+  for (const auto* sheet = this; sheet; sheet = sheet->mParentSheet) {
+    if (sheet->IsConstructed()) {
+      for (DocumentOrShadowRoot* adopter : sheet->mAdopters) {
+        MOZ_ASSERT(adopter->AsNode().OwnerDoc() == sheet->mConstructorDocument);
+        if (adopter->AsNode().IsInComposedDoc()) {
+          return sheet->mConstructorDocument.get();
+        }
+      }
+    }
+  }
+  return nullptr;
 }
 
 void StyleSheet::LastRelease() {
@@ -491,28 +498,32 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 
 // NOTE(emilio): Composed doc and containing shadow root are set in child sheets
 // too, so no need to do it for each ancestor.
-#define NOTIFY(function_, args_)                                      \
-  do {                                                                \
-    if (auto* shadow = GetContainingShadow()) {                       \
-      shadow->function_ args_;                                        \
-    }                                                                 \
-    if (auto* doc = GetComposedDoc()) {                               \
-      doc->function_ args_;                                           \
-    }                                                                 \
-    StyleSheet* current = this;                                       \
-    do {                                                              \
-      for (ServoStyleSet * set : current->mStyleSets) {               \
-        set->function_ args_;                                         \
-      }                                                               \
-      for (auto* adopter : mAdopters) {                               \
-        if (auto* shadow = ShadowRoot::FromNode(adopter->AsNode())) { \
-          shadow->function_ args_;                                    \
-        } else {                                                      \
-          adopter->AsNode().AsDocument()->function_ args_;            \
-        }                                                             \
-      }                                                               \
-      current = current->mParentSheet;                                \
-    } while (current);                                                \
+#define NOTIFY(function_, args_)                                          \
+  do {                                                                    \
+    if (auto* shadow = GetContainingShadow()) {                           \
+      shadow->function_ args_;                                            \
+    }                                                                     \
+    /* FIXME(emilio, bug 1630835): This should probably do something      \
+     * for constructed sheets, at least for some notifications. */        \
+    if (mDocumentOrShadowRoot) {                                          \
+      if (auto* doc = mDocumentOrShadowRoot->AsNode().GetComposedDoc()) { \
+        doc->function_ args_;                                             \
+      }                                                                   \
+    }                                                                     \
+    StyleSheet* current = this;                                           \
+    do {                                                                  \
+      for (ServoStyleSet * set : current->mStyleSets) {                   \
+        set->function_ args_;                                             \
+      }                                                                   \
+      for (auto* adopter : mAdopters) {                                   \
+        if (auto* shadow = ShadowRoot::FromNode(adopter->AsNode())) {     \
+          shadow->function_ args_;                                        \
+        } else {                                                          \
+          adopter->AsNode().AsDocument()->function_ args_;                \
+        }                                                                 \
+      }                                                                   \
+      current = current->mParentSheet;                                    \
+    } while (current);                                                    \
   } while (0)
 
 void StyleSheet::EnsureUniqueInner() {

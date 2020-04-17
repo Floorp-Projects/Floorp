@@ -255,13 +255,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   };
   dom::DocumentOrShadowRoot* GetAssociatedDocumentOrShadowRoot() const;
 
-  // Whether this stylesheet is kept alive by the associated document or
-  // associated shadow root's document somehow, and thus at least has the same
-  // lifetime as GetAssociatedDocument().
-  bool IsKeptAliveByDocument() const;
-
-  // Returns the document whose styles this sheet is affecting.
-  dom::Document* GetComposedDoc() const;
+  // Whether this stylesheet is kept alive by the associated or constructor
+  // document somehow, and thus at least has the same lifetime as
+  // GetAssociatedDocument().
+  dom::Document* GetKeptAliveByDocument() const;
 
   // If this is a constructed style sheet, return mConstructorDocument.
   // Otherwise return the document we're associated to,
