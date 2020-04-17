@@ -9003,16 +9003,6 @@ bool PresShell::IsDisplayportSuppressed() {
   return sDisplayPortSuppressionRespected && mActiveSuppressDisplayport > 0;
 }
 
-nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  StyleSet()->AppendStyleSheet(*aSheet);
-  return NS_OK;
-}
-
-nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
-  StyleSet()->RemoveStyleSheet(*aSheet);
-  return NS_OK;
-}
-
 static void FreezeElement(nsISupports* aSupports) {
   if (nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aSupports)) {
     olc->StopPluginInstance();

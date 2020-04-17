@@ -1074,11 +1074,7 @@ class EditorBase : public nsIEditor,
         // We don't need to dispatch "beforeinput" event before
         // "compositionstart".
         case EditAction::eStartComposition:
-        // We don't need to let web apps know changing UA stylesheet.
-        case EditAction::eAddOverrideStyleSheet:
-        case EditAction::eRemoveOverrideStyleSheet:
         // We don't need to let web apps know the mode change.
-        case EditAction::eEnableStyleSheet:
         case EditAction::eEnableOrDisableCSS:
         case EditAction::eEnableOrDisableAbsolutePositionEditor:
         case EditAction::eEnableOrDisableResizer:
