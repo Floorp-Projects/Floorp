@@ -2443,6 +2443,19 @@
         delete aTab._findBar;
       }
 
+      // Remove stale loading attributes.
+      let attributesToRemove = ["busy", "progress", "pendingicon"];
+      let removedAttributes = [];
+      for (let attr of attributesToRemove) {
+        if (aTab.hasAttribute(attr)) {
+          removedAttributes.push(attr);
+          aTab.removeAttribute(attr);
+        }
+      }
+      if (removedAttributes.length) {
+        this._tabAttrModified(aTab, removedAttributes);
+      }
+
       browser.destroy();
       this.getPanel(browser).remove();
       aTab.removeAttribute("linkedpanel");
