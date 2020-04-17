@@ -57,8 +57,8 @@ extended_properties.update({
     },
     'repeat': {
         'type': 'integer',
-        'default': 1,
-        'minimum': 1,
+        'default': 0,
+        'minimum': 0,
         'title': 'Repeat test(s) N times',
         'description': ('Run test(s) repeatedly (usually used in '
                         'conjunction with runUntilFail)')
