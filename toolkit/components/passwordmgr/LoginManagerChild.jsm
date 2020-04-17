@@ -1107,7 +1107,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    *                                                 useful.
    * @param {Object} [options.fieldOverrideRecipe=null] - A relevant field override recipe to use.
    * @return {Array|null} Array of password field elements for the specified form.
-   *                      If no pw fields are found, or if more than 3 are found, then null
+   *                      If no pw fields are found, or if more than 5 are found, then null
    *                      is returned.
    */
   _getPasswordFields(
@@ -1169,7 +1169,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (!pwFields.length) {
       log("(form ignored -- no password fields.)");
       return null;
-    } else if (pwFields.length > 3) {
+    } else if (pwFields.length > 5) {
       log(
         "(form ignored -- too many password fields. [ got ",
         pwFields.length,

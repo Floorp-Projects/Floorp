@@ -60,11 +60,23 @@ const TESTCASES = [
     skipEmptyFields: undefined,
   },
   {
-    description: "4 empty password fields outside of a <form>",
+    description: "5 empty password fields outside of a <form>",
     document: `<input id="pw1" type=password>
       <input id="pw2" type=password>
       <input id="pw3" type=password>
-      <input id="pw4" type=password>`,
+      <input id="pw4" type=password>
+      <input id="pw5" type=password>`,
+    returnedFieldIDs: [null, "pw1", null],
+    skipEmptyFields: undefined,
+  },
+  {
+    description: "6 empty password fields outside of a <form>",
+    document: `<input id="pw1" type=password>
+      <input id="pw2" type=password>
+      <input id="pw3" type=password>
+      <input id="pw4" type=password>
+      <input id="pw5" type=password>
+      <input id="pw6" type=password>`,
     returnedFieldIDs: [null, null, null],
     skipEmptyFields: undefined,
   },
