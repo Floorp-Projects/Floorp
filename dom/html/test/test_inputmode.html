@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tests for inputmode attribute</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpecialPowers.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<div>
+<input id="a1" inputmode="none">
+<input id="a2" inputmode="text">
+<input id="a3" inputmode="tel">
+<input id="a4" inputmode="url">
+<input id="a5" inputmode="email">
+<input id="a6" inputmode="numeric">
+<input id="a7" inputmode="decimal">
+<input id="a8" inputmode="search">
+<input id="a9">
+<textarea id="b1" inputmode="none"></textarea>
+<textarea id="b2" inputmode="text"></textarea>
+<textarea id="b3" inputmode="tel"></textarea>
+<textarea id="b4" inputmode="url"></textarea>
+<textarea id="b5" inputmode="email"></textarea>
+<textarea id="b6" inputmode="numeric"></textarea>
+<textarea id="b7" inputmode="decimal"></textarea>
+<textarea id="b8" inputmode="search"></textarea>
+<textarea id="b9"></textarea>
+<div contenteditable id="c1" inputmode="none"><span>c1</span></div>
+<div contenteditable id="c2" inputmode="text"><span>c2</span></div>
+<div contenteditable id="c3" inputmode="tel"><span>c3</span></div>
+<div contenteditable id="c4" inputmode="url"><span>c4</span></div>
+<div contenteditable id="c5" inputmode="email"><span>c5</span></div>
+<div contenteditable id="c6" inputmode="numeric"><span>c6</span></div>
+<div contenteditable id="c7" inputmode="decimal"><span>c7</span></div>
+<div contenteditable id="c8" inputmode="search"><span>c8</span></div>
+<div contenteditable id="c9"><span>c9</span></div>
+<input id="d1" inputmode="URL"> <!-- no lowercase -->
+</div>
+<pre id="test">
+<script class=testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.setBoolPref("dom.forms.inputmode", true);
+
+  const tests = [
+    { id: "a1", inputmode: "none", desc: "inputmode of input element is none" },
+    { id: "a2", inputmode: "text", desc: "inputmode of input element is text" },
+    { id: "a3", inputmode: "tel", desc: "inputmode of input element is tel" },
+    { id: "a4", inputmode: "url", desc: "inputmode of input element is url" },
+    { id: "a5", inputmode: "email", desc: "inputmode of input element is email" },
+    { id: "a6", inputmode: "numeric", desc: "inputmode of input element is numeric" },
+    { id: "a7", inputmode: "decimal", desc: "inputmode of input element is decimal" },
+    { id: "a8", inputmode: "search", desc: "inputmode of input element is search" },
+    { id: "a9", inputmode: "", desc: "no inputmode of input element" },
+    { id: "b1", inputmode: "none", desc: "inputmode of textarea element is none" },
+    { id: "b2", inputmode: "text", desc: "inputmode of textarea element is text" },
+    { id: "b3", inputmode: "tel", desc: "inputmode of textarea element is tel" },
+    { id: "b4", inputmode: "url", desc: "inputmode of textarea element is url" },
+    { id: "b5", inputmode: "email", desc: "inputmode of textarea element is email" },
+    { id: "b6", inputmode: "numeric", desc: "inputmode of textarea element is numeric" },
+    { id: "b7", inputmode: "decimal", desc: "inputmode of textarea element is decimal" },
+    { id: "b8", inputmode: "search", desc: "inputmode of textarea element is search" },
+    { id: "b9", inputmode: "", desc: "no inputmode of textarea element" },
+    { id: "c1", inputmode: "none", desc: "inputmode of contenteditable is none" },
+    { id: "c2", inputmode: "text", desc: "inputmode of contenteditable is text" },
+    { id: "c3", inputmode: "tel", desc: "inputmode of contentedtiable is tel" },
+    { id: "c4", inputmode: "url", desc: "inputmode of contentedtiable is url" },
+    { id: "c5", inputmode: "email", desc: "inputmode of contentedtable is email" },
+    { id: "c6", inputmode: "numeric", desc: "inputmode of contenteditable is numeric" },
+    { id: "c7", inputmode: "decimal", desc: "inputmode of contenteditable is decimal" },
+    { id: "c8", inputmode: "search", desc: "inputmode of contenteditable is search" },
+    { id: "c9", inputmode: "", desc: "no inputmode of contentedtiable" },
+    { id: "d1", inputmode: "url", desc: "inputmode of input element is URL" },
+  ];
+
+  for (let test of tests) {
+    let element = document.getElementById(test.id);
+    if (element.tagName == "DIV") {
+      // Set caret to text node in contenteditable
+      window.getSelection().removeAllRanges();
+      let range = document.createRange();
+      range.setStart(element.firstChild.firstChild, 1);
+      range.setEnd(element.firstChild.firstChild, 1);
+      window.getSelection().addRange(range);
+    } else {
+      // input and textarea element
+      element.focus();
+    }
+    is(SpecialPowers.DOMWindowUtils.focusedInputMode, test.inputmode, test.desc);
+  }
+
+  SpecialPowers.clearUserPref("dom.forms.inputmode");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1507,6 +1507,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString focusedActionHint;
 
   /**
+   * Get the inputmode of the currently focused editing host, if any.
+   */
+  readonly attribute AString focusedInputMode;
+
+  /**
    * Find the view ID for a given element. This is the reverse of
    * findElementWithViewId().
    */
