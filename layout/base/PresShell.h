@@ -720,16 +720,6 @@ class PresShell final : public nsStubDocumentObserver,
   void UnsuppressPainting();
 
   /**
-   * Add an override style sheet for this presentation
-   */
-  nsresult AddOverrideStyleSheet(StyleSheet* aSheet);
-
-  /**
-   * Remove an override style sheet
-   */
-  nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet);
-
-  /**
    * Reconstruct frames for all elements in the document
    */
   MOZ_CAN_RUN_SCRIPT void ReconstructFrames();
