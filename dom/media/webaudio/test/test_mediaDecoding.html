@@ -203,15 +203,6 @@ var files = [
     duration: 1.0807,
     fuzzTolerance: 106,
     fuzzToleranceMobile: 3482
-  },
-  {
-    url: "nil-packet.ogg",
-    expectedUrl: null,
-    valid: true,
-    numberOfChannels: 2,
-    sampleRate: 48000,
-    frames: 18600,
-    duration: 0.3874,
   }
 ];
 
@@ -260,9 +251,7 @@ function checkAudioBuffer(buffer, test) {
   is(buffer.length, test.frames, "Correct length");
 
   var wave = createWaveFileData(buffer);
-  if (test.expectedWaveData) {
-    ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
-  }
+  ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
 }
 
 function checkResampledBuffer(buffer, test, callback) {
@@ -356,10 +345,6 @@ function loadTest(test, callback) {
   xhr.open("GET", test.url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
-    if (!test.expectedUrl) {
-      runTest(test, xhr.response, callback);
-      return;
-    }
     var getExpected = new XMLHttpRequest();
     getExpected.open("GET", test.expectedUrl, true);
     getExpected.responseType = "arraybuffer";
