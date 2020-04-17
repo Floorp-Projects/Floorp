@@ -41,7 +41,6 @@ class Options:
             "help": "Path to where data will be stored, defaults to a top-level "
             "`artifacts` folder.",
         },
-        "--cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
         "--hooks": {"type": str, "default": "", "help": "Python hooks"},
         "--verbose": {"action": "store_true", "default": False, "help": "Verbose mode"},
     }

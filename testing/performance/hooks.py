@@ -31,11 +31,11 @@ options = [
 ]
 
 
-def before_cycles(metadata, **kw):
-    metadata.set_arg("cycles", len(sites))
-    add_options(metadata, options)
+def before_runs(env, **kw):
+    env.set_arg("cycles", len(sites))
+    add_options(env, options)
 
 
-def before_cycle(metadata, **kw):
+def before_cycle(env, **kw):
     url = next(get_site)
-    add_option(metadata, "browsertime.url", url)
+    add_option(env, "browsertime.url", url)
