@@ -393,8 +393,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     return CodeOffset(off.getOffset());
   }
 
-  void boxValue(JSValueType type, Register src, Register dest);
-
+  void boxValue(JSValueType type, Register src, Register dest) {
+    Orr(ARMRegister(dest, 64), ARMRegister(src, 64),
+        Operand(ImmShiftedTag(type).value));
+  }
   void splitSignExtTag(Register src, Register dest) {
     sbfx(ARMRegister(dest, 64), ARMRegister(src, 64), JSVAL_TAG_SHIFT,
          (64 - JSVAL_TAG_SHIFT));
