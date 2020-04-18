@@ -505,8 +505,6 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textPath-line-01.svg tex
 
 == thin-stroke-01.svg pass.svg
 
-== transform-origin-presentation-01.svg pass.svg
-
 == transform-outer-svg-01.svg transform-outer-svg-01-ref.svg
 == css-transform-svg.html css-transform-svg-ref.html
 
