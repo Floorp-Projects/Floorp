@@ -56,7 +56,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
 
   // For channel diversion from child to parent.
   void DivertTo(nsIStreamListener* aListener);
-  MOZ_MUST_USE nsresult SuspendForDiversion();
+  [[nodiscard]] nsresult SuspendForDiversion();
 
   void SetupInterception(const nsHttpResponseHead& aResponseHead);
   void SetupInterceptionAfterRedirect(bool aShouldIntercept);

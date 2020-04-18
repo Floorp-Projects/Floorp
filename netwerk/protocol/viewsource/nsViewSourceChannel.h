@@ -57,11 +57,11 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
         mIsSrcdocChannel(false),
         mReplaceRequest(true) {}
 
-  MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
+  [[nodiscard]] nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
 
-  MOZ_MUST_USE nsresult InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
-                                   const nsAString& aSrcdoc,
-                                   nsILoadInfo* aLoadInfo);
+  [[nodiscard]] nsresult InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
+                                    const nsAString& aSrcdoc,
+                                    nsILoadInfo* aLoadInfo);
 
   // Updates or sets the result principal URI of the underlying channel's
   // loadinfo to be prefixed with the "view-source:" schema as:

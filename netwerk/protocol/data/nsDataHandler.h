@@ -26,16 +26,17 @@ class nsDataHandler : public nsIProtocolHandler,
                                nsIURI* aBaseURI, nsIURI** result);
 
   // Define a Create method to be used with a factory:
-  static MOZ_MUST_USE nsresult Create(nsISupports* aOuter, const nsIID& aIID,
-                                      void** aResult);
+  [[nodiscard]] static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
+                                       void** aResult);
 
   // Parse a data: URI and return the individual parts
   // (the given spec will temporarily be modified but will be returned
   //  to the original before returning)
   // contentCharset and dataBuffer can be nullptr if they are not needed.
-  static MOZ_MUST_USE nsresult ParseURI(nsCString& spec, nsCString& contentType,
-                                        nsCString* contentCharset,
-                                        bool& isBase64, nsCString* dataBuffer);
+  [[nodiscard]] static nsresult ParseURI(nsCString& spec,
+                                         nsCString& contentType,
+                                         nsCString* contentCharset,
+                                         bool& isBase64, nsCString* dataBuffer);
 
   // Parse the path portion of a data: URI and return the individual parts.
   //
@@ -47,10 +48,10 @@ class nsDataHandler : public nsIProtocolHandler,
   // @arg aIsBase64 Out param, indicates if the data is base64 encoded.
   // @arg aDataBuffer Optional, will reference the substring in |aPath| that
   //  contains the data portion of the path. No copy is made.
-  static MOZ_MUST_USE nsresult
-  ParsePathWithoutRef(const nsACString& aPath, nsCString& aContentType,
-                      nsCString* aContentCharset, bool& aIsBase64,
-                      nsDependentCSubstring* aDataBuffer);
+  [[nodiscard]] static nsresult ParsePathWithoutRef(
+      const nsACString& aPath, nsCString& aContentType,
+      nsCString* aContentCharset, bool& aIsBase64,
+      nsDependentCSubstring* aDataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */

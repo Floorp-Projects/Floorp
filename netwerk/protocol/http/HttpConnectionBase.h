@@ -58,16 +58,16 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   //  maxHangTime - limits the amount of time this connection can spend on a
   //                single transaction before it should no longer be kept
   //                alive.  a value of 0xffff indicates no limit.
-  virtual MOZ_MUST_USE nsresult
-  Init(nsHttpConnectionInfo* info, uint16_t maxHangTime, nsISocketTransport*,
-       nsIAsyncInputStream*, nsIAsyncOutputStream*, bool connectedTransport,
-       nsIInterfaceRequestor*, PRIntervalTime) = 0;
+  [[nodiscard]] virtual nsresult Init(
+      nsHttpConnectionInfo* info, uint16_t maxHangTime, nsISocketTransport*,
+      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool connectedTransport,
+      nsIInterfaceRequestor*, PRIntervalTime) = 0;
 
   // Activate causes the given transaction to be processed on this
   // connection.  It fails if there is already an existing transaction unless
   // a multiplexing protocol such as SPDY is being used
-  virtual MOZ_MUST_USE nsresult Activate(nsAHttpTransaction*, uint32_t caps,
-                                         int32_t pri) = 0;
+  [[nodiscard]] virtual nsresult Activate(nsAHttpTransaction*, uint32_t caps,
+                                          int32_t pri) = 0;
 
   // Close the underlying socket transport.
   virtual void Close(nsresult reason, bool aIsShutdown = false) = 0;
@@ -84,14 +84,14 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual void CloseTransaction(nsAHttpTransaction*, nsresult,
                                 bool aIsShutdown = false) = 0;
 
-  virtual MOZ_MUST_USE nsresult OnHeadersAvailable(nsAHttpTransaction*,
-                                                   nsHttpRequestHead*,
-                                                   nsHttpResponseHead*,
-                                                   bool* reset) = 0;
+  [[nodiscard]] virtual nsresult OnHeadersAvailable(nsAHttpTransaction*,
+                                                    nsHttpRequestHead*,
+                                                    nsHttpResponseHead*,
+                                                    bool* reset) = 0;
 
-  virtual MOZ_MUST_USE nsresult TakeTransport(nsISocketTransport**,
-                                              nsIAsyncInputStream**,
-                                              nsIAsyncOutputStream**) = 0;
+  [[nodiscard]] virtual nsresult TakeTransport(nsISocketTransport**,
+                                               nsIAsyncInputStream**,
+                                               nsIAsyncOutputStream**) = 0;
 
   virtual bool UsingSpdy() { return false; }
   virtual bool UsingHttp3() { return false; }
@@ -120,10 +120,10 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   }
   virtual void GetSecurityInfo(nsISupports** result) = 0;
 
-  virtual MOZ_MUST_USE nsresult ResumeSend() = 0;
-  virtual MOZ_MUST_USE nsresult ResumeRecv() = 0;
-  virtual MOZ_MUST_USE nsresult ForceSend() = 0;
-  virtual MOZ_MUST_USE nsresult ForceRecv() = 0;
+  [[nodiscard]] virtual nsresult ResumeSend() = 0;
+  [[nodiscard]] virtual nsresult ResumeRecv() = 0;
+  [[nodiscard]] virtual nsresult ForceSend() = 0;
+  [[nodiscard]] virtual nsresult ForceRecv() = 0;
   virtual HttpVersion Version() = 0;
   virtual bool IsProxyConnectInProgress() = 0;
   virtual bool LastTransactionExpectedNoContent() = 0;
@@ -136,7 +136,8 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 
   virtual bool IsPersistent() = 0;
   virtual bool IsReused() = 0;
-  virtual MOZ_MUST_USE nsresult PushBack(const char* data, uint32_t length) = 0;
+  [[nodiscard]] virtual nsresult PushBack(const char* data,
+                                          uint32_t length) = 0;
   PRIntervalTime Rtt() { return mRtt; }
   virtual void SetEvent(nsresult aStatus) = 0;
 
@@ -165,16 +166,16 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
 
 #define NS_DECL_HTTPCONNECTIONBASE                                             \
-  MOZ_MUST_USE nsresult Init(nsHttpConnectionInfo*, uint16_t,                  \
-                             nsISocketTransport*, nsIAsyncInputStream*,        \
-                             nsIAsyncOutputStream*, bool,                      \
-                             nsIInterfaceRequestor*, PRIntervalTime) override; \
-  MOZ_MUST_USE nsresult Activate(nsAHttpTransaction*, uint32_t, int32_t)       \
+  [[nodiscard]] nsresult Init(                                                 \
+      nsHttpConnectionInfo*, uint16_t, nsISocketTransport*,                    \
+      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool,                       \
+      nsIInterfaceRequestor*, PRIntervalTime) override;                        \
+  [[nodiscard]] nsresult Activate(nsAHttpTransaction*, uint32_t, int32_t)      \
       override;                                                                \
-  MOZ_MUST_USE nsresult OnHeadersAvailable(                                    \
+  [[nodiscard]] nsresult OnHeadersAvailable(                                   \
       nsAHttpTransaction*, nsHttpRequestHead*, nsHttpResponseHead*,            \
       bool* reset) override;                                                   \
-  MOZ_MUST_USE nsresult TakeTransport(                                         \
+  [[nodiscard]] nsresult TakeTransport(                                        \
       nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**)     \
       override;                                                                \
   void Close(nsresult, bool aIsShutdown = false) override;                     \
@@ -187,17 +188,17 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
   bool TestJoinConnection(const nsACString&, int32_t) override;                \
   bool JoinConnection(const nsACString&, int32_t) override;                    \
   void GetSecurityInfo(nsISupports** result) override;                         \
-  MOZ_MUST_USE nsresult ResumeSend() override;                                 \
-  MOZ_MUST_USE nsresult ResumeRecv() override;                                 \
-  MOZ_MUST_USE nsresult ForceSend() override;                                  \
-  MOZ_MUST_USE nsresult ForceRecv() override;                                  \
+  [[nodiscard]] nsresult ResumeSend() override;                                \
+  [[nodiscard]] nsresult ResumeRecv() override;                                \
+  [[nodiscard]] nsresult ForceSend() override;                                 \
+  [[nodiscard]] nsresult ForceRecv() override;                                 \
   HttpVersion Version() override;                                              \
   bool IsProxyConnectInProgress() override;                                    \
   bool LastTransactionExpectedNoContent() override;                            \
   void SetLastTransactionExpectedNoContent(bool val) override;                 \
   bool IsPersistent() override;                                                \
   bool IsReused() override;                                                    \
-  MOZ_MUST_USE nsresult PushBack(const char* data, uint32_t length) override;  \
+  [[nodiscard]] nsresult PushBack(const char* data, uint32_t length) override; \
   void SetEvent(nsresult aStatus) override;                                    \
   virtual nsAHttpTransaction* Transaction() override;
 

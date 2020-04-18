@@ -79,29 +79,28 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   virtual uint32_t Caps() = 0;
 
   // called to read request data from the transaction.
-  virtual MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader* reader,
-                                             uint32_t count,
-                                             uint32_t* countRead) = 0;
+  [[nodiscard]] virtual nsresult ReadSegments(nsAHttpSegmentReader* reader,
+                                              uint32_t count,
+                                              uint32_t* countRead) = 0;
 
   // called to write response data to the transaction.
-  virtual MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter* writer,
-                                              uint32_t count,
-                                              uint32_t* countWritten) = 0;
+  [[nodiscard]] virtual nsresult WriteSegments(nsAHttpSegmentWriter* writer,
+                                               uint32_t count,
+                                               uint32_t* countWritten) = 0;
 
   // These versions of the functions allow the overloader to specify whether or
   // not it is safe to call *Segments() in a loop while they return OK.
   // The callee should turn again to false if it is not, otherwise leave
   // untouched
-  virtual MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader* reader,
-                                                  uint32_t count,
-                                                  uint32_t* countRead,
-                                                  bool* again) {
+  [[nodiscard]] virtual nsresult ReadSegmentsAgain(nsAHttpSegmentReader* reader,
+                                                   uint32_t count,
+                                                   uint32_t* countRead,
+                                                   bool* again) {
     return ReadSegments(reader, count, countRead);
   }
-  virtual MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
-                                                   uint32_t count,
-                                                   uint32_t* countWritten,
-                                                   bool* again) {
+  [[nodiscard]] virtual nsresult WriteSegmentsAgain(
+      nsAHttpSegmentWriter* writer, uint32_t count, uint32_t* countWritten,
+      bool* again) {
     return WriteSegments(writer, count, countWritten);
   }
 
@@ -128,7 +127,7 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // Returns NS_ERROR_ALREADY_OPENED if the subtransactions have been
   // at least partially written and cannot be moved.
   //
-  virtual MOZ_MUST_USE nsresult TakeSubTransactions(
+  [[nodiscard]] virtual nsresult TakeSubTransactions(
       nsTArray<RefPtr<nsAHttpTransaction> >& outTransactions) = 0;
 
   // Occasionally the abstract interface has to give way to base implementations
@@ -172,7 +171,7 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // the connection due to multiplexing. This interface represents such an
   // overload. If it returns NS_FAILURE the connection should be considered
   // authoritative.
-  virtual MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports**) {
+  [[nodiscard]] virtual nsresult GetTransactionSecurityInfo(nsISupports**) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -189,11 +188,11 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   virtual void DoNotRemoveAltSvc() {}
 
   // Returns true if early-data or fast open is possible.
-  virtual MOZ_MUST_USE bool CanDo0RTT() { return false; }
+  [[nodiscard]] virtual bool CanDo0RTT() { return false; }
   // Returns true if early-data is possible and transaction will remember
   // that it is in 0RTT mode (to know should it rewide transaction or not
   // in the case of an error).
-  virtual MOZ_MUST_USE bool Do0RTT() { return false; }
+  [[nodiscard]] virtual bool Do0RTT() { return false; }
   // This function will be called when a tls handshake has been finished and
   // we know whether early-data that was sent has been accepted or not, e.g.
   // do we need to restart a transaction. This will be called only if Do0RTT
@@ -205,11 +204,11 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // the transactions out of the session, rewind them all, and start them back
   // over as http/1 transactions
   // The function will return success or failure of the transaction restart.
-  virtual MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) {
+  [[nodiscard]] virtual nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual MOZ_MUST_USE nsresult RestartOnFastOpenError() {
+  [[nodiscard]] virtual nsresult RestartOnFastOpenError() {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -234,16 +233,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
   bool IsDone() override;                                                      \
   nsresult Status() override;                                                  \
   uint32_t Caps() override;                                                    \
-  virtual MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader*, uint32_t,  \
-                                             uint32_t*) override;              \
-  virtual MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t, \
+  [[nodiscard]] virtual nsresult ReadSegments(nsAHttpSegmentReader*, uint32_t, \
                                               uint32_t*) override;             \
+  [[nodiscard]] virtual nsresult WriteSegments(nsAHttpSegmentWriter*,          \
+                                               uint32_t, uint32_t*) override;  \
   virtual void Close(nsresult reason) override;                                \
   nsHttpConnectionInfo* ConnectionInfo() override;                             \
   void SetProxyConnectFailed() override;                                       \
   virtual nsHttpRequestHead* RequestHead() override;                           \
   uint32_t Http1xTransactionCount() override;                                  \
-  MOZ_MUST_USE nsresult TakeSubTransactions(                                   \
+  [[nodiscard]] nsresult TakeSubTransactions(                                  \
       nsTArray<RefPtr<nsAHttpTransaction> >& outTransactions) override;
 
 //-----------------------------------------------------------------------------
@@ -253,9 +252,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
 class nsAHttpSegmentReader {
  public:
   // any returned failure code stops segment iteration
-  virtual MOZ_MUST_USE nsresult OnReadSegment(const char* segment,
-                                              uint32_t count,
-                                              uint32_t* countRead) = 0;
+  [[nodiscard]] virtual nsresult OnReadSegment(const char* segment,
+                                               uint32_t count,
+                                               uint32_t* countRead) = 0;
 
   // Ask the segment reader to commit to accepting size bytes of
   // data from subsequent OnReadSegment() calls or throw hard
@@ -267,14 +266,14 @@ class nsAHttpSegmentReader {
   // (forceCommitment requires a hard failure or OK at this moment.)
   //
   // SpdySession uses this to make sure frames are atomic.
-  virtual MOZ_MUST_USE nsresult CommitToSegmentSize(uint32_t size,
-                                                    bool forceCommitment) {
+  [[nodiscard]] virtual nsresult CommitToSegmentSize(uint32_t size,
+                                                     bool forceCommitment) {
     return NS_ERROR_FAILURE;
   }
 };
 
-#define NS_DECL_NSAHTTPSEGMENTREADER                                    \
-  MOZ_MUST_USE nsresult OnReadSegment(const char*, uint32_t, uint32_t*) \
+#define NS_DECL_NSAHTTPSEGMENTREADER                                     \
+  [[nodiscard]] nsresult OnReadSegment(const char*, uint32_t, uint32_t*) \
       override;
 
 //-----------------------------------------------------------------------------
@@ -284,12 +283,12 @@ class nsAHttpSegmentReader {
 class nsAHttpSegmentWriter {
  public:
   // any returned failure code stops segment iteration
-  virtual MOZ_MUST_USE nsresult OnWriteSegment(char* segment, uint32_t count,
-                                               uint32_t* countWritten) = 0;
+  [[nodiscard]] virtual nsresult OnWriteSegment(char* segment, uint32_t count,
+                                                uint32_t* countWritten) = 0;
 };
 
 #define NS_DECL_NSAHTTPSEGMENTWRITER \
-  MOZ_MUST_USE nsresult OnWriteSegment(char*, uint32_t, uint32_t*) override;
+  [[nodiscard]] nsresult OnWriteSegment(char*, uint32_t, uint32_t*) override;
 
 }  // namespace net
 }  // namespace mozilla

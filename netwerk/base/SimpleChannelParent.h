@@ -24,9 +24,9 @@ class SimpleChannelParent : public nsIParentChannel,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPARENTCHANNEL
   NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISTREAMLISTENER;  // semicolon for clang-format bug 1629756
 
-  MOZ_MUST_USE bool Init(const uint32_t& aArgs);
+  [[nodiscard]] bool Init(const uint32_t& aArgs);
 
  private:
   ~SimpleChannelParent() = default;

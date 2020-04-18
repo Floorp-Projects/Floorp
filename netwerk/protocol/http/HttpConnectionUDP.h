@@ -74,9 +74,9 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   friend class HttpConnectionUDPForceIO;
 
-  static MOZ_MUST_USE nsresult ReadFromStream(nsIInputStream*, void*,
-                                              const char*, uint32_t, uint32_t,
-                                              uint32_t*);
+  [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
+                                               const char*, uint32_t, uint32_t,
+                                               uint32_t*);
 
   bool UsingHttp3() override { return true; }
 
@@ -84,9 +84,9 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   void OnQuicTimeoutExpired();
 
  private:
-  MOZ_MUST_USE nsresult OnTransactionDone(nsresult reason);
-  MOZ_MUST_USE nsresult OnSocketWritable();
-  MOZ_MUST_USE nsresult OnSocketReadable();
+  [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
+  [[nodiscard]] nsresult OnSocketWritable();
+  [[nodiscard]] nsresult OnSocketReadable();
 
  private:
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
@@ -111,7 +111,7 @@ class HttpConnectionUDP final : public HttpConnectionBase,
  private:
   // For ForceSend()
   static void ForceSendIO(nsITimer* aTimer, void* aClosure);
-  MOZ_MUST_USE nsresult MaybeForceSendIO();
+  [[nodiscard]] nsresult MaybeForceSendIO();
   bool mForceSendPending;
   nsCOMPtr<nsITimer> mForceSendTimer;
 

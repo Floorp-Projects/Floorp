@@ -48,8 +48,8 @@ class Http2Session final : public ASpdySession,
   Http2Session(nsISocketTransport*, enum SpdyVersion version,
                bool attemptingEarlyData);
 
-  MOZ_MUST_USE bool AddStream(nsAHttpTransaction*, int32_t, bool, bool,
-                              nsIInterfaceRequestor*) override;
+  [[nodiscard]] bool AddStream(nsAHttpTransaction*, int32_t, bool, bool,
+                               nsIInterfaceRequestor*) override;
   bool CanReuse() override { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams() override;
   enum SpdyVersion SpdyVersion() override;
@@ -223,9 +223,9 @@ class Http2Session final : public ASpdySession,
   void TransactionHasDataToWrite(Http2Stream*);
 
   // an overload of nsAHttpSegementReader
-  virtual MOZ_MUST_USE nsresult
-  CommitToSegmentSize(uint32_t size, bool forceCommitment) override;
-  MOZ_MUST_USE nsresult BufferOutput(const char*, uint32_t, uint32_t*);
+  [[nodiscard]] virtual nsresult CommitToSegmentSize(
+      uint32_t size, bool forceCommitment) override;
+  [[nodiscard]] nsresult BufferOutput(const char*, uint32_t, uint32_t*);
   void FlushOutputQueue();
   uint32_t AmountOfOutputBuffered() {
     return mOutputQueueUsed - mOutputQueueSent;
@@ -233,12 +233,12 @@ class Http2Session final : public ASpdySession,
 
   uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
 
-  MOZ_MUST_USE bool TryToActivate(Http2Stream* stream);
+  [[nodiscard]] bool TryToActivate(Http2Stream* stream);
   void ConnectPushedStream(Http2Stream* stream);
   void ConnectSlowConsumer(Http2Stream* stream);
 
-  MOZ_MUST_USE nsresult ConfirmTLSProfile();
-  static MOZ_MUST_USE bool ALPNCallback(nsISupports* securityInfo);
+  [[nodiscard]] nsresult ConfirmTLSProfile();
+  [[nodiscard]] static bool ALPNCallback(nsISupports* securityInfo);
 
   uint64_t Serial() { return mSerial; }
 
@@ -256,17 +256,17 @@ class Http2Session final : public ASpdySession,
   uint32_t InitialRwin() { return mInitialRwin; }
 
   void SendPing() override;
-  MOZ_MUST_USE bool MaybeReTunnel(nsAHttpTransaction*) override;
+  [[nodiscard]] bool MaybeReTunnel(nsAHttpTransaction*) override;
   bool UseH2Deps() { return mUseH2Deps; }
   void SetCleanShutdown(bool) override;
 
   // overload of nsAHttpTransaction
-  MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader*, uint32_t,
-                                          uint32_t*, bool*) final;
-  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter*, uint32_t,
+  [[nodiscard]] nsresult ReadSegmentsAgain(nsAHttpSegmentReader*, uint32_t,
                                            uint32_t*, bool*) final;
-  MOZ_MUST_USE bool Do0RTT() final { return true; }
-  MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) final;
+  [[nodiscard]] nsresult WriteSegmentsAgain(nsAHttpSegmentWriter*, uint32_t,
+                                            uint32_t*, bool*) final;
+  [[nodiscard]] bool Do0RTT() final { return true; }
+  [[nodiscard]] nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) final;
   void SetFastOpenStatus(uint8_t aStatus) final;
 
   // For use by an HTTP2Stream
@@ -295,12 +295,12 @@ class Http2Session final : public ASpdySession,
 
   static const uint8_t kMagicHello[24];
 
-  MOZ_MUST_USE nsresult ResponseHeadersComplete();
+  [[nodiscard]] nsresult ResponseHeadersComplete();
   uint32_t GetWriteQueueSize();
   void ChangeDownstreamState(enum internalStateType);
   void ResetDownstreamState();
-  MOZ_MUST_USE nsresult ReadyToProcessDataFrame(enum internalStateType);
-  MOZ_MUST_USE nsresult UncompressAndDiscard(bool);
+  [[nodiscard]] nsresult ReadyToProcessDataFrame(enum internalStateType);
+  [[nodiscard]] nsresult UncompressAndDiscard(bool);
   void GeneratePing(bool);
   void GenerateSettingsAck();
   void GeneratePriority(uint32_t, uint8_t);
@@ -311,19 +311,20 @@ class Http2Session final : public ASpdySession,
   void CloseStream(Http2Stream*, nsresult);
   void SendHello();
   void RemoveStreamFromQueues(Http2Stream*);
-  MOZ_MUST_USE nsresult ParsePadding(uint8_t&, uint16_t&);
+  [[nodiscard]] nsresult ParsePadding(uint8_t&, uint16_t&);
 
   void SetWriteCallbacks();
   void RealignOutputQueue();
 
   void ProcessPending();
-  MOZ_MUST_USE nsresult ProcessConnectedPush(Http2Stream*,
+  [[nodiscard]] nsresult ProcessConnectedPush(Http2Stream*,
+                                              nsAHttpSegmentWriter*, uint32_t,
+                                              uint32_t*);
+  [[nodiscard]] nsresult ProcessSlowConsumer(Http2Stream*,
                                              nsAHttpSegmentWriter*, uint32_t,
                                              uint32_t*);
-  MOZ_MUST_USE nsresult ProcessSlowConsumer(Http2Stream*, nsAHttpSegmentWriter*,
-                                            uint32_t, uint32_t*);
 
-  MOZ_MUST_USE nsresult SetInputFrameDataStream(uint32_t);
+  [[nodiscard]] nsresult SetInputFrameDataStream(uint32_t);
   void CreatePriorityNode(uint32_t, uint32_t, uint8_t, const char*);
   char* CreatePriorityFrame(uint32_t, uint32_t, uint8_t);
   bool VerifyStream(Http2Stream*, uint32_t);
@@ -340,8 +341,8 @@ class Http2Session final : public ASpdySession,
 
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes
-  MOZ_MUST_USE nsresult NetworkRead(nsAHttpSegmentWriter*, char*, uint32_t,
-                                    uint32_t*);
+  [[nodiscard]] nsresult NetworkRead(nsAHttpSegmentWriter*, char*, uint32_t,
+                                     uint32_t*);
 
   void Shutdown();
 

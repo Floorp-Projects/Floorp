@@ -125,13 +125,13 @@ inline bool MissingRequiredBrowserChild(
 
 class HttpChannelSecurityWarningReporter : public nsISupports {
  public:
-  virtual MOZ_MUST_USE nsresult ReportSecurityMessage(
+  [[nodiscard]] virtual nsresult ReportSecurityMessage(
       const nsAString& aMessageTag, const nsAString& aMessageCategory) = 0;
-  virtual MOZ_MUST_USE nsresult LogBlockedCORSRequest(
+  [[nodiscard]] virtual nsresult LogBlockedCORSRequest(
       const nsAString& aMessage, const nsACString& aCategory) = 0;
-  virtual MOZ_MUST_USE nsresult
-  LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
-                      const nsAString& aURL, const nsAString& aContentType) = 0;
+  [[nodiscard]] virtual nsresult LogMimeTypeMismatch(
+      const nsACString& aMessageName, bool aWarning, const nsAString& aURL,
+      const nsAString& aContentType) = 0;
 };
 
 }  // namespace net

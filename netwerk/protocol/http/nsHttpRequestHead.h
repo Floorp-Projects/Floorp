@@ -53,7 +53,7 @@ class nsHttpRequestHead {
 
   // Using this function it is possible to itereate through all headers
   // automatically under one lock.
-  MOZ_MUST_USE nsresult VisitHeaders(
+  [[nodiscard]] nsresult VisitHeaders(
       nsIHttpHeaderVisitor* visitor,
       nsHttpHeaderArray::VisitorFilter filter = nsHttpHeaderArray::eFilterAll);
   void Method(nsACString& aMethod);
@@ -67,16 +67,16 @@ class nsHttpRequestHead {
                  int32_t port);
   void Origin(nsACString& aOrigin);
 
-  MOZ_MUST_USE nsresult SetHeader(const nsACString& h, const nsACString& v,
-                                  bool m = false);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString& v,
-                                  bool m = false);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString& v, bool m,
-                                  nsHttpHeaderArray::HeaderVariety variety);
-  MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString& h);
-  MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString& v);
+  [[nodiscard]] nsresult SetHeader(const nsACString& h, const nsACString& v,
+                                   bool m = false);
+  [[nodiscard]] nsresult SetHeader(nsHttpAtom h, const nsACString& v,
+                                   bool m = false);
+  [[nodiscard]] nsresult SetHeader(nsHttpAtom h, const nsACString& v, bool m,
+                                   nsHttpHeaderArray::HeaderVariety variety);
+  [[nodiscard]] nsresult SetEmptyHeader(const nsACString& h);
+  [[nodiscard]] nsresult GetHeader(nsHttpAtom h, nsACString& v);
 
-  MOZ_MUST_USE nsresult ClearHeader(nsHttpAtom h);
+  [[nodiscard]] nsresult ClearHeader(nsHttpAtom h);
   void ClearHeaders();
 
   bool HasHeaderValue(nsHttpAtom h, const char* v);
@@ -86,8 +86,8 @@ class nsHttpRequestHead {
   void Flatten(nsACString&, bool pruneProxyHeaders = false);
 
   // Don't allow duplicate values
-  MOZ_MUST_USE nsresult SetHeaderOnce(nsHttpAtom h, const char* v,
-                                      bool merge = false);
+  [[nodiscard]] nsresult SetHeaderOnce(nsHttpAtom h, const char* v,
+                                       bool merge = false);
 
   bool IsSafeMethod();
 

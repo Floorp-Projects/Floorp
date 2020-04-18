@@ -33,10 +33,10 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // TODO priorities
   void TopLevelOuterContentWindowIdChanged(uint64_t windowId){};
 
-  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader*, uint32_t,
-                                     uint32_t*);
-  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,
+  [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader*, uint32_t,
                                       uint32_t*);
+  [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,
+                                       uint32_t*);
 
   bool RequestBlockedOnRead() const { return mRequestBlockedOnRead; }
 

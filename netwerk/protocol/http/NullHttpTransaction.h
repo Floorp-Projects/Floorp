@@ -42,7 +42,7 @@ class NullHttpTransaction : public nsAHttpTransaction {
   NullHttpTransaction(nsHttpConnectionInfo* ci,
                       nsIInterfaceRequestor* callbacks, uint32_t caps);
 
-  MOZ_MUST_USE bool Claim();
+  [[nodiscard]] bool Claim();
   void Unclaim();
 
   // Overload of nsAHttpTransaction methods

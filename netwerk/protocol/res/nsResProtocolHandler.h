@@ -50,22 +50,22 @@ class nsResProtocolHandler final
   }
 
  protected:
-  MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot,
-                                                nsIURI** aResult,
-                                                uint32_t* aFlags) override;
+  [[nodiscard]] nsresult GetSubstitutionInternal(const nsACString& aRoot,
+                                                 nsIURI** aResult,
+                                                 uint32_t* aFlags) override;
   virtual ~nsResProtocolHandler() = default;
 
-  MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
-                                        const nsACString& aPath,
-                                        const nsACString& aPathname,
-                                        nsACString& aResult) override;
+  [[nodiscard]] bool ResolveSpecialCases(const nsACString& aHost,
+                                         const nsACString& aPath,
+                                         const nsACString& aPathname,
+                                         nsACString& aResult) override;
 
-  virtual MOZ_MUST_USE bool MustResolveJAR(const nsACString& aRoot) override {
+  [[nodiscard]] virtual bool MustResolveJAR(const nsACString& aRoot) override {
     return aRoot.EqualsLiteral("android");
   }
 
  private:
-  MOZ_MUST_USE nsresult Init();
+  [[nodiscard]] nsresult Init();
   static mozilla::StaticRefPtr<nsResProtocolHandler> sSingleton;
 
   nsCString mAppURI;
