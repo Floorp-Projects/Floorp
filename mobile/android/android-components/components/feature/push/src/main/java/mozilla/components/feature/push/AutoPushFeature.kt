@@ -129,7 +129,7 @@ class AutoPushFeature(
      * This should only be done on an account logout or app data deletion.
      */
     override fun shutdown() {
-        DeliveryManager.with(connection) {
+        DeliveryManager.runWithInitialized(connection) {
             coroutineScope.launch {
                 unsubscribeAll()
             }
@@ -163,7 +163,7 @@ class AutoPushFeature(
      * New encrypted messages received from a supported push messaging service.
      */
     override fun onMessageReceived(message: EncryptedPushMessage) {
-        DeliveryManager.with(connection) {
+        DeliveryManager.runWithInitialized(connection) {
             coroutineScope.launchAndTry {
                 logger.info("New push message decrypted.")
 
@@ -200,7 +200,7 @@ class AutoPushFeature(
         onSubscribeError: () -> Unit = {},
         onSubscribe: ((AutoPushSubscription) -> Unit) = {}
     ) {
-        DeliveryManager.with(connection) {
+        DeliveryManager.runWithInitialized(connection) {
             coroutineScope.launchAndTry(errorBlock = {
                 onSubscribeError()
             }, block = {
@@ -222,7 +222,7 @@ class AutoPushFeature(
         onUnsubscribeError: () -> Unit = {},
         onUnsubscribe: (Boolean) -> Unit = {}
     ) {
-        DeliveryManager.with(connection) {
+        DeliveryManager.runWithInitialized(connection) {
             coroutineScope.launchAndTry(errorBlock = {
                 onUnsubscribeError()
             }, block = {
@@ -260,7 +260,7 @@ class AutoPushFeature(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun verifyActiveSubscriptions() {
-        DeliveryManager.with(connection) {
+        DeliveryManager.runWithInitialized(connection) {
             coroutineScope.launchAndTry {
                 val subscriptionChanges = verifyConnection()
 
@@ -383,7 +383,7 @@ internal object DeliveryManager {
     /**
      * Executes the block if the Push Manager is initialized.
      */
-    fun with(connection: PushConnection, block: PushConnection.() -> Unit) {
+    fun runWithInitialized(connection: PushConnection, block: PushConnection.() -> Unit) {
         if (connection.isInitialized()) {
             block(connection)
         }
