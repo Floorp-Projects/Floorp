@@ -21,6 +21,9 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const { DefaultMap } = ExtensionUtils;
 
@@ -596,6 +599,28 @@ var ActorManagerParent = {
 
   addActors(actors) {
     for (let [actorName, actor] of Object.entries(actors)) {
+      // If enablePreference is set, only register the actor while the
+      // preference is set to true.
+      if (actor.enablePreference) {
+        let actorNameProp = actorName + "_Preference";
+        XPCOMUtils.defineLazyPreferenceGetter(
+          this,
+          actorNameProp,
+          actor.enablePreference,
+          false,
+          (prefName, prevValue, isEnabled) => {
+            if (isEnabled) {
+              ChromeUtils.registerWindowActor(actorName, actor);
+            } else {
+              ChromeUtils.unregisterWindowActor(actorName, actor);
+            }
+          }
+        );
+        if (!this[actorNameProp]) {
+          continue;
+        }
+      }
+
       ChromeUtils.registerWindowActor(actorName, actor);
     }
   },
