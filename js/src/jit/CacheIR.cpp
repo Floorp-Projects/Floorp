@@ -3619,9 +3619,10 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
   return true;
 }
 
-static void EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj,
-                                   JSObject* holder, Shape* shape,
-                                   ObjOperandId objId, ValOperandId rhsId) {
+static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
+                                   JSObject* obj, JSObject* holder,
+                                   Shape* shape, ObjOperandId objId,
+                                   ValOperandId rhsId) {
   if (IsCacheableSetPropCallNative(obj, holder, shape)) {
     JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
     MOZ_ASSERT(target->isBuiltinNative());
@@ -3634,7 +3635,8 @@ static void EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj,
 
   JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
   MOZ_ASSERT(target->hasJitEntry());
-  writer.callScriptedSetter(objId, target, rhsId);
+  bool sameRealm = cx->realm() == target->realm();
+  writer.callScriptedSetter(objId, target, rhsId, sameRealm);
   writer.returnFromIC();
 }
 
@@ -3670,7 +3672,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
     writer.guardHasGetterSetter(objId, propShape);
   }
 
-  EmitCallSetterNoGuards(writer, obj, holder, propShape, objId, rhsId);
+  EmitCallSetterNoGuards(cx_, writer, obj, holder, propShape, objId, rhsId);
 
   trackAttached("Setter");
   return AttachDecision::Attach;
@@ -4119,7 +4121,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // EmitCallSetterNoGuards expects |obj| to be the object the property is
   // on to do some checks. Since we actually looked at proto, and no extra
   // guards will be generated, we can just pass that instead.
-  EmitCallSetterNoGuards(writer, proto, holder, propShape, objId, rhsId);
+  EmitCallSetterNoGuards(cx_, writer, proto, holder, propShape, objId, rhsId);
 
   trackAttached("DOMProxyUnshadowed");
   return AttachDecision::Attach;
@@ -4171,8 +4173,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
 
     MOZ_ASSERT(holder == expandoObj);
-    EmitCallSetterNoGuards(writer, expandoObj, expandoObj, propShape, objId,
-                           rhsId);
+    EmitCallSetterNoGuards(cx_, writer, expandoObj, expandoObj, propShape,
+                           objId, rhsId);
     trackAttached("DOMProxyExpandoSetter");
     return AttachDecision::Attach;
   }
