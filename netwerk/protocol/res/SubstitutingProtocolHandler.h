@@ -44,23 +44,22 @@ class SubstitutingProtocolHandler {
   nsresult NewURI(const nsACString& aSpec, const char* aCharset,
                   nsIURI* aBaseURI, nsIURI** aResult);
 
-  MOZ_MUST_USE nsresult
-  CollectSubstitutions(nsTArray<SubstitutionMapping>& aResources);
+  [[nodiscard]] nsresult CollectSubstitutions(
+      nsTArray<SubstitutionMapping>& aResources);
 
  protected:
   virtual ~SubstitutingProtocolHandler() = default;
   void ConstructInternal();
 
-  MOZ_MUST_USE nsresult SendSubstitution(const nsACString& aRoot,
-                                         nsIURI* aBaseURI, uint32_t aFlags);
+  [[nodiscard]] nsresult SendSubstitution(const nsACString& aRoot,
+                                          nsIURI* aBaseURI, uint32_t aFlags);
 
   nsresult GetSubstitutionFlags(const nsACString& root, uint32_t* flags);
 
   // Override this in the subclass to try additional lookups after checking
   // mSubstitutions.
-  virtual MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot,
-                                                        nsIURI** aResult,
-                                                        uint32_t* aFlags) {
+  [[nodiscard]] virtual nsresult GetSubstitutionInternal(
+      const nsACString& aRoot, nsIURI** aResult, uint32_t* aFlags) {
     *aResult = nullptr;
     *aFlags = 0;
     return NS_ERROR_NOT_AVAILABLE;
@@ -68,24 +67,24 @@ class SubstitutingProtocolHandler {
 
   // Override this in the subclass to check for special case when resolving URIs
   // _before_ checking substitutions.
-  virtual MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
-                                                const nsACString& aPath,
-                                                const nsACString& aPathname,
-                                                nsACString& aResult) {
+  [[nodiscard]] virtual bool ResolveSpecialCases(const nsACString& aHost,
+                                                 const nsACString& aPath,
+                                                 const nsACString& aPathname,
+                                                 nsACString& aResult) {
     return false;
   }
 
   // This method should only return true if GetSubstitutionInternal would
   // return the RESOLVE_JAR_URI flag.
-  virtual MOZ_MUST_USE bool MustResolveJAR(const nsACString& aRoot) {
+  [[nodiscard]] virtual bool MustResolveJAR(const nsACString& aRoot) {
     return false;
   }
 
   // Override this in the subclass to check for special case when opening
   // channels.
-  virtual MOZ_MUST_USE nsresult SubstituteChannel(nsIURI* uri,
-                                                  nsILoadInfo* aLoadInfo,
-                                                  nsIChannel** result) {
+  [[nodiscard]] virtual nsresult SubstituteChannel(nsIURI* uri,
+                                                   nsILoadInfo* aLoadInfo,
+                                                   nsIChannel** result) {
     return NS_OK;
   }
 

@@ -114,16 +114,16 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetResponseStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
   void SetResponseEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
 
-  MOZ_MUST_USE bool Do0RTT() override;
-  MOZ_MUST_USE nsresult Finish0RTT(bool aRestart,
-                                   bool aAlpnChanged /* ignored */) override;
+  [[nodiscard]] bool Do0RTT() override;
+  [[nodiscard]] nsresult Finish0RTT(bool aRestart,
+                                    bool aAlpnChanged /* ignored */) override;
 
   // After Finish0RTT early data may have failed but the caller did not request
   // restart - this indicates that state for dev tools
   void Refused0RTT();
 
-  MOZ_MUST_USE bool CanDo0RTT() override;
-  MOZ_MUST_USE nsresult RestartOnFastOpenError() override;
+  [[nodiscard]] bool CanDo0RTT() override;
+  [[nodiscard]] nsresult RestartOnFastOpenError() override;
 
   uint64_t TopLevelOuterContentWindowId() override {
     return mTopLevelOuterContentWindowId;
@@ -147,24 +147,24 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   friend class DeleteHttpTransaction;
   virtual ~nsHttpTransaction();
 
-  MOZ_MUST_USE nsresult Restart();
+  [[nodiscard]] nsresult Restart();
   char* LocateHttpStart(char* buf, uint32_t len, bool aAllowPartialMatch);
-  MOZ_MUST_USE nsresult ParseLine(nsACString& line);
-  MOZ_MUST_USE nsresult ParseLineSegment(char* seg, uint32_t len);
-  MOZ_MUST_USE nsresult ParseHead(char*, uint32_t count, uint32_t* countRead);
-  MOZ_MUST_USE nsresult HandleContentStart();
-  MOZ_MUST_USE nsresult HandleContent(char*, uint32_t count,
-                                      uint32_t* contentRead,
-                                      uint32_t* contentRemaining);
-  MOZ_MUST_USE nsresult ProcessData(char*, uint32_t, uint32_t*);
+  [[nodiscard]] nsresult ParseLine(nsACString& line);
+  [[nodiscard]] nsresult ParseLineSegment(char* seg, uint32_t len);
+  [[nodiscard]] nsresult ParseHead(char*, uint32_t count, uint32_t* countRead);
+  [[nodiscard]] nsresult HandleContentStart();
+  [[nodiscard]] nsresult HandleContent(char*, uint32_t count,
+                                       uint32_t* contentRead,
+                                       uint32_t* contentRemaining);
+  [[nodiscard]] nsresult ProcessData(char*, uint32_t, uint32_t*);
   void DeleteSelfOnConsumerThread();
   void ReleaseBlockingTransaction();
 
-  static MOZ_MUST_USE nsresult ReadRequestSegment(nsIInputStream*, void*,
-                                                  const char*, uint32_t,
-                                                  uint32_t, uint32_t*);
-  static MOZ_MUST_USE nsresult WritePipeSegment(nsIOutputStream*, void*, char*,
-                                                uint32_t, uint32_t, uint32_t*);
+  [[nodiscard]] static nsresult ReadRequestSegment(nsIInputStream*, void*,
+                                                   const char*, uint32_t,
+                                                   uint32_t, uint32_t*);
+  [[nodiscard]] static nsresult WritePipeSegment(nsIOutputStream*, void*, char*,
+                                                 uint32_t, uint32_t, uint32_t*);
 
   bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 

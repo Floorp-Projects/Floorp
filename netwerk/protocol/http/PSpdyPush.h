@@ -40,8 +40,8 @@ class SpdyPushCache {
   // The cache holds only weak pointers - no references
   SpdyPushCache() = default;
   virtual ~SpdyPushCache();
-  MOZ_MUST_USE bool RegisterPushedStreamHttp2(const nsCString& key,
-                                              Http2PushedStream* stream);
+  [[nodiscard]] bool RegisterPushedStreamHttp2(const nsCString& key,
+                                               Http2PushedStream* stream);
   Http2PushedStream* RemovePushedStreamHttp2(const nsCString& key);
   Http2PushedStream* RemovePushedStreamHttp2ByID(const nsCString& key,
                                                  const uint32_t& streamID);

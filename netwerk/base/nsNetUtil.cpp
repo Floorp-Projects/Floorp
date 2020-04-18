@@ -1259,7 +1259,7 @@ nsresult NS_NewBufferedOutputStream(
   return rv;
 }
 
-MOZ_MUST_USE nsresult NS_NewBufferedInputStream(
+[[nodiscard]] nsresult NS_NewBufferedInputStream(
     nsIInputStream** aResult, already_AddRefed<nsIInputStream> aInputStream,
     uint32_t aBufferSize) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);

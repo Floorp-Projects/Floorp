@@ -44,9 +44,9 @@ class nsHttpAuthIdentity {
   const char16_t* User() const { return mUser; }
   const char16_t* Password() const { return mPass; }
 
-  MOZ_MUST_USE nsresult Set(const char16_t* domain, const char16_t* user,
-                            const char16_t* password);
-  MOZ_MUST_USE nsresult Set(const nsHttpAuthIdentity& other) {
+  [[nodiscard]] nsresult Set(const char16_t* domain, const char16_t* user,
+                             const char16_t* password);
+  [[nodiscard]] nsresult Set(const nsHttpAuthIdentity& other) {
     return Set(other.mDomain, other.mUser, other.mPass);
   }
   void Clear();
@@ -77,7 +77,7 @@ class nsHttpAuthEntry {
 
   const nsHttpAuthIdentity& Identity() const { return mIdent; }
 
-  MOZ_MUST_USE nsresult AddPath(const char* aPath);
+  [[nodiscard]] nsresult AddPath(const char* aPath);
 
   nsCOMPtr<nsISupports> mMetaData;
 
@@ -96,10 +96,10 @@ class nsHttpAuthEntry {
   }
   ~nsHttpAuthEntry();
 
-  MOZ_MUST_USE nsresult Set(const char* path, const char* realm,
-                            const char* creds, const char* challenge,
-                            const nsHttpAuthIdentity* ident,
-                            nsISupports* metadata);
+  [[nodiscard]] nsresult Set(const char* path, const char* realm,
+                             const char* creds, const char* challenge,
+                             const nsHttpAuthIdentity* ident,
+                             nsISupports* metadata);
 
   nsHttpAuthIdentity mIdent;
 
@@ -137,11 +137,11 @@ class nsHttpAuthNode {
   EntryList::const_iterator LookupEntryItrByRealm(const char* realm) const;
 
   // if a matching entry is found, then credentials will be changed.
-  MOZ_MUST_USE nsresult SetAuthEntry(const char* path, const char* realm,
-                                     const char* credentials,
-                                     const char* challenge,
-                                     const nsHttpAuthIdentity* ident,
-                                     nsISupports* metadata);
+  [[nodiscard]] nsresult SetAuthEntry(const char* path, const char* realm,
+                                      const char* credentials,
+                                      const char* challenge,
+                                      const nsHttpAuthIdentity* ident,
+                                      nsISupports* metadata);
 
   void ClearAuthEntry(const char* realm);
 
@@ -168,33 +168,31 @@ class nsHttpAuthCache {
   // |scheme|, |host|, and |port| are required
   // |path| can be null
   // |entry| is either null or a weak reference
-  MOZ_MUST_USE nsresult GetAuthEntryForPath(const char* scheme,
-                                            const char* host, int32_t port,
-                                            const char* path,
-                                            nsACString const& originSuffix,
-                                            nsHttpAuthEntry** entry);
+  [[nodiscard]] nsresult GetAuthEntryForPath(const char* scheme,
+                                             const char* host, int32_t port,
+                                             const char* path,
+                                             nsACString const& originSuffix,
+                                             nsHttpAuthEntry** entry);
 
   // |scheme|, |host|, and |port| are required
   // |realm| must not be null
   // |entry| is either null or a weak reference
-  MOZ_MUST_USE nsresult GetAuthEntryForDomain(const char* scheme,
-                                              const char* host, int32_t port,
-                                              const char* realm,
-                                              nsACString const& originSuffix,
-                                              nsHttpAuthEntry** entry);
+  [[nodiscard]] nsresult GetAuthEntryForDomain(const char* scheme,
+                                               const char* host, int32_t port,
+                                               const char* realm,
+                                               nsACString const& originSuffix,
+                                               nsHttpAuthEntry** entry);
 
   // |scheme|, |host|, and |port| are required
   // |path| can be null
   // |realm| must not be null
   // if |credentials|, |user|, |pass|, and |challenge| are each
   // null, then the entry is deleted.
-  MOZ_MUST_USE nsresult SetAuthEntry(const char* scheme, const char* host,
-                                     int32_t port, const char* directory,
-                                     const char* realm, const char* credentials,
-                                     const char* challenge,
-                                     nsACString const& originSuffix,
-                                     const nsHttpAuthIdentity* ident,
-                                     nsISupports* metadata);
+  [[nodiscard]] nsresult SetAuthEntry(
+      const char* scheme, const char* host, int32_t port, const char* directory,
+      const char* realm, const char* credentials, const char* challenge,
+      nsACString const& originSuffix, const nsHttpAuthIdentity* ident,
+      nsISupports* metadata);
 
   void ClearAuthEntry(const char* scheme, const char* host, int32_t port,
                       const char* realm, nsACString const& originSuffix);

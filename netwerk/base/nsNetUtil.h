@@ -477,7 +477,7 @@ nsresult NS_NewLocalFileStream(nsIFileStream** result, nsIFile* file,
                                int32_t ioFlags = -1, int32_t perm = -1,
                                int32_t behaviorFlags = 0);
 
-MOZ_MUST_USE nsresult NS_NewBufferedInputStream(
+[[nodiscard]] nsresult NS_NewBufferedInputStream(
     nsIInputStream** aResult, already_AddRefed<nsIInputStream> aInputStream,
     uint32_t aBufferSize);
 

@@ -43,8 +43,8 @@ class InterceptedChannelBase : public nsIInterceptedChannel {
   void EnsureSynthesizedResponse();
   void DoNotifyController();
   void DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);
-  MOZ_MUST_USE nsresult DoSynthesizeHeader(const nsACString& aName,
-                                           const nsACString& aValue);
+  [[nodiscard]] nsresult DoSynthesizeHeader(const nsACString& aName,
+                                            const nsACString& aValue);
 
   TimeStamp mLaunchServiceWorkerStart;
   TimeStamp mLaunchServiceWorkerEnd;

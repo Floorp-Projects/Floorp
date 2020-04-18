@@ -12,8 +12,8 @@
 #include "nsServiceManagerUtils.h"
 #include "prtime.h"
 
-inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI* aAboutURI,
-                                                   nsCString& aModule) {
+[[nodiscard]] inline nsresult NS_GetAboutModuleName(nsIURI* aAboutURI,
+                                                    nsCString& aModule) {
   NS_ASSERTION(aAboutURI->SchemeIs("about"),
                "should be used only on about: URIs");
 

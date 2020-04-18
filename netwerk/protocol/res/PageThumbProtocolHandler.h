@@ -53,10 +53,10 @@ class PageThumbProtocolHandler final
  private:
   explicit PageThumbProtocolHandler();
 
-  MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
-                                        const nsACString& aPath,
-                                        const nsACString& aPathname,
-                                        nsACString& aResult) override;
+  [[nodiscard]] bool ResolveSpecialCases(const nsACString& aHost,
+                                         const nsACString& aPath,
+                                         const nsACString& aPathname,
+                                         nsACString& aResult) override;
 
   /**
    * On entry to this function, *aRetVal is expected to be non-null and already
@@ -72,7 +72,7 @@ class PageThumbProtocolHandler final
    *         will return NS_ERROR_NO_INTERFACE if the URI resolves to a
    *         non file:// URI.
    */
-  virtual MOZ_MUST_USE nsresult SubstituteChannel(
+  [[nodiscard]] virtual nsresult SubstituteChannel(
       nsIURI* aURI, nsILoadInfo* aLoadInfo, nsIChannel** aRetVal) override;
 
   /**

@@ -55,15 +55,15 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
     return mProxyInfo && (mProxyInfo->IsHTTP() || mProxyInfo->IsHTTPS());
   }
 
-  MOZ_MUST_USE nsresult PrepareForAuthentication(bool proxyAuth);
-  MOZ_MUST_USE nsresult GenCredsAndSetEntry(
+  [[nodiscard]] nsresult PrepareForAuthentication(bool proxyAuth);
+  [[nodiscard]] nsresult GenCredsAndSetEntry(
       nsIHttpAuthenticator*, bool proxyAuth, const char* scheme,
       const char* host, int32_t port, const char* dir, const char* realm,
       const char* challenge, const nsHttpAuthIdentity& ident,
       nsCOMPtr<nsISupports>& session, char** result);
-  MOZ_MUST_USE nsresult GetAuthenticator(const char* challenge,
-                                         nsCString& scheme,
-                                         nsIHttpAuthenticator** auth);
+  [[nodiscard]] nsresult GetAuthenticator(const char* challenge,
+                                          nsCString& scheme,
+                                          nsIHttpAuthenticator** auth);
   void ParseRealm(const char* challenge, nsACString& realm);
   void GetIdentityFromURI(uint32_t authFlags, nsHttpAuthIdentity&);
 
@@ -73,31 +73,31 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
    * the user's decision will be gathered in a callback and is not an actual
    * error.
    */
-  MOZ_MUST_USE nsresult GetCredentials(const char* challenges, bool proxyAuth,
-                                       nsCString& creds);
-  MOZ_MUST_USE nsresult GetCredentialsForChallenge(const char* challenge,
-                                                   const char* scheme,
-                                                   bool proxyAuth,
-                                                   nsIHttpAuthenticator* auth,
-                                                   nsCString& creds);
-  MOZ_MUST_USE nsresult PromptForIdentity(uint32_t level, bool proxyAuth,
-                                          const char* realm,
-                                          const char* authType,
-                                          uint32_t authFlags,
-                                          nsHttpAuthIdentity&);
+  [[nodiscard]] nsresult GetCredentials(const char* challenges, bool proxyAuth,
+                                        nsCString& creds);
+  [[nodiscard]] nsresult GetCredentialsForChallenge(const char* challenge,
+                                                    const char* scheme,
+                                                    bool proxyAuth,
+                                                    nsIHttpAuthenticator* auth,
+                                                    nsCString& creds);
+  [[nodiscard]] nsresult PromptForIdentity(uint32_t level, bool proxyAuth,
+                                           const char* realm,
+                                           const char* authType,
+                                           uint32_t authFlags,
+                                           nsHttpAuthIdentity&);
 
   bool ConfirmAuth(const char* bundleKey, bool doYesNoPrompt);
   void SetAuthorizationHeader(nsHttpAuthCache*, nsHttpAtom header,
                               const char* scheme, const char* host,
                               int32_t port, const char* path,
                               nsHttpAuthIdentity& ident);
-  MOZ_MUST_USE nsresult GetCurrentPath(nsACString&);
+  [[nodiscard]] nsresult GetCurrentPath(nsACString&);
   /**
    * Return all information needed to build authorization information,
    * all parameters except proxyAuth are out parameters. proxyAuth specifies
    * with what authorization we work (WWW or proxy).
    */
-  MOZ_MUST_USE nsresult GetAuthorizationMembers(
+  [[nodiscard]] nsresult GetAuthorizationMembers(
       bool proxyAuth, nsACString& scheme, const char*& host, int32_t& port,
       nsACString& path, nsHttpAuthIdentity*& ident,
       nsISupports**& continuationState);
@@ -106,9 +106,9 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
    * from the user. Called from OnAuthAvailable callback or OnAuthCancelled
    * when credentials for next challenge were obtained synchronously.
    */
-  MOZ_MUST_USE nsresult ContinueOnAuthAvailable(const nsACString& creds);
+  [[nodiscard]] nsresult ContinueOnAuthAvailable(const nsACString& creds);
 
-  MOZ_MUST_USE nsresult DoRedirectChannelToHttps();
+  [[nodiscard]] nsresult DoRedirectChannelToHttps();
 
   /**
    * A function that takes care of reading STS headers and enforcing STS
@@ -116,7 +116,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
    * to be trusted or any STS header data on the channel is ignored.
    * This is called from ProcessResponse.
    */
-  MOZ_MUST_USE nsresult ProcessSTSHeader();
+  [[nodiscard]] nsresult ProcessSTSHeader();
 
   // Depending on the pref setting, the authentication dialog may be blocked
   // for all sub-resources, blocked for cross-origin sub-resources, or
@@ -125,14 +125,12 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
   bool BlockPrompt(bool proxyAuth);
 
   // Store credentials to the cache when appropriate aFlags are set.
-  MOZ_MUST_USE nsresult UpdateCache(nsIHttpAuthenticator* aAuth,
-                                    const char* aScheme, const char* aHost,
-                                    int32_t aPort, const char* aDirectory,
-                                    const char* aRealm, const char* aChallenge,
-                                    const nsHttpAuthIdentity& aIdent,
-                                    const char* aCreds, uint32_t aGenerateFlags,
-                                    nsISupports* aSessionState,
-                                    bool aProxyAuth);
+  [[nodiscard]] nsresult UpdateCache(
+      nsIHttpAuthenticator* aAuth, const char* aScheme, const char* aHost,
+      int32_t aPort, const char* aDirectory, const char* aRealm,
+      const char* aChallenge, const nsHttpAuthIdentity& aIdent,
+      const char* aCreds, uint32_t aGenerateFlags, nsISupports* aSessionState,
+      bool aProxyAuth);
 
  private:
   nsIHttpAuthenticableChannel* mAuthChannel;  // weak ref

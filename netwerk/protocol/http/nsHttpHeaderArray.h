@@ -49,35 +49,35 @@ class nsHttpHeaderArray {
   };
 
   // Used by internal setters: to set header from network use SetHeaderFromNet
-  MOZ_MUST_USE nsresult SetHeader(const nsACString& headerName,
-                                  const nsACString& value, bool merge,
-                                  HeaderVariety variety);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom header, const nsACString& value,
-                                  bool merge, HeaderVariety variety);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom header,
-                                  const nsACString& headerName,
-                                  const nsACString& value, bool merge,
-                                  HeaderVariety variety);
+  [[nodiscard]] nsresult SetHeader(const nsACString& headerName,
+                                   const nsACString& value, bool merge,
+                                   HeaderVariety variety);
+  [[nodiscard]] nsresult SetHeader(nsHttpAtom header, const nsACString& value,
+                                   bool merge, HeaderVariety variety);
+  [[nodiscard]] nsresult SetHeader(nsHttpAtom header,
+                                   const nsACString& headerName,
+                                   const nsACString& value, bool merge,
+                                   HeaderVariety variety);
 
   // Used by internal setters to set an empty header
-  MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString& headerName,
-                                       HeaderVariety variety);
+  [[nodiscard]] nsresult SetEmptyHeader(const nsACString& headerName,
+                                        HeaderVariety variety);
 
   // Merges supported headers. For other duplicate values, determines if error
   // needs to be thrown or 1st value kept.
   // For the response header we keep the original headers as well.
-  MOZ_MUST_USE nsresult SetHeaderFromNet(nsHttpAtom header,
-                                         const nsACString& headerNameOriginal,
-                                         const nsACString& value,
-                                         bool response);
+  [[nodiscard]] nsresult SetHeaderFromNet(nsHttpAtom header,
+                                          const nsACString& headerNameOriginal,
+                                          const nsACString& value,
+                                          bool response);
 
-  MOZ_MUST_USE nsresult SetResponseHeaderFromCache(
+  [[nodiscard]] nsresult SetResponseHeaderFromCache(
       nsHttpAtom header, const nsACString& headerNameOriginal,
       const nsACString& value, HeaderVariety variety);
 
-  MOZ_MUST_USE nsresult GetHeader(nsHttpAtom header, nsACString& value) const;
-  MOZ_MUST_USE nsresult GetOriginalHeader(nsHttpAtom aHeader,
-                                          nsIHttpHeaderVisitor* aVisitor);
+  [[nodiscard]] nsresult GetHeader(nsHttpAtom header, nsACString& value) const;
+  [[nodiscard]] nsresult GetOriginalHeader(nsHttpAtom aHeader,
+                                           nsIHttpHeaderVisitor* aVisitor);
   void ClearHeader(nsHttpAtom h);
 
   // Find the location of the given header value, or null if none exists.
@@ -99,12 +99,12 @@ class nsHttpHeaderArray {
     eFilterResponseOriginal
   };
 
-  MOZ_MUST_USE nsresult VisitHeaders(nsIHttpHeaderVisitor* visitor,
-                                     VisitorFilter filter = eFilterAll);
+  [[nodiscard]] nsresult VisitHeaders(nsIHttpHeaderVisitor* visitor,
+                                      VisitorFilter filter = eFilterAll);
 
   // parse a header line, return the header atom and a pointer to the
   // header value (the substring of the header line -- do not free).
-  static MOZ_MUST_USE nsresult ParseHeaderLine(
+  [[nodiscard]] static nsresult ParseHeaderLine(
       const nsACString& line, nsHttpAtom* header = nullptr,
       nsACString* headerNameOriginal = nullptr, nsACString* value = nullptr);
 
@@ -145,13 +145,13 @@ class nsHttpHeaderArray {
   // It will ignore original headers from the network.
   int32_t LookupEntry(nsHttpAtom header, const nsEntry**) const;
   int32_t LookupEntry(nsHttpAtom header, nsEntry**);
-  MOZ_MUST_USE nsresult MergeHeader(nsHttpAtom header, nsEntry* entry,
-                                    const nsACString& value,
-                                    HeaderVariety variety);
-  MOZ_MUST_USE nsresult SetHeader_internal(nsHttpAtom header,
-                                           const nsACString& headeName,
-                                           const nsACString& value,
-                                           HeaderVariety variety);
+  [[nodiscard]] nsresult MergeHeader(nsHttpAtom header, nsEntry* entry,
+                                     const nsACString& value,
+                                     HeaderVariety variety);
+  [[nodiscard]] nsresult SetHeader_internal(nsHttpAtom header,
+                                            const nsACString& headeName,
+                                            const nsACString& value,
+                                            HeaderVariety variety);
 
   // Header cannot be merged: only one value possible
   bool IsSingletonHeader(nsHttpAtom header);
@@ -233,7 +233,7 @@ inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(nsHttpAtom header) {
   return header == nsHttp::Strict_Transport_Security;
 }
 
-inline MOZ_MUST_USE nsresult nsHttpHeaderArray::MergeHeader(
+[[nodiscard]] inline nsresult nsHttpHeaderArray::MergeHeader(
     nsHttpAtom header, nsEntry* entry, const nsACString& value,
     nsHttpHeaderArray::HeaderVariety variety) {
   if (value.IsEmpty()) return NS_OK;  // merge of empty header = no-op

@@ -84,7 +84,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   // OK to treat these as an infalible allocation
   already_AddRefed<nsHttpConnectionInfo> Clone() const;
   void CloneAsDirectRoute(nsHttpConnectionInfo** outParam);
-  MOZ_MUST_USE nsresult CreateWildCard(nsHttpConnectionInfo** outParam);
+  [[nodiscard]] nsresult CreateWildCard(nsHttpConnectionInfo** outParam);
 
   const char* ProxyHost() const {
     return mProxyInfo ? mProxyInfo->Host().get() : nullptr;

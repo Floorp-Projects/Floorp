@@ -320,8 +320,8 @@ class nsStandardURL : public nsIFileURL,
                            public nsISerializable {
     NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
 
-    MOZ_MUST_USE NS_IMETHOD
-    Deserialize(const mozilla::ipc::URIParams& aParams) override {
+    [[nodiscard]] NS_IMETHOD
+        Deserialize(const mozilla::ipc::URIParams& aParams) override {
       return BaseURIMutator<T>::InitFromIPCParams(aParams);
     }
 
@@ -331,17 +331,17 @@ class nsStandardURL : public nsIFileURL,
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+    [[nodiscard]] NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return BaseURIMutator<T>::InitFromInputStream(aStream);
     }
 
-    MOZ_MUST_USE NS_IMETHOD Finalize(nsIURI** aURI) override {
+    [[nodiscard]] NS_IMETHOD Finalize(nsIURI** aURI) override {
       BaseURIMutator<T>::mURI.forget(aURI);
       return NS_OK;
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetSpec(const nsACString& aSpec,
-                                    nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHOD SetSpec(const nsACString& aSpec,
+                                     nsIURIMutator** aMutator) override {
       if (aMutator) {
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
@@ -349,10 +349,10 @@ class nsStandardURL : public nsIFileURL,
       return BaseURIMutator<T>::InitFromSpec(aSpec);
     }
 
-    MOZ_MUST_USE NS_IMETHOD Init(uint32_t aURLType, int32_t aDefaultPort,
-                                 const nsACString& aSpec, const char* aCharset,
-                                 nsIURI* aBaseURI,
-                                 nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHOD Init(uint32_t aURLType, int32_t aDefaultPort,
+                                  const nsACString& aSpec, const char* aCharset,
+                                  nsIURI* aBaseURI,
+                                  nsIURIMutator** aMutator) override {
       if (aMutator) {
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
@@ -373,8 +373,8 @@ class nsStandardURL : public nsIFileURL,
       return NS_OK;
     }
 
-    MOZ_MUST_USE NS_IMETHODIMP
-    SetDefaultPort(int32_t aNewDefaultPort, nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHODIMP SetDefaultPort(
+        int32_t aNewDefaultPort, nsIURIMutator** aMutator) override {
       if (!BaseURIMutator<T>::mURI) {
         return NS_ERROR_NULL_POINTER;
       }
@@ -385,8 +385,8 @@ class nsStandardURL : public nsIFileURL,
       return BaseURIMutator<T>::mURI->SetDefaultPort(aNewDefaultPort);
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetFileName(const nsACString& aFileName,
-                                        nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHOD SetFileName(const nsACString& aFileName,
+                                         nsIURIMutator** aMutator) override {
       if (!BaseURIMutator<T>::mURI) {
         return NS_ERROR_NULL_POINTER;
       }
@@ -397,8 +397,8 @@ class nsStandardURL : public nsIFileURL,
       return BaseURIMutator<T>::mURI->SetFileNameInternal(aFileName);
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetFileBaseName(const nsACString& aFileBaseName,
-                                            nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHOD SetFileBaseName(
+        const nsACString& aFileBaseName, nsIURIMutator** aMutator) override {
       if (!BaseURIMutator<T>::mURI) {
         return NS_ERROR_NULL_POINTER;
       }
@@ -409,7 +409,7 @@ class nsStandardURL : public nsIFileURL,
       return BaseURIMutator<T>::mURI->SetFileBaseNameInternal(aFileBaseName);
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetFileExtension(
+    [[nodiscard]] NS_IMETHOD SetFileExtension(
         const nsACString& aFileExtension, nsIURIMutator** aMutator) override {
       if (!BaseURIMutator<T>::mURI) {
         return NS_ERROR_NULL_POINTER;
@@ -423,12 +423,12 @@ class nsStandardURL : public nsIFileURL,
 
     T* Create() override { return new T(mMarkedFileURL); }
 
-    MOZ_MUST_USE NS_IMETHOD MarkFileURL() override {
+    [[nodiscard]] NS_IMETHOD MarkFileURL() override {
       mMarkedFileURL = true;
       return NS_OK;
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetFile(nsIFile* aFile) override {
+    [[nodiscard]] NS_IMETHOD SetFile(nsIFile* aFile) override {
       RefPtr<T> uri;
       if (BaseURIMutator<T>::mURI) {
         // We don't need a new URI object if we already have one

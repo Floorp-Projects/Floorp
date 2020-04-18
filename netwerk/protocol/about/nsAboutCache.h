@@ -113,12 +113,12 @@ class nsAboutCache final : public nsIAboutModule {
 
   nsAboutCache() = default;
 
-  static MOZ_MUST_USE nsresult Create(nsISupports* aOuter, REFNSIID aIID,
-                                      void** aResult);
+  [[nodiscard]] static nsresult Create(nsISupports* aOuter, REFNSIID aIID,
+                                       void** aResult);
 
-  static MOZ_MUST_USE nsresult GetStorage(nsACString const& storageName,
-                                          nsILoadContextInfo* loadInfo,
-                                          nsICacheStorage** storage);
+  [[nodiscard]] static nsresult GetStorage(nsACString const& storageName,
+                                           nsILoadContextInfo* loadInfo,
+                                           nsICacheStorage** storage);
 
  protected:
   virtual ~nsAboutCache() = default;
@@ -135,13 +135,13 @@ class nsAboutCache final : public nsIAboutModule {
     virtual ~Channel() = default;
 
    public:
-    MOZ_MUST_USE nsresult Init(nsIURI* aURI, nsILoadInfo* aLoadInfo);
-    MOZ_MUST_USE nsresult ParseURI(nsIURI* uri, nsACString& storage);
+    [[nodiscard]] nsresult Init(nsIURI* aURI, nsILoadInfo* aLoadInfo);
+    [[nodiscard]] nsresult ParseURI(nsIURI* uri, nsACString& storage);
 
     // Finds a next storage we wish to visit (we use this method
     // even there is a specified storage name, which is the only
     // one in the list then.)  Posts FireVisitStorage() when found.
-    MOZ_MUST_USE nsresult VisitNextStorage();
+    [[nodiscard]] nsresult VisitNextStorage();
     // Helper method that calls VisitStorage() for the current storage.
     // When it fails, OnCacheEntryVisitCompleted is simulated to close
     // the output stream and thus the about:cache channel.
@@ -149,13 +149,13 @@ class nsAboutCache final : public nsIAboutModule {
     // Kiks the visit cycle for the given storage, names can be:
     // "disk", "memory", "appcache"
     // Note: any newly added storage type has to be manually handled here.
-    MOZ_MUST_USE nsresult VisitStorage(nsACString const& storageName);
+    [[nodiscard]] nsresult VisitStorage(nsACString const& storageName);
 
     // Writes content of mBuffer to mStream and truncates
     // the buffer.  It may fail when the input stream is closed by canceling
     // the input stream channel.  It can be used to stop the cache iteration
     // process.
-    MOZ_MUST_USE nsresult FlushBuffer();
+    [[nodiscard]] nsresult FlushBuffer();
 
     // Whether we are showing overview status of all available
     // storages.
