@@ -430,7 +430,7 @@ enum class GuardClassKind : uint8_t {
 JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
 
 // Enum for stubs handling a combination of typed arrays and typed objects.
-enum TypedThingLayout {
+enum TypedThingLayout : uint8_t {
   Layout_TypedArray,
   Layout_OutlineTypedObject,
   Layout_InlineTypedObject
@@ -562,7 +562,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(sym);
     addStubField(uintptr_t(sym), StubField::Type::Symbol);
   }
-  void writeRawWordField(const void* ptr) {
+  void writeRawWordField(uintptr_t word) {
+    addStubField(word, StubField::Type::RawWord);
+  }
+  void writeRawPointerField(const void* ptr) {
     addStubField(uintptr_t(ptr), StubField::Type::RawWord);
   }
 
@@ -579,6 +582,19 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     static_assert(JS_WHY_MAGIC_COUNT <= UINT8_MAX,
                   "JSWhyMagic must fit in uint8_t");
     buffer_.writeByte(uint8_t(whyMagic));
+  }
+  void writeTypedThingLayoutImm(TypedThingLayout layout) {
+    static_assert(sizeof(TypedThingLayout) == sizeof(uint8_t),
+                  "TypedThingLayout must fit in a byte");
+    buffer_.writeByte(uint8_t(layout));
+  }
+  void writeReferenceTypeImm(ReferenceType type) {
+    MOZ_ASSERT(size_t(type) <= UINT8_MAX);
+    buffer_.writeByte(uint8_t(type));
+  }
+  void writeScalarTypeImm(Scalar::Type type) {
+    MOZ_ASSERT(size_t(type) <= UINT8_MAX);
+    buffer_.writeByte(uint8_t(type));
   }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
@@ -974,63 +990,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  void storeFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs) {
-    writeOpWithOperandId(CacheOp::StoreFixedSlot, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    writeOperandId(rhs);
-  }
-
-  void storeDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs) {
-    writeOpWithOperandId(CacheOp::StoreDynamicSlot, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    writeOperandId(rhs);
-  }
-
-  void addAndStoreFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
-                            Shape* newShape, bool changeGroup,
-                            ObjectGroup* newGroup) {
-    writeOpWithOperandId(CacheOp::AddAndStoreFixedSlot, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    writeOperandId(rhs);
-    buffer_.writeByte(changeGroup);
-    addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
-    addStubField(uintptr_t(newShape), StubField::Type::Shape);
-  }
-
-  void addAndStoreDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
-                              Shape* newShape, bool changeGroup,
-                              ObjectGroup* newGroup) {
-    writeOpWithOperandId(CacheOp::AddAndStoreDynamicSlot, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    writeOperandId(rhs);
-    buffer_.writeByte(changeGroup);
-    addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
-    addStubField(uintptr_t(newShape), StubField::Type::Shape);
-  }
-
-  void allocateAndStoreDynamicSlot(ObjOperandId obj, size_t offset,
-                                   ValOperandId rhs, Shape* newShape,
-                                   bool changeGroup, ObjectGroup* newGroup,
-                                   uint32_t numNewSlots) {
-    writeOpWithOperandId(CacheOp::AllocateAndStoreDynamicSlot, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    writeOperandId(rhs);
-    buffer_.writeByte(changeGroup);
-    addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
-    addStubField(uintptr_t(newShape), StubField::Type::Shape);
-    addStubField(numNewSlots, StubField::Type::RawWord);
-  }
-
-  void storeTypedObjectReferenceProperty(ObjOperandId obj, uint32_t offset,
-                                         TypedThingLayout layout,
-                                         ReferenceType type, ValOperandId rhs) {
-    writeOpWithOperandId(CacheOp::StoreTypedObjectReferenceProperty, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    buffer_.writeByte(uint32_t(layout));
-    buffer_.writeByte(uint32_t(type));
-    writeOperandId(rhs);
-  }
-
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
                                       TypedThingLayout layout,
                                       Scalar::Type type, OperandId rhs) {
@@ -1038,13 +997,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(offset, StubField::Type::RawWord);
     buffer_.writeByte(uint32_t(layout));
     buffer_.writeByte(uint32_t(type));
-    writeOperandId(rhs);
-  }
-
-  void storeDenseElement(ObjOperandId obj, Int32OperandId index,
-                         ValOperandId rhs) {
-    writeOpWithOperandId(CacheOp::StoreDenseElement, obj);
-    writeOperandId(index);
     writeOperandId(rhs);
   }
 
@@ -1057,14 +1009,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(index);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(handleOOB));
-  }
-
-  void storeDenseElementHole(ObjOperandId obj, Int32OperandId index,
-                             ValOperandId rhs, bool handleAdd) {
-    writeOpWithOperandId(CacheOp::StoreDenseElementHole, obj);
-    writeOperandId(index);
-    writeOperandId(rhs);
-    buffer_.writeByte(handleAdd);
   }
 
   void arrayPush(ObjOperandId obj, ValOperandId rhs) {
