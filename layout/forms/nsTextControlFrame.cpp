@@ -675,7 +675,7 @@ void nsTextControlFrame::ReflowTextControlChild(
 
 nsSize nsTextControlFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   // XXXbz why?  Why not the nsBoxFrame sizes?
-  return nsBox::GetXULMinSize(aState);
+  return nsIFrame::GetXULMinSize(aState);
 }
 
 bool nsTextControlFrame::IsXULCollapsed() {

@@ -350,7 +350,7 @@ static void GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox,
 
   if (aMin) {
     *aMin = aBox->GetXULMinSize(aState);
-    nsBox::AddMargin(aBox, *aMin);
+    nsIFrame::AddXULMargin(aBox, *aMin);
     if (aMin->width < 0) {
       aMin->width = 0;
     }
@@ -361,7 +361,7 @@ static void GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox,
 
   if (aPref) {
     *aPref = aBox->GetXULPrefSize(aState);
-    nsBox::AddMargin(aBox, *aPref);
+    nsIFrame::AddXULMargin(aBox, *aPref);
     if (aPref->width < 0) {
       aPref->width = 0;
     }
@@ -1308,7 +1308,7 @@ nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
 
   if (mVScrollbarBox) {
     nsSize size = mVScrollbarBox->GetXULPrefSize(*aState);
-    nsBox::AddMargin(mVScrollbarBox, size);
+    nsIFrame::AddXULMargin(mVScrollbarBox, size);
     if (IsScrollbarOnRight())
       result.left = size.width;
     else
@@ -1317,7 +1317,7 @@ nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
 
   if (mHScrollbarBox) {
     nsSize size = mHScrollbarBox->GetXULPrefSize(*aState);
-    nsBox::AddMargin(mHScrollbarBox, size);
+    nsIFrame::AddXULMargin(mHScrollbarBox, size);
     // We don't currently support any scripts that would require a scrollbar
     // at the top. (Are there any?)
     result.bottom = size.height;
@@ -1628,17 +1628,17 @@ nsSize nsXULScrollFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
 
   if (mHelper.mVScrollbarBox && styles.mVertical == StyleOverflow::Scroll) {
     nsSize vSize = mHelper.mVScrollbarBox->GetXULPrefSize(aState);
-    nsBox::AddMargin(mHelper.mVScrollbarBox, vSize);
+    nsIFrame::AddXULMargin(mHelper.mVScrollbarBox, vSize);
     pref.width += vSize.width;
   }
 
   if (mHelper.mHScrollbarBox && styles.mHorizontal == StyleOverflow::Scroll) {
     nsSize hSize = mHelper.mHScrollbarBox->GetXULPrefSize(aState);
-    nsBox::AddMargin(mHelper.mHScrollbarBox, hSize);
+    nsIFrame::AddXULMargin(mHelper.mHScrollbarBox, hSize);
     pref.height += hSize.height;
   }
 
-  AddBorderAndPadding(pref);
+  AddXULBorderAndPadding(pref);
   bool widthSet, heightSet;
   nsIFrame::AddXULPrefSize(this, pref, widthSet, heightSet);
   return pref;
@@ -1651,19 +1651,19 @@ nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
 
   if (mHelper.mVScrollbarBox && styles.mVertical == StyleOverflow::Scroll) {
     nsSize vSize = mHelper.mVScrollbarBox->GetXULMinSize(aState);
-    AddMargin(mHelper.mVScrollbarBox, vSize);
+    AddXULMargin(mHelper.mVScrollbarBox, vSize);
     min.width += vSize.width;
     if (min.height < vSize.height) min.height = vSize.height;
   }
 
   if (mHelper.mHScrollbarBox && styles.mHorizontal == StyleOverflow::Scroll) {
     nsSize hSize = mHelper.mHScrollbarBox->GetXULMinSize(aState);
-    AddMargin(mHelper.mHScrollbarBox, hSize);
+    AddXULMargin(mHelper.mHScrollbarBox, hSize);
     min.height += hSize.height;
     if (min.width < hSize.width) min.width = hSize.width;
   }
 
-  AddBorderAndPadding(min);
+  AddXULBorderAndPadding(min);
   bool widthSet, heightSet;
   nsIFrame::AddXULMinSize(this, min, widthSet, heightSet);
   return min;
@@ -1672,7 +1672,7 @@ nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
 nsSize nsXULScrollFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  AddBorderAndPadding(maxSize);
+  AddXULBorderAndPadding(maxSize);
   bool widthSet, heightSet;
   nsIFrame::AddXULMaxSize(this, maxSize, widthSet, heightSet);
   return maxSize;
@@ -1690,7 +1690,7 @@ nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState) {
   nsresult rv = XULLayout(aState);
   aState.SetLayoutFlags(flags);
 
-  nsBox::DoXULLayout(aState);
+  nsIFrame::DoXULLayout(aState);
   return rv;
 }
 
@@ -5303,11 +5303,12 @@ bool nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
                                           bool aOnRightOrBottom,
                                           bool aHorizontal, bool aAdd) {
   if (aHorizontal) {
-    if (mHelper.mNeverHasHorizontalScrollbar || !mHelper.mHScrollbarBox)
+    if (mHelper.mNeverHasHorizontalScrollbar || !mHelper.mHScrollbarBox) {
       return false;
+    }
 
     nsSize hSize = mHelper.mHScrollbarBox->GetXULPrefSize(aState);
-    nsBox::AddMargin(mHelper.mHScrollbarBox, hSize);
+    nsIFrame::AddXULMargin(mHelper.mHScrollbarBox, hSize);
 
     ScrollFrameHelper::SetScrollbarVisibility(mHelper.mHScrollbarBox, aAdd);
 
@@ -5323,11 +5324,12 @@ bool nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
     }
     return fit;
   } else {
-    if (mHelper.mNeverHasVerticalScrollbar || !mHelper.mVScrollbarBox)
+    if (mHelper.mNeverHasVerticalScrollbar || !mHelper.mVScrollbarBox) {
       return false;
+    }
 
     nsSize vSize = mHelper.mVScrollbarBox->GetXULPrefSize(aState);
-    nsBox::AddMargin(mHelper.mVScrollbarBox, vSize);
+    nsIFrame::AddXULMargin(mHelper.mVScrollbarBox, vSize);
 
     ScrollFrameHelper::SetScrollbarVisibility(mHelper.mVScrollbarBox, aAdd);
 

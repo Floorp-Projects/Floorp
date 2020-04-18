@@ -515,7 +515,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   // own.
   if (mIsOpenChanged && !IsMenuList()) {
     nsIScrollableFrame* scrollframe =
-        do_QueryFrame(nsBox::GetChildXULBox(this));
+        do_QueryFrame(nsIFrame::GetChildXULBox(this));
     if (scrollframe) {
       AutoWeakFrame weakFrame(this);
       scrollframe->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
@@ -534,7 +534,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   if (aSizedToPopup) {
     prefSize.width = aParentMenu->GetRect().width;
   }
-  prefSize = BoundsCheck(minSize, prefSize, maxSize);
+  prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
   // if the size changed then set the bounds to be the preferred size
   bool sizeChanged = (mPrefSize != prefSize);
@@ -590,7 +590,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     nsViewManager* viewManager = view->GetViewManager();
     nsRect rect = GetRect();
     rect.x = rect.y = 0;
-    rect.SizeTo(BoundsCheck(minSize, rect.Size(), maxSize));
+    rect.SizeTo(XULBoundsCheck(minSize, rect.Size(), maxSize));
     viewManager->ResizeView(view, rect);
 
     if (mPopupState == ePopupOpening) {

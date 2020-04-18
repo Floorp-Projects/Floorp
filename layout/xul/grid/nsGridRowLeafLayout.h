@@ -54,7 +54,7 @@ class nsGridRowLeafLayout final : public nsGridRowLayout {
 
   nsGridRowLeafLayout();
   virtual ~nsGridRowLeafLayout();
-  // virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
+  // virtual void AddXULBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
 
  private:
 };  // class nsGridRowLeafLayout

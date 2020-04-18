@@ -965,7 +965,7 @@ nsRect nsTextBoxFrame::GetComponentAlphaBounds() const {
   return mTextDrawRect;
 }
 
-bool nsTextBoxFrame::ComputesOwnOverflowArea() { return true; }
+bool nsTextBoxFrame::XULComputesOwnOverflowArea() { return true; }
 
 /* virtual */
 void nsTextBoxFrame::MarkIntrinsicISizesDirty() {
@@ -1054,7 +1054,7 @@ nsSize nsTextBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) {
   nsSize size = mTextSize;
   DISPLAY_PREF_SIZE(this, size);
 
-  AddBorderAndPadding(size);
+  AddXULBorderAndPadding(size);
   bool widthSet, heightSet;
   nsIFrame::AddXULPrefSize(this, size, widthSet, heightSet);
 
@@ -1079,7 +1079,7 @@ nsSize nsTextBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
     }
   }
 
-  AddBorderAndPadding(size);
+  AddXULBorderAndPadding(size);
   bool widthSet, heightSet;
   nsIFrame::AddXULMinSize(this, size, widthSet, heightSet);
 

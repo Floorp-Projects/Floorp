@@ -13,7 +13,6 @@
 
 #include "nsGridCell.h"
 #include "nsFrame.h"
-#include "nsBox.h"
 #include "nsGridLayout2.h"
 
 nsGridCell::nsGridCell() : mBoxInColumn(nullptr), mBoxInRow(nullptr) {
@@ -32,7 +31,7 @@ nsSize nsGridCell::GetXULPrefSize(nsBoxLayoutState& aState) {
   if (mBoxInColumn) {
     nsSize pref = mBoxInColumn->GetXULPrefSize(aState);
 
-    nsBox::AddMargin(mBoxInColumn, pref);
+    nsIFrame::AddXULMargin(mBoxInColumn, pref);
     nsGridLayout2::AddOffset(mBoxInColumn, pref);
 
     nsBoxLayout::AddLargestSize(sum, pref);
@@ -41,7 +40,7 @@ nsSize nsGridCell::GetXULPrefSize(nsBoxLayoutState& aState) {
   if (mBoxInRow) {
     nsSize pref = mBoxInRow->GetXULPrefSize(aState);
 
-    nsBox::AddMargin(mBoxInRow, pref);
+    nsIFrame::AddXULMargin(mBoxInRow, pref);
     nsGridLayout2::AddOffset(mBoxInRow, pref);
 
     nsBoxLayout::AddLargestSize(sum, pref);
@@ -60,7 +59,7 @@ nsSize nsGridCell::GetXULMinSize(nsBoxLayoutState& aState) {
   if (mBoxInColumn) {
     nsSize min = mBoxInColumn->GetXULMinSize(aState);
 
-    nsBox::AddMargin(mBoxInColumn, min);
+    nsIFrame::AddXULMargin(mBoxInColumn, min);
     nsGridLayout2::AddOffset(mBoxInColumn, min);
 
     nsBoxLayout::AddLargestSize(sum, min);
@@ -69,7 +68,7 @@ nsSize nsGridCell::GetXULMinSize(nsBoxLayoutState& aState) {
   if (mBoxInRow) {
     nsSize min = mBoxInRow->GetXULMinSize(aState);
 
-    nsBox::AddMargin(mBoxInRow, min);
+    nsIFrame::AddXULMargin(mBoxInRow, min);
     nsGridLayout2::AddOffset(mBoxInRow, min);
 
     nsBoxLayout::AddLargestSize(sum, min);
@@ -88,7 +87,7 @@ nsSize nsGridCell::GetXULMaxSize(nsBoxLayoutState& aState) {
   if (mBoxInColumn) {
     nsSize max = mBoxInColumn->GetXULMaxSize(aState);
 
-    nsBox::AddMargin(mBoxInColumn, max);
+    nsIFrame::AddXULMargin(mBoxInColumn, max);
     nsGridLayout2::AddOffset(mBoxInColumn, max);
 
     nsBoxLayout::AddSmallestSize(sum, max);
@@ -97,7 +96,7 @@ nsSize nsGridCell::GetXULMaxSize(nsBoxLayoutState& aState) {
   if (mBoxInRow) {
     nsSize max = mBoxInRow->GetXULMaxSize(aState);
 
-    nsBox::AddMargin(mBoxInRow, max);
+    nsIFrame::AddXULMargin(mBoxInRow, max);
     nsGridLayout2::AddOffset(mBoxInRow, max);
 
     nsBoxLayout::AddSmallestSize(sum, max);

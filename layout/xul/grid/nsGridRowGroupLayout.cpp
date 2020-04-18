@@ -18,7 +18,6 @@
 #include "nsGridRowGroupLayout.h"
 #include "nsCOMPtr.h"
 #include "nsIScrollableFrame.h"
-#include "nsBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 #include "nsGridRow.h"
@@ -142,7 +141,7 @@ void nsGridRowGroupLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) {
     // calling MarkIntrinsicISizesDirty for every row group.
     aState.PresShell()->FrameNeedsReflow(aBox, IntrinsicDirty::TreeChange,
                                          NS_FRAME_IS_DIRTY);
-    nsIFrame* child = nsBox::GetChildXULBox(aBox);
+    nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
 
     while (child) {
       // walk into scrollframes
@@ -152,7 +151,7 @@ void nsGridRowGroupLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) {
       nsIGridPart* monument = nsGrid::GetPartFromBox(deepChild);
       if (monument) monument->DirtyRows(deepChild, aState);
 
-      child = nsBox::GetNextXULBox(child);
+      child = nsIFrame::GetNextXULBox(child);
     }
   }
 }
@@ -162,7 +161,7 @@ void nsGridRowGroupLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
   if (aBox) {
     int32_t startCount = aRowCount;
 
-    nsIFrame* child = nsBox::GetChildXULBox(aBox);
+    nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
 
     while (child) {
       // first see if it is a scrollframe. If so walk down into it and get the
@@ -172,11 +171,11 @@ void nsGridRowGroupLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
       nsIGridPart* monument = nsGrid::GetPartFromBox(deepChild);
       if (monument) {
         monument->CountRowsColumns(deepChild, aRowCount, aComputedColumnCount);
-        child = nsBox::GetNextXULBox(child);
+        child = nsIFrame::GetNextXULBox(child);
         continue;
       }
 
-      child = nsBox::GetNextXULBox(child);
+      child = nsIFrame::GetNextXULBox(child);
 
       // if not a monument. Then count it. It will be a bogus row
       aRowCount++;
@@ -193,7 +192,7 @@ int32_t nsGridRowGroupLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows) {
   int32_t rowCount = 0;
 
   if (aBox) {
-    nsIFrame* child = nsBox::GetChildXULBox(aBox);
+    nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
 
     while (child) {
       // first see if it is a scrollframe. If so walk down into it and get the
@@ -203,13 +202,13 @@ int32_t nsGridRowGroupLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows) {
       nsIGridPart* monument = nsGrid::GetPartFromBox(deepChild);
       if (monument) {
         rowCount += monument->BuildRows(deepChild, &aRows[rowCount]);
-        child = nsBox::GetNextXULBox(child);
+        child = nsIFrame::GetNextXULBox(child);
         continue;
       }
 
       aRows[rowCount].Init(child, true);
 
-      child = nsBox::GetNextXULBox(child);
+      child = nsIFrame::GetNextXULBox(child);
 
       // if not a monument. Then count it. It will be a bogus row
       rowCount++;

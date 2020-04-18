@@ -202,7 +202,7 @@ void nsLeafBoxFrame::Reflow(nsPresContext* aPresContext,
     prefSize = GetXULPrefSize(state);
     nsSize minSize = GetXULMinSize(state);
     nsSize maxSize = GetXULMaxSize(state);
-    prefSize = BoundsCheck(minSize, prefSize, maxSize);
+    prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
   }
 
   // get our desiredSize
@@ -281,28 +281,28 @@ nsresult nsLeafBoxFrame::CharacterDataChanged(
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
-  return nsBox::GetXULPrefSize(aState);
+  return nsIFrame::GetXULPrefSize(aState);
 }
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState) {
-  return nsBox::GetXULMinSize(aState);
+  return nsIFrame::GetXULMinSize(aState);
 }
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
-  return nsBox::GetXULMaxSize(aState);
+  return nsIFrame::GetXULMaxSize(aState);
 }
 
 /* virtual */
-nscoord nsLeafBoxFrame::GetXULFlex() { return nsBox::GetXULFlex(); }
+nscoord nsLeafBoxFrame::GetXULFlex() { return nsIFrame::GetXULFlex(); }
 
 /* virtual */
 nscoord nsLeafBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
-  return nsBox::GetXULBoxAscent(aState);
+  return nsIFrame::GetXULBoxAscent(aState);
 }
 
 NS_IMETHODIMP
 nsLeafBoxFrame::DoXULLayout(nsBoxLayoutState& aState) {
-  return nsBox::DoXULLayout(aState);
+  return nsIFrame::DoXULLayout(aState);
 }

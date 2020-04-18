@@ -14,7 +14,6 @@
 #include "nsGridRowLayout.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsBox.h"
 #include "nsStackLayout.h"
 #include "nsGrid.h"
 
@@ -53,7 +52,9 @@ nsIGridPart* nsGridRowLayout::GetParentGridPart(nsIFrame* aBox,
   aBox = nsGrid::GetScrollBox(aBox);
 
   // get the parent
-  if (aBox) aBox = nsBox::GetParentXULBox(aBox);
+  if (aBox) {
+    aBox = nsIFrame::GetParentXULBox(aBox);
+  }
 
   if (aBox) {
     nsIGridPart* parentGridRow = nsGrid::GetPartFromBox(aBox);
@@ -77,7 +78,7 @@ nsGrid* nsGridRowLayout::GetGrid(nsIFrame* aBox, int32_t* aIndex,
   }
 
   int32_t index = -1;
-  nsIFrame* child = nsBox::GetChildXULBox(aBox);
+  nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
   int32_t count = 0;
   while (child) {
     // if there is a scrollframe walk inside it to its child
@@ -94,7 +95,7 @@ nsGrid* nsGridRowLayout::GetGrid(nsIFrame* aBox, int32_t* aIndex,
     } else
       count++;
 
-    child = nsBox::GetNextXULBox(child);
+    child = nsIFrame::GetNextXULBox(child);
   }
 
   // if we didn't find ourselves then the tree isn't properly formed yet
@@ -127,10 +128,10 @@ nsMargin nsGridRowLayout::GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) {
     aBox = nsGrid::GetScrollBox(aBox);
 
     // see if we have a next to see if we are last
-    nsIFrame* next = nsBox::GetNextXULBox(aBox);
+    nsIFrame* next = nsIFrame::GetNextXULBox(aBox);
 
     // get the parent first child to see if we are first
-    nsIFrame* child = nsBox::GetChildXULBox(parent);
+    nsIFrame* child = nsIFrame::GetChildXULBox(parent);
 
     margin = part->GetTotalMargin(parent, aIsHorizontal);
 

@@ -16,7 +16,6 @@ if CONFIG['ENABLE_TESTS']:
     BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
-    'nsBox.h',
     'nsIScrollbarMediator.h',
     'nsXULPopupManager.h',
     'nsXULTooltipListener.h',
