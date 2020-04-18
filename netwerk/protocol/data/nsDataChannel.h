@@ -17,7 +17,7 @@ class nsDataChannel : public nsBaseChannel {
   explicit nsDataChannel(nsIURI* uri) { SetURI(uri); }
 
  protected:
-  virtual MOZ_MUST_USE nsresult OpenContentStream(
+  [[nodiscard]] virtual nsresult OpenContentStream(
       bool async, nsIInputStream** result, nsIChannel** channel) override;
 };
 

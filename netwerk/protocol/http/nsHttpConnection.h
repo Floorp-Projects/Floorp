@@ -113,9 +113,9 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   friend class HttpConnectionForceIO;
 
-  static MOZ_MUST_USE nsresult ReadFromStream(nsIInputStream*, void*,
-                                              const char*, uint32_t, uint32_t,
-                                              uint32_t*);
+  [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
+                                               const char*, uint32_t, uint32_t,
+                                               uint32_t*);
 
   // When a persistent connection is in the connection manager idle
   // connection pool, the nsHttpConnection still reads errors and hangups
@@ -149,9 +149,10 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   int64_t ContentBytesWritten() { return mContentBytesWritten; }
 
-  static MOZ_MUST_USE nsresult MakeConnectString(nsAHttpTransaction* trans,
-                                                 nsHttpRequestHead* request,
-                                                 nsACString& result, bool h2ws);
+  [[nodiscard]] static nsresult MakeConnectString(nsAHttpTransaction* trans,
+                                                  nsHttpRequestHead* request,
+                                                  nsACString& result,
+                                                  bool h2ws);
   void SetupSecondaryTLS(nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
   void SetInSpdyTunnel(bool arg);
 
@@ -187,23 +188,23 @@ class nsHttpConnection final : public HttpConnectionBase,
   };
 
   // called to cause the underlying socket to start speaking SSL
-  MOZ_MUST_USE nsresult InitSSLParams(bool connectingToProxy,
-                                      bool ProxyStartSSL);
-  MOZ_MUST_USE nsresult SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps);
+  [[nodiscard]] nsresult InitSSLParams(bool connectingToProxy,
+                                       bool ProxyStartSSL);
+  [[nodiscard]] nsresult SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps);
 
-  MOZ_MUST_USE nsresult OnTransactionDone(nsresult reason);
-  MOZ_MUST_USE nsresult OnSocketWritable();
-  MOZ_MUST_USE nsresult OnSocketReadable();
+  [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
+  [[nodiscard]] nsresult OnSocketWritable();
+  [[nodiscard]] nsresult OnSocketReadable();
 
-  MOZ_MUST_USE nsresult SetupProxyConnect();
+  [[nodiscard]] nsresult SetupProxyConnect();
 
   PRIntervalTime IdleTime();
   bool IsAlive();
 
   // Makes certain the SSL handshake is complete and NPN negotiation
   // has had a chance to happen
-  MOZ_MUST_USE bool EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
-                                      uint32_t& aOut0RTTBytesWritten);
+  [[nodiscard]] bool EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
+                                       uint32_t& aOut0RTTBytesWritten);
 
   void SetupSSL();
 
@@ -219,13 +220,13 @@ class nsHttpConnection final : public HttpConnectionBase,
                                   nsTArray<RefPtr<nsAHttpTransaction> >& list);
 
   // Directly Add a transaction to an active connection for SPDY
-  MOZ_MUST_USE nsresult AddTransaction(nsAHttpTransaction*, int32_t);
+  [[nodiscard]] nsresult AddTransaction(nsAHttpTransaction*, int32_t);
 
   // Used to set TCP keepalives for fast detection of dead connections during
   // an initial period, and slower detection for long-lived connections.
-  MOZ_MUST_USE nsresult StartShortLivedTCPKeepalives();
-  MOZ_MUST_USE nsresult StartLongLivedTCPKeepalives();
-  MOZ_MUST_USE nsresult DisableTCPKeepalives();
+  [[nodiscard]] nsresult StartShortLivedTCPKeepalives();
+  [[nodiscard]] nsresult StartLongLivedTCPKeepalives();
+  [[nodiscard]] nsresult DisableTCPKeepalives();
 
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
@@ -320,7 +321,7 @@ class nsHttpConnection final : public HttpConnectionBase,
  private:
   // For ForceSend()
   static void ForceSendIO(nsITimer* aTimer, void* aClosure);
-  MOZ_MUST_USE nsresult MaybeForceSendIO();
+  [[nodiscard]] nsresult MaybeForceSendIO();
   bool mForceSendPending;
   nsCOMPtr<nsITimer> mForceSendTimer;
 

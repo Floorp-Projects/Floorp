@@ -83,9 +83,10 @@ class TRRServiceChannel : public HttpBaseChannel,
   // nsIResumableChannel
   NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID) override;
 
-  MOZ_MUST_USE nsresult OnPush(uint32_t aPushedStreamId, const nsACString& aUrl,
-                               const nsACString& aRequestString,
-                               HttpTransactionShell* aTransaction);
+  [[nodiscard]] nsresult OnPush(uint32_t aPushedStreamId,
+                                const nsACString& aUrl,
+                                const nsACString& aRequestString,
+                                HttpTransactionShell* aTransaction);
   void SetPushedStreamTransactionAndId(
       HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId);
 
@@ -128,7 +129,7 @@ class TRRServiceChannel : public HttpBaseChannel,
   void AfterApplyContentConversions(nsresult aResult,
                                     nsIStreamListener* aListener);
   nsresult SyncProcessRedirection(uint32_t aHttpStatus);
-  virtual MOZ_MUST_USE nsresult SetupReplacementChannel(
+  [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI* aNewURI, nsIChannel* aNewChannel, bool aPreserveMethod,
       uint32_t aRedirectFlags) override;
 

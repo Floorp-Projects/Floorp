@@ -74,7 +74,7 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const HttpConnectionInfoCloneArgs& aInfoArgs);
   // Initialize the *real* nsHttpTransaction. See |nsHttpTransaction::Init|
   // for the parameters.
-  MOZ_MUST_USE nsresult InitInternal(
+  [[nodiscard]] nsresult InitInternal(
       uint32_t caps, const HttpConnectionInfoCloneArgs& aArgs,
       nsHttpRequestHead* reqHeaders,
       nsIInputStream* reqBody,  // use the trick in bug 1277681

@@ -59,10 +59,10 @@ class Http3Session final : public nsAHttpTransaction,
   bool CanReuse();
 
   // overload of nsAHttpTransaction
-  MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader*, uint32_t,
-                                          uint32_t*, bool*) final;
-  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter*, uint32_t,
+  [[nodiscard]] nsresult ReadSegmentsAgain(nsAHttpSegmentReader*, uint32_t,
                                            uint32_t*, bool*) final;
+  [[nodiscard]] nsresult WriteSegmentsAgain(nsAHttpSegmentWriter*, uint32_t,
+                                            uint32_t*, bool*) final;
 
   // The folowing functions are used by Http3Stream:
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,

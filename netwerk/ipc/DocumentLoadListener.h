@@ -169,7 +169,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     return 0;
   }
 
-  MOZ_MUST_USE RefPtr<ChildEndpointPromise> AttachStreamFilter(
+  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
       base::ProcessId aChildProcessId);
 
   using ParentEndpoint = ipc::Endpoint<extensions::PStreamFilterParent>;

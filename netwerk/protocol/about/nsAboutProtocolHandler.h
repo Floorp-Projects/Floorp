@@ -94,8 +94,8 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
    private:
     virtual ~Mutator() = default;
 
-    MOZ_MUST_USE NS_IMETHOD
-    Deserialize(const mozilla::ipc::URIParams& aParams) override {
+    [[nodiscard]] NS_IMETHOD Deserialize(
+        const mozilla::ipc::URIParams& aParams) override {
       return InitFromIPCParams(aParams);
     }
 
@@ -104,26 +104,26 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+    [[nodiscard]] NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return InitFromInputStream(aStream);
     }
 
-    MOZ_MUST_USE NS_IMETHOD Finalize(nsIURI** aURI) override {
+    [[nodiscard]] NS_IMETHOD Finalize(nsIURI** aURI) override {
       mURI->mMutable = false;
       mURI.forget(aURI);
       return NS_OK;
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetSpec(const nsACString& aSpec,
-                                    nsIURIMutator** aMutator) override {
+    [[nodiscard]] NS_IMETHOD SetSpec(const nsACString& aSpec,
+                                     nsIURIMutator** aMutator) override {
       if (aMutator) {
         NS_ADDREF(*aMutator = this);
       }
       return InitFromSpec(aSpec);
     }
 
-    MOZ_MUST_USE NS_IMETHOD InitWithBase(nsIURI* aInnerURI,
-                                         nsIURI* aBaseURI) override {
+    [[nodiscard]] NS_IMETHOD InitWithBase(nsIURI* aInnerURI,
+                                          nsIURI* aBaseURI) override {
       mURI = new nsNestedAboutURI(aInnerURI, aBaseURI);
       return NS_OK;
     }

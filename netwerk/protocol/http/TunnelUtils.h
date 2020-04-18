@@ -127,13 +127,13 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
                        nsAHttpSegmentWriter* writer);
 
   const nsAHttpTransaction* Transaction() const { return mTransaction.get(); }
-  MOZ_MUST_USE nsresult CommitToSegmentSize(uint32_t size,
-                                            bool forceCommitment) override;
-  MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports**) override;
-  MOZ_MUST_USE nsresult NudgeTunnel(NudgeTunnelCallback* callback);
-  MOZ_MUST_USE nsresult
-  SetProxiedTransaction(nsAHttpTransaction* aTrans,
-                        nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
+  [[nodiscard]] nsresult CommitToSegmentSize(uint32_t size,
+                                             bool forceCommitment) override;
+  [[nodiscard]] nsresult GetTransactionSecurityInfo(nsISupports**) override;
+  [[nodiscard]] nsresult NudgeTunnel(NudgeTunnelCallback* callback);
+  [[nodiscard]] nsresult SetProxiedTransaction(
+      nsAHttpTransaction* aTrans,
+      nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
   void newIODriver(nsIAsyncInputStream* aSocketIn,
                    nsIAsyncOutputStream* aSocketOut,
                    nsIAsyncInputStream** outSocketIn,
@@ -144,15 +144,15 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   NullHttpTransaction* QueryNullTransaction() override;
   nsHttpTransaction* QueryHttpTransaction() override;
   SpdyConnectTransaction* QuerySpdyConnectTransaction() override;
-  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
-                                           uint32_t count,
-                                           uint32_t* countWritten,
-                                           bool* again) override;
+  [[nodiscard]] nsresult WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
+                                            uint32_t count,
+                                            uint32_t* countWritten,
+                                            bool* again) override;
 
   bool HasDataToRecv();
 
  private:
-  MOZ_MUST_USE nsresult StartTimerCallback();
+  [[nodiscard]] nsresult StartTimerCallback();
   void Cleanup();
   int32_t FilterOutput(const char* aBuf, int32_t aAmount);
   int32_t FilterInput(char* aBuf, int32_t aAmount);
@@ -225,11 +225,12 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
                                  nsHttpConnectionInfo* aConnInfo,
                                  int32_t httpResponseCode);
 
-  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader* reader,
-                                     uint32_t count, uint32_t* countRead) final;
-  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter* writer,
+  [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader* reader,
                                       uint32_t count,
-                                      uint32_t* countWritten) final;
+                                      uint32_t* countRead) final;
+  [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter* writer,
+                                       uint32_t count,
+                                       uint32_t* countWritten) final;
   nsHttpRequestHead* RequestHead() final;
   void Close(nsresult reason) final;
 
@@ -246,7 +247,7 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   friend class InputStreamShim;
   friend class OutputStreamShim;
 
-  MOZ_MUST_USE nsresult Flush(uint32_t count, uint32_t* countRead);
+  [[nodiscard]] nsresult Flush(uint32_t count, uint32_t* countRead);
   void CreateShimError(nsresult code);
 
   nsCString mConnectString;
@@ -286,9 +287,9 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   nsCOMPtr<nsIAsyncInputStream> mOutputShimPipe;
   nsresult WriteDataToBuffer(nsAHttpSegmentWriter* writer, uint32_t count,
                              uint32_t* countWritten);
-  MOZ_MUST_USE nsresult WebsocketWriteSegments(nsAHttpSegmentWriter* writer,
-                                               uint32_t count,
-                                               uint32_t* countWritten);
+  [[nodiscard]] nsresult WebsocketWriteSegments(nsAHttpSegmentWriter* writer,
+                                                uint32_t count,
+                                                uint32_t* countWritten);
 
   bool mCreateShimErrorCalled;
 };

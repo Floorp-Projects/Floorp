@@ -101,7 +101,7 @@ class InterceptedHttpChannel final
 
   virtual void ReleaseListeners() override;
 
-  virtual MOZ_MUST_USE nsresult SetupReplacementChannel(
+  [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI* aURI, nsIChannel* aChannel, bool aPreserveMethod,
       uint32_t aRedirectFlags) override;
 

@@ -109,11 +109,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   static already_AddRefed<nsHttpHandler> GetInstance();
 
-  MOZ_MUST_USE nsresult
-  AddStandardRequestHeaders(nsHttpRequestHead*, bool isSecure,
-                            nsContentPolicyType aContentPolicyType);
-  MOZ_MUST_USE nsresult AddConnectionHeader(nsHttpRequestHead*,
-                                            uint32_t capabilities);
+  [[nodiscard]] nsresult AddStandardRequestHeaders(
+      nsHttpRequestHead*, bool isSecure,
+      nsContentPolicyType aContentPolicyType);
+  [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*,
+                                             uint32_t capabilities);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
 
   const nsCString& UserAgent();
@@ -282,59 +282,59 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // Called to kick-off a new transaction, by default the transaction
   // will be put on the pending transaction queue if it cannot be
   // initiated at this time.  Callable from any thread.
-  MOZ_MUST_USE nsresult InitiateTransaction(HttpTransactionShell* trans,
-                                            int32_t priority);
+  [[nodiscard]] nsresult InitiateTransaction(HttpTransactionShell* trans,
+                                             int32_t priority);
 
   // This function is also called to kick-off a new transaction. But the new
   // transaction will take a sticky connection from |transWithStickyConn|
   // and reuse it.
-  MOZ_MUST_USE nsresult InitiateTransactionWithStickyConn(
+  [[nodiscard]] nsresult InitiateTransactionWithStickyConn(
       HttpTransactionShell* trans, int32_t priority,
       HttpTransactionShell* transWithStickyConn);
 
   // Called to change the priority of an existing transaction that has
   // already been initiated.
-  MOZ_MUST_USE nsresult RescheduleTransaction(HttpTransactionShell* trans,
-                                              int32_t priority);
+  [[nodiscard]] nsresult RescheduleTransaction(HttpTransactionShell* trans,
+                                               int32_t priority);
 
   void UpdateClassOfServiceOnTransaction(HttpTransactionShell* trans,
                                          uint32_t classOfService);
 
   // Called to cancel a transaction, which may or may not be assigned to
   // a connection.  Callable from any thread.
-  MOZ_MUST_USE nsresult CancelTransaction(HttpTransactionShell* trans,
-                                          nsresult reason);
+  [[nodiscard]] nsresult CancelTransaction(HttpTransactionShell* trans,
+                                           nsresult reason);
 
   // Called when a connection is done processing a transaction.  Callable
   // from any thread.
-  MOZ_MUST_USE nsresult ReclaimConnection(HttpConnectionBase* conn) {
+  [[nodiscard]] nsresult ReclaimConnection(HttpConnectionBase* conn) {
     return mConnMgr->ReclaimConnection(conn);
   }
 
-  MOZ_MUST_USE nsresult ProcessPendingQ(nsHttpConnectionInfo* cinfo) {
+  [[nodiscard]] nsresult ProcessPendingQ(nsHttpConnectionInfo* cinfo) {
     return mConnMgr->ProcessPendingQ(cinfo);
   }
 
-  MOZ_MUST_USE nsresult ProcessPendingQ() {
+  [[nodiscard]] nsresult ProcessPendingQ() {
     return mConnMgr->ProcessPendingQ();
   }
 
-  MOZ_MUST_USE nsresult GetSocketThreadTarget(nsIEventTarget** target) {
+  [[nodiscard]] nsresult GetSocketThreadTarget(nsIEventTarget** target) {
     return mConnMgr->GetSocketThreadTarget(target);
   }
 
-  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
-                                           nsIInterfaceRequestor* callbacks,
-                                           uint32_t caps = 0) {
+  [[nodiscard]] nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
+                                            nsIInterfaceRequestor* callbacks,
+                                            uint32_t caps = 0) {
     TickleWifi(callbacks);
     RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
     return mConnMgr->SpeculativeConnect(clone, callbacks, caps);
   }
 
-  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
-                                           nsIInterfaceRequestor* callbacks,
-                                           uint32_t caps,
-                                           NullHttpTransaction* aTrans) {
+  [[nodiscard]] nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
+                                            nsIInterfaceRequestor* callbacks,
+                                            uint32_t caps,
+                                            NullHttpTransaction* aTrans) {
     RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
     return mConnMgr->SpeculativeConnect(clone, callbacks, caps, aTrans);
   }
@@ -360,8 +360,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // The HTTP handler caches pointers to specific XPCOM services, and
   // provides the following helper routines for accessing those services:
   //
-  MOZ_MUST_USE nsresult GetStreamConverterService(nsIStreamConverterService**);
-  MOZ_MUST_USE nsresult GetIOService(nsIIOService** service);
+  [[nodiscard]] nsresult GetStreamConverterService(nsIStreamConverterService**);
+  [[nodiscard]] nsresult GetIOService(nsIIOService** service);
   nsICookieService* GetCookieService();  // not addrefed
   nsISiteSecurityService* GetSSService();
 
@@ -414,7 +414,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // Called by channels before a redirect happens. This notifies both the
   // channel's and the global redirect observers.
-  MOZ_MUST_USE nsresult AsyncOnChannelRedirect(
+  [[nodiscard]] nsresult AsyncOnChannelRedirect(
       nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
       nsIEventTarget* mainThreadEventTarget = nullptr);
 
@@ -426,9 +426,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // Generates the host:port string for use in the Host: header as well as the
   // CONNECT line for proxies. This handles IPv6 literals correctly.
-  static MOZ_MUST_USE nsresult GenerateHostPort(const nsCString& host,
-                                                int32_t port,
-                                                nsACString& hostLine);
+  [[nodiscard]] static nsresult GenerateHostPort(const nsCString& host,
+                                                 int32_t port,
+                                                 nsACString& hostLine);
 
   SpdyInformation* SpdyInfo() { return &mSpdyInfo; }
   bool IsH2MandatorySuiteEnabled() { return mH2MandatorySuiteEnabled; }
@@ -491,7 +491,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   virtual ~nsHttpHandler();
 
-  MOZ_MUST_USE nsresult Init();
+  [[nodiscard]] nsresult Init();
 
   //
   // Useragent/prefs helper methods
@@ -501,10 +501,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   static void PrefsChanged(const char* pref, void* self);
   void PrefsChanged(const char* pref);
 
-  MOZ_MUST_USE nsresult SetAcceptLanguages();
-  MOZ_MUST_USE nsresult SetAcceptEncodings(const char*, bool mIsSecure);
+  [[nodiscard]] nsresult SetAcceptLanguages();
+  [[nodiscard]] nsresult SetAcceptEncodings(const char*, bool mIsSecure);
 
-  MOZ_MUST_USE nsresult InitConnectionMgr();
+  [[nodiscard]] nsresult InitConnectionMgr();
 
   void NotifyObservers(nsIChannel* chan, const char* event);
 
@@ -763,8 +763,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
  public:
   // Socket thread only
-  MOZ_MUST_USE nsresult SubmitPacedRequest(ATokenBucketEvent* event,
-                                           nsICancelable** cancel) {
+  [[nodiscard]] nsresult SubmitPacedRequest(ATokenBucketEvent* event,
+                                            nsICancelable** cancel) {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (!mRequestTokenBucket) {
       return NS_ERROR_NOT_AVAILABLE;
@@ -791,9 +791,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void TickleWifi(nsIInterfaceRequestor* cb);
 
  private:
-  MOZ_MUST_USE nsresult
-  SpeculativeConnectInternal(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                             nsIInterfaceRequestor* aCallbacks, bool anonymous);
+  [[nodiscard]] nsresult SpeculativeConnectInternal(
+      nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
+      bool anonymous);
 
   // State for generating channelIds
   uint32_t mProcessId;
@@ -814,13 +814,13 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   Mutex mSpdyBlacklistLock;
 
  public:
-  MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
+  [[nodiscard]] nsresult NewChannelId(uint64_t& channelId);
   void AddHttpChannel(uint64_t aId, nsISupports* aChannel);
   void RemoveHttpChannel(uint64_t aId);
   nsWeakPtr GetWeakHttpChannel(uint64_t aId);
 
   void BlacklistSpdy(const nsHttpConnectionInfo* ci);
-  MOZ_MUST_USE bool IsSpdyBlacklisted(const nsHttpConnectionInfo* ci);
+  [[nodiscard]] bool IsSpdyBlacklisted(const nsHttpConnectionInfo* ci);
 
  private:
   nsTHashtable<nsCStringHashKey> mBlacklistedSpdyOrigins;
@@ -855,7 +855,7 @@ class nsHttpsHandler : public nsIHttpProtocolHandler,
 
   nsHttpsHandler() = default;
 
-  MOZ_MUST_USE nsresult Init();
+  [[nodiscard]] nsresult Init();
 };
 
 //-----------------------------------------------------------------------------

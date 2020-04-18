@@ -73,7 +73,7 @@ class HttpTransactionShell : public nsISupports {
   // @param topLevelOuterContentWindowId
   //        indicate the top level outer content window in which
   //        this transaction is being loaded.
-  MOZ_MUST_USE nsresult virtual Init(
+  [[nodiscard]] nsresult virtual Init(
       uint32_t caps, nsHttpConnectionInfo* connInfo,
       nsHttpRequestHead* reqHeaders, nsIInputStream* reqBody,
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,

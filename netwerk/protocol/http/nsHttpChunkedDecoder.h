@@ -25,9 +25,9 @@ class nsHttpChunkedDecoder {
   bool ReachedEOF() { return mReachedEOF; }
 
   // called by the transaction to handle chunked content.
-  MOZ_MUST_USE nsresult HandleChunkedContent(char* buf, uint32_t count,
-                                             uint32_t* contentRead,
-                                             uint32_t* contentRemaining);
+  [[nodiscard]] nsresult HandleChunkedContent(char* buf, uint32_t count,
+                                              uint32_t* contentRead,
+                                              uint32_t* contentRemaining);
 
   nsHttpHeaderArray* Trailers() { return mTrailers.get(); }
 
@@ -37,8 +37,8 @@ class nsHttpChunkedDecoder {
   uint32_t GetChunkRemaining() { return mChunkRemaining; }
 
  private:
-  MOZ_MUST_USE nsresult ParseChunkRemaining(char* buf, uint32_t count,
-                                            uint32_t* countRead);
+  [[nodiscard]] nsresult ParseChunkRemaining(char* buf, uint32_t count,
+                                             uint32_t* countRead);
 
  private:
   UniquePtr<nsHttpHeaderArray> mTrailers;
