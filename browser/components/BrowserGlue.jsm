@@ -94,6 +94,25 @@ let ACTORS = {
     matches: ["about:logins", "about:logins?*"],
   },
 
+  AboutWelcome: {
+    parent: {
+      moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
+      events: {
+        // This is added so the actor instantiates immediately and makes
+        // methods available to the page js on load.
+        DOMWindowCreated: {},
+      },
+    },
+    matches: ["about:welcome"],
+
+    // See Bug 1618306
+    // Remove this preference check when we turn on separate about:welcome for all users.
+    enablePreference: "browser.aboutwelcome.enabled",
+  },
+
   BlockedSite: {
     parent: {
       moduleURI: "resource:///actors/BlockedSiteParent.jsm",
@@ -431,51 +450,6 @@ let LEGACY_ACTORS = {
     },
   },
 };
-
-// See Bug 1618306
-// This should be moved to BrowserGlue.jsm and this file should be deleted
-// when we turn on separate about:welcome for all users.
-const ACTOR_CONFIG = {
-  parent: {
-    moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
-  },
-  child: {
-    moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
-    events: {
-      // This is added so the actor instantiates immediately and makes
-      // methods available to the page js on load.
-      DOMWindowCreated: {},
-    },
-  },
-  matches: ["about:welcome"],
-};
-
-const AboutWelcomeActorHelper = {
-  register() {
-    ChromeUtils.registerWindowActor("AboutWelcome", ACTOR_CONFIG);
-  },
-  unregister() {
-    ChromeUtils.unregisterWindowActor("AboutWelcome");
-  },
-};
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "isSeparateAboutWelcome",
-  "browser.aboutwelcome.enabled",
-  false,
-  (prefName, prevValue, isEnabled) => {
-    if (isEnabled) {
-      AboutWelcomeActorHelper.register();
-    } else {
-      AboutWelcomeActorHelper.unregister();
-    }
-  }
-);
-
-if (isSeparateAboutWelcome) {
-  AboutWelcomeActorHelper.register();
-}
 
 (function earlyBlankFirstPaint() {
   if (
