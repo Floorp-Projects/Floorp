@@ -416,13 +416,23 @@ inline JSObject* NewObjectWithGivenTaggedProto(
                                        initialShapeFlags);
 }
 
+namespace detail {
+
+template <typename T, NewObjectKind NewKind>
+inline T* NewObjectWithGivenTaggedProtoForKind(JSContext* cx,
+                                               Handle<TaggedProto> proto) {
+  JSObject* obj =
+      NewObjectWithGivenTaggedProto(cx, &T::class_, proto, NewKind, 0);
+  return obj ? &obj->as<T>() : nullptr;
+}
+
+}  // namespace detail
+
 template <typename T>
 inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
-                                        Handle<TaggedProto> proto,
-                                        NewObjectKind newKind = GenericObject,
-                                        uint32_t initialShapeFlags = 0) {
-  JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, newKind,
-                                                initialShapeFlags);
+                                        Handle<TaggedProto> proto) {
+  JSObject* obj =
+      NewObjectWithGivenTaggedProto(cx, &T::class_, proto, GenericObject, 0);
   return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -466,20 +476,20 @@ inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
 
 template <typename T>
 inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
-                                          GenericObject);
+  return detail::NewObjectWithGivenTaggedProtoForKind<T, GenericObject>(
+      cx, AsTaggedProto(proto));
 }
 
 template <typename T>
 inline T* NewSingletonObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
-                                          SingletonObject);
+  return detail::NewObjectWithGivenTaggedProtoForKind<T, SingletonObject>(
+      cx, AsTaggedProto(proto));
 }
 
 template <typename T>
 inline T* NewTenuredObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto),
-                                          TenuredObject);
+  return detail::NewObjectWithGivenTaggedProtoForKind<T, TenuredObject>(
+      cx, AsTaggedProto(proto));
 }
 
 template <typename T>
