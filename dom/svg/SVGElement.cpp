@@ -964,7 +964,6 @@ const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
     {nsGkAtoms::pointer_events},
     {nsGkAtoms::shape_rendering},
     {nsGkAtoms::text_rendering},
-    {nsGkAtoms::transform_origin},
     {nsGkAtoms::visibility},
     {nullptr}};
 

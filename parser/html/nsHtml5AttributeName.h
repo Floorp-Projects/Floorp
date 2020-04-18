@@ -472,7 +472,6 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_POINTSATZ;
   static nsHtml5AttributeName* ATTR_SPAN;
   static nsHtml5AttributeName* ATTR_STANDBY;
-  static nsHtml5AttributeName* ATTR_TRANSFORM_ORIGIN;
   static nsHtml5AttributeName* ATTR_TRANSFORM;
   static nsHtml5AttributeName* ATTR_VLINK;
   static nsHtml5AttributeName* ATTR_WHEN;
