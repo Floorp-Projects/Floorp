@@ -12,6 +12,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -22,7 +24,7 @@ class Report final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Report)
 
-  Report(nsPIDOMWindowInner* aWindow, const nsAString& aType,
+  Report(nsIGlobalObject* aGlobal, const nsAString& aType,
          const nsAString& aURL, ReportBody* aBody);
 
   already_AddRefed<Report> Clone();
@@ -30,7 +32,7 @@ class Report final : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   void GetType(nsAString& aType) const;
 
@@ -41,7 +43,7 @@ class Report final : public nsISupports, public nsWrapperCache {
  private:
   ~Report();
 
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 
   const nsString mType;
   const nsString mURL;
