@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsLeafFrame.h"
-#include "nsBox.h"
 
 namespace mozilla {
 class PresShell;
@@ -64,7 +63,7 @@ class nsLeafBoxFrame : public nsLeafFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual bool ComputesOwnOverflowArea() override { return false; }
+  virtual bool XULComputesOwnOverflowArea() override { return false; }
 
  protected:
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;

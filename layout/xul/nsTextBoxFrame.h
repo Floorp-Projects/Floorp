@@ -58,7 +58,7 @@ class nsTextBoxFrame final : public nsLeafBoxFrame {
 
   nsRect GetComponentAlphaBounds() const;
 
-  virtual bool ComputesOwnOverflowArea() override;
+  virtual bool XULComputesOwnOverflowArea() override;
 
   void GetCroppedTitle(nsString& aTitle) const { aTitle = mCroppedTitle; }
 

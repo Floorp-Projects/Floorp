@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Likely.h"
-#include "nsBox.h"
 #include "mozilla/Logging.h"
 
 #include "mozilla/ReflowInput.h"
@@ -125,7 +124,7 @@ struct nsRect;
  * Sets the NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW bit, so the default
  * behavior is to keep the frame and view position and size in sync.
  */
-class nsFrame : public nsBox {
+class nsFrame : public nsIFrame {
  public:
   /**
    * Create a new "empty" frame that maps a given piece of content into a
@@ -437,7 +436,7 @@ class nsFrame : public nsBox {
 
   // We compute and store the HTML content's overflow area. So don't
   // try to compute it in the box code.
-  bool ComputesOwnOverflowArea() override { return true; }
+  bool XULComputesOwnOverflowArea() override { return true; }
 
   //--------------------------------------------------
   // Additional methods

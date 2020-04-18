@@ -14,7 +14,6 @@
 #include "nsStackLayout.h"
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
-#include "nsBox.h"
 #include "nsBoxFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -52,11 +51,11 @@ nsStackLayout::nsStackLayout() = default;
 nsSize nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
   nsSize prefSize(0, 0);
 
-  nsIFrame* child = nsBox::GetChildXULBox(aBox);
+  nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
   while (child) {
     nsSize pref = child->GetXULPrefSize(aState);
 
-    AddMargin(child, pref);
+    AddXULMargin(child, pref);
     nsMargin offset;
     GetOffset(child, offset);
     pref.width += offset.LeftRight();
@@ -69,10 +68,10 @@ nsSize nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       prefSize.height = pref.height;
     }
 
-    child = nsBox::GetNextXULBox(child);
+    child = nsIFrame::GetNextXULBox(child);
   }
 
-  AddBorderAndPadding(aBox, prefSize);
+  AddXULBorderAndPadding(aBox, prefSize);
 
   return prefSize;
 }
@@ -80,11 +79,11 @@ nsSize nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
 nsSize nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
   nsSize minSize(0, 0);
 
-  nsIFrame* child = nsBox::GetChildXULBox(aBox);
+  nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
   while (child) {
     nsSize min = child->GetXULMinSize(aState);
 
-    AddMargin(child, min);
+    AddXULMargin(child, min);
     nsMargin offset;
     GetOffset(child, offset);
     min.width += offset.LeftRight();
@@ -97,10 +96,10 @@ nsSize nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       minSize.height = min.height;
     }
 
-    child = nsBox::GetNextXULBox(child);
+    child = nsIFrame::GetNextXULBox(child);
   }
 
-  AddBorderAndPadding(aBox, minSize);
+  AddXULBorderAndPadding(aBox, minSize);
 
   return minSize;
 }
@@ -108,14 +107,14 @@ nsSize nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
 nsSize nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
   nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  nsIFrame* child = nsBox::GetChildXULBox(aBox);
+  nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
   while (child) {
     nsSize min = child->GetXULMinSize(aState);
     nsSize max = child->GetXULMaxSize(aState);
 
-    max = nsBox::BoundsCheckMinMax(min, max);
+    max = nsIFrame::XULBoundsCheckMinMax(min, max);
 
-    AddMargin(child, max);
+    AddXULMargin(child, max);
     nsMargin offset;
     GetOffset(child, offset);
     max.width += offset.LeftRight();
@@ -128,10 +127,10 @@ nsSize nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       maxSize.height = max.height;
     }
 
-    child = nsBox::GetNextXULBox(child);
+    child = nsIFrame::GetNextXULBox(child);
   }
 
-  AddBorderAndPadding(aBox, maxSize);
+  AddXULBorderAndPadding(aBox, maxSize);
 
   return maxSize;
 }
@@ -139,7 +138,7 @@ nsSize nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
 nscoord nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState) {
   nscoord vAscent = 0;
 
-  nsIFrame* child = nsBox::GetChildXULBox(aBox);
+  nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
   while (child) {
     nscoord ascent = child->GetXULBoxAscent(aState);
     nsMargin margin;
@@ -147,7 +146,7 @@ nscoord nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState) {
     ascent += margin.top;
     if (ascent > vAscent) vAscent = ascent;
 
-    child = nsBox::GetNextXULBox(child);
+    child = nsIFrame::GetNextXULBox(child);
   }
 
   return vAscent;
@@ -248,7 +247,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
   bool grow;
 
   do {
-    nsIFrame* child = nsBox::GetChildXULBox(aBox);
+    nsIFrame* child = nsIFrame::GetChildXULBox(aBox);
     grow = false;
 
     while (child) {
@@ -343,7 +342,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
         }
       }
 
-      child = nsBox::GetNextXULBox(child);
+      child = nsIFrame::GetNextXULBox(child);
     }
   } while (grow);
 
