@@ -73,7 +73,7 @@ following parameters:
    are used by default.
 -  ``--fix, -f`` - Try to autofix errors detected by the checkers.
    Depending on the checker, this option might not do anything.
-   The list of checkers with autofix can be found on the `clang-tidy website https://clang.llvm.org/extra/clang-tidy/checks/list.html>`__.
+   The list of checkers with autofix can be found on the `clang-tidy website <https://clang.llvm.org/extra/clang-tidy/checks/list.html>`__.
 -  ``--header-filter, -h-f`` - Regular expression matching the names of
    the headers to output diagnostic from.Diagnostic from the main file
    of each translation unit are always displayed.
