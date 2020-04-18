@@ -858,16 +858,17 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed) {
+bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
+                                                  ObjOperandId objId,
+                                                  uint32_t offsetOffset,
+                                                  ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
-  Address offsetAddr = stubAddress(reader.stubOffset());
+  Address offsetAddr = stubAddress(offsetOffset);
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val =
-      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Maybe<AutoScratchRegister> scratch2;
@@ -899,33 +900,37 @@ bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed) {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreFixedSlot() {
+bool BaselineCacheIRCompiler::emitStoreFixedSlot(ObjOperandId objId,
+                                                 uint32_t offsetOffset,
+                                                 ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitStoreSlotShared(true);
+  return emitStoreSlotShared(true, objId, offsetOffset, rhsId);
 }
 
-bool BaselineCacheIRCompiler::emitStoreDynamicSlot() {
+bool BaselineCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
+                                                   uint32_t offsetOffset,
+                                                   ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitStoreSlotShared(false);
+  return emitStoreSlotShared(false, objId, offsetOffset, rhsId);
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op) {
+bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
+    CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
+    Maybe<uint32_t> numNewSlotsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
-  Address offsetAddr = stubAddress(reader.stubOffset());
+  Address offsetAddr = stubAddress(offsetOffset);
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val =
-      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
 
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch2(allocator, masm);
 
-  bool changeGroup = reader.readBool();
-  Address newGroupAddr = stubAddress(reader.stubOffset());
-  Address newShapeAddr = stubAddress(reader.stubOffset());
+  Address newGroupAddr = stubAddress(newGroupOffset);
+  Address newShapeAddr = stubAddress(newShapeOffset);
 
   if (op == CacheOp::AllocateAndStoreDynamicSlot) {
     // We have to (re)allocate dynamic slots. Do this first, as it's the
@@ -933,7 +938,7 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op) {
     // call below: it does not have to worry about saving registers used by
     // failure paths. Note that growSlotsPure is fallible but does
     // not GC.
-    Address numNewSlotsAddr = stubAddress(reader.stubOffset());
+    Address numNewSlotsAddr = stubAddress(*numNewSlotsOffset);
 
     FailurePath* failure;
     if (!addFailurePath(&failure)) {
@@ -1009,33 +1014,47 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op) {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot() {
+bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot);
+  Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
+  return emitAddAndStoreSlotShared(
+      CacheOp::AddAndStoreFixedSlot, objId, offsetOffset, rhsId, changeGroup,
+      newGroupOffset, newShapeOffset, numNewSlotsOffset);
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot() {
+bool BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot);
+  Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
+  return emitAddAndStoreSlotShared(
+      CacheOp::AddAndStoreDynamicSlot, objId, offsetOffset, rhsId, changeGroup,
+      newGroupOffset, newShapeOffset, numNewSlotsOffset);
 }
 
-bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot() {
+bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
+    uint32_t numNewSlotsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot);
+  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot, objId,
+                                   offsetOffset, rhsId, changeGroup,
+                                   newGroupOffset, newShapeOffset,
+                                   mozilla::Some(numNewSlotsOffset));
 }
 
-bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty() {
+bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
+    ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
+    ReferenceType type, ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
-  Address offsetAddr = stubAddress(reader.stubOffset());
-  TypedThingLayout layout = reader.typedThingLayout();
-  ReferenceType type = reader.referenceTypeDescrType();
+  Address offsetAddr = stubAddress(offsetOffset);
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val =
-      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
 
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch2(allocator, masm);
@@ -1061,16 +1080,15 @@ bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreDenseElement() {
+bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
+                                                    Int32OperandId indexId,
+                                                    ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
-  Int32OperandId indexId = reader.int32OperandId();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val =
-      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -1139,21 +1157,19 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreDenseElementHole() {
+bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
+                                                        Int32OperandId indexId,
+                                                        ValOperandId rhsId,
+                                                        bool handleAdd) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
-  Int32OperandId indexId = reader.int32OperandId();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val =
-      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-
-  bool handleAdd = reader.readBool();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

@@ -4474,21 +4474,22 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
 
   if (holder->isFixedSlot(propShape->slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propShape->slot());
-    writer.addAndStoreFixedSlot(holderId, offset, rhsValId, propShape,
-                                changeGroup, newGroup);
+    writer.addAndStoreFixedSlot(holderId, offset, rhsValId, changeGroup,
+                                newGroup, propShape);
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
     uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
     if (numOldSlots == numNewSlots) {
-      writer.addAndStoreDynamicSlot(holderId, offset, rhsValId, propShape,
-                                    changeGroup, newGroup);
+      writer.addAndStoreDynamicSlot(holderId, offset, rhsValId, changeGroup,
+                                    newGroup, propShape);
       trackAttached("AddSlot");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
-      writer.allocateAndStoreDynamicSlot(holderId, offset, rhsValId, propShape,
-                                         changeGroup, newGroup, numNewSlots);
+      writer.allocateAndStoreDynamicSlot(holderId, offset, rhsValId,
+                                         changeGroup, newGroup, propShape,
+                                         numNewSlots);
       trackAttached("AllocateSlot");
     }
   }
