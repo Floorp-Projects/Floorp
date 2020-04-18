@@ -21,6 +21,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const EXPORTED_SYMBOLS = ["MessagingExperimentAction"];
+const RECIPE_SOURCE = "normandy";
 
 class MessagingExperimentAction extends BaseStudyAction {
   constructor() {
@@ -33,11 +34,11 @@ class MessagingExperimentAction extends BaseStudyAction {
 
   async _run(recipe) {
     if (recipe.arguments) {
-      await this.manager.onRecipe(recipe.arguments);
+      await this.manager.onRecipe(recipe.arguments, RECIPE_SOURCE);
     }
   }
 
   async _finalize() {
-    this.manager.onFinalize();
+    this.manager.onFinalize(RECIPE_SOURCE);
   }
 }
