@@ -167,7 +167,8 @@ bool WarpCacheIRTranspiler::transpile_GuardToInt32Index() {
   Int32OperandId outputId = reader.int32OperandId();
 
   MDefinition* input = getOperand(inputId);
-  auto* ins = MToNumberInt32::New(alloc(), input);
+  auto* ins =
+      MToNumberInt32::New(alloc(), input, IntConversionInputKind::NumbersOnly);
   current->add(ins);
 
   return defineOperand(outputId, ins);
