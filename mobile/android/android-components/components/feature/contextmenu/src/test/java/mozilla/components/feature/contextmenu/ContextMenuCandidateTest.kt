@@ -786,9 +786,29 @@ class ContextMenuCandidateTest {
             HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
         ))
 
+        assertTrue(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.VIDEO("https://www.example.com")
+        ))
+
+        assertTrue(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.AUDIO("https://www.example.com")
+        ))
+
         assertFalse(openLinkInExternalApp.showFor(
             mock(),
             HitResult.UNKNOWN("https://www.otherexample.com")
+        ))
+
+        assertFalse(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.VIDEO("https://www.otherexample.com")
+        ))
+
+        assertFalse(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.AUDIO("https://www.otherexample.com")
         ))
 
         // action
