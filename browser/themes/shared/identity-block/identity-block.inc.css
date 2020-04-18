@@ -30,7 +30,7 @@
 #identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
 #identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
-#identity-box[pageproxystate="invalid"] > #identity-icon-labels,
+#identity-box[pageproxystate="invalid"] > #identity-icon-label,
 #identity-box[pageproxystate="invalid"] > #remote-control-icon {
   display: none;
 }
@@ -63,34 +63,19 @@
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
-#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon-labels {
-  color: #058B00;
-}
-
-:root[lwt-toolbar-field-brighttext] #identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon-labels {
-  color: #30e60b;
-}
-
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels,
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-label,
 .urlbar-label {
   opacity: .6;
 }
 
-#identity-icon-labels:-moz-locale-dir(ltr) {
-  padding-left: 4px;
-}
-#identity-icon-labels:-moz-locale-dir(rtl) {
-  padding-right: 4px;
+#identity-icon-label {
+  padding-inline-start: 4px;
 }
 #identity-box:not(.chromeUI):not(.extensionPage):not(.notSecureText) {
   --urlbar-separator-color: transparent;
 }
-#identity-box[pageproxystate="valid"].verifiedIdentity {
-  --urlbar-separator-color: rgba(18, 188, 0, .5);
-}
 
 #identity-box[pageproxystate="valid"].notSecureText,
-#identity-box[pageproxystate="valid"].verifiedIdentity,
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage,
 #urlbar-label-box {
@@ -101,7 +86,6 @@
 }
 
 #identity-box[pageproxystate="valid"].notSecureText,
-#identity-box[pageproxystate="valid"].verifiedIdentity,
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage {
   padding-inline-end: 8px;
@@ -156,13 +140,11 @@
 }
 
 #identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon,
-#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
 }
 
 #identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon:not([lock-icon-gray]),
-#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon:not([lock-icon-gray]),
 #identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon:not([lock-icon-gray]) {
   fill-opacity: 1;
   fill: #12BC00;
