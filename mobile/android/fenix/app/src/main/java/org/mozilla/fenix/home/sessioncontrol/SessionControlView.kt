@@ -6,7 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.os.Build
 import android.view.View
-import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -164,6 +164,7 @@ class SessionControlView(
     private val homeFragmentStore: HomeFragmentStore,
     override val containerView: View?,
     interactor: SessionControlInteractor,
+    private val viewLifecycleOwner: LifecycleOwner,
     private var homeScreenViewModel: HomeScreenViewModel
 ) : LayoutContainer {
 
@@ -183,7 +184,7 @@ class SessionControlView(
                 )
             itemTouchHelper.attachToRecyclerView(this)
 
-            view.consumeFrom(homeFragmentStore, ProcessLifecycleOwner.get()) {
+            view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
                 update(it)
             }
         }

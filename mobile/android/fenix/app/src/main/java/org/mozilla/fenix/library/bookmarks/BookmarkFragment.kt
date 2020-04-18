@@ -83,11 +83,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             bookmarksController = DefaultBookmarkController(
                 context = context!!,
                 navController = findNavController(),
-                snackbar = FenixSnackbar.make(
-                    view = view,
-                    duration = FenixSnackbar.LENGTH_LONG,
-                    isDisplayedWithBrowserToolbar = false
-                ),
+                showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
                 invokePendingDeletion = ::invokePendingDeletion
             ),
@@ -105,6 +101,16 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         )
 
         return view
+    }
+
+    private fun showSnackBarWithText(text: String) {
+        view?.let {
+            FenixSnackbar.make(
+                view = it,
+                duration = FenixSnackbar.LENGTH_LONG,
+                isDisplayedWithBrowserToolbar = false
+            ).setText(text).show()
+        }
     }
 
     @ExperimentalCoroutinesApi

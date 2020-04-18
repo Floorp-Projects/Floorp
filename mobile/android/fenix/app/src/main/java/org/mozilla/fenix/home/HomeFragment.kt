@@ -222,7 +222,7 @@ class HomeFragment : Fragment() {
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
                 openSettingsScreen = ::openSettingsScreen,
                 openSearchScreen = ::navigateToSearch,
-                openWhatsNewLink = { openCustomTab(SupportUtils.getWhatsNewUrl(view.context)) },
+                openWhatsNewLink = { openCustomTab(SupportUtils.getWhatsNewUrl(activity)) },
                 openPrivacyNotice = { openCustomTab(SupportUtils.getPrivacyNoticeUrl()) }
             )
         )
@@ -230,7 +230,9 @@ class HomeFragment : Fragment() {
         setOffset(view)
         sessionControlView = SessionControlView(
             homeFragmentStore,
-            view.sessionControlRecyclerView, sessionControlInteractor,
+            view.sessionControlRecyclerView,
+            sessionControlInteractor,
+            viewLifecycleOwner,
             homeViewModel
         )
         activity.themeManager.applyStatusBarTheme(activity)

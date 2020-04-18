@@ -17,7 +17,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.nav
 
@@ -43,7 +42,7 @@ interface BookmarkController {
 class DefaultBookmarkController(
     private val context: Context,
     private val navController: NavController,
-    private val snackbar: FenixSnackbar,
+    private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
     private val invokePendingDeletion: () -> Unit
 ) : BookmarkController {
@@ -68,15 +67,13 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkSelected(node: BookmarkNode) {
-        snackbar.setText(resources.getString(R.string.bookmark_cannot_edit_root))
-        snackbar.show()
+        showSnackbar(resources.getString(R.string.bookmark_cannot_edit_root))
     }
 
     override fun handleCopyUrl(item: BookmarkNode) {
         val urlClipData = ClipData.newPlainText(item.url, item.url)
         context.getSystemService<ClipboardManager>()?.primaryClip = urlClipData
-        snackbar.setText(resources.getString(R.string.url_copied))
-        snackbar.show()
+        showSnackbar(resources.getString(R.string.url_copied))
     }
 
     override fun handleBookmarkSharing(item: BookmarkNode) {
