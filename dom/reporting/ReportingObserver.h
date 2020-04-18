@@ -10,12 +10,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -24,27 +23,23 @@ class Report;
 class ReportingObserverCallback;
 struct ReportingObserverOptions;
 
-class ReportingObserver final : public nsIObserver,
-                                public nsWrapperCache,
-                                public nsSupportsWeakReference {
+class ReportingObserver final : public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ReportingObserver,
-                                                         nsIObserver)
-  NS_DECL_NSIOBSERVER
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ReportingObserver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ReportingObserver)
 
   static already_AddRefed<ReportingObserver> Constructor(
       const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,
       const ReportingObserverOptions& aOptions, ErrorResult& aRv);
 
-  ReportingObserver(nsPIDOMWindowInner* aWindow,
+  ReportingObserver(nsIGlobalObject* aGlobal,
                     ReportingObserverCallback& aCallback,
                     const nsTArray<nsString>& aTypes, bool aBuffered);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   void Observe();
 
@@ -56,14 +51,14 @@ class ReportingObserver final : public nsIObserver,
 
   MOZ_CAN_RUN_SCRIPT void MaybeNotify();
 
+  void ForgetReports();
+
  private:
   ~ReportingObserver();
 
-  void Shutdown();
-
   nsTArray<RefPtr<Report>> mReports;
 
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<ReportingObserverCallback> mCallback;
   nsTArray<nsString> mTypes;
   bool mBuffered;
