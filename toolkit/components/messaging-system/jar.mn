@@ -4,6 +4,5 @@
 
 toolkit.jar:
 % resource messaging-system %res/messaging-system/
-  res/messaging-system/experiments/ExperimentManager.jsm (./experiments/ExperimentManager.jsm)
-  res/messaging-system/experiments/ExperimentStore.jsm (./experiments/ExperimentStore.jsm)
+  res/messaging-system/experiments/ (./experiments/*)
   res/messaging-system/lib/ (./lib/*)

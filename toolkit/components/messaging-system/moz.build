@@ -10,7 +10,6 @@ with Files('**'):
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    'experiments/ExperimentAPI.jsm',
     'test/MSTestUtils.jsm'
 ]
 
