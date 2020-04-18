@@ -19,6 +19,7 @@
 #include "nsIBrowserChild.h"
 #include "nsIOService.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIStringBundle.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
