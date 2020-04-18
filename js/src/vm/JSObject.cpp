@@ -1180,7 +1180,7 @@ static bool CopyProxyObject(JSContext* cx, Handle<ProxyObject*> from,
 }
 
 JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
-                          Handle<js::TaggedProto> proto) {
+                          Handle<JSObject*> proto) {
   if (!obj->isNative() && !obj->is<ProxyObject>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CANT_CLONE_OBJECT);
@@ -1191,8 +1191,7 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
   if (obj->isNative()) {
     // CloneObject is used to create the target object for JSObject::swap() and
     // swap() requires its arguments are tenured, so ensure tenure allocation.
-    clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto,
-                                          NewObjectKind::TenuredObject);
+    clone = NewTenuredObjectWithGivenProto(cx, obj->getClass(), proto);
     if (!clone) {
       return nullptr;
     }
@@ -1219,8 +1218,8 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
       return nullptr;
     }
 
-    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto,
-                             obj->getClass());
+    clone = ProxyObject::New(cx, handler, JS::NullHandleValue,
+                             AsTaggedProto(proto), obj->getClass());
     if (!clone) {
       return nullptr;
     }
