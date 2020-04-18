@@ -23,7 +23,7 @@
 #include "vm/TaggedProto.h"    // js::TaggedProto
 #include "vm/TypeInference.h"  // js::AutoSweepObjectGroup
 
-#include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind, js::NewObjectWithGivenTaggedProto
+#include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind, js::NewSingletonObjectWithGivenTaggedProtoAndKind
 #include "vm/TypeInference-inl.h"  // js::AutoSweepObjectGroup::AutoSweepObjectGroup, js::TypeNewScript, js::jit::JitScript::MonitorThisType, js::TypeSet::ObjectType
 
 using JS::Handle;
@@ -35,8 +35,8 @@ using js::GenericObject;
 using js::GuessObjectGCKind;
 using js::NewObjectGCKind;
 using js::NewObjectKind;
-using js::NewObjectWithGivenTaggedProto;
 using js::NewObjectWithGroup;
+using js::NewSingletonObjectWithGivenTaggedProtoAndKind;
 using js::ObjectGroup;
 using js::PlainObject;
 using js::SingletonObject;
@@ -109,8 +109,8 @@ static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
 
   if (newKind == SingletonObject) {
     Rooted<TaggedProto> protoRoot(cx, group->proto());
-    return NewObjectWithGivenTaggedProto<PlainObject>(cx, protoRoot, allocKind,
-                                                      newKind);
+    return NewSingletonObjectWithGivenTaggedProtoAndKind<PlainObject>(
+        cx, protoRoot, allocKind);
   }
   return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
