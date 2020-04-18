@@ -220,6 +220,12 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PushSubscriptionOptions" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "Report", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ReportBody", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ReportingObserver", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "Request",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Response",
