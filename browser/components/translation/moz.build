@@ -15,9 +15,9 @@ EXTRA_JS_MODULES.translation = [
     'cld2/cld-worker.js.mem',
     'GoogleTranslator.jsm',
     'LanguageDetector.jsm',
-    'Translation.jsm',
-    'TranslationContentHandler.jsm',
+    'TranslationChild.jsm',
     'TranslationDocument.jsm',
+    'TranslationParent.jsm',
     'YandexTranslator.jsm'
 ]
 

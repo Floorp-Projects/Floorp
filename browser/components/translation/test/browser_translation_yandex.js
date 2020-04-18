@@ -19,7 +19,7 @@ const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kShowUIPref = "browser.translation.ui.show";
 
 const { Translation } = ChromeUtils.import(
-  "resource:///modules/translation/Translation.jsm"
+  "resource:///modules/translation/TranslationParent.jsm"
 );
 
 add_task(async function setup() {
@@ -140,11 +140,14 @@ function promiseTestPageLoad(url) {
 
 function showTranslationUI(tab, aDetectedLanguage) {
   let browser = gBrowser.selectedBrowser;
-  Translation.documentStateReceived(browser, {
+  let actor = browser.browsingContext.currentWindowGlobal.getActor(
+    "Translation"
+  );
+  actor.documentStateReceived({
     state: Translation.STATE_OFFER,
     originalShown: true,
     detectedLanguage: aDetectedLanguage,
   });
-  let ui = browser.translationUI;
-  return ui.notificationBox.getNotificationWithValue("translation");
+
+  return actor.notificationBox.getNotificationWithValue("translation");
 }

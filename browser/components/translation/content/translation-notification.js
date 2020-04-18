@@ -130,6 +130,7 @@ class MozTranslationNotification extends MozElements.Notification {
     return this._getAnonElt("translationStates").selectedIndex;
   }
 
+  // aTranslation is the TranslationParent actor.
   init(aTranslation) {
     this.translation = aTranslation;
 

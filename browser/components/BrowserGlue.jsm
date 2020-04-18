@@ -403,6 +403,20 @@ let ACTORS = {
     allFrames: true,
   },
 
+  Translation: {
+    parent: {
+      moduleURI: "resource:///modules/translation/TranslationParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///modules/translation/TranslationChild.jsm",
+      events: {
+        pageshow: {},
+        load: { mozSystemGroup: true },
+      },
+    },
+    enablePreference: "browser.translation.detectLanguage",
+  },
+
   UITour: {
     parent: {
       moduleURI: "resource:///modules/UITourParent.jsm",
