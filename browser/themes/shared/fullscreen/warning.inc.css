@@ -19,7 +19,6 @@ html|*.pointerlockfswarning::before {
   width: 24px; height: 24px;
 }
 
-html|*.pointerlockfswarning[data-identity="verifiedIdentity"]::before,
 html|*.pointerlockfswarning[data-identity="verifiedDomain"]::before {
   content: url("chrome://browser/skin/fullscreen/secure.svg");
 }
