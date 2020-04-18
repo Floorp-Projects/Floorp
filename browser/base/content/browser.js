@@ -76,7 +76,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  Translation: "resource:///modules/translation/Translation.jsm",
+  Translation: "resource:///modules/translation/TranslationParent.jsm",
   UITour: "resource:///modules/UITour.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   UrlbarInput: "resource:///modules/UrlbarInput.jsm",
@@ -1805,7 +1805,6 @@ var gBrowserInit = {
     // loading the frame script to ensure that we don't miss any
     // message sent between when the frame script is loaded and when
     // the listener is registered.
-    LanguageDetectionListener.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
 
@@ -7391,17 +7390,6 @@ var gPageStyleMenu = {
       sheetData.authorStyleDisabled = true;
     }
     this._sendMessageToAll("PageStyle:Disable", {});
-  },
-};
-
-var LanguageDetectionListener = {
-  init() {
-    window.messageManager.addMessageListener(
-      "Translation:DocumentState",
-      msg => {
-        Translation.documentStateReceived(msg.target, msg.data);
-      }
-    );
   },
 };
 

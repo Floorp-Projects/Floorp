@@ -4,7 +4,10 @@
 "use strict";
 
 var tmp = {};
-ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
+ChromeUtils.import(
+  "resource:///modules/translation/TranslationParent.jsm",
+  tmp
+);
 var { Translation, TranslationTelemetry } = tmp;
 const Telemetry = Services.telemetry;
 
@@ -108,9 +111,10 @@ var MetricsChecker = {
 };
 
 function getInfobarElement(browser, anonid) {
-  let notif = browser.translationUI.notificationBox.getNotificationWithValue(
-    "translation"
+  let actor = browser.browsingContext.currentWindowGlobal.getActor(
+    "Translation"
   );
+  let notif = actor.notificationBox.getNotificationWithValue("translation");
   return notif._getAnonElt(anonid);
 }
 
@@ -120,9 +124,12 @@ var offerTranslationFor = async function(text, from) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dataUrl);
 
   let browser = gBrowser.getBrowserForTab(tab);
+  let actor = browser.browsingContext.currentWindowGlobal.getActor(
+    "Translation"
+  );
 
   // Send a translation offer.
-  Translation.documentStateReceived(browser, {
+  actor.documentStateReceived({
     state: Translation.STATE_OFFER,
     originalShown: true,
     detectedLanguage: from,
@@ -133,8 +140,10 @@ var offerTranslationFor = async function(text, from) {
 
 var acceptTranslationOffer = async function(tab) {
   let browser = tab.linkedBrowser;
+  let translationPromise = waitForTranslationDone();
+
   getInfobarElement(browser, "translate").doCommand();
-  await waitForMessage(browser, "Translation:Finished");
+  await translationPromise;
 };
 
 var translate = async function(text, from, closeTab = true) {
@@ -147,10 +156,10 @@ var translate = async function(text, from, closeTab = true) {
   return tab;
 };
 
-function waitForMessage({ messageManager }, name) {
+function waitForTranslationDone() {
   return new Promise(resolve => {
-    messageManager.addMessageListener(name, function onMessage() {
-      messageManager.removeMessageListener(name, onMessage);
+    Translation.setListenerForTests(() => {
+      Translation.setListenerForTests(null);
       resolve();
     });
   });

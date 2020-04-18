@@ -5,8 +5,11 @@
 // tests the translation infobar, using a fake 'Translation' implementation.
 
 var tmp = {};
-ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
-var { Translation } = tmp;
+ChromeUtils.import(
+  "resource:///modules/translation/TranslationParent.jsm",
+  tmp
+);
+var { Translation, TranslationParent } = tmp;
 
 const kShowUIPref = "browser.translation.ui.show";
 
@@ -35,47 +38,55 @@ function waitForCondition(condition, nextTest, errorMsg) {
   };
 }
 
-var TranslationStub = {
+// Create a subclass that overrides the translation functions. This can be
+// instantiated separately from the normal actor creation process. This will
+// allow testing translations even when the browser.translation.detectLanguage
+// preference is disabled.
+class TranslationStub extends TranslationParent {
+  constructor(browser) {
+    super();
+    this._browser = browser;
+    this.actorCreated();
+  }
+
+  get browser() {
+    return this._browser;
+  }
+
+  sendAsyncMessage(name, data) {}
+
   translate(aFrom, aTo) {
     this.state = Translation.STATE_TRANSLATING;
     this.translatedFrom = aFrom;
     this.translatedTo = aTo;
-  },
+  }
 
   _reset() {
     this.translatedFrom = "";
     this.translatedTo = "";
-  },
+  }
 
   failTranslation() {
     this.state = Translation.STATE_ERROR;
     this._reset();
-  },
+  }
 
   finishTranslation() {
     this.showTranslatedContent();
     this.state = Translation.STATE_TRANSLATED;
     this._reset();
-  },
-};
+  }
+}
 
 function showTranslationUI(aDetectedLanguage) {
   let browser = gBrowser.selectedBrowser;
-  Translation.documentStateReceived(browser, {
+  let translation = new TranslationStub(browser);
+  translation.documentStateReceived({
     state: Translation.STATE_OFFER,
     originalShown: true,
     detectedLanguage: aDetectedLanguage,
   });
-  let ui = browser.translationUI;
-  for (let name of [
-    "translate",
-    "_reset",
-    "failTranslation",
-    "finishTranslation",
-  ]) {
-    ui[name] = TranslationStub[name];
-  }
-  return ui.notificationBox.getNotificationWithValue("translation");
+  return translation.notificationBox.getNotificationWithValue("translation");
 }
 
 function hasTranslationInfoBar() {
