@@ -339,6 +339,25 @@ void GMPParent::DeleteProcess() {
                                      &GMPParent::ChildTerminated));
   GMP_PARENT_LOG_DEBUG("%s: Shut down process", __FUNCTION__);
   mProcess = nullptr;
+
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mState != GMPStateNotLoaded) {
+    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    MOZ_ASSERT(launcherThread);
+
+    auto procType = java::GeckoProcessType::GMPLUGIN();
+    auto selector =
+        java::GeckoProcessManager::Selector::New(procType, OtherPid());
+
+    launcherThread->Dispatch(NS_NewRunnableFunction(
+        "GMPParent::DeleteProcess",
+        [selector =
+             java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
+          java::GeckoProcessManager::MarkAsDead(selector);
+        }));
+  }
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
   mState = GMPStateNotLoaded;
 
   nsCOMPtr<nsIRunnable> r =
