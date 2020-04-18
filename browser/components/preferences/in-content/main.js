@@ -539,7 +539,7 @@ var gMainPane = {
       row.removeAttribute("hidden");
       // Showing attribution only for Bing Translator.
       var { Translation } = ChromeUtils.import(
-        "resource:///modules/translation/Translation.jsm"
+        "resource:///modules/translation/TranslationParent.jsm"
       );
       if (Translation.translationEngine == "Bing") {
         document.getElementById("bingAttribution").removeAttribute("hidden");
@@ -1379,7 +1379,7 @@ var gMainPane = {
 
   openTranslationProviderAttribution() {
     var { Translation } = ChromeUtils.import(
-      "resource:///modules/translation/Translation.jsm"
+      "resource:///modules/translation/TranslationParent.jsm"
     );
     Translation.openProviderAttribution();
   },
