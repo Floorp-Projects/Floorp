@@ -277,6 +277,7 @@ impl WindowWrapper {
                     #[cfg(feature = "software")]
                     Some(ref swgl) => Rc::new(swgl.clone()),
                     None => gl.clone(),
+                    #[cfg(not(feature = "software"))]
                     _ => panic!(),
                 }
             }
@@ -407,6 +408,7 @@ fn make_window(
                         },
                     }
                 }
+                #[cfg(not(feature = "software"))]
                 _ => panic!(),
             };
             WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
