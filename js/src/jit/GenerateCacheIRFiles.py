@@ -74,6 +74,7 @@ operand_writer_info = {
     'SymbolField': ('JS::Symbol*', 'writeSymbolField'),
     'RawWordField': ('uintptr_t', 'writeRawWordField'),
     'RawPointerField': ('const void*', 'writeRawPointerField'),
+    'IdField': ('jsid', 'writeIdField'),
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
@@ -136,6 +137,7 @@ operand_compiler_info = {
     'SymbolField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'RawWordField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'RawPointerField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'IdField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
     'BoolImm': ('bool', '', 'reader.readBool()'),
