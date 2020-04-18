@@ -18,4 +18,5 @@ export interface Enrollment {
   branch: Branch;
   active: boolean;
   experimentType: string;
+  source: string;
 }
