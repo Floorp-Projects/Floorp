@@ -57,8 +57,8 @@ decorate_task(
     Assert.deepEqual(reportRecipe.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
     Assert.deepEqual(
       onRecipeStub.args,
-      [[recipe.arguments]],
-      "should call onRecipe with recipe args"
+      [[recipe.arguments, "normandy"]],
+      "should call onRecipe with recipe args and 'normandy' source"
     );
   }
 );
