@@ -18,6 +18,10 @@ const { FileTestUtils } = ChromeUtils.import(
 );
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
+const { _RemoteSettingsExperimentLoader } = ChromeUtils.import(
+  "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm"
+);
+
 const EXPORTED_SYMBOLS = ["ExperimentFakes"];
 
 const ExperimentFakes = {
@@ -30,12 +34,22 @@ const ExperimentFakes = {
   childStore() {
     return new ExperimentStore("FakeStore", { isParent: false });
   },
+  rsLoader() {
+    const loader = new _RemoteSettingsExperimentLoader();
+    // Replace RS client with a fake
+    Object.defineProperty(loader, "remoteSettingsClient", {
+      get: () => ({ get: () => Promise.resolve([]) }),
+    });
+
+    return loader;
+  },
   experiment(slug, props = {}) {
     return {
       slug,
       active: true,
       enrollmentId: NormandyUtils.generateUuid(),
       branch: { slug: "treatment", value: { title: "hello" } },
+      source: "test",
       ...props,
     };
   },

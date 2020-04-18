@@ -32,7 +32,7 @@ add_task(async function test_set_inactive() {
   await manager.onStartup();
   manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
-  manager.unenroll("foo", { reason: "some-reason" });
+  manager.unenroll("foo", "some-reason");
 
   Assert.equal(
     manager.store.get("foo").active,
@@ -49,7 +49,7 @@ add_task(async function test_setExperimentInactive_called() {
   await manager.onStartup();
   manager.store.addExperiment(experiment);
 
-  manager.unenroll("foo", { reason: "some-reason" });
+  manager.unenroll("foo", "some-reason");
 
   Assert.ok(
     TelemetryEnvironment.setExperimentInactive.calledWith("foo"),
@@ -65,7 +65,7 @@ add_task(async function test_send_unenroll_event() {
   await manager.onStartup();
   manager.store.addExperiment(experiment);
 
-  manager.unenroll("foo", { reason: "some-reason" });
+  manager.unenroll("foo", "some-reason");
 
   Assert.ok(TelemetryEvents.sendEvent.calledOnce);
   Assert.deepEqual(

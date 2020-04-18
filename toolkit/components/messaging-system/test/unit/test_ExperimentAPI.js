@@ -1,7 +1,7 @@
 "use strict";
 
 const { ExperimentAPI } = ChromeUtils.import(
-  "resource://testing-common/ExperimentAPI.jsm"
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
