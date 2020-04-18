@@ -152,7 +152,10 @@ class HomeFragment : Fragment() {
     private lateinit var homeAppBarOffSetListener: AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var homeFragmentStore: HomeFragmentStore
-    private lateinit var sessionControlInteractor: SessionControlInteractor
+    private var _sessionControlInteractor: SessionControlInteractor? = null
+    protected val sessionControlInteractor: SessionControlInteractor
+        get() = _sessionControlInteractor!!
+
     private var sessionControlView: SessionControlView? = null
     private lateinit var currentMode: CurrentMode
 
@@ -201,7 +204,7 @@ class HomeFragment : Fragment() {
             )
         }
 
-        sessionControlInteractor = SessionControlInteractor(
+        _sessionControlInteractor = SessionControlInteractor(
             DefaultSessionControlController(
                 store = requireComponents.core.store,
                 activity = activity,
@@ -356,6 +359,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        _sessionControlInteractor = null
         sessionControlView = null
         view!!.homeAppBar.removeOnOffsetChangedListener(homeAppBarOffSetListener)
     }
