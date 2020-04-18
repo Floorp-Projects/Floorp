@@ -14,7 +14,6 @@
 #include "nsGridLayout2.h"
 #include "nsGridRowGroupLayout.h"
 #include "nsGridRow.h"
-#include "nsBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsSprocketLayout.h"
 #include "mozilla/ReflowInput.h"
@@ -103,7 +102,7 @@ nsSize nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       }
     }
 
-    AddMargin(aBox, total);
+    AddXULMargin(aBox, total);
     AddOffset(aBox, total);
     AddLargestSize(minSize, total);
   }
@@ -138,7 +137,7 @@ nsSize nsGridLayout2::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       }
     }
 
-    AddMargin(aBox, total);
+    AddXULMargin(aBox, total);
     AddOffset(aBox, total);
     AddLargestSize(pref, total);
   }
@@ -175,7 +174,7 @@ nsSize nsGridLayout2::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
       }
     }
 
-    AddMargin(aBox, total);
+    AddXULMargin(aBox, total);
     AddOffset(aBox, total);
     AddSmallestSize(maxSize, total);
   }

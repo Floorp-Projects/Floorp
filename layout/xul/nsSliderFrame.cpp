@@ -252,7 +252,7 @@ static bool UsesCustomScrollbarMediator(nsIFrame* scrollbarBox) {
 void nsSliderFrame::BuildDisplayListForChildren(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
   // if we are too small to have a thumb don't paint it.
-  nsIFrame* thumb = nsBox::GetChildXULBox(this);
+  nsIFrame* thumb = nsIFrame::GetChildXULBox(this);
 
   if (thumb) {
     nsRect thumbRect(thumb->GetRect());
@@ -378,10 +378,10 @@ void nsSliderFrame::BuildDisplayListForChildren(
 NS_IMETHODIMP
 nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState) {
   // get the thumb should be our only child
-  nsIFrame* thumbBox = nsBox::GetChildXULBox(this);
+  nsIFrame* thumbBox = nsIFrame::GetChildXULBox(this);
 
   if (!thumbBox) {
-    SyncLayout(aState);
+    SyncXULLayout(aState);
     return NS_OK;
   }
 
@@ -447,7 +447,7 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState) {
   nsRect oldThumbRect(thumbBox->GetRect());
   LayoutChildAt(aState, thumbBox, thumbRect);
 
-  SyncLayout(aState);
+  SyncXULLayout(aState);
 
   // Redraw only if thumb changed size.
   if (!oldThumbRect.IsEqualInterior(thumbRect)) XULRedraw(aState);
@@ -1363,7 +1363,7 @@ nsSize nsSliderFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   EnsureOrient();
 
   // our min size is just our borders and padding
-  return nsBox::GetXULMinSize(aState);
+  return nsIFrame::GetXULMinSize(aState);
 }
 
 nsSize nsSliderFrame::GetXULMaxSize(nsBoxLayoutState& aState) {

@@ -483,7 +483,7 @@ nsIFrame* NS_NewEmptyFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                  ClassID aID)
-    : nsBox(aStyle, aPresContext, aID) {
+    : nsIFrame(aStyle, aPresContext, aID) {
   MOZ_COUNT_CTOR(nsFrame);
 }
 
@@ -5759,13 +5759,13 @@ void nsFrame::MarkIntrinsicISizesDirty() {
   if (::IsXULBoxWrapped(this)) {
     nsBoxLayoutMetrics* metrics = BoxMetrics();
 
-    SizeNeedsRecalc(metrics->mPrefSize);
-    SizeNeedsRecalc(metrics->mMinSize);
-    SizeNeedsRecalc(metrics->mMaxSize);
-    SizeNeedsRecalc(metrics->mBlockPrefSize);
-    SizeNeedsRecalc(metrics->mBlockMinSize);
-    CoordNeedsRecalc(metrics->mFlex);
-    CoordNeedsRecalc(metrics->mAscent);
+    XULSizeNeedsRecalc(metrics->mPrefSize);
+    XULSizeNeedsRecalc(metrics->mMinSize);
+    XULSizeNeedsRecalc(metrics->mMaxSize);
+    XULSizeNeedsRecalc(metrics->mBlockPrefSize);
+    XULSizeNeedsRecalc(metrics->mBlockMinSize);
+    XULCoordNeedsRecalc(metrics->mFlex);
+    XULCoordNeedsRecalc(metrics->mAscent);
   }
 
   // If we're a flex item, clear our flex-item-specific cached measurements
@@ -10461,7 +10461,9 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
     // If we don't have any HTML constraints and it's a resize, then nothing in
     // the block could have changed, so no refresh is necessary.
     nsBoxLayoutMetrics* metrics = BoxMetrics();
-    if (!DoesNeedRecalc(metrics->mBlockPrefSize)) return NS_OK;
+    if (!XULNeedsRecalc(metrics->mBlockPrefSize)) {
+      return NS_OK;
+    }
 
     // the rect we plan to size to.
     nsRect rect = GetRect();
@@ -10540,7 +10542,7 @@ nsSize nsFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   // If the size is cached, and there are no HTML constraints that we might
   // be depending on, then we just return the cached size.
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mPrefSize)) {
+  if (!XULNeedsRecalc(metrics->mPrefSize)) {
     size = metrics->mPrefSize;
     return size;
   }
@@ -10573,7 +10575,7 @@ nsSize nsFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   // Don't use the cache if we have HTMLReflowInput constraints --- they might
   // have changed
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mMinSize)) {
+  if (!XULNeedsRecalc(metrics->mMinSize)) {
     size = metrics->mMinSize;
     return size;
   }
@@ -10604,14 +10606,14 @@ nsSize nsFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   // Don't use the cache if we have HTMLReflowInput constraints --- they might
   // have changed
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mMaxSize)) {
+  if (!XULNeedsRecalc(metrics->mMaxSize)) {
     size = metrics->mMaxSize;
     return size;
   }
 
   if (IsXULCollapsed()) return size;
 
-  size = nsBox::GetXULMaxSize(aState);
+  size = nsIFrame::GetXULMaxSize(aState);
   metrics->mMaxSize = size;
 
   return size;
@@ -10619,16 +10621,20 @@ nsSize nsFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
 
 nscoord nsFrame::GetXULFlex() {
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mFlex)) return metrics->mFlex;
+  if (!XULNeedsRecalc(metrics->mFlex)) {
+    return metrics->mFlex;
+  }
 
-  metrics->mFlex = nsBox::GetXULFlex();
+  metrics->mFlex = nsIFrame::GetXULFlex();
 
   return metrics->mFlex;
 }
 
 nscoord nsFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mAscent)) return metrics->mAscent;
+  if (!XULNeedsRecalc(metrics->mAscent)) {
+    return metrics->mAscent;
+  }
 
   if (IsXULCollapsed()) {
     metrics->mAscent = 0;
@@ -10713,7 +10719,7 @@ nsresult nsFrame::DoXULLayout(nsBoxLayoutState& aState) {
   FinishAndStoreOverflow(desiredSize.mOverflowAreas,
                          size.GetPhysicalSize(outerWM), &oldSize);
 
-  SyncLayout(aState);
+  SyncXULLayout(aState);
 
   return NS_OK;
 }

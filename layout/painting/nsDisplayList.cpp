@@ -6822,7 +6822,7 @@ nsDisplayOwnLayer::nsDisplayOwnLayer(
   // For scroll thumb layers, override the AGR to be the thumb's AGR rather
   // than the AGR for mFrame (which is the slider frame).
   if (IsScrollThumbLayer()) {
-    if (nsIFrame* thumbFrame = nsBox::GetChildXULBox(mFrame)) {
+    if (nsIFrame* thumbFrame = nsIFrame::GetChildXULBox(mFrame)) {
       mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(thumbFrame);
     }
   }
