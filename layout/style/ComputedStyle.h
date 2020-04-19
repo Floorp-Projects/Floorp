@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoComputedData.h"
+#include "mozilla/ServoComputedDataInlines.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
