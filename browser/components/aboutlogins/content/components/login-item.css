@@ -221,7 +221,6 @@ input[type="url"][readOnly]:hover:active {
 
 .meta-info {
   font-size: smaller;
-  font-weight: 300;
   color: var(--in-content-deemphasized-text);
   margin-block: 0 8px;
 }
