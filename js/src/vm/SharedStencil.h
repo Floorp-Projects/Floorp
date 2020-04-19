@@ -12,7 +12,7 @@
 
 #include "jstypes.h"
 #include "js/CompileOptions.h"
-#include "vm/TryNoteKind.h"  // TryNoteKind
+#include "vm/StencilEnums.h"  // TryNoteKind
 
 /*
  * Data shared between the vm and stencil structures.

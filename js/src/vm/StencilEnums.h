@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_TryNoteKind_h
-#define vm_TryNoteKind_h
+#ifndef vm_StencilEnums_h
+#define vm_StencilEnums_h
 
 #include <stdint.h>  // uint8_t
 
@@ -48,4 +48,4 @@ enum class TryNoteKind : uint8_t {
 
 }  // namespace js
 
-#endif /* vm_TryNoteKind_h */
+#endif /* vm_StencilEnums_h */

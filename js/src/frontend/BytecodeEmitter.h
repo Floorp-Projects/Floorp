@@ -49,10 +49,10 @@
 #include "vm/Instrumentation.h"            // InstrumentationKind
 #include "vm/Iteration.h"                  // IteratorKind
 #include "vm/JSFunction.h"                 // JSFunction
-#include "vm/JSScript.h"     // JSScript, BaseScript, FieldInitializers
-#include "vm/Runtime.h"      // ReportOutOfMemory
-#include "vm/StringType.h"   // JSAtom
-#include "vm/TryNoteKind.h"  // TryNoteKind
+#include "vm/JSScript.h"      // JSScript, BaseScript, FieldInitializers
+#include "vm/Runtime.h"       // ReportOutOfMemory
+#include "vm/StencilEnums.h"  // TryNoteKind
+#include "vm/StringType.h"    // JSAtom
 
 namespace js {
 namespace frontend {

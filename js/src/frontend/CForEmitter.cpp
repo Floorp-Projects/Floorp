@@ -10,7 +10,7 @@
 #include "frontend/EmitterScope.h"     // EmitterScope
 #include "vm/Opcodes.h"                // JSOp
 #include "vm/Scope.h"                  // ScopeKind
-#include "vm/TryNoteKind.h"            // TryNoteKind
+#include "vm/StencilEnums.h"           // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
