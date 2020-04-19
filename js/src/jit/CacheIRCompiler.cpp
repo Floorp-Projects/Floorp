@@ -2498,11 +2498,12 @@ bool CacheIRCompiler::emitInt32SubResult(Int32OperandId lhsId,
   return true;
 }
 
-bool CacheIRCompiler::emitInt32MulResult() {
+bool CacheIRCompiler::emitInt32MulResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegister scratch(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -2528,11 +2529,12 @@ bool CacheIRCompiler::emitInt32MulResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32DivResult() {
+bool CacheIRCompiler::emitInt32DivResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegister rem(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
@@ -2563,11 +2565,12 @@ bool CacheIRCompiler::emitInt32DivResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32ModResult() {
+bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -2630,11 +2633,12 @@ class MOZ_RAII AutoScratchRegisterMaybeOutputType {
   operator Register() const { return scratchReg_; }
 };
 
-bool CacheIRCompiler::emitInt32PowResult() {
+bool CacheIRCompiler::emitInt32PowResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register base = allocator.useRegister(masm, reader.int32OperandId());
-  Register power = allocator.useRegister(masm, reader.int32OperandId());
+  Register base = allocator.useRegister(masm, lhsId);
+  Register power = allocator.useRegister(masm, rhsId);
   AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
   AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
   AutoScratchRegister scratch3(allocator, masm);
@@ -2650,13 +2654,14 @@ bool CacheIRCompiler::emitInt32PowResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32BitOrResult() {
+bool CacheIRCompiler::emitInt32BitOrResult(Int32OperandId lhsId,
+                                           Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   masm.mov(rhs, scratch);
   masm.or32(lhs, scratch);
@@ -2664,13 +2669,14 @@ bool CacheIRCompiler::emitInt32BitOrResult() {
 
   return true;
 }
-bool CacheIRCompiler::emitInt32BitXorResult() {
+bool CacheIRCompiler::emitInt32BitXorResult(Int32OperandId lhsId,
+                                            Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   masm.mov(rhs, scratch);
   masm.xor32(lhs, scratch);
@@ -2678,13 +2684,14 @@ bool CacheIRCompiler::emitInt32BitXorResult() {
 
   return true;
 }
-bool CacheIRCompiler::emitInt32BitAndResult() {
+bool CacheIRCompiler::emitInt32BitAndResult(Int32OperandId lhsId,
+                                            Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   masm.mov(rhs, scratch);
   masm.and32(lhs, scratch);
@@ -2692,11 +2699,12 @@ bool CacheIRCompiler::emitInt32BitAndResult() {
 
   return true;
 }
-bool CacheIRCompiler::emitInt32LeftShiftResult() {
+bool CacheIRCompiler::emitInt32LeftShiftResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.mov(lhs, scratch);
@@ -2708,11 +2716,12 @@ bool CacheIRCompiler::emitInt32LeftShiftResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32RightShiftResult() {
+bool CacheIRCompiler::emitInt32RightShiftResult(Int32OperandId lhsId,
+                                                Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.mov(lhs, scratch);
@@ -2724,13 +2733,14 @@ bool CacheIRCompiler::emitInt32RightShiftResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32URightShiftResult() {
+bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
+                                                 Int32OperandId rhsId,
+                                                 bool allowDouble) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  Register lhs = allocator.useRegister(masm, reader.int32OperandId());
-  Register rhs = allocator.useRegister(masm, reader.int32OperandId());
-  bool allowDouble = reader.readBool();
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -2816,10 +2826,10 @@ bool CacheIRCompiler::emitInt32DecResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32NotResult() {
+bool CacheIRCompiler::emitInt32NotResult(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register val = allocator.useRegister(masm, reader.int32OperandId());
+  Register val = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.mov(val, scratch);

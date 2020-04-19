@@ -1154,26 +1154,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhsId);
   }
 
-  void int32MulResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32MulResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32DivResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32DivResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32ModResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32ModResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32PowResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32PowResult, lhs);
-    writeOperandId(rhs);
-  }
-
   void bigIntAddResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
     writeOpWithOperandId(CacheOp::BigIntAddResult, lhsId);
     writeOperandId(rhsId);
@@ -1202,42 +1182,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void bigIntPowResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
     writeOpWithOperandId(CacheOp::BigIntPowResult, lhsId);
     writeOperandId(rhsId);
-  }
-
-  void int32BitOrResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32BitOrResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32BitXOrResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32BitXorResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32BitAndResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32BitAndResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32LeftShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32LeftShiftResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32RightShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::Int32RightShiftResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void int32URightShiftResult(Int32OperandId lhs, Int32OperandId rhs,
-                              bool allowDouble) {
-    writeOpWithOperandId(CacheOp::Int32URightShiftResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint32_t(allowDouble));
-  }
-
-  void int32NotResult(Int32OperandId id) {
-    writeOpWithOperandId(CacheOp::Int32NotResult, id);
   }
 
   void int32NegationResult(Int32OperandId id) {
