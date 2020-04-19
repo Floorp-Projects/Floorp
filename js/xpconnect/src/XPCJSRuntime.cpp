@@ -197,7 +197,6 @@ CompartmentPrivate::CompartmentPrivate(
       wantXrays(false),
       allowWaivers(true),
       isWebExtensionContentScript(false),
-      allowCPOWs(false),
       isUAWidgetCompartment(false),
       hasExclusiveExpandos(false),
       wasShutdown(false),
