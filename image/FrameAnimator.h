@@ -44,13 +44,11 @@ class AnimationState {
    * mCompositedFrameInvalid, and mIsCurrentlyDecoded. If aAllowInvalidation
    * is true then returns a rect to invalidate.
    */
-  const gfx::IntRect UpdateState(bool aAnimationFinished, RasterImage* aImage,
-                                 const gfx::IntSize& aSize,
+  const gfx::IntRect UpdateState(RasterImage* aImage, const gfx::IntSize& aSize,
                                  bool aAllowInvalidation = true);
 
  private:
   const gfx::IntRect UpdateStateInternal(LookupResult& aResult,
-                                         bool aAnimationFinished,
                                          const gfx::IntSize& aSize,
                                          bool aAllowInvalidation = true);
 
@@ -298,8 +296,7 @@ class FrameAnimator {
    * Returns the result of that blending, including whether the current frame
    * changed and what the resulting dirty rectangle is.
    */
-  RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime,
-                               bool aAnimationFinished);
+  RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime);
 
   /**
    * Get the full frame for the current frame of the animation (it may or may
