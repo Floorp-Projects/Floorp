@@ -7,6 +7,8 @@
 #ifndef jit_BaselineCacheIRCompiler_h
 #define jit_BaselineCacheIRCompiler_h
 
+#include "mozilla/Maybe.h"
+
 #include "gc/Barrier.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
@@ -39,8 +41,13 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                      Register scratch,
                                      LiveGeneralRegisterSet saveRegs);
 
-  MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
-  MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
+  MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed, ObjOperandId objId,
+                                        uint32_t offsetOffset,
+                                        ValOperandId rhsId);
+  MOZ_MUST_USE bool emitAddAndStoreSlotShared(
+      CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+      bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
+      mozilla::Maybe<uint32_t> numNewSlotsOffset);
 
   bool updateArgc(CallFlags flags, Register argcReg, Register scratch);
   void loadStackObject(ArgumentKind kind, CallFlags flags, size_t stackPushed,
