@@ -35,7 +35,7 @@
 #include "js/Vector.h"                  // Vector
 #include "vm/Opcodes.h"                 // JSOpLength_JumpTarget
 #include "vm/SharedStencil.h"           // TryNote, ScopeNote
-#include "vm/TryNoteKind.h"             // TryNoteKind
+#include "vm/StencilEnums.h"            // TryNoteKind
 
 namespace js {
 
