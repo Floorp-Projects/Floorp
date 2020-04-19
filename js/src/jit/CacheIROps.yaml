@@ -167,7 +167,7 @@
   gen_boilerplate: true
   operands:
     obj: ObjId
-    clasp: RawPointerField
+    clasp: RawWordField
 
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
@@ -176,7 +176,7 @@
   operands:
     obj: ObjId
     global: ObjectField
-    compartment: RawPointerField
+    compartment: RawWordField
 
 - name: GuardIsExtensible
   shared: true
@@ -201,7 +201,7 @@
   gen_boilerplate: true
   operands:
     obj: ObjId
-    handler: RawPointerField
+    handler: RawWordField
 
 - name: GuardNotDOMProxy
   shared: true
@@ -289,7 +289,7 @@
   operands:
     obj: ObjId
     iter: ObjectField
-    enumeratorsAddr: RawPointerField
+    enumeratorsAddr: RawWordField
     result: ObjId
 
 - name: GuardHasGetterSetter
@@ -498,7 +498,7 @@
   shared: false
   operands:
     obj: ObjId
-    expandoAndGeneration: RawPointerField
+    expandoAndGeneration: RawWordField
     generation: DOMExpandoGenerationField
     result: ValId
 
@@ -517,7 +517,6 @@
 
 - name: StoreFixedSlot
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
@@ -525,7 +524,6 @@
 
 - name: StoreDynamicSlot
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
@@ -533,41 +531,37 @@
 
 - name: AddAndStoreFixedSlot
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
-    newShape: ShapeField
+    newShape): ShapeField
 
 - name: AddAndStoreDynamicSlot
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
-    newShape: ShapeField
+    newShape): ShapeField
 
 - name: AllocateAndStoreDynamicSlot
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
-    newShape: ShapeField
+    newShape): ShapeField
     numNewSlots: RawWordField
 
 - name: StoreTypedObjectReferenceProperty
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
@@ -586,7 +580,6 @@
 
 - name: StoreDenseElement
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
@@ -594,7 +587,6 @@
 
 - name: StoreDenseElementHole
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
@@ -603,14 +595,12 @@
 
 - name: ArrayPush
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     rhs: ValId
 
 - name: ArrayJoinResult
   shared: true
-  gen_boilerplate: true
   operands:
     obj: ObjId
 
@@ -626,7 +616,6 @@
 
 - name: CallNativeSetter
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     setter: ObjectField
@@ -634,7 +623,6 @@
 
 - name: CallScriptedSetter
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     setter: ObjectField
@@ -643,7 +631,6 @@
 
 - name: CallSetArrayLength
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     strict: BoolImm
@@ -651,16 +638,14 @@
 
 - name: CallProxySet
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
-    id: IdField
     rhs: ValId
+    id: IdField
     strict: BoolImm
 
 - name: CallProxySetByValue
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -669,7 +654,6 @@
 
 - name: CallAddOrUpdateSparseElementHelper
   shared: false
-  gen_boilerplate: true
   operands:
     obj: ObjId
     id: Int32Id
@@ -696,7 +680,6 @@
 
 - name: CallScriptedFunction
   shared: false
-  gen_boilerplate: true
   operands:
     callee: ObjId
     argc: Int32Id
@@ -709,7 +692,7 @@
     argc: Int32Id
     flags: CallFlagsImm
 #ifdef JS_SIMULATOR
-    rawTarget: RawPointerField
+    rawTarget: RawWordField
 #else
     ignoresReturnValue: BoolImm
 #endif
@@ -720,7 +703,7 @@
     callee: ObjId
     argc: Int32Id
     flags: CallFlagsImm
-    target: RawPointerField
+    target: RawWordField
 
 # Meta ops generate no code, but contain data for BaselineInspector.
 - name: MetaTwoByte
@@ -1004,28 +987,24 @@
 
 - name: Int32MulResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32DivResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32ModResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32PowResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
@@ -1068,42 +1047,36 @@
 
 - name: Int32BitOrResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitXorResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitAndResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32LeftShiftResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32RightShiftResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32URightShiftResult
   shared: true
-  gen_boilerplate: true
   operands:
     lhs: Int32Id
     rhs: Int32Id
@@ -1111,7 +1084,6 @@
 
 - name: Int32NotResult
   shared: true
-  gen_boilerplate: true
   operands:
     input: Int32Id
 

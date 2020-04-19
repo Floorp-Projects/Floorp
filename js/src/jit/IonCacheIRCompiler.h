@@ -8,7 +8,6 @@
 #define jit_IonCacheIRCompiler_h
 
 #include "mozilla/Maybe.h"
-
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonIC.h"
@@ -61,10 +60,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);
 
-  MOZ_MUST_USE bool emitAddAndStoreSlotShared(
-      CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-      bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
-      mozilla::Maybe<uint32_t> numNewSlotsOffset);
+  MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
   MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
       TypedOrValueRegister receiver, TypedOrValueRegister output);
   MOZ_MUST_USE bool emitCallNativeGetterResultShared(
