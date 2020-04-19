@@ -256,6 +256,51 @@ add_task(async function testSettingsButton() {
 });
 
 /**
+ * A test for ensuring Tracking Protection label is shown correctly
+ */
+add_task(async function testTrackingProtectionLabel() {
+  // Open a tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+  await openProtectionsPanel();
+
+  let trackingProtectionLabel = document.getElementById(
+    "protections-popup-footer-protection-type-label"
+  );
+
+  is(
+    trackingProtectionLabel.textContent,
+    "Custom",
+    "The label is correctly set to Custom."
+  );
+  await closeProtectionsPanel();
+
+  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
+  await openProtectionsPanel();
+
+  is(
+    trackingProtectionLabel.textContent,
+    "Standard",
+    "The label is correctly set to Standard."
+  );
+  await closeProtectionsPanel();
+
+  Services.prefs.setStringPref("browser.contentblocking.category", "strict");
+  await openProtectionsPanel();
+  is(
+    trackingProtectionLabel.textContent,
+    "Strict",
+    "The label is correctly set to Strict."
+  );
+
+  await closeProtectionsPanel();
+  Services.prefs.setStringPref("browser.contentblocking.category", "custom");
+  BrowserTestUtils.removeTab(tab);
+});
+
+/**
  * A test for the 'Show Full Report' button in the footer section.
  */
 add_task(async function testShowFullReportButton() {

@@ -1249,6 +1249,12 @@ var gProtectionsHandler = {
       "protections-popup-trackers-blocked-counter-description"
     ));
   },
+  get _protectionsPopupFooterProtectionTypeLabel() {
+    delete this._protectionsPopupFooterProtectionTypeLabel;
+    return (this._protectionsPopupFooterProtectionTypeLabel = document.getElementById(
+      "protections-popup-footer-protection-type-label"
+    ));
+  },
   get _protectionsPopupSiteNotWorkingTPSwitch() {
     delete this._protectionsPopupSiteNotWorkingTPSwitch;
     return (this._protectionsPopupSiteNotWorkingTPSwitch = document.getElementById(
@@ -1451,6 +1457,21 @@ var gProtectionsHandler = {
     Services.obs.removeObserver(this, "browser:purge-session-history");
   },
 
+  getTrackingProtectionLabel() {
+    const value = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
+
+    switch (value) {
+      case "strict":
+        return "protections-popup-footer-protection-label-strict";
+      case "custom":
+        return "protections-popup-footer-protection-label-custom";
+      case "standard":
+      /* fall through */
+      default:
+        return "protections-popup-footer-protection-label-standard";
+    }
+  },
+
   openPreferences(origin) {
     openPreferences("privacy-trackingprotection", { origin });
   },
@@ -1598,6 +1619,11 @@ var gProtectionsHandler = {
     // Get the tracker count and set it to the counter in the footer.
     const trackerCount = await TrackingDBService.sumAllEvents();
     this.setTrackersBlockedCounter(trackerCount);
+
+    // Set tracking protection label
+    const l10nId = this.getTrackingProtectionLabel();
+    const elem = this._protectionsPopupFooterProtectionTypeLabel;
+    document.l10n.setAttributes(elem, l10nId);
 
     // Try to get the earliest recorded date in case that there was no record
     // during the initiation but new records come after that.
