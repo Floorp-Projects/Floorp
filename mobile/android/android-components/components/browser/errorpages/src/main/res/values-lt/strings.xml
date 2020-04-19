@@ -47,8 +47,24 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Ryšys buvo nutrauktas</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Naršyklė sėkmingai užmezgė ryšį, tačiau prisijungimas buvo nutrauktas perduodant duomenis. Bandykite dar kartą.</p>
+      <ul>
+        <li>Svetainė gali būti laikinai nepasiekiama arba turi daug lankytojų. Pabandykite dar kartą šiek tiek vėliau.</li>
+        <li>Jeigu negalite įkelti jokio tinklalapio, patikrinkite savo įrenginio mobilųjį arba belaidį ryšį.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Ryšiui skirtas laikas baigėsi</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Svetainė neatsakė į bandymą užmegzti ryšį, o naršyklės laukimo limitas  baigėsi.</p>
+      <ul>
+        <li>Svetainė gali turėti didelį lankytojų srautą, arba laikinų nesklandumų. Prašome bandyti vėliau.</li>
+        <li>Jei nepavyksta įkelti ir kitų tinklalapių, patikrinkite įrenginio ryšį su tinklu.</li>
+        <li>Jei jūsų įrenginys ar tinklas yra apsaugotas užkarda, arba jungiamasi per įgaliotąjį serverį, tai įsitikinkite, kad parinktos tinkamos nuostatos.</li>
+        <li>Jei nesklandumo pašalinti nepavyksta, kreipkitės į tinklo administratorių ar interneto paslaugų teikėją.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nepavyko užmegzti ryšio</string>

@@ -3,7 +3,7 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Ler e modificar configurações de privacidade</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Acessar seus dados de todos os sites</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Acessar seus dados em todos os sites</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Acessar abas do navegador</string>
     <!-- Description for unlimited_storage permission. -->
