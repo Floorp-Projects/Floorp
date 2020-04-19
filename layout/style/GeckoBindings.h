@@ -24,6 +24,7 @@ class nsAtom;
 class nsIURI;
 class nsSimpleContentList;
 struct nsFont;
+class ServoComputedData;
 
 namespace mozilla {
 class ComputedStyle;

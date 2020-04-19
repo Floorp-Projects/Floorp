@@ -276,7 +276,7 @@ bool nsStyleUtil::ObjectPropsMightCauseOverflow(
 
 /* static */
 bool nsStyleUtil::CSPAllowsInlineStyle(
-    Element* aElement, dom::Document* aDocument,
+    dom::Element* aElement, dom::Document* aDocument,
     nsIPrincipal* aTriggeringPrincipal, uint32_t aLineNumber,
     uint32_t aColumnNumber, const nsAString& aStyleText, nsresult* aRv) {
   nsresult rv;

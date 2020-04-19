@@ -10,6 +10,7 @@
 #include "mozilla/ServoBindings.h"
 
 #include "nsCSSProps.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
 
