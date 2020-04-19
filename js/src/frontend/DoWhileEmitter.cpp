@@ -9,7 +9,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
-#include "vm/TryNoteKind.h"  // TryNoteKind
+#include "vm/StencilEnums.h"  // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
