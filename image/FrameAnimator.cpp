@@ -360,9 +360,6 @@ RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,
   ret.mDirtyRect = aState.UpdateStateInternal(result, mSize);
   if (aState.IsDiscarded() || !result) {
     aState.MaybeAdvanceAnimationFrameTime(aTime);
-    if (!ret.mDirtyRect.IsEmpty()) {
-      ret.mFrameAdvanced = true;
-    }
     return ret;
   }
 
