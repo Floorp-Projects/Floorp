@@ -858,17 +858,16 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
-                                                  ObjOperandId objId,
-                                                  uint32_t offsetOffset,
-                                                  ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Address offsetAddr = stubAddress(offsetOffset);
+  ObjOperandId objId = reader.objOperandId();
+  Address offsetAddr = stubAddress(reader.stubOffset());
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+  ValueOperand val =
+      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Maybe<AutoScratchRegister> scratch2;
@@ -900,37 +899,33 @@ bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreFixedSlot(ObjOperandId objId,
-                                                 uint32_t offsetOffset,
-                                                 ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitStoreFixedSlot() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitStoreSlotShared(true, objId, offsetOffset, rhsId);
+  return emitStoreSlotShared(true);
 }
 
-bool BaselineCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
-                                                   uint32_t offsetOffset,
-                                                   ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitStoreDynamicSlot() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitStoreSlotShared(false, objId, offsetOffset, rhsId);
+  return emitStoreSlotShared(false);
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
-    CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
-    Maybe<uint32_t> numNewSlotsOffset) {
+bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Address offsetAddr = stubAddress(offsetOffset);
+  ObjOperandId objId = reader.objOperandId();
+  Address offsetAddr = stubAddress(reader.stubOffset());
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+  ValueOperand val =
+      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch2(allocator, masm);
 
-  Address newGroupAddr = stubAddress(newGroupOffset);
-  Address newShapeAddr = stubAddress(newShapeOffset);
+  bool changeGroup = reader.readBool();
+  Address newGroupAddr = stubAddress(reader.stubOffset());
+  Address newShapeAddr = stubAddress(reader.stubOffset());
 
   if (op == CacheOp::AllocateAndStoreDynamicSlot) {
     // We have to (re)allocate dynamic slots. Do this first, as it's the
@@ -938,7 +933,7 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     // call below: it does not have to worry about saving registers used by
     // failure paths. Note that growSlotsPure is fallible but does
     // not GC.
-    Address numNewSlotsAddr = stubAddress(*numNewSlotsOffset);
+    Address numNewSlotsAddr = stubAddress(reader.stubOffset());
 
     FailurePath* failure;
     if (!addFailurePath(&failure)) {
@@ -1014,47 +1009,33 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot(
-    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
+bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
-  return emitAddAndStoreSlotShared(
-      CacheOp::AddAndStoreFixedSlot, objId, offsetOffset, rhsId, changeGroup,
-      newGroupOffset, newShapeOffset, numNewSlotsOffset);
+  return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot);
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot(
-    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
+bool BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
-  return emitAddAndStoreSlotShared(
-      CacheOp::AddAndStoreDynamicSlot, objId, offsetOffset, rhsId, changeGroup,
-      newGroupOffset, newShapeOffset, numNewSlotsOffset);
+  return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot);
 }
 
-bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
-    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
-    uint32_t numNewSlotsOffset) {
+bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot, objId,
-                                   offsetOffset, rhsId, changeGroup,
-                                   newGroupOffset, newShapeOffset,
-                                   mozilla::Some(numNewSlotsOffset));
+  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot);
 }
 
-bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
-    ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
-    ReferenceType type, ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Address offsetAddr = stubAddress(offsetOffset);
+  ObjOperandId objId = reader.objOperandId();
+  Address offsetAddr = stubAddress(reader.stubOffset());
+  TypedThingLayout layout = reader.typedThingLayout();
+  ReferenceType type = reader.referenceTypeDescrType();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+  ValueOperand val =
+      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch2(allocator, masm);
@@ -1080,15 +1061,16 @@ bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
-                                                    Int32OperandId indexId,
-                                                    ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitStoreDenseElement() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  ObjOperandId objId = reader.objOperandId();
+  Int32OperandId indexId = reader.int32OperandId();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+  ValueOperand val =
+      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -1157,19 +1139,21 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
-                                                        Int32OperandId indexId,
-                                                        ValOperandId rhsId,
-                                                        bool handleAdd) {
+bool BaselineCacheIRCompiler::emitStoreDenseElementHole() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  ObjOperandId objId = reader.objOperandId();
+  Int32OperandId indexId = reader.int32OperandId();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
   AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+  ValueOperand val =
+      allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
+
+  bool handleAdd = reader.readBool();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1303,9 +1287,10 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
-                                            ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitArrayPush() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  ObjOperandId objId = reader.objOperandId();
+  ValOperandId rhsId = reader.valOperandId();
 
   // Allocate the fixed registers first. These need to be fixed for
   // callTypeUpdateIC.
@@ -1416,13 +1401,11 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
-                                                   uint32_t setterOffset,
-                                                   ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitCallNativeSetter() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  Address setterAddr(stubAddress(setterOffset));
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Address setterAddr(stubAddress(reader.stubOffset()));
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1445,17 +1428,15 @@ bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
-                                                     uint32_t setterOffset,
-                                                     ValOperandId rhsId,
-                                                     bool sameRealm) {
+bool BaselineCacheIRCompiler::emitCallScriptedSetter() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
-  Register obj = allocator.useRegister(masm, objId);
-  Address setterAddr(stubAddress(setterOffset));
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Address setterAddr(stubAddress(reader.stubOffset()));
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  bool isSameRealm = reader.readBool();
 
   // First, load the callee in scratch1.
   masm.loadPtr(setterAddr, scratch1);
@@ -1465,7 +1446,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch2);
 
-  if (!sameRealm) {
+  if (!isSameRealm) {
     masm.switchToObjectRealm(scratch1, scratch2);
   }
 
@@ -1509,19 +1490,18 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
 
   stubFrame.leave(masm, true);
 
-  if (!sameRealm) {
+  if (!isSameRealm) {
     masm.switchToBaselineFrameRealm(R1.scratchReg());
   }
 
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId,
-                                                     bool strict,
-                                                     ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitCallSetArrayLength() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  bool strict = reader.readBool();
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1541,14 +1521,12 @@ bool BaselineCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallProxySet(ObjOperandId objId,
-                                               uint32_t idOffset,
-                                               ValOperandId rhsId,
-                                               bool strict) {
+bool BaselineCacheIRCompiler::emitCallProxySet() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
-  Address idAddr(stubAddress(idOffset));
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  Address idAddr(stubAddress(reader.stubOffset()));
+  bool strict = reader.readBool();
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1572,14 +1550,12 @@ bool BaselineCacheIRCompiler::emitCallProxySet(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallProxySetByValue(ObjOperandId objId,
-                                                      ValOperandId idId,
-                                                      ValOperandId rhsId,
-                                                      bool strict) {
+bool BaselineCacheIRCompiler::emitCallProxySetByValue() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  ValueOperand idVal = allocator.useValueRegister(masm, idId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  bool strict = reader.readBool();
 
   allocator.discardStack(masm);
 
@@ -1608,12 +1584,12 @@ bool BaselineCacheIRCompiler::emitCallProxySetByValue(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper(
-    ObjOperandId objId, Int32OperandId idId, ValOperandId rhsId, bool strict) {
+bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  Register id = allocator.useRegister(masm, idId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register id = allocator.useRegister(masm, reader.int32OperandId());
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  bool strict = reader.readBool();
   AutoScratchRegister scratch(allocator, masm);
 
   allocator.discardStack(masm);
@@ -2778,17 +2754,16 @@ void BaselineCacheIRCompiler::updateReturnValue() {
   masm.bind(&skipThisReplace);
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
-                                                       Int32OperandId argcId,
-                                                       CallFlags flags) {
+bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   AutoScratchRegister scratch2(allocator, masm);
 
-  Register calleeReg = allocator.useRegister(masm, calleeId);
-  Register argcReg = allocator.useRegister(masm, argcId);
+  Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
+  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
 
+  CallFlags flags = reader.callFlags();
   bool isConstructing = flags.isConstructing();
   bool isSameRealm = flags.isSameRealm();
 
