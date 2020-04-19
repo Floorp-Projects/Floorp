@@ -48,10 +48,8 @@ bool JavaScriptParent::allowMessage(JSContext* cx) {
   // If we're running browser code while running tests (in automation),
   // then we allow all safe CPOWs and forbid unsafe CPOWs
   // based on a pref (which defaults to forbidden).
-  // We also allow CPOWs unconditionally in selected globals (based on
-  // Cu.permitCPOWsInScope).
   // A normal (release) browser build will never allow CPOWs,
-  // excecpt as a token to pass round.
+  // except as a token to pass round.
 
   if (!xpc::IsInAutomation()) {
     JS_ReportErrorASCII(cx, "CPOW usage forbidden");
@@ -71,8 +69,7 @@ bool JavaScriptParent::allowMessage(JSContext* cx) {
   if (jsGlobal) {
     JSAutoRealm ar(cx, jsGlobal);
 
-    if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs &&
-        ForbidUnsafeBrowserCPOWs()) {
+    if (ForbidUnsafeBrowserCPOWs()) {
       JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
       return false;
     }
