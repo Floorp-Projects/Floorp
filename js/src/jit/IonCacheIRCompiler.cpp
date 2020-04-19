@@ -1803,20 +1803,21 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitArrayPush() {
+bool IonCacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
   MOZ_ASSERT_UNREACHABLE("emitArrayPush not supported for IonCaches.");
   return false;
 }
 
-bool IonCacheIRCompiler::emitCallNativeSetter() {
+bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
+                                              uint32_t setterOffset,
+                                              ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
+  Register obj = allocator.useRegister(masm, objId);
+  JSFunction* target = &objectStubField(setterOffset)->as<JSFunction>();
   MOZ_ASSERT(target->isNative());
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   AutoScratchRegister argJSContext(allocator, masm);
   AutoScratchRegister argVp(allocator, masm);
@@ -1874,17 +1875,18 @@ bool IonCacheIRCompiler::emitCallNativeSetter() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedSetter() {
+bool IonCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
+                                                uint32_t setterOffset,
+                                                ValOperandId rhsId,
+                                                bool sameRealm) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  JSFunction* target = &objectStubField(setterOffset)->as<JSFunction>();
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
-  bool isSameRealm = reader.readBool();
-  MOZ_ASSERT(isSameRealm == (cx_->realm() == target->realm()));
+  MOZ_ASSERT(sameRealm == (cx_->realm() == target->realm()));
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1916,7 +1918,7 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   masm.Push(val);
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
-  if (!isSameRealm) {
+  if (!sameRealm) {
     masm.switchToRealm(target->realm(), scratch);
   }
 
@@ -1936,7 +1938,7 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   masm.loadJitCodeRaw(scratch, scratch);
   masm.callJit(scratch);
 
-  if (!isSameRealm) {
+  if (!sameRealm) {
     masm.switchToRealm(cx_->realm(), ReturnReg);
   }
 
@@ -1944,14 +1946,13 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallSetArrayLength() {
+bool IonCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId, bool strict,
+                                                ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  bool strict = reader.readBool();
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   allocator.discardStack(masm);
   prepareVMCall(masm, save);
@@ -1965,15 +1966,14 @@ bool IonCacheIRCompiler::emitCallSetArrayLength() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallProxySet() {
+bool IonCacheIRCompiler::emitCallProxySet(ObjOperandId objId, uint32_t idOffset,
+                                          ValOperandId rhsId, bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  jsid id = idStubField(reader.stubOffset());
-  bool strict = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
+  jsid id = idStubField(idOffset);
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1990,16 +1990,16 @@ bool IonCacheIRCompiler::emitCallProxySet() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallProxySetByValue() {
+bool IonCacheIRCompiler::emitCallProxySetByValue(ObjOperandId objId,
+                                                 ValOperandId idId,
+                                                 ValOperandId rhsId,
+                                                 bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ConstantOrRegister idVal =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  bool strict = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister idVal = allocator.useConstantOrRegister(masm, idId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   allocator.discardStack(masm);
   prepareVMCall(masm, save);
@@ -2014,14 +2014,14 @@ bool IonCacheIRCompiler::emitCallProxySetByValue() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
+bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper(
+    ObjOperandId objId, Int32OperandId idId, ValOperandId rhsId, bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register id = allocator.useRegister(masm, reader.int32OperandId());
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  bool strict = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  Register id = allocator.useRegister(masm, idId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
   allocator.discardStack(masm);
   prepareVMCall(masm, save);
@@ -2320,7 +2320,9 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedFunction() {
+bool IonCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
+                                                  Int32OperandId argcId,
+                                                  CallFlags flags) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 

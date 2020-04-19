@@ -3607,9 +3607,8 @@ bool CacheIRCompiler::emitLoadDenseElementHoleExistsResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitArrayJoinResult() {
+bool CacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ObjOperandId objId = reader.objOperandId();
 
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);

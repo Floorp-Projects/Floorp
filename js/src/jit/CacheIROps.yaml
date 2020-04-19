@@ -603,12 +603,14 @@
 
 - name: ArrayPush
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     rhs: ValId
 
 - name: ArrayJoinResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
@@ -624,6 +626,7 @@
 
 - name: CallNativeSetter
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     setter: ObjectField
@@ -631,6 +634,7 @@
 
 - name: CallScriptedSetter
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     setter: ObjectField
@@ -639,6 +643,7 @@
 
 - name: CallSetArrayLength
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     strict: BoolImm
@@ -646,14 +651,16 @@
 
 - name: CallProxySet
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
-    rhs: ValId
     id: IdField
+    rhs: ValId
     strict: BoolImm
 
 - name: CallProxySetByValue
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -662,6 +669,7 @@
 
 - name: CallAddOrUpdateSparseElementHelper
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: Int32Id
@@ -688,6 +696,7 @@
 
 - name: CallScriptedFunction
   shared: false
+  gen_boilerplate: true
   operands:
     callee: ObjId
     argc: Int32Id
