@@ -6616,8 +6616,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
       trackAttached("BinaryArith.Bitwise.BitOr");
       break;
     case JSOp::BitXor:
-      writer.int32BitXOrResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.BitXOr");
+      writer.int32BitXorResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.Bitwise.BitXor");
       break;
     case JSOp::BitAnd:
       writer.int32BitAndResult(lhsIntId, rhsIntId);
