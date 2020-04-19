@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">رازداری کی ترتیبات  پڑھیں اور ترمیم کریں</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">رازداری کی سیٹنگز  پڑھیں اور ترمیم کریں</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">تمام ویب سائٹس کے لئے اپنے کوائف تک رسائی</string>
     <!-- Description for tabs add-on permission. -->
@@ -39,7 +39,7 @@
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">کریپٹو گرافک تصدیق کی خدمات فراہم کریں</string>
     <!-- Description for proxy permission. -->
-    <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی ترتیبات کو کنٹرول کریں</string>
+    <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی سیٹنگز کو کنٹرول کریں</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">حالیہ بند کی گئی ٹیبیں تک رسائی</string>
     <!-- Description for tab_hide permission. -->
