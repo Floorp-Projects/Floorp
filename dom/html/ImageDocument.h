@@ -26,20 +26,19 @@ class ImageDocument final : public MediaDocument,
     return MediaDocumentKind::Image;
   }
 
-  virtual nsresult Init() override;
+  nsresult Init() override;
 
-  virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
-                                     nsILoadGroup* aLoadGroup,
-                                     nsISupports* aContainer,
-                                     nsIStreamListener** aDocListener,
-                                     bool aReset = true,
-                                     nsIContentSink* aSink = nullptr) override;
+  nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
+                             nsILoadGroup* aLoadGroup,
+                             nsISupports* aContainer,
+                             nsIStreamListener** aDocListener,
+                             bool aReset = true,
+                             nsIContentSink* aSink = nullptr) override;
 
-  virtual void SetScriptGlobalObject(
-      nsIScriptGlobalObject* aScriptGlobalObject) override;
-  virtual void Destroy() override;
-  virtual void OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
-                          bool aOnlySystemGroup = false) override;
+  void SetScriptGlobalObject(nsIScriptGlobalObject*) override;
+  void Destroy() override;
+  void OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
+                  bool aOnlySystemGroup = false) override;
 
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
@@ -53,8 +52,7 @@ class ImageDocument final : public MediaDocument,
   void DefaultCheckOverflowing() { CheckOverflowing(mResizeImageByDefault); }
 
   // WebIDL API
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   bool ImageIsOverflowing() const {
     return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
@@ -66,12 +64,12 @@ class ImageDocument final : public MediaDocument,
   void RestoreImage();
   void RestoreImageTo(int32_t aX, int32_t aY) { ScrollImageTo(aX, aY, true); }
 
-  virtual void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
+  void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
 
  protected:
   virtual ~ImageDocument();
 
-  virtual nsresult CreateSyntheticDocument() override;
+  nsresult CreateSyntheticDocument() override;
 
   nsresult CheckOverflowing(bool changeState);
 
