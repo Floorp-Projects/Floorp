@@ -126,20 +126,26 @@ class AwsyTestCase(MarionetteTestCase):
         """
         Handles moving DMD reports from the temp dir to our resultsDir.
         """
-        from dmd import fixStackTraces
+        from dmd import initStackFixing, fixStackTraces
+
+        # Initialize stack fixing machinery. A single `fix-stacks` process will
+        # be spawned and used for every `.json.gz` file, which is good, because
+        # it means all the debug info will only be read once, and that's the
+        # slow part.
+        (fix, finish) = initStackFixing()
 
         # Move DMD files from temp dir to resultsDir.
         tmpdir = tempfile.gettempdir()
         tmp_files = os.listdir(tmpdir)
         for f in fnmatch.filter(tmp_files, "dmd-*.json.gz"):
             f = os.path.join(tmpdir, f)
-            # We don't fix stacks on Windows, even though we could, due to the
-            # tale of woe in bug 1626272.
-            if not sys.platform.startswith('win'):
-                self.logger.info("Fixing stacks for %s, this may take a while" % f)
-                isZipped = True
-                fixStackTraces(f, isZipped, gzip.open)
+            self.logger.info("Fixing stacks for %s, this may take a while" % f)
+            isZipped = True
+            fixStackTraces(fix, f, isZipped, gzip.open)
             shutil.move(f, self._resultsDir)
+
+        # Finish up the stack fixing machinery.
+        finish()
 
         # Also attempt to cleanup the unified memory reports.
         for f in fnmatch.filter(tmp_files, "unified-memory-report-*.json.gz"):
