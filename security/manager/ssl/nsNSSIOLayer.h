@@ -161,6 +161,10 @@ class nsNSSSocketInfo final : public CommonSocketControl {
 
   nsresult SetResumptionTokenFromExternalCache();
 
+  void SetClientCertChain(mozilla::UniqueCERTCertList&& clientCertChain) {
+    mClientCertChain = std::move(clientCertChain);
+  }
+
  protected:
   virtual ~nsNSSSocketInfo();
 
@@ -215,6 +219,17 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   uint64_t mPlaintextBytesRead;
 
   nsCOMPtr<nsIX509Cert> mClientCert;
+  // Regarding the client certificate message in the TLS handshake, RFC 5246
+  // (TLS 1.2) says:
+  //   If the certificate_authorities list in the certificate request
+  //   message was non-empty, one of the certificates in the certificate
+  //   chain SHOULD be issued by one of the listed CAs.
+  // (RFC 8446 (TLS 1.3) has a similar provision)
+  // These certificates may be known to gecko but not NSS (e.g. enterprise
+  // intermediates). In order to make these certificates discoverable to NSS
+  // so it can include them in the message, we cache them here as temporary
+  // certificates.
+  mozilla::UniqueCERTCertList mClientCertChain;
 
   // if non-null this is a reference to the mSharedState (which is
   // not an owning reference). If this is used, the info has a private
