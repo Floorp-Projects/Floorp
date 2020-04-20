@@ -846,39 +846,19 @@ var BrowserUtils = {
   /**
    * Returns a URL which has been trimmed by removing 'http://' and any
    * trailing slash (in http/https/ftp urls).
+   * Note that a trimmed url may not load the same page as the original url, so
+   * before loading it, it must be passed through URIFixup, to check trimming
+   * doesn't change its destination. We don't run the URIFixup check here,
+   * because trimURL is in the page load path (see onLocationChange), so it
+   * must be fast and simple.
    *
    * @param {string} aURL The URL to trim.
    * @returns {string} The trimmed string.
    */
   trimURL(aURL) {
-    // This function must not modify the given URL such that calling
-    // nsIURIFixup::createFixupURI with the result will produce a different URI.
     let url = this.removeSingleTrailingSlashFromURL(aURL);
-    // remove http://
-    if (!url.startsWith("http://")) {
-      return url;
-    }
-    let urlWithoutProtocol = url.substring(7);
-    // It doesn't really matter which search engine is used here, thus it's ok
-    // to ignore whether we are in a private context. The keyword lookup will
-    // also distinguish between whitelisted and not whitelisted hosts.
-    // For example, if "someword" is not a whitelisted host, setting the urlbar
-    // value to "http://someword" should not trim it, because otherwise
-    // confirming the urlbar value would end up searching for "someword".
-    let flags =
-      Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
-      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
-    let fixedUpURL, expectedURLSpec;
-    try {
-      fixedUpURL = Services.uriFixup.createFixupURI(urlWithoutProtocol, flags);
-      expectedURLSpec = Services.io.newURI(aURL).displaySpec;
-    } catch (ex) {
-      return url;
-    }
-    if (fixedUpURL.displaySpec == expectedURLSpec) {
-      return urlWithoutProtocol;
-    }
-    return url;
+    // Remove "http://" prefix.
+    return url.startsWith("http://") ? url.substring(7) : url;
   },
 
   recordSiteOriginTelemetry(aWindows, aIsGeckoView) {

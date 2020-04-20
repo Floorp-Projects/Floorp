@@ -9,12 +9,18 @@ add_task(async function() {
     gURLBar.setURI();
   });
 
+  // Avoid search service sync init warnings due to URIFixup, when running the
+  // test alone.
+  await Services.search.init();
+
   Services.prefs.setBoolPref(PREF_TRIMURLS, true);
 
   testVal("http://mozilla.org/", "mozilla.org");
   testVal("https://mozilla.org/", "https://mozilla.org");
   testVal("http://mözilla.org/", "mözilla.org");
-  testVal("http://mozilla.imaginatory/", "mozilla.imaginatory");
+  // This isn't a valid public suffix, thus we should untrim it or it would
+  // end up doing a search.
+  testVal("http://mozilla.imaginatory/");
   testVal("http://www.mozilla.org/", "www.mozilla.org");
   testVal("http://sub.mozilla.org/", "sub.mozilla.org");
   testVal("http://sub1.sub2.sub3.mozilla.org/", "sub1.sub2.sub3.mozilla.org");
@@ -62,9 +68,10 @@ add_task(async function() {
 
   testVal("http://someotherhostwithnodots");
   testVal("http://localhost/ foo bar baz");
+  // This is not trimmed because it's not in the domain whitelist.
   testVal(
     "http://localhost.localdomain/ foo bar baz",
-    "localhost.localdomain/ foo bar baz"
+    "http://localhost.localdomain/ foo bar baz"
   );
 
   Services.prefs.setBoolPref(PREF_TRIMURLS, false);
@@ -91,12 +98,25 @@ add_task(async function() {
 function testVal(originalValue, targetValue) {
   gURLBar.value = originalValue;
   gURLBar.valueIsTyped = false;
-  is(gURLBar.value, targetValue || originalValue, "url bar value set");
+  let trimmedValue = UrlbarPrefs.get("trimURLs")
+    ? BrowserUtils.trimURL(originalValue)
+    : originalValue;
+  Assert.equal(gURLBar.value, trimmedValue, "url bar value set");
+  // Now focus the urlbar and check the inputField value is properly set.
+  gURLBar.focus();
+  Assert.equal(
+    gURLBar.value,
+    targetValue || originalValue,
+    "Check urlbar value on focus"
+  );
+  // On blur we should trim again.
+  gURLBar.blur();
+  Assert.equal(gURLBar.value, trimmedValue, "Check urlbar value on blur");
 }
 
 function testCopy(originalValue, targetValue) {
   return SimpleTest.promiseClipboardChange(targetValue, () => {
-    is(gURLBar.value, originalValue, "url bar copy value set");
+    Assert.equal(gURLBar.value, originalValue, "url bar copy value set");
     gURLBar.focus();
     gURLBar.select();
     goDoCommand("cmd_copy");

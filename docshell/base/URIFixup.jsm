@@ -88,8 +88,12 @@ XPCOMUtils.defineLazyGetter(this, "asciiAlphaRegex", () => /^[a-z]$/i);
 // Regex used to identify ascii a-f characters.
 XPCOMUtils.defineLazyGetter(this, "asciiHexRegex", () => /^[a-f0-9]$/i);
 
-// Regex used to identify ascii numerical characters.
-XPCOMUtils.defineLazyGetter(this, "asciiDigitRegex", () => /^[0-9]$/);
+// Regex used to identify ascii numbers.
+XPCOMUtils.defineLazyGetter(
+  this,
+  "asciiNumberRegex",
+  () => /^[0-9]+(\.[0-9]+)?$/
+);
 
 // Regex used to identify tab separated content (having at least 2 tabs).
 XPCOMUtils.defineLazyGetter(this, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
@@ -236,10 +240,9 @@ URIFixup.prototype = {
       if (!innerInfo.preferredURI) {
         throw new Components.Exception("No preferredURI", Cr.NS_ERROR_FAILURE);
       }
-      info.fixedURI = Services.io.newURI(
+      info.preferredURI = info.fixedURI = Services.io.newURI(
         "view-source:" + innerInfo.preferredURI.spec
       );
-      info.preferredURI = info.fixedURI;
       return info;
     }
 
@@ -248,7 +251,7 @@ URIFixup.prototype = {
       // where a file path may look like having a scheme is "X:" on Windows.
       let fileURI = fileURIFixup(uriString);
       if (fileURI) {
-        info.fixedURI = info.preferredURI = fileURI;
+        info.preferredURI = info.fixedURI = fileURI;
         info.fixupChangedProtocol = true;
         return info;
       }
@@ -275,6 +278,7 @@ URIFixup.prototype = {
         if (uriString.startsWith(typo)) {
           scheme = fixed;
           uriString = scheme + uriString.substring(typo.length);
+          info.fixupChangedProtocol = true;
           isCommonProtocol = true;
           break;
         }
@@ -319,7 +323,7 @@ URIFixup.prototype = {
         // If the given URL has a user:password we can't just pass it to the
         // external protocol handler; we'll try using it with http instead
         // later
-        info.fixedURI = null;
+        info.preferredURI = info.fixedURI = null;
       }
     }
 
@@ -353,9 +357,16 @@ URIFixup.prototype = {
     // Assume that 1 tab is accidental, but more than 1 implies this is
     // supposed to be tab-separated content.
     if (!isCommonProtocol && maxOneTabRegex.test(uriString)) {
-      let uriWithProtocol = fixupURIProtocol(uriString, info);
+      let uriWithProtocol = fixupURIProtocol(uriString);
       if (uriWithProtocol) {
         info.fixedURI = uriWithProtocol;
+        info.fixupChangedProtocol = true;
+        // Did the caller want us to try an alternative URI?
+        // If so, attempt to fixup http://foo into http://www.foo.com
+        if (fixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) {
+          info.fixupCreatedAlternateURI = makeAlternateFixedURI(info);
+        }
+        info.preferredURI = info.fixedURI;
       }
     }
 
@@ -365,20 +376,15 @@ URIFixup.prototype = {
       fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol
     ) {
-      keywordURIFixup(uriString, info, isPrivateContext, postData);
-      if (info.preferredURI) {
+      if (keywordURIFixup(uriString, info, isPrivateContext, postData)) {
         return info;
       }
     }
 
-    // Did the caller want us to try an alternative URI?
-    // If so, attempt to fixup http://foo into http://www.foo.com
-    if (info.fixedURI && fixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) {
-      info.fixupCreatedAlternateURI = makeAlternateFixedURI(info);
-    }
-
-    if (info.fixedURI) {
-      info.preferredURI = info.fixedURI;
+    if (
+      info.fixedURI &&
+      (!info.fixupChangedProtocol || checkAndFixPublicSuffix(info))
+    ) {
       return info;
     }
 
@@ -491,19 +497,7 @@ URIFixup.prototype = {
     return info;
   },
 
-  isDomainWhitelisted(asciiHost, dotLoc) {
-    if (dnsFirstForSingleWords) {
-      return true;
-    }
-    // Check if this domain is whitelisted as an actual
-    // domain (which will prevent a keyword query)
-    // NB: any processing of the host here should stay in sync with
-    // code in the front-end(s) that set the pref.
-    if (dotLoc == asciiHost.length - 1) {
-      asciiHost = asciiHost.substring(0, asciiHost.length - 1);
-    }
-    return domainsWhitelist.has(asciiHost);
-  },
+  isDomainWhitelisted,
 
   classID: Components.ID("{c6cf88b7-452e-47eb-bdc9-86e3561648ef}"),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(URIFixup),
@@ -577,6 +571,96 @@ URIFixupInfo.prototype = {
 
 // Helpers
 
+/**
+ * Implementation of isDomainWhitelisted, so we don't have to go through the
+ * service.
+ * @param {string} asciiHost
+ */
+function isDomainWhitelisted(asciiHost) {
+  if (dnsFirstForSingleWords) {
+    return true;
+  }
+  // Check if this domain is whitelisted as an actual
+  // domain (which will prevent a keyword query)
+  // Note that any processing of the host here should stay in sync with
+  // code in the front-end(s) that set the pref.
+  if (asciiHost.endsWith(".")) {
+    asciiHost = asciiHost.substring(0, asciiHost.length - 1);
+  }
+  return domainsWhitelist.has(asciiHost.toLowerCase());
+}
+
+/**
+ * Checks the suffix of info.fixedURI against the Public Suffix List.
+ * If the suffix is unknown due to a typo this will try to fix it up.
+ * @param {URIFixupInfo} info about the uri to check.
+ * @note this may modify the public suffix of info.fixedURI.
+ * @returns false if the public suffix is unknown, true in any other case,
+ *          included if it's not present.
+ */
+function checkAndFixPublicSuffix(info) {
+  let uri = info.fixedURI;
+  let asciiHost = uri.asciiHost;
+  if (
+    !asciiHost ||
+    // Quick bailouts for most common cases, according to Alexa Top 1 million.
+    asciiHost.endsWith(".com") ||
+    asciiHost.endsWith(".net") ||
+    asciiHost.endsWith(".org") ||
+    asciiHost.endsWith(".ru") ||
+    asciiHost.endsWith(".de") ||
+    !asciiHost.includes(".") ||
+    asciiHost.endsWith(".") ||
+    isDomainWhitelisted(asciiHost)
+  ) {
+    return true;
+  }
+  try {
+    if (Services.eTLD.getKnownPublicSuffix(uri)) {
+      return true;
+    }
+  } catch (ex) {
+    return true;
+  }
+  // Suffix is unknown, try to fix most common 3 chars TLDs typos.
+  // .com is the most commonly mistyped tld, so it has more cases.
+  let suffix = Services.eTLD.getPublicSuffix(uri);
+  if (!suffix || asciiNumberRegex.test(suffix)) {
+    return true;
+  }
+  for (let [typo, fixed] of [
+    ["ocm", "com"],
+    ["con", "com"],
+    ["cmo", "com"],
+    ["xom", "com"],
+    ["vom", "com"],
+    ["cpm", "com"],
+    ["com'", "com"],
+    ["ent", "net"],
+    ["ner", "net"],
+    ["nte", "net"],
+    ["met", "net"],
+    ["rog", "org"],
+    ["ogr", "org"],
+    ["prg", "org"],
+    ["orh", "org"],
+  ]) {
+    if (suffix == typo) {
+      let host = uri.host.substring(0, uri.host.length - typo.length) + fixed;
+      let updatePreferredURI = info.preferredURI == info.fixedURI;
+      info.fixedURI = uri
+        .mutate()
+        .setHost(host)
+        .finalize();
+      if (updatePreferredURI) {
+        info.preferredURI = info.fixedURI;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 function tryKeywordFixupForURIInfo(
   uriString,
   fixupInfo,
@@ -592,7 +676,9 @@ function tryKeywordFixupForURIInfo(
     fixupInfo.keywordProviderName = keywordInfo.keywordProviderName;
     fixupInfo.keywordAsSent = keywordInfo.keywordAsSent;
     fixupInfo.preferredURI = keywordInfo.preferredURI;
+    return true;
   } catch (ex) {}
+  return false;
 }
 
 /**
@@ -615,12 +701,12 @@ function makeAlternateFixedURI(info) {
   ) {
     return false;
   }
-
   let oldHost = uri.host;
-  // Don't fix up 'localhost' because that's confusing:
+  // Don't create an alternate uri for localhost, because it would be confusing.
   if (oldHost == "localhost") {
     return false;
   }
+
   let numDots = (oldHost.match(/\./g) || []).length;
 
   // Get the prefix and suffix to stick onto the new hostname. By default these
@@ -694,23 +780,24 @@ function fileURIFixup(uriString) {
   return null;
 }
 
-function fixupURIProtocol(uriString, fixupInfo) {
-  // Add http:// to front of url if it has no spec
-  //
-  // Should fix:
-  //
-  //   no-scheme.com
-  //   ftp.no-scheme.com
-  //   ftp4.no-scheme.com
-  //   no-scheme.com/query?foo=http://www.foo.com
-  //   user:pass@no-scheme.com
-  //
+/**
+ * Tries to fixup a string to an nsIURI by adding the default protocol.
+ *
+ * Should fix things like:
+ *    no-scheme.com
+ *    ftp.no-scheme.com
+ *    ftp4.no-scheme.com
+ *    no-scheme.com/query?foo=http://www.foo.com
+ *    user:pass@no-scheme.com
+ *
+ * @param {string} uriString The string to fixup.
+ * @returns an nsIURI built adding the default protocol to the string,
+ *          or null if fixing was not possible.
+ */
+function fixupURIProtocol(uriString) {
   let schemePos = uriString.indexOf("://");
   if (schemePos == -1 || schemePos > uriString.search(/[:\/]/)) {
     uriString = "http://" + uriString;
-    // TODO: This should only be set if this code runs and newURI succeeds
-    // below, but tests fail and some code may depend on this bug.
-    fixupInfo.fixupChangedProtocol = true;
   }
   try {
     return Services.io.newURI(uriString);
@@ -720,6 +807,14 @@ function fixupURIProtocol(uriString, fixupInfo) {
   return null;
 }
 
+/**
+ * Tries to fixup a string to a search url.
+ * @param {string} uriString the string to fixup.
+ * @param {URIFixupInfo} fixupInfo The fixup info object, modified in-place.
+ * @param {boolean} isPrivateContext Whether this happens in a private context.
+ * @param {nsIInputStream} postData optional POST data for the search
+ * @returns {boolean} Whether the keyword fixup was succesful.
+ */
 function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
   // These are keyword formatted strings
   // "what is mozilla"
@@ -798,7 +893,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
       // Hurray, we got ourselves some ipv4!
       // At this point, there's no way we will do a keyword lookup, so just bail
       // immediately:
-      return;
+      return false;
     }
 
     if (iter == ".") {
@@ -826,7 +921,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
       lastSlashLoc = pos;
     } else if (asciiAlphaRegex.test(iter)) {
       hasAsciiAlpha = true;
-    } else if (asciiDigitRegex.test(iter)) {
+    } else if (asciiNumberRegex.test(iter)) {
       foundDigits++;
     }
   }
@@ -838,7 +933,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
   // If there are only colons and only hexadecimal characters ([a-z][0-9])
   // enclosed in [], then don't do a keyword lookup
   if (looksLikeIpv6) {
-    return;
+    return false;
   }
 
   let asciiHost = fixupInfo.fixedURI && fixupInfo.fixedURI.asciiHost;
@@ -853,7 +948,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
       (firstSpaceLoc < firstQMarkLoc || firstQuoteLoc < firstQMarkLoc)) ||
     firstQMarkLoc == 0
   ) {
-    tryKeywordFixupForURIInfo(
+    return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,
       fixupInfo,
       isPrivateContext,
@@ -868,7 +963,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     asciiHost.toLowerCase() == displayHost.toLowerCase()
   ) {
     if (!dnsFirstForSingleWords) {
-      tryKeywordFixupForURIInfo(
+      return tryKeywordFixupForURIInfo(
         fixupInfo.originalInput,
         fixupInfo,
         isPrivateContext,
@@ -884,11 +979,8 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     firstColonLoc == NOT_FOUND &&
     firstQMarkLoc == NOT_FOUND
   ) {
-    if (
-      asciiHost &&
-      Services.uriFixup.isDomainWhitelisted(asciiHost, firstDotLoc)
-    ) {
-      return;
+    if (asciiHost && isDomainWhitelisted(asciiHost)) {
+      return false;
     }
 
     // ... unless there are no dots, and a slash, and alpha characters, and
@@ -899,18 +991,19 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
       hasAsciiAlpha &&
       asciiHost
     ) {
-      return;
+      return false;
     }
 
     // If we get here, we don't have a valid URI, or we did but the
     // host is not whitelisted, so we do a keyword search *anyway*:
-    tryKeywordFixupForURIInfo(
+    return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,
       fixupInfo,
       isPrivateContext,
       postData
     );
   }
+  return false;
 }
 
 function extractScheme(uriString) {

@@ -783,10 +783,12 @@ class UrlbarInput {
     this.setPageProxyState("invalid", true);
 
     if (!result) {
-      // This usually happens when there's no selected results (the user cycles
-      // through results and there was no heuristic), and we reset the input
-      // value to the previous text value.
-      this.value = this._valueOnLastSearch;
+      // This happens when there's no selection, for example when moving to the
+      // one-offs search settings button, or to the input field when Top Sites
+      // are shown; then we must reset the input value.
+      // Note that for Top Sites the last search string would be empty, thus we
+      // must restore the last text value.
+      this.value = this._lastSearchString || this._valueOnLastSearch;
     } else {
       // For autofilled results, the value that should be canonized is not the
       // autofilled value but the value that the user typed.
@@ -1220,7 +1222,9 @@ class UrlbarInput {
       val = originalUrl.displaySpec;
     }
 
-    val = allowTrim ? this._trimValue(val) : val;
+    if (allowTrim) {
+      val = this._trimValue(val);
+    }
 
     this.valueIsTyped = false;
     this._resultForCurrentValue = null;
@@ -1843,9 +1847,14 @@ class UrlbarInput {
     this.endLayoutExtend();
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
-      // Restore value to the last typed one, removing any autofilled portion.
+      // If we were autofilling, remove the autofilled portion, by restoring
+      // the value to the last typed one.
       this.value = this.window.gBrowser.userTypedValue;
+    } else if (this.value == this._focusUntrimmedValue) {
+      // If the value was untrimmed by _on_focus and didn't change, trim it.
+      this.value = this._focusUntrimmedValue;
     }
+    this._focusUntrimmedValue = null;
 
     this.formatValue();
     this._resetSearchState();
@@ -1905,6 +1914,31 @@ class UrlbarInput {
   _on_focus(event) {
     if (!this._hideFocus) {
       this.setAttribute("focused", "true");
+    }
+
+    // If the value was trimmed, check whether we should untrim it.
+    // This is necessary when a protocol was typed, but the whole url has
+    // invalid parts, like the origin, then editing and confirming the trimmed
+    // value would execute a search instead of visiting the typed url.
+    if (this.value != this._untrimmedValue) {
+      // It doesn't really matter which search engine is used here, thus it's ok
+      // to ignore whether we are in a private context. The keyword lookup will
+      // also distinguish between whitelisted and not whitelisted hosts.
+      let untrim = false;
+      try {
+        let fixedSpec = Services.uriFixup.createFixupURI(
+          this.value,
+          Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
+            Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+        ).displaySpec;
+        let expectedSpec = Services.io.newURI(this._untrimmedValue).displaySpec;
+        untrim = fixedSpec != expectedSpec;
+      } catch (ex) {
+        untrim = true;
+      }
+      if (untrim) {
+        this.inputField.value = this._focusUntrimmedValue = this._untrimmedValue;
+      }
     }
 
     this.startLayoutExtend();
