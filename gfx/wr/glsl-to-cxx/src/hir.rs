@@ -86,7 +86,7 @@ impl LiftFrom<&ArraySpecifier> for ArraySizes {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TypeKind {
     Void,
     Bool,
@@ -285,6 +285,48 @@ impl TypeKind {
             | USamplerCubeArray
             | UImageCubeArray => true,
             _ => false,
+        }
+    }
+
+    pub fn is_bool(&self) -> bool {
+        use TypeKind::*;
+        match self {
+            Bool | BVec2 | BVec3 | BVec4 => true,
+            _ => false,
+        }
+    }
+
+    pub fn to_bool(&self) -> Self {
+        use TypeKind::*;
+        match self {
+            Int | UInt | Float | Double => Bool,
+            IVec2 | UVec2 | Vec2 | DVec2 => BVec2,
+            IVec3 | UVec3 | Vec3 | DVec3 => BVec3,
+            IVec4 | UVec4 | Vec4 | DVec4 => BVec4,
+            _ => *self,
+        }
+    }
+
+    pub fn to_int(&self) -> Self {
+        use TypeKind::*;
+        match self {
+            Bool | UInt | Float | Double => Int,
+            BVec2 | UVec2 | Vec2 | DVec2 => IVec2,
+            BVec3 | UVec3 | Vec3 | DVec3 => IVec3,
+            BVec4 | UVec4 | Vec4 | DVec4 => IVec4,
+            _ => *self,
+        }
+    }
+
+    pub fn to_scalar(&self) -> Self {
+        use TypeKind::*;
+        match self {
+            IVec2 | IVec3 | IVec4 => Int,
+            UVec2 | UVec3 | UVec4 => UInt,
+            Vec2 | Vec3 | Vec4 => Float,
+            DVec2 | DVec3 | DVec4 => Double,
+            BVec2 | BVec3 | BVec4 => Bool,
+            _ => *self,
         }
     }
 
@@ -1994,6 +2036,64 @@ pub fn get_texel_fetch_offset(
     None
 }
 
+fn make_const(t: TypeKind, v: i32) -> Expr {
+    Expr {
+        kind: match t {
+            TypeKind::Int => ExprKind::IntConst(v as _),
+            TypeKind::UInt => ExprKind::UIntConst(v as _),
+            TypeKind::Bool => ExprKind::BoolConst(v != 0),
+            TypeKind::Float => ExprKind::FloatConst(v as _),
+            TypeKind::Double => ExprKind::DoubleConst(v as _),
+            _ => panic!("bad constant type"),
+        },
+        ty: Type::new(t),
+    }
+}
+
+// Any parameters needing to convert to bool should just compare via != 0.
+// This ensures they get the proper all-1s pattern for C++ OpenCL vectors.
+fn force_params_to_bool(_state: &mut State, params: &mut Vec<Expr>) {
+    for e in params {
+        if !e.ty.kind.is_bool() {
+            let k = e.ty.kind;
+            *e = Expr {
+                kind: ExprKind::Binary(
+                    BinaryOp::NonEqual,
+                    Box::new(e.clone()),
+                    Box::new(make_const(k.to_scalar(), 0)),
+                ),
+                ty: Type::new(k.to_bool()),
+            };
+        }
+    }
+}
+
+// Transform bool params to int, then mask off the low bit so they become 0 or 1.
+// C++ OpenCL vectors represent bool as all-1s patterns, which will erroneously
+// convert to -1 otherwise.
+fn force_params_from_bool(state: &mut State, params: &mut Vec<Expr>) {
+    for e in params {
+        if e.ty.kind.is_bool() {
+            let k = e.ty.kind.to_int();
+            let sym = state.lookup(k.glsl_primitive_type_name().unwrap()).unwrap();
+            *e = Expr {
+                kind: ExprKind::Binary(
+                    BinaryOp::BitAnd,
+                    Box::new(Expr {
+                        kind: ExprKind::FunCall(
+                            FunIdentifier::Identifier(sym),
+                            vec![e.clone()],
+                        ),
+                        ty: Type::new(k),
+                    }),
+                    Box::new(make_const(TypeKind::Int, 1)),
+                ),
+                ty: Type::new(k),
+            };
+        }
+    }
+}
+
 fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
     match e {
         syntax::Expr::Variable(i) => {
@@ -2104,7 +2204,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
         },
         syntax::Expr::FunCall(fun, params) => {
             let ret_ty: Type;
-            let params: Vec<Expr> = params
+            let mut params: Vec<Expr> = params
                 .iter()
                 .map(|x| translate_expression(state, x))
                 .collect();
@@ -2132,6 +2232,15 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                 Some(s) => s,
                                 None => panic!("missing symbol {}", name),
                             };
+                            // Force any boolean basic type constructors to generate correct
+                            // bit patterns.
+                            if let Some(t) = TypeKind::from_glsl_primitive_type_name(name) {
+                                if t.is_bool() {
+                                    force_params_to_bool(state, &mut params);
+                                } else {
+                                    force_params_from_bool(state, &mut params);
+                                }
+                            }
                             match &state.sym(sym).decl {
                                 SymDecl::NativeFunction(fn_ty, _) => {
                                     let mut ret = None;
@@ -2793,7 +2902,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "bvec2",
         Some("make_bvec2"),
         Type::new(BVec2),
-        vec![Type::new(UInt)],
+        vec![Type::new(Bool)],
     );
     declare_function(
         state,
@@ -2822,7 +2931,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "float",
         Some("make_float"),
         Type::new(Float),
-        vec![Type::new(Bool)],
+        vec![Type::new(Int)],
     );
     declare_function(
         state,
