@@ -719,7 +719,7 @@ void CookieService::GetCookiesForURI(
       continue;
     }
 
-    if (aIsSameSiteForeign &&
+    if (aHttpBound && aIsSameSiteForeign &&
         !ProcessSameSiteCookieForForeignRequest(
             aChannel, cookie, aIsSafeTopLevelNav, laxByDefault)) {
       continue;

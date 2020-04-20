@@ -313,21 +313,6 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
       continue;
     }
 
-    int32_t sameSiteAttr = 0;
-    cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign) {
-      // it if's a cross origin request and the cookie is same site only
-      // (strict) don't send it
-      if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
-        continue;
-      }
-      // if it's a cross origin request, the cookie is same site lax, but it's
-      // not a top-level navigation, don't send it
-      if (sameSiteAttr == nsICookie::SAMESITE_LAX && !aIsSafeTopLevelNav) {
-        continue;
-      }
-    }
-
     // if the nsIURI path doesn't match the cookie path, don't send it back
     if (!CookieCommons::PathMatches(cookie, pathFromURI)) {
       continue;
