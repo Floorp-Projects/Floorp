@@ -7,7 +7,7 @@ use backend::*;
 use backend::cork_state::CorkState;
 use cubeb_backend::{ffi, log_enabled, ChannelLayout, DeviceId, DeviceRef, Error, Result,
                     SampleFormat, StreamOps, StreamParamsRef, StreamPrefs};
-use pulse::{self, CVolumeExt, ChannelMapExt, SampleSpecExt, StreamLatency, USecExt};
+use pulse::{self, ChannelMapExt, SampleSpecExt, StreamLatency, USecExt};
 use pulse_ffi::*;
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
@@ -18,8 +18,6 @@ use ringbuf::RingBuffer;
 use self::RingBufferConsumer::*;
 use self::RingBufferProducer::*;
 use self::LinearInputBuffer::*;
-
-const PULSE_NO_GAIN: f32 = -1.0;
 
 /// Iterator interface to `ChannelLayout`.
 ///
@@ -362,7 +360,7 @@ impl<'ctx> PulseStream<'ctx> {
             output_sample_spec: pulse::SampleSpec::default(),
             input_sample_spec: pulse::SampleSpec::default(),
             shutdown: false,
-            volume: PULSE_NO_GAIN,
+            volume: 1.0,
             state: ffi::CUBEB_STATE_ERROR,
             input_buffer_manager: None
         });
@@ -631,47 +629,9 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         match self.output_stream {
             None => Err(Error::error()),
-            Some(ref stm) => {
-                if let Some(ref context) = self.context.context {
-                    self.context.mainloop.lock();
-
-                    let mut cvol: pa_cvolume = Default::default();
-
-                    /* if the pulse daemon is configured to use flat
-                     * volumes, apply our own gain instead of changing
-                     * the input volume on the sink. */
-                    let flags = {
-                        match self.context.default_sink_info {
-                            Some(ref info) => info.flags,
-                            _ => pulse::SinkFlags::empty(),
-                        }
-                    };
-
-                    if flags.contains(pulse::SinkFlags::FLAT_VOLUME) {
-                        self.volume = volume;
-                    } else {
-                        let channels = stm.get_sample_spec().channels;
-                        let vol = pulse::sw_volume_from_linear(f64::from(volume));
-                        cvol.set(u32::from(channels), vol);
-
-                        let index = stm.get_index();
-
-                        let context_ptr = self.context as *const _ as *mut _;
-                        if let Ok(o) = context.set_sink_input_volume(
-                            index,
-                            &cvol,
-                            context_success,
-                            context_ptr,
-                        ) {
-                            self.context.operation_wait(stm, &o);
-                        }
-                    }
-
-                    self.context.mainloop.unlock();
-                    Ok(())
-                } else {
-                    Err(Error::error())
-                }
+            Some(_) => {
+                self.volume = volume;
+                Ok(())
             }
         }
     }
@@ -936,7 +896,7 @@ impl<'ctx> PulseStream<'ctx> {
                             read_offset += (size / frame_size) * in_frame_size;
                         }
 
-                        if self.volume != PULSE_NO_GAIN {
+                        if self.volume != 1.0 {
                             let samples = (self.output_sample_spec.channels as usize * size
                                 / frame_size) as isize;
 
@@ -1009,14 +969,6 @@ fn stream_success(_: &pulse::Stream, success: i32, u: *mut c_void) {
         cubeb_log!("stream_success ignored failure: {}", success);
     }
     stm.context.mainloop.signal();
-}
-
-fn context_success(_: &pulse::Context, success: i32, u: *mut c_void) {
-    let ctx = unsafe { &*(u as *mut PulseContext) };
-    if success != 1 {
-        cubeb_log!("context_success ignored failure: {}", success);
-    }
-    ctx.mainloop.signal();
 }
 
 fn invalid_format() -> Error {
