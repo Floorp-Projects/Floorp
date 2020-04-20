@@ -98,7 +98,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   // Creates the channel, and then calls AsyncOpen on it.
   bool Open(nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
-            uint32_t aCacheKey, const uint64_t& aChannelId,
+            uint32_t aCacheKey, const Maybe<uint64_t>& aChannelId,
             const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
             Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
             bool aHasGesture, nsresult* aRv);
@@ -161,7 +161,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // our reference to it.
   void DocumentChannelBridgeDisconnected();
 
-  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus);
+  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus,
+                                bool aSwitchingToNewProcess = false);
 
   base::ProcessId OtherPid() const {
     if (mDocumentChannelBridge) {
@@ -180,6 +181,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
                              uint32_t aLoadFlags);
+
+  dom::CanonicalBrowsingContext* GetBrowsingContext() const;
+
+  nsIChannel* GetChannel() const { return mChannel; }
+
+  uint32_t GetLoadType() const { return mLoadStateLoadType; }
 
  protected:
   virtual ~DocumentLoadListener();
@@ -218,8 +225,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
-
-  dom::CanonicalBrowsingContext* GetBrowsingContext();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel

@@ -32,8 +32,12 @@ class ADocumentChannelBridge {
   // RemoveRequest).
   // We do this so we can remove using NS_BINDING_RETARGETED, but still have
   // the channel not be in an error state.
+  //
+  // aSwitchingToNewProcess is true if the load is successful, but we're
+  // disconnecting the bridge to switch the load to a new process.
   virtual void DisconnectChildListeners(nsresult aStatus,
-                                        nsresult aLoadGroupStatus) = 0;
+                                        nsresult aLoadGroupStatus,
+                                        bool aSwitchingToNewProcess) = 0;
 
   // Delete the bridge, and drop any refs to the DocumentLoadListener
   virtual void Delete() = 0;
