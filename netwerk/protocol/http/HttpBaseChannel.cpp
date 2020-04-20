@@ -4411,8 +4411,8 @@ void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
 
 void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
 
-nsresult HttpBaseChannel::GetResponseEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy) {
+NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
   if (!mResponseHead) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -4428,7 +4428,7 @@ nsresult HttpBaseChannel::GetResponseEmbedderPolicy(
     policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
   }
 
-  *aResponseEmbedderPolicy = policy;
+  *aOutPolicy = policy;
   return NS_OK;
 }
 
