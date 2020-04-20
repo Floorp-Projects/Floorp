@@ -4417,18 +4417,11 @@ NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsILoadInfo::CrossOriginEmbedderPolicy policy =
-      nsILoadInfo::EMBEDDER_POLICY_NULL;
-
   nsAutoCString content;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
                                      content);
 
-  if (content.EqualsLiteral("require-corp")) {
-    policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
-  }
-
-  *aOutPolicy = policy;
+  *aOutPolicy = NS_GetCrossOriginEmbedderPolicyFromHeader(content);
   return NS_OK;
 }
 
