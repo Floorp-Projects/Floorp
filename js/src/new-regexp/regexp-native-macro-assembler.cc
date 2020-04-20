@@ -1214,5 +1214,15 @@ bool SMRegExpMacroAssembler::GrowBacktrackStack(RegExpStack* regexp_stack) {
   return !!regexp_stack->EnsureCapacity(size * 2);
 }
 
+bool SMRegExpMacroAssembler::CanReadUnaligned() {
+#if defined(JS_CODEGEN_ARM)
+  return !js::jit::HasAlignmentFault();
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  return false;
+#else
+  return true;
+#endif
+}
+
 }  // namespace internal
 }  // namespace v8
