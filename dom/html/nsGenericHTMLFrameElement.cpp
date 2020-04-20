@@ -131,36 +131,6 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
   mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
 }
 
-void nsGenericHTMLFrameElement::DisallowCreateFrameLoader() {
-  MOZ_ASSERT(!mFrameLoader);
-  MOZ_ASSERT(!mFrameLoaderCreationDisallowed);
-  mFrameLoaderCreationDisallowed = true;
-}
-
-void nsGenericHTMLFrameElement::AllowCreateFrameLoader() {
-  MOZ_ASSERT(!mFrameLoader);
-  MOZ_ASSERT(mFrameLoaderCreationDisallowed);
-  mFrameLoaderCreationDisallowed = false;
-}
-
-void nsGenericHTMLFrameElement::CreateRemoteFrameLoader(
-    BrowserParent* aBrowserParent) {
-  MOZ_ASSERT(!mFrameLoader);
-  EnsureFrameLoader();
-  if (NS_WARN_IF(!mFrameLoader)) {
-    return;
-  }
-  mFrameLoader->InitializeFromBrowserParent(aBrowserParent);
-
-  if (nsSubDocumentFrame* subdocFrame = do_QueryFrame(GetPrimaryFrame())) {
-    // The reflow for this element already happened while we were waiting
-    // for the iframe creation. Therefore the subdoc frame didn't have a
-    // frameloader when UpdatePositionAndSize was supposed to be called in
-    // ReflowFinished, and we need to do it properly now.
-    mFrameLoader->UpdatePositionAndSize(subdocFrame);
-  }
-}
-
 void nsGenericHTMLFrameElement::SwapFrameLoaders(
     HTMLIFrameElement& aOtherLoaderOwner, ErrorResult& rv) {
   if (&aOtherLoaderOwner == this) {
