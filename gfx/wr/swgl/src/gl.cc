@@ -2083,9 +2083,9 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
   }
 }
 
-void CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
+void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
                       GLint srcX, GLint srcY, GLint srcZ, GLuint dstName,
-                      GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY,
+                      GLenum dstTarget, UNUSED GLint dstLevel, GLint dstX, GLint dstY,
                       GLint dstZ, GLsizei srcWidth, GLsizei srcHeight,
                       GLsizei srcDepth) {
   assert(srcLevel == 0 && dstLevel == 0);
@@ -2128,7 +2128,7 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
   }
 }
 
-void CopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+void CopyTexSubImage3D(GLenum target, UNUSED GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLint x, GLint y, GLsizei width,
                        GLsizei height) {
   assert(level == 0);
@@ -2139,7 +2139,7 @@ void CopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                    zoffset, width, height, 1);
 }
 
-void CopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+void CopyTexSubImage2D(GLenum target, UNUSED GLint level, GLint xoffset, GLint yoffset,
                        GLint x, GLint y, GLsizei width, GLsizei height) {
   assert(level == 0);
   Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
@@ -2604,6 +2604,9 @@ static ALWAYS_INLINE void dispatch_draw_span(S* shader, P* buf, int len) {
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#ifndef __clang__
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
 #include "load_shader.h"
 #pragma GCC diagnostic pop
 

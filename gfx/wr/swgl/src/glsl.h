@@ -1521,7 +1521,7 @@ struct vec4 {
   // glsl supports non-const indexing of vecs.
   // hlsl doesn't. The code it generates is probably not wonderful.
   Float operator[](I32 index) {
-    float sel_x;
+    float sel_x = 0;
     switch (index.x) {
       case 0:
         sel_x = x.x;
@@ -1536,7 +1536,7 @@ struct vec4 {
         sel_x = w.x;
         break;
     }
-    float sel_y;
+    float sel_y = 0;
     switch (index.y) {
       case 0:
         sel_y = x.y;
@@ -1551,7 +1551,7 @@ struct vec4 {
         sel_y = w.y;
         break;
     }
-    float sel_z;
+    float sel_z = 0;
     switch (index.z) {
       case 0:
         sel_z = x.z;
@@ -1566,7 +1566,7 @@ struct vec4 {
         sel_z = w.z;
         break;
     }
-    float sel_w;
+    float sel_w = 0;
     switch (index.w) {
       case 0:
         sel_w = x.w;
