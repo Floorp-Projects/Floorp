@@ -398,7 +398,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mTitleValidForCurrentURI(false),
       mWillChangeProcess(false),
       mWatchedByDevtools(false),
-      mIsNavigating(false) {
+      mIsNavigating(false),
+      mSuspendMediaWhenInactive(false) {
   // If no outer window ID was provided, generate a new one.
   if (aContentWindowID == 0) {
     mContentWindowID = nsContentUtils::GenerateWindowId();
@@ -4637,6 +4638,18 @@ nsDocShell::SetIsOffScreenBrowser(bool aIsOffScreen) {
 NS_IMETHODIMP
 nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
   *aIsOffScreen = mIsOffScreenBrowser;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetSuspendMediaWhenInactive(bool aSuspendMediaWhenInactive) {
+  mSuspendMediaWhenInactive = aSuspendMediaWhenInactive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetSuspendMediaWhenInactive(bool* aSuspendMediaWhenInactive) {
+  *aSuspendMediaWhenInactive = mSuspendMediaWhenInactive;
   return NS_OK;
 }
 
