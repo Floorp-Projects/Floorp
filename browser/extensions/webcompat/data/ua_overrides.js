@@ -60,28 +60,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1577179 - UA override for supportforms.embarcadero.com
-     * WebCompat issue #34682 - https://webcompat.com/issues/34682
-     *
-     * supportforms.embarcadero.com has a constant onchange event on a product selector
-     * which makes it unusable. Spoofing as Chrome allows to stop event from firing
-     */
-    id: "bug1577179",
-    platform: "all",
-    domain: "supportforms.embarcadero.com",
-    bug: "1577179",
-    config: {
-      matches: ["*://supportforms.embarcadero.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1577519 - att.tv - Create a UA override for att.tv for playback on desktop
      * WebCompat issue #3846 - https://webcompat.com/issues/3846
      *
@@ -585,33 +563,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1622059 - UA overrides for img.weblogssl.com breakage
-     * Webcompat issue #49166 - https://webcompat.com/issues/49166
-     * Webcompat issue #48650 - https://webcompat.com/issues/48650
-     * Webcompat issue #48787 - https://webcompat.com/issues/48787
-     *
-     * These pages throw due to some poor UA sniffing assumptions, so
-     * we add a "Version/99.0" token so comments will be visible. They
-     * all share a common file hosted at:
-     * https://img.weblogssl.com/LPbackend/prod/v2/js
-     */
-    id: "bug1622059",
-    platform: "android",
-    domain: "img.weblogssl.com",
-    bug: "1622059",
-    config: {
-      matches: [
-        "*://www.genbeta.com/*",
-        "*://www.xataka.com/*",
-        "*://www.xatakandroid.com/*",
-      ],
-      uaTransformer: originalUA => {
-        return originalUA + " Version/99.0";
-      },
-    },
-  },
-  {
-    /*
      * Bug 1622081 - UA override for m2.bmo.com
      * Webcompat issue #45019 - https://webcompat.com/issues/45019
      *
@@ -626,6 +577,45 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://m2.bmo.com/*"],
       uaTransformer: originalUA => {
         return originalUA + " Chrome";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1628462 - UA override for app.pixton.com
+     * Webcompat issue #43438 - https://webcompat.com/issues/43438
+     *
+     * app.pixton.com is showing unsupported message for both Firefox
+     * desktop and mobile. Spoofing as Chrome allows to access the site
+     */
+    id: "bug1628462",
+    platform: "all",
+    domain: "app.pixton.com",
+    bug: "1628462",
+    config: {
+      matches: ["https://*.pixton.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1628455 - UA override for autotrader.ca
+     * Webcompat issue #50961 - https://webcompat.com/issues/50961
+     *
+     * autotrader.ca is showing desktop site for Firefox on Android
+     * based on server side UA detection. Spoofing as Chrome allows to
+     * get mobile experience
+     */
+    id: "bug1628455",
+    platform: "android",
+    domain: "autotrader.ca",
+    bug: "1628455",
+    config: {
+      matches: ["https://*.autotrader.ca/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
