@@ -614,6 +614,7 @@ class GCRuntime {
    * Must be called either during the GC or with the GC lock taken.
    */
   friend class BackgroundDecommitTask;
+  bool tooManyEmptyChunks(const AutoLockGC& lock);
   ChunkPool expireEmptyChunkPool(const AutoLockGC& lock);
   void freeEmptyChunks(const AutoLockGC& lock);
   void prepareToFreeChunk(ChunkInfo& info);
