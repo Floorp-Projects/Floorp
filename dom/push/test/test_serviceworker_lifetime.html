@@ -36,8 +36,6 @@
 </pre>
 
 <script class="testbody" type="text/javascript">
-  /* import-globals-from ./test_utils.js */
-
   function start() {
     return navigator.serviceWorker.register("lifetime_worker.js", {scope: "./"})
     .then((swr) => ({registration: swr}));
