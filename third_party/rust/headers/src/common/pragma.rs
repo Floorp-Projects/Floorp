@@ -1,4 +1,4 @@
-use ::HeaderValue;
+use HeaderValue;
 
 /// The `Pragma` header defined by HTTP/1.0.
 ///
@@ -23,8 +23,13 @@ use ::HeaderValue;
 ///
 /// let pragma = Pragma::no_cache();
 /// ```
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Pragma(HeaderValue);
+
+derive_header! {
+    Pragma(_),
+    name: PRAGMA
+}
 
 impl Pragma {
     /// Construct the literal `no-cache` Pragma header.
@@ -40,8 +45,8 @@ impl Pragma {
 
 #[cfg(test)]
 mod tests {
-    use super::Pragma;
     use super::super::test_decode;
+    use super::Pragma;
 
     #[test]
     fn no_cache_is_no_cache() {

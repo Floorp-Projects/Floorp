@@ -1,14 +1,24 @@
-//! Utilities for working with Tokio.
-//!
-//! This module contains utilities that are useful for working with Tokio.
-//! Currently, this only includes [`FutureExt`] and [`StreamExt`], but this
-//! may grow over time.
-//!
-//! [`FutureExt`]: trait.FutureExt.html
-//! [`StreamExt`]: trait.StreamExt.html
+cfg_io_driver! {
+    pub(crate) mod bit;
+    pub(crate) mod slab;
+}
 
-mod future;
-mod stream;
+#[cfg(any(feature = "sync", feature = "rt-core"))]
+pub(crate) mod linked_list;
 
-pub use self::future::FutureExt;
-pub use self::stream::StreamExt;
+#[cfg(any(feature = "rt-threaded", feature = "macros", feature = "stream"))]
+mod rand;
+
+mod wake;
+pub(crate) use wake::{waker_ref, Wake};
+
+cfg_rt_threaded! {
+    pub(crate) use rand::FastRand;
+
+    mod try_lock;
+    pub(crate) use try_lock::TryLock;
+}
+
+#[cfg(any(feature = "macros", feature = "stream"))]
+#[cfg_attr(not(feature = "macros"), allow(unreachable_pub))]
+pub use rand::thread_rng_n;

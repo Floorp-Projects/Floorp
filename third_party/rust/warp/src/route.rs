@@ -1,3 +1,4 @@
+use scoped_tls::scoped_thread_local;
 use std::cell::RefCell;
 use std::mem;
 use std::net::SocketAddr;
@@ -5,13 +6,13 @@ use std::net::SocketAddr;
 use http;
 use hyper::Body;
 
-use Request;
+use crate::Request;
 
 scoped_thread_local!(static ROUTE: RefCell<Route>);
 
 pub(crate) fn set<F, U>(r: &RefCell<Route>, func: F) -> U
 where
-    F: FnMut() -> U,
+    F: FnOnce() -> U,
 {
     ROUTE.set(r, func)
 }
@@ -43,7 +44,7 @@ enum BodyState {
 
 impl Route {
     pub(crate) fn new(req: Request, remote_addr: Option<SocketAddr>) -> RefCell<Route> {
-        let segments_index = if req.uri().path().starts_with("/") {
+        let segments_index = if req.uri().path().starts_with('/') {
             // Skip the beginning slash.
             1
         } else {
@@ -74,9 +75,11 @@ impl Route {
         self.req.extensions()
     }
 
+    /*
     pub(crate) fn extensions_mut(&mut self) -> &mut http::Extensions {
         self.req.extensions_mut()
     }
+    */
 
     pub(crate) fn uri(&self) -> &http::Uri {
         self.req.uri()

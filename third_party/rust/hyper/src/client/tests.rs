@@ -1,14 +1,30 @@
-#![cfg(feature = "runtime")]
-extern crate pretty_env_logger;
+use std::io;
 
-use futures::{Async, Future, Stream};
-use futures::future::poll_fn;
-use futures::sync::oneshot;
-use tokio::runtime::current_thread::Runtime;
+use futures_util::future;
+use tokio::net::TcpStream;
 
-use mock::MockConnector;
-use super::*;
+use super::Client;
 
+#[tokio::test]
+async fn client_connect_uri_argument() {
+    let connector = tower_util::service_fn(|dst: http::Uri| {
+        assert_eq!(dst.scheme(), Some(&http::uri::Scheme::HTTP));
+        assert_eq!(dst.host(), Some("example.local"));
+        assert_eq!(dst.port(), None);
+        assert_eq!(dst.path(), "/", "path should be removed");
+
+        future::err::<TcpStream, _>(io::Error::new(io::ErrorKind::Other, "expect me"))
+    });
+
+    let client = Client::builder().build::<_, crate::Body>(connector);
+    let _ = client
+        .get("http://example.local/and/a/path".parse().unwrap())
+        .await
+        .expect_err("response should fail");
+}
+
+/*
+// FIXME: re-implement tests with `async/await`
 #[test]
 fn retryable_request() {
     let _ = pretty_env_logger::try_init();
@@ -20,7 +36,7 @@ fn retryable_request() {
     let sock2 = connector.mock("http://mock.local");
 
     let client = Client::builder()
-        .build::<_, ::Body>(connector);
+        .build::<_, crate::Body>(connector);
 
     client.pool.no_timer();
 
@@ -35,7 +51,7 @@ fn retryable_request() {
             try_ready!(sock1.read(&mut [0u8; 512]));
             try_ready!(sock1.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"));
             Ok(Async::Ready(()))
-        }).map_err(|e: ::std::io::Error| panic!("srv1 poll_fn error: {}", e));
+        }).map_err(|e: std::io::Error| panic!("srv1 poll_fn error: {}", e));
         rt.block_on(res1.join(srv1)).expect("res1");
     }
     drop(sock1);
@@ -52,7 +68,7 @@ fn retryable_request() {
         try_ready!(sock2.read(&mut [0u8; 512]));
         try_ready!(sock2.write(b"HTTP/1.1 222 OK\r\nContent-Length: 0\r\n\r\n"));
         Ok(Async::Ready(()))
-    }).map_err(|e: ::std::io::Error| panic!("srv2 poll_fn error: {}", e));
+    }).map_err(|e: std::io::Error| panic!("srv2 poll_fn error: {}", e));
 
     rt.block_on(res2.join(srv2)).expect("res2");
 }
@@ -67,7 +83,7 @@ fn conn_reset_after_write() {
     let sock1 = connector.mock("http://mock.local");
 
     let client = Client::builder()
-        .build::<_, ::Body>(connector);
+        .build::<_, crate::Body>(connector);
 
     client.pool.no_timer();
 
@@ -81,7 +97,7 @@ fn conn_reset_after_write() {
             try_ready!(sock1.read(&mut [0u8; 512]));
             try_ready!(sock1.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"));
             Ok(Async::Ready(()))
-        }).map_err(|e: ::std::io::Error| panic!("srv1 poll_fn error: {}", e));
+        }).map_err(|e: std::io::Error| panic!("srv1 poll_fn error: {}", e));
         rt.block_on(res1.join(srv1)).expect("res1");
     }
 
@@ -96,17 +112,14 @@ fn conn_reset_after_write() {
         // has written the second request, and THEN disconnect.
         //
         // Not because we expect servers to be jerks, but to trigger
-        // state where we write on an assumedly good connetion, and
+        // state where we write on an assumedly good connection, and
         // only reset the close AFTER we wrote bytes.
         try_ready!(sock1.as_mut().unwrap().read(&mut [0u8; 512]));
         sock1.take();
         Ok(Async::Ready(()))
-    }).map_err(|e: ::std::io::Error| panic!("srv2 poll_fn error: {}", e));
+    }).map_err(|e: std::io::Error| panic!("srv2 poll_fn error: {}", e));
     let err = rt.block_on(res2.join(srv2)).expect_err("res2");
-    match err.kind() {
-        &::error::Kind::Incomplete => (),
-        other => panic!("expected Incomplete, found {:?}", other)
-    }
+    assert!(err.is_incomplete_message(), "{:?}", err);
 }
 
 #[test]
@@ -122,11 +135,11 @@ fn checkout_win_allows_connect_future_to_be_pooled() {
     let sock2 = connector.mock_fut("http://mock.local", rx);
 
     let client = Client::builder()
-        .build::<_, ::Body>(connector);
+        .build::<_, crate::Body>(connector);
 
     client.pool.no_timer();
 
-    let uri = "http://mock.local/a".parse::<::Uri>().expect("uri parse");
+    let uri = "http://mock.local/a".parse::<crate::Uri>().expect("uri parse");
 
     // First request just sets us up to have a connection able to be put
     // back in the pool. *However*, it doesn't insert immediately. The
@@ -146,7 +159,7 @@ fn checkout_win_allows_connect_future_to_be_pooled() {
                 0\r\n\r\n\
             "));
             Ok(Async::Ready(()))
-        }).map_err(|e: ::std::io::Error| panic!("srv1 poll_fn error: {}", e));
+        }).map_err(|e: std::io::Error| panic!("srv1 poll_fn error: {}", e));
 
         rt.block_on(res1.join(srv1)).expect("res1").0
     };
@@ -164,7 +177,7 @@ fn checkout_win_allows_connect_future_to_be_pooled() {
             try_ready!(sock1.read(&mut [0u8; 512]));
             try_ready!(sock1.write(b"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nx"));
             Ok(Async::Ready(()))
-        }).map_err(|e: ::std::io::Error| panic!("srv2 poll_fn error: {}", e));
+        }).map_err(|e: std::io::Error| panic!("srv2 poll_fn error: {}", e));
 
         rt.block_on(res2.join(drain).join(srv2)).expect("res2");
     }
@@ -201,9 +214,73 @@ fn checkout_win_allows_connect_future_to_be_pooled() {
             try_ready!(sock2.read(&mut [0u8; 512]));
             try_ready!(sock2.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"));
             Ok(Async::Ready(()))
-        }).map_err(|e: ::std::io::Error| panic!("srv3 poll_fn error: {}", e));
+        }).map_err(|e: std::io::Error| panic!("srv3 poll_fn error: {}", e));
 
         rt.block_on(res3.join(srv3)).expect("res3");
     }
 }
 
+#[cfg(feature = "nightly")]
+#[bench]
+fn bench_http1_get_0b(b: &mut test::Bencher) {
+    let _ = pretty_env_logger::try_init();
+
+    let mut rt = Runtime::new().expect("new rt");
+    let mut connector = MockConnector::new();
+
+
+    let client = Client::builder()
+        .build::<_, crate::Body>(connector.clone());
+
+    client.pool.no_timer();
+
+    let uri = Uri::from_static("http://mock.local/a");
+
+    b.iter(move || {
+        let sock1 = connector.mock("http://mock.local");
+        let res1 = client
+            .get(uri.clone())
+            .and_then(|res| {
+                res.into_body().for_each(|_| Ok(()))
+            });
+        let srv1 = poll_fn(|| {
+            try_ready!(sock1.read(&mut [0u8; 512]));
+            try_ready!(sock1.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"));
+            Ok(Async::Ready(()))
+        }).map_err(|e: std::io::Error| panic!("srv1 poll_fn error: {}", e));
+        rt.block_on(res1.join(srv1)).expect("res1");
+    });
+}
+
+#[cfg(feature = "nightly")]
+#[bench]
+fn bench_http1_get_10b(b: &mut test::Bencher) {
+    let _ = pretty_env_logger::try_init();
+
+    let mut rt = Runtime::new().expect("new rt");
+    let mut connector = MockConnector::new();
+
+
+    let client = Client::builder()
+        .build::<_, crate::Body>(connector.clone());
+
+    client.pool.no_timer();
+
+    let uri = Uri::from_static("http://mock.local/a");
+
+    b.iter(move || {
+        let sock1 = connector.mock("http://mock.local");
+        let res1 = client
+            .get(uri.clone())
+            .and_then(|res| {
+                res.into_body().for_each(|_| Ok(()))
+            });
+        let srv1 = poll_fn(|| {
+            try_ready!(sock1.read(&mut [0u8; 512]));
+            try_ready!(sock1.write(b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\n0123456789"));
+            Ok(Async::Ready(()))
+        }).map_err(|e: std::io::Error| panic!("srv1 poll_fn error: {}", e));
+        rt.block_on(res1.join(srv1)).expect("res1");
+    });
+}
+*/

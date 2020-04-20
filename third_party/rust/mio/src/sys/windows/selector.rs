@@ -55,7 +55,7 @@ impl Selector {
         // offset by 1 to avoid choosing 0 as the id of a selector
         let id = NEXT_ID.fetch_add(1, Ordering::Relaxed) + 1;
 
-        CompletionPort::new(1).map(|cp| {
+        CompletionPort::new(0).map(|cp| {
             Selector {
                 inner: Arc::new(SelectorInner {
                     id: id,

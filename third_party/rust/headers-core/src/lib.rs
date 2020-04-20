@@ -1,20 +1,19 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![cfg_attr(test, deny(warnings))]
-#![doc(html_root_url = "https://docs.rs/headers-core/0.1.1")]
+#![doc(html_root_url = "https://docs.rs/headers-core/0.2.0")]
 
 //! # headers-core
 //!
 //! This is the core crate of the typed HTTP headers system, providing only
 //! the relevant traits. All actual header implementations are in other crates.
 
-extern crate bytes;
 extern crate http;
 
 pub use http::header::{self, HeaderName, HeaderValue};
 
-use std::fmt::{self, Display, Formatter};
 use std::error;
+use std::fmt::{self, Display, Formatter};
 
 /// A trait for any object that will represent a header field and value.
 ///

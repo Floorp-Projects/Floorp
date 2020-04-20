@@ -1,0 +1,53 @@
+error: unexpected token: ()
+ --> $DIR/invalid.rs:5:10
+  |
+5 |     #[pin()] //~ ERROR unexpected token
+  |          ^^
+
+error: unexpected token: (foo)
+  --> $DIR/invalid.rs:10:18
+   |
+10 | struct B<T>(#[pin(foo)] T); //~ ERROR unexpected token
+   |                  ^^^^^
+
+error: unexpected token: (foo)
+  --> $DIR/invalid.rs:14:12
+   |
+14 |     A(#[pin(foo)] T), //~ ERROR unexpected token
+   |            ^^^^^
+
+error: unexpected token: (foo)
+  --> $DIR/invalid.rs:20:14
+   |
+20 |         #[pin(foo)] //~ ERROR unexpected token
+   |              ^^^^^
+
+error: expected identifier
+  --> $DIR/invalid.rs:25:27
+   |
+25 | #[pin_project(UnsafeUnpin,,)] //~ ERROR expected identifier
+   |                           ^
+
+error: unexpected argument: Foo
+  --> $DIR/invalid.rs:31:15
+   |
+31 | #[pin_project(Foo)] //~ ERROR unexpected argument
+   |               ^^^
+
+error: #[pin] attribute may only be used on fields of structs or variants
+  --> $DIR/invalid.rs:39:5
+   |
+39 |     #[pin] //~ ERROR may only be used on fields of structs or variants
+   |     ^^^^^^
+
+error: #[pin] attribute may only be used on fields of structs or variants
+  --> $DIR/invalid.rs:44:1
+   |
+44 | #[pin] //~ ERROR may only be used on fields of structs or variants
+   | ^^^^^^
+
+error: duplicate #[pin] attribute
+  --> $DIR/invalid.rs:52:5
+   |
+52 |     #[pin] //~ ERROR duplicate #[pin] attribute
+   |     ^^^^^^

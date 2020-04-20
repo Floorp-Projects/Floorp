@@ -29,8 +29,13 @@ use http::header::HeaderValue;
 ///
 /// let r = Referer::from_static("/People.html#tim");
 /// ```
-#[derive(Debug, Clone, PartialEq, Header)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Referer(HeaderValue);
+
+derive_header! {
+    Referer(_),
+    name: REFERER
+}
 
 impl Referer {
     /// Create a `Referer` with a static string.
@@ -53,4 +58,3 @@ impl FromStr for Referer {
             .map_err(|_| InvalidReferer { _inner: () })
     }
 }
-

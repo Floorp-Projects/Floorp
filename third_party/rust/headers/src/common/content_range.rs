@@ -48,7 +48,10 @@ error_type!(InvalidContentRange);
 
 impl ContentRange {
     /// Construct a new `Content-Range: bytes ..` header.
-    pub fn bytes(range: impl RangeBounds<u64>, complete_length: impl Into<Option<u64>>) -> Result<ContentRange, InvalidContentRange> {
+    pub fn bytes(
+        range: impl RangeBounds<u64>,
+        complete_length: impl Into<Option<u64>>,
+    ) -> Result<ContentRange, InvalidContentRange> {
         let complete_length = complete_length.into();
 
         let start = match range.start_bound() {
@@ -61,7 +64,7 @@ impl ContentRange {
             Bound::Included(&e) => e,
             Bound::Excluded(&e) => e - 1,
             Bound::Unbounded => match complete_length {
-                Some(max) => max -1,
+                Some(max) => max - 1,
                 None => return Err(InvalidContentRange { _inner: () }),
             },
         };
@@ -170,7 +173,7 @@ fn split_in_two(s: &str, separator: char) -> Option<(&str, &str)> {
     let mut iter = s.splitn(2, separator);
     match (iter.next(), iter.next()) {
         (Some(a), Some(b)) => Some((a, b)),
-        _ => None
+        _ => None,
     }
 }
 

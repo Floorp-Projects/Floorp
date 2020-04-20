@@ -6,12 +6,12 @@
 //! There are two levels of APIs provide for constructing HTTP servers:
 //!
 //! - The higher-level [`Server`](Server) type.
-//! - The lower-level [conn](conn) module.
+//! - The lower-level [`conn`](conn) module.
 //!
 //! # Server
 //!
 //! The [`Server`](Server) is main way to start listening for HTTP requests.
-//! It wraps a listener with a [`MakeService`](::service), and then should
+//! It wraps a listener with a [`MakeService`](crate::service), and then should
 //! be executed to start serving requests.
 //!
 //! [`Server`](Server) accepts connections in both HTTP1 and HTTP2 by default.
@@ -19,58 +19,66 @@
 //! ## Example
 //!
 //! ```no_run
-//! extern crate hyper;
+//! use std::convert::Infallible;
+//! use std::net::SocketAddr;
+//! use hyper::{Body, Request, Response, Server};
+//! use hyper::service::{make_service_fn, service_fn};
 //!
-//! use hyper::{Body, Response, Server};
-//! use hyper::service::service_fn_ok;
+//! async fn handle(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//!     Ok(Response::new(Body::from("Hello World")))
+//! }
 //!
 //! # #[cfg(feature = "runtime")]
-//! fn main() {
-//! # use hyper::rt::Future;
+//! #[tokio::main]
+//! async fn main() {
 //!     // Construct our SocketAddr to listen on...
-//!     let addr = ([127, 0, 0, 1], 3000).into();
+//!     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 //!
 //!     // And a MakeService to handle each connection...
-//!     let make_service = || {
-//!         service_fn_ok(|_req| {
-//!             Response::new(Body::from("Hello World"))
-//!         })
-//!     };
+//!     let make_service = make_service_fn(|_conn| async {
+//!         Ok::<_, Infallible>(service_fn(handle))
+//!     });
 //!
 //!     // Then bind and serve...
-//!     let server = Server::bind(&addr)
-//!         .serve(make_service);
+//!     let server = Server::bind(&addr).serve(make_service);
 //!
-//!     // Finally, spawn `server` onto an Executor...
-//!     hyper::rt::run(server.map_err(|e| {
+//!     // And run forever...
+//!     if let Err(e) = server.await {
 //!         eprintln!("server error: {}", e);
-//!     }));
+//!     }
 //! }
 //! # #[cfg(not(feature = "runtime"))]
 //! # fn main() {}
 //! ```
 
+pub mod accept;
 pub mod conn;
 mod shutdown;
-#[cfg(feature = "runtime")] mod tcp;
+#[cfg(feature = "tcp")]
+mod tcp;
 
+use std::error::Error as StdError;
 use std::fmt;
-#[cfg(feature = "runtime")] use std::net::{SocketAddr, TcpListener as StdTcpListener};
+#[cfg(feature = "tcp")]
+use std::net::{SocketAddr, TcpListener as StdTcpListener};
 
-#[cfg(feature = "runtime")] use std::time::Duration;
+#[cfg(feature = "tcp")]
+use std::time::Duration;
 
-use futures::{Future, Stream, Poll};
-use tokio_io::{AsyncRead, AsyncWrite};
-#[cfg(feature = "runtime")] use tokio_reactor;
+use pin_project::pin_project;
+use tokio::io::{AsyncRead, AsyncWrite};
 
-use body::{Body, Payload};
-use common::exec::{Exec, H2Exec, NewSvcExec};
-use service::{MakeServiceRef, Service};
+use self::accept::Accept;
+use crate::body::{Body, Payload};
+use crate::common::exec::{Exec, H2Exec, NewSvcExec};
+use crate::common::{task, Future, Pin, Poll, Unpin};
+use crate::service::{HttpService, MakeServiceRef};
 // Renamed `Http` as `Http_` for now so that people upgrading don't see an
 // error that `hyper::server::Http` is private...
 use self::conn::{Http as Http_, NoopWatcher, SpawnAll};
 use self::shutdown::{Graceful, GracefulWatcher};
-#[cfg(feature = "runtime")] use self::tcp::AddrIncoming;
+#[cfg(feature = "tcp")]
+use self::tcp::AddrIncoming;
 
 /// A listening HTTP server that accepts connections in both HTTP1 and HTTP2 by default.
 ///
@@ -78,7 +86,9 @@ use self::shutdown::{Graceful, GracefulWatcher};
 /// handlers. It is built using the [`Builder`](Builder), and the future
 /// completes when the server has been shutdown. It should be run by an
 /// `Executor`.
+#[pin_project]
 pub struct Server<I, S, E = Exec> {
+    #[pin]
     spawn_all: SpawnAll<I, S, E>,
 }
 
@@ -101,7 +111,7 @@ impl<I> Server<I, ()> {
     }
 }
 
-#[cfg(feature = "runtime")]
+#[cfg(feature = "tcp")]
 impl Server<AddrIncoming, ()> {
     /// Binds to the provided address, and returns a [`Builder`](Builder).
     ///
@@ -110,46 +120,41 @@ impl Server<AddrIncoming, ()> {
     /// This method will panic if binding to the address fails. For a method
     /// to bind to an address and return a `Result`, see `Server::try_bind`.
     pub fn bind(addr: &SocketAddr) -> Builder<AddrIncoming> {
-        let incoming = AddrIncoming::new(addr, None)
-            .unwrap_or_else(|e| {
-                panic!("error binding to {}: {}", addr, e);
-            });
+        let incoming = AddrIncoming::new(addr).unwrap_or_else(|e| {
+            panic!("error binding to {}: {}", addr, e);
+        });
         Server::builder(incoming)
     }
 
     /// Tries to bind to the provided address, and returns a [`Builder`](Builder).
-    pub fn try_bind(addr: &SocketAddr) -> ::Result<Builder<AddrIncoming>> {
-        AddrIncoming::new(addr, None)
-            .map(Server::builder)
+    pub fn try_bind(addr: &SocketAddr) -> crate::Result<Builder<AddrIncoming>> {
+        AddrIncoming::new(addr).map(Server::builder)
     }
 
     /// Create a new instance from a `std::net::TcpListener` instance.
-    pub fn from_tcp(listener: StdTcpListener) -> Result<Builder<AddrIncoming>, ::Error> {
-        let handle = tokio_reactor::Handle::default();
-        AddrIncoming::from_std(listener, &handle)
-            .map(Server::builder)
+    pub fn from_tcp(listener: StdTcpListener) -> Result<Builder<AddrIncoming>, crate::Error> {
+        AddrIncoming::from_std(listener).map(Server::builder)
     }
 }
 
-#[cfg(feature = "runtime")]
-impl<S> Server<AddrIncoming, S> {
+#[cfg(feature = "tcp")]
+impl<S, E> Server<AddrIncoming, S, E> {
     /// Returns the local address that this server is bound to.
     pub fn local_addr(&self) -> SocketAddr {
         self.spawn_all.local_addr()
     }
 }
 
-impl<I, S, E, B> Server<I, S, E>
+impl<I, IO, IE, S, E, B> Server<I, S, E>
 where
-    I: Stream,
-    I::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    I::Item: AsyncRead + AsyncWrite + Send + 'static,
-    S: MakeServiceRef<I::Item, ReqBody=Body, ResBody=B>,
-    S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    S::Service: 'static,
+    I: Accept<Conn = IO, Error = IE>,
+    IE: Into<Box<dyn StdError + Send + Sync>>,
+    IO: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    S: MakeServiceRef<IO, Body, ResBody = B>,
+    S::Error: Into<Box<dyn StdError + Send + Sync>>,
     B: Payload,
-    E: H2Exec<<S::Service as Service>::Future, B>,
-    E: NewSvcExec<I::Item, S::Future, S::Service, E, GracefulWatcher>,
+    E: H2Exec<<S::Service as HttpService<Body>>::Future, B>,
+    E: NewSvcExec<IO, S::Future, S::Service, E, GracefulWatcher>,
 {
     /// Prepares a server to handle graceful shutdown when the provided future
     /// completes.
@@ -157,34 +162,31 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate hyper;
-    /// # extern crate futures;
-    /// # use futures::Future;
     /// # fn main() {}
-    /// # #[cfg(feature = "runtime")]
-    /// # fn run() {
-    /// # use hyper::{Body, Response, Server};
-    /// # use hyper::service::service_fn_ok;
-    /// # let new_service = || {
-    /// #     service_fn_ok(|_req| {
-    /// #         Response::new(Body::from("Hello World"))
-    /// #     })
-    /// # };
-    ///
+    /// # #[cfg(feature = "tcp")]
+    /// # async fn run() {
+    /// # use hyper::{Body, Response, Server, Error};
+    /// # use hyper::service::{make_service_fn, service_fn};
+    /// # let make_service = make_service_fn(|_| async {
+    /// #     Ok::<_, Error>(service_fn(|_req| async {
+    /// #         Ok::<_, Error>(Response::new(Body::from("Hello World")))
+    /// #     }))
+    /// # });
     /// // Make a server from the previous examples...
     /// let server = Server::bind(&([127, 0, 0, 1], 3000).into())
-    ///     .serve(new_service);
+    ///     .serve(make_service);
     ///
-    /// // Prepare some signal for when the server should start
-    /// // shutting down...
-    /// let (tx, rx) = futures::sync::oneshot::channel::<()>();
-    ///
+    /// // Prepare some signal for when the server should start shutting down...
+    /// let (tx, rx) = tokio::sync::oneshot::channel::<()>();
     /// let graceful = server
-    ///     .with_graceful_shutdown(rx)
-    ///     .map_err(|err| eprintln!("server error: {}", err));
+    ///     .with_graceful_shutdown(async {
+    ///         rx.await.ok();
+    ///     });
     ///
-    /// // Spawn `server` onto an Executor...
-    /// hyper::rt::spawn(graceful);
+    /// // Await the `server` receiving the signal...
+    /// if let Err(e) = graceful.await {
+    ///     eprintln!("server error: {}", e);
+    /// }
     ///
     /// // And later, trigger the signal by calling `tx.send(())`.
     /// let _ = tx.send(());
@@ -192,34 +194,32 @@ where
     /// ```
     pub fn with_graceful_shutdown<F>(self, signal: F) -> Graceful<I, S, F, E>
     where
-        F: Future<Item=()>
+        F: Future<Output = ()>,
     {
         Graceful::new(self.spawn_all, signal)
     }
 }
 
-impl<I, S, B, E> Future for Server<I, S, E>
+impl<I, IO, IE, S, B, E> Future for Server<I, S, E>
 where
-    I: Stream,
-    I::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    I::Item: AsyncRead + AsyncWrite + Send + 'static,
-    S: MakeServiceRef<I::Item, ReqBody=Body, ResBody=B>,
-    S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    S::Service: 'static,
+    I: Accept<Conn = IO, Error = IE>,
+    IE: Into<Box<dyn StdError + Send + Sync>>,
+    IO: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    S: MakeServiceRef<IO, Body, ResBody = B>,
+    S::Error: Into<Box<dyn StdError + Send + Sync>>,
     B: Payload,
-    E: H2Exec<<S::Service as Service>::Future, B>,
-    E: NewSvcExec<I::Item, S::Future, S::Service, E, NoopWatcher>,
+    E: H2Exec<<S::Service as HttpService<Body>>::Future, B>,
+    E: NewSvcExec<IO, S::Future, S::Service, E, NoopWatcher>,
 {
-    type Item = ();
-    type Error = ::Error;
+    type Output = crate::Result<()>;
 
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.spawn_all.poll_watch(&NoopWatcher)
+    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        self.project().spawn_all.poll_watch(cx, &NoopWatcher)
     }
 }
 
 impl<I: fmt::Debug, S: fmt::Debug> fmt::Debug for Server<I, S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Server")
             .field("listener", &self.spawn_all.incoming_ref())
             .finish()
@@ -233,39 +233,35 @@ impl<I, E> Builder<I, E> {
     ///
     /// For a more convenient constructor, see [`Server::bind`](Server::bind).
     pub fn new(incoming: I, protocol: Http_<E>) -> Self {
-        Builder {
-            incoming,
-            protocol,
-        }
+        Builder { incoming, protocol }
     }
 
     /// Sets whether to use keep-alive for HTTP/1 connections.
     ///
     /// Default is `true`.
     pub fn http1_keepalive(mut self, val: bool) -> Self {
-        self.protocol.keep_alive(val);
+        self.protocol.http1_keep_alive(val);
         self
     }
-
 
     /// Set whether HTTP/1 connections should support half-closures.
     ///
     /// Clients can chose to shutdown their write-side while waiting
-    /// for the server to respond. Setting this to `false` will
-    /// automatically close any connection immediately if `read`
-    /// detects an EOF.
+    /// for the server to respond. Setting this to `true` will
+    /// prevent closing the connection immediately if `read`
+    /// detects an EOF in the middle of a request.
     ///
-    /// Default is `true`.
+    /// Default is `false`.
     pub fn http1_half_close(mut self, val: bool) -> Self {
         self.protocol.http1_half_close(val);
         self
     }
 
-    /// Sets whether HTTP/1 is required.
+    /// Set the maximum buffer size.
     ///
-    /// Default is `false`.
-    pub fn http1_only(mut self, val: bool) -> Self {
-        self.protocol.http1_only(val);
+    /// Default is ~ 400kb.
+    pub fn http1_max_buf_size(mut self, val: usize) -> Self {
+        self.protocol.max_buf_size(val);
         self
     }
 
@@ -294,11 +290,96 @@ impl<I, E> Builder<I, E> {
         self
     }
 
+    /// Sets whether HTTP/1 is required.
+    ///
+    /// Default is `false`.
+    pub fn http1_only(mut self, val: bool) -> Self {
+        self.protocol.http1_only(val);
+        self
+    }
+
     /// Sets whether HTTP/2 is required.
     ///
     /// Default is `false`.
     pub fn http2_only(mut self, val: bool) -> Self {
         self.protocol.http2_only(val);
+        self
+    }
+
+    /// Sets the [`SETTINGS_INITIAL_WINDOW_SIZE`][spec] option for HTTP2
+    /// stream-level flow control.
+    ///
+    /// Passing `None` will do nothing.
+    ///
+    /// If not set, hyper will use a default.
+    ///
+    /// [spec]: https://http2.github.io/http2-spec/#SETTINGS_INITIAL_WINDOW_SIZE
+    pub fn http2_initial_stream_window_size(mut self, sz: impl Into<Option<u32>>) -> Self {
+        self.protocol.http2_initial_stream_window_size(sz.into());
+        self
+    }
+
+    /// Sets the max connection-level flow control for HTTP2
+    ///
+    /// Passing `None` will do nothing.
+    ///
+    /// If not set, hyper will use a default.
+    pub fn http2_initial_connection_window_size(mut self, sz: impl Into<Option<u32>>) -> Self {
+        self.protocol
+            .http2_initial_connection_window_size(sz.into());
+        self
+    }
+
+    /// Sets whether to use an adaptive flow control.
+    ///
+    /// Enabling this will override the limits set in
+    /// `http2_initial_stream_window_size` and
+    /// `http2_initial_connection_window_size`.
+    pub fn http2_adaptive_window(mut self, enabled: bool) -> Self {
+        self.protocol.http2_adaptive_window(enabled);
+        self
+    }
+
+    /// Sets the [`SETTINGS_MAX_CONCURRENT_STREAMS`][spec] option for HTTP2
+    /// connections.
+    ///
+    /// Default is no limit (`std::u32::MAX`). Passing `None` will do nothing.
+    ///
+    /// [spec]: https://http2.github.io/http2-spec/#SETTINGS_MAX_CONCURRENT_STREAMS
+    pub fn http2_max_concurrent_streams(mut self, max: impl Into<Option<u32>>) -> Self {
+        self.protocol.http2_max_concurrent_streams(max.into());
+        self
+    }
+
+    /// Sets an interval for HTTP2 Ping frames should be sent to keep a
+    /// connection alive.
+    ///
+    /// Pass `None` to disable HTTP2 keep-alive.
+    ///
+    /// Default is currently disabled.
+    ///
+    /// # Cargo Feature
+    ///
+    /// Requires the `runtime` cargo feature to be enabled.
+    #[cfg(feature = "runtime")]
+    pub fn http2_keep_alive_interval(mut self, interval: impl Into<Option<Duration>>) -> Self {
+        self.protocol.http2_keep_alive_interval(interval);
+        self
+    }
+
+    /// Sets a timeout for receiving an acknowledgement of the keep-alive ping.
+    ///
+    /// If the ping is not acknowledged within the timeout, the connection will
+    /// be closed. Does nothing if `http2_keep_alive_interval` is disabled.
+    ///
+    /// Default is 20 seconds.
+    ///
+    /// # Cargo Feature
+    ///
+    /// Requires the `runtime` cargo feature to be enabled.
+    #[cfg(feature = "runtime")]
+    pub fn http2_keep_alive_timeout(mut self, timeout: Duration) -> Self {
+        self.protocol.http2_keep_alive_timeout(timeout);
         self
     }
 
@@ -317,51 +398,49 @@ impl<I, E> Builder<I, E> {
     /// # Example
     ///
     /// ```
-    /// # extern crate hyper;
-    /// # fn main() {}
-    /// # #[cfg(feature = "runtime")]
-    /// # fn run() {
-    /// use hyper::{Body, Response, Server};
-    /// use hyper::service::service_fn_ok;
+    /// # #[cfg(feature = "tcp")]
+    /// # async fn run() {
+    /// use hyper::{Body, Error, Response, Server};
+    /// use hyper::service::{make_service_fn, service_fn};
     ///
     /// // Construct our SocketAddr to listen on...
     /// let addr = ([127, 0, 0, 1], 3000).into();
     ///
-    /// // And a NewService to handle each connection...
-    /// let new_service = || {
-    ///     service_fn_ok(|_req| {
-    ///         Response::new(Body::from("Hello World"))
-    ///     })
-    /// };
+    /// // And a MakeService to handle each connection...
+    /// let make_svc = make_service_fn(|_| async {
+    ///     Ok::<_, Error>(service_fn(|_req| async {
+    ///         Ok::<_, Error>(Response::new(Body::from("Hello World")))
+    ///     }))
+    /// });
     ///
     /// // Then bind and serve...
     /// let server = Server::bind(&addr)
-    ///     .serve(new_service);
+    ///     .serve(make_svc);
     ///
-    /// // Finally, spawn `server` onto an Executor...
+    /// // Run forever-ish...
+    /// if let Err(err) = server.await {
+    ///     eprintln!("server error: {}", err);
+    /// }
     /// # }
     /// ```
     pub fn serve<S, B>(self, new_service: S) -> Server<I, S, E>
     where
-        I: Stream,
-        I::Error: Into<Box<::std::error::Error + Send + Sync>>,
-        I::Item: AsyncRead + AsyncWrite + Send + 'static,
-        S: MakeServiceRef<I::Item, ReqBody=Body, ResBody=B>,
-        S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-        S::Service: 'static,
+        I: Accept,
+        I::Error: Into<Box<dyn StdError + Send + Sync>>,
+        I::Conn: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+        S: MakeServiceRef<I::Conn, Body, ResBody = B>,
+        S::Error: Into<Box<dyn StdError + Send + Sync>>,
         B: Payload,
-        E: NewSvcExec<I::Item, S::Future, S::Service, E, NoopWatcher>,
-        E: H2Exec<<S::Service as Service>::Future, B>,
+        E: NewSvcExec<I::Conn, S::Future, S::Service, E, NoopWatcher>,
+        E: H2Exec<<S::Service as HttpService<Body>>::Future, B>,
     {
-        let serve = self.protocol.serve_incoming(self.incoming, new_service);
+        let serve = self.protocol.serve(self.incoming, new_service);
         let spawn_all = serve.spawn_all();
-        Server {
-            spawn_all,
-        }
+        Server { spawn_all }
     }
 }
 
-#[cfg(feature = "runtime")]
+#[cfg(feature = "tcp")]
 impl<E> Builder<AddrIncoming, E> {
     /// Set whether TCP keepalive messages are enabled on accepted connections.
     ///
@@ -399,4 +478,3 @@ impl<E> Builder<AddrIncoming, E> {
         self
     }
 }
-

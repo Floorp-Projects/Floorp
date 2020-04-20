@@ -1,16 +1,9 @@
 #![deny(warnings)]
-extern crate handlebars;
-extern crate hyper;
-extern crate warp;
-#[macro_use]
-extern crate serde_json;
-extern crate serde;
-
-use std::error::Error;
 use std::sync::Arc;
 
 use handlebars::Handlebars;
 use serde::Serialize;
+use serde_json::json;
 use warp::Filter;
 
 struct WithTemplate<T: Serialize> {
@@ -22,11 +15,14 @@ fn render<T>(template: WithTemplate<T>, hbs: Arc<Handlebars>) -> impl warp::Repl
 where
     T: Serialize,
 {
-    hbs.render(template.name, &template.value)
-        .unwrap_or_else(|err| err.description().to_owned())
+    let render = hbs
+        .render(template.name, &template.value)
+        .unwrap_or_else(|err| err.to_string());
+    warp::reply::html(render)
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let template = "<!DOCTYPE html>
                     <html>
                       <head>
@@ -50,7 +46,7 @@ fn main() {
     let handlebars = move |with_template| render(with_template, hb.clone());
 
     //GET /
-    let route = warp::get2()
+    let route = warp::get()
         .and(warp::path::end())
         .map(|| WithTemplate {
             name: "template.html",
@@ -58,5 +54,5 @@ fn main() {
         })
         .map(handlebars);
 
-    warp::serve(route).run(([127, 0, 0, 1], 3030));
+    warp::serve(route).run(([127, 0, 0, 1], 3030)).await;
 }

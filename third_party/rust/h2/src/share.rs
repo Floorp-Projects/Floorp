@@ -1,12 +1,15 @@
-use codec::UserError;
-use frame::Reason;
-use proto::{self, WindowSize};
+use crate::codec::UserError;
+use crate::frame::Reason;
+use crate::proto::{self, WindowSize};
 
-use bytes::{Bytes, IntoBuf};
-use futures::{self, Poll, Async};
-use http::{HeaderMap};
+use bytes::{Buf, Bytes};
+use http::HeaderMap;
 
+use crate::PollExt;
 use std::fmt;
+#[cfg(feature = "stream")]
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 /// Sends the body stream and trailers to the remote peer.
 ///
@@ -92,8 +95,8 @@ use std::fmt;
 /// [`send_trailers`]: #method.send_trailers
 /// [`send_reset`]: #method.send_reset
 #[derive(Debug)]
-pub struct SendStream<B: IntoBuf> {
-    inner: proto::StreamRef<B::Buf>,
+pub struct SendStream<B: Buf> {
+    inner: proto::StreamRef<B>,
 }
 
 /// A stream identifier, as described in [Section 5.1.1] of RFC 7540.
@@ -120,7 +123,7 @@ pub struct StreamId(u32);
 /// control.
 ///
 /// See method level documentation for more details on receiving data. See
-/// [`ReleaseCapacity`] for more details on inbound flow control.
+/// [`FlowControl`] for more details on inbound flow control.
 ///
 /// Note that this type implements [`Stream`], yielding the received data frames.
 /// When this implementation is used, the capacity is immediately released when
@@ -129,11 +132,11 @@ pub struct StreamId(u32);
 ///
 /// [`client::ResponseFuture`]: client/struct.ResponseFuture.html
 /// [`server::Connection`]: server/struct.Connection.html
-/// [`ReleaseCapacity`]: struct.ReleaseCapacity.html
+/// [`FlowControl`]: struct.FlowControl.html
 /// [`Stream`]: https://docs.rs/futures/0.1/futures/stream/trait.Stream.html
 #[must_use = "streams do nothing unless polled"]
 pub struct RecvStream {
-    inner: ReleaseCapacity,
+    inner: FlowControl,
 }
 
 /// A handle to release window capacity to a remote stream.
@@ -187,16 +190,37 @@ pub struct RecvStream {
 /// data.
 ///
 /// [flow control]: ../index.html#flow-control
-/// [`release_capacity`]: struct.ReleaseCapacity.html#method.release_capacity
-#[derive(Debug)]
-pub struct ReleaseCapacity {
+/// [`release_capacity`]: struct.FlowControl.html#method.release_capacity
+#[derive(Clone, Debug)]
+pub struct FlowControl {
     inner: proto::OpaqueStreamRef,
+}
+
+/// A handle to send and receive PING frames with the peer.
+// NOT Clone on purpose
+pub struct PingPong {
+    inner: proto::UserPings,
+}
+
+/// Sent via [`PingPong`][] to send a PING frame to a peer.
+///
+/// [`PingPong`]: struct.PingPong.html
+pub struct Ping {
+    _p: (),
+}
+
+/// Received via [`PingPong`][] when a peer acknowledges a [`Ping`][].
+///
+/// [`PingPong`]: struct.PingPong.html
+/// [`Ping`]: struct.Ping.html
+pub struct Pong {
+    _p: (),
 }
 
 // ===== impl SendStream =====
 
-impl<B: IntoBuf> SendStream<B> {
-    pub(crate) fn new(inner: proto::StreamRef<B::Buf>) -> Self {
+impl<B: Buf> SendStream<B> {
+    pub(crate) fn new(inner: proto::StreamRef<B>) -> Self {
         SendStream { inner }
     }
 
@@ -244,11 +268,8 @@ impl<B: IntoBuf> SendStream<B> {
     ///
     /// ```rust
     /// # use h2::*;
-    /// # fn doc(mut send_stream: SendStream<&'static [u8]>) {
+    /// # async fn doc(mut send_stream: SendStream<&'static [u8]>) {
     /// send_stream.reserve_capacity(100);
-    ///
-    /// let capacity = send_stream.poll_capacity();
-    /// // capacity == 5;
     ///
     /// send_stream.send_data(b"hello", false).unwrap();
     /// // At this point, the total amount of requested capacity is 95 bytes.
@@ -277,7 +298,7 @@ impl<B: IntoBuf> SendStream<B> {
     /// Requests to be notified when the stream's capacity increases.
     ///
     /// Before calling this, capacity should be requested with
-    /// [`reserve_capacity`]. Once capacity is requested, the connection will
+    /// `reserve_capacity`. Once capacity is requested, the connection will
     /// assign capacity to the stream **as it becomes available**. There is no
     /// guarantee as to when and in what increments capacity gets assigned to
     /// the stream.
@@ -288,9 +309,11 @@ impl<B: IntoBuf> SendStream<B> {
     /// amount of assigned capacity at that point in time. It is also possible
     /// that `n` is lower than the previous call if, since then, the caller has
     /// sent data.
-    pub fn poll_capacity(&mut self) -> Poll<Option<usize>, ::Error> {
-        let res = try_ready!(self.inner.poll_capacity());
-        Ok(Async::Ready(res.map(|v| v as usize)))
+    pub fn poll_capacity(&mut self, cx: &mut Context) -> Poll<Option<Result<usize, crate::Error>>> {
+        self.inner
+            .poll_capacity(cx)
+            .map_ok_(|w| w as usize)
+            .map_err_(Into::into)
     }
 
     /// Sends a single data frame to the remote peer.
@@ -308,9 +331,9 @@ impl<B: IntoBuf> SendStream<B> {
     /// amounts of data being buffered in memory.
     ///
     /// [`Error`]: struct.Error.html
-    pub fn send_data(&mut self, data: B, end_of_stream: bool) -> Result<(), ::Error> {
+    pub fn send_data(&mut self, data: B, end_of_stream: bool) -> Result<(), crate::Error> {
         self.inner
-            .send_data(data.into_buf(), end_of_stream)
+            .send_data(data, end_of_stream)
             .map_err(Into::into)
     }
 
@@ -318,7 +341,7 @@ impl<B: IntoBuf> SendStream<B> {
     ///
     /// Sending trailers implicitly closes the send stream. Once the send stream
     /// is closed, no more data can be sent.
-    pub fn send_trailers(&mut self, trailers: HeaderMap) -> Result<(), ::Error> {
+    pub fn send_trailers(&mut self, trailers: HeaderMap) -> Result<(), crate::Error> {
         self.inner.send_trailers(trailers).map_err(Into::into)
     }
 
@@ -335,7 +358,7 @@ impl<B: IntoBuf> SendStream<B> {
 
     /// Polls to be notified when the client resets this stream.
     ///
-    /// If stream is still open, this returns `Ok(Async::NotReady)`, and
+    /// If stream is still open, this returns `Poll::Pending`, and
     /// registers the task to be notified if a `RST_STREAM` is received.
     ///
     /// If a `RST_STREAM` frame is received for this stream, calling this
@@ -345,8 +368,8 @@ impl<B: IntoBuf> SendStream<B> {
     ///
     /// If connection sees an error, this returns that error instead of a
     /// `Reason`.
-    pub fn poll_reset(&mut self) -> Poll<Reason, ::Error> {
-        self.inner.poll_reset(proto::PollReset::Streaming)
+    pub fn poll_reset(&mut self, cx: &mut Context) -> Poll<Result<Reason, crate::Error>> {
+        self.inner.poll_reset(cx, proto::PollReset::Streaming)
     }
 
     /// Returns the stream ID of this `SendStream`.
@@ -362,22 +385,42 @@ impl<B: IntoBuf> SendStream<B> {
 // ===== impl StreamId =====
 
 impl StreamId {
-    pub(crate) fn from_internal(id: ::frame::StreamId) -> Self {
+    pub(crate) fn from_internal(id: crate::frame::StreamId) -> Self {
         StreamId(id.into())
     }
 }
 // ===== impl RecvStream =====
 
 impl RecvStream {
-    pub(crate) fn new(inner: ReleaseCapacity) -> Self {
+    pub(crate) fn new(inner: FlowControl) -> Self {
         RecvStream { inner }
     }
 
-    #[deprecated(since = "0.0.0")]
+    /// Get the next data frame.
+    pub async fn data(&mut self) -> Option<Result<Bytes, crate::Error>> {
+        futures_util::future::poll_fn(move |cx| self.poll_data(cx)).await
+    }
+
+    /// Get optional trailers for this stream.
+    pub async fn trailers(&mut self) -> Result<Option<HeaderMap>, crate::Error> {
+        futures_util::future::poll_fn(move |cx| self.poll_trailers(cx)).await
+    }
+
     #[doc(hidden)]
-    pub fn is_empty(&self) -> bool {
-        // If the recv side is closed and the receive queue is empty, the body is empty.
-        self.inner.inner.body_is_empty()
+    pub fn poll_data(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, crate::Error>>> {
+        self.inner.inner.poll_data(cx).map_err_(Into::into)
+    }
+
+    #[doc(hidden)]
+    pub fn poll_trailers(
+        &mut self,
+        cx: &mut Context,
+    ) -> Poll<Result<Option<HeaderMap>, crate::Error>> {
+        match ready!(self.inner.inner.poll_trailers(cx)) {
+            Some(Ok(map)) => Poll::Ready(Ok(Some(map))),
+            Some(Err(e)) => Poll::Ready(Err(e.into())),
+            None => Poll::Ready(Ok(None)),
+        }
     }
 
     /// Returns true if the receive half has reached the end of stream.
@@ -388,16 +431,11 @@ impl RecvStream {
         self.inner.inner.is_end_stream()
     }
 
-    /// Get a mutable reference to this streams `ReleaseCapacity`.
+    /// Get a mutable reference to this stream's `FlowControl`.
     ///
     /// It can be used immediately, or cloned to be used later.
-    pub fn release_capacity(&mut self) -> &mut ReleaseCapacity {
+    pub fn flow_control(&mut self) -> &mut FlowControl {
         &mut self.inner
-    }
-
-    /// Returns received trailers.
-    pub fn poll_trailers(&mut self) -> Poll<Option<HeaderMap>, ::Error> {
-        self.inner.inner.poll_trailers().map_err(Into::into)
     }
 
     /// Returns the stream ID of this stream.
@@ -410,12 +448,12 @@ impl RecvStream {
     }
 }
 
-impl futures::Stream for RecvStream {
-    type Item = Bytes;
-    type Error = ::Error;
+#[cfg(feature = "stream")]
+impl futures_core::Stream for RecvStream {
+    type Item = Result<Bytes, crate::Error>;
 
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        self.inner.inner.poll_data().map_err(Into::into)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.poll_data(cx)
     }
 }
 
@@ -427,21 +465,40 @@ impl fmt::Debug for RecvStream {
     }
 }
 
-// ===== impl ReleaseCapacity =====
+impl Drop for RecvStream {
+    fn drop(&mut self) {
+        // Eagerly clear any received DATA frames now, since its no longer
+        // possible to retrieve them. However, this will be called
+        // again once *all* stream refs have been dropped, since
+        // this won't send a RST_STREAM frame, in case the user wishes to
+        // still *send* DATA.
+        self.inner.inner.clear_recv_buffer();
+    }
+}
 
-impl ReleaseCapacity {
+// ===== impl FlowControl =====
+
+impl FlowControl {
     pub(crate) fn new(inner: proto::OpaqueStreamRef) -> Self {
-        ReleaseCapacity { inner }
+        FlowControl { inner }
     }
 
     /// Returns the stream ID of the stream whose capacity will
-    /// be released by this `ReleaseCapacity`.
-    ///
-    /// # Panics
-    ///
-    /// If the lock on the stream store has been poisoned.
+    /// be released by this `FlowControl`.
     pub fn stream_id(&self) -> StreamId {
         StreamId::from_internal(self.inner.stream_id())
+    }
+
+    /// Get the current available capacity of data this stream *could* receive.
+    pub fn available_capacity(&self) -> isize {
+        self.inner.available_recv_capacity()
+    }
+
+    /// Get the currently *used* capacity for this stream.
+    ///
+    /// This is the amount of bytes that can be released back to the remote.
+    pub fn used_capacity(&self) -> usize {
+        self.inner.used_recv_capacity() as usize
     }
 
     /// Release window capacity back to remote stream.
@@ -451,17 +508,16 @@ impl ReleaseCapacity {
     ///
     /// See [struct level] documentation for more details.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// This function panics if increasing the receive window size by `sz` would
-    /// result in a window size greater than the target window size set by
-    /// [`set_target_window_size`]. In other words, the caller cannot release
-    /// more capacity than data has been received. If 1024 bytes of data have
-    /// been received, at most 1024 bytes can be released.
+    /// This function errors if increasing the receive window size by `sz` would
+    /// result in a window size greater than the target window size. In other
+    /// words, the caller cannot release more capacity than data has been
+    /// received. If 1024 bytes of data have been received, at most 1024 bytes
+    /// can be released.
     ///
     /// [struct level]: #
-    /// [`set_target_window_size`]: server/struct.Server.html#method.set_target_window_size
-    pub fn release_capacity(&mut self, sz: usize) -> Result<(), ::Error> {
+    pub fn release_capacity(&mut self, sz: usize) -> Result<(), crate::Error> {
         if sz > proto::MAX_WINDOW_SIZE as usize {
             return Err(UserError::ReleaseCapacityTooBig.into());
         }
@@ -471,9 +527,68 @@ impl ReleaseCapacity {
     }
 }
 
-impl Clone for ReleaseCapacity {
-    fn clone(&self) -> Self {
-        let inner = self.inner.clone();
-        ReleaseCapacity { inner }
+// ===== impl PingPong =====
+
+impl PingPong {
+    pub(crate) fn new(inner: proto::UserPings) -> Self {
+        PingPong { inner }
+    }
+
+    /// Send a PING frame and wait for the peer to send the pong.
+    pub async fn ping(&mut self, ping: Ping) -> Result<Pong, crate::Error> {
+        self.send_ping(ping)?;
+        futures_util::future::poll_fn(|cx| self.poll_pong(cx)).await
+    }
+
+    #[doc(hidden)]
+    pub fn send_ping(&mut self, ping: Ping) -> Result<(), crate::Error> {
+        // Passing a `Ping` here is just to be forwards-compatible with
+        // eventually allowing choosing a ping payload. For now, we can
+        // just drop it.
+        drop(ping);
+
+        self.inner.send_ping().map_err(|err| match err {
+            Some(err) => err.into(),
+            None => UserError::SendPingWhilePending.into(),
+        })
+    }
+
+    #[doc(hidden)]
+    pub fn poll_pong(&mut self, cx: &mut Context) -> Poll<Result<Pong, crate::Error>> {
+        ready!(self.inner.poll_pong(cx))?;
+        Poll::Ready(Ok(Pong { _p: () }))
+    }
+}
+
+impl fmt::Debug for PingPong {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("PingPong").finish()
+    }
+}
+
+// ===== impl Ping =====
+
+impl Ping {
+    /// Creates a new opaque `Ping` to be sent via a [`PingPong`][].
+    ///
+    /// The payload is "opaque", such that it shouldn't be depended on.
+    ///
+    /// [`PingPong`]: struct.PingPong.html
+    pub fn opaque() -> Ping {
+        Ping { _p: () }
+    }
+}
+
+impl fmt::Debug for Ping {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("Ping").finish()
+    }
+}
+
+// ===== impl Pong =====
+
+impl fmt::Debug for Pong {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("Pong").finish()
     }
 }

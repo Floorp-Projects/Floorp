@@ -1,9 +1,9 @@
-use codec::RecvError;
-use error::Reason;
-use frame::{Headers, StreamId};
-use proto::Open;
+use crate::codec::RecvError;
+use crate::error::Reason;
+use crate::frame::{Pseudo, StreamId};
+use crate::proto::Open;
 
-use http::{Request, Response};
+use http::{HeaderMap, Request, Response};
 
 use std::fmt;
 
@@ -12,11 +12,15 @@ pub(crate) trait Peer {
     /// Message type polled from the transport
     type Poll: fmt::Debug;
 
-    fn dyn() -> Dyn;
+    fn r#dyn() -> Dyn;
 
     fn is_server() -> bool;
 
-    fn convert_poll_message(headers: Headers) -> Result<Self::Poll, RecvError>;
+    fn convert_poll_message(
+        pseudo: Pseudo,
+        fields: HeaderMap,
+        stream_id: StreamId,
+    ) -> Result<Self::Poll, RecvError>;
 
     fn is_local_init(id: StreamId) -> bool {
         assert!(!id.is_zero());
@@ -51,12 +55,17 @@ impl Dyn {
         self.is_server() == id.is_server_initiated()
     }
 
-    pub fn convert_poll_message(&self, headers: Headers) -> Result<PollMessage, RecvError> {
+    pub fn convert_poll_message(
+        &self,
+        pseudo: Pseudo,
+        fields: HeaderMap,
+        stream_id: StreamId,
+    ) -> Result<PollMessage, RecvError> {
         if self.is_server() {
-            ::server::Peer::convert_poll_message(headers)
+            crate::server::Peer::convert_poll_message(pseudo, fields, stream_id)
                 .map(PollMessage::Server)
         } else {
-            ::client::Peer::convert_poll_message(headers)
+            crate::client::Peer::convert_poll_message(pseudo, fields, stream_id)
                 .map(PollMessage::Client)
         }
     }
@@ -66,7 +75,7 @@ impl Dyn {
         if self.is_server() {
             // Ensure that the ID is a valid client initiated ID
             if mode.is_push_promise() || !id.is_client_initiated() {
-                trace!("Cannot open stream {:?} - not client initiated, PROTOCOL_ERROR", id);
+                proto_err!(conn: "cannot open stream {:?} - not client initiated", id);
                 return Err(RecvError::Connection(Reason::PROTOCOL_ERROR));
             }
 
@@ -74,7 +83,7 @@ impl Dyn {
         } else {
             // Ensure that the ID is a valid server initiated ID
             if !mode.is_push_promise() || !id.is_server_initiated() {
-                trace!("Cannot open stream {:?} - not server initiated, PROTOCOL_ERROR", id);
+                proto_err!(conn: "cannot open stream {:?} - not server initiated", id);
                 return Err(RecvError::Connection(Reason::PROTOCOL_ERROR));
             }
 

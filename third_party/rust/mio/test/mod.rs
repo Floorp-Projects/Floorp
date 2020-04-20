@@ -181,7 +181,6 @@ mod ports {
 
 pub fn sleep_ms(ms: u64) {
     use std::thread;
-    use std::time::Duration;
     thread::sleep(Duration::from_millis(ms));
 }
 

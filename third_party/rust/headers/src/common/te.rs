@@ -25,8 +25,13 @@ use util::FlatCsv;
 ///
 /// # Examples
 ///
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Te(FlatCsv);
+
+derive_header! {
+    Te(_),
+    name: TE
+}
 
 impl Te {
     /// Create a `TE: trailers` header.

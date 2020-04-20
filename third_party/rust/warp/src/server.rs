@@ -1,59 +1,63 @@
+#[cfg(feature = "tls")]
+use crate::tls::TlsConfigBuilder;
+use std::convert::Infallible;
 use std::error::Error as StdError;
+use std::future::Future;
 use std::net::SocketAddr;
 #[cfg(feature = "tls")]
 use std::path::Path;
-use std::sync::Arc;
 
-use futures::{Async, Future, Poll, Stream};
+use futures::{future, FutureExt, TryFuture, TryStream, TryStreamExt};
 use hyper::server::conn::AddrIncoming;
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{rt, Server as HyperServer};
-use tokio_io::{AsyncRead, AsyncWrite};
+use hyper::Server as HyperServer;
+use tokio::io::{AsyncRead, AsyncWrite};
 
-use never::Never;
-use reject::Reject;
-use reply::Reply;
-use transport::Transport;
-use Request;
+use crate::filter::Filter;
+use crate::reject::IsReject;
+use crate::reply::Reply;
+use crate::transport::Transport;
 
-/// Create a `Server` with the provided service.
-pub fn serve<S>(service: S) -> Server<S>
+/// Create a `Server` with the provided `Filter`.
+pub fn serve<F>(filter: F) -> Server<F>
 where
-    S: IntoWarpService + 'static,
+    F: Filter + Clone + Send + Sync + 'static,
+    F::Extract: Reply,
+    F::Error: IsReject,
 {
     Server {
         pipeline: false,
-        service,
+        filter,
     }
 }
 
 /// A Warp Server ready to filter requests.
 #[derive(Debug)]
-pub struct Server<S> {
+pub struct Server<F> {
     pipeline: bool,
-    service: S,
+    filter: F,
 }
 
 /// A Warp Server ready to filter requests over TLS.
 ///
 /// *This type requires the `"tls"` feature.*
 #[cfg(feature = "tls")]
-pub struct TlsServer<S> {
-    server: Server<S>,
-    tls: ::rustls::ServerConfig,
+pub struct TlsServer<F> {
+    server: Server<F>,
+    tls: TlsConfigBuilder,
 }
 
 // Getting all various generic bounds to make this a re-usable method is
 // very complicated, so instead this is just a macro.
 macro_rules! into_service {
     ($into:expr) => {{
-        let inner = Arc::new($into.into_warp_service());
+        let inner = crate::service($into);
         make_service_fn(move |transport| {
             let inner = inner.clone();
             let remote_addr = Transport::remote_addr(transport);
-            service_fn(move |req| ReplyFuture {
-                inner: inner.call(req, remote_addr),
-            })
+            future::ok::<_, Infallible>(service_fn(move |req| {
+                inner.call_with_addr(req, remote_addr)
+            }))
         })
     }};
 }
@@ -69,26 +73,22 @@ macro_rules! addr_incoming {
 
 macro_rules! bind_inner {
     ($this:ident, $addr:expr) => {{
-        let service = into_service!($this.service);
+        let service = into_service!($this.filter);
         let (addr, incoming) = addr_incoming!($addr);
         let srv = HyperServer::builder(incoming)
             .http1_pipeline_flush($this.pipeline)
             .serve(service);
-        Ok::<_, hyper::error::Error>((addr, srv))
+        Ok::<_, hyper::Error>((addr, srv))
     }};
 
     (tls: $this:ident, $addr:expr) => {{
-        let service = into_service!($this.server.service);
+        let service = into_service!($this.server.filter);
         let (addr, incoming) = addr_incoming!($addr);
-        let tls = Arc::new($this.tls);
-        let incoming = incoming.map(move |sock| {
-            let session = ::rustls::ServerSession::new(&tls);
-            ::tls::TlsStream::new(sock, session)
-        });
-        let srv = HyperServer::builder(incoming)
+        let tls = $this.tls.build()?;
+        let srv = HyperServer::builder(crate::tls::TlsAcceptor::new(tls, incoming))
             .http1_pipeline_flush($this.server.pipeline)
             .serve(service);
-        Ok::<_, hyper::error::Error>((addr, srv))
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>((addr, srv))
     }};
 }
 
@@ -120,45 +120,46 @@ macro_rules! try_bind {
 
 // ===== impl Server =====
 
-impl<S> Server<S>
+impl<F> Server<F>
 where
-    S: IntoWarpService + 'static,
-    <<S::Service as WarpService>::Reply as Future>::Item: Reply + Send,
-    <<S::Service as WarpService>::Reply as Future>::Error: Reject + Send,
+    F: Filter + Clone + Send + Sync + 'static,
+    <F::Future as TryFuture>::Ok: Reply,
+    <F::Future as TryFuture>::Error: IsReject,
 {
     /// Run this `Server` forever on the current thread.
-    pub fn run(self, addr: impl Into<SocketAddr> + 'static) {
+    pub async fn run(self, addr: impl Into<SocketAddr> + 'static) {
         let (addr, fut) = self.bind_ephemeral(addr);
 
-        info!("warp drive engaged: listening on http://{}", addr);
+        log::info!("listening on http://{}", addr);
 
-        rt::run(fut);
+        fut.await;
     }
 
     /// Run this `Server` forever on the current thread with a specific stream
     /// of incoming connections.
     ///
     /// This can be used for Unix Domain Sockets, or TLS, etc.
-    pub fn run_incoming<I>(self, incoming: I)
+    pub async fn run_incoming<I>(self, incoming: I)
     where
-        I: Stream + Send + 'static,
-        I::Item: AsyncRead + AsyncWrite + Send + 'static,
+        I: TryStream + Send,
+        I::Ok: AsyncRead + AsyncWrite + Send + 'static + Unpin,
         I::Error: Into<Box<dyn StdError + Send + Sync>>,
     {
-        self.run_incoming2(incoming.map(::transport::LiftIo));
+        self.run_incoming2(incoming.map_ok(crate::transport::LiftIo).into_stream())
+            .await;
     }
 
-    fn run_incoming2<I>(self, incoming: I)
+    async fn run_incoming2<I>(self, incoming: I)
     where
-        I: Stream + Send + 'static,
-        I::Item: Transport + Send + 'static,
+        I: TryStream + Send,
+        I::Ok: Transport + Send + 'static + Unpin,
         I::Error: Into<Box<dyn StdError + Send + Sync>>,
     {
         let fut = self.serve_incoming2(incoming);
 
-        info!("warp drive engaged: listening with custom incoming");
+        log::info!("listening with custom incoming");
 
-        rt::run(fut);
+        fut.await;
     }
 
     /// Bind to a socket address, returning a `Future` that can be
@@ -167,10 +168,7 @@ where
     /// # Panics
     ///
     /// Panics if we are unable to bind to the provided address.
-    pub fn bind(
-        self,
-        addr: impl Into<SocketAddr> + 'static,
-    ) -> impl Future<Item = (), Error = ()> + 'static {
+    pub fn bind(self, addr: impl Into<SocketAddr> + 'static) -> impl Future<Output = ()> + 'static {
         let (_, fut) = self.bind_ephemeral(addr);
         fut
     }
@@ -180,15 +178,22 @@ where
     ///
     /// In case we are unable to bind to the specified address, resolves to an
     /// error and logs the reason.
-    pub fn try_bind(
-        self,
-        addr: impl Into<SocketAddr> + 'static,
-    ) -> impl Future<Item = (), Error = ()> + 'static {
+    pub async fn try_bind(self, addr: impl Into<SocketAddr> + 'static) {
         let addr = addr.into();
-        let result = try_bind!(self, &addr).map_err(|e| error!("error binding to {}: {}", addr, e));
-        futures::future::result(result).and_then(|(_, srv)| {
-            srv.map_err(|e| error!("server error: {}", e))
+        let srv = match try_bind!(self, &addr) {
+            Ok((_, srv)) => srv,
+            Err(err) => {
+                log::error!("error binding to {}: {}", addr, err);
+                return;
+            }
+        };
+
+        srv.map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
         })
+        .await;
     }
 
     /// Bind to a possibly ephemeral socket address.
@@ -202,9 +207,15 @@ where
     pub fn bind_ephemeral(
         self,
         addr: impl Into<SocketAddr> + 'static,
-    ) -> (SocketAddr, impl Future<Item = (), Error = ()> + 'static) {
+    ) -> (SocketAddr, impl Future<Output = ()> + 'static) {
         let (addr, srv) = bind!(self, addr);
-        (addr, srv.map_err(|e| error!("server error: {}", e)))
+        let srv = srv.map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
+
+        (addr, srv)
     }
 
     /// Tried to bind a possibly ephemeral socket address.
@@ -217,10 +228,16 @@ where
     pub fn try_bind_ephemeral(
         self,
         addr: impl Into<SocketAddr> + 'static,
-    ) -> Result<(SocketAddr, impl Future<Item = (), Error = ()> + 'static), hyper::error::Error> {
+    ) -> Result<(SocketAddr, impl Future<Output = ()> + 'static), crate::Error> {
         let addr = addr.into();
-        let (addr, srv) = try_bind!(self, &addr)?;
-        Ok((addr, srv.map_err(|e| error!("server error: {}", e))))
+        let (addr, srv) = try_bind!(self, &addr).map_err(crate::Error::new)?;
+        let srv = srv.map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
+
+        Ok((addr, srv))
     }
 
     /// Create a server with graceful shutdown signal.
@@ -234,11 +251,9 @@ where
     /// # Example
     ///
     /// ```no_run
-    /// extern crate futures;
-    /// extern crate warp;
-    ///
-    /// use futures::sync::oneshot;
     /// use warp::Filter;
+    /// use futures::future::TryFutureExt;
+    /// use tokio::sync::oneshot;
     ///
     /// # fn main() {
     /// let routes = warp::any()
@@ -247,10 +262,12 @@ where
     /// let (tx, rx) = oneshot::channel();
     ///
     /// let (addr, server) = warp::serve(routes)
-    ///     .bind_with_graceful_shutdown(([127, 0, 0, 1], 3030), rx);
+    ///     .bind_with_graceful_shutdown(([127, 0, 0, 1], 3030), async {
+    ///          rx.await.ok();
+    ///     });
     ///
     /// // Spawn the server into a runtime
-    /// warp::spawn(server);
+    /// tokio::task::spawn(server);
     ///
     /// // Later, start the shutdown...
     /// let _ = tx.send(());
@@ -259,12 +276,14 @@ where
     pub fn bind_with_graceful_shutdown(
         self,
         addr: impl Into<SocketAddr> + 'static,
-        signal: impl Future<Item = ()> + Send + 'static,
-    ) -> (SocketAddr, impl Future<Item = (), Error = ()> + 'static) {
+        signal: impl Future<Output = ()> + Send + 'static,
+    ) -> (SocketAddr, impl Future<Output = ()> + 'static) {
         let (addr, srv) = bind!(self, addr);
-        let fut = srv
-            .with_graceful_shutdown(signal)
-            .map_err(|e| error!("server error: {}", e));
+        let fut = srv.with_graceful_shutdown(signal).map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
         (addr, fut)
     }
 
@@ -273,27 +292,32 @@ where
     /// This can be used for Unix Domain Sockets, or TLS, etc.
     ///
     /// Returns a `Future` that can be executed on any runtime.
-    pub fn serve_incoming<I>(self, incoming: I) -> impl Future<Item = (), Error = ()> + 'static
+    pub fn serve_incoming<I>(self, incoming: I) -> impl Future<Output = ()> + 'static
     where
-        I: Stream + Send + 'static,
-        I::Item: AsyncRead + AsyncWrite + Send + 'static,
+        I: TryStream + Send + 'static,
+        I::Ok: AsyncRead + AsyncWrite + Send + 'static + Unpin,
         I::Error: Into<Box<dyn StdError + Send + Sync>>,
     {
-        let incoming = incoming.map(::transport::LiftIo);
+        let incoming = incoming.map_ok(crate::transport::LiftIo);
         self.serve_incoming2(incoming)
     }
 
-    fn serve_incoming2<I>(self, incoming: I) -> impl Future<Item = (), Error = ()> + 'static
+    async fn serve_incoming2<I>(self, incoming: I)
     where
-        I: Stream + Send + 'static,
-        I::Item: Transport + Send + 'static,
+        I: TryStream + Send,
+        I::Ok: Transport + Send + 'static + Unpin,
         I::Error: Into<Box<dyn StdError + Send + Sync>>,
     {
-        let service = into_service!(self.service);
-        HyperServer::builder(incoming)
+        let service = into_service!(self.filter);
+
+        let srv = HyperServer::builder(hyper::server::accept::from_stream(incoming.into_stream()))
             .http1_pipeline_flush(self.pipeline)
             .serve(service)
-            .map_err(|e| error!("server error: {}", e))
+            .await;
+
+        if let Err(err) = srv {
+            log::error!("server error: {}", err);
+        }
     }
 
     // Generally shouldn't be used, as it can slow down non-pipelined responses.
@@ -305,47 +329,78 @@ where
         self
     }
 
-    /// Configure a server to use TLS with the supplied certificate and key files.
+    /// Configure a server to use TLS.
     ///
     /// *This function requires the `"tls"` feature.*
     #[cfg(feature = "tls")]
-    pub fn tls(self, cert: impl AsRef<Path>, key: impl AsRef<Path>) -> TlsServer<S> {
-        let tls = ::tls::configure(cert.as_ref(), key.as_ref());
-
-        TlsServer { server: self, tls }
+    pub fn tls(self) -> TlsServer<F> {
+        TlsServer {
+            server: self,
+            tls: TlsConfigBuilder::new(),
+        }
     }
 }
 
-// ===== impl TlsServer =====
+// // ===== impl TlsServer =====
 
 #[cfg(feature = "tls")]
-impl<S> TlsServer<S>
+impl<F> TlsServer<F>
 where
-    S: IntoWarpService + 'static,
-    <<S::Service as WarpService>::Reply as Future>::Item: Reply + Send,
-    <<S::Service as WarpService>::Reply as Future>::Error: Reject + Send,
+    F: Filter + Clone + Send + Sync + 'static,
+    <F::Future as TryFuture>::Ok: Reply,
+    <F::Future as TryFuture>::Error: IsReject,
 {
+    // TLS config methods
+
+    /// Specify the file path to read the private key.
+    pub fn key_path(self, path: impl AsRef<Path>) -> Self {
+        self.with_tls(|tls| tls.key_path(path))
+    }
+
+    /// Specify the file path to read the certificate.
+    pub fn cert_path(self, path: impl AsRef<Path>) -> Self {
+        self.with_tls(|tls| tls.cert_path(path))
+    }
+
+    /// Specify the in-memory contents of the private key.
+    pub fn key(self, key: impl AsRef<[u8]>) -> Self {
+        self.with_tls(|tls| tls.key(key.as_ref()))
+    }
+
+    /// Specify the in-memory contents of the certificate.
+    pub fn cert(self, cert: impl AsRef<[u8]>) -> Self {
+        self.with_tls(|tls| tls.cert(cert.as_ref()))
+    }
+
+    fn with_tls<Func>(self, func: Func) -> Self
+    where
+        Func: FnOnce(TlsConfigBuilder) -> TlsConfigBuilder,
+    {
+        let TlsServer { server, tls } = self;
+        let tls = func(tls);
+        TlsServer { server, tls }
+    }
+
+    // Server run methods
+
     /// Run this `TlsServer` forever on the current thread.
     ///
     /// *This function requires the `"tls"` feature.*
-    pub fn run(self, addr: impl Into<SocketAddr> + 'static) {
+    pub async fn run(self, addr: impl Into<SocketAddr> + 'static) {
         let (addr, fut) = self.bind_ephemeral(addr);
 
-        info!("warp drive engaged: listening on https://{}", addr);
+        log::info!("listening on https://{}", addr);
 
-        rt::run(fut);
+        fut.await;
     }
 
     /// Bind to a socket address, returning a `Future` that can be
-    /// executed on any runtime.
+    /// executed on a runtime.
     ///
     /// *This function requires the `"tls"` feature.*
-    pub fn bind(
-        self,
-        addr: impl Into<SocketAddr> + 'static,
-    ) -> impl Future<Item = (), Error = ()> + 'static {
+    pub async fn bind(self, addr: impl Into<SocketAddr> + 'static) {
         let (_, fut) = self.bind_ephemeral(addr);
-        fut
+        fut.await;
     }
 
     /// Bind to a possibly ephemeral socket address.
@@ -357,9 +412,15 @@ where
     pub fn bind_ephemeral(
         self,
         addr: impl Into<SocketAddr> + 'static,
-    ) -> (SocketAddr, impl Future<Item = (), Error = ()> + 'static) {
+    ) -> (SocketAddr, impl Future<Output = ()> + 'static) {
         let (addr, srv) = bind!(tls: self, addr);
-        (addr, srv.map_err(|e| error!("server error: {}", e)))
+        let srv = srv.map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
+
+        (addr, srv)
     }
 
     /// Create a server with graceful shutdown signal.
@@ -371,66 +432,27 @@ where
     pub fn bind_with_graceful_shutdown(
         self,
         addr: impl Into<SocketAddr> + 'static,
-        signal: impl Future<Item = ()> + Send + 'static,
-    ) -> (SocketAddr, impl Future<Item = (), Error = ()> + 'static) {
+        signal: impl Future<Output = ()> + Send + 'static,
+    ) -> (SocketAddr, impl Future<Output = ()> + 'static) {
         let (addr, srv) = bind!(tls: self, addr);
 
-        let fut = srv
-            .with_graceful_shutdown(signal)
-            .map_err(|e| error!("server error: {}", e));
+        let fut = srv.with_graceful_shutdown(signal).map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
         (addr, fut)
     }
 }
 
 #[cfg(feature = "tls")]
-impl<S> ::std::fmt::Debug for TlsServer<S>
+impl<F> ::std::fmt::Debug for TlsServer<F>
 where
-    S: ::std::fmt::Debug,
+    F: ::std::fmt::Debug,
 {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct("TlsServer")
             .field("server", &self.server)
             .finish()
-    }
-}
-
-// ===== impl WarpService =====
-
-pub trait IntoWarpService {
-    type Service: WarpService + Send + Sync + 'static;
-    fn into_warp_service(self) -> Self::Service;
-}
-
-pub trait WarpService {
-    type Reply: Future + Send;
-    fn call(&self, req: Request, remote_addr: Option<SocketAddr>) -> Self::Reply;
-}
-
-// Optimizes better than using Future::then, since it doesn't
-// have to return an IntoFuture.
-#[derive(Debug)]
-struct ReplyFuture<F> {
-    inner: F,
-}
-
-impl<F> Future for ReplyFuture<F>
-where
-    F: Future,
-    F::Item: Reply,
-    F::Error: Reject,
-{
-    type Item = ::reply::Response;
-    type Error = Never;
-
-    #[inline]
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        match self.inner.poll() {
-            Ok(Async::Ready(ok)) => Ok(Async::Ready(ok.into_response())),
-            Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(err) => {
-                debug!("rejected: {:?}", err);
-                Ok(Async::Ready(err.into_response()))
-            }
-        }
     }
 }

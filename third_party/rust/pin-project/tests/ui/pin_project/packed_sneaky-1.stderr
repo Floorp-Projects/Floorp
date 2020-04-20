@@ -1,0 +1,23 @@
+error: #[pin_project] attribute may not be used on #[repr(packed)] types
+ --> $DIR/packed_sneaky-1.rs:6:1
+  |
+6 | #[hidden_repr(packed)]
+  | ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: #[pin_project] attribute may not be used on #[repr(packed)] types
+  --> $DIR/packed_sneaky-1.rs:13:1
+   |
+13 | #[hidden_repr(packed)]
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: #[pin_project] attribute may not be used on #[repr(packed)] types
+  --> $DIR/packed_sneaky-1.rs:22:1
+   |
+22 | #[hidden_repr(packed)]
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)

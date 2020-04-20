@@ -46,22 +46,22 @@ impl ::Header for Expect {
     }
 
     fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
-        values.extend(::std::iter::once(::HeaderValue::from_static("100-continue")));
+        values.extend(::std::iter::once(::HeaderValue::from_static(
+            "100-continue",
+        )));
     }
 }
 
 impl fmt::Debug for Expect {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("Expect")
-            .field(&"100-continue")
-            .finish()
+        f.debug_tuple("Expect").field(&"100-continue").finish()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Expect;
     use super::super::test_decode;
+    use super::Expect;
 
     #[test]
     fn expect_continue() {
@@ -73,10 +73,7 @@ mod tests {
 
     #[test]
     fn expectation_failed() {
-        assert_eq!(
-            test_decode::<Expect>(&["sandwich"]),
-            None,
-        );
+        assert_eq!(test_decode::<Expect>(&["sandwich"]), None,);
     }
 
     #[test]

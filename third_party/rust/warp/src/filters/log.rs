@@ -5,12 +5,11 @@ use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
 use http::{self, header, StatusCode};
-use tokio::clock;
 
-use filter::{Filter, WrapSealed};
-use reject::Reject;
-use reply::Reply;
-use route::Route;
+use crate::filter::{Filter, WrapSealed};
+use crate::reject::IsReject;
+use crate::reply::Reply;
+use crate::route::Route;
 
 use self::internal::WithLog;
 
@@ -35,7 +34,7 @@ pub fn log(name: &'static str) -> Log<impl Fn(Info) + Copy> {
     let func = move |info: Info| {
         // TODO?
         // - response content length?
-        info!(
+        log::info!(
             target: name,
             "{} \"{} {} {:?}\" {} \"{}\" \"{}\" {:?}",
             OptFmt(info.route.remote_addr()),
@@ -78,7 +77,7 @@ where
     Log { func }
 }
 
-/// Decorates a [`Filter`](::Filter) to log requests and responses.
+/// Decorates a [`Filter`](crate::Filter) to log requests and responses.
 #[derive(Clone, Copy, Debug)]
 pub struct Log<F> {
     func: F,
@@ -97,7 +96,7 @@ where
     FN: Fn(Info) + Clone + Send,
     F: Filter + Clone + Send,
     F::Extract: Reply,
-    F::Error: Reject,
+    F::Error: IsReject,
 {
     type Wrapped = WithLog<FN, F>;
 
@@ -153,7 +152,7 @@ impl<'a> Info<'a> {
 
     /// View the `Duration` that elapsed for the request.
     pub fn elapsed(&self) -> Duration {
-        clock::now() - self.start
+        tokio::time::Instant::now().into_std() - self.start
     }
 
     /// View the host of the request
@@ -178,15 +177,19 @@ impl<T: fmt::Display> fmt::Display for OptFmt<T> {
 }
 
 mod internal {
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
     use std::time::Instant;
 
-    use futures::{Async, Future, Poll};
+    use futures::{ready, TryFuture};
+    use pin_project::pin_project;
 
     use super::{Info, Log};
-    use filter::{Filter, FilterBase};
-    use reject::Reject;
-    use reply::{Reply, Response};
-    use route;
+    use crate::filter::{Filter, FilterBase, Internal};
+    use crate::reject::IsReject;
+    use crate::reply::{Reply, Response};
+    use crate::route;
 
     #[allow(missing_debug_implementations)]
     pub struct Logged(pub(super) Response);
@@ -210,25 +213,27 @@ mod internal {
         FN: Fn(Info) + Clone + Send,
         F: Filter + Clone + Send,
         F::Extract: Reply,
-        F::Error: Reject,
+        F::Error: IsReject,
     {
         type Extract = (Logged,);
         type Error = F::Error;
         type Future = WithLogFuture<FN, F::Future>;
 
-        fn filter(&self) -> Self::Future {
-            let started = ::tokio::clock::now();
+        fn filter(&self, _: Internal) -> Self::Future {
+            let started = tokio::time::Instant::now().into_std();
             WithLogFuture {
                 log: self.log.clone(),
-                future: self.filter.filter(),
+                future: self.filter.filter(Internal),
                 started,
             }
         }
     }
 
     #[allow(missing_debug_implementations)]
+    #[pin_project]
     pub struct WithLogFuture<FN, F> {
         log: Log<FN>,
+        #[pin]
         future: F,
         started: Instant,
     }
@@ -236,23 +241,23 @@ mod internal {
     impl<FN, F> Future for WithLogFuture<FN, F>
     where
         FN: Fn(Info),
-        F: Future,
-        F::Item: Reply,
-        F::Error: Reject,
+        F: TryFuture,
+        F::Ok: Reply,
+        F::Error: IsReject,
     {
-        type Item = (Logged,);
-        type Error = F::Error;
-        fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-            let (result, status) = match self.future.poll() {
-                Ok(Async::Ready(reply)) => {
+        type Output = Result<(Logged,), F::Error>;
+
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+            let pin = self.as_mut().project();
+            let (result, status) = match ready!(pin.future.try_poll(cx)) {
+                Ok(reply) => {
                     let resp = reply.into_response();
                     let status = resp.status();
-                    (Ok(Async::Ready((Logged(resp),))), status)
+                    (Poll::Ready(Ok((Logged(resp),))), status)
                 }
-                Ok(Async::NotReady) => return Ok(Async::NotReady),
                 Err(reject) => {
                     let status = reject.status();
-                    (Err(reject), status)
+                    (Poll::Ready(Err(reject)), status)
                 }
             };
 

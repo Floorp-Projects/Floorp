@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
-use {HeaderName, HeaderValue};
 use util::FlatCsv;
+use {HeaderName, HeaderValue};
 
 /// `Access-Control-Expose-Headers` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-expose-headers-response-header)
@@ -32,18 +32,18 @@ use util::FlatCsv;
 ///     .collect::<AccessControlExposeHeaders>();
 /// # }
 /// ```
-#[derive(Clone, Debug, Header)]
+#[derive(Clone, Debug)]
 pub struct AccessControlExposeHeaders(FlatCsv);
+
+derive_header! {
+    AccessControlExposeHeaders(_),
+    name: ACCESS_CONTROL_EXPOSE_HEADERS
+}
 
 impl AccessControlExposeHeaders {
     /// Returns an iterator over `HeaderName`s contained within.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = HeaderName> + 'a {
-        self
-            .0
-            .iter()
-            .filter_map(|s| {
-                s.parse().ok()
-            })
+        self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
 
@@ -52,24 +52,19 @@ impl FromIterator<HeaderName> for AccessControlExposeHeaders {
     where
         I: IntoIterator<Item = HeaderName>,
     {
-        let flat = iter
-            .into_iter()
-            .map(HeaderValue::from)
-            .collect();
+        let flat = iter.into_iter().map(HeaderValue::from).collect();
         AccessControlExposeHeaders(flat)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{test_decode, test_encode};
+    use super::*;
 
     #[test]
     fn iter() {
-        let expose_headers = test_decode::<AccessControlExposeHeaders>(
-            &["foo, bar"]
-        ).unwrap();
+        let expose_headers = test_decode::<AccessControlExposeHeaders>(&["foo, bar"]).unwrap();
 
         let as_vec = expose_headers.iter().collect::<Vec<_>>();
         assert_eq!(as_vec.len(), 2);
@@ -79,13 +74,15 @@ mod tests {
 
     #[test]
     fn from_iter() {
-        let expose: AccessControlExposeHeaders = vec![
-            ::http::header::CACHE_CONTROL,
-            ::http::header::IF_RANGE,
-        ].into_iter().collect();
+        let expose: AccessControlExposeHeaders =
+            vec![::http::header::CACHE_CONTROL, ::http::header::IF_RANGE]
+                .into_iter()
+                .collect();
 
         let headers = test_encode(expose);
-        assert_eq!(headers["access-control-expose-headers"], "cache-control, if-range");
+        assert_eq!(
+            headers["access-control-expose-headers"],
+            "cache-control, if-range"
+        );
     }
 }
-

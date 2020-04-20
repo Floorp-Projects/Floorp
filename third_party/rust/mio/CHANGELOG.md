@@ -1,3 +1,14 @@
+# 0.6.21 (November 27, 2019)
+
+### Fixed
+- remove `=` dependency on `cfg-if`.
+
+# 0.6.20 (November 21, 2019)
+
+### Fixed
+- Use default IOCP concurrency value (#1161).
+- setting FD_CLOEXEC in pipe (#1095).
+
 # 0.6.19 (May 28, 2018)
 
 ### Fixed

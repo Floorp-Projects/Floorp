@@ -1,0 +1,23 @@
+error: duplicate `UnsafeUnpin` argument
+ --> $DIR/duplicate-argument.rs:3:28
+  |
+3 | #[pin_project(UnsafeUnpin, UnsafeUnpin)] //~ ERROR duplicate `UnsafeUnpin` argument
+  |                            ^^^^^^^^^^^
+
+error: duplicate `PinnedDrop` argument
+ --> $DIR/duplicate-argument.rs:9:27
+  |
+9 | #[pin_project(PinnedDrop, PinnedDrop)] //~ ERROR duplicate `PinnedDrop` argument
+  |                           ^^^^^^^^^^
+
+error: duplicate `UnsafeUnpin` argument
+  --> $DIR/duplicate-argument.rs:15:40
+   |
+15 | #[pin_project(PinnedDrop, UnsafeUnpin, UnsafeUnpin)] //~ ERROR duplicate `UnsafeUnpin` argument
+   |                                        ^^^^^^^^^^^
+
+error: duplicate `PinnedDrop` argument
+  --> $DIR/duplicate-argument.rs:21:40
+   |
+21 | #[pin_project(PinnedDrop, UnsafeUnpin, PinnedDrop, PinnedDrop)] //~ ERROR duplicate `PinnedDrop` argument
+   |                                        ^^^^^^^^^^

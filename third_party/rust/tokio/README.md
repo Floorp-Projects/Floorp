@@ -14,29 +14,22 @@ the Rust programming language. It is:
 
 [![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![Travis Build Status][travis-badge]][travis-url]
-[![Appveyor Build Status][appveyor-badge]][appveyor-url]
-[![Gitter chat][gitter-badge]][gitter-url]
+[![Build Status][azure-badge]][azure-url]
+[![Discord chat][discord-badge]][discord-url]
 
 [crates-badge]: https://img.shields.io/crates/v/tokio.svg
 [crates-url]: https://crates.io/crates/tokio
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: LICENSE-MIT
-[travis-badge]: https://travis-ci.org/tokio-rs/tokio.svg?branch=master
-[travis-url]: https://travis-ci.org/tokio-rs/tokio
-[appveyor-badge]: https://ci.appveyor.com/api/projects/status/s83yxhy9qeb58va7/branch/master?svg=true
-[appveyor-url]: https://ci.appveyor.com/project/carllerche/tokio/branch/master
-[gitter-badge]: https://img.shields.io/gitter/room/tokio-rs/tokio.svg
-[gitter-url]: https://gitter.im/tokio-rs/tokio
+[mit-url]: LICENSE
+[azure-badge]: https://dev.azure.com/tokio-rs/Tokio/_apis/build/status/tokio-rs.tokio?branchName=master
+[azure-url]: https://dev.azure.com/tokio-rs/Tokio/_build/latest?definitionId=1&branchName=master
+[discord-badge]: https://img.shields.io/discord/500028886025895936.svg?logo=discord&style=flat-square
+[discord-url]: https://discord.gg/6yGkFeN
 
 [Website](https://tokio.rs) |
-[Guides](https://tokio.rs/docs/getting-started/hello-world/) |
-[API Docs](https://docs.rs/tokio) |
-[Chat](https://gitter.im/tokio-rs/tokio)
-
-The API docs for the master branch are published [here][master-dox].
-
-[master-dox]: https://tokio-rs.github.io/tokio/tokio/
+[Guides](https://tokio.rs/docs/) |
+[API Docs](https://docs.rs/tokio/0.2/tokio) |
+[Chat](https://discord.gg/6yGkFeN)
 
 ## Overview
 
@@ -45,72 +38,78 @@ asynchronous applications with the Rust programming language. At a high
 level, it provides a few major components:
 
 * A multithreaded, work-stealing based task [scheduler].
-* A [reactor] backed by the operating system's event queue (epoll, kqueue,
+* A reactor backed by the operating system's event queue (epoll, kqueue,
   IOCP, etc...).
 * Asynchronous [TCP and UDP][net] sockets.
 
 These components provide the runtime components necessary for building
 an asynchronous application.
 
-[net]: https://docs.rs/tokio/0.1/tokio/net/index.html
-[reactor]: https://docs.rs/tokio/0.1/tokio/reactor/index.html
-[scheduler]: https://tokio-rs.github.io/tokio/tokio/runtime/index.html
+[net]: https://docs.rs/tokio/0.2/tokio/net/index.html
+[scheduler]: https://docs.rs/tokio/0.2/tokio/runtime/index.html
 
 ## Example
 
+To get started, add the following to `Cargo.toml`.
+
+```toml
+tokio = { version = "0.2", features = ["full"] }
+```
+
+Tokio requires components to be explicitly enabled using feature flags. As a
+shorthand, the `full` feature enables all components.
+
 A basic TCP echo server with Tokio:
 
-```rust
-extern crate tokio;
-
-use tokio::prelude::*;
-use tokio::io::copy;
+```rust,no_run
 use tokio::net::TcpListener;
+use tokio::prelude::*;
 
-fn main() {
-    // Bind the server's socket.
-    let addr = "127.0.0.1:12345".parse().unwrap();
-    let listener = TcpListener::bind(&addr)
-        .expect("unable to bind TCP listener");
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut listener = TcpListener::bind("127.0.0.1:8080").await?;
 
-    // Pull out a stream of sockets for incoming connections
-    let server = listener.incoming()
-        .map_err(|e| eprintln!("accept failed = {:?}", e))
-        .for_each(|sock| {
-            // Split up the reading and writing parts of the
-            // socket.
-            let (reader, writer) = sock.split();
+    loop {
+        let (mut socket, _) = listener.accept().await?;
 
-            // A future that echos the data and returns how
-            // many bytes were copied...
-            let bytes_copied = copy(reader, writer);
+        tokio::spawn(async move {
+            let mut buf = [0; 1024];
 
-            // ... after which we'll print what happened.
-            let handle_conn = bytes_copied.map(|amt| {
-                println!("wrote {:?} bytes", amt)
-            }).map_err(|err| {
-                eprintln!("IO error {:?}", err)
-            });
+            // In a loop, read data from the socket and write the data back.
+            loop {
+                let n = match socket.read(&mut buf).await {
+                    // socket closed
+                    Ok(n) if n == 0 => return,
+                    Ok(n) => n,
+                    Err(e) => {
+                        eprintln!("failed to read from socket; err = {:?}", e);
+                        return;
+                    }
+                };
 
-            // Spawn the future as a concurrent task.
-            tokio::spawn(handle_conn)
+                // Write the data back
+                if let Err(e) = socket.write_all(&buf[0..n]).await {
+                    eprintln!("failed to write to socket; err = {:?}", e);
+                    return;
+                }
+            }
         });
-
-    // Start the Tokio runtime
-    tokio::run(server);
+    }
 }
 ```
 
-More examples can be found [here](examples).
+More examples can be found [here](../examples).
 
 ## Getting Help
 
 First, see if the answer to your question can be found in the [Guides] or the
 [API documentation]. If the answer is not there, there is an active community in
-the [Tokio Gitter channel][chat]. We would be happy to try to answer your
-question.  Last, if that doesn't work, try opening an [issue] with the question.
+the [Tokio Discord server][chat]. We would be happy to try to answer your
+question. Last, if that doesn't work, try opening an [issue] with the question.
 
-[chat]: https://gitter.im/tokio-rs/tokio
+[Guides]: https://tokio.rs/docs/
+[API documentation]: https://docs.rs/tokio/0.2
+[chat]: https://discord.gg/6yGkFeN
 [issue]: https://github.com/tokio-rs/tokio/issues/new
 
 ## Contributing
@@ -121,54 +120,22 @@ project.
 
 [guide]: CONTRIBUTING.md
 
-## Project layout
+## Related Projects
 
-The `tokio` crate, found at the root, is primarily intended for use by
-application developers.  Library authors should depend on the sub crates, which
-have greater guarantees of stability.
+In addition to the crates in this repository, the Tokio project also maintains
+several other libraries, including:
 
-The crates included as part of Tokio are:
+* [`tracing`] (formerly `tokio-trace`): A framework for application-level
+  tracing and async-aware diagnostics.
 
-* [`tokio-async-await`]: Experimental `async` / `await` support.
+* [`mio`]: A low-level, cross-platform abstraction over OS I/O APIs that powers
+  `tokio`.
 
-* [`tokio-codec`]: Utilities for encoding and decoding protocol frames.
+* [`bytes`]: Utilities for working with bytes, including efficient byte buffers.
 
-* [`tokio-current-thread`]: Schedule the execution of futures on the current
-  thread.
-
-* [`tokio-executor`]: Task execution related traits and utilities.
-
-* [`tokio-fs`]: Filesystem (and standard in / out) APIs.
-
-* [`tokio-io`]: Asynchronous I/O related traits and utilities.
-
-* [`tokio-reactor`]: Event loop that drives I/O resources (like TCP and UDP
-  sockets).
-
-* [`tokio-tcp`]: TCP bindings for use with `tokio-io` and `tokio-reactor`.
-
-* [`tokio-threadpool`]: Schedules the execution of futures across a pool of
-  threads.
-
-* [ `tokio-timer`]: Time related APIs.
-
-* [`tokio-udp`]: UDP bindings for use with `tokio-io` and `tokio-reactor`.
-
-* [`tokio-uds`]: Unix Domain Socket bindings for use with `tokio-io` and
-  `tokio-reactor`.
-
-[`tokio-async-await`]: tokio-async-await
-[`tokio-codec`]: tokio-codec
-[`tokio-current-thread`]: tokio-current-thread
-[`tokio-executor`]: tokio-executor
-[`tokio-fs`]: tokio-fs
-[`tokio-io`]: tokio-io
-[`tokio-reactor`]: tokio-reactor
-[`tokio-tcp`]: tokio-tcp
-[`tokio-threadpool`]: tokio-threadpool
-[`tokio-timer`]: tokio-timer
-[`tokio-udp`]: tokio-udp
-[`tokio-uds`]: tokio-uds
+[`tracing`]: https://github.com/tokio-rs/tracing
+[`mio`]: https://github.com/tokio-rs/mio
+[`bytes`]: https://github.com/tokio-rs/bytes
 
 ## Supported Rust Versions
 

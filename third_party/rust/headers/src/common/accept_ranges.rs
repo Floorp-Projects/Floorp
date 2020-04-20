@@ -26,8 +26,13 @@ use util::FlatCsv;
 ///
 /// headers.typed_insert(AcceptRanges::bytes());
 /// ```
-#[derive(Clone, Debug, Header, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct AcceptRanges(FlatCsv);
+
+derive_header! {
+    AcceptRanges(_),
+    name: ACCEPT_RANGES
+}
 
 impl AcceptRanges {
     /// A constructor to easily create the common `Accept-Ranges: bytes` header.

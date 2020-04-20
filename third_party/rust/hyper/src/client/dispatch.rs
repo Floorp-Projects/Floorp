@@ -1,24 +1,20 @@
-use futures::{Async, Poll, Stream};
-use futures::sync::{mpsc, oneshot};
-use want;
+use futures_util::future;
+use tokio::sync::{mpsc, oneshot};
 
-use common::Never;
+use crate::common::{task, Future, Pin, Poll};
 
-pub type RetryPromise<T, U> = oneshot::Receiver<Result<U, (::Error, Option<T>)>>;
-pub type Promise<T> = oneshot::Receiver<Result<T, ::Error>>;
+pub type RetryPromise<T, U> = oneshot::Receiver<Result<U, (crate::Error, Option<T>)>>;
+pub type Promise<T> = oneshot::Receiver<Result<T, crate::Error>>;
 
 pub fn channel<T, U>() -> (Sender<T, U>, Receiver<T, U>) {
-    let (tx, rx) = mpsc::unbounded();
+    let (tx, rx) = mpsc::unbounded_channel();
     let (giver, taker) = want::new();
     let tx = Sender {
         buffered_once: false,
-        giver: giver,
+        giver,
         inner: tx,
     };
-    let rx = Receiver {
-        inner: rx,
-        taker: taker,
-    };
+    let rx = Receiver { inner: rx, taker };
     (tx, rx)
 }
 
@@ -51,9 +47,10 @@ pub struct UnboundedSender<T, U> {
 }
 
 impl<T, U> Sender<T, U> {
-    pub fn poll_ready(&mut self) -> Poll<(), ::Error> {
-        self.giver.poll_want()
-            .map_err(|_| ::Error::new_closed())
+    pub fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<crate::Result<()>> {
+        self.giver
+            .poll_want(cx)
+            .map_err(|_| crate::Error::new_closed())
     }
 
     pub fn is_ready(&self) -> bool {
@@ -82,9 +79,10 @@ impl<T, U> Sender<T, U> {
             return Err(val);
         }
         let (tx, rx) = oneshot::channel();
-        self.inner.unbounded_send(Envelope(Some((val, Callback::Retry(tx)))))
+        self.inner
+            .send(Envelope(Some((val, Callback::Retry(tx)))))
             .map(move |_| rx)
-            .map_err(|e| e.into_inner().0.take().expect("envelope not dropped").0)
+            .map_err(|mut e| (e.0).0.take().expect("envelope not dropped").0)
     }
 
     pub fn send(&mut self, val: T) -> Result<Promise<U>, T> {
@@ -92,9 +90,10 @@ impl<T, U> Sender<T, U> {
             return Err(val);
         }
         let (tx, rx) = oneshot::channel();
-        self.inner.unbounded_send(Envelope(Some((val, Callback::NoRetry(tx)))))
+        self.inner
+            .send(Envelope(Some((val, Callback::NoRetry(tx)))))
             .map(move |_| rx)
-            .map_err(|e| e.into_inner().0.take().expect("envelope not dropped").0)
+            .map_err(|mut e| (e.0).0.take().expect("envelope not dropped").0)
     }
 
     pub fn unbound(self) -> UnboundedSender<T, U> {
@@ -116,9 +115,10 @@ impl<T, U> UnboundedSender<T, U> {
 
     pub fn try_send(&mut self, val: T) -> Result<RetryPromise<T, U>, T> {
         let (tx, rx) = oneshot::channel();
-        self.inner.unbounded_send(Envelope(Some((val, Callback::Retry(tx)))))
+        self.inner
+            .send(Envelope(Some((val, Callback::Retry(tx)))))
             .map(move |_| rx)
-            .map_err(|e| e.into_inner().0.take().expect("envelope not dropped").0)
+            .map_err(|mut e| (e.0).0.take().expect("envelope not dropped").0)
     }
 }
 
@@ -136,20 +136,31 @@ pub struct Receiver<T, U> {
     taker: want::Taker,
 }
 
-impl<T, U> Stream for Receiver<T, U> {
-    type Item = (T, Callback<T, U>);
-    type Error = Never;
-
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        match self.inner.poll() {
-            Ok(Async::Ready(item)) => Ok(Async::Ready(item.map(|mut env| {
-                env.0.take().expect("envelope not dropped")
-            }))),
-            Ok(Async::NotReady) => {
-                self.taker.want();
-                Ok(Async::NotReady)
+impl<T, U> Receiver<T, U> {
+    pub(crate) fn poll_next(
+        &mut self,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<Option<(T, Callback<T, U>)>> {
+        match self.inner.poll_recv(cx) {
+            Poll::Ready(item) => {
+                Poll::Ready(item.map(|mut env| env.0.take().expect("envelope not dropped")))
             }
-            Err(()) => unreachable!("mpsc never errors"),
+            Poll::Pending => {
+                self.taker.want();
+                Poll::Pending
+            }
+        }
+    }
+
+    pub(crate) fn close(&mut self) {
+        self.taker.cancel();
+        self.inner.close();
+    }
+
+    pub(crate) fn try_recv(&mut self) -> Option<(T, Callback<T, U>)> {
+        match self.inner.try_recv() {
+            Ok(mut env) => env.0.take(),
+            Err(_) => None,
         }
     }
 }
@@ -167,99 +178,156 @@ struct Envelope<T, U>(Option<(T, Callback<T, U>)>);
 impl<T, U> Drop for Envelope<T, U> {
     fn drop(&mut self) {
         if let Some((val, cb)) = self.0.take() {
-            let _ = cb.send(Err((::Error::new_canceled(None::<::Error>), Some(val))));
+            cb.send(Err((
+                crate::Error::new_canceled().with("connection closed"),
+                Some(val),
+            )));
         }
     }
 }
 
 pub enum Callback<T, U> {
-    Retry(oneshot::Sender<Result<U, (::Error, Option<T>)>>),
-    NoRetry(oneshot::Sender<Result<U, ::Error>>),
+    Retry(oneshot::Sender<Result<U, (crate::Error, Option<T>)>>),
+    NoRetry(oneshot::Sender<Result<U, crate::Error>>),
 }
 
 impl<T, U> Callback<T, U> {
-    pub fn poll_cancel(&mut self) -> Poll<(), ()> {
+    pub(crate) fn is_canceled(&self) -> bool {
         match *self {
-            Callback::Retry(ref mut tx) => tx.poll_cancel(),
-            Callback::NoRetry(ref mut tx) => tx.poll_cancel(),
+            Callback::Retry(ref tx) => tx.is_closed(),
+            Callback::NoRetry(ref tx) => tx.is_closed(),
         }
     }
 
-    pub fn send(self, val: Result<U, (::Error, Option<T>)>) {
+    pub(crate) fn poll_canceled(&mut self, cx: &mut task::Context<'_>) -> Poll<()> {
+        match *self {
+            Callback::Retry(ref mut tx) => tx.poll_closed(cx),
+            Callback::NoRetry(ref mut tx) => tx.poll_closed(cx),
+        }
+    }
+
+    pub(crate) fn send(self, val: Result<U, (crate::Error, Option<T>)>) {
         match self {
             Callback::Retry(tx) => {
                 let _ = tx.send(val);
-            },
+            }
             Callback::NoRetry(tx) => {
                 let _ = tx.send(val.map_err(|e| e.0));
             }
         }
     }
+
+    pub(crate) fn send_when(
+        self,
+        mut when: impl Future<Output = Result<U, (crate::Error, Option<T>)>> + Unpin,
+    ) -> impl Future<Output = ()> {
+        let mut cb = Some(self);
+
+        // "select" on this callback being canceled, and the future completing
+        future::poll_fn(move |cx| {
+            match Pin::new(&mut when).poll(cx) {
+                Poll::Ready(Ok(res)) => {
+                    cb.take().expect("polled after complete").send(Ok(res));
+                    Poll::Ready(())
+                }
+                Poll::Pending => {
+                    // check if the callback is canceled
+                    ready!(cb.as_mut().unwrap().poll_canceled(cx));
+                    trace!("send_when canceled");
+                    Poll::Ready(())
+                }
+                Poll::Ready(Err(err)) => {
+                    cb.take().expect("polled after complete").send(Err(err));
+                    Poll::Ready(())
+                }
+            }
+        })
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate pretty_env_logger;
     #[cfg(feature = "nightly")]
     extern crate test;
 
-    use futures::{future, Future, Stream};
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
 
+    use super::{channel, Callback, Receiver};
 
     #[derive(Debug)]
     struct Custom(i32);
 
-    #[test]
-    fn drop_receiver_sends_cancel_errors() {
-        let _ = pretty_env_logger::try_init();
+    impl<T, U> Future for Receiver<T, U> {
+        type Output = Option<(T, Callback<T, U>)>;
 
-        future::lazy(|| {
-            let (mut tx, mut rx) = super::channel::<Custom, ()>();
-
-            // must poll once for try_send to succeed
-            assert!(rx.poll().expect("rx empty").is_not_ready());
-
-            let promise = tx.try_send(Custom(43)).unwrap();
-            drop(rx);
-
-            promise.then(|fulfilled| {
-                let err = fulfilled
-                    .expect("fulfilled")
-                    .expect_err("promise should error");
-
-                match (err.0.kind(), err.1) {
-                    (&::error::Kind::Canceled, Some(_)) => (),
-                    e => panic!("expected Error::Cancel(_), found {:?}", e),
-                }
-
-                Ok::<(), ()>(())
-            })
-        }).wait().unwrap();
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            self.poll_next(cx)
+        }
     }
 
-    #[test]
-    fn sender_checks_for_want_on_send() {
-        future::lazy(|| {
-            let (mut tx, mut rx) = super::channel::<Custom, ()>();
-            // one is allowed to buffer, second is rejected
-            let _ = tx.try_send(Custom(1)).expect("1 buffered");
-            tx.try_send(Custom(2)).expect_err("2 not ready");
+    /// Helper to check if the future is ready after polling once.
+    struct PollOnce<'a, F>(&'a mut F);
 
-            assert!(rx.poll().expect("rx 1").is_ready());
-            // Even though 1 has been popped, only 1 could be buffered for the
-            // lifetime of the channel.
-            tx.try_send(Custom(2)).expect_err("2 still not ready");
+    impl<F, T> Future for PollOnce<'_, F>
+    where
+        F: Future<Output = T> + Unpin,
+    {
+        type Output = Option<()>;
 
-            assert!(rx.poll().expect("rx empty").is_not_ready());
-            let _ = tx.try_send(Custom(2)).expect("2 ready");
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            match Pin::new(&mut self.0).poll(cx) {
+                Poll::Ready(_) => Poll::Ready(Some(())),
+                Poll::Pending => Poll::Ready(None),
+            }
+        }
+    }
 
-            Ok::<(), ()>(())
-        }).wait().unwrap();
+    #[tokio::test]
+    async fn drop_receiver_sends_cancel_errors() {
+        let _ = pretty_env_logger::try_init();
+
+        let (mut tx, mut rx) = channel::<Custom, ()>();
+
+        // must poll once for try_send to succeed
+        assert!(PollOnce(&mut rx).await.is_none(), "rx empty");
+
+        let promise = tx.try_send(Custom(43)).unwrap();
+        drop(rx);
+
+        let fulfilled = promise.await;
+        let err = fulfilled
+            .expect("fulfilled")
+            .expect_err("promise should error");
+        match (err.0.kind(), err.1) {
+            (&crate::error::Kind::Canceled, Some(_)) => (),
+            e => panic!("expected Error::Cancel(_), found {:?}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn sender_checks_for_want_on_send() {
+        let (mut tx, mut rx) = channel::<Custom, ()>();
+
+        // one is allowed to buffer, second is rejected
+        let _ = tx.try_send(Custom(1)).expect("1 buffered");
+        tx.try_send(Custom(2)).expect_err("2 not ready");
+
+        assert!(PollOnce(&mut rx).await.is_some(), "rx once");
+
+        // Even though 1 has been popped, only 1 could be buffered for the
+        // lifetime of the channel.
+        tx.try_send(Custom(2)).expect_err("2 still not ready");
+
+        assert!(PollOnce(&mut rx).await.is_none(), "rx empty");
+
+        let _ = tx.try_send(Custom(2)).expect("2 ready");
     }
 
     #[test]
     fn unbounded_sender_doesnt_bound_on_want() {
-        let (tx, rx) = super::channel::<Custom, ()>();
+        let (tx, rx) = channel::<Custom, ()>();
         let mut tx = tx.unbound();
 
         let _ = tx.try_send(Custom(1)).unwrap();
@@ -274,42 +342,50 @@ mod tests {
     #[cfg(feature = "nightly")]
     #[bench]
     fn giver_queue_throughput(b: &mut test::Bencher) {
-        let (mut tx, mut rx) = super::channel::<i32, ()>();
+        use crate::{Body, Request, Response};
+
+        let mut rt = tokio::runtime::Builder::new()
+            .enable_all()
+            .basic_scheduler()
+            .build()
+            .unwrap();
+        let (mut tx, mut rx) = channel::<Request<Body>, Response<Body>>();
 
         b.iter(move || {
-            ::futures::future::lazy(|| {
-                let _ = tx.send(1).unwrap();
+            let _ = tx.send(Request::default()).unwrap();
+            rt.block_on(async {
                 loop {
-                    let async = rx.poll().unwrap();
-                    if async.is_not_ready() {
+                    let poll_once = PollOnce(&mut rx);
+                    let opt = poll_once.await;
+                    if opt.is_none() {
                         break;
                     }
                 }
-
-
-                Ok::<(), ()>(())
-            }).wait().unwrap();
+            });
         })
     }
 
     #[cfg(feature = "nightly")]
     #[bench]
     fn giver_queue_not_ready(b: &mut test::Bencher) {
-        let (_tx, mut rx) = super::channel::<i32, ()>();
-
+        let mut rt = tokio::runtime::Builder::new()
+            .enable_all()
+            .basic_scheduler()
+            .build()
+            .unwrap();
+        let (_tx, mut rx) = channel::<i32, ()>();
         b.iter(move || {
-            ::futures::future::lazy(|| {
-                assert!(rx.poll().unwrap().is_not_ready());
-
-                Ok::<(), ()>(())
-            }).wait().unwrap();
+            rt.block_on(async {
+                let poll_once = PollOnce(&mut rx);
+                assert!(poll_once.await.is_none());
+            });
         })
     }
 
     #[cfg(feature = "nightly")]
     #[bench]
     fn giver_queue_cancel(b: &mut test::Bencher) {
-        let (_tx, mut rx) = super::channel::<i32, ()>();
+        let (_tx, mut rx) = channel::<i32, ()>();
 
         b.iter(move || {
             rx.taker.cancel();

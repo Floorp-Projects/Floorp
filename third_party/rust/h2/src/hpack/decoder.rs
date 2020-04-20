@@ -1,11 +1,10 @@
-use super::{huffman, Header};
-use frame;
+use super::{header::BytesStr, huffman, Header};
+use crate::frame;
 
 use bytes::{Buf, Bytes, BytesMut};
 use http::header;
 use http::method::{self, Method};
 use http::status::{self, StatusCode};
-use string::String;
 
 use std::cmp;
 use std::collections::VecDeque;
@@ -168,7 +167,11 @@ impl Decoder {
     }
 
     /// Decodes the headers found in the given buffer.
-    pub fn decode<F>(&mut self, src: &mut Cursor<&mut BytesMut>, mut f: F) -> Result<(), DecoderError>
+    pub fn decode<F>(
+        &mut self,
+        src: &mut Cursor<&mut BytesMut>,
+        mut f: F,
+    ) -> Result<(), DecoderError>
     where
         F: FnMut(Header),
     {
@@ -180,7 +183,7 @@ impl Decoder {
             self.last_max_update = size;
         }
 
-        trace!("decode");
+        log::trace!("decode");
 
         while let Some(ty) = peek_u8(src) {
             // At this point we are always at the beginning of the next block
@@ -188,14 +191,14 @@ impl Decoder {
             // determined from the first byte.
             match Representation::load(ty)? {
                 Indexed => {
-                    trace!("    Indexed; rem={:?}", src.remaining());
+                    log::trace!("    Indexed; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_indexed(src)?;
                     consume(src);
                     f(entry);
-                },
+                }
                 LiteralWithIndexing => {
-                    trace!("    LiteralWithIndexing; rem={:?}", src.remaining());
+                    log::trace!("    LiteralWithIndexing; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, true)?;
 
@@ -204,16 +207,16 @@ impl Decoder {
                     consume(src);
 
                     f(entry);
-                },
+                }
                 LiteralWithoutIndexing => {
-                    trace!("    LiteralWithoutIndexing; rem={:?}", src.remaining());
+                    log::trace!("    LiteralWithoutIndexing; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, false)?;
                     consume(src);
                     f(entry);
-                },
+                }
                 LiteralNeverIndexed => {
-                    trace!("    LiteralNeverIndexed; rem={:?}", src.remaining());
+                    log::trace!("    LiteralNeverIndexed; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, false)?;
                     consume(src);
@@ -221,9 +224,9 @@ impl Decoder {
                     // TODO: Track that this should never be indexed
 
                     f(entry);
-                },
+                }
                 SizeUpdate => {
-                    trace!("    SizeUpdate; rem={:?}", src.remaining());
+                    log::trace!("    SizeUpdate; rem={:?}", src.remaining());
                     if !can_resize {
                         return Err(DecoderError::InvalidMaxDynamicSize);
                     }
@@ -231,7 +234,7 @@ impl Decoder {
                     // Handle the dynamic table size update
                     self.process_size_update(src)?;
                     consume(src);
-                },
+                }
             }
         }
 
@@ -245,7 +248,7 @@ impl Decoder {
             return Err(DecoderError::InvalidMaxDynamicSize);
         }
 
-        debug!(
+        log::debug!(
             "Decoder changed max table size from {} to {}",
             self.table.size(),
             new_size
@@ -287,7 +290,7 @@ impl Decoder {
     }
 
     fn decode_string(&mut self, buf: &mut Cursor<&mut BytesMut>) -> Result<Bytes, DecoderError> {
-        const HUFF_FLAG: u8 = 0b10000000;
+        const HUFF_FLAG: u8 = 0b1000_0000;
 
         // The first bit in the first byte contains the huffman encoded flag.
         let huff = match peek_u8(buf) {
@@ -299,7 +302,7 @@ impl Decoder {
         let len = decode_int(buf, 7)?;
 
         if len > buf.remaining() {
-            trace!(
+            log::trace!(
                 "decode_string underflow; len={}; remaining={}",
                 len,
                 buf.remaining()
@@ -310,7 +313,7 @@ impl Decoder {
         if huff {
             let ret = {
                 let raw = &buf.bytes()[..len];
-                huffman::decode(raw, &mut self.buffer).map(Into::into)
+                huffman::decode(raw, &mut self.buffer).map(BytesMut::freeze)
             };
 
             buf.advance(len);
@@ -331,12 +334,12 @@ impl Default for Decoder {
 
 impl Representation {
     pub fn load(byte: u8) -> Result<Representation, DecoderError> {
-        const INDEXED: u8 = 0b10000000;
-        const LITERAL_WITH_INDEXING: u8 = 0b01000000;
-        const LITERAL_WITHOUT_INDEXING: u8 = 0b11110000;
-        const LITERAL_NEVER_INDEXED: u8 = 0b00010000;
-        const SIZE_UPDATE_MASK: u8 = 0b11100000;
-        const SIZE_UPDATE: u8 = 0b00100000;
+        const INDEXED: u8 = 0b1000_0000;
+        const LITERAL_WITH_INDEXING: u8 = 0b0100_0000;
+        const LITERAL_WITHOUT_INDEXING: u8 = 0b1111_0000;
+        const LITERAL_NEVER_INDEXED: u8 = 0b0001_0000;
+        const SIZE_UPDATE_MASK: u8 = 0b1110_0000;
+        const SIZE_UPDATE: u8 = 0b0010_0000;
 
         // TODO: What did I even write here?
 
@@ -361,8 +364,8 @@ fn decode_int<B: Buf>(buf: &mut B, prefix_size: u8) -> Result<usize, DecoderErro
     // never overflow an unsigned 32-bit integer. The maximum value of any
     // integer that can be encoded with 5 octets is ~2^28
     const MAX_BYTES: usize = 5;
-    const VARINT_MASK: u8 = 0b01111111;
-    const VARINT_FLAG: u8 = 0b10000000;
+    const VARINT_MASK: u8 = 0b0111_1111;
+    const VARINT_FLAG: u8 = 0b1000_0000;
 
     if prefix_size < 1 || prefix_size > 8 {
         return Err(DecoderError::InvalidIntegerPrefix);
@@ -427,7 +430,7 @@ fn take(buf: &mut Cursor<&mut BytesMut>, n: usize) -> Bytes {
     let pos = buf.position() as usize;
     let mut head = buf.get_mut().split_to(pos + n);
     buf.set_position(0);
-    head.split_to(pos);
+    head.advance(pos);
     head.freeze()
 }
 
@@ -445,7 +448,7 @@ impl Table {
         Table {
             entries: VecDeque::new(),
             size: 0,
-            max_size: max_size,
+            max_size,
         }
     }
 
@@ -516,7 +519,7 @@ impl Table {
                         // Can never happen as the size of the table must reach
                         // 0 by the time we've exhausted all elements.
                         panic!("Size of table != 0, but no headers left!");
-                    },
+                    }
                 };
 
                 self.size -= last.len();
@@ -572,7 +575,6 @@ impl From<DecoderError> for frame::Error {
 
 /// Get an entry from the static table
 pub fn get_static(idx: usize) -> Header {
-    use http::header;
     use http::header::HeaderValue;
 
     match idx {
@@ -782,14 +784,14 @@ pub fn get_static(idx: usize) -> Header {
     }
 }
 
-fn from_static(s: &'static str) -> String<Bytes> {
-    unsafe { String::from_utf8_unchecked(Bytes::from_static(s.as_bytes())) }
+fn from_static(s: &'static str) -> BytesStr {
+    unsafe { BytesStr::from_utf8_unchecked(Bytes::from_static(s.as_bytes())) }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use hpack::Header;
+    use crate::hpack::Header;
 
     #[test]
     fn test_peek_u8() {
@@ -820,23 +822,27 @@ mod test {
     fn test_decode_indexed_larger_than_table() {
         let mut de = Decoder::new(0);
 
-        let mut buf = vec![0b01000000, 0x80 | 2];
+        let mut buf = BytesMut::new();
+        buf.extend(&[0b01000000, 0x80 | 2]);
         buf.extend(huff_encode(b"foo"));
         buf.extend(&[0x80 | 3]);
         buf.extend(huff_encode(b"bar"));
 
-        let mut buf = buf.into();
-
         let mut res = vec![];
-        let _ = de.decode(&mut Cursor::new(&mut buf), |h| {
-            res.push(h);
-        }).unwrap();
+        let _ = de
+            .decode(&mut Cursor::new(&mut buf), |h| {
+                res.push(h);
+            })
+            .unwrap();
 
         assert_eq!(res.len(), 1);
         assert_eq!(de.table.size(), 0);
 
         match res[0] {
-            Header::Field { ref name, ref value } => {
+            Header::Field {
+                ref name,
+                ref value,
+            } => {
                 assert_eq!(name, "foo");
                 assert_eq!(value, "bar");
             }

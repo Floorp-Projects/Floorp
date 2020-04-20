@@ -1,6 +1,6 @@
 use std::fmt;
+use std::convert::TryFrom;
 
-use bytes::Bytes;
 use http::uri::Authority;
 
 /// The `Host` header.
@@ -15,7 +15,7 @@ impl Host {
 
     /// Get the optional port number.
     pub fn port(&self) -> Option<u16> {
-        self.0.port_part().map(|p| p.as_u16())
+        self.0.port_u16()
     }
 }
 
@@ -28,17 +28,14 @@ impl ::Header for Host {
         values
             .next()
             .cloned()
-            .map(Bytes::from)
-            .and_then(|bytes| Authority::from_shared(bytes).ok())
+            .and_then(|val| Authority::try_from(val.as_bytes()).ok())
             .map(Host)
             .ok_or_else(::Error::invalid)
     }
 
     fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
-        let bytes = Bytes::from(self.0.clone());
-
-        let val = ::HeaderValue::from_shared(bytes)
-            .expect("Authority is a valid HeaderValue");
+        let bytes = self.0.as_str().as_bytes();
+        let val = ::HeaderValue::from_bytes(bytes).expect("Authority is a valid HeaderValue");
 
         values.extend(::std::iter::once(val));
     }
@@ -55,4 +52,3 @@ impl fmt::Display for Host {
         fmt::Display::fmt(&self.0, f)
     }
 }
-

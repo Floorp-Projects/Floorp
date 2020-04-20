@@ -6,7 +6,7 @@
 use http::{header, StatusCode};
 
 use self::sealed::AsLocation;
-use reply::{self, Reply};
+use crate::reply::{self, Reply};
 
 /// A simple `301` redirect to a different location.
 ///
@@ -28,6 +28,26 @@ pub fn redirect(uri: impl AsLocation) -> impl Reply {
     )
 }
 
+/// A simple `307` temporary redirect to a different location.
+///
+/// # Example
+///
+/// ```
+/// use warp::{http::Uri, Filter};
+///
+/// let route = warp::path("v1")
+///     .map(|| {
+///         warp::redirect::temporary(Uri::from_static("/v2"))
+///     });
+/// ```
+pub fn temporary(uri: impl AsLocation) -> impl Reply {
+    reply::with_header(
+        StatusCode::TEMPORARY_REDIRECT,
+        header::LOCATION,
+        uri.header_value(),
+    )
+}
+
 mod sealed {
     use bytes::Bytes;
     use http::{header::HeaderValue, Uri};
@@ -44,7 +64,7 @@ mod sealed {
     impl Sealed for Uri {
         fn header_value(self) -> HeaderValue {
             let bytes = Bytes::from(self.to_string());
-            HeaderValue::from_shared(bytes).expect("Uri is a valid HeaderValue")
+            HeaderValue::from_maybe_shared(bytes).expect("Uri is a valid HeaderValue")
         }
     }
 }

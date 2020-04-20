@@ -2,7 +2,7 @@
 #![deny(missing_debug_implementations)]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(all(test, feature = "nightly"), feature(test))]
-#![doc(html_root_url = "https://docs.rs/headers/0.2.1")]
+#![doc(html_root_url = "https://docs.rs/headers/0.3.2")]
 
 //! # Typed HTTP Headers
 //!
@@ -72,14 +72,11 @@
 //! }
 //! ```
 
-
 extern crate base64;
 #[macro_use]
 extern crate bitflags;
 extern crate bytes;
 extern crate headers_core;
-#[macro_use]
-extern crate headers_derive;
 extern crate http;
 extern crate mime;
 extern crate sha1;
@@ -87,19 +84,13 @@ extern crate sha1;
 extern crate test;
 extern crate time;
 
-pub use headers_core::{
-    Error,
-    Header,
-};
+pub use headers_core::{Error, Header};
 
 #[doc(hidden)]
 pub use http::HeaderMap;
 
 #[doc(hidden)]
-pub use http::header::{
-    HeaderName,
-    HeaderValue,
-};
+pub use http::header::{HeaderName, HeaderValue};
 
 #[macro_use]
 mod util;
@@ -108,4 +99,3 @@ mod map_ext;
 
 pub use self::common::*;
 pub use self::map_ext::HeaderMapExt;
-

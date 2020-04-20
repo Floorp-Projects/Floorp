@@ -27,8 +27,13 @@ use util::Seconds;
 ///
 /// let max_age = AccessControlMaxAge::from(Duration::from_secs(531));
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Header)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AccessControlMaxAge(Seconds);
+
+derive_header! {
+    AccessControlMaxAge(_),
+    name: ACCESS_CONTROL_MAX_AGE
+}
 
 impl From<Duration> for AccessControlMaxAge {
     fn from(dur: Duration) -> AccessControlMaxAge {

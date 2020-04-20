@@ -19,16 +19,16 @@
 //! Wrapping allows adding in conditional logic *before* the request enters
 //! the inner filter (though the `with::header` wrapper does not).
 
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 use http::header::{HeaderMap, HeaderName, HeaderValue};
-use http::HttpTryFrom;
 
 use self::sealed::{WithDefaultHeader_, WithHeader_, WithHeaders_};
-use filter::{Filter, Map, WrapSealed};
-use reply::Reply;
+use crate::filter::{Filter, Map, WrapSealed};
+use crate::reply::Reply;
 
-/// Wrap a [`Filter`](::Filter) that adds a header to the reply.
+/// Wrap a [`Filter`](crate::Filter) that adds a header to the reply.
 ///
 /// # Note
 ///
@@ -48,14 +48,16 @@ use reply::Reply;
 /// ```
 pub fn header<K, V>(name: K, value: V) -> WithHeader
 where
-    HeaderName: HttpTryFrom<K>,
-    HeaderValue: HttpTryFrom<V>,
+    HeaderName: TryFrom<K>,
+    <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+    HeaderValue: TryFrom<V>,
+    <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
 {
     let (name, value) = assert_name_and_value(name, value);
     WithHeader { name, value }
 }
 
-/// Wrap a [`Filter`](::Filter) that adds multiple headers to the reply.
+/// Wrap a [`Filter`](crate::Filter) that adds multiple headers to the reply.
 ///
 /// # Note
 ///
@@ -86,7 +88,7 @@ pub fn headers(headers: HeaderMap) -> WithHeaders {
 
 // pub fn headers?
 
-/// Wrap a [`Filter`](::Filter) that adds a header to the reply, if they
+/// Wrap a [`Filter`](crate::Filter) that adds a header to the reply, if they
 /// aren't already set.
 ///
 /// # Note
@@ -107,8 +109,10 @@ pub fn headers(headers: HeaderMap) -> WithHeaders {
 /// ```
 pub fn default_header<K, V>(name: K, value: V) -> WithDefaultHeader
 where
-    HeaderName: HttpTryFrom<K>,
-    HeaderValue: HttpTryFrom<V>,
+    HeaderName: TryFrom<K>,
+    <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+    HeaderValue: TryFrom<V>,
+    <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
 {
     let (name, value) = assert_name_and_value(name, value);
     WithDefaultHeader { name, value }
@@ -175,14 +179,16 @@ where
 
 fn assert_name_and_value<K, V>(name: K, value: V) -> (HeaderName, HeaderValue)
 where
-    HeaderName: HttpTryFrom<K>,
-    HeaderValue: HttpTryFrom<V>,
+    HeaderName: TryFrom<K>,
+    <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+    HeaderValue: TryFrom<V>,
+    <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
 {
-    let name = <HeaderName as HttpTryFrom<K>>::try_from(name)
+    let name = <HeaderName as TryFrom<K>>::try_from(name)
         .map_err(Into::into)
         .unwrap_or_else(|_| panic!("invalid header name"));
 
-    let value = <HeaderValue as HttpTryFrom<V>>::try_from(value)
+    let value = <HeaderValue as TryFrom<V>>::try_from(value)
         .map_err(Into::into)
         .unwrap_or_else(|_| panic!("invalid header value"));
 
@@ -191,8 +197,8 @@ where
 
 mod sealed {
     use super::{WithDefaultHeader, WithHeader, WithHeaders};
-    use generic::{Func, One};
-    use reply::{Reply, Reply_};
+    use crate::generic::{Func, One};
+    use crate::reply::{Reply, Reply_};
 
     #[derive(Clone)]
     #[allow(missing_debug_implementations)]
@@ -243,7 +249,6 @@ mod sealed {
             let mut resp = args.0.into_response();
             resp.headers_mut()
                 .entry(&self.with.name)
-                .expect("parsed headername is always valid")
                 .or_insert_with(|| self.with.value.clone());
 
             Reply_(resp)

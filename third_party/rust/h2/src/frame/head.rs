@@ -1,6 +1,6 @@
 use super::StreamId;
 
-use bytes::{BufMut};
+use bytes::BufMut;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Head {
@@ -30,9 +30,9 @@ pub enum Kind {
 impl Head {
     pub fn new(kind: Kind, flag: u8, stream_id: StreamId) -> Head {
         Head {
-            kind: kind,
-            flag: flag,
-            stream_id: stream_id,
+            kind,
+            flag,
+            stream_id,
         }
     }
 
@@ -66,10 +66,10 @@ impl Head {
     pub fn encode<T: BufMut>(&self, payload_len: usize, dst: &mut T) {
         debug_assert!(self.encode_len() <= dst.remaining_mut());
 
-        dst.put_uint_be(payload_len as u64, 3);
+        dst.put_uint(payload_len as u64, 3);
         dst.put_u8(self.kind as u8);
         dst.put_u8(self.flag);
-        dst.put_u32_be(self.stream_id.into());
+        dst.put_u32(self.stream_id.into());
     }
 }
 

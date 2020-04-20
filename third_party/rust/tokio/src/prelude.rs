@@ -1,3 +1,5 @@
+#![cfg(not(loom))]
+
 //! A "prelude" for users of the `tokio` crate.
 //!
 //! This prelude is similar to the standard library's prelude in that you'll
@@ -5,50 +7,15 @@
 //! library's prelude you'll have to do so manually:
 //!
 //! ```
+//! # #![allow(warnings)]
 //! use tokio::prelude::*;
 //! ```
 //!
 //! The prelude may grow over time as additional items see ubiquitous use.
 
-pub use tokio_io::{
-    AsyncRead,
-    AsyncWrite,
-};
+pub use crate::io::{self, AsyncBufRead, AsyncRead, AsyncWrite};
 
-pub use util::{
-    FutureExt,
-    StreamExt,
-};
-
-pub use ::std::io::{
-    Read,
-    Write,
-};
-
-pub use futures::{
-    Future,
-    future,
-    Stream,
-    stream,
-    Sink,
-    IntoFuture,
-    Async,
-    AsyncSink,
-    Poll,
-    task,
-};
-
-#[cfg(feature = "async-await-preview")]
-#[doc(inline)]
-pub use tokio_async_await::{
-    io::{
-        AsyncReadExt,
-        AsyncWriteExt,
-    },
-    sink::{
-        SinkExt,
-    },
-    stream::{
-        StreamExt as StreamAsyncExt,
-    },
-};
+cfg_io_util! {
+    #[doc(no_inline)]
+    pub use crate::io::{AsyncBufReadExt as _, AsyncReadExt as _, AsyncSeekExt as _, AsyncWriteExt as _};
+}

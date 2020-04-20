@@ -1,97 +1,52 @@
-extern crate env_logger;
-extern crate futures;
-extern crate h2;
-extern crate http;
-extern crate tokio_core;
-
 use h2::client;
-use h2::RecvStream;
+use http::{HeaderMap, Request};
 
-use futures::*;
-use http::*;
+use std::error::Error;
 
-use tokio_core::net::TcpStream;
-use tokio_core::reactor;
+use tokio::net::TcpStream;
 
-struct Process {
-    body: RecvStream,
-    trailers: bool,
-}
-
-impl Future for Process {
-    type Item = ();
-    type Error = h2::Error;
-
-    fn poll(&mut self) -> Poll<(), h2::Error> {
-        loop {
-            if self.trailers {
-                let trailers = try_ready!(self.body.poll_trailers());
-
-                println!("GOT TRAILERS: {:?}", trailers);
-
-                return Ok(().into());
-            } else {
-                match try_ready!(self.body.poll()) {
-                    Some(chunk) => {
-                        println!("GOT CHUNK = {:?}", chunk);
-                    },
-                    None => {
-                        self.trailers = true;
-                    },
-                }
-            }
-        }
-    }
-}
-
-pub fn main() {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn Error>> {
     let _ = env_logger::try_init();
 
-    let mut core = reactor::Core::new().unwrap();
-    let handle = core.handle();
+    let tcp = TcpStream::connect("127.0.0.1:5928").await?;
+    let (mut client, h2) = client::handshake(tcp).await?;
 
-    let tcp = TcpStream::connect(&"127.0.0.1:5928".parse().unwrap(), &handle);
+    println!("sending request");
 
-    let tcp = tcp.then(|res| {
-        let tcp = res.unwrap();
-        client::handshake(tcp)
-    }).then(|res| {
-            let (mut client, h2) = res.unwrap();
+    let request = Request::builder()
+        .uri("https://http2.akamai.com/")
+        .body(())
+        .unwrap();
 
-            println!("sending request");
+    let mut trailers = HeaderMap::new();
+    trailers.insert("zomg", "hello".parse().unwrap());
 
-            let request = Request::builder()
-                .uri("https://http2.akamai.com/")
-                .body(())
-                .unwrap();
+    let (response, mut stream) = client.send_request(request, false).unwrap();
 
-            let mut trailers = HeaderMap::new();
-            trailers.insert("zomg", "hello".parse().unwrap());
+    // send trailers
+    stream.send_trailers(trailers).unwrap();
 
-            let (response, mut stream) = client.send_request(request, false).unwrap();
+    // Spawn a task to run the conn...
+    tokio::spawn(async move {
+        if let Err(e) = h2.await {
+            println!("GOT ERR={:?}", e);
+        }
+    });
 
-            // send trailers
-            stream.send_trailers(trailers).unwrap();
+    let response = response.await?;
+    println!("GOT RESPONSE: {:?}", response);
 
-            // Spawn a task to run the conn...
-            handle.spawn(h2.map_err(|e| println!("GOT ERR={:?}", e)));
+    // Get the body
+    let mut body = response.into_body();
 
-            response
-                .and_then(|response| {
-                    println!("GOT RESPONSE: {:?}", response);
+    while let Some(chunk) = body.data().await {
+        println!("GOT CHUNK = {:?}", chunk?);
+    }
 
-                    // Get the body
-                    let (_, body) = response.into_parts();
+    if let Some(trailers) = body.trailers().await? {
+        println!("GOT TRAILERS: {:?}", trailers);
+    }
 
-                    Process {
-                        body,
-                        trailers: false,
-                    }
-                })
-                .map_err(|e| {
-                    println!("GOT ERR={:?}", e);
-                })
-        });
-
-    core.run(tcp).unwrap();
+    Ok(())
 }

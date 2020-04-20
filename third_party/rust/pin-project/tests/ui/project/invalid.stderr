@@ -1,0 +1,11 @@
+error: unexpected token: (foo)
+  --> $DIR/invalid.rs:12:14
+   |
+12 |     #[project(foo)] //~ ERROR unexpected token
+   |              ^^^^^
+
+error: duplicate #[project] attribute
+  --> $DIR/invalid.rs:20:5
+   |
+20 |     #[project] //~ ERROR duplicate #[project] attribute
+   |     ^^^^^^^^^^

@@ -4,9 +4,9 @@ use fnv::FnvHasher;
 use http::header;
 use http::method::Method;
 
-use std::{cmp, mem, usize};
 use std::collections::VecDeque;
 use std::hash::{Hash, Hasher};
+use std::{cmp, mem, usize};
 
 /// HPACK encoder table
 #[derive(Debug)]
@@ -54,7 +54,7 @@ struct Pos {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct HashValue(usize);
 
-const MAX_SIZE: usize = (1 << 16);
+const MAX_SIZE: usize = 1 << 16;
 const DYN_OFFSET: usize = 62;
 
 macro_rules! probe_loop {
@@ -80,7 +80,7 @@ impl Table {
                 slots: VecDeque::new(),
                 inserted: 0,
                 size: 0,
-                max_size: max_size,
+                max_size,
             }
         } else {
             let capacity = cmp::max(to_raw_capacity(capacity).next_power_of_two(), 8);
@@ -91,7 +91,7 @@ impl Table {
                 slots: VecDeque::with_capacity(usable_capacity(capacity)),
                 inserted: 0,
                 size: 0,
-                max_size: max_size,
+                max_size,
             }
         }
     }
@@ -125,7 +125,7 @@ impl Table {
             Indexed(idx, ..) => idx,
             Name(idx, ..) => idx,
             Inserted(idx) => idx + DYN_OFFSET,
-            InsertedValue(idx, _) => idx,
+            InsertedValue(_name_idx, slot_idx) => slot_idx + DYN_OFFSET,
             NotIndexed(_) => panic!("cannot resolve index"),
         }
     }
@@ -140,6 +140,7 @@ impl Table {
             // Right now, if this is true, the header name is always in the
             // static table. At some point in the future, this might not be true
             // and this logic will need to be updated.
+            debug_assert!(statik.is_some(), "skip_value_index requires a static name",);
             return Index::new(statik, header);
         }
 
@@ -191,7 +192,7 @@ impl Table {
                     return self.index_vacant(header, hash, dist, probe, statik);
                 } else if pos.hash == hash && self.slots[slot_idx].header.name() == header.name() {
                     // Matching name, check values
-                    return self.index_occupied(header, hash, pos.index);
+                    return self.index_occupied(header, hash, pos.index, statik.map(|(n, _)| n));
                 }
             } else {
                 return self.index_vacant(header, hash, dist, probe, statik);
@@ -201,7 +202,13 @@ impl Table {
         });
     }
 
-    fn index_occupied(&mut self, header: Header, hash: HashValue, mut index: usize) -> Index {
+    fn index_occupied(
+        &mut self,
+        header: Header,
+        hash: HashValue,
+        mut index: usize,
+        statik: Option<usize>,
+    ) -> Index {
         debug_assert!(self.assert_valid_state("top"));
 
         // There already is a match for the given header name. Check if a value
@@ -222,6 +229,8 @@ impl Table {
             }
 
             if header.is_sensitive() {
+                // Should we assert this?
+                // debug_assert!(statik.is_none());
                 return Index::Name(real_idx + DYN_OFFSET, header);
             }
 
@@ -245,7 +254,12 @@ impl Table {
 
             // Even if the previous header was evicted, we can still reference
             // it when inserting the new one...
-            return Index::InsertedValue(real_idx + DYN_OFFSET, 0);
+            return if let Some(n) = statik {
+                // If name is in static table, use it instead
+                Index::InsertedValue(n, 0)
+            } else {
+                Index::InsertedValue(real_idx + DYN_OFFSET, 0)
+            };
         }
     }
 
@@ -296,7 +310,7 @@ impl Table {
             &mut self.indices[probe],
             Some(Pos {
                 index: pos_idx,
-                hash: hash,
+                hash,
             }),
         );
 
@@ -327,8 +341,8 @@ impl Table {
         self.inserted = self.inserted.wrapping_add(1);
 
         self.slots.push_front(Slot {
-            hash: hash,
-            header: header,
+            hash,
+            header,
             next: None,
         });
     }
@@ -517,89 +531,89 @@ impl Table {
     #[cfg(test)]
     fn assert_valid_state(&self, _msg: &'static str) -> bool {
         /*
-        // Checks that the internal map structure is valid
-        //
-        // Ensure all hash codes in indices match the associated slot
-        for pos in &self.indices {
-            if let Some(pos) = *pos {
-                let real_idx = pos.index.wrapping_add(self.inserted);
-
-                if real_idx.wrapping_add(1) != 0 {
-                    assert!(real_idx < self.slots.len(),
-                            "out of index; real={}; len={}, msg={}",
-                            real_idx, self.slots.len(), msg);
-
-                    assert_eq!(pos.hash, self.slots[real_idx].hash,
-                               "index hash does not match slot; msg={}", msg);
-                }
-            }
-        }
-
-        // Every index is only available once
-        for i in 0..self.indices.len() {
-            if self.indices[i].is_none() {
-                continue;
-            }
-
-            for j in i+1..self.indices.len() {
-                assert_ne!(self.indices[i], self.indices[j],
-                            "duplicate indices; msg={}", msg);
-            }
-        }
-
-        for (index, slot) in self.slots.iter().enumerate() {
-            let mut indexed = None;
-
-            // First, see if the slot is indexed
-            for (i, pos) in self.indices.iter().enumerate() {
+            // Checks that the internal map structure is valid
+            //
+            // Ensure all hash codes in indices match the associated slot
+            for pos in &self.indices {
                 if let Some(pos) = *pos {
                     let real_idx = pos.index.wrapping_add(self.inserted);
-                    if real_idx == index {
-                        indexed = Some(i);
-                        // Already know that there is no dup, so break
-                        break;
+
+                    if real_idx.wrapping_add(1) != 0 {
+                        assert!(real_idx < self.slots.len(),
+                                "out of index; real={}; len={}, msg={}",
+                                real_idx, self.slots.len(), msg);
+
+                        assert_eq!(pos.hash, self.slots[real_idx].hash,
+                                   "index hash does not match slot; msg={}", msg);
                     }
                 }
             }
 
-            if let Some(actual) = indexed {
-                // Ensure that it is accessible..
-                let desired = desired_pos(self.mask, slot.hash);
-                let mut probe = desired;
-                let mut dist = 0;
+            // Every index is only available once
+            for i in 0..self.indices.len() {
+                if self.indices[i].is_none() {
+                    continue;
+                }
 
-                probe_loop!(probe < self.indices.len(), {
-                    assert!(self.indices[probe].is_some(),
-                            "unexpected empty slot; probe={}; hash={:?}; msg={}",
-                            probe, slot.hash, msg);
-
-                    let pos = self.indices[probe].unwrap();
-
-                    let their_dist = probe_distance(self.mask, pos.hash, probe);
-                    let real_idx = pos.index.wrapping_add(self.inserted);
-
-                    if real_idx == index {
-                        break;
-                    }
-
-                    assert!(dist <= their_dist,
-                            "could not find entry; actual={}; desired={};" +
-                            "probe={}, dist={}; their_dist={}; index={}; msg={}",
-                            actual, desired, probe, dist, their_dist,
-                            index.wrapping_sub(self.inserted), msg);
-
-                    dist += 1;
-                });
-            } else {
-                // There is exactly one next link
-                let cnt = self.slots.iter().map(|s| s.next)
-                    .filter(|n| *n == Some(index.wrapping_sub(self.inserted)))
-                    .count();
-
-                assert_eq!(1, cnt, "more than one node pointing here; msg={}", msg);
+                for j in i+1..self.indices.len() {
+                    assert_ne!(self.indices[i], self.indices[j],
+                                "duplicate indices; msg={}", msg);
+                }
             }
-        }
-    */
+
+            for (index, slot) in self.slots.iter().enumerate() {
+                let mut indexed = None;
+
+                // First, see if the slot is indexed
+                for (i, pos) in self.indices.iter().enumerate() {
+                    if let Some(pos) = *pos {
+                        let real_idx = pos.index.wrapping_add(self.inserted);
+                        if real_idx == index {
+                            indexed = Some(i);
+                            // Already know that there is no dup, so break
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(actual) = indexed {
+                    // Ensure that it is accessible..
+                    let desired = desired_pos(self.mask, slot.hash);
+                    let mut probe = desired;
+                    let mut dist = 0;
+
+                    probe_loop!(probe < self.indices.len(), {
+                        assert!(self.indices[probe].is_some(),
+                                "unexpected empty slot; probe={}; hash={:?}; msg={}",
+                                probe, slot.hash, msg);
+
+                        let pos = self.indices[probe].unwrap();
+
+                        let their_dist = probe_distance(self.mask, pos.hash, probe);
+                        let real_idx = pos.index.wrapping_add(self.inserted);
+
+                        if real_idx == index {
+                            break;
+                        }
+
+                        assert!(dist <= their_dist,
+                                "could not find entry; actual={}; desired={};" +
+                                "probe={}, dist={}; their_dist={}; index={}; msg={}",
+                                actual, desired, probe, dist, their_dist,
+                                index.wrapping_sub(self.inserted), msg);
+
+                        dist += 1;
+                    });
+                } else {
+                    // There is exactly one next link
+                    let cnt = self.slots.iter().map(|s| s.next)
+                        .filter(|n| *n == Some(index.wrapping_sub(self.inserted)))
+                        .count();
+
+                    assert_eq!(1, cnt, "more than one node pointing here; msg={}", msg);
+                }
+            }
+        */
 
         // TODO: Ensure linked lists are correct: no cycles, etc...
 
@@ -667,11 +681,13 @@ fn index_static(header: &Header) -> Option<(usize, bool)> {
             ref value,
         } => match *name {
             header::ACCEPT_CHARSET => Some((15, false)),
-            header::ACCEPT_ENCODING => if value == "gzip, deflate" {
-                Some((16, true))
-            } else {
-                Some((16, false))
-            },
+            header::ACCEPT_ENCODING => {
+                if value == "gzip, deflate" {
+                    Some((16, true))
+                } else {
+                    Some((16, false))
+                }
+            }
             header::ACCEPT_LANGUAGE => Some((17, false)),
             header::ACCEPT_RANGES => Some((18, false)),
             header::ACCEPT => Some((19, false)),

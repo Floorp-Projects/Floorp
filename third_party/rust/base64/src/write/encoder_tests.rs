@@ -1,13 +1,11 @@
-extern crate rand;
-
 use super::EncoderWriter;
-use tests::random_config;
-use {encode_config, encode_config_buf, STANDARD_NO_PAD, URL_SAFE};
+use crate::tests::random_config;
+use crate::{encode_config, encode_config_buf, STANDARD_NO_PAD, URL_SAFE};
 
 use std::io::{Cursor, Write};
 use std::{cmp, io, str};
 
-use self::rand::Rng;
+use rand::Rng;
 
 #[test]
 fn encode_three_bytes() {
@@ -209,7 +207,8 @@ fn write_2_partials_to_exactly_complete_chunk_encodes_complete_chunk() {
 }
 
 #[test]
-fn write_partial_then_enough_to_complete_chunk_but_not_complete_another_chunk_encodes_complete_chunk_without_consuming_remaining() {
+fn write_partial_then_enough_to_complete_chunk_but_not_complete_another_chunk_encodes_complete_chunk_without_consuming_remaining(
+) {
     let mut c = Cursor::new(Vec::new());
     {
         let mut enc = EncoderWriter::new(&mut c, STANDARD_NO_PAD);
@@ -245,7 +244,8 @@ fn write_partial_then_enough_to_complete_chunk_and_another_chunk_encodes_complet
 }
 
 #[test]
-fn write_partial_then_enough_to_complete_chunk_and_another_chunk_and_another_partial_chunk_encodes_only_complete_chunks() {
+fn write_partial_then_enough_to_complete_chunk_and_another_chunk_and_another_partial_chunk_encodes_only_complete_chunks(
+) {
     let mut c = Cursor::new(Vec::new());
     {
         let mut enc = EncoderWriter::new(&mut c, STANDARD_NO_PAD);
@@ -360,7 +360,8 @@ fn retrying_writes_that_error_with_interrupted_works() {
                 retry_interrupted_write_all(
                     &mut stream_encoder,
                     &orig_data[bytes_consumed..bytes_consumed + input_len],
-                ).unwrap();
+                )
+                .unwrap();
 
                 bytes_consumed += input_len;
             }
@@ -411,7 +412,7 @@ fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_
                 w: &mut stream_encoded,
                 rng: &mut partial_rng,
                 full_input_fraction: 0.1,
-                no_interrupt_fraction: 0.1
+                no_interrupt_fraction: 0.1,
             };
 
             let mut stream_encoder = EncoderWriter::new(&mut partial_writer, config);
@@ -420,17 +421,20 @@ fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_
                 // use at most medium-length inputs to exercise retry logic more aggressively
                 let input_len: usize = cmp::min(rng.gen_range(0, 100), orig_len - bytes_consumed);
 
-                let res = stream_encoder.write(&orig_data[bytes_consumed..bytes_consumed + input_len]);
+                let res =
+                    stream_encoder.write(&orig_data[bytes_consumed..bytes_consumed + input_len]);
 
                 // retry on interrupt
                 match res {
                     Ok(len) => bytes_consumed += len,
                     Err(e) => match e.kind() {
                         io::ErrorKind::Interrupted => continue,
-                        _ => { panic!("should not see other errors"); }
+                        _ => {
+                            panic!("should not see other errors");
+                        }
                     },
                 }
-            };
+            }
 
             stream_encoder.finish().unwrap();
 
@@ -440,7 +444,6 @@ fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_
         assert_eq!(normal_encoded, str::from_utf8(&stream_encoded).unwrap());
     }
 }
-
 
 /// Retry writes until all the data is written or an error that isn't Interrupted is returned.
 fn retry_interrupted_write_all<W: Write>(w: &mut W, buf: &[u8]) -> io::Result<()> {
@@ -453,7 +456,7 @@ fn retry_interrupted_write_all<W: Write>(w: &mut W, buf: &[u8]) -> io::Result<()
             Ok(len) => bytes_consumed += len,
             Err(e) => match e.kind() {
                 io::ErrorKind::Interrupted => continue,
-                _ => { return Err(e) }
+                _ => return Err(e),
             },
         }
     }
@@ -540,12 +543,12 @@ struct PartialInterruptingWriter<'a, W: 'a + Write, R: 'a + Rng> {
     /// In [0, 1]. If a random number in [0, 1] is  `<= threshold`, `write()` will write all its
     /// input. Otherwise, it will write a random substring
     full_input_fraction: f64,
-    no_interrupt_fraction: f64
+    no_interrupt_fraction: f64,
 }
 
 impl<'a, W: Write, R: Rng> Write for PartialInterruptingWriter<'a, W, R> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        if self.rng.gen_range(0.0, 1.0) > self.no_interrupt_fraction{
+        if self.rng.gen_range(0.0, 1.0) > self.no_interrupt_fraction {
             return Err(io::Error::new(io::ErrorKind::Interrupted, "interrupted"));
         }
 
@@ -554,7 +557,8 @@ impl<'a, W: Write, R: Rng> Write for PartialInterruptingWriter<'a, W, R> {
             self.w.write(buf)
         } else {
             // only use a prefix of it
-            self.w.write(&buf[0..(self.rng.gen_range(0, buf.len() - 1))])
+            self.w
+                .write(&buf[0..(self.rng.gen_range(0, buf.len() - 1))])
         }
     }
 

@@ -21,8 +21,13 @@ use super::SecWebsocketKey;
 ///
 /// let sec_accept = SecWebsocketAccept::from(sec_key);
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Header)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SecWebsocketAccept(::HeaderValue);
+
+derive_header! {
+    SecWebsocketAccept(_),
+    name: SEC_WEBSOCKET_ACCEPT
+}
 
 impl From<SecWebsocketKey> for SecWebsocketAccept {
     fn from(key: SecWebsocketKey) -> SecWebsocketAccept {
@@ -36,16 +41,15 @@ fn sign(key: &[u8]) -> SecWebsocketAccept {
     sha1.input(&b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"[..]);
     let b64 = Bytes::from(base64::encode(&sha1.result()));
 
-    let val = ::HeaderValue::from_shared(b64)
-        .expect("base64 is a valid value");
+    let val = ::HeaderValue::from_maybe_shared(b64).expect("base64 is a valid value");
 
     SecWebsocketAccept(val)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::{test_decode, test_encode};
     use super::*;
-    use super::super::{test_encode, test_decode};
 
     #[test]
     fn key_to_accept() {
@@ -54,6 +58,9 @@ mod tests {
         let accept = SecWebsocketAccept::from(key);
         let headers = test_encode(accept);
 
-        assert_eq!(headers["sec-websocket-accept"], "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+        assert_eq!(
+            headers["sec-websocket-accept"],
+            "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+        );
     }
 }

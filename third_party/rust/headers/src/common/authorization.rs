@@ -3,8 +3,8 @@
 use base64;
 use bytes::Bytes;
 
-use {HeaderValue};
 use util::HeaderValueString;
+use HeaderValue;
 
 /// `Authorization` header, defined in [RFC7235](https://tools.ietf.org/html/rfc7235#section-4.2)
 ///
@@ -43,16 +43,13 @@ impl Authorization<Basic> {
         let colon_pos = username.len();
         let decoded = format!("{}:{}", username, password);
 
-        Authorization(Basic {
-            decoded,
-            colon_pos,
-        })
+        Authorization(Basic { decoded, colon_pos })
     }
 }
 
 impl Authorization<Bearer> {
     /// Try to create a `Bearer` authorization header.
-    pub fn bearer(token: &str) -> Result<Self, InvalidBearerToken>  {
+    pub fn bearer(token: &str) -> Result<Self, InvalidBearerToken> {
         HeaderValueString::from_string(format!("Bearer {}", token))
             .map(|val| Authorization(Bearer(val)))
             .ok_or_else(|| InvalidBearerToken { _inner: () })
@@ -71,9 +68,9 @@ impl<C: Credentials> ::Header for Authorization<C> {
                 let slice = val.as_bytes();
                 if slice.starts_with(C::SCHEME.as_bytes())
                     && slice.len() > C::SCHEME.len()
-                    && slice[C::SCHEME.len()] == b' ' {
-                    C::decode(val)
-                        .map(Authorization)
+                    && slice[C::SCHEME.len()] == b' '
+                {
+                    C::decode(val).map(Authorization)
                 } else {
                     None
                 }
@@ -151,10 +148,7 @@ impl Credentials for Basic {
 
         let colon_pos = decoded.find(':')?;
 
-        Some(Basic {
-            decoded,
-            colon_pos,
-        })
+        Some(Basic { decoded, colon_pos })
     }
 
     fn encode(&self) -> HeaderValue {
@@ -162,8 +156,7 @@ impl Credentials for Basic {
         base64::encode_config_buf(&self.decoded, base64::STANDARD, &mut encoded);
 
         let bytes = Bytes::from(encoded);
-        HeaderValue::from_shared(bytes)
-            .expect("base64 encoding is always a valid HeaderValue")
+        HeaderValue::from_maybe_shared(bytes).expect("base64 encoding is always a valid HeaderValue")
     }
 }
 
@@ -174,7 +167,7 @@ pub struct Bearer(HeaderValueString);
 impl Bearer {
     /// View the token part as a `&str`.
     pub fn token(&self) -> &str {
-        &self.0.as_str()["Bearer ".len() ..]
+        &self.0.as_str()["Bearer ".len()..]
     }
 }
 
@@ -188,9 +181,7 @@ impl Credentials for Bearer {
             value,
         );
 
-        HeaderValueString::from_val(value)
-            .ok()
-            .map(Bearer)
+        HeaderValueString::from_val(value).ok().map(Bearer)
     }
 
     fn encode(&self) -> HeaderValue {
@@ -200,13 +191,12 @@ impl Credentials for Bearer {
 
 error_type!(InvalidBearerToken);
 
-
 #[cfg(test)]
 mod tests {
-    use ::HeaderMapExt;
-    use http::header::HeaderMap;
-    use super::{Authorization, Basic, Bearer};
     use super::super::{test_decode, test_encode};
+    use super::{Authorization, Basic, Bearer};
+    use http::header::HeaderMap;
+    use HeaderMapExt;
 
     #[test]
     fn basic_encode() {
@@ -232,15 +222,13 @@ mod tests {
         let auth = Authorization::basic("Aladdin", "");
         let headers = test_encode(auth);
 
-        assert_eq!(
-            headers["authorization"],
-            "Basic QWxhZGRpbjo=",
-        );
+        assert_eq!(headers["authorization"], "Basic QWxhZGRpbjo=",);
     }
 
     #[test]
     fn basic_decode() {
-        let auth: Authorization<Basic> = test_decode(&["Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="]).unwrap();
+        let auth: Authorization<Basic> =
+            test_decode(&["Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="]).unwrap();
         assert_eq!(auth.0.username(), "Aladdin");
         assert_eq!(auth.0.password(), "open sesame");
     }
@@ -258,10 +246,7 @@ mod tests {
 
         let headers = test_encode(auth);
 
-        assert_eq!(
-            headers["authorization"],
-            "Bearer fpKL54jvWmEGVoRdCNjG",
-        );
+        assert_eq!(headers["authorization"], "Bearer fpKL54jvWmEGVoRdCNjG",);
     }
 
     #[test]

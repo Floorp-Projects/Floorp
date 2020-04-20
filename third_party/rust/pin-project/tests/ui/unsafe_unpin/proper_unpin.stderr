@@ -1,0 +1,63 @@
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:35:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+35 |     is_unpin::<Blah<PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `Blah<std::marker::PhantomPinned, ()>`
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `pin_project::__private::Wrapper<'_, Blah<std::marker::PhantomPinned, ()>>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Blah<std::marker::PhantomPinned, ()>`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:37:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+37 |     is_unpin::<Blah<PhantomPinned, PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `Blah<std::marker::PhantomPinned, std::marker::PhantomPinned>`
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `pin_project::__private::Wrapper<'_, Blah<std::marker::PhantomPinned, std::marker::PhantomPinned>>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Blah<std::marker::PhantomPinned, std::marker::PhantomPinned>`
+
+error[E0277]: the trait bound `TrivialBounds: pin_project::UnsafeUnpin` is not satisfied
+  --> $DIR/proper_unpin.rs:39:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+39 |     is_unpin::<TrivialBounds>(); //~ ERROR E0277
+   |                ^^^^^^^^^^^^^ the trait `pin_project::UnsafeUnpin` is not implemented for `TrivialBounds`
+   |
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `pin_project::__private::Wrapper<'_, TrivialBounds>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `TrivialBounds`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:41:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+41 |     is_unpin::<OverlappingLifetimeNames<'_, PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `OverlappingLifetimeNames<'_, std::marker::PhantomPinned, ()>`
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `pin_project::__private::Wrapper<'_, OverlappingLifetimeNames<'_, std::marker::PhantomPinned, ()>>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `OverlappingLifetimeNames<'_, std::marker::PhantomPinned, ()>`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:42:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+42 |     is_unpin::<OverlappingLifetimeNames<'_, (), PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `OverlappingLifetimeNames<'_, (), std::marker::PhantomPinned>`
+   = note: required because of the requirements on the impl of `pin_project::UnsafeUnpin` for `pin_project::__private::Wrapper<'_, OverlappingLifetimeNames<'_, (), std::marker::PhantomPinned>>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `OverlappingLifetimeNames<'_, (), std::marker::PhantomPinned>`

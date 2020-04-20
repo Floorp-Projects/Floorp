@@ -1,7 +1,9 @@
-use bytes::{BufMut, BytesMut};
-use frame::{Error, Frame, FrameSize, Head, Kind, StreamId};
+use std::fmt;
 
-#[derive(Debug, Clone, Default, Eq, PartialEq)]
+use crate::frame::{util, Error, Frame, FrameSize, Head, Kind, StreamId};
+use bytes::{BufMut, BytesMut};
+
+#[derive(Clone, Default, Eq, PartialEq)]
 pub struct Settings {
     flags: SettingsFlags,
     // Fields
@@ -27,7 +29,7 @@ pub enum Setting {
     MaxHeaderListSize(u32),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Default)]
 pub struct SettingsFlags(u8);
 
 const ACK: u8 = 0x1;
@@ -108,7 +110,7 @@ impl Settings {
     pub fn load(head: Head, payload: &[u8]) -> Result<Settings, Error> {
         use self::Setting::*;
 
-        debug_assert_eq!(head.kind(), ::frame::Kind::Settings);
+        debug_assert_eq!(head.kind(), crate::frame::Kind::Settings);
 
         if !head.stream_id().is_zero() {
             return Err(Error::InvalidStreamId);
@@ -119,7 +121,7 @@ impl Settings {
 
         if flag.is_ack() {
             // Ensure that the payload is empty
-            if payload.len() > 0 {
+            if !payload.is_empty() {
                 return Err(Error::InvalidPayloadLength);
             }
 
@@ -129,7 +131,7 @@ impl Settings {
 
         // Ensure the payload length is correct, each setting is 6 bytes long.
         if payload.len() % 6 != 0 {
-            debug!("invalid settings payload length; len={:?}", payload.len());
+            log::debug!("invalid settings payload length; len={:?}", payload.len());
             return Err(Error::InvalidPayloadAckSettings);
         }
 
@@ -140,34 +142,36 @@ impl Settings {
             match Setting::load(raw) {
                 Some(HeaderTableSize(val)) => {
                     settings.header_table_size = Some(val);
-                },
+                }
                 Some(EnablePush(val)) => match val {
                     0 | 1 => {
                         settings.enable_push = Some(val);
-                    },
+                    }
                     _ => {
                         return Err(Error::InvalidSettingValue);
-                    },
+                    }
                 },
                 Some(MaxConcurrentStreams(val)) => {
                     settings.max_concurrent_streams = Some(val);
-                },
-                Some(InitialWindowSize(val)) => if val as usize > MAX_INITIAL_WINDOW_SIZE {
-                    return Err(Error::InvalidSettingValue);
-                } else {
-                    settings.initial_window_size = Some(val);
-                },
+                }
+                Some(InitialWindowSize(val)) => {
+                    if val as usize > MAX_INITIAL_WINDOW_SIZE {
+                        return Err(Error::InvalidSettingValue);
+                    } else {
+                        settings.initial_window_size = Some(val);
+                    }
+                }
                 Some(MaxFrameSize(val)) => {
                     if val < DEFAULT_MAX_FRAME_SIZE || val > MAX_MAX_FRAME_SIZE {
                         return Err(Error::InvalidSettingValue);
                     } else {
                         settings.max_frame_size = Some(val);
                     }
-                },
+                }
                 Some(MaxHeaderListSize(val)) => {
                     settings.max_header_list_size = Some(val);
-                },
-                None => {},
+                }
+                None => {}
             }
         }
 
@@ -185,13 +189,13 @@ impl Settings {
         let head = Head::new(Kind::Settings, self.flags.into(), StreamId::zero());
         let payload_len = self.payload_len();
 
-        trace!("encoding SETTINGS; len={}", payload_len);
+        log::trace!("encoding SETTINGS; len={}", payload_len);
 
         head.encode(payload_len, dst);
 
         // Encode the settings
         self.for_each(|setting| {
-            trace!("encoding setting; val={:?}", setting);
+            log::trace!("encoding setting; val={:?}", setting);
             setting.encode(dst)
         });
     }
@@ -231,6 +235,36 @@ impl<T> From<Settings> for Frame<T> {
     }
 }
 
+impl fmt::Debug for Settings {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut builder = f.debug_struct("Settings");
+        builder.field("flags", &self.flags);
+
+        self.for_each(|setting| match setting {
+            Setting::EnablePush(v) => {
+                builder.field("enable_push", &v);
+            }
+            Setting::HeaderTableSize(v) => {
+                builder.field("header_table_size", &v);
+            }
+            Setting::InitialWindowSize(v) => {
+                builder.field("initial_window_size", &v);
+            }
+            Setting::MaxConcurrentStreams(v) => {
+                builder.field("max_concurrent_streams", &v);
+            }
+            Setting::MaxFrameSize(v) => {
+                builder.field("max_frame_size", &v);
+            }
+            Setting::MaxHeaderListSize(v) => {
+                builder.field("max_header_list_size", &v);
+            }
+        });
+
+        builder.finish()
+    }
+}
+
 // ===== impl Setting =====
 
 impl Setting {
@@ -262,7 +296,7 @@ impl Setting {
     ///
     /// If given a buffer shorter than 6 bytes, the function will panic.
     fn load(raw: &[u8]) -> Option<Setting> {
-        let id: u16 = ((raw[0] as u16) << 8) | (raw[1] as u16);
+        let id: u16 = (u16::from(raw[0]) << 8) | u16::from(raw[1]);
         let val: u32 = unpack_octets_4!(raw, 2, u32);
 
         Setting::from_id(id, val)
@@ -280,8 +314,8 @@ impl Setting {
             MaxHeaderListSize(v) => (6, v),
         };
 
-        dst.put_u16_be(kind);
-        dst.put_u32_be(val);
+        dst.put_u16(kind);
+        dst.put_u32(val);
     }
 }
 
@@ -308,5 +342,13 @@ impl SettingsFlags {
 impl From<SettingsFlags> for u8 {
     fn from(src: SettingsFlags) -> u8 {
         src.0
+    }
+}
+
+impl fmt::Debug for SettingsFlags {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        util::debug_flags(f, self.0)
+            .flag_if(self.is_ack(), "ACK")
+            .finish()
     }
 }

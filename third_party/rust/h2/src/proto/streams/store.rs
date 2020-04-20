@@ -11,9 +11,8 @@ use std::ops;
 /// Storage for streams
 #[derive(Debug)]
 pub(super) struct Store {
-    slab: slab::Slab<(StoreId, Stream)>,
-    ids: IndexMap<StreamId, (usize, StoreId)>,
-    counter: StoreId,
+    slab: slab::Slab<Stream>,
+    ids: IndexMap<StreamId, SlabIndex>,
 }
 
 /// "Pointer" to an entry in the store
@@ -25,11 +24,16 @@ pub(super) struct Ptr<'a> {
 /// References an entry in the store.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Key {
-    index: usize,
-    store_id: StoreId,
+    index: SlabIndex,
+    /// Keep the stream ID in the key as an ABA guard, since slab indices
+    /// could be re-used with a new stream.
+    stream_id: StreamId,
 }
 
-type StoreId = usize;
+// We can never have more than `StreamId::MAX` streams in the store,
+// so we can save a smaller index (u32 vs usize).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SlabIndex(u32);
 
 #[derive(Debug)]
 pub(super) struct Queue<N> {
@@ -62,13 +66,12 @@ pub(super) enum Entry<'a> {
 }
 
 pub(super) struct OccupiedEntry<'a> {
-    ids: indexmap::map::OccupiedEntry<'a, StreamId, (usize, StoreId)>,
+    ids: indexmap::map::OccupiedEntry<'a, StreamId, SlabIndex>,
 }
 
 pub(super) struct VacantEntry<'a> {
-    ids: indexmap::map::VacantEntry<'a, StreamId, (usize, StoreId)>,
-    slab: &'a mut slab::Slab<(StoreId, Stream)>,
-    counter: &'a mut usize,
+    ids: indexmap::map::VacantEntry<'a, StreamId, SlabIndex>,
+    slab: &'a mut slab::Slab<Stream>,
 }
 
 pub(super) trait Resolve {
@@ -82,35 +85,32 @@ impl Store {
         Store {
             slab: slab::Slab::new(),
             ids: IndexMap::new(),
-            counter: 0,
         }
     }
 
     pub fn find_mut(&mut self, id: &StreamId) -> Option<Ptr> {
-        let key = match self.ids.get(id) {
+        let index = match self.ids.get(id) {
             Some(key) => *key,
             None => return None,
         };
 
         Some(Ptr {
             key: Key {
-                index: key.0,
-                store_id: key.1,
+                index,
+                stream_id: *id,
             },
             store: self,
         })
     }
 
     pub fn insert(&mut self, id: StreamId, val: Stream) -> Ptr {
-        let store_id = self.counter;
-        self.counter = self.counter.wrapping_add(1);
-        let key = self.slab.insert((store_id, val));
-        assert!(self.ids.insert(id, (key, store_id)).is_none());
+        let index = SlabIndex(self.slab.insert(val) as u32);
+        assert!(self.ids.insert(id, index).is_none());
 
         Ptr {
             key: Key {
-                index: key,
-                store_id,
+                index,
+                stream_id: id,
             },
             store: self,
         }
@@ -120,13 +120,10 @@ impl Store {
         use self::indexmap::map::Entry::*;
 
         match self.ids.entry(id) {
-            Occupied(e) => Entry::Occupied(OccupiedEntry {
-                ids: e,
-            }),
+            Occupied(e) => Entry::Occupied(OccupiedEntry { ids: e }),
             Vacant(e) => Entry::Vacant(VacantEntry {
                 ids: e,
                 slab: &mut self.slab,
-                counter: &mut self.counter,
             }),
         }
     }
@@ -140,13 +137,13 @@ impl Store {
 
         while i < len {
             // Get the key by index, this makes the borrow checker happy
-            let key = *self.ids.get_index(i).unwrap().1;
+            let (stream_id, index) = {
+                let entry = self.ids.get_index(i).unwrap();
+                (*entry.0, *entry.1)
+            };
 
             f(Ptr {
-                key: Key {
-                    index: key.0,
-                    store_id: key.1,
-                },
+                key: Key { index, stream_id },
                 store: self,
             })?;
 
@@ -167,10 +164,7 @@ impl Store {
 
 impl Resolve for Store {
     fn resolve(&mut self, key: Key) -> Ptr {
-        Ptr {
-            key: key,
-            store: self,
-        }
+        Ptr { key, store: self }
     }
 }
 
@@ -178,21 +172,28 @@ impl ops::Index<Key> for Store {
     type Output = Stream;
 
     fn index(&self, key: Key) -> &Self::Output {
-        let slot = self.slab.index(key.index);
-        assert_eq!(slot.0, key.store_id);
-        &slot.1
+        self.slab
+            .get(key.index.0 as usize)
+            .filter(|s| s.id == key.stream_id)
+            .unwrap_or_else(|| {
+                panic!("dangling store key for stream_id={:?}", key.stream_id);
+            })
     }
 }
 
 impl ops::IndexMut<Key> for Store {
     fn index_mut(&mut self, key: Key) -> &mut Self::Output {
-        let slot = self.slab.index_mut(key.index);
-        assert_eq!(slot.0, key.store_id);
-        &mut slot.1
+        self.slab
+            .get_mut(key.index.0 as usize)
+            .filter(|s| s.id == key.stream_id)
+            .unwrap_or_else(|| {
+                panic!("dangling store key for stream_id={:?}", key.stream_id);
+            })
     }
 }
 
 impl Store {
+    #[cfg(feature = "unstable")]
     pub fn num_active_streams(&self) -> usize {
         self.ids.len()
     }
@@ -237,10 +238,10 @@ where
     ///
     /// If the stream is already contained by the list, return `false`.
     pub fn push(&mut self, stream: &mut store::Ptr) -> bool {
-        trace!("Queue::push");
+        log::trace!("Queue::push");
 
         if N::is_queued(stream) {
-            trace!(" -> already queued");
+            log::trace!(" -> already queued");
             return false;
         }
 
@@ -252,7 +253,7 @@ where
         // Queue the stream
         match self.indices {
             Some(ref mut idxs) => {
-                trace!(" -> existing entries");
+                log::trace!(" -> existing entries");
 
                 // Update the current tail node to point to `stream`
                 let key = stream.key();
@@ -260,14 +261,14 @@ where
 
                 // Update the tail pointer
                 idxs.tail = stream.key();
-            },
+            }
             None => {
-                trace!(" -> first entry");
+                log::trace!(" -> first entry");
                 self.indices = Some(store::Indices {
                     head: stream.key(),
                     tail: stream.key(),
                 });
-            },
+            }
         }
 
         true
@@ -328,10 +329,12 @@ impl<'a> Ptr<'a> {
     /// Remove the stream from the store
     pub fn remove(self) -> StreamId {
         // The stream must have been unlinked before this point
-        debug_assert!(!self.store.ids.contains_key(&self.id));
+        debug_assert!(!self.store.ids.contains_key(&self.key.stream_id));
 
         // Remove the stream state
-        self.store.slab.remove(self.key.index).1.id
+        let stream = self.store.slab.remove(self.key.index.0 as usize);
+        assert_eq!(stream.id, self.key.stream_id);
+        stream.id
     }
 
     /// Remove the StreamId -> stream state association.
@@ -339,15 +342,15 @@ impl<'a> Ptr<'a> {
     /// This will effectively remove the stream as far as the H2 protocol is
     /// concerned.
     pub fn unlink(&mut self) {
-        let id = self.id;
-        self.store.ids.remove(&id);
+        let id = self.key.stream_id;
+        self.store.ids.swap_remove(&id);
     }
 }
 
 impl<'a> Resolve for Ptr<'a> {
     fn resolve(&mut self, key: Key) -> Ptr {
         Ptr {
-            key: key,
+            key,
             store: &mut *self.store,
         }
     }
@@ -357,13 +360,13 @@ impl<'a> ops::Deref for Ptr<'a> {
     type Target = Stream;
 
     fn deref(&self) -> &Stream {
-        &self.store.slab[self.key.index].1
+        &self.store[self.key]
     }
 }
 
 impl<'a> ops::DerefMut for Ptr<'a> {
     fn deref_mut(&mut self) -> &mut Stream {
-        &mut self.store.slab[self.key.index].1
+        &mut self.store[self.key]
     }
 }
 
@@ -377,11 +380,9 @@ impl<'a> fmt::Debug for Ptr<'a> {
 
 impl<'a> OccupiedEntry<'a> {
     pub fn key(&self) -> Key {
-        let tup = self.ids.get();
-        Key {
-            index: tup.0,
-            store_id: tup.1,
-        }
+        let stream_id = *self.ids.key();
+        let index = *self.ids.get();
+        Key { index, stream_id }
     }
 }
 
@@ -390,16 +391,12 @@ impl<'a> OccupiedEntry<'a> {
 impl<'a> VacantEntry<'a> {
     pub fn insert(self, value: Stream) -> Key {
         // Insert the value in the slab
-        let store_id = *self.counter;
-        *self.counter = store_id.wrapping_add(1);
-        let index = self.slab.insert((store_id, value));
+        let stream_id = value.id;
+        let index = SlabIndex(self.slab.insert(value) as u32);
 
         // Insert the handle in the ID map
-        self.ids.insert((index, store_id));
+        self.ids.insert(index);
 
-        Key {
-            index,
-            store_id,
-        }
+        Key { index, stream_id }
     }
 }

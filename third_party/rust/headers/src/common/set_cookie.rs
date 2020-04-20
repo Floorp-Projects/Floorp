@@ -1,4 +1,3 @@
-
 /// `Set-Cookie` header, defined [RFC6265](http://tools.ietf.org/html/rfc6265#section-4.1)
 ///
 /// The Set-Cookie HTTP response header is used to send cookies from the
@@ -61,9 +60,7 @@ impl ::Header for SetCookie {
     }
 
     fn decode<'i, I: Iterator<Item = &'i ::HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
-        let vec = values
-            .cloned()
-            .collect::<Vec<_>>();
+        let vec = values.cloned().collect::<Vec<_>>();
 
         if !vec.is_empty() {
             Ok(SetCookie(vec))
@@ -79,8 +76,8 @@ impl ::Header for SetCookie {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{test_decode, test_encode};
+    use super::*;
 
     #[test]
     fn decode() {

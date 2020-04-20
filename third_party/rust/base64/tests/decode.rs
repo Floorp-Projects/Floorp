@@ -4,7 +4,7 @@ use base64::*;
 
 mod helpers;
 
-use helpers::*;
+use self::helpers::*;
 
 #[test]
 fn decode_rfc4648_0() {

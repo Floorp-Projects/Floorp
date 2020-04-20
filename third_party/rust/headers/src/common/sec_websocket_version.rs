@@ -34,8 +34,8 @@ impl ::Header for SecWebsocketVersion {
 
 #[cfg(test)]
 mod tests {
-    use super::SecWebsocketVersion;
     use super::super::{test_decode, test_encode};
+    use super::SecWebsocketVersion;
 
     #[test]
     fn decode_v13() {
@@ -47,10 +47,7 @@ mod tests {
 
     #[test]
     fn decode_fail() {
-        assert_eq!(
-            test_decode::<SecWebsocketVersion>(&["1"]),
-            None,
-        );
+        assert_eq!(test_decode::<SecWebsocketVersion>(&["1"]), None,);
     }
 
     #[test]

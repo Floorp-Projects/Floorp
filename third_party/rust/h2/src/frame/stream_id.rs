@@ -1,4 +1,3 @@
-use byteorder::{BigEndian, ByteOrder};
 use std::u32;
 
 /// A stream identifier, as described in [Section 5.1.1] of RFC 7540.
@@ -29,7 +28,9 @@ impl StreamId {
     /// Parse the stream ID
     #[inline]
     pub fn parse(buf: &[u8]) -> (StreamId, bool) {
-        let unpacked = BigEndian::read_u32(buf);
+        let mut ubuf = [0; 4];
+        ubuf.copy_from_slice(&buf[0..4]);
+        let unpacked = u32::from_be_bytes(ubuf);
         let flag = unpacked & STREAM_ID_MASK == STREAM_ID_MASK;
 
         // Now clear the most significant bit, as that is reserved and MUST be

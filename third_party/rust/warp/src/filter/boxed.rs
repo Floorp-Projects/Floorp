@@ -1,10 +1,12 @@
 use std::fmt;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
-use futures::Future;
+use futures::TryFutureExt;
 
-use super::{Filter, FilterBase, Tuple};
-use reject::Rejection;
+use super::{Filter, FilterBase, Internal, Tuple};
+use crate::reject::Rejection;
 
 /// A type representing a boxed `Filter` trait object.
 ///
@@ -30,7 +32,7 @@ pub struct BoxedFilter<T: Tuple> {
         dyn Filter<
                 Extract = T,
                 Error = Rejection,
-                Future = Box<dyn Future<Item = T, Error = Rejection> + Send>,
+                Future = Pin<Box<dyn Future<Output = Result<T, Rejection>> + Send>>,
             > + Send
             + Sync,
     >,
@@ -44,7 +46,7 @@ impl<T: Tuple + Send> BoxedFilter<T> {
     {
         BoxedFilter {
             filter: Arc::new(BoxingFilter {
-                filter: filter.map_err(Into::into),
+                filter: filter.map_err(super::Internal, Into::into),
             }),
         }
     }
@@ -72,10 +74,10 @@ fn _assert_send() {
 impl<T: Tuple + Send> FilterBase for BoxedFilter<T> {
     type Extract = T;
     type Error = Rejection;
-    type Future = Box<dyn Future<Item = T, Error = Rejection> + Send>;
+    type Future = Pin<Box<dyn Future<Output = Result<T, Rejection>> + Send>>;
 
-    fn filter(&self) -> Self::Future {
-        self.filter.filter()
+    fn filter(&self, _: Internal) -> Self::Future {
+        self.filter.filter(Internal)
     }
 }
 
@@ -90,9 +92,9 @@ where
 {
     type Extract = F::Extract;
     type Error = F::Error;
-    type Future = Box<dyn Future<Item = Self::Extract, Error = Self::Error> + Send>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Extract, Self::Error>> + Send>>;
 
-    fn filter(&self) -> Self::Future {
-        Box::new(self.filter.filter())
+    fn filter(&self, _: Internal) -> Self::Future {
+        Box::pin(self.filter.filter(Internal).into_future())
     }
 }

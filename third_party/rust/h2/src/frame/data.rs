@@ -1,5 +1,5 @@
+use crate::frame::{util, Error, Frame, Head, Kind, StreamId};
 use bytes::{Buf, BufMut, Bytes};
-use frame::{util, Error, Frame, Head, Kind, StreamId};
 
 use std::fmt;
 
@@ -29,7 +29,7 @@ impl<T> Data<T> {
         assert!(!stream_id.is_zero());
 
         Data {
-            stream_id: stream_id,
+            stream_id,
             data: payload,
             flags: DataFlags::default(),
             pad_len: None,
@@ -61,6 +61,18 @@ impl<T> Data<T> {
         } else {
             self.flags.unset_end_stream();
         }
+    }
+
+    /// Returns whther the `PADDED` flag is set on this frame.
+    #[cfg(feature = "unstable")]
+    pub fn is_padded(&self) -> bool {
+        self.flags.is_padded()
+    }
+
+    /// Sets the value for the `PADDED` flag on this frame.
+    #[cfg(feature = "unstable")]
+    pub fn set_padded(&mut self) {
+        self.flags.set_padded();
     }
 
     /// Returns a reference to this frame's payload.
@@ -123,8 +135,8 @@ impl Data<Bytes> {
         Ok(Data {
             stream_id: head.stream_id(),
             data: payload,
-            flags: flags,
-            pad_len: pad_len,
+            flags,
+            pad_len,
         })
     }
 }
@@ -153,12 +165,16 @@ impl<T> From<Data<T>> for Frame<T> {
 
 impl<T> fmt::Debug for Data<T> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("Data")
-            .field("stream_id", &self.stream_id)
-            .field("flags", &self.flags)
-            .field("pad_len", &self.pad_len)
-            // `data` purposefully excluded
-            .finish()
+        let mut f = fmt.debug_struct("Data");
+        f.field("stream_id", &self.stream_id);
+        if !self.flags.is_empty() {
+            f.field("flags", &self.flags);
+        }
+        if let Some(ref pad_len) = self.pad_len {
+            f.field("pad_len", pad_len);
+        }
+        // `data` bytes purposefully excluded
+        f.finish()
     }
 }
 
@@ -167,6 +183,10 @@ impl<T> fmt::Debug for Data<T> {
 impl DataFlags {
     fn load(bits: u8) -> DataFlags {
         DataFlags(bits & ALL)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0 == 0
     }
 
     fn is_end_stream(&self) -> bool {
@@ -184,6 +204,11 @@ impl DataFlags {
     fn is_padded(&self) -> bool {
         self.0 & PADDED == PADDED
     }
+
+    #[cfg(feature = "unstable")]
+    fn set_padded(&mut self) {
+        self.0 |= PADDED
+    }
 }
 
 impl Default for DataFlags {
@@ -200,16 +225,9 @@ impl From<DataFlags> for u8 {
 
 impl fmt::Debug for DataFlags {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let mut f = fmt.debug_struct("DataFlags");
-
-        if self.is_end_stream() {
-            f.field("end_stream", &true);
-        }
-
-        if self.is_padded() {
-            f.field("padded", &true);
-        }
-
-        f.finish()
+        util::debug_flags(fmt, self.0)
+            .flag_if(self.is_end_stream(), "END_STREAM")
+            .flag_if(self.is_padded(), "PADDED")
+            .finish()
     }
 }

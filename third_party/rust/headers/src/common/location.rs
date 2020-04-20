@@ -1,4 +1,4 @@
-use ::HeaderValue;
+use HeaderValue;
 
 /// `Location` header, defined in
 /// [RFC7231](http://tools.ietf.org/html/rfc7231#section-7.1.2)
@@ -20,14 +20,18 @@ use ::HeaderValue;
 ///
 /// # Examples
 ///
-//TODO: make this a `Uri`?
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Location(HeaderValue);
+
+derive_header! {
+    Location(_),
+    name: LOCATION
+}
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::test_decode;
+    use super::*;
 
     #[test]
     fn absolute_uri() {
