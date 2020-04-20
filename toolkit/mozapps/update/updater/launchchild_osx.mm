@@ -66,9 +66,9 @@ void LaunchMacPostProcess(const char* aAppBundle) {
   }
 
   // The path must not traverse directories and it must be a relative path.
-  if ([exeRelPath rangeOfString:@".."].location != NSNotFound ||
-      [exeRelPath rangeOfString:@"./"].location != NSNotFound ||
-      [exeRelPath rangeOfString:@"/"].location == 0) {
+  if ([exeRelPath isEqualToString:@".."] || [exeRelPath hasPrefix:@"/"] ||
+      [exeRelPath hasPrefix:@"../"] || [exeRelPath hasSuffix:@"/.."] ||
+      [exeRelPath containsString:@"/../"]) {
     return;
   }
 
