@@ -6,8 +6,9 @@
 
 #include "nsISupports.idl"
 #include "nsIRequest.idl"
+#include "imgIContainer.idl"
 
-interface imgIContainer;
+//interface imgIContainer;
 interface imgINotificationObserver;
 interface nsIURI;
 interface nsIPrincipal;
@@ -180,10 +181,18 @@ interface imgIRequest : nsIRequest
    * request.
    *
    * @param aFlags Flags of the FLAG_* variety.
-   * @return True there is a surface that satisfies the request and it is
-   *         fully decoded, else false.
+   * @return DECODE_SURFACE_AVAILABLE if is a surface that satisfies the
+   *         request and it is fully decoded.
+   *         DECODE_REQUESTED if we requested a decode.
+   *         DECODE_REQUEST_FAILED if we failed to request a decode. This means
+   *         that either there is an error in the image or we cannot allocate a
+   *         surface that big.
    */
-  [noscript, notxpcom] boolean requestDecodeWithResult(in uint32_t aFlags);
+  [noscript, notxpcom] imgIContainer_DecodeResult requestDecodeWithResult(in uint32_t aFlags);
+/*%{C++
+  DecodeResult RequestDecodeWithResult(uint32_t aFlags);
+%}*/
+
 
   /**
    * Locks an image. If the image does not exist yet, locks it once it becomes

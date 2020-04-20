@@ -213,8 +213,8 @@ bool ImageWrapper::StartDecodingWithResult(uint32_t aFlags,
   return mInnerImage->StartDecodingWithResult(aFlags, aWhichFrame);
 }
 
-bool ImageWrapper::RequestDecodeWithResult(uint32_t aFlags,
-                                           uint32_t aWhichFrame) {
+imgIContainer::DecodeResult ImageWrapper::RequestDecodeWithResult(
+    uint32_t aFlags, uint32_t aWhichFrame) {
   return mInnerImage->RequestDecodeWithResult(aFlags, aWhichFrame);
 }
 

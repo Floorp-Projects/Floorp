@@ -337,10 +337,11 @@ class RasterImage final : public ImageResource,
    * It's an error to call Decode() before this image's intrinsic size is
    * available. A metadata decode must successfully complete first.
    *
-   * Returns true of the decode was run synchronously.
+   * aOutRanSync is set to true if the decode was run synchronously.
+   * aOutFailed is set to true if failed to start a decode.
    */
-  bool Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
-              PlaybackType aPlaybackType);
+  void Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
+              PlaybackType aPlaybackType, bool& aOutRanSync, bool& aOutFailed);
 
   /**
    * Creates and runs a metadata decoder, either synchronously or
@@ -528,9 +529,9 @@ class RasterImage final : public ImageResource,
 
   bool IsOpaque();
 
-  DrawableSurface RequestDecodeForSizeInternal(const UnorientedIntSize& aSize,
-                                               uint32_t aFlags,
-                                               uint32_t aWhichFrame);
+  LookupResult RequestDecodeForSizeInternal(const UnorientedIntSize& aSize,
+                                            uint32_t aFlags,
+                                            uint32_t aWhichFrame);
 
  protected:
   explicit RasterImage(nsIURI* aURI = nullptr);
