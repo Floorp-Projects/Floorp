@@ -8028,11 +8028,11 @@ end:
   !define DT_NOFULLWIDTHCHARBREAK 0x00080000
 !endif
 
+!define /ifndef GWL_STYLE -16
+!define /ifndef GWL_EXSTYLE -20
+
 !ifndef WS_EX_NOINHERITLAYOUT
   !define WS_EX_NOINHERITLAYOUT 0x00100000
-!endif
-!ifndef WS_EX_LAYOUTRTL
-  !define WS_EX_LAYOUTRTL 0x00400000
 !endif
 
 !ifndef PBS_MARQUEE
@@ -8260,6 +8260,23 @@ end:
 !define RemoveStyle "!insertmacro _RemoveStyle"
 
 /**
+ * Adds a single extended style to a control.
+ *
+ * _HANDLE  the handle of the control
+ * _EXSTYLE the extended style to add
+ */
+!macro _AddExStyle _HANDLE _EXSTYLE
+  Push $0
+
+  System::Call 'user32::GetWindowLongW(i ${_HANDLE}, i ${GWL_EXSTYLE}) i .r0'
+  IntOp $0 $0 | ${_EXSTYLE}
+  System::Call 'user32::SetWindowLongW(i ${_HANDLE}, i ${GWL_EXSTYLE}, i r0)'
+
+  Pop $0
+!macroend
+!define AddExStyle "!insertmacro _AddExStyle"
+
+/**
  * Removes a single extended style from a control.
  *
  * _HANDLE  the handle of the control
@@ -8276,6 +8293,25 @@ end:
   Pop $0
 !macroend
 !define RemoveExStyle "!insertmacro _RemoveExStyle"
+
+/**
+ * Set the necessary styles to configure the given window as right-to-left
+ *
+ * _HANDLE the handle of the control to configure
+ */
+!macro _MakeWindowRTL _HANDLE
+  !define /ifndef WS_EX_RIGHT 0x00001000
+  !define /ifndef WS_EX_LEFT 0x00000000
+  !define /ifndef WS_EX_RTLREADING 0x00002000
+  !define /ifndef WS_EX_LTRREADING 0x00000000
+  !define /ifndef WS_EX_LAYOUTRTL 0x00400000
+
+  ${AddExStyle} ${_HANDLE} ${WS_EX_LAYOUTRTL}
+  ${RemoveExStyle} ${_HANDLE} ${WS_EX_RTLREADING}
+  ${RemoveExStyle} ${_HANDLE} ${WS_EX_RIGHT}
+  ${AddExStyle} ${_HANDLE} ${WS_EX_LEFT}|${WS_EX_LTRREADING}
+!macroend
+!define MakeWindowRTL "!insertmacro _MakeWindowRTL"
 
 /**
  * Gets the extent of the specified text in pixels for sizing a control.
