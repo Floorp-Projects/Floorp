@@ -474,34 +474,61 @@ static void MozCrashWarningReporter(JSContext*, JSErrorReport*) {
   MOZ_CRASH("Why is someone touching JSAPI without an AutoJSAPI?");
 }
 
+JSHolderMap::Entry::Entry() : Entry(nullptr, nullptr, nullptr) {}
+
+JSHolderMap::Entry::Entry(void* aHolder, nsScriptObjectTracer* aTracer,
+                          JS::Zone* aZone)
+    : mHolder(aHolder),
+      mTracer(aTracer)
+#ifdef DEBUG
+      ,
+      mZone(aZone)
+#endif
+{
+}
+
 JSHolderMap::JSHolderMap() : mJSHolderMap(256) {}
 
 template <typename F>
 inline void JSHolderMap::ForEach(F&& f) {
-  for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
-    Entry* entry = &iter.Get();
-
-    // If the entry has been cleared, remove it and shrink the vector.
-    if (!entry->mHolder && !RemoveEntry(entry)) {
-      break;  // Removed the last entry.
+  ForEach(mAnyZoneJSHolders, f, nullptr);
+  for (auto i = mPerZoneJSHolders.modIter(); !i.done(); i.next()) {
+    EntryVector* holders = i.get().value().get();
+    ForEach(*holders, f, i.get().key());
+    if (holders->IsEmpty()) {
+      i.remove();
     }
-
-    f(iter.Get().mHolder, iter.Get().mTracer);
   }
 }
 
-bool JSHolderMap::RemoveEntry(Entry* aEntry) {
+template <typename F>
+inline void JSHolderMap::ForEach(EntryVector& aJSHolders, const F& f,
+                                 JS::Zone* aZone) {
+  for (auto iter = aJSHolders.Iter(); !iter.Done(); iter.Next()) {
+    Entry* entry = &iter.Get();
+
+    // If the entry has been cleared, remove it and shrink the vector.
+    if (!entry->mHolder && !RemoveEntry(aJSHolders, entry)) {
+      break;  // Removed the last entry.
+    }
+
+    MOZ_ASSERT(entry->mZone == aZone);
+    f(entry->mHolder, entry->mTracer, aZone);
+  }
+}
+
+bool JSHolderMap::RemoveEntry(EntryVector& aJSHolders, Entry* aEntry) {
   MOZ_ASSERT(aEntry);
   MOZ_ASSERT(!aEntry->mHolder);
 
   // Remove all dead entries from the end of the vector.
-  while (!mJSHolders.GetLast().mHolder && &mJSHolders.GetLast() != aEntry) {
-    mJSHolders.PopLast();
+  while (!aJSHolders.GetLast().mHolder && &aJSHolders.GetLast() != aEntry) {
+    aJSHolders.PopLast();
   }
 
   // Swap the element we want to remove with the last one and update the hash
   // table.
-  Entry* lastEntry = &mJSHolders.GetLast();
+  Entry* lastEntry = &aJSHolders.GetLast();
   if (aEntry != lastEntry) {
     MOZ_ASSERT(lastEntry->mHolder);
     *aEntry = *lastEntry;
@@ -509,7 +536,7 @@ bool JSHolderMap::RemoveEntry(Entry* aEntry) {
     MOZ_ALWAYS_TRUE(mJSHolderMap.put(aEntry->mHolder, aEntry));
   }
 
-  mJSHolders.PopLast();
+  aJSHolders.PopLast();
 
   // Return whether aEntry is still in the vector.
   return aEntry != lastEntry;
@@ -525,9 +552,9 @@ inline nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
     return nullptr;
   }
 
-  Entry* info = ptr->value();
-  MOZ_ASSERT(info->mHolder == aHolder);
-  return info->mTracer;
+  Entry* entry = ptr->value();
+  MOZ_ASSERT(entry->mHolder == aHolder);
+  return entry->mTracer;
 }
 
 inline nsScriptObjectTracer* JSHolderMap::GetAndRemove(void* aHolder) {
@@ -538,34 +565,59 @@ inline nsScriptObjectTracer* JSHolderMap::GetAndRemove(void* aHolder) {
     return nullptr;
   }
 
-  Entry* info = ptr->value();
-  MOZ_ASSERT(info->mHolder == aHolder);
-  nsScriptObjectTracer* tracer = info->mTracer;
+  Entry* entry = ptr->value();
+  MOZ_ASSERT(entry->mHolder == aHolder);
+  nsScriptObjectTracer* tracer = entry->mTracer;
 
-  // Clear the entry's contents. It will be removed during iteration.
-  info->mHolder = nullptr;
-  info->mTracer = nullptr;
+  // Clear the entry's contents. It will be removed during the next iteration.
+  *entry = Entry();
 
   mJSHolderMap.remove(ptr);
 
   return tracer;
 }
 
-inline void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer) {
+inline void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer,
+                             JS::Zone* aZone) {
   MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(aTracer);
+
+  // Don't associate multi-zone holders with a zone, even if one is supplied.
+  if (aTracer->IsMultiZoneJSHolder()) {
+    aZone = nullptr;
+  }
 
   auto ptr = mJSHolderMap.lookupForAdd(aHolder);
   if (ptr) {
-    Entry* info = ptr->value();
-    MOZ_ASSERT(info->mHolder == aHolder);
-    MOZ_ASSERT(info->mTracer == aTracer,
+    Entry* entry = ptr->value();
+#ifdef DEBUG
+    MOZ_ASSERT(entry->mHolder == aHolder);
+    MOZ_ASSERT(entry->mTracer == aTracer,
                "Don't call HoldJSObjects in superclass ctors");
-    info->mTracer = aTracer;
+    if (aZone) {
+      if (entry->mZone) {
+        MOZ_ASSERT(entry->mZone == aZone);
+      } else {
+        entry->mZone = aZone;
+      }
+    }
+#endif
+    entry->mTracer = aTracer;
     return;
   }
 
-  mJSHolders.InfallibleAppend(Entry{aHolder, aTracer});
-  MOZ_ALWAYS_TRUE(mJSHolderMap.add(ptr, aHolder, &mJSHolders.GetLast()));
+  EntryVector* vector = &mAnyZoneJSHolders;
+  if (aZone) {
+    auto ptr = mPerZoneJSHolders.lookupForAdd(aZone);
+    if (!ptr) {
+      MOZ_ALWAYS_TRUE(
+          mPerZoneJSHolders.add(ptr, aZone, MakeUnique<EntryVector>()));
+    }
+    vector = ptr->value().get();
+  }
+
+  vector->InfallibleAppend(Entry{aHolder, aTracer, aZone});
+  MOZ_ALWAYS_TRUE(mJSHolderMap.add(ptr, aHolder, &vector->GetLast()));
 }
 
 size_t JSHolderMap::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -573,8 +625,12 @@ size_t JSHolderMap::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
 
   // We're deliberately not measuring anything hanging off the entries in
   // mJSHolders.
-  n += mJSHolders.SizeOfExcludingThis(aMallocSizeOf);
   n += mJSHolderMap.shallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mAnyZoneJSHolders.SizeOfExcludingThis(aMallocSizeOf);
+  n += mPerZoneJSHolders.shallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto i = mPerZoneJSHolders.iter(); !i.done(); i.next()) {
+    n += i.get().value()->SizeOfExcludingThis(aMallocSizeOf);
+  }
 
   return n;
 }
@@ -694,9 +750,8 @@ size_t CycleCollectedJSRuntime::SizeOfExcludingThis(
 }
 
 void CycleCollectedJSRuntime::UnmarkSkippableJSHolders() {
-  mJSHolders.ForEach([](void* holder, nsScriptObjectTracer* tracer) {
-    tracer->CanSkip(holder, true);
-  });
+  mJSHolders.ForEach([](void* holder, nsScriptObjectTracer* tracer,
+                        JS::Zone* zone) { tracer->CanSkip(holder, true); });
 }
 
 void CycleCollectedJSRuntime::DescribeGCThing(
@@ -880,7 +935,8 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
 
-  mJSHolders.ForEach([&aCb](void* holder, nsScriptObjectTracer* tracer) {
+  mJSHolders.ForEach([&aCb](void* holder, nsScriptObjectTracer* tracer,
+                            JS::Zone* zone) {
     bool noteRoot = false;
     if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
       noteRoot = true;
@@ -1110,9 +1166,10 @@ void mozilla::TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer) {
 // JS::Zone.
 struct CheckZoneTracer : public TraceCallbacks {
   const char* mClassName;
-  mutable JS::Zone* mZone = nullptr;
+  mutable JS::Zone* mZone;
 
-  explicit CheckZoneTracer(const char* aClassName) : mClassName(aClassName) {}
+  explicit CheckZoneTracer(const char* aClassName, JS::Zone* aZone = nullptr)
+      : mClassName(aClassName), mZone(aZone) {}
 
   void checkZone(JS::Zone* aZone, const char* aName) const {
     if (!mZone) {
@@ -1206,8 +1263,9 @@ struct CheckZoneTracer : public TraceCallbacks {
 };
 
 static inline void CheckHolderIsSingleZone(
-    void* aHolder, nsCycleCollectionParticipant* aParticipant) {
-  CheckZoneTracer tracer(aParticipant->ClassName());
+    void* aHolder, nsCycleCollectionParticipant* aParticipant,
+    JS::Zone* aZone) {
+  CheckZoneTracer tracer(aParticipant->ClassName(), aZone);
   aParticipant->Trace(aHolder, tracer, nullptr);
 }
 
@@ -1230,23 +1288,24 @@ void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
   TraceAdditionalNativeGrayRoots(aTracer);
 
   bool checkSingleZoneHolders = ShouldCheckSingleZoneHolders();
-  mJSHolders.ForEach([aTracer, checkSingleZoneHolders](
-                         void* holder, nsScriptObjectTracer* tracer) {
+  mJSHolders.ForEach(
+      [aTracer, checkSingleZoneHolders](
+                         void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
-    if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
-      CheckHolderIsSingleZone(holder, tracer);
-    }
+        if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
+          CheckHolderIsSingleZone(holder, tracer, zone);
+        }
 #else
     Unused << checkSingleZoneHolders;
 #endif
-    tracer->Trace(holder, JsGcTracer(), aTracer);
-  });
+        tracer->Trace(holder, JsGcTracer(), aTracer);
+      });
 }
 
 void CycleCollectedJSRuntime::AddJSHolder(void* aHolder,
                                           nsScriptObjectTracer* aTracer,
                                           JS::Zone* aZone) {
-  mJSHolders.Put(aHolder, aTracer);
+  mJSHolders.Put(aHolder, aTracer, aZone);
 }
 
 struct ClearJSHolder : public TraceCallbacks {
