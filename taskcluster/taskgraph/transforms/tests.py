@@ -138,8 +138,8 @@ WINDOWS_WORKER_TYPES = {
 
 # os x worker types keyed by test-platform
 MACOSX_WORKER_TYPES = {
-    'macosx1014-64': 'releng-hardware/gecko-t-osx-1014',
-    'macosx1014-64-power': 'releng-hardware/gecko-t-osx-1014-power'
+    'macosx1014-64': 't-osx-1014',
+    'macosx1014-64-power': 't-osx-1014-power'
 }
 
 
