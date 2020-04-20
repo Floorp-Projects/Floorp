@@ -1213,8 +1213,6 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
   RefPtr<HTMLMediaElement> element;
   element.swap(mElement);
 
-  AbstractThread::AutoEnter context(element->AbstractMainThread());
-
   if (mLoadID != element->GetCurrentLoadID()) {
     // The channel has been cancelled before we had a chance to create
     // a decoder. Abort, don't dispatch an "error" event, as the new load
@@ -2863,8 +2861,6 @@ void HTMLMediaElement::UpdatePreloadAction() {
 }
 
 MediaResult HTMLMediaElement::LoadResource() {
-  AbstractThread::AutoEnter context(AbstractMainThread());
-
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
 
