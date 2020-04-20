@@ -57,6 +57,15 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
   setAffinityProvider(...args) {
     const { affinityProviderV2 } = this;
     if (affinityProviderV2 && affinityProviderV2.modelKeys) {
+      // A v2 provider is already set. This can happen when new stories come in
+      // and we need to update their scores.
+      // We can use the existing one, a fresh one is created after startup.
+      // Using the existing one might be a bit out of date,
+      // but it's fine for now. We can rely on restarts for updates.
+      // See bug 1629931 for improvements to this.
+      if (this.affinityProvider) {
+        return;
+      }
       // At this point we've determined we can successfully create a v2 personalization provider.
       this.affinityProvider = new PersonalityProvider(...args, {
         modelKeys: affinityProviderV2.modelKeys,
