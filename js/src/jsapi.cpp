@@ -1374,6 +1374,10 @@ JS_PUBLIC_API void JS::ClearKeptObjects(JSContext* cx) {
   }
 }
 
+JS_PUBLIC_API bool JS::ZoneIsCollecting(JS::Zone* zone) {
+  return zone->wasGCStarted();
+}
+
 JS_PUBLIC_API bool JS_AddWeakPointerZonesCallback(JSContext* cx,
                                                   JSWeakPointerZonesCallback cb,
                                                   void* data) {
