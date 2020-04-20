@@ -60,13 +60,11 @@ class ImageDocument final : public MediaDocument,
     return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
   }
   bool ImageIsResized() const { return mImageIsResized; }
-  already_AddRefed<imgIRequest> GetImageRequest(ErrorResult& aRv);
   // ShrinkToFit is called from xpidl methods and we don't have a good
   // way to mark those MOZ_CAN_RUN_SCRIPT yet.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void ShrinkToFit();
   void RestoreImage();
   void RestoreImageTo(int32_t aX, int32_t aY) { ScrollImageTo(aX, aY, true); }
-  void ToggleImageSize();
 
   virtual void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
 

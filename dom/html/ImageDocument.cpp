@@ -287,17 +287,6 @@ void ImageDocument::OnPageShow(bool aPersisted,
   MediaDocument::OnPageShow(aPersisted, aDispatchStartTarget, aOnlySystemGroup);
 }
 
-already_AddRefed<imgIRequest> ImageDocument::GetImageRequest(ErrorResult& aRv) {
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(mImageContent);
-  nsCOMPtr<imgIRequest> imageRequest;
-  if (imageLoader) {
-    aRv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                  getter_AddRefs(imageRequest));
-  }
-  return imageRequest.forget();
-}
-
 void ImageDocument::ShrinkToFit() {
   if (!mImageContent) {
     return;
@@ -409,18 +398,6 @@ void ImageDocument::RestoreImage() {
   mImageIsResized = false;
 
   UpdateTitleAndCharset();
-}
-
-void ImageDocument::ToggleImageSize() {
-  mShouldResize = true;
-  if (mImageIsResized) {
-    mShouldResize = false;
-    ResetZoomLevel();
-    RestoreImage();
-  } else if (ImageIsOverflowing()) {
-    ResetZoomLevel();
-    ShrinkToFit();
-  }
 }
 
 void ImageDocument::NotifyPossibleTitleChange(bool aBoundTitleElement) {
