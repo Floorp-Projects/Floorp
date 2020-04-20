@@ -1738,6 +1738,9 @@ class ClientAuthDataRunnable : public SyncRunnableBase {
         mSelectedCertificate(nullptr),
         mSelectedKey(nullptr) {}
 
+  mozilla::pkix::Result BuildChainForCertificate(
+      CERTCertificate* cert, UniqueCERTCertList& builtChain);
+
   // Take the selected certificate. Will be null if none was selected or if an
   // error prevented selecting one.
   UniqueCERTCertificate TakeSelectedCertificate() {
@@ -1755,6 +1758,7 @@ class ClientAuthDataRunnable : public SyncRunnableBase {
   nsNSSSocketInfo* const mSocketInfo;
   CERTCertificate* const mServerCert;
   nsTArray<nsTArray<uint8_t>> mCollectedCANames;
+  nsTArray<nsTArray<uint8_t>> mEnterpriseIntermediates;
   UniqueCERTCertificate mSelectedCertificate;
   UniqueSECKEYPrivateKey mSelectedKey;
 };
@@ -1840,11 +1844,20 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECFailure;
   }
 
-  // These are non-owning references.
   UniqueCERTCertificate selectedCertificate(
       runnable->TakeSelectedCertificate());
   UniqueSECKEYPrivateKey selectedKey(runnable->TakeSelectedKey());
   if (selectedCertificate && selectedKey) {
+    UniqueCERTCertList builtChain;
+    mozilla::pkix::Result result = runnable->BuildChainForCertificate(
+        selectedCertificate.get(), builtChain);
+    if (result == Success) {
+      info->SetClientCertChain(std::move(builtChain));
+    } else {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("[%p] couldn't determine chain for selected client cert: %d",
+               socket, static_cast<int>(result)));
+    }
     *pRetCert = selectedCertificate.release();
     *pRetKey = selectedKey.release();
     // Make joinConnection prohibit joining after we've sent a client cert
@@ -1865,12 +1878,12 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
  public:
   ClientAuthCertNonverifyingTrustDomain(
       nsTArray<nsTArray<uint8_t>>& collectedCANames,
-      nsTArray<nsTArray<uint8_t>> thirdPartyIntermediates)
+      nsTArray<nsTArray<uint8_t>>& thirdPartyIntermediates)
       : mCollectedCANames(collectedCANames),
 #ifdef MOZ_NEW_CERT_STORAGE
         mCertStorage(do_GetService(NS_CERT_STORAGE_CID)),
 #endif
-        mThirdPartyIntermediates(std::move(thirdPartyIntermediates)) {
+        mThirdPartyIntermediates(thirdPartyIntermediates) {
   }
 
   virtual mozilla::pkix::Result GetCertTrust(
@@ -1888,11 +1901,11 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
       /*optional*/ const Input* aiaExtension) override {
     return Success;
   }
+
   virtual mozilla::pkix::Result IsChainValid(
       const DERArray& certChain, Time time,
-      const CertPolicyId& requiredPolicy) override {
-    return Success;
-  }
+      const CertPolicyId& requiredPolicy) override;
+
   virtual mozilla::pkix::Result CheckSignatureDigestAlgorithm(
       DigestAlgorithm digestAlg, EndEntityOrCA endEntityOrCA,
       Time notBefore) override {
@@ -1933,12 +1946,15 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
     return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
   }
 
+  UniqueCERTCertList TakeBuiltChain() { return std::move(mBuiltChain); }
+
  private:
   nsTArray<nsTArray<uint8_t>>& mCollectedCANames;  // non-owning
 #ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> mCertStorage;
 #endif
-  nsTArray<nsTArray<uint8_t>> mThirdPartyIntermediates;
+  nsTArray<nsTArray<uint8_t>>& mThirdPartyIntermediates;  // non-owning
+  UniqueCERTCertList mBuiltChain;
 };
 
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::GetCertTrust(
@@ -2064,11 +2080,61 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
   return Success;
 }
 
+mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::IsChainValid(
+    const DERArray& certChain, Time, const CertPolicyId&) {
+  if (ConstructCERTCertListFromReversedDERArray(certChain, mBuiltChain) !=
+      SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  return Success;
+}
+
+mozilla::pkix::Result ClientAuthDataRunnable::BuildChainForCertificate(
+    CERTCertificate* cert, UniqueCERTCertList& builtChain) {
+  ClientAuthCertNonverifyingTrustDomain trustDomain(mCollectedCANames,
+                                                    mEnterpriseIntermediates);
+  Input certDER;
+  mozilla::pkix::Result result =
+      certDER.Init(cert->derCert.data, cert->derCert.len);
+  if (result != Success) {
+    return result;
+  }
+  mozilla::pkix::Result eeResult = BuildCertChain(
+      trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
+      KeyUsage::noParticularKeyUsageRequired, KeyPurposeId::anyExtendedKeyUsage,
+      CertPolicyId::anyPolicy, nullptr);
+  if (eeResult == Success) {
+    builtChain = trustDomain.TakeBuiltChain();
+    return Success;
+  }
+  mozilla::pkix::Result caResult = BuildCertChain(
+      trustDomain, certDER, Now(), EndEntityOrCA::MustBeCA,
+      KeyUsage::noParticularKeyUsageRequired, KeyPurposeId::anyExtendedKeyUsage,
+      CertPolicyId::anyPolicy, nullptr);
+  if (caResult == Success) {
+    builtChain = trustDomain.TakeBuiltChain();
+    return Success;
+  }
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("client cert non-validation returned %d %d\n",
+           static_cast<int>(eeResult), static_cast<int>(caResult)));
+  return eeResult;
+}
+
 void ClientAuthDataRunnable::RunOnTargetThread() {
   // We check the value of a pref in this runnable, so this runnable should only
   // be run on the main thread.
   MOZ_ASSERT(NS_IsMainThread());
   void* wincx = mSocketInfo;
+
+  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (NS_WARN_IF(!component)) {
+    return;
+  }
+  nsresult rv = component->GetEnterpriseIntermediates(mEnterpriseIntermediates);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   if (NS_WARN_IF(NS_FAILED(CheckForSmartCardChanges()))) {
     return;
@@ -2093,40 +2159,15 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     return;
   }
 
-  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
-  if (NS_WARN_IF(!component)) {
-    return;
-  }
-  nsTArray<nsTArray<uint8_t>> enterpriseIntermediates;
-  nsresult rv = component->GetEnterpriseIntermediates(enterpriseIntermediates);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  ClientAuthCertNonverifyingTrustDomain trustDomain(
-      mCollectedCANames, std::move(enterpriseIntermediates));
   CERTCertListNode* n = CERT_LIST_HEAD(certList);
   while (!CERT_LIST_END(n, certList)) {
-    Input certDER;
+    UniqueCERTCertList unusedBuiltChain;
     mozilla::pkix::Result result =
-        certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
+        BuildChainForCertificate(n->cert, unusedBuiltChain);
     if (result != Success) {
-      CERTCertListNode* toRemove = n;
-      n = CERT_LIST_NEXT(n);
-      CERT_RemoveCertListNode(toRemove);
-      continue;  // probably too big
-    }
-    mozilla::pkix::Result eeResult = BuildCertChain(
-        trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
-        KeyUsage::noParticularKeyUsageRequired,
-        KeyPurposeId::anyExtendedKeyUsage, CertPolicyId::anyPolicy, nullptr);
-    mozilla::pkix::Result caResult = BuildCertChain(
-        trustDomain, certDER, Now(), EndEntityOrCA::MustBeCA,
-        KeyUsage::noParticularKeyUsageRequired,
-        KeyPurposeId::anyExtendedKeyUsage, CertPolicyId::anyPolicy, nullptr);
-    if (eeResult != Success && caResult != Success) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("client cert non-validation returned %d %d\n",
-               static_cast<int>(eeResult), static_cast<int>(caResult)));
+              ("removing cert '%s' (result=%d)", n->cert->subjectName,
+               static_cast<int>(result)));
       CERTCertListNode* toRemove = n;
       n = CERT_LIST_NEXT(n);
       CERT_RemoveCertListNode(toRemove);
