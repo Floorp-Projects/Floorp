@@ -201,10 +201,5 @@ Isolate::InternalizeString(const Vector<const uint8_t>& str);
 template Handle<String>
 Isolate::InternalizeString(const Vector<const char16_t>& str);
 
-bool FLAG_trace_regexp_assembler = false;
-bool FLAG_trace_regexp_bytecodes = false;
-bool FLAG_trace_regexp_parser = false;
-bool FLAG_trace_regexp_peephole_optimization = false;
-
 }  // namespace internal
 }  // namespace v8

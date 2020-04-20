@@ -1189,10 +1189,9 @@ const bool FLAG_regexp_tier_up = true;
 // Debugging Flags
 //**************************************************
 
-extern bool FLAG_trace_regexp_assembler;
-extern bool FLAG_trace_regexp_bytecodes;
-extern bool FLAG_trace_regexp_parser;
-extern bool FLAG_trace_regexp_peephole_optimization;
+#define FLAG_trace_regexp_bytecodes js::jit::JitOptions.traceRegExpInterpreter
+#define FLAG_trace_regexp_parser js::jit::JitOptions.traceRegExpParser
+#define FLAG_trace_regexp_peephole_optimization js::jit::JitOptions.traceRegExpPeephole
 
 #define V8_USE_COMPUTED_GOTO 1
 #define COMPILING_IRREGEXP_FOR_EXTERNAL_EMBEDDER

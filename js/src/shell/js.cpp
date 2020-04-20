@@ -10746,6 +10746,21 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.nativeRegExp = false;
   }
 
+#ifdef ENABLE_NEW_REGEXP
+  if (op.getBoolOption("trace-regexp-parser")) {
+    jit::JitOptions.traceRegExpParser = true;
+  }
+  if (op.getBoolOption("trace-regexp-assembler")) {
+    jit::JitOptions.traceRegExpAssembler = true;
+  }
+  if (op.getBoolOption("trace-regexp-interpreter")) {
+    jit::JitOptions.traceRegExpInterpreter = true;
+  }
+  if (op.getBoolOption("trace-regexp-peephole")) {
+    jit::JitOptions.traceRegExpPeephole = true;
+  }
+#endif
+
 #ifdef NIGHTLY_BUILD
   if (op.getBoolOption("no-ti")) {
     jit::JitOptions.typeInference = false;
@@ -11322,6 +11337,13 @@ int main(int argc, char** argv, char** envp) {
           "Wait for COUNT invocations before compiling regexps to native code "
           "(default 10)",
           -1) ||
+      !op.addBoolOption('\0', "trace-regexp-parser", "Trace regexp parsing") ||
+      !op.addBoolOption('\0', "trace-regexp-assembler",
+                        "Trace regexp assembler") ||
+      !op.addBoolOption('\0', "trace-regexp-interpreter",
+                        "Trace regexp interpreter") ||
+      !op.addBoolOption('\0', "trace-regexp-peephole",
+                        "Trace regexp peephole optimization") ||
 #endif
       !op.addBoolOption('\0', "no-unboxed-objects",
                         "Disable creating unboxed plain objects") ||
