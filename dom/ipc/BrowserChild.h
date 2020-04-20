@@ -770,9 +770,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // call this during Init().
   void NotifyTabContextUpdated();
 
-  // Update the frameType on our docshell.
-  void UpdateFrameType();
-
   void ActorDestroy(ActorDestroyReason why) override;
 
   bool InitBrowserChildMessageManager();
