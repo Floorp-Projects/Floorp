@@ -106,9 +106,6 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD EqualsURI(nsIURI* aOtherURI, bool* _retval) override;
-  NS_IMETHOD EqualsForPermission(nsIPrincipal* other, bool aExactHost,
-                                 bool* _retval) final;
-  NS_IMETHOD EqualsURIForPermission(nsIURI* other, bool* _retval) final;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other,
                                        bool* _retval) final;
