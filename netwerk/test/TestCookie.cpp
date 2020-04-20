@@ -142,7 +142,11 @@ void GetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aSpec);
 
-  Unused << aCookieService->GetCookieString(uri, nullptr, aCookie);
+  RefPtr<BasePrincipal> principal =
+      BasePrincipal::CreateContentPrincipal(uri, OriginAttributes());
+  MOZ_ASSERT(principal);
+
+  Unused << aCookieService->GetCookieStringForPrincipal(principal, aCookie);
 }
 
 // some #defines for comparison rules

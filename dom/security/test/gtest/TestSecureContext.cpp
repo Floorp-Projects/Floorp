@@ -69,6 +69,7 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithContentPrincipal)
     nsAutoCString uri(uris[i].uri);
     rv = nsScriptSecurityManager::GetScriptSecurityManager()
              ->CreateContentPrincipalFromOrigin(uri, getter_AddRefs(prin));
+    ASSERT_EQ(rv, NS_OK);
     bool isPotentiallyTrustworthy = prin->GetIsOriginPotentiallyTrustworthy();
     ASSERT_EQ(isPotentiallyTrustworthy, uris[i].expectedResult);
   }
