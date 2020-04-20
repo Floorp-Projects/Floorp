@@ -64,7 +64,7 @@ async function runTest() {
 
   info("Check that the cookie has been correctly set.");
   await BrowserTestUtils.withNewTab(
-    TEST_ORIGIN1 + "getCookies.html",
+    TEST_ORIGIN1 + "getCookies.sjs",
     async function(browser) {
       await checkCookiePresent(browser);
     }

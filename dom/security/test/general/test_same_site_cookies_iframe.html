@@ -37,7 +37,7 @@ const NESTED_DATA_IFRAME_NAVIGATION = `
   data:text/html,
   <html>
   <body>
-    <a id="testlink" href="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.html"></a>
+    <a id="testlink" href="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.sjs"></a>
     <script type="application/javascript">
       let link = document.getElementById("testlink");
       link.click();
@@ -56,7 +56,7 @@ const NESTED_DATA_IFRAME_INCLUSION = `
       window.parent.postMessage({result: event.data.result}, '*');
     }
     <\/script>
-    <iframe src="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.html"></iframe>
+    <iframe src="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.sjs"></iframe>
   </body>
   </html>`;
 
