@@ -795,20 +795,22 @@ bool IonCacheIRCompiler::emitLoadValueResult() {
   MOZ_CRASH("Baseline-specific op");
 }
 
-bool IonCacheIRCompiler::emitLoadFixedSlotResult() {
+bool IonCacheIRCompiler::emitLoadFixedSlotResult(ObjOperandId objId,
+                                                 uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  int32_t offset = int32StubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  int32_t offset = int32StubField(offsetOffset);
   masm.loadTypedOrValue(Address(obj, offset), output);
   return true;
 }
 
-bool IonCacheIRCompiler::emitLoadDynamicSlotResult() {
+bool IonCacheIRCompiler::emitLoadDynamicSlotResult(ObjOperandId objId,
+                                                   uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  int32_t offset = int32StubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  int32_t offset = int32StubField(offsetOffset);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
