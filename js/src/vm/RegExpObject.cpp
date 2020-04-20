@@ -1116,7 +1116,7 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
   MOZ_ASSERT(kind() == RegExpShared::Kind::Unparsed);
   kind_ = RegExpShared::Kind::RegExp;
   pairCount_ = pairCount;
-  ticks_ = 10;  // TODO: add a jit option to control this threshold
+  ticks_ = jit::JitOptions.regexpWarmUpThreshold;
 }
 
 void RegExpShared::tierUpTick() {

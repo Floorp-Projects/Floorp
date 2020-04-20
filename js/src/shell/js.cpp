@@ -10706,6 +10706,13 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.baselineJitWarmUpThreshold = warmUpThreshold;
   }
 
+#ifdef ENABLE_NEW_REGEXP
+  warmUpThreshold = op.getIntOption("regexp-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.regexpWarmUpThreshold = warmUpThreshold;
+  }
+#endif
+
   if (op.getBoolOption("baseline-eager")) {
     jit::JitOptions.setEagerBaselineCompilation();
   }
@@ -11309,6 +11316,13 @@ int main(int argc, char** argv, char** envp) {
 
       !op.addBoolOption('\0', "no-native-regexp",
                         "Disable native regexp compilation") ||
+#ifdef ENABLE_NEW_REGEXP
+      !op.addIntOption(
+          '\0', "regexp-warmup-threshold", "COUNT",
+          "Wait for COUNT invocations before compiling regexps to native code "
+          "(default 10)",
+          -1) ||
+#endif
       !op.addBoolOption('\0', "no-unboxed-objects",
                         "Disable creating unboxed plain objects") ||
       !op.addBoolOption('\0', "enable-streams",
