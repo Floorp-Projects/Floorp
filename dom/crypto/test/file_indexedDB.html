@@ -76,7 +76,10 @@
 
     openDatabase()
       .then(retrieveKey).then(generateKey).then(storeKey)
-      .then(() => alert("ok")).catch(alert);
+      .then(() => parent.postMessage("ok", "*"))
+      .catch(error => {
+        parent.postMessage(String(error), "*");
+      });
   </script>
 </body>
 </html>
