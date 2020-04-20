@@ -2824,8 +2824,7 @@ class nsAsyncMessageToChild : public nsSameProcessAsyncMessageBase,
 nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                            const nsAString& aMessage,
                                            StructuredCloneData& aData,
-                                           JS::Handle<JSObject*> aCpows,
-                                           nsIPrincipal* aPrincipal) {
+                                           JS::Handle<JSObject*> aCpows) {
   auto* browserParent = GetBrowserParent();
   if (browserParent) {
     ClonedMessageData data;
@@ -2839,8 +2838,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
     if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
       return NS_ERROR_UNEXPECTED;
     }
-    if (browserParent->SendAsyncMessage(nsString(aMessage), cpows, aPrincipal,
-                                        data)) {
+    if (browserParent->SendAsyncMessage(nsString(aMessage), cpows, data)) {
       return NS_OK;
     } else {
       return NS_ERROR_UNEXPECTED;
@@ -2851,7 +2849,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
     JS::RootingContext* rcx = JS::RootingContext::get(aCx);
     RefPtr<nsAsyncMessageToChild> ev =
         new nsAsyncMessageToChild(rcx, aCpows, this);
-    nsresult rv = ev->Init(aMessage, aData, aPrincipal);
+    nsresult rv = ev->Init(aMessage, aData);
     if (NS_FAILED(rv)) {
       return rv;
     }
