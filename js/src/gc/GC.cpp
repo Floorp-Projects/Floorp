@@ -723,13 +723,17 @@ void ChunkPool::Iter::next() {
   current_ = current_->info.next;
 }
 
+inline bool GCRuntime::tooManyEmptyChunks(const AutoLockGC& lock) {
+  return emptyChunks(lock).count() > tunables.minEmptyChunkCount(lock);
+}
+
 ChunkPool GCRuntime::expireEmptyChunkPool(const AutoLockGC& lock) {
   MOZ_ASSERT(emptyChunks(lock).verify());
   MOZ_ASSERT(tunables.minEmptyChunkCount(lock) <=
              tunables.maxEmptyChunkCount());
 
   ChunkPool expired;
-  while (emptyChunks(lock).count() > tunables.minEmptyChunkCount(lock)) {
+  while (tooManyEmptyChunks(lock)) {
     Chunk* chunk = emptyChunks(lock).pop();
     prepareToFreeChunk(chunk->info);
     expired.push(chunk);
@@ -3154,14 +3158,19 @@ void GCRuntime::startDecommit() {
     // explicit Vector containing the Chunks we want to visit.
     MOZ_ASSERT(availableChunks(lock).verify());
     availableChunks(lock).sort();
-    for (ChunkPool::Iter iter(availableChunks(lock)); !iter.done();
-         iter.next()) {
-      if (!toDecommit.append(iter.get())) {
+    for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
+         chunk.next()) {
+      if (chunk->info.numArenasFreeCommitted && !toDecommit.append(chunk)) {
         // The OOM handler does a full, immediate decommit.
         return onOutOfMallocMemory(lock);
       }
     }
+
+    if (toDecommit.empty() && !tooManyEmptyChunks(lock)) {
+      return;
+    }
   }
+
   decommitTask.setChunksToScan(toDecommit);
 
   if (sweepOnBackgroundThread) {
