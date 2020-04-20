@@ -156,9 +156,6 @@ interface nsICookieService : nsISupports
    *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
    *        is acceptable, and will be stripped. This argument must not be null.
-   * @param aFirstURI
-   *        the URI that the user originally typed in or clicked on to initiate
-   *        the load of the document referenced by aURI.
    * @param aCookie
    *        the cookie string to set.
    * @param aChannel
@@ -168,9 +165,8 @@ interface nsICookieService : nsISupports
    *        to determine the originating URI of the document; if it is not
    *        provided, the cookies will be assumed third-party.)
    */
-  void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
-                               in ACString aCookie, in nsIChannel aChannel);
-
+  void setCookieStringFromHttp(in nsIURI aURI, in ACString aCookie,
+                               in nsIChannel aChannel);
 
   /*
    * Batch SQLite operations into one transaction. By default each call to

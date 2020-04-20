@@ -10,36 +10,11 @@ function run_test() {
   var cookieService = Cc["@mozilla.org/cookieService;1"].getService(
     Ci.nsICookieService
   );
-  cookieService.setCookieStringFromHttp(
-    cookieURI,
-    cookieURI,
-    "BadCookie1=\x01",
-    null
-  );
-  cookieService.setCookieStringFromHttp(
-    cookieURI,
-    cookieURI,
-    "BadCookie2=\v",
-    null
-  );
-  cookieService.setCookieStringFromHttp(
-    cookieURI,
-    cookieURI,
-    "Bad\x07Name=illegal",
-    null
-  );
-  cookieService.setCookieStringFromHttp(
-    cookieURI,
-    cookieURI,
-    GOOD_COOKIE,
-    null
-  );
-  cookieService.setCookieStringFromHttp(
-    cookieURI,
-    cookieURI,
-    SPACEY_COOKIE,
-    null
-  );
+  cookieService.setCookieStringFromHttp(cookieURI, "BadCookie1=\x01", null);
+  cookieService.setCookieStringFromHttp(cookieURI, "BadCookie2=\v", null);
+  cookieService.setCookieStringFromHttp(cookieURI, "Bad\x07Name=illegal", null);
+  cookieService.setCookieStringFromHttp(cookieURI, GOOD_COOKIE, null);
+  cookieService.setCookieStringFromHttp(cookieURI, SPACEY_COOKIE, null);
 
   const principal = Services.scriptSecurityManager.createContentPrincipal(
     cookieURI,
