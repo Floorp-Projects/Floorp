@@ -372,8 +372,7 @@ class HeadersPanel extends Component {
   }
 
   renderValue(props) {
-    const member = props.member;
-    const value = props.value;
+    const { member, value } = props;
 
     if (typeof value !== "string") {
       return null;

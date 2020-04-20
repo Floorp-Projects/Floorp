@@ -107,7 +107,7 @@ add_task(async function() {
   const imageData = RequestsMenu._ctx.getImageData(0, 0, 161, 1);
   ok(imageData, "The image data should have been created.");
 
-  const data = imageData.data;
+  const { data } = imageData;
   ok(data, "The image data should contain a pixel array.");
 
   ok(hasPixelAt(0), "The tick at 0 is should not be empty.");

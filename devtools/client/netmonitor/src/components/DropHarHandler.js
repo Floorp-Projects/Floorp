@@ -72,7 +72,7 @@ class DropHarHandler extends Component {
     event.preventDefault();
     stopDragging(findDOMNode(this));
 
-    const files = event.dataTransfer.files;
+    const { files } = event.dataTransfer;
     if (!files) {
       return;
     }

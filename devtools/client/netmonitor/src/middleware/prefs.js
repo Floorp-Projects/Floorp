@@ -74,7 +74,7 @@ function prefsMiddleware(store) {
  */
 function persistVisibleColumns(state) {
   const visibleColumns = [];
-  const columns = state.ui.columns;
+  const { columns } = state.ui;
   for (const column in columns) {
     if (columns[column]) {
       visibleColumns.push(column);
@@ -92,7 +92,7 @@ function persistVisibleColumns(state) {
  */
 function persistVisibleWebSocketsColumns(state) {
   const visibleColumns = [];
-  const columns = state.webSockets.columns;
+  const { columns } = state.webSockets;
   for (const column in columns) {
     if (columns[column]) {
       visibleColumns.push(column);

@@ -32,7 +32,7 @@ add_task(async function() {
     },
   });
 
-  const node = table.node;
+  const { node } = table;
   const grid = node.querySelector(".table-chart-grid");
   const totals = node.querySelector(".table-chart-totals");
   const rows = grid.querySelectorAll(".table-chart-row");
