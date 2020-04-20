@@ -1135,7 +1135,6 @@ class Label {
 
 // TODO: Map flags to jitoptions
 extern bool FLAG_correctness_fuzzer_suppressions;
-extern bool FLAG_enable_regexp_unaligned_accesses;
 extern bool FLAG_harmony_regexp_sequence;
 extern bool FLAG_regexp_interpret_all;
 extern bool FLAG_regexp_mode_modifiers;
@@ -1143,6 +1142,11 @@ extern bool FLAG_regexp_optimization;
 extern bool FLAG_regexp_peephole_optimization;
 extern bool FLAG_regexp_possessive_quantifier;
 extern bool FLAG_regexp_tier_up;
+
+// Instead of using a flag for this, we provide an implementation of
+// CanReadUnaligned in SMRegExpMacroAssembler.
+const bool FLAG_enable_regexp_unaligned_accesses = false;
+
 extern bool FLAG_trace_regexp_assembler;
 extern bool FLAG_trace_regexp_bytecodes;
 extern bool FLAG_trace_regexp_parser;
