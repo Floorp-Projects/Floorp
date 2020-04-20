@@ -339,6 +339,7 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
   if (!mMainController) {
     LOG_MAINCONTROLLER("Clear main controller");
     mSource->SetPlaybackState(MediaSessionPlaybackState::None);
+    mSource->SetMediaMetadata(MediaMetadataBase::EmptyData());
   } else {
     LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
                        mMainController->Id());

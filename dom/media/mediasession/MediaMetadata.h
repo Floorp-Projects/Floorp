@@ -27,6 +27,8 @@ class MediaMetadataBase {
                     const nsString& aAlbum)
       : mTitle(aTitle), mArtist(aArtist), mAlbum(aAlbum) {}
 
+  static MediaMetadataBase EmptyData() { return MediaMetadataBase(); }
+
   nsString mTitle;
   nsString mArtist;
   nsString mAlbum;
