@@ -523,7 +523,9 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
   if (!aPrincipal) return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
+  // Casting to BasePrincipal, as we can't get InnerMost URI otherwise
+  auto* basePrincipal = BasePrincipal::Cast(aPrincipal);
+  basePrincipal->GetURI(getter_AddRefs(uri));
 
   if (!uri) return NS_OK;
 
@@ -600,7 +602,9 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
   }
 
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
+  // Casting to BasePrincipal, as we can't get InnerMost URI otherwise
+  auto* basePrincipal = BasePrincipal::Cast(aPrincipal);
+  basePrincipal->GetURI(getter_AddRefs(uri));
 
   if (!uri) {
     return NS_ERROR_NOT_AVAILABLE;
