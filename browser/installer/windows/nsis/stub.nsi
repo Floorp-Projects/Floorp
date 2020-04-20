@@ -24,26 +24,13 @@ ManifestDPIAware true
 
 !addplugindir ./
 
-Var Dialog
-Var Progressbar
-Var ProgressbarMarqueeIntervalMS
 Var CheckboxSetAsDefault
 Var CheckboxShortcuts
 Var CheckboxSendPing
 Var CheckboxInstallMaintSvc
-Var LabelBlurb
-Var BgBitmapImage
-Var HwndBgBitmapControl
-Var CurrentBlurbIdx
 Var CheckboxCleanupProfile
 
 Var FontFamilyName
-Var FontInstalling
-Var FontHeader
-Var FontBlurb
-Var FontFooter
-Var FontButton
-Var FontCheckbox
 
 Var CanWriteToInstallDir
 Var HasRequiredSpaceAvailable
@@ -91,9 +78,8 @@ Var DownloadServerIP
 Var PostSigningData
 Var PreviousInstallDir
 Var ProfileCleanupPromptType
-Var ProfileCleanupHeaderString
-Var ProfileCleanupButtonString
 Var AppLaunchWaitTickCount
+Var TimerHandle
 
 !define ARCH_X86 1
 !define ARCH_AMD64 2
@@ -224,7 +210,6 @@ Var ArchToInstall
 !define DefaultInstDir32bit "$PROGRAMFILES32\${BrandFullName}"
 !define DefaultInstDir64bit "$PROGRAMFILES64\${BrandFullName}"
 
-!include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
 !include "TextFunc.nsh"
@@ -269,7 +254,6 @@ Var ArchToInstall
 !insertmacro GetPathFromString
 !insertmacro GetParent
 !insertmacro GetSingleInstallPath
-!insertmacro GetTextWidthHeight
 !insertmacro InitHashAppModelId
 !insertmacro IsUserAdmin
 !insertmacro RemovePrecompleteEntries
@@ -285,7 +269,7 @@ OutFile "setup-stub.exe"
 Icon "firefox64.ico"
 XPStyle on
 BrandingText " "
-ChangeUI all "nsisui.exe"
+ChangeUI IDD_INST "nsisui.exe"
 
 !ifdef ${AB_CD}_rtl
   LoadLanguageFile "locale-rtl.nlf"
@@ -388,9 +372,6 @@ Function .onInit
   ${EndIf}
   StrCpy $CheckboxSetAsDefault "0"
 
-  ; The interval in MS used for the progress bars set as marquee.
-  StrCpy $ProgressbarMarqueeIntervalMS "10"
-
   ; Initialize the majority of variables except those that need to be reset
   ; when a page is displayed.
   StrCpy $ExitCode "${ERR_DOWNLOAD_CANCEL}"
@@ -406,6 +387,7 @@ Function .onInit
   StrCpy $CheckboxShortcuts "1"
   StrCpy $CheckboxSendPing "1"
   StrCpy $CheckboxCleanupProfile "0"
+  StrCpy $ProgressCompleted "0"
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; We can only install the maintenance service if the user is an admin.
   Call IsUserAdmin
@@ -437,18 +419,8 @@ Function .onInit
     StrCpy $FontFamilyName "$(^Font)"
   ${EndIf}
 
-  CreateFont $FontHeader     "$FontFamilyName" "${INSTALL_HEADER_FONT_SIZE}" \
-                                               "${INSTALL_HEADER_FONT_WEIGHT}"
-  CreateFont $FontInstalling "$FontFamilyName" "${INSTALL_INSTALLING_FONT_SIZE}" \
-                                               "${INSTALL_INSTALLING_FONT_WEIGHT}"
-  CreateFont $FontButton     "$FontFamilyName" "10" "500"
-  CreateFont $FontBlurb      "$FontFamilyName" "15" "400"
-  CreateFont $FontFooter     "$FontFamilyName" "13" "400"
-  CreateFont $FontCheckbox   "$FontFamilyName" "10" "400"
-
   InitPluginsDir
   File /oname=$PLUGINSDIR\bgstub.jpg "bgstub.jpg"
-  File /oname=$PLUGINSDIR\bgstub_2x.jpg "bgstub_2x.jpg"
 
   ; Detect whether the machine is running with a high contrast theme.
   ; We'll hide our background images in that case, both because they don't
@@ -514,16 +486,15 @@ Function .onInit
   ${EndIf}
 
   ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+
+  File /oname=$PLUGINSDIR\stub_common.css "stub_common.css"
+  File /oname=$PLUGINSDIR\stub_common.js "stub_common.js"
 FunctionEnd
 
 ; .onGUIInit isn't needed except for RTL locales
 !ifdef ${AB_CD}_rtl
 Function .onGUIInit
-  ; Since NSIS RTL support doesn't mirror progress bars use Windows mirroring.
-  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LAYOUTRTL}
-  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RTLREADING}
-  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RIGHT}
-  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LEFT}|${WS_EX_LTRREADING}
+  ${MakeWindowRTL} $HWNDPARENT
 FunctionEnd
 !endif
 
@@ -536,13 +507,7 @@ Function .onGUIEnd
 FunctionEnd
 
 Function .onUserAbort
-  ${NSD_KillTimer} StartDownload
-  ${NSD_KillTimer} OnDownload
-  ${NSD_KillTimer} CheckInstall
-  ${NSD_KillTimer} FinishInstall
-  ${NSD_KillTimer} DisplayDownloadError
-  ${NSD_KillTimer} NextBlurb
-  ${NSD_KillTimer} ClearBlurb
+  WebBrowser::CancelTimer $TimerHandle
 
   ${If} "$IsDownloadFinished" != ""
     ; Go ahead and cancel the download so it doesn't keep running while this
@@ -572,384 +537,129 @@ Function .onUserAbort
   Abort
 FunctionEnd
 
-Function DrawBackgroundImage
-  ${NSD_CreateBitmap} 0 0 100% 100% ""
-  Pop $HwndBgBitmapControl
+!macro _RegisterAllCustomFunctions
+  GetFunctionAddress $0 getUIString
+  WebBrowser::RegisterCustomFunction $0 "getUIString"
 
-  ; If the scaling factor is 100%, use the 1x image; the 2x images scaled down
-  ; by that much don't always look good because some of them use thinner lines
-  ; and a darker background (over which aliasing is more visible).
-  System::Call 'user32::GetWindowDC(i $HWNDPARENT) i .r0'
-  System::Call 'gdi32::GetDeviceCaps(i $0, i 88) i .r1' ; 88 = LOGPIXELSX
-  System::Call 'user32::ReleaseDC(i $HWNDPARENT, i $0)'
-  ${If} $1 <= 96
-    ${SetStretchedImageOLE} $HwndBgBitmapControl $PLUGINSDIR\bgstub.jpg $BgBitmapImage
-  ${Else}
-    ${SetStretchedImageOLE} $HwndBgBitmapControl $PLUGINSDIR\bgstub_2x.jpg $BgBitmapImage
-  ${EndIf}
+  GetFunctionAddress $0 getTextDirection
+  WebBrowser::RegisterCustomFunction $0 "getTextDirection"
 
-  ; transparent bg on control prevents flicker on redraw
-  SetCtlColors $HwndBgBitmapControl ${COMMON_TEXT_COLOR} transparent
+  GetFunctionAddress $0 getFontName
+  WebBrowser::RegisterCustomFunction $0 "getFontName"
+
+  GetFunctionAddress $0 getIsHighContrast
+  WebBrowser::RegisterCustomFunction $0 "getIsHighContrast"
+
+  GetFunctionAddress $0 gotoInstallPage
+  WebBrowser::RegisterCustomFunction $0 "gotoInstallPage"
+
+  GetFunctionAddress $0 getProgressBarPercent
+  WebBrowser::RegisterCustomFunction $0 "getProgressBarPercent"
+!macroend
+!define RegisterAllCustomFunctions "!insertmacro _RegisterAllCustomFunctions"
+
+!macro _StartTimer _INTERVAL_MS _FUNCTION_NAME
+  Push $0
+  GetFunctionAddress $0 ${_FUNCTION_NAME}
+  WebBrowser::CreateTimer $0 ${_INTERVAL_MS}
+  Pop $TimerHandle
+  Pop $0
+!macroend
+!define StartTimer "!insertmacro _StartTimer"
+
+Function gotoInstallPage
+  Pop $0
+  StrCpy $CheckboxCleanupProfile $0
+
+  StrCpy $R9 1
+  Call RelativeGotoPage
+  Push $0
+FunctionEnd
+
+Function getProgressBarPercent
+  ; Custom functions always get one parameter, which we don't use here.
+  ; But we will use $0 as a scratch accumulator register.
+  Pop $0
+  ; This math is getting the progess bar completion fraction and converting it
+  ; to a percentage, but we implement that with the operations in the reverse
+  ; of the intuitive order so that our integer math doesn't truncate to zero.
+  IntOp $0 $ProgressCompleted * 100
+  IntOp $0 $0 / ${PROGRESS_BAR_TOTAL_STEPS}
+  Push $0
+FunctionEnd
+
+Function getTextDirection
+  Pop $0
+  !ifdef ${AB_CD}_rtl
+    Push "rtl"
+  !else
+    Push "ltr"
+  !endif
+FunctionEnd
+
+Function getFontName
+  Pop $0
+  Push $FontFamilyName
+FunctionEnd
+
+Function getIsHighContrast
+  Pop $0
+  Push $UsingHighContrastMode
+FunctionEnd
+
+Function getUIString
+  Pop $0
+  ${Select} $0
+    ${Case} "cleanup_header"
+      ${If} $ProfileCleanupPromptType == 1
+        Push "$(STUB_CLEANUP_REINSTALL_HEADER2)"
+      ${Else}
+        Push "$(STUB_CLEANUP_PAVEOVER_HEADER2)"
+      ${EndIf}
+    ${Case} "cleanup_button"
+      ${If} $ProfileCleanupPromptType == 1
+        Push "$(STUB_CLEANUP_REINSTALL_BUTTON2)"
+      ${Else}
+        Push "$(STUB_CLEANUP_PAVEOVER_BUTTON2)"
+      ${EndIf}
+    ${Case} "cleanup_checkbox"
+      Push "$(STUB_CLEANUP_CHECKBOX_LABEL2)"
+    ${Case} "installing_header"
+      Push "$(STUB_INSTALLING_HEADLINE)"
+    ${Case} "installing_label"
+      Push "$(STUB_INSTALLING_LABEL2)"
+    ${Case} "installing_content"
+      Push "$(STUB_INSTALLING_BODY)"
+    ${Case} "installing_blurb_0"
+      Push "$(STUB_BLURB_FIRST1)"
+    ${Case} "installing_blurb_1"
+      Push "$(STUB_BLURB_SECOND1)"
+    ${Case} "installing_blurb_2"
+      Push "$(STUB_BLURB_THIRD1)"
+    ${Case} "global_footer"
+      Push "$(STUB_BLURB_FOOTER2)"
+    ${Default}
+      Push ""
+  ${EndSelect}
 FunctionEnd
 
 Function createProfileCleanup
   Call ShouldPromptForProfileCleanup
-  ${Select} $ProfileCleanupPromptType
-  ${Case} 0
+
+  ${If} $ProfileCleanupPromptType == 0
     StrCpy $CheckboxCleanupProfile 0
     Abort ; Skip this page
-  ${Case} 1
-    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_REINSTALL_HEADER2)
-    StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_REINSTALL_BUTTON)
-  ${Case} 2
-    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_PAVEOVER_HEADER2)
-    StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_PAVEOVER_BUTTON)
-  ${EndSelect}
-
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  SetCtlColors $HWNDPARENT ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
-
-  ; Since the text color for controls is set in this Dialog the foreground and
-  ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
-
-  FindWindow $7 "#32770" "" $HWNDPARENT
-  ${GetDlgItemWidthHeight} $HWNDPARENT $8 $9
-
-  ; Resize the Dialog to fill the entire window
-  System::Call 'user32::MoveWindow(i$Dialog,i0,i0,i $8,i $9,i0)'
-
-  GetDlgItem $0 $HWNDPARENT 1 ; Install button
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
-
-  GetDlgItem $0 $HWNDPARENT 3 ; Back button
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
-
-  GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
-  ; Hide the Cancel button, but don't disable it (or else it won't be possible
-  ; to close the window)
-  ShowWindow $0 ${SW_HIDE}
-
-  GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
-  ; Hiding and then disabling allows Esc to still exit the installer
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
-
-  GetDlgItem $0 $HWNDPARENT 11 ; Footer text
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
-
-  ; Draw the main prompt header label.
-  !if ${PROFILE_CLEANUP_LABEL_WIDTH} == "100%"
-    ${GetDlgItemWidthHeight} $HWNDPARENT $0 $1
-    ; Allow for some padding around the dialog edges.
-    IntOp $1 $0 * 90
-    IntOp $1 $1 / 100
-
-    ; Center the text in the dialog.
-    IntOp $R1 $1 / 2
-    IntOp $0 $0 / 2
-    IntOp $9 $0 - $R1
-    ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontHeader $1 $R1 $R2
-  !else
-    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_LABEL_WIDTH} X $1
-    ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontHeader $1 $1 $R2
-    ${ConvertLeftCoordForRTL} ${PROFILE_CLEANUP_LABEL_LEFT} $1 $9
-  !endif
-  ; If this text is over the maximum height, drop the font size until it fits.
-  StrCpy $4 $FontHeader
-  !ifdef PROFILE_CLEANUP_LABEL_HEIGHT
-    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_LABEL_HEIGHT} Y $2
-    StrCpy $3 ${INSTALL_HEADER_FONT_SIZE}
-    ${While} $R2 > $2
-      IntOp $3 $3 - 2
-      CreateFont $4 "$FontFamilyName" $3 ${INSTALL_HEADER_FONT_WEIGHT}
-      ${GetTextWidthHeight} $ProfileCleanupHeaderString $4 $1 $R1 $R2
-    ${EndWhile}
-  !endif
-  ${NSD_CreateLabel} $9 ${PROFILE_CLEANUP_LABEL_TOP} $1 $R2 \
-    "$ProfileCleanupHeaderString"
-  Pop $0
-  !if ${PROFILE_CLEANUP_LABEL_ALIGN} == "center"
-    ${NSD_AddStyle} $0 ${SS_CENTER}
-  !endif
-  SendMessage $0 ${WM_SETFONT} $4 0
-  SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-
-  ; For the checkbox, first find how much height we're going to need for the
-  ; label text.
-  ${If} ${PROFILE_CLEANUP_CHECKBOX_WIDTH} == "100%"
-    ${GetDlgItemWidthHeight} $HWNDPARENT $R1 $R2
-  ${Else}
-    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_CHECKBOX_WIDTH} X $R1
-  ${EndIf}
-  ; Subtract out the width of the checkbox itself and any padding/border so that
-  ; PROFILE_CLEANUP_CHECKBOX_WIDTH can be the width of the entire control and
-  ; doesn't have to guess. We used a fixed (but DPI-adjusted) 25 pixels to
-  ; represent all the things we need to subtract. Using a fixed number of pixels
-  ; for this seems dubious, but the obvious method of using SM_CXMENUCHECK
-  ; seems to be not quite enough by a pixel or two in certain situations for
-  ; mysterious reasons, and this method was taken from what the WinForms
-  ; checkbox control does according to the .NET Framework 4.8 reference source.
-  ; Get the DPI for the monitor this window is on.
-  System::Call 'user32::GetWindowDC(i $HWNDPARENT) i .R8'
-  System::Call 'gdi32::GetDeviceCaps(i $R8, i 88) i .R9' ; 88 = LOGPIXELSX
-  System::Call 'user32::ReleaseDC(i $HWNDPARENT, i $R8)'
-  ; Divide the DPI by 96 to get the scaling factor, and multiply the scaling
-  ; factor by 25 (but backwards to avoid truncating the scale factor).
-  IntOp $1 $R9 * 25
-  IntOp $1 $1 / 96
-  ; Subtract out the converted 25 pixels from the width available for the text.
-  IntOp $R2 $R1 - $1
-  ${GetTextWidthHeight} "$(STUB_CLEANUP_CHECKBOX_LABEL)" $FontCheckbox $R2 \
-    $R3 $R2
-  ; Now that we know the size for the checkbox, position it in the dialog.
-  ${If} ${PROFILE_CLEANUP_CHECKBOX_LEFT} == "center"
-    ${GetDlgItemWidthHeight} $HWNDPARENT $R4 $R5
-    IntOp $R5 $R3 + $1
-    IntOp $R6 $R5 / 2
-    IntOp $R3 $R4 / 2
-    IntOp $R3 $R3 - $R6
-  ${Else}
-    StrCpy $R3 ${PROFILE_CLEANUP_CHECKBOX_LEFT}
-  ${EndIf}
-  ${GetDlgItemBottomPX} $0 $1
-  ; Add a bit of margin above the checkbox.
-  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_CHECKBOX_TOP_MARGIN} Y $2
-  IntOp $1 $1 + $2
-  ClearErrors
-  ${WordFind} "${PROFILE_CLEANUP_CHECKBOX_WIDTH}" "%" "E#" $9
-  ${If} ${Errors}
-    ${ConvertLeftCoordForRTL} $R3 ${PROFILE_CLEANUP_CHECKBOX_WIDTH} $R3
-  ${EndIf}
-  ${NSD_CreateCheckbox} $R3 $1 ${PROFILE_CLEANUP_CHECKBOX_WIDTH} $R2 \
-    $(STUB_CLEANUP_CHECKBOX_LABEL)
-  Pop $CheckboxCleanupProfile
-  SendMessage $CheckboxCleanupProfile ${WM_SETFONT} $FontCheckbox 0
-  ; The uxtheme must be disabled on checkboxes in order to override the system
-  ; colors and have a transparent background.
-  System::Call 'uxtheme::SetWindowTheme(i $CheckboxCleanupProfile, w " ", w " ")'
-  SetCtlColors $CheckboxCleanupProfile ${COMMON_TEXT_COLOR} transparent
-  ; Setting the background color to transparent isn't enough to actually make a
-  ; checkbox background transparent, you also have to set the right style.
-  ${NSD_AddExStyle} $CheckboxCleanupProfile ${WS_EX_TRANSPARENT}
-  ; For some reason, clicking on the checkbox causes its text to be redrawn
-  ; one pixel to the side of where it was, but without clearing away the
-  ; existing text first, so it looks like the weight increases when you click.
-  ; Hack around this by manually hiding and then re-showing the textbox when
-  ; it gets clicked on.
-  ${NSD_OnClick} $CheckboxCleanupProfile RedrawWindow
-  ${NSD_Check} $CheckboxCleanupProfile
-
-  ; Time to draw the continue button. Compute its height based on the top and
-  ; height of the checkbox, since GetDlgItemBottomPX returns nonsense for the
-  ; checkbox for some reason.
-  IntOp $1 $1 + $R2
-  ; Also add some margin above the button.
-  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_TOP_MARGIN} Y $2
-  IntOp $1 $1 + $2
-  ; Determine the size of the button.
-  ${GetTextExtent} $ProfileCleanupButtonString $FontFooter $R1 $R2
-  ; Add some padding around the text for both dimensions.
-  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_X_PADDING} X $2
-  IntOp $R1 $R1 + $2
-  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_Y_PADDING} Y $2
-  IntOp $R2 $R2 + $2
-  ${If} ${PROFILE_CLEANUP_BUTTON_LEFT} == "center"
-    ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
-    IntOp $R5 $R1 / 2
-    IntOp $R3 $R3 / 2
-    IntOp $R3 $R3 - $R5
-  ${Else}
-    ${ConvertLeftCoordForRTL} ${PROFILE_CLEANUP_BUTTON_LEFT} $R1 $R3
-  ${EndIf}
-  ; We need a custom button because the default ones get drawn underneath the
-  ; background image we're about to insert.
-  ${NSD_CreateButton} $R3 $1 $R1 $R2 "$ProfileCleanupButtonString"
-  Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontButton 0
-  ${NSD_OnClick} $0 gotoInstallPage
-  ${NSD_SetFocus} $0
-
-  ; Draw the footer text.
-  !ifdef INSTALL_FOOTER_WIDTH
-    ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
-      ${INSTALL_FOOTER_WIDTH} $R1 $R2
-    !ifdef ${AB_CD}_rtl
-      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
-        ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP} ${INSTALL_FOOTER_WIDTH} \
-        "$R2" "$(STUB_BLURB_FOOTER2)"
-    !else
-      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
-        ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP} ${INSTALL_FOOTER_WIDTH} \
-        "$R2" "$(STUB_BLURB_FOOTER2)"
-    !endif
-    Pop $0
-    SendMessage $0 ${WM_SETFONT} $FontFooter 0
-    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-  !endif
-
-  ${If} $UsingHighContrastMode == 0
-    Call DrawBackgroundImage
   ${EndIf}
 
-  LockWindow off
-  nsDialogs::Show
+  ${RegisterAllCustomFunctions}
 
-  ${If} $UsingHighContrastMode == 0
-    ${NSD_FreeImage} $BgBitmapImage
-  ${EndIf}
-FunctionEnd
-
-Function RedrawWindow
-  Pop $0
-  ShowWindow $0 ${SW_HIDE}
-  ShowWindow $0 ${SW_SHOW}
-FunctionEnd
-
-Function gotoInstallPage
-  ; Eat the parameter that NSD_OnClick always passes but that we don't need.
-  Pop $0
-
-  ; Save the state of the checkbox before it's destroyed.
-  ${NSD_GetState} $CheckboxCleanupProfile $CheckboxCleanupProfile
-
-  StrCpy $R9 1
-  Call RelativeGotoPage
+  File /oname=$PLUGINSDIR\profile_cleanup.html "profile_cleanup.html"
+  File /oname=$PLUGINSDIR\profile_cleanup_page.css "profile_cleanup_page.css"
+  File /oname=$PLUGINSDIR\profile_cleanup.js "profile_cleanup.js"
+  WebBrowser::ShowPage "$PLUGINSDIR\profile_cleanup.html"
 FunctionEnd
 
 Function createInstall
-  ; Begin setting up the download/install window
-
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  SetCtlColors $HWNDPARENT ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
-
-  ; Since the text color for controls is set in this Dialog the foreground and
-  ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
-
-  FindWindow $7 "#32770" "" $HWNDPARENT
-  ${GetDlgItemWidthHeight} $HWNDPARENT $8 $9
-
-  ; Resize the Dialog to fill the entire window
-  System::Call 'user32::MoveWindow(i$Dialog,i0,i0,i $8,i $9,i0)'
-
-  !ifdef INSTALL_HEADER_WIDTH
-    ; Draw the header text.
-    ${DialogUnitsToPixels} ${INSTALL_HEADER_WIDTH} X $0
-    ${GetTextWidthHeight} "$(STUB_INSTALLING_HEADLINE)" $FontHeader $0 $R1 $R2
-    ${ConvertLeftCoordForRTL} ${INSTALL_HEADER_LEFT} $0 $9
-    ; If this text is over the maximum height, drop the font size until it fits.
-    StrCpy $4 $FontHeader
-    !ifdef INSTALL_HEADER_HEIGHT
-      ${DialogUnitsToPixels} ${INSTALL_HEADER_HEIGHT} Y $2
-      StrCpy $3 ${INSTALL_HEADER_FONT_SIZE}
-      ${While} $R2 > $2
-        IntOp $3 $3 - 2
-        CreateFont $4 "$FontFamilyName" $3 ${INSTALL_HEADER_FONT_WEIGHT}
-        ${GetTextWidthHeight} "$(STUB_INSTALLING_HEADLINE)" $4 $0 $R1 $R2
-      ${EndWhile}
-    !endif
-    ${NSD_CreateLabel} $9 ${INSTALL_HEADER_TOP} $0 $R2 \
-      "$(STUB_INSTALLING_HEADLINE)"
-    Pop $0
-    SendMessage $0 ${WM_SETFONT} $4 0
-    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-  !endif
-
-  !ifdef INSTALL_BODY_WIDTH
-    ; Draw the body text the same way as the header, but we also need to work
-    ; out where to put it based on where the bottom of the header is.
-    ${GetDlgItemBottomPX} $0 $1
-    ; Add a bit of padding above this text.
-    ${DialogUnitsToPixels} ${INSTALL_BODY_TOP_MARGIN} Y $2
-    IntOp $1 $1 + $2
-    ${DialogUnitsToPixels} ${INSTALL_BODY_WIDTH} X $0
-    ${GetTextWidthHeight} "$(STUB_INSTALLING_BODY)" $FontCheckbox $0 $R1 $R2
-    ${ConvertLeftCoordForRTL} ${INSTALL_BODY_LEFT} $0 $9
-    ${NSD_CreateLabel} $9 $1 ${INSTALL_BODY_WIDTH} $R2 "$(STUB_INSTALLING_BODY)"
-    Pop $0
-    SendMessage $0 ${WM_SETFONT} $FontCheckbox 0
-    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-  !endif
-
-  ; Draw the "Now installing" text
-  !if ${INSTALL_INSTALLING_WIDTH} == "100%"
-    ${GetDlgItemWidthHeight} $HWNDPARENT $0 $1
-  !else
-    ${DialogUnitsToPixels} ${INSTALL_INSTALLING_WIDTH} X $0
-  !endif
-  ${GetTextWidthHeight} "$(STUB_INSTALLING_LABEL2)" $FontInstalling $0 $R1 $R2
-  ${ConvertLeftCoordForRTL} ${INSTALL_INSTALLING_LEFT} $0 $9
-  ${NSD_CreateLabelCenter} $9 ${INSTALL_INSTALLING_TOP} \
-    ${INSTALL_INSTALLING_WIDTH} $R2 "$(STUB_INSTALLING_LABEL2)"
-  Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontInstalling 0
-  ${If} $UsingHighContrastMode == 0
-    SetCtlColors $0 ${INSTALL_INSTALLING_TEXT_COLOR} transparent
-  ${Else}
-    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-  ${EndIf}
-
-  ; Initialize these variables even if we won't use them to silence warnings.
-  StrCpy $CurrentBlurbIdx "0"
-  StrCpy $LabelBlurb "0"
-  !ifdef INSTALL_BLURB_WIDTH
-    ${NSD_CreateLabelCenter} 0% ${INSTALL_BLURB_TOP} 100% ${INSTALL_BLURB_WIDTH} \
-      "$(STUB_BLURB_FIRST1)"
-    Pop $LabelBlurb
-    SendMessage $LabelBlurb ${WM_SETFONT} $FontBlurb 0
-    SetCtlColors $LabelBlurb ${COMMON_TEXT_COLOR} transparent
-    ${NSD_CreateTimer} ClearBlurb ${BlurbDisplayMS}
-  !endif
-
-  !ifdef INSTALL_FOOTER_WIDTH
-    ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
-      ${INSTALL_FOOTER_WIDTH} $R1 $R2
-    !ifdef ${AB_CD}_rtl
-      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
-        ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP} \
-        ${INSTALL_FOOTER_WIDTH} "$R2u" "$(STUB_BLURB_FOOTER2)"
-    !else
-      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
-        ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP} \
-        ${INSTALL_FOOTER_WIDTH} "$R2u" "$(STUB_BLURB_FOOTER2)"
-    !endif
-    Pop $0
-    SendMessage $0 ${WM_SETFONT} $FontFooter 0
-    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
-  !endif
-
-  ; And now draw the progress bar.
-  ClearErrors
-  ${WordFind} "${INSTALL_PROGRESS_BAR_WIDTH}" "%" "E#" $9
-  ${If} ${Errors}
-    ${ConvertLeftCoordForRTL} ${INSTALL_PROGRESS_BAR_LEFT} ${INSTALL_PROGRESS_BAR_WIDTH} $9
-  ${Else}
-    StrCpy $9 "${INSTALL_PROGRESS_BAR_LEFT}"
-  ${EndIf}
-  ${NSD_CreateProgressBar} $9 ${INSTALL_PROGRESS_BAR_TOP} \
-    ${INSTALL_PROGRESS_BAR_WIDTH} ${INSTALL_PROGRESS_BAR_HEIGHT} ""
-  Pop $Progressbar
-  !ifdef PROGRESS_BAR_BACKGROUND_COLOR
-    ; The uxtheme must be disabled so we can change the color.
-    System::Call 'uxtheme::SetWindowTheme(i $Progressbar, w " ", w " ")'
-    SendMessage $Progressbar ${PBM_SETBARCOLOR} 0 ${PROGRESS_BAR_BACKGROUND_COLOR}
-  !endif
-  ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
-  SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
-              $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
-
-  ${If} $UsingHighContrastMode == 0
-    Call DrawBackgroundImage
-  ${EndIf}
-
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
@@ -959,23 +669,12 @@ Function createInstall
   ShowWindow $0 ${SW_HIDE}
 
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
-  ; Focus the Cancel button otherwise it isn't possible to tab to it since it is
-  ; the only control that can be tabbed to.
-  ${NSD_SetFocus} $0
-  ; Kill the Cancel button's focus so pressing enter won't cancel the install.
-  SendMessage $0 ${WM_KILLFOCUS} 0 0
   ; Hide the Cancel button, but don't disable it (or else it won't be possible
   ; to close the window)
   ShowWindow $0 ${SW_HIDE}
 
-  GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
-  ; Hiding and then disabling allows Esc to still exit the installer
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
-
-  GetDlgItem $0 $HWNDPARENT 11 ; Footer text
-  ShowWindow $0 ${SW_HIDE}
-  EnableWindow $0 0
+  ; Get keyboard focus on the parent
+  System::Call "user32::SetFocus(p$HWNDPARENT)"
 
   ; Set $DownloadReset to true so the first download tick count is measured.
   StrCpy $DownloadReset "true"
@@ -1021,66 +720,34 @@ Function createInstall
   ; Make sure the file we're about to try to download to doesn't already exist,
   ; so we don't end up trying to "resume" on top of the wrong file.
   Delete "$PLUGINSDIR\download.exe"
-  ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
-  LockWindow off
-  nsDialogs::Show
+  ${StartTimer} ${DownloadIntervalMS} StartDownload
 
-  ${If} $UsingHighContrastMode == 0
-    ${NSD_FreeImage} $BgBitmapImage
-  ${EndIf}
+  ${RegisterAllCustomFunctions}
+
+  File /oname=$PLUGINSDIR\installing.html "installing.html"
+  File /oname=$PLUGINSDIR\installing_page.css "installing_page.css"
+  File /oname=$PLUGINSDIR\installing.js "installing.js"
+  WebBrowser::ShowPage "$PLUGINSDIR\installing.html"
 FunctionEnd
 
 Function StartDownload
-  ${NSD_KillTimer} StartDownload
+  WebBrowser::CancelTimer $TimerHandle
+
   Call GetDownloadURL
   Pop $0
   InetBgDL::Get "$0" "$PLUGINSDIR\download.exe" \
                 /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
-  StrCpy $4 ""
-  ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
+
+  ${StartTimer} ${DownloadIntervalMS} OnDownload
+
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
     RmDir /r "$INSTDIR\${TO_BE_DELETED}"
   ${EndIf}
 FunctionEnd
 
 Function SetProgressBars
-  SendMessage $Progressbar ${PBM_SETPOS} $ProgressCompleted 0
   ${ITBL3SetProgressValue} "$ProgressCompleted" "${PROGRESS_BAR_TOTAL_STEPS}"
-FunctionEnd
-
-Function NextBlurb
-  ${NSD_KillTimer} NextBlurb
-
-  IntOp $CurrentBlurbIdx $CurrentBlurbIdx + 1
-  IntOp $CurrentBlurbIdx $CurrentBlurbIdx % 3
-
-  ${If} $CurrentBlurbIdx == "0"
-    StrCpy $0 "$(STUB_BLURB_FIRST1)"
-  ${ElseIf} $CurrentBlurbIdx == "1"
-    StrCpy $0 "$(STUB_BLURB_SECOND1)"
-  ${ElseIf} $CurrentBlurbIdx == "2"
-    StrCpy $0 "$(STUB_BLURB_THIRD1)"
-  ${EndIf}
-
-  SendMessage $LabelBlurb ${WM_SETTEXT} 0 "STR:$0"
-
-  ${NSD_CreateTimer} ClearBlurb ${BlurbDisplayMS}
-FunctionEnd
-
-Function ClearBlurb
-  ${NSD_KillTimer} ClearBlurb
-
-  SendMessage $LabelBlurb ${WM_SETTEXT} 0 "STR:"
-
-  ; force the background to repaint to clear the transparent label
-  System::Call "*(i,i,i,i) p .r0"
-  System::Call "user32::GetWindowRect(p $LabelBlurb, p r0)"
-  System::Call "user32::MapWindowPoints(p 0, p $HwndBgBitmapControl, p r0, i 2)"
-  System::Call "user32::InvalidateRect(p $HwndBgBitmapControl, p r0, i 0)"
-  System::Free $0
-
-  ${NSD_CreateTimer} NextBlurb ${BlurbBlankMS}
 FunctionEnd
 
 Function OnDownload
@@ -1094,12 +761,12 @@ Function OnDownload
   # When status is $0 =< 299 it is handled by InetBgDL
   StrCpy $DownloadServerIP "$5"
   ${If} $0 > 299
-    ${NSD_KillTimer} OnDownload
+    WebBrowser::CancelTimer $TimerHandle
     IntOp $DownloadRetryCount $DownloadRetryCount + 1
     ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
       StrCpy $ExitCode "${ERR_DOWNLOAD_TOO_MANY_RETRIES}"
       ; Use a timer so the UI has a chance to update
-      ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+      ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
       Return
     ${EndIf}
 
@@ -1110,9 +777,6 @@ Function OnDownload
     ${If} $0 != 1000
       ${If} "$DownloadReset" != "true"
         StrCpy $DownloadedBytes "0"
-        ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
-        SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
-                    $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
         ${ITBL3SetProgressState} "${TBPF_INDETERMINATE}"
       ${EndIf}
       StrCpy $DownloadSizeBytes ""
@@ -1121,7 +785,7 @@ Function OnDownload
     ${EndIf}
 
     InetBgDL::Get /RESET /END
-    ${NSD_CreateTimer} StartDownload ${DownloadRetryIntervalMS}
+    ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
     Return
   ${EndIf}
 
@@ -1146,24 +810,21 @@ Function OnDownload
     ; beginning of the download.
     ${If} $4 < ${DownloadMinSizeBytes}
     ${OrIf} $4 > ${DownloadMaxSizeBytes}
-      ${NSD_KillTimer} OnDownload
+      WebBrowser::CancelTimer $TimerHandle
       InetBgDL::Get /RESET /END
       StrCpy $DownloadReset "true"
 
       ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
         ; Use a timer so the UI has a chance to update
-        ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+        ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
       ${Else}
-        ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
+        ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
       ${EndIf}
       Return
     ${EndIf}
 
     StrCpy $DownloadSizeBytes "$4"
-    SendMessage $Progressbar ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
-    ${RemoveStyle} $Progressbar ${PBS_MARQUEE}
     StrCpy $ProgressCompleted 0
-    SendMessage $Progressbar ${PBM_SETRANGE32} $ProgressCompleted ${PROGRESS_BAR_TOTAL_STEPS}
   ${EndIf}
 
   ; Don't update the status until after the download starts
@@ -1180,16 +841,16 @@ Function OnDownload
 
     ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
       ; Use a timer so the UI has a chance to update
-      ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+      ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
     ${Else}
-      ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
+      ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
     ${EndIf}
     Return
   ${EndIf}
 
   ${If} $IsDownloadFinished != "true"
     ${If} $2 == 0
-      ${NSD_KillTimer} OnDownload
+      WebBrowser::CancelTimer $TimerHandle
       StrCpy $IsDownloadFinished "true"
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndDownloadPhaseTickCount
@@ -1206,9 +867,9 @@ Function OnDownload
 
         ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
           ; Use a timer so the UI has a chance to update
-          ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+          ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
         ${Else}
-          ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
+          ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
         ${EndIf}
         Return
       ${EndIf}
@@ -1235,11 +896,11 @@ Function OnDownload
         System::Call "kernel32::GetTickCount()l .s"
         Pop $EndPreInstallPhaseTickCount
         ; Use a timer so the UI has a chance to update
-        ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+        ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
       ${Else}
         CertCheck::CheckPETrustAndInfoAsync "$PLUGINSDIR\download.exe" \
           "${CertNameDownload}" "${CertIssuerDownload}"
-        ${NSD_CreateTimer} OnCertCheck ${DownloadIntervalMS}
+        ${StartTimer} ${DownloadIntervalMS} OnCertCheck
       ${EndIf}
     ${Else}
       StrCpy $DownloadedBytes "$3"
@@ -1261,10 +922,10 @@ Function OnCertCheck
   ${If} $0 == 0
     ${GetSecondsElapsed} "$EndDownloadPhaseTickCount" "$EndPreInstallPhaseTickCount" $0
     ${If} $0 >= ${PreinstallCertCheckMaxWaitSec}
-      ${NSD_KillTimer} OnCertCheck
+      WebBrowser::CancelTimer $TimerHandle
       StrCpy $ExitCode "${ERR_PREINSTALL_CERT_TIMEOUT}"
       ; Use a timer so the UI has a chance to update
-      ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+      ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
     ${EndIf}
     Return
   ${EndIf}
@@ -1280,12 +941,12 @@ Function OnCertCheck
     StrCpy $ExitCode "${ERR_PREINSTALL_CERT_ATTRIBUTES}"
   ${EndIf}
 
-  ${NSD_KillTimer} OnCertCheck
+  WebBrowser::CancelTimer $TimerHandle
 
   ${If} $0 == 0
   ${OrIf} $1 == 0
     ; Use a timer so the UI has a chance to update
-    ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+    ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
     Return
   ${EndIf}
 
@@ -1345,12 +1006,10 @@ Function LaunchFullInstaller
   Pop $EndPreInstallPhaseTickCount
 
   Exec "$\"$PLUGINSDIR\download.exe$\" /LaunchedFromStub /INI=$PLUGINSDIR\${CONFIG_INI}"
-  ${NSD_CreateTimer} CheckInstall ${InstallIntervalMS}
+  ${StartTimer} ${InstallIntervalMS} CheckInstall
 FunctionEnd
 
 Function SendPing
-  ${NSD_KillTimer} NextBlurb
-  ${NSD_KillTimer} ClearBlurb
   HideWindow
 
   ${If} $CheckboxSendPing == 1
@@ -1579,7 +1238,7 @@ Function SendPing
     StrCpy $R9 "2"
     Call RelativeGotoPage
 !else
-    ${NSD_CreateTimer} OnPing ${DownloadIntervalMS}
+    ${StartTimer} ${DownloadIntervalMS} OnPing
     InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP/$PostSigningData/$ProfileCleanupPromptType/$CheckboxCleanupProfile" \
                   "$PLUGINSDIR\_temp" /END
 !endif
@@ -1606,7 +1265,7 @@ Function OnPing
   # When status is $0 =< 299 it is handled by InetBgDL
   ${If} $2 == 0
   ${OrIf} $0 > 299
-    ${NSD_KillTimer} OnPing
+    WebBrowser::CancelTimer $TimerHandle
     ${If} $0 > 299
       InetBgDL::Get /RESET /END
     ${EndIf}
@@ -1620,12 +1279,12 @@ FunctionEnd
 Function CheckInstall
   IntOp $InstallCounterStep $InstallCounterStep + 1
   ${If} $InstallCounterStep >= $InstallTotalSteps
-    ${NSD_KillTimer} CheckInstall
+    WebBrowser::CancelTimer $TimerHandle
     ; Close the handle that prevents modification of the full installer
     System::Call 'kernel32::CloseHandle(i $HandleDownload)'
     StrCpy $ExitCode "${ERR_INSTALL_TIMEOUT}"
     ; Use a timer so the UI has a chance to update
-    ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
+    ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
     Return
   ${EndIf}
 
@@ -1649,7 +1308,7 @@ Function CheckInstall
     ClearErrors
     Delete "$INSTDIR\install.log"
     ${Unless} ${Errors}
-      ${NSD_KillTimer} CheckInstall
+      WebBrowser::CancelTimer $TimerHandle
       ; Close the handle that prevents modification of the full installer
       System::Call 'kernel32::CloseHandle(i $HandleDownload)'
       Rename "$INSTDIR\install.tmp" "$INSTDIR\install.log"
@@ -1786,7 +1445,7 @@ Function LaunchApp
   ${EndIf}
 
   StrCpy $AppLaunchWaitTickCount 0
-  ${NSD_CreateTimer} WaitForAppLaunch ${AppLaunchWaitIntervalMS}
+  ${StartTimer} ${AppLaunchWaitIntervalMS} WaitForAppLaunch
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
@@ -1804,7 +1463,7 @@ Function WaitForAppLaunch
   FindWindow $1 "${DialogWindowClass}"
   ${If} $0 <> 0
   ${OrIf} $1 <> 0
-    ${NSD_KillTimer} WaitForAppLaunch
+    WebBrowser::CancelTimer $TimerHandle
     StrCpy $ProgressCompleted "${PROGRESS_BAR_APP_LAUNCH_END_STEP}"
     Call SetProgressBars
     Call SendPing
@@ -1815,7 +1474,7 @@ Function WaitForAppLaunch
   IntOp $0 $AppLaunchWaitTickCount * ${AppLaunchWaitIntervalMS}
   ${If} $0 >= ${AppLaunchWaitTimeoutMS}
     ; We've waited an unreasonably long time, so just exit.
-    ${NSD_KillTimer} WaitForAppLaunch
+    WebBrowser::CancelTimer $TimerHandle
     Call SendPing
     Return
   ${EndIf}
@@ -1838,9 +1497,7 @@ Function CopyPostSigningData
 FunctionEnd
 
 Function DisplayDownloadError
-  ${NSD_KillTimer} DisplayDownloadError
-  ${NSD_KillTimer} NextBlurb
-  ${NSD_KillTimer} ClearBlurb
+  WebBrowser::CancelTimer $TimerHandle
   ; To better display the error state on the taskbar set the progress completed
   ; value to the total value.
   ${ITBL3SetProgressValue} "100" "100"
