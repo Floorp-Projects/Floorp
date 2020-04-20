@@ -4304,7 +4304,7 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
     if (mDecoder->IsEnded()) {
       SetCurrentTime(0);
     }
-    if (!mSuspendedForInactiveDocument) {
+    if (!mSuspendedByInactiveDocOrDocshell) {
       mDecoder->Play();
     }
   }
@@ -5048,13 +5048,13 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mSuspendedForInactiveDocument) {
+  if (mSuspendedByInactiveDocOrDocshell) {
     mDecoder->Suspend();
   }
 
   if (!mPaused) {
     SetPlayedOrSeeked(true);
-    if (!mSuspendedForInactiveDocument) {
+    if (!mSuspendedByInactiveDocOrDocshell) {
       mDecoder->Play();
     }
   }
@@ -5070,7 +5070,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   }
 
   bool shouldPlay = !(aFlags & REMOVING_SRC_STREAM) && !mPaused &&
-                    !mSuspendedForInactiveDocument;
+                    !mSuspendedByInactiveDocOrDocshell;
   if (shouldPlay == mSrcStreamIsPlaying) {
     return;
   }
@@ -5944,7 +5944,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState) {
   if (oldState < HAVE_FUTURE_DATA && mReadyState >= HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
-      if (mDecoder && !mSuspendedForInactiveDocument) {
+      if (mDecoder && !mSuspendedByInactiveDocOrDocshell) {
         MOZ_ASSERT(AutoplayPolicy::IsAllowedToPlay(*this));
         mDecoder->Play();
       }
@@ -6019,7 +6019,7 @@ bool HTMLMediaElement::CanActivateAutoplay() {
     return false;
   }
 
-  if (mSuspendedForInactiveDocument) {
+  if (mSuspendedByInactiveDocOrDocshell) {
     return false;
   }
 
@@ -6063,7 +6063,7 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
     if (mCurrentPlayRangeStart == -1.0) {
       mCurrentPlayRangeStart = CurrentTime();
     }
-    MOZ_ASSERT(!mSuspendedForInactiveDocument);
+    MOZ_ASSERT(!mSuspendedByInactiveDocOrDocshell);
     mDecoder->Play();
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);
@@ -6362,11 +6362,11 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
 void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
   LOG(LogLevel::Debug, ("%p SuspendOrResumeElement(suspend=%d) hidden=%d", this,
                         aSuspendElement, OwnerDoc()->Hidden()));
-  if (aSuspendElement == mSuspendedForInactiveDocument) {
+  if (aSuspendElement == mSuspendedByInactiveDocOrDocshell) {
     return;
   }
 
-  mSuspendedForInactiveDocument = aSuspendElement;
+  mSuspendedByInactiveDocOrDocshell = aSuspendElement;
   UpdateSrcMediaStreamPlaying();
   UpdateAudioChannelPlayingState();
 
@@ -6432,6 +6432,16 @@ bool HTMLMediaElement::IsBeingDestroyed() {
   return isBeingDestroyed;
 }
 
+bool HTMLMediaElement::ShouldBeSuspendedByInactiveDocShell() const {
+  nsIDocShell* docShell = OwnerDoc()->GetDocShell();
+  if (!docShell) {
+    return false;
+  }
+  bool isDocShellActive = false;
+  docShell->GetIsActive(&isDocShellActive);
+  return !isDocShellActive && docShell->GetSuspendMediaWhenInactive();
+}
+
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
   bool visible = !IsHidden();
   if (visible) {
@@ -6446,7 +6456,11 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
     NotifyDecoderActivityChanges();
   }
 
-  SuspendOrResumeElement(!IsActive());
+  // We would suspend media when the document is inactive, or its docshell has
+  // been set to hidden and explicitly wants to suspend media. In those cases,
+  // the media would be not visible and we don't want them to continue playing.
+  bool shouldSuspend = !IsActive() || ShouldBeSuspendedByInactiveDocShell();
+  SuspendOrResumeElement(shouldSuspend);
 
   // If the owning document has become inactive we should shutdown the CDM.
   if (!OwnerDoc()->IsCurrentActiveDocument() && mMediaKeys) {
