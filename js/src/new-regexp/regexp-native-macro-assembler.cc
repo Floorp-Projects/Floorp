@@ -459,7 +459,7 @@ void SMRegExpMacroAssembler::CheckPosition(int cp_offset,
         Address(current_position_, cp_offset * char_size()), temp0_);
 
     // Compare to start of input.
-    masm_.branchPtr(Assembler::GreaterThanOrEqual, inputStart(), temp0_,
+    masm_.branchPtr(Assembler::GreaterThan, inputStart(), temp0_,
                     LabelOrBacktrack(on_outside_input));
   }
 }
