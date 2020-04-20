@@ -87,7 +87,7 @@ var waitForLoad = async function(uri) {
   };
   gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
 
-  await BrowserTestUtils.browserStopped(gBrowser);
+  await BrowserTestUtils.browserStopped(gBrowser, uri);
 };
 
 // Tests referrerInfo when navigating from a page in the remote process to main
