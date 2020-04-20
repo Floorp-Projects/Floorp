@@ -131,8 +131,10 @@ template <typename Context>
 void Transaction<Context>::Apply(Context* aOwner) {
   EachIndex([&](auto idx) {
     if (auto& txnField = GetAt(idx, mMaybeFields)) {
-      GetAt(idx, GetFieldStorage(aOwner).mFields) = std::move(*txnField);
+      auto& ownerField = GetAt(idx, GetFieldStorage(aOwner).mFields);
+      std::swap(ownerField, *txnField);
       aOwner->DidSet(idx);
+      aOwner->DidSet(idx, std::move(*txnField));
       txnField.reset();
     }
   });
