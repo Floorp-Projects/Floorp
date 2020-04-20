@@ -141,7 +141,6 @@ void DocGroup::RemoveDocument(Document* aDocument) {
     mBrowsingContextGroup = nullptr;
     // This clears the cycle DocGroup has with LabellingEventTarget.
     mEventTarget = nullptr;
-    mAbstractThread = nullptr;
   }
 }
 
@@ -290,20 +289,10 @@ AbstractThread* DocGroup::AbstractMainThreadFor(TaskCategory aCategory) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDocuments.IsEmpty());
 
-  if (!mEventTarget) {
-    return AbstractThread::MainThread();
-  }
-
   // Here we have the same thread for every TaskCategory. The reason
   // for that is that currently TaskCategory isn't used, and it's
   // unsure if it ever will be (See Bug 1624819).
-  if (!mAbstractThread) {
-    mAbstractThread = AbstractThread::CreateEventTargetWrapper(
-        mEventTarget,
-        /* aRequireTailDispatch = */ true);
-  }
-
-  return mAbstractThread;
+  return AbstractThread::MainThread();
 }
 
 void DocGroup::SignalSlotChange(HTMLSlotElement& aSlot) {
