@@ -8,20 +8,23 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
+#include "MainThreadUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RelativeTimeline.h"
+#include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/UseCounter.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
+#include "nsILoadInfo.h"
 #include "nsTObserverArray.h"
 
 #include "js/ContextOptions.h"
@@ -717,7 +720,7 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mChannel.forget();
   }
 
-  nsPIDOMWindowInner* GetWindow() {
+  nsPIDOMWindowInner* GetWindow() const {
     AssertIsOnMainThread();
     return mLoadInfo.mWindow;
   }
@@ -913,6 +916,34 @@ class WorkerPrivate : public RelativeTimeline {
     mUseCounters[static_cast<size_t>(aUseCounter)] = true;
   }
 
+  /**
+   * COEP Methods
+   *
+   * If browser.tabs.remote.useCrossOriginEmbedderPolicy=false, these methods
+   * will, depending on the return type, return a value that will avoid
+   * assertion failures or a value that won't block loads.
+   */
+
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetEmbedderPolicy() const;
+
+  // Fails if a policy has already been set or if `aPolicy` violates the owner's
+  // policy, if an owner exists.
+  mozilla::Result<Ok, nsresult> SetEmbedderPolicy(
+      nsILoadInfo::CrossOriginEmbedderPolicy aPolicy);
+
+  // `aRequest` is the request loading the worker and must be QI-able to
+  // `nsIChannel*`. It's used to verify that the worker can indeed inherit its
+  // owner's COEP (when an owner exists).
+  //
+  // TODO: remove `aRequest`; currently, it's required because instances may not
+  // always know its final, resolved script URL or have access internally to
+  // `aRequest`.
+  void InheritOwnerEmbedderPolicyOrNull(nsIRequest* aRequest);
+
+  // Requires a policy to already have been set.
+  bool MatchEmbedderPolicy(
+      nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) const;
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1016,6 +1047,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   void ReportUseCounters();
 
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetOwnerEmbedderPolicy() const;
+
   class EventTarget;
   friend class EventTarget;
   friend class AutoSyncLoopHolder;
@@ -1030,9 +1063,9 @@ class WorkerPrivate : public RelativeTimeline {
   SharedMutex mMutex;
   mozilla::CondVar mCondVar;
 
-  WorkerPrivate* mParent;
+  WorkerPrivate* const mParent;
 
-  nsString mScriptURL;
+  const nsString mScriptURL;
 
   // This is the worker name for shared workers and dedicated workers.
   nsString mWorkerName;
@@ -1257,6 +1290,14 @@ class WorkerPrivate : public RelativeTimeline {
   // This is used to check if it's allowed to share the memory across the agent
   // cluster.
   const nsILoadInfo::CrossOriginOpenerPolicy mAgentClusterOpenerPolicy;
+
+  // Member variable of this class rather than the worker global scope because
+  // it's received on the main thread, but the global scope is thread-bound
+  // to the worker thread, so storing the value in the global scope would
+  // involve sacrificing the thread-bound-ness or using a WorkerRunnable, and
+  // there isn't a strong reason to store it on the global scope other than
+  // better consistency with the COEP spec.
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mEmbedderPolicy;
 };
 
 class AutoSyncLoopHolder {
