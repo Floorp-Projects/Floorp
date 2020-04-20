@@ -42,6 +42,8 @@ class ADocumentChannelBridge {
   // Delete the bridge, and drop any refs to the DocumentLoadListener
   virtual void Delete() = 0;
 
+  virtual bool SupportsRedirectToRealChannel() { return true; }
+
   // Initate a switch from the DocumentChannel to the protocol-specific
   // real channel.
   virtual RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>

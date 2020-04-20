@@ -121,6 +121,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // if the top-level browsing context has been discarded.
   MediaController* GetMediaController();
 
+  bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
+                              bool aSetNavigating);
+
   bool HasHistoryEntry(nsISHEntry* aEntry) const {
     return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
   }
@@ -183,8 +186,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   friend class net::DocumentLoadListener;
   // Called when a DocumentLoadListener is created to start a load for
-  // this browsing context.
-  void StartDocumentLoad(net::DocumentLoadListener* aLoad);
+  // this browsing context. Returns false if a higher priority load is
+  // already in-progress and the new one has been rejected.
+  bool StartDocumentLoad(net::DocumentLoadListener* aLoad);
   // Called once DocumentLoadListener completes handling a load, and it
   // is either complete, or handed off to the final channel to deliver
   // data to the destination docshell.

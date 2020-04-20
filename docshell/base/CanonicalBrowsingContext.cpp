@@ -13,6 +13,8 @@
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/PlaybackController.h"
+#include "mozilla/net/DocumentLoadListener.h"
+#include "mozilla/net/BrowsingContextDocumentChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/net/DocumentLoadListener.h"
@@ -564,12 +566,70 @@ MediaController* CanonicalBrowsingContext::GetMediaController() {
   return mTabMediaController;
 }
 
-void CanonicalBrowsingContext::StartDocumentLoad(
+bool CanonicalBrowsingContext::AttemptLoadURIInParent(
+    nsDocShellLoadState* aLoadState, bool aSetNavigating) {
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  if (!IsTopContent() || !StaticPrefs::browser_tabs_documentchannel() ||
+      !StaticPrefs::browser_tabs_documentchannel_parent_initiated()) {
+    return false;
+  }
+
+  // DocumentChannel currently only supports connecting channels into the
+  // content process, so we can only support schemes that will always be loaded
+  // there for now. Restrict to just http(s) for simplicity.
+  if (!aLoadState->URI()->SchemeIs("http") &&
+      !aLoadState->URI()->SchemeIs("https")) {
+    return false;
+  }
+
+  uint64_t outerWindowId = 0;
+  if (WindowGlobalParent* global = GetCurrentWindowGlobal()) {
+    nsCOMPtr<nsIURI> currentURI = global->GetDocumentURI();
+    if (currentURI) {
+      bool newURIHasRef = false;
+      aLoadState->URI()->GetHasRef(&newURIHasRef);
+      bool equalsExceptRef = false;
+      aLoadState->URI()->EqualsExceptRef(currentURI, &equalsExceptRef);
+
+      if (equalsExceptRef && newURIHasRef) {
+        // This navigation is same-doc WRT the current one, we should pass it
+        // down to the docshell to be handled.
+        return false;
+      }
+    }
+    // If the current document has a beforeunload listener, then we need to
+    // start the load in that process after we fire the event.
+    if (global->HasBeforeUnload()) {
+      return false;
+    }
+
+    outerWindowId = global->OuterWindowId();
+  }
+
+  RefPtr<net::BrowsingContextDocumentChannel> docChannel =
+      new net::BrowsingContextDocumentChannel(this);
+
+  // If we successfully open the DocumentChannel, then it'll register
+  // itself in mCurrentLoad and be kept alive until it completes
+  // loading.
+  return docChannel->Open(aLoadState, outerWindowId, aSetNavigating);
+}
+
+bool CanonicalBrowsingContext::StartDocumentLoad(
     net::DocumentLoadListener* aLoad) {
   if (mCurrentLoad) {
+    // If the new load is originates from a content process,
+    // and the current load is from the parent, then we consider
+    // the existing load higher precendence, and reject the new
+    // one.
+    if (aLoad->OtherPid() && !mCurrentLoad->OtherPid()) {
+      return false;
+    }
     mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
   mCurrentLoad = aLoad;
+  return true;
 }
 void CanonicalBrowsingContext::EndDocumentLoad(
     net::DocumentLoadListener* aLoad) {
