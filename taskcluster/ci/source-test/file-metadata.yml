@@ -7,7 +7,7 @@ job-defaults:
     treeherder:
         kind: other
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         artifacts:
             - type: directory
