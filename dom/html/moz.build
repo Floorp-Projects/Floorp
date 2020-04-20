@@ -23,7 +23,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 XPIDL_SOURCES += [
     'nsIFormSubmitObserver.idl',
-    'nsIImageDocument.idl',
     'nsIMenuBuilder.idl',
 ]
 
