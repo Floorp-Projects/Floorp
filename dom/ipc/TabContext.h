@@ -18,7 +18,7 @@ namespace dom {
 class IPCTabContext;
 
 /**
- * TabContext encapsulates information about an iframe that may be a mozbrowser.
+ * TabContext encapsulates information about an iframe.
  *
  * BrowserParent and BrowserChild both inherit from TabContext, and you can also
  * have standalone TabContext objects.
@@ -38,13 +38,6 @@ class TabContext {
    * TabContext's information.
    */
   IPCTabContext AsIPCTabContext() const;
-
-  /**
-   * Does this TabContext correspond to a mozbrowser?
-   *
-   * <iframe mozbrowser> is a mozbrowser element, but <xul:browser> is not.
-   */
-  bool IsMozBrowserElement() const;
 
   bool IsJSPlugin() const;
   int32_t JSPluginId() const;
@@ -95,7 +88,7 @@ class TabContext {
    */
   void SetFirstPartyDomainAttributes(const nsAString& aFirstPartyDomain);
 
-  bool SetTabContext(bool aIsMozBrowserElement, uint64_t aChromeOuterWindowID,
+  bool SetTabContext(uint64_t aChromeOuterWindowID,
                      UIStateChangeType aShowFocusRings,
                      const OriginAttributes& aOriginAttributes,
                      const nsAString& aPresentationURL,
@@ -106,7 +99,7 @@ class TabContext {
    * case triggered by nsFrameLoader::SwapWithOtherRemoteLoader which may have
    * caused the owner content to change.
    *
-   * This special case only allows the field `mIsMozBrowserElement` to be
+   * This special case only allows the field `mChromeOuterWindowID` to be
    * changed.  If any other fields have changed, the update is ignored and
    * returns false.
    */
@@ -131,14 +124,6 @@ class TabContext {
    * Has this TabContext been initialized?  If so, mutator methods will fail.
    */
   bool mInitialized;
-
-  /**
-   * Whether this TabContext corresponds to a mozbrowser.
-   *
-   * <iframe mozbrowser> and <xul:browser> are not considered to be
-   * mozbrowser elements.
-   */
-  bool mIsMozBrowserElement;
 
   /**
    * The outerWindowID of the window hosting the remote frameloader.
@@ -179,14 +164,14 @@ class MutableTabContext : public TabContext {
     return TabContext::SetTabContext(aContext);
   }
 
-  bool SetTabContext(bool aIsMozBrowserElement, uint64_t aChromeOuterWindowID,
+  bool SetTabContext(uint64_t aChromeOuterWindowID,
                      UIStateChangeType aShowFocusRings,
                      const OriginAttributes& aOriginAttributes,
                      const nsAString& aPresentationURL,
                      uint32_t aMaxTouchPoints) {
-    return TabContext::SetTabContext(aIsMozBrowserElement, aChromeOuterWindowID,
-                                     aShowFocusRings, aOriginAttributes,
-                                     aPresentationURL, aMaxTouchPoints);
+    return TabContext::SetTabContext(aChromeOuterWindowID, aShowFocusRings,
+                                     aOriginAttributes, aPresentationURL,
+                                     aMaxTouchPoints);
   }
 
   bool SetTabContextForJSPluginFrame(uint32_t aJSPluginID) {
