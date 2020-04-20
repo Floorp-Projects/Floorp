@@ -166,14 +166,16 @@ RasterImage::RequestRefresh(const TimeStamp& aTime) {
     res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime);
   }
 
-  if (res.mFrameAdvanced) {
-// Notify listeners that our frame has actually changed, but do this only
-// once for all frames that we've now passed (if AdvanceFrame() was called
-// more than once).
 #ifdef DEBUG
+  if (res.mFrameAdvanced) {
     mFramesNotified++;
+  }
 #endif
 
+  // Notify listeners that our frame has actually changed, but do this only
+  // once for all frames that we've now passed (if AdvanceFrame() was called
+  // more than once).
+  if (!res.mDirtyRect.IsEmpty() || res.mFrameAdvanced) {
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(res.mDirtyRect);
     NotifyProgress(NoProgress, dirtyRect);
   }
