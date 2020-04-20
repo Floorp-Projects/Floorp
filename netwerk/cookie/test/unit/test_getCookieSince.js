@@ -6,7 +6,7 @@ const cm = cs.QueryInterface(Ci.nsICookieManager);
 function setCookie(name, url) {
   let value = `${name}=${Math.random()}; Path=/; Max-Age=1000; sameSite=none`;
   info(`Setting cookie ${value} for ${url.spec}`);
-  cs.setCookieStringFromHttp(url, null, value, null, null);
+  cs.setCookieStringFromHttp(url, null, value, null);
 }
 
 async function sleep() {

@@ -2128,11 +2128,7 @@ HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   nsICookieService* cs = gHttpHandler->GetCookieService();
   NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
 
-  nsAutoCString date;
-  // empty date is not an error
-  Unused << mResponseHead->GetHeader(nsHttp::Date, date);
-  nsresult rv =
-      cs->SetCookieStringFromHttp(mURI, nullptr, aCookieHeader, date, this);
+  nsresult rv = cs->SetCookieStringFromHttp(mURI, nullptr, aCookieHeader, this);
   if (NS_SUCCEEDED(rv)) {
     NotifySetCookie(aCookieHeader);
   }
