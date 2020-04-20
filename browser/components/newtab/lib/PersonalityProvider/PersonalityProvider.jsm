@@ -53,6 +53,9 @@ this.PersonalityProvider = class PersonalityProvider {
     }
     this.maxHistoryQueryResults = maxHistoryQueryResults;
     this.version = version;
+    this.scores = scores || {};
+    this.interestConfig = this.scores.interestConfig;
+    this.interestVector = this.scores.interestVector;
     this.onSync = this.onSync.bind(this);
     this.setup();
   }
