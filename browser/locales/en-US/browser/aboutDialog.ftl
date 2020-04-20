@@ -12,7 +12,7 @@ update-checkForUpdatesButton =
     .accesskey = C
 
 update-updateButton =
-    .label = Restart to update { -brand-shorter-name }
+    .label = Restart to Update { -brand-shorter-name }
     .accesskey = R
 
 update-checkingForUpdates = Checking for updates…
