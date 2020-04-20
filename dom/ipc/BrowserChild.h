@@ -227,7 +227,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
     return mBrowserChildMessageManager->WrapObject(aCx, aGivenProto);
   }
 
-  nsIPrincipal* GetPrincipal() { return mPrincipal; }
   // Get the Document for the top-level window in this tab.
   already_AddRefed<Document> GetTopLevelDocument() const;
 
@@ -246,14 +245,12 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   virtual bool DoSendBlockingMessage(JSContext* aCx, const nsAString& aMessage,
                                      StructuredCloneData& aData,
                                      JS::Handle<JSObject*> aCpows,
-                                     nsIPrincipal* aPrincipal,
                                      nsTArray<StructuredCloneData>* aRetVal,
                                      bool aIsSync) override;
 
   virtual nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
                                       StructuredCloneData& aData,
-                                      JS::Handle<JSObject*> aCpows,
-                                      nsIPrincipal* aPrincipal) override;
+                                      JS::Handle<JSObject*> aCpows) override;
 
   bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                const ViewID& aViewId,
@@ -417,7 +414,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMessage,
                                            nsTArray<CpowEntry>&& aCpows,
-                                           nsIPrincipal* aPrincipal,
                                            const ClonedMessageData& aData);
   mozilla::ipc::IPCResult RecvSwappedWithOtherRemoteLoader(
       const IPCTabContext& aContext);
