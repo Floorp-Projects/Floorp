@@ -1293,6 +1293,9 @@ struct ClearJSHolder : public TraceCallbacks {
 void CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder) {
   nsScriptObjectTracer* tracer = mJSHolders.GetAndRemove(aHolder);
   if (tracer) {
+    // Bug 1531951: The analysis can't see through the virtual call but we know
+    // that the ClearJSHolder tracer will never GC.
+    JS::AutoSuppressGCAnalysis nogc;
     tracer->Trace(aHolder, ClearJSHolder(), nullptr);
   }
 }
