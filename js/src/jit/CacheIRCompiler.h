@@ -765,7 +765,8 @@ class MOZ_RAII CacheIRCompiler {
     emitPostBarrierShared(obj, val, scratch, index);
   }
 
-  bool emitComparePointerResultShared(bool symbol);
+  bool emitComparePointerResultShared(JSOp op, TypedOperandId lhsId,
+                                      TypedOperandId rhsId);
 
   bool emitCompareBigIntInt32ResultShared(Register bigInt, Register int32,
                                           Register scratch1, Register scratch2,

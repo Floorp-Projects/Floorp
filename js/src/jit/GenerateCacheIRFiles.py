@@ -77,6 +77,7 @@ operand_writer_info = {
     'RawWordField': ('uintptr_t', 'writeRawWordField'),
     'RawPointerField': ('const void*', 'writeRawPointerField'),
     'IdField': ('jsid', 'writeIdField'),
+    'ValueField': ('const Value&', 'writeValueField'),
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
@@ -88,7 +89,9 @@ operand_writer_info = {
     'ReferenceTypeImm': ('ReferenceType', 'writeReferenceTypeImm'),
     'ScalarTypeImm': ('Scalar::Type', 'writeScalarTypeImm'),
     'Int32Imm': ('int32_t', 'writeInt32Imm'),
+    'UInt32Imm': ('uint32_t', 'writeUInt32Imm'),
     'JSNativeImm': ('JSNative', 'writeJSNativeImm'),
+    'StaticStringImm': ('const char*', 'writeStaticStringImm'),
 }
 
 
@@ -143,6 +146,7 @@ operand_compiler_info = {
     'RawWordField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'RawPointerField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'IdField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'ValueField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
     'BoolImm': ('bool', '', 'reader.readBool()'),
@@ -154,7 +158,9 @@ operand_compiler_info = {
     'ReferenceTypeImm': ('ReferenceType', '', 'reader.referenceTypeDescrType()'),
     'ScalarTypeImm': ('Scalar::Type', '', 'reader.scalarType()'),
     'Int32Imm': ('int32_t', '', 'reader.int32Immediate()'),
+    'UInt32Imm': ('uint32_t', '', 'reader.uint32Immediate()'),
     'JSNativeImm': ('JSNative', '', 'reinterpret_cast<JSNative>(reader.pointer())'),
+    'StaticStringImm': ('const char*', '', 'reinterpret_cast<char*>(reader.pointer())'),
 }
 
 
