@@ -193,6 +193,7 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult RecvInvalidateRenderedFrame() override;
   mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvCapture() override;
+  mozilla::ipc::IPCResult RecvToggleCaptureSequence() override;
   mozilla::ipc::IPCResult RecvSetTransactionLogging(const bool&) override;
   mozilla::ipc::IPCResult RecvSyncWithCompositor() override;
 

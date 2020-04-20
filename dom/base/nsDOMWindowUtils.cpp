@@ -4114,6 +4114,14 @@ nsDOMWindowUtils::WrCapture() {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::WrToggleCaptureSequence() {
+  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+    wrbc->ToggleCaptureSequence();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetCompositionRecording(bool aValue, Promise** aOutPromise) {
   return aValue ? StartCompositionRecording(aOutPromise)
                 : StopCompositionRecording(true, aOutPromise);

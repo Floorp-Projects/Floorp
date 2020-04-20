@@ -2003,9 +2003,8 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     txn.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
-#[no_mangle]
-pub extern "C" fn wr_api_capture(dh: &mut DocumentHandle, path: *const c_char, bits_raw: u32) {
-    use std::fs::{create_dir_all, File};
+fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
+    use std::fs::{File, create_dir_all};
     use std::io::Write;
 
     let cstr = unsafe { CStr::from_ptr(path) };
@@ -2053,12 +2052,34 @@ pub extern "C" fn wr_api_capture(dh: &mut DocumentHandle, path: *const c_char, b
         }
         Err(e) => {
             warn!("Unable to create path '{:?}' for capture: {:?}", path, e);
-            return;
+            return None
         }
     }
 
-    let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
-    dh.api.save_capture(path, bits);
+    Some(path)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_capture(dh: &mut DocumentHandle, path: *const c_char, bits_raw: u32) {
+    if let Some(path) = generate_capture_path(path) {
+        let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
+        dh.api.save_capture(path, bits);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_start_capture_sequence(dh: &mut DocumentHandle, path: *const c_char, bits_raw: u32) {
+    if let Some(path) = generate_capture_path(path) {
+        let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
+        dh.api.start_capture_sequence(path, bits);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_stop_capture_sequence(dh: &mut DocumentHandle) {
+    let border = "--------------------------\n";
+    warn!("{} Stop capturing WR state\n{}", &border, &border);
+    dh.api.stop_capture_sequence();
 }
 
 #[no_mangle]
