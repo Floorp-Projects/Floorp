@@ -3,11 +3,6 @@ import { mount } from "enzyme";
 import React from "react";
 
 describe("Discovery Stream <DSImage>", () => {
-  let sandbox;
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
   it("should have a child with class ds-image", () => {
     const img = mount(<DSImage />);
     const child = img.find(".ds-image");
@@ -18,11 +13,6 @@ describe("Discovery Stream <DSImage>", () => {
   it("should set proper sources if only `source` is available", () => {
     const img = mount(<DSImage source="https://placekitten.com/g/640/480" />);
 
-    img.setState({
-      isSeen: true,
-      containerWidth: 640,
-    });
-
     assert.equal(
       img.find("img").prop("src"),
       "https://placekitten.com/g/640/480"
@@ -30,23 +20,47 @@ describe("Discovery Stream <DSImage>", () => {
   });
 
   it("should set proper sources if `rawSource` is available", () => {
-    const img = mount(
-      <DSImage rawSource="https://placekitten.com/g/640/480" />
-    );
+    const testSizes = [
+      {
+        mediaMatcher: "(min-width: 1122px)",
+        width: 296,
+        height: 148,
+      },
 
-    img.setState({
-      isSeen: true,
-      containerWidth: 640,
-      containerHeight: 480,
-    });
+      {
+        mediaMatcher: "(min-width: 866px)",
+        width: 218,
+        height: 109,
+      },
+
+      {
+        mediaMatcher: "(max-width: 610px)",
+        width: 202,
+        height: 101,
+      },
+    ];
+
+    const img = mount(
+      <DSImage
+        rawSource="https://placekitten.com/g/640/480"
+        sizes={testSizes}
+      />
+    );
 
     assert.equal(
       img.find("img").prop("src"),
-      "https://img-getpocket.cdn.mozilla.net/640x480/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480"
+      "https://placekitten.com/g/640/480"
     );
     assert.equal(
       img.find("img").prop("srcSet"),
-      "https://img-getpocket.cdn.mozilla.net/1280x960/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 2x"
+      [
+        "https://img-getpocket.cdn.mozilla.net/296x148/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 296w",
+        "https://img-getpocket.cdn.mozilla.net/592x296/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 592w",
+        "https://img-getpocket.cdn.mozilla.net/218x109/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 218w",
+        "https://img-getpocket.cdn.mozilla.net/436x218/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 436w",
+        "https://img-getpocket.cdn.mozilla.net/202x101/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 202w",
+        "https://img-getpocket.cdn.mozilla.net/404x202/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 404w",
+      ].join(",")
     );
   });
 
@@ -82,35 +96,15 @@ describe("Discovery Stream <DSImage>", () => {
     assert.equal(img.find("div").prop("className"), "broken-image");
   });
 
-  it("should update state when seen", () => {
+  it("should update loaded state when seen", () => {
     const img = mount(
       <DSImage rawSource="https://placekitten.com/g/640/480" />
     );
 
-    img.instance().onSeen([
-      {
-        isIntersecting: true,
-        boundingClientRect: {
-          width: 640,
-          height: 480,
-        },
-      },
-    ]);
-
-    assert.equal(img.state().containerWidth, 640);
-    assert.equal(img.state().containerHeight, 480);
-    assert.propertyVal(img.state(), "isSeen", true);
+    img.instance().onLoad();
+    assert.propertyVal(img.state(), "isLoaded", true);
   });
 
-  it("should stop observing when removed", () => {
-    const img = mount(<DSImage />);
-    const { observer } = img.instance();
-    sandbox.stub(observer, "unobserve");
-
-    img.unmount();
-
-    assert.calledOnce(observer.unobserve);
-  });
   describe("DSImage with Idle Callback", () => {
     let wrapper;
     let windowStub = {

@@ -122,6 +122,8 @@ $wrapper-max-width-widest: $grid-unit * 8 + $base-gutter * 7 + $section-horizont
 $scrollbar-width: 16px;
 
 // Breakpoints
+// If updating these breakpoints, don't forget to update uses of DSImage, which
+// might choose the right image src to use depending on the viewport size.
 $break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width; // 610px
 $break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width; // 866px
 $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width; // 1122px

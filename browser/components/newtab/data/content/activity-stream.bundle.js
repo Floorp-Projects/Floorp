@@ -4790,7 +4790,29 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
 
     if (props.App.isForStartupCache) {
       this.state.isSeen = true;
-    }
+    } // We want to choose the optimal thumbnail for the underlying DSImage, but
+    // want to do it in a performant way. The breakpoints used in the
+    // CSS of the page are, unfortuntely, not easy to retrieve without
+    // causing a style flush. To avoid that, we hardcode them here.
+    //
+    // The values chosen here were the dimensions of the card thumbnails as
+    // computed by getBoundingClientRect() for each type of viewport width
+    // across both high-density and normal-density displays.
+
+
+    this.dsImageSizes = [{
+      mediaMatcher: "(min-width: 1122px)",
+      width: 296,
+      height: 148
+    }, {
+      mediaMatcher: "(min-width: 866px)",
+      width: 218,
+      height: 109
+    }, {
+      mediaMatcher: "(max-width: 610px)",
+      width: 202,
+      height: 101
+    }];
   }
 
   onLinkClick(event) {
@@ -4887,7 +4909,8 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__["DSImage"], {
       extraClassNames: "img",
       source: this.props.image_src,
-      rawSource: this.props.raw_image_src
+      rawSource: this.props.raw_image_src,
+      sizes: this.dsImageSizes
     })), isButtonCTA ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(CTAButtonMeta, {
       display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
@@ -4955,49 +4978,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSImage", function() { return DSImage; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 class DSImage extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onOptimizedImageError = this.onOptimizedImageError.bind(this);
     this.onNonOptimizedImageError = this.onNonOptimizedImageError.bind(this);
+    this.onLoad = this.onLoad.bind(this);
     this.state = {
-      isSeen: false,
+      isLoaded: false,
       optimizedImageFailed: false,
       useTransition: false
     };
   }
 
-  onSeen(entries) {
-    if (this.state) {
-      const entry = entries.find(e => e.isIntersecting);
-
-      if (entry) {
-        if (this.props.optimize) {
-          this.setState({
-            // Thumbor doesn't handle subpixels and just errors out, so rounding...
-            containerWidth: Math.round(entry.boundingClientRect.width),
-            containerHeight: Math.round(entry.boundingClientRect.height)
-          });
-        }
-
-        this.setState({
-          isSeen: true
-        }); // Stop observing since element has been seen
-
-        this.observer.unobserve(react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.findDOMNode(this));
-      }
-    }
-  }
-
   onIdleCallback() {
-    if (!this.state.isSeen) {
+    if (!this.state.isLoaded) {
       this.setState({
         useTransition: true
       });
@@ -5013,21 +5012,9 @@ class DSImage extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
 
   componentDidMount() {
     this.idleCallbackId = this.props.windowObj.requestIdleCallback(this.onIdleCallback.bind(this));
-    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
-      // Assume an image will be eventually seen if it is within
-      // half the average Desktop vertical screen size:
-      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
-      rootMargin: `540px`
-    });
-    this.observer.observe(react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.findDOMNode(this));
   }
 
   componentWillUnmount() {
-    // Remove observer on unmount
-    if (this.observer) {
-      this.observer.unobserve(react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.findDOMNode(this));
-    }
-
     if (this.idleCallbackId) {
       this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
     }
@@ -5037,31 +5024,52 @@ class DSImage extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
     let classNames = `ds-image
       ${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}
       ${this.state && this.state.useTransition ? ` use-transition` : ``}
-      ${this.state && this.state.isSeen ? ` loaded` : ``}
+      ${this.state && this.state.isLoaded ? ` loaded` : ``}
     `;
     let img;
 
-    if (this.state && this.state.isSeen) {
+    if (this.state) {
       if (this.props.optimize && this.props.rawSource && !this.state.optimizedImageFailed) {
-        let source;
-        let source2x;
+        let baseSource = this.props.rawSource;
+        let sizeRules = [];
+        let srcSetRules = [];
 
-        if (this.state && this.state.containerWidth) {
-          let baseSource = this.props.rawSource;
-          source = this.reformatImageURL(baseSource, this.state.containerWidth, this.state.containerHeight);
-          source2x = this.reformatImageURL(baseSource, this.state.containerWidth * 2, this.state.containerHeight * 2);
-          img = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
-            alt: this.props.alt_text,
-            crossOrigin: "anonymous",
-            onError: this.onOptimizedImageError,
-            src: source,
-            srcSet: `${source2x} 2x`
-          });
+        for (let rule of this.props.sizes) {
+          let {
+            mediaMatcher,
+            width,
+            height
+          } = rule;
+          let sizeRule = `${mediaMatcher} ${width}px`;
+          sizeRules.push(sizeRule);
+          let srcSetRule = `${this.reformatImageURL(baseSource, width, height)} ${width}w`;
+          let srcSetRule2x = `${this.reformatImageURL(baseSource, width * 2, height * 2)} ${width * 2}w`;
+          srcSetRules.push(srcSetRule);
+          srcSetRules.push(srcSetRule2x);
         }
-      } else if (!this.state.nonOptimizedImageFailed) {
+
+        if (this.props.sizes.length) {
+          // We have to supply a fallback in the very unlikely event that none of
+          // the media queries match. The smallest dimension was chosen arbitrarily.
+          sizeRules.push(`${this.props.sizes[this.props.sizes.length - 1].width}px`);
+        }
+
         img = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+          loading: "lazy",
           alt: this.props.alt_text,
           crossOrigin: "anonymous",
+          onLoad: this.onLoad,
+          onError: this.onOptimizedImageError,
+          sizes: sizeRules.join(","),
+          src: baseSource,
+          srcSet: srcSetRules.join(",")
+        });
+      } else if (!this.state.nonOptimizedImageFailed) {
+        img = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+          loading: "lazy",
+          alt: this.props.alt_text,
+          crossOrigin: "anonymous",
+          onLoad: this.onLoad,
           onError: this.onNonOptimizedImageError,
           src: this.props.source
         });
@@ -5091,6 +5099,12 @@ class DSImage extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
     });
   }
 
+  onLoad() {
+    this.setState({
+      isLoaded: true
+    });
+  }
+
 }
 DSImage.defaultProps = {
   source: null,
@@ -5102,8 +5116,9 @@ DSImage.defaultProps = {
   optimize: true,
   // Measure parent container to request exact sizes
   alt_text: null,
-  windowObj: window // Added to support unit tests
-
+  windowObj: window,
+  // Added to support unit tests
+  sizes: []
 };
 
 /***/ }),
