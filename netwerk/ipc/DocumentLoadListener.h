@@ -102,6 +102,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
             Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
             bool aHasGesture, nsresult* aRv);
+  bool OpenFromParent(nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -194,8 +195,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
   // this is complete.
-  void TriggerRedirectToRealChannel(
-      const Maybe<uint64_t>& aDestinationProcess = Nothing());
+  void TriggerRedirectToRealChannel(const Maybe<uint64_t>& aDestinationProcess);
 
   // Called once the content-process side on setting up a replacement
   // channel is complete. May wait for the new parent channel to
