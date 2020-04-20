@@ -20,6 +20,8 @@ function run_test() {
   cs.setCookieString(uri, set, null);
 
   expected = "foo=bar";
-  actual = cs.getCookieString(uri, null, null);
+  actual = cs.getCookieStringForPrincipal(
+    Services.scriptSecurityManager.createContentPrincipal(uri, {})
+  );
   Assert.equal(actual, expected);
 }

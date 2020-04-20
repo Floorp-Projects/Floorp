@@ -46,6 +46,11 @@ function run_test() {
     null
   );
 
-  var storedCookie = cookieService.getCookieString(cookieURI, null);
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
+    cookieURI,
+    {}
+  );
+  var storedCookie = cookieService.getCookieStringForPrincipal(principal);
+
   Assert.equal(storedCookie, GOOD_COOKIE + "; " + SPACEY_COOKIE);
 }
