@@ -102,6 +102,34 @@ export class _DSCard extends React.PureComponent {
     if (props.App.isForStartupCache) {
       this.state.isSeen = true;
     }
+
+    // We want to choose the optimal thumbnail for the underlying DSImage, but
+    // want to do it in a performant way. The breakpoints used in the
+    // CSS of the page are, unfortuntely, not easy to retrieve without
+    // causing a style flush. To avoid that, we hardcode them here.
+    //
+    // The values chosen here were the dimensions of the card thumbnails as
+    // computed by getBoundingClientRect() for each type of viewport width
+    // across both high-density and normal-density displays.
+    this.dsImageSizes = [
+      {
+        mediaMatcher: "(min-width: 1122px)",
+        width: 296,
+        height: 148,
+      },
+
+      {
+        mediaMatcher: "(min-width: 866px)",
+        width: 218,
+        height: 109,
+      },
+
+      {
+        mediaMatcher: "(max-width: 610px)",
+        width: 202,
+        height: 101,
+      },
+    ];
   }
 
   onLinkClick(event) {
@@ -202,6 +230,7 @@ export class _DSCard extends React.PureComponent {
               extraClassNames="img"
               source={this.props.image_src}
               rawSource={this.props.raw_image_src}
+              sizes={this.dsImageSizes}
             />
           </div>
           {isButtonCTA ? (
