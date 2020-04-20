@@ -221,6 +221,9 @@ add_task(async function() {
   setInputValue(hud, "Reflect.setPrototypeOf({}, null)");
   await waitForNoEagerEvaluationResult(hud);
 
+  setInputValue(hud, "[] instanceof Array");
+  await waitForEagerEvaluationResult(hud, "true");
+
   // go back to inline layout.
   await toggleLayout(hud);
 });
