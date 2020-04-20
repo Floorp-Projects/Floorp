@@ -8,8 +8,6 @@
 /* globals user_pref */
 // Enable w3c touch events for testing
 user_pref("dom.w3c_touch_events.enabled", 1);
-// Enable CSS 'contain' for testing
-user_pref("layout.css.contain.enabled", true);
 // Enable CSS Grid 'subgrid' feature for testing
 user_pref("layout.css.grid-template-subgrid-value.enabled", true);
 // Enable CSS initial-letter for testing
