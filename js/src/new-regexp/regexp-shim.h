@@ -1144,14 +1144,9 @@ class Label {
   friend class SMRegExpMacroAssembler;
 };
 
-// TODO: Map flags to jitoptions
-extern bool FLAG_harmony_regexp_sequence;
-extern bool FLAG_regexp_interpret_all;
-extern bool FLAG_regexp_mode_modifiers;
-extern bool FLAG_regexp_optimization;
-extern bool FLAG_regexp_peephole_optimization;
-extern bool FLAG_regexp_possessive_quantifier;
-extern bool FLAG_regexp_tier_up;
+//**************************************************
+// Constant Flags
+//**************************************************
 
 // V8 uses this for differential fuzzing to handle stack overflows.
 // We address the same problem in StackLimitCheck::HasOverflowed.
@@ -1160,6 +1155,39 @@ const bool FLAG_correctness_fuzzer_suppressions = false;
 // Instead of using a flag for this, we provide an implementation of
 // CanReadUnaligned in SMRegExpMacroAssembler.
 const bool FLAG_enable_regexp_unaligned_accesses = false;
+
+// This is used to guard a prototype implementation of sequence properties.
+// See: https://github.com/tc39/proposal-regexp-unicode-sequence-properties
+// TODO: Expose this behind a pref once it is past stage 2?
+const bool FLAG_harmony_regexp_sequence = false;
+
+// This is only used in a helper function in regex.h that we never call.
+const bool FLAG_regexp_interpret_all = false;
+
+// This is used to guard a prototype implementation of mode modifiers,
+// which can modify the regexp flags on the fly inside the pattern.
+// As far as I can tell, there isn't even a TC39 proposal for this.
+const bool FLAG_regexp_mode_modifiers = false;
+
+// This is used to guard an old prototype implementation of possessive
+// quantifiers, which never got past the point of adding parser support.
+const bool FLAG_regexp_possessive_quantifier = false;
+
+// These affect the default level of optimization. We can still turn
+// optimization off on a case-by-case basis in CompilePattern - for
+// example, if a regexp is too long - so we might as well turn these
+// flags on unconditionally.
+const bool FLAG_regexp_optimization = true;
+const bool FLAG_regexp_peephole_optimization = true;
+
+// This is used to control whether regexps tier up from interpreted to
+// compiled. We control this with --no-native-regexp and
+// --regexp-warmup-threshold.
+const bool FLAG_regexp_tier_up = true;
+
+//**************************************************
+// Debugging Flags
+//**************************************************
 
 extern bool FLAG_trace_regexp_assembler;
 extern bool FLAG_trace_regexp_bytecodes;
