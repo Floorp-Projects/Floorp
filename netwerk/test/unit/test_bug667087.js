@@ -23,5 +23,12 @@ function run_test() {
     Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("a"), 1);
-  Assert.equal(cs.getCookieString(NetUtil.newURI("http://a"), null), "foo=bar");
+
+  const uri = NetUtil.newURI("http://a");
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    {}
+  );
+
+  Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
 }

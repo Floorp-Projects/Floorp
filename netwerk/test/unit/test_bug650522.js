@@ -23,8 +23,12 @@ function run_test() {
     Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("e.mail.com"), 1);
-  Assert.equal(
-    cs.getCookieString(NetUtil.newURI("http://e.mail.com"), null),
-    "foo=bar"
+
+  const uri = NetUtil.newURI("http://e.mail.com");
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    {}
   );
+
+  Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
 }

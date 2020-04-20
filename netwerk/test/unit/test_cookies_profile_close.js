@@ -31,6 +31,11 @@ function* do_run_test() {
 
   // Set a cookie.
   let uri = NetUtil.newURI("http://foo.com");
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    {}
+  );
+
   Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
   let cookies = Services.cookiemgr.cookies;
   Assert.ok(cookies.length == 1);
@@ -40,11 +45,11 @@ function* do_run_test() {
   do_close_profile();
 
   // Check that the APIs behave appropriately.
-  Assert.equal(Services.cookies.getCookieString(uri, null), "");
+  Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
   Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), "");
   Services.cookies.setCookieString(uri, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, null, "oh3=hai", null, null);
-  Assert.equal(Services.cookies.getCookieString(uri, null), "");
+  Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
 
   do_check_throws(function() {
     Services.cookiemgr.removeAll();

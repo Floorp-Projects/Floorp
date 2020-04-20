@@ -62,7 +62,9 @@ async function test_basic_eviction(base_host) {
   );
 
   // Check if cookies are evicted by last accessed time.
-  cs.getCookieString(FOO_PATH, null);
+  cs.getCookieStringForPrincipal(
+    Services.scriptSecurityManager.createContentPrincipal(FOO_PATH, {})
+  );
   await setCookie("session_foo_path_7", null, "/foo", null, FOO_PATH);
   verifyCookies(
     ["session_foo_path_5", "session_foo_path_6", "session_foo_path_7"],
