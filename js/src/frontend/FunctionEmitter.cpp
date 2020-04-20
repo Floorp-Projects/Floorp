@@ -49,8 +49,6 @@ bool FunctionEmitter::prepareForNonLazy() {
 
   funbox_->wasEmitted = true;
 
-  MOZ_ASSERT_IF(bce_->sc->strict(), funbox_->strictScript);
-
 #ifdef DEBUG
   state_ = State::NonLazy;
 #endif

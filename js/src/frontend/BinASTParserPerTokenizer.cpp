@@ -223,7 +223,7 @@ void BinASTParserPerTokenizer<Tok>::forceStrictIfNecessary(
 
   for (const ParseNode* directive : directives->contents()) {
     if (directive->as<NameNode>().atom() == useStrict) {
-      sc->strictScript = true;
+      sc->setStrictScript();
       break;
     }
   }
