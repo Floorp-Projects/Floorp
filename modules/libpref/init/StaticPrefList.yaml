@@ -1023,12 +1023,6 @@
   value: "#551A8B"
   mirror: never
 
-# Enable xul error pages.
-- name: browser.xul.error_pages.enabled
-  type: bool
-  value: true
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
