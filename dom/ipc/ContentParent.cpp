@@ -872,7 +872,6 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
       (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
     // For pre-allocated process we have not set the opener yet.
     p->mOpener = aOpener;
-    MOZ_DIAGNOSTIC_ASSERT(p->mScriptableHelper);
     aContentParents.AppendElement(p);
     p->mActivateTS = TimeStamp::Now();
     return p.forget();
