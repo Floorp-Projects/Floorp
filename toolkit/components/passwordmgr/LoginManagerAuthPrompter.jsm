@@ -685,7 +685,7 @@ LoginManagerAuthPrompter.prototype = {
           aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY &&
           !(aAuthInfo.flags & Ci.nsIAuthInformation.PREVIOUS_FAILED) &&
           Services.prefs.getBoolPref("signon.autologin.proxy") &&
-          !this._inPrivateBrowsing
+          !PrivateBrowsingUtils.permanentPrivateBrowsing
         ) {
           this.log("Autologin enabled, skipping auth prompt.");
           canAutologin = true;
