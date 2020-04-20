@@ -94,7 +94,7 @@ function testIsMultipartRequest(data) {
 }
 
 function testFindHeader(data) {
-  const headers = data.headers;
+  const { headers } = data;
   const hostName = CurlUtils.findHeader(headers, "Host");
   const requestedWithLowerCased = CurlUtils.findHeader(
     headers,
@@ -116,7 +116,7 @@ function testFindHeader(data) {
 }
 
 function testMultiPartHeaders(data) {
-  const headers = data.headers;
+  const { headers } = data;
   const contentType = CurlUtils.findHeader(headers, "Content-Type");
 
   ok(

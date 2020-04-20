@@ -109,7 +109,7 @@ add_task(async function() {
   }
 
   function testCustomItemChanged(item, orig) {
-    const url = item.url;
+    const { url } = item;
     const expectedUrl = orig.url + "&" + ADD_QUERY;
 
     is(url, expectedUrl, "menu item is updated to reflect url entered in form");

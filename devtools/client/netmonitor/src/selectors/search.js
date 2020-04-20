@@ -13,7 +13,7 @@ function getSearchStatus(state) {
 }
 
 function getSearchResultCount(state) {
-  const results = state.search.results;
+  const { results } = state.search;
   return (
     (results.length !== 0
       ? results.reduce((total, current) => total + current.results.length, 0)

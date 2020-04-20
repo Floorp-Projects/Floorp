@@ -39,7 +39,7 @@ function eventTelemetryMiddleware(connector, telemetry) {
     }
 
     const state = store.getState();
-    const sessionId = toolbox.sessionId;
+    const { sessionId } = toolbox;
 
     const filterChangeActions = [
       TOGGLE_REQUEST_FILTER_TYPE,

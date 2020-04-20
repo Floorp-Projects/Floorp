@@ -176,7 +176,7 @@ function addRequest(state, action) {
 function updateRequest(state, action) {
   const { requests, lastEndedMs } = state;
 
-  const id = action.id;
+  const { id } = action;
   const index = requests.findIndex(needle => needle.id === id);
   if (index === -1) {
     return state;

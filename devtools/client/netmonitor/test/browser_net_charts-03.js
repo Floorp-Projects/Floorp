@@ -49,7 +49,7 @@ add_task(async function() {
     },
   });
 
-  const node = table.node;
+  const { node } = table;
   const title = node.querySelector(".table-chart-title");
   const grid = node.querySelector(".table-chart-grid");
   const totals = node.querySelector(".table-chart-totals");

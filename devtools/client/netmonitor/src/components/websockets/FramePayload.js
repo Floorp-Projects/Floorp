@@ -273,7 +273,7 @@ class FramePayload extends Component {
   }
 
   render() {
-    let payload = this.state.payload;
+    let { payload } = this.state;
     let isTruncated = false;
     if (this.state.payload.length >= MESSAGE_DATA_LIMIT) {
       payload = payload.substring(0, MESSAGE_DATA_LIMIT);
