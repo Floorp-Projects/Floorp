@@ -17,6 +17,11 @@
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("MediaControlKeysManager=%p, " msg, this, ##__VA_ARGS__))
 
+#undef LOG_INFO
+#define LOG_INFO(msg, ...)                  \
+  MOZ_LOG(gMediaControlLog, LogLevel::Info, \
+          ("MediaControlKeysManager=%p, " msg, this, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -59,7 +64,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
     return;
   }
 
-  LOG("StartMonitoringControlKeys");
+  LOG_INFO("StartMonitoringControlKeys");
   if (!mEventSource->IsOpened() && mEventSource->Open()) {
     mEventSource->SetPlaybackState(mPlaybackState);
     mEventSource->SetMediaMetadata(mMetadata);
@@ -69,7 +74,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
 
 void MediaControlKeysManager::StopMonitoringControlKeys() {
   if (mEventSource && mEventSource->IsOpened()) {
-    LOG("StopMonitoringControlKeys");
+    LOG_INFO("StopMonitoringControlKeys");
     mEventSource->Close();
   }
 }
