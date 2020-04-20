@@ -212,14 +212,12 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
  public:
   nsCocoaWindow();
 
-  // clang-format off
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSPIWIDGETCOCOA
+  NS_DECL_NSPIWIDGETCOCOA;  // semicolon for clang-format bug 1629756
 
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                         const DesktopIntRect& aRect,
                                         nsWidgetInitData* aInitData = nullptr) override;
-  // clang-format on
 
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                         const LayoutDeviceIntRect& aRect,
