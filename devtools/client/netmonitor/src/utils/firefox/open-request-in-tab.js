@@ -44,7 +44,7 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
     );
     postData.setData(stringStream);
   }
-  const userContextId = win.gBrowser.contentPrincipal.userContextId;
+  const { userContextId } = win.gBrowser.contentPrincipal;
   win.gBrowser.selectedTab = win.gBrowser.addWebTab(url, {
     // TODO this should be using the original request principal
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({

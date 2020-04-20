@@ -88,7 +88,7 @@ class FrameListContent extends Component {
 
   componentDidMount() {
     const { startPanelContainer } = this.props;
-    const scrollAnchor = this.refs.scrollAnchor;
+    const { scrollAnchor } = this.refs;
 
     if (scrollAnchor) {
       // Always scroll to anchor when FrameListContent component first mounts.
@@ -99,7 +99,7 @@ class FrameListContent extends Component {
 
   componentDidUpdate(prevProps) {
     const { startPanelContainer, channelId } = this.props;
-    const scrollAnchor = this.refs.scrollAnchor;
+    const { scrollAnchor } = this.refs;
 
     // When frames are cleared, the previous scrollAnchor would be destroyed, so we need to reset this boolean.
     if (!scrollAnchor) {
@@ -146,7 +146,7 @@ class FrameListContent extends Component {
 
   componentWillUnmount() {
     // Reset observables and boolean values.
-    const scrollAnchor = this.refs.scrollAnchor;
+    const { scrollAnchor } = this.refs;
 
     if (this.intersectionObserver) {
       if (scrollAnchor) {

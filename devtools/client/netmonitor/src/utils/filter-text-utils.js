@@ -219,7 +219,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
     },
     "set-cookie-domain": () => {
       if (responseCookies.length > 0) {
-        const host = item.urlDetails.host;
+        const { host } = item.urlDetails;
         const i = responseCookies.findIndex(c => {
           const domain = c.hasOwnProperty("domain") ? c.domain : host;
           return domain.includes(value);

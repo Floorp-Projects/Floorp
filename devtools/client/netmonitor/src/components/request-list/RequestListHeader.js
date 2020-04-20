@@ -234,7 +234,7 @@ class RequestListHeader extends Component {
   }
 
   resizeWaterfall() {
-    const waterfallHeader = this.refs.waterfallHeader;
+    const { waterfallHeader } = this.refs;
     if (waterfallHeader) {
       // Measure its width and update the 'waterfallWidth' property in the store.
       // The 'waterfallWidth' will be further updated on every window resize.
@@ -457,7 +457,7 @@ class RequestListHeader extends Component {
     // Update style for all columns from array widths.
     let i = 0;
     visibleColumns.forEach(col => {
-      const name = col.name;
+      const { name } = col;
       const headerRef = this.refs[`${name}Header`];
       headerRef.style.width = `${this.px2percent(widths[i], parentWidth)}%`;
       i++;
@@ -473,7 +473,7 @@ class RequestListHeader extends Component {
     // Do not check width for waterfall because
     // when all are getting smaller, waterfall is getting bigger.
     for (let i = 0; i < visibleColumns.length - 1; i++) {
-      const name = visibleColumns[i].name;
+      const { name } = visibleColumns[i];
       const headerRef = this.refs[`${name}Header`];
       const minColWidth = this.getMinWidth(name);
       if (headerRef.getBoundingClientRect().width > minColWidth) {
@@ -502,7 +502,7 @@ class RequestListHeader extends Component {
       const lastChangeInWidth = changeInWidth;
       // In the loop adjust all columns except last one - waterfall
       for (let i = 0; i < widths.length - 1; i++) {
-        const name = visibleColumns[i].name;
+        const { name } = visibleColumns[i];
         const minColWidth = this.getMinWidth(name);
         const newColWidth = Math.max(
           widths[i] + changeInWidthPerColumn,
@@ -536,7 +536,7 @@ class RequestListHeader extends Component {
     let totalPercent = 0;
 
     visibleColumns.forEach(col => {
-      const name = col.name;
+      const { name } = col;
       const headerRef = this.refs[`${name}Header`];
       // Get column width from style.
       let widthFromStyle = 0;
@@ -565,7 +565,7 @@ class RequestListHeader extends Component {
     const parentWidth = parentElRect.width;
     const newWidths = [];
     visibleColumns.forEach(col => {
-      const name = col.name;
+      const { name } = col;
       const headerRef = this.refs[`${name}Header`];
       const headerWidth = headerRef.getBoundingClientRect().width;
 
@@ -601,7 +601,7 @@ class RequestListHeader extends Component {
    * Helper method to get minWidth from columnsData;
    */
   getMinWidth(colName) {
-    const columnsData = this.props.columnsData;
+    const { columnsData } = this.props;
     if (columnsData.has(colName)) {
       return columnsData.get(colName).minWidth;
     }
@@ -612,10 +612,10 @@ class RequestListHeader extends Component {
    * Render one column header from the table headers.
    */
   renderColumn(header) {
-    const columnsData = this.props.columnsData;
+    const { columnsData } = this.props;
     const visibleColumns = this.getVisibleColumns();
     const lastVisibleColumn = visibleColumns[visibleColumns.length - 1].name;
-    const name = header.name;
+    const { name } = header;
     const boxName = header.boxName || name;
     const label = header.noLocalization
       ? name

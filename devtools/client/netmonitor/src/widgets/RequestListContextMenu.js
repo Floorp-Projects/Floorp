@@ -38,7 +38,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const OS = Services.appinfo.OS;
+const { OS } = Services.appinfo;
 
 class RequestListContextMenu {
   constructor(props) {

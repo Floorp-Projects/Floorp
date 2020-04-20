@@ -47,7 +47,7 @@ HarAutomation.prototype = {
   initialize: function(toolbox) {
     this.toolbox = toolbox;
 
-    const target = toolbox.target;
+    const { target } = toolbox;
     this.startMonitoring(target.client);
   },
 

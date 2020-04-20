@@ -99,8 +99,7 @@ add_task(async function() {
       }
 
       const currentValue = getPrefs()[name];
-      const firstValue = prefsToCheck[name].firstValue;
-      const validateValue = prefsToCheck[name].validateValue;
+      const { firstValue, validateValue } = prefsToCheck[name];
 
       is(
         firstValue.toString(),
@@ -127,9 +126,7 @@ add_task(async function() {
       }
 
       const currentValue = getPrefs()[name];
-      const firstValue = prefsToCheck[name].firstValue;
-      const newValue = prefsToCheck[name].newValue;
-      const validateValue = prefsToCheck[name].validateValue;
+      const { firstValue, newValue, validateValue } = prefsToCheck[name];
       const modFrontend = prefsToCheck[name].modifyFrontend;
 
       modFrontend(newValue);
@@ -171,9 +168,7 @@ add_task(async function() {
       }
 
       const currentValue = getPrefs()[name];
-      const firstValue = prefsToCheck[name].firstValue;
-      const newValue = prefsToCheck[name].newValue;
-      const validateValue = prefsToCheck[name].validateValue;
+      const { firstValue, newValue, validateValue } = prefsToCheck[name];
 
       isnot(
         firstValue.toString(),
@@ -205,9 +200,7 @@ add_task(async function() {
       }
 
       const currentValue = getPrefs()[name];
-      const firstValue = prefsToCheck[name].firstValue;
-      const newValue = prefsToCheck[name].newValue;
-      const validateValue = prefsToCheck[name].validateValue;
+      const { firstValue, newValue, validateValue } = prefsToCheck[name];
       const modFrontend = prefsToCheck[name].modifyFrontend;
 
       modFrontend(firstValue);

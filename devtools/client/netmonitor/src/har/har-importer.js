@@ -112,7 +112,7 @@ HarImporter.prototype = {
       };
 
       if (entry.cache.afterRequest) {
-        const afterRequest = entry.cache.afterRequest;
+        const { afterRequest } = entry.cache;
         data.responseCache = {
           cache: {
             expires: afterRequest.expires,

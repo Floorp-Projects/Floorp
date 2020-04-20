@@ -26,7 +26,7 @@ add_task(async function() {
     height: 100,
   });
 
-  const node = pie.node;
+  const { node } = pie;
   const slices = node.querySelectorAll(".pie-chart-slice.chart-colored-blob");
   const labels = node.querySelectorAll(".pie-chart-label");
 

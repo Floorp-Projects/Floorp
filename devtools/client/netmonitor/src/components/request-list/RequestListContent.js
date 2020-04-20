@@ -181,7 +181,7 @@ class RequestListContent extends Component {
     let onscreenDidChange = false;
     const onscreenItems = new Set(this.state.onscreenItems);
     for (const { target, isIntersecting } of entries) {
-      const id = target.dataset.id;
+      const { id } = target.dataset;
       if (isIntersecting) {
         if (onscreenItems.add(id)) {
           onscreenDidChange = true;

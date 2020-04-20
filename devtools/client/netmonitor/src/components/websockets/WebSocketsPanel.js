@@ -122,8 +122,8 @@ class WebSocketsPanel extends Component {
       channelId,
     } = this.props;
 
-    const searchboxRef = this.searchboxRef;
-    const startPanelContainer = this.state.startPanelContainer;
+    const { searchboxRef } = this;
+    const { startPanelContainer } = this.state;
 
     const initialHeight = Services.prefs.getIntPref(
       "devtools.netmonitor.ws.payload-preview-height"
