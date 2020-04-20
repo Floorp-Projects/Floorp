@@ -38,6 +38,7 @@
 #include "nsMimeTypes.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIOService.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsICookieService.h"
@@ -339,6 +340,13 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
   return prev.forget();
 }
 
+CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
+  if (!mParentChannelListener) {
+    return nullptr;
+  }
+  return mParentChannelListener->GetBrowsingContext();
+}
+
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags, uint32_t aCacheKey,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
@@ -505,6 +513,10 @@ bool DocumentLoadListener::Open(
   mTiming = aTiming;
   mSrcdocData = aLoadState->SrcdocData();
   mBaseURI = aLoadState->BaseURI();
+
+  if (auto* ctx = GetBrowsingContext()) {
+    ctx->StartDocumentLoad(this);
+  }
   return true;
 }
 
@@ -518,6 +530,10 @@ void DocumentLoadListener::DocumentChannelBridgeDisconnected() {
     httpChannelImpl->SetWarningReporter(nullptr);
   }
   mDocumentChannelBridge = nullptr;
+
+  if (auto* ctx = GetBrowsingContext()) {
+    ctx->EndDocumentLoad(this);
+  }
 }
 
 void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
@@ -525,9 +541,18 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
       ("DocumentLoadListener Cancel [this=%p, "
        "aStatusCode=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aStatusCode)));
-  if (mChannel && !mDoingProcessSwitch) {
+  if (mDoingProcessSwitch) {
+    // If we've already initiated process-switching
+    // then we can no longer be cancelled and we'll
+    // disconnect the old listeners when done.
+    return;
+  }
+
+  if (mChannel) {
     mChannel->Cancel(aStatusCode);
   }
+
+  DisconnectChildListeners(aStatusCode, aStatusCode);
 }
 
 void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
@@ -537,7 +562,10 @@ void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
        "aStatus=%" PRIx32 " aLoadGroupStatus=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aStatus),
        static_cast<uint32_t>(aLoadGroupStatus)));
+  RefPtr<DocumentLoadListener> keepAlive(this);
   if (mDocumentChannelBridge) {
+    // This will drop the bridge's reference to us, so we use keepAlive to
+    // make sure we don't get deleted until we exit the function.
     mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
   }
   DocumentChannelBridgeDisconnected();
@@ -639,6 +667,9 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
       redirectChannel->Delete();
     }
     mChannel->Resume();
+    if (auto* ctx = GetBrowsingContext()) {
+      ctx->EndDocumentLoad(this);
+    }
     return;
   }
 
@@ -765,6 +796,10 @@ void DocumentLoadListener::ResumeSuspendedChannel(
                "Should not have added new stream listener function!");
 
   mChannel->Resume();
+
+  if (auto* ctx = GetBrowsingContext()) {
+    ctx->EndDocumentLoad(this);
+  }
 }
 
 void DocumentLoadListener::SerializeRedirectData(
@@ -1024,9 +1059,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
 
-  // If this is a download, then redirect entirely within the parent.
-  // TODO, see bug 1574372.
-
   if (!mDocumentChannelBridge) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1034,15 +1066,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // Enforce CSP frame-ancestors and x-frame-options checks which
   // might cancel the channel.
   nsContentSecurityUtils::PerformCSPFrameAncestorAndXFOCheck(mChannel);
-
-  // Once we initiate a process switch, we ask the child to notify the
-  // listeners that we have completed. If the switch promise then gets
-  // rejected we also cancel the parent, which results in this being called.
-  // We don't need to forward it on though, since the child side is already
-  // completed.
-  if (mDoingProcessSwitch) {
-    return NS_OK;
-  }
 
   // Generally we want to switch to a real channel even if the request failed,
   // since the listener might want to access protocol-specific data (like http
@@ -1053,7 +1076,7 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   nsresult status = NS_OK;
   aRequest->GetStatus(&status);
   if (status == NS_ERROR_NO_CONTENT) {
-    mDocumentChannelBridge->DisconnectChildListeners(status, status);
+    DisconnectChildListeners(status, status);
     return NS_OK;
   }
 
