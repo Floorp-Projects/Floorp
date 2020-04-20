@@ -1836,11 +1836,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
                IgnoreErrors());
 
   nsILoadInfo::CrossOriginEmbedderPolicy coep =
-      nsILoadInfo::EMBEDDER_POLICY_NULL;
-
-  if (coepHeader.EqualsLiteral("require-corp")) {
-    coep = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
-  }
+      NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
       mRunnable->mWorkerPrivate, coep, mRunnable->mIsMainScript);
