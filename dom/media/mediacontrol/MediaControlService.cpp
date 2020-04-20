@@ -23,6 +23,10 @@
 #define LOG_MAINCONTROLLER(msg, ...) \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
+#undef LOG_MAINCONTROLLER_INFO
+#define LOG_MAINCONTROLLER_INFO(msg, ...) \
+  MOZ_LOG(gMediaControlLog, LogLevel::Info, (msg, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -337,12 +341,12 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
   DisconnectMainControllerEvents();
 
   if (!mMainController) {
-    LOG_MAINCONTROLLER("Clear main controller");
+    LOG_MAINCONTROLLER_INFO("Clear main controller");
     mSource->SetPlaybackState(MediaSessionPlaybackState::None);
     mSource->SetMediaMetadata(MediaMetadataBase::EmptyData());
   } else {
-    LOG_MAINCONTROLLER("Set controller %" PRId64 " as main controller",
-                       mMainController->Id());
+    LOG_MAINCONTROLLER_INFO("Set controller %" PRId64 " as main controller",
+                            mMainController->Id());
     ConnectToMainControllerEvents();
   }
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
