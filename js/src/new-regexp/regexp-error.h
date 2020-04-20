@@ -5,6 +5,7 @@
 #ifndef V8_REGEXP_REGEXP_ERROR_H_
 #define V8_REGEXP_REGEXP_ERROR_H_
 
+#include "new-regexp/regexp-shim.h"
 
 namespace v8 {
 namespace internal {
