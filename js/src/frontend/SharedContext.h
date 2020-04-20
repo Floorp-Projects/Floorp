@@ -114,9 +114,6 @@ class SharedContext {
   ThisBinding thisBinding_;
 
  public:
-  bool strictScript : 1;
-  bool localStrict : 1;
-
   SourceExtent extent;
 
  protected:
@@ -126,6 +123,9 @@ class SharedContext {
   bool allowArguments_ : 1;
   bool inWith_ : 1;
   bool needsThisTDZChecks_ : 1;
+
+  // See `strict()` below.
+  bool localStrict : 1;
 
   // True if "use strict"; appears in the body instead of being inherited.
   bool hasExplicitUseStrict_ : 1;
@@ -146,8 +146,6 @@ class SharedContext {
         kind_(kind),
         compilationInfo_(compilationInfo),
         thisBinding_(ThisBinding::Global),
-        strictScript(directives.strict()),
-        localStrict(false),
         extent(extent),
         allowNewTarget_(false),
         allowSuperProperty_(false),
@@ -155,6 +153,7 @@ class SharedContext {
         allowArguments_(true),
         inWith_(false),
         needsThisTDZChecks_(false),
+        localStrict(false),
         hasExplicitUseStrict_(false) {
     if (kind_ == Kind::FunctionBox) {
       immutableFlags_.setFlag(ImmutableFlags::IsFunction);
@@ -165,6 +164,8 @@ class SharedContext {
     } else {
       MOZ_ASSERT(kind_ == Kind::Global);
     }
+
+    immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
   }
 
   // If this is the outermost SharedContext, the Scope that encloses
@@ -248,7 +249,14 @@ class SharedContext {
 
   inline bool allBindingsClosedOver();
 
-  bool strict() const { return strictScript || localStrict; }
+  // The ImmutableFlag tracks if the entire script is strict, while the
+  // localStrict flag indicates the current region (such as class body) should
+  // be treated as strict. The localStrict flag will always be reset to false
+  // before the end of the script.
+  bool strict() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::Strict) || localStrict;
+  }
+  void setStrictScript() { immutableFlags_.setFlag(ImmutableFlags::Strict); }
   bool setLocalStrictMode(bool strict) {
     bool retVal = localStrict;
     localStrict = strict;

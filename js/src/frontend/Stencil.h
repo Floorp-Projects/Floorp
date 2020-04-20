@@ -74,13 +74,11 @@ struct LazyScriptCreationData {
   // This is traced by the functionbox which owns this LazyScriptCreationData
   Vector<FunctionIndex> innerFunctionIndexes;
   bool forceStrict = false;
-  bool strict = false;
 
   explicit LazyScriptCreationData(JSContext* cx) : innerFunctionIndexes(cx) {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
-            Vector<FunctionIndex>&& innerIndexes, bool isForceStrict,
-            bool isStrict) {
+            Vector<FunctionIndex>&& innerIndexes, bool isForceStrict) {
     // Check if we will overflow the `ngcthings` field later.
     mozilla::CheckedUint32 ngcthings =
         mozilla::CheckedUint32(COB.length()) +
@@ -91,7 +89,6 @@ struct LazyScriptCreationData {
     }
 
     forceStrict = isForceStrict;
-    strict = isStrict;
     innerFunctionIndexes = std::move(innerIndexes);
 
     if (!closedOverBindings.appendAll(COB)) {
