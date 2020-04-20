@@ -13,6 +13,7 @@ namespace mozilla {
 namespace dom {
 struct GPUTextureDescriptor;
 struct GPUTextureViewDescriptor;
+class HTMLCanvasElement;
 }  // namespace dom
 
 namespace webgpu {
@@ -32,6 +33,8 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
           const dom::GPUTextureDescriptor& aDesc);
   Device* GetParentDevice() { return mParent; }
   const RawId mId;
+
+  WeakPtr<dom::HTMLCanvasElement> mTargetCanvasElement;
 
  private:
   virtual ~Texture();

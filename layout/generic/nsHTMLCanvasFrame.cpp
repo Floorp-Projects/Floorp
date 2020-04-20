@@ -203,7 +203,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         if (!canvasContext->UpdateWebRenderLocalCanvasData(canvasData)) {
           return true;
         }
-        canvasData->Present();
 
         nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
         IntrinsicSize intrinsicSize =
@@ -222,24 +221,29 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         // Check that the key exists, and its namespace matches the active
         // bridge. It will mismatch if there was a GPU reset.
         if (imageKeyMaybe &&
-            aManager->WrBridge()->GetNamespace() == imageKey.mNamespace) {
+            aManager->WrBridge()->GetNamespace() == imageKeyMaybe->mNamespace) {
           imageKey = imageKeyMaybe.value();
         } else {
           imageKey = canvasContext->CreateImageKey(aManager);
           const RGBDescriptor rgbDesc(canvasSizeInPx, canvasData->mFormat,
                                       false);
           const auto targetStride = ImageDataSerializer::GetRGBStride(rgbDesc);
-          const wr::ImageDescriptor imageDesc(canvasSizeInPx, targetStride,
-                                              canvasData->mFormat,
-                                              wr::OpacityType::Opaque, true);
+          const bool preferCompositorSurface = true;
+          const wr::ImageDescriptor imageDesc(
+              canvasSizeInPx, targetStride, canvasData->mFormat,
+              wr::OpacityType::Opaque, preferCompositorSurface);
           aResources.AddPrivateExternalImage(canvasContext->mExternalImageId,
                                              imageKey, imageDesc);
+          canvasData->mDescriptor = imageDesc;
         }
 
         mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
             nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
         aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
                            !BackfaceIsHidden(), rendering, imageKey);
+
+        canvasData->mImageKey = imageKey;
+        canvasData->RequestFrameReadback();
         break;
       }
       case CanvasContextType::ImageBitmap: {

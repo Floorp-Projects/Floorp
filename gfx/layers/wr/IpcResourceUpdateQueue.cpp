@@ -350,6 +350,13 @@ bool IpcResourceUpdateQueue::UpdateBlobImage(BlobImageKey aKey,
   return true;
 }
 
+void IpcResourceUpdateQueue::UpdatePrivateExternalImage(
+    wr::ExternalImageId aExtId, wr::ImageKey aKey,
+    const wr::ImageDescriptor& aDesc, ImageIntRect aDirtyRect) {
+  mUpdates.AppendElement(
+      layers::OpUpdatePrivateExternalImage(aExtId, aKey, aDesc, aDirtyRect));
+}
+
 void IpcResourceUpdateQueue::UpdateSharedExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey, ImageIntRect aDirtyRect) {
   mUpdates.AppendElement(

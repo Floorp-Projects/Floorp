@@ -288,12 +288,18 @@ class WebRenderLocalCanvasData : public WebRenderUserData {
   UserDataType GetType() override { return UserDataType::eLocalCanvas; }
   static UserDataType Type() { return UserDataType::eLocalCanvas; }
 
-  void Present();
+  void RequestFrameReadback();
+  void RefreshExternalImage();
+
+  // TODO: introduce a CanvasRenderer derivative to store here?
 
   WeakPtr<webgpu::WebGPUChild> mGpuBridge;
   uint64_t mGpuTextureId = 0;
   wr::ExternalImageId mExternalImageId = {0};
+  wr::ImageKey mImageKey = {};
+  wr::ImageDescriptor mDescriptor;
   gfx::SurfaceFormat mFormat = gfx::SurfaceFormat::UNKNOWN;
+  bool mDirty = false;
 };
 
 class WebRenderRemoteData : public WebRenderUserData {
