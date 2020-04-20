@@ -41,6 +41,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Sprintf.h"
 #include "nsReadableUtils.h"
+#include "nsWrapperCacheInlines.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/CustomElementRegistry.h"
@@ -2204,10 +2205,7 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
 
   nsWrapperCache* cache = nullptr;
   CallQueryInterface(native, &cache);
-  bool preserving = cache->PreservingWrapper();
-  cache->SetPreservingWrapper(false);
-  cache->SetWrapper(aObj);
-  cache->SetPreservingWrapper(preserving);
+  cache->UpdateWrapperForNewGlobal(native, aObj);
 
   if (propertyHolder) {
     JS::Rooted<JSObject*> copyTo(aCx);
