@@ -4602,7 +4602,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 
   // Needn't guard LHS is object, because the actual stub can handle that
   // and correctly return false.
-  writer.loadInstanceOfObjectResult(lhs, protoId, slot);
+  writer.loadInstanceOfObjectResult(lhs, protoId);
   writer.returnFromIC();
   trackAttached("InstanceOf");
   return AttachDecision::Attach;

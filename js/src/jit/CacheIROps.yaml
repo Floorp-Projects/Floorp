@@ -977,47 +977,55 @@
 
 - name: LoadInstanceOfObjectResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: ValId
     proto: ObjId
 
 - name: LoadTypeOfObjectResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: DoubleAddResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
 
 - name: DoubleSubResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
 
 - name: DoubleMulResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
 
 - name: DoubleDivResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
 
 - name: DoubleModResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
 
 - name: DoublePowResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: NumId
     rhs: NumId
@@ -1066,36 +1074,42 @@
 
 - name: BigIntAddResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntSubResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntMulResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntDivResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntModResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntPowResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
@@ -1151,81 +1165,96 @@
 
 - name: BigIntBitOrResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntBitXorResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntBitAndResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntLeftShiftResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntRightShiftResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: BigIntId
     rhs: BigIntId
 
 - name: BigIntNotResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: BigIntId
 
 - name: Int32NegationResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: Int32Id
 
 - name: DoubleNegationResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: NumId
 
 - name: BigIntNegationResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: BigIntId
 
 - name: Int32IncResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: Int32Id
 
 - name: Int32DecResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: Int32Id
 
 - name: DoubleIncResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: NumId
 
 - name: DoubleDecResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: NumId
 
 - name: BigIntIncResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: BigIntId
 
 - name: BigIntDecResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: BigIntId
 
