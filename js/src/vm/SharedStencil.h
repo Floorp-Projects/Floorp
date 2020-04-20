@@ -7,16 +7,20 @@
 #ifndef vm_SharedStencil_h
 #define vm_SharedStencil_h
 
+#include "mozilla/Span.h"  // mozilla::Span
+
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "jstypes.h"
-#include "js/CompileOptions.h"
-#include "vm/StencilEnums.h"  // TryNoteKind
+#include "frontend/SourceNotes.h"  // js::SrcNote
+#include "js/CompileOptions.h"  // JS::{ReadOnlyCompileOptions,TransitiveCompileOptions}
+#include "js/TypeDecls.h"  // JSContext,jsbytecode
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
-/*
- * Data shared between the vm and stencil structures.
- */
+//
+// Data structures shared between Stencil and the VM.
+//
 
 namespace js {
 
@@ -87,11 +91,10 @@ struct ScopeNote {
   uint32_t parent = 0;
 };
 
+// These are wrapper types around the flag enums to provide a more appropriate
+// abstraction of the bitfields.
 template <typename EnumType>
 class ScriptFlagBase {
-  // To allow cross-checking offsetof assert.
-  friend class js::BaseScript;
-
  protected:
   // Stored as a uint32_t to make access more predictable from
   // JIT code.
@@ -126,13 +129,6 @@ class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
  public:
   using ScriptFlagBase<ImmutableScriptFlagsEnum>::ScriptFlagBase;
 
-  void static_asserts() {
-    static_assert(sizeof(ImmutableScriptFlags) == sizeof(flags_),
-                  "No extra members allowed");
-    static_assert(offsetof(ImmutableScriptFlags, flags_) == 0,
-                  "Required for JIT flag access");
-  }
-
   void operator=(uint32_t flag) { flags_ = flag; }
 
   static ImmutableScriptFlags fromCompileOptions(
@@ -163,13 +159,6 @@ class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
 class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
  public:
   MutableScriptFlags() = default;
-
-  void static_asserts() {
-    static_assert(sizeof(MutableScriptFlags) == sizeof(flags_),
-                  "No extra members allowed");
-    static_assert(offsetof(MutableScriptFlags, flags_) == 0,
-                  "Required for JIT flag access");
-  }
 
   MutableScriptFlags& operator&=(const uint32_t rhs) {
     flags_ &= rhs;
