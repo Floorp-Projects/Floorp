@@ -12,10 +12,11 @@
 namespace mozilla {
 namespace cyclecollector {
 
-void HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer) {
+void HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer,
+                       JS::Zone* aZone) {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  rt->AddJSHolder(aHolder, aTracer);
+  rt->AddJSHolder(aHolder, aTracer, aZone);
 }
 
 void HoldJSObjectsImpl(nsISupports* aHolder) {
