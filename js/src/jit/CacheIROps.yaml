@@ -1270,26 +1270,31 @@
 
 - name: LoadStringTruthyResult
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
 
 - name: LoadObjectTruthyResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: LoadBigIntTruthyResult
   shared: true
+  gen_boilerplate: true
   operands:
-    bi: BigIntId
+    bigInt: BigIntId
 
 - name: LoadValueResult
   shared: false
+  gen_boilerplate: true
   operands:
     val: ValueField
 
 - name: LoadNewObjectFromTemplateResult
   shared: true
+  gen_boilerplate: true
   operands:
     templateObject: ObjectField
     disambiguationIdHi: UInt32Imm
@@ -1297,41 +1302,47 @@
 
 - name: CallStringConcatResult
   shared: true
+  gen_boilerplate: true
   operands:
     lhs: StrId
     rhs: StrId
 
 - name: CallStringObjectConcatResult
   shared: false
+  gen_boilerplate: true
   operands:
     lhs: ValId
     rhs: ValId
 
 - name: CallIsSuspendedGeneratorResult
   shared: true
+  gen_boilerplate: true
   operands:
     val: ValId
 
 - name: CompareStringResult
   shared: false
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: StrId
     rhs: StrId
-    op: JSOpImm
 
 - name: CompareObjectResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: ObjId
     rhs: ObjId
-    op: JSOpImm
 
 - name: CompareSymbolResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: SymId
     rhs: SymId
-    op: JSOpImm
 
 - name: CompareInt32Result
   shared: true
@@ -1343,77 +1354,89 @@
 
 - name: CompareDoubleResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: NumId
     rhs: NumId
-    op: JSOpImm
 
 - name: CompareBigIntResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: BigIntId
     rhs: BigIntId
-    op: JSOpImm
 
 - name: CompareBigIntInt32Result
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: BigIntId
     rhs: Int32Id
-    op: JSOpImm
 
 - name: CompareInt32BigIntResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: Int32Id
     rhs: BigIntId
-    op: JSOpImm
 
 - name: CompareBigIntNumberResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: BigIntId
     rhs: NumId
-    op: JSOpImm
 
 - name: CompareNumberBigIntResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: NumId
     rhs: BigIntId
-    op: JSOpImm
 
 - name: CompareBigIntStringResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: BigIntId
     rhs: StrId
-    op: JSOpImm
 
 - name: CompareStringBigIntResult
   shared: true
+  gen_boilerplate: true
   operands:
+    op: JSOpImm
     lhs: StrId
     rhs: BigIntId
-    op: JSOpImm
 
 - name: CompareObjectUndefinedNullResult
   shared: true
+  gen_boilerplate: true
   operands:
-    obj: ObjId
     op: JSOpImm
+    obj: ObjId
 
 - name: CallPrintString
   shared: true
+  gen_boilerplate: true
   operands:
     str: StaticStringImm
 
 - name: Breakpoint
   shared: true
+  gen_boilerplate: true
   operands:
 
 - name: TypeMonitorResult
   shared: false
+  gen_boilerplate: true
   operands:
 
 - name: ReturnFromIC
@@ -1423,4 +1446,5 @@
 
 - name: WrapResult
   shared: true
+  gen_boilerplate: true
   operands:

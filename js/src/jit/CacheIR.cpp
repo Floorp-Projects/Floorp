@@ -7096,7 +7096,14 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
 
   writer.guardNoAllocationMetadataBuilder();
   writer.guardObjectGroupNotPretenured(templateObject_->group());
-  writer.loadNewObjectFromTemplateResult(templateObject_);
+
+  // Bake in a monotonically increasing number to ensure we differentiate
+  // between different baseline stubs that otherwise might share stub code.
+  uint64_t id = cx_->runtime()->jitRuntime()->nextDisambiguationId();
+  uint32_t idHi = id >> 32;
+  uint32_t idLo = id & UINT32_MAX;
+  writer.loadNewObjectFromTemplateResult(templateObject_, idHi, idLo);
+
   writer.returnFromIC();
 
   trackAttached("NewObjectWithTemplate");

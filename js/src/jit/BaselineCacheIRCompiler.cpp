@@ -417,10 +417,10 @@ bool BaselineCacheIRCompiler::emitGuardSpecificSymbol(SymbolOperandId symId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadValueResult() {
+bool BaselineCacheIRCompiler::emitLoadValueResult(uint32_t valOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  masm.loadValue(stubAddress(reader.stubOffset()), output.valueReg());
+  masm.loadValue(stubAddress(valOffset), output.valueReg());
   return true;
 }
 
@@ -754,13 +754,14 @@ bool BaselineCacheIRCompiler::emitLoadStringResult(uint32_t strOffset) {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCompareStringResult() {
+bool BaselineCacheIRCompiler::emitCompareStringResult(JSOp op,
+                                                      StringOperandId lhsId,
+                                                      StringOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  Register left = allocator.useRegister(masm, reader.stringOperandId());
-  Register right = allocator.useRegister(masm, reader.stringOperandId());
-  JSOp op = reader.jsop();
+  Register left = allocator.useRegister(masm, lhsId);
+  Register right = allocator.useRegister(masm, rhsId);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
@@ -2149,10 +2150,11 @@ uint8_t* ICCacheIR_Updated::stubDataStart() {
   return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
 }
 
-bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
+bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
+    ValOperandId lhsId, ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand lhs = allocator.useValueRegister(masm, reader.valOperandId());
-  ValueOperand rhs = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand lhs = allocator.useValueRegister(masm, lhsId);
+  ValueOperand rhs = allocator.useValueRegister(masm, rhsId);
 
   allocator.discardStack(masm);
 

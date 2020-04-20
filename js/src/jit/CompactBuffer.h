@@ -177,7 +177,7 @@ class CompactBufferWriter {
     uint8_t* endPtr = buffer() + length();
     reinterpret_cast<uint32_t*>(endPtr)[-1] = value;
   }
-  void writeRawPointer(void* ptr) {
+  void writeRawPointer(const void* ptr) {
     uintptr_t ptrWord = reinterpret_cast<uintptr_t>(ptr);
     for (unsigned i = 0; i < sizeof(uintptr_t); i++) {
       writeByte((ptrWord >> (i * 8)) & 0xFF);
