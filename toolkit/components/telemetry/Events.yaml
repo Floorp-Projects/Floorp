@@ -139,14 +139,14 @@ addonsManager:
           - site_warning, site_blocked, install_disabled_warning
           - download_started, download_completed, download_failed
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -164,14 +164,14 @@ addonsManager:
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
       num_strings: The number of permission description strings in the extension permission doorhanger
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596]
     release_channel_collection: opt-out
   link:
     description: >
@@ -188,13 +188,13 @@ addonsManager:
       view: The view the user was on (discover, list, detail or updates).
       type: "For search: the type of page for this view (especially extension or theme list)."
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1546248, 1590736]
+    bug_numbers: [1500147, 1546248, 1590736, 1630596]
     release_channel_collection: opt-out
   view:
     description: >
@@ -210,13 +210,13 @@ addonsManager:
       source: The source of the installation for an add-on.
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1590736]
+    bug_numbers: [1500147, 1590736, 1630596]
     release_channel_collection: opt-out
   action:
     description: >
@@ -240,13 +240,13 @@ addonsManager:
         The view for the event when object is aboutAddons, or the specific doorhanger when object is doorhanger.
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1513344, 1529347, 1546248, 1590736]
+    bug_numbers: [1500147, 1513344, 1529347, 1546248, 1590736, 1630596]
     release_channel_collection: opt-out
   report:
     description: >
@@ -266,14 +266,14 @@ addonsManager:
         ERROR_ABORTED_SUBMIT, ERROR_ADDON_NOT_FOUND, ERROR_CLIENT, ERROR_NETWORK, ERROR_UNKNOWN,
         ERROR_RECENT_SUBMIT, ERROR_SERVER, ERROR_AMODETAILS_NOTFOUND, ERROR_AMODETAILS_FAILURE.
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1544927, 1580561, 1590736]
+    bug_numbers: [1544927, 1580561, 1590736, 1630596]
     release_channel_collection: opt-out
 
 form_autocomplete:
