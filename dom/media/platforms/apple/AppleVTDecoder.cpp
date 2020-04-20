@@ -184,7 +184,15 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
       kVTDecodeFrame_EnableAsynchronousDecompression;
   rv = VTDecompressionSessionDecodeFrame(
       mSession, sample, decodeFlags, CreateAppleFrameRef(aSample), &infoFlags);
-  if (rv != noErr && !(infoFlags & kVTDecodeInfo_FrameDropped)) {
+  if (infoFlags & kVTDecodeInfo_FrameDropped) {
+    MonitorAutoLock mon(mMonitor);
+    // Smile and nod
+    NS_WARNING("Decoder synchronously dropped frame");
+    mPromise.ResolveIfExists(DecodedData(), __func__);
+    return;
+  }
+
+  if (rv != noErr) {
     LOG("AppleVTDecoder: Error %d VTDecompressionSessionDecodeFrame", rv);
     NS_WARNING("Couldn't pass frame to decoder");
     // It appears that even when VTDecompressionSessionDecodeFrame returned a
@@ -279,9 +287,12 @@ static void PlatformCallback(void* decompressionOutputRefCon,
       static_cast<AppleVTDecoder::AppleFrameRef*>(sourceFrameRefCon));
 
   // Validate our arguments.
-  if (status != noErr || !image) {
+  if (status != noErr) {
+    NS_WARNING("VideoToolbox decoder returned an error");
+    decoder->OnDecodeError(status);
+    return;
+  } else if (!image) {
     NS_WARNING("VideoToolbox decoder returned no data");
-    image = nullptr;
   } else if (flags & kVTDecodeInfo_FrameDropped) {
     NS_WARNING("  ...frame tagged as dropped...");
   } else {
@@ -430,6 +441,14 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));
+}
+
+void AppleVTDecoder::OnDecodeError(OSStatus aError) {
+  MonitorAutoLock mon(mMonitor);
+  mPromise.RejectIfExists(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("OnDecodeError:%x", aError)),
+      __func__);
 }
 
 nsresult AppleVTDecoder::WaitForAsynchronousFrames() {

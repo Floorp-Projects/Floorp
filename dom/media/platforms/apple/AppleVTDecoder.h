@@ -67,6 +67,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   // Access from the taskqueue and the decoder's thread.
   // OutputFrame is thread-safe.
   void OutputFrame(CVPixelBufferRef aImage, AppleFrameRef aFrameRef);
+  void OnDecodeError(OSStatus aError);
 
  private:
   virtual ~AppleVTDecoder();
