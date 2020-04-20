@@ -474,7 +474,7 @@ interface nsIPrincipal : nsISerializable
      * features for the Provided DocumentURI
      */
     boolean isL10nAllowed(in nsIURI aDocumentURI);
-     
+    
     /**
     * Returns a nsIPrincipal, with one less Subdomain Segment
     * Returns `nullptr` if there are no more segments to remove.
