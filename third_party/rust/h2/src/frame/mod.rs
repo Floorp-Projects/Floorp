@@ -1,4 +1,4 @@
-use hpack;
+use crate::hpack;
 
 use bytes::Bytes;
 
@@ -18,12 +18,12 @@ use std::fmt;
 #[macro_escape]
 macro_rules! unpack_octets_4 {
     // TODO: Get rid of this macro
-    ($buf:expr, $offset:expr, $tip:ty) => (
-        (($buf[$offset + 0] as $tip) << 24) |
-        (($buf[$offset + 1] as $tip) << 16) |
-        (($buf[$offset + 2] as $tip) <<  8) |
-        (($buf[$offset + 3] as $tip) <<  0)
-    );
+    ($buf:expr, $offset:expr, $tip:ty) => {
+        (($buf[$offset + 0] as $tip) << 24)
+            | (($buf[$offset + 1] as $tip) << 16)
+            | (($buf[$offset + 2] as $tip) << 8)
+            | (($buf[$offset + 3] as $tip) << 0)
+    };
 }
 
 mod data;
@@ -42,7 +42,9 @@ mod window_update;
 pub use self::data::Data;
 pub use self::go_away::GoAway;
 pub use self::head::{Head, Kind};
-pub use self::headers::{Continuation, Headers, Pseudo, PushPromise};
+pub use self::headers::{
+    parse_u64, Continuation, Headers, Pseudo, PushPromise, PushPromiseHeaderError,
+};
 pub use self::ping::Ping;
 pub use self::priority::{Priority, StreamDependency};
 pub use self::reason::Reason;
@@ -51,14 +53,14 @@ pub use self::settings::Settings;
 pub use self::stream_id::{StreamId, StreamIdOverflow};
 pub use self::window_update::WindowUpdate;
 
+#[cfg(feature = "unstable")]
+pub use crate::hpack::BytesStr;
+
 // Re-export some constants
 
 pub use self::settings::{
-    DEFAULT_INITIAL_WINDOW_SIZE,
-    DEFAULT_MAX_FRAME_SIZE,
-    DEFAULT_SETTINGS_HEADER_TABLE_SIZE,
-    MAX_INITIAL_WINDOW_SIZE,
-    MAX_MAX_FRAME_SIZE,
+    DEFAULT_INITIAL_WINDOW_SIZE, DEFAULT_MAX_FRAME_SIZE, DEFAULT_SETTINGS_HEADER_TABLE_SIZE,
+    MAX_INITIAL_WINDOW_SIZE, MAX_MAX_FRAME_SIZE,
 };
 
 pub type FrameSize = u32;
@@ -104,15 +106,15 @@ impl<T> fmt::Debug for Frame<T> {
         use self::Frame::*;
 
         match *self {
-            Data(ref frame) => write!(fmt, "Frame::Data({:?})", frame),
-            Headers(ref frame) => write!(fmt, "Frame::Headers({:?})", frame),
-            Priority(ref frame) => write!(fmt, "Frame::Priority({:?})", frame),
-            PushPromise(ref frame) => write!(fmt, "Frame::PushPromise({:?})", frame),
-            Settings(ref frame) => write!(fmt, "Frame::Settings({:?})", frame),
-            Ping(ref frame) => write!(fmt, "Frame::Ping({:?})", frame),
-            GoAway(ref frame) => write!(fmt, "Frame::GoAway({:?})", frame),
-            WindowUpdate(ref frame) => write!(fmt, "Frame::WindowUpdate({:?})", frame),
-            Reset(ref frame) => write!(fmt, "Frame::Reset({:?})", frame),
+            Data(ref frame) => fmt::Debug::fmt(frame, fmt),
+            Headers(ref frame) => fmt::Debug::fmt(frame, fmt),
+            Priority(ref frame) => fmt::Debug::fmt(frame, fmt),
+            PushPromise(ref frame) => fmt::Debug::fmt(frame, fmt),
+            Settings(ref frame) => fmt::Debug::fmt(frame, fmt),
+            Ping(ref frame) => fmt::Debug::fmt(frame, fmt),
+            GoAway(ref frame) => fmt::Debug::fmt(frame, fmt),
+            WindowUpdate(ref frame) => fmt::Debug::fmt(frame, fmt),
+            Reset(ref frame) => fmt::Debug::fmt(frame, fmt),
         }
     }
 }

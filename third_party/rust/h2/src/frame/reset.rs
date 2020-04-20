@@ -1,6 +1,6 @@
-use frame::{self, Error, Head, Kind, Reason, StreamId};
+use crate::frame::{self, Error, Head, Kind, Reason, StreamId};
 
-use bytes::{BufMut};
+use bytes::BufMut;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Reset {
@@ -38,14 +38,14 @@ impl Reset {
     }
 
     pub fn encode<B: BufMut>(&self, dst: &mut B) {
-        trace!(
+        log::trace!(
             "encoding RESET; id={:?} code={:?}",
             self.stream_id,
             self.error_code
         );
         let head = Head::new(Kind::Reset, 0, self.stream_id);
         head.encode(4, dst);
-        dst.put_u32_be(self.error_code.into());
+        dst.put_u32(self.error_code.into());
     }
 }
 

@@ -1,4 +1,7 @@
-use std::{fmt, str::{self, FromStr}};
+use std::{
+    fmt,
+    str::{self, FromStr},
+};
 
 use bytes::Bytes;
 use http::header::HeaderValue;
@@ -17,9 +20,7 @@ pub(crate) struct HeaderValueString {
 impl HeaderValueString {
     pub(crate) fn from_val(val: &HeaderValue) -> Result<Self, ::Error> {
         if val.to_str().is_ok() {
-            Ok(HeaderValueString {
-                value: val.clone(),
-            })
+            Ok(HeaderValueString { value: val.clone() })
         } else {
             Err(::Error::invalid())
         }
@@ -28,11 +29,9 @@ impl HeaderValueString {
     pub(crate) fn from_string(src: String) -> Option<Self> {
         // A valid `str` (the argument)...
         let bytes = Bytes::from(src);
-        HeaderValue::from_shared(bytes)
+        HeaderValue::from_maybe_shared(bytes)
             .ok()
-            .map(|value| HeaderValueString {
-                value,
-            })
+            .map(|value| HeaderValueString { value })
     }
 
     pub(crate) fn from_static(src: &'static str) -> HeaderValueString {
@@ -45,9 +44,7 @@ impl HeaderValueString {
     pub(crate) fn as_str(&self) -> &str {
         // HeaderValueString is only created from HeaderValues
         // that have validated they are also UTF-8 strings.
-        unsafe {
-            str::from_utf8_unchecked(self.value.as_bytes())
-        }
+        unsafe { str::from_utf8_unchecked(self.value.as_bytes()) }
     }
 }
 
@@ -89,11 +86,8 @@ impl FromStr for HeaderValueString {
 
     fn from_str(src: &str) -> Result<Self, Self::Err> {
         // A valid `str` (the argument)...
-        src
-            .parse()
-            .map(|value| HeaderValueString {
-                value,
-            })
+        src.parse()
+            .map(|value| HeaderValueString { value })
             .map_err(|_| FromStrError(()))
     }
 }

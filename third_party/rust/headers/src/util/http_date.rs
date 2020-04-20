@@ -36,11 +36,7 @@ pub(crate) struct HttpDate(time::Tm);
 
 impl HttpDate {
     pub(crate) fn from_val(val: &HeaderValue) -> Option<Self> {
-        val.to_str()
-            .ok()?
-            .parse()
-            .ok()
-
+        val.to_str().ok()?.parse().ok()
     }
 }
 
@@ -71,8 +67,7 @@ impl<'a> From<&'a HttpDate> for HeaderValue {
         // TODO: could be just BytesMut instead of String
         let s = date.to_string();
         let bytes = Bytes::from(s);
-        HeaderValue::from_shared(bytes)
-            .expect("HttpDate always is a valid value")
+        HeaderValue::from_maybe_shared(bytes).expect("HttpDate always is a valid value")
     }
 }
 
@@ -80,11 +75,8 @@ impl FromStr for HttpDate {
     type Err = Error;
     fn from_str(s: &str) -> Result<HttpDate, Error> {
         time::strptime(s, "%a, %d %b %Y %T %Z")
-            .or_else(|_| {
-                time::strptime(s, "%A, %d-%b-%y %T %Z")
-            }).or_else(|_| {
-                time::strptime(s, "%c")
-            })
+            .or_else(|_| time::strptime(s, "%A, %d-%b-%y %T %Z"))
+            .or_else(|_| time::strptime(s, "%c"))
             .map(HttpDate)
             .map_err(|_| Error(()))
     }
@@ -108,12 +100,12 @@ impl From<SystemTime> for HttpDate {
             Ok(dur) => {
                 // subsec nanos always dropped
                 time::Timespec::new(dur.as_secs() as i64, 0)
-            },
+            }
             Err(err) => {
                 let neg = err.duration();
                 // subsec nanos always dropped
                 time::Timespec::new(-(neg.as_secs() as i64), 0)
-            },
+            }
         };
         HttpDate(time::at_utc(tmspec))
     }
@@ -132,8 +124,8 @@ impl From<HttpDate> for SystemTime {
 
 #[cfg(test)]
 mod tests {
-    use time::Tm;
     use super::HttpDate;
+    use time::Tm;
 
     const NOV_07: HttpDate = HttpDate(Tm {
         tm_nsec: 0,
@@ -151,17 +143,28 @@ mod tests {
 
     #[test]
     fn test_imf_fixdate() {
-        assert_eq!("Sun, 07 Nov 1994 08:48:37 GMT".parse::<HttpDate>().unwrap(), NOV_07);
+        assert_eq!(
+            "Sun, 07 Nov 1994 08:48:37 GMT".parse::<HttpDate>().unwrap(),
+            NOV_07
+        );
     }
 
     #[test]
     fn test_rfc_850() {
-        assert_eq!("Sunday, 07-Nov-94 08:48:37 GMT".parse::<HttpDate>().unwrap(), NOV_07);
+        assert_eq!(
+            "Sunday, 07-Nov-94 08:48:37 GMT"
+                .parse::<HttpDate>()
+                .unwrap(),
+            NOV_07
+        );
     }
 
     #[test]
     fn test_asctime() {
-        assert_eq!("Sun Nov  7 08:48:37 1994".parse::<HttpDate>().unwrap(), NOV_07);
+        assert_eq!(
+            "Sun Nov  7 08:48:37 1994".parse::<HttpDate>().unwrap(),
+            NOV_07
+        );
     }
 
     #[test]

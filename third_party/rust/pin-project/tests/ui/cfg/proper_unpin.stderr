@@ -1,0 +1,11 @@
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:27:5
+   |
+22 | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+27 |     is_unpin::<Bar<PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Bar<'_, std::marker::PhantomPinned>`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because it appears within the type `__Bar<'_, std::marker::PhantomPinned>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Bar<std::marker::PhantomPinned>`

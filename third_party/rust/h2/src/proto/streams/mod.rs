@@ -12,7 +12,7 @@ mod streams;
 pub(crate) use self::prioritize::Prioritized;
 pub(crate) use self::recv::Open;
 pub(crate) use self::send::PollReset;
-pub(crate) use self::streams::{StreamRef, OpaqueStreamRef, Streams};
+pub(crate) use self::streams::{OpaqueStreamRef, StreamRef, Streams};
 
 use self::buffer::Buffer;
 use self::counts::Counts;
@@ -24,11 +24,10 @@ use self::state::State;
 use self::store::Store;
 use self::stream::Stream;
 
-use frame::{StreamId, StreamIdOverflow};
-use proto::*;
+use crate::frame::{StreamId, StreamIdOverflow};
+use crate::proto::*;
 
 use bytes::Bytes;
-use http::{Request, Response};
 use std::time::Duration;
 
 #[derive(Debug)]

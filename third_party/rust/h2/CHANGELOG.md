@@ -1,3 +1,103 @@
+# 0.2.3 (March 25, 2020)
+
+* Fix server being able to accept `CONNECT` requests without `:scheme` or `:path`.
+* Fix receiving a GOAWAY frame from updating the recv max ID, it should only update max send ID.
+
+# 0.2.2 (March 3, 2020)
+
+* Reduce size of `FlowControl` and `RecvStream`.
+
+# 0.2.1 (December 6, 2019)
+
+* Relax `Unpin` bounds on the send `Buf` generic.
+
+# 0.2.0 (December 3, 2019)
+
+* Add `server::Connection::set_initial_window_size` and `client::Connection::set_initial_window_size` which can adjust the `INITIAL_WINDOW_SIZE` setting on an existing connection (#421).
+* Update to `http` v0.2.
+* Update to `tokio` v0.2.
+* Change `unstable-stream` feature to `stream`.
+* Change `ReserveCapacity` to `FlowControl` (#423).
+* Remove `From<io::Error>` for `Error`.
+
+# 0.2.0-alpha.3 (October 1, 2019)
+
+* Update to futures `0.3.0-alpha.19`.
+* Update to tokio `0.2.0-alpha.6`.
+
+# 0.2.0-alpha.2 (September 20, 2019)
+
+* Add server support for `PUSH_PROMISE`s (#327).
+* Update to tokio `0.2.0-alpha.5`.
+* Change `stream` feature to `unstable-stream`.
+
+# 0.2.0-alpha.1 (August 30, 2019)
+
+* Update from `futures` 0.1 to `std::future::Future`.
+* Update `AsyncRead`/`AsyncWrite` to `tokio-io` 0.2 alpha.
+* Change `Stream` implementations to be optional, default disabled. Specific async and poll functions are now inherent, and `Stream` can be re-enabled with the `stream` cargo feature.
+
+# 0.1.25 (June 28, 2019)
+
+* Fix to send a `RST_STREAM` instead of `GOAWAY` if receiving a frame on a previously closed stream.
+* Fix receiving trailers without an end-stream flag to be a stream error instead of connection error.
+
+# 0.1.24 (June 17, 2019)
+
+* Fix server wrongly rejecting requests that don't have an `:authority` header (#372).
+
+# 0.1.23 (June 4, 2019)
+
+* Fix leaking of received DATA frames if the `RecvStream` is never polled (#368).
+
+# 0.1.22 (June 3, 2019)
+
+* Fix rare panic when remote sends `RST_STREAM` or `GOAWAY` for a stream pending window capacity (#364).
+
+# 0.1.21 (May 30, 2019)
+
+* Fix write loop when a header didn't fit in write buffer.
+
+# 0.1.20 (May 16, 2019)
+
+* Fix lifetime conflict for older compilers.
+
+# 0.1.19 (May 15, 2019)
+
+* Fix rare crash if `CONTINUATION` frame resumed in the middle of headers with the same name.
+* Fix HPACK encoder using an old evicted index for repeated header names.
+
+# 0.1.18 (April 9, 2019)
+
+* Fix `server::Connection::abrupt_shutdown` to no longer return the same error the user sent (#352).
+
+# 0.1.17 (March 12, 2019)
+
+* Add user PING support (#346).
+* Fix notifying a `RecvStream` task if locally sending a reset.
+* Fix connections "hanging" when all handles are dropped but some streams had been reset.
+
+# 0.1.16 (January 24, 2019)
+
+* Log header values when malformed (#342).
+
+# 0.1.15 (January 12, 2019)
+
+* Fix race condition bug related to shutting down the client (#338).
+
+# 0.1.14 (December 5, 2018)
+
+* Fix closed streams to always return window capacity to the connection (#334).
+* Fix locking when `Debug` printing an `OpaqueStreamRef` (#333).
+* Fix inverted split for DATA frame padding (#330).
+* Reduce `Debug` noise for `Frame` (#329).
+
+# 0.1.13 (October 16, 2018)
+
+* Add client support for Push Promises (#314).
+* Expose `io::Error` from `h2::Error` (#311)
+* Misc bug fixes (#304, #309, #319, #313, #320).
+
 # 0.1.12 (August 8, 2018)
 
 * Fix initial send window size (#301).

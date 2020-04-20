@@ -1,60 +1,121 @@
-use codec::RecvError;
-use frame;
-use proto::*;
+use crate::codec::{RecvError, UserError};
+use crate::error::Reason;
+use crate::frame;
+use crate::proto::*;
+use std::task::{Context, Poll};
 
 #[derive(Debug)]
 pub(crate) struct Settings {
+    /// Our local SETTINGS sync state with the remote.
+    local: Local,
     /// Received SETTINGS frame pending processing. The ACK must be written to
     /// the socket first then the settings applied **before** receiving any
     /// further frames.
-    pending: Option<frame::Settings>,
+    remote: Option<frame::Settings>,
+}
+
+#[derive(Debug)]
+enum Local {
+    /// We want to send these SETTINGS to the remote when the socket is ready.
+    ToSend(frame::Settings),
+    /// We have sent these SETTINGS and are waiting for the remote to ACK
+    /// before we apply them.
+    WaitingAck(frame::Settings),
+    /// Our local settings are in sync with the remote.
+    Synced,
 }
 
 impl Settings {
-    pub fn new() -> Self {
+    pub(crate) fn new(local: frame::Settings) -> Self {
         Settings {
-            pending: None,
+            // We assume the initial local SETTINGS were flushed during
+            // the handshake process.
+            local: Local::WaitingAck(local),
+            remote: None,
         }
     }
 
-    pub fn recv_settings(&mut self, frame: frame::Settings) {
-        if frame.is_ack() {
-            debug!("received remote settings ack");
-        // TODO: handle acks
-        } else {
-            assert!(self.pending.is_none());
-            self.pending = Some(frame);
-        }
-    }
-
-    pub fn send_pending_ack<T, B, C, P>(
+    pub(crate) fn recv_settings<T, B, C, P>(
         &mut self,
-        dst: &mut Codec<T, B>,
+        frame: frame::Settings,
+        codec: &mut Codec<T, B>,
         streams: &mut Streams<C, P>,
-    ) -> Poll<(), RecvError>
+    ) -> Result<(), RecvError>
     where
-        T: AsyncWrite,
+        T: AsyncWrite + Unpin,
         B: Buf,
         C: Buf,
         P: Peer,
     {
-        trace!("send_pending_ack; pending={:?}", self.pending);
+        if frame.is_ack() {
+            match &self.local {
+                Local::WaitingAck(local) => {
+                    log::debug!("received settings ACK; applying {:?}", local);
 
-        if let Some(ref settings) = self.pending {
-            if !dst.poll_ready()?.is_ready() {
-                trace!("failed to send ACK");
-                return Ok(Async::NotReady);
+                    if let Some(max) = local.max_frame_size() {
+                        codec.set_max_recv_frame_size(max as usize);
+                    }
+
+                    if let Some(max) = local.max_header_list_size() {
+                        codec.set_max_recv_header_list_size(max as usize);
+                    }
+
+                    streams.apply_local_settings(local)?;
+                    self.local = Local::Synced;
+                    Ok(())
+                }
+                Local::ToSend(..) | Local::Synced => {
+                    // We haven't sent any SETTINGS frames to be ACKed, so
+                    // this is very bizarre! Remote is either buggy or malicious.
+                    proto_err!(conn: "received unexpected settings ack");
+                    Err(RecvError::Connection(Reason::PROTOCOL_ERROR))
+                }
+            }
+        } else {
+            // We always ACK before reading more frames, so `remote` should
+            // always be none!
+            assert!(self.remote.is_none());
+            self.remote = Some(frame);
+            Ok(())
+        }
+    }
+
+    pub(crate) fn send_settings(&mut self, frame: frame::Settings) -> Result<(), UserError> {
+        assert!(!frame.is_ack());
+        match &self.local {
+            Local::ToSend(..) | Local::WaitingAck(..) => Err(UserError::SendSettingsWhilePending),
+            Local::Synced => {
+                log::trace!("queue to send local settings: {:?}", frame);
+                self.local = Local::ToSend(frame);
+                Ok(())
+            }
+        }
+    }
+
+    pub(crate) fn poll_send<T, B, C, P>(
+        &mut self,
+        cx: &mut Context,
+        dst: &mut Codec<T, B>,
+        streams: &mut Streams<C, P>,
+    ) -> Poll<Result<(), RecvError>>
+    where
+        T: AsyncWrite + Unpin,
+        B: Buf,
+        C: Buf,
+        P: Peer,
+    {
+        if let Some(settings) = &self.remote {
+            if !dst.poll_ready(cx)?.is_ready() {
+                return Poll::Pending;
             }
 
             // Create an ACK settings frame
             let frame = frame::Settings::ack();
 
             // Buffer the settings frame
-            dst.buffer(frame.into())
-                .ok()
-                .expect("invalid settings frame");
+            dst.buffer(frame.into()).expect("invalid settings frame");
 
-            trace!("ACK sent; applying settings");
+            log::trace!("ACK sent; applying settings");
 
             if let Some(val) = settings.max_frame_size() {
                 dst.set_max_send_frame_size(val as usize);
@@ -63,8 +124,24 @@ impl Settings {
             streams.apply_remote_settings(settings)?;
         }
 
-        self.pending = None;
+        self.remote = None;
 
-        Ok(().into())
+        match &self.local {
+            Local::ToSend(settings) => {
+                if !dst.poll_ready(cx)?.is_ready() {
+                    return Poll::Pending;
+                }
+
+                // Buffer the settings frame
+                dst.buffer(settings.clone().into())
+                    .expect("invalid settings frame");
+                log::trace!("local settings sent; waiting for ack: {:?}", settings);
+
+                self.local = Local::WaitingAck(settings.clone());
+            }
+            Local::WaitingAck(..) | Local::Synced => {}
+        }
+
+        Poll::Ready(Ok(()))
     }
 }

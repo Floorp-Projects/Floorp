@@ -1,0 +1,63 @@
+error: cannot find attribute `pin` in this scope
+  --> $DIR/remove-attr-from-struct.rs:10:7
+   |
+10 |     #[pin] //~ ERROR cannot find attribute `pin` in this scope
+   |       ^^^
+
+error: cannot find attribute `pin` in this scope
+  --> $DIR/remove-attr-from-struct.rs:17:7
+   |
+17 |     #[pin] //~ ERROR cannot find attribute `pin` in this scope
+   |       ^^^
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/remove-attr-from-struct.rs:22:5
+   |
+5  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+22 |     is_unpin::<Foo>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^ within `Foo`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because it appears within the type `Foo`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/remove-attr-from-struct.rs:23:5
+   |
+5  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+23 |     is_unpin::<Bar>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^ within `Bar`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because it appears within the type `Bar`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/remove-attr-from-struct.rs:26:14
+   |
+26 |     let _x = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |              ^^^^^^^^ within `Foo`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because it appears within the type `Foo`
+   = note: required by `std::pin::Pin::<P>::new`
+
+error[E0599]: no method named `project` found for struct `std::pin::Pin<&mut Foo>` in the current scope
+  --> $DIR/remove-attr-from-struct.rs:26:31
+   |
+26 |     let _x = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |                               ^^^^^^^ method not found in `std::pin::Pin<&mut Foo>`
+
+error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+  --> $DIR/remove-attr-from-struct.rs:29:14
+   |
+29 |     let _x = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |              ^^^^^^^^ within `Bar`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = note: required because it appears within the type `Bar`
+   = note: required by `std::pin::Pin::<P>::new`
+
+error[E0599]: no method named `project` found for struct `std::pin::Pin<&mut Bar>` in the current scope
+  --> $DIR/remove-attr-from-struct.rs:29:31
+   |
+29 |     let _x = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |                               ^^^^^^^ method not found in `std::pin::Pin<&mut Bar>`

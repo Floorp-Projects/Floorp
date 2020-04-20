@@ -1,13 +1,12 @@
 #![deny(warnings)]
-extern crate pretty_env_logger;
-extern crate warp;
 
 use warp::Filter;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     pretty_env_logger::init();
 
-    let readme = warp::get2()
+    let readme = warp::get()
         .and(warp::path::end())
         .and(warp::fs::file("./README.md"));
 
@@ -18,5 +17,5 @@ fn main() {
     // GET /ex/... => ./examples/..
     let routes = readme.or(examples);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030));
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }

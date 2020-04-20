@@ -80,5 +80,5 @@ Describe the modifications you've made.
 Describe the testing you've done to validate your change.  Performance-related
 changes should include before- and after- benchmark results.
 
-[issue]: https://github.com/carllerche/h2/issues/new
+[issue]: https://github.com/hyperium/h2/issues/new
 [gitter]: https://gitter.im/tokio-rs/tokio

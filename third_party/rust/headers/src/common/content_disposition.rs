@@ -55,7 +55,7 @@ impl ContentDisposition {
     /*
     pub fn attachment(filename: &str) -> ContentDisposition {
         let full = Bytes::from(format!("attachment; filename={}", filename));
-        match ::HeaderValue::from_shared(full) {
+        match ::HeaderValue::from_maybe_shared(full) {
             Ok(val) => ContentDisposition(val),
             Err(_) => {
                 unimplemented!("filename that isn't ASCII");
@@ -80,8 +80,7 @@ impl ContentDisposition {
     }
 
     fn get_type(&self) -> &str {
-        self
-            .0
+        self.0
             .to_str()
             .unwrap_or("")
             .split(';')

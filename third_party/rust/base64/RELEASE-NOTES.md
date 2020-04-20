@@ -1,11 +1,18 @@
-# Next
+# 0.12.0
 
-- TBD
+- A `Read` implementation (`DecoderReader`) to let users transparently decoded data from a b64 input source
+- IMAP's modified b64 alphabet
+- Relaxed type restrictions to just `AsRef<[ut8]>` for main `encode*`/`decode*` functions
+- A minor performance improvement in encoding
+
+# 0.11.0
+- Minimum rust version 1.34.0
+- `no_std` is now supported via the two new features `alloc` and `std`.
 
 # 0.10.1
 
 - Minimum rust version 1.27.2
-- Fix bug in streaming encoding ([#90](https://github.com/alicemaz/rust-base64/pull/90)): if the underlying writer didn't write all the bytes given to it, the remaining bytes would not be retried later. See the docs on `EncoderWriter::write`.
+- Fix bug in streaming encoding ([#90](https://github.com/marshallpierce/rust-base64/pull/90)): if the underlying writer didn't write all the bytes given to it, the remaining bytes would not be retried later. See the docs on `EncoderWriter::write`.
 - Make it configurable whether or not to return an error when decoding detects excess trailing bits.
 
 # 0.10.0

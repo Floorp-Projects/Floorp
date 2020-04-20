@@ -11,7 +11,7 @@ use base64::{
 
 use criterion::{black_box, Bencher, Criterion, ParameterizedBenchmark, Throughput};
 use rand::{FromEntropy, Rng};
-use std::io::Write;
+use std::io::{self, Read, Write};
 
 const TEST_CONFIG: Config = base64::STANDARD;
 
@@ -48,6 +48,24 @@ fn do_decode_bench_slice(b: &mut Bencher, &size: &usize) {
     buf.resize(size, 0);
     b.iter(|| {
         decode_config_slice(&encoded, TEST_CONFIG, &mut buf).unwrap();
+        black_box(&buf);
+    });
+}
+
+fn do_decode_bench_stream(b: &mut Bencher, &size: &usize) {
+    let mut v: Vec<u8> = Vec::with_capacity(size * 3 / 4);
+    fill(&mut v);
+    let encoded = encode(&v);
+
+    let mut buf = Vec::new();
+    buf.resize(size, 0);
+    buf.truncate(0);
+
+    b.iter(|| {
+        let mut cursor = io::Cursor::new(&encoded[..]);
+        let mut decoder = base64::read::DecoderReader::new(&mut cursor, TEST_CONFIG);
+        decoder.read_to_end(&mut buf).unwrap();
+        buf.clear();
         black_box(&buf);
     });
 }
@@ -124,7 +142,7 @@ fn encode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {
     ParameterizedBenchmark::new("encode", do_encode_bench, byte_sizes.iter().cloned())
         .warm_up_time(std::time::Duration::from_millis(500))
         .measurement_time(std::time::Duration::from_secs(3))
-        .throughput(|s| Throughput::Bytes(*s as u32))
+        .throughput(|s| Throughput::Bytes(*s as u64))
         .with_function("encode_display", do_encode_bench_display)
         .with_function("encode_reuse_buf", do_encode_bench_reuse_buf)
         .with_function("encode_slice", do_encode_bench_slice)
@@ -135,9 +153,10 @@ fn decode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {
     ParameterizedBenchmark::new("decode", do_decode_bench, byte_sizes.iter().cloned())
         .warm_up_time(std::time::Duration::from_millis(500))
         .measurement_time(std::time::Duration::from_secs(3))
-        .throughput(|s| Throughput::Bytes(*s as u32))
+        .throughput(|s| Throughput::Bytes(*s as u64))
         .with_function("decode_reuse_buf", do_decode_bench_reuse_buf)
         .with_function("decode_slice", do_decode_bench_slice)
+        .with_function("decode_stream", do_decode_bench_stream)
 }
 
 fn bench(c: &mut Criterion) {

@@ -1,6 +1,7 @@
 //! CORS Filters
 
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use std::error::Error as StdError;
 use std::sync::Arc;
 
@@ -10,12 +11,11 @@ use headers::{
 use http::{
     self,
     header::{self, HeaderName, HeaderValue},
-    HttpTryFrom,
 };
 
-use filter::{Filter, WrapSealed};
-use reject::{CombineRejection, Rejection};
-use reply::Reply;
+use crate::filter::{Filter, WrapSealed};
+use crate::reject::{CombineRejection, Rejection};
+use crate::reply::Reply;
 
 use self::internal::{CorsFilter, IntoOrigin, Seconds};
 
@@ -37,8 +37,15 @@ use self::internal::{CorsFilter, IntoOrigin, Seconds};
 ///     .map(warp::reply)
 ///     .with(cors);
 /// ```
-pub fn cors() -> Cors {
-    Cors {
+/// If you want to allow any route:
+/// ```
+/// use warp::Filter;
+/// let cors = warp::cors()
+///     .allow_any_origin();
+/// ```
+/// You can find more usage examples [here](https://github.com/seanmonstar/warp/blob/7fa54eaecd0fe12687137372791ff22fc7995766/tests/cors.rs).
+pub fn cors() -> Builder {
+    Builder {
         credentials: false,
         allowed_headers: HashSet::new(),
         exposed_headers: HashSet::new(),
@@ -51,6 +58,12 @@ pub fn cors() -> Cors {
 /// A wrapping filter constructed via `warp::cors()`.
 #[derive(Clone, Debug)]
 pub struct Cors {
+    config: Arc<Configured>,
+}
+
+/// A constructed via `warp::cors()`.
+#[derive(Clone, Debug)]
+pub struct Builder {
     credentials: bool,
     allowed_headers: HashSet<HeaderName>,
     exposed_headers: HashSet<HeaderName>,
@@ -59,7 +72,7 @@ pub struct Cors {
     origins: Option<HashSet<HeaderValue>>,
 }
 
-impl Cors {
+impl Builder {
     /// Sets whether to add the `Access-Control-Allow-Credentials` header.
     pub fn allow_credentials(mut self, allow: bool) -> Self {
         self.credentials = allow;
@@ -73,9 +86,9 @@ impl Cors {
     /// Panics if the provided argument is not a valid `http::Method`.
     pub fn allow_method<M>(mut self, method: M) -> Self
     where
-        http::Method: HttpTryFrom<M>,
+        http::Method: TryFrom<M>,
     {
-        let method = match HttpTryFrom::try_from(method) {
+        let method = match TryFrom::try_from(method) {
             Ok(m) => m,
             Err(_) => panic!("illegal Method"),
         };
@@ -91,9 +104,9 @@ impl Cors {
     pub fn allow_methods<I>(mut self, methods: I) -> Self
     where
         I: IntoIterator,
-        http::Method: HttpTryFrom<I::Item>,
+        http::Method: TryFrom<I::Item>,
     {
-        let iter = methods.into_iter().map(|m| match HttpTryFrom::try_from(m) {
+        let iter = methods.into_iter().map(|m| match TryFrom::try_from(m) {
             Ok(m) => m,
             Err(_) => panic!("illegal Method"),
         });
@@ -108,9 +121,9 @@ impl Cors {
     /// Panics if the provided argument is not a valid `http::header::HeaderName`.
     pub fn allow_header<H>(mut self, header: H) -> Self
     where
-        HeaderName: HttpTryFrom<H>,
+        HeaderName: TryFrom<H>,
     {
-        let header = match HttpTryFrom::try_from(header) {
+        let header = match TryFrom::try_from(header) {
             Ok(m) => m,
             Err(_) => panic!("illegal Header"),
         };
@@ -126,9 +139,9 @@ impl Cors {
     pub fn allow_headers<I>(mut self, headers: I) -> Self
     where
         I: IntoIterator,
-        HeaderName: HttpTryFrom<I::Item>,
+        HeaderName: TryFrom<I::Item>,
     {
-        let iter = headers.into_iter().map(|h| match HttpTryFrom::try_from(h) {
+        let iter = headers.into_iter().map(|h| match TryFrom::try_from(h) {
             Ok(h) => h,
             Err(_) => panic!("illegal Header"),
         });
@@ -143,9 +156,9 @@ impl Cors {
     /// Panics if the provided argument is not a valid `http::header::HeaderName`.
     pub fn expose_header<H>(mut self, header: H) -> Self
     where
-        HeaderName: HttpTryFrom<H>,
+        HeaderName: TryFrom<H>,
     {
-        let header = match HttpTryFrom::try_from(header) {
+        let header = match TryFrom::try_from(header) {
             Ok(m) => m,
             Err(_) => panic!("illegal Header"),
         };
@@ -161,9 +174,9 @@ impl Cors {
     pub fn expose_headers<I>(mut self, headers: I) -> Self
     where
         I: IntoIterator,
-        HeaderName: HttpTryFrom<I::Item>,
+        HeaderName: TryFrom<I::Item>,
     {
-        let iter = headers.into_iter().map(|h| match HttpTryFrom::try_from(h) {
+        let iter = headers.into_iter().map(|h| match TryFrom::try_from(h) {
             Ok(h) => h,
             Err(_) => panic!("illegal Header"),
         });
@@ -233,6 +246,46 @@ impl Cors {
         self.max_age = Some(seconds.seconds());
         self
     }
+
+    /// Builds the `Cors` wrapper from the configured settings.
+    ///
+    /// This step isn't *required*, as the `Builder` itself can be passed
+    /// to `Filter::with`. This just allows constructing once, thus not needing
+    /// to pay the cost of "building" every time.
+    pub fn build(self) -> Cors {
+        let expose_headers_header = if self.exposed_headers.is_empty() {
+            None
+        } else {
+            Some(self.exposed_headers.iter().cloned().collect())
+        };
+        let allowed_headers_header = self.allowed_headers.iter().cloned().collect();
+        let methods_header = self.methods.iter().cloned().collect();
+
+        let config = Arc::new(Configured {
+            cors: self,
+            allowed_headers_header,
+            expose_headers_header,
+            methods_header,
+        });
+
+        Cors { config }
+    }
+}
+
+impl<F> WrapSealed<F> for Builder
+where
+    F: Filter + Clone + Send + Sync + 'static,
+    F::Extract: Reply,
+    F::Error: CombineRejection<Rejection>,
+    <F::Error as CombineRejection<Rejection>>::One: CombineRejection<Rejection>,
+{
+    type Wrapped = CorsFilter<F>;
+
+    fn wrap(&self, inner: F) -> Self::Wrapped {
+        let Cors { config } = self.clone().build();
+
+        CorsFilter { config, inner }
+    }
 }
 
 impl<F> WrapSealed<F> for Cors
@@ -240,29 +293,18 @@ where
     F: Filter + Clone + Send + Sync + 'static,
     F::Extract: Reply,
     F::Error: CombineRejection<Rejection>,
-    <F::Error as CombineRejection<Rejection>>::Rejection: CombineRejection<Rejection>,
+    <F::Error as CombineRejection<Rejection>>::One: CombineRejection<Rejection>,
 {
     type Wrapped = CorsFilter<F>;
 
     fn wrap(&self, inner: F) -> Self::Wrapped {
-        let expose_headers_header = if self.exposed_headers.is_empty() {
-            None
-        } else {
-            Some(self.exposed_headers.iter().map(|m| m.clone()).collect())
-        };
-        let config = Arc::new(Configured {
-            cors: self.clone(),
-            allowed_headers_header: self.allowed_headers.iter().map(|m| m.clone()).collect(),
-            expose_headers_header,
-            methods_header: self.methods.iter().map(|m| m.clone()).collect(),
-        });
+        let config = self.config.clone();
 
         CorsFilter { config, inner }
     }
 }
 
 /// An error used to reject requests that are forbidden by a `cors` filter.
-#[derive(Debug)]
 pub struct CorsForbidden {
     kind: Forbidden,
 }
@@ -272,6 +314,12 @@ enum Forbidden {
     OriginNotAllowed,
     MethodNotAllowed,
     HeaderNotAllowed,
+}
+
+impl ::std::fmt::Debug for CorsForbidden {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_tuple("CorsForbidden").field(&self.kind).finish()
+    }
 }
 
 impl ::std::fmt::Display for CorsForbidden {
@@ -285,15 +333,11 @@ impl ::std::fmt::Display for CorsForbidden {
     }
 }
 
-impl StdError for CorsForbidden {
-    fn description(&self) -> &str {
-        "CORS request forbidden"
-    }
-}
+impl StdError for CorsForbidden {}
 
 #[derive(Clone, Debug)]
 struct Configured {
-    cors: Cors,
+    cors: Builder,
     allowed_headers_header: AccessControlAllowHeaders,
     expose_headers_header: Option<AccessControlExposeHeaders>,
     methods_header: AccessControlAllowMethods,
@@ -324,7 +368,7 @@ impl Configured {
                         return Err(Forbidden::MethodNotAllowed);
                     }
                 } else {
-                    trace!("preflight request missing access-control-request-method header");
+                    log::trace!("preflight request missing access-control-request-method header");
                     return Err(Forbidden::MethodNotAllowed);
                 }
 
@@ -332,7 +376,7 @@ impl Configured {
                     let headers = req_headers
                         .to_str()
                         .map_err(|_| Forbidden::HeaderNotAllowed)?;
-                    for header in headers.split(",") {
+                    for header in headers.split(',') {
                         if !self.is_header_allowed(header) {
                             return Err(Forbidden::HeaderNotAllowed);
                         }
@@ -344,7 +388,7 @@ impl Configured {
             (Some(origin), _) => {
                 // Any other method, simply check for a valid origin...
 
-                trace!("origin header: {:?}", origin);
+                log::trace!("origin header: {:?}", origin);
                 if self.is_origin_allowed(origin) {
                     Ok(Validated::Simple(origin.clone()))
                 } else {
@@ -403,19 +447,23 @@ impl Configured {
 }
 
 mod internal {
+    use std::future::Future;
+    use std::pin::Pin;
     use std::sync::Arc;
+    use std::task::{Context, Poll};
 
-    use futures::{future, Future, Poll};
+    use futures::{future, ready, TryFuture};
     use headers::Origin;
     use http::header;
+    use pin_project::pin_project;
 
     use super::{Configured, CorsForbidden, Validated};
-    use filter::{Filter, FilterBase, One};
-    use generic::Either;
-    use reject::{CombineRejection, Rejection};
-    use route;
+    use crate::filter::{Filter, FilterBase, Internal, One};
+    use crate::generic::Either;
+    use crate::reject::{CombineRejection, Rejection};
+    use crate::route;
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct CorsFilter<F> {
         pub(super) config: Arc<Configured>,
         pub(super) inner: F,
@@ -425,17 +473,18 @@ mod internal {
     where
         F: Filter,
         F::Extract: Send,
+        F::Future: Future,
         F::Error: CombineRejection<Rejection>,
     {
         type Extract =
             One<Either<One<Preflight>, One<Either<One<Wrapped<F::Extract>>, F::Extract>>>>;
-        type Error = <F::Error as CombineRejection<Rejection>>::Rejection;
+        type Error = <F::Error as CombineRejection<Rejection>>::One;
         type Future = future::Either<
-            future::FutureResult<Self::Extract, Self::Error>,
+            future::Ready<Result<Self::Extract, Self::Error>>,
             WrappedFuture<F::Future>,
         >;
 
-        fn filter(&self) -> Self::Future {
+        fn filter(&self, _: Internal) -> Self::Future {
             let validated =
                 route::with(|route| self.config.check_request(route.method(), route.headers()));
 
@@ -445,19 +494,19 @@ mod internal {
                         config: self.config.clone(),
                         origin,
                     };
-                    future::Either::A(future::ok((Either::A((preflight,)),)))
+                    future::Either::Left(future::ok((Either::A((preflight,)),)))
                 }
-                Ok(Validated::Simple(origin)) => future::Either::B(WrappedFuture {
-                    inner: self.inner.filter(),
+                Ok(Validated::Simple(origin)) => future::Either::Right(WrappedFuture {
+                    inner: self.inner.filter(Internal),
                     wrapped: Some((self.config.clone(), origin)),
                 }),
-                Ok(Validated::NotCors) => future::Either::B(WrappedFuture {
-                    inner: self.inner.filter(),
+                Ok(Validated::NotCors) => future::Either::Right(WrappedFuture {
+                    inner: self.inner.filter(Internal),
                     wrapped: None,
                 }),
                 Err(err) => {
-                    let rejection = ::reject::known(CorsForbidden { kind: err });
-                    future::Either::A(future::err(rejection.into()))
+                    let rejection = crate::reject::known(CorsForbidden { kind: err });
+                    future::Either::Left(future::err(rejection.into()))
                 }
             }
         }
@@ -469,9 +518,9 @@ mod internal {
         origin: header::HeaderValue,
     }
 
-    impl ::reply::Reply for Preflight {
-        fn into_response(self) -> ::reply::Response {
-            let mut res = ::reply::Response::default();
+    impl crate::reply::Reply for Preflight {
+        fn into_response(self) -> crate::reply::Response {
+            let mut res = crate::reply::Response::default();
             self.config.append_preflight_headers(res.headers_mut());
             res.headers_mut()
                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, self.origin);
@@ -486,11 +535,11 @@ mod internal {
         origin: header::HeaderValue,
     }
 
-    impl<R> ::reply::Reply for Wrapped<R>
+    impl<R> crate::reply::Reply for Wrapped<R>
     where
-        R: ::reply::Reply,
+        R: crate::reply::Reply,
     {
-        fn into_response(self) -> ::reply::Response {
+        fn into_response(self) -> crate::reply::Response {
             let mut res = self.inner.into_response();
             self.config.append_common_headers(res.headers_mut());
             res.headers_mut()
@@ -499,33 +548,42 @@ mod internal {
         }
     }
 
+    #[pin_project]
     #[derive(Debug)]
     pub struct WrappedFuture<F> {
+        #[pin]
         inner: F,
         wrapped: Option<(Arc<Configured>, header::HeaderValue)>,
     }
 
     impl<F> Future for WrappedFuture<F>
     where
-        F: Future,
+        F: TryFuture,
         F::Error: CombineRejection<Rejection>,
     {
-        type Item = One<Either<One<Preflight>, One<Either<One<Wrapped<F::Item>>, F::Item>>>>;
-        type Error = <F::Error as CombineRejection<Rejection>>::Rejection;
+        type Output = Result<
+            One<Either<One<Preflight>, One<Either<One<Wrapped<F::Ok>>, F::Ok>>>>,
+            <F::Error as CombineRejection<Rejection>>::One,
+        >;
 
-        fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-            let inner = try_ready!(self.inner.poll());
-            let item = if let Some((config, origin)) = self.wrapped.take() {
-                (Either::A((Wrapped {
-                    config,
-                    inner,
-                    origin,
-                },)),)
-            } else {
-                (Either::B(inner),)
-            };
-            let item = (Either::B(item),);
-            Ok(item.into())
+        fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+            let pin = self.project();
+            match ready!(pin.inner.try_poll(cx)) {
+                Ok(inner) => {
+                    let item = if let Some((config, origin)) = pin.wrapped.take() {
+                        (Either::A((Wrapped {
+                            config,
+                            inner,
+                            origin,
+                        },)),)
+                    } else {
+                        (Either::B(inner),)
+                    };
+                    let item = (Either::B(item),);
+                    Poll::Ready(Ok(item))
+                }
+                Err(err) => Poll::Ready(Err(err.into())),
+            }
         }
     }
 

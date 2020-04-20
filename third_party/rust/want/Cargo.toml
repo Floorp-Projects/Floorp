@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,20 +11,22 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "want"
-version = "0.0.6"
+version = "0.3.0"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "Detect when another Future wants a result."
-homepage = "https://github.com/seanmonstar/want"
 documentation = "https://docs.rs/want"
-keywords = ["futures", "channel"]
+keywords = ["futures", "channel", "async"]
 license = "MIT"
 repository = "https://github.com/seanmonstar/want"
-[dependencies.futures]
-version = "0.1"
-
 [dependencies.log]
 version = "0.4"
 
 [dependencies.try-lock]
 version = "0.2"
+[dev-dependencies.tokio-executor]
+version = "0.2.0-alpha.2"
+
+[dev-dependencies.tokio-sync]
+version = "0.2.0-alpha.2"

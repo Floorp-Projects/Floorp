@@ -1,19 +1,19 @@
 use super::{DecoderError, NeedMore};
 
 use bytes::Bytes;
-use http::{Method, StatusCode};
 use http::header::{HeaderName, HeaderValue};
-use string::{String, TryFrom};
+use http::{Method, StatusCode};
+use std::fmt;
 
 /// HTTP/2.0 Header
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Header<T = HeaderName> {
     Field { name: T, value: HeaderValue },
     // TODO: Change these types to `http::uri` types.
-    Authority(String<Bytes>),
+    Authority(BytesStr),
     Method(Method),
-    Scheme(String<Bytes>),
-    Path(String<Bytes>),
+    Scheme(BytesStr),
+    Path(BytesStr),
     Status(StatusCode),
 }
 
@@ -28,6 +28,10 @@ pub enum Name<'a> {
     Status,
 }
 
+#[doc(hidden)]
+#[derive(Clone, Eq, PartialEq, Default)]
+pub struct BytesStr(Bytes);
+
 pub fn len(name: &HeaderName, value: &HeaderValue) -> usize {
     let n: &str = name.as_ref();
     32 + n.len() + value.len()
@@ -41,14 +45,8 @@ impl Header<Option<HeaderName>> {
             Field {
                 name: Some(n),
                 value,
-            } => Field {
-                name: n,
-                value: value,
-            },
-            Field {
-                name: None,
-                value,
-            } => return Err(value),
+            } => Field { name: n, value },
+            Field { name: None, value } => return Err(value),
             Authority(v) => Authority(v),
             Method(v) => Method(v),
             Scheme(v) => Scheme(v),
@@ -60,31 +58,31 @@ impl Header<Option<HeaderName>> {
 
 impl Header {
     pub fn new(name: Bytes, value: Bytes) -> Result<Header, DecoderError> {
-        if name.len() == 0 {
+        if name.is_empty() {
             return Err(DecoderError::NeedMore(NeedMore::UnexpectedEndOfStream));
         }
         if name[0] == b':' {
             match &name[1..] {
                 b"authority" => {
-                    let value = String::try_from(value)?;
+                    let value = BytesStr::try_from(value)?;
                     Ok(Header::Authority(value))
-                },
+                }
                 b"method" => {
                     let method = Method::from_bytes(&value)?;
                     Ok(Header::Method(method))
-                },
+                }
                 b"scheme" => {
-                    let value = String::try_from(value)?;
+                    let value = BytesStr::try_from(value)?;
                     Ok(Header::Scheme(value))
-                },
+                }
                 b"path" => {
-                    let value = String::try_from(value)?;
+                    let value = BytesStr::try_from(value)?;
                     Ok(Header::Path(value))
-                },
+                }
                 b"status" => {
                     let status = StatusCode::from_bytes(&value)?;
                     Ok(Header::Status(status))
-                },
+                }
                 _ => Err(DecoderError::InvalidPseudoheader),
             }
         } else {
@@ -92,10 +90,7 @@ impl Header {
             let name = HeaderName::from_lowercase(&name)?;
             let value = HeaderValue::from_bytes(&value)?;
 
-            Ok(Header::Field {
-                name: name,
-                value: value,
-            })
+            Ok(Header::Field { name, value })
         }
     }
 
@@ -116,9 +111,7 @@ impl Header {
     /// Returns the header name
     pub fn name(&self) -> Name {
         match *self {
-            Header::Field {
-                ref name, ..
-            } => Name::Field(name),
+            Header::Field { ref name, .. } => Name::Field(name),
             Header::Authority(..) => Name::Authority,
             Header::Method(..) => Name::Method,
             Header::Scheme(..) => Name::Scheme,
@@ -129,9 +122,7 @@ impl Header {
 
     pub fn value_slice(&self) -> &[u8] {
         match *self {
-            Header::Field {
-                ref value, ..
-            } => value.as_ref(),
+            Header::Field { ref value, .. } => value.as_ref(),
             Header::Authority(ref v) => v.as_ref(),
             Header::Method(ref v) => v.as_ref().as_ref(),
             Header::Scheme(ref v) => v.as_ref(),
@@ -142,17 +133,13 @@ impl Header {
 
     pub fn value_eq(&self, other: &Header) -> bool {
         match *self {
-            Header::Field {
-                ref value, ..
-            } => {
+            Header::Field { ref value, .. } => {
                 let a = value;
                 match *other {
-                    Header::Field {
-                        ref value, ..
-                    } => a == value,
+                    Header::Field { ref value, .. } => a == value,
                     _ => false,
                 }
-            },
+            }
             Header::Authority(ref a) => match *other {
                 Header::Authority(ref b) => a == b,
                 _ => false,
@@ -178,9 +165,7 @@ impl Header {
 
     pub fn is_sensitive(&self) -> bool {
         match *self {
-            Header::Field {
-                ref value, ..
-            } => value.is_sensitive(),
+            Header::Field { ref value, .. } => value.is_sensitive(),
             // TODO: Technically these other header values can be sensitive too.
             _ => false,
         }
@@ -190,18 +175,16 @@ impl Header {
         use http::header;
 
         match *self {
-            Header::Field {
-                ref name, ..
-            } => match *name {
-                header::AGE |
-                header::AUTHORIZATION |
-                header::CONTENT_LENGTH |
-                header::ETAG |
-                header::IF_MODIFIED_SINCE |
-                header::IF_NONE_MATCH |
-                header::LOCATION |
-                header::COOKIE |
-                header::SET_COOKIE => true,
+            Header::Field { ref name, .. } => match *name {
+                header::AGE
+                | header::AUTHORIZATION
+                | header::CONTENT_LENGTH
+                | header::ETAG
+                | header::IF_MODIFIED_SINCE
+                | header::IF_NONE_MATCH
+                | header::LOCATION
+                | header::COOKIE
+                | header::SET_COOKIE => true,
                 _ => false,
             },
             Header::Path(..) => true,
@@ -214,10 +197,7 @@ impl Header {
 impl From<Header> for Header<Option<HeaderName>> {
     fn from(src: Header) -> Self {
         match src {
-            Header::Field {
-                name,
-                value,
-            } => Header::Field {
+            Header::Field { name, value } => Header::Field {
                 name: Some(name),
                 value,
             },
@@ -237,17 +217,17 @@ impl<'a> Name<'a> {
                 name: name.clone(),
                 value: HeaderValue::from_bytes(&*value)?,
             }),
-            Name::Authority => Ok(Header::Authority(String::try_from(value)?)),
+            Name::Authority => Ok(Header::Authority(BytesStr::try_from(value)?)),
             Name::Method => Ok(Header::Method(Method::from_bytes(&*value)?)),
-            Name::Scheme => Ok(Header::Scheme(String::try_from(value)?)),
-            Name::Path => Ok(Header::Path(String::try_from(value)?)),
+            Name::Scheme => Ok(Header::Scheme(BytesStr::try_from(value)?)),
+            Name::Path => Ok(Header::Path(BytesStr::try_from(value)?)),
             Name::Status => {
                 match StatusCode::from_bytes(&value) {
                     Ok(status) => Ok(Header::Status(status)),
                     // TODO: better error handling
                     Err(_) => Err(DecoderError::InvalidStatusCode),
                 }
-            },
+            }
         }
     }
 
@@ -260,5 +240,47 @@ impl<'a> Name<'a> {
             Name::Path => b":path",
             Name::Status => b":status",
         }
+    }
+}
+
+// ===== impl BytesStr =====
+
+impl BytesStr {
+    pub(crate) unsafe fn from_utf8_unchecked(bytes: Bytes) -> Self {
+        BytesStr(bytes)
+    }
+
+    #[doc(hidden)]
+    pub fn try_from(bytes: Bytes) -> Result<Self, std::str::Utf8Error> {
+        std::str::from_utf8(bytes.as_ref())?;
+        Ok(BytesStr(bytes))
+    }
+
+    pub(crate) fn as_str(&self) -> &str {
+        // Safety: check valid utf-8 in constructor
+        unsafe { std::str::from_utf8_unchecked(self.0.as_ref()) }
+    }
+
+    pub(crate) fn into_inner(self) -> Bytes {
+        self.0
+    }
+}
+
+impl std::ops::Deref for BytesStr {
+    type Target = str;
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl AsRef<[u8]> for BytesStr {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
+impl fmt::Debug for BytesStr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }

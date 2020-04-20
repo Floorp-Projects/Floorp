@@ -1,5 +1,5 @@
-use http;
 use super::{Error, Header, HeaderValue};
+use http;
 
 /// An extension trait adding "typed" methods to `http::HeaderMap`.
 pub trait HeaderMapExt: self::sealed::Sealed {
@@ -24,9 +24,7 @@ impl HeaderMapExt for http::HeaderMap {
     where
         H: Header,
     {
-        let entry = self
-            .entry(H::name())
-            .expect("HeaderName is always valid");
+        let entry = self.entry(H::name());
         let mut values = ToValues {
             state: State::First(entry),
         };
@@ -37,8 +35,7 @@ impl HeaderMapExt for http::HeaderMap {
     where
         H: Header,
     {
-        HeaderMapExt::typed_try_get(self)
-            .unwrap_or(None)
+        HeaderMapExt::typed_try_get(self).unwrap_or(None)
     }
 
     fn typed_try_get<H>(&self) -> Result<Option<H>, Error>
@@ -66,25 +63,24 @@ enum State<'a> {
 }
 
 impl<'a> Extend<HeaderValue> for ToValues<'a> {
-    fn extend<T: IntoIterator<Item=HeaderValue>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = HeaderValue>>(&mut self, iter: T) {
         for value in iter {
             let entry = match ::std::mem::replace(&mut self.state, State::Tmp) {
                 State::First(http::header::Entry::Occupied(mut e)) => {
                     e.insert(value);
                     e
-                },
+                }
                 State::First(http::header::Entry::Vacant(e)) => e.insert_entry(value),
                 State::Latter(mut e) => {
                     e.append(value);
                     e
-                },
+                }
                 State::Tmp => unreachable!("ToValues State::Tmp"),
             };
             self.state = State::Latter(entry);
         }
     }
 }
-
 
 mod sealed {
     pub trait Sealed {}

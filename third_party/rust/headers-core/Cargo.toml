@@ -12,7 +12,7 @@
 
 [package]
 name = "headers-core"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "typed HTTP headers core trait"
 homepage = "https://hyper.rs"
@@ -20,8 +20,5 @@ readme = "README.md"
 keywords = ["http", "headers", "hyper", "hyperium"]
 license = "MIT"
 repository = "https://github.com/hyperium/headers"
-[dependencies.bytes]
-version = "0.4"
-
 [dependencies.http]
-version = "0.1.15"
+version = "0.2.0"

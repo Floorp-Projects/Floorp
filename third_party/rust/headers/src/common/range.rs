@@ -51,7 +51,9 @@ impl Range {
             (Bound::Unbounded, Bound::Included(end)) => format!("bytes=-{}", end),
             (Bound::Unbounded, Bound::Excluded(&end)) => format!("bytes=-{}", end - 1),
             (Bound::Included(start), Bound::Included(end)) => format!("bytes={}-{}", start, end),
-            (Bound::Included(start), Bound::Excluded(&end)) => format!("bytes={}-{}", start, end - 1),
+            (Bound::Included(start), Bound::Excluded(&end)) => {
+                format!("bytes={}-{}", start, end - 1)
+            }
             (Bound::Included(start), Bound::Unbounded) => format!("bytes={}-", start),
             _ => return Err(InvalidRange { _inner: () }),
         };
@@ -60,17 +62,16 @@ impl Range {
     }
 
     /// Iterate the range sets as a tuple of bounds.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item=(Bound<u64>, Bound<u64>)> + 'a {
-        let s = self.0
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Bound<u64>, Bound<u64>)> + 'a {
+        let s = self
+            .0
             .to_str()
             .expect("valid string checked in Header::decode()");
 
-        s["bytes=".len()..]
-            .split(',')
-            .filter_map(|spec| {
-                let mut iter = spec.trim().splitn(2, '-');
-                Some((parse_bound(iter.next()?)?, parse_bound(iter.next()?)?))
-            })
+        s["bytes=".len()..].split(',').filter_map(|spec| {
+            let mut iter = spec.trim().splitn(2, '-');
+            Some((parse_bound(iter.next()?)?, parse_bound(iter.next()?)?))
+        })
     }
 }
 

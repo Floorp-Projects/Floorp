@@ -1,27 +1,29 @@
-extern crate futures;
-
-use futures::prelude::*;
-use futures::future::{ok, select_all, err};
+use futures::executor::block_on;
+use futures::future::{ready, select_all};
+use std::collections::HashSet;
 
 #[test]
 fn smoke() {
     let v = vec![
-        ok(1),
-        err(2),
-        ok(3),
+        ready(1),
+        ready(2),
+        ready(3),
     ];
 
-    let (i, idx, v) = select_all(v).wait().ok().unwrap();
-    assert_eq!(i, 1);
+    let mut c = vec![1, 2, 3].into_iter().collect::<HashSet<_>>();
+
+    let (i, idx, v) = block_on(select_all(v));
+    assert!(c.remove(&i));
     assert_eq!(idx, 0);
 
-    let (i, idx, v) = select_all(v).wait().err().unwrap();
-    assert_eq!(i, 2);
+    let (i, idx, v) = block_on(select_all(v));
+    assert!(c.remove(&i));
     assert_eq!(idx, 0);
 
-    let (i, idx, v) = select_all(v).wait().ok().unwrap();
-    assert_eq!(i, 3);
+    let (i, idx, v) = block_on(select_all(v));
+    assert!(c.remove(&i));
     assert_eq!(idx, 0);
 
+    assert!(c.is_empty());
     assert!(v.is_empty());
 }

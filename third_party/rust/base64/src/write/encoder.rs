@@ -1,7 +1,9 @@
-use encode::encode_to_slice;
-use std::io::{ErrorKind, Result, Write};
-use std::{cmp, fmt};
-use {encode_config_slice, Config};
+use crate::encode::encode_to_slice;
+use crate::{encode_config_slice, Config};
+use std::{
+    cmp, fmt,
+    io::{ErrorKind, Result, Write},
+};
 
 pub(crate) const BUF_SIZE: usize = 1024;
 /// The most bytes whose encoding will fit in `BUF_SIZE`
@@ -153,7 +155,7 @@ impl<'a, W: Write> EncoderWriter<'a, W> {
         let res = self.w.write(&self.output[..current_output_len]);
         self.panicked = false;
 
-        return res.map(|consumed| {
+        res.map(|consumed| {
             debug_assert!(consumed <= current_output_len);
 
             if consumed < current_output_len {
@@ -165,9 +167,7 @@ impl<'a, W: Write> EncoderWriter<'a, W> {
             } else {
                 self.output_occupied_len = 0;
             }
-
-            ()
-        });
+        })
     }
 
     /// Write all buffered encoded output. If this returns `Ok`, `self.output_occupied_len` is `0`.
@@ -232,10 +232,10 @@ impl<'a, W: Write> Write for EncoderWriter<'a, W> {
         // before reading any input, write any leftover encoded output from last time
         if self.output_occupied_len > 0 {
             let current_len = self.output_occupied_len;
-            return self.write_to_delegate(current_len)
+            return self
+                .write_to_delegate(current_len)
                 // did not read any input
-                .map(|_| 0)
-
+                .map(|_| 0);
         }
 
         debug_assert_eq!(0, self.output_occupied_len);
@@ -282,7 +282,7 @@ impl<'a, W: Write> Write for EncoderWriter<'a, W> {
                 // and don't read more than can be encoded
                 max_input_len = MAX_INPUT_LEN - MIN_ENCODE_CHUNK_SIZE;
 
-                // fall through to normal encoding
+            // fall through to normal encoding
             } else {
                 // `extra` and `input` are non empty, but `|extra| + |input| < 3`, so there must be
                 // 1 byte in each.
@@ -329,7 +329,7 @@ impl<'a, W: Write> Write for EncoderWriter<'a, W> {
             // no matter whether we wrote the full encoded buffer or not, we consumed the same
             // input
             .map(|_| extra_input_read_len + input_chunks_to_encode_len)
-            .map_err( |e| {
+            .map_err(|e| {
                 // in case we filled and encoded `extra`, reset extra_len
                 self.extra_input_occupied_len = orig_extra_len;
 

@@ -27,17 +27,13 @@ struct Slot<T> {
 
 impl<T> Buffer<T> {
     pub fn new() -> Self {
-        Buffer {
-            slab: Slab::new(),
-        }
+        Buffer { slab: Slab::new() }
     }
 }
 
 impl Deque {
     pub fn new() -> Self {
-        Deque {
-            indices: None,
-        }
+        Deque { indices: None }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -45,42 +41,36 @@ impl Deque {
     }
 
     pub fn push_back<T>(&mut self, buf: &mut Buffer<T>, value: T) {
-        let key = buf.slab.insert(Slot {
-            value,
-            next: None,
-        });
+        let key = buf.slab.insert(Slot { value, next: None });
 
         match self.indices {
             Some(ref mut idxs) => {
                 buf.slab[idxs.tail].next = Some(key);
                 idxs.tail = key;
-            },
+            }
             None => {
                 self.indices = Some(Indices {
                     head: key,
                     tail: key,
                 });
-            },
+            }
         }
     }
 
     pub fn push_front<T>(&mut self, buf: &mut Buffer<T>, value: T) {
-        let key = buf.slab.insert(Slot {
-            value,
-            next: None,
-        });
+        let key = buf.slab.insert(Slot { value, next: None });
 
         match self.indices {
             Some(ref mut idxs) => {
                 buf.slab[key].next = Some(idxs.head);
                 idxs.head = key;
-            },
+            }
             None => {
                 self.indices = Some(Indices {
                     head: key,
                     tail: key,
                 });
-            },
+            }
         }
     }
 
@@ -97,16 +87,18 @@ impl Deque {
                     self.indices = Some(idxs);
                 }
 
-                return Some(slot.value);
-            },
+                Some(slot.value)
+            }
             None => None,
         }
     }
 
+    /*
     pub fn peek_front<'a, T>(&self, buf: &'a Buffer<T>) -> Option<&'a T> {
         match self.indices {
             Some(idxs) => Some(&buf.slab[idxs.head].value),
             None => None,
         }
     }
+    */
 }

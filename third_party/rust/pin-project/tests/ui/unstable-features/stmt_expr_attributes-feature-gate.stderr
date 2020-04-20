@@ -1,0 +1,35 @@
+error[E0658]: attributes on expressions are experimental
+  --> $DIR/stmt_expr_attributes-feature-gate.rs:22:5
+   |
+22 |     #[project] //~ ERROR E0658
+   |     ^^^^^^^^^^
+   |
+   = note: see issue #15701 <https://github.com/rust-lang/rust/issues/15701> for more information
+   = help: add `#![feature(stmt_expr_attributes)]` to the crate attributes to enable
+
+error[E0658]: attributes on expressions are experimental
+  --> $DIR/stmt_expr_attributes-feature-gate.rs:38:14
+   |
+38 |     let () = #[project] //~ ERROR E0658
+   |              ^^^^^^^^^^
+   |
+   = note: see issue #15701 <https://github.com/rust-lang/rust/issues/15701> for more information
+   = help: add `#![feature(stmt_expr_attributes)]` to the crate attributes to enable
+
+error[E0658]: custom attributes cannot be applied to expressions
+  --> $DIR/stmt_expr_attributes-feature-gate.rs:22:5
+   |
+22 |     #[project] //~ ERROR E0658
+   |     ^^^^^^^^^^
+   |
+   = note: see issue #54727 <https://github.com/rust-lang/rust/issues/54727> for more information
+   = help: add `#![feature(proc_macro_hygiene)]` to the crate attributes to enable
+
+error[E0658]: custom attributes cannot be applied to expressions
+  --> $DIR/stmt_expr_attributes-feature-gate.rs:38:14
+   |
+38 |     let () = #[project] //~ ERROR E0658
+   |              ^^^^^^^^^^
+   |
+   = note: see issue #54727 <https://github.com/rust-lang/rust/issues/54727> for more information
+   = help: add `#![feature(proc_macro_hygiene)]` to the crate attributes to enable

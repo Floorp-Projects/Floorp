@@ -1,19 +1,15 @@
 use std::fmt;
 use std::time::Duration;
 
-use {HeaderValue};
 use util::IterExt;
+use HeaderValue;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct Seconds(Duration);
 
 impl Seconds {
     pub(crate) fn from_val(val: &HeaderValue) -> Option<Self> {
-        let secs = val
-            .to_str()
-            .ok()?
-            .parse()
-            .ok()?;
+        let secs = val.to_str().ok()?.parse().ok()?;
 
         Some(Seconds(Duration::from_secs(secs)))
     }
@@ -43,6 +39,7 @@ impl<'a> From<&'a Seconds> for HeaderValue {
 
 impl From<Duration> for Seconds {
     fn from(dur: Duration) -> Seconds {
+        debug_assert!(dur.subsec_nanos() == 0);
         Seconds(dur)
     }
 }

@@ -1,0 +1,45 @@
+error: #[pin_project] attribute may not be used on structs with zero fields
+ --> $DIR/unsupported.rs:4:16
+  |
+4 | struct Struct1 {} //~ ERROR may not be used on structs with zero fields
+  |                ^^
+
+error: #[pin_project] attribute may not be used on structs with zero fields
+ --> $DIR/unsupported.rs:7:15
+  |
+7 | struct Struct2(); //~ ERROR may not be used on structs with zero fields
+  |               ^^
+
+error: #[pin_project] attribute may not be used on structs with units
+  --> $DIR/unsupported.rs:10:8
+   |
+10 | struct Struct3; //~ ERROR may not be used on structs with units
+   |        ^^^^^^^
+
+error: #[pin_project] attribute may not be used on enums without variants
+  --> $DIR/unsupported.rs:13:12
+   |
+13 | enum Enum1 {} //~ ERROR may not be used on enums without variants
+   |            ^^
+
+error: #[pin_project] attribute may not be used on enums with discriminants
+  --> $DIR/unsupported.rs:17:9
+   |
+17 |     A = 2, //~ ERROR may not be used on enums with discriminants
+   |         ^
+
+error: #[pin_project] attribute may not be used on enums that have no field
+  --> $DIR/unsupported.rs:22:5
+   |
+22 | /     A, //~ ERROR may not be used on enums that have no field
+23 | |     B,
+   | |______^
+
+error: #[pin_project] attribute may only be used on structs or enums
+  --> $DIR/unsupported.rs:27:1
+   |
+27 | / union Union {
+28 | |     //~^ ERROR may only be used on structs or enums
+29 | |     x: u8,
+30 | | }
+   | |_^

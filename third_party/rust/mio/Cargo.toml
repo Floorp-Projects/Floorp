@@ -12,12 +12,12 @@
 
 [package]
 name = "mio"
-version = "0.6.19"
+version = "0.6.21"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = [".gitignore", ".travis.yml", "deploy.sh"]
 description = "Lightweight non-blocking IO"
 homepage = "https://github.com/carllerche/mio"
-documentation = "https://docs.rs/mio/0.6.19/mio/"
+documentation = "https://docs.rs/mio/0.6.21/mio/"
 readme = "README.md"
 keywords = ["io", "async", "non-blocking"]
 categories = ["asynchronous"]
@@ -27,6 +27,9 @@ repository = "https://github.com/carllerche/mio"
 [[test]]
 name = "test"
 path = "test/mod.rs"
+[dependencies.cfg-if]
+version = "0.1.9"
+
 [dependencies.iovec]
 version = "0.1.1"
 

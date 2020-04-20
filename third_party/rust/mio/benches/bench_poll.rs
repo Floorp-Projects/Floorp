@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(deprecated)]
 
 extern crate mio;
 extern crate test;

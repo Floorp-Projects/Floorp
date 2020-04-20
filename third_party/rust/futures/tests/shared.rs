@@ -1,28 +1,28 @@
-extern crate futures;
-
-mod support;
-
-use std::cell::RefCell;
+use futures::channel::oneshot;
+use futures::executor::{block_on, LocalPool};
+use futures::future::{self, FutureExt, TryFutureExt, LocalFutureObj};
+use futures::task::LocalSpawn;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::thread;
 
-use futures::sync::oneshot;
-use futures::prelude::*;
-use futures::future;
-
 fn send_shared_oneshot_and_wait_on_multiple_threads(threads_number: u32) {
-    let (tx, rx) = oneshot::channel::<u32>();
+    let (tx, rx) = oneshot::channel::<i32>();
     let f = rx.shared();
-    let threads = (0..threads_number).map(|_| {
-        let cloned_future = f.clone();
-        thread::spawn(move || {
-            assert_eq!(*cloned_future.wait().unwrap(), 6);
+    let join_handles = (0..threads_number)
+        .map(|_| {
+            let cloned_future = f.clone();
+            thread::spawn(move || {
+                assert_eq!(block_on(cloned_future).unwrap(), 6);
+            })
         })
-    }).collect::<Vec<_>>();
+        .collect::<Vec<_>>();
+
     tx.send(6).unwrap();
-    assert_eq!(*f.wait().unwrap(), 6);
-    for f in threads {
-        f.join().unwrap();
+
+    assert_eq!(block_on(f).unwrap(), 6);
+    for join_handle in join_handles {
+        join_handle.join().unwrap();
     }
 }
 
@@ -50,43 +50,47 @@ fn drop_on_one_task_ok() {
     let (tx2, rx2) = oneshot::channel::<u32>();
 
     let t1 = thread::spawn(|| {
-        let f = f1.map_err(|_| ()).map(|x| *x).select(rx2.map_err(|_| ()));
-        drop(f.wait());
+        let f = future::try_select(f1.map_err(|_| ()), rx2.map_err(|_| ()));
+        drop(block_on(f));
     });
 
     let (tx3, rx3) = oneshot::channel::<u32>();
 
     let t2 = thread::spawn(|| {
-        let _ = f2.map(|x| tx3.send(*x).unwrap()).map_err(|_| ()).wait();
+        let _ = block_on(f2.map_ok(|x| tx3.send(x).unwrap()).map_err(|_| ()));
     });
 
     tx2.send(11).unwrap(); // cancel `f1`
     t1.join().unwrap();
 
     tx.send(42).unwrap(); // Should cause `f2` and then `rx3` to get resolved.
-    let result = rx3.wait().unwrap();
+    let result = block_on(rx3).unwrap();
     assert_eq!(result, 42);
     t2.join().unwrap();
 }
 
 #[test]
 fn drop_in_poll() {
-    let slot = Rc::new(RefCell::new(None));
-    let slot2 = slot.clone();
-    let future = future::poll_fn(move || {
-        drop(slot2.borrow_mut().take().unwrap());
-        Ok::<_, u32>(1.into())
+    let slot1 = Rc::new(RefCell::new(None));
+    let slot2 = slot1.clone();
+
+    let future1 = future::lazy(move |_| {
+        slot2.replace(None); // Drop future
+        1
     }).shared();
-    let future2 = Box::new(future.clone()) as Box<Future<Item=_, Error=_>>;
-    *slot.borrow_mut() = Some(future2);
-    assert_eq!(*future.wait().unwrap(), 1);
+
+    let future2 = LocalFutureObj::new(Box::new(future1.clone()));
+    slot1.replace(Some(future2));
+
+    assert_eq!(block_on(future1), 1);
 }
 
 #[test]
 fn peek() {
-    let core = ::support::local_executor::Core::new();
+    let mut local_pool = LocalPool::new();
+    let spawn = &mut local_pool.spawner();
 
-    let (tx0, rx0) = oneshot::channel::<u32>();
+    let (tx0, rx0) = oneshot::channel::<i32>();
     let f1 = rx0.shared();
     let f2 = f1.clone();
 
@@ -104,101 +108,44 @@ fn peek() {
     }
 
     // Once the Shared has been polled, the value is peekable on the clone.
-    core.spawn(f1.map(|_|()).map_err(|_|()));
-    core.run(future::ok::<(),()>(())).unwrap();
+    spawn.spawn_local_obj(LocalFutureObj::new(Box::new(f1.map(|_| ())))).unwrap();
+    local_pool.run();
     for _ in 0..2 {
-        assert_eq!(42, *f2.peek().unwrap().unwrap());
+        assert_eq!(*f2.peek().unwrap(), Ok(42));
+    }
+}
+
+struct CountClone(Rc<Cell<i32>>);
+
+impl Clone for CountClone {
+    fn clone(&self) -> Self {
+        self.0.set(self.0.get() + 1);
+        CountClone(self.0.clone())
     }
 }
 
 #[test]
-fn polled_then_ignored() {
-    let core = ::support::local_executor::Core::new();
+fn dont_clone_in_single_owner_shared_future() {
+    let counter = CountClone(Rc::new(Cell::new(0)));
+    let (tx, rx) = oneshot::channel();
 
-    let (tx0, rx0) = oneshot::channel::<u32>();
-    let f1 = rx0.shared();
-    let f2 = f1.clone();
+    let rx = rx.shared();
 
-    let (tx1, rx1) = oneshot::channel::<u32>();
-    let (tx2, rx2) = oneshot::channel::<u32>();
-    let (tx3, rx3) = oneshot::channel::<u32>();
+    tx.send(counter).ok().unwrap();
 
-    core.spawn(f1.map(|n| tx3.send(*n).unwrap()).map_err(|_|()));
-
-    core.run(future::ok::<(),()>(())).unwrap(); // Allow f1 to be polled.
-
-    core.spawn(f2.map_err(|_| ()).map(|x| *x).select(rx2.map_err(|_| ())).map_err(|_| ())
-        .and_then(|(_, f2)| rx3.map_err(|_| ()).map(move |n| {drop(f2); tx1.send(n).unwrap()})));
-
-    core.run(future::ok::<(),()>(())).unwrap();  // Allow f2 to be polled.
-
-    tx2.send(11).unwrap(); // Resolve rx2, causing f2 to no longer get polled.
-
-    core.run(future::ok::<(),()>(())).unwrap(); // Let the send() propagate.
-
-    tx0.send(42).unwrap(); // Should cause f1, then rx3, and then rx1 to resolve.
-
-    assert_eq!(core.run(rx1).unwrap(), 42);
+    assert_eq!(block_on(rx).unwrap().0.get(), 0);
 }
 
 #[test]
-fn recursive_poll() {
-    use futures::sync::mpsc;
-    use futures::Stream;
+fn dont_do_unnecessary_clones_on_output() {
+    let counter = CountClone(Rc::new(Cell::new(0)));
+    let (tx, rx) = oneshot::channel();
 
-    let core = ::support::local_executor::Core::new();
-    let (tx0, rx0) = mpsc::unbounded::<Box<Future<Item=(),Error=()>>>();
-    let run_stream = rx0.for_each(|f| f);
+    let rx = rx.shared();
 
-    let (tx1, rx1) = oneshot::channel::<()>();
+    tx.send(counter).ok().unwrap();
 
-    let f1 = run_stream.shared();
-    let f2 = f1.clone();
-    let f3 = f1.clone();
-    tx0.unbounded_send(Box::new(
-        f1.map(|_|()).map_err(|_|())
-            .select(rx1.map_err(|_|()))
-            .map(|_| ()).map_err(|_|()))).unwrap();
-
-    core.spawn(f2.map(|_|()).map_err(|_|()));
-
-    // Call poll() on the spawned future. We want to be sure that this does not trigger a
-    // deadlock or panic due to a recursive lock() on a mutex.
-    core.run(future::ok::<(),()>(())).unwrap();
-
-    tx1.send(()).unwrap(); // Break the cycle.
-    drop(tx0);
-    core.run(f3).unwrap();
-}
-
-#[test]
-fn recursive_poll_with_unpark() {
-    use futures::sync::mpsc;
-    use futures::{Stream, task};
-
-    let core = ::support::local_executor::Core::new();
-    let (tx0, rx0) = mpsc::unbounded::<Box<Future<Item=(),Error=()>>>();
-    let run_stream = rx0.for_each(|f| f);
-
-    let (tx1, rx1) = oneshot::channel::<()>();
-
-    let f1 = run_stream.shared();
-    let f2 = f1.clone();
-    let f3 = f1.clone();
-    tx0.unbounded_send(Box::new(future::lazy(move || {
-        task::current().notify();
-        f1.map(|_|()).map_err(|_|())
-            .select(rx1.map_err(|_|()))
-            .map(|_| ()).map_err(|_|())
-    }))).unwrap();
-
-    core.spawn(f2.map(|_|()).map_err(|_|()));
-
-    // Call poll() on the spawned future. We want to be sure that this does not trigger a
-    // deadlock or panic due to a recursive lock() on a mutex.
-    core.run(future::ok::<(),()>(())).unwrap();
-
-    tx1.send(()).unwrap(); // Break the cycle.
-    drop(tx0);
-    core.run(f3).unwrap();
+    assert_eq!(block_on(rx.clone()).unwrap().0.get(), 1);
+    assert_eq!(block_on(rx.clone()).unwrap().0.get(), 2);
+    assert_eq!(block_on(rx).unwrap().0.get(), 2);
 }

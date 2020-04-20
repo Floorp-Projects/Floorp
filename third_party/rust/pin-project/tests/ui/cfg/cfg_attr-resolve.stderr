@@ -1,0 +1,5 @@
+error[E0599]: no method named `project` found for struct `std::pin::Pin<&mut Foo<u8>>` in the current scope
+  --> $DIR/cfg_attr-resolve.rs:10:31
+   |
+10 |     let _x = Pin::new(&mut x).project(); //~ ERROR E0599
+   |                               ^^^^^^^ method not found in `std::pin::Pin<&mut Foo<u8>>`

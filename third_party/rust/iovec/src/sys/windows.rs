@@ -1,5 +1,17 @@
-use winapi::{WSABUF, DWORD};
 use std::{mem, slice, u32};
+
+// declare the types we need directly here to avoid bringing
+// in the old and slow winapi 0.2 dependency.
+
+type DWORD = u32;
+type ULONG = u32;
+type CHAR = i8;
+
+#[repr(C)]
+struct WSABUF {
+    pub len: ULONG,
+    pub buf: *mut CHAR,
+}
 
 pub struct IoVec {
     inner: [u8],

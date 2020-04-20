@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "warp"
-version = "0.1.19"
+version = "0.2.2"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 autoexamples = true
 autotests = true
@@ -34,6 +35,10 @@ codegen-units = 1
 incremental = false
 
 [[example]]
+name = "unix_socket"
+required-features = ["tokio/uds"]
+
+[[example]]
 name = "websockets"
 required-features = ["websocket"]
 
@@ -49,19 +54,21 @@ required-features = ["multipart"]
 name = "ws"
 required-features = ["websocket"]
 [dependencies.bytes]
-version = "0.4.8"
+version = "0.5"
 
 [dependencies.futures]
-version = "0.1"
+version = "0.3"
+features = ["alloc"]
+default-features = false
 
 [dependencies.headers]
-version = "0.2"
+version = "0.3"
 
 [dependencies.http]
-version = "0.1"
+version = "0.2"
 
 [dependencies.hyper]
-version = "0.12.18"
+version = "0.13"
 
 [dependencies.log]
 version = "0.4"
@@ -78,9 +85,8 @@ features = ["server"]
 optional = true
 default-features = false
 
-[dependencies.rustls]
-version = "0.15"
-optional = true
+[dependencies.pin-project]
+version = "0.4.5"
 
 [dependencies.scoped-tls]
 version = "1.0"
@@ -95,23 +101,28 @@ version = "1.0"
 version = "0.6"
 
 [dependencies.tokio]
-version = "0.1.11"
+version = "0.2"
+features = ["blocking", "fs", "stream", "sync", "time"]
 
-[dependencies.tokio-io]
-version = "0.1"
+[dependencies.tokio-rustls]
+version = "0.12.2"
+optional = true
 
-[dependencies.tokio-threadpool]
-version = "0.1.7"
-
-[dependencies.tungstenite]
-version = "0.9"
+[dependencies.tokio-tungstenite]
+version = "0.10"
 optional = true
 default-features = false
+
+[dependencies.tower-service]
+version = "0.3"
 
 [dependencies.urlencoding]
 version = "1.0.0"
 [dev-dependencies.handlebars]
-version = "1.0.0"
+version = "3.0.0"
+
+[dev-dependencies.listenfd]
+version = "0.3"
 
 [dev-dependencies.pretty_env_logger]
 version = "0.3"
@@ -119,7 +130,11 @@ version = "0.3"
 [dev-dependencies.serde_derive]
 version = "1.0"
 
+[dev-dependencies.tokio]
+version = "0.2"
+features = ["macros"]
+
 [features]
 default = ["multipart", "websocket"]
-tls = ["rustls"]
-websocket = ["tungstenite"]
+tls = ["tokio-rustls"]
+websocket = ["tokio-tungstenite"]

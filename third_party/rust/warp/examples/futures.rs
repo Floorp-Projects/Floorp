@@ -1,11 +1,24 @@
 #![deny(warnings)]
-extern crate tokio;
-extern crate warp;
 
+use std::convert::Infallible;
 use std::str::FromStr;
-use std::time::{Duration, Instant};
-use tokio::timer::Delay;
-use warp::{Filter, Future};
+use std::time::Duration;
+use warp::Filter;
+
+#[tokio::main]
+async fn main() {
+    // Match `/:Seconds`...
+    let routes = warp::path::param()
+        // and_then create a `Future` that will simply wait N seconds...
+        .and_then(sleepy);
+
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+}
+
+async fn sleepy(Seconds(seconds): Seconds) -> Result<impl warp::Reply, Infallible> {
+    tokio::time::delay_for(Duration::from_secs(seconds)).await;
+    Ok(format!("I waited {} seconds!", seconds))
+}
 
 /// A newtype to enforce our maximum allowed seconds.
 struct Seconds(u64);
@@ -21,23 +34,4 @@ impl FromStr for Seconds {
             }
         })
     }
-}
-
-fn main() {
-    // Match `/:u32`...
-    let routes = warp::path::param()
-        // and_then create a `Future` that will simply wait N seconds...
-        .and_then(|Seconds(seconds)| {
-            Delay::new(Instant::now() + Duration::from_secs(seconds))
-                // return the number of seconds again...
-                .map(move |()| seconds)
-                // An error from `Delay` means a big problem with the server...
-                .map_err(|timer_err| {
-                    eprintln!("timer error: {}", timer_err);
-                    warp::reject::custom(timer_err)
-                })
-        })
-        .map(|seconds| format!("I waited {} seconds!", seconds));
-
-    warp::serve(routes).run(([127, 0, 0, 1], 3030));
 }

@@ -1,42 +1,94 @@
-//! The `Connect` trait, and supporting types.
+//! Connectors used by the `Client`.
 //!
 //! This module contains:
 //!
-//! - A default [`HttpConnector`](HttpConnector) that does DNS resolution and
-//!   establishes connections over TCP.
-//! - The [`Connect`](Connect) trait and related types to build custom connectors.
-use std::error::Error as StdError;
-use std::{fmt, mem};
+//! - A default [`HttpConnector`][] that does DNS resolution and establishes
+//!   connections over TCP.
+//! - Types to build custom connectors.
+//!
+//! # Connectors
+//!
+//! A "connector" is a [`Service`][] that takes a [`Uri`][] destination, and
+//! its `Response` is some type implementing [`AsyncRead`][], [`AsyncWrite`][],
+//! and [`Connection`][].
+//!
+//! ## Custom Connectors
+//!
+//! A simple connector that ignores the `Uri` destination and always returns
+//! a TCP connection to the same address could be written like this:
+//!
+//! ```rust,ignore
+//! let connector = tower::service_fn(|_dst| async {
+//!     tokio::net::TcpStream::connect("127.0.0.1:1337")
+//! })
+//! ```
+//!
+//! Or, fully written out:
+//!
+//! ```
+//! use std::{future::Future, net::SocketAddr, pin::Pin, task::{self, Poll}};
+//! use hyper::{service::Service, Uri};
+//! use tokio::net::TcpStream;
+//!
+//! #[derive(Clone)]
+//! struct LocalConnector;
+//!
+//! impl Service<Uri> for LocalConnector {
+//!     type Response = TcpStream;
+//!     type Error = std::io::Error;
+//!     // We can't "name" an `async` generated future.
+//!     type Future = Pin<Box<
+//!         dyn Future<Output = Result<Self::Response, Self::Error>> + Send
+//!     >>;
+//!
+//!     fn poll_ready(&mut self, _: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
+//!         // This connector is always ready, but others might not be.
+//!         Poll::Ready(Ok(()))
+//!     }
+//!
+//!     fn call(&mut self, _: Uri) -> Self::Future {
+//!         Box::pin(TcpStream::connect(SocketAddr::from(([127, 0, 0, 1], 1337))))
+//!     }
+//! }
+//! ```
+//!
+//! It's worth noting that for `TcpStream`s, the [`HttpConnector`][] is a
+//! better starting place to extend from.
+//!
+//! Using either of the above connector examples, it can be used with the
+//! `Client` like this:
+//!
+//! ```
+//! # let connector = hyper::client::HttpConnector::new();
+//! // let connector = ...
+//!
+//! let client = hyper::Client::builder()
+//!     .build::<_, hyper::Body>(connector);
+//! ```
+//!
+//!
+//! [`HttpConnector`]: HttpConnector
+//! [`Service`]: crate::service::Service
+//! [`Uri`]: http::Uri
+//! [`AsyncRead`]: tokio::io::AsyncRead
+//! [`AsyncWrite`]: tokio::io::AsyncWrite
+//! [`Connection`]: Connection
+use std::fmt;
 
-use bytes::{BufMut, Bytes, BytesMut};
-use futures::Future;
-use http::{uri, Response, Uri};
-use tokio_io::{AsyncRead, AsyncWrite};
+use ::http::Response;
 
-#[cfg(feature = "runtime")] pub mod dns;
-#[cfg(feature = "runtime")] mod http;
-#[cfg(feature = "runtime")] pub use self::http::{HttpConnector, HttpInfo};
+#[cfg(feature = "tcp")]
+pub mod dns;
+#[cfg(feature = "tcp")]
+mod http;
+#[cfg(feature = "tcp")]
+pub use self::http::{HttpConnector, HttpInfo};
+pub use self::sealed::Connect;
 
-/// Connect to a destination, returning an IO transport.
-///
-/// A connector receives a [`Destination`](Destination) describing how a
-/// connection should be estabilished, and returns a `Future` of the
-/// ready connection.
-pub trait Connect: Send + Sync {
-    /// The connected IO Stream.
-    type Transport: AsyncRead + AsyncWrite + Send + 'static;
-    /// An error occured when trying to connect.
-    type Error: Into<Box<StdError + Send + Sync>>;
-    /// A Future that will resolve to the connected Transport.
-    type Future: Future<Item=(Self::Transport, Connected), Error=Self::Error> + Send;
-    /// Connect to a destination.
-    fn connect(&self, dst: Destination) -> Self::Future;
-}
-
-/// A set of properties to describe where and how to try to connect.
-#[derive(Clone, Debug)]
-pub struct Destination {
-    pub(super) uri: Uri,
+/// Describes a type returned by a connector.
+pub trait Connection {
+    /// Return metadata describing the connection.
+    fn connected(&self) -> Connected;
 }
 
 /// Extra information about the connected transport.
@@ -50,195 +102,12 @@ pub struct Connected {
     pub(super) extra: Option<Extra>,
 }
 
-pub(super) struct Extra(Box<ExtraInner>);
+pub(super) struct Extra(Box<dyn ExtraInner>);
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Alpn {
     H2,
     None,
-}
-
-impl Destination {
-    /// Get the protocol scheme.
-    #[inline]
-    pub fn scheme(&self) -> &str {
-        self.uri
-            .scheme_part()
-            .map(|s| s.as_str())
-            .unwrap_or("")
-    }
-
-    /// Get the hostname.
-    #[inline]
-    pub fn host(&self) -> &str {
-        self.uri
-            .host()
-            .unwrap_or("")
-    }
-
-    /// Get the port, if specified.
-    #[inline]
-    pub fn port(&self) -> Option<u16> {
-         match self.uri.port_part() {
-            Some(port) => Some(port.as_u16()),
-            None => None
-        }
-    }
-
-    /// Update the scheme of this destination.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use hyper::client::connect::Destination;
-    /// # fn with_dst(mut dst: Destination) {
-    /// // let mut dst = some_destination...
-    /// // Change from "http://"...
-    /// assert_eq!(dst.scheme(), "http");
-    ///
-    /// // to "ws://"...
-    /// dst.set_scheme("ws");
-    /// assert_eq!(dst.scheme(), "ws");
-    /// # }
-    /// ```
-    ///
-    /// # Error
-    ///
-    /// Returns an error if the string is not a valid scheme.
-    pub fn set_scheme(&mut self, scheme: &str) -> ::Result<()> {
-        let scheme = scheme.parse().map_err(::error::Parse::from)?;
-        self.update_uri(move |parts| {
-            parts.scheme = Some(scheme);
-        })
-    }
-
-    /// Update the host of this destination.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use hyper::client::connect::Destination;
-    /// # fn with_dst(mut dst: Destination) {
-    /// // let mut dst = some_destination...
-    /// // Change from "hyper.rs"...
-    /// assert_eq!(dst.host(), "hyper.rs");
-    ///
-    /// // to "some.proxy"...
-    /// dst.set_host("some.proxy");
-    /// assert_eq!(dst.host(), "some.proxy");
-    /// # }
-    /// ```
-    ///
-    /// # Error
-    ///
-    /// Returns an error if the string is not a valid hostname.
-    pub fn set_host(&mut self, host: &str) -> ::Result<()> {
-        // Prevent any userinfo setting, it's bad!
-        if host.contains('@') {
-            return Err(::error::Parse::Uri.into());
-        }
-        let auth = if let Some(port) = self.port() {
-            let bytes = Bytes::from(format!("{}:{}", host, port));
-            uri::Authority::from_shared(bytes)
-                .map_err(::error::Parse::from)?
-        } else {
-            let auth = host.parse::<uri::Authority>().map_err(::error::Parse::from)?;
-            if auth.port_part().is_some() { // std::uri::Authority::Uri
-                return Err(::error::Parse::Uri.into());
-            }
-            auth
-        };
-        self.update_uri(move |parts| {
-            parts.authority = Some(auth);
-        })
-    }
-
-    /// Update the port of this destination.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use hyper::client::connect::Destination;
-    /// # fn with_dst(mut dst: Destination) {
-    /// // let mut dst = some_destination...
-    /// // Change from "None"...
-    /// assert_eq!(dst.port(), None);
-    ///
-    /// // to "4321"...
-    /// dst.set_port(4321);
-    /// assert_eq!(dst.port(), Some(4321));
-    ///
-    /// // Or remove the port...
-    /// dst.set_port(None);
-    /// assert_eq!(dst.port(), None);
-    /// # }
-    /// ```
-    pub fn set_port<P>(&mut self, port: P)
-    where
-        P: Into<Option<u16>>,
-    {
-        self.set_port_opt(port.into());
-    }
-
-    fn set_port_opt(&mut self, port: Option<u16>) {
-        use std::fmt::Write;
-
-        let auth = if let Some(port) = port {
-            let host = self.host();
-            // Need space to copy the hostname, plus ':',
-            // plus max 5 port digits...
-            let cap = host.len() + 1 + 5;
-            let mut buf = BytesMut::with_capacity(cap);
-            buf.put_slice(host.as_bytes());
-            buf.put_u8(b':');
-            write!(buf, "{}", port)
-                .expect("should have space for 5 digits");
-
-            uri::Authority::from_shared(buf.freeze())
-                .expect("valid host + :port should be valid authority")
-        } else {
-            self.host().parse()
-                .expect("valid host without port should be valid authority")
-        };
-
-        self.update_uri(move |parts| {
-            parts.authority = Some(auth);
-        })
-            .expect("valid uri should be valid with port");
-    }
-
-    fn update_uri<F>(&mut self, f: F) -> ::Result<()>
-    where
-        F: FnOnce(&mut uri::Parts)
-    {
-        // Need to store a default Uri while we modify the current one...
-        let old_uri = mem::replace(&mut self.uri, Uri::default());
-        // However, mutate a clone, so we can revert if there's an error...
-        let mut parts: uri::Parts = old_uri.clone().into();
-
-        f(&mut parts);
-
-        match Uri::from_parts(parts) {
-            Ok(uri) => {
-                self.uri = uri;
-                Ok(())
-            },
-            Err(err) => {
-                self.uri = old_uri;
-                Err(::error::Parse::from(err).into())
-            },
-        }
-    }
-
-    /*
-    /// Returns whether this connection must negotiate HTTP/2 via ALPN.
-    pub fn must_h2(&self) -> bool {
-        match self.alpn {
-            Alpn::Http1 => false,
-            Alpn::H2 => true,
-        }
-    }
-    */
 }
 
 impl Connected {
@@ -254,8 +123,19 @@ impl Connected {
     /// Set whether the connected transport is to an HTTP proxy.
     ///
     /// This setting will affect if HTTP/1 requests written on the transport
-    /// will have the request-target in absolute-form or origin-form (such as
-    /// `GET http://hyper.rs/guide HTTP/1.1` or `GET /guide HTTP/1.1`).
+    /// will have the request-target in absolute-form or origin-form:
+    ///
+    /// - When `proxy(false)`:
+    ///
+    /// ```http
+    /// GET /guide HTTP/1.1
+    /// ```
+    ///
+    /// - When `proxy(true)`:
+    ///
+    /// ```http
+    /// GET http://hyper.rs/guide HTTP/1.1
+    /// ```
     ///
     /// Default is `false`.
     pub fn proxy(mut self, is_proxied: bool) -> Connected {
@@ -294,7 +174,7 @@ impl Connected {
 // ===== impl Extra =====
 
 impl Extra {
-    pub(super) fn set(&self, res: &mut Response<::Body>) {
+    pub(super) fn set(&self, res: &mut Response<crate::Body>) {
         self.0.set(res);
     }
 }
@@ -306,15 +186,14 @@ impl Clone for Extra {
 }
 
 impl fmt::Debug for Extra {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Extra")
-            .finish()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Extra").finish()
     }
 }
 
 trait ExtraInner: Send + Sync {
-    fn clone_box(&self) -> Box<ExtraInner>;
-    fn set(&self, res: &mut Response<::Body>);
+    fn clone_box(&self) -> Box<dyn ExtraInner>;
+    fn set(&self, res: &mut Response<crate::Body>);
 }
 
 // This indirection allows the `Connected` to have a type-erased "extra" value,
@@ -325,18 +204,18 @@ struct ExtraEnvelope<T>(T);
 
 impl<T> ExtraInner for ExtraEnvelope<T>
 where
-    T: Clone + Send + Sync + 'static
+    T: Clone + Send + Sync + 'static,
 {
-    fn clone_box(&self) -> Box<ExtraInner> {
+    fn clone_box(&self) -> Box<dyn ExtraInner> {
         Box::new(self.clone())
     }
 
-    fn set(&self, res: &mut Response<::Body>) {
+    fn set(&self, res: &mut Response<crate::Body>) {
         res.extensions_mut().insert(self.0.clone());
     }
 }
 
-struct ExtraChain<T>(Box<ExtraInner>, T);
+struct ExtraChain<T>(Box<dyn ExtraInner>, T);
 
 impl<T: Clone> Clone for ExtraChain<T> {
     fn clone(&self) -> Self {
@@ -346,165 +225,101 @@ impl<T: Clone> Clone for ExtraChain<T> {
 
 impl<T> ExtraInner for ExtraChain<T>
 where
-    T: Clone + Send + Sync + 'static
+    T: Clone + Send + Sync + 'static,
 {
-    fn clone_box(&self) -> Box<ExtraInner> {
+    fn clone_box(&self) -> Box<dyn ExtraInner> {
         Box::new(self.clone())
     }
 
-    fn set(&self, res: &mut Response<::Body>) {
+    fn set(&self, res: &mut Response<crate::Body>) {
         self.0.set(res);
         res.extensions_mut().insert(self.1.clone());
     }
 }
 
+pub(super) mod sealed {
+    use std::error::Error as StdError;
+
+    use ::http::Uri;
+    use tokio::io::{AsyncRead, AsyncWrite};
+
+    use super::Connection;
+    use crate::common::{Future, Unpin};
+
+    /// Connect to a destination, returning an IO transport.
+    ///
+    /// A connector receives a [`Uri`](::http::Uri) and returns a `Future` of the
+    /// ready connection.
+    ///
+    /// # Trait Alias
+    ///
+    /// This is really just an *alias* for the `tower::Service` trait, with
+    /// additional bounds set for convenience *inside* hyper. You don't actually
+    /// implement this trait, but `tower::Service<Uri>` instead.
+    // The `Sized` bound is to prevent creating `dyn Connect`, since they cannot
+    // fit the `Connect` bounds because of the blanket impl for `Service`.
+    pub trait Connect: Sealed + Sized {
+        #[doc(hidden)]
+        type _Svc: ConnectSvc;
+        #[doc(hidden)]
+        fn connect(self, internal_only: Internal, dst: Uri) -> <Self::_Svc as ConnectSvc>::Future;
+    }
+
+    pub trait ConnectSvc {
+        type Connection: AsyncRead + AsyncWrite + Connection + Unpin + Send + 'static;
+        type Error: Into<Box<dyn StdError + Send + Sync>>;
+        type Future: Future<Output = Result<Self::Connection, Self::Error>> + Unpin + Send + 'static;
+
+        fn connect(self, internal_only: Internal, dst: Uri) -> Self::Future;
+    }
+
+    impl<S, T> Connect for S
+    where
+        S: tower_service::Service<Uri, Response = T> + Send + 'static,
+        S::Error: Into<Box<dyn StdError + Send + Sync>>,
+        S::Future: Unpin + Send,
+        T: AsyncRead + AsyncWrite + Connection + Unpin + Send + 'static,
+    {
+        type _Svc = S;
+
+        fn connect(self, _: Internal, dst: Uri) -> crate::service::Oneshot<S, Uri> {
+            crate::service::oneshot(self, dst)
+        }
+    }
+
+    impl<S, T> ConnectSvc for S
+    where
+        S: tower_service::Service<Uri, Response = T> + Send + 'static,
+        S::Error: Into<Box<dyn StdError + Send + Sync>>,
+        S::Future: Unpin + Send,
+        T: AsyncRead + AsyncWrite + Connection + Unpin + Send + 'static,
+    {
+        type Connection = T;
+        type Error = S::Error;
+        type Future = crate::service::Oneshot<S, Uri>;
+
+        fn connect(self, _: Internal, dst: Uri) -> Self::Future {
+            crate::service::oneshot(self, dst)
+        }
+    }
+
+    impl<S, T> Sealed for S
+    where
+        S: tower_service::Service<Uri, Response = T> + Send,
+        S::Error: Into<Box<dyn StdError + Send + Sync>>,
+        S::Future: Unpin + Send,
+        T: AsyncRead + AsyncWrite + Connection + Unpin + Send + 'static,
+    {
+    }
+
+    pub trait Sealed {}
+    #[allow(missing_debug_implementations)]
+    pub struct Internal;
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Connected, Destination};
-
-    #[test]
-    fn test_destination_set_scheme() {
-        let mut dst = Destination {
-            uri: "http://hyper.rs".parse().expect("initial parse"),
-        };
-
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-
-        dst.set_scheme("https").expect("set https");
-        assert_eq!(dst.scheme(), "https");
-        assert_eq!(dst.host(), "hyper.rs");
-
-        dst.set_scheme("<im not a scheme//?>").unwrap_err();
-        assert_eq!(dst.scheme(), "https", "error doesn't modify dst");
-        assert_eq!(dst.host(), "hyper.rs", "error doesn't modify dst");
-    }
-
-    #[test]
-    fn test_destination_set_host() {
-        let mut dst = Destination {
-            uri: "http://hyper.rs".parse().expect("initial parse"),
-        };
-
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), None);
-
-        dst.set_host("seanmonstar.com").expect("set https");
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "seanmonstar.com");
-        assert_eq!(dst.port(), None);
-
-        dst.set_host("/im-not a host! >:)").unwrap_err();
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), None, "error doesn't modify dst");
-
-        // Check port isn't snuck into `set_host`.
-        dst.set_host("seanmonstar.com:3030").expect_err("set_host sneaky port");
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), None, "error doesn't modify dst");
-
-        // Check userinfo isn't snuck into `set_host`.
-        dst.set_host("sean@nope").expect_err("set_host sneaky userinfo");
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), None, "error doesn't modify dst");
-
-        // Allow IPv6 hosts
-        dst.set_host("[::1]").expect("set_host with IPv6");
-        assert_eq!(dst.host(), "::1");
-        assert_eq!(dst.port(), None, "IPv6 didn't affect port");
-
-        // However, IPv6 with a port is rejected.
-        dst.set_host("[::2]:1337").expect_err("set_host with IPv6 and sneaky port");
-        assert_eq!(dst.host(), "::1");
-        assert_eq!(dst.port(), None);
-
-        // -----------------
-
-        // Also test that an exist port is set correctly.
-        let mut dst = Destination {
-            uri: "http://hyper.rs:8080".parse().expect("initial parse 2"),
-        };
-
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), Some(8080));
-
-        dst.set_host("seanmonstar.com").expect("set host");
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "seanmonstar.com");
-        assert_eq!(dst.port(), Some(8080));
-
-        dst.set_host("/im-not a host! >:)").unwrap_err();
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), Some(8080), "error doesn't modify dst");
-
-        // Check port isn't snuck into `set_host`.
-        dst.set_host("seanmonstar.com:3030").expect_err("set_host sneaky port");
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), Some(8080), "error doesn't modify dst");
-
-        // Check userinfo isn't snuck into `set_host`.
-        dst.set_host("sean@nope").expect_err("set_host sneaky userinfo");
-        assert_eq!(dst.scheme(), "http", "error doesn't modify dst");
-        assert_eq!(dst.host(), "seanmonstar.com", "error doesn't modify dst");
-        assert_eq!(dst.port(), Some(8080), "error doesn't modify dst");
-
-        // Allow IPv6 hosts
-        dst.set_host("[::1]").expect("set_host with IPv6");
-        assert_eq!(dst.host(), "::1");
-        assert_eq!(dst.port(), Some(8080), "IPv6 didn't affect port");
-
-        // However, IPv6 with a port is rejected.
-        dst.set_host("[::2]:1337").expect_err("set_host with IPv6 and sneaky port");
-        assert_eq!(dst.host(), "::1");
-        assert_eq!(dst.port(), Some(8080));
-    }
-
-    #[test]
-    fn test_destination_set_port() {
-        let mut dst = Destination {
-            uri: "http://hyper.rs".parse().expect("initial parse"),
-        };
-
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), None);
-
-        dst.set_port(None);
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), None);
-
-        dst.set_port(8080);
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), Some(8080));
-
-        // Also test that an exist port is set correctly.
-        let mut dst = Destination {
-            uri: "http://hyper.rs:8080".parse().expect("initial parse 2"),
-        };
-
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), Some(8080));
-
-        dst.set_port(3030);
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), Some(3030));
-
-        dst.set_port(None);
-        assert_eq!(dst.scheme(), "http");
-        assert_eq!(dst.host(), "hyper.rs");
-        assert_eq!(dst.port(), None);
-    }
+    use super::Connected;
 
     #[derive(Clone, Debug, PartialEq)]
     struct Ex1(usize);
@@ -517,18 +332,13 @@ mod tests {
 
     #[test]
     fn test_connected_extra() {
-        let c1 = Connected::new()
-            .extra(Ex1(41));
+        let c1 = Connected::new().extra(Ex1(41));
 
-        let mut res1 = ::Response::new(::Body::empty());
+        let mut res1 = crate::Response::new(crate::Body::empty());
 
         assert_eq!(res1.extensions().get::<Ex1>(), None);
 
-        c1
-            .extra
-            .as_ref()
-            .expect("c1 extra")
-            .set(&mut res1);
+        c1.extra.as_ref().expect("c1 extra").set(&mut res1);
 
         assert_eq!(res1.extensions().get::<Ex1>(), Some(&Ex1(41)));
     }
@@ -543,17 +353,13 @@ mod tests {
             .extra(Ex2("zoom"))
             .extra(Ex3("pew pew"));
 
-        let mut res1 = ::Response::new(::Body::empty());
+        let mut res1 = crate::Response::new(crate::Body::empty());
 
         assert_eq!(res1.extensions().get::<Ex1>(), None);
         assert_eq!(res1.extensions().get::<Ex2>(), None);
         assert_eq!(res1.extensions().get::<Ex3>(), None);
 
-        c1
-            .extra
-            .as_ref()
-            .expect("c1 extra")
-            .set(&mut res1);
+        c1.extra.as_ref().expect("c1 extra").set(&mut res1);
 
         assert_eq!(res1.extensions().get::<Ex1>(), Some(&Ex1(45)));
         assert_eq!(res1.extensions().get::<Ex2>(), Some(&Ex2("zoom")));
@@ -565,16 +371,11 @@ mod tests {
             .extra(Ex2("hiccup"))
             .extra(Ex1(99));
 
-        let mut res2 = ::Response::new(::Body::empty());
+        let mut res2 = crate::Response::new(crate::Body::empty());
 
-        c2
-            .extra
-            .as_ref()
-            .expect("c2 extra")
-            .set(&mut res2);
+        c2.extra.as_ref().expect("c2 extra").set(&mut res2);
 
         assert_eq!(res2.extensions().get::<Ex1>(), Some(&Ex1(99)));
         assert_eq!(res2.extensions().get::<Ex2>(), Some(&Ex2("hiccup")));
     }
 }
-

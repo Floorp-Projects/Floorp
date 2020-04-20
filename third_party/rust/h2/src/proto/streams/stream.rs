@@ -1,5 +1,6 @@
 use super::*;
 
+use std::task::{Context, Waker};
 use std::time::Instant;
 use std::usize;
 
@@ -47,7 +48,7 @@ pub(super) struct Stream {
     pub buffered_send_data: WindowSize,
 
     /// Task tracking additional send capacity (i.e. window updates).
-    send_task: Option<task::Task>,
+    send_task: Option<Waker>,
 
     /// Frames pending for this stream being sent to the socket
     pub pending_send: buffer::Deque,
@@ -67,6 +68,9 @@ pub(super) struct Stream {
 
     /// Set to true when the stream is pending to be opened
     pub is_pending_open: bool,
+
+    /// Set to true when a push is pending for this stream
+    pub is_pending_push: bool,
 
     // ===== Fields related to receiving =====
     /// Next node in the accept linked list
@@ -96,7 +100,7 @@ pub(super) struct Stream {
     pub pending_recv: buffer::Deque,
 
     /// Task tracking receiving frames
-    pub recv_task: Option<task::Task>,
+    pub recv_task: Option<Waker>,
 
     /// The stream's pending push promises
     pub pending_push_promises: store::Queue<NextAccept>,
@@ -132,23 +136,17 @@ pub(super) struct NextOpen;
 pub(super) struct NextResetExpire;
 
 impl Stream {
-    pub fn new(
-        id: StreamId,
-        init_send_window: WindowSize,
-        init_recv_window: WindowSize,
-    ) -> Stream {
+    pub fn new(id: StreamId, init_send_window: WindowSize, init_recv_window: WindowSize) -> Stream {
         let mut send_flow = FlowControl::new();
         let mut recv_flow = FlowControl::new();
 
         recv_flow
             .inc_window(init_recv_window)
-            .ok()
             .expect("invalid initial receive window");
         recv_flow.assign_capacity(init_recv_window);
 
         send_flow
             .inc_window(init_send_window)
-            .ok()
             .expect("invalid initial send window size");
 
         Stream {
@@ -160,7 +158,7 @@ impl Stream {
             // ===== Fields related to sending =====
             next_pending_send: None,
             is_pending_send: false,
-            send_flow: send_flow,
+            send_flow,
             requested_send_capacity: 0,
             buffered_send_data: 0,
             send_task: None,
@@ -170,11 +168,12 @@ impl Stream {
             send_capacity_inc: false,
             is_pending_open: false,
             next_open: None,
+            is_pending_push: false,
 
             // ===== Fields related to receiving =====
             next_pending_accept: None,
             is_pending_accept: false,
-            recv_flow: recv_flow,
+            recv_flow,
             in_flight_recv_data: 0,
             next_window_update: None,
             is_pending_window_update: false,
@@ -203,6 +202,26 @@ impl Stream {
     /// a local reset.
     pub fn is_pending_reset_expiration(&self) -> bool {
         self.reset_at.is_some()
+    }
+
+    /// Returns true if frames for this stream are ready to be sent over the wire
+    pub fn is_send_ready(&self) -> bool {
+        // Why do we check pending_open?
+        //
+        // We allow users to call send_request() which schedules a stream to be pending_open
+        // if there is no room according to the concurrency limit (max_send_streams), and we
+        // also allow data to be buffered for send with send_data() if there is no capacity for
+        // the stream to send the data, which attempts to place the stream in pending_send.
+        // If the stream is not open, we don't want the stream to be scheduled for
+        // execution (pending_send). Note that if the stream is in pending_open, it will be
+        // pushed to pending_send when there is room for an open stream.
+        //
+        // In pending_push we track whether a PushPromise still needs to be sent
+        // from a different stream before we can start sending frames on this one.
+        // This is different from the "open" check because reserved streams don't count
+        // toward the concurrency limit.
+        // See https://httpwg.org/specs/rfc7540.html#rfc.section.5.1.2
+        !self.is_pending_open && !self.is_pending_push
     }
 
     /// Returns true if the stream is closed
@@ -246,12 +265,16 @@ impl Stream {
         self.send_capacity_inc = true;
         self.send_flow.assign_capacity(capacity);
 
-        trace!("  assigned capacity to stream; available={}; buffered={}; id={:?}",
-               self.send_flow.available(), self.buffered_send_data, self.id);
+        log::trace!(
+            "  assigned capacity to stream; available={}; buffered={}; id={:?}",
+            self.send_flow.available(),
+            self.buffered_send_data,
+            self.id
+        );
 
         // Only notify if the capacity exceeds the amount of buffered data
         if self.send_flow.available() > self.buffered_send_data {
-            trace!("  notifying task");
+            log::trace!("  notifying task");
             self.notify_send();
         }
     }
@@ -264,7 +287,7 @@ impl Stream {
                 None => return Err(()),
             },
             ContentLength::Head => return Err(()),
-            _ => {},
+            _ => {}
         }
 
         Ok(())
@@ -280,17 +303,17 @@ impl Stream {
 
     pub fn notify_send(&mut self) {
         if let Some(task) = self.send_task.take() {
-            task.notify();
+            task.wake();
         }
     }
 
-    pub fn wait_send(&mut self) {
-        self.send_task = Some(task::current());
+    pub fn wait_send(&mut self, cx: &Context) {
+        self.send_task = Some(cx.waker().clone());
     }
 
     pub fn notify_recv(&mut self) {
         if let Some(task) = self.recv_task.take() {
-            task.notify();
+            task.wake();
         }
     }
 }

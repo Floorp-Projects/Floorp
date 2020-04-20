@@ -1,23 +1,22 @@
-extern crate futures;
-
-use std::sync::mpsc::channel;
-
-use futures::future::ok;
-use futures::prelude::*;
+use futures::executor::block_on;
+use futures::future::{self, FutureExt, BoxFuture};
+use std::sync::mpsc;
+use std::thread;
 
 #[test]
 fn lots() {
-    fn doit(n: usize) -> Box<Future<Item=(), Error=()> + Send> {
+    fn do_it(input: (i32, i32)) -> BoxFuture<'static, i32> {
+        let (n, x) = input;
         if n == 0 {
-            Box::new(ok(()))
+            future::ready(x).boxed()
         } else {
-            Box::new(ok(n - 1).and_then(doit))
+            future::ready((n - 1, x + n)).then(do_it).boxed()
         }
     }
 
-    let (tx, rx) = channel();
-    ::std::thread::spawn(|| {
-        doit(1_000).map(move |_| tx.send(()).unwrap()).wait()
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(|| {
+        block_on(do_it((1_000, 0)).map(move |x| tx.send(x).unwrap()))
     });
-    rx.recv().unwrap();
+    assert_eq!(500_500, rx.recv().unwrap());
 }

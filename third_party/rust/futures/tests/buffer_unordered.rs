@@ -1,13 +1,12 @@
-extern crate futures;
-
+use futures::channel::{oneshot, mpsc};
+use futures::executor::{block_on, block_on_stream};
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 use std::sync::mpsc as std_mpsc;
 use std::thread;
 
-use futures::prelude::*;
-use futures::sync::oneshot;
-use futures::sync::mpsc;
-
 #[test]
+#[ignore] // FIXME: https://github.com/rust-lang/futures-rs/issues/1790
 fn works() {
     const N: usize = 4;
 
@@ -16,22 +15,22 @@ fn works() {
     let (tx2, rx2) = std_mpsc::channel();
     let (tx3, rx3) = std_mpsc::channel();
     let t1 = thread::spawn(move || {
-        for _ in 0..N+1 {
+        for _ in 0..=N {
             let (mytx, myrx) = oneshot::channel();
-            tx = tx.send(myrx).wait().unwrap();
+            block_on(tx.send(myrx)).unwrap();
             tx3.send(mytx).unwrap();
         }
         rx2.recv().unwrap();
         for _ in 0..N {
             let (mytx, myrx) = oneshot::channel();
-            tx = tx.send(myrx).wait().unwrap();
+            block_on(tx.send(myrx)).unwrap();
             tx3.send(mytx).unwrap();
         }
     });
 
     let (tx4, rx4) = std_mpsc::channel();
     let t2 = thread::spawn(move || {
-        for item in rx.map_err(|_| panic!()).buffer_unordered(N).wait() {
+        for item in block_on_stream(rx.buffer_unordered(N)) {
             tx4.send(item.unwrap()).unwrap();
         }
     });
