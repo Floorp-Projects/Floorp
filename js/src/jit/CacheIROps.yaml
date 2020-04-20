@@ -882,16 +882,19 @@
 
 - name: LoadInt32Result
   shared: true
+  gen_boilerplate: true
   operands:
     val: Int32Id
 
 - name: LoadDoubleResult
   shared: true
+  gen_boilerplate: true
   operands:
     val: NumId
 
 - name: CallScriptedGetterResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     getter: ObjectField
@@ -899,31 +902,36 @@
 
 - name: CallScriptedGetterByValueResult
   shared: false
+  gen_boilerplate: true
   operands:
     val: ValId
     getter: ObjectField
-    samerealm: BoolImm
+    sameRealm: BoolImm
 
 - name: CallNativeGetterResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     getter: ObjectField
 
 - name: CallNativeGetterByValueResult
   shared: false
+  gen_boilerplate: true
   operands:
     val: ValId
     getter: ObjectField
 
 - name: CallProxyGetResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: IdField
 
 - name: CallProxyGetByValueResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     id: ValId
@@ -938,27 +946,32 @@
 
 - name: CallObjectHasSparseElementResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: CallNativeGetElementResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadUndefinedResult
   shared: true
+  gen_boilerplate: true
   operands:
 
 - name: LoadBooleanResult
   shared: true
+  gen_boilerplate: true
   operands:
     val: BoolImm
 
 - name: LoadStringResult
   shared: false
+  gen_boilerplate: true
   operands:
     str: StringField
 

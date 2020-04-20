@@ -1245,70 +1245,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::BigIntDecResult, id);
   }
 
-  void loadBooleanResult(bool val) {
-    writeOp(CacheOp::LoadBooleanResult);
-    buffer_.writeByte(uint32_t(val));
-  }
-
-  void loadUndefinedResult() { writeOp(CacheOp::LoadUndefinedResult); }
-  void loadStringResult(JSString* str) {
-    writeOp(CacheOp::LoadStringResult);
-    addStubField(uintptr_t(str), StubField::Type::String);
-  }
-
-  void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
-    writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
-    addStubField(uintptr_t(getter), StubField::Type::JSObject);
-    buffer_.writeByte(cx_->realm() == getter->realm());
-  }
-
-  void callScriptedGetterByValueResult(ValOperandId obj, JSFunction* getter) {
-    writeOpWithOperandId(CacheOp::CallScriptedGetterByValueResult, obj);
-    addStubField(uintptr_t(getter), StubField::Type::JSObject);
-    buffer_.writeByte(cx_->realm() == getter->realm());
-  }
-
-  void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
-    writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
-    addStubField(uintptr_t(getter), StubField::Type::JSObject);
-  }
-
-  void callNativeGetterByValueResult(ValOperandId obj, JSFunction* getter) {
-    writeOpWithOperandId(CacheOp::CallNativeGetterByValueResult, obj);
-    addStubField(uintptr_t(getter), StubField::Type::JSObject);
-  }
-
-  void callProxyGetResult(ObjOperandId obj, jsid id) {
-    writeOpWithOperandId(CacheOp::CallProxyGetResult, obj);
-    addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
-  }
-
-  void callProxyGetByValueResult(ObjOperandId obj, ValOperandId idVal) {
-    writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
-    writeOperandId(idVal);
-  }
-
-  void callObjectHasSparseElementResult(ObjOperandId obj,
-                                        Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::CallObjectHasSparseElementResult, obj);
-    writeOperandId(index);
-  }
-
-  void callNativeGetElementResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::CallNativeGetElementResult, obj);
-    writeOperandId(index);
-  }
-
   void callIsSuspendedGeneratorResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::CallIsSuspendedGeneratorResult, val);
-  }
-
-  void loadInt32Result(Int32OperandId val) {
-    writeOpWithOperandId(CacheOp::LoadInt32Result, val);
-  }
-
-  void loadDoubleResult(NumberOperandId val) {
-    writeOpWithOperandId(CacheOp::LoadDoubleResult, val);
   }
 
   void loadInstanceOfObjectResult(ValOperandId lhs, ObjOperandId protoId,
