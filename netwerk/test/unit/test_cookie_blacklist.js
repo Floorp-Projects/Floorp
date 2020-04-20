@@ -14,35 +14,30 @@ function run_test() {
     cookieURI,
     cookieURI,
     "BadCookie1=\x01",
-    null,
     null
   );
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
     "BadCookie2=\v",
-    null,
     null
   );
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
     "Bad\x07Name=illegal",
-    null,
     null
   );
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
     GOOD_COOKIE,
-    null,
     null
   );
   cookieService.setCookieStringFromHttp(
     cookieURI,
     cookieURI,
     SPACEY_COOKIE,
-    null,
     null
   );
 

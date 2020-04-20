@@ -109,7 +109,7 @@ function do_load_profile(generator) {
 // Set a single session cookie using http and test the cookie count
 // against 'expected'
 function do_set_single_http_cookie(uri, channel, expected) {
-  Services.cookies.setCookieStringFromHttp(uri, null, "foo=bar", null, channel);
+  Services.cookies.setCookieStringFromHttp(uri, null, "foo=bar", channel);
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected);
 }
 
@@ -129,7 +129,6 @@ function do_set_cookies(uri, channel, session, expected) {
     uri,
     null,
     "cheez=burger" + suffix,
-    null,
     null
   );
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[2]);
@@ -138,7 +137,6 @@ function do_set_cookies(uri, channel, session, expected) {
     uri,
     null,
     "hot=dog" + suffix,
-    null,
     channel
   );
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[3]);

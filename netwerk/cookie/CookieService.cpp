@@ -428,7 +428,6 @@ CookieService::SetCookieString(nsIURI* aHostURI,
 NS_IMETHODIMP
 CookieService::SetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* /*aFirstURI*/,
                                        const nsACString& aCookieHeader,
-                                       const nsACString& aServerTime,
                                        nsIChannel* aChannel) {
   return SetCookieStringCommon(aHostURI, aCookieHeader, aChannel, true);
 }
