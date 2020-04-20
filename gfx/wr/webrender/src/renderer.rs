@@ -933,12 +933,6 @@ impl From<TextureTarget> for ImageBufferKind {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum RendererKind {
-    Native,
-    OSMesa,
-}
-
 #[derive(Debug)]
 pub struct GpuProfile {
     pub frame_id: GpuFrameId,
@@ -6721,7 +6715,6 @@ pub struct RendererOptions {
     pub enable_dithering: bool,
     pub max_recorded_profiles: usize,
     pub precache_flags: ShaderPrecacheFlags,
-    pub renderer_kind: RendererKind,
     /// Enable sub-pixel anti-aliasing if a fast implementation is available.
     pub enable_subpixel_aa: bool,
     /// Enable sub-pixel anti-aliasing if it requires a slow implementation.
@@ -6793,7 +6786,6 @@ impl Default for RendererOptions {
             debug_flags: DebugFlags::empty(),
             max_recorded_profiles: 0,
             precache_flags: ShaderPrecacheFlags::empty(),
-            renderer_kind: RendererKind::Native,
             enable_subpixel_aa: false,
             force_subpixel_aa: false,
             clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
