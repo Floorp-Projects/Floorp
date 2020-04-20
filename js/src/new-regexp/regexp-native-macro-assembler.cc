@@ -369,25 +369,25 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
     masm_.branch32(Assembler::Equal, temp1_, temp2_, &loop_increment);
 
     // Mismatch. Try case-insensitive match.
-    // Force the match character to lower case (by setting bit 0x20)
+    // Force the capture character to lower case (by setting bit 0x20)
     // then check to see if it is a letter.
-    js::jit::Label convert_capture;
+    js::jit::Label convert_match;
     masm_.or32(Imm32(0x20), temp1_);
 
     // Check if it is in [a,z].
     masm_.computeEffectiveAddress(Address(temp1_, -'a'), temp2_);
     masm_.branch32(Assembler::BelowOrEqual, temp2_, Imm32('z' - 'a'),
-                   &convert_capture);
+                   &convert_match);
     // Check for values in range [224,254].
     // Exclude 247 (U+00F7 DIVISION SIGN).
     masm_.sub32(Imm32(224 - 'a'), temp2_);
     masm_.branch32(Assembler::Above, temp2_, Imm32(254 - 224), &fail);
     masm_.branch32(Assembler::Equal, temp2_, Imm32(247 - 224), &fail);
 
-    // Match character is lower case. Convert capture character
+    // Capture character is lower case. Convert match character
     // to lower case and compare.
-    masm_.bind(&convert_capture);
-    masm_.load8ZeroExtend(Address(current_character_, 0), temp2_);
+    masm_.bind(&convert_match);
+    masm_.load8ZeroExtend(Address(current_position_, 0), temp2_);
     masm_.or32(Imm32(0x20), temp2_);
     masm_.branch32(Assembler::NotEqual, temp1_, temp2_, &fail);
 
