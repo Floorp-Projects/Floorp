@@ -104,7 +104,9 @@ struct VectorType {
     };
   };
 
-  VectorType() = default;
+  VectorType() : data{0} { }
+
+  constexpr VectorType(const VectorType& rhs) : data(rhs.data) {}
   constexpr VectorType(T n) : data{n, n, n, n} {}
   constexpr VectorType(T a, T b, T c, T d) : data{a, b, c, d} {}
   constexpr VectorType(T a, T b, T c, T d, T e, T f, T g, T h)
@@ -113,7 +115,7 @@ struct VectorType {
                        T l, T m, T n, T o, T p)
       : data{a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} {}
 
-  SI VectorType wrap(data_type data) {
+  SI VectorType wrap(const data_type& data) {
     VectorType v;
     v.data = data;
     return v;
