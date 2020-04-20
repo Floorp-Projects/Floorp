@@ -67,7 +67,16 @@ class BrowsertimeRunner(NodeRunner):
     name = "browsertime (%s)" % NodeRunner.name
 
     arguments = {
-        "--cycles": {"type": int, "default": 1, "help": "Number of full cycles"}
+        "--browser-cycles": {
+            "type": int,
+            "default": 1,
+            "help": "Number of full cycles",
+        },
+        "--browser-binary": {
+            "type": str,
+            "default": None,
+            "help": "Path to the desktop browser, or Android app name.",
+        },
     }
 
     def __init__(self, env, mach_cmd):
@@ -75,7 +84,6 @@ class BrowsertimeRunner(NodeRunner):
         self.topsrcdir = mach_cmd.topsrcdir
         self._mach_context = mach_cmd._mach_context
         self.virtualenv_manager = mach_cmd.virtualenv_manager
-        self.proxy = None
         self._created_dirs = []
 
     @property
@@ -409,19 +417,27 @@ class BrowsertimeRunner(NodeRunner):
 
         return extra_args
 
-    def get_profile(self, metadata):
-        # XXX we'll use conditioned profiles
-        from mozprofile import create_profile
+    def browsertime_android(self, metadata):
+        app_name = self.get_arg("android-app-name")
 
-        profile = create_profile(app="firefox")
-        prefs = metadata.get_browser_prefs()
-        profile.set_preferences(prefs)
-        self.info("Created profile at %s" % profile.profile)
-        self._created_dirs.append(profile.profile)
-        return profile
+        args_list = [
+            # "--browser", "firefox",
+            "--android",
+            # Work around a `selenium-webdriver` issue where Browsertime
+            # fails to find a Firefox binary even though we're going to
+            # actually do things on an Android device.
+            # "--firefox.binaryPath", self.mach_cmd.get_binary_path(),
+            "--firefox.android.package",
+            app_name,
+        ]
+        activity = self.get_arg("android-activity")
+        if activity is not None:
+            args_list += ["--firefox.android.activity", activity]
+
+        return args_list
 
     def __call__(self, metadata):
-        cycles = self.get_arg("cycles", 1)
+        cycles = self.get_arg("browser-cycles", 1)
         for cycle in range(1, cycles + 1):
             metadata.run_hook("before_cycle", cycle=cycle)
             try:
@@ -431,9 +447,7 @@ class BrowsertimeRunner(NodeRunner):
         return metadata
 
     def _one_cycle(self, metadata):
-        # keep the object around
-        # see https://bugzilla.mozilla.org/show_bug.cgi?id=1625118
-        profile = self.get_profile(metadata)
+        profile = self.get_arg("profile-directory")
         test_script = self.get_arg("tests")[0]
         output = self.get_arg("output")
         if output is not None:
@@ -451,7 +465,7 @@ class BrowsertimeRunner(NodeRunner):
             "--resultDir",
             result_dir,
             "--firefox.profileTemplate",
-            profile.profile,
+            profile,
             "--iterations",
             "1",
             test_script,
@@ -473,14 +487,12 @@ class BrowsertimeRunner(NodeRunner):
                 args += ["--" + name, value]
 
         firefox_args = ["--firefox.developer"]
+        if self.get_arg("android"):
+            args.extend(self.browsertime_android(metadata))
+
         extra = self.extra_default_args(args=firefox_args)
         command = [self.browsertime_js] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
         self.node(command)
         metadata.set_result(result_dir)
         return metadata
-
-    def teardown(self):
-        for dir in self._created_dirs:
-            if os.path.exists(dir):
-                shutil.rmtree(dir)
