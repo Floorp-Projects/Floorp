@@ -148,20 +148,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1526977",
-    platform: "desktop",
-    domain: "sreedharscce.in",
-    bug: "1526977",
-    contentScripts: {
-      matches: ["*://*.sreedharscce.in/authenticate"],
-      css: [
-        {
-          file: "injections/css/bug1526977-sreedharscce.in-login-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1551672",
     platform: "android",
     domain: "Sites using PDK 5 video",
@@ -277,20 +263,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1574973",
-    platform: "android",
-    domain: "patch.com",
-    bug: "1574973",
-    contentScripts: {
-      matches: ["*://patch.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1574973-patch.com-dropdown-menu-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1575000",
     platform: "all",
     domain: "apply.lloydsbank.co.uk",
@@ -301,21 +273,6 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1575011",
-    platform: "android",
-    domain: "holiday-weather.com",
-    bug: "1575011",
-    contentScripts: {
-      matches: ["*://*.holiday-weather.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1575011-holiday-weather.com-scrolling-fix.css",
         },
       ],
     },
@@ -414,7 +371,7 @@ const AVAILABLE_INJECTIONS = [
   },
   {
     id: "bug1610344",
-    platform: "android",
+    platform: "all",
     domain: "directv.com.co",
     bug: "1610344",
     contentScripts: {
@@ -437,6 +394,49 @@ const AVAILABLE_INJECTIONS = [
       types: ["script"],
     },
     customFunc: "detectSwipeFix",
+  },
+  {
+    id: "bug1625224",
+    platform: "all",
+    domain: "sixt-neuwagen.de",
+    bug: "1625224",
+    contentScripts: {
+      matches: ["*://*.sixt-neuwagen.de/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1625224-sixt-neuwagen.de-window-netscape-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1630280",
+    platform: "android",
+    domain: "dominos.ch",
+    bug: "1630280",
+    contentScripts: {
+      matches: ["https://www.dominos.ch/*"],
+      css: [
+        {
+          file: "injections/css/bug1630280-dominos.ch-hide-overlay.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1629926",
+    platform: "desktop",
+    domain: "GMail Hangouts microphone fix",
+    bug: "1629926",
+    contentScripts: {
+      matches: ["https://mail.google.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1629926-mail.google.com-hangouts-mic-fix.js",
+        },
+      ],
+    },
   },
 ];
 
