@@ -10,6 +10,7 @@ from abc import (
 )
 
 import errno
+import io
 import itertools
 import os
 import six
@@ -149,7 +150,7 @@ class BuildBackend(LoggingMixin):
         for path in delete_files:
             full_path = mozpath.join(self.environment.topobjdir, path)
             try:
-                with open(full_path, 'r') as existing:
+                with io.open(full_path, mode='r', encoding='utf-8') as existing:
                     old_content = existing.read()
                     if old_content:
                         self.file_diffs[full_path] = simple_diff(
