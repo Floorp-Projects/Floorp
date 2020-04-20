@@ -176,6 +176,12 @@ DefaultJitOptions::DefaultJitOptions() {
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(fullIonWarmUpThreshold, 100'000);
 
+#ifdef ENABLE_NEW_REGEXP
+  // How many invocations are needed before regexps are compiled to
+  // native code.
+  SET_DEFAULT(regexpWarmUpThreshold, 10);
+#endif
+
   // Number of exception bailouts (resuming into catch/finally block) before
   // we invalidate and forbid Ion compilation.
   SET_DEFAULT(exceptionBailoutThreshold, 10);
@@ -298,6 +304,9 @@ void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 void DefaultJitOptions::setEagerBaselineCompilation() {
   baselineInterpreterWarmUpThreshold = 0;
   baselineJitWarmUpThreshold = 0;
+#ifdef ENABLE_NEW_REGEXP
+  regexpWarmUpThreshold = 0;
+#endif
 }
 
 void DefaultJitOptions::setEagerIonCompilation() {

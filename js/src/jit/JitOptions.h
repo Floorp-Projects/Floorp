@@ -83,6 +83,9 @@ struct DefaultJitOptions {
   uint32_t baselineJitWarmUpThreshold;
   uint32_t normalIonWarmUpThreshold;
   uint32_t fullIonWarmUpThreshold;
+#ifdef ENABLE_NEW_REGEXP
+  uint32_t regexpWarmUpThreshold;
+#endif
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
