@@ -955,7 +955,6 @@ nsresult ContentChild::ProvideWindowCommon(
     PopupIPCTabContext context;
     openerTabId = aTabOpener->GetTabId();
     context.opener() = openerTabId;
-    context.isMozBrowserElement() = aTabOpener->IsMozBrowserElement();
     ipcContext = MakeUnique<IPCTabContext>(context);
   } else {
     // It's possible to not have a BrowserChild opener in the case
@@ -993,12 +992,11 @@ nsresult ContentChild::ProvideWindowCommon(
   MutableTabContext newTabContext;
   if (aTabOpener) {
     newTabContext.SetTabContext(
-        aTabOpener->IsMozBrowserElement(), aTabOpener->ChromeOuterWindowID(),
-        aTabOpener->ShowFocusRings(), browsingContext->OriginAttributesRef(),
-        aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
+        aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
+        browsingContext->OriginAttributesRef(), aTabOpener->PresentationURL(),
+        aTabOpener->MaxTouchPoints());
   } else {
     newTabContext.SetTabContext(
-        /* isMozBrowserElement */ false,
         /* chromeOuterWindowID */ 0,
         /* showFocusRings */ UIStateChangeType_NoChange,
         browsingContext->OriginAttributesRef(),
