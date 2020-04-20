@@ -105,6 +105,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<RemotenessPromise> ChangeFrameRemoteness(const nsAString& aRemoteType,
                                                   uint64_t aPendingSwitchId);
 
+  // Helper version for WebIDL - resolves to the PID where the load is being
+  // resumed.
+  already_AddRefed<Promise> ChangeFrameRemoteness(const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId,
+                                                  ErrorResult& aRv);
+
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
   // if the top-level browsing context has been discarded.

@@ -41,9 +41,6 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsICookieService.h"
-#include "nsIBrowser.h"
-#include "nsIE10SUtils.h"
-#include "nsImportModule.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -241,6 +238,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIProcessSwitchRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentLoadListener)
 NS_INTERFACE_MAP_END
@@ -885,196 +883,26 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.loadStateLoadType() = mLoadStateLoadType;
 }
 
-bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
-  MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
-                        "Already in the middle of switching?");
-  MOZ_DIAGNOSTIC_ASSERT(mChannel);
-  MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
+void DocumentLoadListener::TriggerCrossProcessSwitch() {
+  MOZ_ASSERT(mRedirectContentProcessIdPromise);
+  MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
+  MOZ_ASSERT(NS_IsMainThread());
 
-  LOG(("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p]", this));
+  LOG(("DocumentLoadListener TriggerCrossProcessSwitch [this=%p]", this));
 
-  // Get the BrowsingContext which will be switching processes.
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      mParentChannelListener->GetBrowsingContext();
-  if (NS_WARN_IF(!browsingContext)) {
-    LOG(("Process Switch Abort: no browsing context"));
-    return false;
-  }
-  if (!browsingContext->IsContent()) {
-    LOG(("Process Switch Abort: non-content browsing context"));
-    return false;
-  }
-  if (browsingContext->GetParent() && !browsingContext->UseRemoteSubframes()) {
-    LOG(("Process Switch Abort: remote subframes disabled"));
-    return false;
-  }
-
-  // We currently can't switch processes for toplevel loads unless they're
-  // loaded within a browser tab.
-  // FIXME: Ideally we won't do this in the future.
-  nsCOMPtr<nsIBrowser> browser;
-  if (!browsingContext->GetParent()) {
-    Element* browserElement = browsingContext->GetEmbedderElement();
-    if (!browserElement) {
-      LOG(("Process Switch Abort: cannot get browser element"));
-      return false;
-    }
-    browser = browserElement->AsBrowser();
-    if (!browser) {
-      LOG(("Process Switch Abort: not loaded within nsIBrowser"));
-      return false;
-    }
-    bool loadedInTab = false;
-    if (NS_FAILED(browser->GetCanPerformProcessSwitch(&loadedInTab)) ||
-        !loadedInTab) {
-      LOG(("Process Switch Abort: browser is not loaded in a tab"));
-      return false;
-    }
-  }
-
-  // Get information about the current document loaded in our BrowsingContext.
-  nsCOMPtr<nsIPrincipal> currentPrincipal;
-  if (RefPtr<WindowGlobalParent> wgp =
-          browsingContext->GetCurrentWindowGlobal()) {
-    currentPrincipal = wgp->DocumentPrincipal();
-  }
-  RefPtr<ContentParent> currentProcess = browsingContext->GetContentParent();
-  if (!currentProcess) {
-    LOG(("Process Switch Abort: frame currently not remote"));
-    return false;
-  }
-
-  // Get the final principal, used to select which process to load into.
-  nsCOMPtr<nsIPrincipal> resultPrincipal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-      mChannel, getter_AddRefs(resultPrincipal));
-  if (NS_FAILED(rv)) {
-    LOG(("Process Switch Abort: failed to get channel result principal"));
-    return false;
-  }
-
-  if (resultPrincipal->IsSystemPrincipal()) {
-    LOG(("Process Switch Abort: cannot switch process for system principal"));
-    return false;
-  }
-
-  // Determine our COOP status, which will be used to determine our preferred
-  // remote type.
-  bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
-  nsILoadInfo::CrossOriginOpenerPolicy coop =
-      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
-  if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel)) {
-    MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
-  }
-
-  nsAutoString preferredRemoteType(currentProcess->GetRemoteType());
-  if (coop ==
-      nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
-    // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
-    // policy to be loaded in a separate process in which we can enable
-    // high-resolution timers.
-    nsAutoCString siteOrigin;
-    resultPrincipal->GetSiteOrigin(siteOrigin);
-    preferredRemoteType.Assign(
-        NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX));
-    preferredRemoteType.Append(NS_ConvertUTF8toUTF16(siteOrigin));
-  } else if (isCOOPSwitch) {
-    // If we're doing a COOP switch, we do not need any affinity to the current
-    // remote type. Clear it back to the default value.
-    preferredRemoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-  }
-  MOZ_DIAGNOSTIC_ASSERT(!preferredRemoteType.IsEmpty(),
-                        "Unexpected empty remote type!");
-
-  LOG(
-      ("DocumentLoadListener GetRemoteTypeForPrincipal "
-       "[this=%p, currentProcess=%s, preferredRemoteType=%s]",
-       this, NS_ConvertUTF16toUTF8(currentProcess->GetRemoteType()).get(),
-       NS_ConvertUTF16toUTF8(preferredRemoteType).get()));
-
-  nsCOMPtr<nsIE10SUtils> e10sUtils =
-      do_ImportModule("resource://gre/modules/E10SUtils.jsm", "E10SUtils");
-  if (!e10sUtils) {
-    LOG(("Process Switch Abort: Could not import E10SUtils"));
-    return false;
-  }
-
-  nsAutoString remoteType;
-  rv = e10sUtils->GetRemoteTypeForPrincipal(
-      resultPrincipal, browsingContext->UseRemoteTabs(),
-      browsingContext->UseRemoteSubframes(), preferredRemoteType,
-      currentPrincipal, browsingContext->GetParent(), remoteType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Process Switch Abort: getRemoteTypeForPrincipal threw an exception"));
-    return false;
-  }
-
-  // Check if a process switch is needed.
-  if (currentProcess->GetRemoteType() == remoteType && !isCOOPSwitch) {
-    LOG(("Process Switch Abort: type (%s) is compatible",
-         NS_ConvertUTF16toUTF8(remoteType).get()));
-    return false;
-  }
-  if (NS_WARN_IF(remoteType.IsEmpty())) {
-    LOG(("Process Switch Abort: non-remote target process"));
-    return false;
-  }
-
-  LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       NS_ConvertUTF16toUTF8(currentProcess->GetRemoteType()).get(),
-       NS_ConvertUTF16toUTF8(remoteType).get()));
-
-  // XXX: This is super hacky, and we should be able to do something better.
-  static uint64_t sNextCrossProcessRedirectIdentifier = 0;
-  mCrossProcessRedirectIdentifier = ++sNextCrossProcessRedirectIdentifier;
   mDoingProcessSwitch = true;
 
   RefPtr<DocumentLoadListener> self = this;
-  // At this point, we're actually going to perform a process switch, which
-  // involves calling into other logic.
-  if (browsingContext->GetParent()) {
-    LOG(("Process Switch: Calling ChangeFrameRemoteness"));
-    // If we're switching a subframe, ask BrowsingContext to do it for us.
-    MOZ_ASSERT(!isCOOPSwitch);
-    browsingContext
-        ->ChangeFrameRemoteness(remoteType, mCrossProcessRedirectIdentifier)
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [self](BrowserParent* aBrowserParent) {
-              MOZ_ASSERT(self->mChannel,
-                         "Something went wrong, channel got cancelled");
-              self->TriggerRedirectToRealChannel(
-                  Some(aBrowserParent->Manager()->ChildID()));
-            },
-            [self](nsresult aStatusCode) {
-              MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
-              self->RedirectToRealChannelFinished(aStatusCode);
-            });
-    return true;
-  }
-
-  LOG(("Process Switch: Calling nsIBrowser::PerformProcessSwitch"));
-  // We're switching a toplevel BrowsingContext's process. This has to be done
-  // using nsIBrowser.
-  RefPtr<Promise> domPromise;
-  browser->PerformProcessSwitch(remoteType, mCrossProcessRedirectIdentifier,
-                                isCOOPSwitch, getter_AddRefs(domPromise));
-  MOZ_DIAGNOSTIC_ASSERT(domPromise,
-                        "PerformProcessSwitch didn't return a promise");
-
-  MozPromise<uint64_t, nsresult, true>::FromDomPromise(domPromise)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self](uint64_t aCpId) {
-            MOZ_ASSERT(self->mChannel,
-                       "Something went wrong, channel got cancelled");
-            self->TriggerRedirectToRealChannel(Some(aCpId));
-          },
-          [self](nsresult aStatusCode) {
-            MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
-            self->RedirectToRealChannelFinished(aStatusCode);
-          });
-  return true;
+  mRedirectContentProcessIdPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self, this](uint64_t aCpId) {
+        MOZ_ASSERT(mChannel, "Something went wrong, channel got cancelled");
+        TriggerRedirectToRealChannel(Some(aCpId));
+      },
+      [self](nsresult aStatusCode) {
+        MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
+        self->RedirectToRealChannelFinished(aStatusCode);
+      });
 }
 
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
@@ -1255,10 +1083,18 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     httpChannel->SetApplyConversion(false);
   }
 
-  // Determine if a new process needs to be spawned. If it does, this will
-  // trigger a cross process switch, and we should hold off on redirecting to
-  // the real channel.
-  if (status != NS_BINDING_ABORTED && MaybeTriggerProcessSwitch()) {
+  // notify "channel-on-may-change-process" observers which is typically
+  // SessionStore.jsm. This will determine if a new process needs to be
+  // spawned and if so SwitchProcessTo() will be called which will set a
+  // ContentProcessIdPromise.
+  if (status != NS_BINDING_ABORTED) {
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    obsService->NotifyObservers(ToSupports(this),
+                                "channel-on-may-change-process", nullptr);
+  }
+
+  if (mRedirectContentProcessIdPromise) {
+    TriggerCrossProcessSwitch();
     return NS_OK;
   }
 
@@ -1421,8 +1257,10 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // include the state of all channels we redirected through.
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aOldChannel);
   if (httpChannel) {
-    mHasCrossOriginOpenerPolicyMismatch |=
-        httpChannel->HasCrossOriginOpenerPolicyMismatch();
+    bool mismatch = false;
+    MOZ_ALWAYS_SUCCEEDS(
+        httpChannel->HasCrossOriginOpenerPolicyMismatch(&mismatch));
+    mHasCrossOriginOpenerPolicyMismatch |= mismatch;
   }
 
   // We don't need to confirm internal redirects or record any
@@ -1513,22 +1351,70 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// DocumentLoadListener::nsIProcessSwitchRequestor
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP DocumentLoadListener::GetChannel(nsIChannel** aChannel) {
+  MOZ_ASSERT(mChannel);
+  nsCOMPtr<nsIChannel> channel(mChannel);
+  channel.forget(aChannel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentLoadListener::SwitchProcessTo(
+    dom::Promise* aContentProcessIdPromise, uint64_t aIdentifier) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aContentProcessIdPromise);
+
+  mRedirectContentProcessIdPromise =
+      ContentProcessIdPromise::FromDomPromise(aContentProcessIdPromise);
+  mCrossProcessRedirectIdentifier = aIdentifier;
+  return NS_OK;
+}
+
 // This method returns the cached result of running the Cross-Origin-Opener
 // policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
-bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() {
+NS_IMETHODIMP
+DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
+  MOZ_ASSERT(aMismatch);
+
+  if (!aMismatch) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // If we found a COOP mismatch on an earlier channel and then
   // redirected away from that, we should use that result.
   if (mHasCrossOriginOpenerPolicyMismatch) {
-    return true;
+    *aMismatch = true;
+    return NS_OK;
   }
 
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (!httpChannel) {
     // Not an nsHttpChannel assume it's okay to switch.
-    return false;
+    *aMismatch = false;
+    return NS_OK;
   }
 
-  return httpChannel->HasCrossOriginOpenerPolicyMismatch();
+  return httpChannel->HasCrossOriginOpenerPolicyMismatch(aMismatch);
+}
+
+NS_IMETHODIMP
+DocumentLoadListener::GetCachedCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  MOZ_ASSERT(aPolicy);
+  if (!aPolicy) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+  if (!httpChannel) {
+    *aPolicy = nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
+    return NS_OK;
+  }
+
+  return httpChannel->GetCrossOriginOpenerPolicy(aPolicy);
 }
 
 auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)

@@ -102,6 +102,10 @@ interface CanonicalBrowsingContext : BrowsingContext {
   [Throws]
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
+  [Throws]
+  Promise<unsigned long long> changeFrameRemoteness(
+      DOMString remoteType, unsigned long long pendingSwitchId);
+
   readonly attribute nsISHistory? sessionHistory;
 };
 

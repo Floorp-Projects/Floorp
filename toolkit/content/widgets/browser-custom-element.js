@@ -2052,23 +2052,6 @@
       }
       return origins;
     }
-
-    get canPerformProcessSwitch() {
-      return this.getTabBrowser() != null;
-    }
-
-    performProcessSwitch(
-      remoteType,
-      redirectLoadSwitchId,
-      replaceBrowsingContext
-    ) {
-      return this.getTabBrowser().performProcessSwitch(
-        this,
-        remoteType,
-        redirectLoadSwitchId,
-        replaceBrowsingContext
-      );
-    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);

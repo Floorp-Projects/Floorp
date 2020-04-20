@@ -66,9 +66,6 @@ with Files('DeferredTask.jsm'):
 with Files("E10SUtils.jsm"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
-with Files("nsIE10SUtils.idl"):
-    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
-
 with Files('Finder*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -302,9 +299,3 @@ for var in ('MOZ_ALLOW_ADDON_SIDELOAD',
 JAR_MANIFESTS += ['jar.mn']
 
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
-
-XPIDL_SOURCES += [
-    'nsIE10SUtils.idl',
-]
-
-XPIDL_MODULE = 'toolkit_modules'
