@@ -2069,24 +2069,6 @@
         replaceBrowsingContext
       );
     }
-
-    getRemoteTypeForPrincipal(
-      principal,
-      remoteTabs,
-      remoteSubframes,
-      preferredRemoteType,
-      currentPrincipal,
-      isSubframe
-    ) {
-      return E10SUtils.getRemoteTypeForPrincipal(
-        principal,
-        remoteTabs,
-        remoteSubframes,
-        preferredRemoteType,
-        currentPrincipal,
-        isSubframe
-      );
-    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);
