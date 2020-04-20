@@ -2128,7 +2128,7 @@ HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   nsICookieService* cs = gHttpHandler->GetCookieService();
   NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
 
-  nsresult rv = cs->SetCookieStringFromHttp(mURI, nullptr, aCookieHeader, this);
+  nsresult rv = cs->SetCookieStringFromHttp(mURI, aCookieHeader, this);
   if (NS_SUCCEEDED(rv)) {
     NotifySetCookie(aCookieHeader);
   }

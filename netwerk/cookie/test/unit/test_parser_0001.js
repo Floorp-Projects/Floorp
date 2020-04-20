@@ -16,7 +16,7 @@ function run_test() {
   let uri = NetUtil.newURI("http://example.org/");
 
   let set = "foo=bar";
-  cs.setCookieStringFromHttp(uri, null, set, null);
+  cs.setCookieStringFromHttp(uri, set, null);
 
   let expected = "foo=bar";
   let actual = cs.getCookieStringFromHttp(uri, null);
