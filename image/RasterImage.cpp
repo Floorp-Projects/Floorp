@@ -163,19 +163,18 @@ RasterImage::RequestRefresh(const TimeStamp& aTime) {
   RefreshResult res;
   if (mAnimationState) {
     MOZ_ASSERT(mFrameAnimator);
-    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime);
+    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime,
+                                         mAnimationFinished);
   }
 
-#ifdef DEBUG
   if (res.mFrameAdvanced) {
+// Notify listeners that our frame has actually changed, but do this only
+// once for all frames that we've now passed (if AdvanceFrame() was called
+// more than once).
+#ifdef DEBUG
     mFramesNotified++;
-  }
 #endif
 
-  // Notify listeners that our frame has actually changed, but do this only
-  // once for all frames that we've now passed (if AdvanceFrame() was called
-  // more than once).
-  if (!res.mDirtyRect.IsEmpty() || res.mFrameAdvanced) {
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(res.mDirtyRect);
     NotifyProgress(NoProgress, dirtyRect);
   }
@@ -490,7 +489,8 @@ void RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded) {
     ReleaseImageContainer();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
+                                                size.ToUnknownSize());
 
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
     NotifyProgress(NoProgress, dirtyRect);
@@ -1041,7 +1041,8 @@ void RasterImage::Discard() {
     ReleaseImageContainer();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
+                                                size.ToUnknownSize());
 
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
     NotifyProgress(NoProgress, dirtyRect);
@@ -1258,7 +1259,8 @@ bool RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
 #ifdef DEBUG
     IntRect rect =
 #endif
-        mAnimationState->UpdateState(this, ToUnoriented(mSize).ToUnknownSize(),
+        mAnimationState->UpdateState(mAnimationFinished, this,
+                                     ToUnoriented(mSize).ToUnknownSize(),
                                      false);
     MOZ_ASSERT(rect.IsEmpty());
   }
@@ -1707,7 +1709,8 @@ void RasterImage::NotifyDecodeComplete(
     mAnimationState->NotifyDecodeComplete();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
+                                                size.ToUnknownSize());
 
     if (!rect.IsEmpty()) {
       auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
