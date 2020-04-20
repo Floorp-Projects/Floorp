@@ -1242,10 +1242,11 @@ nsresult PendingLookup::AddRedirects(nsIArray* aRedirects) {
 
     nsCOMPtr<nsIPrincipal> principal;
     rv = redirectEntry->GetPrincipal(getter_AddRefs(principal));
+    auto* basePrin = BasePrincipal::Cast(principal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
-    rv = principal->GetURI(getter_AddRefs(uri));
+    rv = basePrin->GetURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Add the spec to our list of local lookups. The most recent redirect is
