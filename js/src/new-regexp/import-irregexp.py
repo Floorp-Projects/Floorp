@@ -49,6 +49,7 @@ def copy_and_update_includes(src_path, dst_path):
                  'regexp-bytecode-peephole.h',
                  'regexp-bytecodes.h',
                  'regexp-dotprinter.h',
+                 'regexp-error.h',
                  'regexp.h',
                  'regexp-macro-assembler.h',
                  'regexp-stack.h',
