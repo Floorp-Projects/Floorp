@@ -17,7 +17,6 @@ module.exports = {
     chromeOuterWindowID: false,
     content: false,
     docShell: false,
-    privateNoteIntentionalCrash: false,
     processMessageManager: false,
     removeMessageListener: false,
     removeWeakMessageListener: false,
