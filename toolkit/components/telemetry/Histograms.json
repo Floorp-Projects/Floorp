@@ -14216,24 +14216,24 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "78",
+    "expires_in_version": "88",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 100,
-    "bug_numbers": [1265472, 1558870],
+    "bug_numbers": [1265472, 1558870, 1630155],
     "description": "Time in milliseconds to complete a WebAuthn create credential."
   },
   "WEBAUTHN_GET_ASSERTION_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "78",
+    "expires_in_version": "88",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 100,
-    "bug_numbers": [1265472, 1558870],
+    "bug_numbers": [1265472, 1558870, 1630155],
     "description": "Time in milliseconds to complete a WebAuthn get assertion."
   },
   "VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS": {
