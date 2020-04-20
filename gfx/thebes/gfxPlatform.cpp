@@ -2939,12 +2939,6 @@ void gfxPlatform::InitWebRenderConfig() {
   ApplyGfxInfoFeature(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, featureComp);
 
 #ifdef XP_WIN
-  if (!gfxVars::UseWebRenderDCompWin()) {
-    featureComp.Disable(
-        FeatureStatus::Unavailable, "No DirectComposition usage",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
-  }
-
   // Disable native compositor when hardware stretching is not supported. It is
   // for avoiding a problem like Bug 1618370.
   // XXX Is there a better check for Bug 1618370?
@@ -3115,6 +3109,14 @@ void gfxPlatform::InitWebRenderConfig() {
         FeatureStatus::Unavailable, "Picture caching is disabled",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_PICTURE_CACHING_DISABLED"));
   }
+
+#ifdef XP_WIN
+  if (!gfxVars::UseWebRenderDCompWin()) {
+    featureComp.Disable(
+        FeatureStatus::Unavailable, "No DirectComposition usage",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
+  }
+#endif
 
   if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBRENDER_COMPOSITOR)) {
     gfxVars::SetUseWebRenderCompositor(true);
