@@ -216,7 +216,7 @@ add_task(async function() {
       ["KEY_ArrowLeft", { shiftKey: true }],
       "KEY_Backspace",
     ],
-    type: UrlbarUtils.RESULT_TYPE.URL,
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
   });
 
   await test_autocomplete({

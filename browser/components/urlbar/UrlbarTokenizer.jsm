@@ -142,7 +142,7 @@ var UrlbarTokenizer = {
     ) {
       return true;
     }
-    if (Services.uriFixup.isDomainWhitelisted(hostPort, -1)) {
+    if (Services.uriFixup.isDomainWhitelisted(hostPort)) {
       return true;
     }
     return false;

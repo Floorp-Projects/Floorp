@@ -163,10 +163,7 @@ interface nsIURIFixup : nsISupports
      * treated as a search term.
      *
      * @param aDomain A domain name to query.
-     * @param aDotPos The position of the first '.' character in aDomain, or
-     *                -1 if no '.' character exists.
      */
-    bool isDomainWhitelisted(in AUTF8String aDomain,
-                             in uint32_t aDotPos);
+    bool isDomainWhitelisted(in AUTF8String aDomain);
 };
 

@@ -47,11 +47,6 @@ async function typeAndSubmitAndStop(url) {
     value: url,
     fireInputEvent: true,
   });
-  is(
-    gURLBar.value,
-    BrowserUtils.trimURL(url),
-    "location bar reflects loading page"
-  );
 
   let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
     url,

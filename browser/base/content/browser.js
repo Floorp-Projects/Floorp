@@ -1324,13 +1324,14 @@ var gKeywordURIFixup = {
           return;
         }
 
+        let displayHostName = "http://" + hostName + "/";
         let message = gNavigatorBundle.getFormattedString(
           "keywordURIFixup.message",
-          [hostName]
+          [displayHostName]
         );
         let yesMessage = gNavigatorBundle.getFormattedString(
           "keywordURIFixup.goTo",
-          [hostName]
+          [displayHostName]
         );
 
         let buttons = [

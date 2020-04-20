@@ -22,11 +22,19 @@ function test() {
     Services.prefs.clearUserPref(trimPref);
     Services.prefs.clearUserPref(phishyUserPassPref);
     Services.prefs.clearUserPref(decodeURLpref);
+    Services.prefs.clearUserPref(
+      "browser.fixup.domainwhitelist.sub2.xn--lt-uia.mochi.test"
+    );
+
     gURLBar.setURI();
   });
 
   Services.prefs.setBoolPref(trimPref, true);
   Services.prefs.setIntPref(phishyUserPassPref, 32); // avoid prompting about phishing
+  Services.prefs.setBoolPref(
+    "browser.fixup.domainwhitelist.sub2.xn--lt-uia.mochi.test",
+    true
+  );
 
   waitForExplicitFinish();
 

@@ -143,9 +143,9 @@ var UrlbarUtils = {
   // unit separator.
   TITLE_TAGS_SEPARATOR: "\x1F",
 
-  // Regex matching single words (no spaces, dots or url-like chars).
-  // We accept a trailing dot though.
-  REGEXP_SINGLE_WORD: /^[^\s.?@:/]+\.?$/,
+  // Regex matching single word hosts with an optional port; no spaces, auth or
+  // path-like chars are admitted.
+  REGEXP_SINGLE_WORD: /^[^\s@:/?#]+(:\d+)?$/,
 
   /**
    * Returns the payload schema for the given type of result.
@@ -536,7 +536,7 @@ var UrlbarUtils = {
    * Given a string, checks if it looks like a single word host, not containing
    * spaces nor dots (apart from a possible trailing one).
    * @note This matching should stay in sync with the related code in
-   * nsDefaultURIFixup::KeywordURIFixup
+   * URIFixup::KeywordURIFixup
    * @param {string} value
    * @returns {boolean} Whether the value looks like a single word host.
    */
