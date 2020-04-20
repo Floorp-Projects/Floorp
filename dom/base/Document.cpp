@@ -5670,29 +5670,8 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
   nsCOMPtr<nsICookieService> service =
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
-    // Get a URI from the document principal. We use the original
-    // content URI in case the domain was changed by SetDomain
-    nsCOMPtr<nsIURI> principalURI;
-    auto* basePrin = BasePrincipal::Cast(NodePrincipal());
-    basePrin->GetURI(getter_AddRefs(principalURI));
-
-    if (!principalURI) {
-      // Document's principal is not a content or null (may be system), so
-      // can't set cookies
-
-      return;
-    }
-
-    nsCOMPtr<nsIChannel> channel(mChannel);
-    if (!channel) {
-      channel = CreateDummyChannelForCookies(principalURI);
-      if (!channel) {
-        return;
-      }
-    }
-
     nsAutoCString cookie;
-    service->GetCookieString(principalURI, channel, cookie);
+    service->GetCookieStringForPrincipal(EffectiveStoragePrincipal(), cookie);
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
     UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
