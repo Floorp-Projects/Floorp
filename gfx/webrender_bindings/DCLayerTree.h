@@ -33,8 +33,6 @@ class GLContext;
 
 namespace wr {
 
-#define USE_VIRTUAL_SURFACES
-
 // The size of the virtual surface. This is large enough such that we
 // will never render a surface larger than this.
 #define VIRTUAL_SURFACE_SIZE (1024 * 1024)
@@ -179,7 +177,6 @@ class DCSurface {
     int32_t mY;
   };
 
-#ifdef USE_VIRTUAL_SURFACES
   wr::DeviceIntSize GetTileSize() const { return mTileSize; }
   wr::DeviceIntPoint GetVirtualOffset() const { return mVirtualOffset; }
 
@@ -189,7 +186,6 @@ class DCSurface {
 
   void UpdateAllocatedRect();
   void DirtyAllocatedRect();
-#endif
 
  protected:
   DCLayerTree* mDCLayerTree;
@@ -211,10 +207,7 @@ class DCSurface {
   bool mAllocatedRectDirty;
   std::unordered_map<TileKey, UniquePtr<DCLayer>, TileKeyHashFn> mDCLayers;
   wr::DeviceIntPoint mVirtualOffset;
-
-#ifdef USE_VIRTUAL_SURFACES
   RefPtr<IDCompositionVirtualSurface> mVirtualSurface;
-#endif
 };
 
 /**
@@ -227,21 +220,7 @@ class DCLayer {
   ~DCLayer();
   bool Initialize(int aX, int aY, wr::DeviceIntSize aSize, bool aIsOpaque);
 
-#ifdef USE_VIRTUAL_SURFACES
   gfx::IntRect mValidRect;
-#else
-  IDCompositionSurface* GetCompositionSurface() const {
-    return mCompositionSurface;
-  }
-  IDCompositionVisual2* GetVisual() const { return mVisual; }
-
- protected:
-  RefPtr<IDCompositionSurface> CreateCompositionSurface(wr::DeviceIntSize aSize,
-                                                        bool aIsOpaque);
-
-  RefPtr<IDCompositionSurface> mCompositionSurface;
-  RefPtr<IDCompositionVisual2> mVisual;
-#endif
 
   DCLayerTree* mDCLayerTree;
 };
