@@ -6,6 +6,7 @@
 EXPORTS.mozilla.dom += [
     'AudioFocusManager.h',
     'ContentMediaController.h',
+    'FetchImageHelper.h',
     'MediaControlKeysEvent.h',
     'MediaControlKeysManager.h',
     'MediaController.h',
@@ -21,6 +22,7 @@ EXPORTS.ipc += [
 UNIFIED_SOURCES += [
     'AudioFocusManager.cpp',
     'ContentMediaController.cpp',
+    'FetchImageHelper.cpp',
     'MediaControlKeysEvent.cpp',
     'MediaControlKeysManager.cpp',
     'MediaController.cpp',
