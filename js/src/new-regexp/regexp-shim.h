@@ -1065,7 +1065,18 @@ class StackLimitCheck {
   StackLimitCheck(Isolate* isolate) : cx_(isolate->cx()) {}
 
   // Use this to check for stack-overflows in C++ code.
-  bool HasOverflowed() { return !CheckRecursionLimitDontReport(cx_); }
+  bool HasOverflowed() {
+    bool overflowed = !CheckRecursionLimitDontReport(cx_);
+#ifdef JS_MORE_DETERMINISTIC
+    if (overflowed) {
+      // We don't report overrecursion here, but we throw an exception later
+      // and this still affects differential testing. Mimic ReportOverRecursed
+      // (the fuzzers check for this particular string).
+      fprintf(stderr, "ReportOverRecursed called\n");
+    }
+#endif
+    return overflowed;
+  }
 
   // Use this to check for interrupt request in C++ code.
   bool InterruptRequested() {
@@ -1134,7 +1145,6 @@ class Label {
 };
 
 // TODO: Map flags to jitoptions
-extern bool FLAG_correctness_fuzzer_suppressions;
 extern bool FLAG_harmony_regexp_sequence;
 extern bool FLAG_regexp_interpret_all;
 extern bool FLAG_regexp_mode_modifiers;
@@ -1142,6 +1152,10 @@ extern bool FLAG_regexp_optimization;
 extern bool FLAG_regexp_peephole_optimization;
 extern bool FLAG_regexp_possessive_quantifier;
 extern bool FLAG_regexp_tier_up;
+
+// V8 uses this for differential fuzzing to handle stack overflows.
+// We address the same problem in StackLimitCheck::HasOverflowed.
+const bool FLAG_correctness_fuzzer_suppressions = false;
 
 // Instead of using a flag for this, we provide an implementation of
 // CanReadUnaligned in SMRegExpMacroAssembler.
