@@ -250,7 +250,7 @@
   background-color: -moz-dialog;
 }
 
-/* ::::: titlebar ::::: */
+/* Titlebar */
 
 :root[tabsintitlebar][sizemode="normal"] #titlebar {
   -moz-appearance: -moz-window-titlebar;
@@ -311,7 +311,7 @@
   }
 }
 
-/* window control buttons */
+/* Window control buttons */
 
 .titlebar-min {
   -moz-appearance: -moz-window-button-minimize;
@@ -341,7 +341,7 @@
   display: none;
 }
 
-/* ::::: bookmark menus ::::: */
+/* Bookmark menus */
 
 menu.bookmark-item,
 menuitem.bookmark-item {
@@ -372,7 +372,7 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
-/* ::::: fullscreen window controls ::::: */
+/* Fullscreen window controls */
 
 #minimize-button,
 #restore-button,
@@ -390,6 +390,10 @@ menuitem.bookmark-item {
 
 #restore-button {
   list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+}
+
+#restore-button > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 #minimize-button:hover,
@@ -501,7 +505,7 @@ menuitem.bookmark-item {
   }
 }
 
-/* ::::: Location Bar ::::: */
+/* Location bar */
 
 %include ../shared/urlbar-searchbar.inc.css
 
@@ -568,7 +572,7 @@ menuitem.bookmark-item {
 
 %include ../shared/places/editBookmarkPanel.inc.css
 
-/* ::::: Content area ::::: */
+/* Content area */
 
 %include ../shared/sidebar.inc.css
 
@@ -713,6 +717,7 @@ notification[value="translation"] {
 }
 
 /* Bookmarks roots menu-items */
+
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {
