@@ -1713,9 +1713,10 @@ let IconDetails = {
   },
 };
 
+// A cache to support faster initialization of extensions at browser startup.
+// All cached data is removed when the browser is updated.
+// Extension-specific data is removed when the add-on is updated.
 StartupCache = {
-  DB_NAME: "ExtensionStartupCache",
-
   STORE_NAMES: Object.freeze([
     "general",
     "locales",
@@ -1725,6 +1726,8 @@ StartupCache = {
     "schemas",
   ]),
 
+  // When the application version changes, this file is removed by
+  // RemoveComponentRegistries in nsAppRunner.cpp.
   file: OS.Path.join(
     OS.Constants.Path.localProfileDir,
     "startupCache",
