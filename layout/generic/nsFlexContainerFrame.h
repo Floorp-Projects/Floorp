@@ -469,7 +469,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
   /**
    * This method computes the metrics to be reported via the flex container's
-   * ReflowOutput output parameter.
+   * ReflowOutput & nsReflowStatus output parameters in Reflow().
    *
    * @param aContentBoxSize the final content-box size for the flex container as
    *                        a whole, converted from the flex container's
@@ -497,7 +497,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             children, pass nscoord_MIN to synthesize a
    *                             value from the flex container itself).
    */
-  void ComputeFinalSize(
+  void PopulateReflowOutput(
       ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
       nsReflowStatus& aStatus, const mozilla::LogicalSize& aContentBoxSize,
       const mozilla::LogicalMargin& aBorderPadding,

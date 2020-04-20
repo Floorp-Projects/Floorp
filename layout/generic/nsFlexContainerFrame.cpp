@@ -4357,10 +4357,15 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       availableSizeForItems, borderPadding, consumedBSize, flexContainerAscent,
       lines, placeholders, axisTracker, hasLineClampEllipsis);
 
-  ComputeFinalSize(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
-                   borderPadding, consumedBSize, mayNeedNextInFlow,
-                   maxBlockEndEdgeOfChildren, areChildrenComplete,
-                   flexContainerAscent, lines, axisTracker);
+  PopulateReflowOutput(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
+                       borderPadding, consumedBSize, mayNeedNextInFlow,
+                       maxBlockEndEdgeOfChildren, areChildrenComplete,
+                       flexContainerAscent, lines, axisTracker);
+
+  FinishReflowWithAbsoluteFrames(PresContext(), aReflowOutput, aReflowInput,
+                                 aStatus);
+
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput)
 
   // Finally update our line and item measurements in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
@@ -5056,7 +5061,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   return {maxBlockEndEdgeOfChildren, true};
 }
 
-void nsFlexContainerFrame::ComputeFinalSize(
+void nsFlexContainerFrame::PopulateReflowOutput(
     ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
     nsReflowStatus& aStatus, const LogicalSize& aContentBoxSize,
     const LogicalMargin& aBorderPadding, const nscoord aConsumedBSize,
@@ -5200,11 +5205,6 @@ void nsFlexContainerFrame::ComputeFinalSize(
   for (nsIFrame* childFrame : mFrames) {
     ConsiderChildOverflow(aReflowOutput.mOverflowAreas, childFrame);
   }
-
-  FinishReflowWithAbsoluteFrames(PresContext(), aReflowOutput, aReflowInput,
-                                 aStatus);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput)
 }
 
 void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
