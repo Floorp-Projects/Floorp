@@ -344,6 +344,18 @@ async function test_background_page_storage(testAreaName) {
       clearGlobalChanges();
     }
 
+    function CustomObj() {
+      this.testKey1 = "testValue1";
+    }
+
+    CustomObj.prototype.toString = function() {
+      return '{"testKey2":"testValue2"}';
+    };
+
+    CustomObj.prototype.toJSON = function customObjToJSON() {
+      return { testKey1: "testValue3" };
+    };
+
     /* eslint-disable dot-notation */
     async function runTests(areaName) {
       expectedAreaName = areaName;
@@ -490,7 +502,21 @@ async function test_background_page_storage(testAreaName) {
             null: null,
             undef: undefined,
             obj: {},
+            nestedObj: {
+              testKey: {},
+            },
+            intKeyObj: {
+              4: "testValue1",
+              3: "testValue2",
+              99: "testValue3",
+            },
+            floatKeyObj: {
+              1.4: "testValue1",
+              5.5: "testValue2",
+            },
+            customObj: new CustomObj(),
             arr: [1, 2],
+            nestedArr: [1, [2, 3]],
             date,
             regexp: /regexp/,
           },
@@ -528,6 +554,17 @@ async function test_background_page_storage(testAreaName) {
         });
         let obj = data["test-prop1"];
 
+        browser.test.assertEq(
+          "object",
+          typeof obj.customObj,
+          "custom object part correct"
+        );
+        browser.test.assertEq(
+          1,
+          Object.keys(obj.customObj).length,
+          "customObj keys correct"
+        );
+
         if (areaName === "local") {
           browser.test.assertEq(
             String(date),
@@ -538,6 +575,12 @@ async function test_background_page_storage(testAreaName) {
             "/regexp/",
             obj.regexp.toString(),
             "regexp part correct"
+          );
+          // storage.local doesn't call toJSON
+          browser.test.assertEq(
+            "testValue1",
+            obj.customObj.testKey1,
+            "customObj keys correct"
           );
         } else {
           browser.test.assertEq(
@@ -556,6 +599,12 @@ async function test_background_page_storage(testAreaName) {
             Object.keys(obj.regexp).length,
             "regexp part is an empty object"
           );
+          // storage.sync does call toJSON
+          browser.test.assertEq(
+            "testValue3",
+            obj.customObj.testKey1,
+            "customObj keys correct"
+          );
         }
 
         browser.test.assertEq("hello", obj.str, "string part correct");
@@ -564,10 +613,85 @@ async function test_background_page_storage(testAreaName) {
         browser.test.assertEq(undefined, obj.undef, "undefined part correct");
         browser.test.assertEq(undefined, obj.window, "window part correct");
         browser.test.assertEq("object", typeof obj.obj, "object part correct");
+        browser.test.assertEq(
+          "object",
+          typeof obj.nestedObj,
+          "nested object part correct"
+        );
+        browser.test.assertEq(
+          "object",
+          typeof obj.nestedObj.testKey,
+          "nestedObj.testKey part correct"
+        );
+        browser.test.assertEq(
+          "object",
+          typeof obj.intKeyObj,
+          "int key object part correct"
+        );
+        browser.test.assertEq(
+          "testValue1",
+          obj.intKeyObj[4],
+          "intKeyObj[4] part correct"
+        );
+        browser.test.assertEq(
+          "testValue2",
+          obj.intKeyObj[3],
+          "intKeyObj[3] part correct"
+        );
+        browser.test.assertEq(
+          "testValue3",
+          obj.intKeyObj[99],
+          "intKeyObj[99] part correct"
+        );
+        browser.test.assertEq(
+          "object",
+          typeof obj.floatKeyObj,
+          "float key object part correct"
+        );
+        browser.test.assertEq(
+          "testValue1",
+          obj.floatKeyObj[1.4],
+          "floatKeyObj[1.4] part correct"
+        );
+        browser.test.assertEq(
+          "testValue2",
+          obj.floatKeyObj[5.5],
+          "floatKeyObj[5.5] part correct"
+        );
+
         browser.test.assertTrue(Array.isArray(obj.arr), "array part present");
         browser.test.assertEq(1, obj.arr[0], "arr[0] part correct");
         browser.test.assertEq(2, obj.arr[1], "arr[1] part correct");
         browser.test.assertEq(2, obj.arr.length, "arr.length part correct");
+        browser.test.assertTrue(
+          Array.isArray(obj.nestedArr),
+          "nested array part present"
+        );
+        browser.test.assertEq(
+          2,
+          obj.nestedArr.length,
+          "nestedArr.length part correct"
+        );
+        browser.test.assertEq(1, obj.nestedArr[0], "nestedArr[0] part correct");
+        browser.test.assertTrue(
+          Array.isArray(obj.nestedArr[1]),
+          "nestedArr[1] part present"
+        );
+        browser.test.assertEq(
+          2,
+          obj.nestedArr[1].length,
+          "nestedArr[1].length part correct"
+        );
+        browser.test.assertEq(
+          2,
+          obj.nestedArr[1][0],
+          "nestedArr[1][0] part correct"
+        );
+        browser.test.assertEq(
+          3,
+          obj.nestedArr[1][1],
+          "nestedArr[1][1] part correct"
+        );
       } catch (e) {
         browser.test.fail(`Error: ${e} :: ${e.stack}`);
         browser.test.notifyFail("storage");
