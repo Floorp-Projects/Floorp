@@ -16,6 +16,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/net/DocumentLoadListener.h"
+#include "nsIWebNavigation.h"
 
 #include "nsGlobalWindowOuter.h"
 
@@ -280,6 +281,25 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
   }
 
   LoadURI(loadState, true);
+}
+
+void CanonicalBrowsingContext::Stop(uint32_t aStopFlags) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad && (aStopFlags & nsIWebNavigation::STOP_NETWORK)) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  // Ask the docshell to stop to handle loads that haven't
+  // yet reached here, as well as non-network activity.
+  if (GetDocShell()) {
+    nsDocShell::Cast(GetDocShell())->Stop(aStopFlags);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Unused << cp->SendStopLoad(this, aStopFlags);
+  }
 }
 
 void CanonicalBrowsingContext::PendingRemotenessChange::Complete(

@@ -844,6 +844,8 @@ child:
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
+    async StopLoad(MaybeDiscardedBrowsingContext aContext, uint32_t aStopFlags);
+
     // Tell aContext's docshell to update its mOSHE and mLSHE entries
     async UpdateSHEntriesInDocShell(CrossProcessSHEntry aOldEntry,
                                     CrossProcessSHEntry aNewEntry,
