@@ -129,13 +129,9 @@ struct FunctionCreationData {
   // when this copy constructor is run, it doesn't have any lazyScriptData.
   FunctionCreationData(const FunctionCreationData& data)
       : atom(data.atom),
-        kind(data.kind),
         generatorKind(data.generatorKind),
         asyncKind(data.asyncKind),
-        allocKind(data.allocKind),
-        flags(data.flags),
-        isSelfHosting(data.isSelfHosting),
-        lazyScriptData(mozilla::Nothing()) {
+        flags(data.flags) {
     MOZ_RELEASE_ASSERT(!data.lazyScriptData);
   }
 
@@ -143,16 +139,12 @@ struct FunctionCreationData {
 
   // The Parser uses KeepAtoms to prevent GC from collecting atoms
   JSAtom* atom = nullptr;
-  FunctionSyntaxKind kind;  // can't field-initialize and forward declare
   GeneratorKind generatorKind = GeneratorKind::NotGenerator;
   FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
 
-  gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
   FunctionFlags flags = {};
 
-  bool isSelfHosting = false;
-
-  mozilla::Maybe<LazyScriptCreationData> lazyScriptData;
+  mozilla::Maybe<LazyScriptCreationData> lazyScriptData = {};
 
   HandleAtom getAtom(JSContext* cx) const;
 
