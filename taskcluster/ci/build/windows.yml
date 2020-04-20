@@ -202,6 +202,10 @@ win64-fuzzing/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - win32-fix-stacks
     optimization:
         fuzzing-builds:
             - windows
