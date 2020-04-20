@@ -90,10 +90,15 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     // getMostRecentBrowserWindow will find the appropriate window on Firefox
     // Desktop and on GeckoView.
     const topAppWindow = Services.wm.getMostRecentBrowserWindow();
-    if (!topAppWindow) {
+
+    const selectedBrowser = topAppWindow?.gBrowser?.selectedBrowser;
+    if (!selectedBrowser) {
+      // Note: gBrowser is not available on GeckoView.
+      // We should find another way to know if this browser is the selected
+      // browser. See Bug 1631020.
       return false;
     }
-    const selectedBrowser = topAppWindow.gBrowser.selectedBrowser;
+
     return this._browser === selectedBrowser;
   },
 
