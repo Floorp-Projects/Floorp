@@ -22,8 +22,10 @@ use std::hash::BuildHasherDefault;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::capture::CaptureConfig;
 #[cfg(feature = "capture")]
-use crate::capture::{CaptureConfig, ExternalCaptureImage};
+use crate::capture::ExternalCaptureImage;
 #[cfg(feature = "replay")]
 use crate::capture::PlainExternalImage;
 
@@ -540,7 +542,7 @@ pub enum DebugOutput {
     #[cfg(feature = "capture")]
     SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
     #[cfg(feature = "replay")]
-    LoadCapture(PathBuf, Vec<PlainExternalImage>),
+    LoadCapture(CaptureConfig, Vec<PlainExternalImage>),
 }
 
 #[allow(dead_code)]

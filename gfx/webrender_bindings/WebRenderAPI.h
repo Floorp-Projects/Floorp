@@ -279,6 +279,9 @@ class WebRenderAPI final {
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
   void Capture();
+
+  void ToggleCaptureSequence();
+
   void SetTransactionLogging(bool aValue);
 
   void SetCompositionRecorder(
@@ -322,6 +325,7 @@ class WebRenderAPI final {
   bool mUseANGLE;
   bool mUseDComp;
   bool mUseTripleBuffering;
+  bool mCaptureSequence;
   layers::SyncHandle mSyncHandle;
   wr::RenderRoot mRenderRoot;
 
