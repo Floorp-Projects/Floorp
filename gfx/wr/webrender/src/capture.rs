@@ -21,16 +21,25 @@ use serde;
 pub struct CaptureConfig {
     pub root: PathBuf,
     pub bits: CaptureBits,
+    /// Scene sequence ID when capturing multiple frames. Zero for a single frame capture.
+    pub scene_id: u32,
+    /// Frame sequence ID when capturing multiple frames. Zero for a single frame capture.
+    pub frame_id: u32,
+    /// Resource sequence ID when capturing multiple frames. Zero for a single frame capture.
+    pub resource_id: u32,
     #[cfg(feature = "capture")]
     pretty: ron::ser::PrettyConfig,
 }
 
 impl CaptureConfig {
-    #[cfg(feature = "capture")]
+    #[cfg(any(feature = "capture", feature = "replay"))]
     pub fn new(root: PathBuf, bits: CaptureBits) -> Self {
         CaptureConfig {
             root,
             bits,
+            scene_id: 0,
+            frame_id: 0,
+            resource_id: 0,
             #[cfg(feature = "capture")]
             pretty: ron::ser::PrettyConfig {
                 enumerate_arrays: true,
@@ -40,35 +49,111 @@ impl CaptureConfig {
     }
 
     #[cfg(feature = "capture")]
-    pub fn file_path<P>(&self, name: P, ext: &str) -> PathBuf
-    where P: AsRef<Path> {
-        self.root.join(name).with_extension(ext)
+    pub fn prepare_scene(&mut self) {
+        use std::fs::create_dir_all;
+        self.scene_id += 1;
+        let _ = create_dir_all(&self.scene_root());
     }
 
     #[cfg(feature = "capture")]
-    pub fn serialize<T, P>(&self, data: &T, name: P)
+    pub fn prepare_frame(&mut self) {
+        use std::fs::create_dir_all;
+        self.frame_id += 1;
+        let _ = create_dir_all(&self.frame_root());
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn prepare_resource(&mut self) {
+        use std::fs::create_dir_all;
+        self.resource_id += 1;
+        let _ = create_dir_all(&self.resource_root());
+    }
+
+    #[cfg(any(feature = "capture", feature = "replay"))]
+    pub fn scene_root(&self) -> PathBuf {
+        if self.scene_id > 0 {
+            let path = format!("scenes/{:05}", self.scene_id);
+            self.root.join(path)
+        } else {
+            self.root.clone()
+        }
+    }
+
+    #[cfg(any(feature = "capture", feature = "replay"))]
+    pub fn frame_root(&self) -> PathBuf {
+        if self.frame_id > 0 {
+            let path = format!("frames/{:05}", self.frame_id);
+            self.scene_root().join(path)
+        } else {
+            self.root.clone()
+        }
+    }
+
+    #[cfg(any(feature = "capture", feature = "replay"))]
+    pub fn resource_root(&self) -> PathBuf {
+        if self.resource_id > 0 {
+            let path = format!("resources/{:05}", self.resource_id);
+            self.root.join(path)
+        } else {
+            self.root.clone()
+        }
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn serialize_for_scene<T, P>(&self, data: &T, name: P)
+    where
+        T: serde::Serialize,
+        P: AsRef<Path>,
+    {
+        self.serialize(data, self.scene_root(), name)
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn serialize_for_frame<T, P>(&self, data: &T, name: P)
+    where
+        T: serde::Serialize,
+        P: AsRef<Path>,
+    {
+        self.serialize(data, self.frame_root(), name)
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn serialize_for_resource<T, P>(&self, data: &T, name: P)
+    where
+        T: serde::Serialize,
+        P: AsRef<Path>,
+    {
+        self.serialize(data, self.resource_root(), name)
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn file_path_for_frame<P>(&self, name: P, ext: &str) -> PathBuf
+    where P: AsRef<Path> {
+        self.frame_root().join(name).with_extension(ext)
+    }
+
+    #[cfg(feature = "capture")]
+    fn serialize<T, P>(&self, data: &T, path: PathBuf, name: P)
     where
         T: serde::Serialize,
         P: AsRef<Path>,
     {
         use std::io::Write;
-
         let ron = ron::ser::to_string_pretty(data, self.pretty.clone())
             .unwrap();
-        let path = self.file_path(name, "ron");
-        let mut file = File::create(path)
+        let mut file = File::create(path.join(name).with_extension("ron"))
             .unwrap();
         write!(file, "{}\n", ron)
             .unwrap();
     }
 
     #[cfg(feature = "capture")]
-    pub fn serialize_tree<T, P>(&self, data: &T, name: P)
+    fn serialize_tree<T, P>(data: &T, root: PathBuf, name: P)
     where
         T: PrintableTree,
         P: AsRef<Path>
     {
-        let path = self.root
+        let path = root
             .join(name)
             .with_extension("tree");
         let file = File::create(path)
@@ -77,8 +162,17 @@ impl CaptureConfig {
         data.print_with(&mut pt);
     }
 
+    #[cfg(feature = "capture")]
+    pub fn serialize_tree_for_frame<T, P>(&self, data: &T, name: P)
+    where
+        T: PrintableTree,
+        P: AsRef<Path>
+    {
+        Self::serialize_tree(data, self.frame_root(), name)
+    }
+
     #[cfg(feature = "replay")]
-    pub fn deserialize<T, P>(root: &PathBuf, name: P) -> Option<T>
+    fn deserialize<T, P>(root: &PathBuf, name: P) -> Option<T>
     where
         T: for<'a> serde::Deserialize<'a>,
         P: AsRef<Path>,
@@ -97,6 +191,33 @@ impl CaptureConfig {
             Ok(out) => Some(out),
             Err(e) => panic!("File {:?} deserialization failed: {:?}", name.as_ref(), e),
         }
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn deserialize_for_scene<T, P>(&self, name: P) -> Option<T>
+    where
+        T: for<'a> serde::Deserialize<'a>,
+        P: AsRef<Path>,
+    {
+        Self::deserialize(&self.scene_root(), name)
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn deserialize_for_frame<T, P>(&self, name: P) -> Option<T>
+    where
+        T: for<'a> serde::Deserialize<'a>,
+        P: AsRef<Path>,
+    {
+        Self::deserialize(&self.frame_root(), name)
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn deserialize_for_resource<T, P>(&self, name: P) -> Option<T>
+    where
+        T: for<'a> serde::Deserialize<'a>,
+        P: AsRef<Path>,
+    {
+        Self::deserialize(&self.resource_root(), name)
     }
 
     #[cfg(feature = "png")]

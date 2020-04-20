@@ -2182,6 +2182,13 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvToggleCaptureSequence() {
+  if (!mDestroyed) {
+    mApis[wr::RenderRoot::Default]->ToggleCaptureSequence();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTransactionLogging(
     const bool& aValue) {
   if (!mDestroyed) {
