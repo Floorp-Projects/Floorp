@@ -42,6 +42,8 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "nsICookieService.h"
 #include "nsIBrowser.h"
+#include "nsIE10SUtils.h"
+#include "nsImportModule.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -908,24 +910,26 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
   }
 
   // We currently can't switch processes for toplevel loads unless they're
-  // loaded within a browser tab. We also enforce this for non-toplevel tabs, as
-  // otherwise cross-origin subframes could get out of sync.
+  // loaded within a browser tab.
   // FIXME: Ideally we won't do this in the future.
-  Element* browserElement = browsingContext->Top()->GetEmbedderElement();
-  if (!browserElement) {
-    LOG(("Process Switch Abort: cannot get browser element"));
-    return false;
-  }
-  nsCOMPtr<nsIBrowser> browser = browserElement->AsBrowser();
-  if (!browser) {
-    LOG(("Process Switch Abort: not loaded within nsIBrowser"));
-    return false;
-  }
-  bool loadedInTab = false;
-  if (NS_FAILED(browser->GetCanPerformProcessSwitch(&loadedInTab)) ||
-      !loadedInTab) {
-    LOG(("Process Switch Abort: browser is not loaded in a tab"));
-    return false;
+  nsCOMPtr<nsIBrowser> browser;
+  if (!browsingContext->GetParent()) {
+    Element* browserElement = browsingContext->GetEmbedderElement();
+    if (!browserElement) {
+      LOG(("Process Switch Abort: cannot get browser element"));
+      return false;
+    }
+    browser = browserElement->AsBrowser();
+    if (!browser) {
+      LOG(("Process Switch Abort: not loaded within nsIBrowser"));
+      return false;
+    }
+    bool loadedInTab = false;
+    if (NS_FAILED(browser->GetCanPerformProcessSwitch(&loadedInTab)) ||
+        !loadedInTab) {
+      LOG(("Process Switch Abort: browser is not loaded in a tab"));
+      return false;
+    }
   }
 
   // Get information about the current document loaded in our BrowsingContext.
@@ -988,8 +992,15 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
        this, NS_ConvertUTF16toUTF8(currentProcess->GetRemoteType()).get(),
        NS_ConvertUTF16toUTF8(preferredRemoteType).get()));
 
+  nsCOMPtr<nsIE10SUtils> e10sUtils =
+      do_ImportModule("resource://gre/modules/E10SUtils.jsm", "E10SUtils");
+  if (!e10sUtils) {
+    LOG(("Process Switch Abort: Could not import E10SUtils"));
+    return false;
+  }
+
   nsAutoString remoteType;
-  rv = browser->GetRemoteTypeForPrincipal(
+  rv = e10sUtils->GetRemoteTypeForPrincipal(
       resultPrincipal, browsingContext->UseRemoteTabs(),
       browsingContext->UseRemoteSubframes(), preferredRemoteType,
       currentPrincipal, browsingContext->GetParent(), remoteType);
