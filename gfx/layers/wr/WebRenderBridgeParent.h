@@ -443,6 +443,10 @@ class WebRenderBridgeParent final
   bool AddPrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                                wr::ImageDescriptor aDesc,
                                wr::TransactionBuilder& aResources);
+  bool UpdatePrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+                                  const wr::ImageDescriptor& aDesc,
+                                  const ImageIntRect& aDirtyRect,
+                                  wr::TransactionBuilder& aResources);
   bool AddSharedExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                               wr::TransactionBuilder& aResources);
   bool UpdateSharedExternalImage(

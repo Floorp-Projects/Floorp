@@ -398,10 +398,22 @@ WebRenderLocalCanvasData::WebRenderLocalCanvasData(
 
 WebRenderLocalCanvasData::~WebRenderLocalCanvasData() = default;
 
-void WebRenderLocalCanvasData::Present() {
+void WebRenderLocalCanvasData::RequestFrameReadback() {
   if (mGpuBridge) {
     mGpuBridge->SwapChainPresent(mExternalImageId, mGpuTextureId);
   }
+}
+
+void WebRenderLocalCanvasData::RefreshExternalImage() {
+  if (!mDirty) {
+    return;
+  }
+
+  const ImageIntRect dirtyRect(0, 0, mDescriptor.width, mDescriptor.height);
+  // Update the WR external image, forcing the composition of a new frame.
+  mManager->AsyncResourceUpdates().UpdatePrivateExternalImage(
+      mExternalImageId, mImageKey, mDescriptor, dirtyRect);
+  mDirty = false;
 }
 
 WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,

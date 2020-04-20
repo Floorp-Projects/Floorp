@@ -30,8 +30,7 @@ NS_INTERFACE_MAP_END
 
 CanvasContext::CanvasContext()
     : mExternalImageId(layers::CompositorManagerChild::GetInstance()
-                           ->GetNextExternalImageId()) {
-}
+                           ->GetNextExternalImageId()) {}
 
 CanvasContext::~CanvasContext() { Cleanup(); }
 
@@ -85,6 +84,13 @@ RefPtr<SwapChain> CanvasContext::ConfigureSwapChain(
   extent.mHeight = mHeight;
   extent.mDepth = 1;
   mSwapChain = new SwapChain(aDesc, extent, mExternalImageId, format);
+
+  // Force a new frame to be built, which will execute the
+  // `CanvasContextType::WebGPU` switch case in `CreateWebRenderCommands` and
+  // populate the WR user data.
+  mCanvasElement->InvalidateCanvas();
+
+  mSwapChain->GetCurrentTexture()->mTargetCanvasElement = mCanvasElement;
   return mSwapChain;
 }
 

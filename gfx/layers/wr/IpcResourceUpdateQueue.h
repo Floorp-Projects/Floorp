@@ -143,6 +143,9 @@ class IpcResourceUpdateQueue {
                        Range<uint8_t> aBytes, ImageIntRect aVisibleRect,
                        ImageIntRect aDirtyRect);
 
+  void UpdatePrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+                                  const wr::ImageDescriptor& aDesc,
+                                  ImageIntRect aDirtyRect);
   void UpdateSharedExternalImage(ExternalImageId aExtID, ImageKey aKey,
                                  ImageIntRect aDirtyRect);
 

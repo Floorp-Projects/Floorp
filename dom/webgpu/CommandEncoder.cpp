@@ -20,7 +20,7 @@ GPU_IMPL_JS_WRAP(CommandEncoder)
 
 static ffi::WGPUBufferCopyView ConvertBufferCopyView(
     const dom::GPUBufferCopyView& aView) {
-  ffi::WGPUBufferCopyView view;
+  ffi::WGPUBufferCopyView view = {};
   view.buffer = aView.mBuffer->mId;
   view.offset = aView.mOffset;
   view.bytes_per_row = aView.mBytesPerRow;
@@ -54,7 +54,7 @@ static ffi::WGPUTextureCopyView ConvertTextureCopyView(
 }
 
 static ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent) {
-  ffi::WGPUExtent3d extent;
+  ffi::WGPUExtent3d extent = {};
   if (aExtent.IsUnsignedLongSequence()) {
     const auto& seq = aExtent.GetAsUnsignedLongSequence();
     extent.width = seq.Length() > 0 ? seq[0] : 0;
@@ -144,6 +144,17 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
 
 already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
+  for (const auto& at : aDesc.mColorAttachments) {
+    auto* targetCanvasElement = at.mAttachment->GetTargetCanvasElement();
+    if (targetCanvasElement) {
+      if (mTargetCanvasElement) {
+        NS_WARNING("Command encoder touches more than one canvas");
+      } else {
+        mTargetCanvasElement = targetCanvasElement;
+      }
+    }
+  }
+
   RefPtr<RenderPassEncoder> pass = new RenderPassEncoder(this, aDesc);
   return pass.forget();
 }
@@ -187,7 +198,8 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
     mValid = false;
     id = mBridge->CommandEncoderFinish(mId, aDesc);
   }
-  RefPtr<CommandBuffer> comb = new CommandBuffer(mParent, id);
+  RefPtr<CommandBuffer> comb =
+      new CommandBuffer(mParent, id, mTargetCanvasElement);
   return comb.forget();
 }
 
