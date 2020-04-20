@@ -285,23 +285,16 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
     change->GetCountOfEventListenerChangesAffectingAccessibility(&changeCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (changeCount) {
+    for (uint32_t i = 0; i < changeCount; i++) {
       Document* ownerDoc = node->OwnerDoc();
       DocAccessible* document = GetExistingDocAccessible(ownerDoc);
 
-      if (document) {
-        Accessible* acc = document->GetAccessible(node);
-        if (!acc && nsCoreUtils::HasClickListener(node)) {
-          // Create an accessible for a inaccessible element having click event
-          // handler.
-          document->ContentInserted(node, node->GetNextSibling());
-        } else if (acc && acc->IsHTMLLink() && !acc->AsHTMLLink()->IsLinked()) {
-          // Notify of a LINKED state change if an HTML link gets a click
-          // listener but does not have an href attribute.
-          RefPtr<AccEvent> linkedChangeEvent =
-              new AccStateChangeEvent(acc, states::LINKED);
-          document->FireDelayedEvent(linkedChangeEvent);
-        }
+      // Create an accessible for a inaccessible element having click event
+      // handler.
+      if (document && !document->HasAccessible(node) &&
+          nsCoreUtils::HasClickListener(node)) {
+        document->ContentInserted(node, node->GetNextSibling());
+        break;
       }
     }
   }

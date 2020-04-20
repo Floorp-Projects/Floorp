@@ -122,10 +122,6 @@
       getNode("scrollable2").setAttribute("disabled", "true");
       await p;
 
-      p = waitForEvent(...focusableStateChange("link", false));
-      getNode("link").removeAttribute("href");
-      await p;
-
       SimpleTest.finish();
     }
 
@@ -155,8 +151,6 @@
   </div>
 
   <textarea id="textarea" rows="3" cols="30"></textarea>
-
-  <a id="link" href="#">A link</a>
 
 </body>
 </html>

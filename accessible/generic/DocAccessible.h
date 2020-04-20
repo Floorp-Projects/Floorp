@@ -472,10 +472,9 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * @param aAccessible   [in] accessible the DOM attribute is changed for
    * @param aNameSpaceID  [in] namespace of changed attribute
    * @param aAttribute    [in] changed attribute
-   * @param aModType      [in] modification type (changed/added/removed)
    */
   void AttributeChangedImpl(Accessible* aAccessible, int32_t aNameSpaceID,
-                            nsAtom* aAttribute, int32_t aModType);
+                            nsAtom* aAttribute);
 
   /**
    * Fire accessible events when ARIA attribute is changed.

@@ -671,7 +671,7 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
     return;
   }
 
-  if (aAttribute == nsGkAtoms::aria_disabled || aAttribute == nsGkAtoms::href ||
+  if (aAttribute == nsGkAtoms::aria_disabled ||
       aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::tabindex ||
       aAttribute == nsGkAtoms::contenteditable) {
     mPrevStateBits = accessible->State();
@@ -732,7 +732,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 
   // Fire accessible events iff there's an accessible, otherwise we consider
   // the accessible state wasn't changed, i.e. its state is initial state.
-  AttributeChangedImpl(accessible, aNameSpaceID, aAttribute, aModType);
+  AttributeChangedImpl(accessible, aNameSpaceID, aAttribute);
 
   // Update dependent IDs cache. Take care of accessible elements because no
   // accessible element means either the element is not accessible at all or
@@ -748,7 +748,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 // DocAccessible protected member
 void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
                                          int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType) {
+                                         nsAtom* aAttribute) {
   // Fire accessible event after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change. Otherwise,
   // assistive technology will retrieve the wrong state/value/selection info.
@@ -921,23 +921,6 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   if (aAttribute == nsGkAtoms::value) {
     if (aAccessible->IsProgress())
       FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
-    return;
-  }
-
-  if (aModType == dom::MutationEvent_Binding::REMOVAL ||
-      aModType == dom::MutationEvent_Binding::ADDITION) {
-    if (aAttribute == nsGkAtoms::href) {
-      if (aAccessible->IsHTMLLink() &&
-          !nsCoreUtils::HasClickListener(aAccessible->GetContent())) {
-        RefPtr<AccEvent> linkedChangeEvent =
-            new AccStateChangeEvent(aAccessible, states::LINKED);
-        FireDelayedEvent(linkedChangeEvent);
-        // Fire a focusable state change event if the previous state was
-        // different. It may be the same if there is tabindex on this link.
-        aAccessible->MaybeFireFocusableStateChange(
-            (mPrevStateBits & states::FOCUSABLE));
-      }
-    }
   }
 }
 
@@ -1803,6 +1786,17 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     // a different sets of interfaces (COM restriction).
     RecreateAccessible(aElement);
 
+    return true;
+  }
+
+  if (aAttribute == nsGkAtoms::href) {
+    // Not worth the expense to ensure which namespace these are in. It doesn't
+    // kill use to recreate the accessible even if the attribute was used in
+    // the wrong namespace or an element that doesn't support it.
+
+    // Make sure the accessible is recreated asynchronously to allow the content
+    // to handle the attribute change.
+    RecreateAccessible(aElement);
     return true;
   }
 
