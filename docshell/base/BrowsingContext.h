@@ -258,7 +258,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
 
   // Triggers a load in the process which currently owns this BrowsingContext.
-  nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
+  nsresult LoadURI(nsDocShellLoadState* aLoadState,
+                   bool aSetNavigating = false);
 
   nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
@@ -350,6 +351,19 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   BrowsingContextGroup* Group() { return mGroup; }
+
+  // WebIDL bindings for nsILoadContext
+  Nullable<WindowProxyHolder> GetAssociatedWindow();
+  Nullable<WindowProxyHolder> GetTopWindow();
+  Element* GetTopFrameElement();
+  bool GetIsContent() { return IsContent(); }
+  void SetUsePrivateBrowsing(bool aUsePrivateBrowsing, ErrorResult& aError);
+  // Needs a different name to disambiguate from the xpidl method with
+  // the same signature but different return value.
+  void SetUseTrackingProtectionWebIDL(bool aUseTrackingProtection);
+  bool UseTrackingProtectionWebIDL() { return UseTrackingProtection(); }
+  void GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal,
+                           ErrorResult& aError);
 
   bool InRDMPane() const { return GetInRDMPane(); }
 
