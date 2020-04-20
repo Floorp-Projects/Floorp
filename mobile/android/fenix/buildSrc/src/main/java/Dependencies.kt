@@ -42,7 +42,6 @@ object Versions {
 
     const val mockwebserver = "3.11.0"
     const val uiautomator = "2.2.0"
-    const val robolectric = "4.2.1"
 
     const val google_ads_id_version = "16.0.0"
 
@@ -201,7 +200,7 @@ object Deps {
 
     const val mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val uiautomator = "androidx.test.uiautomator:uiautomator:${Versions.uiautomator}"
-    const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
+    const val robolectric = "org.robolectric:robolectric:4.3.1"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 
