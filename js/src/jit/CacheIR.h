@@ -502,9 +502,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeUint32Immediate(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
-  void writePointer(void* ptr) { buffer_.writeRawPointer(ptr); }
-
   void writeCallFlagsImm(CallFlags flags) {
     // See CacheIRReader::callFlags()
     uint8_t value = flags.getArgFormat();
@@ -571,6 +568,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeIdField(jsid id) {
     addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
   }
+  void writeValueField(const Value& val) {
+    addStubField(val.asRawBits(), StubField::Type::Value);
+  }
 
   void writeJSOpImm(JSOp op) {
     static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
@@ -607,10 +607,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void writeInt32Imm(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
+  void writeUInt32Imm(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
+  void writePointer(const void* ptr) { buffer_.writeRawPointer(ptr); }
 
   void writeJSNativeImm(JSNative native) {
     writePointer(JS_FUNC_TO_DATA_PTR(void*, native));
   }
+  void writeStaticStringImm(const char* str) { writePointer(str); }
 
   CacheIRWriter(const CacheIRWriter&) = delete;
   CacheIRWriter& operator=(const CacheIRWriter&) = delete;
@@ -1120,10 +1123,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
 
-  void callIsSuspendedGeneratorResult(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::CallIsSuspendedGeneratorResult, val);
-  }
-
   void loadInt32TruthyResult(ValOperandId integer) {
     writeOpWithOperandId(CacheOp::LoadInt32TruthyResult, integer);
   }
@@ -1131,130 +1130,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void loadDoubleTruthyResult(ValOperandId dbl) {
     writeOpWithOperandId(CacheOp::LoadDoubleTruthyResult, dbl);
   }
-
-  void loadStringTruthyResult(StringOperandId str) {
-    writeOpWithOperandId(CacheOp::LoadStringTruthyResult, str);
-  }
-
-  void loadObjectTruthyResult(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadObjectTruthyResult, obj);
-  }
-
-  void loadBigIntTruthyResult(BigIntOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadBigIntTruthyResult, obj);
-  }
-
-  void loadValueResult(const Value& val) {
-    writeOp(CacheOp::LoadValueResult);
-    addStubField(val.asRawBits(), StubField::Type::Value);
-  }
-
-  void loadNewObjectFromTemplateResult(JSObject* templateObj) {
-    writeOp(CacheOp::LoadNewObjectFromTemplateResult);
-    addStubField(uintptr_t(templateObj), StubField::Type::JSObject);
-    // Bake in a monotonically increasing number to ensure we differentiate
-    // between different baseline stubs that otherwise might share
-    // stub code.
-    uint64_t id = cx_->runtime()->jitRuntime()->nextDisambiguationId();
-    writeUint32Immediate(id & UINT32_MAX);
-    writeUint32Immediate(id >> 32);
-  }
-
-  void callStringConcatResult(StringOperandId lhs, StringOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CallStringConcatResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void callStringObjectConcatResult(ValOperandId lhs, ValOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CallStringObjectConcatResult, lhs);
-    writeOperandId(rhs);
-  }
-
-  void compareStringResult(JSOp op, StringOperandId lhs, StringOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareStringResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareObjectResult(JSOp op, ObjOperandId lhs, ObjOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareObjectResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareObjectUndefinedNullResult(JSOp op, ObjOperandId object) {
-    writeOpWithOperandId(CacheOp::CompareObjectUndefinedNullResult, object);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareSymbolResult(JSOp op, SymbolOperandId lhs, SymbolOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareSymbolResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareDoubleResult(JSOp op, NumberOperandId lhs, NumberOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareBigIntResult(JSOp op, BigIntOperandId lhs, BigIntOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareBigIntResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareBigIntInt32Result(JSOp op, BigIntOperandId lhs,
-                                Int32OperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareBigIntInt32Result, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareInt32BigIntResult(JSOp op, Int32OperandId lhs,
-                                BigIntOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareInt32BigIntResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareBigIntNumberResult(JSOp op, BigIntOperandId lhs,
-                                 NumberOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareBigIntNumberResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareNumberBigIntResult(JSOp op, NumberOperandId lhs,
-                                 BigIntOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareNumberBigIntResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareBigIntStringResult(JSOp op, BigIntOperandId lhs,
-                                 StringOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareBigIntStringResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void compareStringBigIntResult(JSOp op, StringOperandId lhs,
-                                 BigIntOperandId rhs) {
-    writeOpWithOperandId(CacheOp::CompareStringBigIntResult, lhs);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
-  }
-
-  void callPrintString(const char* str) {
-    writeOp(CacheOp::CallPrintString);
-    writePointer(const_cast<char*>(str));
-  }
-
-  void breakpoint() { writeOp(CacheOp::Breakpoint); }
-  void typeMonitorResult() { writeOp(CacheOp::TypeMonitorResult); }
-  void wrapResult() { writeOp(CacheOp::WrapResult); }
 
   CACHE_IR_WRITER_GENERATED
 };
