@@ -1685,6 +1685,7 @@ SearchService.prototype = {
       }
       // Reset search default expiration on major releases
       if (
+        !gModernConfig &&
         json.appVersion != Services.appinfo.version &&
         gGeoSpecificDefaultsEnabled &&
         json.metaData
