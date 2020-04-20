@@ -66,11 +66,10 @@ class nsMixedContentBlocker : public nsIContentPolicy,
    */
   static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
                              uint32_t aContentType, nsIURI* aContentLocation,
-                             nsIURI* aRequestingLocation,
+                             nsIPrincipal* aLoadingPrincipal,
+                             nsIPrincipal* aTriggeringPrincipal,
                              nsISupports* aRequestingContext,
-                             const nsACString& aMimeGuess,
-                             nsIPrincipal* aRequestPrincipal,
-                             int16_t* aDecision);
+                             const nsACString& aMimeGuess, int16_t* aDecision);
   static void AccumulateMixedContentHSTS(
       nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
 

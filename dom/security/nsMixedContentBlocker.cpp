@@ -87,7 +87,8 @@ class nsMixedContentEvent : public Runnable {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIDocShell> rootShell = docShell->GetBrowsingContext()->Top()->GetDocShell();
+    nsCOMPtr<nsIDocShell> rootShell =
+        docShell->GetBrowsingContext()->Top()->GetDocShell();
     if (!rootShell) {
       return NS_OK;
     }
@@ -322,16 +323,8 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
                                   int16_t* aDecision) {
   uint32_t contentType = aLoadInfo->InternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
-  nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
-  nsCOMPtr<nsIURI> requestingLocation;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
-
-  // We need to get a Requesting Location if possible
-  // so we're casting to BasePrincipal to acess GetURI
-  auto* basePrin = BasePrincipal::Cast(loadingPrincipal);
-  if (basePrin) {
-    basePrin->GetURI(getter_AddRefs(requestingLocation));
-  }
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
 
   // We pass in false as the first parameter to ShouldLoad(), because the
   // callers of this method don't know whether the load went through cached
@@ -339,8 +332,8 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   // ShouldLoad.
   nsresult rv =
       ShouldLoad(false,  // aHadInsecureImageRedirect
-                 contentType, aContentLocation, requestingLocation,
-                 requestingContext, aMimeGuess, requestPrincipal, aDecision);
+                 contentType, aContentLocation, loadingPrincipal,
+                 triggeringPrincipal, requestingContext, aMimeGuess, aDecision);
 
   if (*aDecision == nsIContentPolicy::REJECT_REQUEST) {
     NS_SetRequestBlockingReason(aLoadInfo,
@@ -504,9 +497,9 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
  */
 nsresult nsMixedContentBlocker::ShouldLoad(
     bool aHadInsecureImageRedirect, uint32_t aContentType,
-    nsIURI* aContentLocation, nsIURI* aRequestingLocation,
-    nsISupports* aRequestingContext, const nsACString& aMimeGuess,
-    nsIPrincipal* aRequestPrincipal, int16_t* aDecision) {
+    nsIURI* aContentLocation, nsIPrincipal* aLoadingPrincipal,
+    nsIPrincipal* aTriggeringPrincipal, nsISupports* aRequestingContext,
+    const nsACString& aMimeGuess, int16_t* aDecision) {
   // Asserting that we are on the main thread here and hence do not have to lock
   // and unlock security.mixed_content.block_active_content and
   // security.mixed_content.block_display_content before reading/writing to
@@ -672,84 +665,51 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     return NS_OK;
   }
 
-  // Since there are cases where aRequestingLocation and aRequestPrincipal are
-  // definitely not the owning document, we try to ignore them by extracting the
-  // requestingLocation in the following order:
-  // 1) from the aRequestingContext, either extracting
-  //    a) the node's principal, or the
-  //    b) script object's principal.
-  // 2) if aRequestingContext yields a principal but no location, we check
-  //    if its the system principal. If it is, allow the load.
-  // 3) Special case handling for:
-  //    a) speculative loads, where shouldLoad is called twice (bug 839235)
-  //       and the first speculative load does not include a context.
-  //       In this case we use aRequestingLocation to set requestingLocation.
-  //    b) TYPE_CSP_REPORT which does not provide a context. In this case we
-  //       use aRequestingLocation to set requestingLocation.
-  //    c) content scripts from addon code that do not provide
-  //       aRequestingContext or aRequestingLocation, but do provide
-  //       aRequestPrincipal. If aRequestPrincipal is an expanded principal,
-  //       we allow the load.
-  // 4) If we still end up not having a requestingLocation, we reject the load.
+  /*
+   * Most likely aLoadingPrincipal reflects the security context of the owning
+   * document for this mixed content check. There are cases where that is not
+   * true, hence we have to we process requests in the following order:
+   * 1) If the load is triggered by the SystemPrincipal, we allow the load.
+   *    Content scripts from addon code do provide aTriggeringPrincipal, which
+   *    is an ExpandedPrincipal. If encountered, we allow the load.
+   * 2) If aLoadingPrincipal does not yield to a requestingLocation, then we
+   *    fall back to querying the requestingLocation from aTriggeringPrincipal.
+   * 3) If we still end up not having a requestingLocation, we reject the load.
+   */
 
-  nsCOMPtr<nsIPrincipal> principal;
-  // 1a) Try to get the principal if aRequestingContext is a node.
-  nsCOMPtr<nsINode> node = do_QueryInterface(aRequestingContext);
-  if (node) {
-    principal = node->NodePrincipal();
-  }
-
-  // 1b) Try using the window's script object principal if it's not a node.
-  if (!principal) {
-    nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin =
-        do_QueryInterface(aRequestingContext);
-    if (scriptObjPrin) {
-      principal = scriptObjPrin->GetPrincipal();
-    }
-  }
-
-  nsCOMPtr<nsIURI> requestingLocation;
-  // We need to get a Requesting Location if possible
-  // so we're casting to BasePrincipal to acess GetURI
-  auto* basePrin = BasePrincipal::Cast(principal);
-  if (basePrin) {
-    basePrin->GetURI(getter_AddRefs(requestingLocation));
-  }
-
-  // 2) if aRequestingContext yields a principal but no location, we check if
-  // its a system principal.
-  if (principal && !requestingLocation) {
-    if (principal->IsSystemPrincipal()) {
+  // 1) Check if the load was triggered by the system (SystemPrincipal) or
+  // a content script from addons code (ExpandedPrincipal) in which case the
+  // load is not subject to mixed content blocking.
+  if (aTriggeringPrincipal) {
+    if (aTriggeringPrincipal->IsSystemPrincipal()) {
       *aDecision = ACCEPT;
       return NS_OK;
     }
-  }
-
-  // 3a,b) Special case handling for speculative loads and TYPE_CSP_REPORT. In
-  // such cases, aRequestingContext doesn't exist, so we use
-  // aRequestingLocation. Unfortunately we can not distinguish between
-  // speculative and normal loads here, otherwise we could special case this
-  // assignment.
-  if (!requestingLocation) {
-    requestingLocation = aRequestingLocation;
-  }
-
-  // 3c) Special case handling for content scripts from addons code, which only
-  // provide a aRequestPrincipal; aRequestingContext and aRequestingLocation are
-  // both null; if the aRequestPrincipal is an expandedPrincipal, we allow the
-  // load.
-  if (!principal && !requestingLocation && aRequestPrincipal) {
     nsCOMPtr<nsIExpandedPrincipal> expanded =
-        do_QueryInterface(aRequestPrincipal);
+        do_QueryInterface(aTriggeringPrincipal);
     if (expanded) {
       *aDecision = ACCEPT;
       return NS_OK;
     }
   }
 
-  // 4) Giving up. We still don't have a requesting location, therefore we can't
-  // tell
-  //    if this is a mixed content load. Deny to be safe.
+  // 2) If aLoadingPrincipal does not provide a requestingLocation, then
+  // we fall back to to querying the requestingLocation from
+  // aTriggeringPrincipal.
+  nsCOMPtr<nsIURI> requestingLocation;
+  auto* baseLoadingPrincipal = BasePrincipal::Cast(aLoadingPrincipal);
+  if (baseLoadingPrincipal) {
+    baseLoadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
+  }
+  if (!requestingLocation) {
+    auto* baseTriggeringPrincipal = BasePrincipal::Cast(aTriggeringPrincipal);
+    if (baseTriggeringPrincipal) {
+      baseTriggeringPrincipal->GetURI(getter_AddRefs(requestingLocation));
+    }
+  }
+
+  // 3) Giving up. We still don't have a requesting location, therefore we can't
+  // tell if this is a mixed content load. Deny to be safe.
   if (!requestingLocation) {
     *aDecision = REJECT_REQUEST;
     return NS_OK;
@@ -956,10 +916,10 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   nsresult stateRV = securityUI->GetState(&state);
 
   OriginAttributes originAttributes;
-  if (principal) {
-    originAttributes = principal->OriginAttributesRef();
-  } else if (aRequestPrincipal) {
-    originAttributes = aRequestPrincipal->OriginAttributesRef();
+  if (aLoadingPrincipal) {
+    originAttributes = aLoadingPrincipal->OriginAttributesRef();
+  } else if (aTriggeringPrincipal) {
+    originAttributes = aTriggeringPrincipal->OriginAttributesRef();
   }
 
   // At this point we know that the request is mixed content, and the only
