@@ -449,4 +449,39 @@ class WebExtensionBrowserMenuTest {
             assertEquals("some_example_id", fact.metadata?.get("id"))
         }
     }
+
+    @Test
+    fun `hides browser and page actions in private tabs if extension is not allowed to run`() {
+        val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+
+        val actionExt1 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val tabSessionState = TabSessionState(
+            content = mock(),
+            extensionState = emptyMap()
+        )
+        whenever(tabSessionState.content.private).thenReturn(true)
+
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        browserExtensions["1"] =
+            WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+        val browserState = BrowserState(extensions = browserExtensions)
+        val actionItems = getOrUpdateWebExtensionMenuItems(browserState, tabSessionState)
+        assertEquals(0, actionItems.size)
+
+        val browserExtensionsAllowedInPrivateBrowsing = HashMap<String, WebExtensionState>()
+        browserExtensionsAllowedInPrivateBrowsing["1"] =
+            WebExtensionState(id = "1", allowedInPrivateBrowsing = true, name = "extensionA", browserAction = actionExt1)
+        val browserStateAllowedInPrivateBrowsing = BrowserState(extensions = browserExtensionsAllowedInPrivateBrowsing)
+        val actionItemsAllowedInPrivateBrowsing = getOrUpdateWebExtensionMenuItems(browserStateAllowedInPrivateBrowsing, tabSessionState)
+        assertEquals(1, actionItemsAllowedInPrivateBrowsing.size)
+        assertEquals(actionExt1, (actionItemsAllowedInPrivateBrowsing[0] as WebExtensionBrowserMenuItem).action)
+    }
 }

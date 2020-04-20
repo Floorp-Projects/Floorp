@@ -94,6 +94,20 @@ class WebExtensionToolbarFeature(
     internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState? = null) {
         val extensions = state.extensions.values.toList()
         extensions.filter { it.enabled }.sortedBy { it.name }.forEach { extension ->
+            if (extensionNotAllowedInTab(extension, tab)) {
+                webExtensionPageActions[extension.id]?.let {
+                    toolbar.removePageAction(it)
+                    toolbar.invalidateActions()
+                    webExtensionPageActions.remove(extension.id)
+                }
+                webExtensionBrowserActions[extension.id]?.let {
+                    toolbar.removeBrowserAction(it)
+                    toolbar.invalidateActions()
+                    webExtensionBrowserActions.remove(extension.id)
+                }
+                return@forEach
+            }
+
             extension.browserAction?.let { browserAction ->
                 addOrUpdateAction(
                     extension = extension,
@@ -112,6 +126,11 @@ class WebExtensionToolbarFeature(
             }
         }
     }
+
+    private fun extensionNotAllowedInTab(
+        extension: WebExtensionState?,
+        tab: SessionState?
+    ): Boolean = extension?.allowedInPrivateBrowsing == false && tab?.content?.private == true
 
     private fun addOrUpdateAction(
         extension: WebExtensionState,

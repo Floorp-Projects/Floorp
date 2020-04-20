@@ -149,7 +149,12 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val addonCollectionProvider by lazy {
-        AddonCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+        AddonCollectionProvider(
+            applicationContext,
+            client,
+            collectionName = "16f6e5d9a40448b8955db57ced6d75",
+            maxCacheAgeInMinutes = DAY_IN_MINUTES
+        )
     }
 
     val supportedAddonsChecker by lazy {

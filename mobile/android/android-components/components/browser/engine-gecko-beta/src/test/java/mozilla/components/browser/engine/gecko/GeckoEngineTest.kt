@@ -1147,7 +1147,7 @@ class GeckoEngineTest {
         whenever(extensionController.list()).thenReturn(installedExtensionResult)
         whenever(runtime.webExtensionController).thenReturn(extensionController)
 
-        val engine = GeckoEngine(context, runtime = runtime)
+        val engine = GeckoEngine(testContext, runtime = runtime)
         var extensions: List<WebExtension>? = null
         var onErrorCalled = false
 
@@ -1159,6 +1159,49 @@ class GeckoEngineTest {
 
         assertFalse(onErrorCalled)
         assertNotNull(extensions)
+    }
+
+    @Test
+    fun `migrate private browsing default`() {
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val metaDataBundle = GeckoBundle()
+        metaDataBundle.putBoolean("privateBrowsingAllowed", true)
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        bundle.putBundle("metaData", metaDataBundle)
+        val installedExtension = MockWebExtension(bundle)
+
+        val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
+        val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
+
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+        whenever(extensionController.list()).thenReturn(installedExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val allowedInPrivateBrowsingExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.setAllowedInPrivateBrowsing(any(), anyBoolean())).thenReturn(allowedInPrivateBrowsingExtensionResult)
+
+        val engine = spy(GeckoEngine(testContext, runtime = runtime))
+        var extensions: List<WebExtension>? = null
+        var onErrorCalled = false
+
+        engine.listInstalledWebExtensions(
+                onSuccess = { extensions = it },
+                onError = { onErrorCalled = true }
+        )
+        installedExtensionResult.complete(installedExtensions)
+        assertFalse(onErrorCalled)
+        assertNotNull(extensions)
+        val installedWebExtension = extensions!![0]
+        verify(engine, times(1)).setAllowedInPrivateBrowsing(eq(installedWebExtension), eq(false), any(), any())
+
+        engine.listInstalledWebExtensions(
+                onSuccess = { extensions = it },
+                onError = { onErrorCalled = true }
+        )
+        verify(engine, times(1)).setAllowedInPrivateBrowsing(eq(installedWebExtension), eq(false), any(), any())
     }
 
     @Test
@@ -1333,6 +1376,86 @@ class GeckoEngineTest {
         assertSame(expected, throwable)
         assertNull(result)
         verify(webExtensionsDelegate, never()).onEnabled(any())
+    }
+
+    @Test
+    fun `set allowedInPrivateBrowsing successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val allowedInPrivateBrowsing = MockWebExtension(bundle)
+        val allowedInPrivateBrowsingExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.setAllowedInPrivateBrowsing(any(), anyBoolean())).thenReturn(allowedInPrivateBrowsingExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime,
+            true,
+            true
+        )
+        var result: WebExtension? = null
+        var onErrorCalled = false
+
+        engine.setAllowedInPrivateBrowsing(
+            extension,
+            true,
+            onSuccess = { ext -> result = ext },
+            onError = { onErrorCalled = true }
+        )
+        allowedInPrivateBrowsingExtensionResult.complete(allowedInPrivateBrowsing)
+
+        assertFalse(onErrorCalled)
+        assertNotNull(result)
+        verify(webExtensionsDelegate).onAllowedInPrivateBrowsingChanged(result!!)
+    }
+
+    @Test
+    fun `set allowedInPrivateBrowsing failure`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val allowedInPrivateBrowsingExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.setAllowedInPrivateBrowsing(any(), anyBoolean())).thenReturn(allowedInPrivateBrowsingExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime,
+            true,
+            true
+        )
+        var result: WebExtension? = null
+        val expected = IOException()
+        var throwable: Throwable? = null
+
+        engine.setAllowedInPrivateBrowsing(
+            extension,
+            true,
+            onSuccess = { ext -> result = ext },
+            onError = { throwable = it }
+        )
+        allowedInPrivateBrowsingExtensionResult.completeExceptionally(expected)
+
+        assertSame(expected, throwable)
+        assertNull(result)
+        verify(webExtensionsDelegate, never()).onAllowedInPrivateBrowsingChanged(any())
     }
 
     @Test(expected = RuntimeException::class)

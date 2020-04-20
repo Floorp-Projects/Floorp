@@ -16,6 +16,8 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
  * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
  * @property name The name of this web extension.
  * @property enabled Whether or not this web extension is enabled, defaults to true.
+ * @property allowedInPrivateBrowsing Whether or not this web extension is allowed in private browsing
+ * mode. Defaults to false.
  * @property browserAction The browser action state of this extension.
  * @property pageAction The page action state of this extension.
  * @property popupSessionId The ID of the session displaying
@@ -27,6 +29,7 @@ data class WebExtensionState(
     val url: String? = null,
     val name: String? = null,
     val enabled: Boolean = true,
+    val allowedInPrivateBrowsing: Boolean = false,
     val browserAction: WebExtensionBrowserAction? = null,
     val pageAction: WebExtensionPageAction? = null,
     val popupSessionId: String? = null,

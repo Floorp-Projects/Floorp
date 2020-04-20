@@ -247,6 +247,42 @@ class AddonManager(
     }
 
     /**
+     * Sets whether to allow/disallow the provided [Addon] in private browsing mode.
+     *
+     * @param addon the [Addon] to allow/disallow.
+     * @param allowed true if allow, false otherwise.
+     * @param onSuccess (optional) callback invoked with the enabled [Addon].
+     * @param onError (optional) callback invoked if there was an error enabling
+     */
+    fun setAddonAllowedInPrivateBrowsing(
+        addon: Addon,
+        allowed: Boolean,
+        onSuccess: ((Addon) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { }
+    ) {
+        val extension = addon.installedState?.let { installedExtensions[it.id] }
+        if (extension == null) {
+            onError(IllegalStateException("Addon is not installed"))
+            return
+        }
+
+        val pendingAction = addPendingAddonAction()
+        engine.setAllowedInPrivateBrowsing(
+            extension,
+            allowed,
+            onSuccess = { ext ->
+                val modifiedAddon = addon.copy(installedState = ext.toInstalledState())
+                completePendingAddonAction(pendingAction)
+                onSuccess(modifiedAddon)
+            },
+            onError = {
+                completePendingAddonAction(pendingAction)
+                onError(it)
+            }
+        )
+    }
+
+    /**
      * Updates the addon with the provided [id] if an update is available.
      *
      * @param id the ID of the addon
@@ -305,5 +341,6 @@ private fun WebExtension.toInstalledState() =
         optionsPageUrl = getMetadata()?.optionsPageUrl,
         openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
         enabled = isEnabled(),
-        disabledAsUnsupported = isUnsupported()
+        disabledAsUnsupported = isUnsupported(),
+        allowedInPrivateBrowsing = isAllowedInPrivateBrowsing()
     )

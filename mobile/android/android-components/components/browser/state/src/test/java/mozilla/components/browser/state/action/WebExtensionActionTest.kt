@@ -187,7 +187,7 @@ class WebExtensionActionTest {
                     "url",
                     "name",
                     true,
-                    mockedBrowserAction1
+                    browserAction = mockedBrowserAction1
                 )
             )
         )
@@ -269,7 +269,7 @@ class WebExtensionActionTest {
                     "url",
                     "name",
                     true,
-                    mockedPageAction1
+                    pageAction = mockedPageAction1
                 )
             )
         )
@@ -346,5 +346,20 @@ class WebExtensionActionTest {
         store.dispatch(WebExtensionAction.UpdateWebExtensionAction(updatedExtension)).joinBlocking()
         assertEquals(updatedExtension, store.state.extensions.values.first())
         assertSame(updatedExtension, store.state.extensions.values.first())
+    }
+
+    @Test
+    fun `UpdateWebExtensionAllowedInPrivateBrowsingAction - Updates allowedInPrivateBrowsing state of an existing web extension`() {
+        val store = BrowserStore()
+        val extension = WebExtensionState("id", "url", allowedInPrivateBrowsing = false)
+
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
+        assertFalse(store.state.extensions[extension.id]?.allowedInPrivateBrowsing!!)
+
+        store.dispatch(WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(extension.id, true)).joinBlocking()
+        assertTrue(store.state.extensions[extension.id]?.allowedInPrivateBrowsing!!)
+
+        store.dispatch(WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(extension.id, false)).joinBlocking()
+        assertFalse(store.state.extensions[extension.id]?.allowedInPrivateBrowsing!!)
     }
 }
