@@ -122,8 +122,6 @@
 
     tabAnimationsInProgress: 0,
 
-    _XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-
     /**
      * Binding from browser to tab
      */
