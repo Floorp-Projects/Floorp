@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface imgIRequest;
-
 [ChromeOnly, OverrideBuiltins,
  Exposed=Window]
 interface ImageDocument : HTMLDocument {
@@ -14,10 +12,6 @@ interface ImageDocument : HTMLDocument {
 
   /* Whether the image has been resized to fit visible area. */
   readonly attribute boolean imageIsResized;
-
-  /* The image request being displayed in the content area */
-  [Throws]
-  readonly attribute imgIRequest? imageRequest;
 
   /* Resize the image to fit visible area. */
   void shrinkToFit();
@@ -29,11 +23,4 @@ interface ImageDocument : HTMLDocument {
    * The coordinate system is that of the shrunken image.
    */
   void restoreImageTo(long x, long y);
-
-  /* A helper method for switching between states.
-   * The switching logic is as follows. If the image has been resized
-   * restore image original size, otherwise if the image is overflowing
-   * current visible area resize the image to fit the area.
-   */
-  void toggleImageSize();
 };
