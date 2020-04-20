@@ -15,26 +15,25 @@
 //    and any cycle they participate in is uncollectable. These roots are
 //    traced from TraceNativeBlackRoots.
 //
-// 3. all other roots held by C++ objects that participate in cycle
-//    collection, held by us (see TraceNativeGrayRoots). Roots from this
-//    category are considered grey in the cycle collector; whether or not
-//    they are collected depends on the objects that hold them.
+// 3. all other roots held by C++ objects that participate in cycle collection,
+//    held by us (see TraceNativeGrayRoots). Roots from this category are
+//    considered grey in the cycle collector; whether or not they are collected
+//    depends on the objects that hold them.
 //
 // Note that if a root is in multiple categories the fact that it is in
 // category 1 or 2 that takes precedence, so it will be considered black.
 //
-// During garbage collection we switch to an additional mark color (gray)
-// when tracing inside TraceNativeGrayRoots. This allows us to walk those
-// roots later on and add all objects reachable only from them to the
-// cycle collector.
+// During garbage collection we switch to an additional mark color (gray) when
+// tracing inside TraceNativeGrayRoots. This allows us to walk those roots later
+// on and add all objects reachable only from them to the cycle collector.
 //
 // Phases:
 //
 // 1. marking of the roots in category 1 by having the JS GC do its marking
 // 2. marking of the roots in category 2 by having the JS GC call us back
 //    (via JS_SetExtraGCRootsTracer) and running TraceNativeBlackRoots
-// 3. marking of the roots in category 3 by TraceNativeGrayRoots using an
-//    additional color (gray).
+// 3. marking of the roots in category 3 by
+//    TraceNativeGrayRootsInCollectingZones using an additional color (gray).
 // 4. end of GC, GC can sweep its heap
 //
 // At some later point, when the cycle collector runs:
@@ -62,6 +61,7 @@
 #include "GeckoProfiler.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
+#include "js/HeapAPI.h"
 #include "js/Warnings.h"  // JS::SetWarningReporter
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
@@ -490,9 +490,16 @@ JSHolderMap::Entry::Entry(void* aHolder, nsScriptObjectTracer* aTracer,
 JSHolderMap::JSHolderMap() : mJSHolderMap(256) {}
 
 template <typename F>
-inline void JSHolderMap::ForEach(F&& f) {
+inline void JSHolderMap::ForEach(F&& f, WhichHolders aWhich) {
+  // Multi-zone JS holders must always be considered.
   ForEach(mAnyZoneJSHolders, f, nullptr);
+
   for (auto i = mPerZoneJSHolders.modIter(); !i.done(); i.next()) {
+    if (aWhich == HoldersInCollectingZones &&
+        !JS::ZoneIsCollecting(i.get().key())) {
+      continue;
+    }
+
     EntryVector* holders = i.get().value().get();
     ForEach(*holders, f, i.get().key());
     if (holders->IsEmpty()) {
@@ -512,7 +519,7 @@ inline void JSHolderMap::ForEach(EntryVector& aJSHolders, const F& f,
       break;  // Removed the last entry.
     }
 
-    MOZ_ASSERT(entry->mZone == aZone);
+    MOZ_ASSERT_IF(aZone, entry->mZone == aZone);
     f(entry->mHolder, entry->mTracer, aZone);
   }
 }
@@ -725,7 +732,7 @@ void CycleCollectedJSRuntime::Shutdown(JSContext* cx) {
 #ifdef NS_BUILD_REFCNT_LOGGING
   JSLeakTracer tracer(Runtime());
   TraceNativeBlackRoots(&tracer);
-  TraceNativeGrayRoots(&tracer);
+  TraceNativeGrayRoots(&tracer, JSHolderMap::AllHolders);
 #endif
 
 #ifdef DEBUG
@@ -964,7 +971,7 @@ void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
   // Mark these roots as gray so the CC can walk them later.
-  self->TraceNativeGrayRoots(aTracer);
+  self->TraceNativeGrayRoots(aTracer, JSHolderMap::HoldersInCollectingZones);
 }
 
 /* static */
@@ -1282,7 +1289,8 @@ static inline bool ShouldCheckSingleZoneHolders() {
 #  endif
 }
 
-void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
+void CycleCollectedJSRuntime::TraceNativeGrayRoots(
+    JSTracer* aTracer, JSHolderMap::WhichHolders aWhich) {
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
   TraceAdditionalNativeGrayRoots(aTracer);
@@ -1299,7 +1307,8 @@ void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
     Unused << checkSingleZoneHolders;
 #endif
         tracer->Trace(holder, JsGcTracer(), aTracer);
-      });
+      },
+      aWhich);
 }
 
 void CycleCollectedJSRuntime::AddJSHolder(void* aHolder,
