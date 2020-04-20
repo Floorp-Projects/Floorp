@@ -73,7 +73,7 @@ function setCookie(value, expected) {
     }
 
     Services.obs.addObserver(observer, "cookie-changed");
-    cs.setCookieStringFromHttp(URI, null, valueInternal, null);
+    cs.setCookieStringFromHttp(URI, valueInternal, null);
     Services.obs.removeObserver(observer, "cookie-changed");
   }
 
