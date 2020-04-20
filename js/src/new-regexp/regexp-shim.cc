@@ -202,7 +202,6 @@ template Handle<String>
 Isolate::InternalizeString(const Vector<const char16_t>& str);
 
 // TODO: Map flags to jitoptions
-bool FLAG_correctness_fuzzer_suppressions = false;
 bool FLAG_harmony_regexp_sequence = false;
 bool FLAG_regexp_interpret_all = false;
 bool FLAG_regexp_mode_modifiers = false;
