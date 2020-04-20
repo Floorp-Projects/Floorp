@@ -44,8 +44,8 @@ class EventTargetWrapper : public AbstractThread {
                   NS_IsMainThread() && aTarget->IsOnCurrentThread());
   }
 
-  virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                            DispatchReason aReason = NormalDispatch) override {
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                    DispatchReason aReason = NormalDispatch) override {
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) &&
         RequiresTailDispatch(currentThread)) {
@@ -60,7 +60,7 @@ class EventTargetWrapper : public AbstractThread {
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
   using AbstractThread::Dispatch;
 
-  virtual bool IsCurrentThreadIn() const override {
+  bool IsCurrentThreadIn() const override {
     return mTarget->IsOnCurrentThread();
   }
 
@@ -72,7 +72,7 @@ class EventTargetWrapper : public AbstractThread {
     mTailDispatcher.reset();
   }
 
-  virtual TaskDispatcher& TailDispatcher() override {
+  TaskDispatcher& TailDispatcher() override {
     MOZ_ASSERT(IsCurrentThreadIn());
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
@@ -86,15 +86,12 @@ class EventTargetWrapper : public AbstractThread {
     return mTailDispatcher.ref();
   }
 
-  virtual bool MightHaveTailTasks() override {
-    return mTailDispatcher.isSome();
-  }
+  bool MightHaveTailTasks() override { return mTailDispatcher.isSome(); }
 
-  virtual nsIEventTarget* AsEventTarget() override { return mTarget; }
+  nsIEventTarget* AsEventTarget() override { return mTarget; }
 
  private:
-  nsCOMPtr<nsIThread> mRunningThread;
-  RefPtr<nsIEventTarget> mTarget;
+  const RefPtr<nsIEventTarget> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
   class Runner : public CancelableRunnable {
