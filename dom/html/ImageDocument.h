@@ -10,13 +10,11 @@
 #include "imgINotificationObserver.h"
 #include "MediaDocument.h"
 #include "nsIDOMEventListener.h"
-#include "nsIImageDocument.h"
 
 namespace mozilla {
 namespace dom {
 
 class ImageDocument final : public MediaDocument,
-                            public nsIImageDocument,
                             public imgINotificationObserver,
                             public nsIDOMEventListener {
  public:
@@ -43,7 +41,6 @@ class ImageDocument final : public MediaDocument,
   virtual void OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup = false) override;
 
-  NS_DECL_NSIIMAGEDOCUMENT
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // nsIDOMEventListener

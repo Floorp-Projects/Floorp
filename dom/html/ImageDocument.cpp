@@ -158,7 +158,6 @@ ImageDocument::~ImageDocument() = default;
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument, mImageContent)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument,
-                                             nsIImageDocument,
                                              imgINotificationObserver,
                                              nsIDOMEventListener)
 
@@ -288,18 +287,6 @@ void ImageDocument::OnPageShow(bool aPersisted,
   MediaDocument::OnPageShow(aPersisted, aDispatchStartTarget, aOnlySystemGroup);
 }
 
-NS_IMETHODIMP
-ImageDocument::GetImageIsOverflowing(bool* aImageIsOverflowing) {
-  *aImageIsOverflowing = ImageIsOverflowing();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageDocument::GetImageIsResized(bool* aImageIsResized) {
-  *aImageIsResized = ImageIsResized();
-  return NS_OK;
-}
-
 already_AddRefed<imgIRequest> ImageDocument::GetImageRequest(ErrorResult& aRv) {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
       do_QueryInterface(mImageContent);
@@ -309,13 +296,6 @@ already_AddRefed<imgIRequest> ImageDocument::GetImageRequest(ErrorResult& aRv) {
                                   getter_AddRefs(imageRequest));
   }
   return imageRequest.forget();
-}
-
-NS_IMETHODIMP
-ImageDocument::GetImageRequest(imgIRequest** aImageRequest) {
-  ErrorResult rv;
-  *aImageRequest = GetImageRequest(rv).take();
-  return rv.StealNSResult();
 }
 
 void ImageDocument::ShrinkToFit() {
@@ -377,18 +357,6 @@ void ImageDocument::ShrinkToFit() {
   UpdateTitleAndCharset();
 }
 
-NS_IMETHODIMP
-ImageDocument::DOMShrinkToFit() {
-  ShrinkToFit();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageDocument::DOMRestoreImageTo(int32_t aX, int32_t aY) {
-  RestoreImageTo(aX, aY);
-  return NS_OK;
-}
-
 void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage) {
   if (restoreImage) {
     RestoreImage();
@@ -443,12 +411,6 @@ void ImageDocument::RestoreImage() {
   UpdateTitleAndCharset();
 }
 
-NS_IMETHODIMP
-ImageDocument::DOMRestoreImage() {
-  RestoreImage();
-  return NS_OK;
-}
-
 void ImageDocument::ToggleImageSize() {
   mShouldResize = true;
   if (mImageIsResized) {
@@ -459,12 +421,6 @@ void ImageDocument::ToggleImageSize() {
     ResetZoomLevel();
     ShrinkToFit();
   }
-}
-
-NS_IMETHODIMP
-ImageDocument::DOMToggleImageSize() {
-  ToggleImageSize();
-  return NS_OK;
 }
 
 void ImageDocument::NotifyPossibleTitleChange(bool aBoundTitleElement) {
