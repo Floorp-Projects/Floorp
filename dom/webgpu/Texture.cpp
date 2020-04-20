@@ -6,6 +6,7 @@
 #include "Texture.h"
 
 #include "mozilla/webgpu/ffi/wgpu.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "TextureView.h"
 
 namespace mozilla {

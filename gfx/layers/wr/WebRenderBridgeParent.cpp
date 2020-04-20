@@ -693,6 +693,15 @@ bool WebRenderBridgeParent::UpdateResources(
         }
         break;
       }
+      case OpUpdateResource::TOpUpdatePrivateExternalImage: {
+        const auto& op = cmd.get_OpUpdatePrivateExternalImage();
+        if (!UpdatePrivateExternalImage(op.externalImageId(), op.key(),
+                                        op.descriptor(), op.dirtyRect(),
+                                        aUpdates)) {
+          return false;
+        }
+        break;
+      }
       case OpUpdateResource::TOpUpdateSharedExternalImage: {
         const auto& op = cmd.get_OpUpdateSharedExternalImage();
         if (!UpdateSharedExternalImage(op.externalImageId(), op.key(),
@@ -775,6 +784,23 @@ bool WebRenderBridgeParent::AddPrivateExternalImage(
 
   aResources.AddExternalImage(aKey, aDesc, aExtId,
                               wr::ExternalImageType::Buffer(), 0);
+
+  return true;
+}
+
+bool WebRenderBridgeParent::UpdatePrivateExternalImage(
+    wr::ExternalImageId aExtId, wr::ImageKey aKey,
+    const wr::ImageDescriptor& aDesc, const ImageIntRect& aDirtyRect,
+    wr::TransactionBuilder& aResources) {
+  Range<wr::ImageKey> keys(&aKey, 1);
+  // Check if key is obsoleted.
+  if (keys[0].mNamespace != mIdNamespace) {
+    return true;
+  }
+
+  aResources.UpdateExternalImageWithDirtyRect(
+      aKey, aDesc, aExtId, wr::ExternalImageType::Buffer(),
+      wr::ToDeviceIntRect(aDirtyRect), 0);
 
   return true;
 }

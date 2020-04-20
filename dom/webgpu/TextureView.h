@@ -10,6 +10,9 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+namespace dom {
+class HTMLCanvasElement;
+}  // namespace dom
 namespace webgpu {
 
 class Texture;
@@ -20,6 +23,7 @@ class TextureView final : public ObjectBase, public ChildOf<Texture> {
   GPU_DECL_JS_WRAP(TextureView)
 
   TextureView(Texture* const aParent, RawId aId);
+  dom::HTMLCanvasElement* GetTargetCanvasElement() const;
 
   const RawId mId;
 

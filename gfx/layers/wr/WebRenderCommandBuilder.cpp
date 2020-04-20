@@ -1500,7 +1500,8 @@ void WebRenderCommandBuilder::EmptyTransaction() {
   }
   for (auto iter = mLastLocalCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<WebRenderLocalCanvasData> canvasData = iter.Get()->GetKey();
-    canvasData->Present();
+    canvasData->RefreshExternalImage();
+    canvasData->RequestFrameReadback();
   }
 }
 
