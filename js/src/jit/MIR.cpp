@@ -5554,6 +5554,16 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
+  if (getClass() == &ArrayObject::class_) {
+    if (object()->isNewArray() || object()->isNewArrayCopyOnWrite()) {
+      return object();
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MCheckThis::foldsTo(TempAllocator& alloc) {
   MDefinition* input = thisValue();
   if (!input->isBox()) {
