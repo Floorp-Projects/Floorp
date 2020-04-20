@@ -56,7 +56,16 @@ public class VideoCaptureDeviceInfoAndroid {
           }
 
           CaptureCapabilityAndroid device = new CaptureCapabilityAndroid();
-          device.name = camera;
+
+          // The only way to plumb through whether the device is front facing
+          // or not is by the name, but the name we receive depends upon the
+          // camera API in use. For the Camera1 API, this information is
+          // already present, but that is not the case when using Camera2.
+          // Later on, we look up the camera by name, so we have to use a
+          // format this is easy to undo. Ideally, libwebrtc would expose
+          // camera facing in VideoCaptureCapability and none of this would be
+          // necessary.
+          device.name = "Facing " + (enumerator.isFrontFacing(camera) ? "front" : "back") + ":" + camera;
 
           // This isn't part of the new API, but we don't call
           // GetDeviceOrientation() anywhere, so this value is unused.
