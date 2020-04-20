@@ -251,7 +251,9 @@ function checkAudioBuffer(buffer, test) {
   is(buffer.length, test.frames, "Correct length");
 
   var wave = createWaveFileData(buffer);
-  ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
+  if (test.expectedWaveData) {
+    ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
+  }
 }
 
 function checkResampledBuffer(buffer, test, callback) {
@@ -345,6 +347,10 @@ function loadTest(test, callback) {
   xhr.open("GET", test.url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
+    if (!test.expectedUrl) {
+      runTest(test, xhr.response, callback);
+      return;
+    }
     var getExpected = new XMLHttpRequest();
     getExpected.open("GET", test.expectedUrl, true);
     getExpected.responseType = "arraybuffer";
