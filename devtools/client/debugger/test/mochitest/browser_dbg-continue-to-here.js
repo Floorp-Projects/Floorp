@@ -5,14 +5,21 @@
 async function continueToLine(dbg, line) {
   rightClickElement(dbg, "gutter", line);
   selectContextMenuItem(dbg, selectors.editorContextMenu.continueToHere);
-  await waitForDispatch(dbg, "RESUME");
-  return waitForPaused(dbg);
+  return waitForPause(dbg);
 }
 
 async function continueToColumn(dbg, pos) {
   await rightClickAtPos(dbg, pos);
-
   selectContextMenuItem(dbg, selectors.editorContextMenu.continueToHere);
+  await waitForPause(dbg);
+}
+
+async function cmdClickLine(dbg, line) {
+  await cmdClickGutter(dbg, line);
+  return waitForPause(dbg);
+}
+
+async function waitForPause(dbg) {
   await waitForDispatch(dbg, "RESUME");
   await waitForPaused(dbg);
   await waitForInlinePreviews(dbg);
@@ -26,9 +33,7 @@ add_task(async function() {
   info("Test continuing to a line");
   clickElementInTab("#sequences");
   await waitForPaused(dbg);
-  await waitForInlinePreviews(dbg);
-
-  await continueToColumn(dbg, { line: 31, ch: 7 });
+  await continueToLine(dbg, 31);
   assertDebugLine(dbg, 31, 4);
   await resume(dbg);
 
@@ -36,9 +41,15 @@ add_task(async function() {
   clickElementInTab("#sequences");
   await waitForPaused(dbg);
   await waitForInlinePreviews(dbg);
-
   await continueToColumn(dbg, { line: 31, ch: 7 });
+  assertDebugLine(dbg, 31, 4);
+  await resume(dbg);
 
+  info("Test cmd+click continueing to a line");
+  clickElementInTab("#sequences");
+  await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
+  await cmdClickLine(dbg, 31);
   assertDebugLine(dbg, 31, 4);
   await resume(dbg);
 });

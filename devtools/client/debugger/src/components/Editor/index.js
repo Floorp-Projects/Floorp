@@ -415,7 +415,7 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    const location = { line, column: undefined, sourceId };
+    const location = { line, sourceId };
 
     if (target.classList.contains("CodeMirror-linenumber")) {
       const lineText = getLineText(
@@ -482,7 +482,10 @@ class Editor extends PureComponent<Props, State> {
     }
 
     if (ev.metaKey) {
-      return continueToHere(cx, sourceLine);
+      return continueToHere(cx, {
+        line: sourceLine,
+        sourceId: selectedSource.id,
+      });
     }
 
     return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
