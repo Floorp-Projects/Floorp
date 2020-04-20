@@ -113,6 +113,8 @@ class JSHolderMap {
   using EntryMap = mozilla::HashMap<void*, Entry*, DefaultHasher<void*>,
                                     InfallibleAllocPolicy>;
 
+  bool RemoveEntry(Entry* aEntry);
+
   EntryVector mJSHolders;
   EntryMap mJSHolderMap;
 };
