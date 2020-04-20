@@ -2147,21 +2147,21 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         });
       }
       if (usernameField) {
-        // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+        // Don't modify the username field because the user wouldn't be able to change it either.
         let disabledOrReadOnly =
           usernameField.disabled || usernameField.readOnly;
 
-        let userNameDiffers = selectedLogin.username != usernameField.value;
-        // Don't replace the username if it differs only in case, and the user triggered
-        // this autocomplete. We assume that if it was user-triggered the entered text
-        // is desired.
-        let userEnteredDifferentCase =
-          userTriggered &&
-          userNameDiffers &&
-          usernameField.value.toLowerCase() ==
-            selectedLogin.username.toLowerCase();
+        if (selectedLogin.username && !disabledOrReadOnly) {
+          let userNameDiffers = selectedLogin.username != usernameField.value;
+          // Don't replace the username if it differs only in case, and the user triggered
+          // this autocomplete. We assume that if it was user-triggered the entered text
+          // is desired.
+          let userEnteredDifferentCase =
+            userTriggered &&
+            userNameDiffers &&
+            usernameField.value.toLowerCase() ==
+              selectedLogin.username.toLowerCase();
 
-        if (!disabledOrReadOnly) {
           if (!userEnteredDifferentCase && userNameDiffers) {
             usernameField.setUserInput(selectedLogin.username);
           }
