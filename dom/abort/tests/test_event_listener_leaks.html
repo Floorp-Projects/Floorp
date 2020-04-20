@@ -13,7 +13,6 @@
 <body>
 <p id="display"></p>
 <script class="testbody" type="text/javascript">
-/* import-globals-from ../../events/test/event_leak_utils.js */
 
 // Manipulate AbortSignal.  Its important here that we create a
 // listener callback from the DOM objects back to the frame's global
@@ -42,4 +41,3 @@ addEventListener("load", runTest, { once: true });
 </pre>
 </body>
 </html>
-

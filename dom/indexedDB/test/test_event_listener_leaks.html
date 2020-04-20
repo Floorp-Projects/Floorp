@@ -12,8 +12,6 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-/* global checkForEventListenerLeaks */
-
 // Manipulate IDB objects in the frame's context.
 // Its important here that we create a listener callback from
 // the DOM objects back to the frame's global in order to
@@ -61,4 +59,3 @@ addEventListener("load", runTest, { once: true });
 </pre>
 </body>
 </html>
-
