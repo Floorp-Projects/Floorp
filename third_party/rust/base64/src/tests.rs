@@ -1,13 +1,12 @@
-extern crate rand;
-
-use encode::encoded_size;
-use *;
+use crate::{decode_config, encode::encoded_size, encode_config_buf, CharacterSet, Config};
 
 use std::str;
 
-use self::rand::distributions::{Distribution, Uniform};
-use self::rand::{FromEntropy, Rng};
-use self::rand::seq::SliceRandom;
+use rand::{
+    distributions::{Distribution, Uniform},
+    seq::SliceRandom,
+    FromEntropy, Rng,
+};
 
 #[test]
 fn roundtrip_random_config_short() {
@@ -73,6 +72,7 @@ pub fn random_config<R: Rng>(rng: &mut R) -> Config {
         CharacterSet::UrlSafe,
         CharacterSet::Standard,
         CharacterSet::Crypt,
+        CharacterSet::ImapMutf7,
     ];
     let charset = *CHARSETS.choose(rng).unwrap();
 

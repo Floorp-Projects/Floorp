@@ -1,11 +1,9 @@
 #![deny(warnings)]
-extern crate pretty_env_logger;
-#[macro_use]
-extern crate warp;
 
 use warp::Filter;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     pretty_env_logger::init();
 
     // We'll start simple, and gradually show how you combine these powers
@@ -17,17 +15,18 @@ fn main() {
     // How about multiple segments? First, we could use the `path!` macro:
     //
     // GET /hello/from/warp
-    let hello_from_warp = path!("hello" / "from" / "warp").map(|| "Hello from warp!");
+    let hello_from_warp = warp::path!("hello" / "from" / "warp").map(|| "Hello from warp!");
 
     // Fine, but how do I handle parameters in paths?
     //
     // GET /sum/:u32/:u32
-    let sum = path!("sum" / u32 / u32).map(|a, b| format!("{} + {} = {}", a, b, a + b));
+    let sum = warp::path!("sum" / u32 / u32).map(|a, b| format!("{} + {} = {}", a, b, a + b));
 
     // Any type that implements FromStr can be used, and in any order:
     //
     // GET /:u16/times/:u16
-    let times = path!(u16 / "times" / u16).map(|a, b| format!("{} times {} = {}", a, b, a * b));
+    let times =
+        warp::path!(u16 / "times" / u16).map(|a, b| format!("{} times {} = {}", a, b, a * b));
 
     // Oh shoot, those math routes should be mounted at a different path,
     // is that possible? Yep.
@@ -60,6 +59,14 @@ fn main() {
     // GET /math/:u16/times/:u16
     let math = warp::path("math").and(sum.or(times));
 
+    // We can use the end() filter to match a shorter path
+    let help = warp::path("math")
+        // Careful! Omitting the following line would make this filter match
+        // requests to /math/sum/:u32/:u32 and /math/:u16/times/:u16
+        .and(warp::path::end())
+        .map(|| "This is the Math API. Try calling /math/sum/:u32/:u32 or /math/:u16/times/:u16");
+    let math = help.or(math);
+
     // Let's let people know that the `sum` and `times` routes are under `math`.
     let sum = sum.map(|output| format!("(This route has moved to /math/sum/:u16/:u16) {}", output));
     let times =
@@ -75,7 +82,11 @@ fn main() {
     // GET /math/sum/:u32/:u32
     // GET /math/:u16/times/:u16
 
-    let routes = warp::get2().and(hi.or(hello_from_warp).or(bye).or(math).or(sum).or(times));
+    let routes = warp::get().and(hi.or(hello_from_warp).or(bye).or(math).or(sum).or(times));
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030));
+    // Note that composing filters for many routes may increase compile times (because it uses a lot of generics).
+    // If you wish to use dynamic dispatch instead and speed up compile times while
+    // making it slightly slower at runtime, you can use Filter::boxed().
+
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }

@@ -1,0 +1,13 @@
+error[E0277]: the trait bound `std::marker::PhantomPinned: std::marker::Unpin` is not satisfied in `_::__Origin<'_, std::marker::PhantomPinned>`
+  --> $DIR/overlapping_unpin_struct.rs:18:5
+   |
+15 | fn is_unpin<T: Unpin>() {}
+   |    --------    ----- required by this bound in `is_unpin`
+...
+18 |     is_unpin::<Foo<PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `_::__Origin<'_, std::marker::PhantomPinned>`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |
+   = help: the following implementations were found:
+             <std::marker::PhantomPinned as std::marker::Unpin>
+   = note: required because it appears within the type `_::__Origin<'_, std::marker::PhantomPinned>`
+   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Foo<std::marker::PhantomPinned>`

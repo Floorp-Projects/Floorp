@@ -25,8 +25,13 @@ use util::HttpDate;
 ///
 /// let date = Date::from(SystemTime::now());
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Header)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Date(HttpDate);
+
+derive_header! {
+    Date(_),
+    name: DATE
+}
 
 impl From<SystemTime> for Date {
     fn from(time: SystemTime) -> Date {

@@ -70,7 +70,7 @@ pub use self::vary::Vary;
 
 #[cfg(test)]
 fn test_decode<T: ::Header>(values: &[&str]) -> Option<T> {
-    use ::HeaderMapExt;
+    use HeaderMapExt;
     let mut map = ::http::HeaderMap::new();
     for val in values {
         map.append(T::name(), val.parse().unwrap());
@@ -80,7 +80,7 @@ fn test_decode<T: ::Header>(values: &[&str]) -> Option<T> {
 
 #[cfg(test)]
 fn test_encode<T: ::Header>(header: T) -> ::http::HeaderMap {
-    use ::HeaderMapExt;
+    use HeaderMapExt;
     let mut map = ::http::HeaderMap::new();
     map.typed_insert(header);
     map
@@ -92,14 +92,14 @@ macro_rules! bench_header {
         #[cfg(feature = "nightly")]
         mod $mod {
             use super::$ty;
-            use ::HeaderMapExt;
+            use HeaderMapExt;
 
             #[bench]
             fn bench_decode(b: &mut ::test::Bencher) {
                 let mut map = ::http::HeaderMap::new();
                 map.append(
                     <$ty as ::Header>::name(),
-                    $value.parse().expect("HeaderValue::from_str($value)")
+                    $value.parse().expect("HeaderValue::from_str($value)"),
                 );
                 b.bytes = $value.len() as u64;
                 b.iter(|| {
@@ -112,7 +112,7 @@ macro_rules! bench_header {
                 let mut map = ::http::HeaderMap::new();
                 map.append(
                     <$ty as ::Header>::name(),
-                    $value.parse().expect("HeaderValue::from_str($value)")
+                    $value.parse().expect("HeaderValue::from_str($value)"),
                 );
                 let typed = map.typed_get::<$ty>().unwrap();
                 b.bytes = $value.len() as u64;
@@ -122,7 +122,7 @@ macro_rules! bench_header {
                 });
             }
         }
-    }
+    };
 }
 
 //mod accept;

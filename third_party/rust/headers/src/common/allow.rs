@@ -34,18 +34,18 @@ use util::FlatCsv;
 ///     .into_iter()
 ///     .collect::<Allow>();
 /// ```
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Allow(FlatCsv);
+
+derive_header! {
+    Allow(_),
+    name: ALLOW
+}
 
 impl Allow {
     /// Returns an iterator over `Method`s contained within.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = Method> + 'a {
-        self
-            .0
-            .iter()
-            .filter_map(|s| {
-                s.parse().ok()
-            })
+        self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
 
@@ -66,4 +66,3 @@ impl FromIterator<Method> for Allow {
         Allow(flat)
     }
 }
-

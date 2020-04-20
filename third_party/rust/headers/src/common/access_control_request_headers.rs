@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
-use {HeaderName, HeaderValue};
 use util::FlatCsv;
+use {HeaderName, HeaderValue};
 
 /// `Access-Control-Request-Headers` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-request-headers-request-header)
@@ -33,18 +33,18 @@ use util::FlatCsv;
 ///     .collect::<AccessControlRequestHeaders>();
 /// # }
 /// ```
-#[derive(Clone, Debug, Header)]
+#[derive(Clone, Debug)]
 pub struct AccessControlRequestHeaders(FlatCsv);
+
+derive_header! {
+    AccessControlRequestHeaders(_),
+    name: ACCESS_CONTROL_REQUEST_HEADERS
+}
 
 impl AccessControlRequestHeaders {
     /// Returns an iterator over `HeaderName`s contained within.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = HeaderName> + 'a {
-        self
-            .0
-            .iter()
-            .filter_map(|s| {
-                s.parse().ok()
-            })
+        self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
 
@@ -53,24 +53,19 @@ impl FromIterator<HeaderName> for AccessControlRequestHeaders {
     where
         I: IntoIterator<Item = HeaderName>,
     {
-        let flat = iter
-            .into_iter()
-            .map(HeaderValue::from)
-            .collect();
+        let flat = iter.into_iter().map(HeaderValue::from).collect();
         AccessControlRequestHeaders(flat)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{test_decode, test_encode};
+    use super::*;
 
     #[test]
     fn iter() {
-        let req_headers = test_decode::<AccessControlRequestHeaders>(
-            &["foo, bar"]
-        ).unwrap();
+        let req_headers = test_decode::<AccessControlRequestHeaders>(&["foo, bar"]).unwrap();
 
         let as_vec = req_headers.iter().collect::<Vec<_>>();
         assert_eq!(as_vec.len(), 2);
@@ -80,13 +75,15 @@ mod tests {
 
     #[test]
     fn from_iter() {
-        let req_headers: AccessControlRequestHeaders = vec![
-            ::http::header::CACHE_CONTROL,
-            ::http::header::IF_RANGE,
-        ].into_iter().collect();
+        let req_headers: AccessControlRequestHeaders =
+            vec![::http::header::CACHE_CONTROL, ::http::header::IF_RANGE]
+                .into_iter()
+                .collect();
 
         let headers = test_encode(req_headers);
-        assert_eq!(headers["access-control-request-headers"], "cache-control, if-range");
+        assert_eq!(
+            headers["access-control-request-headers"],
+            "cache-control, if-range"
+        );
     }
 }
-

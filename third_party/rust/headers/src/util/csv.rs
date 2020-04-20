@@ -9,25 +9,24 @@ where
 {
     values
         .flat_map(|value| {
-            value
-                .to_str()
-                .into_iter()
-                .flat_map(|string| {
-                    string
-                        .split(',')
-                        .filter_map(|x| match x.trim() {
-                            "" => None,
-                            y => Some(y)
-                        })
-                        .map(|x| x.parse().map_err(|_| ::Error::invalid()))
-                })
+            value.to_str().into_iter().flat_map(|string| {
+                string
+                    .split(',')
+                    .filter_map(|x| match x.trim() {
+                        "" => None,
+                        y => Some(y),
+                    })
+                    .map(|x| x.parse().map_err(|_| ::Error::invalid()))
+            })
         })
         .collect()
 }
 
-
 /// Format an array into a comma-delimited string.
-pub(crate) fn fmt_comma_delimited<T: fmt::Display>(f: &mut fmt::Formatter, mut iter: impl Iterator<Item=T>) -> fmt::Result {
+pub(crate) fn fmt_comma_delimited<T: fmt::Display>(
+    f: &mut fmt::Formatter,
+    mut iter: impl Iterator<Item = T>,
+) -> fmt::Result {
     if let Some(part) = iter.next() {
         fmt::Display::fmt(&part, f)?;
     }

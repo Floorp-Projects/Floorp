@@ -3,29 +3,33 @@
 //! # Example
 //!
 //! ```
-//! # extern crate futures;
-//! # extern crate warp;
 //!
 //! use std::time::Duration;
-//! use futures::stream::iter_ok;
+//! use std::convert::Infallible;
 //! use warp::{Filter, sse::ServerSentEvent};
+//! use futures::{stream::iter, Stream};
 //!
-//! let app = warp::path("push-notifications").and(warp::sse()).map(|sse: warp::sse::Sse| {
-//!     let events = iter_ok::<_, ::std::io::Error>(vec![
-//!         warp::sse::data("unnamed event").into_a(),
-//!         (
+//! fn sse_events() -> impl Stream<Item = Result<impl ServerSentEvent, Infallible>> {
+//!     iter(vec![
+//!         Ok(warp::sse::data("unnamed event").into_a()),
+//!         Ok((
 //!             warp::sse::event("chat"),
 //!             warp::sse::data("chat message"),
-//!         ).into_a().into_b(),
-//!         (
+//!         ).into_a().into_b()),
+//!         Ok((
 //!             warp::sse::id(13),
 //!             warp::sse::event("chat"),
 //!             warp::sse::data("other chat message\nwith next line"),
 //!             warp::sse::retry(Duration::from_millis(5000)),
-//!         ).into_b().into_b(),
-//!     ]);
-//!     sse.reply(warp::sse::keep_alive().stream(events))
-//! });
+//!         ).into_b().into_b()),
+//!     ])
+//! }
+//!
+//! let app = warp::path("push-notifications")
+//!     .and(warp::get())
+//!     .map(|| {
+//!         warp::sse::reply(warp::sse::keep_alive().stream(sse_events()))
+//!     });
 //! ```
 //!
 //! Each field already is event which can be sent to client.
@@ -38,26 +42,30 @@
 use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt::{self, Display, Formatter, Write};
+use std::future::Future;
+use std::pin::Pin;
 use std::str::FromStr;
+use std::task::{Context, Poll};
 use std::time::Duration;
 
-use futures::{Async, Future, Poll, Stream};
+use futures::{future, Stream, TryStream, TryStreamExt};
 use http::header::{HeaderValue, CACHE_CONTROL, CONTENT_TYPE};
 use hyper::Body;
+use pin_project::pin_project;
 use serde::Serialize;
 use serde_json;
-use tokio::{clock::now, timer::Delay};
+use tokio::time::{self, Delay};
 
 use self::sealed::{
     BoxedServerSentEvent, EitherServerSentEvent, SseError, SseField, SseFormat, SseWrapper,
 };
 use super::header;
-use filter::One;
-use reply::Response;
-use {Filter, Rejection, Reply};
+use crate::filter::One;
+use crate::reply::Response;
+use crate::{Filter, Rejection, Reply};
 
 /// Server-sent event message
-pub trait ServerSentEvent: SseFormat + Sized + Send + 'static {
+pub trait ServerSentEvent: SseFormat + Sized + Send + Sync + 'static {
     /// Convert to either A
     fn into_a<B>(self) -> EitherServerSentEvent<Self, B> {
         EitherServerSentEvent::A(self)
@@ -74,7 +82,7 @@ pub trait ServerSentEvent: SseFormat + Sized + Send + 'static {
     }
 }
 
-impl<T: SseFormat + Send + 'static> ServerSentEvent for T {}
+impl<T: SseFormat + Send + Sync + 'static> ServerSentEvent for T {}
 
 #[allow(missing_debug_implementations)]
 struct SseComment<T>(T);
@@ -82,7 +90,7 @@ struct SseComment<T>(T);
 /// Comment field (":<comment-text>")
 pub fn comment<T>(comment: T) -> impl ServerSentEvent
 where
-    T: Display + Send + 'static,
+    T: Display + Send + Sync + 'static,
 {
     SseComment(comment)
 }
@@ -104,7 +112,7 @@ struct SseEvent<T>(T);
 /// Event name field ("event:<event-name>")
 pub fn event<T>(event: T) -> impl ServerSentEvent
 where
-    T: Display + Send + 'static,
+    T: Display + Send + Sync + 'static,
 {
     SseEvent(event)
 }
@@ -126,7 +134,7 @@ struct SseId<T>(T);
 /// Identifier field ("id:<identifier>")
 pub fn id<T>(id: T) -> impl ServerSentEvent
 where
-    T: Display + Send + 'static,
+    T: Display + Send + Sync + 'static,
 {
     SseId(id)
 }
@@ -156,7 +164,7 @@ impl SseFormat for SseRetry {
             k.fmt(f)?;
 
             let secs = self.0.as_secs();
-            let millis = self.0.subsec_nanos() / 1_000_000;
+            let millis = self.0.subsec_millis();
 
             if secs > 0 {
                 // format seconds
@@ -188,7 +196,7 @@ struct SseData<T>(T);
 /// using sequential data fields, one per line.
 pub fn data<T>(data: T) -> impl ServerSentEvent
 where
-    T: Display + Send + 'static,
+    T: Display + Send + Sync + 'static,
 {
     SseData(data)
 }
@@ -212,7 +220,7 @@ struct SseJson<T>(T);
 /// Data field with JSON content ("data:<json-content>")
 pub fn json<T>(data: T) -> impl ServerSentEvent
 where
-    T: Serialize + Send + 'static,
+    T: Serialize + Send + Sync + 'static,
 {
     SseJson(data)
 }
@@ -223,7 +231,7 @@ impl<T: Serialize> SseFormat for SseJson<T> {
             k.fmt(f)?;
             serde_json::to_string(&self.0)
                 .map_err(|error| {
-                    error!("sse::json error {}", error);
+                    log::error!("sse::json error {}", error);
                     fmt::Error
                 })
                 .and_then(|data| data.fmt(f))?;
@@ -262,160 +270,126 @@ tuple_fmt!((A, B, C, D, E, F, G, H) => (0, 1, 2, 3, 4, 5, 6, 7));
 /// let app = warp::sse::last_event_id::<u32>();
 ///
 /// // The identifier is present
-/// assert_eq!(
-///     warp::test::request()
-///        .header("Last-Event-ID", "12")
-///        .filter(&app)
-///        .unwrap(),
-///     Some(12)
-/// );
+/// async {
+///     assert_eq!(
+///         warp::test::request()
+///            .header("Last-Event-ID", "12")
+///            .filter(&app)
+///            .await
+///            .unwrap(),
+///         Some(12)
+///     );
 ///
-/// // The identifier is missing
-/// assert_eq!(
-///     warp::test::request()
-///        .filter(&app)
-///        .unwrap(),
-///     None
-/// );
+///     // The identifier is missing
+///     assert_eq!(
+///        warp::test::request()
+///            .filter(&app)
+///            .await
+///            .unwrap(),
+///         None
+///     );
 ///
-/// // The identifier is not a valid
-/// assert!(
-///     warp::test::request()
-///        .header("Last-Event-ID", "abc")
-///        .filter(&app)
-///        .is_err(),
-/// );
+///     // The identifier is not a valid
+///     assert!(
+///        warp::test::request()
+///            .header("Last-Event-ID", "abc")
+///            .filter(&app)
+///            .await
+///            .is_err(),
+///     );
+///};
 /// ```
-pub fn last_event_id<T>() -> impl Filter<Extract = One<Option<T>>, Error = Rejection>
+pub fn last_event_id<T>() -> impl Filter<Extract = One<Option<T>>, Error = Rejection> + Copy
 where
-    T: FromStr + Send,
+    T: FromStr + Send + Sync + 'static,
 {
-    header::header("last-event-id")
-        .map(Some)
-        .or_else(|rejection: Rejection| {
-            if rejection.find_cause::<::reject::MissingHeader>().is_some() {
-                return Ok((None,));
-            }
-            Err(rejection)
-        })
+    header::optional("last-event-id")
 }
 
-/// Creates a Server-sent Events filter.
+/// Server-sent events reply
 ///
-/// The yielded `Sse` is used to reply with stream of events.
-///
-/// # Note
-///
-/// This filter combines multiple filters internally, so you don't need them:
-///
-/// - Method must be `GET`
-/// - Header `connection` must be `keep-alive` when it present.
-///
-/// If the filters are met, yields a `Sse`. Calling `Sse::reply` will return
-/// a reply with:
+/// This function converts stream of server events into a `Reply` with:
 ///
 /// - Status of `200 OK`
 /// - Header `content-type: text/event-stream`
 /// - Header `cache-control: no-cache`.
-pub fn sse() -> impl Filter<Extract = One<Sse>, Error = Rejection> + Copy {
-    ::get2()
-        .and(
-            header::exact_ignore_case("connection", "keep-alive").or_else(
-                |rejection: Rejection| {
-                    if rejection.find_cause::<::reject::MissingHeader>().is_some() {
-                        return Ok(());
-                    }
-                    Err(rejection)
-                },
-            ),
-        )
-        .map(|| Sse)
-}
-
-/// Extracted by the [`sse`](sse) filter, and used to reply with stream of events.
-pub struct Sse;
-
-impl Sse {
-    /// Server-sent events reply
-    ///
-    /// This function converts stream of server events into reply.
-    ///
-    /// ```
-    /// # extern crate futures;
-    /// # extern crate warp;
-    /// # extern crate serde;
-    /// # #[macro_use] extern crate serde_derive;
-    ///
-    /// use std::time::Duration;
-    /// use futures::stream::iter_ok;
-    /// use warp::{Filter, sse::ServerSentEvent};
-    ///
-    /// #[derive(Serialize)]
-    /// struct Msg {
-    ///     from: u32,
-    ///     text: String,
-    /// }
-    ///
-    /// let app = warp::path("sse").and(warp::sse()).map(|sse: warp::sse::Sse| {
-    ///     let events = iter_ok::<_, ::std::io::Error>(vec![
-    ///         // Unnamed event with data only
-    ///         warp::sse::data("payload").boxed(),
-    ///         // Named event with ID and retry timeout
-    ///         (
-    ///             warp::sse::data("other message\nwith next line"),
-    ///             warp::sse::event("chat"),
-    ///             warp::sse::id(1),
-    ///             warp::sse::retry(Duration::from_millis(15000))
-    ///         ).boxed(),
-    ///         // Event with JSON data
-    ///         (
-    ///             warp::sse::id(2),
-    ///             warp::sse::json(Msg {
-    ///                 from: 2,
-    ///                 text: "hello".into(),
-    ///             }),
-    ///         ).boxed(),
-    ///     ]);
-    ///     sse.reply(events)
-    /// });
-    ///
-    /// let res = warp::test::request()
-    ///     .method("GET")
-    ///     .header("Connection", "Keep-Alive")
-    ///     .path("/sse")
-    ///     .reply(&app)
-    ///     .into_body();
-    ///
-    /// assert_eq!(
-    ///     res,
-    ///     r#"data:payload
-    ///
-    /// event:chat
-    /// data:other message
-    /// data:with next line
-    /// id:1
-    /// retry:15000
-    ///
-    /// data:{"from":2,"text":"hello"}
-    /// id:2
-    ///
-    /// "#
-    /// );
-    /// ```
-    pub fn reply<S>(self, event_stream: S) -> impl Reply
-    where
-        S: Stream + Send + 'static,
-        S::Item: ServerSentEvent,
-        S::Error: StdError + Send + Sync + 'static,
-    {
-        SseReply { event_stream }
-    }
-}
-
-impl fmt::Debug for Sse {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Sse").finish()
-    }
+///
+/// # Example
+///
+/// ```
+///
+/// use std::time::Duration;
+/// use futures::Stream;
+/// use futures::stream::iter;
+/// use std::convert::Infallible;
+/// use warp::{Filter, sse::ServerSentEvent};
+/// use serde_derive::Serialize;
+///
+/// #[derive(Serialize)]
+/// struct Msg {
+///     from: u32,
+///     text: String,
+/// }
+///
+/// fn event_stream() -> impl Stream<Item = Result<impl ServerSentEvent, Infallible>> {
+///         iter(vec![
+///             // Unnamed event with data only
+///             Ok(warp::sse::data("payload").boxed()),
+///             // Named event with ID and retry timeout
+///             Ok((
+///                 warp::sse::data("other message\nwith next line"),
+///                 warp::sse::event("chat"),
+///                 warp::sse::id(1),
+///                 warp::sse::retry(Duration::from_millis(15000))
+///             ).boxed()),
+///             // Event with JSON data
+///             Ok((
+///                 warp::sse::id(2),
+///                 warp::sse::json(Msg {
+///                     from: 2,
+///                     text: "hello".into(),
+///                 }),
+///             ).boxed()),
+///         ])
+/// }
+///
+/// async {
+///     let app = warp::path("sse").and(warp::get()).map(|| {
+///        warp::sse::reply(event_stream())
+///     });
+///
+///     let res = warp::test::request()
+///         .method("GET")
+///         .header("Connection", "Keep-Alive")
+///         .path("/sse")
+///         .reply(&app)
+///         .await
+///         .into_body();
+///
+///     assert_eq!(
+///         res,
+///         r#"data:payload
+///
+/// event:chat
+/// data:other message
+/// data:with next line
+/// id:1
+/// retry:15000
+///
+/// data:{"from":2,"text":"hello"}
+/// id:2
+///
+/// "#
+///     );
+/// };
+/// ```
+pub fn reply<S>(event_stream: S) -> impl Reply
+where
+    S: TryStream + Send + Sync + 'static,
+    S::Ok: ServerSentEvent,
+    S::Error: StdError + Send + Sync + 'static,
+{
+    SseReply { event_stream }
 }
 
 #[allow(missing_debug_implementations)]
@@ -425,8 +399,8 @@ struct SseReply<S> {
 
 impl<S> Reply for SseReply<S>
 where
-    S: Stream + Send + 'static,
-    S::Item: ServerSentEvent,
+    S: TryStream + Send + Sync + 'static,
+    S::Ok: ServerSentEvent,
     S::Error: StdError + Send + Sync + 'static,
 {
     #[inline]
@@ -435,10 +409,11 @@ where
             .event_stream
             .map_err(|error| {
                 // FIXME: error logging
-                error!("sse stream error: {}", error);
+                log::error!("sse stream error: {}", error);
                 SseError
             })
-            .and_then(|event| SseWrapper::format(&event));
+            .into_stream()
+            .and_then(|event| future::ready(SseWrapper::format(&event)));
 
         let mut res = Response::new(Body::wrap_stream(body_stream));
         // Set appropriate content type
@@ -478,21 +453,21 @@ impl KeepAlive {
 
     /// Wrap an event stream with keep-alive functionality.
     ///
-    /// See [`keep_alive`](super::keep_alive) for more.
+    /// See [`keep_alive`](keep_alive) for more.
     pub fn stream<S>(
         self,
         event_stream: S,
-    ) -> impl Stream<
-        Item = impl ServerSentEvent + Send + 'static,
+    ) -> impl TryStream<
+        Ok = impl ServerSentEvent + Send + 'static,
         Error = impl StdError + Send + Sync + 'static,
     > + Send
-                 + 'static
+           + 'static
     where
-        S: Stream + Send + 'static,
-        S::Item: ServerSentEvent + Send,
+        S: TryStream + Send + 'static,
+        S::Ok: ServerSentEvent + Send,
         S::Error: StdError + Send + Sync + 'static,
     {
-        let alive_timer = Delay::new(now() + self.max_interval);
+        let alive_timer = time::delay_for(self.max_interval);
         SseKeepAlive {
             event_stream,
             comment_text: self.comment_text,
@@ -503,7 +478,9 @@ impl KeepAlive {
 }
 
 #[allow(missing_debug_implementations)]
+#[pin_project]
 struct SseKeepAlive<S> {
+    #[pin]
     event_stream: S,
     comment_text: Cow<'static, str>,
     max_interval: Duration,
@@ -515,20 +492,20 @@ struct SseKeepAlive<S> {
 pub fn keep<S>(
     event_stream: S,
     keep_interval: impl Into<Option<Duration>>,
-) -> impl Stream<
-    Item = impl ServerSentEvent + Send + 'static,
+) -> impl TryStream<
+    Ok = impl ServerSentEvent + Send + 'static,
     Error = impl StdError + Send + Sync + 'static,
 > + Send
-         + 'static
+       + 'static
 where
-    S: Stream + Send + 'static,
-    S::Item: ServerSentEvent + Send,
+    S: TryStream + Send + 'static,
+    S::Ok: ServerSentEvent + Send,
     S::Error: StdError + Send + Sync + 'static,
 {
     let max_interval = keep_interval
         .into()
         .unwrap_or_else(|| Duration::from_secs(15));
-    let alive_timer = Delay::new(now() + max_interval);
+    let alive_timer = time::delay_for(max_interval);
     SseKeepAlive {
         event_stream,
         comment_text: Cow::Borrowed(""),
@@ -548,29 +525,32 @@ where
 /// as shown below.
 ///
 /// ```
-/// extern crate pretty_env_logger;
-/// extern crate tokio;
-/// extern crate warp;
 /// use std::time::Duration;
-/// use tokio::{clock::now, timer::Interval};
-/// use warp::{Filter, Stream};
+/// use std::convert::Infallible;
+/// use futures::StreamExt;
+/// use tokio::time::interval;
+/// use warp::{Filter, Stream, sse::ServerSentEvent};
+///
+/// // create server-sent event
+/// fn sse_counter(counter: u64) ->  Result<impl ServerSentEvent, Infallible> {
+///     Ok(warp::sse::data(counter))
+/// }
 ///
 /// fn main() {
 ///     let routes = warp::path("ticks")
-///         .and(warp::sse())
-///         .map(|sse: warp::sse::Sse| {
+///         .and(warp::get())
+///         .map(|| {
 ///             let mut counter: u64 = 0;
-///             let event_stream = Interval::new(now(), Duration::from_secs(15)).map(move |_| {
+///             let event_stream = interval(Duration::from_secs(15)).map(move |_| {
 ///                 counter += 1;
-///                 // create server-sent event
-///                 warp::sse::data(counter)
+///                 sse_counter(counter)
 ///             });
 ///             // reply using server-sent events
 ///             let stream = warp::sse::keep_alive()
 ///                 .interval(Duration::from_secs(5))
 ///                 .text("thump".to_string())
 ///                 .stream(event_stream);
-///             sse.reply(stream)
+///             warp::sse::reply(stream)
 ///         });
 /// }
 /// ```
@@ -585,39 +565,35 @@ pub fn keep_alive() -> KeepAlive {
 
 impl<S> Stream for SseKeepAlive<S>
 where
-    S: Stream + Send + 'static,
-    S::Item: ServerSentEvent,
+    S: TryStream + Send + 'static,
+    S::Ok: ServerSentEvent,
     S::Error: StdError + Send + Sync + 'static,
 {
-    type Item = EitherServerSentEvent<S::Item, SseComment<Cow<'static, str>>>;
-    type Error = SseError;
+    type Item = Result<EitherServerSentEvent<S::Ok, SseComment<Cow<'static, str>>>, SseError>;
 
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        match self.event_stream.poll() {
-            Ok(Async::NotReady) => match self.alive_timer.poll() {
-                Ok(Async::NotReady) => Ok(Async::NotReady),
-                Ok(Async::Ready(_)) => {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        let mut pin = self.project();
+        match pin.event_stream.try_poll_next(cx) {
+            Poll::Pending => match Pin::new(&mut pin.alive_timer).poll(cx) {
+                Poll::Pending => Poll::Pending,
+                Poll::Ready(_) => {
                     // restart timer
-                    self.alive_timer.reset(now() + self.max_interval);
-                    let comment_str = self.comment_text.clone();
-                    Ok(Async::Ready(Some(EitherServerSentEvent::B(SseComment(
-                        comment_str,
-                    )))))
-                }
-                Err(error) => {
-                    error!("sse::keep error: {}", error);
-                    Err(SseError)
+                    pin.alive_timer
+                        .reset(tokio::time::Instant::now() + *pin.max_interval);
+                    let comment_str = pin.comment_text.clone();
+                    Poll::Ready(Some(Ok(EitherServerSentEvent::B(SseComment(comment_str)))))
                 }
             },
-            Ok(Async::Ready(Some(event))) => {
+            Poll::Ready(Some(Ok(event))) => {
                 // restart timer
-                self.alive_timer.reset(now() + self.max_interval);
-                Ok(Async::Ready(Some(EitherServerSentEvent::A(event))))
+                pin.alive_timer
+                    .reset(tokio::time::Instant::now() + *pin.max_interval);
+                Poll::Ready(Some(Ok(EitherServerSentEvent::A(event))))
             }
-            Ok(Async::Ready(None)) => Ok(Async::Ready(None)),
-            Err(error) => {
-                error!("sse::keep error: {}", error);
-                Err(SseError)
+            Poll::Ready(None) => Poll::Ready(None),
+            Poll::Ready(Some(Err(error))) => {
+                log::error!("sse::keep error: {}", error);
+                Poll::Ready(Some(Err(SseError)))
             }
         }
     }
@@ -636,11 +612,7 @@ mod sealed {
         }
     }
 
-    impl StdError for SseError {
-        fn description(&self) -> &str {
-            "sse error"
-        }
-    }
+    impl StdError for SseError {}
 
     impl Display for SseField {
         fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -714,7 +686,7 @@ mod sealed {
     }
 
     #[allow(missing_debug_implementations)]
-    pub struct BoxedServerSentEvent(pub(super) Box<dyn SseFormat + Send>);
+    pub struct BoxedServerSentEvent(pub(super) Box<dyn SseFormat + Send + Sync>);
 
     impl SseFormat for BoxedServerSentEvent {
         fn fmt_field(&self, f: &mut Formatter, k: &SseField) -> fmt::Result {

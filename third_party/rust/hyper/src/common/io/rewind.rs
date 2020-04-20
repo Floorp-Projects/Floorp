@@ -1,9 +1,10 @@
-use std::cmp;
-use std::io::{self, Read, Write};
+use std::marker::Unpin;
+use std::{cmp, io};
 
-use bytes::{Buf, BufMut, Bytes, IntoBuf};
-use futures::{Async, Poll};
-use tokio_io::{AsyncRead, AsyncWrite};
+use bytes::{Buf, Bytes};
+use tokio::io::{AsyncRead, AsyncWrite};
+
+use crate::common::{task, Pin, Poll};
 
 /// Combine a buffer with an IO, rewinding reads to use the buffer.
 #[derive(Debug)]
@@ -35,188 +36,118 @@ impl<T> Rewind<T> {
     pub(crate) fn into_inner(self) -> (T, Bytes) {
         (self.inner, self.pre.unwrap_or_else(Bytes::new))
     }
-}
 
-impl<T> Read for Rewind<T>
-where
-    T: Read,
-{
-    #[inline]
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if let Some(pre_bs) = self.pre.take() {
-            // If there are no remaining bytes, let the bytes get dropped.
-            if pre_bs.len() > 0 {
-                let mut pre_reader = pre_bs.into_buf().reader();
-                let read_cnt = pre_reader.read(buf)?;
-
-                let mut new_pre = pre_reader.into_inner().into_inner();
-                new_pre.advance(read_cnt);
-
-                // Put back whats left
-                if new_pre.len() > 0 {
-                    self.pre = Some(new_pre);
-                }
-
-                return Ok(read_cnt);
-            }
-        }
-        self.inner.read(buf)
-    }
-}
-
-impl<T> Write for Rewind<T>
-where
-    T: Write,
-{
-    #[inline]
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.inner.write(buf)
-    }
-
-    #[inline]
-    fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
+    pub(crate) fn get_mut(&mut self) -> &mut T {
+        &mut self.inner
     }
 }
 
 impl<T> AsyncRead for Rewind<T>
 where
-    T: AsyncRead,
+    T: AsyncRead + Unpin,
 {
     #[inline]
-    unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [u8]) -> bool {
+    unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [std::mem::MaybeUninit<u8>]) -> bool {
         self.inner.prepare_uninitialized_buffer(buf)
     }
 
-    #[inline]
-    fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
-        if let Some(bs) = self.pre.take() {
-            let pre_len = bs.len();
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
+        if let Some(mut prefix) = self.pre.take() {
             // If there are no remaining bytes, let the bytes get dropped.
-            if pre_len > 0 {
-                let cnt = cmp::min(buf.remaining_mut(), pre_len);
-                let pre_buf = bs.into_buf();
-                let mut xfer = Buf::take(pre_buf, cnt);
-                buf.put(&mut xfer);
-
-                let mut new_pre = xfer.into_inner().into_inner();
-                new_pre.advance(cnt);
-
+            if !prefix.is_empty() {
+                let copy_len = cmp::min(prefix.len(), buf.len());
+                prefix.copy_to_slice(&mut buf[..copy_len]);
                 // Put back whats left
-                if new_pre.len() > 0 {
-                    self.pre = Some(new_pre);
+                if !prefix.is_empty() {
+                    self.pre = Some(prefix);
                 }
 
-                return Ok(Async::Ready(cnt));
+                return Poll::Ready(Ok(copy_len));
             }
         }
-        self.inner.read_buf(buf)
+        Pin::new(&mut self.inner).poll_read(cx, buf)
     }
 }
 
 impl<T> AsyncWrite for Rewind<T>
 where
-    T: AsyncWrite,
+    T: AsyncWrite + Unpin,
 {
-    #[inline]
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        AsyncWrite::shutdown(&mut self.inner)
+    fn poll_write(
+        mut self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut self.inner).poll_write(cx, buf)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+        Pin::new(&mut self.inner).poll_flush(cx)
+    }
+
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+        Pin::new(&mut self.inner).poll_shutdown(cx)
     }
 
     #[inline]
-    fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
-        self.inner.write_buf(buf)
+    fn poll_write_buf<B: Buf>(
+        mut self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        buf: &mut B,
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut self.inner).poll_write_buf(cx, buf)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    extern crate tokio_mockstream;
-    use self::tokio_mockstream::MockStream;
-    use std::io::Cursor;
+    // FIXME: re-implement tests with `async/await`, this import should
+    // trigger a warning to remind us
+    use super::Rewind;
+    use bytes::Bytes;
+    use tokio::io::AsyncReadExt;
 
-    // Test a partial rewind
-    #[test]
-    fn async_partial_rewind() {
-        let bs = &mut [104, 101, 108, 108, 111];
-        let o1 = &mut [0, 0];
-        let o2 = &mut [0, 0, 0, 0, 0];
+    #[tokio::test]
+    async fn partial_rewind() {
+        let underlying = [104, 101, 108, 108, 111];
 
-        let mut stream = Rewind::new(MockStream::new(bs));
-        let mut o1_cursor = Cursor::new(o1);
+        let mock = tokio_test::io::Builder::new().read(&underlying).build();
+
+        let mut stream = Rewind::new(mock);
+
         // Read off some bytes, ensure we filled o1
-        match stream.read_buf(&mut o1_cursor).unwrap() {
-            Async::NotReady => panic!("should be ready"),
-            Async::Ready(cnt) => assert_eq!(2, cnt),
-        }
+        let mut buf = [0; 2];
+        stream.read_exact(&mut buf).await.expect("read1");
 
         // Rewind the stream so that it is as if we never read in the first place.
-        let read_buf = Bytes::from(&o1_cursor.into_inner()[..]);
-        stream.rewind(read_buf);
+        stream.rewind(Bytes::copy_from_slice(&buf[..]));
 
-        // We poll 2x here since the first time we'll only get what is in the
-        // prefix (the rewinded part) of the Rewind.\
-        let mut o2_cursor = Cursor::new(o2);
-        stream.read_buf(&mut o2_cursor).unwrap();
-        stream.read_buf(&mut o2_cursor).unwrap();
-        let o2_final = o2_cursor.into_inner();
+        let mut buf = [0; 5];
+        stream.read_exact(&mut buf).await.expect("read1");
 
         // At this point we should have read everything that was in the MockStream
-        assert_eq!(&o2_final, &bs);
+        assert_eq!(&buf, &underlying);
     }
-    // Test a full rewind
-    #[test]
-    fn async_full_rewind() {
-        let bs = &mut [104, 101, 108, 108, 111];
-        let o1 = &mut [0, 0, 0, 0, 0];
-        let o2 = &mut [0, 0, 0, 0, 0];
 
-        let mut stream = Rewind::new(MockStream::new(bs));
-        let mut o1_cursor = Cursor::new(o1);
-        match stream.read_buf(&mut o1_cursor).unwrap() {
-            Async::NotReady => panic!("should be ready"),
-            Async::Ready(cnt) => assert_eq!(5, cnt),
-        }
+    #[tokio::test]
+    async fn full_rewind() {
+        let underlying = [104, 101, 108, 108, 111];
 
-        let read_buf = Bytes::from(&o1_cursor.into_inner()[..]);
-        stream.rewind(read_buf);
+        let mock = tokio_test::io::Builder::new().read(&underlying).build();
 
-        let mut o2_cursor = Cursor::new(o2);
-        stream.read_buf(&mut o2_cursor).unwrap();
-        stream.read_buf(&mut o2_cursor).unwrap();
-        let o2_final = o2_cursor.into_inner();
+        let mut stream = Rewind::new(mock);
 
-        assert_eq!(&o2_final, &bs);
-    }
-    #[test]
-    fn partial_rewind() {
-        let bs = &mut [104, 101, 108, 108, 111];
-        let o1 = &mut [0, 0];
-        let o2 = &mut [0, 0, 0, 0, 0];
+        let mut buf = [0; 5];
+        stream.read_exact(&mut buf).await.expect("read1");
 
-        let mut stream = Rewind::new(MockStream::new(bs));
-        stream.read(o1).unwrap();
+        // Rewind the stream so that it is as if we never read in the first place.
+        stream.rewind(Bytes::copy_from_slice(&buf[..]));
 
-        let read_buf = Bytes::from(&o1[..]);
-        stream.rewind(read_buf);
-        let cnt = stream.read(o2).unwrap();
-        stream.read(&mut o2[cnt..]).unwrap();
-        assert_eq!(&o2, &bs);
-    }
-    #[test]
-    fn full_rewind() {
-        let bs = &mut [104, 101, 108, 108, 111];
-        let o1 = &mut [0, 0, 0, 0, 0];
-        let o2 = &mut [0, 0, 0, 0, 0];
-
-        let mut stream = Rewind::new(MockStream::new(bs));
-        stream.read(o1).unwrap();
-
-        let read_buf = Bytes::from(&o1[..]);
-        stream.rewind(read_buf);
-        let cnt = stream.read(o2).unwrap();
-        stream.read(&mut o2[cnt..]).unwrap();
-        assert_eq!(&o2, &bs);
+        let mut buf = [0; 5];
+        stream.read_exact(&mut buf).await.expect("read1");
     }
 }

@@ -1,10 +1,11 @@
 use std::fmt;
+use std::convert::TryFrom;
 
 use bytes::Bytes;
 use http::uri::{self, Authority, Scheme, Uri};
 
 use util::{IterExt, TryFromValues};
-use ::{HeaderValue};
+use HeaderValue;
 
 /// The `Origin` header.
 ///
@@ -24,8 +25,13 @@ use ::{HeaderValue};
 ///
 /// let origin = Origin::NULL;
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Header)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Origin(OriginOrNull);
+
+derive_header! {
+    Origin(_),
+    name: ORIGIN
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum OriginOrNull {
@@ -68,14 +74,17 @@ impl Origin {
     #[inline]
     pub fn port(&self) -> Option<u16> {
         match self.0 {
-            OriginOrNull::Origin(_, ref auth) => auth.port_part().map(|p| p.as_u16()),
+            OriginOrNull::Origin(_, ref auth) => auth.port_u16(),
             OriginOrNull::Null => None,
         }
     }
 
     /// Tries to build a `Origin` from three parts, the scheme, the host and an optional port.
-    pub fn try_from_parts(scheme: &str, host: &str, port: impl Into<Option<u16>>) -> Result<Self, InvalidOrigin> {
-
+    pub fn try_from_parts(
+        scheme: &str,
+        host: &str,
+        port: impl Into<Option<u16>>,
+    ) -> Result<Self, InvalidOrigin> {
         struct MaybePort(Option<u16>);
 
         impl fmt::Display for MaybePort {
@@ -89,7 +98,7 @@ impl Origin {
         }
 
         let bytes = Bytes::from(format!("{}://{}{}", scheme, host, MaybePort(port.into())));
-        HeaderValue::from_shared(bytes)
+        HeaderValue::from_maybe_shared(bytes)
             .ok()
             .and_then(|val| Self::try_from_value(&val))
             .ok_or_else(|| InvalidOrigin { _inner: () })
@@ -97,8 +106,7 @@ impl Origin {
 
     // Used in AccessControlAllowOrigin
     pub(super) fn try_from_value(value: &HeaderValue) -> Option<Self> {
-        OriginOrNull::try_from_value(value)
-            .map(Origin)
+        OriginOrNull::try_from_value(value).map(Origin)
     }
 
     pub(super) fn into_value(&self) -> HeaderValue {
@@ -109,9 +117,7 @@ impl Origin {
 impl fmt::Display for Origin {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.0 {
-            OriginOrNull::Origin(ref scheme, ref auth) => {
-                write!(f, "{}://{}", scheme, auth)
-            },
+            OriginOrNull::Origin(ref scheme, ref auth) => write!(f, "{}://{}", scheme, auth),
             OriginOrNull::Null => f.write_str("null"),
         }
     }
@@ -125,9 +131,7 @@ impl OriginOrNull {
             return Some(OriginOrNull::Null);
         }
 
-        let bytes = Bytes::from(value.clone());
-
-        let uri = Uri::from_shared(bytes).ok()?;
+        let uri = Uri::try_from(value.as_bytes()).ok()?;
 
         let (scheme, auth) = match uri.into_parts() {
             uri::Parts {
@@ -169,9 +173,9 @@ impl<'a> From<&'a OriginOrNull> for HeaderValue {
             OriginOrNull::Origin(ref scheme, ref auth) => {
                 let s = format!("{}://{}", scheme, auth);
                 let bytes = Bytes::from(s);
-                HeaderValue::from_shared(bytes)
+                HeaderValue::from_maybe_shared(bytes)
                     .expect("Scheme and Authority are valid header values")
-            },
+            }
             // Serialized as "null" per ASCII serialization of an origin
             // https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin
             OriginOrNull::Null => HeaderValue::from_static("null"),
@@ -179,12 +183,10 @@ impl<'a> From<&'a OriginOrNull> for HeaderValue {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{test_decode, test_encode};
-
+    use super::*;
 
     #[test]
     fn origin() {
@@ -200,13 +202,9 @@ mod tests {
 
     #[test]
     fn null() {
-        assert_eq!(
-            test_decode::<Origin>(&["null"]),
-            Some(Origin::NULL),
-        );
+        assert_eq!(test_decode::<Origin>(&["null"]), Some(Origin::NULL),);
 
         let headers = test_encode(Origin::NULL);
         assert_eq!(headers["origin"], "null");
     }
 }
-

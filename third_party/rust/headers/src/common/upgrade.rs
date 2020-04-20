@@ -1,4 +1,4 @@
-use ::HeaderValue;
+use HeaderValue;
 
 /// `Upgrade` header, defined in [RFC7230](http://tools.ietf.org/html/rfc7230#section-6.7)
 ///
@@ -39,8 +39,13 @@ use ::HeaderValue;
 ///
 /// let ws = Upgrade::websocket();
 /// ```
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Upgrade(HeaderValue);
+
+derive_header! {
+    Upgrade(_),
+    name: UPGRADE
+}
 
 impl Upgrade {
     /// Constructs an `Upgrade: websocket` header.

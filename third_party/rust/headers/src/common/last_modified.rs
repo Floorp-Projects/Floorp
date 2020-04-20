@@ -30,8 +30,13 @@ use util::HttpDate;
 ///     SystemTime::now() - Duration::from_secs(60 * 60 * 24)
 /// );
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Header)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LastModified(pub(super) HttpDate);
+
+derive_header! {
+    LastModified(_),
+    name: LAST_MODIFIED
+}
 
 impl From<SystemTime> for LastModified {
     fn from(time: SystemTime) -> LastModified {

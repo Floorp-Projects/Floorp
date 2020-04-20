@@ -1,14 +1,10 @@
-use runtime::{Inner, Runtime};
+use crate::runtime::handle::Handle;
+use crate::runtime::shell::Shell;
+use crate::runtime::{blocking, io, time, Callback, Runtime, Spawner};
 
-use reactor::Reactor;
-
-use std::io;
-
-use tokio_reactor;
-use tokio_threadpool::Builder as ThreadPoolBuilder;
-use tokio_threadpool::park::DefaultPark;
-use tokio_timer::clock::{self, Clock};
-use tokio_timer::timer::{self, Timer};
+use std::fmt;
+#[cfg(not(loom))]
+use std::sync::Arc;
 
 /// Builds Tokio Runtime with custom configuration values.
 ///
@@ -26,32 +22,59 @@ use tokio_timer::timer::{self, Timer};
 /// # Examples
 ///
 /// ```
-/// # extern crate tokio;
-/// # extern crate tokio_threadpool;
-/// # use tokio::runtime::Builder;
+/// use tokio::runtime::Builder;
 ///
-/// # pub fn main() {
-/// // create and configure ThreadPool
-/// let mut threadpool_builder = tokio_threadpool::Builder::new();
-/// threadpool_builder
-///     .name_prefix("my-runtime-worker-")
-///     .pool_size(4);
+/// fn main() {
+///     // build runtime
+///     let runtime = Builder::new()
+///         .threaded_scheduler()
+///         .core_threads(4)
+///         .thread_name("my-custom-name")
+///         .thread_stack_size(3 * 1024 * 1024)
+///         .build()
+///         .unwrap();
 ///
-/// // build Runtime
-/// let runtime = Builder::new()
-///     .threadpool_builder(threadpool_builder)
-///     .build();
-/// // ... call runtime.run(...)
-/// # let _ = runtime;
-/// # }
+///     // use runtime ...
+/// }
 /// ```
-#[derive(Debug)]
 pub struct Builder {
-    /// Thread pool specific builder
-    threadpool_builder: ThreadPoolBuilder,
+    /// The task execution model to use.
+    kind: Kind,
 
-    /// The clock to use
-    clock: Clock,
+    /// Whether or not to enable the I/O driver
+    enable_io: bool,
+
+    /// Whether or not to enable the time driver
+    enable_time: bool,
+
+    /// The number of worker threads, used by Runtime.
+    ///
+    /// Only used when not using the current-thread executor.
+    core_threads: Option<usize>,
+
+    /// Cap on thread usage.
+    max_threads: usize,
+
+    /// Name used for threads spawned by the runtime.
+    pub(super) thread_name: String,
+
+    /// Stack size used for threads spawned by the runtime.
+    pub(super) thread_stack_size: Option<usize>,
+
+    /// Callback to run after each thread starts.
+    pub(super) after_start: Option<Callback>,
+
+    /// To run before each worker thread stops
+    pub(super) before_stop: Option<Callback>,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Kind {
+    Shell,
+    #[cfg(feature = "rt-core")]
+    Basic,
+    #[cfg(feature = "rt-threaded")]
+    ThreadPool,
 }
 
 impl Builder {
@@ -60,115 +83,138 @@ impl Builder {
     ///
     /// Configuration methods can be chained on the return value.
     pub fn new() -> Builder {
-        let mut threadpool_builder = ThreadPoolBuilder::new();
-        threadpool_builder.name_prefix("tokio-runtime-worker-");
-
         Builder {
-            threadpool_builder,
-            clock: Clock::new(),
+            // No task execution by default
+            kind: Kind::Shell,
+
+            // I/O defaults to "off"
+            enable_io: false,
+
+            // Time defaults to "off"
+            enable_time: false,
+
+            // Default to lazy auto-detection (one thread per CPU core)
+            core_threads: None,
+
+            max_threads: 512,
+
+            // Default thread name
+            thread_name: "tokio-runtime-worker".into(),
+
+            // Do not set a stack size by default
+            thread_stack_size: None,
+
+            // No worker thread callbacks
+            after_start: None,
+            before_stop: None,
         }
     }
 
-    /// Set the `Clock` instance that will be used by the runtime.
-    pub fn clock(&mut self, clock: Clock) -> &mut Self {
-        self.clock = clock;
+    /// Enables both I/O and time drivers.
+    ///
+    /// Doing this is a shorthand for calling `enable_io` and `enable_time`
+    /// individually. If additional components are added to Tokio in the future,
+    /// `enable_all` will include these future components.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::runtime;
+    ///
+    /// let rt = runtime::Builder::new()
+    ///     .threaded_scheduler()
+    ///     .enable_all()
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    pub fn enable_all(&mut self) -> &mut Self {
+        #[cfg(feature = "io-driver")]
+        self.enable_io();
+        #[cfg(feature = "time")]
+        self.enable_time();
+
         self
     }
 
-    /// Set builder to set up the thread pool instance.
-    #[deprecated(
-        since="0.1.9",
-        note="use the `core_threads`, `blocking_threads`, `name_prefix`, \
-              and `stack_size` functions on `runtime::Builder`, instead")]
-    #[doc(hidden)]
-    pub fn threadpool_builder(&mut self, val: ThreadPoolBuilder) -> &mut Self {
-        self.threadpool_builder = val;
-        self
-    }
-
-    /// Set the maximum number of worker threads for the `Runtime`'s thread pool.
+    #[deprecated(note = "In future will be replaced by core_threads method")]
+    /// Sets the maximum number of worker threads for the `Runtime`'s thread pool.
     ///
     /// This must be a number between 1 and 32,768 though it is advised to keep
     /// this value on the smaller side.
     ///
     /// The default value is the number of cores available to the system.
+    pub fn num_threads(&mut self, val: usize) -> &mut Self {
+        self.core_threads = Some(val);
+        self
+    }
+
+    /// Sets the core number of worker threads for the `Runtime`'s thread pool.
+    ///
+    /// This should be a number between 1 and 32,768 though it is advised to keep
+    /// this value on the smaller side.
+    ///
+    /// The default value is the number of cores available to the system.
+    ///
+    /// These threads will be always active and running.
     ///
     /// # Examples
     ///
     /// ```
-    /// # extern crate tokio;
-    /// # extern crate futures;
-    /// # use tokio::runtime;
+    /// use tokio::runtime;
     ///
-    /// # pub fn main() {
-    /// let mut rt = runtime::Builder::new()
+    /// let rt = runtime::Builder::new()
+    ///     .threaded_scheduler()
     ///     .core_threads(4)
     ///     .build()
     ///     .unwrap();
-    /// # }
     /// ```
     pub fn core_threads(&mut self, val: usize) -> &mut Self {
-        self.threadpool_builder.pool_size(val);
+        assert_ne!(val, 0, "Core threads cannot be zero");
+        self.core_threads = Some(val);
         self
     }
 
-    /// Set the maximum number of concurrent blocking sections in the `Runtime`'s
-    /// thread pool.
+    /// Specifies limit for threads, spawned by the Runtime.
     ///
-    /// When the maximum concurrent `blocking` calls is reached, any further
-    /// calls to `blocking` will return `NotReady` and the task is notified once
-    /// previously in-flight calls to `blocking` return.
+    /// This is number of threads to be used by Runtime, including `core_threads`
+    /// Having `max_threads` less than `core_threads` results in invalid configuration
+    /// when building multi-threaded `Runtime`, which would cause a panic.
     ///
-    /// This must be a number between 1 and 32,768 though it is advised to keep
-    /// this value on the smaller side.
+    /// Similarly to the `core_threads`, this number should be between 1 and 32,768.
     ///
-    /// The default value is 100.
+    /// The default value is 512.
+    ///
+    /// When multi-threaded runtime is not used, will act as limit on additional threads.
+    ///
+    /// Otherwise as `core_threads` are always active, it limits additional threads (e.g. for
+    /// blocking annotations) as `max_threads - core_threads`.
+    pub fn max_threads(&mut self, val: usize) -> &mut Self {
+        assert_ne!(val, 0, "Thread limit cannot be zero");
+        self.max_threads = val;
+        self
+    }
+
+    /// Sets name of threads spawned by the `Runtime`'s thread pool.
+    ///
+    /// The default name is "tokio-runtime-worker".
     ///
     /// # Examples
     ///
     /// ```
-    /// # extern crate tokio;
-    /// # extern crate futures;
     /// # use tokio::runtime;
     ///
     /// # pub fn main() {
-    /// let mut rt = runtime::Builder::new()
-    ///     .blocking_threads(200)
+    /// let rt = runtime::Builder::new()
+    ///     .thread_name("my-pool")
     ///     .build();
     /// # }
     /// ```
-    pub fn blocking_threads(&mut self, val: usize) -> &mut Self {
-        self.threadpool_builder.max_blocking(val);
+    pub fn thread_name(&mut self, val: impl Into<String>) -> &mut Self {
+        self.thread_name = val.into();
         self
     }
 
-    /// Set name prefix of threads spawned by the `Runtime`'s thread pool.
-    ///
-    /// Thread name prefix is used for generating thread names. For example, if
-    /// prefix is `my-pool-`, then threads in the pool will get names like
-    /// `my-pool-1` etc.
-    ///
-    /// The default prefix is "tokio-runtime-worker-".
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tokio;
-    /// # extern crate futures;
-    /// # use tokio::runtime;
-    ///
-    /// # pub fn main() {
-    /// let mut rt = runtime::Builder::new()
-    ///     .name_prefix("my-pool-")
-    ///     .build();
-    /// # }
-    /// ```
-    pub fn name_prefix<S: Into<String>>(&mut self, val: S) -> &mut Self {
-        self.threadpool_builder.name_prefix(val);
-        self
-    }
-
-    /// Set the stack size (in bytes) for worker threads.
+    /// Sets the stack size (in bytes) for worker threads.
     ///
     /// The actual stack size may be greater than this value if the platform
     /// specifies minimal stack size.
@@ -179,83 +225,295 @@ impl Builder {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tokio;
-    /// # extern crate futures;
     /// # use tokio::runtime;
     ///
     /// # pub fn main() {
-    /// let mut rt = runtime::Builder::new()
-    ///     .stack_size(32 * 1024)
+    /// let rt = runtime::Builder::new()
+    ///     .threaded_scheduler()
+    ///     .thread_stack_size(32 * 1024)
     ///     .build();
     /// # }
     /// ```
-    pub fn stack_size(&mut self, val: usize) -> &mut Self {
-        self.threadpool_builder.stack_size(val);
+    pub fn thread_stack_size(&mut self, val: usize) -> &mut Self {
+        self.thread_stack_size = Some(val);
         self
     }
 
-    /// Create the configured `Runtime`.
+    /// Executes function `f` after each thread is started but before it starts
+    /// doing work.
+    ///
+    /// This is intended for bookkeeping and monitoring use cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tokio::runtime;
+    ///
+    /// # pub fn main() {
+    /// let runtime = runtime::Builder::new()
+    ///     .threaded_scheduler()
+    ///     .on_thread_start(|| {
+    ///         println!("thread started");
+    ///     })
+    ///     .build();
+    /// # }
+    /// ```
+    #[cfg(not(loom))]
+    pub fn on_thread_start<F>(&mut self, f: F) -> &mut Self
+    where
+        F: Fn() + Send + Sync + 'static,
+    {
+        self.after_start = Some(Arc::new(f));
+        self
+    }
+
+    /// Executes function `f` before each thread stops.
+    ///
+    /// This is intended for bookkeeping and monitoring use cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tokio::runtime;
+    ///
+    /// # pub fn main() {
+    /// let runtime = runtime::Builder::new()
+    ///     .threaded_scheduler()
+    ///     .on_thread_stop(|| {
+    ///         println!("thread stopping");
+    ///     })
+    ///     .build();
+    /// # }
+    /// ```
+    #[cfg(not(loom))]
+    pub fn on_thread_stop<F>(&mut self, f: F) -> &mut Self
+    where
+        F: Fn() + Send + Sync + 'static,
+    {
+        self.before_stop = Some(Arc::new(f));
+        self
+    }
+
+    /// Creates the configured `Runtime`.
     ///
     /// The returned `ThreadPool` instance is ready to spawn tasks.
     ///
     /// # Examples
     ///
     /// ```
-    /// # extern crate tokio;
-    /// # use tokio::runtime::Builder;
-    /// # pub fn main() {
-    /// let runtime = Builder::new().build().unwrap();
-    /// // ... call runtime.run(...)
-    /// # let _ = runtime;
-    /// # }
+    /// use tokio::runtime::Builder;
+    ///
+    /// let mut rt = Builder::new().build().unwrap();
+    ///
+    /// rt.block_on(async {
+    ///     println!("Hello from the Tokio runtime");
+    /// });
     /// ```
     pub fn build(&mut self) -> io::Result<Runtime> {
-        use std::collections::HashMap;
-        use std::sync::{Arc, Mutex};
+        match self.kind {
+            Kind::Shell => self.build_shell_runtime(),
+            #[cfg(feature = "rt-core")]
+            Kind::Basic => self.build_basic_runtime(),
+            #[cfg(feature = "rt-threaded")]
+            Kind::ThreadPool => self.build_threaded_runtime(),
+        }
+    }
 
-        // Get a handle to the clock for the runtime.
-        let clock1 = self.clock.clone();
-        let clock2 = clock1.clone();
+    fn build_shell_runtime(&mut self) -> io::Result<Runtime> {
+        use crate::runtime::Kind;
 
-        let timers = Arc::new(Mutex::new(HashMap::<_, timer::Handle>::new()));
-        let t1 = timers.clone();
+        let clock = time::create_clock();
 
-        // Spawn a reactor on a background thread.
-        let reactor = Reactor::new()?.background()?;
+        // Create I/O driver
+        let (io_driver, io_handle) = io::create_driver(self.enable_io)?;
+        let (driver, time_handle) = time::create_driver(self.enable_time, io_driver, clock.clone());
 
-        // Get a handle to the reactor.
-        let reactor_handle = reactor.handle().clone();
+        let spawner = Spawner::Shell;
 
-        let pool = self.threadpool_builder
-            .around_worker(move |w, enter| {
-                let timer_handle = t1.lock().unwrap()
-                    .get(w.id()).unwrap()
-                    .clone();
-
-                tokio_reactor::with_default(&reactor_handle, enter, |enter| {
-                    clock::with_default(&clock1, enter, |enter| {
-                        timer::with_default(&timer_handle, enter, |_| {
-                            w.run();
-                        });
-                    })
-                });
-            })
-            .custom_park(move |worker_id| {
-                // Create a new timer
-                let timer = Timer::new_with_now(DefaultPark::new(), clock2.clone());
-
-                timers.lock().unwrap()
-                    .insert(worker_id.clone(), timer.handle());
-
-                timer
-            })
-            .build();
+        let blocking_pool = blocking::create_blocking_pool(self, self.max_threads);
+        let blocking_spawner = blocking_pool.spawner().clone();
 
         Ok(Runtime {
-            inner: Some(Inner {
-                reactor,
-                pool,
-            }),
+            kind: Kind::Shell(Shell::new(driver)),
+            handle: Handle {
+                spawner,
+                io_handle,
+                time_handle,
+                clock,
+                blocking_spawner,
+            },
+            blocking_pool,
         })
+    }
+}
+
+cfg_io_driver! {
+    impl Builder {
+        /// Enables the I/O driver.
+        ///
+        /// Doing this enables using net, process, signal, and some I/O types on
+        /// the runtime.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use tokio::runtime;
+        ///
+        /// let rt = runtime::Builder::new()
+        ///     .enable_io()
+        ///     .build()
+        ///     .unwrap();
+        /// ```
+        pub fn enable_io(&mut self) -> &mut Self {
+            self.enable_io = true;
+            self
+        }
+    }
+}
+
+cfg_time! {
+    impl Builder {
+        /// Enables the time driver.
+        ///
+        /// Doing this enables using `tokio::time` on the runtime.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use tokio::runtime;
+        ///
+        /// let rt = runtime::Builder::new()
+        ///     .enable_time()
+        ///     .build()
+        ///     .unwrap();
+        /// ```
+        pub fn enable_time(&mut self) -> &mut Self {
+            self.enable_time = true;
+            self
+        }
+    }
+}
+
+cfg_rt_core! {
+    impl Builder {
+        /// Sets runtime to use a simpler scheduler that runs all tasks on the current-thread.
+        ///
+        /// The executor and all necessary drivers will all be run on the current
+        /// thread during `block_on` calls.
+        ///
+        /// See also [the module level documentation][1], which has a section on scheduler
+        /// types.
+        ///
+        /// [1]: index.html#runtime-configurations
+        pub fn basic_scheduler(&mut self) -> &mut Self {
+            self.kind = Kind::Basic;
+            self
+        }
+
+        fn build_basic_runtime(&mut self) -> io::Result<Runtime> {
+            use crate::runtime::{BasicScheduler, Kind};
+
+            let clock = time::create_clock();
+
+            // Create I/O driver
+            let (io_driver, io_handle) = io::create_driver(self.enable_io)?;
+
+            let (driver, time_handle) = time::create_driver(self.enable_time, io_driver, clock.clone());
+
+            // And now put a single-threaded scheduler on top of the timer. When
+            // there are no futures ready to do something, it'll let the timer or
+            // the reactor to generate some new stimuli for the futures to continue
+            // in their life.
+            let scheduler = BasicScheduler::new(driver);
+            let spawner = Spawner::Basic(scheduler.spawner().clone());
+
+            // Blocking pool
+            let blocking_pool = blocking::create_blocking_pool(self, self.max_threads);
+            let blocking_spawner = blocking_pool.spawner().clone();
+
+            Ok(Runtime {
+                kind: Kind::Basic(scheduler),
+                handle: Handle {
+                    spawner,
+                    io_handle,
+                    time_handle,
+                    clock,
+                    blocking_spawner,
+                },
+                blocking_pool,
+            })
+        }
+    }
+}
+
+cfg_rt_threaded! {
+    impl Builder {
+        /// Sets runtime to use a multi-threaded scheduler for executing tasks.
+        ///
+        /// See also [the module level documentation][1], which has a section on scheduler
+        /// types.
+        ///
+        /// [1]: index.html#runtime-configurations
+        pub fn threaded_scheduler(&mut self) -> &mut Self {
+            self.kind = Kind::ThreadPool;
+            self
+        }
+
+        fn build_threaded_runtime(&mut self) -> io::Result<Runtime> {
+            use crate::runtime::{Kind, ThreadPool};
+            use crate::runtime::park::Parker;
+
+            let core_threads = self.core_threads.unwrap_or_else(crate::loom::sys::num_cpus);
+            assert!(core_threads <= self.max_threads, "Core threads number cannot be above max limit");
+
+            let clock = time::create_clock();
+
+            let (io_driver, io_handle) = io::create_driver(self.enable_io)?;
+            let (driver, time_handle) = time::create_driver(self.enable_time, io_driver, clock.clone());
+            let (scheduler, launch) = ThreadPool::new(core_threads, Parker::new(driver));
+            let spawner = Spawner::ThreadPool(scheduler.spawner().clone());
+
+            // Create the blocking pool
+            let blocking_pool = blocking::create_blocking_pool(self, self.max_threads);
+            let blocking_spawner = blocking_pool.spawner().clone();
+
+            // Create the runtime handle
+            let handle = Handle {
+                spawner,
+                io_handle,
+                time_handle,
+                clock,
+                blocking_spawner,
+            };
+
+            // Spawn the thread pool workers
+            handle.enter(|| launch.launch());
+
+            Ok(Runtime {
+                kind: Kind::ThreadPool(scheduler),
+                handle,
+                blocking_pool,
+            })
+        }
+    }
+}
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl fmt::Debug for Builder {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("Builder")
+            .field("kind", &self.kind)
+            .field("core_threads", &self.core_threads)
+            .field("max_threads", &self.max_threads)
+            .field("thread_name", &self.thread_name)
+            .field("thread_stack_size", &self.thread_stack_size)
+            .field("after_start", &self.after_start.as_ref().map(|_| "..."))
+            .field("before_stop", &self.after_start.as_ref().map(|_| "..."))
+            .finish()
     }
 }

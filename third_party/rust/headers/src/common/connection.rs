@@ -1,8 +1,8 @@
 use std::iter::FromIterator;
 
-use util::FlatCsv;
-use ::{HeaderName, HeaderValue};
 use self::sealed::AsConnectionOption;
+use util::FlatCsv;
+use {HeaderName, HeaderValue};
 
 /// `Connection` header, defined in
 /// [RFC7230](http://tools.ietf.org/html/rfc7230#section-6.1)
@@ -34,8 +34,13 @@ use self::sealed::AsConnectionOption;
 /// let keep_alive = Connection::keep_alive();
 /// ```
 // This is frequently just 1 or 2 values, so optimize for that case.
-#[derive(Clone, Debug, Header)]
+#[derive(Clone, Debug)]
 pub struct Connection(FlatCsv);
+
+derive_header! {
+    Connection(_),
+    name: CONNECTION
+}
 
 impl Connection {
     /// A constructor to easily create a `Connection: close` header.
@@ -82,8 +87,7 @@ impl Connection {
     /// ```
     pub fn contains(&self, name: impl AsConnectionOption) -> bool {
         let s = name.as_connection_option();
-        self
-            .0
+        self.0
             .iter()
             .find(|&opt| opt.eq_ignore_ascii_case(s))
             .is_some()
@@ -95,10 +99,7 @@ impl FromIterator<HeaderName> for Connection {
     where
         I: IntoIterator<Item = HeaderName>,
     {
-        let flat = iter
-            .into_iter()
-            .map(HeaderValue::from)
-            .collect();
+        let flat = iter.into_iter().map(HeaderValue::from).collect();
         Connection(flat)
     }
 }
@@ -116,7 +117,6 @@ mod sealed {
     }
 
     impl<'a> Sealed for &'a str {}
-
 
     impl<'a> AsConnectionOption for &'a ::HeaderName {
         fn as_connection_option(&self) -> &str {

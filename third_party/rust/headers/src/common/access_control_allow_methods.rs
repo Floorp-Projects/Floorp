@@ -32,25 +32,25 @@ use util::FlatCsv;
 ///     .into_iter()
 ///     .collect::<AccessControlAllowMethods>();
 /// ```
-#[derive(Clone, Debug, PartialEq, Header)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct AccessControlAllowMethods(FlatCsv);
+
+derive_header! {
+    AccessControlAllowMethods(_),
+    name: ACCESS_CONTROL_ALLOW_METHODS
+}
 
 impl AccessControlAllowMethods {
     /// Returns an iterator over `Method`s contained within.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = Method> + 'a {
-        self
-            .0
-            .iter()
-            .filter_map(|s| {
-                s.parse().ok()
-            })
+        self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
 
 impl FromIterator<Method> for AccessControlAllowMethods {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item=Method>,
+        I: IntoIterator<Item = Method>,
     {
         let methods = iter
             .into_iter()
@@ -68,14 +68,12 @@ impl FromIterator<Method> for AccessControlAllowMethods {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{test_decode, test_encode};
+    use super::*;
 
     #[test]
     fn iter() {
-        let allowed = test_decode::<AccessControlAllowMethods>(
-            &["GET, PUT"]
-        ).unwrap();
+        let allowed = test_decode::<AccessControlAllowMethods>(&["GET, PUT"]).unwrap();
 
         let as_vec = allowed.iter().collect::<Vec<_>>();
         assert_eq!(as_vec.len(), 2);
@@ -85,13 +83,9 @@ mod tests {
 
     #[test]
     fn from_iter() {
-        let allow: AccessControlAllowMethods = vec![
-            Method::GET,
-            Method::PUT,
-        ].into_iter().collect();
+        let allow: AccessControlAllowMethods = vec![Method::GET, Method::PUT].into_iter().collect();
 
         let headers = test_encode(allow);
         assert_eq!(headers["access-control-allow-methods"], "GET, PUT");
     }
 }
-

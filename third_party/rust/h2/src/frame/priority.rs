@@ -1,4 +1,4 @@
-use frame::*;
+use crate::frame::*;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Priority {
@@ -30,7 +30,7 @@ impl Priority {
 
         Ok(Priority {
             stream_id: head.stream_id(),
-            dependency: dependency,
+            dependency,
         })
     }
 }

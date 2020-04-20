@@ -1,0 +1,7 @@
+error[E0365]: `__AProjection` is private, and cannot be re-exported
+  --> $DIR/use-public.rs:12:13
+   |
+12 |     pub use crate::A; //~ ERROR E0365
+   |             ^^^^^^^^ re-export of private `__AProjection`
+   |
+   = note: consider declaring type or module `__AProjection` with `pub`

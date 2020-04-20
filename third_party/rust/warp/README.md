@@ -1,6 +1,6 @@
 # warp
 
-[![Travis Build Status](https://travis-ci.org/seanmonstar/warp.svg?branch=master)](https://travis-ci.org/seanmonstar/warp)
+[![GHA Build Status](https://github.com/seanmonstar/warp/workflows/CI/badge.svg)](https://github.com/seanmonstar/warp/actions?query=workflow%3ACI)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![crates.io](https://img.shields.io/crates/v/warp.svg)](https://crates.io/crates/warp)
 [![Released API docs](https://docs.rs/warp/badge.svg)](https://docs.rs/warp)
@@ -31,16 +31,27 @@ Since it builds on top of [hyper](https://hyper.rs), you automatically get:
 
 ## Example
 
-```rust
-use warp::{self, path, Filter};
+Add warp and Tokio to your dependencies:
 
-fn main() {
+```toml
+tokio = { version = "0.2", features = ["macros"] }
+warp = "0.2"
+```
+
+And then get started in your `main.rs`:
+
+```rust
+use warp::Filter;
+
+#[tokio::main]
+async fn main() {
     // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = path!("hello" / String)
+    let hello = warp::path!("hello" / String)
         .map(|name| format!("Hello, {}!", name));
 
     warp::serve(hello)
-        .run(([127, 0, 0, 1], 3030));
+        .run(([127, 0, 0, 1], 3030))
+        .await;
 }
 ```
 

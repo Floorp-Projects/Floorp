@@ -1,10 +1,10 @@
-use codec::Codec;
-use frame::{self, Reason, StreamId};
+use crate::codec::Codec;
+use crate::frame::{self, Reason, StreamId};
 
 use bytes::Buf;
-use futures::{Async, Poll};
 use std::io;
-use tokio_io::AsyncWrite;
+use std::task::{Context, Poll};
+use tokio::io::AsyncWrite;
 
 /// Manages our sending of GOAWAY frames.
 #[derive(Debug)]
@@ -13,7 +13,8 @@ pub(super) struct GoAway {
     close_now: bool,
     /// Records if we've sent any GOAWAY before.
     going_away: Option<GoingAway>,
-
+    /// Whether the user started the GOAWAY by calling `abrupt_shutdown`.
+    is_user_initiated: bool,
     /// A GOAWAY frame that must be buffered in the Codec immediately.
     pending: Option<frame::GoAway>,
 }
@@ -45,6 +46,7 @@ impl GoAway {
         GoAway {
             close_now: false,
             going_away: None,
+            is_user_initiated: false,
             pending: None,
         }
     }
@@ -57,7 +59,7 @@ impl GoAway {
             assert!(
                 f.last_stream_id() <= going_away.last_processed_id,
                 "GOAWAY stream IDs shouldn't be higher; \
-                last_processed_id = {:?}, f.last_stream_id() = {:?}",
+                 last_processed_id = {:?}, f.last_stream_id() = {:?}",
                 going_away.last_processed_id,
                 f.last_stream_id(),
             );
@@ -74,12 +76,17 @@ impl GoAway {
         self.close_now = true;
         if let Some(ref going_away) = self.going_away {
             // Prevent sending the same GOAWAY twice.
-            if going_away.last_processed_id == f.last_stream_id()
-                && going_away.reason == f.reason() {
+            if going_away.last_processed_id == f.last_stream_id() && going_away.reason == f.reason()
+            {
                 return;
             }
         }
         self.go_away(f);
+    }
+
+    pub fn go_away_from_user(&mut self, f: frame::GoAway) {
+        self.is_user_initiated = true;
+        self.go_away_now(f);
     }
 
     /// Return if a GOAWAY has ever been scheduled.
@@ -87,11 +94,13 @@ impl GoAway {
         self.going_away.is_some()
     }
 
+    pub fn is_user_initiated(&self) -> bool {
+        self.is_user_initiated
+    }
+
     /// Return the last Reason we've sent.
     pub fn going_away_reason(&self) -> Option<Reason> {
-        self.going_away
-            .as_ref()
-            .map(|g| g.reason)
+        self.going_away.as_ref().map(|g| g.reason)
     }
 
     /// Returns if the connection should close now, or wait until idle.
@@ -101,36 +110,43 @@ impl GoAway {
 
     /// Returns if the connection should be closed when idle.
     pub fn should_close_on_idle(&self) -> bool {
-        !self.close_now && self.going_away
-            .as_ref()
-            .map(|g| g.last_processed_id != StreamId::MAX)
-            .unwrap_or(false)
+        !self.close_now
+            && self
+                .going_away
+                .as_ref()
+                .map(|g| g.last_processed_id != StreamId::MAX)
+                .unwrap_or(false)
     }
 
     /// Try to write a pending GOAWAY frame to the buffer.
     ///
     /// If a frame is written, the `Reason` of the GOAWAY is returned.
-    pub fn send_pending_go_away<T, B>(&mut self, dst: &mut Codec<T, B>) -> Poll<Option<Reason>, io::Error>
+    pub fn send_pending_go_away<T, B>(
+        &mut self,
+        cx: &mut Context,
+        dst: &mut Codec<T, B>,
+    ) -> Poll<Option<io::Result<Reason>>>
     where
-        T: AsyncWrite,
+        T: AsyncWrite + Unpin,
         B: Buf,
     {
         if let Some(frame) = self.pending.take() {
-            if !dst.poll_ready()?.is_ready() {
+            if !dst.poll_ready(cx)?.is_ready() {
                 self.pending = Some(frame);
-                return Ok(Async::NotReady);
+                return Poll::Pending;
             }
 
             let reason = frame.reason();
-            dst.buffer(frame.into())
-                .ok()
-                .expect("invalid GOAWAY frame");
+            dst.buffer(frame.into()).expect("invalid GOAWAY frame");
 
-            return Ok(Async::Ready(Some(reason)));
+            return Poll::Ready(Some(Ok(reason)));
         } else if self.should_close_now() {
-            return Ok(Async::Ready(self.going_away_reason()));
+            return match self.going_away_reason() {
+                Some(reason) => Poll::Ready(Some(Ok(reason))),
+                None => Poll::Ready(None),
+            };
         }
 
-        Ok(Async::Ready(None))
+        Poll::Ready(None)
     }
 }

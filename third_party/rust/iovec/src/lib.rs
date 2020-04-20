@@ -7,9 +7,6 @@
 #[cfg(unix)]
 extern crate libc;
 
-#[cfg(windows)]
-extern crate winapi;
-
 mod sys;
 
 use std::{ops, mem};

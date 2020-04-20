@@ -23,7 +23,10 @@ jobs:
     parameters:
       rust_version: ${{ parameters.rust_version }}
 
-  - script: cargo ${{ parameters.cmd }}
+  - script: |
+      cargo update
+      cargo update -p cfg-if --precise 0.1.9
+      cargo ${{ parameters.cmd }}
     displayName: cargo ${{ parameters.cmd }}
     env:
       CI: 'True'

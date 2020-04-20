@@ -9,7 +9,7 @@ use std::fmt;
 pub enum Never {}
 
 impl fmt::Display for Never {
-    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {}
     }
 }
@@ -19,4 +19,3 @@ impl Error for Never {
         match *self {}
     }
 }
-

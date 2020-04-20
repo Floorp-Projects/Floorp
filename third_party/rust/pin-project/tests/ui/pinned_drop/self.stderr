@@ -1,0 +1,95 @@
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:36:27
+   |
+34 |     impl PinnedDrop for Enum {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+35 |         fn drop(mut self: Pin<&mut Self>) {
+36 |             let _: Self = Self::StructVariant { x: 0 }; //~ ERROR can't use generic parameters from outer function [E0401]
+   |                           ^^^^^^^^^^^^^^^^^^^
+   |                           |
+   |                           use of generic parameter from outer function
+   |                           use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:52:17
+   |
+49 |     impl PinnedDrop for Struct {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+52 |                 Self { x: _ } => {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                 ^^^^
+   |                 |
+   |                 use of generic parameter from outer function
+   |                 use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:54:20
+   |
+49 |     impl PinnedDrop for Struct {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+54 |             if let Self { x: _ } = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                    ^^^^
+   |                    |
+   |                    use of generic parameter from outer function
+   |                    use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:55:17
+   |
+49 |     impl PinnedDrop for Struct {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+55 |             let Self { x: _ } = *self; //~ ERROR can't use generic parameters from outer function [E0401]
+   |                 ^^^^
+   |                 |
+   |                 use of generic parameter from outer function
+   |                 use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:84:17
+   |
+81 |     impl PinnedDrop for Enum {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+84 |                 Self::StructVariant { x: _ } => {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                 ^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 use of generic parameter from outer function
+   |                 use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:85:17
+   |
+81 |     impl PinnedDrop for Enum {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+85 |                 Self::TupleVariant(_) => {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                 ^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 use of generic parameter from outer function
+   |                 use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:87:20
+   |
+81 |     impl PinnedDrop for Enum {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+87 |             if let Self::StructVariant { x: _ } = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                    ^^^^^^^^^^^^^^^^^^^
+   |                    |
+   |                    use of generic parameter from outer function
+   |                    use a type here instead
+
+error[E0401]: can't use generic parameters from outer function
+  --> $DIR/self.rs:88:20
+   |
+81 |     impl PinnedDrop for Enum {
+   |     ---- `Self` type implicitly declared here, by this `impl`
+...
+88 |             if let Self::TupleVariant(_) = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
+   |                    ^^^^^^^^^^^^^^^^^^
+   |                    |
+   |                    use of generic parameter from outer function
+   |                    use a type here instead

@@ -1,8 +1,8 @@
-use ::HeaderValue;
+use HeaderValue;
 
 //pub use self::charset::Charset;
 //pub use self::encoding::Encoding;
-pub(crate) use self::entity::EntityTag;
+pub(crate) use self::entity::{EntityTag, EntityTagRange};
 pub(crate) use self::flat_csv::{FlatCsv, SemiColon};
 pub(crate) use self::fmt::fmt;
 pub(crate) use self::http_date::HttpDate;
@@ -25,7 +25,7 @@ mod seconds;
 mod value_string;
 
 macro_rules! error_type {
-    ($name:ident) => (
+    ($name:ident) => {
         #[doc(hidden)]
         pub struct $name {
             _inner: (),
@@ -33,8 +33,7 @@ macro_rules! error_type {
 
         impl ::std::fmt::Debug for $name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                f.debug_struct(stringify!($name))
-                    .finish()
+                f.debug_struct(stringify!($name)).finish()
             }
         }
 
@@ -44,12 +43,29 @@ macro_rules! error_type {
             }
         }
 
-        impl ::std::error::Error for $name {
-            fn description(&self) -> &str {
-                stringify!($name)
+        impl ::std::error::Error for $name {}
+    };
+}
+
+macro_rules! derive_header {
+    ($type:ident(_), name: $name:ident) => {
+        impl crate::Header for $type {
+            fn name() -> &'static ::http::header::HeaderName {
+                &::http::header::$name
+            }
+
+            fn decode<'i, I>(values: &mut I) -> Result<Self, ::Error>
+            where
+                I: Iterator<Item = &'i ::http::header::HeaderValue>,
+            {
+                ::util::TryFromValues::try_from_values(values).map($type)
+            }
+
+            fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
+                values.extend(::std::iter::once((&self.0).into()));
             }
         }
-    );
+    };
 }
 
 /// A helper trait for use when deriving `Header`.
@@ -66,10 +82,6 @@ impl TryFromValues for HeaderValue {
     where
         I: Iterator<Item = &'i HeaderValue>,
     {
-        values
-            .next()
-            .cloned()
-            .ok_or_else(|| ::Error::invalid())
+        values.next().cloned().ok_or_else(|| ::Error::invalid())
     }
 }
-

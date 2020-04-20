@@ -1,21 +1,19 @@
-extern crate bytes;
-extern crate quickcheck;
-extern crate rand;
-
-use hpack::{Decoder, Encode, Encoder, Header};
+use crate::hpack::{Decoder, Encode, Encoder, Header};
 
 use http::header::{HeaderName, HeaderValue};
 
-use self::bytes::{Bytes, BytesMut};
-use self::quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
-use self::rand::{Rng, SeedableRng, StdRng};
+use bytes::{buf::BufMutExt, Bytes, BytesMut};
+use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
+use rand::{Rng, SeedableRng, StdRng};
 
 use std::io::Cursor;
 
+const MIN_CHUNK: usize = 16;
 const MAX_CHUNK: usize = 2 * 1024;
 
 #[test]
 fn hpack_fuzz() {
+    let _ = env_logger::try_init();
     fn prop(fuzz: FuzzHpack) -> TestResult {
         fuzz.run();
         TestResult::from_bool(true)
@@ -25,6 +23,16 @@ fn hpack_fuzz() {
         .tests(100)
         .quickcheck(prop as fn(FuzzHpack) -> TestResult)
 }
+
+/*
+// If wanting to test with a specific feed, uncomment and fill in the seed.
+#[test]
+fn hpack_fuzz_seeded() {
+    let _ = env_logger::try_init();
+    let seed = [/* fill me in*/];
+    FuzzHpack::new(seed).run();
+}
+*/
 
 #[derive(Debug, Clone)]
 struct FuzzHpack {
@@ -81,21 +89,40 @@ impl FuzzHpack {
                     let low = rng.gen_range(0, high);
 
                     frame.resizes.extend(&[low, high]);
-                },
-                1...3 => {
+                }
+                1..=3 => {
                     frame.resizes.push(rng.gen_range(128, MAX_CHUNK * 2));
-                },
-                _ => {},
+                }
+                _ => {}
             }
 
-            for _ in 0..rng.gen_range(1, (num - added) + 1) {
-                added += 1;
+            let mut is_name_required = true;
 
+            for _ in 0..rng.gen_range(1, (num - added) + 1) {
                 let x: f64 = rng.gen_range(0.0, 1.0);
                 let x = x.powi(skew);
 
                 let i = (x * source.len() as f64) as usize;
-                frame.headers.push(source[i].clone());
+
+                let header = &source[i];
+                match header {
+                    Header::Field { name: None, .. } => {
+                        if is_name_required {
+                            continue;
+                        }
+                    }
+                    Header::Field { .. } => {
+                        is_name_required = false;
+                    }
+                    _ => {
+                        // pseudos can't be followed by a header with no name
+                        is_name_required = true;
+                    }
+                }
+
+                frame.headers.push(header.clone());
+
+                added += 1;
             }
 
             frames.push(frame);
@@ -105,7 +132,7 @@ impl FuzzHpack {
         let mut chunks = vec![];
 
         for _ in 0..rng.gen_range(0, 100) {
-            chunks.push(rng.gen_range(0, MAX_CHUNK));
+            chunks.push(rng.gen_range(MIN_CHUNK, MAX_CHUNK));
         }
 
         FuzzHpack {
@@ -125,12 +152,32 @@ impl FuzzHpack {
         let mut decoder = Decoder::default();
 
         for frame in frames {
-            expect.extend(frame.headers.clone());
+            // build "expected" frames, such that decoding headers always
+            // includes a name
+            let mut prev_name = None;
+            for header in &frame.headers {
+                match header.clone().reify() {
+                    Ok(h) => {
+                        prev_name = match h {
+                            Header::Field { ref name, .. } => Some(name.clone()),
+                            _ => None,
+                        };
+                        expect.push(h);
+                    }
+                    Err(value) => {
+                        expect.push(Header::Field {
+                            name: prev_name.as_ref().cloned().expect("previous header name"),
+                            value,
+                        });
+                    }
+                }
+            }
 
-            let mut index = None;
             let mut input = frame.headers.into_iter();
+            let mut index = None;
 
-            let mut buf = BytesMut::with_capacity(chunks.pop().unwrap_or(MAX_CHUNK));
+            let mut max_chunk = chunks.pop().unwrap_or(MAX_CHUNK);
+            let mut buf = BytesMut::with_capacity(max_chunk);
 
             if let Some(max) = frame.resizes.iter().max() {
                 decoder.queue_size_update(*max);
@@ -142,29 +189,32 @@ impl FuzzHpack {
             }
 
             loop {
-                match encoder.encode(index.take(), &mut input, &mut buf) {
+                match encoder.encode(index.take(), &mut input, &mut (&mut buf).limit(max_chunk)) {
                     Encode::Full => break,
                     Encode::Partial(i) => {
                         index = Some(i);
 
                         // Decode the chunk!
                         decoder
-                            .decode(&mut Cursor::new(&mut buf), |e| {
-                                assert_eq!(e, expect.remove(0).reify().unwrap());
+                            .decode(&mut Cursor::new(&mut buf), |h| {
+                                let e = expect.remove(0);
+                                assert_eq!(h, e);
                             })
-                            .unwrap();
+                            .expect("partial decode");
 
-                        buf = BytesMut::with_capacity(chunks.pop().unwrap_or(MAX_CHUNK));
-                    },
+                        max_chunk = chunks.pop().unwrap_or(MAX_CHUNK);
+                        buf = BytesMut::with_capacity(max_chunk);
+                    }
                 }
             }
 
             // Decode the chunk!
             decoder
-                .decode(&mut Cursor::new(&mut buf), |e| {
-                    assert_eq!(e, expect.remove(0).reify().unwrap());
+                .decode(&mut Cursor::new(&mut buf), |h| {
+                    let e = expect.remove(0);
+                    assert_eq!(h, e);
                 })
-                .unwrap();
+                .expect("full decode");
         }
 
         assert_eq!(0, expect.len());
@@ -185,7 +235,7 @@ fn gen_header(g: &mut StdRng) -> Header<Option<HeaderName>> {
             0 => {
                 let value = gen_string(g, 4, 20);
                 Header::Authority(to_shared(value))
-            },
+            }
             1 => {
                 let method = match g.next_u32() % 6 {
                     0 => Method::GET,
@@ -200,12 +250,12 @@ fn gen_header(g: &mut StdRng) -> Header<Option<HeaderName>> {
                             .collect();
 
                         Method::from_bytes(&bytes).unwrap()
-                    },
+                    }
                     _ => unreachable!(),
                 };
 
                 Header::Method(method)
-            },
+            }
             2 => {
                 let value = match g.next_u32() % 2 {
                     0 => "http",
@@ -214,7 +264,7 @@ fn gen_header(g: &mut StdRng) -> Header<Option<HeaderName>> {
                 };
 
                 Header::Scheme(to_shared(value.to_string()))
-            },
+            }
             3 => {
                 let value = match g.next_u32() % 100 {
                     0 => "/".to_string(),
@@ -223,26 +273,27 @@ fn gen_header(g: &mut StdRng) -> Header<Option<HeaderName>> {
                 };
 
                 Header::Path(to_shared(value))
-            },
+            }
             4 => {
                 let status = (g.gen::<u16>() % 500) + 100;
 
                 Header::Status(StatusCode::from_u16(status).unwrap())
-            },
+            }
             _ => unreachable!(),
         }
     } else {
-        let name = gen_header_name(g);
+        let name = if g.gen_weighted_bool(10) {
+            None
+        } else {
+            Some(gen_header_name(g))
+        };
         let mut value = gen_header_value(g);
 
         if g.gen_weighted_bool(30) {
             value.set_sensitive(true);
         }
 
-        Header::Field {
-            name: Some(name),
-            value: value,
-        }
+        Header::Field { name, value }
     }
 }
 
@@ -325,8 +376,9 @@ fn gen_header_name(g: &mut StdRng) -> HeaderName {
             header::X_DNS_PREFETCH_CONTROL,
             header::X_FRAME_OPTIONS,
             header::X_XSS_PROTECTION,
-        ]).unwrap()
-            .clone()
+        ])
+        .unwrap()
+        .clone()
     } else {
         let value = gen_string(g, 1, 25);
         HeaderName::from_bytes(value.as_bytes()).unwrap()
@@ -351,7 +403,7 @@ fn gen_string(g: &mut StdRng, min: usize, max: usize) -> String {
     String::from_utf8(bytes).unwrap()
 }
 
-fn to_shared(src: String) -> ::string::String<Bytes> {
+fn to_shared(src: String) -> crate::hpack::BytesStr {
     let b: Bytes = src.into();
-    unsafe { ::string::String::from_utf8_unchecked(b) }
+    unsafe { crate::hpack::BytesStr::from_utf8_unchecked(b) }
 }

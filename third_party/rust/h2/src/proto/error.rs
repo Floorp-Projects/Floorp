@@ -1,5 +1,5 @@
-use codec::{RecvError, SendError};
-use frame::Reason;
+use crate::codec::{RecvError, SendError};
+use crate::frame::Reason;
 
 use std::io;
 

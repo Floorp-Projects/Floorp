@@ -66,9 +66,7 @@ impl Header for ContentLength {
             }
         }
 
-        len
-            .map(ContentLength)
-            .ok_or_else(::Error::invalid)
+        len.map(ContentLength).ok_or_else(::Error::invalid)
     }
 
     fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
@@ -95,4 +93,3 @@ __hyper__tm!(ContentLength, tests {
     test_header!(test_duplicates_vary, vec![b"5", b"6", b"5"], None);
 });
 */
-

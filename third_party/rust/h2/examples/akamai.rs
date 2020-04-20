@@ -1,37 +1,25 @@
-extern crate env_logger;
-extern crate futures;
-extern crate h2;
-extern crate http;
-extern crate rustls;
-extern crate tokio_core;
-extern crate tokio_rustls;
-extern crate webpki;
-extern crate webpki_roots;
-
 use h2::client;
-
-use futures::*;
 use http::{Method, Request};
-
-use tokio_core::net::TcpStream;
-use tokio_core::reactor;
+use tokio::net::TcpStream;
+use tokio_rustls::TlsConnector;
 
 use rustls::Session;
-use tokio_rustls::ClientConfigExt;
 use webpki::DNSNameRef;
 
+use std::error::Error;
 use std::net::ToSocketAddrs;
 
 const ALPN_H2: &str = "h2";
 
-pub fn main() {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn Error>> {
     let _ = env_logger::try_init();
 
     let tls_client_config = std::sync::Arc::new({
         let mut c = rustls::ClientConfig::new();
         c.root_store
             .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-        c.alpn_protocols.push(ALPN_H2.to_owned());
+        c.alpn_protocols.push(ALPN_H2.as_bytes().to_owned());
         c
     });
 
@@ -44,50 +32,44 @@ pub fn main() {
 
     println!("ADDR: {:?}", addr);
 
-    let mut core = reactor::Core::new().unwrap();
-    let handle = core.handle();
-
-    let tcp = TcpStream::connect(&addr, &handle);
+    let tcp = TcpStream::connect(&addr).await?;
     let dns_name = DNSNameRef::try_from_ascii_str("http2.akamai.com").unwrap();
+    let connector = TlsConnector::from(tls_client_config);
+    let res = connector.connect(dns_name, tcp).await;
+    let tls = res.unwrap();
+    {
+        let (_, session) = tls.get_ref();
+        let negotiated_protocol = session.get_alpn_protocol();
+        assert_eq!(
+            Some(ALPN_H2.as_bytes()),
+            negotiated_protocol.as_ref().map(|x| &**x)
+        );
+    }
 
-    let tcp = tcp.then(|res| {
-        let tcp = res.unwrap();
-        tls_client_config
-            .connect_async(dns_name, tcp)
-            .then(|res| {
-                let tls = res.unwrap();
-                {
-                    let (_, session) = tls.get_ref();
-                    let negotiated_protocol = session.get_alpn_protocol();
-                    assert_eq!(Some(ALPN_H2), negotiated_protocol.as_ref().map(|x| &**x));
-                }
+    println!("Starting client handshake");
+    let (mut client, h2) = client::handshake(tls).await?;
 
-                println!("Starting client handshake");
-                client::handshake(tls)
-            })
-            .then(|res| {
-                let (mut client, h2) = res.unwrap();
+    println!("building request");
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("https://http2.akamai.com/")
+        .body(())
+        .unwrap();
 
-                let request = Request::builder()
-                    .method(Method::GET)
-                    .uri("https://http2.akamai.com/")
-                    .body(())
-                    .unwrap();
+    println!("sending request");
+    let (response, other) = client.send_request(request, true).unwrap();
 
-                let (response, _) = client.send_request(request, true).unwrap();
-
-                let stream = response.and_then(|response| {
-                    let (_, body) = response.into_parts();
-
-                    body.for_each(|chunk| {
-                        println!("RX: {:?}", chunk);
-                        Ok(())
-                    })
-                });
-
-                h2.join(stream)
-            })
+    tokio::spawn(async move {
+        if let Err(e) = h2.await {
+            println!("GOT ERR={:?}", e);
+        }
     });
 
-    core.run(tcp).unwrap();
+    println!("waiting on response : {:?}", other);
+    let (_, mut body) = response.await?.into_parts();
+    println!("processing body");
+    while let Some(chunk) = body.data().await {
+        println!("RX: {:?}", chunk?);
+    }
+    Ok(())
 }

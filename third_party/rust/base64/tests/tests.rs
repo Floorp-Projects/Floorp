@@ -6,7 +6,7 @@ use rand::{FromEntropy, Rng};
 use base64::*;
 
 mod helpers;
-use helpers::*;
+use self::helpers::*;
 
 // generate random contents of the specified length and test encode/decode roundtrip
 fn roundtrip_random(
