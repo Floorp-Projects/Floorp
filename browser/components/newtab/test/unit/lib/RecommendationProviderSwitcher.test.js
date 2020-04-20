@@ -31,6 +31,7 @@ describe("RecommendationProviderSwitcher", () => {
 
       assert.equal(feed.affinityProvider.modelKeys, undefined);
 
+      feed.affinityProvider = null;
       feed.affinityProviderV2 = {
         modelKeys: "1234",
       };
@@ -44,6 +45,31 @@ describe("RecommendationProviderSwitcher", () => {
       );
 
       assert.equal(feed.affinityProvider.modelKeys, "1234");
+    });
+    it("should use old provider", async () => {
+      feed.setAffinityProvider(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      );
+
+      assert.equal(feed.affinityProvider.modelKeys, undefined);
+
+      feed.affinityProviderV2 = {
+        modelKeys: "1234",
+      };
+
+      feed.setAffinityProvider(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      );
+
+      assert.equal(feed.affinityProvider.modelKeys, undefined);
     });
   });
 
