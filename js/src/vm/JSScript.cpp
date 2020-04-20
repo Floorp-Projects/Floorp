@@ -4177,7 +4177,9 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
     const frontend::ScriptStencil& stencil) {
-  uint32_t ngcthings = stencil.ngcthings;
+  uint32_t ngcthings = stencil.gcThings.length();
+
+  MOZ_ASSERT(ngcthings <= INDEX_LIMIT);
 
   // Create and initialize PrivateScriptData
   if (!JSScript::createPrivateScriptData(cx, script, ngcthings)) {
@@ -4319,7 +4321,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
 
   /* The counts of indexed things must be checked during code generation. */
   MOZ_ASSERT(stencil.natoms <= INDEX_LIMIT);
-  MOZ_ASSERT(stencil.ngcthings <= INDEX_LIMIT);
 
   script->addToImmutableFlags(stencil.immutableFlags);
 

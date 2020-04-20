@@ -430,24 +430,21 @@ class ScriptStencil {
   using ImmutableFlags = ImmutableScriptFlagsEnum;
 
  public:
-  js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
-
-  // See `initAtomMap` method.
-  uint32_t natoms = 0;
-
-  // See `finishGCThings` method.
-  uint32_t ngcthings = 0;
-
-  // The flags that will be added to the script when initializing it.
-  ImmutableScriptFlags immutableFlags;
-
-  ScriptThingsVector gcThings;
-
-  // The function to link this script to.
+  // See `BaseScript::functionOrGlobal_`.
   mozilla::Maybe<FunctionIndex> functionIndex;
 
-  // (Only) Class-constructors should use this field.
+  // See `BaseScript::immutableFlags_`.
+  ImmutableScriptFlags immutableFlags;
+
+  // See `finishGCThings` and `BaseScript::data_`.
   mozilla::Maybe<FieldInitializers> fieldInitializers;
+  ScriptThingsVector gcThings;
+
+  // See `initAtomMap` and `BaseScript::sharedData_`.
+  uint32_t natoms = 0;
+  js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
+
+  // End of fields.
 
   ScriptStencil(JSContext* cx) : gcThings(cx) {}
 
