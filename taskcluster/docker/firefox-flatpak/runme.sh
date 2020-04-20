@@ -138,12 +138,11 @@ install -D -m755 launch-script.sh "${appdir}/bin/firefox"
 
 flatpak build-finish build                                      \
         --share=ipc                                             \
-        --socket=wayland                                        \
-        --socket=fallback-x11                                   \
-        --require-version=1.0.0                                 \
         --share=network                                         \
         --socket=pulseaudio                                     \
+        --socket=x11                                            \
         --socket=pcsc                                           \
+        --require-version=0.11.1                                \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
         --device=all                                            \
