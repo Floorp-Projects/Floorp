@@ -6,7 +6,7 @@ const IMG_BYTES = atob(
   "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
 
 const IFRAME_INC =
-  `<iframe src='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about_inclusion.html'></iframe>`;
+  `<iframe src='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about.sjs?inclusion'></iframe>`;
 
 function handleRequest(request, response)
 {
@@ -25,7 +25,7 @@ function handleRequest(request, response)
   if (request.queryString.includes("loadsrcdocframeNav")) {
     let FRAME = `
       <iframe srcdoc="foo"
-       onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about_navigation.html'">
+       onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about.sjs?navigation'">
       </iframe>`;
     response.write(FRAME);
     return;
@@ -34,7 +34,7 @@ function handleRequest(request, response)
   if (request.queryString.includes("loadblankframeNav")) {
     let FRAME = `
       <iframe src="about:blank"
-       onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about_navigation.html'">
+       onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about.sjs?navigation'">
       </iframe>`;
     response.write(FRAME);
     return;
@@ -54,6 +54,34 @@ function handleRequest(request, response)
       <\/script>`;
     response.write(FRAME);
     return;
+  }
+
+  if (request.queryString.includes("navigation")) {
+    const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+    response.write(`
+      <!DOCTYPE html>
+      <html>
+      <body>
+        <script type="application/javascript">
+          window.parent.postMessage({result: "${cookies}" }, '*');
+        </script>
+      </body>
+      </html>
+    `);
+  }
+
+  if (request.queryString.includes("inclusion")) {
+    const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+    response.write(`
+      <!DOCTYPE html>
+      <html>
+      <body>
+        <script type="application/javascript">
+          window.parent.parent.parent.postMessage({result: "${cookies}" }, '*');
+        </script>
+      </body>
+      </html>
+    `);
   }
 
   // we should never get here, but just in case return something unexpected
