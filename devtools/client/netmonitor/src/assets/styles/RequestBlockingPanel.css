@@ -57,10 +57,6 @@
   flex-grow: 1;
 }
 
-.request-blocking-enable-bar button::before {
-  background-image: url("chrome://devtools/skin/images/add.svg");
-}
-
 .request-blocking-contents {
   flex: 0 1 auto;
   overflow-y: auto;
