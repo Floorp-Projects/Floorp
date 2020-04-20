@@ -15,6 +15,7 @@ DIRS += [
     'components',
     'content',
     'crashreporter',
+    'forgetaboutsite',
     'locales',
     'modules',
     'mozapps/downloads',
