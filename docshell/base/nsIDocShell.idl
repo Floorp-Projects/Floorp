@@ -559,6 +559,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute boolean isActive;
 
   /**
+   * Set if the media element in this docShell should be suspended when the
+   * docShell is inactive.
+   */
+  [infallible] attribute boolean suspendMediaWhenInactive;
+
+
+  /**
    * The ID of the docshell in the session history.
    */
   readonly attribute nsIDPtr historyID;
