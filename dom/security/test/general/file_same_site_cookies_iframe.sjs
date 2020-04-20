@@ -8,7 +8,7 @@ const IMG_BYTES = atob(
 const NESTED_IFRAME_NAVIGATION = `
   <html>
   <body>
-    <a id="testlink" href="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.html"></a>
+    <a id="testlink" href="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.sjs"></a>
     <script type="application/javascript">
       let link = document.getElementById("testlink");
       link.click();
@@ -27,7 +27,7 @@ const NESTED_IFRAME_INCLUSION = `
       window.parent.postMessage({result: event.data.result}, '*');
     }
     <\/script>
-    <iframe src="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.html"></iframe>
+    <iframe src="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.sjs"></iframe>
   </body>
   </html>`;
 
@@ -68,6 +68,18 @@ function handleRequest(request, response)
     return;
   }
 
-  // we should never get here, but just in case return something unexpected
-  response.write("D'oh");
+  const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+  response.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Bug 1454027 - Update SameSite cookie handling inside iframes</title>
+    </head>
+    <body>
+      <script type="application/javascript">
+        window.parent.postMessage({result: "${cookies}" }, '*');
+      </script>
+    </body>
+    </html>
+  `);
 }
