@@ -5,7 +5,7 @@ const TEST_HTTP_POST =
   "http://example.org/browser/dom/html/test/form_submit_server.sjs";
 
 // Test for bug 1351358.
-async function runTest() {
+async function runTest(doNewTab) {
   // Create file URI and test data file paths.
   let testFile = getChromeDir(getResolvedURI(gTestPath));
   testFile.append("dummy_page.html");
@@ -19,16 +19,28 @@ async function runTest() {
   // Open file:// page tab in which to run the test.
   await BrowserTestUtils.withNewTab(fileUriString, async function(fileBrowser) {
     // Create a form to post to server that writes posted data into body as JSON.
-    let promiseLoad = BrowserTestUtils.browserLoaded(
-      fileBrowser,
-      false,
-      TEST_HTTP_POST
-    );
+
+    var promiseLoad;
+    if (doNewTab) {
+      promiseLoad = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        TEST_HTTP_POST,
+        true,
+        false
+      );
+    } else {
+      promiseLoad = BrowserTestUtils.browserLoaded(
+        fileBrowser,
+        false,
+        TEST_HTTP_POST
+      );
+    }
+
     /* eslint-disable no-shadow */
     await SpecialPowers.spawn(
       fileBrowser,
-      [[TEST_HTTP_POST, filePaths]],
-      ([actionUri, filePaths]) => {
+      [TEST_HTTP_POST, filePaths, doNewTab],
+      (actionUri, filePaths, doNewTab) => {
         Cu.importGlobalProperties(["File"]);
 
         let doc = content.document;
@@ -36,6 +48,9 @@ async function runTest() {
         form.action = actionUri;
         form.method = "POST";
         form.enctype = "multipart/form-data";
+        if (doNewTab) {
+          form.target = "_blank";
+        }
 
         let inputText = form.appendChild(doc.createElement("input"));
         inputText.type = "text";
@@ -73,7 +88,17 @@ async function runTest() {
     );
     /* eslint-enable no-shadow */
 
-    let href = await promiseLoad;
+    var href;
+    var testBrowser;
+    var newTab;
+    if (doNewTab) {
+      newTab = await promiseLoad;
+      testBrowser = newTab.linkedBrowser;
+      href = testBrowser.currentURI.spec;
+    } else {
+      testBrowser = fileBrowser;
+      href = await promiseLoad;
+    }
     is(
       href,
       TEST_HTTP_POST,
@@ -86,7 +111,7 @@ async function runTest() {
     } else {
       binContentType = "application/octet-stream";
     }
-    await SpecialPowers.spawn(fileBrowser, [{ binContentType }], args => {
+    await SpecialPowers.spawn(testBrowser, [binContentType], binContentType => {
       let data = JSON.parse(content.document.body.textContent);
       is(
         data[0].headers["Content-Disposition"],
@@ -123,7 +148,7 @@ async function runTest() {
       );
       is(
         data[3].headers["Content-Type"],
-        args.binContentType,
+        binContentType,
         "Check binary file input Content-Type"
       );
       is(
@@ -132,6 +157,10 @@ async function runTest() {
         "Check binary file input body"
       );
     });
+
+    if (newTab) {
+      BrowserTestUtils.removeTab(newTab);
+    }
   });
 }
 
@@ -147,7 +176,8 @@ if (!SpecialPowers.useRemoteSubframes) {
       ],
     });
 
-    await runTest();
+    await runTest(false);
+    await runTest(true);
 
     await SpecialPowers.popPrefEnv();
   });
@@ -162,7 +192,8 @@ add_task(async function runWithDocumentChannel() {
     ],
   });
 
-  await runTest();
+  await runTest(false);
+  await runTest(true);
 
   await SpecialPowers.popPrefEnv();
 });
