@@ -19,12 +19,12 @@ class Perfherder(Layer):
             "default": False,
             "help": "Output data in the perfherder format.",
         },
-        "--prefix": {
+        "--perfherder-prefix": {
             "type": str,
             "default": "",
             "help": "Prefix the output files with this string.",
         },
-        "--metrics": {
+        "--perfherder-metrics": {
             "nargs": "*",
             "default": [],
             "help": "The metrics that should be retrieved from the data.",
@@ -56,7 +56,7 @@ class Perfherder(Layer):
             metadata.get_result(),
             self.warning,
             output=self.get_arg("output"),
-            prefix=self.get_arg("prefix"),
+            prefix=self.get_arg("perfherder-prefix"),
         )
         res = cm.get_standardized_data(
             group_name="firefox", transformer="SingleJsonRetriever"
@@ -64,7 +64,7 @@ class Perfherder(Layer):
         _, results = res["file-output"], res["data"]
 
         # Filter out unwanted metrics
-        results = filter_metrics(results, self.get_arg("metrics"))
+        results = filter_metrics(results, self.get_arg("perfherder-metrics"))
         if not results:
             self.warning("No results left after filtering")
             return metadata

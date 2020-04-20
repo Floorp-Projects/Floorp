@@ -26,7 +26,7 @@ class ConsoleOutput(Layer):
             metadata.get_result(),
             self.warning,
             output=self.get_arg("output"),
-            prefix=self.get_arg("prefix"),
+            prefix=self.get_arg("perfherder-prefix"),
         )
         res = cm.get_standardized_data(
             group_name="firefox", transformer="SingleJsonRetriever"
@@ -34,7 +34,7 @@ class ConsoleOutput(Layer):
         _, results = res["file-output"], res["data"]
 
         # Filter out unwanted metrics
-        results = filter_metrics(results, self.get_arg("metrics"))
+        results = filter_metrics(results, self.get_arg("perfherder-metrics"))
         if not results:
             self.warning("No results left after filtering")
             return metadata
