@@ -78,6 +78,7 @@ operand_writer_info = {
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
+    'ByteImm': ('uint32_t', 'writeByteImm'),  # uint32_t to enable fits-in-byte asserts.
     'GuardClassKindImm': ('GuardClassKind', 'writeGuardClassKindImm'),
     'JSWhyMagicImm': ('JSWhyMagic', 'writeJSWhyMagicImm'),
     'CallFlagsImm': ('CallFlags', 'writeCallFlagsImm'),
@@ -141,6 +142,7 @@ operand_compiler_info = {
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
     'BoolImm': ('bool', '', 'reader.readBool()'),
+    'ByteImm': ('uint8_t', '', 'reader.readByte()'),
     'GuardClassKindImm': ('GuardClassKind', '', 'reader.guardClassKind()'),
     'JSWhyMagicImm': ('JSWhyMagic', '', 'reader.whyMagic()'),
     'CallFlagsImm': ('CallFlags', '', 'reader.callFlags()'),

@@ -732,18 +732,21 @@
 
 - name: LoadFixedSlotResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
 
 - name: LoadDynamicSlotResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
 
 - name: LoadTypedObjectResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     layout: TypedThingLayoutImm
@@ -752,30 +755,35 @@
 
 - name: LoadDenseElementResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadDenseElementHoleResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: CallGetSparseElementResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadDenseElementExistsResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadTypedElementExistsResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
@@ -783,12 +791,14 @@
 
 - name: LoadDenseElementHoleExistsResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadTypedElementResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id

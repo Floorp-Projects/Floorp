@@ -1695,7 +1695,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedObject(HandleObject obj,
 
   maybeEmitIdGuard(id);
   writer.guardGroupForLayout(objId, obj->group());
-  writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
+  writer.loadTypedObjectResult(objId, layout, typeDescr, fieldOffset);
 
   // Only monitor the result if the type produced by this stub might vary.
   bool monitorLoad = false;

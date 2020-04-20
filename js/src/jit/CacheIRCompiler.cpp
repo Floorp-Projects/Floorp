@@ -3192,11 +3192,12 @@ bool CacheIRCompiler::emitLoadArgumentsObjectArgResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDenseElementResult() {
+bool CacheIRCompiler::emitLoadDenseElementResult(ObjOperandId objId,
+                                                 Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -3486,11 +3487,12 @@ bool CacheIRCompiler::emitGuardNotClassConstructor(ObjOperandId funId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDenseElementHoleResult() {
+bool CacheIRCompiler::emitLoadDenseElementHoleResult(ObjOperandId objId,
+                                                     Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -3529,12 +3531,12 @@ bool CacheIRCompiler::emitLoadDenseElementHoleResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedElementExistsResult() {
+bool CacheIRCompiler::emitLoadTypedElementExistsResult(
+    ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-  TypedThingLayout layout = reader.typedThingLayout();
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Label outOfBounds, done;
@@ -3552,11 +3554,12 @@ bool CacheIRCompiler::emitLoadTypedElementExistsResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDenseElementExistsResult() {
+bool CacheIRCompiler::emitLoadDenseElementExistsResult(ObjOperandId objId,
+                                                       Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -3579,11 +3582,12 @@ bool CacheIRCompiler::emitLoadDenseElementExistsResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDenseElementHoleExistsResult() {
+bool CacheIRCompiler::emitLoadDenseElementHoleExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -3789,14 +3793,15 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
   masm.bind(&done);
 }
 
-bool CacheIRCompiler::emitLoadTypedElementResult() {
+bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
+                                                 Int32OperandId indexId,
+                                                 TypedThingLayout layout,
+                                                 Scalar::Type elementType,
+                                                 bool handleOOB) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-  TypedThingLayout layout = reader.typedThingLayout();
-  Scalar::Type type = reader.scalarType();
-  bool handleOOB = reader.readBool();
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
 
   AutoScratchRegister scratch1(allocator, masm);
 #ifdef JS_PUNBOX64
@@ -3808,10 +3813,10 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
 #endif
 
   // BigInt values are always boxed.
-  MOZ_ASSERT_IF(Scalar::isBigIntType(type), output.hasValue());
+  MOZ_ASSERT_IF(Scalar::isBigIntType(elementType), output.hasValue());
 
   if (!output.hasValue()) {
-    if (type == Scalar::Float32 || type == Scalar::Float64) {
+    if (elementType == Scalar::Float32 || elementType == Scalar::Float64) {
       if (output.type() != JSVAL_TYPE_DOUBLE) {
         masm.assumeUnreachable(
             "Should have monitored double after attaching stub");
@@ -3840,7 +3845,7 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
 
   // Allocate BigInt if needed. The code after this should be infallible.
   Maybe<Register> bigInt;
-  if (Scalar::isBigIntType(type)) {
+  if (Scalar::isBigIntType(elementType)) {
     bigInt.emplace(output.valueReg().scratchReg());
 
     LiveRegisterSet save(GeneralRegisterSet::Volatile(),
@@ -3858,10 +3863,11 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
   LoadTypedThingData(masm, layout, obj, scratch1);
 
   // Load the value.
-  BaseIndex source(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+  BaseIndex source(scratch1, index,
+                   ScaleFromElemWidth(Scalar::byteSize(elementType)));
 
   if (output.hasValue()) {
-    if (Scalar::isBigIntType(type)) {
+    if (Scalar::isBigIntType(elementType)) {
 #ifdef JS_PUNBOX64
       Register64 temp(scratch2);
 #else
@@ -3872,7 +3878,7 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
       Register64 temp(output.valueReg().typeReg(), obj);
 #endif
 
-      masm.loadFromTypedBigIntArray(type, source, *bigInt, temp);
+      masm.loadFromTypedBigIntArray(elementType, source, *bigInt, temp);
 
 #ifndef JS_PUNBOX64
       masm.pop(obj);
@@ -3880,20 +3886,21 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
 
       masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
     } else {
-      masm.loadFromTypedArray(type, source, output.valueReg(),
+      masm.loadFromTypedArray(elementType, source, output.valueReg(),
                               *allowDoubleResult_, scratch1, failure->label());
     }
   } else {
-    bool needGpr = (type == Scalar::Int8 || type == Scalar::Uint8 ||
-                    type == Scalar::Int16 || type == Scalar::Uint16 ||
-                    type == Scalar::Uint8Clamped || type == Scalar::Int32);
+    bool needGpr =
+        (elementType == Scalar::Int8 || elementType == Scalar::Uint8 ||
+         elementType == Scalar::Int16 || elementType == Scalar::Uint16 ||
+         elementType == Scalar::Uint8Clamped || elementType == Scalar::Int32);
     if (needGpr && output.type() == JSVAL_TYPE_DOUBLE) {
       // Load the element as integer, then convert it to double.
-      masm.loadFromTypedArray(type, source, AnyRegister(scratch1), scratch1,
-                              failure->label());
+      masm.loadFromTypedArray(elementType, source, AnyRegister(scratch1),
+                              scratch1, failure->label());
       masm.convertInt32ToDouble(source, output.typedReg().fpu());
     } else {
-      masm.loadFromTypedArray(type, source, output.typedReg(), scratch1,
+      masm.loadFromTypedArray(elementType, source, output.typedReg(), scratch1,
                               failure->label());
     }
   }
@@ -3990,17 +3997,18 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedObjectResult() {
+bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
+                                                TypedThingLayout layout,
+                                                uint8_t typeDescr,
+                                                uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   MOZ_ASSERT(output.hasValue());
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
-  TypedThingLayout layout = reader.typedThingLayout();
-  uint32_t typeDescr = reader.typeDescrKey();
-  StubFieldOffset offset(reader.stubOffset(), StubField::Type::RawWord);
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
 
   // Allocate BigInt if needed. The code after this should be infallible.
   Maybe<Register> bigInt;
@@ -5705,13 +5713,14 @@ bool CacheIRCompiler::emitCallProxyGetByValueResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitCallGetSparseElementResult() {
+bool CacheIRCompiler::emitCallGetSparseElementResult(ObjOperandId objId,
+                                                     Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);
 
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register id = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register id = allocator.useRegister(masm, indexId);
 
   callvm.prepare();
   masm.Push(id);
