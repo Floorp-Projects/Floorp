@@ -257,7 +257,7 @@ const query = function*(detailsIn, props, context) {
     );
   }
 
-  // Based on CookieService::GetCookieStringInternal
+  // Based on CookieService::GetCookieStringFromHttp
   function matches(cookie) {
     function domainMatches(host) {
       return (
