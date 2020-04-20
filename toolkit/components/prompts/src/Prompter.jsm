@@ -550,19 +550,8 @@ class ModalPrompter {
 
   openPrompt(args) {
     if (!this.browsingContext) {
-      // We don't have a browsing context, fallback to a window prompt
-
-      // There's an implied contract that says modal prompts should still work
-      // when no "parent" window is passed for the dialog (eg, the "Master
-      // Password" dialog does this).  These prompts must be shown even if there
-      // are *no* visible windows at all.
-
-      // We try and find a window to use as the parent, but don't consider
-      // if that is visible before showing the prompt.
-      let parentWindow = Services.ww.activeWindow;
-      // parentWindow may still be null here if there are _no_ windows open.
-
-      this.openWindowPrompt(parentWindow, args);
+      // We don't have a browsing context, fallback to a window prompt.
+      this.openWindowPrompt(null, args);
       return;
     }
 
@@ -583,7 +572,15 @@ class ModalPrompter {
 
     args.browsingContext = this.browsingContext;
 
-    let actor = this._domWin.windowGlobalChild.getActor("Prompt");
+    let actor;
+    try {
+      actor = this._domWin.windowGlobalChild.getActor("Prompt");
+    } catch (error) {
+      Cu.reportError(error);
+      // We can't get the prompt actor, fallback to window prompt.
+      this.openWindowPrompt(this._domWin, args);
+      return;
+    }
 
     let docShell =
       (this.browsingContext && this.browsingContext.docShell) ||
@@ -665,14 +662,28 @@ class ModalPrompter {
     PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
   }
 
-  openWindowPrompt(parentWindow, args) {
+  /**
+   * Open a window modal prompt
+   *
+   * There's an implied contract that says modal prompts should still work when
+   * no "parent" window is passed for the dialog (eg, the "Master Password"
+   * dialog does this).  These prompts must be shown even if there are *no*
+   * visible windows at all.
+   * We try and find a window to use as the parent, but don't consider if that
+   * is visible before showing the prompt. parentWindow may still be null if
+   * there are _no_ windows open.
+   * @param {Window} [parentWindow] - The parent window for the prompt, may be
+   *        null.
+   * @param {Object} args - Prompt options and return values.
+   */
+  openWindowPrompt(parentWindow = null, args) {
     const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
     const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
 
     let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
     let propBag = PromptUtils.objectToPropBag(args);
     Services.ww.openWindow(
-      parentWindow,
+      parentWindow || Services.ww.activeWindow,
       uri,
       "_blank",
       "centerscreen,chrome,modal,titlebar",

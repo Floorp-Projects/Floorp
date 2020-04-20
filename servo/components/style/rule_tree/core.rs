@@ -644,7 +644,7 @@ impl Drop for StrongRuleNode {
             return;
         }
 
-        let root = &node.root.as_ref().unwrap().p;
+        let root: &RuleNode = &*node.root.as_ref().unwrap().p;
         let free_list = &root.next_free;
         let mut old_head = free_list.load(Ordering::Relaxed);
 

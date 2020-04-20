@@ -1759,7 +1759,9 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   }
 
   nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  // Casting to BasePrincipal, as we can't get InnerMost URI otherwise
+  auto* basePrincipal = BasePrincipal::Cast(aPrincipal);
+  rv = basePrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
@@ -2031,7 +2033,9 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  // Casting to BasePrincipal, as we can't get InnerMost URI otherwise
+  auto* basePrincipal = BasePrincipal::Cast(aPrincipal);
+  rv = basePrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
