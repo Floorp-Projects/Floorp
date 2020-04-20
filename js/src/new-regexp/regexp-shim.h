@@ -88,19 +88,7 @@ static constexpr inline T Max(T t1, T t2) {
 #  define V8PRIuPTRDIFF "tu"
 #endif
 
-// Origin:
-// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/base/macros.h#L27-L38
-// The arraysize(arr) macro returns the # of elements in an array arr.
-// The expression is a compile-time constant, and therefore can be
-// used in defining new arrays, for example.  If you use arraysize on
-// a pointer by mistake, you will get a compile-time error.
-#define arraysize(array) (sizeof(ArraySizeHelper(array)))
-
-// This template function declaration is used in defining arraysize.
-// Note that the function doesn't need an implementation, as we only
-// use its type.
-template <typename T, size_t N>
-char (&ArraySizeHelper(T (&array)[N]))[N];
+#define arraysize mozilla::ArrayLength
 
 // Explicitly declare the assignment operator as deleted.
 #define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&) = delete
@@ -735,14 +723,7 @@ inline Handle<T> handle(T object, Isolate* isolate) {
 
 // RAII Guard classes
 
-class DisallowHeapAllocation {
- public:
-  DisallowHeapAllocation() {}
-  operator const JS::AutoAssertNoGC&() const { return no_gc_; }
-
- private:
-  const JS::AutoAssertNoGC no_gc_;
-};
+using DisallowHeapAllocation = JS::AutoAssertNoGC;
 
 // V8 uses this inside DisallowHeapAllocation regions to turn
 // allocation back on before throwing a stack overflow exception or
