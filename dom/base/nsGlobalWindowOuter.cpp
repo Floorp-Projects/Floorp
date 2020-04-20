@@ -1908,9 +1908,7 @@ bool nsGlobalWindowOuter::ComputeIsSecureContext(Document* aDocument,
     }
   }
 
-  bool isTrustworthyOrigin = false;
-  principal->GetIsOriginPotentiallyTrustworthy(&isTrustworthyOrigin);
-  return isTrustworthyOrigin;
+  return principal->GetIsOriginPotentiallyTrustworthy();
 }
 
 static bool InitializeLegacyNetscapeObject(JSContext* aCx,

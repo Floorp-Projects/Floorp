@@ -509,9 +509,7 @@ bool PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl) {
     return false;
   }
 
-  bool isTrustworthyOrigin = false;
-  principal->GetIsOriginPotentiallyTrustworthy(&isTrustworthyOrigin);
-  return isTrustworthyOrigin;
+  return principal->GetIsOriginPotentiallyTrustworthy();
 }
 
 bool PresentationRequest::IsAllURLAuthenticated() {
