@@ -18,6 +18,7 @@
 #include "new-regexp/regexp-compiler.h"
 #include "new-regexp/regexp-interpreter.h"
 #include "new-regexp/regexp-macro-assembler-arch.h"
+#include "new-regexp/regexp-macro-assembler-tracer.h"
 #include "new-regexp/regexp-parser.h"
 #include "new-regexp/regexp-shim.h"
 #include "new-regexp/regexp.h"
@@ -45,6 +46,7 @@ using v8::internal::RegExpCompileData;
 using v8::internal::RegExpCompiler;
 using v8::internal::RegExpError;
 using v8::internal::RegExpMacroAssembler;
+using v8::internal::RegExpMacroAssemblerTracer;
 using v8::internal::RegExpNode;
 using v8::internal::RegExpParser;
 using v8::internal::SMRegExpMacroAssembler;
@@ -486,10 +488,21 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     masm->set_global_mode(mode);
   }
 
-  // Compile the regexp
+  // The masm tracer works as a thin wrapper around another macroassembler.
+  RegExpMacroAssembler* masm_ptr = masm.get();
+#ifdef DEBUG
+  UniquePtr<RegExpMacroAssembler> tracer_masm;
+  if (jit::JitOptions.traceRegExpAssembler) {
+    tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate,
+                                                         masm_ptr);
+    masm_ptr = tracer_masm.get();
+  }
+#endif
+
+  // Compile the regexp.
   V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
   RegExpCompiler::CompilationResult result = compiler.Assemble(
-      cx->isolate, masm.get(), data.node, data.capture_count, wrappedPattern);
+      cx->isolate, masm_ptr, data.node, data.capture_count, wrappedPattern);
   if (result.code.value().isUndefined()) {
     // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
     MOZ_ASSERT(useNativeCode);
