@@ -95,7 +95,6 @@ SpecialPowers.pushPermissions([
   SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", false],
-                                      ["dom.mozBrowserFramesEnabled", true],
                                       ["network.disable.ipc.security", true]]},
                             runTests);
 });
