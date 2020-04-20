@@ -1012,8 +1012,13 @@ void SMRegExpMacroAssembler::initFrameAndRegs() {
   masm_.storePtr(backtrack_stack_pointer_, backtrackStackBase());
 }
 
+// Called when we find a match. May not be generated if we can
+// determine ahead of time that a regexp cannot match: for example,
+// when compiling /\u1e9e/ for latin-1 inputs.
 void SMRegExpMacroAssembler::successHandler() {
-  MOZ_ASSERT(success_label_.used());
+  if (!success_label_.used()) {
+    return;
+  }
   masm_.bind(&success_label_);
 
   // Copy captures to the MatchPairs pointed to by the InputOutputData.
@@ -1102,8 +1107,6 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
   }
 
   // Called if the backtrack-stack limit has been hit.
-  // NOTE: depending on architecture, the call may have
-  // changed the stack pointer. We adjust for that below.
   masm_.bind(&stack_overflow_label_);
 
   // Load argument
