@@ -91,11 +91,11 @@ class EventTargetWrapper : public AbstractThread {
   const RefPtr<nsIEventTarget> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
-  class Runner : public CancelableRunnable {
+  class Runner : public Runnable {
    public:
     explicit Runner(EventTargetWrapper* aThread,
                     already_AddRefed<nsIRunnable> aRunnable)
-        : CancelableRunnable("EventTargetWrapper::Runner"),
+        : Runnable("EventTargetWrapper::Runner"),
           mThread(aThread),
           mRunnable(aRunnable) {}
 
@@ -103,19 +103,6 @@ class EventTargetWrapper : public AbstractThread {
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
       return mRunnable->Run();
-    }
-
-    nsresult Cancel() override {
-      nsresult rv = NS_OK;
-
-      // Try to cancel the runnable if it implements the right interface.
-      // Otherwise just skip the runnable.
-      nsCOMPtr<nsICancelableRunnable> cr = do_QueryInterface(mRunnable);
-      if (cr) {
-        rv = cr->Cancel();
-      }
-
-      return rv;
     }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
