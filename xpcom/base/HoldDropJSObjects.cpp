@@ -49,12 +49,4 @@ void DropJSObjectsImpl(nsISupports* aHolder) {
 
 }  // namespace cyclecollector
 
-#ifdef DEBUG
-bool IsJSHolder(void* aHolder) {
-  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  return rt->IsJSHolder(aHolder);
-}
-#endif
-
 }  // namespace mozilla

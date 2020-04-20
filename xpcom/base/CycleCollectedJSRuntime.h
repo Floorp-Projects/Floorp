@@ -276,7 +276,6 @@ class CycleCollectedJSRuntime {
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
   void RemoveJSHolder(void* aHolder);
 #ifdef DEBUG
-  bool IsJSHolder(void* aHolder);
   void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
 
