@@ -157,15 +157,13 @@ for (let name of COMMANDS) {
   };
 }
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 function autoCloseIfNeeded(aCrash) {
   if (!gArgs.autoclose) {
     return;
   }
   setTimeout(function() {
     if (aCrash) {
-      let browser = document.createElementNS(XUL_NS, "browser");
+      let browser = document.createXULElement("browser");
       // FIXME(emilio): we could use gBrowser if we bothered get the process switches right.
       //
       // Doesn't seem worth for this particular case.

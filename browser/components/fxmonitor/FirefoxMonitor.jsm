@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STYLESHEET = "chrome://browser/content/fxmonitor/FirefoxMonitor.css";
 const ICON = "chrome://browser/content/fxmonitor/monitor32.svg";
 
@@ -345,10 +344,10 @@ this.FirefoxMonitor = {
     // inside it. This way, when we animate the icon, its scale change
     // does not cause the popup notification to bounce due to the anchor
     // point moving.
-    let anchorBox = doc.createElementNS(XUL_NS, "box");
+    let anchorBox = doc.createXULElement("box");
     anchorBox.setAttribute("id", `${this.kNotificationID}-notification-anchor`);
     anchorBox.classList.add("notification-anchor-icon");
-    let img = doc.createElementNS(XUL_NS, "image");
+    let img = doc.createXULElement("image");
     img.setAttribute("role", "button");
     img.classList.add(`${this.kNotificationID}-icon`);
     img.style.listStyleImage = `url(${ICON})`;
@@ -363,8 +362,8 @@ this.FirefoxMonitor = {
 
     // Now, the popupnotificationcontent:
     let parentElt = doc.defaultView.PopupNotifications.panel.parentNode;
-    let pn = doc.createElementNS(XUL_NS, "popupnotification");
-    let pnContent = doc.createElementNS(XUL_NS, "popupnotificationcontent");
+    let pn = doc.createXULElement("popupnotification");
+    let pnContent = doc.createXULElement("popupnotificationcontent");
     let panelUI = new PanelUI(doc);
     pnContent.appendChild(panelUI.box);
     pn.appendChild(pnContent);
@@ -518,14 +517,14 @@ function PanelUI(doc) {
   this.site = null;
   this.doc = doc;
 
-  let box = doc.createElementNS(XUL_NS, "vbox");
+  let box = doc.createXULElement("vbox");
 
-  let elt = doc.createElementNS(XUL_NS, "description");
+  let elt = doc.createXULElement("description");
   elt.textContent = this.getString("fxmonitor.popupHeader");
   elt.classList.add("headerText");
   box.appendChild(elt);
 
-  elt = doc.createElementNS(XUL_NS, "description");
+  elt = doc.createXULElement("description");
   elt.classList.add("popupText");
   box.appendChild(elt);
 
