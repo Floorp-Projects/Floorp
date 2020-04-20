@@ -70,8 +70,8 @@ class ChunkPool {
  public:
   ChunkPool() : head_(nullptr), count_(0) {}
   ~ChunkPool() {
-    // TODO: We should be able to assert that the chunk pool is empty but
-    // this causes XPCShell test failures on Windows 2012. See bug 1379232.
+    MOZ_ASSERT(!head_);
+    MOZ_ASSERT(count_ == 0);
   }
 
   bool empty() const { return !head_; }
