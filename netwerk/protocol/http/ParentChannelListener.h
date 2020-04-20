@@ -65,7 +65,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // Called to set a new listener which replaces the old one after a redirect.
   void SetListenerAfterRedirect(nsIStreamListener* aListener);
 
-  dom::CanonicalBrowsingContext* GetBrowsingContext() {
+  dom::CanonicalBrowsingContext* GetBrowsingContext() const {
     return mBrowsingContext;
   }
 
