@@ -362,8 +362,7 @@ CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* /*aFirstURI*/,
-                                       nsIChannel* aChannel,
+CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
                                        nsACString& aCookieString) {
   NS_ENSURE_ARG(aHostURI);
 

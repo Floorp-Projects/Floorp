@@ -114,9 +114,6 @@ interface nsICookieService : nsISupports
    *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
    *        is acceptable, and will be stripped. This argument must not be null.
-   * @param aFirstURI
-   *        the URI that the user originally typed in or clicked on to initiate
-   *        the load of the document referenced by aURI.
    * @param aChannel
    *        the channel used to load the document.  this parameter should not
    *        be null, otherwise the cookies will not be returned if third-party
@@ -126,8 +123,7 @@ interface nsICookieService : nsISupports
    *
    * @return the resulting cookie string
    */
-  ACString getCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
-                                   in nsIChannel aChannel);
+  ACString getCookieStringFromHttp(in nsIURI aURI, in nsIChannel aChannel);
 
   /*
    * Set the cookie string associated with the URI.
