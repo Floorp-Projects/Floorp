@@ -103,7 +103,6 @@
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
 
     <command id="wrCaptureCmd" oncommand="gGfxUtils.webrenderCapture();" disabled="true"/>
-    <command id="wrToggleCaptureSequenceCmd" oncommand="gGfxUtils.toggleWebrenderCaptureSequence();" disabled="true"/>
 #ifdef NIGHTLY_BUILD
     <command id="windowRecordingCmd" oncommand="gGfxUtils.toggleWindowRecording();"/>
     <command id="wrTransactionLoggingCmd" oncommand="gGfxUtils.toggleTransactionLogging();"/>
@@ -339,13 +338,6 @@
     key="#" modifiers="control"
 #endif
     command="wrCaptureCmd"/>
-    <key id="key_wrToggleCaptureSequenceCmd"
-#ifdef XP_MACOSX
-    key="6" modifiers="control,shift"
-#else
-    key="^" modifiers="control"
-#endif
-    command="wrToggleCaptureSequenceCmd"/>
 #ifdef NIGHTLY_BUILD
     <key id="key_windowRecordingCmd"
 #ifdef XP_MACOSX

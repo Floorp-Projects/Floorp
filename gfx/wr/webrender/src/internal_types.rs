@@ -540,7 +540,7 @@ pub enum DebugOutput {
     #[cfg(feature = "capture")]
     SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
     #[cfg(feature = "replay")]
-    LoadCapture(CaptureConfig, Vec<PlainExternalImage>),
+    LoadCapture(PathBuf, Vec<PlainExternalImage>),
 }
 
 #[allow(dead_code)]
