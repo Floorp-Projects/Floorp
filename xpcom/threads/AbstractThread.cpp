@@ -9,15 +9,14 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"  // We initialize the MozPromise logging in this file.
-#include "mozilla/StaticPtr.h"
 #include "mozilla/StateWatching.h"  // We initialize the StateWatching logging in this file.
-#include "mozilla/TaskQueue.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TaskDispatcher.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
-
-#include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -227,6 +226,9 @@ void AbstractThread::InitMainThread() {
   if (!sCurrentThreadTLS.init()) {
     MOZ_CRASH();
   }
+  // Set the default current main thread so that GetCurrent() never returns
+  // nullptr.
+  sCurrentThreadTLS.set(sMainThread);
 }
 
 void AbstractThread::DispatchStateChange(
