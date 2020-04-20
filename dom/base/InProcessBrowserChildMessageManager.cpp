@@ -46,8 +46,8 @@ InProcessBrowserChildMessageManager::Create(nsDocShell* aShell,
 
 bool InProcessBrowserChildMessageManager::DoSendBlockingMessage(
     JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData,
-    JS::Handle<JSObject*> aCpows, nsIPrincipal* aPrincipal,
-    nsTArray<StructuredCloneData>* aRetVal, bool aIsSync) {
+    JS::Handle<JSObject*> aCpows, nsTArray<StructuredCloneData>* aRetVal,
+    bool aIsSync) {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   queue->Flush();
 
@@ -55,8 +55,8 @@ bool InProcessBrowserChildMessageManager::DoSendBlockingMessage(
     SameProcessCpowHolder cpows(JS::RootingContext::get(aCx), aCpows);
     RefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     RefPtr<nsFrameLoader> fl = GetFrameLoader();
-    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
-                       aRetVal, IgnoreErrors());
+    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aRetVal,
+                       IgnoreErrors());
   }
   return true;
 }
@@ -81,13 +81,13 @@ class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
 
 nsresult InProcessBrowserChildMessageManager::DoSendAsyncMessage(
     JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData,
-    JS::Handle<JSObject*> aCpows, nsIPrincipal* aPrincipal) {
+    JS::Handle<JSObject*> aCpows) {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   JS::RootingContext* rcx = JS::RootingContext::get(aCx);
   RefPtr<nsAsyncMessageToParent> ev =
       new nsAsyncMessageToParent(rcx, aCpows, this);
 
-  nsresult rv = ev->Init(aMessage, aData, aPrincipal);
+  nsresult rv = ev->Init(aMessage, aData);
   if (NS_FAILED(rv)) {
     return rv;
   }
