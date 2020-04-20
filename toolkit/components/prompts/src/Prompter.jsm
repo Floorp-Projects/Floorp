@@ -676,14 +676,14 @@ class ModalPrompter {
    *        null.
    * @param {Object} args - Prompt options and return values.
    */
-  openWindowPrompt(parentWindow = Services.ww.activeWindow, args) {
+  openWindowPrompt(parentWindow = null, args) {
     const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
     const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
 
     let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
     let propBag = PromptUtils.objectToPropBag(args);
     Services.ww.openWindow(
-      parentWindow,
+      parentWindow || Services.ww.activeWindow,
       uri,
       "_blank",
       "centerscreen,chrome,modal,titlebar",
