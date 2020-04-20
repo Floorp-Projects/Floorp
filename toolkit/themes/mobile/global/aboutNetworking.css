@@ -38,10 +38,6 @@ body {
   pointer-events: none;
 }
 
-#categories hr {
-  border-top-color: rgba(255,255,255,0.15);
-}
-
 /** Content area **/
 
 .main-content {
