@@ -2890,9 +2890,9 @@ impl Renderer {
                         self.save_capture(config, deferred);
                     }
                     #[cfg(feature = "replay")]
-                    DebugOutput::LoadCapture(config, plain_externals) => {
+                    DebugOutput::LoadCapture(root, plain_externals) => {
                         self.active_documents.clear();
-                        self.load_capture(config, plain_externals);
+                        self.load_capture(root, plain_externals);
                     }
                 },
                 ResultMsg::DebugCommand(command) => {
@@ -3132,9 +3132,7 @@ impl Renderer {
                 self.debug_server.send(json);
             }
             DebugCommand::SaveCapture(..) |
-            DebugCommand::LoadCapture(..) |
-            DebugCommand::StartCaptureSequence(..) |
-            DebugCommand::StopCaptureSequence => {
+            DebugCommand::LoadCapture(..) => {
                 panic!("Capture commands are not welcome here! Did you build with 'capture' feature?")
             }
             DebugCommand::ClearCaches(_)
@@ -6929,13 +6927,7 @@ struct PlainRenderer {
     gpu_cache: PlainTexture,
     gpu_cache_frame_id: FrameId,
     textures: FastHashMap<CacheTextureId, PlainTexture>,
-}
-
-#[cfg(any(feature = "capture", feature = "replay"))]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct PlainExternalResources {
-    images: Vec<ExternalCaptureImage>
+    external_images: Vec<ExternalCaptureImage>
 }
 
 #[cfg(feature = "replay")]
@@ -7083,13 +7075,11 @@ impl Renderer {
         use std::io::Write;
         use api::{CaptureBits, ExternalImageData};
 
-        let root = config.resource_root();
-
         self.device.begin_frame();
         let _gm = self.gpu_profile.start_marker("read GPU data");
         self.device.bind_read_target_impl(self.read_fbo);
 
-        if config.bits.contains(CaptureBits::EXTERNAL_RESOURCES) && !deferred_images.is_empty() {
+        if !deferred_images.is_empty() {
             info!("saving external images");
             let mut arc_map = FastHashMap::<*const u8, String>::default();
             let mut tex_map = FastHashMap::<u32, String>::default();
@@ -7140,13 +7130,13 @@ impl Renderer {
                     }
                 };
                 if let Some(bytes) = data {
-                    fs::File::create(root.join(&short_path))
+                    fs::File::create(config.root.join(&short_path))
                         .expect(&format!("Unable to create {}", short_path))
                         .write_all(&bytes)
                         .unwrap();
                     #[cfg(feature = "png")]
                     CaptureConfig::save_png(
-                        root.join(&short_path).with_extension("png"),
+                        config.root.join(&short_path).with_extension("png"),
                         def.descriptor.size,
                         def.descriptor.format,
                         def.descriptor.stride,
@@ -7158,19 +7148,15 @@ impl Renderer {
                     external: def.external,
                     uv: ext_image.uv,
                 };
-                config.serialize_for_resource(&plain, &def.short_path);
+                config.serialize(&plain, &def.short_path);
             }
             for def in &deferred_images {
                 handler.unlock(def.external.id, def.external.channel_index);
             }
-            let plain_external = PlainExternalResources {
-                images: deferred_images,
-            };
-            config.serialize_for_resource(&plain_external, "external_resources");
         }
 
         if config.bits.contains(CaptureBits::FRAME) {
-            let path_textures = root.join("textures");
+            let path_textures = config.root.join("textures");
             if !path_textures.is_dir() {
                 fs::create_dir(&path_textures).unwrap();
             }
@@ -7181,21 +7167,22 @@ impl Renderer {
                 device_size: self.device_size,
                 gpu_cache: Self::save_texture(
                     &self.gpu_cache_texture.texture.as_ref().unwrap(),
-                    "gpu", &root, &mut self.device,
+                    "gpu", &config.root, &mut self.device,
                 ),
                 gpu_cache_frame_id: self.gpu_cache_frame_id,
                 textures: FastHashMap::default(),
+                external_images: deferred_images,
             };
 
             info!("saving cached textures");
             for (id, texture) in &self.texture_resolver.texture_cache_map {
                 let file_name = format!("cache-{}", plain_self.textures.len() + 1);
                 info!("\t{}", file_name);
-                let plain = Self::save_texture(texture, &file_name, &root, &mut self.device);
+                let plain = Self::save_texture(texture, &file_name, &config.root, &mut self.device);
                 plain_self.textures.insert(*id, plain);
             }
 
-            config.serialize_for_resource(&plain_self, "renderer");
+            config.serialize(&plain_self, "renderer");
         }
 
         self.device.reset_read_target();
@@ -7205,9 +7192,7 @@ impl Renderer {
 
     #[cfg(feature = "replay")]
     fn load_capture(
-        &mut self,
-        config: CaptureConfig,
-        plain_externals: Vec<PlainExternalImage>,
+        &mut self, root: PathBuf, plain_externals: Vec<PlainExternalImage>
     ) {
         use std::fs::File;
         use std::io::Read;
@@ -7219,8 +7204,6 @@ impl Renderer {
         let mut image_handler = DummyExternalImageHandler {
             data: FastHashMap::default(),
         };
-
-        let root = config.resource_root();
 
         // Note: this is a `SCENE` level population of the external image handlers
         // It would put both external buffers and texture into the map.
@@ -7243,49 +7226,7 @@ impl Renderer {
             image_handler.data.insert((ext.id, ext.channel_index), value);
         }
 
-        if let Some(external_resources) = config.deserialize_for_resource::<PlainExternalResources, _>("external_resources") {
-            info!("loading external texture-backed images");
-            let mut native_map = FastHashMap::<String, gl::GLuint>::default();
-            for ExternalCaptureImage { short_path, external, descriptor } in external_resources.images {
-                let target = match external.image_type {
-                    ExternalImageType::TextureHandle(target) => target,
-                    ExternalImageType::Buffer => continue,
-                };
-                let plain_ext = config.deserialize_for_resource::<PlainExternalImage, _>(&short_path)
-                    .expect(&format!("Unable to read {}.ron", short_path));
-                let key = (external.id, external.channel_index);
-
-                let tid = match native_map.entry(plain_ext.data) {
-                    Entry::Occupied(e) => e.get().clone(),
-                    Entry::Vacant(e) => {
-                        //TODO: provide a way to query both the layer count and the filter from external images
-                        let (layer_count, filter) = (1, TextureFilter::Linear);
-                        let plain_tex = PlainTexture {
-                            data: e.key().clone(),
-                            size: (descriptor.size, layer_count),
-                            format: descriptor.format,
-                            filter,
-                            has_depth: false,
-                        };
-                        let t = Self::load_texture(
-                            target,
-                            &plain_tex,
-                            None,
-                            &root,
-                            &mut self.device
-                        );
-                        let extex = t.0.into_external();
-                        self.owned_external_images.insert(key, extex.clone());
-                        e.insert(extex.internal_id()).clone()
-                    }
-                };
-
-                let value = (CapturedExternalImageData::NativeTexture(tid), plain_ext.uv);
-                image_handler.data.insert(key, value);
-            }
-        }
-
-        if let Some(renderer) = config.deserialize_for_resource::<PlainRenderer, _>("renderer") {
+        if let Some(renderer) = CaptureConfig::deserialize::<PlainRenderer, _>(&root, "renderer") {
             info!("loading cached textures");
             self.device_size = renderer.device_size;
             self.device.begin_frame();
@@ -7339,18 +7280,46 @@ impl Renderer {
             }
             self.gpu_cache_frame_id = renderer.gpu_cache_frame_id;
 
-            self.device.end_frame();
-        } else {
-            info!("loading cached textures");
-            self.device.begin_frame();
-            for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {
-                self.device.delete_texture(texture);
+            info!("loading external texture-backed images");
+            let mut native_map = FastHashMap::<String, gl::GLuint>::default();
+            for ExternalCaptureImage { short_path, external, descriptor } in renderer.external_images {
+                let target = match external.image_type {
+                    ExternalImageType::TextureHandle(target) => target,
+                    ExternalImageType::Buffer => continue,
+                };
+                let plain_ext = CaptureConfig::deserialize::<PlainExternalImage, _>(&root, &short_path)
+                    .expect(&format!("Unable to read {}.ron", short_path));
+                let key = (external.id, external.channel_index);
+
+                let tid = match native_map.entry(plain_ext.data) {
+                    Entry::Occupied(e) => e.get().clone(),
+                    Entry::Vacant(e) => {
+                        //TODO: provide a way to query both the layer count and the filter from external images
+                        let (layer_count, filter) = (1, TextureFilter::Linear);
+                        let plain_tex = PlainTexture {
+                            data: e.key().clone(),
+                            size: (descriptor.size, layer_count),
+                            format: descriptor.format,
+                            filter,
+                            has_depth: false,
+                        };
+                        let t = Self::load_texture(
+                            target,
+                            &plain_tex,
+                            None,
+                            &root,
+                            &mut self.device
+                        );
+                        let extex = t.0.into_external();
+                        self.owned_external_images.insert(key, extex.clone());
+                        e.insert(extex.internal_id()).clone()
+                    }
+                };
+
+                let value = (CapturedExternalImageData::NativeTexture(tid), plain_ext.uv);
+                image_handler.data.insert(key, value);
             }
 
-            info!("loading gpu cache");
-            if let Some(t) = self.gpu_cache_texture.texture.take() {
-                self.device.delete_texture(t);
-            }
             self.device.end_frame();
         }
 
