@@ -859,11 +859,7 @@ void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
 CompositorCapabilities RenderCompositorANGLE::GetCompositorCapabilities() {
   CompositorCapabilities caps;
 
-#ifdef USE_VIRTUAL_SURFACES
   caps.virtual_surface_size = VIRTUAL_SURFACE_SIZE;
-#else
-  caps.virtual_surface_size = 0;
-#endif
 
   return caps;
 }
