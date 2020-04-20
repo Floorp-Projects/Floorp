@@ -43,6 +43,7 @@
 #include "mozilla/dom/FormDataEvent.h"
 #include "mozilla/dom/SubmitEvent.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs_prompts.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
 #include "nsCategoryManagerUtils.h"
@@ -54,7 +55,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
-#include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "nsISecurityUITelemetry.h"
 #include "nsIStringBundle.h"
 
@@ -886,17 +887,21 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   if (!docShell) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShell);
-  if (!prompt) {
-    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc =
+      do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
   nsCOMPtr<nsIStringBundle> stringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
       mozilla::services::GetStringBundleService();
   if (!stringBundleService) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = stringBundleService->CreateBundle(
+  rv = stringBundleService->CreateBundle(
       "chrome://global/locale/browser.properties",
       getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) {
@@ -914,10 +919,14 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   int32_t buttonPressed;
   bool checkState =
       false;  // this is unused (ConfirmEx requires this parameter)
-  rv = prompt->ConfirmEx(
-      title.get(), message.get(),
-      (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
-          (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
+  rv = promptSvc->ConfirmExBC(
+      docShell->GetBrowsingContext(),
+      StaticPrefs::prompts_modalType_insecureFormSubmit(), title.get(),
+      message.get(),
+      (nsIPromptService::BUTTON_TITLE_IS_STRING *
+       nsIPromptService::BUTTON_POS_0) +
+          (nsIPromptService::BUTTON_TITLE_CANCEL *
+           nsIPromptService::BUTTON_POS_1),
       cont.get(), nullptr, nullptr, nullptr, &checkState, &buttonPressed);
   if (NS_FAILED(rv)) {
     return rv;

@@ -69,6 +69,7 @@ pref_groups = [
     'preferences',
     'print',
     'privacy',
+    'prompts',
     'security',
     'slider',
     'svg',
