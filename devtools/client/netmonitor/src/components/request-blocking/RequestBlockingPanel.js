@@ -26,7 +26,6 @@ const { PANELS } = require("devtools/client/netmonitor/src/constants");
 const ENABLE_BLOCKING_LABEL = L10N.getStr(
   "netmonitor.actionbar.enableBlocking"
 );
-const ADD_BUTTON_TOOLTIP = L10N.getStr("netmonitor.actionbar.addBlockedUrl");
 const ADD_URL_PLACEHOLDER = L10N.getStr(
   "netmonitor.actionbar.blockSearchPlaceholder"
 );
@@ -104,12 +103,7 @@ class RequestBlockingPanel extends Component {
           }),
           span({ className: "request-blocking-label" }, ENABLE_BLOCKING_LABEL)
         )
-      ),
-      button({
-        className: "devtools-button",
-        title: ADD_BUTTON_TOOLTIP,
-        onClick: () => this.refs.addInput.focus(),
-      })
+      )
     );
   }
 
