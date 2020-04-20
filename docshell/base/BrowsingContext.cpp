@@ -200,6 +200,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       nsILoadInfo::EMBEDDER_POLICY_NULL);
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
+  context->mFields.SetWithoutSyncing<IDX_WatchedByDevtools>(false);
 
   if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
@@ -1866,6 +1867,12 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
                              const bool& aAllowPlugins,
+                             ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevtools>,
+                             const bool& aWatchedByDevtools,
                              ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
 }

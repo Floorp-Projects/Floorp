@@ -12845,5 +12845,6 @@ nsDocShell::GetWatchedByDevtools(bool* aWatched) {
 NS_IMETHODIMP
 nsDocShell::SetWatchedByDevtools(bool aWatched) {
   mWatchedByDevtools = aWatched;
+  mBrowsingContext->SetWatchedByDevtools(aWatched);
   return NS_OK;
 }
