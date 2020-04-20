@@ -64,27 +64,6 @@ impl BufferManager {
             }
         }
     }
-    pub fn push_silent_data(&mut self, silent_samples: usize) {
-        let pushed = match &mut self.producer {
-            RingBufferProducer::FloatRingBufferProducer(p) => {
-                let mut silent_buffer = [0. as f32; INPUT_BUFFER_CAPACITY];
-                let silent_slice = silent_buffer.split_at_mut(silent_samples).0;
-                p.push_slice(silent_slice)
-            }
-            RingBufferProducer::IntegerRingBufferProducer(p) => {
-                let mut silent_buffer = [0 as i16; INPUT_BUFFER_CAPACITY];
-                let silent_slice = silent_buffer.split_at_mut(silent_samples).0;
-                p.push_slice(silent_slice)
-            }
-        };
-        if pushed != silent_samples {
-            cubeb_log!(
-                "Input ringbuffer full, could only push {} instead of {}",
-                pushed,
-                silent_samples
-            );
-        }
-    }
     pub fn push_data(&mut self, input_data: *const c_void, read_samples: usize) {
         let pushed = match &mut self.producer {
             RingBufferProducer::FloatRingBufferProducer(p) => {

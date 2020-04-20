@@ -679,7 +679,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0f62d389cc04cc3707368eda14fe1904ee8d7981#0f62d389cc04cc3707368eda14fe1904ee8d7981"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=6156e941e5f46a641d2da10ca53a9ad318c10722#6156e941e5f46a641d2da10ca53a9ad318c10722"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -916,7 +916,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0f62d389cc04cc3707368eda14fe1904ee8d7981#0f62d389cc04cc3707368eda14fe1904ee8d7981"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=6156e941e5f46a641d2da10ca53a9ad318c10722#6156e941e5f46a641d2da10ca53a9ad318c10722"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -933,7 +933,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=e845327c3fe91192870a34fc2999d2f460291295#e845327c3fe91192870a34fc2999d2f460291295"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -3380,7 +3380,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=e845327c3fe91192870a34fc2999d2f460291295#e845327c3fe91192870a34fc2999d2f460291295"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -3389,7 +3389,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=e845327c3fe91192870a34fc2999d2f460291295#e845327c3fe91192870a34fc2999d2f460291295"
 dependencies = [
  "libc",
 ]
