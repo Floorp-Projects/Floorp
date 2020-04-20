@@ -104,6 +104,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   using BrowsingContext::LoadURI;
   void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
                ErrorResult& aError);
+  void Stop(uint32_t aStopFlags);
 
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
   RefPtr<RemotenessPromise> ChangeFrameRemoteness(const nsAString& aRemoteType,
