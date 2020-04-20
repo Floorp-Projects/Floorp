@@ -9,6 +9,8 @@
 #include "nsIObserverService.h"
 #include "nsIOService.h"
 #include "SocketProcessParent.h"
+#include "ProcessUtils.h"
+#include "mozilla/ipc/FileDescriptor.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxBroker.h"
@@ -22,6 +24,8 @@
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
 #endif
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
