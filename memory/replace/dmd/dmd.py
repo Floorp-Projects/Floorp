@@ -207,9 +207,9 @@ variable is used to find breakpad symbols for stack fixing.
     return p.parse_args(sys.argv[1:])
 
 
-# Fix stacks if necessary: first write the output to a tempfile, then replace
-# the original file with it.
-def fixStackTraces(inputFilename, isZipped, opener):
+# Initialize stack fixing. Works much the same as fix_stacks.py:init, and the
+# warnings that apply to that function apply here too.
+def initStackFixing():
     # This append() call is needed to make the import statements work when this
     # script is installed as a symlink.
     sys.path.append(os.path.dirname(__file__))
@@ -217,19 +217,22 @@ def fixStackTraces(inputFilename, isZipped, opener):
     bpsyms = os.environ.get('BREAKPAD_SYMBOLS_PATH', None)
     sysname = platform.system()
     if bpsyms and os.path.exists(bpsyms):
-        import fix_stacks as fixModule
-
-        def fix(line):
-            return fixModule.fixSymbols(line, jsonMode=True, breakpadSymsDir=bpsyms)
+        import fix_stacks
+        return fix_stacks.init(json_mode=True, breakpad_syms_dir=bpsyms)
 
     elif sysname in ('Linux', 'Darwin', 'Windows'):
-        import fix_stacks as fixModule
-
-        def fix(line): return fixModule.fixSymbols(line, jsonMode=True)
+        import fix_stacks
+        return fix_stacks.init(json_mode=True)
 
     else:
-        return
+        # No stack fixing will be performed. `fix` is the identify function,
+        # and `finish` does nothing.
+        return (lambda line: line, lambda: None)
 
+
+# Fix stacks if necessary: first write the output to a tempfile, then replace
+# the original file with it. `fix` must have come from `initStackTraces`.
+def fixStackTraces(fix, inputFilename, isZipped, opener):
     # Fix stacks, writing output to a temporary file, and then overwrite the
     # original file.
     tmpFile = tempfile.NamedTemporaryFile(delete=False)
@@ -264,7 +267,9 @@ def getDigestFromFile(args, inputFile):
 
     # Fix stack traces unless otherwise instructed.
     if not args.no_fix_stacks:
-        fixStackTraces(inputFile, isZipped, opener)
+        (fix, finish) = initStackFixing()
+        fixStackTraces(fix, inputFile, isZipped, opener)
+        finish()
 
     if args.clamp_contents:
         clampBlockList(args, inputFile, isZipped, opener)
