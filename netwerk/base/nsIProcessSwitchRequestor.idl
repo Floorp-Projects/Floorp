@@ -23,20 +23,6 @@ interface nsIProcessSwitchRequestor : nsISupports
   readonly attribute nsIChannel channel;
 
   /**
-   * Instructs the callee to be loaded in a new process. Like 'redirectTo'
-   * this can only be used on channels that have not yet called their
-   * listener's OnStartRequest(). Can only be called during the
-   * channel-on-may-change-process observer notification.
-   *
-   * @param aTabPromise   a promise which resolves to a nsIRemotTab object
-   *                      which the load will proceed in.
-   * @param aIdentifier   a 64-bit ID which will be provided to the
-   *                      ChildProcessChannelListener.
-   */
-  [must_use] void switchProcessTo(in Promise aTabPromise,
-                                  in unsigned long long aIdentifier);
-
-  /**
    * Used to determine if there is a Cross-Origin-Opener-Policy mismatch
    * that would require switching the channel to another process.
    * @throws NS_ERROR_NOT_AVAILABLE if we don't have a responseHead
