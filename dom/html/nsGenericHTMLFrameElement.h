@@ -49,7 +49,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
         mSrcLoadHappened(false),
         mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK),
         mBrowserFrameListenersRegistered(false),
-        mFrameLoaderCreationDisallowed(false),
         mReallyIsBrowser(false) {}
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -134,7 +133,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   bool mNetworkCreated;
 
   bool mBrowserFrameListenersRegistered;
-  bool mFrameLoaderCreationDisallowed;
   bool mReallyIsBrowser;
 
   // This flag is only used by <iframe>. See HTMLIFrameElement::
