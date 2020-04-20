@@ -668,6 +668,17 @@ BasePrincipal::GetPrepath(nsACString& aPath) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetFilePath(nsACString& aPath) {
+  aPath.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetFilePath(aPath);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetIsSystemPrincipal(bool* aResult) {
   *aResult = IsSystemPrincipal();
   return NS_OK;

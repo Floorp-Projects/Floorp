@@ -231,7 +231,6 @@ interface nsIPrincipal : nsISerializable
      */
     [noscript] readonly attribute ACString asciiHost;
 
-
     /**
      * Returns the "host" portion of the 
      * Principals URI, if any.
@@ -239,11 +238,16 @@ interface nsIPrincipal : nsISerializable
     [noscript] readonly attribute ACString host;
 
     /**
-        * Returns the prepath of the principals uri
-        * follows the format scheme:
-        * "scheme://username:password@hostname:portnumber/"
-    */
-        [noscript] readonly attribute ACString prepath;
+     * Returns the prepath of the principals uri
+     * follows the format scheme:
+     * "scheme://username:password@hostname:portnumber/"
+     */
+    [noscript] readonly attribute ACString prepath;
+
+    /**
+     * Returns the filePath of the principals uri. See nsIURI.
+     */
+    [noscript] readonly attribute ACString filePath;
 
     /**
       * Returns the ASCII Spec from the Principals URI.
@@ -322,7 +326,8 @@ interface nsIPrincipal : nsISerializable
      *
      * This method returns false instead of throwing upon errors.
      */ 
-    readonly attribute bool isOriginPotentiallyTrustworthy;
+    [infallible]
+    readonly attribute boolean isOriginPotentiallyTrustworthy;
 
     /**
      * Returns the Flags of the Principals 
