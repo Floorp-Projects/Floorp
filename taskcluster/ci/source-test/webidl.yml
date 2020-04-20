@@ -9,7 +9,7 @@ test:
         symbol: Wp
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800

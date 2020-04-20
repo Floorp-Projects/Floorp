@@ -4,7 +4,7 @@
 ---
 job-defaults:
     platform: gecko-decision/opt
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 3600

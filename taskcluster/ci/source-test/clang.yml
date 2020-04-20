@@ -13,7 +13,7 @@ job-defaults:
         code-review: true
     worker-type:
         by-platform:
-            linux64.*: t-linux-xlarge-source
+            linux64.*: t-linux-xlarge
     worker:
         docker-image: {in-tree: static-analysis-build}
         max-run-time: 5400
