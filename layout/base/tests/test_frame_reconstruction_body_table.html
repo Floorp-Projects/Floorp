@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>
+    Test for Bug 1630819: Test we don't reframe the html element when
+    inserting a block element into a display:table body element.
+  </title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+
+  function runTest() {
+    document.documentElement.offsetTop;
+
+    const frameCountBeforeReframe = utils.framesConstructed;
+
+    // We expect to construct one newly appended block, and reconstruct the
+    // display:table <body>, which consists of 8 frames including TableWrapper,
+    // Table, TableRowGroup, TableRow, TableColGroup, TableCol, TableCell, and
+    // TableCell's inner block.
+    const expectedFrameConstructionCount = 1 + 8;
+
+    let div = document.createElement("div");
+    document.body.appendChild(div);
+    document.documentElement.offsetTop;
+
+    is(utils.framesConstructed - frameCountBeforeReframe,
+       expectedFrameConstructionCount,
+       "We shouldn't reframe <html> when appending a <div> into a display:table <body>!");
+
+    SimpleTest.finish();
+  }
+  </script>
+
+  <style>
+  body {
+    display: table;
+  }
+  </style>
+
+  <body onload="runTest();"></body>
+</html>
