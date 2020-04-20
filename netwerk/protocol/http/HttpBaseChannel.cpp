@@ -3038,7 +3038,7 @@ void HttpBaseChannel::AddCookiesToRequest() {
   if (useCookieService) {
     nsICookieService* cs = gHttpHandler->GetCookieService();
     if (cs) {
-      cs->GetCookieStringFromHttp(mURI, nullptr, this, cookie);
+      cs->GetCookieStringFromHttp(mURI, this, cookie);
     }
 
     if (cookie.IsEmpty()) {

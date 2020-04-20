@@ -571,7 +571,6 @@ CookieServiceChild::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP
 CookieServiceChild::GetCookieStringFromHttp(nsIURI* /*aHostURI*/,
-                                            nsIURI* /*aFirstURI*/,
                                             nsIChannel* /*aChannel*/,
                                             nsACString& /*aCookieString*/) {
   return NS_ERROR_NOT_IMPLEMENTED;

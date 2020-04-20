@@ -13,7 +13,7 @@ function run_test() {
   let expected = "foo=bar; baz=foo";
   cs.setCookieStringFromHttp(uri, null, set, null);
 
-  let actual = cs.getCookieStringFromHttp(uri, null, null);
+  let actual = cs.getCookieStringFromHttp(uri, null);
   Assert.equal(actual, expected);
 
   uri = NetUtil.newURI("http://example.com/");

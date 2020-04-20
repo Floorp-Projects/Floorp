@@ -46,7 +46,7 @@ function* do_run_test() {
 
   // Check that the APIs behave appropriately.
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
-  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), "");
+  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null), "");
   Services.cookies.setCookieString(uri, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, null, "oh3=hai", null);
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
