@@ -2172,18 +2172,19 @@ bool IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape(
   return true;
 }
 
-bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration() {
+bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
+    ObjOperandId objId, uint32_t expandoAndGenerationOffset,
+    uint32_t generationOffset, ValOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   ExpandoAndGeneration* expandoAndGeneration =
-      rawWordStubField<ExpandoAndGeneration*>(reader.stubOffset());
+      rawWordStubField<ExpandoAndGeneration*>(expandoAndGenerationOffset);
   uint64_t* generationFieldPtr =
-      expandoGenerationStubFieldPtr(reader.stubOffset());
+      expandoGenerationStubFieldPtr(generationOffset);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
-  ValueOperand output =
-      allocator.defineValueRegister(masm, reader.valOperandId());
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

@@ -1905,10 +1905,12 @@ bool CacheIRCompiler::emitGuardSpecificNativeFunction(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardFunctionPrototype() {
+bool CacheIRCompiler::emitGuardFunctionPrototype(ObjOperandId objId,
+                                                 ObjOperandId protoId,
+                                                 uint32_t slotOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register prototypeObject = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register prototypeObject = allocator.useRegister(masm, protoId);
 
   // Allocate registers before the failure path to make sure they're registered
   // by addFailurePath.
@@ -1921,7 +1923,7 @@ bool CacheIRCompiler::emitGuardFunctionPrototype() {
   }
 
   // Guard on the .prototype object.
-  StubFieldOffset slot(reader.stubOffset(), StubField::Type::RawWord);
+  StubFieldOffset slot(slotOffset, StubField::Type::RawWord);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
   emitLoadStubField(slot, scratch2);
   BaseObjectSlotIndex prototypeSlot(scratch1, scratch2);
@@ -2230,10 +2232,11 @@ bool CacheIRCompiler::emitLoadWrapperTarget(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitLoadValueTag() {
+bool CacheIRCompiler::emitLoadValueTag(ValOperandId valId,
+                                       ValueTagOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  Register res = allocator.defineRegister(masm, reader.valueTagOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+  Register res = allocator.defineRegister(masm, resultId);
 
   Register tag = masm.extractTag(val, res);
   if (tag != res) {
@@ -2242,10 +2245,11 @@ bool CacheIRCompiler::emitLoadValueTag() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDOMExpandoValue() {
+bool CacheIRCompiler::emitLoadDOMExpandoValue(ObjOperandId objId,
+                                              ValOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand val = allocator.defineValueRegister(masm, resultId);
 
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()),
                val.scratchReg());
@@ -2255,11 +2259,11 @@ bool CacheIRCompiler::emitLoadDOMExpandoValue() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration() {
+bool CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration(
+    ObjOperandId objId, ValOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand output =
-      allocator.defineValueRegister(masm, reader.valOperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
   // Determine the expando's Address.
   Register scratch = output.scratchReg();
@@ -3023,10 +3027,11 @@ bool CacheIRCompiler::emitBigIntDecResult(BigIntOperandId inputId) {
   return emitBigIntUnaryOperationShared<Fn, BigInt::dec>(inputId);
 }
 
-bool CacheIRCompiler::emitTruncateDoubleToUInt32() {
+bool CacheIRCompiler::emitTruncateDoubleToUInt32(ValOperandId valId,
+                                                 Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-  Register res = allocator.defineRegister(masm, reader.int32OperandId());
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+  Register res = allocator.defineRegister(masm, resultId);
 
   Label int32, done;
   masm.branchTestInt32(Assembler::Equal, val, &int32);
@@ -3331,10 +3336,11 @@ bool CacheIRCompiler::emitGuardIndexIsValidUpdateOrAdd(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardTagNotEqual() {
+bool CacheIRCompiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
+                                           ValueTagOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register lhs = allocator.useRegister(masm, reader.valueTagOperandId());
-  Register rhs = allocator.useRegister(masm, reader.valueTagOperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3354,11 +3360,11 @@ bool CacheIRCompiler::emitGuardTagNotEqual() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto() {
+bool CacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto(
+    ObjOperandId objId, bool hasExpando, uint32_t shapeWrapperOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  bool hasExpando = reader.readBool();
-  StubFieldOffset shapeWrapper(reader.stubOffset(), StubField::Type::JSObject);
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset shapeWrapper(shapeWrapperOffset, StubField::Type::JSObject);
 
   AutoScratchRegister scratch(allocator, masm);
   Maybe<AutoScratchRegister> scratch2, scratch3;
@@ -5495,10 +5501,11 @@ bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
   return true;
 }
 
-bool CacheIRCompiler::emitCallInt32ToString() {
+bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
+                                            StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register input = allocator.useRegister(masm, reader.int32OperandId());
-  Register result = allocator.defineRegister(masm, reader.stringOperandId());
+  Register input = allocator.useRegister(masm, inputId);
+  Register result = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -5523,13 +5530,14 @@ bool CacheIRCompiler::emitCallInt32ToString() {
   return true;
 }
 
-bool CacheIRCompiler::emitCallNumberToString() {
+bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
+                                             StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  Register result = allocator.defineRegister(masm, reader.stringOperandId());
+  allocator.ensureDoubleRegister(masm, inputId, FloatReg0);
+  Register result = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -5555,10 +5563,11 @@ bool CacheIRCompiler::emitCallNumberToString() {
   return true;
 }
 
-bool CacheIRCompiler::emitBooleanToString() {
+bool CacheIRCompiler::emitBooleanToString(Int32OperandId inputId,
+                                          StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register boolean = allocator.useRegister(masm, reader.int32OperandId());
-  Register result = allocator.defineRegister(masm, reader.stringOperandId());
+  Register boolean = allocator.useRegister(masm, inputId);
+  Register result = allocator.defineRegister(masm, resultId);
   const JSAtomState& names = cx_->names();
   Label true_, done;
 
