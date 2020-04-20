@@ -76,11 +76,13 @@ class InProcessBrowserChildMessageManager final
   virtual bool DoSendBlockingMessage(JSContext* aCx, const nsAString& aMessage,
                                      StructuredCloneData& aData,
                                      JS::Handle<JSObject*> aCpows,
+                                     nsIPrincipal* aPrincipal,
                                      nsTArray<StructuredCloneData>* aRetVal,
                                      bool aIsSync) override;
   virtual nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
                                       StructuredCloneData& aData,
-                                      JS::Handle<JSObject*> aCpows) override;
+                                      JS::Handle<JSObject*> aCpows,
+                                      nsIPrincipal* aPrincipal) override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 

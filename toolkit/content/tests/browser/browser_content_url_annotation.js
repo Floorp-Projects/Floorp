@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* global Services, requestLongerTimeout, TestUtils, BrowserTestUtils,
- ok, info, dump, is, Ci, Cu, Components, ctypes,
+ ok, info, dump, is, Ci, Cu, Components, ctypes, privateNoteIntentionalCrash,
  gBrowser, add_task, addEventListener, removeEventListener, ContentTask */
 
 "use strict";

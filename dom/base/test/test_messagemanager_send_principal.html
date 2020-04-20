@@ -28,6 +28,9 @@
 
         sendAsyncMessage("test:result", "principal.origin: " +
                          ("origin" in message.data ? "OK" : "KO"));
+
+        sendAsyncMessage("test:result", "principal.isInIsolatedMozBrowserElement: " +
+                         ("isInIsolatedMozBrowserElement" in message.data ? "OK" : "KO"));
       });
 
       addMessageListener("test:system", function(message) {
@@ -55,19 +58,18 @@
     function runTests() {
       ok("Browser prefs set.");
 
-      let iframe = document.createXULElement("browser");
-      iframe.setAttribute("type", "content");
-      iframe.setAttribute("forcemessagemanager", "true");
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
       iframe.id = "iframe";
       iframe.src = childFrameURL;
 
       let sb = new Cu.Sandbox(['http://foo.example.com', 'http://bar.example.com']);
       let ep = Cu.getObjectPrincipal(sb);
 
-      iframe.addEventListener("load", function() {
+      iframe.addEventListener("mozbrowserloadend", function() {
         ok(true, "Got iframe load event.");
 
-        let mm = iframe.messageManager;
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
         mm.addMessageListener("test:result", function(message) {
           // We need to wrap to access message.json, and unwrap to do the
           // identity check.
@@ -77,6 +79,8 @@
           } else if(/KO$/.exec(msg)) {
             ok(true, false);
           } else if (/DONE/.exec(msg)) {
+            permManager.removeFromPrincipal(window.document.nodePrincipal, "browser",
+                                            Ci.nsIPermissionManager.ALLOW_ACTION);
             SimpleTest.finish();
           }
         });
@@ -102,8 +106,13 @@
     addEventListener("load", function() {
       info("Got load event.");
 
+      permManager.addFromPrincipal(window.document.nodePrincipal, "browser",
+                                   Ci.nsIPermissionManager.ALLOW_ACTION);
+
       SpecialPowers.pushPrefEnv({
         "set": [
+          ["dom.mozBrowserFramesEnabled", true],
+          ["network.disable.ipc.security", true],
           ["browser.pagethumbnails.capturing_disabled", true]
         ]
       }, runTests);

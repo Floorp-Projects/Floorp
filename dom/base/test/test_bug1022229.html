@@ -11,10 +11,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022229
   <script type="application/javascript">
 
   /** Test for postMessage between sandboxed iframe and non-sandboxed window.
+      This test is particularly interesting on b2g where we're in a mozBrowser.
+
+      We set the test up with an extra iframe so that we can easily run it in
+      an artificial mozbrowser for desktop builds.
    **/
   SimpleTest.waitForExplicitFinish();
   function go() {
     var ifr = document.createElement('iframe');
+
+    /* Uncomment this chunk to run in a mozBrowser. Make sure to uncomment the
+       chunk in iframe_main as well. */
+    /*
+    SpecialPowers.Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
+    SpecialPowers.Services.prefs.setBoolPref("network.disable.ipc.security", true);
+    SpecialPowers.Services.prefs.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
+    SpecialPowers.addPermission("browser", true, document);
+    SpecialPowers.wrap(ifr).mozbrowser = true;
+    */
 
     ifr.setAttribute('src', 'iframe_main_bug1022229.html');
     document.body.appendChild(ifr);

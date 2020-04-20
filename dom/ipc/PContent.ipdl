@@ -941,11 +941,11 @@ parent:
     sync GetGfxVars() returns (GfxVarUpdate[] vars);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
-                     CpowEntry[] aCpows)
+                     CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                                        CpowEntry[] aCpows)
+                                        CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     async ShowAlert(nsIAlertNotification alert);
@@ -1557,7 +1557,7 @@ both:
                                            uint64_t aEpoch);
 
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       ClonedMessageData aData);
+                       Principal aPrincipal, ClonedMessageData aData);
 
     /**
      * Notify `push-subscription-modified` observers in the parent and child.

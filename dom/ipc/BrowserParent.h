@@ -345,16 +345,17 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows,
+      nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvRpcMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows,
+      nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMessage,
                                            nsTArray<CpowEntry>&& aCpows,
+                                           nsIPrincipal* aPrincipal,
                                            const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvNotifyIMEFocus(
@@ -750,7 +751,7 @@ class BrowserParent final : public PBrowserParent,
 
   bool ReceiveMessage(
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
-      mozilla::jsipc::CpowHolder* aCpows,
+      mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aJSONRetVal = nullptr);
 
   mozilla::ipc::IPCResult RecvAsyncAuthPrompt(const nsCString& aUri,
