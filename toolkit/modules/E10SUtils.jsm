@@ -850,17 +850,6 @@ var E10SUtils = {
     this.log().info(
       `shouldLoadURIInThisProcess: have ${remoteType} want ${wantRemoteType}`
     );
-
-    if (
-      (aRemoteSubframes || documentChannel) &&
-      remoteType != NOT_REMOTE &&
-      wantRemoteType != NOT_REMOTE &&
-      documentChannelPermittedForURI(aURI)
-    ) {
-      // We can switch later with documentchannel.
-      return true;
-    }
-
     return remoteType == wantRemoteType;
   },
 
