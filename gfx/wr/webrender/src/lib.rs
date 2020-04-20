@@ -212,7 +212,7 @@ pub use crate::frame_builder::ChasePrimitive;
 pub use crate::prim_store::PrimitiveDebugId;
 pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
-    AsyncPropertySampler, CpuProfile, DebugFlags, RendererKind, GpuProfile, GraphicsApi,
+    AsyncPropertySampler, CpuProfile, DebugFlags, GpuProfile, GraphicsApi,
     GraphicsApiInfo, PipelineInfo, Renderer, RendererError, RendererOptions, RenderResults,
     RendererStats, SceneBuilderHooks, ThreadListener, ShaderPrecacheFlags,
     MAX_VERTEX_TEXTURE_WIDTH,
