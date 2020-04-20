@@ -7,6 +7,9 @@
 <!-- non-empty alt to avoid the broken image icon -->
 <img id="image1" alt=" ">
 <script>
+
+window.addEventListener("MozReftestInvalidate", reftestInvalidateListener);
+
 // This loads a externally specified image, forces a draw (in case of
 // decode-on-draw), waits 350ms, and then triggers the reftest snapshot.
 // This allows the animation on the page to complete.
@@ -23,17 +26,28 @@ img.src = imgURL;
 img.onload = forceDecode;
 img.onerror = forceDecode;
 
+let decodeComplete = false;
+let gotReftestInvalidate = false;
+
 function forceDecode() {
+  img.decode().then(function() {
+    decodeComplete = true;
+    maybeStartTimer();
+  }, function() {
+    decodeComplete = true;
+    maybeStartTimer();
+  });
+}
 
-  try {
-    // We need to force drawing of the image in an invisible context
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-  } catch(e) {}
+function reftestInvalidateListener() {
+  gotReftestInvalidate = true;
+  maybeStartTimer();
+}
 
-  // We've force the decode. start the timer to trigger the reftest
-  startTimer();
+function maybeStartTimer() {
+  if (decodeComplete && gotReftestInvalidate) {
+    startTimer();
+  }
 }
 
 function startTimer() {

@@ -440,9 +440,16 @@ void nsImageLoadingContent::MaybeResolveDecodePromises() {
   // before LOAD_COMPLETE because we want to start as soon as possible.
   uint32_t flags = imgIContainer::FLAG_HIGH_QUALITY_SCALING |
                    imgIContainer::FLAG_AVOID_REDECODE_FOR_SIZE;
-  if (!mCurrentRequest->RequestDecodeWithResult(flags)) {
+  imgIContainer::DecodeResult decodeResult =
+      mCurrentRequest->RequestDecodeWithResult(flags);
+  if (decodeResult == imgIContainer::DECODE_REQUESTED) {
     return;
   }
+  if (decodeResult == imgIContainer::DECODE_REQUEST_FAILED) {
+    RejectDecodePromises(NS_ERROR_DOM_IMAGE_BROKEN);
+    return;
+  }
+  MOZ_ASSERT(decodeResult == imgIContainer::DECODE_SURFACE_AVAILABLE);
 
   // We can only fulfill the promises once we have all the data.
   if (!(status & imgIRequest::STATUS_LOAD_COMPLETE)) {

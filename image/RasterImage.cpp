@@ -371,7 +371,11 @@ LookupResult RasterImage::LookupFrame(const UnorientedIntSize& aSize,
           UnorientedIntSize::FromUnknownSize(result.SuggestedSize());
     }
 
-    bool ranSync = Decode(requestedSize, aFlags, aPlaybackType);
+    bool ranSync = false, failed = false;
+    Decode(requestedSize, aFlags, aPlaybackType, ranSync, failed);
+    if (failed) {
+      result.SetFailedToRequestDecode();
+    }
 
     // If we can or did sync decode, we should already have the frame.
     if (ranSync || syncDecode) {
@@ -1089,23 +1093,31 @@ bool RasterImage::StartDecodingWithResult(uint32_t aFlags,
 
   uint32_t flags = (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST |
                    FLAG_HIGH_QUALITY_SCALING;
-  DrawableSurface surface =
+  LookupResult result =
       RequestDecodeForSizeInternal(ToUnoriented(mSize), flags, aWhichFrame);
+  DrawableSurface surface = std::move(result.Surface());
   return surface && surface->IsFinished();
 }
 
-bool RasterImage::RequestDecodeWithResult(uint32_t aFlags,
-                                          uint32_t aWhichFrame) {
+imgIContainer::DecodeResult RasterImage::RequestDecodeWithResult(
+    uint32_t aFlags, uint32_t aWhichFrame) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mError) {
-    return false;
+    return imgIContainer::DECODE_REQUEST_FAILED;
   }
 
   uint32_t flags = aFlags | FLAG_ASYNC_NOTIFY;
-  DrawableSurface surface =
+  LookupResult result =
       RequestDecodeForSizeInternal(ToUnoriented(mSize), flags, aWhichFrame);
-  return surface && surface->IsFinished();
+  DrawableSurface surface = std::move(result.Surface());
+  if (surface && surface->IsFinished()) {
+    return imgIContainer::DECODE_SURFACE_AVAILABLE;
+  }
+  if (result.GetFailedToRequestDecode()) {
+    return imgIContainer::DECODE_REQUEST_FAILED;
+  }
+  return imgIContainer::DECODE_REQUESTED;
 }
 
 NS_IMETHODIMP
@@ -1124,21 +1136,23 @@ RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags,
   return NS_OK;
 }
 
-DrawableSurface RasterImage::RequestDecodeForSizeInternal(
+LookupResult RasterImage::RequestDecodeForSizeInternal(
     const UnorientedIntSize& aSize, uint32_t aFlags, uint32_t aWhichFrame) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aWhichFrame > FRAME_MAX_VALUE) {
-    return DrawableSurface();
+    return LookupResult(MatchType::NOT_FOUND);
   }
 
   if (mError) {
-    return DrawableSurface();
+    LookupResult result = LookupResult(MatchType::NOT_FOUND);
+    result.SetFailedToRequestDecode();
+    return result;
   }
 
   if (!mHasSize) {
     mWantFullDecode = true;
-    return DrawableSurface();
+    return LookupResult(MatchType::NOT_FOUND);
   }
 
   // Decide whether to sync decode images we can decode quickly. Here we are
@@ -1151,9 +1165,8 @@ DrawableSurface RasterImage::RequestDecodeForSizeInternal(
       shouldSyncDecodeIfFast ? aFlags : aFlags & ~FLAG_SYNC_DECODE_IF_FAST;
 
   // Perform a frame lookup, which will implicitly start decoding if needed.
-  LookupResult result = LookupFrame(aSize, flags, ToPlaybackType(aWhichFrame),
-                                    /* aMarkUsed = */ false);
-  return std::move(result.Surface());
+  return LookupFrame(aSize, flags, ToPlaybackType(aWhichFrame),
+                     /* aMarkUsed = */ false);
 }
 
 static bool LaunchDecodingTask(IDecodingTask* aTask, RasterImage* aImage,
@@ -1178,18 +1191,20 @@ static bool LaunchDecodingTask(IDecodingTask* aTask, RasterImage* aImage,
   return false;
 }
 
-bool RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
-                         PlaybackType aPlaybackType) {
+void RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
+                         PlaybackType aPlaybackType, bool& aOutRanSync,
+                         bool& aOutFailed) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mError) {
-    return false;
+    aOutFailed = true;
+    return;
   }
 
   // If we don't have a size yet, we can't do any other decoding.
   if (!mHasSize) {
     mWantFullDecode = true;
-    return false;
+    return;
   }
 
   // We're about to decode again, which may mean that some of the previous sizes
@@ -1248,7 +1263,8 @@ bool RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
     // managed to insert the new decoder. Pretend we did a sync call to make
     // the caller lookup in the surface cache again.
     MOZ_ASSERT(!task);
-    return true;
+    aOutRanSync = true;
+    return;
   }
 
   if (animated) {
@@ -1266,14 +1282,15 @@ bool RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!task);
-    return false;
+    aOutFailed = true;
+    return;
   }
 
   MOZ_ASSERT(task);
   mDecodeCount++;
 
   // We're ready to decode; start the decoder.
-  return LaunchDecodingTask(task, this, aFlags, mAllSourceData);
+  aOutRanSync = LaunchDecodingTask(task, this, aFlags, mAllSourceData);
 }
 
 NS_IMETHODIMP
@@ -1314,17 +1331,19 @@ void RasterImage::RecoverFromInvalidFrames(const UnorientedIntSize& aSize,
     SurfaceCache::LockImage(ImageKey(this));
   }
 
+  bool unused1, unused2;
+
   // Animated images require some special handling, because we normally require
   // that they never be discarded.
   if (mAnimationState) {
     Decode(ToUnoriented(mSize), aFlags | FLAG_SYNC_DECODE,
-           PlaybackType::eAnimated);
+           PlaybackType::eAnimated, unused1, unused2);
     ResetAnimation();
     return;
   }
 
   // For non-animated images, it's fine to recover using an async decode.
-  Decode(aSize, aFlags, PlaybackType::eStatic);
+  Decode(aSize, aFlags, PlaybackType::eStatic, unused1, unused2);
 }
 
 static bool HaveSkia() {
