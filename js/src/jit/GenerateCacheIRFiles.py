@@ -66,6 +66,7 @@ operand_writer_info = {
     'SymId': ('SymbolOperandId', 'writeOperandId'),
     'Int32Id': ('Int32OperandId', 'writeOperandId'),
     'NumId': ('NumberOperandId', 'writeOperandId'),
+    'BigIntId': ('BigIntOperandId', 'writeOperandId'),
 
     'ShapeField': ('Shape*', 'writeShapeField'),
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
@@ -131,6 +132,7 @@ operand_compiler_info = {
     'SymId': ('SymbolOperandId', 'Id', 'reader.symbolOperandId()'),
     'Int32Id': ('Int32OperandId', 'Id', 'reader.int32OperandId()'),
     'NumId': ('NumberOperandId', 'Id', 'reader.numberOperandId()'),
+    'BigIntId': ('BigIntOperandId', 'Id', 'reader.bigIntOperandId()'),
 
     'ShapeField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),

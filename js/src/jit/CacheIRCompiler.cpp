@@ -2354,64 +2354,69 @@ bool CacheIRCompiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitDoubleAddResult() {
+bool CacheIRCompiler::emitDoubleAddResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   masm.addDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
   return true;
 }
-bool CacheIRCompiler::emitDoubleSubResult() {
+bool CacheIRCompiler::emitDoubleSubResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   masm.subDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
   return true;
 }
-bool CacheIRCompiler::emitDoubleMulResult() {
+bool CacheIRCompiler::emitDoubleMulResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   masm.mulDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
   return true;
 }
-bool CacheIRCompiler::emitDoubleDivResult() {
+bool CacheIRCompiler::emitDoubleDivResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   masm.divDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
   return true;
 }
-bool CacheIRCompiler::emitDoubleModResult() {
+bool CacheIRCompiler::emitDoubleModResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
@@ -2430,13 +2435,14 @@ bool CacheIRCompiler::emitDoubleModResult() {
 
   return true;
 }
-bool CacheIRCompiler::emitDoublePowResult() {
+bool CacheIRCompiler::emitDoublePowResult(NumberOperandId lhsId,
+                                          NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
@@ -2770,10 +2776,10 @@ bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
   return true;
 }
 
-bool CacheIRCompiler::emitInt32NegationResult() {
+bool CacheIRCompiler::emitInt32NegationResult(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register val = allocator.useRegister(masm, reader.int32OperandId());
+  Register val = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -2790,9 +2796,9 @@ bool CacheIRCompiler::emitInt32NegationResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32IncResult() {
+bool CacheIRCompiler::emitInt32IncResult(Int32OperandId inputId) {
   AutoOutputRegister output(*this);
-  Register input = allocator.useRegister(masm, reader.int32OperandId());
+  Register input = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -2807,9 +2813,9 @@ bool CacheIRCompiler::emitInt32IncResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitInt32DecResult() {
+bool CacheIRCompiler::emitInt32DecResult(Int32OperandId inputId) {
   AutoOutputRegister output(*this);
-  Register input = allocator.useRegister(masm, reader.int32OperandId());
+  Register input = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -2836,10 +2842,10 @@ bool CacheIRCompiler::emitInt32NotResult(Int32OperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitDoubleNegationResult() {
+bool CacheIRCompiler::emitDoubleNegationResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, inputId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2855,9 +2861,10 @@ bool CacheIRCompiler::emitDoubleNegationResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc) {
+bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc,
+                                             NumberOperandId inputId) {
   AutoOutputRegister output(*this);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, inputId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2881,19 +2888,20 @@ bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc) {
   return true;
 }
 
-bool CacheIRCompiler::emitDoubleIncResult() {
-  return emitDoubleIncDecResult(true);
+bool CacheIRCompiler::emitDoubleIncResult(NumberOperandId inputId) {
+  return emitDoubleIncDecResult(true, inputId);
 }
 
-bool CacheIRCompiler::emitDoubleDecResult() {
-  return emitDoubleIncDecResult(false);
+bool CacheIRCompiler::emitDoubleDecResult(NumberOperandId inputId) {
+  return emitDoubleIncDecResult(false, inputId);
 }
 
 template <typename Fn, Fn fn>
-bool CacheIRCompiler::emitBigIntBinaryOperationShared() {
+bool CacheIRCompiler::emitBigIntBinaryOperationShared(BigIntOperandId lhsId,
+                                                      BigIntOperandId rhsId) {
   AutoCallVM callvm(masm, this, allocator);
-  Register lhs = allocator.useRegister(masm, reader.bigIntOperandId());
-  Register rhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
 
   callvm.prepare();
 
@@ -2904,76 +2912,87 @@ bool CacheIRCompiler::emitBigIntBinaryOperationShared() {
   return true;
 }
 
-bool CacheIRCompiler::emitBigIntAddResult() {
+bool CacheIRCompiler::emitBigIntAddResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::add>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::add>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntSubResult() {
+bool CacheIRCompiler::emitBigIntSubResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::sub>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::sub>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntMulResult() {
+bool CacheIRCompiler::emitBigIntMulResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::mul>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::mul>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntDivResult() {
+bool CacheIRCompiler::emitBigIntDivResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::div>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::div>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntModResult() {
+bool CacheIRCompiler::emitBigIntModResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::mod>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::mod>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntPowResult() {
+bool CacheIRCompiler::emitBigIntPowResult(BigIntOperandId lhsId,
+                                          BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::pow>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::pow>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntBitAndResult() {
+bool CacheIRCompiler::emitBigIntBitAndResult(BigIntOperandId lhsId,
+                                             BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::bitAnd>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitAnd>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntBitOrResult() {
+bool CacheIRCompiler::emitBigIntBitOrResult(BigIntOperandId lhsId,
+                                            BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::bitOr>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitOr>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntBitXorResult() {
+bool CacheIRCompiler::emitBigIntBitXorResult(BigIntOperandId lhsId,
+                                             BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::bitXor>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitXor>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntLeftShiftResult() {
+bool CacheIRCompiler::emitBigIntLeftShiftResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::lsh>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::lsh>(lhsId, rhsId);
 }
 
-bool CacheIRCompiler::emitBigIntRightShiftResult() {
+bool CacheIRCompiler::emitBigIntRightShiftResult(BigIntOperandId lhsId,
+                                                 BigIntOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, BigInt::rsh>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::rsh>(lhsId, rhsId);
 }
 
 template <typename Fn, Fn fn>
-bool CacheIRCompiler::emitBigIntUnaryOperationShared() {
+bool CacheIRCompiler::emitBigIntUnaryOperationShared(BigIntOperandId inputId) {
   AutoCallVM callvm(masm, this, allocator);
-  Register val = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register val = allocator.useRegister(masm, inputId);
 
   callvm.prepare();
 
@@ -2983,28 +3002,28 @@ bool CacheIRCompiler::emitBigIntUnaryOperationShared() {
   return true;
 }
 
-bool CacheIRCompiler::emitBigIntNotResult() {
+bool CacheIRCompiler::emitBigIntNotResult(BigIntOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, BigInt::bitNot>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::bitNot>(inputId);
 }
 
-bool CacheIRCompiler::emitBigIntNegationResult() {
+bool CacheIRCompiler::emitBigIntNegationResult(BigIntOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, BigInt::neg>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::neg>(inputId);
 }
 
-bool CacheIRCompiler::emitBigIntIncResult() {
+bool CacheIRCompiler::emitBigIntIncResult(BigIntOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, BigInt::inc>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::inc>(inputId);
 }
 
-bool CacheIRCompiler::emitBigIntDecResult() {
+bool CacheIRCompiler::emitBigIntDecResult(BigIntOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, BigInt::dec>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::dec>(inputId);
 }
 
 bool CacheIRCompiler::emitTruncateDoubleToUInt32() {
@@ -4143,10 +4162,10 @@ bool CacheIRCompiler::emitLoadDoubleResult(NumberOperandId valId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypeOfObjectResult() {
+bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Label slowCheck, isObject, isCallable, isUndefined, done;
@@ -5294,11 +5313,12 @@ Address CacheIRCompiler::emitAddressFromStubField(StubFieldOffset val,
   return Address(base, 0);
 }
 
-bool CacheIRCompiler::emitLoadInstanceOfObjectResult() {
+bool CacheIRCompiler::emitLoadInstanceOfObjectResult(ValOperandId lhsId,
+                                                     ObjOperandId protoId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  ValueOperand lhs = allocator.useValueRegister(masm, reader.valOperandId());
-  Register proto = allocator.useRegister(masm, reader.objOperandId());
+  ValueOperand lhs = allocator.useValueRegister(masm, lhsId);
+  Register proto = allocator.useRegister(masm, protoId);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
