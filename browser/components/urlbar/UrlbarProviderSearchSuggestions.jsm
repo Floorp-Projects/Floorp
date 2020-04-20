@@ -171,7 +171,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     if (
       queryContext.tokens.length == 1 &&
       queryContext.tokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN &&
-      Services.uriFixup.isDomainWhitelisted(queryContext.tokens[0].value, -1)
+      Services.uriFixup.isDomainWhitelisted(queryContext.tokens[0].value)
     ) {
       return false;
     }

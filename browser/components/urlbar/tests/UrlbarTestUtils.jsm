@@ -12,8 +12,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -50,27 +52,28 @@ var UrlbarTestUtils = {
     selectionEnd = -1,
   } = {}) {
     await new Promise(resolve => waitForFocus(resolve, window));
-    let lastSearchString = window.gURLBar._lastSearchString;
     window.gURLBar.inputField.focus();
-    window.gURLBar.value = value;
+    // Using the value setter in some cases may trim and fetch unexpected
+    // results, then pick an alternate path.
+    if (UrlbarPrefs.get("trimURLs") && value != BrowserUtils.trimURL(value)) {
+      window.gURLBar.inputField.value = value;
+      fireInputEvent = true;
+    } else {
+      window.gURLBar.value = value;
+    }
     if (selectionStart >= 0 && selectionEnd >= 0) {
       window.gURLBar.selectionEnd = selectionEnd;
       window.gURLBar.selectionStart = selectionStart;
     }
+
+    // An input event will start a new search, so be careful not to start a
+    // search if we fired an input event since that would start two searches.
     if (fireInputEvent) {
       // This is necessary to get the urlbar to set gBrowser.userTypedValue.
       this.fireInputEvent(window);
     } else {
       window.gURLBar.setPageProxyState("invalid");
-    }
-    // An input event will start a new search, with a couple of exceptions, so
-    // be careful not to call _startSearch if we fired an input event since that
-    // would start two searches.  The first exception is when the new search and
-    // old search are the same.  Many tests do consecutive searches with the
-    // same string and expect new searches to start, so call _startSearch
-    // directly then.
-    if (!fireInputEvent || value == lastSearchString) {
-      this._startSearch(window.gURLBar, value, selectionStart, selectionEnd);
+      window.gURLBar.startQuery();
     }
     return this.promiseSearchComplete(window);
   },
@@ -108,16 +111,6 @@ var UrlbarTestUtils = {
    */
   getOneOffSearchButtonsVisible(win) {
     return this.getOneOffSearchButtons(win).style.display != "none";
-  },
-
-  _startSearch(urlbar, text, selectionStart = -1, selectionEnd = -1) {
-    urlbar.value = text;
-    if (selectionStart >= 0 && selectionEnd >= 0) {
-      urlbar.selectionEnd = selectionEnd;
-      urlbar.selectionStart = selectionStart;
-    }
-    urlbar.setPageProxyState("invalid");
-    urlbar.startQuery();
   },
 
   /**
