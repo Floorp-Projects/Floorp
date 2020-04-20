@@ -52,57 +52,69 @@
       <radio value="5" data-l10n-id="connection-proxy-option-system" id="systemPref" hidden="true" />
       <radio value="1" data-l10n-id="connection-proxy-option-manual"/>
       <box id="proxy-grid" class="indent" flex="1">
-        <hbox pack="end">
-          <label data-l10n-id="connection-proxy-http" control="networkProxyHTTP" />
-        </hbox>
-        <hbox align="center">
-          <html:input id="networkProxyHTTP" type="text" style="-moz-box-flex: 1;"
-                      preference="network.proxy.http"/>
-          <label data-l10n-id="connection-proxy-http-port" control="networkProxyHTTP_Port" />
-          <html:input id="networkProxyHTTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535"
-                      preference="network.proxy.http_port"/>
-        </hbox>
-        <hbox/>
-        <hbox>
-          <checkbox id="shareAllProxies" data-l10n-id="connection-proxy-http-sharing"
-                    preference="network.proxy.share_proxy_settings"/>
-        </hbox>
-        <hbox pack="end">
-          <label data-l10n-id="connection-proxy-https" control="networkProxySSL"/>
-        </hbox>
-        <hbox align="center">
-          <html:input id="networkProxySSL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ssl"/>
-          <label data-l10n-id="connection-proxy-ssl-port" control="networkProxySSL_Port" />
-          <html:input id="networkProxySSL_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                      preference="network.proxy.ssl_port"/>
-        </hbox>
-        <hbox pack="end">
-          <label data-l10n-id="connection-proxy-ftp" control="networkProxyFTP"/>
-        </hbox>
-        <hbox align="center">
-          <html:input id="networkProxyFTP" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ftp"/>
-          <label data-l10n-id="connection-proxy-ftp-port" control="networkProxyFTP_Port"/>
-          <html:input id="networkProxyFTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                      preference="network.proxy.ftp_port"/>
-        </hbox>
+        <html:div class="proxy-grid-row">
+          <hbox pack="end">
+            <label data-l10n-id="connection-proxy-http" control="networkProxyHTTP" />
+          </hbox>
+          <hbox align="center">
+            <html:input id="networkProxyHTTP" type="text" style="-moz-box-flex: 1;"
+                        preference="network.proxy.http"/>
+            <label data-l10n-id="connection-proxy-http-port" control="networkProxyHTTP_Port" />
+            <html:input id="networkProxyHTTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535"
+                        preference="network.proxy.http_port"/>
+          </hbox>
+        </html:div>
+        <html:div class="proxy-grid-row">
+          <hbox/>
+          <hbox>
+            <checkbox id="shareAllProxies" data-l10n-id="connection-proxy-http-sharing"
+                      preference="network.proxy.share_proxy_settings"/>
+          </hbox>
+        </html:div>
+        <html:div class="proxy-grid-row">
+          <hbox pack="end">
+            <label data-l10n-id="connection-proxy-https" control="networkProxySSL"/>
+          </hbox>
+          <hbox align="center">
+            <html:input id="networkProxySSL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ssl"/>
+            <label data-l10n-id="connection-proxy-ssl-port" control="networkProxySSL_Port" />
+            <html:input id="networkProxySSL_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
+                        preference="network.proxy.ssl_port"/>
+          </hbox>
+        </html:div>
+        <html:div class="proxy-grid-row">
+          <hbox pack="end">
+            <label data-l10n-id="connection-proxy-ftp" control="networkProxyFTP"/>
+          </hbox>
+          <hbox align="center">
+            <html:input id="networkProxyFTP" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ftp"/>
+            <label data-l10n-id="connection-proxy-ftp-port" control="networkProxyFTP_Port"/>
+            <html:input id="networkProxyFTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
+                        preference="network.proxy.ftp_port"/>
+          </hbox>
+        </html:div>
         <separator class="thin"/>
-        <hbox pack="end">
-          <label data-l10n-id="connection-proxy-socks" control="networkProxySOCKS"/>
-        </hbox>
-        <hbox align="center">
-          <html:input id="networkProxySOCKS" type="text" style="-moz-box-flex: 1;" preference="network.proxy.socks"/>
-          <label data-l10n-id="connection-proxy-socks-port" control="networkProxySOCKS_Port"/>
-          <html:input id="networkProxySOCKS_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                      preference="network.proxy.socks_port"/>
-        </hbox>
-        <spacer/>
-        <box pack="start">
-        <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
-                    preference="network.proxy.socks_version">
-          <radio id="networkProxySOCKSVersion4" value="4" data-l10n-id="connection-proxy-socks4" />
-          <radio id="networkProxySOCKSVersion5" value="5" data-l10n-id="connection-proxy-socks5" />
-        </radiogroup>
-        </box>
+        <html:div class="proxy-grid-row">
+          <hbox pack="end">
+            <label data-l10n-id="connection-proxy-socks" control="networkProxySOCKS"/>
+          </hbox>
+          <hbox align="center">
+            <html:input id="networkProxySOCKS" type="text" style="-moz-box-flex: 1;" preference="network.proxy.socks"/>
+            <label data-l10n-id="connection-proxy-socks-port" control="networkProxySOCKS_Port"/>
+            <html:input id="networkProxySOCKS_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
+                        preference="network.proxy.socks_port"/>
+          </hbox>
+        </html:div>
+        <html:div class="proxy-grid-row">
+          <spacer/>
+          <box pack="start">
+          <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
+                      preference="network.proxy.socks_version">
+            <radio id="networkProxySOCKSVersion4" value="4" data-l10n-id="connection-proxy-socks4" />
+            <radio id="networkProxySOCKSVersion5" value="5" data-l10n-id="connection-proxy-socks5" />
+          </radiogroup>
+          </box>
+        </html:div>
       </box>
       <radio value="2" data-l10n-id="connection-proxy-autotype" />
       <hbox class="indent" flex="1" align="center">
@@ -133,21 +145,25 @@
             data-l10n-id="connection-dns-over-https"
             preference="network.trr.mode"/>
 
-    <box id="dnsOverHttps-grid" class="indent custom-container-hidden" flex="1">
-      <hbox pack="end">
-        <label id="networkDnsOverHttpsResolverChoicesLabel"
-               data-l10n-id="connection-dns-over-https-url-resolver"
-               control="networkDnsOverHttpsResolverChoices"/>
-      </hbox>
-      <menulist id="networkDnsOverHttpsResolverChoices"
-                oncommand="gConnectionsDialog.updateDnsOverHttpsUI()"></menulist>
-      <hbox pack="end" id="networkCustomDnsOverHttpsInputLabelContainer">
-        <label id="networkCustomDnsOverHttpsInputLabel"
-               data-l10n-id="connection-dns-over-https-custom-label"
-               control="networkCustomDnsOverHttpsInput"/>
-      </hbox>
-      <html:input id="networkCustomDnsOverHttpsInput" type="text" style="-moz-box-flex: 1;"
-                  preference="network.trr.custom_uri"/>
+    <box id="dnsOverHttps-grid" class="indent" flex="1">
+      <html:div class="dnsOverHttps-grid-row">
+        <hbox pack="end">
+          <label id="networkDnsOverHttpsResolverChoicesLabel"
+                data-l10n-id="connection-dns-over-https-url-resolver"
+                control="networkDnsOverHttpsResolverChoices"/>
+        </hbox>
+        <menulist id="networkDnsOverHttpsResolverChoices"
+                  oncommand="gConnectionsDialog.updateDnsOverHttpsUI()"></menulist>
+      </html:div>
+      <html:div class="dnsOverHttps-grid-row" id="customDnsOverHttpsContainer" hidden="hidden">
+        <hbox pack="end">
+          <label id="networkCustomDnsOverHttpsInputLabel"
+                data-l10n-id="connection-dns-over-https-custom-label"
+                control="networkCustomDnsOverHttpsInput"/>
+        </hbox>
+        <html:input id="networkCustomDnsOverHttpsInput" type="text" style="-moz-box-flex: 1;"
+                    preference="network.trr.custom_uri"/>
+      </html:div>
     </box>
   </groupbox>
 </dialog>
