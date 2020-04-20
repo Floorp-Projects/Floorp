@@ -49,6 +49,29 @@ constexpr auto SAMESITE_MDN_URL = NS_LITERAL_STRING(
 
 namespace {
 
+void ComposeCookieString(nsTArray<Cookie*>& aCookieList,
+                         nsACString& aCookieString) {
+  for (Cookie* cookie : aCookieList) {
+    // check if we have anything to write
+    if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
+      // if we've already added a cookie to the return list, append a "; " so
+      // that subsequent cookies are delimited in the final list.
+      if (!aCookieString.IsEmpty()) {
+        aCookieString.AppendLiteral("; ");
+      }
+
+      if (!cookie->Name().IsEmpty()) {
+        // we have a name and value - write both
+        aCookieString +=
+            cookie->Name() + NS_LITERAL_CSTRING("=") + cookie->Value();
+      } else {
+        // just write value
+        aCookieString += cookie->Value();
+      }
+    }
+  }
+}
+
 // Return false if the cookie should be ignored for the current channel.
 bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
                                             Cookie* aCookie,
@@ -224,6 +247,116 @@ CookieService::Observe(nsISupports* /*aSubject*/, const char* aTopic,
     RemoveCookiesWithOriginAttributes(pattern, EmptyCString());
     mPrivateStorage = CookiePrivateStorage::Create();
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
+                                           nsACString& aCookie) {
+  NS_ENSURE_ARG(aPrincipal);
+
+  nsresult rv;
+
+  aCookie.Truncate();
+
+  if (!IsInitialized()) {
+    return NS_OK;
+  }
+
+  CookieStorage* storage = PickStorage(aPrincipal->OriginAttributesRef());
+
+  nsAutoCString baseDomain;
+  // for historical reasons we use ascii host for file:// URLs.
+  if (aPrincipal->SchemeIs("file")) {
+    rv = aPrincipal->GetAsciiHost(baseDomain);
+  } else {
+    rv = aPrincipal->GetBaseDomain(baseDomain);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  nsAutoCString hostFromURI;
+  rv = aPrincipal->GetAsciiHost(hostFromURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  nsAutoCString pathFromURI;
+  rv = aPrincipal->GetFilePath(pathFromURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  int64_t currentTimeInUsec = PR_Now();
+  int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
+
+  const nsTArray<RefPtr<Cookie>>* cookies = storage->GetCookiesFromHost(
+      baseDomain, aPrincipal->OriginAttributesRef());
+  if (!cookies) {
+    return NS_OK;
+  }
+
+  // check if aPrincipal is using an https secure protocol.
+  // if it isn't, then we can't send a secure cookie over the connection.
+  bool potentiallyTurstworthy = aPrincipal->GetIsOriginPotentiallyTrustworthy();
+
+  bool stale = false;
+  nsTArray<Cookie*> cookieList;
+
+  // iterate the cookies!
+  for (Cookie* cookie : *cookies) {
+    // check the host, since the base domain lookup is conservative.
+    if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
+      continue;
+    }
+
+    // if the cookie is httpOnly and it's not going directly to the HTTP
+    // connection, don't send it
+    if (cookie->IsHttpOnly()) {
+      continue;
+    }
+
+    // if the cookie is secure and the host scheme isn't, we can't send it
+    if (cookie->IsSecure() && !potentiallyTurstworthy) {
+      continue;
+    }
+
+    // if the nsIURI path doesn't match the cookie path, don't send it back
+    if (!CookieCommons::PathMatches(cookie, pathFromURI)) {
+      continue;
+    }
+
+    // check if the cookie has expired
+    if (cookie->Expiry() <= currentTime) {
+      continue;
+    }
+
+    // all checks passed - add to list and check if lastAccessed stamp needs
+    // updating
+    cookieList.AppendElement(cookie);
+    if (cookie->IsStale()) {
+      stale = true;
+    }
+  }
+
+  if (cookieList.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // update lastAccessed timestamps. we only do this if the timestamp is stale
+  // by a certain amount, to avoid thrashing the db during pageload.
+  if (stale) {
+    storage->StaleCookies(cookieList, currentTimeInUsec);
+  }
+
+  // return cookies in order of path length; longest to shortest.
+  // this is required per RFC2109.  if cookies match in length,
+  // then sort by creation time (see bug 236772).
+  cookieList.Sort(CompareCookiesForSending());
+  ComposeCookieString(cookieList, aCookie);
 
   return NS_OK;
 }
@@ -783,28 +916,7 @@ void CookieService::GetCookieStringInternal(
       aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign, aHttpBound,
       aOriginAttrs, foundCookieList);
 
-  Cookie* cookie;
-  for (uint32_t i = 0; i < foundCookieList.Length(); ++i) {
-    cookie = foundCookieList.ElementAt(i);
-
-    // check if we have anything to write
-    if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
-      // if we've already added a cookie to the return list, append a "; " so
-      // that subsequent cookies are delimited in the final list.
-      if (!aCookieString.IsEmpty()) {
-        aCookieString.AppendLiteral("; ");
-      }
-
-      if (!cookie->Name().IsEmpty()) {
-        // we have a name and value - write both
-        aCookieString +=
-            cookie->Name() + NS_LITERAL_CSTRING("=") + cookie->Value();
-      } else {
-        // just write value
-        aCookieString += cookie->Value();
-      }
-    }
-  }
+  ComposeCookieString(foundCookieList, aCookieString);
 
   if (!aCookieString.IsEmpty()) {
     COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, aCookieString, nullptr, false);

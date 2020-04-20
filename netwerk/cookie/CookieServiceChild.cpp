@@ -599,6 +599,91 @@ CookieServiceChild::GetCookieString(nsIURI* aHostURI, nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
+CookieServiceChild::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
+                                                nsACString& aCookieString) {
+  NS_ENSURE_ARG(aPrincipal);
+
+  nsresult rv;
+
+  aCookieString.Truncate();
+
+  nsAutoCString baseDomain;
+  // for historical reasons we use ascii host for file:// URLs.
+  if (aPrincipal->SchemeIs("file")) {
+    rv = aPrincipal->GetAsciiHost(baseDomain);
+  } else {
+    rv = aPrincipal->GetBaseDomain(baseDomain);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  CookieKey key(baseDomain, aPrincipal->OriginAttributesRef());
+  CookiesList* cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    return NS_OK;
+  }
+
+  nsAutoCString hostFromURI;
+  aPrincipal->GetAsciiHost(hostFromURI);
+
+  nsAutoCString pathFromURI;
+  aPrincipal->GetFilePath(pathFromURI);
+
+  bool isPotentiallyTrustworthy =
+      aPrincipal->GetIsOriginPotentiallyTrustworthy();
+  int64_t currentTimeInUsec = PR_Now();
+  int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
+
+  cookiesList->Sort(CompareCookiesForSending());
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    Cookie* cookie = cookiesList->ElementAt(i);
+    // check the host, since the base domain lookup is conservative.
+    if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
+      continue;
+    }
+
+    // We don't show HttpOnly cookies in content processes.
+    if (cookie->IsHttpOnly()) {
+      continue;
+    }
+
+    // if the cookie is secure and the host scheme isn't, we can't send it
+    if (cookie->IsSecure() && !isPotentiallyTrustworthy) {
+      continue;
+    }
+
+    // if the nsIURI path doesn't match the cookie path, don't send it back
+    if (!CookieCommons::PathMatches(cookie, pathFromURI)) {
+      continue;
+    }
+
+    // check if the cookie has expired
+    if (cookie->Expiry() <= currentTime) {
+      continue;
+    }
+
+    if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
+      if (!aCookieString.IsEmpty()) {
+        aCookieString.AppendLiteral("; ");
+      }
+      if (!cookie->Name().IsEmpty()) {
+        aCookieString.Append(cookie->Name().get());
+        aCookieString.AppendLiteral("=");
+        aCookieString.Append(cookie->Value().get());
+      } else {
+        aCookieString.Append(cookie->Value().get());
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieServiceChild::GetCookieStringFromHttp(nsIURI* /*aHostURI*/,
                                             nsIURI* /*aFirstURI*/,
                                             nsIChannel* /*aChannel*/,
