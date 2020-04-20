@@ -1102,6 +1102,47 @@ bool BrowsingContext::CanSetOriginAttributes() {
   return true;
 }
 
+Nullable<WindowProxyHolder> BrowsingContext::GetAssociatedWindow() {
+  // nsILoadContext usually only returns same-process windows,
+  // so we intentionally return nullptr if this BC is out of
+  // process.
+  if (IsInProcess()) {
+    return WindowProxyHolder(this);
+  }
+  return nullptr;
+}
+
+Nullable<WindowProxyHolder> BrowsingContext::GetTopWindow() {
+  return Top()->GetAssociatedWindow();
+}
+
+Element* BrowsingContext::GetTopFrameElement() {
+  return Top()->GetEmbedderElement();
+}
+
+void BrowsingContext::SetUsePrivateBrowsing(bool aUsePrivateBrowsing,
+                                            ErrorResult& aError) {
+  nsresult rv = SetUsePrivateBrowsing(aUsePrivateBrowsing);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
+}
+
+void BrowsingContext::SetUseTrackingProtectionWebIDL(
+    bool aUseTrackingProtection) {
+  SetForceEnableTrackingProtection(aUseTrackingProtection);
+}
+
+void BrowsingContext::GetOriginAttributes(JSContext* aCx,
+                                          JS::MutableHandle<JS::Value> aVal,
+                                          ErrorResult& aError) {
+  AssertOriginAttributesMatchPrivateBrowsing();
+
+  if (!ToJSValue(aCx, mOriginAttributes, aVal)) {
+    aError.NoteJSContextException(aCx);
+  }
+}
+
 NS_IMETHODIMP BrowsingContext::GetAssociatedWindow(
     mozIDOMWindowProxy** aAssociatedWindow) {
   nsCOMPtr<mozIDOMWindowProxy> win = GetDOMWindow();
@@ -1114,14 +1155,8 @@ NS_IMETHODIMP BrowsingContext::GetTopWindow(mozIDOMWindowProxy** aTopWindow) {
 }
 
 NS_IMETHODIMP BrowsingContext::GetTopFrameElement(Element** aTopFrameElement) {
-  RefPtr<Element> topFrameElement = Top()->GetEmbedderElement();
+  RefPtr<Element> topFrameElement = GetTopFrameElement();
   topFrameElement.forget(aTopFrameElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP BrowsingContext::GetNestedFrameId(uint64_t* aNestedFrameId) {
-  // FIXME: nestedFrameId should be removed, as it was only used by B2G.
-  *aNestedFrameId = 0;
   return NS_OK;
 }
 

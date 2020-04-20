@@ -11766,11 +11766,6 @@ nsDocShell::GetTopFrameElement(Element** aElement) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetNestedFrameId(uint64_t* aId) {
-  return mBrowsingContext->GetNestedFrameId(aId);
-}
-
-NS_IMETHODIMP
 nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection) {
   return mBrowsingContext->GetUseTrackingProtection(aUseTrackingProtection);
 }
