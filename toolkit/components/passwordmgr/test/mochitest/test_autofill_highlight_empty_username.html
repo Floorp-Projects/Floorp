@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that filling an empty username into a form does not highlight the username element</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+let formFilledPromise = promiseFormsProcessed();
+
+runInParent(function initLogins() {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+  login1.init("https://example.com", "https://autofill", null,
+              "", "pass1", "", "");
+
+  Services.logins.addLogin(login1);
+});
+</script>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <form id="form1" action="https://autofill" onsubmit="return false;">
+    <input  type="text"       id="uname">
+    <input  type="password"   id="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+<pre id="test">
+<script>
+add_task(async function test_field_highlight_on_autofill() {
+  await formFilledPromise;
+
+  let username = document.getElementById("uname");
+  let password = document.getElementById("pword");
+  is(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+        "Highlight was not applied to the username field on page load autofill");
+  isnot(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
+        "Highlight was successfully applied to the password field on page load autofill");
+
+  // Test that initiating a change on the input value will remove the highlight. We check by pressing
+  // the tab key after backspace(by shifting focus to the next element) because the tab key is known to
+  // cause a bug where the highlight is applied once again.
+  username.focus();
+  synthesizeKey("U");
+  synthesizeKey("KEY_Tab");
+
+  let computedStyle = document.defaultView.getComputedStyle(username);
+  is(computedStyle.getPropertyValue("filter"), "none", "Highlight is still not present on username element");
+
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
+  computedStyle = document.defaultView.getComputedStyle(password);
+  is(computedStyle.getPropertyValue("filter"), "none", "Highlight was successfully removed on change in value of password input element");
+});
+</script>
+</body>
+</html>
+
