@@ -14,7 +14,6 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
@@ -32,6 +31,9 @@
   }
 
 namespace mozilla {
+namespace dom {
+class CanonicalBrowsingContext;
+}
 namespace net {
 using ChildEndpointPromise =
     MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
@@ -217,6 +219,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
+
+  dom::CanonicalBrowsingContext* GetBrowsingContext();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
