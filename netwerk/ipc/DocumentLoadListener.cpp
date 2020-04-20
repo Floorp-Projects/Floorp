@@ -340,7 +340,7 @@ GetTopWindowExcludingExtensionAccessibleContentFrames(
   return prev.forget();
 }
 
-CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
+CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() const {
   if (!mParentChannelListener) {
     return nullptr;
   }
@@ -349,7 +349,7 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
 
 bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags, uint32_t aCacheKey,
-    const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
+    const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
     uint64_t aOuterWindowId, bool aHasGesture, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
@@ -420,8 +420,8 @@ bool DocumentLoadListener::Open(
       AntiTrackingUtils::HasStoragePermissionInParent(mChannel));
 
   nsCOMPtr<nsIIdentChannel> identChannel = do_QueryInterface(mChannel);
-  if (identChannel) {
-    Unused << identChannel->SetChannelId(aChannelId);
+  if (identChannel && aChannelId) {
+    Unused << identChannel->SetChannelId(*aChannelId);
   }
 
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
@@ -502,6 +502,9 @@ bool DocumentLoadListener::Open(
   {
     *aRv = mChannel->AsyncOpen(openInfo);
     if (NS_FAILED(*aRv)) {
+      LOG(("DocumentLoadListener::Open failed AsyncOpen [this=%p rv=%" PRIx32
+           "]",
+           this, static_cast<uint32_t>(*aRv)));
       mParentChannelListener = nullptr;
       return false;
     }
@@ -555,8 +558,8 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
   DisconnectChildListeners(aStatusCode, aStatusCode);
 }
 
-void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
-                                                    nsresult aLoadGroupStatus) {
+void DocumentLoadListener::DisconnectChildListeners(
+    nsresult aStatus, nsresult aLoadGroupStatus, bool aSwitchingToNewProcess) {
   LOG(
       ("DocumentLoadListener DisconnectChildListener [this=%p, "
        "aStatus=%" PRIx32 " aLoadGroupStatus=%" PRIx32 " ]",
@@ -566,7 +569,8 @@ void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
   if (mDocumentChannelBridge) {
     // This will drop the bridge's reference to us, so we use keepAlive to
     // make sure we don't get deleted until we exit the function.
-    mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
+    mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus,
+                                                     aSwitchingToNewProcess);
   }
   DocumentChannelBridgeDisconnected();
 
@@ -629,7 +633,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
   nsresult rv;
 
   if (mDoingProcessSwitch) {
-    DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
+    DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
   }
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
@@ -651,8 +655,8 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
         newChannel->Cancel(NS_BINDING_ABORTED);
       }
     }
-    // Release all previously registered channels, they are no longer needed to
-    // be kept in the registrar from this moment.
+    // Release all previously registered channels, they are no longer needed
+    // to be kept in the registrar from this moment.
     registrar->DeregisterChannels(mRedirectChannelId);
 
     mRedirectChannelId = 0;
@@ -683,8 +687,8 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
   redirectChannel->SetParentListener(mParentChannelListener);
 
   // We stored the values from all nsIParentChannel functions called since we
-  // couldn't handle them. Copy them across to the real channel since it should
-  // know what to do.
+  // couldn't handle them. Copy them across to the real channel since it
+  // should know what to do.
   for (auto& variant : mIParentChannelFunctions) {
     variant.match(
         [redirectChannel](const nsIHttpChannel::FlashPluginState& aState) {
@@ -957,8 +961,7 @@ DocumentLoadListener::RedirectToRealChannel(
     }
 
     RedirectToRealChannelArgs args;
-    SerializeRedirectData(args, !!aDestinationProcess, aRedirectFlags,
-                          aLoadFlags);
+    SerializeRedirectData(args, true, aRedirectFlags, aLoadFlags);
     if (mTiming) {
       mTiming->Anonymize(args.uri());
       args.timing() = Some(std::move(mTiming));
@@ -1265,6 +1268,9 @@ NS_IMETHODIMP
 DocumentLoadListener::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* aCallback) {
+  LOG(("DocumentLoadListener::AsyncOnChannelRedirect [this=%p flags=%" PRIu32
+       "]",
+       this, aFlags));
   // We generally don't want to notify the content process about redirects,
   // so just update our channel and tell the callback that we're good to go.
   mChannel = aNewChannel;

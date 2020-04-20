@@ -46,8 +46,8 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
  private:
   // DocumentChannelListener
-  void DisconnectChildListeners(nsresult aStatus,
-                                nsresult aLoadGroupStatus) override {
+  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus,
+                                bool aSwitchingToNewProcess) override {
     if (CanSend()) {
       Unused << SendDisconnectChildListeners(aStatus, aLoadGroupStatus);
     }

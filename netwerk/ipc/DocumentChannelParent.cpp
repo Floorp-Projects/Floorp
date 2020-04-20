@@ -46,7 +46,7 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
-                     aArgs.channelId(), aArgs.asyncOpenTime(),
+                     Some(aArgs.channelId()), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
                      aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
                      &rv)) {
