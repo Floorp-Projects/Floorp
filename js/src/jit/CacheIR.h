@@ -571,6 +571,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeValueField(const Value& val) {
     addStubField(val.asRawBits(), StubField::Type::Value);
   }
+  void writeDOMExpandoGenerationField(uint64_t generation) {
+    addStubField(generation, StubField::Type::DOMExpandoGeneration);
+  }
 
   void writeJSOpImm(JSOp op) {
     static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
@@ -728,22 +731,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardShape(obj, shape);
   }
 
-  void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj,
-                                            JSObject* shapeWrapper) {
-    assertSameCompartment(shapeWrapper);
-    writeOpWithOperandId(CacheOp::GuardXrayExpandoShapeAndDefaultProto, obj);
-    buffer_.writeByte(uint32_t(!!shapeWrapper));
-    addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
-  }
-
-  // Guard rhs[slot] == prototypeObject
-  void guardFunctionPrototype(ObjOperandId rhs, uint32_t slot,
-                              ObjOperandId protoId) {
-    writeOpWithOperandId(CacheOp::GuardFunctionPrototype, rhs);
-    writeOperandId(protoId);
-    addStubField(slot, StubField::Type::RawWord);
-  }
-
  public:
   // Instead of calling guardGroup manually, use (or create) a specialization
   // below to clarify what constraint the group guard is implying.
@@ -776,25 +763,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // Guard object is a specific function. This implies immutable fields on
     // the JSFunction struct itself are unchanged.
     return guardSpecificObject(obj, expected);
-  }
-
-  void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
-    writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);
-    writeOperandId(rhs);
-  }
-
-  Int32OperandId truncateDoubleToUInt32(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::TruncateDoubleToUInt32, val);
-    writeOperandId(res);
-    return res;
-  }
-
-  ValueTagOperandId loadValueTag(ValOperandId val) {
-    ValueTagOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadValueTag, val);
-    writeOperandId(res);
-    return res;
   }
 
   ValOperandId loadArgumentFixedSlot(
@@ -832,31 +800,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
-    ValOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadDOMExpandoValue, obj);
-    writeOperandId(res);
-    return res;
-  }
-
-  ValOperandId loadDOMExpandoValueGuardGeneration(
-      ObjOperandId obj, ExpandoAndGeneration* expandoAndGeneration) {
-    ValOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadDOMExpandoValueGuardGeneration, obj);
-    addStubField(uintptr_t(expandoAndGeneration), StubField::Type::RawWord);
-    addStubField(expandoAndGeneration->generation,
-                 StubField::Type::DOMExpandoGeneration);
-    writeOperandId(res);
-    return res;
-  }
-
-  ValOperandId loadDOMExpandoValueIgnoreGeneration(ObjOperandId obj) {
-    ValOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadDOMExpandoValueIgnoreGeneration, obj);
-    writeOperandId(res);
-    return res;
-  }
-
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
                                       TypedThingLayout layout,
                                       Scalar::Type type, OperandId rhs) {
@@ -876,27 +819,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(index);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(handleOOB));
-  }
-
-  StringOperandId callInt32ToString(Int32OperandId id) {
-    StringOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::CallInt32ToString, id);
-    writeOperandId(res);
-    return res;
-  }
-
-  StringOperandId callNumberToString(NumberOperandId id) {
-    StringOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::CallNumberToString, id);
-    writeOperandId(res);
-    return res;
-  }
-
-  StringOperandId booleanToString(Int32OperandId id) {
-    StringOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::BooleanToString, id);
-    writeOperandId(res);
-    return res;
   }
 
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,

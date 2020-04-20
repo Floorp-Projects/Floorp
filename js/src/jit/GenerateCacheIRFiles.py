@@ -67,6 +67,7 @@ operand_writer_info = {
     'Int32Id': ('Int32OperandId', 'writeOperandId'),
     'NumId': ('NumberOperandId', 'writeOperandId'),
     'BigIntId': ('BigIntOperandId', 'writeOperandId'),
+    'ValTagId': ('ValueTagOperandId', 'writeOperandId'),
 
     'ShapeField': ('Shape*', 'writeShapeField'),
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
@@ -79,6 +80,7 @@ operand_writer_info = {
     'RawPointerField': ('const void*', 'writeRawPointerField'),
     'IdField': ('jsid', 'writeIdField'),
     'ValueField': ('const Value&', 'writeValueField'),
+    'DOMExpandoGenerationField': ('uint64_t', 'writeDOMExpandoGenerationField'),
 
     'JSOpImm': ('JSOp', 'writeJSOpImm'),
     'BoolImm': ('bool', 'writeBoolImm'),
@@ -146,6 +148,7 @@ operand_compiler_info = {
     'Int32Id': ('Int32OperandId', 'Id', 'reader.int32OperandId()'),
     'NumId': ('NumberOperandId', 'Id', 'reader.numberOperandId()'),
     'BigIntId': ('BigIntOperandId', 'Id', 'reader.bigIntOperandId()'),
+    'ValTagId': ('ValueTagOperandId', 'Id', 'reader.valueTagOperandId()'),
 
     'ShapeField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
@@ -158,6 +161,7 @@ operand_compiler_info = {
     'RawPointerField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'IdField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'ValueField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
+    'DOMExpandoGenerationField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
 
     'JSOpImm': ('JSOp', '', 'reader.jsop()'),
     'BoolImm': ('bool', '', 'reader.readBool()'),

@@ -1803,15 +1803,16 @@ bool BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration() {
+bool BaselineCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
+    ObjOperandId objId, uint32_t expandoAndGenerationOffset,
+    uint32_t generationOffset, ValOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Address expandoAndGenerationAddr(stubAddress(reader.stubOffset()));
-  Address generationAddr(stubAddress(reader.stubOffset()));
+  Register obj = allocator.useRegister(masm, objId);
+  Address expandoAndGenerationAddr(stubAddress(expandoAndGenerationOffset));
+  Address generationAddr(stubAddress(generationOffset));
 
   AutoScratchRegister scratch(allocator, masm);
-  ValueOperand output =
-      allocator.defineValueRegister(masm, reader.valOperandId());
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
