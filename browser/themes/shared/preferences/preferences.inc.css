@@ -1083,12 +1083,12 @@ richlistitem .text-link:hover {
   align-items: center;
 }
 
-#proxy-grid > .thin {
-  grid-column-end: 3;
-  height: 20px;
+.proxy-grid-row:not([hidden]),
+.dnsOverHttps-grid-row:not([hidden]) {
+  display: contents;
 }
 
-#dnsOverHttps-grid.custom-container-hidden #networkCustomDnsOverHttpsInputLabelContainer,
-#dnsOverHttps-grid.custom-container-hidden #networkCustomDnsOverHttpsInput {
-  display: none;
+#proxy-grid > .thin {
+  grid-column: span 2;
+  height: 20px;
 }
