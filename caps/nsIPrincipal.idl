@@ -59,6 +59,14 @@ interface nsIPrincipal : nsISerializable
     boolean equals(in nsIPrincipal other);
 
     /**
+     * Returns whether the other principal is equivalent to this principal
+     * for permission purposes
+     * Matches {originAttributes ,equalsURIForPermission}
+     */
+
+    boolean equalsForPermission(in nsIPrincipal other, in bool aExactHost);
+
+    /**
      * Like equals, but takes document.domain changes into account.
      */
     boolean equalsConsideringDomain(in nsIPrincipal other);
