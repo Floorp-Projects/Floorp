@@ -1844,6 +1844,28 @@ var gEMETests = [
     sessionCount: 2,
     duration: 2.0,
   },
+  {
+    // Files adapted from testcase for bug 1560092. See bug 1630381 for a
+    // detailed explanation on how they were adapted.
+    name: "avc3 h264 video in mp4 using clearkey cenc encryption",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc3.640015"',
+        fragments: [
+          "big-buck-bunny-cenc-avc3-init.mp4",
+          "big-buck-bunny-cenc-avc3-1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "10000000100010001000100000000001": "3A2A1B68DD2BD9B2EEB25E84C4776668",
+    },
+    sessionType: "temporary",
+    sessionCount: 1,
+    duration: 2.08,
+  },
 ];
 
 var gEMENonMSEFailTests = [
