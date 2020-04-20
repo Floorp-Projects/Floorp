@@ -102,6 +102,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   [Throws]
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
+  void stop(unsigned long aStopFlags);
+
   [Throws]
   Promise<unsigned long long> changeFrameRemoteness(
       DOMString remoteType, unsigned long long pendingSwitchId);

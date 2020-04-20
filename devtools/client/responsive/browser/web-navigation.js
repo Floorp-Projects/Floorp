@@ -96,8 +96,7 @@ BrowserElementWebNavigation.prototype = {
   },
 
   stop(flags) {
-    // No equivalent in the current BrowserElement API
-    this._sendMessage("WebNavigation:Stop", { flags });
+    this._browser.browsingContext.stop(flags);
   },
 
   get document() {
