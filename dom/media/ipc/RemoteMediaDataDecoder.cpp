@@ -22,10 +22,10 @@ RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(RemoteDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self]() { return self->mChild->Init(); })
+  return InvokeAsync(RemoteDecoderManagerChild::GetManagerThread(), __func__,
+                     [self]() { return self->mChild->Init(); })
       ->Then(
-          RemoteDecoderManagerChild::GetManagerAbstractThread(), __func__,
+          RemoteDecoderManagerChild::GetManagerThread(), __func__,
           [self, this](TrackType aTrack) {
             // If shutdown has started in the meantime shutdown promise may
             // be resloved before this task. In this case mChild will be null
@@ -51,7 +51,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Decode(
   RefPtr<RemoteMediaDataDecoder> self = this;
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(
-      RemoteDecoderManagerChild::GetManagerAbstractThread(), __func__,
+      RemoteDecoderManagerChild::GetManagerThread(), __func__,
       [self, sample]() {
         return self->mChild->Decode(nsTArray<RefPtr<MediaRawData>>{sample});
       });
@@ -60,29 +60,28 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Decode(
 RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::DecodeBatch(
     nsTArray<RefPtr<MediaRawData>>&& aSamples) {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(RemoteDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self, samples = std::move(aSamples)]() {
+  return InvokeAsync(RemoteDecoderManagerChild::GetManagerThread(), __func__,
+                     [self, samples = std::move(aSamples)]() {
                        return self->mChild->Decode(samples);
                      });
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> RemoteMediaDataDecoder::Flush() {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(RemoteDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self]() { return self->mChild->Flush(); });
+  return InvokeAsync(RemoteDecoderManagerChild::GetManagerThread(), __func__,
+                     [self]() { return self->mChild->Flush(); });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Drain() {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(RemoteDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self]() { return self->mChild->Drain(); });
+  return InvokeAsync(RemoteDecoderManagerChild::GetManagerThread(), __func__,
+                     [self]() { return self->mChild->Drain(); });
 }
 
 RefPtr<ShutdownPromise> RemoteMediaDataDecoder::Shutdown() {
   RefPtr<RemoteMediaDataDecoder> self = this;
   return InvokeAsync(
-      RemoteDecoderManagerChild::GetManagerAbstractThread(), __func__,
-      [self]() {
+      RemoteDecoderManagerChild::GetManagerThread(), __func__, [self]() {
         RefPtr<ShutdownPromise> p = self->mChild->Shutdown();
 
         // We're about to be destroyed and drop our ref to
