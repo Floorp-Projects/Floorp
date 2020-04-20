@@ -1027,10 +1027,7 @@ struct CheckWrapperCacheTracing<T, true> {
     CallQueryInterface(ccISupports, &participant);
     MOZ_ASSERT(participant, "Can't QI to CycleCollectionParticipant?");
 
-    bool wasPreservingWrapper = wrapperCacheFromQI->PreservingWrapper();
-    wrapperCacheFromQI->SetPreservingWrapper(true);
     wrapperCacheFromQI->CheckCCWrapperTraversal(ccISupports, participant);
-    wrapperCacheFromQI->SetPreservingWrapper(wasPreservingWrapper);
   }
 };
 
