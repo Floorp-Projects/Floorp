@@ -72,11 +72,11 @@ class WindowProxyHolder;
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
-// This defines the default do-nothing implementations for DidSet()
+// This defines the default do-nothing implementations for DidChange()
 // and CanSet() for all the fields. They may be overloaded to provide
 // different behavior for a specific field.
-// DidSet() is used to run code in any process that sees the
-// the value updated (note: even if the value itself didn't change).
+// DidChange() is used to run code in any process that sees the the value
+// updated.
 // CanSet() is used to verify that the setting is allowed, and will
 // assert if it fails in Debug builds.
 #define MOZ_EACH_BC_FIELD(FIELD)                                             \
@@ -638,12 +638,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return true;
   }
 
-  void DidSet(FieldIndex<IDX_UserActivationState>);
+  void DidChange(FieldIndex<IDX_UserActivationState>, UserActivation::State);
 
   // Ensure that we only set the flag on the top level browsingContext.
   // And then, we do a pre-order walk in the tree to refresh the
   // volume of all media elements.
-  void DidSet(FieldIndex<IDX_Muted>);
+  void DidChange(FieldIndex<IDX_Muted>, bool);
 
   bool CanSet(FieldIndex<IDX_EmbedderInnerWindowId>, const uint64_t& aValue,
               ContentParent* aSource);
@@ -651,21 +651,23 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_CurrentInnerWindowId>, const uint64_t& aValue,
               ContentParent* aSource);
 
-  void DidSet(FieldIndex<IDX_CurrentInnerWindowId>);
+  void DidChange(FieldIndex<IDX_CurrentInnerWindowId>, uint64_t);
 
   bool CanSet(FieldIndex<IDX_IsPopupSpam>, const bool& aValue,
               ContentParent* aSource);
 
-  void DidSet(FieldIndex<IDX_IsPopupSpam>);
+  void DidChange(FieldIndex<IDX_IsPopupSpam>, bool);
 
-  void DidSet(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>);
-  void DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>);
+  void DidChange(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>,
+                 GVAutoplayRequestStatus);
+  void DidChange(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>,
+                 GVAutoplayRequestStatus);
 
-  void DidSet(FieldIndex<IDX_Loading>);
+  void DidChange(FieldIndex<IDX_Loading>, bool);
 
-  void DidSet(FieldIndex<IDX_AncestorLoading>);
+  void DidChange(FieldIndex<IDX_AncestorLoading>, bool);
 
-  void DidSet(FieldIndex<IDX_UserAgentOverride>);
+  void DidChange(FieldIndex<IDX_UserAgentOverride>, const nsAString&);
   bool CanSet(FieldIndex<IDX_UserAgentOverride>, const nsString& aUserAgent,
               ContentParent* aSource);
 
@@ -688,8 +690,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return true;
   }
 
-  template <size_t I>
-  void DidSet(FieldIndex<I>) {}
+  template <size_t I, typename T>
+  void DidChange(FieldIndex<I>, const T&) {}
 
   // True if the process attemping to set field is the same as the owning
   // process.

@@ -63,6 +63,7 @@ struct nsID {
   }
 
   inline bool operator==(const nsID& aOther) const { return Equals(aOther); }
+  inline bool operator!=(const nsID& aOther) const { return !Equals(aOther); }
 
   /**
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
