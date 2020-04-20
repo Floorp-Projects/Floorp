@@ -393,6 +393,11 @@ static bool PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal) {
     return true;
   }
 
+  // pdf.js is a special-case too.
+  if (nsContentUtils::IsPDFJS(principal)) {
+    return true;
+  }
+
   // Check whether our URI is an "about:" URI that allows scripts.  If it is,
   // we need to allow JS to run.
   if (aPrincipal->SchemeIs("about")) {
