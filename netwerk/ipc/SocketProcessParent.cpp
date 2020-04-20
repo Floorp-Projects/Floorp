@@ -53,6 +53,21 @@ SocketProcessParent* SocketProcessParent::GetSingleton() {
 }
 
 void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
+#if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIEventTarget> launcherThread(ipc::GetIPCLauncher());
+  MOZ_ASSERT(launcherThread);
+
+  auto procType = java::GeckoProcessType::SOCKET();
+  auto selector =
+      java::GeckoProcessManager::Selector::New(procType, OtherPid());
+
+  launcherThread->Dispatch(NS_NewRunnableFunction(
+      "SocketProcessParent::ActorDestroy",
+      [selector = java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
+        java::GeckoProcessManager::MarkAsDead(selector);
+      }));
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
   if (aWhy == AbnormalShutdown) {
     GenerateCrashReport(OtherPid());
   }
