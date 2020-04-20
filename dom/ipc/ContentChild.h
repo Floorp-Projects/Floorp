@@ -343,7 +343,6 @@ class ContentChild final
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
                                            nsTArray<CpowEntry>&& aCpows,
-                                           const IPC::Principal& aPrincipal,
                                            const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvRegisterStringBundles(
