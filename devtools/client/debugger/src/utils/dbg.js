@@ -78,6 +78,8 @@ function getDocumentForUrl(dbg, url) {
   return getDocument(source.id);
 }
 
+const diff = (a, b) => Object.keys(a).filter(key => !Object.is(a[key], b[key]));
+
 export function setupHelper(obj: Object) {
   const selectors = bindSelectors(obj);
   const dbg: Object = {
@@ -105,6 +107,7 @@ export function setupHelper(obj: Object) {
     _telemetry: {
       events: {},
     },
+    diff,
   };
 
   window.dbg = dbg;

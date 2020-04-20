@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import React, { Component } from "react";
+import React, { Component, memo } from "react";
 import PropTypes from "prop-types";
 
 import classNames from "classnames";
@@ -30,34 +30,36 @@ function FrameTitle({ frame, options = {}, l10n }: FrameTitleProps) {
 
 type FrameLocationProps = { frame: Frame, displayFullUrl: boolean };
 
-function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
-  if (!frame.source) {
-    return null;
-  }
+const FrameLocation = memo(
+  ({ frame, displayFullUrl = false }: FrameLocationProps) => {
+    if (!frame.source) {
+      return null;
+    }
 
-  if (frame.library) {
+    if (frame.library) {
+      return (
+        <span className="location">
+          {frame.library}
+          <AccessibleImage
+            className={`annotation-logo ${frame.library.toLowerCase()}`}
+          />
+        </span>
+      );
+    }
+
+    const { location, source } = frame;
+    const filename = displayFullUrl
+      ? getFileURL(source, false)
+      : getFilename(source);
+
     return (
-      <span className="location">
-        {frame.library}
-        <AccessibleImage
-          className={`annotation-logo ${frame.library.toLowerCase()}`}
-        />
+      <span className="location" title={source.url}>
+        <span className="filename">{filename}</span>:
+        <span className="line">{location.line}</span>
       </span>
     );
   }
-
-  const { location, source } = frame;
-  const filename = displayFullUrl
-    ? getFileURL(source, false)
-    : getFilename(source);
-
-  return (
-    <span className="location" title={source.url}>
-      <span className="filename">{filename}</span>:
-      <span className="line">{location.line}</span>
-    </span>
-  );
-}
+);
 
 FrameLocation.displayName = "FrameLocation";
 
