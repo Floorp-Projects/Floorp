@@ -773,12 +773,13 @@ class MOZ_RAII CacheIRCompiler {
                                           const AutoOutputRegister& output);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool emitBigIntBinaryOperationShared();
+  MOZ_MUST_USE bool emitBigIntBinaryOperationShared(BigIntOperandId lhsId,
+                                                    BigIntOperandId rhsId);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool emitBigIntUnaryOperationShared();
+  MOZ_MUST_USE bool emitBigIntUnaryOperationShared(BigIntOperandId inputId);
 
-  bool emitDoubleIncDecResult(bool isInc);
+  bool emitDoubleIncDecResult(bool isInc, NumberOperandId inputId);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
   CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
