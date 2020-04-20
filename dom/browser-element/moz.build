@@ -35,12 +35,3 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/ipc',
 ]
-
-MOCHITEST_MANIFESTS += [
-    'mochitest/mochitest-oop.ini',
-    'mochitest/mochitest.ini',
-]
-
-MOCHITEST_CHROME_MANIFESTS += [
-    'mochitest/chrome.ini',
-]
