@@ -2057,7 +2057,7 @@ fuzzy(0-1,0-625) == 1466638-1.html 1466638-1-ref.html
 == bug1472465-1.html bug1472465-1-ref.html
 == 1475971-1.html 1475971-1-ref.html
 == chrome://reftest/content/bugs/1483649-1.xhtml chrome://reftest/content/bugs/1483649-1-ref.xhtml
-test-pref(layout.css.contain.enabled,true) == 1483946.html 1483946-ref.html
+== 1483946.html 1483946-ref.html
 test-pref(layout.css.visited_links_enabled,false) == 1488155.html 1488155-ref.html
 == 1492660-1.html 1492660-1-ref.html
 pref(layout.css.supports-selector.enabled,true) == 1499386.html 1499386-ref.html
