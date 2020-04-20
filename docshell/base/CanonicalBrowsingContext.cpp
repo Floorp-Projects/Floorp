@@ -575,6 +575,15 @@ bool CanonicalBrowsingContext::AttemptLoadURIInParent(
     return false;
   }
 
+  // We currently don't support initiating loads in the parent when they are
+  // watched by devtools. This is because devtools tracks loads using content
+  // process notifications, which happens after the load is initiated in this
+  // case. Devtools clears all prior requests when it detects a new navigation,
+  // so it drops the main document load that happened here.
+  if (GetWatchedByDevtools()) {
+    return false;
+  }
+
   // DocumentChannel currently only supports connecting channels into the
   // content process, so we can only support schemes that will always be loaded
   // there for now. Restrict to just http(s) for simplicity.

@@ -121,7 +121,8 @@ class WindowProxyHolder;
   FIELD(UserAgentOverride, nsString)                                         \
   FIELD(EmbedderElementType, Maybe<nsString>)                                \
   FIELD(MessageManagerGroup, nsString)                                       \
-  FIELD(MaxTouchPointsOverride, uint8_t)
+  FIELD(MaxTouchPointsOverride, uint8_t)                                     \
+  FIELD(WatchedByDevtools, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -695,6 +696,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               const bool& aAllowContentRetargetingOnChildren,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
 
   template <size_t I, typename T>
