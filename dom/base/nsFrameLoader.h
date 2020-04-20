@@ -347,16 +347,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
 
   /**
-   * Tell this FrameLoader to use a particular remote browser.
-   *
-   * This will assert if mBrowserParent is non-null.  In practice,
-   * this means you can't have successfully run TryRemoteBrowser() on
-   * this object, which means you can't have called ShowRemoteFrame()
-   * or ReallyStartLoading().
-   */
-  void InitializeFromBrowserParent(BrowserParent* aBrowserParent);
-
-  /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're
    * destroying the nsSubDocumentFrame. If the nsSubdocumentFrame is
    * being reframed we'll restore the detached nsIFrame when it's recreated,

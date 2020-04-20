@@ -2932,19 +2932,6 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
 }
 
-void nsFrameLoader::InitializeFromBrowserParent(BrowserParent* aBrowserParent) {
-  MOZ_ASSERT(!mRemoteBrowser);
-  mIsRemoteFrame = true;
-  mRemoteBrowser = new BrowserHost(aBrowserParent);
-  mPendingBrowsingContext = aBrowserParent->GetBrowsingContext();
-  mChildID = aBrowserParent ? aBrowserParent->Manager()->ChildID() : 0;
-  MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
-  ReallyLoadFrameScripts();
-  InitializeBrowserAPI();
-  aBrowserParent->InitRendering();
-  ShowRemoteFrame(ScreenIntSize(0, 0));
-}
-
 void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
                                            Document* aContainerDoc) {
   mDetachedSubdocFrame = aDetachedFrame;
