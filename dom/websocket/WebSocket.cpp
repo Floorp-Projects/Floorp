@@ -1592,8 +1592,8 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
     mSecure = true;
 
     params.AppendElement(NS_LITERAL_STRING("wss"));
-    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeInsecureRequest",
-                                         params, nsIScriptError::warningFlag,
+    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
+                                         nsIScriptError::warningFlag,
                                          mInnerWindowID, mPrivateBrowsing);
   }
 
