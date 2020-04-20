@@ -26,11 +26,11 @@ namespace net {
 class Cookie;
 class CookieStruct;
 
-class CookieServiceChild : public PCookieServiceChild,
-                           public nsICookieService,
-                           public nsIObserver,
-                           public nsITimerCallback,
-                           public nsSupportsWeakReference {
+class CookieServiceChild final : public PCookieServiceChild,
+                                 public nsICookieService,
+                                 public nsIObserver,
+                                 public nsITimerCallback,
+                                 public nsSupportsWeakReference {
   friend class PCookieServiceChild;
 
  public:
@@ -48,24 +48,9 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void TrackCookieLoad(nsIChannel* aChannel);
 
- protected:
-  virtual ~CookieServiceChild();
+ private:
+  ~CookieServiceChild();
   void MoveCookies();
-
-  void SerializeURIs(nsIURI* aHostURI, nsIChannel* aChannel,
-                     nsCString& aHostSpec, nsCString& aHostCharset,
-                     nsCString& aOriginatingSpec,
-                     nsCString& aOriginatingCharset);
-
-  nsresult GetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   nsACString& aCookieString);
-
-  void GetCookieStringFromCookieHashTable(
-      nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
-      bool aIsThirdPartySocialTrackingResource,
-      bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
-      bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
-      nsACString& aCookieString);
 
   nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
                                    const nsACString& aCookieString,
