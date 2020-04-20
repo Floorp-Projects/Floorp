@@ -37,6 +37,7 @@ permalink: /changelog/
 
 * **browser-tabstray**
   * The iconView is no longer required in the template.
+  * The URL text for items may be styled.
 
 # 38.0.0
 

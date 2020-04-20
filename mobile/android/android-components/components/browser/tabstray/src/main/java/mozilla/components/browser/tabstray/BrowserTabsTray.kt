@@ -43,6 +43,9 @@ class BrowserTabsTray @JvmOverloads constructor(
                 DEFAULT_ITEM_BACKGROUND_SELECTED_COLOR),
             attr.getColor(R.styleable.BrowserTabsTray_tabsTrayItemTextColor, DEFAULT_ITEM_TEXT_COLOR),
             attr.getColor(R.styleable.BrowserTabsTray_tabsTraySelectedItemTextColor, DEFAULT_ITEM_TEXT_SELECTED_COLOR),
+            attr.getColor(R.styleable.BrowserTabsTray_tabsTrayItemUrlTextColor, DEFAULT_ITEM_TEXT_COLOR),
+            attr.getColor(R.styleable.BrowserTabsTray_tabsTraySelectedItemUrlTextColor,
+                DEFAULT_ITEM_TEXT_SELECTED_COLOR),
             attr.getDimensionPixelSize(R.styleable.BrowserTabsTray_tabsTrayItemElevation, 0).toFloat()
         )
         attr.recycle()
@@ -61,5 +64,7 @@ internal data class TabsTrayStyling(
     val selectedItemBackgroundColor: Int,
     val itemTextColor: Int,
     val selectedItemTextColor: Int,
+    val itemUrlTextColor: Int,
+    val selectedItemUrlTextColor: Int,
     val itemElevation: Float
 )
