@@ -1,0 +1,14 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0.If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "resource.h"
+#include "afxres.h"
+
+// The size of this dialog is a placeholder;
+// it's going to get resized to fit its parent.
+IDD_DIALOG1 DIALOGEX 0, 0, 1, 1
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
