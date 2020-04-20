@@ -157,8 +157,13 @@ def lint(paths, config, fix=None, **lintargs):
         '--message-format=json',
     ]
 
-    results = []
+    lock_files_to_delete = []
+    for p in paths:
+        lock_file = os.path.join(p, 'Cargo.lock')
+        if not os.path.exists(lock_file):
+            lock_files_to_delete.append(lock_file)
 
+    results = []
     for p in paths:
         # Quick sanity check of the paths
         if p.endswith("Cargo.toml"):
@@ -195,6 +200,13 @@ def lint(paths, config, fix=None, **lintargs):
         base_command = cmd_args_clippy + cmd_args_common + [p]
         output = run_process(log, config, base_command)
 
+        # Remove build artifacts created by clippy
+        run_process(log, config, clean_command)
         results += parse_issues(log, config, output, p, onlyIn)
+
+    # Remove Cargo.lock files created by clippy
+    for lock_file in lock_files_to_delete:
+        if os.path.exists(lock_file):
+            os.remove(lock_file)
 
     return sorted(results, key=lambda issue: issue.path)
