@@ -143,6 +143,16 @@ subcommands:
               long: keyframes
               takes_value: true
               help: Provide a keyframes file, that can be used to animate the yaml input file
+          - scene-id:
+              short: s
+              long: scene-id
+              takes_value: true
+              help: Select a starting scene sequence ID (YAML capture sequence only).
+          - frame-id:
+              short: f
+              long: frame-id
+              takes_value: true
+              help: Select a starting frame sequence ID (YAML capture sequence only).
           - INPUT:
               help: The input YAML, binary recording, or capture directory
               required: true
