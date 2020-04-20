@@ -21,7 +21,11 @@
  */
 async function showTooltip(tooltip, anchor, { position, x, y } = {}) {
   await tooltip.show(anchor, { position, x, y });
-  return waitForReflow(tooltip);
+  await waitForReflow(tooltip);
+
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
 }
 
 /**
@@ -37,7 +41,11 @@ async function hideTooltip(tooltip) {
   const onPopupHidden = tooltip.once("hidden");
   tooltip.hide();
   await onPopupHidden;
-  return waitForReflow(tooltip);
+  await waitForReflow(tooltip);
+
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
 }
 
 /**
