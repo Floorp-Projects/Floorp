@@ -1113,7 +1113,7 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
   LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
 
 #ifdef JS_USE_LINK_REGISTER
-  masm.pushReturnAddress();
+  masm_.pushReturnAddress();
 #endif
 
   // Adjust for the return address on the stack.
