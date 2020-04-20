@@ -885,8 +885,9 @@ sync_auth:
     expires: "2020-09-01"
   use_email:
     type: event
-    description: >
-      A user chose to use their email to sign in instead of scanning a QR code, counterpart to "scan_pairing"
+    description: |
+      A user chose to use their email to sign in instead of scanning a QR code,
+      counterpart to "scan_pairing"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/9834
     data_reviews:
@@ -896,7 +897,7 @@ sync_auth:
     expires: "2020-09-01"
   use_email_problem:
     type: event
-    description: >
+    description: |
       A user chose to use their email to sign in after an account problem
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/9834
@@ -1117,7 +1118,7 @@ history:
 tip:
   displayed:
     type: event
-    description: >
+    description: |
       The tip was displayed
     extra_keys:
       identifier:
@@ -1131,7 +1132,7 @@ tip:
     expires: "2020-09-01"
   pressed:
     type: event
-    description: >
+    description: |
       The tip's button was pressed
     extra_keys:
       identifier:
@@ -1145,7 +1146,7 @@ tip:
     expires: "2020-09-01"
   closed:
     type: event
-    description: >
+    description: |
       The tip was closed
     extra_keys:
       identifier:
