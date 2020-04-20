@@ -701,9 +701,14 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void OnVisibilityChange(Visibility aNewVisibility);
 
-  // These are used for testing only
+  // Begin testing only methods
   float ComputedVolume() const;
   bool ComputedMuted() const;
+
+  // Return true if the media has been suspended media due to an inactive
+  // document or prohibiting by the docshell.
+  bool IsSuspendedByInactiveDocOrDocShell() const;
+  // End testing only methods
 
   void SetMediaInfo(const MediaInfo& aInfo);
 
