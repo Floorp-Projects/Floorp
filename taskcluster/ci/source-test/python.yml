@@ -7,9 +7,9 @@ job-defaults:
     always-target: true
     worker-type:
         by-platform:
-            linux1804-64.*: t-linux-xlarge-source
+            linux1804-64.*: t-linux-xlarge
             macosx1014-64.*: t-osx-1014
-            windows10-64.*: t-win10-64-source
+            windows10-64.*: t-win10-64
     worker:
         by-platform:
             linux1804-64.*:

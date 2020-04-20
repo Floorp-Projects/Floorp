@@ -547,7 +547,7 @@ workers:
                 by-level:
                     '3': 'gecko-{level}-t-osx-1014'
                     default: 'gecko-t-osx-1014'
-        t-win10-64(|-gpu-s|-source):
+        t-win10-64(|-gpu-s):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows

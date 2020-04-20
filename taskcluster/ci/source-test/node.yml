@@ -9,7 +9,7 @@ newtab-unit-tests:
         symbol: node(newtab)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "ubuntu1804-test"}
         max-run-time: 1800
@@ -36,7 +36,7 @@ debugger-tests:
         symbol: node(debugger)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -60,7 +60,7 @@ devtools-tests:
         symbol: node(devtools)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -90,7 +90,7 @@ eslint-plugin-mozilla:
         symbol: node(epm)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
