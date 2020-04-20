@@ -4413,6 +4413,11 @@ NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (!nsContentUtils::ComputeIsSecureContext(this)) {
+    // Feature is only available for secure contexts.
+    return NS_OK;
+  }
+
   nsAutoCString content;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
                                      content);
