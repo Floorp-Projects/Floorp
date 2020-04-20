@@ -472,7 +472,9 @@ var gConnectionsDialog = {
       return;
     }
     let [menu, customInput] = this.getDnsOverHttpsControls();
-    let dohUIContainer = document.getElementById("dnsOverHttps-grid");
+    let customDohContainer = document.getElementById(
+      "customDnsOverHttpsContainer"
+    );
     let customURI = Preferences.get("network.trr.custom_uri").value;
     let currentURI = Preferences.get("network.trr.uri").value;
     let resolvers = this.dnsOverHttpsResolvers;
@@ -495,11 +497,11 @@ var gConnectionsDialog = {
     }
 
     if (!menu.disabled && isCustom) {
-      dohUIContainer.classList.remove("custom-container-hidden");
+      customDohContainer.hidden = false;
       customInput.disabled = false;
       customInput.scrollIntoView();
     } else {
-      dohUIContainer.classList.add("custom-container-hidden");
+      customDohContainer.hidden = true;
       customInput.disabled = true;
     }
 
