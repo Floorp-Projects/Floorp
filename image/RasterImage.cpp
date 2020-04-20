@@ -163,8 +163,7 @@ RasterImage::RequestRefresh(const TimeStamp& aTime) {
   RefreshResult res;
   if (mAnimationState) {
     MOZ_ASSERT(mFrameAnimator);
-    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime,
-                                         mAnimationFinished);
+    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime);
   }
 
   if (res.mFrameAdvanced) {
@@ -489,8 +488,7 @@ void RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded) {
     ReleaseImageContainer();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
-                                                size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
 
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
     NotifyProgress(NoProgress, dirtyRect);
@@ -1041,8 +1039,7 @@ void RasterImage::Discard() {
     ReleaseImageContainer();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
-                                                size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
 
     auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
     NotifyProgress(NoProgress, dirtyRect);
@@ -1259,8 +1256,7 @@ bool RasterImage::Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
 #ifdef DEBUG
     IntRect rect =
 #endif
-        mAnimationState->UpdateState(mAnimationFinished, this,
-                                     ToUnoriented(mSize).ToUnknownSize(),
+        mAnimationState->UpdateState(this, ToUnoriented(mSize).ToUnknownSize(),
                                      false);
     MOZ_ASSERT(rect.IsEmpty());
   }
@@ -1709,8 +1705,7 @@ void RasterImage::NotifyDecodeComplete(
     mAnimationState->NotifyDecodeComplete();
 
     auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this,
-                                                size.ToUnknownSize());
+    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
 
     if (!rect.IsEmpty()) {
       auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
