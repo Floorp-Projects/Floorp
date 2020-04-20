@@ -233,6 +233,7 @@ class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
 // offset of the array from the start offset of the subsequent array. The
 // notable exception is that bytecode length is stored explicitly.
 class alignas(uint32_t) ImmutableScriptData final {
+ private:
   // Offsets are measured in bytes relative to 'this'.
   using Offset = uint32_t;
 
@@ -241,6 +242,7 @@ class alignas(uint32_t) ImmutableScriptData final {
   // Length of bytecode
   uint32_t codeLength_ = 0;
 
+ public:
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
 
@@ -265,6 +267,7 @@ class alignas(uint32_t) ImmutableScriptData final {
   // NOTE: The raw bytes of this structure are used for hashing so use explicit
   // padding values as needed for predicatable results across compilers.
 
+ private:
   struct Flags {
     uint8_t resumeOffsetsEndIndex : 2;
     uint8_t scopeNotesEndIndex : 2;
@@ -274,9 +277,6 @@ class alignas(uint32_t) ImmutableScriptData final {
   static_assert(sizeof(Flags) == sizeof(uint8_t),
                 "Structure packing is broken");
 
-  friend class ::JSScript;
-
- private:
   // Offsets (in bytes) from 'this' to each component array. The delta between
   // each offset and the next offset is the size of each array and is defined
   // even if an array is empty.
@@ -386,11 +386,13 @@ class alignas(uint32_t) ImmutableScriptData final {
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
 
+ private:
   Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
   const Flags& flags() const {
     return const_cast<ImmutableScriptData*>(this)->flagsRef();
   }
 
+ public:
   uint32_t codeLength() const { return codeLength_; }
   jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
   mozilla::Span<jsbytecode> codeSpan() { return {code(), codeLength()}; }
@@ -412,6 +414,7 @@ class alignas(uint32_t) ImmutableScriptData final {
                              offsetToPointer<TryNote>(endOffset()));
   }
 
+  // Expose offsets to the JITs.
   static constexpr size_t offsetOfCode() {
     return sizeof(ImmutableScriptData) + sizeof(Flags);
   }
@@ -429,10 +432,6 @@ class alignas(uint32_t) ImmutableScriptData final {
   static constexpr size_t offsetOfFunLength() {
     return offsetof(ImmutableScriptData, funLength);
   }
-
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::UniquePtr<ImmutableScriptData>& script);
 
   // ImmutableScriptData has trailing data so isn't copyable or movable.
   ImmutableScriptData(const ImmutableScriptData&) = delete;

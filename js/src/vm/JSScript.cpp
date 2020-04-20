@@ -875,9 +875,8 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
 }
 
 template <XDRMode mode>
-/* static */
-XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr,
-                                   UniquePtr<ImmutableScriptData>& isd) {
+static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
+                                        UniquePtr<ImmutableScriptData>& isd) {
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
   uint32_t numResumeOffsets = 0;
@@ -946,18 +945,6 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr,
 
   return Ok();
 }
-
-template
-    /* static */
-    XDRResult
-    ImmutableScriptData::XDR(XDRState<XDR_ENCODE>* xdr,
-                             js::UniquePtr<ImmutableScriptData>& script);
-
-template
-    /* static */
-    XDRResult
-    ImmutableScriptData::XDR(XDRState<XDR_DECODE>* xdr,
-                             js::UniquePtr<ImmutableScriptData>& script);
 
 /* static */ size_t RuntimeScriptData::AllocationSize(uint32_t natoms) {
   size_t size = sizeof(RuntimeScriptData);
@@ -1032,7 +1019,7 @@ XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
     }
   }
 
-  MOZ_TRY(ImmutableScriptData::XDR<mode>(xdr, rsd->isd_));
+  MOZ_TRY(XDRImmutableScriptData<mode>(xdr, rsd->isd_));
 
   return Ok();
 }
