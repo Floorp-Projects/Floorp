@@ -2025,7 +2025,7 @@ FunctionCreationData::FunctionCreationData(HandleAtom atom,
                                            FunctionAsyncKind asyncKind,
                                            bool isSelfHosting /* = false */,
                                            bool inFunctionBox /* = false */)
-    : atom(atom), generatorKind(generatorKind), asyncKind(asyncKind) {
+    : atom(atom) {
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
@@ -2078,6 +2078,14 @@ FunctionCreationData::FunctionCreationData(HandleAtom atom,
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
     flags.setIsExtended();
   }
+
+  if (generatorKind == GeneratorKind::Generator) {
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsGenerator);
+  }
+
+  if (asyncKind == FunctionAsyncKind::AsyncFunction) {
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsAsync);
+  }
 }
 
 HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
@@ -2093,7 +2101,15 @@ JSFunction* AllocNewFunction(JSContext* cx,
   const FunctionCreationData& data = dataHandle.get();
 
   RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, data.generatorKind, data.asyncKind, &proto)) {
+  GeneratorKind generatorKind =
+      data.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
+          ? GeneratorKind::Generator
+          : GeneratorKind::NotGenerator;
+  FunctionAsyncKind asyncKind =
+      data.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
+          ? FunctionAsyncKind::AsyncFunction
+          : FunctionAsyncKind::SyncFunction;
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
     return nullptr;
   }
   gc::AllocKind allocKind = data.flags.isExtended()
