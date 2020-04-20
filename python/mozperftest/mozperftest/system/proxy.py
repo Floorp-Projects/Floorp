@@ -25,6 +25,9 @@ class ProxyRunner(Layer):
         pass
 
     def __call__(self, metadata):
+        if not self.get_arg("proxy"):
+            return metadata
+
         self.metadata = metadata
         if not self.get_arg("proxy"):
             return metadata
