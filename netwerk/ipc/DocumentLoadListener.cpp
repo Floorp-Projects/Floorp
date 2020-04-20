@@ -780,7 +780,6 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
   // Ask redirected channel if verification can proceed.
   // ReadyToVerify will be invoked when redirected channel is ready.
   redirectingParent->ContinueVerification(this);
-  return;
 }
 
 NS_IMETHODIMP
