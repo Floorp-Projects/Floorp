@@ -43,6 +43,7 @@ CUSTOM_NSIS_PLUGINS = \
 	ServicesHelper.dll \
 	ShellLink.dll \
 	UAC.dll \
+	WebBrowser.dll \
 	$(NULL)
 
 CUSTOM_UI = \
