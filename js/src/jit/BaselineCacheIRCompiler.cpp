@@ -485,9 +485,8 @@ bool BaselineCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
 }
 
 bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
-    TypedOrValueRegister receiver) {
-  Address getterAddr(stubAddress(reader.stubOffset()));
-  bool isSameRealm = reader.readBool();
+    TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm) {
+  Address getterAddr(stubAddress(getterOffset));
 
   AutoScratchRegister code(allocator, masm);
   AutoScratchRegister callee(allocator, masm);
@@ -502,7 +501,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
-  if (!isSameRealm) {
+  if (!sameRealm) {
     masm.switchToObjectRealm(callee, scratch);
   }
 
@@ -536,32 +535,35 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
 
   stubFrame.leave(masm, true);
 
-  if (!isSameRealm) {
+  if (!sameRealm) {
     masm.switchToBaselineFrameRealm(R1.scratchReg());
   }
 
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedGetterResult() {
+bool BaselineCacheIRCompiler::emitCallScriptedGetterResult(
+    ObjOperandId objId, uint32_t getterOffset, bool sameRealm) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
   return emitCallScriptedGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), getterOffset,
+      sameRealm);
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedGetterByValueResult() {
+bool BaselineCacheIRCompiler::emitCallScriptedGetterByValueResult(
+    ValOperandId valId, uint32_t getterOffset, bool sameRealm) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, valId);
 
-  return emitCallScriptedGetterResultShared(val);
+  return emitCallScriptedGetterResultShared(val, getterOffset, sameRealm);
 }
 
 template <typename T, typename CallVM>
 bool BaselineCacheIRCompiler::emitCallNativeGetterResultShared(
-    T receiver, const CallVM& emitCallVM) {
-  Address getterAddr(stubAddress(reader.stubOffset()));
+    T receiver, uint32_t getterOffset, const CallVM& emitCallVM) {
+  Address getterAddr(stubAddress(getterOffset));
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -582,32 +584,35 @@ bool BaselineCacheIRCompiler::emitCallNativeGetterResultShared(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeGetterResult() {
+bool BaselineCacheIRCompiler::emitCallNativeGetterResult(
+    ObjOperandId objId, uint32_t getterOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
-  return emitCallNativeGetterResultShared(obj, [this]() {
+  return emitCallNativeGetterResultShared(obj, getterOffset, [this]() {
     using Fn =
         bool (*)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
     callVM<Fn, CallNativeGetter>(masm);
   });
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeGetterByValueResult() {
+bool BaselineCacheIRCompiler::emitCallNativeGetterByValueResult(
+    ValOperandId valId, uint32_t getterOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+  ValueOperand val = allocator.useValueRegister(masm, valId);
 
-  return emitCallNativeGetterResultShared(val, [this]() {
+  return emitCallNativeGetterResultShared(val, getterOffset, [this]() {
     using Fn =
         bool (*)(JSContext*, HandleFunction, HandleValue, MutableHandleValue);
     callVM<Fn, CallNativeGetterByValue>(masm);
   });
 }
 
-bool BaselineCacheIRCompiler::emitCallProxyGetResult() {
+bool BaselineCacheIRCompiler::emitCallProxyGetResult(ObjOperandId objId,
+                                                     uint32_t idOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Address idAddr(stubAddress(reader.stubOffset()));
+  Register obj = allocator.useRegister(masm, objId);
+  Address idAddr(stubAddress(idOffset));
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -739,12 +744,12 @@ bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadStringResult() {
+bool BaselineCacheIRCompiler::emitLoadStringResult(uint32_t strOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  masm.loadPtr(stubAddress(reader.stubOffset()), scratch);
+  masm.loadPtr(stubAddress(strOffset), scratch);
   masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
   return true;
 }

@@ -909,8 +909,9 @@ static void EmitReadSlotReturn(CacheIRWriter& writer, JSObject*,
   }
 }
 
-static void EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj,
-                                         JSObject* holder, Shape* shape,
+static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
+                                         JSObject* obj, JSObject* holder,
+                                         Shape* shape,
                                          ObjOperandId receiverId) {
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
@@ -923,7 +924,8 @@ static void EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj,
     case CanAttachScriptedGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
       MOZ_ASSERT(target->hasJitEntry());
-      writer.callScriptedGetterResult(receiverId, target);
+      bool sameRealm = cx->realm() == target->realm();
+      writer.callScriptedGetterResult(receiverId, target, sameRealm);
       writer.typeMonitorResult();
       break;
     }
@@ -956,23 +958,23 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, JSObject* obj,
   }
 }
 
-static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
-                                 JSObject* holder, Shape* shape,
+static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
+                                 JSObject* obj, JSObject* holder, Shape* shape,
                                  ObjOperandId objId, ObjOperandId receiverId,
                                  ICState::Mode mode) {
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
-  EmitCallGetterResultNoGuards(writer, obj, holder, shape, receiverId);
+  EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
 }
 
-static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
-                                 JSObject* holder, Shape* shape,
+static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
+                                 JSObject* obj, JSObject* holder, Shape* shape,
                                  ObjOperandId objId, ICState::Mode mode) {
-  EmitCallGetterResult(writer, obj, holder, shape, objId, objId, mode);
+  EmitCallGetterResult(cx, writer, obj, holder, shape, objId, objId, mode);
 }
 
-static void EmitCallGetterByValueResult(CacheIRWriter& writer, JSObject* obj,
-                                        JSObject* holder, Shape* shape,
-                                        ObjOperandId objId,
+static void EmitCallGetterByValueResult(JSContext* cx, CacheIRWriter& writer,
+                                        JSObject* obj, JSObject* holder,
+                                        Shape* shape, ObjOperandId objId,
                                         ValOperandId receiverId,
                                         ICState::Mode mode) {
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
@@ -988,7 +990,8 @@ static void EmitCallGetterByValueResult(CacheIRWriter& writer, JSObject* obj,
     case CanAttachScriptedGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
       MOZ_ASSERT(target->hasJitEntry());
-      writer.callScriptedGetterByValueResult(receiverId, target);
+      bool sameRealm = cx->realm() == target->realm();
+      writer.callScriptedGetterByValueResult(receiverId, target, sameRealm);
       writer.typeMonitorResult();
       break;
     }
@@ -1066,7 +1069,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       ObjOperandId receiverId =
           isSuper() ? writer.guardToObject(getSuperReceiverValueId()) : objId;
       maybeEmitIdGuard(id);
-      EmitCallGetterResult(writer, obj, holder, shape, objId, receiverId,
+      EmitCallGetterResult(cx_, writer, obj, holder, shape, objId, receiverId,
                            mode_);
 
       trackAttached("NativeGetter");
@@ -1173,7 +1176,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
-      EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId,
+      EmitCallGetterResult(cx_, writer, windowObj, holder, shape, windowObjId,
                            mode_);
 
       trackAttached("WindowProxyGetter");
@@ -1497,7 +1500,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
     // and not the expando object.
     MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                canCache == CanAttachScriptedGetter);
-    EmitCallGetterResultNoGuards(writer, expandoObj, expandoObj, propShape,
+    EmitCallGetterResultNoGuards(cx_, writer, expandoObj, expandoObj, propShape,
                                  objId);
   }
 
@@ -1601,7 +1604,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                  canCache == CanAttachScriptedGetter);
       MOZ_ASSERT(!isSuper());
-      EmitCallGetterResultNoGuards(writer, checkObj, holder, shape, objId);
+      EmitCallGetterResultNoGuards(cx_, writer, checkObj, holder, shape, objId);
     }
   } else {
     // Property was not found on the prototype chain. Deoptimize down to
@@ -1923,8 +1926,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       maybeEmitIdGuard(id);
 
       ObjOperandId protoId = writer.loadObject(proto);
-      EmitCallGetterByValueResult(writer, proto, holder, shape, protoId, valId,
-                                  mode_);
+      EmitCallGetterByValueResult(cx_, writer, proto, holder, shape, protoId,
+                                  valId, mode_);
 
       trackAttached("PrimitiveGetter");
       return AttachDecision::Attach;
@@ -2570,8 +2573,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     writer.guardShape(holderId, holder->lastProperty());
   }
 
-  EmitCallGetterResultNoGuards(writer, &globalLexical->global(), holder, shape,
-                               globalId);
+  EmitCallGetterResultNoGuards(cx_, writer, &globalLexical->global(), holder,
+                               shape, globalId);
 
   trackAttached("GlobalNameGetter");
   return AttachDecision::Attach;

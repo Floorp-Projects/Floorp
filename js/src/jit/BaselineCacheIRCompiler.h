@@ -72,10 +72,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   bool emitCallNativeShared(NativeCallType callType);
 
   MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
-      TypedOrValueRegister receiver);
+      TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm);
 
   template <typename T, typename CallVM>
   MOZ_MUST_USE bool emitCallNativeGetterResultShared(T receiver,
+                                                     uint32_t getterOffset,
                                                      const CallVM& emitCallVM);
 
  public:
