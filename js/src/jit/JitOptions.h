@@ -72,6 +72,12 @@ struct DefaultJitOptions {
 #ifdef JS_TRACE_LOGGING
   bool enableTraceLogger;
 #endif
+#ifdef ENABLE_NEW_REGEXP
+  bool traceRegExpParser;
+  bool traceRegExpAssembler;
+  bool traceRegExpInterpreter;
+  bool traceRegExpPeephole;
+#endif
   bool enableWasmJitExit;
   bool enableWasmJitEntry;
   bool enableWasmIonFastCalls;
