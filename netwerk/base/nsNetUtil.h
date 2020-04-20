@@ -61,6 +61,11 @@ class ClientInfo;
 class PerformanceStorage;
 class ServiceWorkerDescriptor;
 }  // namespace dom
+
+namespace ipc {
+class FileDescriptor;
+}  // namespace ipc
+
 }  // namespace mozilla
 
 template <class>
@@ -461,6 +466,9 @@ nsresult NS_NewLocalFileInputStream(nsIInputStream** result, nsIFile* file,
 nsresult NS_NewLocalFileOutputStream(nsIOutputStream** result, nsIFile* file,
                                      int32_t ioFlags = -1, int32_t perm = -1,
                                      int32_t behaviorFlags = 0);
+
+nsresult NS_NewLocalFileOutputStream(nsIOutputStream** result,
+                                     const mozilla::ipc::FileDescriptor& fd);
 
 // returns a file output stream which can be QI'ed to nsISafeOutputStream.
 nsresult NS_NewAtomicFileOutputStream(nsIOutputStream** result, nsIFile* file,
