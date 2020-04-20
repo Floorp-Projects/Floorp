@@ -97,7 +97,7 @@ add_task(async _ => {
       Services.obs.addObserver(observer, "cookie-saved-on-disk");
     });
 
-    cs.setCookieStringFromHttp(uri, null, test.cookie, null, channel);
+    cs.setCookieStringFromHttp(uri, null, test.cookie, channel);
 
     await promise;
 

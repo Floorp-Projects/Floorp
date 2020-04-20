@@ -165,12 +165,6 @@ interface nsICookieService : nsISupports
    *        the load of the document referenced by aURI.
    * @param aCookie
    *        the cookie string to set.
-   * @param aServerTime
-   *        the current time reported by the server, if available. This should
-   *        be the string from the Date header in an HTTP response. If the
-   *        string is empty or null, server time is assumed to be the current
-   *        local time. If provided, it will be used to calculate the expiry
-   *        time of the cookie relative to the server's local time.
    * @param aChannel
    *        the channel used to load the document.  this parameter should not
    *        be null, otherwise the cookies will not be set if third-party
@@ -179,8 +173,7 @@ interface nsICookieService : nsISupports
    *        provided, the cookies will be assumed third-party.)
    */
   void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
-                               in ACString aCookie, in ACString aServerTime,
-                               in nsIChannel aChannel);
+                               in ACString aCookie, in nsIChannel aChannel);
 
 
   /*

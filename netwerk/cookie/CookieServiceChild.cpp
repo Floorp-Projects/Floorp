@@ -588,7 +588,6 @@ NS_IMETHODIMP
 CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
                                             nsIURI* /*aFirstURI*/,
                                             const nsACString& aCookieString,
-                                            const nsACString& aServerTime,
                                             nsIChannel* aChannel) {
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString, true);
 }
