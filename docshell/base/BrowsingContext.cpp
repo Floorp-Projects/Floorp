@@ -1729,19 +1729,22 @@ void BrowsingContext::ResetGVAutoplayRequestStatus() {
   SetGVInaudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>,
+                                GVAutoplayRequestStatus) {
   MOZ_ASSERT(IsTop(),
              "Should only set GVAudibleAutoplayRequestStatus in the top-level "
              "browsing context");
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>,
+                                GVAutoplayRequestStatus) {
   MOZ_ASSERT(IsTop(),
              "Should only set GVAudibleAutoplayRequestStatus in the top-level "
              "browsing context");
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_UserActivationState>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_UserActivationState>,
+                                UserActivation::State) {
   MOZ_ASSERT_IF(!mIsInProcess, mUserGestureStart.IsNull());
   USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8
                       " for %s browsing context 0x%08" PRIx64,
@@ -1758,7 +1761,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserActivationState>) {
   }
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_Muted>, bool) {
   MOZ_ASSERT(!mParent, "Set muted flag on non top-level context!");
   USER_ACTIVATION_LOG("Set audio muted %d for %s browsing context 0x%08" PRIx64,
                       GetMuted(), XRE_IsParentProcess() ? "Parent" : "Child",
@@ -1783,7 +1786,8 @@ void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent) {
   Top()->SetUserAgentOverride(aUserAgent);
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_UserAgentOverride>,
+                                const nsAString& aOldUserAgent) {
   MOZ_ASSERT(IsTop());
 
   PreOrderWalk([&](BrowsingContext* aContext) {
@@ -1941,7 +1945,8 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
   return window && window->GetBrowsingContext() == this;
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_CurrentInnerWindowId>,
+                                uint64_t) {
   mCurrentWindowContext = WindowContext::GetById(GetCurrentInnerWindowId());
   if (XRE_IsParentProcess()) {
     BrowserParent::UpdateFocusFromBrowsingContext();
@@ -1955,7 +1960,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsPopupSpam>, const bool& aValue,
   return aValue && !GetIsPopupSpam();
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_IsPopupSpam>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_IsPopupSpam>, bool) {
   if (GetIsPopupSpam()) {
     PopupBlocker::RegisterOpenPopupSpam();
   }
@@ -1984,8 +1989,8 @@ bool BrowsingContext::IsLoading() {
   return false;
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_Loading>) {
-  if (mFields.Get<IDX_Loading>()) {
+void BrowsingContext::DidChange(FieldIndex<IDX_Loading>, bool) {
+  if (GetLoading()) {
     return;
   }
 
@@ -2002,17 +2007,17 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Loading>) {
 
 // Inform the Document for this context of the (potential) change in
 // loading state
-void BrowsingContext::DidSet(FieldIndex<IDX_AncestorLoading>) {
+void BrowsingContext::DidChange(FieldIndex<IDX_AncestorLoading>, bool) {
   nsPIDOMWindowOuter* outer = GetDOMWindow();
   if (!outer) {
     MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
-            ("DidSetAncestorLoading BC: %p -- No outer window", (void*)this));
+            ("DidChangeAncestorLoading BC: %p -- No outer window", (void*)this));
     return;
   }
   Document* document = nsGlobalWindowOuter::Cast(outer)->GetExtantDoc();
   if (document) {
     MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
-            ("DidSetAncestorLoading BC: %p -- NotifyLoading(%d, %d, %d)",
+            ("DidChangeAncestorLoading BC: %p -- NotifyLoading(%d, %d, %d)",
              (void*)this, GetAncestorLoading(), document->GetReadyStateEnum(),
              document->GetReadyStateEnum()));
     document->NotifyLoading(GetAncestorLoading(), document->GetReadyStateEnum(),
