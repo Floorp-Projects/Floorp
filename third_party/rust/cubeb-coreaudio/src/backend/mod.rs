@@ -399,12 +399,9 @@ extern "C" fn audiounit_input_callback(
             // For now state that no error occurred and feed silence, stream will be
             // resumed once reinit has completed.
             cubeb_logv!(
-                "({:p}) input: reinit pending feeding silence instead",
+                "({:p}) input: reinit pending, output will pull silence instead",
                 stm.core_stream_data.stm_ptr
             );
-            let elements =
-                (input_frames * stm.core_stream_data.input_desc.mChannelsPerFrame) as usize;
-            input_buffer_manager.push_silent_data(elements);
             ErrorHandle::Reinit
         } else {
             assert_eq!(status, NO_ERR);
@@ -610,13 +607,12 @@ extern "C" fn audiounit_output_callback(
                 && (stm.switching_device.load(Ordering::SeqCst)
                     || stm.frames_read.load(Ordering::SeqCst) == 0)
             {
+                // The silent frames will be inserted in `get_linear_data` below.
                 let silent_frames_to_push = input_frames_needed - buffered_input_frames;
-                let silent_samples_to_push = silent_frames_to_push * input_channels;
-                input_buffer_manager.push_silent_data(silent_samples_to_push);
                 stm.frames_read
                     .fetch_add(input_frames_needed, Ordering::SeqCst);
                 cubeb_log!(
-                    "({:p}) Missing Frames: {} pushed {} frames of input silence.",
+                    "({:p}) Missing Frames: {} will append {} frames of input silence.",
                     stm.core_stream_data.stm_ptr,
                     if stm.frames_read.load(Ordering::SeqCst) == 0 {
                         "input hasn't started,"
@@ -1379,50 +1375,28 @@ fn get_presentation_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
     device_latency + stream_latency
 }
 
-#[allow(clippy::cognitive_complexity)]
 fn get_device_group_id(
     id: AudioDeviceID,
     devtype: DeviceType,
 ) -> std::result::Result<CString, OSStatus> {
+    const BLTN: u32 = 0x626C_746E; // "bltn" (builtin)
+
     match get_device_transport_type(id, devtype) {
-        // If the device type is "bltn" (builtin)
-        Ok(0x626C_746E) => {
+        Ok(BLTN) => {
             cubeb_log!(
-                "transport type is {:?}",
-                convert_uint32_into_string(0x626C_746E)
+                "The transport type is {:?}",
+                convert_uint32_into_string(BLTN)
             );
-            match get_device_source(id, devtype) {
-                Ok(source) => {
-                    let msg = format!("source is {:?}", convert_uint32_into_string(source));
-                    match source {
-                        // "imic" (internal microphone) or "ispk" (internal speaker)
-                        0x696D_6963 | 0x6973_706B => {
-                            const GROUP_ID: &str = "builtin-internal-mic|spk";
-                            cubeb_log!("{}. Use hardcode group id: {}.", msg, GROUP_ID);
-                            return Ok(CString::new(GROUP_ID).unwrap());
-                        }
-                        // "emic" (external microphone) or "hdpn" (headphone)
-                        0x656D_6963 | 0x6864_706E => {
-                            const GROUP_ID: &str = "builtin-external-mic|hdpn";
-                            cubeb_log!("{}. Use hardcode group id: {}", msg, GROUP_ID);
-                            return Ok(CString::new(GROUP_ID).unwrap());
-                        }
-                        _ => {
-                            cubeb_log!("{}. Get model uid instead.", msg);
-                        }
-                    }
+            match get_custom_group_id(id, devtype) {
+                Some(id) => return Ok(id),
+                None => {
+                    cubeb_log!("Get model uid instead.");
                 }
-                Err(e) => {
-                    cubeb_log!(
-                        "Error: {} when getting device source. Get model uid instead.",
-                        e
-                    );
-                }
-            }
+            };
         }
         Ok(trans_type) => {
             cubeb_log!(
-                "transport type is {:?}. Get model uid instead.",
+                "The transport type is {:?}. Get model uid instead.",
                 convert_uint32_into_string(trans_type)
             );
         }
@@ -1439,6 +1413,44 @@ fn get_device_group_id(
     get_device_model_uid(id, devtype)
         .or_else(|_| get_device_model_uid(id, DeviceType::INPUT | DeviceType::OUTPUT))
         .map(|uid| uid.into_cstring())
+}
+
+fn get_custom_group_id(id: AudioDeviceID, devtype: DeviceType) -> Option<CString> {
+    const IMIC: u32 = 0x696D_6963; // "imic" (internal microphone)
+    const ISPK: u32 = 0x6973_706B; // "ispk" (internal speaker)
+    const EMIC: u32 = 0x656D_6963; // "emic" (external microphone)
+    const HDPN: u32 = 0x6864_706E; // "hdpn" (headphone)
+
+    match get_device_source(id, devtype) {
+        s @ Ok(IMIC) | s @ Ok(ISPK) => {
+            const GROUP_ID: &str = "builtin-internal-mic|spk";
+            cubeb_log!(
+                "Use hardcode group id: {} when source is: {:?}.",
+                GROUP_ID,
+                convert_uint32_into_string(s.unwrap())
+            );
+            return Some(CString::new(GROUP_ID).unwrap());
+        }
+        s @ Ok(EMIC) | s @ Ok(HDPN) => {
+            const GROUP_ID: &str = "builtin-external-mic|hdpn";
+            cubeb_log!(
+                "Use hardcode group id: {} when source is: {:?}.",
+                GROUP_ID,
+                convert_uint32_into_string(s.unwrap())
+            );
+            return Some(CString::new(GROUP_ID).unwrap());
+        }
+        Ok(s) => {
+            cubeb_log!(
+                "No custom group id when source is: {:?}.",
+                convert_uint32_into_string(s)
+            );
+        }
+        Err(e) => {
+            cubeb_log!("Error: {} when getting device source. ", e);
+        }
+    }
+    None
 }
 
 fn get_device_label(

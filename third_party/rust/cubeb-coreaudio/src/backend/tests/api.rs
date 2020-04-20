@@ -720,34 +720,9 @@ fn test_convert_channel_layout() {
 // ------------------------------------
 #[test]
 fn test_get_preferred_channel_layout_output() {
-    const STEREO: [mixer::Channel; 2] = [mixer::Channel::FrontLeft, mixer::Channel::FrontRight];
-    // Predefined whitelist
-    use std::collections::HashMap;
-    let devices_layouts: HashMap<&'static str, Vec<mixer::Channel>> = [
-        ("hdpn", STEREO.to_vec()),
-        ("ispk", STEREO.to_vec()),
-        ("FApd", STEREO.to_vec()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
-
-    let source = test_get_default_source_name(Scope::Output);
-    let unit = test_get_default_audiounit(Scope::Output);
-    if source.is_none() || unit.is_none() {
-        println!("No output audiounit or device source name found.");
-        return;
-    }
-
-    let source = source.unwrap();
-    let unit = unit.unwrap();
-    if let Some(layout) = devices_layouts.get(source.as_str()) {
-        assert_eq!(
-            &audiounit_get_preferred_channel_layout(unit.get_inner()),
-            layout
-        );
-    } else {
-        println!("Device {} is not in the whitelist.", source);
+    match test_get_default_audiounit(Scope::Output) {
+        Some(unit) => assert!(!audiounit_get_preferred_channel_layout(unit.get_inner()).is_empty()),
+        None => println!("No output audiounit for test."),
     }
 }
 
@@ -755,35 +730,9 @@ fn test_get_preferred_channel_layout_output() {
 // ------------------------------------
 #[test]
 fn test_get_current_channel_layout_output() {
-    const STEREO: [mixer::Channel; 2] = [mixer::Channel::FrontLeft, mixer::Channel::FrontRight];
-
-    // Predefined whitelist
-    use std::collections::HashMap;
-    let devices_layouts: HashMap<&'static str, Vec<mixer::Channel>> = [
-        ("hdpn", STEREO.to_vec()),
-        ("ispk", STEREO.to_vec()),
-        ("FApd", STEREO.to_vec()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
-
-    let source = test_get_default_source_name(Scope::Output);
-    let unit = test_get_default_audiounit(Scope::Output);
-    if source.is_none() || unit.is_none() {
-        println!("No output audiounit or device source name found.");
-        return;
-    }
-
-    let source = source.unwrap();
-    let unit = unit.unwrap();
-    if let Some(layout) = devices_layouts.get(source.as_str()) {
-        assert_eq!(
-            audiounit_get_current_channel_layout(unit.get_inner()),
-            *layout
-        );
-    } else {
-        println!("Device {} is not in the whitelist.", source);
+    match test_get_default_audiounit(Scope::Output) {
+        Some(unit) => assert!(!audiounit_get_current_channel_layout(unit.get_inner()).is_empty()),
+        None => println!("No output audiounit for test."),
     }
 }
 
