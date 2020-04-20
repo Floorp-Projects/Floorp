@@ -536,20 +536,11 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
   prefSize = BoundsCheck(minSize, prefSize, maxSize);
 
-
-  bool sizeChanged = (mPrefSize != prefSize);
   // if the size changed then set the bounds to be the preferred size
+  bool sizeChanged = (mPrefSize != prefSize);
   if (sizeChanged) {
     SetXULBounds(aState, nsRect(0, 0, prefSize.width, prefSize.height), false);
     mPrefSize = prefSize;
-#if MOZ_WAYLAND
-    nsIWidget* widget = GetWidget();
-    if (widget) {
-      // When the popup size changed in the DOM, we need to flush widget
-      // preferred popup rect to avoid showing it in wrong size.
-      widget->FlushPreferredPopupRect();
-    }
-#endif
   }
 
   bool needCallback = false;
@@ -1416,17 +1407,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // tell us which axis the popup is flush against in case we have to move
       // it around later. The AdjustPositionForAnchorAlign method accounts for
       // the popup's margin.
-
-#ifdef MOZ_WAYLAND
-      if (gdk_display_get_default() &&
-          !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-        screenPoint = nsPoint(anchorRect.x, anchorRect.y);
-        mAnchorRect = anchorRect;
-      } else
-#endif
-      {
-        screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
-      }
+      screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
     } else {
       // with no anchor, the popup is positioned relative to the root frame
       anchorRect = rootScreenRect;
@@ -1538,17 +1519,6 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     // Ensure that anchorRect is on screen.
     anchorRect = anchorRect.Intersect(screenRect);
 
-#ifdef MOZ_WAYLAND
-    nsIWidget* widget = GetWidget();
-    if (widget) {
-      nsRect prefRect = widget->GetPreferredPopupRect();
-      if (prefRect.width > 0 && prefRect.height > 0) {
-        screenRect = prefRect;
-      }
-    } else {
-      NS_WARNING("No widget associated with popup frame.");
-    }
-#endif
     // shrink the the popup down if it is larger than the screen size
     if (mRect.width > screenRect.width) mRect.width = screenRect.width;
     if (mRect.height > screenRect.height) mRect.height = screenRect.height;
