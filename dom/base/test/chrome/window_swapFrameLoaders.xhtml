@@ -220,35 +220,6 @@ Test swapFrameLoaders with different frame types and remoteness
         is(pongB, "A", "Frame B message manager acquired after swap gets reply A after swap");
       }
 
-      // Verify browser API frame scripts destroyed if swapped out of browser frame
-      if (frameA.hasAttribute("mozbrowser") != frameB.hasAttribute("mozbrowser")) {
-        let mmA = frameA.frameLoader.messageManager;
-        let mmB = frameB.frameLoader.messageManager;
-
-        let inflightA = once(mmA, "check-browser-api");
-        let inflightB = once(mmB, "check-browser-api");
-
-        info("Check browser API for frame A");
-        mmA.sendAsyncMessage("check-browser-api");
-        let [ { data: apiA } ] = await inflightA;
-        if (frameA.hasAttribute("mozbrowser")) {
-          ok(apiA.exists && apiA.running, "Frame A browser API exists and is running");
-        } else {
-          ok(apiA.exists && !apiA.running, "Frame A browser API did exist but is now destroyed");
-        }
-
-        info("Check browser API for frame B");
-        mmB.sendAsyncMessage("check-browser-api");
-        let [ { data: apiB } ] = await inflightB;
-        if (frameB.hasAttribute("mozbrowser")) {
-          ok(apiB.exists && apiB.running, "Frame B browser API exists and is running");
-        } else {
-          ok(apiB.exists && !apiB.running, "Frame B browser API did exist but is now destroyed");
-        }
-      } else {
-        info("Frames have matching mozbrowser state, skipping browser API destruction check");
-      }
-
       frameA.remove();
       frameB.remove();
     }

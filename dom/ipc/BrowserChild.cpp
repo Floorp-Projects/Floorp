@@ -143,9 +143,6 @@
 #  include "nsIWebBrowserPrint.h"
 #endif
 
-#define BROWSER_ELEMENT_CHILD_SCRIPT \
-  NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
-
 static mozilla::LazyLogModule sApzChildLog("apz.child");
 
 using namespace mozilla;
@@ -2254,10 +2251,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvSwappedWithOtherRemoteLoader(
 
   // Ignore previous value of mTriedBrowserInit since owner content has changed.
   mTriedBrowserInit = true;
-  // Initialize the child side of the browser element machinery, if appropriate.
-  if (IsMozBrowserElement()) {
-    RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
-  }
 
   nsContentUtils::FirePageShowEventForFrameLoaderSwap(
       ourDocShell, ourEventTarget, true, true);
@@ -2604,11 +2597,6 @@ bool BrowserChild::InitBrowserChildMessageManager() {
 
   if (!mTriedBrowserInit) {
     mTriedBrowserInit = true;
-    // Initialize the child side of the browser element machinery,
-    // if appropriate.
-    if (IsMozBrowserElement()) {
-      RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
-    }
   }
 
   return true;
