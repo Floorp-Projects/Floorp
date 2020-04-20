@@ -1297,10 +1297,6 @@ void CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder) {
 }
 
 #ifdef DEBUG
-bool CycleCollectedJSRuntime::IsJSHolder(void* aHolder) {
-  return mJSHolders.Has(aHolder);
-}
-
 static void AssertNoGcThing(JS::GCCellPtr aGCThing, const char* aName,
                             void* aClosure) {
   MOZ_ASSERT(!aGCThing);
