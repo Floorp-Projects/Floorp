@@ -19,7 +19,7 @@ lints:
         symbol: A(lints)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge
+    worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: android-build}
         env:

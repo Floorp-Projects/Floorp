@@ -10,7 +10,7 @@ job-defaults:
         kind: test
         tier: 1
     platform: lint/opt
-    worker-type: t-linux-xlarge
+    worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800

@@ -498,7 +498,7 @@ workers:
             implementation: generic-worker
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
-        t-linux(-large|-xlarge):
+        t-linux(-large|-xlarge|-xlarge-source):
             provisioner: 'gecko-t'
             implementation: docker-worker
             os: linux
@@ -547,7 +547,7 @@ workers:
                 by-level:
                     '3': 'gecko-{level}-t-osx-1014'
                     default: 'gecko-t-osx-1014'
-        t-win10-64(|-gpu-s):
+        t-win10-64(|-gpu-s|-source):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
