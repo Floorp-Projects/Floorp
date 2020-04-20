@@ -9,3 +9,4 @@ The stub installer is the default installer interface that most users installing
   StubConfig
   StubPing
   StubArch
+  StubGUI
