@@ -71,7 +71,7 @@ var waitForLoad = async function(uri) {
   };
   gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
 
-  await BrowserTestUtils.browserStopped(gBrowser);
+  await BrowserTestUtils.browserStopped(gBrowser, uri);
 
   // Some of the documents we're using in this test use Fluent,
   // and they may finish localization later.
@@ -101,7 +101,7 @@ var waitForLoadWithFlags = async function(
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
-  await BrowserTestUtils.browserStopped(gBrowser);
+  await BrowserTestUtils.browserStopped(gBrowser, uri);
   if (!(flags & Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY)) {
     if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY) {
       gExpectedHistory.entries.pop();
