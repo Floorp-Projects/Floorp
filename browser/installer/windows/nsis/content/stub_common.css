@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+   height: 100%;
+   width: 100%;
+   margin: 0;
+   padding: 0;
+   overflow: hidden;
+
+   font-family: "Segoe UI", sans-serif;
+}
+
+#background {
+  min-height: 100%;
+  min-width: 100%;
+
+  width: 100%;
+  height: auto;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  z-index: -1;
+}
+
+body.high-contrast #background {
+  display: none;
+}
