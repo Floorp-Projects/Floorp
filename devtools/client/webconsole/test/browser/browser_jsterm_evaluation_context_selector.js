@@ -8,6 +8,8 @@ const FILE_FOLDER = `browser/devtools/client/webconsole/test/browser`;
 const TEST_URI = `http://example.com/${FILE_FOLDER}/test-console-evaluation-context-selector.html`;
 const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-child.html`;
 
+requestLongerTimeout(2);
+
 add_task(async function() {
   await pushPref("devtools.contenttoolbox.fission", true);
   await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
@@ -31,8 +33,8 @@ add_task(async function() {
       iframe2.addEventListener("load", resolve, { once: true });
     });
 
-    iframe1.src = `http://example.org/${iframPath}`;
-    iframe2.src = `http://mochi.test:8888/${iframPath}`;
+    iframe1.src = `http://example.org/${iframPath}?id=iframe-1`;
+    iframe2.src = `http://mochi.test:8888/${iframPath}?id=iframe-2`;
 
     await Promise.all([onLoadIframe1, onLoadIframe2]);
   });
@@ -150,7 +152,7 @@ add_task(async function() {
 
   await hud.toolbox.selectTool("webconsole");
   info("Check that 'Store as global variable' selects the right context");
-  await storeAsGlobalVariable(
+  await testStoreAsGlobalVariable(
     hud,
     iframe1DocumentMessage,
     "temp0",
@@ -158,14 +160,14 @@ add_task(async function() {
   );
   await waitForEagerEvaluationResult(
     hud,
-    `Location http://example.org/${IFRAME_PATH}`
+    `Location http://example.org/${IFRAME_PATH}?id=iframe-1`
   );
   await waitFor(() =>
     evaluationContextSelectorButton.innerText.includes("example.org")
   );
   ok(true, "The context was set to the selected iframe document");
 
-  await storeAsGlobalVariable(
+  await testStoreAsGlobalVariable(
     hud,
     iframe2DocumentMessage,
     "temp0",
@@ -173,14 +175,14 @@ add_task(async function() {
   );
   await waitForEagerEvaluationResult(
     hud,
-    `Location http://mochi.test:8888/${IFRAME_PATH}`
+    `Location http://mochi.test:8888/${IFRAME_PATH}?id=iframe-2`
   );
   await waitFor(() =>
     evaluationContextSelectorButton.innerText.includes("mochi.test")
   );
   ok(true, "The context was set to the selected iframe document");
 
-  await storeAsGlobalVariable(
+  await testStoreAsGlobalVariable(
     hud,
     topLevelDocumentMessage,
     "temp0",
@@ -191,6 +193,57 @@ add_task(async function() {
     evaluationContextSelectorButton.innerText.includes("Top")
   );
   ok(true, "The context was set to the top document");
+
+  info("Open the inspector again");
+  await hud.toolbox.selectTool("inspector");
+
+  info(
+    "Check that 'Use in console' works as expected for element in the first iframe"
+  );
+  await testUseInConsole(
+    hud,
+    inspector,
+    ".iframe-1",
+    "h2",
+    "temp1",
+    `<h2 id="iframe-1">`
+  );
+  await waitFor(() =>
+    evaluationContextSelectorButton.innerText.includes("example.org")
+  );
+  ok(true, "The context selector was updated");
+
+  info(
+    "Check that 'Use in console' works as expected for element in the second iframe"
+  );
+  await testUseInConsole(
+    hud,
+    inspector,
+    ".iframe-2",
+    "h2",
+    "temp1",
+    `<h2 id="iframe-2">`
+  );
+  await waitFor(() =>
+    evaluationContextSelectorButton.innerText.includes("mochi.test:8888")
+  );
+  ok(true, "The context selector was updated");
+
+  info(
+    "Check that 'Use in console' works as expected for element in the top frame"
+  );
+  await testUseInConsole(
+    hud,
+    inspector,
+    ":root",
+    "h1",
+    "temp1",
+    `<h1 id="top-level">`
+  );
+  await waitFor(() =>
+    evaluationContextSelectorButton.innerText.includes("Top")
+  );
+  ok(true, "The context selector was updated");
 });
 
 async function selectIframeContentElement(
@@ -206,9 +259,10 @@ async function selectIframeContentElement(
     .treeChildren()[0]
     .walkerFront.findNodeFront([iframeContentSelector]);
   inspector.selection.setNodeFront(childrenNodeFront);
+  return childrenNodeFront;
 }
 
-async function storeAsGlobalVariable(
+async function testStoreAsGlobalVariable(
   hud,
   msg,
   variableName,
@@ -237,4 +291,48 @@ async function storeAsGlobalVariable(
     ".result"
   );
   ok(true, "Correct variable assigned into console.");
+}
+
+async function testUseInConsole(
+  hud,
+  inspector,
+  iframeSelector,
+  iframeContentSelector,
+  variableName,
+  expectedTextResult
+) {
+  const nodeFront = await selectIframeContentElement(
+    inspector,
+    iframeSelector,
+    iframeContentSelector
+  );
+  const container = inspector.markup.getContainer(nodeFront);
+
+  const onConsoleReady = inspector.once("console-var-ready");
+  const menu = inspector.markup.contextMenu._openMenu({
+    target: container.tagLine,
+  });
+  const useInConsoleItem = menu.items.find(
+    ({ id }) => id === "node-menu-useinconsole"
+  );
+  useInConsoleItem.click();
+  await onConsoleReady;
+
+  menu.clear();
+
+  is(
+    getInputValue(hud),
+    variableName,
+    "A variable with the expected name was created"
+  );
+  await waitForEagerEvaluationResult(hud, expectedTextResult);
+  ok(true, "The eager evaluation display the expected result");
+
+  await executeAndWaitForMessage(
+    hud,
+    variableName,
+    expectedTextResult,
+    ".result"
+  );
+  ok(true, "the expected variable was created with the expected value.");
 }

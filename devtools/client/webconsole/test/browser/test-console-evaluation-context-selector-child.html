@@ -8,6 +8,8 @@
     <script>
       "use strict";
       console.log("iframe", document);
+      var id = new URLSearchParams(document.location.search).get("id");
+      document.querySelector("h2").id = id;
     </script>
   </body>
 </html>
