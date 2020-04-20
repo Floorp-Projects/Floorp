@@ -4,6 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Build and run wrench with off-screen software rendering (OSMesa/LLVMpipe)
+# for platform-independent results. This is good for running reference tests.
+#
+# Usage: headless.py ARGS
+#
+# Pass ARGS through to wrench, after '--headless' and '--no-scissor'.
+#
+# Environment variables:
+#
+# WRENCH_HEADLESS_TARGET: If set, don't rebuild wrench. Instead, the value should
+#     be the path to an already-built cargo 'target' directory. This is useful
+#     for running a cross-compiled wrench.
+#
+# CARGOFLAGS: Extra flags to be passed to 'cargo build'. Split on whitespace.
+#
+# OPTIMIZED: This script uses the release build by default, but if this variable
+#     is set to '0' or 'false', the script uses the debug build.
+#
+# DEBUGGER: If set, run wrench under a debugger. Permitted values are 'rr' (run
+#     under 'rr record'), or 'gdb', 'rust-gdb', or 'cgdb' (run under the given
+#     debugger, and arrange to supply ARGS to the wrench debuggee, not the
+#     debugger)
+
 from __future__ import print_function
 import contextlib
 import os
