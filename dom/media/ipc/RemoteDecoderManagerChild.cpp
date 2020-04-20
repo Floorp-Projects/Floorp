@@ -22,7 +22,6 @@ using namespace gfx;
 
 // Only modified on the main-thread
 StaticRefPtr<nsIThread> sRemoteDecoderManagerChildThread;
-StaticRefPtr<AbstractThread> sRemoteDecoderManagerChildAbstractThread;
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild>
@@ -41,9 +40,6 @@ void RemoteDecoderManagerChild::InitializeThread() {
     nsresult rv = NS_NewNamedThread("RemVidChild", getter_AddRefs(childThread));
     NS_ENSURE_SUCCESS_VOID(rv);
     sRemoteDecoderManagerChildThread = childThread;
-
-    sRemoteDecoderManagerChildAbstractThread =
-        AbstractThread::CreateXPCOMThreadWrapper(childThread, false);
 
     sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
   }
@@ -91,7 +87,6 @@ void RemoteDecoderManagerChild::Shutdown() {
             }),
         NS_DISPATCH_NORMAL);
 
-    sRemoteDecoderManagerChildAbstractThread = nullptr;
     sRemoteDecoderManagerChildThread->Shutdown();
     sRemoteDecoderManagerChildThread = nullptr;
 
@@ -128,11 +123,6 @@ RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetGPUProcessSingleton() {
 /* static */
 nsIThread* RemoteDecoderManagerChild::GetManagerThread() {
   return sRemoteDecoderManagerChildThread;
-}
-
-/* static */
-AbstractThread* RemoteDecoderManagerChild::GetManagerAbstractThread() {
-  return sRemoteDecoderManagerChildAbstractThread;
 }
 
 PRemoteDecoderChild* RemoteDecoderManagerChild::AllocPRemoteDecoderChild(
