@@ -1,0 +1,39 @@
+<html>
+<body>
+
+  <!-- Try to load in a frame a cross-origin page which sends:
+     "X-Frame-Options: Allow-From http://mochi.test:8888/",
+       and a cross-origin page which sends
+     "X-Frame-Options: Allow-From http://example.com/". -->
+
+<script>
+
+// Make sure these iframes aren't too tall; they both need to fit inside the
+// iframe this page is contained in, without scrolling, in order for the test's
+// screenshots to work properly.
+
+var frame_src = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsAllowFrom.sjs";
+
+var iframe1 = document.createElement("iframe");
+iframe1.height = "300px";
+var iframe2 = document.createElement("iframe");
+iframe2.height = "300px";
+document.body.appendChild(iframe1);
+
+iframe1.addEventListener("load", function() {
+  // This causes our embedder to take a screenshot (and blocks until the
+  // screenshot is completed).
+  iframe2.addEventListener("load", function() {
+    alert("finish");
+  }, {once: true});
+
+  document.body.appendChild(iframe2);
+  iframe2.src = frame_src;
+}, {once: true});
+
+
+iframe1.src = frame_src + "?iframe1";
+</script>
+
+</body>
+</html>

@@ -26,9 +26,5 @@ FINAL_TARGET_FILES.content += [
     'content/WrapPrivileged.jsm',
 ]
 
-TESTING_JS_MODULES += [
-    'content/MockFilePicker.jsm',
-]
-
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Mochitest")

@@ -1,0 +1,15 @@
+<html>
+<body>
+<script>
+
+if (location.href.includes("clear=true")) {
+  localStorage.removeItem("foo");
+  alert("CLEAR");
+} else {
+  var initialValue = localStorage.getItem("foo") || "EMPTY";
+  localStorage.setItem("foo", "bar");
+  alert(initialValue);
+}
+</script>
+</body>
+</html>

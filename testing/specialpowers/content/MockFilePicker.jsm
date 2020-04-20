@@ -17,10 +17,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
-/* globals __URI__ */
-if (__URI__.includes("specialpowers")) {
-  Cu.forcePermissiveCOWs();
-}
+Cu.forcePermissiveCOWs();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID;

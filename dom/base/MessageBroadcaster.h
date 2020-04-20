@@ -30,7 +30,7 @@ class MessageBroadcaster : public MessageListenerManager {
                              JS::Handle<JS::Value> aObj,
                              JS::Handle<JSObject*> aObjects,
                              mozilla::ErrorResult& aError) {
-    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects,
+    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, nullptr,
                          JS::UndefinedHandleValue, aError);
   }
   uint32_t ChildCount() { return mChildManagers.Length(); }
