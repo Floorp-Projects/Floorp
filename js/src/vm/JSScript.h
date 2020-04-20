@@ -2135,11 +2135,11 @@ setterLevel:                                                                  \
     return offsetof(BaseScript, sharedData_);
   }
   static size_t offsetOfImmutableFlags() {
-    static_assert(offsetof(ImmutableScriptFlags, flags_) == 0,
-                  "Required for JIT flag access");
+    static_assert(sizeof(ImmutableScriptFlags) == sizeof(uint32_t));
     return offsetof(BaseScript, immutableFlags_);
   }
   static constexpr size_t offsetOfMutableFlags() {
+    static_assert(sizeof(MutableScriptFlags) == sizeof(uint32_t));
     return offsetof(BaseScript, mutableFlags_);
   }
   static constexpr size_t offsetOfWarmUpData() {
