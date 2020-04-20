@@ -145,7 +145,6 @@ class DocGroup final {
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
   nsTHashtable<nsUint64HashKey> mIframesUsedPostMessageQueue;
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
-  RefPtr<AbstractThread> mAbstractThread;
 
   // non-null if the JS execution for this docgroup is regulated with regards
   // to worker threads. This should only be used when we are forcing serialized
