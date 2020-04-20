@@ -57,11 +57,7 @@ function deactivateDomainPolicy() {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.ipc.browser_frames.oop_by_default", false],
-      ["browser.pagethumbnails.capturing_disabled", false],
-      ["dom.mozBrowserFramesEnabled", false],
-    ],
+    set: [["browser.pagethumbnails.capturing_disabled", false]],
   });
 
   registerCleanupFunction(() => {
