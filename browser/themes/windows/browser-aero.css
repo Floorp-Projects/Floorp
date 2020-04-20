@@ -132,6 +132,10 @@
         list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
       }
 
+      .titlebar-restore > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+        transform: scaleX(-1);
+      }
+
       .titlebar-close {
         list-style-image: url(chrome://browser/skin/window-controls/close.svg);
       }
