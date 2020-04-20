@@ -8116,6 +8116,17 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "prompts."
+#---------------------------------------------------------------------------
+
+# The prompt type to use for the insecure form submit warning.
+# See nsIPromptService::MODAL_TYPE fields for possible values.
+- name: prompts.modalType.insecureFormSubmit
+  type: int32_t
+  value: 2
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "security."
 #---------------------------------------------------------------------------
 
