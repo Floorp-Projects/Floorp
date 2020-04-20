@@ -157,6 +157,9 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetIsScriptAllowedByPolicy(
       bool* aIsScriptAllowedByPolicy) override;
   NS_IMETHOD GetStorageOriginKey(nsACString& aOriginKey) override;
+
+  NS_IMETHOD GetNextSubDomainPrincipal(
+      nsIPrincipal** aNextSubDomainPrincipal) override;
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
   // Method populates a passed Json::Value with serializable fields

@@ -27,6 +27,10 @@
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "nsIURL.h"
+#include "nsEffectiveTLDService.h"
+#include "nsIURIMutator.h"
+#include "mozilla/StaticPrefs_permissions.h"
+#include "nsIURIMutator.h"
 #include "prnetdb.h"
 #include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
@@ -1026,6 +1030,49 @@ BasePrincipal::GetLocalStorageQuotaKey(nsACString& aKey) {
   aKey.Append(':');
   aKey.Append(subdomainsDBKey);
 
+  return NS_OK;
+}
+NS_IMETHODIMP
+BasePrincipal::GetNextSubDomainPrincipal(
+    nsIPrincipal** aNextSubDomainPrincipal) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv) || !uri) {
+    return NS_OK;
+  }
+
+  nsAutoCString host;
+  rv = uri->GetHost(host);
+  if (NS_FAILED(rv) || host.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCString subDomain;
+  rv = nsEffectiveTLDService::GetInstance()->GetNextSubDomain(host, subDomain);
+
+  if (NS_FAILED(rv) || subDomain.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> subDomainURI;
+  rv = NS_MutateURI(uri).SetHost(subDomain).Finalize(subDomainURI);
+  if (NS_FAILED(rv) || !subDomainURI) {
+    return NS_OK;
+  }
+  // Copy the attributes over
+  mozilla::OriginAttributes attrs = OriginAttributesRef();
+
+  if (!StaticPrefs::permissions_isolateBy_userContext()) {
+    // Disable userContext for permissions.
+    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  }
+  RefPtr<nsIPrincipal> principal =
+      mozilla::BasePrincipal::CreateContentPrincipal(subDomainURI, attrs);
+
+  if (!principal) {
+    return NS_OK;
+  }
+  principal.forget(aNextSubDomainPrincipal);
   return NS_OK;
 }
 

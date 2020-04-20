@@ -323,38 +323,6 @@ already_AddRefed<nsIURI> GetNextSubDomainURI(nsIURI* aURI) {
   return uri.forget();
 }
 
-// This function produces a nsIPrincipal which is identical to the current
-// nsIPrincipal, except that it has one less subdomain segment. It returns
-// `nullptr` if there are no more segments to remove.
-already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
-    nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return nullptr;
-  }
-
-  // Create a new principal which is identical to the current one, but with the
-  // new host
-  nsCOMPtr<nsIURI> newURI = GetNextSubDomainURI(uri);
-  if (!newURI) {
-    return nullptr;
-  }
-
-  // Copy the attributes over
-  OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-
-  if (!StaticPrefs::permissions_isolateBy_userContext()) {
-    // Disable userContext for permissions.
-    attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID);
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateContentPrincipal(newURI, attrs);
-
-  return principal.forget();
-}
-
 nsresult UpgradeHostToOriginAndInsert(
     const nsACString& aHost, const nsCString& aType, uint32_t aPermission,
     uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime,
@@ -2548,7 +2516,7 @@ PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
   // If aExactHostMatch wasn't true, we can check if the base domain has a
   // permission entry.
   if (!aExactHostMatch) {
-    nsCOMPtr<nsIPrincipal> principal = GetNextSubDomainPrincipal(aPrincipal);
+    nsCOMPtr<nsIPrincipal> principal = aPrincipal->GetNextSubDomainPrincipal();
     if (principal) {
       return GetPermissionHashKey(principal, aType, aExactHostMatch);
     }
@@ -3117,9 +3085,8 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
     GetKeyForPrincipal(prin, false, pair->first);
 
     Unused << GetOriginFromPrincipal(prin, false, pair->second);
-
+    prin = prin->GetNextSubDomainPrincipal();
     // Get the next subdomain principal and loop back around.
-    prin = GetNextSubDomainPrincipal(prin);
   }
 
   MOZ_ASSERT(pairs.Length() >= 1,
