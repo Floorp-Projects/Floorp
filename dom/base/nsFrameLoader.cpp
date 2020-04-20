@@ -2144,13 +2144,9 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (OwnerIsMozBrowserFrame()) {
-    docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
-  }
-
   // Apply sandbox flags even if our owner is not an iframe, as this copies
   // flags from our owning content's owning document.
-  // Note: ApplySandboxFlags should be called after docShell->SetFrameType
+  // Note: ApplySandboxFlags should be called after docShell->SetIsFrame
   // because we need to get the correct presentation URL in ApplySandboxFlags.
   uint32_t sandboxFlags = 0;
   HTMLIFrameElement* iframe = HTMLIFrameElement::FromNode(mOwnerContent);
@@ -2165,10 +2161,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     if (mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
       docShell->SetName(name);
     }
-    docShell->SetFullscreenAllowed(
-        mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
-        mOwnerContent->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::mozallowfullscreen));
   }
 
   // Typically there will be a window, however for some cases such as printing
@@ -2176,8 +2168,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   // that the window exists to ensure we don't try to gather ancestors for
   // those cases.
   nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
-  if (!docShell->GetIsMozBrowser() &&
-      parentDocShell->ItemType() == docShell->ItemType() &&
+  if (parentDocShell->ItemType() == docShell->ItemType() &&
       !doc->IsStaticDocument() && win) {
     // Propagate through the ancestor principals.
     nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;

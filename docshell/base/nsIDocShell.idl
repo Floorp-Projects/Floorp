@@ -685,39 +685,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript] void notifyScrollObservers();
 
   /**
-   * The type of iframe that this docshell lives.
-   */
-  cenum FrameType : 8 {
-    FRAME_TYPE_REGULAR = 0,
-    FRAME_TYPE_BROWSER = 1,
-  };
-  [infallible] attribute nsIDocShell_FrameType frameType;
-
-  /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>.
-   * <xul:browser> returns false here.
-   */
-  [infallible] readonly attribute boolean isMozBrowser;
-
-  /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>, or
-   * if this docshell is contained in an <iframe mozbrowser>. <xul:browser>
-   * returns false here.
-   *
-   * To compute this value, we walk up the docshell hierarchy.  If we encounter
-   * a docshell with isMozBrowser before we hit the end of the hierarchy,
-   * we return true.  Otherwise, we return false.
-   */
-  [infallible] readonly attribute boolean isInMozBrowser;
-
-  /**
    * Returns true if this docshell is the top level content docshell.
    */
   [infallible] readonly attribute boolean isTopLevelContentDocShell;
 
   /**
    * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
-   * mozbrowser> boundaries.
+   * mozbrowser> boundaries. Which no longer exist.
    *
    * @deprecated: Use `BrowsingContext::GetParent()` in the future.
    */
@@ -778,8 +752,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * exception.
    */
   [infallible] readonly attribute boolean fullscreenAllowed;
-
-  void setFullscreenAllowed(in boolean allowed);
 
   [notxpcom] uint32_t orientationLock();
   [notxpcom] void setOrientationLock(in uint32_t orientationLock);
