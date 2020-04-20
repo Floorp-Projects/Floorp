@@ -39,6 +39,7 @@ DIRS += [
     'filewatcher',
     'finalizationwitness',
     'find',
+    'forgetaboutsite',
     'fuzzyfox',
     'glean',
     'jsoncpp/src/lib_json',
