@@ -2034,8 +2034,7 @@ bool BrowserParent::SendHandleTap(TapType aType,
 
 mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
     const nsString& aMessage, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
-    nsTArray<StructuredCloneData>* aRetVal) {
+    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvSyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserParent::RecvSyncMessage", aMessage, aData);
@@ -2044,7 +2043,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
-  if (!ReceiveMessage(aMessage, true, &data, &cpows, aPrincipal, aRetVal)) {
+  if (!ReceiveMessage(aMessage, true, &data, &cpows, aRetVal)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -2052,8 +2051,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
 
 mozilla::ipc::IPCResult BrowserParent::RecvRpcMessage(
     const nsString& aMessage, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
-    nsTArray<StructuredCloneData>* aRetVal) {
+    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvRpcMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserParent::RecvRpcMessage", aMessage, aData);
@@ -2062,7 +2060,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRpcMessage(
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
-  if (!ReceiveMessage(aMessage, true, &data, &cpows, aPrincipal, aRetVal)) {
+  if (!ReceiveMessage(aMessage, true, &data, &cpows, aRetVal)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -2070,7 +2068,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRpcMessage(
 
 mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
     const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
-    nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
+    const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvAsyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserParent::RecvAsyncMessage", aMessage, aData);
@@ -2079,7 +2077,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
-  if (!ReceiveMessage(aMessage, false, &data, &cpows, aPrincipal, nullptr)) {
+  if (!ReceiveMessage(aMessage, false, &data, &cpows, nullptr)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -3266,7 +3264,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvDispatchFocusToTopLevelWindow() {
 
 bool BrowserParent::ReceiveMessage(const nsString& aMessage, bool aSync,
                                    StructuredCloneData* aData,
-                                   CpowHolder* aCpows, nsIPrincipal* aPrincipal,
+                                   CpowHolder* aCpows,
                                    nsTArray<StructuredCloneData>* aRetVal) {
   // If we're for an oop iframe, don't deliver messages to the wrong place.
   if (mBrowserBridgeParent) {
@@ -3279,7 +3277,7 @@ bool BrowserParent::ReceiveMessage(const nsString& aMessage, bool aSync,
         frameLoader->GetFrameMessageManager();
 
     manager->ReceiveMessage(mFrameElement, frameLoader, aMessage, aSync, aData,
-                            aCpows, aPrincipal, aRetVal, IgnoreErrors());
+                            aCpows, aRetVal, IgnoreErrors());
   }
   return true;
 }

@@ -257,7 +257,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   virtual nsresult DoSendAsyncMessage(
       JSContext* aCx, const nsAString& aMessage,
       mozilla::dom::ipc::StructuredCloneData& aData,
-      JS::Handle<JSObject*> aCpows, nsIPrincipal* aPrincipal) override;
+      JS::Handle<JSObject*> aCpows) override;
 
   /**
    * Called from the layout frame associated with this frame loader;
