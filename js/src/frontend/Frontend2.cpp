@@ -62,13 +62,13 @@ class SmooshScriptStencil : public ScriptStencil {
 
  public:
   SmooshScriptStencil(const SmooshResult& result,
-                      CompilationInfo& compilationInfo,
-                      UniquePtr<ImmutableScriptData> immutableScriptData)
-      : ScriptStencil(compilationInfo.cx, std::move(immutableScriptData)),
+                      CompilationInfo& compilationInfo)
+      : ScriptStencil(compilationInfo.cx),
         result_(result),
         compilationInfo_(compilationInfo) {}
 
-  MOZ_MUST_USE bool init(JSContext* cx) {
+  MOZ_MUST_USE bool init(JSContext* cx,
+                         UniquePtr<ImmutableScriptData> immutableData) {
     natoms = result_.atoms.len;
 
     ngcthings = result_.gcthings.len;
@@ -86,6 +86,8 @@ class SmooshScriptStencil : public ScriptStencil {
                            result_.needs_function_environment_objects);
     immutableFlags.setFlag(ImmutableFlags::HasModuleGoal,
                            result_.has_module_goal);
+
+    immutableScriptData = std::move(immutableData);
 
     if (!createAtoms(cx)) {
       return false;
@@ -460,9 +462,8 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  SmooshScriptStencil stencil(smoosh, compilationInfo,
-                              std::move(immutableScriptData));
-  if (!stencil.init(cx)) {
+  SmooshScriptStencil stencil(smoosh, compilationInfo);
+  if (!stencil.init(cx, std::move(immutableScriptData))) {
     return nullptr;
   }
 

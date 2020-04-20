@@ -449,9 +449,7 @@ class ScriptStencil {
   // (Only) Class-constructors should use this field.
   mozilla::Maybe<FieldInitializers> fieldInitializers;
 
-  ScriptStencil(JSContext* cx,
-                UniquePtr<js::ImmutableScriptData> immutableScriptData)
-      : immutableScriptData(std::move(immutableScriptData)), gcThings(cx) {}
+  ScriptStencil(JSContext* cx) : gcThings(cx) {}
 
   bool isFunction() const {
     return immutableFlags.hasFlag(ImmutableFlags::IsFunction);
