@@ -1722,7 +1722,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   LazyScriptCreationData data(cx_);
   if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
                  std::move(pc_->innerFunctionIndexesForLazy),
-                 options().forceStrictMode(), pc_->sc()->strict())) {
+                 options().forceStrictMode())) {
     return false;
   }
 
@@ -1782,7 +1782,6 @@ bool LazyScriptCreationData::create(JSContext* cx,
 
   // Compute the flags that frontend doesn't directly compute.
   immutableFlags.setFlag(ImmutableFlags::ForceStrict, forceStrict);
-  immutableFlags.setFlag(ImmutableFlags::Strict, strict);
   immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                          funbox->hasMappedArgsObj());
 
@@ -3559,7 +3558,7 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
           error(JSMSG_DEPRECATED_OCTAL);
           return false;
         }
-        pc_->sc()->strictScript = true;
+        pc_->sc()->setStrictScript();
       }
     } else if (directive == cx_->names().useAsm) {
       if (pc_->isFunctionBox()) {
