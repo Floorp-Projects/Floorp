@@ -24,7 +24,6 @@ ChromeUtils.defineModuleGetter(
 const SANDBOX_GLOBALS = [
   "Blob",
   "ChromeUtils",
-  "FileReader",
   "TextDecoder",
   "TextEncoder",
   "URL",

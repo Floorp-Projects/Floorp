@@ -321,44 +321,38 @@ function testOpenWithoutClose() {
   return Promise.all(closed);
 }
 
-function awaitEvent(target, event) {
-  return new Promise(resolve => {
-    target.addEventListener(event, resolve, { once: true });
-  });
-}
-
-async function testBFCache() {
+function testBFCache() {
   info('test for bfcache behavior');
 
   let socket = new UDPSocket();
 
-  await socket.opened;
+  return socket.opened.then(function() {
+    let iframe = document.getElementById('iframe');
+    SpecialPowers.wrap(iframe).mozbrowser = true;
+    iframe.src = 'file_udpsocket_iframe.html?' + socket.localPort;
 
-  let win = window.open(`file_udpsocket_iframe.html?${socket.localPort}`);
+    return new Promise(function(resolve, reject) {
+      socket.addEventListener('message', function(msg) {
+        iframe.src = 'about:blank';
+        iframe.addEventListener('load', function() {
+          socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
 
-  let msg = await awaitEvent(socket, "message");
+          function recv_again_callback(message) {
+            socket.removeEventListener('message', recv_again_callback);
+            ok(false, 'should not receive packet after page unload');
+          }
 
-  win.location = "file_postMessage_opener.html";
-  await awaitEvent(window, "message");
+          socket.addEventListener('message', recv_again_callback);
 
-  socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
-
-  await new Promise(resolve => {
-    function recv_again_callback(message) {
-      socket.removeEventListener('message', recv_again_callback);
-      ok(false, 'should not receive packet after page unload');
-    }
-
-    socket.addEventListener('message', recv_again_callback);
-
-    let timeout = setTimeout(function() {
-      socket.removeEventListener('message', recv_again_callback);
-      socket.close();
-      resolve();
-    }, 5000);
+          let timeout = setTimeout(function() {
+            socket.removeEventListener('message', recv_again_callback);
+            socket.close();
+            resolve();
+          }, 5000);
+        }, {once: true});
+      }, {once: true});
+    });
   });
-
-  win.close();
 }
 
 function runTest() {

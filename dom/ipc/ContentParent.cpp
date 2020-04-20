@@ -1545,9 +1545,9 @@ void ContentParent::ShutDownMessageManager() {
     return;
   }
 
-  mMessageManager->ReceiveMessage(mMessageManager, nullptr,
-                                  CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                                  nullptr, nullptr, nullptr, IgnoreErrors());
+  mMessageManager->ReceiveMessage(
+      mMessageManager, nullptr, CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr,
+      nullptr, nullptr, nullptr, IgnoreErrors());
 
   mMessageManager->SetOsPid(-1);
   mMessageManager->Disconnect();
@@ -3201,6 +3201,17 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
           "Got null opener from child; aborting AllocPBrowserParent.");
       return false;
     }
+
+    // Popup windows of isMozBrowserElement frames must be isMozBrowserElement
+    // if the parent isMozBrowserElement.  Allocating a !isMozBrowserElement
+    // frame with same app ID would allow the content to access data it's not
+    // supposed to.
+    if (!popupContext.isMozBrowserElement() && opener->IsMozBrowserElement()) {
+      ASSERT_UNLESS_FUZZING(
+          "Child trying to escalate privileges!  Aborting "
+          "AllocPBrowserParent.");
+      return false;
+    }
   }
 
   MaybeInvalidTabContext tc(aContext);
@@ -3897,7 +3908,8 @@ mozilla::ipc::IPCResult ContentParent::RecvNotificationEvent(
 
 mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals) {
+    nsTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+    nsTArray<StructuredCloneData>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvSyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvSyncMessage", aMsg, aData);
@@ -3908,15 +3920,16 @@ mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
 
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aRetvals,
-                        IgnoreErrors());
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aPrincipal,
+                        aRetvals, IgnoreErrors());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvRpcMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals) {
+    nsTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+    nsTArray<StructuredCloneData>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvRpcMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvRpcMessage", aMsg, aData);
@@ -3927,15 +3940,15 @@ mozilla::ipc::IPCResult ContentParent::RecvRpcMessage(
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
 
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aRetvals,
-                        IgnoreErrors());
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aPrincipal,
+                        aRetvals, IgnoreErrors());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
     const nsString& aMsg, nsTArray<CpowEntry>&& aCpows,
-    const ClonedMessageData& aData) {
+    const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvAsyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvAsyncMessage", aMsg, aData);
@@ -3946,8 +3959,8 @@ mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
 
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, &cpows, nullptr,
-                        IgnoreErrors());
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, &cpows, aPrincipal,
+                        nullptr, IgnoreErrors());
   }
   return IPC_OK();
 }
@@ -4144,7 +4157,8 @@ bool ContentParent::DoLoadMessageManagerScript(const nsAString& aURL,
 nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
                                            const nsAString& aMessage,
                                            StructuredCloneData& aHelper,
-                                           JS::Handle<JSObject*> aCpows) {
+                                           JS::Handle<JSObject*> aCpows,
+                                           nsIPrincipal* aPrincipal) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForParent(this, aHelper, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -4154,7 +4168,8 @@ nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
   if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (!SendAsyncMessage(nsString(aMessage), cpows, data)) {
+  if (!SendAsyncMessage(nsString(aMessage), cpows, Principal(aPrincipal),
+                        data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
@@ -4665,6 +4680,10 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   nsCOMPtr<nsIContent> frame;
   if (topParent) {
     frame = topParent->GetOwnerElement();
+
+    if (NS_WARN_IF(topParent->IsMozBrowserElement())) {
+      return IPC_FAIL(this, "aThisTab is not a MozBrowser");
+    }
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> outerWin;

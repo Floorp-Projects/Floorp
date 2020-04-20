@@ -22,6 +22,7 @@ add_task(async function test() {
     }
 
     await SpecialPowers.spawn(browser, [], startTests);
+    await mozBrowserTests(browser);
   });
 });
 
@@ -76,4 +77,33 @@ function startTests() {
     gWindow,
     "gWindow is parent"
   );
+}
+
+async function mozBrowserTests(browser) {
+  info("Granting special powers for mozbrowser");
+  await SpecialPowers.addPermission("browser", true, TEST_URI);
+  Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  Services.prefs.setBoolPref("network.disable.ipc.security", true);
+
+  await SpecialPowers.spawn(browser, [], function() {
+    info("Checking mozbrowser iframe");
+    let mozBrowserFrame = content.document.createElement("iframe");
+    mozBrowserFrame.setAttribute("mozbrowser", "");
+    content.document.body.appendChild(mozBrowserFrame);
+    Assert.equal(
+      mozBrowserFrame.contentWindow.top,
+      mozBrowserFrame.contentWindow,
+      "Mozbrowser top == iframe window"
+    );
+    Assert.equal(
+      mozBrowserFrame.contentWindow.parent,
+      mozBrowserFrame.contentWindow,
+      "Mozbrowser parent == iframe window"
+    );
+  });
+
+  info("Revoking special powers for mozbrowser");
+  Services.prefs.clearUserPref("dom.mozBrowserFramesEnabled");
+  Services.prefs.clearUserPref("network.disable.ipc.security");
+  await SpecialPowers.removePermission("browser", TEST_URI);
 }

@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for EventTarget chain of MessageManagers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script src="/tests/SimpleTest/EventUtils.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <script type="application/javascript">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    const browserFrameURL = "file_empty.html";
+    const contentFrameURL =
+      "data:text/html,<!DOCTYPE HTML><html><body><button id=\"target\">target</button></body></html>";
+
+    function frameScript() {
+      "use strict";
+      addEventListener("test-event", function (e) {
+        sendSyncMessage("test-event");
+      }, true);
+    }
+
+    function runTests() {
+      // messageIndex is incremented for each message/event received
+      let messageIndex = 0;
+
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("mozbrowser", true);
+      iframe.setAttribute("src", browserFrameURL);
+
+      iframe.addEventListener("mozbrowserloadend", function () {
+        info("First iframe loaded");
+        // First message manager
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.addMessageListener("test-event", function onEvent(message) {
+          is(messageIndex, 0,
+             "first mm should be the first one to receive the test event");
+          messageIndex++;
+        });
+        mm.loadFrameScript("data:,(" + frameScript.toString() + ")();", false);
+
+        // Document in the middle
+        let doc1 = SpecialPowers.wrap(iframe).contentDocument;
+        doc1.addEventListener("test-event", function (e) {
+          ok(false, "content document shouldn't receive test event from child");
+        }, true);
+
+        let iframe2 = doc1.createElement("iframe");
+        iframe2.setAttribute("mozbrowser", true);
+        iframe2.setAttribute("src", browserFrameURL);
+
+        iframe2.addEventListener("mozbrowserloadend", function () {
+          info("Second iframe loaded");
+          // Second message manager
+          let mm2 = SpecialPowers.getBrowserFrameMessageManager(iframe2);
+          mm2.addMessageListener("test-event", function onEvent(message) {
+            is(messageIndex, 1,
+               "second mm should be the second one to receive the test event");
+            messageIndex++;
+          });
+          mm2.loadFrameScript("data:,(" + frameScript.toString() +")();", false);
+
+          // Third is the regular iframe
+          let doc2 = SpecialPowers.wrap(iframe2).contentDocument;
+          let iframe3 = doc2.createElement("iframe");
+          iframe3.setAttribute("src", contentFrameURL);
+
+          iframe3.addEventListener("load", function (e) {
+            info("Third iframe loaded");
+            let doc3 = SpecialPowers.wrap(iframe3).contentDocument;
+            let target = doc3.getElementById("target");
+            target.addEventListener("test-event", function onEvent() {
+              is(messageIndex, 2,
+                 "target should be the last one to receive the test event");
+              messageIndex++;
+              SimpleTest.finish();
+            });
+
+            // Fire test event after load
+            SimpleTest.executeSoon(function () {
+              var event = new Event("test-event");
+              SpecialPowers.dispatchEvent(iframe3.contentWindow, target, event);
+            });
+          });
+          doc2.body.appendChild(iframe3);
+        });
+        doc1.body.appendChild(iframe2);
+      });
+      document.addEventListener("test-event", function (e) {
+        ok(false, "top document shouldn't receive test event from child");
+      }, true);
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+      var principal = SpecialPowers.wrap(document).nodePrincipal;
+      SpecialPowers.pushPermissions([
+        { type: "browser", allow: 1, context: { url: principal.URI.spec,
+                                                originAttributes: {}}},
+        { type: "browser", allow: 1, context: { url: principal.URI.spec,
+                                                originAttributes: {
+                                                  inIsolatedMozBrowser: true }}}
+      ], () => {
+        SpecialPowers.pushPrefEnv({
+          set: [
+            ["dom.mozBrowserFramesEnabled", true],
+            ["network.disable.ipc.security", true],
+            ["dom.ipc.browser_frames.oop_by_default", false],
+          ]
+        }, runTests);
+      });
+    });
+  </script>
+</body>
+</html>

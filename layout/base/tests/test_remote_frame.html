@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  div, iframe {
+    position:absolute;
+    left:0; top:50px;
+    width:400px; height:400px;
+    transform: translateY(50px);
+    border:5px solid black;
+  }
+  </style>
+</head>
+  <body>
+    <div id="d" style="background:blue"></div>
+
+  <script type="application/javascript">
+    "use strict";
+
+    var referenceSnapshot;
+    var iterations = 0;
+
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
+
+    function pollForTestPass() {
+      var snapshot = snapshotWindow(window);
+      if (compareSnapshots(referenceSnapshot, snapshot, true)[0]) {
+        ok(true, "Test passed after " + iterations + " iterations");
+        SimpleTest.finish();
+        return;
+      }
+
+      ++iterations;
+      if (iterations == 20) {
+        todo(false, "We couldn't draw the frame, but at least we didn't crash");
+        SimpleTest.finish();
+        return;
+      }
+      setTimeout(pollForTestPass, 10);
+    }
+    function addRemoteFrame() {
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.src = "data:text/html,<html style='background:blue;'>";
+
+      document.body.appendChild(iframe);
+
+      pollForTestPass();
+    }
+    addEventListener("load", function() {
+      referenceSnapshot = snapshotWindow(window);
+      document.getElementById("d").style.display = 'none';
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true]
+        ]
+      }, addRemoteFrame);      
+    });
+  </script>
+</body>

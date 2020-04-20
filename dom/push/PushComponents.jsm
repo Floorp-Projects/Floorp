@@ -225,7 +225,7 @@ Object.assign(PushServiceParent.prototype, {
     if (!this._isValidMessage(message)) {
       return;
     }
-    let { name, target, data } = message;
+    let { name, principal, target, data } = message;
     if (name === "Push:NotificationForOriginShown") {
       this.notificationForOriginShown(data);
       return;
@@ -238,7 +238,7 @@ Object.assign(PushServiceParent.prototype, {
       this.reportDeliveryError(data.messageId, data.reason);
       return;
     }
-    this._handleRequest(name, data.principal, data)
+    this._handleRequest(name, principal, data)
       .then(
         result => {
           target.sendAsyncMessage(this._getResponseName(name, "OK"), {
@@ -382,30 +382,42 @@ Object.assign(PushServiceContent.prototype, {
 
   subscribeWithKey(scope, principal, key, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Register", {
-      scope,
-      appServerKey: key,
-      requestID,
-      principal,
-    });
+    this._mm.sendAsyncMessage(
+      "Push:Register",
+      {
+        scope,
+        appServerKey: key,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   unsubscribe(scope, principal, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Unregister", {
-      scope,
-      requestID,
-      principal,
-    });
+    this._mm.sendAsyncMessage(
+      "Push:Unregister",
+      {
+        scope,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   getSubscription(scope, principal, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Registration", {
-      scope,
-      requestID,
-      principal,
-    });
+    this._mm.sendAsyncMessage(
+      "Push:Registration",
+      {
+        scope,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   clearForDomain(domain, callback) {
