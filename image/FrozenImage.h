@@ -62,7 +62,7 @@ class FrozenImage : public ImageWrapper {
   NS_IMETHOD StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) override;
   NS_IMETHOD_(bool)
   StartDecodingWithResult(uint32_t aFlags, uint32_t aWhichFrame) override;
-  NS_IMETHOD_(bool)
+  NS_IMETHOD_(DecodeResult)
   RequestDecodeWithResult(uint32_t aFlags, uint32_t aWhichFrame) override;
   NS_IMETHOD RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
                                   uint32_t aWhichFrame) override;

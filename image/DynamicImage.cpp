@@ -231,9 +231,9 @@ bool DynamicImage::StartDecodingWithResult(uint32_t aFlags,
   return true;
 }
 
-bool DynamicImage::RequestDecodeWithResult(uint32_t aFlags,
-                                           uint32_t aWhichFrame) {
-  return true;
+imgIContainer::DecodeResult DynamicImage::RequestDecodeWithResult(
+    uint32_t aFlags, uint32_t aWhichFrame) {
+  return imgIContainer::DECODE_SURFACE_AVAILABLE;
 }
 
 NS_IMETHODIMP

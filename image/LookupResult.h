@@ -42,7 +42,8 @@ enum class MatchType : uint8_t {
  */
 class MOZ_STACK_CLASS LookupResult {
  public:
-  explicit LookupResult(MatchType aMatchType) : mMatchType(aMatchType) {
+  explicit LookupResult(MatchType aMatchType)
+      : mMatchType(aMatchType), mFailedToRequestDecode(false) {
     MOZ_ASSERT(
         mMatchType == MatchType::NOT_FOUND || mMatchType == MatchType::PENDING,
         "Only NOT_FOUND or PENDING make sense with no surface");
@@ -51,10 +52,13 @@ class MOZ_STACK_CLASS LookupResult {
   LookupResult(LookupResult&& aOther)
       : mSurface(std::move(aOther.mSurface)),
         mMatchType(aOther.mMatchType),
-        mSuggestedSize(aOther.mSuggestedSize) {}
+        mSuggestedSize(aOther.mSuggestedSize),
+        mFailedToRequestDecode(aOther.mFailedToRequestDecode) {}
 
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType)
-      : mSurface(std::move(aSurface)), mMatchType(aMatchType) {
+      : mSurface(std::move(aSurface)),
+        mMatchType(aMatchType),
+        mFailedToRequestDecode(false) {
     MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
                               mMatchType == MatchType::PENDING),
                "Only NOT_FOUND or PENDING make sense with no surface");
@@ -64,7 +68,9 @@ class MOZ_STACK_CLASS LookupResult {
   }
 
   LookupResult(MatchType aMatchType, const gfx::IntSize& aSuggestedSize)
-      : mMatchType(aMatchType), mSuggestedSize(aSuggestedSize) {
+      : mMatchType(aMatchType),
+        mSuggestedSize(aSuggestedSize),
+        mFailedToRequestDecode(false) {
     MOZ_ASSERT(
         mMatchType == MatchType::NOT_FOUND || mMatchType == MatchType::PENDING,
         "Only NOT_FOUND or PENDING make sense with no surface");
@@ -74,7 +80,8 @@ class MOZ_STACK_CLASS LookupResult {
                const gfx::IntSize& aSuggestedSize)
       : mSurface(std::move(aSurface)),
         mMatchType(aMatchType),
-        mSuggestedSize(aSuggestedSize) {
+        mSuggestedSize(aSuggestedSize),
+        mFailedToRequestDecode(false) {
     MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
                               mMatchType == MatchType::PENDING),
                "Only NOT_FOUND or PENDING make sense with no surface");
@@ -88,6 +95,7 @@ class MOZ_STACK_CLASS LookupResult {
     mSurface = std::move(aOther.mSurface);
     mMatchType = aOther.mMatchType;
     mSuggestedSize = aOther.mSuggestedSize;
+    mFailedToRequestDecode = aOther.mFailedToRequestDecode;
     return *this;
   }
 
@@ -100,6 +108,9 @@ class MOZ_STACK_CLASS LookupResult {
 
   /// @return what kind of match this is (exact, substitute, etc.)
   MatchType Type() const { return mMatchType; }
+
+  void SetFailedToRequestDecode() { mFailedToRequestDecode = true; }
+  bool GetFailedToRequestDecode() { return mFailedToRequestDecode; }
 
  private:
   LookupResult(const LookupResult&) = delete;
@@ -114,6 +125,10 @@ class MOZ_STACK_CLASS LookupResult {
   /// all other results. If non-empty, it will always be the size the caller
   /// should request any decodes at.
   gfx::IntSize mSuggestedSize;
+
+  // True if we tried to start a decode but failed, likely because the image was
+  // too big to fit into the surface cache.
+  bool mFailedToRequestDecode;
 };
 
 }  // namespace image
