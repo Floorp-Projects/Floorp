@@ -112,19 +112,6 @@ class AbstractThread : public nsISerialEventTarget {
 
   static void DispatchDirectTask(already_AddRefed<nsIRunnable> aRunnable);
 
-  struct AutoEnter {
-    explicit AutoEnter(AbstractThread* aThread) {
-      MOZ_ASSERT(aThread);
-      mLastCurrentThread = sCurrentThreadTLS.get();
-      sCurrentThreadTLS.set(aThread);
-    }
-
-    ~AutoEnter() { sCurrentThreadTLS.set(mLastCurrentThread); }
-
-   private:
-    AbstractThread* mLastCurrentThread = nullptr;
-  };
-
  protected:
   virtual ~AbstractThread() = default;
   static MOZ_THREAD_LOCAL(AbstractThread*) sCurrentThreadTLS;

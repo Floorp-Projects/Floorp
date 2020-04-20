@@ -64,8 +64,6 @@ class EventTargetWrapper : public AbstractThread {
   }
 
   void FireTailDispatcher() {
-    AutoEnter context(this);
-
     MOZ_DIAGNOSTIC_ASSERT(mTailDispatcher.isSome());
     mTailDispatcher.ref().DrainDirectTasks();
     mTailDispatcher.reset();
@@ -102,17 +100,12 @@ class EventTargetWrapper : public AbstractThread {
           mRunnable(aRunnable) {}
 
     NS_IMETHOD Run() override {
-      AutoEnter taskGuard(mThread);
-
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
       return mRunnable->Run();
     }
 
     nsresult Cancel() override {
-      // Set the TLS during Cancel() just in case it calls Run().
-      AutoEnter taskGuard(mThread);
-
       nsresult rv = NS_OK;
 
       // Try to cancel the runnable if it implements the right interface.
