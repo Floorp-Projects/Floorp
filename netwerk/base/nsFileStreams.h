@@ -20,6 +20,12 @@
 #include "nsReadLine.h"
 #include <algorithm>
 
+namespace mozilla {
+namespace ipc {
+class FileDescriptor;
+}  // namespace ipc
+}  // namespace mozilla
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsFileStreamBase : public nsISeekableStream, public nsIFileMetadata {
@@ -195,6 +201,7 @@ class nsFileOutputStream : public nsFileStreamBase, public nsIFileOutputStream {
   NS_FORWARD_NSIOUTPUTSTREAM(nsFileStreamBase::)
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  nsresult InitWithFileDescriptor(const mozilla::ipc::FileDescriptor& aFd);
 
  protected:
   virtual ~nsFileOutputStream() = default;
