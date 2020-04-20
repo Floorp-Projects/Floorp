@@ -236,25 +236,30 @@ static void GetFrameName(Element* aOwnerContent, nsAString& aFrameName) {
 // manner, they are no longer handled by typeContent and typeChrome. Instead,
 // the actual BrowsingContext tree is broken at these edges.
 static bool IsTopContent(BrowsingContext* aParent, Element* aOwner) {
+  if (XRE_IsContentProcess()) {
+    return false;
+  }
+
+  // If we have a (deprecated) mozbrowser element, we want to start a new
+  // BrowsingContext tree regardless of whether the parent is chrome or content.
   nsCOMPtr<nsIMozBrowserFrame> mozbrowser = aOwner->GetAsMozBrowserFrame();
+  if (mozbrowser && mozbrowser->GetReallyIsBrowser()) {
+    return true;
+  }
 
   if (aParent->IsContent()) {
     // If we're already in content, we may still want to create a new
-    // BrowsingContext tree if our element is either:
-    //  a) a real <iframe mozbrowser> frame, or
-    //  b) a xul browser element with a `remote="true"` marker.
-    return (mozbrowser && mozbrowser->GetReallyIsBrowser()) ||
-           (aOwner->IsXULElement() &&
-            aOwner->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
-                                nsGkAtoms::_true, eCaseMatters));
+    // BrowsingContext tree if our element is a xul browser element with a
+    // `remote="true"` marker.
+    return aOwner->IsXULElement() &&
+           aOwner->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
+                               nsGkAtoms::_true, eCaseMatters);
   }
 
-  // If we're in a chrome context, we want to start a new tree if:
-  //  a) we have any mozbrowser frame (even if disabled), or
-  //  b) we are an element with a `type="content"` marker.
-  return (mozbrowser && mozbrowser->GetMozbrowser()) ||
-         (aOwner->AttrValueIs(kNameSpaceID_None, TypeAttrName(aOwner),
-                              nsGkAtoms::content, eIgnoreCase));
+  // If we're in a chrome context, we want to start a new tree if we are an
+  // element with a `type="content"` marker.
+  return aOwner->AttrValueIs(kNameSpaceID_None, TypeAttrName(aOwner),
+                             nsGkAtoms::content, eIgnoreCase);
 }
 
 static already_AddRefed<BrowsingContext> CreateBrowsingContext(
@@ -303,19 +308,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
-    RefPtr<BrowsingContext> bc = BrowsingContext::CreateDetached(
-        nullptr, opener, frameName, BrowsingContext::Type::Content);
-
-    // If this is a mozbrowser frame, pretend it's windowless so that it gets
-    // ownership of its BrowsingContext even though it's a top-level content
-    // frame. This is horrible, but will fortunately go away soon.
-    if (nsCOMPtr<nsIMozBrowserFrame> mozbrowser =
-            aOwner->GetAsMozBrowserFrame()) {
-      if (mozbrowser->GetReallyIsBrowser()) {
-        bc->SetWindowless();
-      }
-    }
-    return bc.forget();
+    return BrowsingContext::CreateDetached(nullptr, opener, frameName,
+                                           BrowsingContext::Type::Content);
   }
 
   MOZ_ASSERT(!aOpenWindowInfo,
