@@ -17,37 +17,30 @@
 #include <stdlib.h>  // size_t
 
 #include "frontend/AbstractScopePtr.h"   // AbstractScopePtr, ScopeIndex
-#include "frontend/NameAnalysisTypes.h"  // {AtomVector, FunctionBoxVector}
+#include "frontend/NameAnalysisTypes.h"  // AtomVector
 #include "frontend/ObjLiteral.h"         // ObjLiteralCreationData
 #include "frontend/TypedIndex.h"         // TypedIndex
-#include "gc/AllocKind.h"                // gc::AllocKind
 #include "gc/Barrier.h"                  // HeapPtr, GCPtrAtom
 #include "gc/Rooting.h"  // HandleAtom, HandleModuleObject, HandleScriptSourceObject, MutableHandleScope
 #include "js/GCVariant.h"    // GC Support for mozilla::Variant
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/RootingAPI.h"   // Handle
-#include "js/UniquePtr.h"    // UniquePtr
+#include "js/TypeDecls.h"    // JSContext,JSAtom,JSFunction
+#include "js/UniquePtr.h"    // js::UniquePtr
 #include "js/Utility.h"      // JS::FreePolicy, UniqueTwoByteChars
 #include "js/Vector.h"       // js::Vector
 #include "util/Text.h"       // DuplicateString
 #include "vm/BigIntType.h"   // ParseBigIntLiteral
 #include "vm/JSFunction.h"   // FunctionFlags
-#include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, ScopeNote, JSTryNote, FieldInitializers
-#include "vm/Runtime.h"  // ReportOutOfMemory
+#include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, FieldInitializers
+#include "vm/Runtime.h"   // ReportOutOfMemory
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptFlags
 
-struct JSContext;
-class JSAtom;
-class JSFunction;
-class JSTracer;
+class JS_PUBLIC_API JSTracer;
 
-namespace js {
-
-class Shape;
-
-namespace frontend {
+namespace js::frontend {
 
 struct CompilationInfo;
 class FunctionBox;
@@ -477,8 +470,7 @@ class ScriptStencil {
   virtual void finishInnerFunctions() const = 0;
 };
 
-} /* namespace frontend */
-} /* namespace js */
+} /* namespace js::frontend */
 
 namespace JS {
 template <>
