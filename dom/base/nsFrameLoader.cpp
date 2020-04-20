@@ -3334,9 +3334,9 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   uint32_t maxTouchPoints = BrowserParent::GetMaxTouchPoints(mOwnerContent);
 
-  bool tabContextUpdated = aTabContext->SetTabContext(
-      OwnerIsMozBrowserFrame(), chromeOuterWindowID, showFocusRings, attrs,
-      presentationURLStr, maxTouchPoints);
+  bool tabContextUpdated =
+      aTabContext->SetTabContext(chromeOuterWindowID, showFocusRings, attrs,
+                                 presentationURLStr, maxTouchPoints);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;
