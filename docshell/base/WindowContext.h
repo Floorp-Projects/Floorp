@@ -89,10 +89,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
     return true;
   }
 
-  // Overload `DidChange` to get notifications for a particular field being
-  // changed, with the old value.
-  template <size_t I, typename T>
-  void DidChange(FieldIndex<I>, const T&) {}
+  // Overload `DidSet` to get notifications for a particular field being set.
+  template <size_t I>
+  void DidSet(FieldIndex<I>) {}
 
   uint64_t mInnerWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
