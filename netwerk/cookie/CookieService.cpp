@@ -362,25 +362,12 @@ CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-CookieService::GetCookieString(nsIURI* aHostURI, nsIChannel* aChannel,
-                               nsACString& aCookie) {
-  return GetCookieStringCommon(aHostURI, aChannel, false, aCookie);
-}
-
-NS_IMETHODIMP
 CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* /*aFirstURI*/,
                                        nsIChannel* aChannel,
-                                       nsACString& aCookie) {
-  return GetCookieStringCommon(aHostURI, aChannel, true, aCookie);
-}
-
-nsresult CookieService::GetCookieStringCommon(nsIURI* aHostURI,
-                                              nsIChannel* aChannel,
-                                              bool aHttpBound,
-                                              nsACString& aCookie) {
+                                       nsACString& aCookieString) {
   NS_ENSURE_ARG(aHostURI);
 
-  aCookie.Truncate();
+  aCookieString.Truncate();
 
   uint32_t rejectedReason = 0;
   ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
@@ -394,13 +381,21 @@ nsresult CookieService::GetCookieStringCommon(nsIURI* aHostURI,
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
-  GetCookieStringInternal(
+
+  AutoTArray<Cookie*, 8> foundCookieList;
+  GetCookiesForURI(
       aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
-      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aHttpBound, attrs,
-      aCookie);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, true, attrs,
+      foundCookieList);
+
+  ComposeCookieString(foundCookieList, aCookieString);
+
+  if (!aCookieString.IsEmpty()) {
+    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, aCookieString, nullptr, false);
+  }
   return NS_OK;
 }
 
@@ -900,27 +895,6 @@ void CookieService::GetCookiesForURI(
   // this is required per RFC2109.  if cookies match in length,
   // then sort by creation time (see bug 236772).
   aCookieList.Sort(CompareCookiesForSending());
-}
-
-void CookieService::GetCookieStringInternal(
-    nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
-    bool aIsThirdPartyTrackingResource,
-    bool aIsThirdPartySocialTrackingResource,
-    bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
-    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
-    const OriginAttributes& aOriginAttrs, nsACString& aCookieString) {
-  AutoTArray<Cookie*, 8> foundCookieList;
-  GetCookiesForURI(
-      aHostURI, aChannel, aIsForeign, aIsThirdPartyTrackingResource,
-      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
-      aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign, aHttpBound,
-      aOriginAttrs, foundCookieList);
-
-  ComposeCookieString(foundCookieList, aCookieString);
-
-  if (!aCookieString.IsEmpty()) {
-    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, aCookieString, nullptr, false);
-  }
 }
 
 // processes a single cookie, and returns true if there are more cookies
