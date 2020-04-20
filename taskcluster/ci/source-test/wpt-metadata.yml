@@ -7,7 +7,7 @@ job-defaults:
     treeherder:
         kind: test
         tier: 2
-    worker-type: t-linux-xlarge
+    worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
