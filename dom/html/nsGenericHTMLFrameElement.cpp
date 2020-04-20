@@ -121,7 +121,7 @@ Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
 }
 
 void nsGenericHTMLFrameElement::EnsureFrameLoader() {
-  if (!IsInComposedDoc() || mFrameLoader || mFrameLoaderCreationDisallowed) {
+  if (!IsInComposedDoc() || mFrameLoader) {
     // If frame loader is there, we just keep it around, cached
     return;
   }
