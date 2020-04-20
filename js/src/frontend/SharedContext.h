@@ -413,7 +413,6 @@ class FunctionBox : public SharedContext {
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      Handle<FunctionCreationData> fun,
                                      FunctionSyntaxKind kind) {
-    MOZ_ASSERT(fun.get().kind == kind);
     initWithEnclosingParseContext(enclosing, kind, fun.get().flags.isArrow(),
                                   fun.get().flags.allowSuperProperty());
   }

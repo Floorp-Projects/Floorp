@@ -2025,14 +2025,12 @@ FunctionCreationData::FunctionCreationData(HandleAtom atom,
                                            FunctionAsyncKind asyncKind,
                                            bool isSelfHosting /* = false */,
                                            bool inFunctionBox /* = false */)
-    : atom(atom),
-      kind(kind),
-      generatorKind(generatorKind),
-      asyncKind(asyncKind),
-      isSelfHosting(isSelfHosting) {
+    : atom(atom), generatorKind(generatorKind), asyncKind(asyncKind) {
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
+
+  gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
 
   switch (kind) {
     case FunctionSyntaxKind::Expression:
@@ -2072,6 +2070,14 @@ FunctionCreationData::FunctionCreationData(HandleAtom atom,
                    ? FunctionFlags::INTERPRETED_NORMAL
                    : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
+
+  if (isSelfHosting) {
+    flags.setIsSelfHostedBuiltin();
+  }
+
+  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
+    flags.setIsExtended();
+  }
 }
 
 HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
@@ -2090,15 +2096,14 @@ JSFunction* AllocNewFunction(JSContext* cx,
   if (!GetFunctionPrototype(cx, data.generatorKind, data.asyncKind, &proto)) {
     return nullptr;
   }
+  gc::AllocKind allocKind = data.flags.isExtended()
+                                ? gc::AllocKind::FUNCTION_EXTENDED
+                                : gc::AllocKind::FUNCTION;
   RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0, data.flags,
                                               nullptr, data.getAtom(cx), proto,
-                                              data.allocKind, TenuredObject));
+                                              allocKind, TenuredObject));
   if (!fun) {
     return nullptr;
-  }
-
-  if (data.isSelfHosting) {
-    fun->setIsSelfHostedBuiltin();
   }
 
   return fun;
