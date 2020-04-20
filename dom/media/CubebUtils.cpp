@@ -601,7 +601,7 @@ void InitLibrary() {
   }
 
 #ifndef MOZ_WIDGET_ANDROID
-  AbstractThread::MainThread()->Dispatch(
+  NS_DispatchToMainThread(
       NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 #ifdef MOZ_CUBEB_REMOTING
