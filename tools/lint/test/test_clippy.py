@@ -1,5 +1,5 @@
 import mozunit
-
+import os
 
 LINTER = 'clippy'
 
@@ -83,6 +83,18 @@ def test_file_provided(lint, config, paths):
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[0].path
     for r in results:
         assert "bad_2.rs" not in r.relpath
+
+
+def test_cleanup(lint, paths, root):
+    # If Cargo.lock does not exist before clippy run, delete it
+    lint(paths("test1/"))
+    assert not os.path.exists(os.path.join(root, "test1/target/"))
+    assert not os.path.exists(os.path.join(root, "test1/Cargo.lock"))
+
+    # If Cargo.lock exists before clippy run, keep it after cleanup
+    lint(paths("test2/"))
+    assert not os.path.exists(os.path.join(root, "test2/target/"))
+    assert os.path.exists(os.path.join(root, "test2/Cargo.lock"))
 
 
 if __name__ == '__main__':
