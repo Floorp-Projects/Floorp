@@ -1423,6 +1423,10 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       return NS_ERROR_UNEXPECTED;
     }
 
+    if (Canonical()->AttemptLoadURIInParent(aLoadState, aSetNavigating)) {
+      return NS_OK;
+    }
+
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
     }
