@@ -356,6 +356,8 @@ class GeckoEngineSession(
             if (initialLoad && url == ABOUT_BLANK) {
                 return
             }
+
+            currentUrl = url
             initialLoad = false
             isIgnoredForTrackingProtection { ignored ->
                 notifyObservers {
@@ -479,8 +481,6 @@ class GeckoEngineSession(
         }
 
         override fun onPageStart(session: GeckoSession, url: String) {
-            currentUrl = url
-
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
