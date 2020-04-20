@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 app_package_name('org.mozilla.fenix.debug')
-use_tests_in_packages(['org.mozilla.fenix.ui.screenshots'])
+use_tests_in_packages(['org.mozilla.fenix.screenshots'])
 
-app_apk_path('app/build/outputs/apk/x86/debug/app-x86-debug.apk')
-tests_apk_path('app/build/outputs/apk/androidTest/x86/debug/app-x86-debug-androidTest.apk')
+app_apk_path('app/build/outputs/apk/geckoBeta/debug/app-geckoBeta-x86-debug.apk')
+tests_apk_path('app/build/outputs/apk/androidTest/geckoBeta/debug/app-geckoBeta-debug-androidTest.apk')
 test_instrumentation_runner 'androidx.test.runner.AndroidJUnitRunner'
 
 locales(['en-US', 'fr-FR', 'it-IT', 'de-DE', 'ja', 'ru', 'zh-CN', 'zh-TW', 'ko'])

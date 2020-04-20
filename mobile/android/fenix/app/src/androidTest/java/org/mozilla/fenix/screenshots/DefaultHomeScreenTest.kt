@@ -47,6 +47,7 @@ class DefaultHomeScreenTest : ScreenshotTest() {
         homeScreen {
             togglePrivateBrowsingModeOnOff()
             Screengrab.screenshot("HomeScreenRobot_private-browsing-menu")
+            togglePrivateBrowsingModeOnOff()
         }
     }
 }

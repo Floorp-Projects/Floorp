@@ -80,35 +80,31 @@ class MenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("SettingsSubMenuAccessibilityRobot_settings-accessibility")
             mDevice.pressBack()
 
+            settingsLanguage()
+            Screengrab.screenshot("SettingsSubMenuAccessibilityRobot_settings-language")
+            mDevice.pressBack()
+
             settingDefaultBrowser()
             Screengrab.screenshot("SettingsSubMenuDefaultBrowserRobot_settings-default-browser")
             mDevice.pressBack()
 
-            settingsToolbar()
-            Screengrab.screenshot("SettingsSubMenuDefaultBrowserRobot_settings-toolbar")
+            settingsTP()
+            Screengrab.screenshot("settings-enhanced-tp")
             mDevice.pressBack()
 
-            // Need to find a way to swipe only a little to get all the options in all screensizes
-            // settingsTP()
-            // Screengrab.screenshot("settings-enhanced-tp")
-            // mDevice.pressBack()
-
-            // Need to find a way to swipe only a little to get all the options in all screensizes
-            // settingsAddToHomeScreen()
-            // Screengrab.screenshot("settings-add-to-homescreen")
-            // mDevice.pressBack()
-
-            // Wee need this but this way not going to work in other languages. Need a workaround to not use Sleep
-            // mDevice.waitNotNull(Until.findObjects(By.text("Delete browsing data on quit")), TestAssetHelper.waitingTime)
-            // settingsRemoveData()
-            // Screengrab.screenshot("settings-delete-browsing-data")
-            // device.pressBack()
+            loginsAndPassword()
+            Screengrab.screenshot("SettingsSubMenuLoginsAndPasswords-settings-logins-passwords")
+            mDevice.pressBack()
 
             swipeToBottom()
             Screengrab.screenshot("SettingsRobot_settings-scroll-to-bottom")
 
             settingsTelemetry()
             Screengrab.screenshot("settings-telemetry")
+            mDevice.pressBack()
+
+            addOns()
+            Screengrab.screenshot("settings-addons")
         }
     }
 
@@ -188,6 +184,19 @@ class MenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("remove-tab")
         }
     }
+
+    @Test
+    fun saveLoginPromptTest() {
+        val saveLoginTest =
+                TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        TestAssetHelper.waitingTimeShort
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            Screengrab.screenshot("save-login-prompt")
+            TestAssetHelper.waitingTime
+            // verifySaveLoginPromptIsShown()
+        }
+    }
 }
 
 fun openHistoryThreeDotMenu() = onView(withText(R.string.library_history)).click()
@@ -221,3 +230,9 @@ fun settingsAddToHomeScreen() = onView(withText(R.string.preferences_add_private
 fun settingsRemoveData() = onView(withText(R.string.preferences_delete_browsing_data)).click()
 
 fun settingsTelemetry() = onView(withText(R.string.preferences_data_collection)).click()
+
+fun loginsAndPassword() = onView(withText(R.string.preferences_passwords_logins_and_passwords)).click()
+
+fun addOns() = onView(withText(R.string.preferences_addons)).click()
+
+fun settingsLanguage() = onView(withText(R.string.preferences_language)).click()
