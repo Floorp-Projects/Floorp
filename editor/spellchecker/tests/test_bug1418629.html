@@ -56,7 +56,6 @@ async function test_with_single_quote(input) {
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
   let editor = getEditor(input);
   // isSpellingCheckOk is defined in spellcheck.js
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords), "no misspelt words");
 
   synthesizeKey("n");
@@ -67,7 +66,6 @@ async function test_with_single_quote(input) {
   // XXX This won't work since mozInlineSpellWordUtil::SplitDOM removes
   // last single quote unfortunately that is during inputting.
   // isSpellingCheckOk is defined in spellcheck.js
-  // eslint-disable-next-line no-undef
   todo_is(isSpellingCheckOk(editor, misspeltWords, true), true,
           "don't run spellchecker during inputting word");
 
@@ -77,7 +75,6 @@ async function test_with_single_quote(input) {
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
   misspeltWords.push("doesn");
   // isSpellingCheckOk is defined in spellcheck.js
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords), "should run spellchecker");
 }
 
@@ -103,7 +100,6 @@ async function test_with_twice_characters(input, ch) {
   misspeltWords.push("doesn");
   let editor = getEditor(input);
   // isSpellingCheckOk is defined in spellcheck.js
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords), "should run spellchecker");
 }
 
@@ -122,7 +118,6 @@ async function test_between_single_quote(input) {
 
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
   let editor = getEditor(input);
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker between single qoute");
 }
@@ -149,14 +144,12 @@ async function test_with_email(input) {
 
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
   let editor = getEditor(input);
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker for email address");
 
   synthesizeKey(" ");
 
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords),
      "no misspelt words due to email address");
 }
@@ -185,14 +178,12 @@ async function test_with_url(input) {
 
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
   let editor = getEditor(input);
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker for URL");
 
   synthesizeKey(" ");
 
   await new Promise((resolve) => { onSpellCheck(input, resolve); });
-  // eslint-disable-next-line no-undef
   ok(isSpellingCheckOk(editor, misspeltWords),
      "no misspelt words due to URL");
 }

@@ -12,8 +12,6 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-/* import-globals-from ../../events/test/event_leak_utils.js */
-
 // Manipulate BroadcastChannel objects in the frame's context.
 // Its important here that we create a listener callback from
 // the DOM objects back to the frame's global in order to
@@ -55,4 +53,3 @@ addEventListener("load", runTest, { once: true });
 </pre>
 </body>
 </html>
-
