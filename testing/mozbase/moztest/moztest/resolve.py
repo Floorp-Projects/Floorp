@@ -664,22 +664,22 @@ class TestResolver(MozbuildObject):
         for manifest, data in six.iteritems(manifests):
             tests_root = data["tests_path"]
             for test_type, path, tests in manifest:
-                full_path = os.path.join(tests_root, path)
-                src_path = os.path.relpath(full_path, self.topsrcdir)
+                full_path = mozpath.join(tests_root, path)
+                src_path = mozpath.relpath(full_path, self.topsrcdir)
                 if test_type not in ["testharness", "reftest", "wdspec", "crashtest"]:
                     continue
                 for test in tests:
                     self._tests.append({
                         "path": full_path,
                         "flavor": "web-platform-tests",
-                        "here": os.path.dirname(path),
+                        "here": mozpath.dirname(path),
                         "manifest": data["manifest_path"],
                         "name": test.id,
                         "file_relpath": src_path,
                         "head": "",
                         "support-files": "",
                         "subsuite": test_type,
-                        "dir_relpath": os.path.dirname(src_path),
+                        "dir_relpath": mozpath.dirname(src_path),
                         "srcdir_relpath": src_path,
                     })
 
