@@ -1791,11 +1791,11 @@ nsSiteSecurityService::Enumerate(uint32_t aType,
       return NS_ERROR_INVALID_ARG;
   }
 
-  nsTArray<mozilla::dom::DataStorageItem> items;
+  nsTArray<mozilla::psm::DataStorageItem> items;
   mSiteStateStorage->GetAll(&items);
 
   nsCOMArray<nsISiteSecurityState> states;
-  for (const mozilla::dom::DataStorageItem& item : items) {
+  for (const mozilla::psm::DataStorageItem& item : items) {
     if (!StringEndsWith(item.key(), keySuffix)) {
       // The key does not end with correct suffix, so is not the type we want.
       continue;

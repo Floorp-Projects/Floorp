@@ -65,6 +65,7 @@ include ClientIPCTypes;
 include HangTypes;
 include PrefsTypes;
 include NeckoChannelParams;
+include PSMIPCTypes;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -89,7 +90,6 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
-using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
@@ -168,17 +168,6 @@ struct SystemFontListEntry {
     bool      appFontFamily;
 };
 #endif
-
-struct DataStorageItem {
-  nsCString key;
-  nsCString value;
-  DataStorageType type;
-};
-
-struct DataStorageEntry {
-  DataStorageItem[] items;
-  nsString filename;
-};
 
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;

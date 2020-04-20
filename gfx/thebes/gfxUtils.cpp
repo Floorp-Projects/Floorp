@@ -1481,7 +1481,6 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
   Preferences::SetCString(GFX_SHADER_CHECK_BUILD_VERSION_PREF, buildID);
   Preferences::SetString(GFX_SHADER_CHECK_DEVICE_ID_PREF, deviceID);
   Preferences::SetString(GFX_SHADER_CHECK_DRIVER_VERSION_PREF, driverVersion);
-  return;
 }
 
 /* static */

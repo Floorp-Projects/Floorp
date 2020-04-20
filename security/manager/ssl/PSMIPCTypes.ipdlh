@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
+
 namespace mozilla {
 namespace psm {
 
@@ -15,6 +17,17 @@ struct ByteArray{
 struct DelegatedCredentialInfoArg {
   uint32_t scheme;
   uint32_t authKeyBits;
+};
+
+struct DataStorageItem {
+  nsCString key;
+  nsCString value;
+  DataStorageType type;
+};
+
+struct DataStorageEntry {
+  DataStorageItem[] items;
+  nsString filename;
 };
 
 } // namespace psm
