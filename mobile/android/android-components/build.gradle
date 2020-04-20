@@ -6,8 +6,23 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 buildscript {
     repositories {
-        google()
-        jcenter()
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+            }
+        } else {
+            google()
+        }
+
+        if (project.hasProperty("jcenterRepo")) {
+            maven {
+                name "BintrayJCenter"
+                url project.property("jcenterRepo")
+            }
+        } else {
+            jcenter()
+        }
     }
 
     dependencies {
@@ -24,10 +39,26 @@ plugins {
 
 allprojects {
     repositories {
-        google()
-        jcenter()
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+            }
+        } else {
+            google()
+        }
+
+        if (project.hasProperty("jcenterRepo")) {
+            maven {
+                name "BintrayJCenter"
+                url project.property("jcenterRepo")
+            }
+        } else {
+            jcenter()
+        }
 
         maven {
+            name "Mozilla"
             url "https://maven.mozilla.org/maven2"
         }
     }
@@ -295,3 +326,11 @@ task ktlint(type: JavaExec, group: "verification") {
 
 apply plugin: GVVersionVerifierPlugin
 apply plugin: GitHubPlugin
+
+
+task listRepositories {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+   }
+}

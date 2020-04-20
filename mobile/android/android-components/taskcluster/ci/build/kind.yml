@@ -39,6 +39,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     include-coverage:
         by-build-type:
             release: false

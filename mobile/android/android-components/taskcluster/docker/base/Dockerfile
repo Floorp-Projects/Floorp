@@ -19,7 +19,8 @@ WORKDIR /builds/worker/
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
+ENV CURL='curl --location --retry 5' \
+    GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
     LANG='en_US.UTF-8' \
     TERM='dumb'
 

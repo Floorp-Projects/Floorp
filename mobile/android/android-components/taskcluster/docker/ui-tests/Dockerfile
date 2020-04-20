@@ -11,7 +11,6 @@ RUN apt-get install -y jq \
 
 USER worker:worker
 
-ENV CURL 'curl --location --retry 5'
 ENV GOOGLE_SDK_DOWNLOAD ./gcloud.tar.gz
 ENV GOOGLE_SDK_VERSION 233
 
