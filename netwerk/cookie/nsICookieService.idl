@@ -7,6 +7,7 @@
 
 interface nsIURI;
 interface nsIChannel;
+interface nsIPrincipal;
 
 /**
  * @see nsICookieService::runInTransaction
@@ -88,6 +89,19 @@ interface nsICookieService : nsISupports
   // Value = 1 is considered the same as 0 (See Bug 606655).
   const uint32_t ACCEPT_SESSION    = 2; // downgrade to session
   // Value = 3 is considered the same as 0
+
+  /*
+   * Get the complete cookie string associated with the principal. This method
+   * is meant to be used for `document.cookie` only. Any security check about
+   * storage-access permission and cookie behavior must be done by the caller.
+   *
+   * @param aPrincipal
+   *        The nsIPrincipal of the document for which cookies are being
+   *        queried.
+   *
+   * @return the resulting cookie string
+   */
+  ACString getCookieStringForPrincipal(in nsIPrincipal aPrincipal);
 
   /*
    * Get the complete cookie string associated with the URI.
