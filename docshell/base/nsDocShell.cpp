@@ -372,8 +372,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowMedia(true),
       mAllowDNSPrefetch(true),
       mAllowWindowControl(true),
-      mUseErrorPages(false),
-      mObserveErrorPages(true),
+      mUseErrorPages(true),
       mCSSErrorReportingEnabled(false),
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
@@ -2026,17 +2025,12 @@ already_AddRefed<nsILoadURIDelegate> nsDocShell::GetLoadURIDelegate() {
 
 NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool* aUseErrorPages) {
-  *aUseErrorPages = UseErrorPages();
+  *aUseErrorPages = mUseErrorPages;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages) {
-  // If mUseErrorPages is set explicitly, stop using the
-  // browser.xul.error_pages_enabled pref.
-  if (mObserveErrorPages) {
-    mObserveErrorPages = false;
-  }
   mUseErrorPages = aUseErrorPages;
   return NS_OK;
 }
@@ -3811,7 +3805,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     error = "nssFailure2";
   }
 
-  if (UseErrorPages()) {
+  if (mUseErrorPages) {
     // Display an error page
     nsresult loadedPage =
         LoadErrorPage(aURI, aURL, errorPage.get(), error, messageStr.get(),
@@ -4264,9 +4258,6 @@ nsDocShell::Create() {
   NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
   mCreated = true;
 
-  // Should we use XUL error pages instead of alerts if possible?
-  mUseErrorPages = StaticPrefs::browser_xul_error_pages_enabled();
-
   mDisableMetaRefreshWhenInactive =
       Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
                            mDisableMetaRefreshWhenInactive);
@@ -4312,11 +4303,6 @@ nsDocShell::Destroy() {
 
   // Make sure we don't record profile timeline markers anymore
   SetRecordProfileTimelineMarkers(false);
-
-  // Remove our pref observers
-  if (mObserveErrorPages) {
-    mObserveErrorPages = false;
-  }
 
   // Make sure to blow away our mLoadingURI just in case.  No loads
   // from inside this pagehide.
@@ -6251,7 +6237,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
          aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
          aStatus == NS_ERROR_MALFORMED_URI ||
          aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
-        (isTopFrame || UseErrorPages())) {
+        (isTopFrame || mUseErrorPages)) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
     } else if (aStatus == NS_ERROR_NET_TIMEOUT ||
                aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||

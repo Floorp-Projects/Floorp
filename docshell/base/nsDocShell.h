@@ -1034,12 +1034,6 @@ class nsDocShell final : public nsDocLoader,
 
   already_AddRefed<mozilla::dom::ChildSHistory> GetRootSessionHistory();
 
-  inline bool UseErrorPages() {
-    return (mObserveErrorPages
-                ? mozilla::StaticPrefs::browser_xul_error_pages_enabled()
-                : mUseErrorPages);
-  }
-
   bool CSSErrorReportingEnabled() const { return mCSSErrorReportingEnabled; }
 
   // Handles retrieval of subframe session history for nsDocShell::LoadURI. If a
@@ -1283,7 +1277,6 @@ class nsDocShell final : public nsDocLoader,
   bool mAllowDNSPrefetch : 1;
   bool mAllowWindowControl : 1;
   bool mUseErrorPages : 1;
-  bool mObserveErrorPages : 1;
   bool mCSSErrorReportingEnabled : 1;
   bool mAllowAuth : 1;
   bool mAllowKeywordFixup : 1;
