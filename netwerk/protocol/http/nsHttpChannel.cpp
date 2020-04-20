@@ -6227,6 +6227,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIProcessSwitchRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
@@ -7419,6 +7420,59 @@ nsHttpChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
 NS_IMETHODIMP
 nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
   return HttpBaseChannel::GetRequestMethod(aMethod);
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIProcessSwitchRequestor
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP nsHttpChannel::GetChannel(nsIChannel** aChannel) {
+  *aChannel = do_AddRef(this).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
+    dom::Promise* aContentProcessIdPromise, uint64_t aIdentifier) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aContentProcessIdPromise);
+
+  LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
+  LogCallingScriptLocation(this);
+
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(this, parentChannel);
+  RefPtr<DocumentLoadListener> documentChannelParent =
+      do_QueryObject(parentChannel);
+  // This is a temporary change as the DocumentChannelParent currently must go
+  // through the nsHttpChannel to perform a process switch via SessionStore.
+  if (!documentChannelParent) {
+    // We cannot do this after OnStartRequest of the listener has been called.
+    NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
+  }
+
+  mRedirectContentProcessIdPromise =
+      ContentProcessIdPromise::FromDomPromise(aContentProcessIdPromise);
+  mCrossProcessRedirectIdentifier = aIdentifier;
+  return NS_OK;
+}
+
+// This method returns the cached result of running the Cross-Origin-Opener
+// policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
+NS_IMETHODIMP
+nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
+  MOZ_ASSERT(aMismatch);
+  if (!aMismatch) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aMismatch = mHasCrossOriginOpenerPolicyMismatch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCachedCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  return HttpBaseChannel::GetCrossOriginOpenerPolicy(aPolicy);
 }
 
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
