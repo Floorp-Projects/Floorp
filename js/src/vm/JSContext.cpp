@@ -116,12 +116,7 @@ bool JSContext::init(ContextKind kind) {
     TlsContext.set(this);
     currentThread_ = ThreadId::ThisThreadId();
 
-#ifdef ENABLE_NEW_REGEXP
-    isolate = irregexp::CreateIsolate(this);
-    if (!isolate) {
-      return false;
-    }
-#else
+#ifndef ENABLE_NEW_REGEXP
     if (!regexpStack.ref().init()) {
       return false;
     }
@@ -144,6 +139,13 @@ bool JSContext::init(ContextKind kind) {
       return false;
     }
   }
+
+#ifdef ENABLE_NEW_REGEXP
+  isolate = irregexp::CreateIsolate(this);
+  if (!isolate) {
+    return false;
+  }
+#endif
 
   // Set the ContextKind last, so that ProtectedData checks will allow us to
   // initialize this context before it becomes the runtime's active context.
