@@ -1535,6 +1535,11 @@ class HTMLMediaElement::AudioChannelAgentCallback final
       return false;
     }
 
+    // Media is suspended by the docshell.
+    if (mOwner->ShouldBeSuspendedByInactiveDocShell()) {
+      return false;
+    }
+
     // Are we paused
     if (mOwner->mPaused) {
       return false;
@@ -4214,6 +4219,12 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   // play promises.
   // Note: Promise appended to list of pending promises as needed below.
 
+  if (ShouldBeSuspendedByInactiveDocShell()) {
+    LOG(LogLevel::Debug, ("%p no allow to play by the docShell for now", this));
+    mPendingPlayPromises.AppendElement(promise);
+    return promise.forget();
+  }
+
   // We may delay starting playback of a media resource for an unvisited tab
   // until it's going to foreground or being resumed by the play tab icon.
   if (MediaPlaybackDelayPolicy::ShouldDelayPlayback(this)) {
@@ -6026,6 +6037,11 @@ bool HTMLMediaElement::CanActivateAutoplay() {
   // Static document is used for print preview and printing, should not be
   // autoplay
   if (OwnerDoc()->IsStaticDocument()) {
+    return false;
+  }
+
+  if (ShouldBeSuspendedByInactiveDocShell()) {
+    LOG(LogLevel::Debug, ("%p prohibiting autoplay by the docShell", this));
     return false;
   }
 
