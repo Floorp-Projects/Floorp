@@ -160,8 +160,12 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s complementos</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Deprender más</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">Anovóse con ésitu</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Fallu</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Información del anovador</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Estáu:</string>
 </resources>

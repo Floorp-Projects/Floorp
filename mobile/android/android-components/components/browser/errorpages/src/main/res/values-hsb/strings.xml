@@ -225,19 +225,17 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksy serwera je zwisk wotpokazał</string>
-    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
-      <p>Wobhladowak bu konfigurowany, zo by so proksyjowy serwer wužiwa, ale proksy zwisk wotpokaza.</p>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksyserwer je zwisk wotpokazał</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Wobhladowak bu konfigurowany, zo by so proksyserwer wužiwa, ale proksy zwisk wotpokaza.</p>
       <ul>
         <li>Je konfiguracija proksy wobhladowaka korektna? Přepruwujće nastajenja a spytajće hišće raz.</li>
         <li>Dowola słužba proksy zwiski z tuteje syće?</li>
         <li>Maće hišće ćeže? Skonsultujće swojeho syćoweho administratora abo internetneho poskićowarja za podpěru.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksyjowy serwer njenamakany</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Wobhladowak bu konfigurowany, zo by so proksyjowy serwer wužiwa, ale proksy njeda so namakać.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksyserwer njenamakany</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Wobhladowak bu konfigurowany, zo by so proksyserwer wužiwa, ale proksy njeda so namakać.</p>
       <ul>
         <li>Je konfiguracija proksyja wobhladowaka korektna? Přepruwujće nastajenja a spytajće hišće raz.</li>
         <li>Je grat z aktiwnej syću zwjazany?</li>
