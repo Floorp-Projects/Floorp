@@ -195,11 +195,6 @@ dictionary ReceiveMessageArgument
 
   sequence<MessagePort> ports;
 
-  /**
-   * Principal for the window app.
-   */
-  required Principal? principal;
-
   FrameLoader targetFrameLoader;
 };
 
@@ -316,7 +311,6 @@ interface mixin MessageSenderMixin {
   void sendAsyncMessage(optional DOMString? messageName = null,
                         optional any obj,
                         optional object? objects = null,
-                        optional Principal? principal = null,
                         optional any transfers);
 
   /**
@@ -357,8 +351,7 @@ interface mixin SyncMessageSenderMixin
   [Throws]
   sequence<any> sendSyncMessage(optional DOMString? messageName = null,
                                 optional any obj,
-                                optional object? objects = null,
-                                optional Principal? principal = null);
+                                optional object? objects = null);
 
   /**
    * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
@@ -372,8 +365,7 @@ interface mixin SyncMessageSenderMixin
   [Throws]
   sequence<any> sendRpcMessage(optional DOMString? messageName = null,
                                optional any obj,
-                               optional object? objects = null,
-                               optional Principal? principal = null);
+                               optional object? objects = null);
 };
 
 /**
