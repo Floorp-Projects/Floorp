@@ -18,42 +18,31 @@
     const TEST_URI = "https://example.com/tests/" +
                      "dom/crypto/test/file_indexedDB.html";
 
-    SimpleTest.waitForExplicitFinish();
-
-    function createMozBrowserFrame(cb) {
+    function createFrame() {
       let frame = document.createElement("iframe");
-      SpecialPowers.wrap(frame).mozbrowser = true;
       frame.src = TEST_URI;
 
-      frame.addEventListener("mozbrowsershowmodalprompt", function(e) {
-        cb(frame, e.detail.message);
-      }, {once: true});
+      return new Promise(resolve => {
+        addEventListener("message", event => {
+          is(event.source.frameElement, frame,
+             "Message must come from the correct iframe");
+          resolve([frame, event.data]);
+        }, { once: true });
 
-      document.body.appendChild(frame);
-    }
-
-    function runTest() {
-      // Load the test app once, to generate and store keys.
-      createMozBrowserFrame((frame, result) => {
-        is(result, "ok", "stored keys successfully");
-        frame.remove();
-
-        // Load the test app again to retrieve stored keys.
-        createMozBrowserFrame((recFrame, recResult) => {
-          is(recResult, "ok", "retrieved keys successfully");
-          recFrame.remove();
-          SimpleTest.finish();
-        });
+        document.body.appendChild(frame);
       });
     }
 
-    addEventListener("load", function() {
-      SpecialPowers.addPermission("browser", true, document);
-      SpecialPowers.pushPrefEnv({set: [
-        ["dom.ipc.browser_frames.oop_by_default", true],
-        ["dom.mozBrowserFramesEnabled", true],
-        ["network.disable.ipc.security", true],
-      ]}, runTest);
+    add_task(async function() {
+      // Load the test app once, to generate and store keys.
+      let [frame, result] = await createFrame();
+      is(result, "ok", "stored keys successfully");
+      frame.remove();
+
+      // Load the test app again to retrieve stored keys.
+      let [recFrame, recResult] = await createFrame();
+      is(recResult, "ok", "retrieved keys successfully");
+      recFrame.remove();
     });
   </script>
 </body>
