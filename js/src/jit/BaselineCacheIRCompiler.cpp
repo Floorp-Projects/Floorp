@@ -424,25 +424,27 @@ bool BaselineCacheIRCompiler::emitLoadValueResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadFixedSlotResult() {
+bool BaselineCacheIRCompiler::emitLoadFixedSlotResult(ObjOperandId objId,
+                                                      uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  masm.load32(stubAddress(reader.stubOffset()), scratch);
+  masm.load32(stubAddress(offsetOffset), scratch);
   masm.loadValue(BaseIndex(obj, scratch, TimesOne), output.valueReg());
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadDynamicSlotResult() {
+bool BaselineCacheIRCompiler::emitLoadDynamicSlotResult(ObjOperandId objId,
+                                                        uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   AutoScratchRegister scratch2(allocator, masm);
 
-  masm.load32(stubAddress(reader.stubOffset()), scratch);
+  masm.load32(stubAddress(offsetOffset), scratch);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
   masm.loadValue(BaseIndex(scratch2, scratch, TimesOne), output.valueReg());
   return true;

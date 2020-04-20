@@ -601,6 +601,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
+  void writeByteImm(uint32_t b) {
+    MOZ_ASSERT(b <= UINT8_MAX);
+    buffer_.writeByte(b);
+  }
+
   void writeInt32Imm(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
 
   void writeJSNativeImm(JSNative native) {
@@ -1260,25 +1265,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(str), StubField::Type::String);
   }
 
-  void loadFixedSlotResult(ObjOperandId obj, size_t offset) {
-    writeOpWithOperandId(CacheOp::LoadFixedSlotResult, obj);
-    addStubField(offset, StubField::Type::RawWord);
-  }
-
-  void loadDynamicSlotResult(ObjOperandId obj, size_t offset) {
-    writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
-    addStubField(offset, StubField::Type::RawWord);
-  }
-
-  void loadTypedObjectResult(ObjOperandId obj, uint32_t offset,
-                             TypedThingLayout layout, uint32_t typeDescr) {
-    MOZ_ASSERT(typeDescr <= UINT8_MAX);
-    writeOpWithOperandId(CacheOp::LoadTypedObjectResult, obj);
-    buffer_.writeByte(uint32_t(layout));
-    buffer_.writeByte(typeDescr);
-    addStubField(offset, StubField::Type::RawWord);
-  }
-
   void loadInt32ArrayLengthResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
   }
@@ -1294,49 +1280,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void loadArgumentsObjectArgResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
     writeOperandId(index);
-  }
-
-  void loadDenseElementResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadDenseElementResult, obj);
-    writeOperandId(index);
-  }
-
-  void loadDenseElementHoleResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadDenseElementHoleResult, obj);
-    writeOperandId(index);
-  }
-
-  void callGetSparseElementResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::CallGetSparseElementResult, obj);
-    writeOperandId(index);
-  }
-
-  void loadDenseElementExistsResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadDenseElementExistsResult, obj);
-    writeOperandId(index);
-  }
-
-  void loadTypedElementExistsResult(ObjOperandId obj, Int32OperandId index,
-                                    TypedThingLayout layout) {
-    writeOpWithOperandId(CacheOp::LoadTypedElementExistsResult, obj);
-    writeOperandId(index);
-    buffer_.writeByte(uint32_t(layout));
-  }
-
-  void loadDenseElementHoleExistsResult(ObjOperandId obj,
-                                        Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadDenseElementHoleExistsResult, obj);
-    writeOperandId(index);
-  }
-
-  void loadTypedElementResult(ObjOperandId obj, Int32OperandId index,
-                              TypedThingLayout layout, Scalar::Type elementType,
-                              bool handleOOB) {
-    writeOpWithOperandId(CacheOp::LoadTypedElementResult, obj);
-    writeOperandId(index);
-    buffer_.writeByte(uint32_t(layout));
-    buffer_.writeByte(uint32_t(elementType));
-    buffer_.writeByte(uint32_t(handleOOB));
   }
 
   void loadStringLengthResult(StringOperandId str) {
