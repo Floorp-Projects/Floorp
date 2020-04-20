@@ -98,6 +98,16 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
 
   // Code was forced into strict mode using CompileOptions.
   ForceStrict = 1 << 3,
+
+  // Script came from eval().
+  IsForEval = 1 << 4,
+
+  // Script is parsed with a top-level goal of Module. This may be a top-level
+  // or an inner-function script.
+  IsModule = 1 << 5,
+
+  // Script is for function.
+  IsFunction = 1 << 6,
   // ----
 
   // Parser Flags
@@ -106,7 +116,7 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // ----
 
   // Code is in strict mode.
-  Strict = 1 << 4,
+  Strict = 1 << 7,
 
   // The (static) bindings of this script need to support dynamic name
   // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -125,7 +135,7 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // taken not to turn off the whole 'arguments' optimization). To answer the
   // more general "is this argument aliased" question, script->needsArgsObj
   // should be tested (see JSScript::argIsAliased).
-  BindingsAccessedDynamically = 1 << 5,
+  BindingsAccessedDynamically = 1 << 8,
 
   // This function does something that can extend the set of bindings in its
   // call objects --- it does a direct eval in non-strict code, or includes a
@@ -134,44 +144,44 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // This flag is *not* inherited by enclosed or enclosing functions; it
   // applies only to the function in whose flags it appears.
   //
-  FunHasExtensibleScope = 1 << 6,
+  FunHasExtensibleScope = 1 << 9,
 
   // True if a tagged template exists in the body => Bytecode contains
   // JSOp::CallSiteObj
   // (We don't relazify functions with template strings, due to observability)
-  HasCallSiteObj = 1 << 7,
+  HasCallSiteObj = 1 << 10,
 
   // Script is parsed with a top-level goal of Module. This may be a top-level
   // or an inner-function script.
-  HasModuleGoal = 1 << 8,
+  HasModuleGoal = 1 << 11,
 
   // Whether this function has a .this binding. If true, we need to emit
   // JSOp::FunctionThis in the prologue to initialize it.
-  FunctionHasThisBinding = 1 << 9,
+  FunctionHasThisBinding = 1 << 12,
 
   // Whether the arguments object for this script, if it needs one, should be
   // mapped (alias formal parameters).
-  HasMappedArgsObj = 1 << 10,
+  HasMappedArgsObj = 1 << 13,
 
   // Script contains inner functions. Used to check if we can relazify the
   // script.
-  HasInnerFunctions = 1 << 11,
+  HasInnerFunctions = 1 << 14,
 
-  NeedsHomeObject = 1 << 12,
-  IsDerivedClassConstructor = 1 << 13,
+  NeedsHomeObject = 1 << 15,
+  IsDerivedClassConstructor = 1 << 16,
 
   // 'this', 'arguments' and f.apply() are used. This is likely to be a
   // wrapper.
-  IsLikelyConstructorWrapper = 1 << 14,
+  IsLikelyConstructorWrapper = 1 << 17,
 
   // Set if this function is a generator function or async generator.
-  IsGenerator = 1 << 15,
+  IsGenerator = 1 << 18,
 
   // Set if this function is an async function or async generator.
-  IsAsync = 1 << 16,
+  IsAsync = 1 << 19,
 
   // Set if this function has a rest parameter.
-  HasRest = 1 << 17,
+  HasRest = 1 << 20,
 
   // Whether 'arguments' has a local binding.
   //
@@ -195,25 +205,15 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // flag will not be set. This is because, as a formal, 'arguments' will
   // have no special semantics: the initial value is unconditionally the
   // actual argument (or undefined if nactual < nformal).
-  ArgumentsHasVarBinding = 1 << 18,
+  ArgumentsHasVarBinding = 1 << 21,
 
   // Whether 'arguments' always must be the arguments object. If this is unset,
   // but ArgumentsHasVarBinding is set then an analysis pass is performed at
   // runtime to decide if we can optimize it away.
-  AlwaysNeedsArgsObj = 1 << 19,
+  AlwaysNeedsArgsObj = 1 << 22,
 
   // Whether the Parser declared 'arguments'.
-  ShouldDeclareArguments = 1 << 20,
-
-  // Script came from eval().
-  IsForEval = 1 << 21,
-
-  // Script is parsed with a top-level goal of Module. This may be a top-level
-  // or an inner-function script.
-  IsModule = 1 << 22,
-
-  // Script is for function.
-  IsFunction = 1 << 23,
+  ShouldDeclareArguments = 1 << 23,
 
   // Whether this script contains a direct eval statement.
   HasDirectEval = 1 << 24,
