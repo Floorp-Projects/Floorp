@@ -32,7 +32,9 @@ const cookieBehaviorValues = new Map([
 ]);
 
 function isTLSMinVersionLowerOrEQThan(version) {
-  return Services.prefs.getIntPref(TLS_MIN_PREF) <= version;
+  return (
+    Services.prefs.getDefaultBranch("").getIntPref(TLS_MIN_PREF) <= version
+  );
 }
 
 const TLS_VERSIONS = [
@@ -214,22 +216,40 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
         return version.version;
       }
 
-      Services.console.logStringMessage(
+      throw new ExtensionError(
         `Setting TLS version ${string} is not allowed for security reasons.`
       );
-      return 0;
     }
 
-    const prefs = [];
+    const prefs = {};
 
-    const minimum = tlsStringToVersion(value.minimum);
-    if (minimum) {
-      prefs[TLS_MIN_PREF] = minimum;
+    if (value.minimum) {
+      prefs[TLS_MIN_PREF] = tlsStringToVersion(value.minimum);
     }
 
-    const maximum = tlsStringToVersion(value.maximum);
-    if (maximum) {
-      prefs[TLS_MAX_PREF] = maximum;
+    if (value.maximum) {
+      prefs[TLS_MAX_PREF] = tlsStringToVersion(value.maximum);
+    }
+
+    // If minimum has passed and it's greater than the max value.
+    if (prefs[TLS_MIN_PREF]) {
+      const max =
+        prefs[TLS_MAX_PREF] || Services.prefs.getIntPref(TLS_MAX_PREF);
+      if (max < prefs[TLS_MIN_PREF]) {
+        throw new ExtensionError(
+          `Setting TLS min version grater than the max version is not allowed.`
+        );
+      }
+    }
+
+    // If maximum has passed and it's lower than the min value.
+    else if (prefs[TLS_MAX_PREF]) {
+      const min = Services.prefs.getIntPref(TLS_MIN_PREF);
+      if (min > prefs[TLS_MAX_PREF]) {
+        throw new ExtensionError(
+          `Setting TLS max version lower than the min version is not allowed.`
+        );
+      }
     }
 
     return prefs;
