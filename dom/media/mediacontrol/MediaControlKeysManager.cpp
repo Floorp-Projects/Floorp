@@ -99,11 +99,9 @@ void MediaControlKeysManager::SetPlaybackState(
     MediaSessionPlaybackState aState) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPlaybackState(aState);
-  } else {
-    // If the event source hasn't been created or been opened yet, we would
-    // cache the state, and set it again when creating the event source.
-    mPlaybackState = aState;
   }
+  mPlaybackState = aState;
+  LOG_INFO("playbackState=%s", ToMediaSessionPlaybackStateStr(mPlaybackState));
 }
 
 MediaSessionPlaybackState MediaControlKeysManager::GetPlaybackState() const {
@@ -116,11 +114,12 @@ void MediaControlKeysManager::SetMediaMetadata(
     const MediaMetadataBase& aMetadata) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetMediaMetadata(aMetadata);
-  } else {
-    // If the event source hasn't been created or been opened yet, we would
-    // cache the state, and set it again when creating the event source.
-    mMetadata = aMetadata;
   }
+  mMetadata = aMetadata;
+  LOG_INFO("title=%s, artist=%s album=%s",
+           NS_ConvertUTF16toUTF8(mMetadata.mTitle).get(),
+           NS_ConvertUTF16toUTF8(mMetadata.mArtist).get(),
+           NS_ConvertUTF16toUTF8(mMetadata.mAlbum).get());
 }
 
 }  // namespace dom
