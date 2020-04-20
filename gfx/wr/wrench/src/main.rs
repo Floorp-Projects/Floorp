@@ -54,7 +54,7 @@ use webrender::api::*;
 use webrender::api::units::*;
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::VirtualKeyCode;
-use crate::wrench::{Wrench, WrenchThing};
+use crate::wrench::{CapturedSequence, Wrench, WrenchThing};
 use crate::yaml_frame_reader::YamlFrameReader;
 
 pub const PLATFORM_DEFAULT_FACE_NAME: &str = "Arial";
@@ -764,13 +764,18 @@ fn render<'a>(
     let input_path = subargs.value_of("INPUT").map(PathBuf::from).unwrap();
 
     // If the input is a directory, we are looking at a capture.
-    let mut thing = if input_path.as_path().is_dir() {
-        let mut documents = wrench.api.load_capture(input_path);
+    let mut thing = if input_path.join("scenes").as_path().is_dir() {
+        let scene_id = subargs.value_of("scene-id").map(|z| z.parse::<u32>().unwrap());
+        let frame_id = subargs.value_of("frame-id").map(|z| z.parse::<u32>().unwrap());
+        Box::new(CapturedSequence::new(
+            input_path,
+            scene_id.unwrap_or(1),
+            frame_id.unwrap_or(1),
+        ))
+    } else if input_path.as_path().is_dir() {
+        let mut documents = wrench.api.load_capture(input_path, None);
         println!("loaded {:?}", documents.iter().map(|cd| cd.document_id).collect::<Vec<_>>());
         let captured = documents.swap_remove(0);
-        if let Some(fb_size) = wrench.renderer.device_size() {
-            window.resize(fb_size);
-        }
         wrench.document_id = captured.document_id;
         Box::new(captured) as Box<dyn WrenchThing>
     } else {
@@ -793,6 +798,10 @@ fn render<'a>(
 
     window.update(wrench);
     thing.do_frame(wrench);
+
+    if let Some(fb_size) = wrench.renderer.device_size() {
+        window.resize(fb_size);
+    }
 
     let mut debug_flags = DebugFlags::empty();
     debug_flags.set(DebugFlags::DISABLE_BATCHING, no_batch);
