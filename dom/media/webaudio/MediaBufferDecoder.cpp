@@ -31,16 +31,12 @@
 #include "WebAudioUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Logging.h"
 #include "nsPrintfCString.h"
 #include "AudioNodeEngine.h"
 
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
-
-#define LOG(x, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 using namespace dom;
 
@@ -246,7 +242,6 @@ void MediaDecodeTask::OnInitDemuxerCompleted() {
   if (!!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack)) {
     mTrackDemuxer = mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
     if (!mTrackDemuxer) {
-      LOG("MediaDecodeTask: Could not get a track demuxer.");
       ReportFailureOnMainThread(WebAudioDecodeJob::UnknownContent);
       return;
     }
@@ -261,7 +256,6 @@ void MediaDecodeTask::OnInitDemuxerCompleted() {
   }
 
   if (NS_FAILED(CreateDecoder(*mMediaInfo.mAudio.GetAsAudioInfo()))) {
-    LOG("MediaDecodeTask: Could not create a decoder.");
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownContent);
     return;
   }
@@ -271,7 +265,6 @@ void MediaDecodeTask::OnInitDemuxerCompleted() {
 void MediaDecodeTask::OnInitDemuxerFailed(const MediaResult& aError) {
   MOZ_ASSERT(OnPDecoderTaskQueue());
 
-  LOG("MediaDecodeTask: Could not initialize the demuxer.");
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
 }
 
@@ -315,7 +308,6 @@ void MediaDecodeTask::OnInitDecoderFailed() {
   MOZ_ASSERT(OnPDecoderTaskQueue());
 
   ShutdownDecoder();
-  LOG("MediaDecodeTask: Could not initialize the decoder");
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
 }
 
@@ -344,7 +336,6 @@ void MediaDecodeTask::OnAudioDemuxFailed(const MediaResult& aError) {
     DoDecode();
   } else {
     ShutdownDecoder();
-    LOG("MediaDecodeTask: Audio demux failed");
     ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
   }
 }
@@ -403,7 +394,6 @@ void MediaDecodeTask::OnAudioDecodeFailed(const MediaResult& aError) {
   MOZ_ASSERT(OnPDecoderTaskQueue());
 
   ShutdownDecoder();
-  LOG("MediaDecodeTask: decode audio failed.");
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
 }
 
@@ -437,7 +427,6 @@ void MediaDecodeTask::OnAudioDrainFailed(const MediaResult& aError) {
   MOZ_ASSERT(OnPDecoderTaskQueue());
 
   ShutdownDecoder();
-  LOG("MediaDecodeTask: Drain audio failed");
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
 }
 
@@ -463,8 +452,6 @@ void MediaDecodeTask::FinishDecode() {
   uint32_t sampleRate = mMediaInfo.mAudio.mRate;
 
   if (!frameCount || !channelCount || !sampleRate) {
-    LOG("MediaDecodeTask: invalid content frame count, channel count or "
-        "sample-rate");
     ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
     return;
   }
@@ -496,7 +483,6 @@ void MediaDecodeTask::FinishDecode() {
       ThreadSharedFloatArrayBufferList::Create(channelCount, resampledFrames,
                                                fallible);
   if (!buffer) {
-    LOG("MediaDecodeTask: Could not create final buffer (f32)");
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
     return;
   }
@@ -509,7 +495,6 @@ void MediaDecodeTask::FinishDecode() {
   bufferSize *= channelCount;
   RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
   if (!buffer) {
-    LOG("MediaDecodeTask: Could not create final buffer (i16)");
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
     return;
   }
@@ -596,7 +581,6 @@ void MediaDecodeTask::AllocateBuffer() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDecodeJob.AllocateBuffer()) {
-    LOG("MediaDecodeTask: Could not allocate final buffer");
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
     return;
   }
