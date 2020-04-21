@@ -63,6 +63,10 @@ interface nsIPromptService : nsISupports
                in unsigned long modalType,
                in wstring aDialogTitle,
                in wstring aText);
+  Promise asyncAlert(in BrowsingContext aBrowsingContext,
+              in unsigned long modalType,
+              in wstring aDialogTitle,
+              in wstring aText);
 
   /**
    * Puts up an alert dialog with an OK button and a labeled checkbox.
@@ -90,6 +94,12 @@ interface nsIPromptService : nsISupports
                     in wstring aText,
                     in wstring aCheckMsg,
                     inout boolean aCheckState);
+  Promise asyncAlertCheck(in BrowsingContext aBrowsingContext,
+                          in unsigned long modalType,
+                          in wstring aDialogTitle,
+                          in wstring aText,
+                          in wstring aCheckMsg,
+                          in boolean aCheckState);
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
@@ -110,6 +120,10 @@ interface nsIPromptService : nsISupports
                     in unsigned long modalType,
                     in wstring aDialogTitle,
                     in wstring aText);
+  Promise asyncConfirm(in BrowsingContext aBrowsingContext,
+                       in unsigned long modalType,
+                       in wstring aDialogTitle,
+                       in wstring aText);
 
   /**
    * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
@@ -139,6 +153,12 @@ interface nsIPromptService : nsISupports
                          in wstring aText,
                          in wstring aCheckMsg,
                          inout boolean aCheckState);
+  Promise asyncConfirmCheck(in BrowsingContext aBrowsingContext,
+                            in unsigned long modalType,
+                            in wstring aDialogTitle,
+                            in wstring aText,
+                            in wstring aCheckMsg,
+                            in boolean aCheckState);
 
   /**
    * Button Flags
@@ -262,7 +282,16 @@ interface nsIPromptService : nsISupports
                       in wstring aButton2Title,
                       in wstring aCheckMsg,
                       inout boolean aCheckState);
-
+  Promise asyncConfirmEx(in BrowsingContext aBrowsingContext,
+                      in unsigned long modalType,
+                      in wstring aDialogTitle,
+                      in wstring aText,
+                      in unsigned long aButtonFlags,
+                      in wstring aButton0Title,
+                      in wstring aButton1Title,
+                      in wstring aButton2Title,
+                      in wstring aCheckMsg,
+                      in boolean aCheckState);
   /**
    * Puts up a dialog with an edit field and an optional, labeled checkbox.
    *
@@ -298,6 +327,13 @@ interface nsIPromptService : nsISupports
                    inout wstring aValue,
                    in wstring aCheckMsg,
                    inout boolean aCheckState);
+  Promise asyncPrompt(in BrowsingContext aBrowsingContext,
+                   in unsigned long modalType,
+                   in wstring aDialogTitle,
+                   in wstring aText,
+                   in wstring aValue,
+                   in wstring aCheckMsg,
+                   in boolean aCheckState);
 
   /**
    * Puts up a dialog with an edit field, a password field, and an optional,
@@ -342,6 +378,14 @@ interface nsIPromptService : nsISupports
                                       inout wstring aPassword,
                                       in wstring aCheckMsg,
                                       inout boolean aCheckState);
+  Promise asyncPromptUsernameAndPassword(in BrowsingContext aBrowsingContext,
+                                      in unsigned long modalType,
+                                      in wstring aDialogTitle,
+                                      in wstring aText,
+                                      in wstring aUsername,
+                                      in wstring aPassword,
+                                      in wstring aCheckMsg,
+                                      in boolean aCheckState);
 
   /**
    * Puts up a dialog with a password field and an optional, labeled checkbox.
@@ -378,7 +422,13 @@ interface nsIPromptService : nsISupports
                            inout wstring aPassword,
                            in wstring aCheckMsg,
                            inout boolean aCheckState);
-
+  Promise asyncPromptPassword(in BrowsingContext aBrowsingContext,
+                           in unsigned long modalType,
+                           in wstring aDialogTitle,
+                           in wstring aText,
+                           in wstring aPassword,
+                           in wstring aCheckMsg,
+                           in boolean aCheckState);
   /**
    * Puts up a dialog box which has a list box of strings from which the user
    * may make a single selection.
@@ -408,6 +458,11 @@ interface nsIPromptService : nsISupports
                    in wstring aText,
                    in Array<AString> aSelectList,
                    out long aOutSelection);
+  Promise asyncSelect(in BrowsingContext aBrowsingContext,
+                   in unsigned long modalType,
+                   in wstring aDialogTitle,
+                   in wstring aText,
+                   in Array<AString> aSelectList);
 
   // NOTE: These functions differ from their nsIAuthPrompt counterparts by
   // having additional checkbox parameters
