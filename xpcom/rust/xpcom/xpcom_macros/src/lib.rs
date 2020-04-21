@@ -563,6 +563,27 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream2, Box<dyn Error>> {
             .into());
     }
 
+    // Ensure that all our base interface methods have unique names.
+    if bases.len() > 1 {
+        let mut names = HashMap::new();
+        for base in &bases {
+            if let Ok(methods) = base.methods {
+                for method in methods {
+                    if let Some(existing) = names.insert(method.name, base.name) {
+                        return Err(format!(
+                            "The method `{0}` is declared on both `{1}` and `{2}`, \
+                             but a Rust type cannot implement two methods with the same name. \
+                             You can add the `[binaryname(Renamed{0})]` XPIDL attribute to one of \
+                             the declarations to rename it.",
+                            method.name, existing, base.name
+                        )
+                        .into());
+                    }
+                }
+            }
+        }
+    }
+
     // Determine what reference count type to use, and generate the real struct.
     let refcnt_ty = get_refcnt_kind(&init.attrs)?;
     let real = gen_real_struct(&init, &bases, refcnt_ty)?;
