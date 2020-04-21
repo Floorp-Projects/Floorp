@@ -14,6 +14,7 @@ static const JS::Value JSVAL_TRUE =
     JS::Value::fromTagAndPayload(JSVAL_TAG_BOOLEAN, true);
 static const JS::Value JSVAL_VOID =
     JS::Value::fromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
+static const mozilla::Maybe<JS::Value> JSVAL_NOTHING;
 
 namespace JS {
 
@@ -25,5 +26,7 @@ const HandleValue TrueHandleValue =
     HandleValue::fromMarkedLocation(&JSVAL_TRUE);
 const HandleValue FalseHandleValue =
     HandleValue::fromMarkedLocation(&JSVAL_FALSE);
+const Handle<mozilla::Maybe<Value>> NothingHandleValue =
+    Handle<mozilla::Maybe<Value>>::fromMarkedLocation(&JSVAL_NOTHING);
 
 }  // namespace JS
