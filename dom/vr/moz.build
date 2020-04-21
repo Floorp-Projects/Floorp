@@ -39,6 +39,7 @@ UNIFIED_SOURCES = [
     'XRFrame.cpp',
     'XRInputSource.cpp',
     'XRInputSourceArray.cpp',
+    'XRInputSpace.cpp',
     'XRNativeOriginFixed.cpp',
     'XRNativeOriginLocal.cpp',
     'XRNativeOriginLocalFloor.cpp',

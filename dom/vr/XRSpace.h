@@ -38,7 +38,7 @@ class XRSpace : public DOMEventTargetHelper {
   gfx::QuaternionDouble GetEffectiveOriginOrientation() const;
   gfx::PointDouble3D GetEffectiveOriginPosition() const;
   gfx::Matrix4x4Double GetEffectiveOriginTransform() const;
-  bool IsPositionEmulated() const;
+  virtual bool IsPositionEmulated() const;
 
  protected:
   virtual ~XRSpace() = default;

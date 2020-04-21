@@ -160,6 +160,7 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
 
+  const bool emulatedPosition = aSpace.IsPositionEmulated();
   gfx::Matrix4x4Double base;
   base.SetRotationFromQuaternion(aBaseSpace.GetEffectiveOriginOrientation());
   base.PreTranslate(-aBaseSpace.GetEffectiveOriginPosition());
@@ -167,7 +168,7 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
   gfx::Matrix4x4Double matrix = aSpace.GetEffectiveOriginTransform() * base;
 
   RefPtr<XRRigidTransform> transform = new XRRigidTransform(mParent, matrix);
-  RefPtr<XRPose> pose = new XRPose(mParent, transform, false);
+  RefPtr<XRPose> pose = new XRPose(mParent, transform, emulatedPosition);
 
   return pose;
 }

@@ -61,6 +61,8 @@ class XRInputSource final : public nsWrapperCache {
     ActionState_Released = 3
   };
 
+  void CreateGripSpace(XRSession* aSession,
+                       const gfx::VRControllerState& controllerState);
   void DispatchEvent(const nsAString& aEvent, XRSession* aSession);
 
   nsTArray<nsString> mProfiles;

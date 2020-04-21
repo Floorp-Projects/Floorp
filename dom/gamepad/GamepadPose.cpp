@@ -36,7 +36,8 @@ bool GamepadPose::HasOrientation() const {
 }
 
 bool GamepadPose::HasPosition() const {
-  return bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position);
+  return bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position) ||
+         bool(mPoseState.flags & GamepadCapabilityFlags::Cap_PositionEmulated);
 }
 
 void GamepadPose::GetPosition(JSContext* aJSContext,
@@ -44,7 +45,8 @@ void GamepadPose::GetPosition(JSContext* aJSContext,
                               ErrorResult& aRv) {
   const bool valid =
       mPoseState.isPositionValid &&
-      bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position);
+      (bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position) ||
+       bool(mPoseState.flags & GamepadCapabilityFlags::Cap_PositionEmulated));
   SetFloat32Array(aJSContext, this, aRetval, mPosition,
                   valid ? mPoseState.position : nullptr, 3, aRv);
 }
@@ -54,7 +56,8 @@ void GamepadPose::GetLinearVelocity(JSContext* aJSContext,
                                     ErrorResult& aRv) {
   const bool valid =
       mPoseState.isPositionValid &&
-      bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position);
+      (bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position) ||
+       bool(mPoseState.flags & GamepadCapabilityFlags::Cap_PositionEmulated));
   SetFloat32Array(aJSContext, this, aRetval, mLinearVelocity,
                   valid ? mPoseState.linearVelocity : nullptr, 3, aRv);
 }
