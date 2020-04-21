@@ -95,6 +95,22 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
+    url: EXAMPLE_URL + "favicon_request",
+    causeType: "img",
+    causeUri: INITIATOR_URL,
+    // the favicon request is triggered in FaviconLoader.jsm module, it should
+    // NOT be shown in the stack (bug 1280266).  For now we intentionally
+    // specify the file and the line number to be properly sorted.
+    // NOTE: The line number can be an arbitrary number greater than 0.
+    stack: [
+      {
+        file: "resource:///modules/FaviconLoader.jsm",
+        line: Number.MAX_SAFE_INTEGER,
+      },
+    ],
+  },
+  {
+    method: "GET",
     url: EXAMPLE_URL + "lazy_img_request",
     causeType: "lazy-img",
     causeUri: INITIATOR_URL,
@@ -112,7 +128,7 @@ const EXPECTED_REQUESTS = [
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: INITIATOR_URL,
-    stack: [{ fn: "performBeaconRequest", file: INITIATOR_URL, line: 70 }],
+    stack: [{ fn: "performBeaconRequest", file: INITIATOR_URL, line: 80 }],
   },
 ];
 
@@ -142,6 +158,9 @@ add_task(async function() {
 
   const wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
   BrowserTestUtils.loadURI(tab.linkedBrowser, INITIATOR_URL);
+
+  registerFaviconNotifier(tab.linkedBrowser);
+
   await wait;
 
   // For all expected requests
@@ -180,6 +199,7 @@ add_task(async function() {
 
   const expectedOrder = EXPECTED_REQUESTS.sort(initiatorSortPredicate).map(
     r => {
+      let isChromeFrames = false;
       const lastFrameExists = !!r.stack;
       let initiator = "";
       let lineNumber = "";
@@ -187,16 +207,24 @@ add_task(async function() {
         const { file, line: _lineNumber } = r.stack[0];
         initiator = getUrlBaseName(file);
         lineNumber = ":" + _lineNumber;
+        isChromeFrames = file.startsWith("resource:///");
       }
       const causeStr = lastFrameExists ? " (" + r.causeType + ")" : r.causeType;
-      return initiator + lineNumber + causeStr;
+      return {
+        initiatorStr: initiator + lineNumber + causeStr,
+        isChromeFrames,
+      };
     }
   );
 
   expectedOrder.forEach((expectedInitiator, i) => {
     const request = getSortedRequests(store.getState())[i];
     let initiator;
-    if (request.cause.stacktraceAvailable) {
+    // In cases of chrome frames, we shouldn't have stack.
+    if (
+      request.cause.stacktraceAvailable &&
+      !expectedInitiator.isChromeFrames
+    ) {
       const { filename, lineNumber } = request.cause.lastFrame;
       initiator =
         getUrlBaseName(filename) +
@@ -208,11 +236,20 @@ add_task(async function() {
     } else {
       initiator = request.cause.type;
     }
-    is(
-      initiator,
-      expectedInitiator,
-      `The request #${i} has the expected initiator after sorting`
-    );
+
+    if (expectedInitiator.isChromeFrames) {
+      todo_is(
+        initiator,
+        expectedInitiator.initiatorStr,
+        `The request #${i} has the expected initiator after sorting`
+      );
+    } else {
+      is(
+        initiator,
+        expectedInitiator.initiatorStr,
+        `The request #${i} has the expected initiator after sorting`
+      );
+    }
   });
 
   await teardown(monitor);

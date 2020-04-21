@@ -708,7 +708,11 @@ NetworkObserver.prototype = {
     }
 
     event.cause = {
-      type: causeTypeToString(causeType, channel.loadFlags),
+      type: causeTypeToString(
+        causeType,
+        channel.loadFlags,
+        channel.loadInfo.internalContentPolicyType
+      ),
       loadingDocumentUri: causeUri,
       stacktrace,
     };
@@ -1501,11 +1505,11 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "webManifest",
 };
 
-function causeTypeToString(causeType, loadFlags) {
+function causeTypeToString(causeType, loadFlags, internalContentPolicyType) {
   let prefix = "";
   if (
     (causeType == Ci.nsIContentPolicy.TYPE_IMAGESET ||
-      causeType == Ci.nsIContentPolicy.TYPE_IMAGE) &&
+      internalContentPolicyType == Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE) &&
     loadFlags & Ci.nsIRequest.LOAD_BACKGROUND
   ) {
     prefix = "lazy-";
