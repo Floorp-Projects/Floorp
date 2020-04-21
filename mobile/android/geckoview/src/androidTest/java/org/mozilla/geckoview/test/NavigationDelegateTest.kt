@@ -1410,7 +1410,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                 extension.metaData!!.baseUrl, startsWith("moz-extension://"))
 
         val url = extension.metaData!!.baseUrl + "page.html"
-        processSwitchingTest(url, true)
+        val isRemote = sessionRule.getPrefs("extensions.webextensions.remote")[0] as Boolean
+        processSwitchingTest(url, isRemote)
 
         sessionRule.waitForResult(controller.uninstall(extension))
     }
@@ -1420,7 +1421,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         processSwitchingTest("about:config")
     }
 
-    fun processSwitchingTest(url: String, isExtension: Boolean = false) {
+    fun processSwitchingTest(url: String, isRemoteExtension: Boolean = false) {
         val settings = sessionRule.runtime.settings
         val aboutConfigEnabled = settings.aboutConfigEnabled
         settings.aboutConfigEnabled = true
@@ -1458,12 +1459,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         // History navigation to or from the extension process does not trigger
         // an about:blank load when browser.tabs.documentchannel == true
         sessionRule.session.goBack()
-        sessionRule.waitForPageStops(if (isExtension) 1 else 2)
+        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
 
         sessionRule.session.goBack()
-        sessionRule.waitForPageStops(if (isExtension) 1 else 2)
+        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
