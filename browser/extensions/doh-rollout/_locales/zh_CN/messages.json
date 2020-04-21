@@ -10,8 +10,8 @@
     "message": "更安全、经加密的 DNS 查询",
     "description": "Bold title is shown to ask the user if they wish to disable DoH"
   },
-  "doorhangerBody": {
-    "message": "隐私是公民的基本权利。Firefox 现在会尽可能使用 CloudFlare 所提供服务进行 DNS 请求，让网络浏览更安全。",
+  "doorhangerBodyNew": {
+    "message": "隐私是公民的基本权利。Firefox 现在会尽可能使用合作伙伴提供的一项服务处理您的 DNS 请求，让您上网更安全。",
     "description": "This text is shown to ask the user if they wish to disable DoH"
   },
   "doorhangerButtonOk": {
