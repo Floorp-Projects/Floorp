@@ -9,6 +9,8 @@ EXPORTS += [
     'OggCodecStore.h',
     'OggDecoder.h',
     'OggDemuxer.h',
+    'OggRLBox.h',
+    'OggRLBoxTypes.h',
     'OggWriter.h',
     'OpusParser.h',
 ]
