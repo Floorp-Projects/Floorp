@@ -18,7 +18,9 @@ const size_t kMaxChromeStacksKept = 50;
 CombinedStacks::CombinedStacks() : CombinedStacks(kMaxChromeStacksKept) {}
 
 CombinedStacks::CombinedStacks(size_t aMaxStacksCount)
-    : mNextIndex(0), mMaxStacksCount(aMaxStacksCount) {}
+    : mNextIndex(0),
+      mMaxStacksCount(aMaxStacksCount),
+      mIsFromTerminatorWatchdog(false) {}
 
 size_t CombinedStacks::GetModuleCount() const { return mModules.size(); }
 
@@ -102,6 +104,15 @@ void CombinedStacks::RemoveStack(unsigned aIndex) {
   if (mNextIndex > mStacks.size()) {
     mNextIndex = mStacks.size();
   }
+}
+
+bool CombinedStacks::GetIsFromTerminatorWatchdog() {
+  return mIsFromTerminatorWatchdog;
+}
+
+void CombinedStacks::SetIsFromTerminatorWatchdog(
+    bool aIsFromTerminatorWatchdog) {
+  mIsFromTerminatorWatchdog = aIsFromTerminatorWatchdog;
 }
 
 void CombinedStacks::Swap(CombinedStacks& aOther) {
