@@ -15,8 +15,10 @@
   <body>
     <p>Request cause test</p>
     <img src="img_request" />
+    <img srcset="img_srcset_request" />
     <div style="height: 200vh;"></div>
     <img loading="lazy" src="lazy_img_request" />
+    <img loading="lazy" srcset="lazy_img_srcset_request" />
     <script type="text/javascript">
       "use strict";
 
@@ -50,9 +52,17 @@
 
       function performLazyLoadingImage() {
         return new Promise(function (resolve) {
-          const lazyImg = document.querySelector("img[loading='lazy']");
-          lazyImg.addEventListener("error", resolve);
-          lazyImg.scrollIntoView({ behavior: "instant" });
+          const lazyImgs = document.querySelectorAll("img[loading='lazy']");
+
+          const promises = [
+            lazyImgs[0].addEventListener("error", resolve),
+            lazyImgs[1].addEventListener("error", resolve),
+          ];
+
+          // Given that the default display style of <img> is `inline` so
+          // it's sufficient to scroll to an <img>.
+          lazyImgs[0].scrollIntoView({ behavior: "instant" });
+          return Promise.all(promises);
         });
       }
 
