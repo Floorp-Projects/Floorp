@@ -56,21 +56,21 @@ function* do_run_test() {
   // test with cookies enabled, and third party cookies persistent.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", false);
-  do_set_cookies(uri1, channel2, false, [1, 2, 3, 4]);
-  do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
+  do_set_cookies(uri1, channel2, false, [1, 2, 3]);
+  do_set_cookies(uri2, channel1, true, [1, 2, 3]);
 
   // fake a profile change
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 4);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 3);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // test with third party cookies for session only.
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", true);
   Services.cookies.removeAll();
-  do_set_cookies(uri1, channel2, false, [1, 2, 3, 4]);
-  do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
+  do_set_cookies(uri1, channel2, false, [1, 2, 3]);
+  do_set_cookies(uri2, channel1, true, [1, 2, 3]);
 
   // fake a profile change
   do_close_profile(test_generator);

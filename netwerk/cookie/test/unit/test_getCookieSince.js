@@ -1,3 +1,4 @@
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
@@ -6,7 +7,14 @@ const cm = cs.QueryInterface(Ci.nsICookieManager);
 function setCookie(name, url) {
   let value = `${name}=${Math.random()}; Path=/; Max-Age=1000; sameSite=none`;
   info(`Setting cookie ${value} for ${url.spec}`);
-  cs.setCookieStringFromHttp(url, value, null);
+
+  let channel = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
+  });
+
+  cs.setCookieStringFromHttp(url, value, channel);
 }
 
 async function sleep() {
@@ -24,6 +32,11 @@ function checkSorting(cookies) {
 }
 
 add_task(async function() {
+  Services.prefs.setBoolPref(
+    "network.cookieJarSettings.unblocked_for_testing",
+    true
+  );
+
   await setCookie("A", Services.io.newURI("https://example.com/A/"));
   await sleep();
 

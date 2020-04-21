@@ -155,11 +155,7 @@ interface nsICookieService : nsISupports
    * @param aCookie
    *        the cookie string to set.
    * @param aChannel
-   *        the channel used to load the document.  this parameter should not
-   *        be null, otherwise the cookies will not be set if third-party
-   *        cookies have been disabled by the user. (the channel is used
-   *        to determine the originating URI of the document; if it is not
-   *        provided, the cookies will be assumed third-party.)
+   *        the channel used to load the document.
    */
   void setCookieStringFromHttp(in nsIURI aURI, in ACString aCookie,
                                in nsIChannel aChannel);

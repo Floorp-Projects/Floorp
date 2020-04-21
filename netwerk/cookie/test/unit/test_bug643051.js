@@ -20,7 +20,7 @@ function run_test() {
 
   let set = "foo=bar\nbaz=foo";
   let expected = "foo=bar; baz=foo";
-  cs.setCookieStringFromHttp(uri, set, null);
+  cs.setCookieStringFromHttp(uri, set, channel);
 
   let actual = cs.getCookieStringFromHttp(uri, channel);
   Assert.equal(actual, expected);

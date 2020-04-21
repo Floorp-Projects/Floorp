@@ -50,14 +50,19 @@ function* do_run_test() {
   // test with cookies enabled, and third party cookies persistent.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", false);
-  do_set_cookies(uri1, channel1, false, [1, 2, 3, 4]);
-  do_set_cookies(uri2, channel2, true, [1, 2, 3, 4]);
+  Services.prefs.setBoolPref(
+    "network.cookieJarSettings.unblocked_for_testing",
+    true
+  );
+
+  do_set_cookies(uri1, channel1, false, [1, 2, 3]);
+  do_set_cookies(uri2, channel2, true, [1, 2, 3]);
 
   // fake a profile change
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 4);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 3);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // Again, but don't wait for the async close to complete. This should always
@@ -65,14 +70,14 @@ function* do_run_test() {
   // since then.
   do_close_profile();
   do_load_profile();
-  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 4);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 3);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // test with cookies set to session-only
   Services.prefs.setIntPref("network.cookie.lifetimePolicy", 2);
   Services.cookies.removeAll();
-  do_set_cookies(uri1, channel1, false, [1, 2, 3, 4]);
-  do_set_cookies(uri2, channel2, true, [1, 2, 3, 4]);
+  do_set_cookies(uri1, channel1, false, [1, 2, 3]);
+  do_set_cookies(uri2, channel2, true, [1, 2, 3]);
 
   // fake a profile change
   do_close_profile(test_generator);
