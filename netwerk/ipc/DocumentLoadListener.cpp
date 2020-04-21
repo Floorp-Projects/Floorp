@@ -1159,6 +1159,9 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
 
   uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
   MOZ_ALWAYS_SUCCEEDS(mChannel->GetLoadFlags(&newLoadFlags));
+  // We're pulling our flags from the inner channel, which may not have this
+  // flag set on it. This is the case when loading a 'view-source' channel.
+  newLoadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
   if (!aDestinationProcess) {
     newLoadFlags |= nsIChannel::LOAD_REPLACE;
   }
