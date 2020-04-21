@@ -43,8 +43,8 @@
 <script class=testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.setBoolPref("dom.forms.inputmode", true);
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.setBoolPref("dom.forms.inputmode", true);
 
   const tests = [
     { id: "a1", inputmode: "none", desc: "inputmode of input element is none" },
