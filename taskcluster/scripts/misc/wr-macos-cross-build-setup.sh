@@ -31,14 +31,13 @@ END_PKGCONFIG_WRAPPER
 chmod +x "${TARGET_TRIPLE}-pkg-config"
 popd
 
-# The PATH intentionally excludes clang/bin because osmesa will try to
-# build llvmpipe if it finds a llvm-config. And that will fail because
-# we don't have a target libLLVM library to link with. We don't need
-# llvmpipe anyway since we only use the softpipe driver. If for whatever
-# reason we need to add clang/bin to the path here, we should be able to
-# instead set LLVM_CONFIG=no to disable llvmpipe, but that might impact
-# other parts of the build.
-export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${PATH}"
+# Set LLVM_CONFIG=no to disable building llvmpipe, otherwise it will
+# be built automatically because clang is present in PATH (which is
+# required for bindgen), and that will fail because we don't have a
+# target libLLVM library to link with. We don't need llvmpipe anyway
+# since we only use the softpipe driver.
+export LLVM_CONFIG=no
+export PATH="${MOZ_FETCHES_DIR}/clang/bin:${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${PATH}"
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
@@ -49,17 +48,20 @@ export LD_LIBRARY_PATH="${CLANGDIR}/lib:${LD_LIBRARY_PATH}"
 export ZLIB_CFLAGS="-I${MACOS_SYSROOT}/usr/include"
 export ZLIB_LIBS="-L${MACOS_SYSROOT}/usr/lib -lz"
 
-# Set up compiler and flags for cross-compile
+# Set up compiler and flags for cross-compile. Careful to only export the
+# target-specific CFLAGS/CXXFLAGS variables, to not break any host builds.
 LDPATH="${MOZ_FETCHES_DIR}/cctools/bin/${TARGET_TRIPLE}-ld"
 export CC="${CLANGDIR}/bin/clang"
-export CFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT}"
+TARGET_CFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT}"
+export CFLAGS_${TARGET_TRIPLE//-/_}="${TARGET_CFLAGS}"
 export CXX="${CLANGDIR}/bin/clang++"
-export CXXFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -stdlib=libc++"
+TARGET_CXXFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -stdlib=libc++"
+export CXXFLAGS_${TARGET_TRIPLE//-/_}="${TARGET_CXXFLAGS}"
 export AR="${CLANGDIR}/bin/llvm-ar"
 
 # See documentation in cargo-linker for why we need this. TL;DR is that passing
 # the right arguments to the linker when invoked by cargo is nigh impossible
 # without this.
 export MOZ_CARGO_WRAP_LD="${CC}"
-export MOZ_CARGO_WRAP_LDFLAGS="${CFLAGS}"
+export MOZ_CARGO_WRAP_LDFLAGS="${TARGET_CFLAGS}"
 export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER="${GECKO_PATH}/build/cargo-linker"

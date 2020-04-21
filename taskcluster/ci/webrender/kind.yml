@@ -52,12 +52,14 @@ jobs:
             docker-image: {in-tree: webrender}
         fetches:
             toolchain:
+                - linux64-clang
                 - linux64-rust
                 - wrench-deps
         run:
             using: run-task
             command: >-
-                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/rustc/bin &&
+                export LLVM_CONFIG=no &&
                 cd $HOME/checkouts/gecko/gfx/wr &&
                 mv $MOZ_FETCHES_DIR/wrench-deps/{vendor,.cargo} ./ &&
                 CARGOFLAGS="--verbose --frozen" ci-scripts/linux-release-tests.sh
@@ -76,12 +78,14 @@ jobs:
             docker-image: {in-tree: webrender}
         fetches:
             toolchain:
+                - linux64-clang
                 - linux64-rust
                 - wrench-deps
         run:
             using: run-task
             command: >-
-                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/rustc/bin &&
+                export LLVM_CONFIG=no &&
                 cd $HOME/checkouts/gecko/gfx/wr &&
                 mv $MOZ_FETCHES_DIR/wrench-deps/{vendor,.cargo} ./ &&
                 CARGOFLAGS="--verbose --frozen" ci-scripts/linux-debug-tests.sh
@@ -225,6 +229,7 @@ jobs:
                 TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/win64/vs2017.manifest'
         fetches:
             toolchain:
+                - win64-clang-cl
                 - win64-rust
                 - wrench-deps
         run:
@@ -267,6 +272,7 @@ jobs:
                 - android-gradle-dependencies
                 - android-ndk-linux
                 - android-sdk-linux
+                - linux64-clang
                 - linux64-rust-android
                 - wrench-deps
         treeherder:
@@ -302,6 +308,7 @@ jobs:
                 - android-gradle-dependencies
                 - android-ndk-linux
                 - android-sdk-linux
+                - linux64-clang
                 - linux64-rust-android
                 - wrench-deps
         treeherder:

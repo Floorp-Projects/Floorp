@@ -6,10 +6,16 @@ source ${GECKO_PATH}/taskcluster/scripts/misc/wr-macos-cross-build-setup.sh
 # The osmesa-src build which we do as part of the headless build below
 # doesn't seem to always use CFLAGS/CXXFLAGS where expected. Instead we
 # just squash those flags into CC/CXX and everything works out.
-export CC="${CC} ${CFLAGS}"
-export CFLAGS=
-export CXX="${CXX} ${CXXFLAGS}"
-export CXXFLAGS=
+# Export HOST_CC and HOST_CXX without the squashed flags, so that host
+# builds use them and don't see the target flags.
+export HOST_CC="${CC}"
+export HOST_CXX="${CXX}"
+CFLAGS_VAR="CFLAGS_${TARGET_TRIPLE//-/_}"
+CXXFLAGS_VAR="CXXFLAGS_${TARGET_TRIPLE//-/_}"
+export CC="${CC} ${!CFLAGS_VAR}"
+export ${CFLAGS_VAR}=
+export CXX="${CXX} ${!CXXFLAGS_VAR}"
+export ${CXXFLAGS_VAR}=
 
 export UPLOAD_DIR="${HOME}/artifacts"
 mkdir -p "${UPLOAD_DIR}"
