@@ -108,4 +108,36 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
 
   mon.AwaitFinished();
 }
+
+TEST(TestAudioTrackGraph, NotifyDeviceStarted)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
+
+  // Dummy track to make graph rolling. Add it and remove it to remove the
+  // graph from the global hash table and let it shutdown.
+  RefPtr<SourceMediaTrack> dummySource =
+      graph->CreateSourceTrack(MediaSegment::AUDIO);
+
+  RefPtr<GenericPromise> p = graph->NotifyWhenDeviceStarted(dummySource);
+
+  GMPTestMonitor mon;
+  p->Then(GetMainThreadSerialEventTarget(), __func__, [&mon, dummySource]() {
+    {
+      MediaTrackGraphImpl* graph = dummySource->GraphImpl();
+      MonitorAutoLock lock(graph->GetMonitor());
+      EXPECT_TRUE(graph->CurrentDriver()->AsAudioCallbackDriver());
+      EXPECT_TRUE(graph->CurrentDriver()->ThreadRunning());
+    }
+    // Test has finished, destroy the track to shutdown the MTG.
+    dummySource->Destroy();
+    mon.SetFinished();
+  });
+
+  mon.AwaitFinished();
+}
 #endif
