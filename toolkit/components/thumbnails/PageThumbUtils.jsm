@@ -111,9 +111,8 @@ var PageThumbUtils = {
    */
   getContentSize(aWindow) {
     let utils = aWindow.windowUtils;
-    // aWindow may be a cpow, add exposed props security values.
-    let sbWidth = {},
-      sbHeight = {};
+    let sbWidth = {};
+    let sbHeight = {};
 
     try {
       utils.getScrollbarSize(false, sbWidth, sbHeight);
@@ -201,9 +200,6 @@ var PageThumbUtils = {
    * @return Canvas with a scaled thumbnail of the window.
    */
   createSnapshotThumbnail(aWindow, aDestCanvas, aArgs) {
-    if (Cu.isCrossProcessWrapper(aWindow)) {
-      throw new Error("Do not pass cpows here.");
-    }
     let fullScale = aArgs ? aArgs.fullScale : false;
     let [contentWidth, contentHeight] = this.getContentSize(aWindow);
     let [thumbnailWidth, thumbnailHeight] = aDestCanvas
@@ -300,13 +296,9 @@ var PageThumbUtils = {
    * @return An array containing width, height and scale.
    */
   determineCropSize(aWindow, aCanvas) {
-    if (Cu.isCrossProcessWrapper(aWindow)) {
-      throw new Error("Do not pass cpows here.");
-    }
     let utils = aWindow.windowUtils;
-    // aWindow may be a cpow, add exposed props security values.
-    let sbWidth = {},
-      sbHeight = {};
+    let sbWidth = {};
+    let sbHeight = {};
 
     try {
       utils.getScrollbarSize(false, sbWidth, sbHeight);
