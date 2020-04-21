@@ -1109,15 +1109,16 @@ bool IonCacheIRCompiler::emitLoadFrameNumActualArgsResult() {
   MOZ_CRASH("Baseline-specific op");
 }
 
-bool IonCacheIRCompiler::emitLoadFrameArgumentResult() {
+bool IonCacheIRCompiler::emitLoadFrameArgumentResult(Int32OperandId indexId) {
   MOZ_CRASH("Baseline-specific op");
 }
 
-bool IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult() {
+bool IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  int32_t offset = int32StubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  int32_t offset = int32StubField(offsetOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1133,11 +1134,12 @@ bool IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult() {
+bool IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  int32_t offset = int32StubField(reader.stubOffset());
+  Register obj = allocator.useRegister(masm, objId);
+  int32_t offset = int32StubField(offsetOffset);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
