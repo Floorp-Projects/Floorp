@@ -308,8 +308,16 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage);
 
-  void NotifyWhenGraphStarted(RefPtr<AudioNodeTrack> aTrack,
-                              MozPromiseHolder<GraphStartedPromise>&& aHolder);
+  /**
+   * Resolve the GraphStartedPromise when the driver has started processing.
+   * Processing of the audio can happen in two different threads, the
+   * FallbackDriver's thread, while the device is starting, and the audio
+   * thread when the device has started.
+   */
+  enum class ProcessingThread { FALLBACK_THREAD, AUDIO_THREAD };
+  void NotifyWhenGraphStarted(RefPtr<MediaTrack> aTrack,
+                              MozPromiseHolder<GraphStartedPromise>&& aHolder,
+                              ProcessingThread aProcessingThread);
 
   /**
    * Apply an AudioContext operation (suspend/resume/close), on the graph

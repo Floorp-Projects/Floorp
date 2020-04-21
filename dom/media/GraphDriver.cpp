@@ -1026,7 +1026,7 @@ static const char* StateToString(cubeb_state aState) {
 void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   MOZ_ASSERT(!InIteration());
   LOG(LogLevel::Debug,
-      ("AudioCallbackDriver State: %s", StateToString(aState)));
+      ("AudioCallbackDriver(%p) State: %s", this, StateToString(aState)));
 
   // Clear the flag for the not running
   // states: stopped, drained, error.
