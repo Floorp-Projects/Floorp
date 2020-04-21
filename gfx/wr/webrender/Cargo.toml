@@ -21,6 +21,8 @@ no_static_freetype = []
 leak_checks = []
 
 [build-dependencies]
+build-parallel = "0.1.1"
+glslopt = "0.1.1"
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 
 [dependencies]

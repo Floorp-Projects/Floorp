@@ -405,6 +405,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8380105befe91099e6f69206164072c05bc92427ff6aa8a5171388317346dd75"
 
 [[package]]
+name = "build-parallel"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b5f8b148c1884e660514fb1205f36b595e96df4daac5ad526a23db44937de77"
+dependencies = [
+ "crossbeam-utils 0.7.0",
+ "jobserver",
+ "num_cpus",
+]
+
+[[package]]
 name = "bumpalo"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1806,6 +1817,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "glslopt"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91cc19a37d1c89655d9bd58c56b58c00ed4ff5402d7cedde141af7d018e119c3"
+dependencies = [
+ "bindgen",
+ "cc",
+]
+
+[[package]]
 name = "goblin"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2072,6 +2093,15 @@ name = "itoa"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
+
+[[package]]
+name = "jobserver"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c71313ebb9439f74b00d9d2dcec36440beaf57a6aa0623068441dd7cd81a7f2"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "js"
@@ -4922,6 +4952,7 @@ dependencies = [
  "base64",
  "bincode",
  "bitflags",
+ "build-parallel",
  "byteorder",
  "cfg-if",
  "core-foundation",
@@ -4933,6 +4964,7 @@ dependencies = [
  "freetype",
  "fxhash",
  "gleam",
+ "glslopt",
  "image",
  "lazy_static",
  "libc",
