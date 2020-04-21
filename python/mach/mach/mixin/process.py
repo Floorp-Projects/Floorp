@@ -42,10 +42,11 @@ if os.environ.get('MSYSTEM', None) in ('MINGW32', 'MINGW64'):
 class ProcessExecutionMixin(LoggingMixin):
     """Mix-in that provides process execution functionality."""
 
-    def run_process(self, args=None, cwd=None, append_env=None,
-                    explicit_env=None, log_name=None, log_level=logging.INFO,
-                    line_handler=None, require_unix_environment=False,
-                    ensure_exit_code=0, ignore_children=False, pass_thru=False):
+    def run_process(
+            self, args=None, cwd=None, append_env=None, explicit_env=None,
+            log_name=None, log_level=logging.INFO, line_handler=None,
+            require_unix_environment=False, ensure_exit_code=0,
+            ignore_children=False, pass_thru=False, python_unbuffered=True):
         """Runs a single process to completion.
 
         Takes a list of arguments to run where the first item is the
@@ -74,6 +75,13 @@ class ProcessExecutionMixin(LoggingMixin):
         where buffering from mozprocess could be an issue. pass_thru does not
         use mozprocess. Therefore, arguments like log_name, line_handler,
         and ignore_children have no effect.
+
+        When python_unbuffered is set, the PYTHONUNBUFFERED environment variable
+        will be set in the child process. This is normally advantageous (see bug
+        1627873) but is detrimental in certain circumstances (specifically, we
+        have seen issues when using pass_thru mode to open a Python subshell, as
+        in bug 1628838). This variable should be set to False to avoid bustage
+        in those circumstances.
         """
         args = self._normalize_command(args, require_unix_environment)
 
@@ -101,7 +109,8 @@ class ProcessExecutionMixin(LoggingMixin):
             if append_env:
                 use_env.update(append_env)
 
-        use_env['PYTHONUNBUFFERED'] = '1'
+        if python_unbuffered:
+            use_env['PYTHONUNBUFFERED'] = '1'
 
         self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
