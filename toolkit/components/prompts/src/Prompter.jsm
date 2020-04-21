@@ -8,6 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { objectToPropBag } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+).BrowserUtils;
 // This is redefined below, for strange and unfortunate reasons.
 var { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
@@ -65,6 +68,11 @@ Prompter.prototype = {
     p.alert(...promptArgs);
   },
 
+  asyncAlert(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.alert(...promptArgs);
+  },
+
   alertCheck(domWin, title, text, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     p.alertCheck(title, text, checkLabel, checkValue);
@@ -73,6 +81,11 @@ Prompter.prototype = {
   alertCheckBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     p.alertCheck(...promptArgs);
+  },
+
+  asyncAlertCheck(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.alertCheck(...promptArgs);
   },
 
   confirm(domWin, title, text) {
@@ -85,6 +98,11 @@ Prompter.prototype = {
     return p.confirm(...promptArgs);
   },
 
+  asyncConfirm(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.confirm(...promptArgs);
+  },
+
   confirmCheck(domWin, title, text, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.confirmCheck(title, text, checkLabel, checkValue);
@@ -92,6 +110,11 @@ Prompter.prototype = {
 
   confirmCheckBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
+    return p.confirmCheck(...promptArgs);
+  },
+
+  asyncConfirmCheck(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
     return p.confirmCheck(...promptArgs);
   },
 
@@ -119,29 +142,14 @@ Prompter.prototype = {
     );
   },
 
-  confirmExBC(
-    browsingContext,
-    modalType,
-    title,
-    text,
-    flags,
-    button0,
-    button1,
-    button2,
-    checkLabel,
-    checkValue
-  ) {
+  confirmExBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
-    return p.confirmEx(
-      title,
-      text,
-      flags,
-      button0,
-      button1,
-      button2,
-      checkLabel,
-      checkValue
-    );
+    return p.confirmEx(...promptArgs);
+  },
+
+  asyncConfirmEx(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.confirmEx(...promptArgs);
   },
 
   prompt(domWin, title, text, value, checkLabel, checkValue) {
@@ -151,6 +159,11 @@ Prompter.prototype = {
 
   promptBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
+    return p.nsIPrompt_prompt(...promptArgs);
+  },
+
+  asyncPrompt(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
     return p.nsIPrompt_prompt(...promptArgs);
   },
 
@@ -179,6 +192,11 @@ Prompter.prototype = {
     return p.nsIPrompt_promptUsernameAndPassword(...promptArgs);
   },
 
+  asyncPromptUsernameAndPassword(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.nsIPrompt_promptUsernameAndPassword(...promptArgs);
+  },
+
   promptPassword(domWin, title, text, pass, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.nsIPrompt_promptPassword(
@@ -195,6 +213,11 @@ Prompter.prototype = {
     return p.nsIPrompt_promptPassword(...promptArgs);
   },
 
+  asyncPromptPassword(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.nsIPrompt_promptPassword(...promptArgs);
+  },
+
   select(domWin, title, text, list, selected) {
     let p = this.pickPrompter({ domWin });
     return p.select(title, text, list, selected);
@@ -202,6 +225,11 @@ Prompter.prototype = {
 
   selectBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
+    return p.select(...promptArgs);
+  },
+
+  asyncSelect(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
     return p.select(...promptArgs);
   },
 
@@ -483,7 +511,12 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function() {
 });
 
 class ModalPrompter {
-  constructor({ browsingContext = null, domWin = null, modalType = null }) {
+  constructor({
+    browsingContext = null,
+    domWin = null,
+    modalType = null,
+    async = false,
+  }) {
     if (browsingContext && domWin) {
       throw new Error("Pass either browsingContext or domWin");
     }
@@ -506,6 +539,8 @@ class ModalPrompter {
 
     // Use given modal type or fallback to default
     this.modalType = modalType || ModalPrompter.defaultModalType;
+
+    this.async = async;
 
     this.QueryInterface = ChromeUtils.generateQI([
       Ci.nsIPrompt,
@@ -548,11 +583,31 @@ class ModalPrompter {
 
   /* ---------- internal methods ---------- */
 
-  openPrompt(args) {
+  /**
+   * Synchronous wrapper around {@link ModalPrompter#openPrompt}
+   * @param {Object} args Prompt arguments. When prompt has been closed, they are updated to reflect the result state.
+   */
+  openPromptSync(args) {
+    let closed = false;
+    this.openPrompt(args)
+      .then(returnedArgs => {
+        if (returnedArgs) {
+          for (let key in returnedArgs) {
+            args[key] = returnedArgs[key];
+          }
+        }
+      })
+      .finally(() => {
+        closed = true;
+      });
+    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+  }
+
+  async openPrompt(args) {
     if (!this.browsingContext) {
       // We don't have a browsing context, fallback to a window prompt.
       this.openWindowPrompt(null, args);
-      return;
+      return args;
     }
 
     // Select prompts are not part of CommonDialog
@@ -579,7 +634,7 @@ class ModalPrompter {
       Cu.reportError(error);
       // We can't get the prompt actor, fallback to window prompt.
       this.openWindowPrompt(this._domWin, args);
-      return;
+      return args;
     }
 
     let docShell =
@@ -620,46 +675,27 @@ class ModalPrompter {
         .generateUUID()
         .toString();
 
-    let closed = false;
-
     args.promptPrincipal = this._domWin.document.nodePrincipal;
     args.inPermitUnload = inPermitUnload;
     args._remoteId = id;
 
-    actor
-      .sendQuery("Prompt:Open", args)
-      .then(returnedArgs => {
-        // Copy the response from the closed prompt into our args, it will be
-        // read by our caller.
-        if (!returnedArgs) {
-          return;
-        }
+    let returnedArgs;
 
-        if (returnedArgs.promptAborted) {
-          throw Components.Exception(
-            "prompt aborted by user",
-            Cr.NS_ERROR_NOT_AVAILABLE
-          );
-        }
-
-        if (returnedArgs._remoteId !== id) {
-          return;
-        }
-
-        for (let key in returnedArgs) {
-          args[key] = returnedArgs[key];
-        }
-      })
-      .finally(() => {
-        closed = true;
-      });
-
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
-
-    if (windowUtils) {
-      windowUtils.leaveModalState();
+    try {
+      returnedArgs = await actor.sendQuery("Prompt:Open", args);
+      if (returnedArgs && returnedArgs.promptAborted) {
+        throw Components.Exception(
+          "prompt aborted by user",
+          Cr.NS_ERROR_NOT_AVAILABLE
+        );
+      }
+    } finally {
+      if (windowUtils) {
+        windowUtils.leaveModalState();
+      }
+      PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
-    PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
+    return returnedArgs;
   }
 
   /**
@@ -690,6 +726,31 @@ class ModalPrompter {
       propBag
     );
     PromptUtils.propBagToObject(propBag, args);
+  }
+
+  /**
+   * Calls async prompt method and optionally runs promise chained task on
+   * result data. Converts result data to nsIPropertyBag.
+   * @param {Object} args - Prompt arguments.
+   * @param {Function} [task] - Function which is called with the modified
+   *  prompt args object once the prompt has been closed. Must return a
+   *  result object for the prompt caller.
+   * @returns {Promise<nsIPropertyBag>} - Resolves with a property bag holding the
+   * prompt result properties. Resolves once prompt has been closed.
+   */
+  async openPromptAsync(args, task) {
+    let result = await this.openPrompt(args);
+    // If task is not defined, the prompt method does not return
+    // anything. In this case we can resolve without value.
+    if (!task) {
+      return undefined;
+    }
+    // Convert task result to nsIPropertyBag and resolve
+    let taskResult = task(result);
+    if (!(taskResult instanceof Object)) {
+      throw new Error("task must return object");
+    }
+    return objectToPropBag(taskResult);
   }
 
   /*
@@ -737,7 +798,11 @@ class ModalPrompter {
       text,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args);
+    }
+
+    return this.openPromptSync(args);
   }
 
   alertCheck(title, text, checkLabel, checkValue) {
@@ -745,18 +810,28 @@ class ModalPrompter {
       title = PromptUtils.getLocalizedString("Alert");
     }
 
+    // For sync calls checkValue is an XPCOM inout. XPCOM wraps primitves in
+    // objects for call by reference.
+    // The async version of this method uses call by value.
+    let checked = this.async ? checkValue : checkValue.value;
+
     let args = {
       promptType: "alertCheck",
       title,
       text,
       checkLabel,
-      checked: checkValue.value,
+      checked,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        checked: result.checked,
+      }));
+    }
 
-    // Checkbox state always returned, even if cancel clicked.
+    this.openPromptSync(args);
     checkValue.value = args.checked;
+    return undefined;
   }
 
   confirm(title, text) {
@@ -771,9 +846,11 @@ class ModalPrompter {
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({ ok: result.ok }));
+    }
 
-    // Did user click Ok or Cancel?
+    this.openPromptSync(args);
     return args.ok;
   }
 
@@ -782,21 +859,28 @@ class ModalPrompter {
       title = PromptUtils.getLocalizedString("ConfirmCheck");
     }
 
+    let checked = this.async ? checkValue : checkValue.value;
+
     let args = {
       promptType: "confirmCheck",
       title,
       text,
       checkLabel,
-      checked: checkValue.value,
+      checked,
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        // Checkbox state always returned, even if cancel clicked.
+        checked: result.checked,
+        // Did user click Ok or Cancel?
+        ok: result.ok,
+      }));
+    }
 
-    // Checkbox state always returned, even if cancel clicked.
+    this.openPromptSync(args);
     checkValue.value = args.checked;
-
-    // Did user click Ok or Cancel?
     return args.ok;
   }
 
@@ -819,7 +903,7 @@ class ModalPrompter {
       title,
       text,
       checkLabel,
-      checked: checkValue.value,
+      checked: this.async ? checkValue : checkValue.value,
       ok: false,
       buttonNumClicked: 1,
     };
@@ -845,12 +929,15 @@ class ModalPrompter {
       }
     }
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        checked: !!result.checked,
+        buttonNumClicked: result.buttonNumClicked,
+      }));
+    }
 
-    // Checkbox state always returned, even if cancel clicked.
+    this.openPromptSync(args);
     checkValue.value = args.checked;
-
-    // Get the number of the button the user clicked.
     return args.buttonNumClicked;
   }
 
@@ -863,13 +950,21 @@ class ModalPrompter {
       promptType: "prompt",
       title,
       text,
-      value: value.value,
+      value: this.async ? value : value.value,
       checkLabel,
-      checked: checkValue.value,
+      checked: this.async ? checkValue : checkValue.value,
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        checked: !!result.checked,
+        value: result.value,
+        ok: result.ok,
+      }));
+    }
+
+    this.openPromptSync(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -899,14 +994,23 @@ class ModalPrompter {
       promptType: "promptUserAndPass",
       title,
       text,
-      user: user.value,
-      pass: pass.value,
+      user: this.async ? user : user.value,
+      pass: this.async ? pass : pass.value,
       checkLabel,
-      checked: checkValue.value,
+      checked: this.async ? checkValue : checkValue.value,
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        checked: result.checked,
+        user: result.user,
+        pass: result.pass,
+        ok: result.ok,
+      }));
+    }
+
+    this.openPromptSync(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -930,13 +1034,21 @@ class ModalPrompter {
       promptType: "promptPassword",
       title,
       text,
-      pass: pass.value,
+      pass: this.async ? pass : pass.value,
       checkLabel,
-      checked: checkValue.value,
+      checked: this.async ? checkValue : checkValue.value,
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        checked: result.checked,
+        pass: result.pass,
+        ok: result.ok,
+      }));
+    }
+
+    this.openPromptSync(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -962,7 +1074,14 @@ class ModalPrompter {
       ok: false,
     };
 
-    this.openPrompt(args);
+    if (this.async) {
+      return this.openPromptAsync(args, result => ({
+        selected: result.selected,
+        ok: result.ok,
+      }));
+    }
+
+    this.openPromptSync(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
