@@ -18,13 +18,13 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
-DocumentChannelParent::DocumentChannelParent(
-    CanonicalBrowsingContext* aContext) {
+DocumentChannelParent::DocumentChannelParent(CanonicalBrowsingContext* aContext,
+                                             nsILoadContext* aLoadContext) {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
   // Sometime we can get this called without a BrowsingContext, so that we have
   // an actor to call SendFailedAsyncOpen on.
   if (aContext) {
-    mParent = new DocumentLoadListener(aContext, this);
+    mParent = new DocumentLoadListener(aContext, aLoadContext, this);
   }
 }
 
@@ -46,7 +46,7 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
-                     Some(aArgs.channelId()), aArgs.asyncOpenTime(),
+                     aArgs.channelId(), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
                      aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
                      &rv)) {

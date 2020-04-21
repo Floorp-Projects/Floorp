@@ -109,6 +109,73 @@ async function promiseNewEngine(basename, options = {}) {
   return engine;
 }
 
+let promiseStateChangeFrameScript =
+  "data:," +
+  encodeURIComponent(
+    `(${() => {
+      /* globals docShell, sendAsyncMessage */
+
+      const global = this;
+      const LISTENER = Symbol("listener");
+      let listener = {
+        QueryInterface: ChromeUtils.generateQI([
+          "nsISupportsWeakReference",
+          "nsIWebProgressListener",
+        ]),
+
+        onStateChange: function onStateChange(webProgress, req, flags, status) {
+          // Only care about top-level document starts
+          if (
+            !webProgress.isTopLevel ||
+            !(flags & Ci.nsIWebProgressListener.STATE_START)
+          ) {
+            return;
+          }
+
+          req.QueryInterface(Ci.nsIChannel);
+          let spec = req.originalURI.spec;
+          if (spec == "about:blank") {
+            return;
+          }
+
+          delete global[LISTENER];
+          docShell.removeProgressListener(listener);
+
+          req.cancel(Cr.NS_ERROR_FAILURE);
+
+          sendAsyncMessage("PromiseStateChange::StateChanged", spec);
+        },
+      };
+
+      // Make sure the weak reference stays alive.
+      global[LISTENER] = listener;
+
+      docShell.QueryInterface(Ci.nsIWebProgress);
+      docShell.addProgressListener(
+        listener,
+        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+      );
+    }})()`
+  );
+
+function promiseStateChangeURI() {
+  const MSG = "PromiseStateChange::StateChanged";
+
+  return new Promise(resolve => {
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript(promiseStateChangeFrameScript, true);
+
+    let listener = msg => {
+      mm.removeMessageListener(MSG, listener);
+      mm.removeDelayedFrameScript(promiseStateChangeFrameScript);
+
+      resolve(msg.data);
+    };
+
+    mm.addMessageListener(MSG, listener);
+  });
+}
+
 // Get an array of the one-off buttons.
 function getOneOffs() {
   let oneOffs = [];

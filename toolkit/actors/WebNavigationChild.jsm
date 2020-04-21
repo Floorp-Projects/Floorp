@@ -25,6 +25,9 @@ class WebNavigationChild extends JSWindowActorChild {
       case "WebNavigation:Reload":
         this.reload(message.data.loadFlags);
         break;
+      case "WebNavigation:Stop":
+        this.stop(message.data.loadFlags);
+        break;
     }
   }
 
@@ -75,5 +78,9 @@ class WebNavigationChild extends JSWindowActorChild {
 
   reload(loadFlags) {
     this.webNavigation.reload(loadFlags);
+  }
+
+  stop(loadFlags) {
+    this.webNavigation.stop(loadFlags);
   }
 }

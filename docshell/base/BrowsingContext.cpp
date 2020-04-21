@@ -200,7 +200,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       nsILoadInfo::EMBEDDER_POLICY_NULL);
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
-  context->mFields.SetWithoutSyncing<IDX_WatchedByDevtools>(false);
 
   if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
@@ -1103,47 +1102,6 @@ bool BrowsingContext::CanSetOriginAttributes() {
   return true;
 }
 
-Nullable<WindowProxyHolder> BrowsingContext::GetAssociatedWindow() {
-  // nsILoadContext usually only returns same-process windows,
-  // so we intentionally return nullptr if this BC is out of
-  // process.
-  if (IsInProcess()) {
-    return WindowProxyHolder(this);
-  }
-  return nullptr;
-}
-
-Nullable<WindowProxyHolder> BrowsingContext::GetTopWindow() {
-  return Top()->GetAssociatedWindow();
-}
-
-Element* BrowsingContext::GetTopFrameElement() {
-  return Top()->GetEmbedderElement();
-}
-
-void BrowsingContext::SetUsePrivateBrowsing(bool aUsePrivateBrowsing,
-                                            ErrorResult& aError) {
-  nsresult rv = SetUsePrivateBrowsing(aUsePrivateBrowsing);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
-}
-
-void BrowsingContext::SetUseTrackingProtectionWebIDL(
-    bool aUseTrackingProtection) {
-  SetForceEnableTrackingProtection(aUseTrackingProtection);
-}
-
-void BrowsingContext::GetOriginAttributes(JSContext* aCx,
-                                          JS::MutableHandle<JS::Value> aVal,
-                                          ErrorResult& aError) {
-  AssertOriginAttributesMatchPrivateBrowsing();
-
-  if (!ToJSValue(aCx, mOriginAttributes, aVal)) {
-    aError.NoteJSContextException(aCx);
-  }
-}
-
 NS_IMETHODIMP BrowsingContext::GetAssociatedWindow(
     mozIDOMWindowProxy** aAssociatedWindow) {
   nsCOMPtr<mozIDOMWindowProxy> win = GetDOMWindow();
@@ -1156,8 +1114,14 @@ NS_IMETHODIMP BrowsingContext::GetTopWindow(mozIDOMWindowProxy** aTopWindow) {
 }
 
 NS_IMETHODIMP BrowsingContext::GetTopFrameElement(Element** aTopFrameElement) {
-  RefPtr<Element> topFrameElement = GetTopFrameElement();
+  RefPtr<Element> topFrameElement = Top()->GetEmbedderElement();
   topFrameElement.forget(aTopFrameElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP BrowsingContext::GetNestedFrameId(uint64_t* aNestedFrameId) {
+  // FIXME: nestedFrameId should be removed, as it was only used by B2G.
+  *aNestedFrameId = 0;
   return NS_OK;
 }
 
@@ -1336,7 +1300,6 @@ void BrowsingContext::AssertOriginAttributesMatchPrivateBrowsing() {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowsingContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsILoadContext)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -1457,10 +1420,6 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
     if (!XRE_IsParentProcess()) {
       return NS_ERROR_UNEXPECTED;
-    }
-
-    if (Canonical()->AttemptLoadURIInParent(aLoadState, aSetNavigating)) {
-      return NS_OK;
     }
 
     if (ContentParent* cp = Canonical()->GetContentParent()) {
@@ -1867,12 +1826,6 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
                              const bool& aAllowPlugins,
-                             ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
-}
-
-bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevtools>,
-                             const bool& aWatchedByDevtools,
                              ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
 }
