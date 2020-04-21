@@ -156,17 +156,17 @@ git push <remote> --no-verify
 There are multiple helper flags available via `local.properties` that will help speed up local development workflow
 when working across multiple layers of the dependency stack - specifically, with android-components, geckoview or application-services.
 
-### android-components auto-publication workflow
-Specify a relative path to your local `android-components` checkout via `autoPublish.android-components.dir`.
+### Auto-publication workflow for android-components and application-services
+If you're making changes to these projects and want to test them in Fenix, auto-publication workflow is the fastest, most reliable
+way to do that.
 
-If enabled, during a Fenix build android-components will be compiled and locally published if it has been modified,
-and published versions of android-components modules will be automatically used instead of whatever is declared in Dependencies.kt.
+In `local.properties`, specify a relative path to your local `android-components` and/or `application-services` checkouts. E.g.:
+- `autoPublish.android-components.dir=../android-components`
+- `autoPublish.application-services.dir=../application-services`
 
-### application-services auto-publication workflow
-Specify a relative path to your local `application-services` checkout via `autoPublish.application-services.dir`.
+Once these flags are set, your Fenix builds will include any local modifications present in these projects.
 
-If enabled, during a Fenix build application-services will be compiled and locally published,
-and published versions of application-services modules will be automatically used instead of whatever is declared in Dependencies.kt.
+See a [demo of auto-publication workflow in action](https://www.youtube.com/watch?v=qZKlBzVvQGc).
 
 ### GeckoView
 Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,

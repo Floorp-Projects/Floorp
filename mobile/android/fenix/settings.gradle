@@ -20,10 +20,6 @@ def runCmd(cmd, workingDir, successMessage, captureStdout=true) {
     return captureStdout ? standardOutput : null
 }
 
-def gradlew = './gradlew'
-if (System.properties['os.name'].toLowerCase().contains('windows')) {
-    gradlew += ".bat"
-}
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////
@@ -49,7 +45,7 @@ if (localProperties != null) {
 
     if (appServicesLocalPath != null) {
         log("Enabling automatic publication of application-services from: $appServicesLocalPath")
-        def publishAppServicesCmd = ["./gradlew", "autoPublishForLocalDevelopment"]
+        def publishAppServicesCmd = ["./automation/publish_to_maven_local_if_modified.py"]
         runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
     } else {
         log("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
@@ -59,19 +55,8 @@ if (localProperties != null) {
 
     if (androidComponentsLocalPath != null) {
         log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
-        log("Determining if android-components are up-to-date...")
-        def compileAcCmd = [gradlew, "compileReleaseKotlin"]
-        def compileOutput = runCmd(compileAcCmd, androidComponentsLocalPath, "Compiled android-components.")
-        // This is somewhat brittle: parse last line of gradle output, to fish out how many tasks were executed.
-        // One executed task means gradle didn't do any work other than executing the top-level 'compile' task.
-        def compileTasksExecuted = compileOutput.toString().split('\n').last().split(':')[1].split(' ')[1]
-        if (compileTasksExecuted.equals("1")) {
-            log("android-components are up-to-date, skipping publication.")
-        } else {
-            log("android-components changed, publishing locally...")
-            def publishAcCmd = ["${androidComponentsLocalPath}/${gradlew}", "publishToMavenLocal", "-Plocal=true"]
-            runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.", false)
-        }
+        def publishAcCmd = ["./automation/publish_to_maven_local_if_modified.py"]
+        runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components for local development.", false)
     } else {
         log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
     }
