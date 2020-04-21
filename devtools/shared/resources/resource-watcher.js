@@ -300,6 +300,7 @@ class ResourceWatcher {
 
 ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   CONSOLE_MESSAGES: "console-messages",
+  PLATFORM_MESSAGES: "platform-messages",
 };
 module.exports = { ResourceWatcher };
 
@@ -309,4 +310,6 @@ module.exports = { ResourceWatcher };
 const LegacyListeners = {
   [ResourceWatcher.TYPES
     .CONSOLE_MESSAGES]: require("devtools/shared/resources/legacy-listeners/console-messages"),
+  [ResourceWatcher.TYPES
+    .PLATFORM_MESSAGES]: require("devtools/shared/resources/legacy-listeners/platform-messages"),
 };
