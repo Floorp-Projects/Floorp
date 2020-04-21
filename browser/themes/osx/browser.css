@@ -294,6 +294,16 @@
   }
 }
 
+#BMB_bookmarksPopup[side="top"],
+#BMB_bookmarksPopup[side="bottom"] {
+  margin-inline: -26px;
+}
+
+#BMB_bookmarksPopup[side="left"],
+#BMB_bookmarksPopup[side="right"] {
+  margin-block: -26px;
+}
+
 /* Bookmarking panel */
 
 %include ../shared/places/editBookmarkPanel.inc.css

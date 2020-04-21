@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 menupopup,
-panel:not([type="arrow"]) {
+panel {
   -moz-appearance: menupopup;
   -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
@@ -22,6 +23,75 @@ menupopup > menu > menupopup {
 
 panel[titlebar] {
   -moz-appearance: none; /* to disable rounded corners */
+}
+
+panel[type="arrow"] {
+  -moz-appearance: none;
+  background: transparent;
+}
+
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -25px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -25px;
+}
+
+.panel-arrowcontent {
+  -moz-appearance: none;
+  -moz-font-smoothing-background-color: var(--arrowpanel-background);
+  background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  color: var(--arrowpanel-color);
+  border: none;
+  padding: var(--arrowpanel-padding);
+  margin: 1px;
+}
+
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
+panel[type="arrow"].panel-no-padding::part(arrowcontent) {
+  padding: 0;
+  overflow: hidden; /* Don't let panel content overflow the border-radius */
+}
+
+:-moz-any(panel, menupopup)::part(arrow) {
+  -moz-context-properties: fill, stroke;
+  fill: var(--arrowpanel-background);
+  stroke: var(--arrowpanel-border-color);
+}
+
+:-moz-any(panel, menupopup)[side="top"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  margin-inline: 16px;
+  margin-bottom: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="bottom"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  -moz-transform: scaleY(-1);
+  margin-inline: 16px;
+  margin-top: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="left"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  margin-block: 16px;
+  margin-right: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="right"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  transform: scaleX(-1);
+  margin-block: 16px;
+  margin-left: -1px;
 }
 
 /* rules for popups associated with menulists */
