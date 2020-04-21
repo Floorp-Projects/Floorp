@@ -2861,19 +2861,6 @@ mozilla::ipc::IPCResult ContentParent::RecvGetIconForExtension(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetShowPasswordSetting(
-    bool* showPassword) {
-  // default behavior is to show the last password character
-  *showPassword = true;
-#ifdef MOZ_WIDGET_ANDROID
-  NS_ASSERTION(AndroidBridge::Bridge() != nullptr,
-               "AndroidBridge is not available");
-
-  *showPassword = java::GeckoAppShell::GetShowPasswordSetting();
-#endif
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvFirstIdle() {
   // When the ContentChild goes idle, it sends us a FirstIdle message
   // which we use as a good time to signal the PreallocatedProcessManager

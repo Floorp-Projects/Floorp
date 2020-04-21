@@ -1000,8 +1000,6 @@ class ContentParent final
                                                   const uint32_t& aIconSize,
                                                   nsTArray<uint8_t>* bits);
 
-  mozilla::ipc::IPCResult RecvGetShowPasswordSetting(bool* showPassword);
-
   mozilla::ipc::IPCResult RecvStartVisitedQueries(
       const nsTArray<RefPtr<nsIURI>>&);
 
