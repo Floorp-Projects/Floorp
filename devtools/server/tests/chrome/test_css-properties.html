@@ -13,27 +13,15 @@ Bug 1265798 - Replace inIDOMUtils.cssPropertyIsShorthand
 "use strict";
 
 window.onload = function() {
-  const { initCssProperties } = require("devtools/client/fronts/css-properties");
-
   function toSortedString(array) {
     return JSON.stringify(array.sort());
   }
 
-  // Return some mocked values for a tab. Override hasActor with the
-  // options passed into the test. A second property is used
-  // during these tests: `win` for css-properties.js's getClientBrowserVersion.
-  async function getTabProperties(url, useActor) {
-    const { target, win } = await attachURL(url);
-    target.hasActor = () => useActor;
-    return { target, win };
-  }
-
-  const runCssPropertiesTests = async function(url, useActor) {
-    info(`Opening two tabs ${useActor ? "with" : "without"} CssPropertiesActor support.`);
-
+  const runCssPropertiesTests = async function(url) {
+    info(`Opening tab with CssPropertiesActor support.`);
     // Open a new tab. The only property we are interested in is `target`.
-    const tab = await getTabProperties(url, useActor);
-    const { cssProperties } = await initCssProperties(tab);
+    const { target } = await attachURL(url);
+    const { cssProperties } = await target.getFront("cssProperties");
 
     ok(cssProperties.isKnown("border"),
       "The `border` shorthand property is known.");
@@ -67,8 +55,7 @@ window.onload = function() {
 
   addAsyncTest(async function setup() {
     const url = document.getElementById("cssProperties").href;
-    await runCssPropertiesTests(url, true);
-    await runCssPropertiesTests(url, false);
+    await runCssPropertiesTests(url);
 
     runNextTest();
   });
