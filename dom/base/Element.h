@@ -1305,6 +1305,8 @@ class Element : public FragmentOrElement {
   already_AddRefed<Flex> GetAsFlexContainer();
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
 
+  bool HasGridFragments();
+
   already_AddRefed<DOMMatrixReadOnly> GetTransformToAncestor(
       Element& aAncestor);
   already_AddRefed<DOMMatrixReadOnly> GetTransformToParent();

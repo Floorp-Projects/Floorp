@@ -679,7 +679,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * @return {Boolean} true if the current node has a CSS grid layout, false otherwise.
    */
   isGrid() {
-    return this.currentNode.getGridFragments().length > 0;
+    return this.currentNode.hasGridFragments();
   }
 
   /**
