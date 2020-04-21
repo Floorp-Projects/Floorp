@@ -184,8 +184,8 @@ add_task(async function() {
       let initiator = "";
       let lineNumber = "";
       if (lastFrameExists) {
-        const { filename, line: _lineNumber } = r.stack[0];
-        initiator = getUrlBaseName(filename);
+        const { file, line: _lineNumber } = r.stack[0];
+        initiator = getUrlBaseName(file);
         lineNumber = ":" + _lineNumber;
       }
       const causeStr = lastFrameExists ? " (" + r.causeType + ")" : r.causeType;
@@ -197,9 +197,9 @@ add_task(async function() {
     const request = getSortedRequests(store.getState())[i];
     let initiator;
     if (request.cause.stacktraceAvailable) {
-      const { fileName, lineNumber } = request.cause.lastFrame;
+      const { filename, lineNumber } = request.cause.lastFrame;
       initiator =
-        getUrlBaseName(fileName) +
+        getUrlBaseName(filename) +
         ":" +
         lineNumber +
         " (" +
