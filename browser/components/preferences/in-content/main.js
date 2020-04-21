@@ -147,7 +147,6 @@ Preferences.addAll([
 
   // Languages
   { id: "browser.translation.detectLanguage", type: "bool" },
-  { id: "intl.regional_prefs.use_os_locales", type: "bool" },
 
   // General tab
 
@@ -360,7 +359,7 @@ var gMainPane = {
       this.updatePerformanceSettingsBox({ duringChangeEvent: true });
     });
     this.updatePerformanceSettingsBox({ duringChangeEvent: false });
-    this.displayUseSystemLocale();
+
     let connectionSettingsLink = document.getElementById(
       "connectionSettingsLearnMore"
     );
@@ -1368,29 +1367,6 @@ var gMainPane = {
     // They matched, so we can reset the UI.
     gMainPane.setBrowserLocales(Services.locale.appLocaleAsBCP47);
     gMainPane.hideConfirmLanguageChangeMessageBar();
-  },
-
-  displayUseSystemLocale() {
-    let appLocale = Services.locale.appLocaleAsBCP47;
-    let regionalPrefsLocales = Services.locale.regionalPrefsLocales;
-    if (!regionalPrefsLocales.length) {
-      return;
-    }
-    let systemLocale = regionalPrefsLocales[0];
-    let localeDisplayname = Services.intl.getLocaleDisplayNames(undefined, [
-      systemLocale,
-    ]);
-    if (!localeDisplayname.length) {
-      return;
-    }
-    let localeName = localeDisplayname[0];
-    if (appLocale.split("-u-")[0] != systemLocale.split("-u-")[0]) {
-      let checkbox = document.getElementById("useSystemLocale");
-      document.l10n.setAttributes(checkbox, "use-system-locale", {
-        localeName,
-      });
-      checkbox.hidden = false;
-    }
   },
 
   /**
