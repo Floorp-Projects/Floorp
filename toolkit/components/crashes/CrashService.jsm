@@ -16,6 +16,35 @@ var gQuitting = false;
 var gRunningProcesses = new Set();
 
 /**
+ * Run the minidump-analyzer with the given options unless we're already
+ * shutting down or the main process has been instructed to shut down in the
+ * case a content process crashes. Minidump analysis can take a while so we
+ * don't want to block shutdown waiting for it.
+ */
+async function maybeRunMinidumpAnalyzer(minidumpPath, allThreads) {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let shutdown = env.exists("MOZ_CRASHREPORTER_SHUTDOWN");
+
+  if (gQuitting || shutdown) {
+    return;
+  }
+
+  await runMinidumpAnalyzer(minidumpPath, allThreads);
+}
+
+function getMinidumpAnalyzerPath() {
+  const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
+  const exeName = "minidump-analyzer" + binSuffix;
+
+  let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+  exe.append(exeName);
+
+  return exe;
+}
+
+/**
  * Run the minidump analyzer tool to gather stack traces from the minidump. The
  * stack traces will be stored in the .extra file under the StackTraces= entry.
  *
@@ -29,12 +58,7 @@ var gRunningProcesses = new Set();
 function runMinidumpAnalyzer(minidumpPath, allThreads) {
   return new Promise((resolve, reject) => {
     try {
-      const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
-      const exeName = "minidump-analyzer" + binSuffix;
-
-      let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-      exe.append(exeName);
-
+      let exe = getMinidumpAnalyzerPath();
       let args = [minidumpPath];
       let process = Cc["@mozilla.org/process/util;1"].createInstance(
         Ci.nsIProcess
@@ -195,12 +219,7 @@ CrashService.prototype = Object.freeze({
     let metadata = {};
     let hash = null;
 
-    if (!gQuitting) {
-      // Minidump analysis can take a long time, don't start it if the browser
-      // is already quitting.
-      await runMinidumpAnalyzer(minidumpPath, allThreads);
-    }
-
+    await maybeRunMinidumpAnalyzer(minidumpPath, allThreads);
     metadata = await processExtraFile(extraPath);
     hash = await computeMinidumpHash(minidumpPath);
 
