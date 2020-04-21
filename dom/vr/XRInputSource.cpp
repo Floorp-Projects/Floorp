@@ -8,6 +8,7 @@
 #include "mozilla/dom/XRInputSourceEvent.h"
 #include "XRNativeOriginViewer.h"
 #include "XRNativeOriginTracker.h"
+#include "XRInputSpace.h"
 
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
@@ -170,13 +171,11 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   }
 
   RefPtr<XRNativeOrigin> nativeOriginTargetRay = nullptr;
-  RefPtr<XRNativeOrigin> nativeOriginGrip = nullptr;
   mTargetRayMode = XRTargetRayMode::Tracked_pointer;
   switch (controllerState.targetRayMode) {
     case gfx::TargetRayMode::Gaze:
       mTargetRayMode = XRTargetRayMode::Gaze;
       nativeOriginTargetRay = new XRNativeOriginViewer(displayClient);
-      nativeOriginGrip = new XRNativeOriginViewer(displayClient);
       break;
     case gfx::TargetRayMode::TrackedPointer:
       mTargetRayMode = XRTargetRayMode::Tracked_pointer;
@@ -184,7 +183,6 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
       // data internally.
       nativeOriginTargetRay =
           new XRNativeOriginTracker(&controllerState.targetRayPose);
-      nativeOriginGrip = new XRNativeOriginTracker(&controllerState.pose);
       break;
     case gfx::TargetRayMode::Screen:
       mTargetRayMode = XRTargetRayMode::Screen;
@@ -193,10 +191,10 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
       MOZ_ASSERT(false && "Undefined TargetRayMode type.");
       break;
   }
-  mTargetRaySpace =
-      new XRSpace(aSession->GetParentObject(), aSession, nativeOriginTargetRay);
-  mGripSpace =
-      new XRSpace(aSession->GetParentObject(), aSession, nativeOriginGrip);
+
+  mTargetRaySpace = new XRInputSpace(aSession->GetParentObject(), aSession,
+                                     nativeOriginTargetRay, aIndex);
+
   const uint32_t gamepadId =
       displayInfo.mDisplayID * kVRControllerMaxCount + aIndex;
   const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(
@@ -207,6 +205,10 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
                   displayInfo.mDisplayID, controllerState.numButtons,
                   controllerState.numAxes, controllerState.numHaptics, 0, 0);
   mIndex = aIndex;
+
+  if (!mGripSpace) {
+    CreateGripSpace(aSession, controllerState);
+  }
 }
 
 void XRInputSource::SetGamepadIsConnected(bool aConnected) {
@@ -225,6 +227,13 @@ void XRInputSource::Update(XRSession* aSession) {
   const gfx::VRControllerState& controllerState =
       displayInfo.mControllerState[mIndex];
   MOZ_ASSERT(controllerState.controllerName[0] != '\0');
+
+  // OculusVR and OpenVR controllers need to wait until
+  // update functions to assign GamepadCapabilityFlags::Cap_GripSpacePosition
+  // flag.
+  if (!mGripSpace) {
+    CreateGripSpace(aSession, controllerState);
+  }
 
   // Update button values.
   nsTArray<RefPtr<GamepadButton>> buttons;
@@ -346,6 +355,21 @@ void XRInputSource::DispatchEvent(const nsAString& aEvent,
   event->SetTrusted(true);
   aSession->DispatchEvent(*event);
   frame->EndInputSourceEvent();
+}
+
+void XRInputSource::CreateGripSpace(
+    XRSession* aSession, const gfx::VRControllerState& controllerState) {
+  MOZ_ASSERT(!mGripSpace);
+  MOZ_ASSERT(aSession && mIndex >= 0 && mGamepad);
+  if (mTargetRayMode == XRTargetRayMode::Tracked_pointer &&
+      controllerState.flags & GamepadCapabilityFlags::Cap_GripSpacePosition) {
+    RefPtr<XRNativeOrigin> nativeOriginGrip = nullptr;
+    nativeOriginGrip = new XRNativeOriginTracker(&controllerState.pose);
+    mGripSpace = new XRInputSpace(aSession->GetParentObject(), aSession,
+                                  nativeOriginGrip, mIndex);
+  } else {
+    mGripSpace = nullptr;
+  }
 }
 
 }  // namespace dom

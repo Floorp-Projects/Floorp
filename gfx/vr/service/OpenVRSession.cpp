@@ -1047,7 +1047,8 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
     VRControllerState& controllerState = aState.controllerState[stateIndex];
     controllerState.hand = GetControllerHandFromControllerRole(role);
     mControllerMapper->UpdateButtons(controllerState, mControllerHand[role]);
-    SetControllerSelectionAndSqueezeFrameId(controllerState, aState.displayState.lastSubmittedFrameId);
+    SetControllerSelectionAndSqueezeFrameId(
+        controllerState, aState.displayState.lastSubmittedFrameId);
   }
 }
 
@@ -1072,9 +1073,10 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
     } else {
       const ::vr::TrackedDevicePose_t& pose = poseData.pose;
       if (pose.bDeviceIsConnected) {
-        controllerState.flags = (dom::GamepadCapabilityFlags::Cap_Orientation |
-                                 dom::GamepadCapabilityFlags::Cap_Position |
-                                 dom::GamepadCapabilityFlags::Cap_TargetRaySpacePosition);
+        controllerState.flags =
+            (dom::GamepadCapabilityFlags::Cap_Orientation |
+             dom::GamepadCapabilityFlags::Cap_Position |
+             dom::GamepadCapabilityFlags::Cap_GripSpacePosition);
       } else {
         controllerState.flags = dom::GamepadCapabilityFlags::Cap_None;
       }
@@ -1119,7 +1121,7 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
 
         // Calculate its target ray space by shifting degrees in x-axis
         // for ergonomic.
-        const float kPointerAngleDegrees = -0.698; // 40 degrees.
+        const float kPointerAngleDegrees = -0.698;  // 40 degrees.
         gfx::Matrix4x4 rayMtx(m);
         rayMtx.RotateX(kPointerAngleDegrees);
         gfx::Quaternion rayRot;
