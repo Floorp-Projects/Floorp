@@ -18,14 +18,13 @@
 //! The code here deals with adapting the `cranelift_wasm` module to the specifics of BaldrMonkey's
 //! internal data structures.
 
-use crate::bindings::GlobalDesc;
-use cranelift_codegen::ir::immediates::Offset32;
 use std::collections::HashMap;
 
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
 use cranelift_codegen::entity::{EntityRef, PrimaryMap, SecondaryMap};
 use cranelift_codegen::ir;
 use cranelift_codegen::ir::condcodes::IntCC;
+use cranelift_codegen::ir::immediates::Offset32;
 use cranelift_codegen::ir::InstBuilder;
 use cranelift_codegen::isa::{CallConv, TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
@@ -34,7 +33,7 @@ use cranelift_wasm::{
     SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
 };
 
-use crate::bindings::{self, SymbolicAddress};
+use crate::bindings::{self, SymbolicAddress, GlobalDesc};
 use crate::compile::{symbolic_function_name, wasm_function_name};
 use crate::isa::POINTER_SIZE;
 
