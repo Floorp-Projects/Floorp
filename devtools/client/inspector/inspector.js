@@ -18,12 +18,6 @@ const Promise = require("Promise");
 
 loader.lazyRequireGetter(
   this,
-  "initCssProperties",
-  "devtools/client/fronts/css-properties",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "HTMLBreadcrumbs",
   "devtools/client/inspector/breadcrumbs",
   true
@@ -418,10 +412,8 @@ Inspector.prototype = {
     this._pendingSelection = null;
   },
 
-  _getCssProperties: function() {
-    return initCssProperties(this.toolbox).then(cssProperties => {
-      this._cssProperties = cssProperties;
-    }, this._handleRejectionIfNotDestroyed);
+  _getCssProperties: async function() {
+    this._cssProperties = await this.currentTarget.getFront("cssProperties");
   },
 
   _getAccessibilityFront: async function() {
