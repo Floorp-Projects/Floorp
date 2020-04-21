@@ -323,7 +323,7 @@ void ImageDocument::ShrinkToFit() {
 
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.
-  ScrollImageTo(0, 0, false);
+  ScrollImageTo(0, 0);
 
   if (!mImageContent) {
     // ScrollImageTo flush destroyed our content.
@@ -337,12 +337,7 @@ void ImageDocument::ShrinkToFit() {
   UpdateTitleAndCharset();
 }
 
-void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage) {
-  if (restoreImage) {
-    RestoreImage();
-    FlushPendingNotifications(FlushType::Layout);
-  }
-
+void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY) {
   RefPtr<PresShell> presShell = GetPresShell();
   if (!presShell) {
     return;
@@ -518,7 +513,9 @@ ImageDocument::HandleEvent(Event* aEvent) {
         y = event->ClientY() - img->OffsetTop();
       }
       mShouldResize = false;
-      RestoreImageTo(x, y);
+      RestoreImage();
+      FlushPendingNotifications(FlushType::Layout);
+      ScrollImageTo(x, y);
     } else if (ImageIsOverflowing()) {
       ShrinkToFit();
     }
