@@ -73,6 +73,9 @@ import org.mozilla.fenix.settings.logins.SavedLoginsAuthFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
+import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
+import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
+import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
@@ -386,6 +389,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             DefaultBrowserSettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSavedLoginsFragment ->
             SavedLoginsAuthFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromAddNewDeviceFragment ->
+            AddNewDeviceFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromAddSearchEngineFragment ->
+            AddSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromEditCustomSearchEngineFragment ->
+            EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     private fun load(

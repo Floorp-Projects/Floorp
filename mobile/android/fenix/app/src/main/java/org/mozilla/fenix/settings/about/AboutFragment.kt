@@ -17,7 +17,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kotlinx.android.synthetic.main.fragment_about.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.crashes.CrashListActivity
@@ -180,11 +182,12 @@ class AboutFragment : Fragment(), AboutPageListener {
         )
     }
 
-    private fun openLinkInCustomTab(url: String) {
-        context?.let { context ->
-            val intent = SupportUtils.createCustomTabIntent(context, url)
-            startActivity(intent)
-        }
+    private fun openLinkInNormalTab(url: String) {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = url,
+            newTab = true,
+            from = BrowserDirection.FromAbout
+        )
     }
 
     private fun openLibrariesPage() {
@@ -214,7 +217,7 @@ class AboutFragment : Fragment(), AboutPageListener {
                     }
                 }
 
-                openLinkInCustomTab(item.url)
+                openLinkInNormalTab(item.url)
             }
             is AboutItem.Libraries -> {
                 requireComponents.analytics.metrics.track(Event.LibrariesThatWeUseTapped)

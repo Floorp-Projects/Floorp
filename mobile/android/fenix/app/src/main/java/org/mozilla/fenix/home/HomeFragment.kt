@@ -235,8 +235,8 @@ class HomeFragment : Fragment() {
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
                 openSettingsScreen = ::openSettingsScreen,
                 openSearchScreen = ::navigateToSearch,
-                openWhatsNewLink = { openCustomTab(SupportUtils.getWhatsNewUrl(activity)) },
-                openPrivacyNotice = { openCustomTab(SupportUtils.getMozillaPageUrl(PRIVATE_NOTICE)) },
+                openWhatsNewLink = { openInNormalTab(SupportUtils.getWhatsNewUrl(activity)) },
+                openPrivacyNotice = { openInNormalTab(SupportUtils.getMozillaPageUrl(PRIVATE_NOTICE)) },
                 showTabTray = ::openTabTray
             )
         )
@@ -656,11 +656,12 @@ class HomeFragment : Fragment() {
         nav(R.id.homeFragment, directions)
     }
 
-    private fun openCustomTab(url: String) {
-        context?.let { context ->
-            val intent = SupportUtils.createCustomTabIntent(context, url)
-            startActivity(intent)
-        }
+    private fun openInNormalTab(url: String) {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = url,
+            newTab = true,
+            from = BrowserDirection.FromHome
+        )
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
