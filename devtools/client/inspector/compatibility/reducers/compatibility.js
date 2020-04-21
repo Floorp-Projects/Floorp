@@ -80,7 +80,10 @@ const reducers = {
     return Object.assign({}, state, { isSettingsVisibile: visibility });
   },
   [COMPATIBILITY_UPDATE_TARGET_BROWSERS_START](state) {
-    return Object.assign({}, state, { isTopLevelTargetProcessing: true });
+    return Object.assign({}, state, {
+      isTopLevelTargetProcessing: true,
+      topLevelTargetIssues: [],
+    });
   },
   [COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS](state, { targetBrowsers }) {
     return Object.assign({}, state, { targetBrowsers });
