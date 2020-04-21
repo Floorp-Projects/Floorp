@@ -114,13 +114,11 @@ ImageListener::OnStartRequest(nsIRequest* request) {
   }
 
   if (!imgDoc->mObservingImageLoader) {
-    nsCOMPtr<nsIImageLoadingContent> imageLoader =
-        do_QueryInterface(imgDoc->mImageContent);
-    NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
-
-    imageLoader->AddNativeObserver(imgDoc);
+    NS_ENSURE_TRUE(imgDoc->mImageContent, NS_ERROR_UNEXPECTED);
+    imgDoc->mImageContent->AddNativeObserver(imgDoc);
     imgDoc->mObservingImageLoader = true;
-    imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
+    imgDoc->mImageContent->LoadImageWithChannel(channel,
+                                                getter_AddRefs(mNextStream));
   }
 
   return MediaDocumentStreamListener::OnStartRequest(request);
@@ -194,22 +192,15 @@ nsresult ImageDocument::StartDocumentLoad(const char* aCommand,
 }
 
 void ImageDocument::Destroy() {
-  if (mImageContent) {
+  if (RefPtr<HTMLImageElement> img = std::move(mImageContent)) {
     // Remove our event listener from the image content.
-    nsCOMPtr<EventTarget> target = mImageContent;
-    target->RemoveEventListener(NS_LITERAL_STRING("load"), this, false);
-    target->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
+    img->RemoveEventListener(NS_LITERAL_STRING("load"), this, false);
+    img->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
 
     // Break reference cycle with mImageContent, if we have one
     if (mObservingImageLoader) {
-      nsCOMPtr<nsIImageLoadingContent> imageLoader =
-          do_QueryInterface(mImageContent);
-      if (imageLoader) {
-        imageLoader->RemoveNativeObserver(this);
-      }
+      img->RemoveNativeObserver(this);
     }
-
-    mImageContent = nullptr;
   }
 
   MediaDocument::Destroy();
@@ -293,7 +284,7 @@ void ImageDocument::ShrinkToFit() {
     // displayed image height by getting .height on the HTMLImageElement.
     //
     // Hold strong ref, because Height() can run script.
-    RefPtr<HTMLImageElement> img = HTMLImageElement::FromNode(mImageContent);
+    RefPtr<HTMLImageElement> img = mImageContent;
     uint32_t imageHeight = img->Height();
     nsDOMTokenList* classList = img->ClassList();
     if (imageHeight > mVisibleHeight) {
@@ -312,7 +303,7 @@ void ImageDocument::ShrinkToFit() {
 #endif
 
   // Keep image content alive while changing the attributes.
-  RefPtr<HTMLImageElement> image = HTMLImageElement::FromNode(mImageContent);
+  RefPtr<HTMLImageElement> image = mImageContent;
 
   uint32_t newWidth = std::max(1, NSToCoordFloor(GetRatio() * mImageWidth));
   uint32_t newHeight = std::max(1, NSToCoordFloor(GetRatio() * mImageHeight));
@@ -365,7 +356,7 @@ void ImageDocument::RestoreImage() {
     return;
   }
   // Keep image content alive while changing the attributes.
-  nsCOMPtr<Element> imageContent = mImageContent;
+  RefPtr<HTMLImageElement> imageContent = mImageContent;
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, true);
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, true);
 
@@ -505,8 +496,7 @@ ImageDocument::HandleEvent(Event* aEvent) {
       int32_t x = 0, y = 0;
       MouseEvent* event = aEvent->AsMouseEvent();
       if (event) {
-        RefPtr<HTMLImageElement> img =
-            HTMLImageElement::FromNode(mImageContent);
+        RefPtr<HTMLImageElement> img = mImageContent;
         x = event->ClientX() - img->OffsetLeft();
         y = event->ClientY() - img->OffsetTop();
       }
@@ -532,7 +522,7 @@ void ImageDocument::UpdateSizeFromLayout() {
   }
 
   // Need strong ref, because GetPrimaryFrame can run script.
-  nsCOMPtr<Element> imageContent = mImageContent;
+  RefPtr<HTMLImageElement> imageContent = mImageContent;
   nsIFrame* contentFrame = imageContent->GetPrimaryFrame(FlushType::Frames);
   if (!contentFrame) {
     return;
@@ -570,25 +560,23 @@ nsresult ImageDocument::CreateSyntheticDocument() {
   nodeInfo = mNodeInfoManager->GetNodeInfo(
       nsGkAtoms::img, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
-  mImageContent = NS_NewHTMLImageElement(nodeInfo.forget());
+  RefPtr<Element> image = NS_NewHTMLImageElement(nodeInfo.forget());
+  mImageContent = HTMLImageElement::FromNodeOrNull(image);
   if (!mImageContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(mImageContent);
-  NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
   nsAutoCString src;
   mDocumentURI->GetSpec(src);
 
   NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...
-  imageLoader->SetLoadingEnabled(false);
+  mImageContent->SetLoadingEnabled(false);
   mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::src, srcString, false);
   mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, srcString, false);
 
   body->AppendChildTo(mImageContent, false);
-  imageLoader->SetLoadingEnabled(true);
+  mImageContent->SetLoadingEnabled(true);
 
   return NS_OK;
 }
@@ -647,11 +635,9 @@ void ImageDocument::UpdateTitleAndCharset() {
 
   nsAutoCString typeStr;
   nsCOMPtr<imgIRequest> imageRequest;
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(mImageContent);
-  if (imageLoader) {
-    imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                            getter_AddRefs(imageRequest));
+  if (mImageContent) {
+    mImageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                              getter_AddRefs(imageRequest));
   }
 
   if (imageRequest) {

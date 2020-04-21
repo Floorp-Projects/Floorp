@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+class HTMLImageElement;
+
 class ImageDocument final : public MediaDocument,
                             public imgINotificationObserver,
                             public nsIDOMEventListener {
@@ -109,7 +111,7 @@ class ImageDocument final : public MediaDocument,
   void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnHasTransparency();
 
-  nsCOMPtr<Element> mImageContent;
+  RefPtr<HTMLImageElement> mImageContent;
 
   float mVisibleWidth;
   float mVisibleHeight;
