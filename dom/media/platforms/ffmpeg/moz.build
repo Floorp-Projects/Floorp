@@ -20,4 +20,7 @@ UNIFIED_SOURCES += [
     'FFmpegRuntimeLinker.cpp',
 ]
 
+if CONFIG['MOZ_WAYLAND']:
+  include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'

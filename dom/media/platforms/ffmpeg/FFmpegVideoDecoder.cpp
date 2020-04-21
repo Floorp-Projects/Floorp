@@ -154,14 +154,44 @@ AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
   return nullptr;
 }
 
+class VAAPIDisplayHolder {
+ public:
+  VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay)
+      : mLib(aLib), mDisplay(aDisplay){};
+  ~VAAPIDisplayHolder() { mLib->vaTerminate(mDisplay); }
+
+ private:
+  FFmpegLibWrapper* mLib;
+  VADisplay mDisplay;
+};
+
+static void VAAPIDisplayReleaseCallback(struct AVHWDeviceContext* hwctx) {
+  auto displayHolder = static_cast<VAAPIDisplayHolder*>(hwctx->user_opaque);
+  delete displayHolder;
+}
+
 bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
-  AVDictionary* opts = nullptr;
-  mLib->av_dict_set(&opts, "connection_type", "drm", 0);
-  bool ret =
-      (mLib->av_hwdevice_ctx_create(
-           &mVAAPIDeviceContext, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0) == 0);
-  mLib->av_dict_free(&opts);
-  if (!ret) {
+  mVAAPIDeviceContext = mLib->av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VAAPI);
+  if (!mVAAPIDeviceContext) {
+    return false;
+  }
+  AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
+  AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
+
+  mDisplay = mLib->vaGetDisplayWl(widget::WaylandDisplayGet()->GetDisplay());
+
+  hwctx->user_opaque = new VAAPIDisplayHolder(mLib, mDisplay);
+  hwctx->free = VAAPIDisplayReleaseCallback;
+
+  int major, minor;
+  int status = mLib->vaInitialize(mDisplay, &major, &minor);
+  if (status != VA_STATUS_SUCCESS) {
+    return false;
+  }
+
+  vactx->display = mDisplay;
+
+  if (mLib->av_hwdevice_ctx_init(mVAAPIDeviceContext) < 0) {
     return false;
   }
 
@@ -172,22 +202,17 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
+  if (!mLib->IsVAAPIAvailable()) {
+    FFMPEG_LOG("libva library or symbols are missing.");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   auto layersBackend = mImageAllocator
                            ? mImageAllocator->GetCompositorBackendType()
                            : layers::LayersBackend::LAYERS_BASIC;
   if (layersBackend != layers::LayersBackend::LAYERS_OPENGL &&
       layersBackend != layers::LayersBackend::LAYERS_WR) {
     FFMPEG_LOG("VA-API works with HW accelerated backend only!");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!mLib->IsVAAPIAvailable()) {
-    FFMPEG_LOG("libva library or symbols are missing.");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!gfxPlatformGtk::GetPlatform()->UseWaylandHardwareVideoDecoding()) {
-    FFMPEG_LOG("VA-API FFmpeg is disabled by platform");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -275,6 +300,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 #ifdef MOZ_WAYLAND_USE_VAAPI
       mVAAPIDeviceContext(nullptr),
       mDisableHardwareDecoding(aDisableHardwareDecoding),
+      mDisplay(nullptr),
 #endif
       mImageAllocator(aAllocator),
       mImageContainer(aImageContainer),
@@ -606,16 +632,10 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
              " duration=%" PRId64 " opaque=%" PRId64,
              aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
-  AVHWDeviceContext* device_ctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
-  AVVAAPIDeviceContext* VAAPIDeviceContext =
-      (AVVAAPIDeviceContext*)device_ctx->hwctx;
   VADRMPRIMESurfaceDescriptor va_desc;
-
   VASurfaceID surface_id = (VASurfaceID)(uintptr_t)mFrame->data[3];
-
   VAStatus vas = mLib->vaExportSurfaceHandle(
-      VAAPIDeviceContext->display, surface_id,
-      VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+      mDisplay, surface_id, VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
       VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
       &va_desc);
   if (vas != VA_STATUS_SUCCESS) {
@@ -623,7 +643,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
         NS_ERROR_OUT_OF_MEMORY,
         RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
   }
-  vas = mLib->vaSyncSurface(VAAPIDeviceContext->display, surface_id);
+  vas = mLib->vaSyncSurface(mDisplay, surface_id);
   if (vas != VA_STATUS_SUCCESS) {
     NS_WARNING("vaSyncSurface() failed.");
   }

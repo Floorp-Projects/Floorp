@@ -116,9 +116,9 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 #ifdef MOZ_WAYLAND
   const AVCodecHWConfig* (*avcodec_get_hw_config)(const AVCodec* codec,
                                                   int index);
-  int (*av_hwdevice_ctx_create)(AVBufferRef** device_ctx, int type,
-                                const char* device, AVDictionary* opts,
-                                int flags);
+  AVBufferRef* (*av_hwdevice_ctx_alloc)(int);
+  int (*av_hwdevice_ctx_init)(AVBufferRef* ref);
+
   AVBufferRef* (*av_buffer_ref)(AVBufferRef* buf);
   void (*av_buffer_unref)(AVBufferRef** buf);
   int (*av_hwframe_transfer_get_formats)(AVBufferRef* hwframe_ctx, int dir,
@@ -132,12 +132,16 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 
   int (*vaExportSurfaceHandle)(void*, unsigned int, uint32_t, uint32_t, void*);
   int (*vaSyncSurface)(void*, unsigned int);
+  int (*vaInitialize)(void* dpy, int* major_version, int* minor_version);
+  int (*vaTerminate)(void* dpy);
+  void* (*vaGetDisplayWl)(struct wl_display* display);
 #endif
 
   PRLibrary* mAVCodecLib;
   PRLibrary* mAVUtilLib;
 #ifdef MOZ_WAYLAND
   PRLibrary* mVALib;
+  PRLibrary* mVALibWayland;
 #endif
 
  private:
