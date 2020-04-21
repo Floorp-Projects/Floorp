@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const Services = require("Services");
 
 class ResourceWatcher {
   /**
@@ -308,47 +307,6 @@ module.exports = { ResourceWatcher };
 // Each section added here should eventually be removed once the equivalent server
 // code is implement in Firefox, in its release channel.
 const LegacyListeners = {
-  // Bug 1620243 aims at implementing this from the actor and will eventually replace
-  // this client side code.
-  async [ResourceWatcher.TYPES.CONSOLE_MESSAGES]({
-    targetList,
-    targetType,
-    targetFront,
-    isTopLevel,
-    onAvailable,
-  }) {
-    // Allow the top level target unconditionnally.
-    // Also allow frame, but only in content toolbox, when the fission/content toolbox pref is
-    // set. i.e. still ignore them in the content of the browser toolbox as we inspect
-    // messages via the process targets
-    // Also ignore workers as they are not supported yet. (see bug 1592584)
-    const isContentToolbox = targetList.targetFront.isLocalTab;
-    const listenForFrames =
-      isContentToolbox &&
-      Services.prefs.getBoolPref("devtools.contenttoolbox.fission");
-    const isAllowed =
-      isTopLevel ||
-      targetType === targetList.TYPES.PROCESS ||
-      (targetType === targetList.TYPES.FRAME && listenForFrames);
-
-    if (!isAllowed) {
-      return;
-    }
-
-    const webConsoleFront = await targetFront.getFront("console");
-
-    // Request notifying about new messages
-    await webConsoleFront.startListeners(["ConsoleAPI"]);
-
-    // Fetch already existing messages
-    // /!\ The actor implementation requires to call startListeners(ConsoleAPI) first /!\
-    const { messages } = await webConsoleFront.getCachedMessages([
-      "ConsoleAPI",
-    ]);
-    // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
-    messages.map(message => ({ message })).forEach(onAvailable);
-
-    // Forward new message events
-    webConsoleFront.on("consoleAPICall", onAvailable);
-  },
+  [ResourceWatcher.TYPES
+    .CONSOLE_MESSAGES]: require("devtools/shared/resources/legacy-listeners/console-messages"),
 };
