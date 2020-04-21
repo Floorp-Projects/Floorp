@@ -292,6 +292,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Enable cold page-load for browsertime tp6",
         }],
+        [["--verbose"], {
+            "action": "store_true",
+            "dest": "verbose",
+            "default": False,
+            "help": "Verbose output",
+        }],
 
     ] + testing_config_options + \
         copy.deepcopy(code_coverage_config_options) + \
