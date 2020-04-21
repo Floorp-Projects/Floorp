@@ -3321,36 +3321,55 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
   }
 }
 
-auto MediaTrackGraph::NotifyWhenGraphStarted(AudioNodeTrack* aTrack)
+auto MediaTrackGraph::NotifyWhenGraphStarted(MediaTrack* aTrack)
     -> RefPtr<GraphStartedPromise> {
   MOZ_ASSERT(NS_IsMainThread());
   MozPromiseHolder<GraphStartedPromise> h;
   RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
-  aTrack->GraphImpl()->NotifyWhenGraphStarted(aTrack, std::move(h));
+  aTrack->GraphImpl()->NotifyWhenGraphStarted(
+      aTrack, std::move(h),
+      MediaTrackGraphImpl::ProcessingThread::FALLBACK_THREAD);
+  return p;
+}
+
+auto MediaTrackGraph::NotifyWhenDeviceStarted(MediaTrack* aTrack)
+    -> RefPtr<GraphStartedPromise> {
+  MOZ_ASSERT(NS_IsMainThread());
+  MozPromiseHolder<GraphStartedPromise> h;
+  RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
+  aTrack->GraphImpl()->NotifyWhenGraphStarted(
+      aTrack, std::move(h),
+      MediaTrackGraphImpl::ProcessingThread::AUDIO_THREAD);
   return p;
 }
 
 void MediaTrackGraphImpl::NotifyWhenGraphStarted(
-    RefPtr<AudioNodeTrack> aTrack,
-    MozPromiseHolder<GraphStartedPromise>&& aHolder) {
+    RefPtr<MediaTrack> aTrack, MozPromiseHolder<GraphStartedPromise>&& aHolder,
+    ProcessingThread aProcessingThread) {
   class GraphStartedNotificationControlMessage : public ControlMessage {
-    RefPtr<AudioNodeTrack> mAudioNodeTrack;
+    RefPtr<MediaTrack> mMediaTrack;
     MozPromiseHolder<GraphStartedPromise> mHolder;
+    ProcessingThread mProcessingThread = ProcessingThread::FALLBACK_THREAD;
 
    public:
     GraphStartedNotificationControlMessage(
-        RefPtr<AudioNodeTrack> aTrack,
-        MozPromiseHolder<GraphStartedPromise>&& aHolder)
+        RefPtr<MediaTrack> aTrack,
+        MozPromiseHolder<GraphStartedPromise>&& aHolder,
+        ProcessingThread aProcessingThread)
         : ControlMessage(nullptr),
-          mAudioNodeTrack(std::move(aTrack)),
-          mHolder(std::move(aHolder)) {}
+          mMediaTrack(std::move(aTrack)),
+          mHolder(std::move(aHolder)),
+          mProcessingThread(aProcessingThread) {}
     void Run() override {
       // This runs on the graph thread, so when this runs, and the current
       // driver is an AudioCallbackDriver, we know the audio hardware is
       // started. If not, we are going to switch soon, keep reposting this
       // ControlMessage.
-      MediaTrackGraphImpl* graphImpl = mAudioNodeTrack->GraphImpl();
-      if (graphImpl->CurrentDriver()->AsAudioCallbackDriver()) {
+      MediaTrackGraphImpl* graphImpl = mMediaTrack->GraphImpl();
+      if (graphImpl->CurrentDriver()->AsAudioCallbackDriver() &&
+          (mProcessingThread == ProcessingThread::FALLBACK_THREAD ||
+           (mProcessingThread == ProcessingThread::AUDIO_THREAD &&
+            graphImpl->CurrentDriver()->ThreadRunning()))) {
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",
@@ -3360,11 +3379,12 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
       } else {
         graphImpl->DispatchToMainThreadStableState(
             NewRunnableMethod<
-                StoreCopyPassByRRef<RefPtr<AudioNodeTrack>>,
-                StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>>(
+                StoreCopyPassByRRef<RefPtr<MediaTrack>>,
+                StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>,
+                ProcessingThread>(
                 "MediaTrackGraphImpl::NotifyWhenGraphStarted", graphImpl,
                 &MediaTrackGraphImpl::NotifyWhenGraphStarted,
-                std::move(mAudioNodeTrack), std::move(mHolder)));
+                std::move(mMediaTrack), std::move(mHolder), mProcessingThread));
       }
     }
     void RunDuringShutdown() override {
@@ -3379,7 +3399,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
 
   MediaTrackGraphImpl* graph = aTrack->GraphImpl();
   graph->AppendMessage(MakeUnique<GraphStartedNotificationControlMessage>(
-      std::move(aTrack), std::move(aHolder)));
+      std::move(aTrack), std::move(aHolder), aProcessingThread));
 }
 
 void MediaTrackGraphImpl::IncrementSuspendCount(MediaTrack* aTrack) {
