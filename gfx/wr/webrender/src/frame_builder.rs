@@ -352,6 +352,7 @@ impl FrameBuilder {
         );
 
         {
+            profile_scope!("UpdateVisibility");
             profile_marker!("UpdateVisibility");
 
             let visibility_context = FrameVisibilityContext {
@@ -469,6 +470,7 @@ impl FrameBuilder {
 
         {
             profile_marker!("PreparePrims");
+            profile_scope!("PreparePrims");
 
             scene.prim_store.prepare_primitives(
                 &mut prim_list,
