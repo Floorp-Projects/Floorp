@@ -886,15 +886,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
   }
 
-  void loadFrameCalleeResult() { writeOp(CacheOp::LoadFrameCalleeResult); }
-  void loadFrameNumActualArgsResult() {
-    writeOp(CacheOp::LoadFrameNumActualArgsResult);
-  }
-
-  void loadFrameArgumentResult(Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadFrameArgumentResult, index);
-  }
-
   ObjOperandId loadObject(JSObject* obj) {
     assertSameCompartment(obj);
     ObjOperandId res(nextOperandId_++);
@@ -1265,27 +1256,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(str), StubField::Type::String);
   }
 
-  void loadInt32ArrayLengthResult(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
-  }
-
-  void loadArgumentsObjectLengthResult(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
-  }
-
-  void loadFunctionLengthResult(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadFunctionLengthResult, obj);
-  }
-
-  void loadArgumentsObjectArgResult(ObjOperandId obj, Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
-    writeOperandId(index);
-  }
-
-  void loadStringLengthResult(StringOperandId str) {
-    writeOpWithOperandId(CacheOp::LoadStringLengthResult, str);
-  }
-
   void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
@@ -1331,20 +1301,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void callIsSuspendedGeneratorResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::CallIsSuspendedGeneratorResult, val);
-  }
-
-  void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
-    writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
-    addStubField(offset, StubField::Type::RawWord);
-  }
-
-  void loadEnvironmentDynamicSlotResult(ObjOperandId obj, size_t offset) {
-    writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
-    addStubField(offset, StubField::Type::RawWord);
-  }
-
-  void loadObjectResult(ObjOperandId obj) {
-    writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
   }
 
   void loadInt32Result(Int32OperandId val) {
