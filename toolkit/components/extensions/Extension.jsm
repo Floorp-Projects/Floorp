@@ -686,7 +686,9 @@ class ExtensionData {
   }
 
   // Returns whether the front end should prompt for this permission
-  static shouldPromptFor(permission) {
+  static async shouldPromptFor(permission) {
+    // Schema might not be initialized yet, let's wait
+    await Management.lazyInit();
     return !NO_PROMPT_PERMISSIONS.has(permission);
   }
 
@@ -1545,14 +1547,12 @@ class ExtensionData {
       if (permission == "nativeMessaging") {
         continue;
       }
-      if (!ExtensionData.shouldPromptFor(permission)) {
-        continue;
+      try {
+        result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
+      } catch (err) {
+        // We deliberately do not include all permissions in the prompt.
+        // So if we don't find one then just skip it.
       }
-      // This will throw if the permission key is not present in the properties
-      // file. Any permission for which we prompt for needs an entry in
-      // browser.properties with the key
-      // |webextPerms.description.<permission name>|.
-      result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
     }
 
     const haveAccessKeys = AppConstants.platform !== "android";
