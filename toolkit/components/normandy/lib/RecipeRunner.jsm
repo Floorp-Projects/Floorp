@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
   BaseAction: "resource://normandy/actions/BaseAction.jsm",
-  Kinto: "resource://services-common/kinto-offline-client.js",
+  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -609,12 +609,17 @@ var RecipeRunner = {
      * "normandy-recipes-capabilities" collection now.
      */
     async migration01RemoveOldRecipesCollection() {
-      const kintoCollection = new Kinto({
-        bucket: "main",
-        adapter: Kinto.adapters.IDB,
-        adapterOptions: { dbName: "remote-settings" },
-      }).collection("normandy-recipes");
-      await kintoCollection.clear();
+      // Don't bother to open IDB and clear on clean profiles.
+      const lastCheckPref =
+        "services.settings.main.normandy-recipes.last_check";
+      if (Services.prefs.prefHasUserValue(lastCheckPref)) {
+        // We instantiate a client, but it won't take part of sync.
+        const client = new RemoteSettingsClient("normandy-recipes", {
+          bucketNamePref: "services.settings.default_bucket",
+        });
+        await client.db.clear();
+        Services.prefs.clearUserPref(lastCheckPref);
+      }
     },
   },
 };
