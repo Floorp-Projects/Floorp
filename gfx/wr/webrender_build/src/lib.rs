@@ -5,9 +5,15 @@
 #[macro_use]
 extern crate bitflags;
 
+#[macro_use]
+extern crate lazy_static;
+
 #[cfg(any(feature = "serde"))]
 #[macro_use]
 extern crate serde;
 
 pub mod shader;
-mod shader_features;
+pub mod shader_features;
+
+/// This must be known at build-time as the shaders depend on it.
+pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
