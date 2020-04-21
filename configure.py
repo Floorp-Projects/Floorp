@@ -122,7 +122,7 @@ def config_status(config):
             # coding=utf-8
             from __future__ import unicode_literals
         ''') % {'python': config['PYTHON3']})
-        for k, v in six.iteritems(sanitized_config):
+        for k, v in sorted(six.iteritems(sanitized_config)):
             fh.write('%s = ' % k)
             write_indented_repr(fh, v)
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
