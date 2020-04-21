@@ -18,9 +18,4 @@ interface ImageDocument : HTMLDocument {
 
   /* Restore image original size. */
   void restoreImage();
-
-  /* Restore the image, trying to keep a certain pixel in the same position.
-   * The coordinate system is that of the shrunken image.
-   */
-  void restoreImageTo(long x, long y);
 };

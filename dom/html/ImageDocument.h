@@ -62,7 +62,6 @@ class ImageDocument final : public MediaDocument,
   // way to mark those MOZ_CAN_RUN_SCRIPT yet.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void ShrinkToFit();
   void RestoreImage();
-  void RestoreImageTo(int32_t aX, int32_t aY) { ScrollImageTo(aX, aY, true); }
 
   void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
 
@@ -75,7 +74,7 @@ class ImageDocument final : public MediaDocument,
 
   void UpdateTitleAndCharset();
 
-  void ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage);
+  void ScrollImageTo(int32_t aX, int32_t aY);
 
   float GetRatio() {
     return std::min(mVisibleWidth / mImageWidth, mVisibleHeight / mImageHeight);
