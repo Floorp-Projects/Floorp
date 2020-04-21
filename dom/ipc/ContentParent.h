@@ -8,7 +8,6 @@
 #define mozilla_dom_ContentParent_h
 
 #include "mozilla/dom/PContentParent.h"
-#include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/RemoteBrowser.h"
@@ -103,7 +102,6 @@ class SharedPreferenceSerializer;
 
 namespace jsipc {
 class PJavaScriptParent;
-class CpowEntry;
 }  // namespace jsipc
 
 namespace layers {
@@ -142,7 +140,6 @@ class ContentParent final
       public gfx::GPUProcessListener,
       public mozilla::MemoryReportingProcess,
       public mozilla::dom::ipc::MessageManagerCallback,
-      public CPOWManagerGetter,
       public mozilla::ipc::IShmemAllocator,
       public mozilla::ipc::ParentToChildStreamActorManager {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
@@ -349,9 +346,8 @@ class ContentParent final
   virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
                                           bool aRunInGlobalScope) override;
 
-  virtual nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
-                                      StructuredCloneData& aData,
-                                      JS::Handle<JSObject*> aCpows) override;
+  virtual nsresult DoSendAsyncMessage(const nsAString& aMessage,
+                                      StructuredCloneData& aData) override;
 
   /** Notify that a tab is beginning its destruction sequence. */
   void NotifyTabDestroying();
@@ -364,8 +360,6 @@ class ContentParent final
   bool DestroyTestShell(TestShellParent* aTestShell);
 
   TestShellParent* GetTestShellSingleton();
-
-  jsipc::CPOWManager* GetCPOWManager() override;
 
   // This method can be called on any thread.
   void RegisterRemoteWorkerActor();
@@ -1042,14 +1036,9 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals);
-
-  mozilla::ipc::IPCResult RecvRpcMessage(
-      const nsString& aMsg, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals);
+      nsTArray<StructuredCloneData>* aRetvals);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
-                                           nsTArray<CpowEntry>&& aCpows,
                                            const ClonedMessageData& aData);
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we don't have MOZ_CAN_RUN_SCRIPT bits

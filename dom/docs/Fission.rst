@@ -108,7 +108,7 @@ Like messages sent via the Message Manager, anything that can be serialized usin
     Cross Process Object Wrappers (CPOWs) cannot be sent over JSWindowActors.
 
 .. note::
-    Notably absent is ``sendSyncMessage`` or ``sendRPCMessage``. Sync IPC is not supported on JSWindowActors, and code which needs to send sync messages should be modified to use async messages, or must send them over the per-process message manager.
+    Notably absent is ``sendSyncMessage``. Sync IPC is not supported on JSWindowActors, and code which needs to send sync messages should be modified to use async messages, or must send them over the per-process message manager.
 
 ``sendQuery``
 `````````````

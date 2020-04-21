@@ -11,7 +11,7 @@ let toString = Object.prototype.toString;
 (function prepare() {
   debug("Script loaded.");
   addTestReceiver();
-  sendAsyncMessage("mmMessagePort:finishScriptLoad", {}, {});
+  sendAsyncMessage("mmMessagePort:finishScriptLoad");
 })();
 
 function ok(condition, message) {

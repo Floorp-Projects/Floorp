@@ -153,7 +153,6 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::widget;
-using namespace mozilla::jsipc;
 using mozilla::layers::GeckoContentController;
 
 NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
@@ -198,8 +197,7 @@ void BrowserChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
       mBrowserChildMessageManager);
   RefPtr<nsFrameMessageManager> mm = kungFuDeathGrip->GetMessageManager();
   mm->ReceiveMessage(static_cast<EventTarget*>(kungFuDeathGrip), nullptr,
-                     aMessageName, false, &data, nullptr, nullptr,
-                     IgnoreErrors());
+                     aMessageName, false, &data, nullptr, IgnoreErrors());
 }
 
 bool BrowserChild::UpdateFrame(const RepaintRequest& aRequest) {
@@ -2179,13 +2177,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
-    const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
-    const ClonedMessageData& aData) {
+    const nsString& aMessage, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserChild::RecvAsyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserChild::RecvAsyncMessage", aMessage, aData);
 
-  CrossProcessCpowHolder cpows(Manager(), aCpows);
   if (!mBrowserChildMessageManager) {
     return IPC_OK();
   }
@@ -2206,8 +2202,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
   StructuredCloneData data;
   UnpackClonedMessageDataForChild(aData, data);
   mm->ReceiveMessage(static_cast<EventTarget*>(mBrowserChildMessageManager),
-                     nullptr, aMessage, false, &data, &cpows, nullptr,
-                     IgnoreErrors());
+                     nullptr, aMessage, false, &data, nullptr, IgnoreErrors());
   return IPC_OK();
 }
 
@@ -2920,46 +2915,23 @@ void BrowserChild::SetTabId(const TabId& aTabId) {
   NestedBrowserChildMap()[mUniqueId] = this;
 }
 
-bool BrowserChild::DoSendBlockingMessage(JSContext* aCx,
-                                         const nsAString& aMessage,
-                                         StructuredCloneData& aData,
-                                         JS::Handle<JSObject*> aCpows,
-                                         nsTArray<StructuredCloneData>* aRetVal,
-                                         bool aIsSync) {
+bool BrowserChild::DoSendBlockingMessage(
+    const nsAString& aMessage, StructuredCloneData& aData,
+    nsTArray<StructuredCloneData>* aRetVal) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
-  nsTArray<CpowEntry> cpows;
-  if (aCpows) {
-    jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
-    if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
-      return false;
-    }
-  }
-  if (aIsSync) {
-    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows, aRetVal);
-  }
-
-  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows, aRetVal);
+  return SendSyncMessage(PromiseFlatString(aMessage), data, aRetVal);
 }
 
-nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
-                                          const nsAString& aMessage,
-                                          StructuredCloneData& aData,
-                                          JS::Handle<JSObject*> aCpows) {
+nsresult BrowserChild::DoSendAsyncMessage(const nsAString& aMessage,
+                                          StructuredCloneData& aData) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
-  nsTArray<CpowEntry> cpows;
-  if (aCpows) {
-    jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
-    if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows, data)) {
+  if (!SendAsyncMessage(PromiseFlatString(aMessage), data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

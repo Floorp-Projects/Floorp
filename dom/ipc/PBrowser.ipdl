@@ -184,8 +184,7 @@ nested(upto inside_cpow) sync refcounted protocol PBrowser
     manages PBrowserBridge;
 
 both:
-    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       ClonedMessageData aData);
+    async AsyncMessage(nsString aMessage, ClonedMessageData aData);
 
 parent:
 #ifdef ACCESSIBILITY
@@ -255,12 +254,7 @@ parent:
 
     async Event(RemoteDOMEvent aEvent);
 
-    sync SyncMessage(nsString aMessage, ClonedMessageData aData,
-                     CpowEntry[] aCpows)
-      returns (StructuredCloneData[] retval);
-
-    nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                                        CpowEntry[] aCpows)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (StructuredCloneData[] retval);
 
     /**

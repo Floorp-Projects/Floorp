@@ -188,11 +188,6 @@ dictionary ReceiveMessageArgument
    */
   any json = null;
 
-  /**
-   * Named table of jsvals/objects, or null.
-   */
-  required object objects;
-
   sequence<MessagePort> ports;
 
   FrameLoader targetFrameLoader;
@@ -310,7 +305,6 @@ interface mixin MessageSenderMixin {
   [Throws]
   void sendAsyncMessage(optional DOMString? messageName = null,
                         optional any obj,
-                        optional object? objects = null,
                         optional any transfers);
 
   /**
@@ -350,22 +344,7 @@ interface mixin SyncMessageSenderMixin
    */
   [Throws]
   sequence<any> sendSyncMessage(optional DOMString? messageName = null,
-                                optional any obj,
-                                optional object? objects = null);
-
-  /**
-   * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
-   * issued even if, earlier on the call stack, we are waiting for a reply
-   * to an earlier sendRpcMessage() call.
-   *
-   * Both sendSyncMessage and sendRpcMessage will block until a reply is
-   * received, but they may be temporarily interrupted to process an urgent
-   * incoming message (such as a CPOW request).
-   */
-  [Throws]
-  sequence<any> sendRpcMessage(optional DOMString? messageName = null,
-                               optional any obj,
-                               optional object? objects = null);
+                                optional any obj);
 };
 
 /**
@@ -543,8 +522,7 @@ interface MessageBroadcaster : MessageListenerManager
    */
   [Throws]
   void broadcastAsyncMessage(optional DOMString? messageName = null,
-                             optional any obj,
-                             optional object? objects = null);
+                             optional any obj);
 
   /**
    * Number of subordinate message managers.
