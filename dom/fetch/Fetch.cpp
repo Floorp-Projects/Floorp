@@ -534,7 +534,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       return nullptr;
     }
 
-    Maybe<ClientInfo> clientInfo(worker->GetClientInfo());
+    Maybe<ClientInfo> clientInfo(worker->GlobalScope()->GetClientInfo());
     if (clientInfo.isNothing()) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return nullptr;
@@ -546,7 +546,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     }
 
     RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(
-        resolver, clientInfo.ref(), worker->GetController(),
+        resolver, clientInfo.ref(), worker->GlobalScope()->GetController(),
         worker->CSPEventListener(), r, std::move(stack));
     worker->DispatchToMainThread(run.forget());
   }

@@ -85,10 +85,6 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
       return false;
     }
 
-    if (NS_WARN_IF(!aWorkerPrivate->EnsureClientSource())) {
-      return false;
-    }
-
     if (NS_WARN_IF(!aWorkerPrivate->EnsureCSPEventListener())) {
       return false;
     }
