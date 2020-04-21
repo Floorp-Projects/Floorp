@@ -238,6 +238,9 @@ class Instance {
 
 using UniqueInstance = UniquePtr<Instance>;
 
+bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
+                      Maybe<char*> stackResultsLoc, MutableHandleValue rval);
+
 }  // namespace wasm
 }  // namespace js
 

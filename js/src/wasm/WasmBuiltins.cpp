@@ -333,7 +333,7 @@ static bool WasmHandleDebugTrap() {
     return true;
   }
   if (site->kind() == CallSite::LeaveFrame) {
-    if (!debugFrame->updateReturnJSValue()) {
+    if (!debugFrame->updateReturnJSValue(cx)) {
       return false;
     }
     bool ok = DebugAPI::onLeaveFrame(cx, debugFrame, nullptr, true);

@@ -612,6 +612,9 @@ static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 static const unsigned MaxResultsForJitEntry = 1;
 static const unsigned MaxResultsForJitExit = 1;
 static const unsigned MaxResultsForJitInlineCall = MaxResultsForJitEntry;
+// The maximum number of results of a function call or block that may be
+// returned in registers.
+static const unsigned MaxRegisterResults = 1;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
