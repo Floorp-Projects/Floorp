@@ -9,7 +9,7 @@ let { ForgetAboutSite } = ChromeUtils.import(
 
 // Test clearing plugin data by domain using ForgetAboutSite.
 const testURL =
-  "http://mochi.test:8888/browser/toolkit/forgetaboutsite/test/browser/browser_clearplugindata.html";
+  "http://mochi.test:8888/browser/toolkit/components/forgetaboutsite/test/browser/browser_clearplugindata.html";
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
