@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Maybe.h"
+
 #include "ds/TraceableFifo.h"
 #include "gc/Policy.h"
 #include "js/GCHashTable.h"
@@ -14,6 +16,9 @@
 #include "jsapi-tests/tests.h"
 
 using namespace js;
+
+using mozilla::Maybe;
+using mozilla::Some;
 
 BEGIN_TEST(testGCExactRooting) {
   JS::RootedObject rootCx(cx, JS_NewPlainObject(cx));
@@ -435,3 +440,48 @@ BEGIN_TEST(testGCVectorEmplaceBack) {
   return true;
 }
 END_TEST(testGCVectorEmplaceBack)
+
+BEGIN_TEST(testRootedMaybeValue) {
+  JS::Rooted<Maybe<Value>> maybeNothing(cx);
+  CHECK(maybeNothing.isNothing());
+  CHECK(!maybeNothing.isSome());
+
+  JS::Rooted<Maybe<Value>> maybe(cx, Some(UndefinedValue()));
+  CHECK(CheckConstOperations<Rooted<Maybe<Value>>&>(maybe));
+  CHECK(CheckConstOperations<Handle<Maybe<Value>>>(maybe));
+  CHECK(CheckConstOperations<MutableHandle<Maybe<Value>>>(&maybe));
+
+  maybe = Some(JS::TrueValue());
+  CHECK(CheckMutableOperations<Rooted<Maybe<Value>>&>(maybe));
+
+  maybe = Some(JS::TrueValue());
+  CHECK(CheckMutableOperations<MutableHandle<Maybe<Value>>>(&maybe));
+
+  CHECK(JS::NothingHandleValue.isNothing());
+
+  return true;
+}
+
+template <typename T>
+bool CheckConstOperations(T someUndefinedValue) {
+  CHECK(someUndefinedValue.isSome());
+  CHECK(someUndefinedValue.value().isUndefined());
+  CHECK(someUndefinedValue->isUndefined());
+  CHECK((*someUndefinedValue).isUndefined());
+  return true;
+}
+
+template <typename T>
+bool CheckMutableOperations(T maybe) {
+  CHECK(maybe->isTrue());
+
+  *maybe = JS::FalseValue();
+  CHECK(maybe->isFalse());
+
+  maybe.reset();
+  CHECK(maybe.isNothing());
+
+  return true;
+}
+
+END_TEST(testRootedMaybeValue)
