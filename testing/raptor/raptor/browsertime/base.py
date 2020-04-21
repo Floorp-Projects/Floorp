@@ -205,9 +205,11 @@ class Browsertime(Perftest):
             "--timeouts.pageLoad", str(timeout),
             # running browser scripts timeout (milliseconds)
             "--timeouts.script", str(timeout * int(test.get("page_cycles", 1))),
-            "-vvv",
             "--resultDir", self.results_handler.result_dir_for_test(test),
         ]
+
+        if self.verbose:
+            browsertime_options.append("-vvv")
 
         if self.browsertime_video:
             # For now, capturing video with Firefox always uses the window recorder/composition

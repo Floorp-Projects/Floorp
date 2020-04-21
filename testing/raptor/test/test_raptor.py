@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 import time
+import traceback
 import mock
 import pytest
 from mock import Mock
@@ -37,6 +38,12 @@ class TestBrowserThread(threading.Thread):
         self.tests = tests
         self.names = names
         self.exc = None
+
+    def print_error(self):
+        if self.exc is None:
+            return
+        type, value, tb = self.exc
+        traceback.print_exception(type, value, tb, None, sys.stderr)
 
     def run(self):
         try:
@@ -207,7 +214,10 @@ def test_start_browser(get_binary, app):
         except RunnerNotStartedError:
             time.sleep(0.1)
     else:
-        assert False  # browser didn't start
+        # browser didn't start
+        # if the thread had an error, display it here
+        thread.print_error()
+        assert False
 
     raptor.clean_up()
     thread.join(5)
@@ -236,7 +246,6 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         "--visualMetrics", "false",
         "--timeouts.pageLoad", str(DEFAULT_TIMEOUT),
         "--timeouts.script", str(DEFAULT_TIMEOUT),
-        "-vvv",
         "--resultDir",
         "-n", "1",
     }
