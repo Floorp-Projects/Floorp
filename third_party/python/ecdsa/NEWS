@@ -1,0 +1,213 @@
+* Release 0.15 (02 Jan 2020)
+
+Bug fixes:
+`from curves import *` will now correctly import `BRAINPOOLP256r1` and
+`BRAINPOOLP320r1` curves.
+
+New features:
+ECDH operations have a public explicit API.
+Large hashes are now supported with small curves (e.g. SHA-256 can be used
+with NIST192p).
+`VerifyingKey` now supports the `precompute()` method to further speed up
+signature verification with the given instance of the key.
+
+New API:
+`VerifyingKey`, `SigningKey`, `Public_key`, `Private_key` and
+`CurveFp` now have `__eq__` methods.
+`ecdsa.ecdh` module and `ECDH` class.
+`PointJacobi` added.
+`VerifyingKey.verify_digest`, `SigningKey.sign_digest` and
+`SigningKey.sign_digest_deterministic` methods now accept `allow_truncate`
+argument to enable use of hashes larger than the curve order.
+`VerifyingKey` `from_pem` and `from_der` now accept `hashfunc` parameter
+like other `from*` methods.
+`VerifyingKey` has `precompute` method now.
+`VerifyingKey.from_public_point` may now not perform validation of public
+point when `validate_point=False` argument is passed to method.
+`CurveFp` constructor now accepts the `h` parameter - the cofactor of the
+elliptic curve, it's used for selection of algorithm of public point
+verification.
+
+Performance:
+`randrange` now will now perform much fewer calls to system random number
+generator.
+`PointJacobi` introduced and used as the underlying implementation; speeds up
+the library by a factor of about 20.
+Library has now optional dependencies on `gmpy` and `gmpy2`. When they are
+availbale, the elliptic curve calculations will be about 3 times faster.
+
+Maintenance:
+expected minimum version of `six` module (1.9.0) is now specified explicitly
+in `setup.py` and tested against.
+Significantly faster test suite execution.
+
+* Release 0.14.1 (06 Nov 2019)
+
+Remove the obsolete `six.py` file from wheel
+
+* Release 0.14 (06 Nov 2019)
+
+Bug fixes:
+Strict checking of DER requirements when parsing SEQUENCE, INTEGER,
+OBJECT IDENTIFIER and BITSTRING objects.
+DER parsers now consistently raise `UnexpectedDER` exception on malformed DER
+encoded byte strings.
+Make sure that both malformed and invalid signatures raise `BadSignatureError`.
+Ensure that all `SigningKey` and `VerifyingKey` methods that should accept
+bytes-like objects actually do accept them (also avoid copying input strings).
+Make `SigningKey.sign_digest_deterministic` use default object hashfunc when
+none was provided.
+`encode_integer` now works for large integers.
+Make `encode_oid` and `remove_object` correctly handle OBJECT IDENTIFIERs
+with large second subidentifier and padding in encoded subidentifiers.
+
+New features:
+Deterministic signature methods now accept `extra_entropy` parameter to further
+randomise the selection of `k` (the nonce) for signature, as specified in
+RFC6979.
+Recovery of public key from signature is now supported.
+Support for SEC1/X9.62 formatted keys, all three encodings are supported:
+"uncompressed", "compressed" and "hybrid". Both string, and PEM/DER will
+automatically accept them, if the size of the key matches the curve.
+Benchmarking application now provides performance numbers that are easier to
+compare against OpenSSL.
+Support for all Brainpool curves (non-twisted).
+
+New API:
+`CurveFp`: `__str__` is now supported.
+`SigningKey.sign_deterministic`, `SigningKey.sign_digest_deterministic` and
+`generate_k`: extra_entropy parameter was added
+`Signature.recover_public_keys` was added
+`VerifyingKey.from_public_key_recovery` and
+`VerifyingKey.from_public_key_recovery_with_digest` were added
+`VerifyingKey.to_string`: `encoding` parameter was added
+`VerifyingKey.to_der` and `SigningKey.to_der`: `point_encoding` parameter was
+added.
+`encode_bitstring`: `unused` parameter was added
+`remove_bitstring`: `expect_unused` parameter was added
+`SECP256k1` is now part of `curves` `*` import
+`Curves`: `__repr__` is now supported
+`VerifyingKey`: `__repr__` is now supported
+
+Deprecations:
+Python 2.5 is not supported any more - dead code removal.
+`from ecdsa.keys import *` will now import only objects defined in that module.
+Trying to decode a malformed point using `VerifyingKey.from_string`
+will rise now the `MalformedPointError` exception (that inherits from
+`AssertionError` but is not it).
+Multiple functions in `numbertheory` are considered deprecated: `phi`,
+`carmichael`, `carmichael_of_factorized`, `carmichael_of_ppower`,
+`order_mod`, `largest_factor_relatively_prime`, `kinda_order_mod`. They will
+now emit `DeprecationWarning` when used. Run the application or test suite
+with `-Wd` option or with `PYTHONWARNINGS=default` environment variable to
+verify if those methods are not used. They will be removed completely in a
+future release.
+`encode_bitstring` and `decode_bitstring` expect the number of unused
+bits to be passed as an argument now. They will emit `DeprecationWarning`
+if they are used in the deprecated way.
+modular_exp: will emit `DeprecationWarning`
+
+Hardening:
+Deterministic signatures now verify that the signature won't leak private
+key through very unlikely selection of `k` value (the nonce).
+Nonce bit size hiding was added (hardening against Minerva attack). Please
+note that it DOES NOT make library secure against side channel attacks (timing
+attacks).
+
+Performance:
+The public key in key generation is not verified twice now, making key
+generation and private key reading about 33% faster.
+Microoptimisation to `inverse_mod` function, increasing performance by about
+40% for all operations.
+
+Maintenance:
+Extended test coverage to newer python versions.
+Fixes to examples in README.md: correct commands, more correct code (now works
+on Python 3).
+Stopped bundling `six`
+Moved sources into `src` subdirectory
+Made benchmarking script standalone (runnable either with `tox -e speed`, or
+after installation, with `python speed.py`)
+Now test coverage reported to coveralls is branch coverage, not line coverage
+Autodetection of curves supported by OpenSSL (test suite compatibility with
+Fedora OpenSSL package).
+More readable error messages (exceptions) in `der` module.
+Documentation to `VerifyingKey`, `SigningKey` and signature encoder/decoder
+functions added.
+Added measuring and verifying condition coverage to Continuous Integration.
+Big clean-up of the test suite, use pytest parametrisation and hypothesis
+for better test coverage and more precise failure reporting.
+Use platform-provided `math.gcd`, when provided.
+
+* Release 0.13.3 (07 Oct 2019)
+
+Fix CVE-2019-14853 - possible DoS caused by malformed signature decoding and
+signature malleability.
+
+Also harden key decoding from string and DER encodings.
+
+* Release 0.13.2 (17 Apr 2019)
+
+Restore compatibility of setup.py with Python 2.6 and 2.7.
+
+* Release 0.13.1 (17 Apr 2019)
+
+Fix the PyPI wheel - the old version included .pyc files.
+
+* Release 0.13 (07 Feb 2015)
+
+Fix the argument order for Curve constructor (put openssl_name= at the end,
+with a default value) to unbreak compatibility with external callers who used
+the 0.11 convention.
+
+* Release 0.12 (06 Feb 2015)
+
+Switch to Versioneer for version-string management (fixing the broken
+`ecdsa.__version__` attribute). Add Curve.openssl_name property. Mention
+secp256k1 in README, test against OpenSSL. Produce "wheel" distributions. Add
+py3.4 and pypy3 compatibility testing. Other minor fixes.
+
+* Release 0.11 (10 Mar 2014)
+
+Add signature-encoding functions "sigencode_{strings,string,der}_canonize"
+which canonicalize the S value (using the smaller of the two possible
+values). Add "validate_point=" argument to VerifyingKey.from_string()
+constructor (defaults to True) which can be used to disable time-consuming
+point validation when importing a pre-validated verifying key. Drop python2.5
+support (untested but not explicitly broken yet), update trove classifiers.
+
+* Release 0.10 (23 Oct 2013)
+
+Make the secp256k1 available in __init__.py too (thanks to Scott Bannert).
+
+* Release 0.9 (01 Oct 2013)
+
+Add secp256k1 curve (thanks to Benjamin Dauvergne). Add deterministic (no
+entropy needed) signatures (thanks to slush). Added py3.2/py3.3 compatibility
+(thanks to Elizabeth Myers).
+
+* Release 0.8 (04 Oct 2011)
+
+Small API addition: accept a hashfunc= argument in the constructors for
+SigningKey and VerifyingKey. This makes it easier to write wrappers that e.g.
+use NIST256p and SHA256 without their obligating callers to pass
+hashfunc=sha256 in each time they call sign() or verify().
+
+* Release 0.7 (28 Nov 2010)
+
+Fix test failure against OpenSSL-1.0.0 (previous versions only worked against
+openssl-0.9.8 or earlier). Increase python requirement to py2.5 or later
+(still no py3 compatibility, but work is underway). Replace use of obsolete
+'sha' library with modern 'hashlib'. Clean up unit test runner (stop using
+subprocesses).
+
+* Release 0.6 (15 Oct 2010)
+
+Small packaging changes: extract version number from git, add 'setup.py test'
+command, set exit code correctly on test failure. Fix pyflakes warnings.
+
+* Release 0.5 (27 Apr 2010)
+
+Initial release. EC-DSA signature for five NIST "Suite B" GF(p) curves:
+prime192v1, secp224r1, prime256v1, secp384r1, and secp521r1. DER/PEM
+input/output functions, seed-to-randrange helper functions.
