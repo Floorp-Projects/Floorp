@@ -5175,8 +5175,8 @@ class ConnectionPool final {
     NS_ASSERT_OWNINGTHREAD(ConnectionPool);
   }
 
-  nsresult GetOrCreateConnection(const Database& aDatabase,
-                                 RefPtr<DatabaseConnection>* aConnection);
+  Result<RefPtr<DatabaseConnection>, nsresult> GetOrCreateConnection(
+      const Database& aDatabase);
 
   uint64_t Start(const nsID& aBackgroundChildLoggingId,
                  const nsACString& aDatabaseId, int64_t aLoggingSerialNumber,
@@ -12108,11 +12108,10 @@ void ConnectionPool::IdleTimerCallback(nsITimer* aTimer, void* aClosure) {
   self->AdjustIdleTimer();
 }
 
-nsresult ConnectionPool::GetOrCreateConnection(
-    const Database& aDatabase, RefPtr<DatabaseConnection>* aConnection) {
+Result<RefPtr<DatabaseConnection>, nsresult>
+ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("ConnectionPool::GetOrCreateConnection", DOM);
 
@@ -12125,41 +12124,41 @@ nsresult ConnectionPool::GetOrCreateConnection(
 
   MOZ_ASSERT(dbInfo);
 
-  RefPtr<DatabaseConnection> connection = dbInfo->mConnection;
-  if (!connection) {
-    MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
+  if (dbInfo->mConnection) {
+    dbInfo->AssertIsOnConnectionThread();
 
-    nsCOMPtr<mozIStorageConnection> storageConnection;
-    nsresult rv =
-        GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
-                             aDatabase.TelemetryId(), &storageConnection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    connection = new DatabaseConnection(storageConnection,
-                                        aDatabase.GetFileManagerPtr());
-
-    rv = connection->Init();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    dbInfo->mConnection = connection;
-
-    IDB_DEBUG_LOG(("ConnectionPool created connection 0x%p for '%s'",
-                   dbInfo->mConnection.get(),
-                   NS_ConvertUTF16toUTF8(aDatabase.FilePath()).get()));
-
-#ifdef DEBUG
-    dbInfo->mDEBUGConnectionThread = PR_GetCurrentThread();
-#endif
+    return dbInfo->mConnection;
   }
 
-  dbInfo->AssertIsOnConnectionThread();
+  MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
 
-  *aConnection = std::move(connection);
-  return NS_OK;
+  nsCOMPtr<mozIStorageConnection> storageConnection;
+  nsresult rv =
+      GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
+                           aDatabase.TelemetryId(), &storageConnection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  RefPtr<DatabaseConnection> connection =
+      new DatabaseConnection(storageConnection, aDatabase.GetFileManagerPtr());
+
+  rv = connection->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  dbInfo->mConnection = connection;
+
+  IDB_DEBUG_LOG(("ConnectionPool created connection 0x%p for '%s'",
+                 dbInfo->mConnection.get(),
+                 NS_ConvertUTF16toUTF8(aDatabase.FilePath()).get()));
+
+#ifdef DEBUG
+  dbInfo->mDEBUGConnectionThread = PR_GetCurrentThread();
+#endif
+
+  return connection;
 }
 
 uint64_t ConnectionPool::Start(
@@ -13840,10 +13839,12 @@ nsresult Database::EnsureConnection() {
   AUTO_PROFILER_LABEL("Database::EnsureConnection", DOM);
 
   if (!mConnection || !mConnection->HasStorageConnection()) {
-    nsresult rv = gConnectionPool->GetOrCreateConnection(*this, &mConnection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    auto res = gConnectionPool->GetOrCreateConnection(*this);
+    if (NS_WARN_IF(res.isErr())) {
+      return res.unwrapErr();
     }
+
+    mConnection = res.unwrap();
   }
 
   AssertIsOnConnectionThread();
