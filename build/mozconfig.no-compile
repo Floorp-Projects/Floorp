@@ -41,7 +41,7 @@ unset RANLIB
 unset NASM
 
 # Don't unset this on Linux artifact builds so the artifact builds correctly
-# package any Wasm sandboxed shared libraries.
+# package the graphite shared library.
 if test `uname -s` != Linux; then
   unset WASM_SANDBOXED_LIBRARIES
 fi

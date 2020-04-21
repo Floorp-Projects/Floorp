@@ -8,23 +8,16 @@ with Files('*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS.ogg += [
-    'geckoextra/include/OggStructsForRLBox.h',
     'include/ogg/config_types.h',
     'include/ogg/ogg.h',
     'include/ogg/os_types.h',
 ]
 
-all_sources = [
+UNIFIED_SOURCES += [
     'src/ogg_alloc.c',
     'src/ogg_bitwise.c',
     'src/ogg_framing.c',
 ]
-
-UNIFIED_SOURCES += all_sources
-
-if CONFIG['MOZ_WASM_SANDBOXING_OGG']:
-    SANDBOXED_WASM_LIBRARY_NAME = 'oggwasm'
-    WASM_SOURCES += all_sources
 
 FINAL_LIBRARY = 'gkmedias'
 

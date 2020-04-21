@@ -12,51 +12,34 @@
 namespace mozilla {
 namespace ipc {
 
-static nsAutoCString GetSandboxedPath(const nsACString& libName) {
+nsAutoCString GetSandboxedGraphitePath() {
   nsCOMPtr<nsIFile> binaryPath;
   nsresult rv = mozilla::BinaryPath::GetFile(getter_AddRefs(binaryPath));
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Library preload failure: Failed to get binary file\n");
   }
 
-  nsCOMPtr<nsIFile> libFile;
-  rv = binaryPath->GetParent(getter_AddRefs(libFile));
+  nsCOMPtr<nsIFile> graphiteFile;
+  rv = binaryPath->GetParent(getter_AddRefs(graphiteFile));
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Library preload failure: Failed to get binary folder\n");
   }
 
-  rv = libFile->AppendNative(libName);
-
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Library preload failure: Failed to get library file\n");
-  }
-
-  nsAutoString fullPath;
-  rv = libFile->GetPath(fullPath);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Library preload failure: Failed to get library path\n");
-  }
-
-  nsAutoCString converted_path = NS_ConvertUTF16toUTF8(fullPath);
-  return converted_path;
-}
-
-nsAutoCString GetSandboxedGraphitePath() {
-  return GetSandboxedPath(
+  rv = graphiteFile->AppendNative(
       NS_LITERAL_CSTRING(MOZ_DLL_PREFIX "graphitewasm" MOZ_DLL_SUFFIX));
-}
 
-nsAutoCString GetSandboxedOggPath() {
-  return GetSandboxedPath(
-      NS_LITERAL_CSTRING(MOZ_DLL_PREFIX "oggwasm" MOZ_DLL_SUFFIX));
-}
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH("Library preload failure: Failed to get libgraphite file");
+  }
 
-static PRLibrary* PreloadLibrary(const nsAutoCString& path) {
-  PRLibSpec libSpec;
-  libSpec.type = PR_LibSpec_Pathname;
-  libSpec.value.pathname = path.get();
-  PRLibrary* ret = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY);
-  return ret;
+  nsAutoString path;
+  rv = graphiteFile->GetPath(path);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH("Library preload failure: Failed to get libgraphite path\n");
+  }
+
+  nsAutoCString converted_path = NS_ConvertUTF16toUTF8(path);
+  return converted_path;
 }
 
 void PreloadSandboxedDynamicLibraries() {
@@ -64,17 +47,15 @@ void PreloadSandboxedDynamicLibraries() {
   // This preloads wasm sandboxed libraries before the process level sandbox is
   // enabled. Currently, this is only needed for Linux as Mac allows loading
   // libraries from the package file.
-#if defined(XP_LINUX)
-#  if defined(MOZ_WASM_SANDBOXING_GRAPHITE)
-  if (!PreloadLibrary(GetSandboxedGraphitePath())) {
+#if defined(XP_LINUX) && defined(MOZ_WASM_SANDBOXING_GRAPHITE)
+  nsAutoCString path = GetSandboxedGraphitePath();
+  PRLibSpec libSpec;
+  libSpec.type = PR_LibSpec_Pathname;
+  libSpec.value.pathname = path.get();
+  PRLibrary* ret = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY);
+  if (!ret) {
     MOZ_CRASH("Library preload failure: Failed to load libgraphite\n");
   }
-#  endif
-#  if defined(MOZ_WASM_SANDBOXING_OGG)
-  if (!PreloadLibrary(GetSandboxedOggPath())) {
-    MOZ_CRASH("Library preload failure: Failed to load libogg\n");
-  }
-#  endif
 #endif
 }
 

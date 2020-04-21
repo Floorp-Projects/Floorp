@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 #include <stdint.h>
@@ -15,7 +14,6 @@
 #include <opus/opus.h>
 
 #include "OggCodecState.h"
-#include "OggRLBox.h"
 #include "OpusDecoder.h"
 #include "OpusParser.h"
 #include "VideoUtils.h"
@@ -31,62 +29,34 @@ extern LazyLogModule gMediaDecoderLog;
 using media::TimeUnit;
 
 /** Decoder base class for Ogg-encapsulated streams. */
-OggCodecState* OggCodecState::Create(rlbox_sandbox_ogg* aSandbox,
-                                     tainted_opaque_ogg<ogg_page*> aPage,
-                                     uint32_t aSerial) {
-  NS_ASSERTION(sandbox_invoke(*aSandbox, ogg_page_bos, aPage)
-                   .unverified_safe_because(RLBOX_SAFE_DEBUG_ASSERTION),
-               "Only call on BOS page!");
+OggCodecState* OggCodecState::Create(ogg_page* aPage) {
+  NS_ASSERTION(ogg_page_bos(aPage), "Only call on BOS page!");
   UniquePtr<OggCodecState> codecState;
-  tainted_ogg<ogg_page*> aPage_t = rlbox::from_opaque(aPage);
-  const char codec_reason[] =
-      "These conditions set the type of codec. Since we are relying on "
-      "ogg_page to determine the codec type, the library could lie about "
-      "this. We allow this as it does not directly allow renderer "
-      "vulnerabilities if this is incorrect.";
-  long body_len = aPage_t->body_len.unverified_safe_because(codec_reason);
-
-  if (body_len > 6 && rlbox::memcmp(*aSandbox, aPage_t->body + 1, "theora", 6u)
-                              .unverified_safe_because(codec_reason) == 0) {
-    codecState = MakeUnique<TheoraState>(aSandbox, aPage, aSerial);
-  } else if (body_len > 6 &&
-             rlbox::memcmp(*aSandbox, aPage_t->body + 1, "vorbis", 6u)
-                     .unverified_safe_because(codec_reason) == 0) {
-    codecState = MakeUnique<VorbisState>(aSandbox, aPage, aSerial);
-  } else if (body_len > 8 &&
-             rlbox::memcmp(*aSandbox, aPage_t->body, "OpusHead", 8u)
-                     .unverified_safe_because(codec_reason) == 0) {
-    codecState = MakeUnique<OpusState>(aSandbox, aPage, aSerial);
-  } else if (body_len > 8 &&
-             rlbox::memcmp(*aSandbox, aPage_t->body, "fishead\0", 8u)
-                     .unverified_safe_because(codec_reason) == 0) {
-    codecState = MakeUnique<SkeletonState>(aSandbox, aPage, aSerial);
-  } else if (body_len > 5 &&
-             rlbox::memcmp(*aSandbox, aPage_t->body, "\177FLAC", 5u)
-                     .unverified_safe_because(codec_reason) == 0) {
-    codecState = MakeUnique<FlacState>(aSandbox, aPage, aSerial);
+  if (aPage->body_len > 6 && memcmp(aPage->body + 1, "theora", 6) == 0) {
+    codecState = MakeUnique<TheoraState>(aPage);
+  } else if (aPage->body_len > 6 && memcmp(aPage->body + 1, "vorbis", 6) == 0) {
+    codecState = MakeUnique<VorbisState>(aPage);
+  } else if (aPage->body_len > 8 && memcmp(aPage->body, "OpusHead", 8) == 0) {
+    codecState = MakeUnique<OpusState>(aPage);
+  } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
+    codecState = MakeUnique<SkeletonState>(aPage);
+  } else if (aPage->body_len > 5 && memcmp(aPage->body, "\177FLAC", 5) == 0) {
+    codecState = MakeUnique<FlacState>(aPage);
   } else {
     // Can't use MakeUnique here, OggCodecState is protected.
-    codecState.reset(new OggCodecState(aSandbox, aPage, aSerial, false));
+    codecState.reset(new OggCodecState(aPage, false));
   }
   return codecState->OggCodecState::InternalInit() ? codecState.release()
                                                    : nullptr;
 }
 
-OggCodecState::OggCodecState(rlbox_sandbox_ogg* aSandbox,
-                             tainted_opaque_ogg<ogg_page*> aBosPage,
-                             uint32_t aSerial, bool aActive)
+OggCodecState::OggCodecState(ogg_page* aBosPage, bool aActive)
     : mPacketCount(0),
-      mSerial(aSerial),
+      mSerial(ogg_page_serialno(aBosPage)),
       mActive(aActive),
-      mDoneReadingHeaders(!aActive),
-      mSandbox(aSandbox) {
+      mDoneReadingHeaders(!aActive) {
   MOZ_COUNT_CTOR(OggCodecState);
-  tainted_ogg<ogg_stream_state*> state =
-      mSandbox->malloc_in_sandbox<ogg_stream_state>();
-  MOZ_ASSERT(state != nullptr);
-  rlbox::memset(*mSandbox, state, 0, sizeof(ogg_stream_state));
-  mState = state.to_opaque();
+  memset(&mState, 0, sizeof(ogg_stream_state));
 }
 
 OggCodecState::~OggCodecState() {
@@ -95,17 +65,12 @@ OggCodecState::~OggCodecState() {
 #ifdef DEBUG
   int ret =
 #endif
-      sandbox_invoke(*mSandbox, ogg_stream_clear, mState)
-          .unverified_safe_because(RLBOX_SAFE_DEBUG_ASSERTION);
+      ogg_stream_clear(&mState);
   NS_ASSERTION(ret == 0, "ogg_stream_clear failed");
-  mSandbox->free_in_sandbox(rlbox::from_opaque(mState));
-  tainted_ogg<ogg_stream_state*> nullval = nullptr;
-  mState = nullval.to_opaque();
 }
 
 nsresult OggCodecState::Reset() {
-  if (sandbox_invoke(*mSandbox, ogg_stream_reset, mState)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) != 0) {
+  if (ogg_stream_reset(&mState) != 0) {
     return NS_ERROR_FAILURE;
   }
   mPackets.Erase();
@@ -116,8 +81,7 @@ nsresult OggCodecState::Reset() {
 void OggCodecState::ClearUnstamped() { mUnstamped.Clear(); }
 
 bool OggCodecState::InternalInit() {
-  int ret = sandbox_invoke(*mSandbox, ogg_stream_init, mState, mSerial)
-                .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON);
+  int ret = ogg_stream_init(&mState, mSerial);
   return ret == 0;
 }
 
@@ -195,33 +159,12 @@ void VorbisState::AssertHasRecordedPacketSamples(ogg_packet* aPacket) {
 #endif
 }
 
-// Clone the given packet from memory accessible to the sandboxed libOgg to
-// memory accessible only to the Firefox renderer
-static OggPacketPtr CloneOutOfSandbox(tainted_ogg<ogg_packet*> aPacket) {
-  ogg_packet* clone =
-      aPacket.copy_and_verify([](std::unique_ptr<tainted_ogg<ogg_packet>> val) {
-        const char packet_reason[] =
-            "Packets have no guarantees on what data they hold. The renderer's "
-            "safety is not compromised even if packets return garbage data.";
-
-        ogg_packet* p = new ogg_packet();
-        p->bytes = val->bytes.unverified_safe_because(packet_reason);
-        p->b_o_s = val->b_o_s.unverified_safe_because(packet_reason);
-        p->e_o_s = val->e_o_s.unverified_safe_because(packet_reason);
-        p->granulepos = val->granulepos.unverified_safe_because(packet_reason);
-        p->packetno = val->packetno.unverified_safe_because(packet_reason);
-        if (p->bytes == 0) {
-          p->packet = nullptr;
-        } else {
-          p->packet = val->packet.copy_and_verify_range(
-              [](std::unique_ptr<unsigned char[]> packet) {
-                return packet.release();
-              },
-              p->bytes);
-        }
-        return p;
-      });
-  return OggPacketPtr(clone);
+static OggPacketPtr Clone(ogg_packet* aPacket) {
+  ogg_packet* p = new ogg_packet();
+  memcpy(p, aPacket, sizeof(ogg_packet));
+  p->packet = new unsigned char[p->bytes];
+  memcpy(p->packet, aPacket->packet, p->bytes);
+  return OggPacketPtr(p);
 }
 
 void OggPacketQueue::Append(OggPacketPtr aPacket) {
@@ -280,34 +223,24 @@ already_AddRefed<MediaRawData> OggCodecState::PacketOutAsMediaRawData() {
   return sample.forget();
 }
 
-nsresult OggCodecState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
+nsresult OggCodecState::PageIn(ogg_page* aPage) {
   if (!mActive) {
     return NS_OK;
   }
-  NS_ASSERTION((rlbox::sandbox_static_cast<uint32_t>(sandbox_invoke(
-                    *mSandbox, ogg_page_serialno, aPage)) == mSerial)
-                   .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON),
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
                "Page must be for this stream!");
-  if (sandbox_invoke(*mSandbox, ogg_stream_pagein, mState, aPage)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == -1) {
+  if (ogg_stream_pagein(&mState, aPage) == -1) {
     return NS_ERROR_FAILURE;
   }
   int r;
-  tainted_ogg<ogg_packet*> packet = mSandbox->malloc_in_sandbox<ogg_packet>();
-  if (!packet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  auto clean_packet = MakeScopeExit([&] { mSandbox->free_in_sandbox(packet); });
-
   do {
-    r = sandbox_invoke(*mSandbox, ogg_stream_packetout, mState, packet)
-            .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON);
+    ogg_packet packet;
+    r = ogg_stream_packetout(&mState, &packet);
     if (r == 1) {
-      mPackets.Append(CloneOutOfSandbox(packet));
+      mPackets.Append(Clone(&packet));
     }
   } while (r != 0);
-  if (sandbox_invoke(*mSandbox, ogg_stream_check, mState)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON)) {
+  if (ogg_stream_check(&mState)) {
     NS_WARNING("Unrecoverable error in ogg_stream_packetout");
     return NS_ERROR_FAILURE;
   }
@@ -315,47 +248,36 @@ nsresult OggCodecState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
 }
 
 nsresult OggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos) {
-  tainted_ogg<int> r;
+  int r;
   aFoundGranulepos = false;
   // Extract packets from the sync state until either no more packets
   // come out, or we get a data packet with non -1 granulepos.
-  tainted_ogg<ogg_packet*> packet = mSandbox->malloc_in_sandbox<ogg_packet>();
-  if (!packet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  auto clean_packet = MakeScopeExit([&] { mSandbox->free_in_sandbox(packet); });
-
   do {
-    r = sandbox_invoke(*mSandbox, ogg_stream_packetout, mState, packet);
-    if (r.unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == 1) {
-      OggPacketPtr clone = CloneOutOfSandbox(packet);
-      if (IsHeader(clone.get())) {
+    ogg_packet packet;
+    r = ogg_stream_packetout(&mState, &packet);
+    if (r == 1) {
+      OggPacketPtr clone = Clone(&packet);
+      if (IsHeader(&packet)) {
         // Header packets go straight into the packet queue.
         mPackets.Append(std::move(clone));
       } else {
         // We buffer data packets until we encounter a granulepos. We'll
         // then use the granulepos to figure out the granulepos of the
         // preceeding packets.
-        aFoundGranulepos = clone.get()->granulepos > 0;
         mUnstamped.AppendElement(std::move(clone));
+        aFoundGranulepos = packet.granulepos > 0;
       }
     }
-  } while (r.unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) != 0 &&
-           !aFoundGranulepos);
-  if (sandbox_invoke(*mSandbox, ogg_stream_check, mState)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON)) {
+  } while (r != 0 && !aFoundGranulepos);
+  if (ogg_stream_check(&mState)) {
     NS_WARNING("Unrecoverable error in ogg_stream_packetout");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-TheoraState::TheoraState(rlbox_sandbox_ogg* aSandbox,
-                         tainted_opaque_ogg<ogg_page*> aBosPage,
-                         uint32_t aSerial)
-    : OggCodecState(aSandbox, aBosPage, aSerial, true),
-      mSetup(nullptr),
-      mCtx(nullptr) {
+TheoraState::TheoraState(ogg_page* aBosPage)
+    : OggCodecState(aBosPage, true), mSetup(0), mCtx(0) {
   MOZ_COUNT_CTOR(TheoraState);
   th_info_init(&mTheoraInfo);
   th_comment_init(&mComment);
@@ -526,16 +448,11 @@ bool TheoraState::IsKeyframe(ogg_packet* pkt) {
   return (pkt->bytes >= 1 && (pkt->packet[0] & 0x40) == 0x00);
 }
 
-nsresult TheoraState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
+nsresult TheoraState::PageIn(ogg_page* aPage) {
   if (!mActive) return NS_OK;
-  NS_ASSERTION((rlbox::sandbox_static_cast<uint32_t>(sandbox_invoke(
-                    *mSandbox, ogg_page_serialno, aPage)) == mSerial)
-                   .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON),
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
                "Page must be for this stream!");
-  if (sandbox_invoke(*mSandbox, ogg_stream_pagein, mState, aPage)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == -1) {
-    return NS_ERROR_FAILURE;
-  }
+  if (ogg_stream_pagein(&mState, aPage) == -1) return NS_ERROR_FAILURE;
   bool foundGp;
   nsresult res = PacketOutUntilGranulepos(foundGp);
   if (NS_FAILED(res)) return res;
@@ -662,12 +579,8 @@ nsresult VorbisState::Reset() {
   return res;
 }
 
-VorbisState::VorbisState(rlbox_sandbox_ogg* aSandbox,
-                         tainted_opaque_ogg<ogg_page*> aBosPage,
-                         uint32_t aSerial)
-    : OggCodecState(aSandbox, aBosPage, aSerial, true),
-      mPrevVorbisBlockSize(0),
-      mGranulepos(0) {
+VorbisState::VorbisState(ogg_page* aBosPage)
+    : OggCodecState(aBosPage, true), mPrevVorbisBlockSize(0), mGranulepos(0) {
   MOZ_COUNT_CTOR(VorbisState);
   vorbis_info_init(&mVorbisInfo);
   vorbis_comment_init(&mComment);
@@ -813,18 +726,13 @@ UniquePtr<MetadataTags> VorbisState::GetTags() {
   return tags;
 }
 
-nsresult VorbisState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
+nsresult VorbisState::PageIn(ogg_page* aPage) {
   if (!mActive) {
     return NS_OK;
   }
-  NS_ASSERTION((rlbox::sandbox_static_cast<uint32_t>(sandbox_invoke(
-                    *mSandbox, ogg_page_serialno, aPage)) == mSerial)
-                   .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON),
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
                "Page must be for this stream!");
-  if (sandbox_invoke(*mSandbox, ogg_stream_pagein, mState, aPage)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == -1) {
-    return NS_ERROR_FAILURE;
-  }
+  if (ogg_stream_pagein(&mState, aPage) == -1) return NS_ERROR_FAILURE;
   bool foundGp;
   nsresult res = PacketOutUntilGranulepos(foundGp);
   if (NS_FAILED(res)) {
@@ -955,9 +863,8 @@ void VorbisState::ReconstructVorbisGranulepos() {
   mGranulepos = last->granulepos;
 }
 
-OpusState::OpusState(rlbox_sandbox_ogg* aSandbox,
-                     tainted_opaque_ogg<ogg_page*> aBosPage, uint32_t aSerial)
-    : OggCodecState(aSandbox, aBosPage, aSerial, true),
+OpusState::OpusState(ogg_page* aBosPage)
+    : OggCodecState(aBosPage, true),
       mParser(nullptr),
       mDecoder(nullptr),
       mPrevPacketGranulepos(0),
@@ -1094,18 +1001,13 @@ bool OpusState::IsHeader(ogg_packet* aPacket) {
                                   !memcmp(aPacket->packet, "OpusTags", 8));
 }
 
-nsresult OpusState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
+nsresult OpusState::PageIn(ogg_page* aPage) {
   if (!mActive) {
     return NS_OK;
   }
-  NS_ASSERTION((rlbox::sandbox_static_cast<uint32_t>(sandbox_invoke(
-                    *mSandbox, ogg_page_serialno, aPage)) == mSerial)
-                   .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON),
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
                "Page must be for this stream!");
-  if (sandbox_invoke(*mSandbox, ogg_stream_pagein, mState, aPage)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == -1) {
-    return NS_ERROR_FAILURE;
-  }
+  if (ogg_stream_pagein(&mState, aPage) == -1) return NS_ERROR_FAILURE;
 
   bool haveGranulepos;
   nsresult rv = PacketOutUntilGranulepos(haveGranulepos);
@@ -1263,9 +1165,7 @@ already_AddRefed<MediaRawData> OpusState::PacketOutAsMediaRawData() {
   return data.forget();
 }
 
-FlacState::FlacState(rlbox_sandbox_ogg* aSandbox,
-                     tainted_opaque_ogg<ogg_page*> aBosPage, uint32_t aSerial)
-    : OggCodecState(aSandbox, aBosPage, aSerial, true) {}
+FlacState::FlacState(ogg_page* aBosPage) : OggCodecState(aBosPage, true) {}
 
 bool FlacState::DecodeHeader(OggPacketPtr aPacket) {
   if (mParser.DecodeHeaderBlock(aPacket->packet, aPacket->bytes).isErr()) {
@@ -1297,18 +1197,13 @@ bool FlacState::IsHeader(ogg_packet* aPacket) {
   return res.isOk() ? res.unwrap() : false;
 }
 
-nsresult FlacState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
+nsresult FlacState::PageIn(ogg_page* aPage) {
   if (!mActive) {
     return NS_OK;
   }
-  NS_ASSERTION((rlbox::sandbox_static_cast<uint32_t>(sandbox_invoke(
-                    *mSandbox, ogg_page_serialno, aPage)) == mSerial)
-                   .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON),
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
                "Page must be for this stream!");
-  if (sandbox_invoke(*mSandbox, ogg_stream_pagein, mState, aPage)
-          .unverified_safe_because(RLBOX_OGG_STATE_ASSERT_REASON) == -1) {
-    return NS_ERROR_FAILURE;
-  }
+  if (ogg_stream_pagein(&mState, aPage) == -1) return NS_ERROR_FAILURE;
   bool foundGp;
   nsresult res = PacketOutUntilGranulepos(foundGp);
   if (NS_FAILED(res)) {
@@ -1373,10 +1268,8 @@ bool FlacState::ReconstructFlacGranulepos(void) {
   return true;
 }
 
-SkeletonState::SkeletonState(rlbox_sandbox_ogg* aSandbox,
-                             tainted_opaque_ogg<ogg_page*> aBosPage,
-                             uint32_t aSerial)
-    : OggCodecState(aSandbox, aBosPage, aSerial, true),
+SkeletonState::SkeletonState(ogg_page* aBosPage)
+    : OggCodecState(aBosPage, true),
       mVersion(0),
       mPresentationTime(0),
       mLength(0) {
