@@ -362,6 +362,7 @@ NS_IMETHODIMP
 CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
                                        nsACString& aCookieString) {
   NS_ENSURE_ARG(aHostURI);
+  NS_ENSURE_ARG(aChannel);
 
   aCookieString.Truncate();
 
@@ -370,10 +371,8 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       aChannel, false, aHostURI, nullptr, &rejectedReason);
 
   OriginAttributes attrs;
-  if (aChannel) {
-    NS_GetOriginAttributes(aChannel, attrs,
-                           true /* considering storage principal */);
-  }
+  NS_GetOriginAttributes(aChannel, attrs,
+                         true /* considering storage principal */);
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
