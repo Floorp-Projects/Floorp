@@ -26,21 +26,6 @@ from taskgraph.taskgraph import TaskGraph
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-# Some tasks show up in the target task set, but are possibly special cases,
-# uncommon tasks, or tasks running against limited hardware set that they
-# should only be selectable with --full.
-TARGET_TASK_FILTERS = (
-    r'-ccov/',
-    r'windows10-aarch64/opt',
-    r'win64-aarch64-laptop',
-    r'windows10-64-ref-hw-2017',
-    r'android-hw',
-    r'android-geckoview-docs',
-    r'linux1804-32',   # hide linux32 tests - bug 1599197
-    r'linux-',  # hide all linux32 tasks by default - bug 1599197
-    r'linux.*web-platform-tests.*-fis-',  # hide wpt linux fission tests - bug 1610879
-)
-
 PARAMETER_MISMATCH = """
 ERROR - The parameters being used to generate tasks differ from those expected
 by your working copy:
@@ -122,19 +107,6 @@ def generate_tasks(params=None, full=False):
     if full:
         return tg_full
     return tg_target
-
-
-def filter_tasks_by_blacklist(task):
-    """Checks task label against known task filters.
-
-    Args:
-        task (str): String representing the task name.
-
-    Returns:
-        (Boolean): True if task does not match any known filters.
-        False otherwise.
-    """
-    return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
 
 
 def filter_tasks_by_paths(tasks, paths):

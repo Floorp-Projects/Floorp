@@ -12,7 +12,7 @@ from tryselect.cli import BaseTryParser
 from tryselect.push import check_working_directory, generate_try_task_config, push_to_try
 from tryselect.tasks import generate_tasks
 
-from ...tasks import filter_tasks_by_blacklist
+from taskgraph.target_tasks import filter_tasks_by_blacklist
 
 here = os.path.abspath(os.path.dirname(__file__))
 

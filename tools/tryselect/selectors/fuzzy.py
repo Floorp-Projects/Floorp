@@ -17,9 +17,11 @@ from mozboot.util import get_state_dir
 from mozterm import Terminal
 
 from ..cli import BaseTryParser
-from ..tasks import generate_tasks, filter_tasks_by_paths, filter_tasks_by_blacklist
+from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, generate_try_task_config
 from ..util.manage_estimates import download_task_history_data, make_trimmed_taskgraph_cache
+
+from taskgraph.target_tasks import filter_tasks_by_blacklist
 
 terminal = Terminal()
 
