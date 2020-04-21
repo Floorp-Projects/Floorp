@@ -9276,10 +9276,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aDatabase);
 
-  nsTArray<SerializedStructuredCloneFile> result;
-
   if (aFiles.IsEmpty()) {
-    return result;
+    return nsTArray<SerializedStructuredCloneFile>{};
   }
 
   nsCOMPtr<nsIFile> directory =
@@ -9289,120 +9287,121 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  const uint32_t count = aFiles.Length();
-
-  if (NS_WARN_IF(!result.SetCapacity(count, fallible))) {
+  nsTArray<SerializedStructuredCloneFile> serializedStructuredCloneFiles;
+  if (NS_WARN_IF(!serializedStructuredCloneFiles.SetCapacity(aFiles.Length(),
+                                                             fallible))) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  for (const StructuredCloneFileParent& file : aFiles) {
-    if (aForPreprocess &&
-        file.Type() != StructuredCloneFileBase::eStructuredClone) {
-      continue;
-    }
+  auto res = TransformIfAbortOnErr(
+      aFiles, MakeBackInserter(serializedStructuredCloneFiles),
+      [aForPreprocess](const auto& file) {
+        return !aForPreprocess ||
+               file.Type() == StructuredCloneFileBase::eStructuredClone;
+      },
+      [&directory, &aDatabase, aBackgroundActor, aForPreprocess](
+          const auto& file) -> Result<SerializedStructuredCloneFile, nsresult> {
+        const int64_t fileId = file.FileInfo().Id();
+        MOZ_ASSERT(fileId > 0);
 
-    const int64_t fileId = file.FileInfo().Id();
-    MOZ_ASSERT(fileId > 0);
-
-    nsCOMPtr<nsIFile> nativeFile =
-        mozilla::dom::indexedDB::FileManager::GetCheckedFileForId(directory,
-                                                                  fileId);
-    if (NS_WARN_IF(!nativeFile)) {
-      IDB_REPORT_INTERNAL_ERR();
-      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-
-    switch (file.Type()) {
-      case StructuredCloneFileBase::eBlob: {
-        RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
-        impl->SetFileId(file.FileInfo().Id());
-
-        IPCBlob ipcBlob;
-        nsresult rv = IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          // This can only fail if the child has crashed.
+        nsCOMPtr<nsIFile> nativeFile =
+            mozilla::dom::indexedDB::FileManager::GetCheckedFileForId(directory,
+                                                                      fileId);
+        if (NS_WARN_IF(!nativeFile)) {
           IDB_REPORT_INTERNAL_ERR();
           return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         }
 
-        result.EmplaceBack(ipcBlob, StructuredCloneFileBase::eBlob);
+        switch (file.Type()) {
+          case StructuredCloneFileBase::eBlob: {
+            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+            impl->SetFileId(file.FileInfo().Id());
 
-        aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
-        break;
-      }
+            IPCBlob ipcBlob;
+            nsresult rv =
+                IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              // This can only fail if the child has crashed.
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
 
-      case StructuredCloneFileBase::eMutableFile: {
-        if (aDatabase->IsFileHandleDisabled()) {
-          result.EmplaceBack(null_t(), StructuredCloneFileBase::eMutableFile);
-        } else {
-          RefPtr<MutableFile> actor = MutableFile::Create(
-              nativeFile, aDatabase.clonePtr(), file.FileInfoPtr());
-          if (!actor) {
-            IDB_REPORT_INTERNAL_ERR();
-            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
+
+            return SerializedStructuredCloneFile{
+                ipcBlob, StructuredCloneFileBase::eBlob};
           }
 
-          // Transfer ownership to IPDL.
-          actor->SetActorAlive();
+          case StructuredCloneFileBase::eMutableFile: {
+            if (aDatabase->IsFileHandleDisabled()) {
+              return SerializedStructuredCloneFile{
+                  null_t(), StructuredCloneFileBase::eMutableFile};
+            }
 
-          if (!aDatabase->SendPBackgroundMutableFileConstructor(
-                  actor, EmptyString(), EmptyString())) {
-            // This can only fail if the child has crashed.
-            IDB_REPORT_INTERNAL_ERR();
-            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            RefPtr<MutableFile> actor = MutableFile::Create(
+                nativeFile, aDatabase.clonePtr(), file.FileInfoPtr());
+            if (!actor) {
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
+
+            // Transfer ownership to IPDL.
+            actor->SetActorAlive();
+
+            if (!aDatabase->SendPBackgroundMutableFileConstructor(
+                    actor, EmptyString(), EmptyString())) {
+              // This can only fail if the child has crashed.
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
+
+            return SerializedStructuredCloneFile{
+                actor.get(), StructuredCloneFileBase::eMutableFile};
           }
 
-          result.EmplaceBack(actor.get(),
-                             StructuredCloneFileBase::eMutableFile);
+          case StructuredCloneFileBase::eStructuredClone: {
+            if (!aForPreprocess) {
+              return SerializedStructuredCloneFile{
+                  null_t(), StructuredCloneFileBase::eStructuredClone};
+            }
+
+            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+            impl->SetFileId(file.FileInfo().Id());
+
+            IPCBlob ipcBlob;
+            nsresult rv =
+                IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              // This can only fail if the child has crashed.
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
+
+            aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
+
+            return SerializedStructuredCloneFile{
+                ipcBlob, StructuredCloneFileBase::eStructuredClone};
+          }
+
+          case StructuredCloneFileBase::eWasmBytecode:
+          case StructuredCloneFileBase::eWasmCompiled: {
+            // Set file() to null, support for storing WebAssembly.Modules has
+            // been removed in bug 1469395. Support for de-serialization of
+            // WebAssembly.Modules modules has been removed in bug 1561876. Full
+            // removal is tracked in bug 1487479.
+
+            return SerializedStructuredCloneFile{null_t(), file.Type()};
+          }
+
+          default:
+            MOZ_CRASH("Should never get here!");
         }
-
-        break;
-      }
-
-      case StructuredCloneFileBase::eStructuredClone: {
-        if (!aForPreprocess) {
-          result.EmplaceBack(null_t(),
-                             StructuredCloneFileBase::eStructuredClone);
-        } else {
-          RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
-          impl->SetFileId(file.FileInfo().Id());
-
-          IPCBlob ipcBlob;
-          nsresult rv =
-              IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            // This can only fail if the child has crashed.
-            IDB_REPORT_INTERNAL_ERR();
-            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-          }
-
-          result.EmplaceBack(ipcBlob,
-                             StructuredCloneFileBase::eStructuredClone);
-
-          aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
-        }
-
-        break;
-      }
-
-      case StructuredCloneFileBase::eWasmBytecode:
-      case StructuredCloneFileBase::eWasmCompiled: {
-        // Set file() to null, support for storing WebAssembly.Modules has been
-        // removed in bug 1469395. Support for de-serialization of
-        // WebAssembly.Modules modules has been removed in bug 1561876. Full
-        // removal is tracked in bug 1487479.
-
-        result.EmplaceBack(null_t(), file.Type());
-
-        break;
-      }
-
-      default:
-        MOZ_CRASH("Should never get here!");
-    }
+      });
+  if (res.isErr()) {
+    return Err(res.unwrapErr());
   }
 
-  return std::move(result);
+  return std::move(serializedStructuredCloneFiles);
 }
 
 enum struct Idempotency { Yes, No };
