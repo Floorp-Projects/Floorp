@@ -137,6 +137,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetH2WSTransaction(SpdyConnectTransaction*);
 
   void OnProxyConnectComplete(int32_t aResponseCode) override;
+  void SetFlat407Headers(const nsACString& aHeaders);
 
   // This is only called by Http2PushedStream::TryOnPush when a new pushed
   // stream is available. The newly added stream will be taken by another
@@ -267,6 +268,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   HttpVersion mHttpVersion;
   uint16_t mHttpResponseCode;
+  nsCString mFlat407Headers;
 
   uint32_t mCurrentHttpResponseHeaderSize;
 
