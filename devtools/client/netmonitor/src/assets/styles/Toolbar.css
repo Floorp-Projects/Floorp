@@ -82,17 +82,6 @@
   margin-inline-end: 7px;
 }
 
-/* Options menu */
-
-#netmonitor-settings-menu-button.tooltip-container[type="doorhanger"] .menuitem > .command[role="menuseparator"] {
-  padding-top: 0;
-  margin-bottom: 6px;
-}
-
-#netmonitor-settings-menu-button.tooltip-container[type="doorhanger"] .menuitem > .command[disabled] {
-  opacity: 0.5;
-}
-
 /* Hide filter input learn more link if there is not enough
    horizontal space. */
 @media (max-width: 590px) {

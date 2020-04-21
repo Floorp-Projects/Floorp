@@ -433,6 +433,10 @@ strong {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
+.tooltip-container[type="doorhanger"] .menuitem > .command[disabled] {
+  opacity: 0.5;
+}
+
 .tooltip-container[type="doorhanger"] .menuitem > .command[aria-checked="true"] {
   list-style-image: none;
   -moz-context-properties: fill;
