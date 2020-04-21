@@ -9,7 +9,6 @@
 #  include <ogg/ogg.h>
 // For MOZ_SAMPLE_TYPE_*
 #  include "FlacFrameParser.h"
-#  include "OggRLBoxTypes.h"
 #  include "VideoUtils.h"
 #  include <nsDeque.h>
 #  include <nsTArray.h>
@@ -32,23 +31,6 @@
 struct OpusMSDecoder;
 
 namespace mozilla {
-
-inline constexpr char RLBOX_SAFE_DEBUG_ASSERTION[] =
-    "Tainted data is being inspected only for debugging purposes. This is not "
-    "a condition that is critical for safety of the renderer.";
-
-inline constexpr char RLBOX_OGG_STATE_ASSERT_REASON[] =
-    "Tainted data is being inspected only to check the internal state of "
-    "libogg structures. This is not a condition that is critical for safety of "
-    "the renderer.";
-
-inline constexpr char RLBOX_OGG_PAGE_SERIAL_REASON[] =
-    "We are checking the serial of the page. If libogg is operating correctly, "
-    "we check serial numbers to make sure the Firefox renderer is correctly "
-    "passing streams to the correct source. If libogg has been corrupted, it "
-    "could return an incorrect serial, however this would mean that an OGG "
-    "file has intentionally corrupted data across multiple logical streams. "
-    "This however cannot compromise memory safety of the renderer.";
 
 class OpusParser;
 
@@ -122,9 +104,7 @@ class OggCodecState {
 
   // Factory for creating nsCodecStates. Use instead of constructor.
   // aPage should be a beginning-of-stream page.
-  static OggCodecState* Create(rlbox_sandbox_ogg* aSandbox,
-                               tainted_opaque_ogg<ogg_page*> aPage,
-                               uint32_t aSerial);
+  static OggCodecState* Create(ogg_page* aPage);
 
   virtual CodecType GetType() { return TYPE_UNKNOWN; }
 
@@ -223,7 +203,7 @@ class OggCodecState {
   // inactive streams. Multiple pages may need to be inserted before
   // PacketOut() starts to return packets, as granulepos may need to be
   // captured.
-  virtual nsresult PageIn(tainted_opaque_ogg<ogg_page*> aPage);
+  virtual nsresult PageIn(ogg_page* aPage);
 
   // Returns the maximum number of microseconds which a keyframe can be offset
   // from any given interframe.b
@@ -238,7 +218,7 @@ class OggCodecState {
   uint32_t mSerial;
 
   // Ogg specific state.
-  tainted_opaque_ogg<ogg_stream_state*> mState;
+  ogg_stream_state mState;
 
   // Queue of as yet undecoded packets. Packets are guaranteed to have
   // a valid granulepos.
@@ -249,11 +229,6 @@ class OggCodecState {
 
   // True when all headers packets have been read.
   bool mDoneReadingHeaders;
-
-  // All invocations of libogg functionality from the demuxer is sandboxed using
-  // wasm library sandboxes on supported platforms. This is the sandbox
-  // instance.
-  rlbox_sandbox_ogg* mSandbox;
 
   virtual const TrackInfo* GetInfo() const {
     MOZ_RELEASE_ASSERT(false, "Can't be called directly");
@@ -273,9 +248,7 @@ class OggCodecState {
   // Constructs a new OggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
   // false.
-  OggCodecState(rlbox_sandbox_ogg* aSandbox,
-                tainted_opaque_ogg<ogg_page*> aBosPage, uint32_t aSerial,
-                bool aActive);
+  OggCodecState(ogg_page* aBosPage, bool aActive);
 
   // Deallocates all packets stored in mUnstamped, and clears the array.
   void ClearUnstamped();
@@ -302,9 +275,7 @@ class OggCodecState {
 
 class VorbisState : public OggCodecState {
  public:
-  explicit VorbisState(rlbox_sandbox_ogg* aSandbox,
-                       tainted_opaque_ogg<ogg_page*> aBosPage,
-                       uint32_t aSerial);
+  explicit VorbisState(ogg_page* aBosPage);
   virtual ~VorbisState();
 
   CodecType GetType() override { return TYPE_VORBIS; }
@@ -314,7 +285,7 @@ class VorbisState : public OggCodecState {
   bool Init() override;
   nsresult Reset() override;
   bool IsHeader(ogg_packet* aPacket) override;
-  nsresult PageIn(tainted_opaque_ogg<ogg_page*> aPage) override;
+  nsresult PageIn(ogg_page* aPage) override;
   const TrackInfo* GetInfo() const override { return &mInfo; }
 
   // Return a hash table with tag metadata.
@@ -377,9 +348,7 @@ int TheoraVersion(th_info* info, unsigned char maj, unsigned char min,
 
 class TheoraState : public OggCodecState {
  public:
-  explicit TheoraState(rlbox_sandbox_ogg* aSandbox,
-                       tainted_opaque_ogg<ogg_page*> aBosPage,
-                       uint32_t aSerial);
+  explicit TheoraState(ogg_page* aBosPage);
   virtual ~TheoraState();
 
   CodecType GetType() override { return TYPE_THEORA; }
@@ -391,7 +360,7 @@ class TheoraState : public OggCodecState {
   nsresult Reset() override;
   bool IsHeader(ogg_packet* aPacket) override;
   bool IsKeyframe(ogg_packet* aPacket) override;
-  nsresult PageIn(tainted_opaque_ogg<ogg_page*> aPage) override;
+  nsresult PageIn(ogg_page* aPage) override;
   const TrackInfo* GetInfo() const override { return &mInfo; }
   int64_t MaxKeyframeOffset() override;
   int32_t KeyFrameGranuleJobs() override {
@@ -420,8 +389,7 @@ class TheoraState : public OggCodecState {
 
 class OpusState : public OggCodecState {
  public:
-  explicit OpusState(rlbox_sandbox_ogg* aSandbox,
-                     tainted_opaque_ogg<ogg_page*> aBosPage, uint32_t aSerial);
+  explicit OpusState(ogg_page* aBosPage);
   virtual ~OpusState();
 
   CodecType GetType() override { return TYPE_OPUS; }
@@ -432,7 +400,7 @@ class OpusState : public OggCodecState {
   nsresult Reset() override;
   nsresult Reset(bool aStart);
   bool IsHeader(ogg_packet* aPacket) override;
-  nsresult PageIn(tainted_opaque_ogg<ogg_page*> aPage) override;
+  nsresult PageIn(ogg_page* aPage) override;
   already_AddRefed<MediaRawData> PacketOutAsMediaRawData() override;
   const TrackInfo* GetInfo() const override { return &mInfo; }
 
@@ -493,9 +461,7 @@ struct MessageField {
 
 class SkeletonState : public OggCodecState {
  public:
-  explicit SkeletonState(rlbox_sandbox_ogg* aSandbox,
-                         tainted_opaque_ogg<ogg_page*> aBosPage,
-                         uint32_t aSerial);
+  explicit SkeletonState(ogg_page* aBosPage);
   ~SkeletonState();
 
   nsClassHashtable<nsUint32HashKey, MessageField> mMsgFieldStore;
@@ -606,15 +572,14 @@ class SkeletonState : public OggCodecState {
 
 class FlacState : public OggCodecState {
  public:
-  explicit FlacState(rlbox_sandbox_ogg* aSandbox,
-                     tainted_opaque_ogg<ogg_page*> aBosPage, uint32_t aSerial);
+  explicit FlacState(ogg_page* aBosPage);
 
   CodecType GetType() override { return TYPE_FLAC; }
   bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t granulepos) override;
   int64_t PacketDuration(ogg_packet* aPacket) override;
   bool IsHeader(ogg_packet* aPacket) override;
-  nsresult PageIn(tainted_opaque_ogg<ogg_page*> aPage) override;
+  nsresult PageIn(ogg_page* aPage) override;
 
   // Return a hash table with tag metadata.
   UniquePtr<MetadataTags> GetTags() override;
