@@ -1159,7 +1159,7 @@ void SpdyConnectTransaction::ForcePlainText() {
 
 void SpdyConnectTransaction::MapStreamToHttpConnection(
     nsISocketTransport* aTransport, nsHttpConnectionInfo* aConnInfo,
-    int32_t httpResponseCode) {
+    const nsACString& aFlat407Headers, int32_t aHttpResponseCode) {
   MOZ_ASSERT(OnSocketThread());
 
   mConnInfo = aConnInfo;
@@ -1169,11 +1169,11 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
   mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
   mTunneledConn = new nsHttpConnection();
 
-  // If httpResponseCode is -1, it means that proxy connect is not used. We
+  // If aHttpResponseCode is -1, it means that proxy connect is not used. We
   // should not call HttpProxyResponseToErrorCode(), since this will create a
   // shim error.
-  if (httpResponseCode > 0 && httpResponseCode != 200) {
-    nsresult err = HttpProxyResponseToErrorCode(httpResponseCode);
+  if (aHttpResponseCode > 0 && aHttpResponseCode != 200) {
+    nsresult err = HttpProxyResponseToErrorCode(aHttpResponseCode);
     if (NS_FAILED(err)) {
       CreateShimError(err);
     }
@@ -1212,7 +1212,12 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
       gHttpHandler->ConnMgr()->MakeConnectionHandle(mTunneledConn);
   mDrivingTransaction->SetConnection(wrappedConn);
   mDrivingTransaction->MakeSticky();
-  mDrivingTransaction->OnProxyConnectComplete(httpResponseCode);
+  mDrivingTransaction->OnProxyConnectComplete(aHttpResponseCode);
+
+  if (aHttpResponseCode == 407) {
+    mDrivingTransaction->SetFlat407Headers(aFlat407Headers);
+    mDrivingTransaction->SetProxyConnectFailed();
+  }
 
   if (!mIsWebsocket) {
     // jump the priority and start the dispatcher
