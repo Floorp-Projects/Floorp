@@ -34,21 +34,6 @@ for (const key of Object.keys(ThreadSafeDevToolsUtils)) {
 }
 
 /**
- * Helper for Cu.isCrossProcessWrapper that works with Debugger.Objects.
- * This will always return false in workers (see the implementation in
- * ThreadSafeDevToolsUtils.js).
- *
- * @param Debugger.Object debuggerObject
- * @return bool
- */
-exports.isCPOW = function(debuggerObject) {
-  try {
-    return Cu.isCrossProcessWrapper(debuggerObject.unsafeDereference());
-  } catch (e) {}
-  return false;
-};
-
-/**
  * Waits for the next tick in the event loop to execute a callback.
  */
 exports.executeSoon = function(fn) {
@@ -182,7 +167,7 @@ exports.getProperty = function(object, key, invokeUnsafeGetters = false) {
  *        objects belong to this case.
  *      - Otherwise, if the debuggee doesn't subsume object's compartment, returns `null`.
  *      - Otherwise, if the object belongs to an invisible-to-debugger compartment,
- *        returns `undefined`. Note CPOW objects belong to this case.
+ *        returns `undefined`.
  *      - Otherwise, returns the unwrapped object.
  */
 exports.unwrap = function unwrap(obj) {
@@ -194,7 +179,6 @@ exports.unwrap = function unwrap(obj) {
   // Attempt to unwrap via `obj.unwrap()`. Note that:
   // - This will return `null` if the debuggee does not subsume object's compartment.
   // - This will throw if the object belongs to an invisible-to-debugger compartment.
-  //   This case includes CPOWs (see bug 1391449).
   // - This will return `obj` if there is no wrapper.
   let unwrapped;
   try {
@@ -216,18 +200,13 @@ exports.unwrap = function unwrap(obj) {
  * Checks whether a debuggee object is safe. Unsafe objects may run proxy traps or throw
  * when using `proto`, `isExtensible`, `isFrozen` or `isSealed`. Note that safe objects
  * may still throw when calling `getOwnPropertyNames`, `getOwnPropertyDescriptor`, etc.
- * Also note CPOW objects are considered to be unsafe, and DeadObject objects to be safe.
+ * Also note DeadObject objects are considered safe.
  *
  * @param obj Debugger.Object
  *        The debuggee object to be checked.
  * @return boolean
  */
 exports.isSafeDebuggerObject = function(obj) {
-  // CPOW usage is forbidden outside tests (bug 1465911)
-  if (exports.isCPOW(obj)) {
-    return false;
-  }
-
   const unwrapped = exports.unwrap(obj);
 
   // Objects belonging to an invisible-to-debugger compartment might be proxies,

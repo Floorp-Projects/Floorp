@@ -40,7 +40,7 @@ It can also be useful for patch authors: if the changes comply with these guidel
 * Test changes:
  * The feature or bug is [tested by new tests, or a modification of existing tests](../tests/writing-tests.md).
  * [Test logging](../tests/writing-tests.md#logs-and-comments) is sufficient to help investigating test failures/timeouts.
- * [Test is e10s compliant](../tests/writing-tests.md#e10s-electrolysis) (no CPOWs, no content, etc…).
+ * [Test is e10s compliant](../tests/writing-tests.md#e10s-electrolysis) (doesn't try to access web content from the parent process, etc…).
  * Tests are [clean and maintainable](../tests/writing-tests.md#writing-clean-maintainable-test-code).
  * A try push has started (or even better, is green already).
 * User facing changes:
