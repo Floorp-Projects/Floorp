@@ -115,11 +115,7 @@ interface nsICookieService : nsISupports
    *        scheme must have a non-empty host. A trailing dot in the host
    *        is acceptable, and will be stripped. This argument must not be null.
    * @param aChannel
-   *        the channel used to load the document.  this parameter should not
-   *        be null, otherwise the cookies will not be returned if third-party
-   *        cookies have been disabled by the user. (the channel is used
-   *        to determine the originating URI of the document; if it is not
-   *        provided, the cookies will be assumed third-party.)
+   *        the channel used to load the document.
    *
    * @return the resulting cookie string
    */
