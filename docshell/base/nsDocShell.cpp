@@ -9742,14 +9742,14 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     cacheKey = mOSHE->GetCacheKey();
   }
 
-  // We want to use DocumentChannel if we're using a supported scheme, or if
-  // we're a sandboxed srcdoc load. Non-sandboxed srcdoc loads need to share
-  // the same principal object as their outer document (and must load in the
-  // same process), which breaks if we serialize to the parent process.
+  // We want to use DocumentChannel if we're using a supported scheme. Sandboxed
+  // srcdoc loads break due to failing assertions after changing processes, and
+  // non-sandboxed srcdoc loads need to share the same principal object as their
+  // outer document (and must load in the same process), which breaks if we
+  // serialize to the parent process.
   bool canUseDocumentChannel =
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC)
-          ? (sandboxFlags & SANDBOXED_ORIGIN)
-          : URIUsesDocChannel(aLoadState->URI());
+      !aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
+      URIUsesDocChannel(aLoadState->URI());
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
