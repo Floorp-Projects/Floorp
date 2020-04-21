@@ -16,6 +16,9 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#ifdef MOZ_WASM_SANDBOXING_OGG
+#  include "mozilla/ipc/LibrarySandboxPreload.h"
+#endif
 #include "nsAutoRef.h"
 #include "nsError.h"
 
