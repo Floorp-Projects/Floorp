@@ -95,6 +95,18 @@ bool GetParentPrincipalAndTrackingOrigin(
   return true;
 };
 
+bool GetTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow,
+                       nsACString& aTrackingOrigin) {
+  nsCOMPtr<nsIPrincipal> trackingPrincipal =
+      a3rdPartyTrackingWindow->GetPrincipal();
+  if (NS_WARN_IF(!trackingPrincipal)) {
+    return false;
+  }
+
+  return !NS_WARN_IF(
+      NS_FAILED(trackingPrincipal->GetOriginNoSuffix(aTrackingOrigin)));
+}
+
 // This internal method returns ACCESS_DENY if the access is denied,
 // ACCESS_DEFAULT if unknown, some other access code if granted.
 uint32_t CheckCookiePermissionForPrincipal(
@@ -730,9 +742,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
   }
 
   nsAutoCString trackingOrigin;
-  if (!GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner::Cast(aWindow),
-                                           behavior, nullptr, trackingOrigin,
-                                           nullptr)) {
+  if (!GetTrackingOrigin(nsGlobalWindowInner::Cast(aWindow), trackingOrigin)) {
     LOG(("Failed to obtain the the tracking origin"));
     *aRejectedReason = blockedReason;
     return false;
