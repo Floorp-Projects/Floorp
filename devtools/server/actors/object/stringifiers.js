@@ -22,9 +22,6 @@ loader.lazyRequireGetter(
  */
 function stringify(obj) {
   if (!DevToolsUtils.isSafeDebuggerObject(obj)) {
-    if (DevToolsUtils.isCPOW(obj)) {
-      return "<cpow>";
-    }
     const unwrapped = DevToolsUtils.unwrap(obj);
     if (unwrapped === undefined) {
       return "<invisibleToDebugger>";
