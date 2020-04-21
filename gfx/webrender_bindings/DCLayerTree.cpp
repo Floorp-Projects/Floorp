@@ -241,13 +241,13 @@ void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
                        uint32_t* aFboId, wr::DeviceIntRect aDirtyRect,
                        wr::DeviceIntRect aValidRect) {
   auto surface = GetSurface(aId.surface_id);
-  auto layer = surface->GetLayer(aId.x, aId.y);
+  auto tile = surface->GetTile(aId.x, aId.y);
   wr::DeviceIntPoint targetOffset{0, 0};
 
   gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
                          aValidRect.size.width, aValidRect.size.height);
-  if (!layer->mValidRect.IsEqualEdges(validRect)) {
-    layer->mValidRect = validRect;
+  if (!tile->mValidRect.IsEqualEdges(validRect)) {
+    tile->mValidRect = validRect;
     surface->DirtyAllocatedRect();
   }
   wr::DeviceIntSize tileSize = surface->GetTileSize();
@@ -318,12 +318,12 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
                              wr::DeviceIntRect aClipRect) {
   auto it = mDCSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(it != mDCSurfaces.end());
-  const auto layer = it->second.get();
-  const auto visual = layer->GetVisual();
+  const auto surface = it->second.get();
+  const auto visual = surface->GetVisual();
 
-  layer->UpdateAllocatedRect();
+  surface->UpdateAllocatedRect();
 
-  wr::DeviceIntPoint virtualOffset = layer->GetVirtualOffset();
+  wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
   aPosition.x -= virtualOffset.x;
   aPosition.y -= virtualOffset.y;
 
@@ -424,23 +424,23 @@ bool DCSurface::Initialize() {
 
 void DCSurface::CreateTile(int aX, int aY) {
   TileKey key(aX, aY);
-  MOZ_RELEASE_ASSERT(mDCLayers.find(key) == mDCLayers.end());
+  MOZ_RELEASE_ASSERT(mDCTiles.find(key) == mDCTiles.end());
 
-  auto layer = MakeUnique<DCLayer>(mDCLayerTree);
-  if (!layer->Initialize(aX, aY, mTileSize, mIsOpaque)) {
-    gfxCriticalNote << "Failed to initialize DCLayer: " << aX << aY;
+  auto tile = MakeUnique<DCTile>(mDCLayerTree);
+  if (!tile->Initialize(aX, aY, mTileSize, mIsOpaque)) {
+    gfxCriticalNote << "Failed to initialize DCTile: " << aX << aY;
     return;
   }
 
   mAllocatedRectDirty = true;
 
-  mDCLayers[key] = std::move(layer);
+  mDCTiles[key] = std::move(tile);
 }
 
 void DCSurface::DestroyTile(int aX, int aY) {
   TileKey key(aX, aY);
   mAllocatedRectDirty = true;
-  mDCLayers.erase(key);
+  mDCTiles.erase(key);
 }
 
 void DCSurface::DirtyAllocatedRect() { mAllocatedRectDirty = true; }
@@ -452,16 +452,16 @@ void DCSurface::UpdateAllocatedRect() {
     // rect, supply the rect of each valid tile to handle this case.
     std::vector<RECT> validRects;
 
-    for (auto it = mDCLayers.begin(); it != mDCLayers.end(); ++it) {
-      auto layer = GetLayer(it->first.mX, it->first.mY);
+    for (auto it = mDCTiles.begin(); it != mDCTiles.end(); ++it) {
+      auto tile = GetTile(it->first.mX, it->first.mY);
       RECT rect;
 
       rect.left = (LONG)(mVirtualOffset.x + it->first.mX * mTileSize.width +
-                         layer->mValidRect.x);
+                         tile->mValidRect.x);
       rect.top = (LONG)(mVirtualOffset.y + it->first.mY * mTileSize.height +
-                        layer->mValidRect.y);
-      rect.right = rect.left + layer->mValidRect.width;
-      rect.bottom = rect.top + layer->mValidRect.height;
+                        tile->mValidRect.y);
+      rect.right = rect.left + tile->mValidRect.width;
+      rect.bottom = rect.top + tile->mValidRect.height;
 
       validRects.push_back(rect);
     }
@@ -471,19 +471,19 @@ void DCSurface::UpdateAllocatedRect() {
   }
 }
 
-DCLayer* DCSurface::GetLayer(int aX, int aY) const {
+DCTile* DCSurface::GetTile(int aX, int aY) const {
   TileKey key(aX, aY);
-  auto layer_it = mDCLayers.find(key);
-  MOZ_RELEASE_ASSERT(layer_it != mDCLayers.end());
-  return layer_it->second.get();
+  auto tile_it = mDCTiles.find(key);
+  MOZ_RELEASE_ASSERT(tile_it != mDCTiles.end());
+  return tile_it->second.get();
 }
 
-DCLayer::DCLayer(DCLayerTree* aDCLayerTree) : mDCLayerTree(aDCLayerTree) {}
+DCTile::DCTile(DCLayerTree* aDCLayerTree) : mDCLayerTree(aDCLayerTree) {}
 
-DCLayer::~DCLayer() {}
+DCTile::~DCTile() {}
 
-bool DCLayer::Initialize(int aX, int aY, wr::DeviceIntSize aSize,
-                         bool aIsOpaque) {
+bool DCTile::Initialize(int aX, int aY, wr::DeviceIntSize aSize,
+                        bool aIsOpaque) {
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
