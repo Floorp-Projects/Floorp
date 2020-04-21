@@ -39,6 +39,9 @@
 # - Immediate (BoolImm, Int32Imm, JSOpImm, ...): a value baked directly into
 #   the bytecode stream. This is useful for bits of state that need to be
 #   available to all CacheIR compilers/transpilers.
+#
+# If there's an operand named 'result', the generated CacheIRWriter method will
+# return a new OperandId of this type.
 
 - name: GuardToObject
   shared: true
@@ -47,33 +50,39 @@
 
 - name: GuardIsObjectOrNull
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsNullOrUndefined
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsNotNullOrUndefined
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsNull
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsUndefined
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardToBoolean
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardToString
@@ -98,38 +107,44 @@
 
 - name: GuardToInt32
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardToInt32Index
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardToTypedArrayIndex
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardToInt32ModUint32
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardToUint8Clamped
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     result: Int32Id
 
 - name: GuardType
   shared: true
+  gen_boilerplate: true
   operands:
-    val: ValId
+    input: ValId
     type: ValueTypeImm
 
 - name: GuardShape
@@ -263,30 +278,35 @@
 
 - name: GuardAndGetIndexFromString
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
     result: Int32Id
 
 - name: GuardAndGetInt32FromString
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
     result: Int32Id
 
 - name: GuardAndGetNumberFromString
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
     result: NumId
 
 - name: GuardAndGetNumberFromBoolean
   shared: true
+  gen_boilerplate: true
   operands:
     boolean: Int32Id
     result: NumId
 
 - name: GuardAndGetIterator
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     iter: ObjectField
@@ -399,24 +419,28 @@
 
 - name: LoadObject
   shared: true
+  gen_boilerplate: true
   operands:
     result: ObjId
     obj: ObjectField
 
 - name: LoadProto
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     result: ObjId
 
 - name: LoadEnclosingEnvironment
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     result: ObjId
 
 - name: LoadWrapperTarget
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     result: ObjId

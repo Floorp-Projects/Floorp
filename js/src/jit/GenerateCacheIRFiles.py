@@ -84,6 +84,7 @@ operand_writer_info = {
     'BoolImm': ('bool', 'writeBoolImm'),
     'ByteImm': ('uint32_t', 'writeByteImm'),  # uint32_t to enable fits-in-byte asserts.
     'GuardClassKindImm': ('GuardClassKind', 'writeGuardClassKindImm'),
+    'ValueTypeImm': ('ValueType', 'writeValueTypeImm'),
     'JSWhyMagicImm': ('JSWhyMagic', 'writeJSWhyMagicImm'),
     'CallFlagsImm': ('CallFlags', 'writeCallFlagsImm'),
     'TypedThingLayoutImm': ('TypedThingLayout', 'writeTypedThingLayoutImm'),
@@ -112,16 +113,24 @@ def gen_writer_method(name, operands):
     method_name = name[0].lower() + name[1:]
 
     args_sig = []
+    ret_type = 'void'
     operands_code = ''
     if operands:
         for opnd_name, opnd_type in six.iteritems(operands):
             argtype, write_method = operand_writer_info[opnd_type]
-            args_sig.append('{} {}'.format(argtype, opnd_name))
-            operands_code += '  {}({});\\\n'.format(write_method, opnd_name)
+            if opnd_name == 'result':
+                ret_type = argtype
+                operands_code += '  {} result(newOperandId());\\\n'.format(argtype)
+                operands_code += '  writeOperandId(result);\\\n'
+            else:
+                args_sig.append('{} {}'.format(argtype, opnd_name))
+                operands_code += '  {}({});\\\n'.format(write_method, opnd_name)
 
-    code = 'void {}({}) {{\\\n'.format(method_name, ', '.join(args_sig))
+    code = '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(args_sig))
     code += '  writeOp(CacheOp::{});\\\n'.format(name)
     code += operands_code
+    if ret_type != 'void':
+        code += '  return result;\\\n'
     code += '}'
     return code
 
@@ -154,6 +163,7 @@ operand_compiler_info = {
     'BoolImm': ('bool', '', 'reader.readBool()'),
     'ByteImm': ('uint8_t', '', 'reader.readByte()'),
     'GuardClassKindImm': ('GuardClassKind', '', 'reader.guardClassKind()'),
+    'ValueTypeImm': ('ValueType', '', 'reader.valueType()'),
     'JSWhyMagicImm': ('JSWhyMagic', '', 'reader.whyMagic()'),
     'CallFlagsImm': ('CallFlags', '', 'reader.callFlags()'),
     'TypedThingLayoutImm': ('TypedThingLayout', '', 'reader.typedThingLayout()'),
