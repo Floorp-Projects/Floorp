@@ -103,6 +103,8 @@ suites:
             web-de: "Android page-load performance test for web-de using Browsertime."
             wikipedia: "Android page-load performance test for wikipedia using Browsertime."
             youtube-watch: "Android page-load performance test for youtube-watch using Browsertime."
+    live:
+        description: "A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms."
     benchmarks:
         description: "Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. "
     scenario:
