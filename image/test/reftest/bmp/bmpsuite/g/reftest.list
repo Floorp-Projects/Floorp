@@ -74,7 +74,7 @@ fuzzy(0-1,0-996) == pal8os2.bmp pal8.png
 # "A v4 bitmap. I’m not sure that the gamma and chromaticity values in this
 # file are sensible, because I can’t find any detailed documentation of them."
 # [We seem to handle the profile wrong in QCMS. See bug 1619332.]
-fuzzy(3-3,6376-6376) == pal8v4.bmp pal8.png
+fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),1-1,899-899) fuzzy-if(!(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),3-3,6376-6376) == pal8v4.bmp pal8.png #bug 1619847
 
 # BMP: bihsize=124, 127 x 64, bpp=8, compression=0, colors=252
 # "A v5 bitmap. Version 5 has additional colorspace options over v4, so it is
