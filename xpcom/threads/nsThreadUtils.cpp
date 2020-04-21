@@ -312,32 +312,6 @@ extern nsresult NS_DispatchToMainThreadQueue(
   return rv;
 }
 
-namespace mozilla {
-
-class MicroTaskRunnableWrapper : public MicroTaskRunnable {
- public:
-  explicit MicroTaskRunnableWrapper(already_AddRefed<nsIRunnable> aRunnable)
-      : mRunnable(aRunnable) {}
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Run(AutoSlowOperation& aSo) final {
-    mRunnable->Run();
-  }
-
- private:
-  nsCOMPtr<nsIRunnable> mRunnable;
-};
-
-void DispatchAsMicroTask(already_AddRefed<nsIRunnable> aRunnable) {
-  CycleCollectedJSContext* ctx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(ctx, "Can't dispatch microtask without a script runtime");
-
-  RefPtr<MicroTaskRunnable> r =
-      new MicroTaskRunnableWrapper(std::move(aRunnable));
-  ctx->DispatchToMicroTask(r.forget());
-}
-
-}  // namespace mozilla
-
 class IdleRunnableWrapper final : public IdleRunnable {
  public:
   explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
@@ -593,7 +567,13 @@ nsIEventTarget* GetCurrentThreadEventTarget() {
 }
 
 nsIEventTarget* GetMainThreadEventTarget() {
-  return GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->EventTarget();
 }
 
 nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
@@ -607,12 +587,13 @@ nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
 }
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget() {
-  nsIThread* mainThread = nsThreadManager::get().GetMainThreadWeak();
-  if (!mainThread) {
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
     return nullptr;
   }
 
-  return static_cast<nsThread*>(mainThread);
+  return thread->SerialEventTarget();
 }
 
 size_t GetNumberOfProcessors() {
