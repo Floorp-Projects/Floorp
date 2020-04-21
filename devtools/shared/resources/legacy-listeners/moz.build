@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'legacy-listeners'
-]
-
 DevToolsModules(
-    'resource-watcher.js',
-    'target-list.js',
+    'console-messages.js',
 )
-
-if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
