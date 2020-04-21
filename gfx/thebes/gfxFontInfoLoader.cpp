@@ -118,7 +118,8 @@ NS_IMETHODIMP
 gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports* aSubject,
                                              const char* aTopic,
                                              const char16_t* someData) {
-  if (!nsCRT::strcmp(aTopic, "quit-application")) {
+  if (!nsCRT::strcmp(aTopic, "quit-application") ||
+      !nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     mLoader->CancelLoader();
     sFontLoaderShutdownObserved = true;
   } else {
@@ -278,6 +279,7 @@ void gfxFontInfoLoader::AddShutdownObserver() {
   if (obs) {
     mObserver = new ShutdownObserver(this);
     obs->AddObserver(mObserver, "quit-application", false);
+    obs->AddObserver(mObserver, "xpcom-shutdown", false);
   }
 }
 
@@ -286,6 +288,7 @@ void gfxFontInfoLoader::RemoveShutdownObserver() {
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs) {
       obs->RemoveObserver(mObserver, "quit-application");
+      obs->RemoveObserver(mObserver, "xpcom-shutdown");
       mObserver = nullptr;
     }
   }
