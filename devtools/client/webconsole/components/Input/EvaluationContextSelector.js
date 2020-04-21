@@ -144,7 +144,10 @@ class EvaluationContextSelector extends Component {
       );
     }
 
-    return MenuList({ id: "webconsole-console-settings-menu-list" }, items);
+    return MenuList(
+      { id: "webconsole-console-evaluation-context-selector-menu-list" },
+      items
+    );
   }
 
   getLabel() {
