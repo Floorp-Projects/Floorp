@@ -5,8 +5,6 @@
 @import "chrome://global/skin/global.css";
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-%include ../../../toolkit/themes/osx/global/shared.inc
-
 #topBar {
   -moz-appearance: toolbar;
   -moz-window-dragging: drag;
@@ -24,7 +22,6 @@
   -moz-box-align: center;
   -moz-appearance: toolbarbutton;
   font: menu;
-  text-shadow: @loweredShadow@;
   margin: 0;
   padding: 0 6px;
   height: 22px;

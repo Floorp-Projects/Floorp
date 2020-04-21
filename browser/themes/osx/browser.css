@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../../toolkit/themes/osx/global/shared.inc
-%define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
-
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/browser.inc.css
@@ -491,8 +488,6 @@
 /* ----- CONTENT ----- */
 
 .browserContainer > findbar {
-  background: @scopeBarBackground@;
-  border-top: @scopeBarSeparatorBorder@;
   color: -moz-DialogText;
   text-shadow: none;
 }
@@ -564,7 +559,6 @@
 
 #TabsToolbar:not(:-moz-lwtheme) {
   color: #333;
-  text-shadow: @loweredShadow@;
 }
 
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {

@@ -9,7 +9,7 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-* skin/classic/browser/pageInfo.css
+  skin/classic/browser/pageInfo.css
 * skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/webRTC-indicator.css
