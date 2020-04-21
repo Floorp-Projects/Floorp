@@ -85,4 +85,5 @@ pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.overlay", true);
 pref("devtools.debugger.features.inline-preview", true);
+pref("devtools.debugger.features.frame-step", true);
 pref("devtools.debugger.features.windowless-service-workers", false);

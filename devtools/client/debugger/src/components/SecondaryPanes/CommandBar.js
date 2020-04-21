@@ -14,6 +14,7 @@ import {
   getIsWaitingOnBreak,
   getSkipPausing,
   getCurrentThread,
+  isTopFrameSelected,
   getThreadContext,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
@@ -82,6 +83,7 @@ type Props = {
   isWaitingOnBreak: boolean,
   horizontal: boolean,
   skipPausing: boolean,
+  topFrameSelected: boolean,
   resume: typeof actions.resume,
   stepIn: typeof actions.stepIn,
   stepOut: typeof actions.stepOut,
@@ -134,7 +136,7 @@ class CommandBar extends Component<Props> {
   }
 
   renderStepButtons() {
-    const { cx } = this.props;
+    const { cx, topFrameSelected } = this.props;
     const className = cx.isPaused ? "active" : "disabled";
     const isDisabled = !cx.isPaused;
 
@@ -152,7 +154,7 @@ class CommandBar extends Component<Props> {
         "stepIn",
         className,
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
-        isDisabled
+        isDisabled || (features.frameStep && !topFrameSelected)
       ),
       debugBtn(
         () => this.props.stepOut(cx),
@@ -249,6 +251,7 @@ const mapStateToProps = state => ({
   cx: getThreadContext(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
   skipPausing: getSkipPausing(state),
+  topFrameSelected: isTopFrameSelected(state, getCurrentThread(state)),
 });
 
 export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
