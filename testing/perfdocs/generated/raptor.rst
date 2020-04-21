@@ -168,6 +168,10 @@ Browsertime youtube
 ^^^^^^^^^^^^^^^^^^^
 Desktop page-load performance test for youtube using Browsertime.
 
+Live
+----
+A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms.
+
 Mobile
 ------
 Page-load performance test suite on Android.
