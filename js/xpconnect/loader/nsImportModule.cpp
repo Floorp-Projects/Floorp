@@ -17,8 +17,7 @@ using mozilla::dom::AutoJSAPI;
 namespace mozilla {
 namespace loader {
 
-nsresult ImportModule(const char* aURI, const char* aExportName,
-                      const nsIID& aIID, void** aResult) {
+nsresult ImportModule(const char* aURI, const nsIID& aIID, void** aResult) {
   AutoJSAPI jsapi;
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsapi.cx();
@@ -27,17 +26,6 @@ nsresult ImportModule(const char* aURI, const char* aExportName,
   JS::RootedObject exports(cx);
   MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, nsDependentCString(aURI),
                                               &global, &exports));
-
-  if (aExportName) {
-    JS::RootedValue namedExport(cx);
-    if (!JS_GetProperty(cx, exports, aExportName, &namedExport)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (!namedExport.isObject()) {
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-    exports.set(&namedExport.toObject());
-  }
 
   return nsXPConnect::XPConnect()->WrapJS(cx, exports, aIID, aResult);
 }
