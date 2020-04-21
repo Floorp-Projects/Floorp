@@ -21,6 +21,7 @@
 #include "js/Value.h"
 #include "jsapi.h"
 #include "KeyPath.h"
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
@@ -755,7 +756,7 @@ void ReadCompressedIndexId(const uint8_t** aIterator, const uint8_t* aEnd,
 
 // static
 nsresult MakeCompressedIndexDataValues(
-    const FallibleTArray<IndexDataValue>& aIndexValues,
+    const nsTArray<IndexDataValue>& aIndexValues,
     UniqueFreePtr<uint8_t>& aCompressedIndexDataValues,
     uint32_t* aCompressedIndexDataValuesLength) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -2607,14 +2608,11 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
   }
 
   // Update the array with the new addition.
-  if (NS_WARN_IF(
-          !indexValues.SetCapacity(indexValues.Length() + 1, fallible))) {
+  if (NS_WARN_IF(!indexValues.InsertElementSorted(
+          IndexDataValue(indexId, !!unique, value), fallible))) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  MOZ_ALWAYS_TRUE(indexValues.InsertElementSorted(
-      IndexDataValue(indexId, !!unique, value), fallible));
 
   // Compress the array.
   UniqueFreePtr<uint8_t> indexValuesBlob;
@@ -5592,12 +5590,11 @@ class DatabaseOperationBase : public Runnable,
 
   static nsresult InsertIndexTableRows(
       DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
-      const Key& aObjectStoreKey,
-      const FallibleTArray<IndexDataValue>& aIndexValues);
+      const Key& aObjectStoreKey, const nsTArray<IndexDataValue>& aIndexValues);
 
   static nsresult DeleteIndexDataTableRows(
       DatabaseConnection* aConnection, const Key& aObjectStoreKey,
-      const FallibleTArray<IndexDataValue>& aIndexValues);
+      const nsTArray<IndexDataValue>& aIndexValues);
 
   static nsresult DeleteObjectStoreDataTableRowsWithIndexes(
       DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
@@ -5605,8 +5602,7 @@ class DatabaseOperationBase : public Runnable,
 
   static nsresult UpdateIndexValues(
       DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
-      const Key& aObjectStoreKey,
-      const FallibleTArray<IndexDataValue>& aIndexValues);
+      const Key& aObjectStoreKey, const nsTArray<IndexDataValue>& aIndexValues);
 
   static nsresult ObjectStoreHasIndexes(DatabaseConnection* aConnection,
 
@@ -6563,7 +6559,7 @@ class NormalTransaction final : public TransactionBase,
  private:
   // This constructor is only called by Database.
   NormalTransaction(SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
-                    nsTArray<RefPtr<FullObjectStoreMetadata>>& aObjectStores);
+                    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores);
 
   // Reference counted.
   ~NormalTransaction() override = default;
@@ -7424,7 +7420,7 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
                                         const bool aMayHaveIndexes,
                                         bool* aHasIndexes);
 
-  virtual nsresult GetPreprocessParams(PreprocessParams& aParams);
+  virtual mozilla::Result<PreprocessParams, nsresult> GetPreprocessParams();
 
   // Subclasses use this override to set the IPDL response value.
   virtual void GetResponse(RequestResponse& aResponse,
@@ -7778,14 +7774,15 @@ class ObjectStoreGetRequestOp final : public NormalTransactionOp {
 
   ~ObjectStoreGetRequestOp() override = default;
 
-  template <bool aForPreprocess, typename T>
-  nsresult ConvertResponse(StructuredCloneReadInfoParent& aInfo, T& aResult);
+  template <typename T>
+  mozilla::Result<T, nsresult> ConvertResponse(
+      StructuredCloneReadInfoParent&& aInfo);
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   bool HasPreprocessInfo() override;
 
-  nsresult GetPreprocessParams(PreprocessParams& aParams) override;
+  mozilla::Result<PreprocessParams, nsresult> GetPreprocessParams() override;
 
   void GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 };
@@ -7797,7 +7794,7 @@ class ObjectStoreGetKeyRequestOp final : public NormalTransactionOp {
   const Maybe<SerializedKeyRange> mOptionalKeyRange;
   const uint32_t mLimit;
   const bool mGetAll;
-  FallibleTArray<Key> mResponse;
+  nsTArray<Key> mResponse;
 
  private:
   // Only created by TransactionBase.
@@ -8106,7 +8103,7 @@ class ObjectStoreCursorBase : public CursorBase {
   };
 };
 
-using FilesArray = nsTArray<FallibleTArray<StructuredCloneFileParent>>;
+using FilesArray = nsTArray<nsTArray<StructuredCloneFileParent>>;
 
 struct PseudoFilesArray {
   static constexpr bool IsEmpty() { return true; }
@@ -12711,7 +12708,7 @@ void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
 
   const auto foundIt = std::find_if(
       mQueuedTransactions.begin(), mQueuedTransactions.end(),
-      [& me = *this](const auto& queuedTransaction) {
+      [&me = *this](const auto& queuedTransaction) {
         return !me.ScheduleTransaction(queuedTransaction,
                                        /* aFromQueuedTransactions */ true);
       });
@@ -12837,7 +12834,7 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
   // finished.
   mCompleteCallbacks.RemoveElementsAt(
       std::remove_if(mCompleteCallbacks.begin(), mCompleteCallbacks.end(),
-                     [& me = *this](const auto& completeCallback) {
+                     [&me = *this](const auto& completeCallback) {
                        return me.MaybeFireCallback(completeCallback.get());
                      }),
       mCompleteCallbacks.end());
@@ -13776,26 +13773,21 @@ bool Database::InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable) {
     return true;
   }
 
-  FallibleTArray<RefPtr<T>> elementsToInvalidate;
+  nsTArray<RefPtr<T>> elementsToInvalidate;
   if (NS_WARN_IF(!elementsToInvalidate.SetCapacity(count, fallible))) {
     return false;
   }
 
   for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
-    if (NS_WARN_IF(!elementsToInvalidate.AppendElement(iter.Get()->GetKey(),
-                                                       fallible))) {
-      return false;
-    }
+    elementsToInvalidate.AppendElement(iter.Get()->GetKey());
   }
 
-  if (count) {
-    IDB_REPORT_INTERNAL_ERR();
+  IDB_REPORT_INTERNAL_ERR();
 
-    for (const auto& elementToInvalidate : elementsToInvalidate) {
-      MOZ_ASSERT(elementToInvalidate);
+  for (const auto& elementToInvalidate : elementsToInvalidate) {
+    MOZ_ASSERT(elementToInvalidate);
 
-      elementToInvalidate->Invalidate();
-    }
+    elementToInvalidate->Invalidate();
   }
 
   return true;
@@ -14301,8 +14293,8 @@ PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
     return nullptr;
   }
 
-  FallibleTArray<RefPtr<FullObjectStoreMetadata>> fallibleObjectStores;
-  if (NS_WARN_IF(!fallibleObjectStores.SetCapacity(nameCount, fallible))) {
+  nsTArray<RefPtr<FullObjectStoreMetadata>> objectStoreMetadatas;
+  if (NS_WARN_IF(!objectStoreMetadatas.SetCapacity(nameCount, fallible))) {
     return nullptr;
   }
 
@@ -14323,22 +14315,17 @@ PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
           MOZ_ASSERT(entry.GetKey());
           return name == value->mCommonMetadata.name() && !value->mDeleted;
         });
-    if (foundIt != objectStores.cend()) {
-      if (NS_WARN_IF(!fallibleObjectStores.AppendElement(foundIt->GetData(),
-                                                         fallible))) {
-        return nullptr;
-      }
+    if (foundIt == objectStores.cend()) {
+      ASSERT_UNLESS_FUZZING();
+      return nullptr;
     }
+
+    objectStoreMetadatas.AppendElement(foundIt->GetData());
   }
 
-  nsTArray<RefPtr<FullObjectStoreMetadata>> infallibleObjectStores;
-  infallibleObjectStores.SwapElements(fallibleObjectStores);
-
-  RefPtr<NormalTransaction> transaction =
+  RefPtr transaction =
       new NormalTransaction(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                            aMode, infallibleObjectStores);
-
-  MOZ_ASSERT(infallibleObjectStores.IsEmpty());
+                            aMode, std::move(objectStoreMetadatas));
 
   return transaction.forget().take();
 }
@@ -15411,12 +15398,11 @@ bool TransactionBase::DeallocCursor(PBackgroundIDBCursorParent* const aActor) {
 
 NormalTransaction::NormalTransaction(
     SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
-    nsTArray<RefPtr<FullObjectStoreMetadata>>& aObjectStores)
-    : TransactionBase(std::move(aDatabase), aMode) {
+    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores)
+    : TransactionBase(std::move(aDatabase), aMode),
+      mObjectStores{std::move(aObjectStores)} {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!aObjectStores.IsEmpty());
-
-  mObjectStores.SwapElements(aObjectStores);
+  MOZ_ASSERT(!mObjectStores.IsEmpty());
 }
 
 bool NormalTransaction::IsSameProcessActor() {
@@ -19849,8 +19835,7 @@ nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
 // static
 nsresult DatabaseOperationBase::InsertIndexTableRows(
     DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
-    const Key& aObjectStoreKey,
-    const FallibleTArray<IndexDataValue>& aIndexValues) {
+    const Key& aObjectStoreKey, const nsTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(!aObjectStoreKey.IsUnset());
@@ -19961,7 +19946,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
 // static
 nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     DatabaseConnection* aConnection, const Key& aObjectStoreKey,
-    const FallibleTArray<IndexDataValue>& aIndexValues) {
+    const nsTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(!aObjectStoreKey.IsUnset());
@@ -20180,8 +20165,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 // static
 nsresult DatabaseOperationBase::UpdateIndexValues(
     DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
-    const Key& aObjectStoreKey,
-    const FallibleTArray<IndexDataValue>& aIndexValues) {
+    const Key& aObjectStoreKey, const nsTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(!aObjectStoreKey.IsUnset());
@@ -21052,7 +21036,7 @@ nsresult FactoryOp::SendVersionChangeMessages(
   const uint32_t expectedCount = mDeleting ? 0 : 1;
   const uint32_t liveCount = aDatabaseActorInfo->mLiveDatabases.Length();
   if (liveCount > expectedCount) {
-    FallibleTArray<MaybeBlockedDatabaseInfo> maybeBlockedDatabases;
+    nsTArray<MaybeBlockedDatabaseInfo> maybeBlockedDatabases;
     for (const auto& database : aDatabaseActorInfo->mLiveDatabases) {
       if ((!aOpeningDatabase || database.get() != &aOpeningDatabase.ref()) &&
           !database->IsClosed() &&
@@ -21064,9 +21048,7 @@ nsresult FactoryOp::SendVersionChangeMessages(
       }
     }
 
-    if (!maybeBlockedDatabases.IsEmpty()) {
-      mMaybeBlockedDatabases.SwapElements(maybeBlockedDatabases);
-    }
+    mMaybeBlockedDatabases = std::move(maybeBlockedDatabases);
   }
 
   // We don't want to wait forever if we were not able to send the
@@ -25042,19 +25024,20 @@ nsresult NormalTransactionOp::ObjectStoreHasIndexes(
   return NS_OK;
 }
 
-nsresult NormalTransactionOp::GetPreprocessParams(PreprocessParams& aParams) {
-  return NS_OK;
+Result<PreprocessParams, nsresult> NormalTransactionOp::GetPreprocessParams() {
+  return PreprocessParams{};
 }
 
 nsresult NormalTransactionOp::SendPreprocessInfo() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  PreprocessParams params;
-  nsresult rv = GetPreprocessParams(params);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto res = GetPreprocessParams();
+  if (NS_WARN_IF(res.isErr())) {
+    return res.unwrapErr();
   }
+
+  const auto& params = res.unwrap();
 
   MOZ_ASSERT(params.type() != PreprocessParams::T__None);
 
@@ -25769,36 +25752,28 @@ ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(
 }
 
 template <typename T>
-void MoveData(StructuredCloneReadInfoParent& aInfo, T& aResult);
+Result<T, nsresult> ObjectStoreGetRequestOp::ConvertResponse(
+    StructuredCloneReadInfoParent&& aInfo) {
+  T result;
 
-template <>
-void MoveData<SerializedStructuredCloneReadInfo>(
-    StructuredCloneReadInfoParent& aInfo,
-    SerializedStructuredCloneReadInfo& aResult) {
-  aResult.data().data = aInfo.ReleaseData();
-  aResult.hasPreprocessInfo() = aInfo.HasPreprocessInfo();
-}
+  static_assert(std::is_same_v<T, SerializedStructuredCloneReadInfo> ||
+                std::is_same_v<T, PreprocessInfo>);
 
-template <>
-void MoveData<PreprocessInfo>(StructuredCloneReadInfoParent& aInfo,
-                              PreprocessInfo& aResult) {}
-
-template <bool aForPreprocess, typename T>
-nsresult ObjectStoreGetRequestOp::ConvertResponse(
-    StructuredCloneReadInfoParent& aInfo, T& aResult) {
-  MoveData(aInfo, aResult);
-
-  auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                           aInfo.Files(), aForPreprocess);
-  if (NS_WARN_IF(res.isErr())) {
-    return res.unwrapErr();
+  if constexpr (std::is_same_v<T, SerializedStructuredCloneReadInfo>) {
+    result.data().data = aInfo.ReleaseData();
+    result.hasPreprocessInfo() = aInfo.HasPreprocessInfo();
   }
 
-  MOZ_ASSERT(aResult.files().IsEmpty());
+  auto res =
+      SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, aInfo.Files(),
+                                    std::is_same_v<T, PreprocessInfo>);
+  if (NS_WARN_IF(res.isErr())) {
+    return Err(res.unwrapErr());
+  }
 
-  aResult.files() = res.unwrap();
+  result.files() = res.unwrap();
 
-  return NS_OK;
+  return result;
 }
 
 nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
@@ -25874,50 +25849,45 @@ bool ObjectStoreGetRequestOp::HasPreprocessInfo() {
   return mPreprocessInfoCount > 0;
 }
 
-nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
-    PreprocessParams& aParams) {
+Result<PreprocessParams, nsresult>
+ObjectStoreGetRequestOp::GetPreprocessParams() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mResponse.IsEmpty());
 
   if (mGetAll) {
-    aParams = ObjectStoreGetAllPreprocessParams();
+    auto params = ObjectStoreGetAllPreprocessParams();
 
-    FallibleTArray<PreprocessInfo> falliblePreprocessInfos;
-    if (NS_WARN_IF(!falliblePreprocessInfos.SetLength(mPreprocessInfoCount,
-                                                      fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    auto& preprocessInfos = params.preprocessInfos();
+    if (NS_WARN_IF(
+            !preprocessInfos.SetCapacity(mPreprocessInfoCount, fallible))) {
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
 
-    uint32_t fallibleIndex = 0;
-    for (auto& info : mResponse) {
-      if (info.HasPreprocessInfo()) {
-        nsresult rv = ConvertResponse<true>(
-            info, falliblePreprocessInfos[fallibleIndex++]);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
+    auto res = TransformIfAbortOnErr(
+        std::make_move_iterator(mResponse.begin()),
+        std::make_move_iterator(mResponse.end()),
+        MakeBackInserter(preprocessInfos),
+        [](const auto& info) { return info.HasPreprocessInfo(); },
+        [&self = *this](StructuredCloneReadInfoParent&& info) {
+          return self.ConvertResponse<PreprocessInfo>(std::move(info));
+        });
+
+    if (NS_WARN_IF(res.isErr())) {
+      return Err(res.unwrapErr());
     }
 
-    nsTArray<PreprocessInfo>& preprocessInfos =
-        aParams.get_ObjectStoreGetAllPreprocessParams().preprocessInfos();
-
-    falliblePreprocessInfos.SwapElements(preprocessInfos);
-
-    return NS_OK;
+    return PreprocessParams{std::move(params)};
   }
 
-  aParams = ObjectStoreGetPreprocessParams();
+  auto params = ObjectStoreGetPreprocessParams();
 
-  PreprocessInfo& preprocessInfo =
-      aParams.get_ObjectStoreGetPreprocessParams().preprocessInfo();
-
-  nsresult rv = ConvertResponse<true>(mResponse[0], preprocessInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto res = ConvertResponse<PreprocessInfo>(std::move(mResponse[0]));
+  if (NS_WARN_IF(res.isErr())) {
+    return Err(res.unwrapErr());
   }
+  params.preprocessInfo() = res.unwrap();
 
-  return NS_OK;
+  return PreprocessParams{std::move(params)};
 }
 
 void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
@@ -25929,28 +25899,21 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
     *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
-      FallibleTArray<SerializedStructuredCloneReadInfo> fallibleCloneInfos;
-      if (NS_WARN_IF(
-              !fallibleCloneInfos.SetLength(mResponse.Length(), fallible))) {
-        aResponse = NS_ERROR_OUT_OF_MEMORY;
+      auto res = TransformIntoNewArrayAbortOnErr(
+          std::make_move_iterator(mResponse.begin()),
+          std::make_move_iterator(mResponse.end()),
+          [this, &aResponseSize](StructuredCloneReadInfoParent&& info) {
+            *aResponseSize += info.Size();
+            return ConvertResponse<SerializedStructuredCloneReadInfo>(
+                std::move(info));
+          },
+          fallible);
+      if (NS_WARN_IF(res.isErr())) {
+        aResponse = res.unwrapErr();
         return;
       }
 
-      for (uint32_t count = mResponse.Length(), index = 0; index < count;
-           index++) {
-        *aResponseSize += mResponse[index].Size();
-        nsresult rv =
-            ConvertResponse<false>(mResponse[index], fallibleCloneInfos[index]);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          aResponse = rv;
-          return;
-        }
-      }
-
-      nsTArray<SerializedStructuredCloneReadInfo>& cloneInfos =
-          aResponse.get_ObjectStoreGetAllResponse().cloneInfos();
-
-      fallibleCloneInfos.SwapElements(cloneInfos);
+      aResponse.get_ObjectStoreGetAllResponse().cloneInfos() = res.unwrap();
     }
 
     return;
@@ -25964,10 +25927,13 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
         aResponse.get_ObjectStoreGetResponse().cloneInfo();
 
     *aResponseSize += mResponse[0].Size();
-    nsresult rv = ConvertResponse<false>(mResponse[0], serializedInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResponse = rv;
+    auto res = ConvertResponse<SerializedStructuredCloneReadInfo>(
+        std::move(mResponse[0]));
+    if (NS_WARN_IF(res.isErr())) {
+      aResponse = res.unwrapErr();
+      return;
     }
+    serializedInfo = res.unwrap();
   }
 }
 
@@ -26063,8 +26029,7 @@ void ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
                                        return old + entry.GetBuffer().Length();
                                      });
 
-    mResponse.SwapElements(
-        aResponse.get_ObjectStoreGetAllKeysResponse().keys());
+    aResponse.get_ObjectStoreGetAllKeysResponse().keys() = std::move(mResponse);
 
     return;
   }
@@ -26457,49 +26422,48 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   return NS_OK;
 }
 
+// XXX This is more or less a duplicate of ObjectStoreGetRequestOp::GetResponse
 void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
                                     size_t* aResponseSize) {
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
+
+  auto convertResponse = [this](StructuredCloneReadInfoParent&& info)
+      -> mozilla::Result<SerializedStructuredCloneReadInfo, nsresult> {
+    SerializedStructuredCloneReadInfo result;
+
+    result.data().data = info.ReleaseData();
+
+    auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
+                                             info.Files(), false);
+    if (NS_WARN_IF(res.isErr())) {
+      return Err(res.unwrapErr());
+    }
+
+    result.files() = res.unwrap();
+
+    return result;
+  };
 
   if (mGetAll) {
     aResponse = IndexGetAllResponse();
     *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
-      FallibleTArray<SerializedStructuredCloneReadInfo> fallibleCloneInfos;
-      if (NS_WARN_IF(
-              !fallibleCloneInfos.SetLength(mResponse.Length(), fallible))) {
-        aResponse = NS_ERROR_OUT_OF_MEMORY;
+      auto res = TransformIntoNewArrayAbortOnErr(
+          std::make_move_iterator(mResponse.begin()),
+          std::make_move_iterator(mResponse.end()),
+          [convertResponse,
+           &aResponseSize](StructuredCloneReadInfoParent&& info) {
+            *aResponseSize += info.Size();
+            return convertResponse(std::move(info));
+          },
+          fallible);
+      if (NS_WARN_IF(res.isErr())) {
+        aResponse = res.unwrapErr();
         return;
       }
 
-      for (uint32_t count = mResponse.Length(), index = 0; index < count;
-           index++) {
-        StructuredCloneReadInfoParent& info = mResponse[index];
-        *aResponseSize += info.Size();
-
-        SerializedStructuredCloneReadInfo& serializedInfo =
-            fallibleCloneInfos[index];
-
-        serializedInfo.data().data = info.ReleaseData();
-
-        auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                                 info.Files(),
-                                                 /* aForPreprocess */ false);
-        if (NS_WARN_IF(res.isErr())) {
-          aResponse = res.unwrapErr();
-          return;
-        }
-
-        MOZ_ASSERT(serializedInfo.files().IsEmpty());
-
-        serializedInfo.files() = res.unwrap();
-      }
-
-      nsTArray<SerializedStructuredCloneReadInfo>& cloneInfos =
-          aResponse.get_IndexGetAllResponse().cloneInfos();
-
-      fallibleCloneInfos.SwapElements(cloneInfos);
+      aResponse.get_IndexGetAllResponse().cloneInfos() = res.unwrap();
     }
 
     return;
@@ -26509,25 +26473,16 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
   *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
-    StructuredCloneReadInfoParent& info = mResponse[0];
-    *aResponseSize += info.Size();
-
     SerializedStructuredCloneReadInfo& serializedInfo =
         aResponse.get_IndexGetResponse().cloneInfo();
 
-    serializedInfo.data().data = info.ReleaseData();
-
-    auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                             info.Files(),
-                                             /* aForPreprocess */ false);
+    *aResponseSize += mResponse[0].Size();
+    auto res = convertResponse(std::move(mResponse[0]));
     if (NS_WARN_IF(res.isErr())) {
       aResponse = res.unwrapErr();
       return;
     }
-
-    MOZ_ASSERT(serializedInfo.files().IsEmpty());
-
-    serializedInfo.files() = res.unwrap();
+    serializedInfo = res.unwrap();
   }
 }
 
