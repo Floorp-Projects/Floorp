@@ -160,8 +160,6 @@ class ABIResultIter {
   void settleNext();
   void settlePrev();
 
-  static constexpr size_t RegisterResultCount = 1;
-
  public:
   explicit ABIResultIter(const ResultType& type)
       : type_(type), count_(type.length()) {
@@ -223,7 +221,7 @@ class ABIResultIter {
   uint32_t stackBytesConsumedSoFar() const { return nextStackOffset_; }
 
   static inline bool HasStackResults(const ResultType& type) {
-    return type.length() > RegisterResultCount;
+    return type.length() > MaxRegisterResults;
   }
 
   static uint32_t MeasureStackBytes(const ResultType& type) {

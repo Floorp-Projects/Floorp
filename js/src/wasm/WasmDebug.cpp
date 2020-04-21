@@ -367,11 +367,6 @@ bool DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals,
   return DecodeValidatedLocalEntries(d, locals);
 }
 
-bool DebugState::debugGetResultTypes(uint32_t funcIndex,
-                                     ValTypeVector* results) {
-  return results->appendAll(metadata().debugFuncReturnTypes[funcIndex]);
-}
-
 bool DebugState::getGlobal(Instance& instance, uint32_t globalIndex,
                            MutableHandleValue vp) {
   const GlobalDesc& global = metadata().globals[globalIndex];
