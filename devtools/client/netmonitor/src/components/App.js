@@ -52,6 +52,8 @@ class App extends Component {
       sourceMapService: PropTypes.object,
       // True if the stats panel is opened.
       statisticsOpen: PropTypes.bool.isRequired,
+      // Document which settings menu will be injected to
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -65,6 +67,7 @@ class App extends Component {
       openSplitConsole,
       sourceMapService,
       statisticsOpen,
+      toolboxDoc,
     } = this.props;
 
     return div(
@@ -81,6 +84,7 @@ class App extends Component {
               openSplitConsole,
               sourceMapService,
               openLink,
+              toolboxDoc,
             })
           )
         : StatisticsPanel({

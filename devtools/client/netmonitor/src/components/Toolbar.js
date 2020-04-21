@@ -54,7 +54,7 @@ const SearchBox = createFactory(
   require("devtools/client/shared/components/SearchBox")
 );
 
-const { button, div, input, label, span } = dom;
+const { button, div, input, label, span, hr } = dom;
 
 // Localization
 const FILTER_KEY_SHORTCUT = L10N.getStr(
@@ -168,6 +168,7 @@ class Toolbar extends Component {
       networkActionBarSelectedPanel: PropTypes.string.isRequired,
       hasBlockedRequests: PropTypes.bool.isRequired,
       selectedRequest: PropTypes.object,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -465,10 +466,11 @@ class Toolbar extends Component {
   }
 
   renderSettingsMenuButton() {
+    const { toolboxDoc } = this.props;
     return MenuButton(
       {
         menuId: "netmonitor-settings-menu-button",
-        toolboxDoc: document,
+        toolboxDoc,
         className: "devtools-button netmonitor-settings-menu-button",
         title: L10N.getStr("netmonitor.settings.menuTooltip"),
       },
@@ -498,7 +500,7 @@ class Toolbar extends Component {
         tooltip: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip"),
         onClick: () => togglePersistentLogs(),
       }),
-      MenuItem({ role: "menuseparator", key: "har-separator", label: "" }),
+      hr(),
       MenuItem({
         key: "request-list-context-import-har",
         className: "menu-item netmonitor-settings-import-har-item",
