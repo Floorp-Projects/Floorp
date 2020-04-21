@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::super::shader_source::UNOPTIMIZED_SHADERS;
+use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
 use api::{ColorF, ImageDescriptor, ImageFormat, MemoryReport};
 use api::{MixBlendMode, TextureTarget, VoidPtrToSizeFn};
 use api::units::*;
@@ -662,10 +662,17 @@ pub struct VBOId(gl::GLuint);
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 struct IBOId(gl::GLuint);
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Debug)]
+enum ProgramSourceType {
+    Unoptimized,
+    Optimized(ShaderVersion),
+}
+
+#[derive(Clone, Debug)]
 pub struct ProgramSourceInfo {
     base_filename: &'static str,
     features: Vec<&'static str>,
+    source_type: ProgramSourceType,
     digest: ProgramSourceDigest,
 }
 
@@ -677,72 +684,131 @@ impl ProgramSourceInfo {
     ) -> Self {
 
         // Compute the digest. Assuming the device has a `ProgramCache`, this
-        // will always be needed, whereas the source is rarely needed. As such,
-        // we compute the hash by walking the static strings in the same order
-        // as we would when concatenating the source, to avoid heap-allocating
-        // in the common case.
-        //
-        // Note that we cheat a bit to make the hashing more efficient. First,
-        // the only difference between the vertex and fragment shader is a
-        // single deterministic define, so we don't need to hash both. Second,
-        // we precompute the digest of the expanded source file at build time,
-        // and then just hash that digest here.
+        // will always be needed, whereas the source is rarely needed.
 
         use std::collections::hash_map::DefaultHasher;
         use std::hash::Hasher;
 
         // Setup.
         let mut hasher = DefaultHasher::new();
-        let version = get_shader_version(&*device.gl());
-        let override_path = device.resource_override_path.as_ref();
-        let source_and_digest = UNOPTIMIZED_SHADERS.get(&name).expect("Shader not found");
+        let gl_version = get_shader_version(&*device.gl());
 
         // Hash the renderer name.
         hasher.write(device.capabilities.renderer_name.as_bytes());
 
-        // Hash the prefix string.
-        build_shader_prefix_string(
-            version,
-            &features,
-            ShaderKind::Vertex,
-            &name,
-            &mut |s| hasher.write(s.as_bytes()),
-        );
+        let full_name = &Self::full_name(name, features);
 
-        // Hash the shader file contents. We use a precomputed digest, and
-        // verify it in debug builds.
-        if override_path.is_some() || cfg!(debug_assertions) {
-            let mut h = DefaultHasher::new();
-            build_shader_main_string(
-                &name,
-                &|f| get_unoptimized_shader_source(f, override_path),
-                &mut |s| h.write(s.as_bytes())
-            );
-            let d: ProgramSourceDigest = h.into();
-            let digest = format!("{}", d);
-            debug_assert!(override_path.is_some() || digest == source_and_digest.digest);
-            hasher.write(digest.as_bytes());
+        let optimized_source = if device.use_optimized_shaders {
+            OPTIMIZED_SHADERS.get(&(gl_version, full_name)).or_else(|| {
+                warn!("Missing optimized shader source for {}", full_name);
+                None
+            })
         } else {
-            hasher.write(source_and_digest.digest.as_bytes());
+            None
+        };
+
+        let source_type = match optimized_source {
+            Some(source_and_digest) => {
+                // Optimized shader sources are used as-is, without any run-time processing.
+                // The vertex and fragment shaders are different, so must both be hashed.
+                // We use the hashes that were computed at build time, and verify it in debug builds.
+                if cfg!(debug_assertions) {
+                    let mut h = DefaultHasher::new();
+                    h.write(source_and_digest.vert_source.as_bytes());
+                    h.write(source_and_digest.frag_source.as_bytes());
+                    let d: ProgramSourceDigest = h.into();
+                    let digest = d.to_string();
+                    debug_assert_eq!(digest, source_and_digest.digest);
+                    hasher.write(digest.as_bytes());
+                } else {
+                    hasher.write(source_and_digest.digest.as_bytes());
+                }
+
+                ProgramSourceType::Optimized(gl_version)
+            }
+            None => {
+                // For non-optimized sources we compute the hash by walking the static strings
+                // in the same order as we would when concatenating the source, to avoid
+                // heap-allocating in the common case.
+                //
+                // Note that we cheat a bit to make the hashing more efficient. First, the only
+                // difference between the vertex and fragment shader is a single deterministic
+                // define, so we don't need to hash both. Second, we precompute the digest of the
+                // expanded source file at build time, and then just hash that digest here.
+                let override_path = device.resource_override_path.as_ref();
+                let source_and_digest = UNOPTIMIZED_SHADERS.get(&name).expect("Shader not found");
+
+                // Hash the prefix string.
+                build_shader_prefix_string(
+                    gl_version,
+                    &features,
+                    ShaderKind::Vertex,
+                    &name,
+                    &mut |s| hasher.write(s.as_bytes()),
+                );
+
+                // Hash the shader file contents. We use a precomputed digest, and
+                // verify it in debug builds.
+                if override_path.is_some() || cfg!(debug_assertions) {
+                    let mut h = DefaultHasher::new();
+                    build_shader_main_string(
+                        &name,
+                        &|f| get_unoptimized_shader_source(f, override_path),
+                        &mut |s| h.write(s.as_bytes())
+                    );
+                    let d: ProgramSourceDigest = h.into();
+                    let digest = format!("{}", d);
+                    debug_assert!(override_path.is_some() || digest == source_and_digest.digest);
+                    hasher.write(digest.as_bytes());
+                } else {
+                    hasher.write(source_and_digest.digest.as_bytes());
+                }
+
+                ProgramSourceType::Unoptimized
+            }
         };
 
         // Finish.
         ProgramSourceInfo {
             base_filename: name,
             features: features.to_vec(),
+            source_type,
             digest: hasher.into(),
         }
     }
 
     fn compute_source(&self, device: &Device, kind: ShaderKind) -> String {
-        let mut src = String::new();
-        device.build_shader_string(
-            &self.features,
-            kind,
-            self.base_filename,
-            |s| src.push_str(s),
-        );
-        src
+        let full_name = Self::full_name(self.base_filename, &self.features);
+        match self.source_type {
+            ProgramSourceType::Optimized(gl_version) => {
+                let shader = OPTIMIZED_SHADERS
+                    .get(&(gl_version, &full_name))
+                    .unwrap_or_else(|| panic!("Missing optimized shader source for {}", full_name));
+
+                match kind {
+                    ShaderKind::Vertex => shader.vert_source.to_string(),
+                    ShaderKind::Fragment => shader.frag_source.to_string(),
+                }
+            },
+            ProgramSourceType::Unoptimized => {
+                let mut src = String::new();
+                device.build_shader_string(
+                    &self.features,
+                    kind,
+                    self.base_filename,
+                    |s| src.push_str(s),
+                );
+                src
+            }
+        }
+    }
+
+    fn full_name(base_filename: &'static str, features: &[&'static str]) -> String {
+        if features.is_empty() {
+            base_filename.to_string()
+        } else {
+            format!("{}_{}", base_filename, features.join("_"))
+        }
     }
 }
 
@@ -1015,6 +1081,9 @@ pub struct Device {
     // resources
     resource_override_path: Option<PathBuf>,
 
+    /// Whether to use shaders that have been optimized at build time.
+    use_optimized_shaders: bool,
+
     max_texture_size: i32,
     max_texture_layers: u32,
     cached_programs: Option<Rc<ProgramCache>>,
@@ -1250,6 +1319,7 @@ impl Device {
     pub fn new(
         mut gl: Rc<dyn gl::Gl>,
         resource_override_path: Option<PathBuf>,
+        use_optimized_shaders: bool,
         upload_method: UploadMethod,
         cached_programs: Option<Rc<ProgramCache>>,
         allow_pixel_local_storage_support: bool,
@@ -1408,7 +1478,8 @@ impl Device {
             ),
         };
 
-        let (depth_format, upload_method) = if renderer_name.starts_with("Software WebRender") {
+        let is_software_webrender = renderer_name.starts_with("Software WebRender");
+        let (depth_format, upload_method) = if is_software_webrender {
             (gl::DEPTH_COMPONENT16, UploadMethod::Immediate)
         } else {
             (gl::DEPTH_COMPONENT24, upload_method)
@@ -1449,6 +1520,9 @@ impl Device {
             gl::GlType::Gles => supports_extension(&extensions,"GL_EXT_blend_func_extended"),
         };
 
+        // Software webrender relies on the unoptimized shader source.
+        let use_optimized_shaders = use_optimized_shaders && !is_software_webrender;
+
         // On the android emulator, glShaderSource can crash if the source
         // strings are not null-terminated. See bug 1591945.
         let requires_null_terminated_shader_source = is_emulator;
@@ -1479,6 +1553,7 @@ impl Device {
             gl,
             base_gl: None,
             resource_override_path,
+            use_optimized_shaders,
             upload_method,
             inside_frame: false,
 

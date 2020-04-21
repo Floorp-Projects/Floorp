@@ -657,6 +657,7 @@ fn main() {
         &mut window,
         events_loop.as_mut().map(|el| el.create_proxy()),
         res_path,
+        !args.is_present("use_unoptimized_shaders"),
         dp_ratio,
         save_type,
         dim,

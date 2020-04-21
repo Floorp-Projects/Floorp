@@ -2192,6 +2192,7 @@ impl Renderer {
         let mut device = Device::new(
             gl,
             options.resource_override_path.clone(),
+            options.use_optimized_shaders,
             options.upload_method.clone(),
             options.cached_programs.take(),
             options.allow_pixel_local_storage_support,
@@ -6713,6 +6714,8 @@ bitflags! {
 pub struct RendererOptions {
     pub device_pixel_ratio: f32,
     pub resource_override_path: Option<PathBuf>,
+    /// Whether to use shaders that have been optimized at build time.
+    pub use_optimized_shaders: bool,
     pub enable_aa: bool,
     pub enable_dithering: bool,
     pub max_recorded_profiles: usize,
@@ -6783,6 +6786,7 @@ impl Default for RendererOptions {
         RendererOptions {
             device_pixel_ratio: 1.0,
             resource_override_path: None,
+            use_optimized_shaders: false,
             enable_aa: true,
             enable_dithering: false,
             debug_flags: DebugFlags::empty(),

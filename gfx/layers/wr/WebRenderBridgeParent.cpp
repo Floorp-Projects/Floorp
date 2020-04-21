@@ -125,6 +125,10 @@ const char* gfx_wr_resource_path_override() {
   return resourcePath;
 }
 
+bool gfx_wr_use_optimized_shaders() {
+  return mozilla::gfx::gfxVars::UseWebRenderOptimizedShaders();
+}
+
 void gfx_critical_note(const char* msg) { gfxCriticalNote << msg; }
 
 void gfx_critical_error(const char* msg) { gfxCriticalError() << msg; }
