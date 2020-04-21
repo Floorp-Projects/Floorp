@@ -561,18 +561,6 @@ class TryOptionSyntax(object):
                 return False
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
-        # Don't schedule code coverage when try option syntax is used
-        if 'ccov' in attr('build_platform', []):
-            return False
-
-        # Don't schedule tasks for windows10-aarch64 unless try fuzzy is used
-        if 'windows10-aarch64' in attr("test_platform", ""):
-            return False
-
-        # Don't schedule android-hw tests when try option syntax is used
-        if 'android-hw' in task.label:
-            return False
-
         # Don't schedule fission tests when try option syntax is used
         if attr('unittest_variant') == 'fission':
             return False
