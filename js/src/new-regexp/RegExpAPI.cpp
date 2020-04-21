@@ -493,8 +493,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 #ifdef DEBUG
   UniquePtr<RegExpMacroAssembler> tracer_masm;
   if (jit::JitOptions.traceRegExpAssembler) {
-    tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate,
-                                                         masm_ptr);
+    tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate, masm_ptr);
     masm_ptr = tracer_masm.get();
   }
 #endif

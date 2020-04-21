@@ -75,7 +75,7 @@ class ThreadLocal {
   friend IDBFactory;
 
   LoggingInfo mLoggingInfo;
-  IDBTransaction* mCurrentTransaction;
+  Maybe<IDBTransaction&> mCurrentTransaction;
   nsCString mLoggingIdString;
 
   NS_DECL_OWNINGTHREAD
@@ -124,13 +124,13 @@ class ThreadLocal {
     return mLoggingInfo.nextRequestSerialNumber()++;
   }
 
-  void SetCurrentTransaction(IDBTransaction* aCurrentTransaction) {
+  void SetCurrentTransaction(Maybe<IDBTransaction&> aCurrentTransaction) {
     AssertIsOnOwningThread();
 
     mCurrentTransaction = aCurrentTransaction;
   }
 
-  IDBTransaction* GetCurrentTransaction() const {
+  Maybe<IDBTransaction&> MaybeCurrentTransactionRef() const {
     AssertIsOnOwningThread();
 
     return mCurrentTransaction;
@@ -405,12 +405,12 @@ class BackgroundTransactionBase {
   // mTemporaryStrongTransaction is strong and is only valid until the end of
   // NoteComplete() member function or until the NoteActorDestroyed() member
   // function is called.
-  RefPtr<IDBTransaction> mTemporaryStrongTransaction;
+  SafeRefPtr<IDBTransaction> mTemporaryStrongTransaction;
 
  protected:
   // mTransaction is weak and is valid until the NoteActorDestroyed() member
   // function is called.
-  IDBTransaction* mTransaction;
+  IDBTransaction* mTransaction = nullptr;
 
  public:
 #ifdef DEBUG
@@ -425,10 +425,11 @@ class BackgroundTransactionBase {
   }
 
  protected:
-  BackgroundTransactionBase();
-  explicit BackgroundTransactionBase(IDBTransaction* aTransaction);
+  MOZ_COUNTED_DEFAULT_CTOR(BackgroundTransactionBase);
 
-  virtual ~BackgroundTransactionBase();
+  explicit BackgroundTransactionBase(SafeRefPtr<IDBTransaction> aTransaction);
+
+  MOZ_COUNTED_DTOR_VIRTUAL(BackgroundTransactionBase);
 
   void NoteActorDestroyed();
 
@@ -436,7 +437,7 @@ class BackgroundTransactionBase {
 
  private:
   // Only called by BackgroundVersionChangeTransactionChild.
-  void SetDOMTransaction(IDBTransaction* aTransaction);
+  void SetDOMTransaction(SafeRefPtr<IDBTransaction> aTransaction);
 };
 
 class BackgroundTransactionChild final : public BackgroundTransactionBase,
@@ -455,7 +456,7 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
 
  private:
   // Only created by IDBDatabase.
-  explicit BackgroundTransactionChild(IDBTransaction* aTransaction);
+  explicit BackgroundTransactionChild(SafeRefPtr<IDBTransaction> aTransaction);
 
   // Only destroyed by BackgroundDatabaseChild.
   ~BackgroundTransactionChild();
@@ -502,9 +503,7 @@ class BackgroundVersionChangeTransactionChild final
   ~BackgroundVersionChangeTransactionChild();
 
   // Only called by BackgroundDatabaseChild.
-  void SetDOMTransaction(IDBTransaction* aDOMObject) {
-    BackgroundTransactionBase::SetDOMTransaction(aDOMObject);
-  }
+  using BackgroundTransactionBase::SetDOMTransaction;
 
  public:
   // IPDL methods are only called by IPDL.
@@ -580,7 +579,7 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   class PreprocessHelper;
 
-  RefPtr<IDBTransaction> mTransaction;
+  SafeRefPtr<IDBTransaction> mTransaction;
   nsTArray<CloneInfo> mCloneInfos;
   uint32_t mRunningPreprocessHelpers;
   uint32_t mCurrentCloneDataIndex;
@@ -625,6 +624,10 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
   nsresult HandlePreprocessInternal(
       const nsTArray<PreprocessInfo>& aPreprocessInfos);
 
+  SafeRefPtr<IDBTransaction> AcquireTransaction() const {
+    return mTransaction.clonePtr();
+  }
+
  public:
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -644,7 +647,7 @@ class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
   NS_DECL_OWNINGTHREAD
  protected:
   InitializedOnceNotNull<IDBRequest* const> mRequest;
-  IDBTransaction* mTransaction;
+  Maybe<IDBTransaction&> mTransaction;
 
   // These are only set while a request is in progress.
   RefPtr<IDBRequest> mStrongRequest;

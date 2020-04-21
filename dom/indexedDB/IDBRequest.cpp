@@ -89,7 +89,7 @@ void IDBRequest::InitMembers() {
 
 // static
 RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBDatabase* aDatabase,
-                                      IDBTransaction* aTransaction) {
+                                      SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
@@ -97,7 +97,7 @@ RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBDatabase* aDatabase,
   RefPtr<IDBRequest> request = new IDBRequest(aDatabase);
   CaptureCaller(aCx, request->mFilename, &request->mLineNo, &request->mColumn);
 
-  request->mTransaction = aTransaction;
+  request->mTransaction = std::move(aTransaction);
 
   return request;
 }
@@ -106,11 +106,11 @@ RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBDatabase* aDatabase,
 RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx,
                                       IDBObjectStore* aSourceAsObjectStore,
                                       IDBDatabase* aDatabase,
-                                      IDBTransaction* aTransaction) {
+                                      SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aSourceAsObjectStore);
   aSourceAsObjectStore->AssertIsOnOwningThread();
 
-  auto request = Create(aCx, aDatabase, aTransaction);
+  auto request = Create(aCx, aDatabase, std::move(aTransaction));
 
   request->mSourceAsObjectStore = aSourceAsObjectStore;
 
@@ -120,11 +120,11 @@ RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx,
 // static
 RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBIndex* aSourceAsIndex,
                                       IDBDatabase* aDatabase,
-                                      IDBTransaction* aTransaction) {
+                                      SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aSourceAsIndex);
   aSourceAsIndex->AssertIsOnOwningThread();
 
-  auto request = Create(aCx, aDatabase, aTransaction);
+  auto request = Create(aCx, aDatabase, std::move(aTransaction));
 
   request->mSourceAsIndex = aSourceAsIndex;
 
@@ -264,6 +264,10 @@ void IDBRequest::GetResult(JS::MutableHandle<JS::Value> aResult,
   aResult.set(mResultVal);
 }
 
+// XXX This function should be renamed, it doesn't set the callback, but uses
+// the callback to set the result. In addition, the ResultCallback class can be
+// removed, a functor can just be passed instead. The same should be done for
+// IDBFileRequest::SetResultCallback.
 void IDBRequest::SetResultCallback(ResultCallback* aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
@@ -366,7 +370,7 @@ void IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
-  aVisitor.SetParentTarget(mTransaction, false);
+  aVisitor.SetParentTarget(mTransaction.unsafeGetRawPtr(), false);
 }
 
 IDBOpenDBRequest::IDBOpenDBRequest(SafeRefPtr<IDBFactory> aFactory,
@@ -417,12 +421,12 @@ RefPtr<IDBOpenDBRequest> IDBOpenDBRequest::Create(
   return request;
 }
 
-void IDBOpenDBRequest::SetTransaction(IDBTransaction* aTransaction) {
+void IDBOpenDBRequest::SetTransaction(SafeRefPtr<IDBTransaction> aTransaction) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(!aTransaction || !mTransaction);
 
-  mTransaction = aTransaction;
+  mTransaction = std::move(aTransaction);
 }
 
 void IDBOpenDBRequest::DispatchNonTransactionError(nsresult aErrorCode) {
