@@ -19,7 +19,7 @@
             android:lineSpacingExtra="6dp"
             android:gravity="center_vertical"
             android:scrollHorizontally="false"
-            tools:text="@string/private_browsing_placeholder_description"
+            tools:text="@string/private_browsing_placeholder_description_2"
             android:textColor="?primaryText"
             android:textSize="14sp" />
     <TextView

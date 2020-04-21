@@ -22,7 +22,7 @@ class PrivateBrowsingDescriptionViewHolder(
         val resources = view.context.resources
         val appName = resources.getString(R.string.app_name)
         view.private_session_description.text = resources.getString(
-            R.string.private_browsing_placeholder_description, appName
+            R.string.private_browsing_placeholder_description_2, appName
         )
         val commonMythsText = view.private_session_common_myths.text.toString()
         val textWithLink = SpannableString(commonMythsText).apply {
