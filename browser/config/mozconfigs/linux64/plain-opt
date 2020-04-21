@@ -1,7 +1,7 @@
 export TOOLTOOL_DIR="$topsrcdir"
 export LLVM_CONFIG="${MOZ_FETCHES_DIR}/clang/bin/llvm-config"
 
-export WASM_SANDBOXED_LIBRARIES=graphite
+export WASM_SANDBOXED_LIBRARIES=graphite,ogg
 export LUCETC="${MOZ_FETCHES_DIR}/lucetc/lucetc"
 export WASI_SYSROOT="${MOZ_FETCHES_DIR}/wasi-sysroot/share/wasi-sysroot"
 export WASM_CC="${MOZ_FETCHES_DIR}/clang/bin/clang --target=wasm32-wasi"
