@@ -250,22 +250,21 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
         # Run each line through fix_stacks.py, using breakpad symbol files.
         # This method is preferred for automation, since native symbols may
         # have been stripped.
-        #
-        # We never call `finish` on this code path, which is a bit dodgy but
-        # doesn't seem to cause problems in practice.
-        fix_stacks = import_stack_fixer_module('fix_stacks')
-        (fix, finish) = fix_stacks.init(slow_warning=True, breakpad_syms_dir=symbolsPath)
-        return fix
+        stack_fixer_module = import_stack_fixer_module('fix_stacks')
+
+        def stack_fixer_function(line):
+            return stack_fixer_module.fixSymbols(
+                line, slowWarning=True, breakpadSymsDir=symbolsPath)
 
     elif mozinfo.isLinux or mozinfo.isMac or mozinfo.isWin:
         # Run each line through fix_stacks.py. This method is preferred for
         # developer machines, so we don't have to run "mach buildsymbols".
-        #
-        # We never call `finish` on this code path, which is a bit dodgy but
-        # doesn't seem to cause problems in practice.
-        fix_stacks = import_stack_fixer_module('fix_stacks')
-        (fix, finish) = fix_stacks.init(slow_warning=True)
-        return fix
+        stack_fixer_module = import_stack_fixer_module('fix_stacks')
+
+        def stack_fixer_function(line):
+            return stack_fixer_module.fixSymbols(line, slowWarning=True)
 
     else:
         return None
+
+    return stack_fixer_function
