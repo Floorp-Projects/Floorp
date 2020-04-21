@@ -1259,6 +1259,316 @@ class ArgTypeVector {
   }
 };
 
+template <typename PointerType>
+class TaggedValue {
+ public:
+  enum Kind {
+    ImmediateKind1 = 0,
+    ImmediateKind2 = 1,
+    PointerKind1 = 2,
+    PointerKind2 = 3
+  };
+
+ private:
+  uintptr_t bits_;
+
+  static constexpr uintptr_t PayloadShift = 2;
+  static constexpr uintptr_t KindMask = 0x3;
+  static constexpr uintptr_t PointerKindBit = 0x2;
+
+  constexpr static bool IsPointerKind(Kind kind) {
+    return uintptr_t(kind) & PointerKindBit;
+  }
+  constexpr static bool IsImmediateKind(Kind kind) {
+    return !IsPointerKind(kind);
+  }
+
+  static_assert(IsImmediateKind(ImmediateKind1), "immediate kind 1");
+  static_assert(IsImmediateKind(ImmediateKind2), "immediate kind 2");
+  static_assert(IsPointerKind(PointerKind1), "pointer kind 1");
+  static_assert(IsPointerKind(PointerKind2), "pointer kind 2");
+
+  static uintptr_t PackImmediate(Kind kind, uint32_t imm) {
+    MOZ_ASSERT(IsImmediateKind(kind));
+    MOZ_ASSERT((uintptr_t(kind) & KindMask) == kind);
+    MOZ_ASSERT((imm & (uint32_t(KindMask) << (32 - PayloadShift))) == 0);
+    return uintptr_t(kind) | (uintptr_t(imm) << PayloadShift);
+  }
+
+  static uintptr_t PackPointer(Kind kind, PointerType* ptr) {
+    uintptr_t ptrBits = reinterpret_cast<uintptr_t>(ptr);
+    MOZ_ASSERT(IsPointerKind(kind));
+    MOZ_ASSERT((uintptr_t(kind) & KindMask) == kind);
+    MOZ_ASSERT((ptrBits & KindMask) == 0);
+    return uintptr_t(kind) | ptrBits;
+  }
+
+ public:
+  TaggedValue(Kind kind, uint32_t imm) : bits_(PackImmediate(kind, imm)) {}
+  TaggedValue(Kind kind, PointerType* ptr) : bits_(PackPointer(kind, ptr)) {}
+
+  uintptr_t bits() const { return bits_; }
+  Kind kind() const { return Kind(bits() & KindMask); }
+  uint32_t immediate() const {
+    MOZ_ASSERT(IsImmediateKind(kind()));
+    return mozilla::AssertedCast<uint32_t>(bits() >> PayloadShift);
+  }
+  PointerType* pointer() const {
+    MOZ_ASSERT(IsPointerKind(kind()));
+    return reinterpret_cast<PointerType*>(bits() & ~KindMask);
+  }
+};
+
+// ResultType represents the WebAssembly spec's `resulttype`. Semantically, a
+// result type is just a vec(valtype).  For effiency, though, the ResultType
+// value is packed into a word, with separate encodings for these 3 cases:
+//  []
+//  [valtype]
+//  pointer to ValTypeVector
+//
+// Additionally there is an encoding indicating uninitialized ResultType
+// values.
+//
+// Generally in the latter case the ValTypeVector is the args() or results() of
+// a FuncType in the compilation unit, so as long as the lifetime of the
+// ResultType value is less than the OpIter, we can just borrow the pointer
+// without ownership or copying.
+class ResultType {
+  using Tagged = TaggedValue<const ValTypeVector>;
+  Tagged tagged_;
+
+  enum Kind {
+    EmptyKind = Tagged::ImmediateKind1,
+    SingleKind = Tagged::ImmediateKind2,
+#ifdef ENABLE_WASM_MULTI_VALUE
+    VectorKind = Tagged::PointerKind1,
+#endif
+    InvalidKind = Tagged::PointerKind2,
+  };
+
+  ResultType(Kind kind, uint32_t imm) : tagged_(Tagged::Kind(kind), imm) {}
+#ifdef ENABLE_WASM_MULTI_VALUE
+  explicit ResultType(const ValTypeVector* ptr)
+      : tagged_(Tagged::Kind(VectorKind), ptr) {}
+#endif
+
+  Kind kind() const { return Kind(tagged_.kind()); }
+
+  ValType singleValType() const {
+    MOZ_ASSERT(kind() == SingleKind);
+    return ValType(PackedTypeCodeFromBits(tagged_.immediate()));
+  }
+
+#ifdef ENABLE_WASM_MULTI_VALUE
+  const ValTypeVector& values() const {
+    MOZ_ASSERT(kind() == VectorKind);
+    return *tagged_.pointer();
+  }
+#endif
+
+ public:
+  ResultType() : tagged_(Tagged::Kind(InvalidKind), nullptr) {}
+
+  static ResultType Empty() { return ResultType(EmptyKind, uint32_t(0)); }
+  static ResultType Single(ValType vt) {
+    return ResultType(SingleKind, vt.bitsUnsafe());
+  }
+  static ResultType Vector(const ValTypeVector& vals) {
+    switch (vals.length()) {
+      case 0:
+        return Empty();
+      case 1:
+        return Single(vals[0]);
+      default:
+#ifdef ENABLE_WASM_MULTI_VALUE
+        return ResultType(&vals);
+#else
+        MOZ_CRASH("multi-value returns not supported");
+#endif
+    }
+  }
+
+  bool empty() const { return kind() == EmptyKind; }
+
+  size_t length() const {
+    switch (kind()) {
+      case EmptyKind:
+        return 0;
+      case SingleKind:
+        return 1;
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case VectorKind:
+        return values().length();
+#endif
+      default:
+        MOZ_CRASH("bad resulttype");
+    }
+  }
+
+  ValType operator[](size_t i) const {
+    switch (kind()) {
+      case SingleKind:
+        MOZ_ASSERT(i == 0);
+        return singleValType();
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case VectorKind:
+        return values()[i];
+#endif
+      default:
+        MOZ_CRASH("bad resulttype");
+    }
+  }
+
+  bool operator==(ResultType rhs) const {
+    switch (kind()) {
+      case EmptyKind:
+      case SingleKind:
+      case InvalidKind:
+        return tagged_.bits() == rhs.tagged_.bits();
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case VectorKind: {
+        if (rhs.kind() != VectorKind) {
+          return false;
+        }
+        return EqualContainers(values(), rhs.values());
+      }
+#endif
+      default:
+        MOZ_CRASH("bad resulttype");
+    }
+  }
+  bool operator!=(ResultType rhs) const { return !(*this == rhs); }
+};
+
+// BlockType represents the WebAssembly spec's `blocktype`. Semantically, a
+// block type is just a (vec(valtype) -> vec(valtype)) with four special
+// encodings which are represented explicitly in BlockType:
+//  [] -> []
+//  [] -> [valtype]
+//  [params] -> [results] via pointer to FuncType
+//  [] -> [results] via pointer to FuncType (ignoring [params])
+
+class BlockType {
+  using Tagged = TaggedValue<const FuncType>;
+  Tagged tagged_;
+
+  enum Kind {
+    VoidToVoidKind = Tagged::ImmediateKind1,
+    VoidToSingleKind = Tagged::ImmediateKind2,
+#ifdef ENABLE_WASM_MULTI_VALUE
+    FuncKind = Tagged::PointerKind1,
+    FuncResultsKind = Tagged::PointerKind2
+#endif
+  };
+
+  BlockType(Kind kind, uint32_t imm) : tagged_(Tagged::Kind(kind), imm) {}
+#ifdef ENABLE_WASM_MULTI_VALUE
+  BlockType(Kind kind, const FuncType& type)
+      : tagged_(Tagged::Kind(kind), &type) {}
+#endif
+
+  Kind kind() const { return Kind(tagged_.kind()); }
+  ValType singleValType() const {
+    MOZ_ASSERT(kind() == VoidToSingleKind);
+    return ValType(PackedTypeCodeFromBits(tagged_.immediate()));
+  }
+
+#ifdef ENABLE_WASM_MULTI_VALUE
+  const FuncType& funcType() const { return *tagged_.pointer(); }
+#endif
+
+ public:
+  BlockType()
+      : tagged_(Tagged::Kind(VoidToVoidKind),
+                uint32_t(InvalidPackedTypeCode())) {}
+
+  static BlockType VoidToVoid() {
+    return BlockType(VoidToVoidKind, uint32_t(0));
+  }
+  static BlockType VoidToSingle(ValType vt) {
+    return BlockType(VoidToSingleKind, vt.bitsUnsafe());
+  }
+  static BlockType Func(const FuncType& type) {
+#ifdef ENABLE_WASM_MULTI_VALUE
+    if (type.args().length() == 0) {
+      return FuncResults(type);
+    }
+    return BlockType(FuncKind, type);
+#else
+    MOZ_ASSERT(type.args().length() == 0);
+    return FuncResults(type);
+#endif
+  }
+  static BlockType FuncResults(const FuncType& type) {
+    switch (type.results().length()) {
+      case 0:
+        return VoidToVoid();
+      case 1:
+        return VoidToSingle(type.results()[0]);
+      default:
+#ifdef ENABLE_WASM_MULTI_VALUE
+        return BlockType(FuncResultsKind, type);
+#else
+        MOZ_CRASH("multi-value returns not supported");
+#endif
+    }
+  }
+
+  ResultType params() const {
+    switch (kind()) {
+      case VoidToVoidKind:
+      case VoidToSingleKind:
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case FuncResultsKind:
+#endif
+        return ResultType::Empty();
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case FuncKind:
+        return ResultType::Vector(funcType().args());
+#endif
+      default:
+        MOZ_CRASH("unexpected kind");
+    }
+  }
+
+  ResultType results() const {
+    switch (kind()) {
+      case VoidToVoidKind:
+        return ResultType::Empty();
+      case VoidToSingleKind:
+        return ResultType::Single(singleValType());
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case FuncKind:
+      case FuncResultsKind:
+        return ResultType::Vector(funcType().results());
+#endif
+      default:
+        MOZ_CRASH("unexpected kind");
+    }
+  }
+
+  bool operator==(BlockType rhs) const {
+    if (kind() != rhs.kind()) {
+      return false;
+    }
+    switch (kind()) {
+      case VoidToVoidKind:
+      case VoidToSingleKind:
+        return tagged_.bits() == rhs.tagged_.bits();
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case FuncKind:
+        return funcType() == rhs.funcType();
+      case FuncResultsKind:
+        return EqualContainers(funcType().results(), rhs.funcType().results());
+#endif
+      default:
+        MOZ_CRASH("unexpected kind");
+    }
+  }
+
+  bool operator!=(BlockType rhs) const { return !(*this == rhs); }
+};
+
 // Structure type.
 //
 // The Module owns a dense array of StructType values that represent the
@@ -2872,20 +3182,47 @@ static_assert(sizeof(Frame) % 16 == 0, "frame size");
 // instead of just Frames. These extra fields are used by the Debugger API.
 
 class DebugFrame {
-  // The results field left uninitialized and only used during the baseline
-  // compiler's return sequence to allow the debugger to inspect and modify
-  // the return value of a frame being debugged.
-  union {
-    int32_t resultI32_;
-    int64_t resultI64_;
-    intptr_t resultRef_;
-    AnyRef resultAnyRef_;
-    float resultF32_;
-    double resultF64_;
+  // The register results field.  Initialized only during the baseline
+  // compiler's return sequence to allow the debugger to inspect and
+  // modify the return values of a frame being debugged.
+  union SpilledRegisterResult {
+   private:
+    int32_t i32_;
+    int64_t i64_;
+    intptr_t ref_;
+    AnyRef anyref_;
+    float f32_;
+    double f64_;
+#ifdef DEBUG
+    // Should we add a new value representation, this will remind us to update
+    // SpilledRegisterResult.
+    static inline void assertAllValueTypesHandled(ValType type) {
+      switch (type.kind()) {
+        case ValType::I32:
+        case ValType::I64:
+        case ValType::F32:
+        case ValType::F64:
+          return;
+        case ValType::Ref:
+          switch (type.refTypeKind()) {
+            case RefType::Any:
+            case RefType::Func:
+            case RefType::Null:
+            case RefType::TypeIndex:
+              return;
+          }
+      }
+    }
+#endif
   };
+  SpilledRegisterResult registerResults_[MaxRegisterResults];
 
   // The returnValue() method returns a HandleValue pointing to this field.
   js::Value cachedReturnJSValue_;
+
+  // If the function returns multiple results, this field is initialized
+  // to a pointer to the stack results.
+  void* stackResultsPointer_;
 
   // The function index of this frame. Technically, this could be derived
   // given a PC into this frame (which could lookup the CodeRange which has
@@ -2893,22 +3230,24 @@ class DebugFrame {
   uint32_t funcIndex_;
 
   // Flags whose meaning are described below.
-  union {
+  union Flags {
     struct {
-      bool observing_ : 1;
-      bool isDebuggee_ : 1;
-      bool prevUpToDate_ : 1;
-      bool hasCachedSavedFrame_ : 1;
-      bool hasCachedReturnJSValue_ : 1;
+      uint32_t observing : 1;
+      uint32_t isDebuggee : 1;
+      uint32_t prevUpToDate : 1;
+      uint32_t hasCachedSavedFrame : 1;
+      uint32_t hasCachedReturnJSValue : 1;
+      uint32_t hasSpilledRefRegisterResult : MaxRegisterResults;
     };
-    void* flagsWord_;
-  };
+    uint32_t allFlags;
+  } flags_;
 
   // Avoid -Wunused-private-field warnings.
  protected:
-#if JS_BITS_PER_WORD == 32 && !defined(JS_CODEGEN_MIPS32)
-  // See alignmentStaticAsserts().
-  // For MIPS32 padding is already incorporated in the frame.
+#if defined(JS_CODEGEN_MIPS32)
+  // See alignmentStaticAsserts().  For MIPS32, sizeof(Frame) is only
+  // 4-byte aligned, so we add another word to get up to 8-byte
+  // alignment.
   uint32_t padding_;
 #endif
 
@@ -2930,8 +3269,8 @@ class DebugFrame {
   // results union into cachedReturnJSValue_ by updateReturnJSValue() before
   // returnValue() can return a Handle to it.
 
-  bool hasCachedReturnJSValue() const { return hasCachedReturnJSValue_; }
-  MOZ_MUST_USE bool updateReturnJSValue();
+  bool hasCachedReturnJSValue() const { return flags_.hasCachedReturnJSValue; }
+  MOZ_MUST_USE bool updateReturnJSValue(JSContext* cx);
   HandleValue returnValue() const;
   void clearReturnJSValue();
 
@@ -2948,32 +3287,51 @@ class DebugFrame {
   // the Debugger API. The bit is then used for Debugger-internal purposes
   // afterwards.
 
-  bool isDebuggee() const { return isDebuggee_; }
-  void setIsDebuggee() { isDebuggee_ = true; }
-  void unsetIsDebuggee() { isDebuggee_ = false; }
+  bool isDebuggee() const { return flags_.isDebuggee; }
+  void setIsDebuggee() { flags_.isDebuggee = true; }
+  void unsetIsDebuggee() { flags_.isDebuggee = false; }
 
   // These are opaque boolean flags used by the debugger to implement
   // AbstractFramePtr. They are initialized to false and not otherwise read or
   // written by wasm code or runtime.
 
-  bool prevUpToDate() const { return prevUpToDate_; }
-  void setPrevUpToDate() { prevUpToDate_ = true; }
-  void unsetPrevUpToDate() { prevUpToDate_ = false; }
+  bool prevUpToDate() const { return flags_.prevUpToDate; }
+  void setPrevUpToDate() { flags_.prevUpToDate = true; }
+  void unsetPrevUpToDate() { flags_.prevUpToDate = false; }
 
-  bool hasCachedSavedFrame() const { return hasCachedSavedFrame_; }
-  void setHasCachedSavedFrame() { hasCachedSavedFrame_ = true; }
-  void clearHasCachedSavedFrame() { hasCachedSavedFrame_ = false; }
+  bool hasCachedSavedFrame() const { return flags_.hasCachedSavedFrame; }
+  void setHasCachedSavedFrame() { flags_.hasCachedSavedFrame = true; }
+  void clearHasCachedSavedFrame() { flags_.hasCachedSavedFrame = false; }
+
+  bool hasSpilledRegisterRefResult(size_t n) const {
+    uint32_t mask = hasSpilledRegisterRefResultBitMask(n);
+    return (flags_.allFlags & mask) != 0;
+  }
 
   // DebugFrame is accessed directly by JIT code.
 
-  static constexpr size_t offsetOfResults() {
-    return offsetof(DebugFrame, resultI32_);
+  static constexpr size_t offsetOfRegisterResults() {
+    return offsetof(DebugFrame, registerResults_);
+  }
+  static constexpr size_t offsetOfRegisterResult(size_t n) {
+    MOZ_ASSERT(n < MaxRegisterResults);
+    return offsetOfRegisterResults() + n * sizeof(SpilledRegisterResult);
   }
   static constexpr size_t offsetOfCachedReturnJSValue() {
     return offsetof(DebugFrame, cachedReturnJSValue_);
   }
-  static constexpr size_t offsetOfFlagsWord() {
-    return offsetof(DebugFrame, flagsWord_);
+  static constexpr size_t offsetOfStackResultsPointer() {
+    return offsetof(DebugFrame, stackResultsPointer_);
+  }
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(DebugFrame, flags_);
+  }
+  static constexpr uint32_t hasSpilledRegisterRefResultBitMask(size_t n) {
+    MOZ_ASSERT(n < MaxRegisterResults);
+    union Flags flags = {.allFlags = 0};
+    flags.hasSpilledRefRegisterResult = 1 << n;
+    MOZ_ASSERT(flags.allFlags != 0);
+    return flags.allFlags;
   }
   static constexpr size_t offsetOfFuncIndex() {
     return offsetof(DebugFrame, funcIndex_);

@@ -369,6 +369,13 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
 
+  // Invariant: The result of getFuncResultType can only be used as long as
+  // MetaData is live, because the returned ResultType may encode a pointer to
+  // debugFuncReturnTypes.
+  ResultType getFuncResultType(uint32_t funcIndex) const {
+    return ResultType::Vector(debugFuncReturnTypes[funcIndex]);
+  };
+
   // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
   // encapsulated within AsmJS.cpp, but the additional virtual functions allow
   // asm.js to override wasm behavior in the handful of cases that can't be

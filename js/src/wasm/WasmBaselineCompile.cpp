@@ -2343,7 +2343,7 @@ class MachineStackTracker {
 
 // StackMapGenerator, which carries all state needed to create stack maps.
 
-enum class HasRefTypedDebugFrame { No, Yes };
+enum class HasDebugFrame { No, Yes };
 
 struct StackMapGenerator {
  private:
@@ -2439,13 +2439,13 @@ struct StackMapGenerator {
   MOZ_MUST_USE bool createStackMap(const char* who,
                                    const ExitStubMapVector& extras,
                                    uint32_t assemblerOffset,
-                                   HasRefTypedDebugFrame refDebugFrame,
+                                   HasDebugFrame debugFrame,
                                    const StkVector& stk) {
     size_t countedPointers = machineStackTracker.numPtrs() + memRefsOnStk;
 #ifndef DEBUG
     // An important optimization.  If there are obviously no pointers, as
     // we expect in the majority of cases, exit quickly.
-    if (countedPointers == 0 && refDebugFrame == HasRefTypedDebugFrame::No) {
+    if (countedPointers == 0 && debugFrame == HasDebugFrame::No) {
       // We can skip creating the map if there are no |true| elements in
       // |extras|.
       bool extrasHasRef = false;
@@ -2646,8 +2646,8 @@ struct StackMapGenerator {
 #endif
 
     // Note the presence of a ref-typed DebugFrame, if any.
-    if (refDebugFrame == HasRefTypedDebugFrame::Yes) {
-      stackMap->setHasRefTypedDebugFrame();
+    if (debugFrame == HasDebugFrame::Yes) {
+      stackMap->setHasDebugFrame();
     }
 
     // Add the completed map to the running collection thereof.
@@ -3602,35 +3602,24 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Create a vanilla stack map.
   MOZ_MUST_USE bool createStackMap(const char* who) {
     const ExitStubMapVector noExtras;
-    return stackMapGenerator_.createStackMap(
-        who, noExtras, masm.currentOffset(), HasRefTypedDebugFrame::No, stk_);
+    return createStackMap(who, noExtras, masm.currentOffset());
   }
 
   // Create a stack map as vanilla, but for a custom assembler offset.
   MOZ_MUST_USE bool createStackMap(const char* who,
                                    CodeOffset assemblerOffset) {
     const ExitStubMapVector noExtras;
-    return stackMapGenerator_.createStackMap(who, noExtras,
-                                             assemblerOffset.offset(),
-                                             HasRefTypedDebugFrame::No, stk_);
-  }
-
-  // Create a stack map as vanilla, and note the presence of a ref-typed
-  // DebugFrame on the stack.
-  MOZ_MUST_USE bool createStackMap(const char* who,
-                                   HasRefTypedDebugFrame refDebugFrame) {
-    const ExitStubMapVector noExtras;
-    return stackMapGenerator_.createStackMap(
-        who, noExtras, masm.currentOffset(), refDebugFrame, stk_);
+    return createStackMap(who, noExtras, assemblerOffset.offset());
   }
 
   // The most general stack map construction.
   MOZ_MUST_USE bool createStackMap(const char* who,
                                    const ExitStubMapVector& extras,
-                                   uint32_t assemblerOffset,
-                                   HasRefTypedDebugFrame refDebugFrame) {
+                                   uint32_t assemblerOffset) {
+    auto debugFrame =
+        env_.debugEnabled() ? HasDebugFrame::Yes : HasDebugFrame::No;
     return stackMapGenerator_.createStackMap(who, extras, assemblerOffset,
-                                             refDebugFrame, stk_);
+                                             debugFrame, stk_);
   }
 
   // This is an optimization used to avoid calling sync() for
@@ -4641,22 +4630,12 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.store32(
           Imm32(func_.index),
           Address(masm.getStackPointer(), DebugFrame::offsetOfFuncIndex()));
-      masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
-                                        DebugFrame::offsetOfFlagsWord()));
-      // Zero out pointer values for safety, since it's not easy to establish
-      // whether they will always be defined before a GC.
+      masm.store32(Imm32(0), Address(masm.getStackPointer(),
+                                     DebugFrame::offsetOfFlags()));
 
-      // DebugFrame::resultRef_ and ::resultAnyRef_
-      masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
-                                        DebugFrame::offsetOfResults()));
-
-      // DebugFrame::cachedReturnJSValue_
-      for (size_t i = 0; i < sizeof(js::Value) / sizeof(void*); i++) {
-        masm.storePtr(ImmWord(0),
-                      Address(masm.getStackPointer(),
-                              DebugFrame::offsetOfCachedReturnJSValue() +
-                                  i * sizeof(void*)));
-      }
+      // No need to initialize cachedReturnJSValue_ or any ref-typed spilled
+      // register results, as they are traced if and only if a corresponding
+      // flag (hasCachedReturnJSValue or hasSpilledRefRegisterResult) is set.
     }
 
     // Generate a stack-overflow check and its associated stack map.
@@ -4667,8 +4646,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, &extras)) {
       return false;
     }
-    if (!createStackMap("stack check", extras, masm.currentOffset(),
-                        HasRefTypedDebugFrame::No)) {
+    if (!createStackMap("stack check", extras, masm.currentOffset())) {
       return false;
     }
 
@@ -4695,13 +4673,27 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // Copy arguments from registers to stack.
     for (ABIArgIter i(args); !i.done(); i++) {
-      if (!i->argInRegister()) {
+      if (args.isSyntheticStackResultPointerArg(i.index())) {
+        // If there are stack results and the pointer to stack results
+        // was passed in a register, store it to the stack.
+        if (i->argInRegister()) {
+          fr.storeIncomingStackResultAreaPtr(RegPtr(i->gpr()));
+        }
+        // If we're in a debug frame, copy the stack result pointer arg
+        // to a well-known place.
+        if (env_.debugEnabled()) {
+          Register target = ABINonArgReturnReg0;
+          fr.loadIncomingStackResultAreaPtr(RegPtr(target));
+          size_t debugFrameOffset =
+              masm.framePushed() - DebugFrame::offsetOfFrame();
+          size_t debugStackResultsPointerOffset =
+              debugFrameOffset + DebugFrame::offsetOfStackResultsPointer();
+          masm.storePtr(target, Address(masm.getStackPointer(),
+                                        debugStackResultsPointerOffset));
+        }
         continue;
       }
-      if (args.isSyntheticStackResultPointerArg(i.index())) {
-        // The synthetic stack result area parameter was passed in a register.
-        // Store it to the stack.
-        fr.storeIncomingStackResultAreaPtr(RegPtr(i->gpr()));
+      if (!i->argInRegister()) {
         continue;
       }
       Local& l = localInfo_[args.naturalIndex(i.index())];
@@ -4764,9 +4756,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void saveRegisterReturnValues(const ResultType& resultType) {
     MOZ_ASSERT(env_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
-    Address resultsAddress(masm.getStackPointer(),
-                           debugFrameOffset + DebugFrame::offsetOfResults());
-
+    size_t registerResultIdx = 0;
     for (ABIResultIter i(resultType); !i.done(); i.next()) {
       const ABIResult result = i.cur();
       if (!result.inRegister()) {
@@ -4777,34 +4767,42 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
         break;
       }
-      MOZ_ASSERT(i.index() == 0,
-                 "debug frame only has space for one stored register result");
+
+      size_t resultOffset =
+          DebugFrame::offsetOfRegisterResult(registerResultIdx);
+      Address dest(masm.getStackPointer(), debugFrameOffset + resultOffset);
       switch (result.type().kind()) {
         case ValType::I32:
-          masm.store32(RegI32(result.gpr()), resultsAddress);
+          masm.store32(RegI32(result.gpr()), dest);
           break;
         case ValType::I64:
-          masm.store64(RegI64(result.gpr64()), resultsAddress);
+          masm.store64(RegI64(result.gpr64()), dest);
           break;
         case ValType::F64:
-          masm.storeDouble(RegF64(result.fpr()), resultsAddress);
+          masm.storeDouble(RegF64(result.fpr()), dest);
           break;
         case ValType::F32:
-          masm.storeFloat32(RegF32(result.fpr()), resultsAddress);
+          masm.storeFloat32(RegF32(result.fpr()), dest);
           break;
-        case ValType::Ref:
-          masm.storePtr(RegPtr(result.gpr()), resultsAddress);
+        case ValType::Ref: {
+          uint32_t flag =
+              DebugFrame::hasSpilledRegisterRefResultBitMask(registerResultIdx);
+          // Tell Instance::traceFrame that we have a pointer to trace.
+          masm.or32(Imm32(flag),
+                    Address(masm.getStackPointer(),
+                            debugFrameOffset + DebugFrame::offsetOfFlags()));
+          masm.storePtr(RegPtr(result.gpr()), dest);
           break;
+        }
       }
+      registerResultIdx++;
     }
   }
 
   void restoreRegisterReturnValues(const ResultType& resultType) {
     MOZ_ASSERT(env_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
-    Address resultsAddress(masm.getStackPointer(),
-                           debugFrameOffset + DebugFrame::offsetOfResults());
-
+    size_t registerResultIdx = 0;
     for (ABIResultIter i(resultType); !i.done(); i.next()) {
       const ABIResult result = i.cur();
       if (!result.inRegister()) {
@@ -4815,23 +4813,24 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
         break;
       }
-      MOZ_ASSERT(i.index() == 0,
-                 "debug frame only has space for one stored register result");
+      size_t resultOffset =
+          DebugFrame::offsetOfRegisterResult(registerResultIdx++);
+      Address src(masm.getStackPointer(), debugFrameOffset + resultOffset);
       switch (result.type().kind()) {
         case ValType::I32:
-          masm.load32(resultsAddress, RegI32(result.gpr()));
+          masm.load32(src, RegI32(result.gpr()));
           break;
         case ValType::I64:
-          masm.load64(resultsAddress, RegI64(result.gpr64()));
+          masm.load64(src, RegI64(result.gpr64()));
           break;
         case ValType::F64:
-          masm.loadDouble(resultsAddress, RegF64(result.fpr()));
+          masm.loadDouble(src, RegF64(result.fpr()));
           break;
         case ValType::F32:
-          masm.loadFloat32(resultsAddress, RegF32(result.fpr()));
+          masm.loadFloat32(src, RegF32(result.fpr()));
           break;
         case ValType::Ref:
-          masm.loadPtr(resultsAddress, RegPtr(result.gpr()));
+          masm.loadPtr(src, RegPtr(result.gpr()));
           break;
       }
     }
@@ -4861,27 +4860,15 @@ class BaseCompiler final : public BaseCompilerInterface {
     popStackReturnValues(resultType);
 
     if (env_.debugEnabled()) {
-      // If a return type is a ref, we need to note that in the stack maps
-      // generated here.  Note that this assumes that DebugFrame::result* and
-      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they are
-      // both not ref-typed.  It can't represent the situation where one is and
-      // the other isn't.
-      HasRefTypedDebugFrame refDebugFrame = HasRefTypedDebugFrame::No;
-      for (ValType result : funcType().results()) {
-        if (result.isReference()) {
-          refDebugFrame = HasRefTypedDebugFrame::Yes;
-          break;
-        }
-      }
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
       saveRegisterReturnValues(resultType);
       insertBreakablePoint(CallSiteDesc::Breakpoint);
-      if (!createStackMap("debug: breakpoint", refDebugFrame)) {
+      if (!createStackMap("debug: breakpoint")) {
         return false;
       }
       insertBreakablePoint(CallSiteDesc::LeaveFrame);
-      if (!createStackMap("debug: leave frame", refDebugFrame)) {
+      if (!createStackMap("debug: leave frame")) {
         return false;
       }
       restoreRegisterReturnValues(resultType);

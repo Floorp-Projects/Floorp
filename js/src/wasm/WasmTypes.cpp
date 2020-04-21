@@ -714,75 +714,47 @@ bool DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp) {
   return true;
 }
 
-bool DebugFrame::updateReturnJSValue() {
-  hasCachedReturnJSValue_ = true;
-  ValTypeVector results;
-  if (!instance()->debug().debugGetResultTypes(funcIndex(), &results)) {
-    return false;
+bool DebugFrame::updateReturnJSValue(JSContext* cx) {
+  MutableHandleValue rval =
+      MutableHandleValue::fromMarkedLocation(&cachedReturnJSValue_);
+  rval.setUndefined();
+  flags_.hasCachedReturnJSValue = true;
+  ResultType resultType = instance()->debug().debugGetResultType(funcIndex());
+  Maybe<char*> stackResultsLoc;
+  if (ABIResultIter::HasStackResults(resultType)) {
+    stackResultsLoc = Some(static_cast<char*>(stackResultsPointer_));
   }
-  if (results.length() == 0) {
-    cachedReturnJSValue_.setUndefined();
-    return true;
-  }
-  MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-  switch (results[0].kind()) {
-    case ValType::I32:
-      cachedReturnJSValue_.setInt32(resultI32_);
-      break;
-    case ValType::I64:
-      // Just display as a Number; it's ok if we lose some precision
-      cachedReturnJSValue_.setDouble((double)resultI64_);
-      break;
-    case ValType::F32:
-      cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF32_));
-      break;
-    case ValType::F64:
-      cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
-      break;
-    case ValType::Ref:
-      switch (results[0].refTypeKind()) {
-        case RefType::TypeIndex:
-          cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
-          break;
-        case RefType::Func:
-          cachedReturnJSValue_ =
-              UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
-          break;
-        case RefType::Any:
-        case RefType::Null:
-          cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
-          break;
-      }
-      break;
-    default:
-      MOZ_CRASH("result type");
-  }
-  return true;
+  DebugCodegen(DebugChannel::Function,
+               "wasm-function[%d] updateReturnJSValue [", funcIndex());
+  bool ok =
+      ResultsToJSValue(cx, resultType, registerResults_, stackResultsLoc, rval);
+  DebugCodegen(DebugChannel::Function, "]\n");
+  return ok;
 }
 
 HandleValue DebugFrame::returnValue() const {
-  MOZ_ASSERT(hasCachedReturnJSValue_);
+  MOZ_ASSERT(flags_.hasCachedReturnJSValue);
   return HandleValue::fromMarkedLocation(&cachedReturnJSValue_);
 }
 
 void DebugFrame::clearReturnJSValue() {
-  hasCachedReturnJSValue_ = true;
+  flags_.hasCachedReturnJSValue = true;
   cachedReturnJSValue_.setUndefined();
 }
 
 void DebugFrame::observe(JSContext* cx) {
-  if (!observing_) {
+  if (!flags_.observing) {
     instance()->debug().adjustEnterAndLeaveFrameTrapsState(
         cx, /* enabled = */ true);
-    observing_ = true;
+    flags_.observing = true;
   }
 }
 
 void DebugFrame::leave(JSContext* cx) {
-  if (observing_) {
+  if (flags_.observing) {
     instance()->debug().adjustEnterAndLeaveFrameTrapsState(
         cx, /* enabled = */ false);
-    observing_ = false;
+    flags_.observing = false;
   }
 }
 
