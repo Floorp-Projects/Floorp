@@ -1,12 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import sys
 import os
 import tempfile
 
 from mach.decorators import CommandArgument, CommandProvider, Command
-from mozbuild.base import MachCommandBase
+from mozbuild.base import MachCommandBase, BinaryNotFoundException
 
 requirements = os.path.join(os.path.dirname(__file__), "requirements", "base.txt")
 
@@ -91,7 +92,17 @@ class CondprofileCommandProvider(MachCommandBase):
         self._init()
 
         if kw["firefox"] is None:
-            kw["firefox"] = self.get_binary_path()
+            try:
+                kw["firefox"] = self.get_binary_path()
+            except BinaryNotFoundException as e:
+                self.log(logging.ERROR, 'run-condprofile',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'run-condprofile',
+                         {'help': e.help()},
+                         '{help}')
+                return 1
+
         from condprof.runner import run
 
         run(**kw)

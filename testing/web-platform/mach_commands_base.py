@@ -27,13 +27,19 @@ class WebPlatformTestsRunner(object):
 
     def run(self, logger, **kwargs):
         from wptrunner import wptrunner
+        from mozbuild.base import BinaryNotFoundException
 
         if kwargs["manifest_update"] is not False:
             self.update_manifest(logger)
         kwargs["manifest_update"] = False
 
         if kwargs["product"] in ["firefox", None]:
-            kwargs = self.setup.kwargs_firefox(kwargs)
+            try:
+                kwargs = self.setup.kwargs_firefox(kwargs)
+            except BinaryNotFoundException as e:
+                logger.error(e)
+                logger.info(e.help())
+                return 1
         elif kwargs["product"] == "firefox_android":
             from wptrunner import wptcommandline
             kwargs = wptcommandline.check_args(self.setup.kwargs_common(kwargs))

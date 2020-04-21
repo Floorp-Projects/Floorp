@@ -84,6 +84,19 @@ class ObjdirMismatchException(BadEnvironmentException):
         return "Objdir mismatch: %s != %s" % (self.objdir1, self.objdir2)
 
 
+class BinaryNotFoundException(Exception):
+    """Raised when the binary is not found in the expected location."""
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return 'Binary expected at {} does not exist.'.format(self.path)
+
+    def help(self):
+        return 'It looks like your program isn\'t built. You can run |./mach build| to build it.'
+
+
 class MozbuildObject(ProcessExecutionMixin):
     """Base class providing basic functionality useful to many modules.
 
@@ -556,7 +569,7 @@ class MozbuildObject(ProcessExecutionMixin):
         path = os.path.join(stem, leaf)
 
         if validate_exists and not os.path.exists(path):
-            raise Exception('Binary expected at %s does not exist.' % path)
+            raise BinaryNotFoundException(path)
 
         return path
 

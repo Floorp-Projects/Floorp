@@ -11,7 +11,7 @@ import glob
 import subprocess
 
 import mozcrash
-from mozbuild.base import MozbuildObject
+from mozbuild.base import MozbuildObject, BinaryNotFoundException
 from mozfile import TemporaryDirectory
 from mozhttpd import MozHttpd
 from mozprofile import FirefoxProfile, Preferences
@@ -63,7 +63,11 @@ if __name__ == '__main__':
 
     binary = runner_args.get('binary')
     if not binary:
-        binary = build.get_binary_path(where="staged-package")
+        try:
+            binary = build.get_binary_path(where="staged-package")
+        except BinaryNotFoundException as e:
+            print('{}\n\n{}\n'.format(e, e.help()))
+            sys.exit(1)
     binary = os.path.normpath(os.path.abspath(binary))
 
     path_mappings = {

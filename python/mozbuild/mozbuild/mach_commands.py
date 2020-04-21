@@ -28,6 +28,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import (
+    BinaryNotFoundException,
     BuildEnvironmentNotFoundException,
     MachCommandBase,
     MachCommandConditions as conditions,
@@ -955,10 +956,13 @@ class RunProgram(MachCommandBase):
     def _run_jsshell(self, params, debug, debugger, debugger_args):
         try:
             binpath = self.get_binary_path('app')
-        except Exception as e:
-            print("It looks like your program isn't built.",
-                  "You can run |mach build| to build it.")
-            print(e)
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'run',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'run',
+                     {'help': e.help()},
+                     '{help}')
             return 1
 
         args = [binpath]
@@ -1011,10 +1015,13 @@ class RunProgram(MachCommandBase):
 
         try:
             binpath = self.get_binary_path('app')
-        except Exception as e:
-            print("It looks like your program isn't built.",
-                  "You can run |mach build| to build it.")
-            print(e)
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'run',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'run',
+                     {'help': e.help()},
+                     '{help}')
             return 1
 
         args = []
@@ -1413,7 +1420,17 @@ class WebRTCGTestCommands(GTestCommands):
                      'split as the Bourne shell would.')
     def gtest(self, gtest_filter, debug, debugger,
               debugger_args):
-        app_path = self.get_binary_path('webrtc-gtest')
+        try:
+            app_path = self.get_binary_path('webrtc-gtest')
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'webrtc-gtest',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'webrtc-gtest',
+                     {'help': e.help()},
+                     '{help}')
+            return 1
+
         args = [app_path]
 
         if debug or debugger or debugger_args:

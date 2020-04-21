@@ -14,7 +14,7 @@ from mach.decorators import (
     CommandProvider,
 )
 
-from mozbuild.base import MachCommandBase
+from mozbuild.base import MachCommandBase, BinaryNotFoundException
 
 
 @CommandProvider
@@ -41,12 +41,15 @@ class GeckoDriver(MachCommandBase):
     def run(self, binary, params, debug, debugger, debugger_args):
         try:
             binpath = self.get_binary_path("geckodriver")
-        except Exception as e:
-            print("It looks like geckodriver isn't built. "
-                  "Add ac_add_options --enable-geckodriver to your "
-                  "mozconfig ",
-                  "and run |mach build| to build it.")
-            print(e)
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'geckodriver',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'geckodriver', {},
+                     "It looks like geckodriver isn't built. "
+                     "Add ac_add_options --enable-geckodriver to your "
+                     "mozconfig "
+                     "and run |./mach build| to build it.")
             return 1
 
         args = [binpath]
@@ -55,7 +58,16 @@ class GeckoDriver(MachCommandBase):
             args.extend(params)
 
         if binary is None:
-            binary = self.get_binary_path("app")
+            try:
+                binary = self.get_binary_path("app")
+            except BinaryNotFoundException as e:
+                self.log(logging.ERROR, 'geckodriver',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'geckodriver',
+                         {'help': e.help()},
+                         '{help}')
+                return 1
 
         args.extend(["--binary", binary])
 

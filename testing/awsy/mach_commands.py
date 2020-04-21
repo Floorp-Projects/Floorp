@@ -12,6 +12,7 @@ import sys
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
+    BinaryNotFoundException,
 )
 
 from mach.decorators import (
@@ -273,5 +274,14 @@ class MachCommands(MachCommandBase):
             del kwargs['test_objects']
 
         if not kwargs.get('binary') and conditions.is_firefox(self):
-            kwargs['binary'] = self.get_binary_path('app')
+            try:
+                kwargs['binary'] = self.get_binary_path('app')
+            except BinaryNotFoundException as e:
+                self.log(logging.ERROR, 'awsy',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'awsy',
+                         {'help': e.help()},
+                         '{help}')
+                return 1
         return self.run_awsy(tests, **kwargs)

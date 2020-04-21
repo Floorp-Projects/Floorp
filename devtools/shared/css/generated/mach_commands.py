@@ -10,6 +10,7 @@ This information is used to generate the properties-db.js file.
 
 from __future__ import absolute_import, print_function
 import json
+import logging
 import os
 import runpy
 import sys
@@ -19,6 +20,7 @@ from mozbuild import shellutil
 from mozbuild.base import (
     MozbuildObject,
     MachCommandBase,
+    BinaryNotFoundException,
 )
 from mach.decorators import (
     CommandProvider,
@@ -43,6 +45,8 @@ class MachCommands(MachCommandBase):
 
         print("Re-generating the css properties database...")
         db = self.get_properties_db_from_xpcshell()
+        if not db:
+            return 1
 
         self.output_template({
             'preferences': stringify(db['preferences']),
@@ -58,7 +62,17 @@ class MachCommands(MachCommandBase):
             'devtools/shared/css/generated/generate-properties-db.js')
         gre_path = resolve_path(self.topobjdir, 'dist/bin')
         browser_path = resolve_path(self.topobjdir, 'dist/bin/browser')
-        xpcshell_path = build.get_binary_path(what='xpcshell')
+        try:
+            xpcshell_path = build.get_binary_path(what='xpcshell')
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'devtools-css-db',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'devtools-css-db',
+                     {'help': e.help()},
+                     '{help}')
+            return None
+
         print(browser_path)
 
         sub_env = dict(os.environ)
