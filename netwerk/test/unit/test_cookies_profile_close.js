@@ -58,7 +58,7 @@ function* do_run_test() {
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
   Assert.equal(Services.cookies.getCookieStringFromHttp(uri, channel), "");
   Services.cookies.setCookieString(uri, "oh2=hai", null);
-  Services.cookies.setCookieStringFromHttp(uri, "oh3=hai", null);
+  Services.cookies.setCookieStringFromHttp(uri, "oh3=hai", channel);
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
 
   do_check_throws(function() {

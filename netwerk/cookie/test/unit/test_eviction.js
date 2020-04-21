@@ -1,3 +1,4 @@
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BASE_HOSTNAMES = ["example.org", "example.co.uk"];
@@ -19,6 +20,12 @@ function run_test() {
 async function test_basic_eviction(base_host) {
   Services.prefs.setIntPref("network.cookie.quotaPerHost", 2);
   Services.prefs.setIntPref("network.cookie.maxPerHost", 5);
+
+  // We don't want to have CookieJarSettings blocking this test.
+  Services.prefs.setBoolPref(
+    "network.cookieJarSettings.unblocked_for_testing",
+    true
+  );
 
   const BASE_URI = Services.io.newURI("http://" + base_host);
   const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo/");
@@ -176,7 +183,14 @@ function setCookie(name, domain, path, maxAge, url) {
   }
   s += " for " + url.spec;
   info(s);
-  cs.setCookieStringFromHttp(url, value, null);
+
+  let channel = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
+  });
+
+  cs.setCookieStringFromHttp(url, value, channel);
   return new Promise(function(resolve) {
     // Windows XP has low precision timestamps that cause our cookie eviction
     // algorithm to produce different results from other platforms. We work around
