@@ -18,7 +18,9 @@ SYSTEM, BROWSER, METRICS = 0, 1, 2
 class MachEnvironment:
     def __init__(self, mach_cmd, flavor="script", **kwargs):
         self._mach_cmd = mach_cmd
-        self._mach_args = kwargs
+        self._mach_args = dict(
+            [(self._normalize(key), value) for key, value in kwargs.items()]
+        )
         self.layers = []
         # XXX do something with flavors, etc
         if flavor != "script":

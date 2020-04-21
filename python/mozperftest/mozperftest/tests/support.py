@@ -29,6 +29,13 @@ def get_running_env():
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
 
-    env = MachEnvironment(mach_cmd, "script", test_objects=None, resolve_tests=True)
+    mach_args = {
+        "test_objects": None,
+        "resolve_tests": True,
+        "browsertime-clobber": False,
+        "browsertime-install-url": None,
+    }
+
+    env = MachEnvironment(mach_cmd, "script", **mach_args)
     metadata = Metadata(mach_cmd, env, "script")
     return mach_cmd, metadata, env
