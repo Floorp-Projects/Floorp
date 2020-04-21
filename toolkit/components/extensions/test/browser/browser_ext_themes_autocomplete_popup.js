@@ -3,8 +3,6 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // popup properties are applied correctly to the autocomplete bar.
 const POPUP_COLOR = "#85A400";
-const POPUP_BORDER_COLOR = "#220300";
-const CHROME_CONTENT_SEPARATOR_COLOR = "#220301";
 const POPUP_TEXT_COLOR_DARK = "#000000";
 const POPUP_TEXT_COLOR_BRIGHT = "#ffffff";
 const POPUP_SELECTED_COLOR = "#9400ff";
@@ -52,10 +50,8 @@ add_task(async function test_popup_url() {
         colors: {
           frame: ACCENT_COLOR,
           tab_background_text: TEXT_COLOR,
-          popup: POPUP_COLOR,
-          popup_border: POPUP_BORDER_COLOR,
-          toolbar_bottom_separator: CHROME_CONTENT_SEPARATOR_COLOR,
-          popup_text: POPUP_TEXT_COLOR_DARK,
+          toolbar_field_focus: POPUP_COLOR,
+          toolbar_field_text_focus: POPUP_TEXT_COLOR_DARK,
           popup_highlight: POPUP_SELECTED_COLOR,
           popup_highlight_text: POPUP_SELECTED_TEXT_COLOR,
         },
@@ -132,25 +128,7 @@ add_task(async function test_popup_url() {
     `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_DARK}`
   );
 
-  let root = document.documentElement;
-  Assert.equal(
-    root.hasAttribute("lwt-popup-brighttext"),
-    false,
-    "brighttext should not be set!"
-  );
-  Assert.equal(
-    root.getAttribute("lwt-popup-darktext"),
-    "true",
-    "darktext should be set!"
-  );
-
   await extension.unload();
-
-  Assert.equal(
-    root.hasAttribute("lwt-popup-darktext"),
-    false,
-    "lwt-popup-darktext attribute should be removed"
-  );
 
   // Load a manifest with popup_text being bright. Test for bright text properties.
   extension = ExtensionTestUtils.loadExtension({
@@ -162,8 +140,8 @@ add_task(async function test_popup_url() {
         colors: {
           frame: ACCENT_COLOR,
           tab_background_text: TEXT_COLOR,
-          popup: POPUP_COLOR,
-          popup_text: POPUP_TEXT_COLOR_BRIGHT,
+          toolbar_field_focus: POPUP_COLOR,
+          toolbar_field_text_focus: POPUP_TEXT_COLOR_BRIGHT,
           popup_highlight: POPUP_SELECTED_COLOR,
           popup_highlight_text: POPUP_SELECTED_TEXT_COLOR,
         },
@@ -188,29 +166,5 @@ add_task(async function test_popup_url() {
     `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_BRIGHT}`
   );
 
-  Assert.equal(
-    root.getAttribute("lwt-popup-brighttext"),
-    "true",
-    "brighttext should be set to true!"
-  );
-  Assert.equal(
-    root.hasAttribute("lwt-popup-darktext"),
-    false,
-    "darktext should not be set!"
-  );
-
   await extension.unload();
-
-  // Check to see if popup-brighttext and secondary color are not set after
-  // unload of theme
-  Assert.equal(
-    root.hasAttribute("lwt-popup-brighttext"),
-    false,
-    "brighttext should not be set!"
-  );
-  Assert.equal(
-    root.hasAttribute("lwt-popup-darktext"),
-    false,
-    "darktext should not be set!"
-  );
 });

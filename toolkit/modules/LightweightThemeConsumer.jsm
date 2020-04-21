@@ -74,7 +74,6 @@ const toolkitVariableMap = [
 
         if (!rgbaChannels) {
           element.removeAttribute("lwt-popup-brighttext");
-          element.removeAttribute("lwt-popup-darktext");
           element.style.removeProperty(disabledColorVariable);
           return null;
         }
@@ -83,9 +82,7 @@ const toolkitVariableMap = [
 
         if (_isColorDark(r, g, b)) {
           element.removeAttribute("lwt-popup-brighttext");
-          element.setAttribute("lwt-popup-darktext", "true");
         } else {
-          element.removeAttribute("lwt-popup-darktext");
           element.setAttribute("lwt-popup-brighttext", "true");
         }
 
@@ -163,6 +160,19 @@ const toolkitVariableMap = [
     {
       lwtProperty: "toolbar_field_text_focus",
       fallbackProperty: "toolbar_field_text",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          element.removeAttribute("lwt-toolbar-field-focus-brighttext");
+          return null;
+        }
+        const { r, g, b, a } = rgbaChannels;
+        if (_isColorDark(r, g, b)) {
+          element.removeAttribute("lwt-toolbar-field-focus-brighttext");
+        } else {
+          element.setAttribute("lwt-toolbar-field-focus-brighttext", "true");
+        }
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
     },
   ],
   [
