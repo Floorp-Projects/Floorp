@@ -41,9 +41,6 @@
 #include "mozilla/Preferences.h"
 #include <algorithm>
 
-#define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
-#define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
-
 // XXX A hack needed for Firefox's site specific zoom.
 static bool IsSiteSpecific() {
   return !mozilla::StaticPrefs::privacy_resistFingerprinting() &&
@@ -135,8 +132,6 @@ ImageDocument::ImageDocument()
       mVisibleHeight(0.0),
       mImageWidth(0),
       mImageHeight(0),
-      mResizeImageByDefault(false),
-      mClickResizingEnabled(false),
       mImageIsOverflowingHorizontally(false),
       mImageIsOverflowingVertically(false),
       mImageIsResized(false),
@@ -165,9 +160,7 @@ nsresult ImageDocument::Init() {
   nsresult rv = MediaDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mResizeImageByDefault = Preferences::GetBool(AUTOMATIC_IMAGE_RESIZING_PREF);
-  mClickResizingEnabled = Preferences::GetBool(CLICK_IMAGE_RESIZING_PREF);
-  mShouldResize = mResizeImageByDefault;
+  mShouldResize = StaticPrefs::browser_enable_automatic_image_resizing();
   mFirstResize = true;
 
   return NS_OK;
@@ -515,7 +508,8 @@ ImageDocument::HandleEvent(Event* aEvent) {
   aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("resize")) {
     CheckOverflowing(false);
-  } else if (eventType.EqualsLiteral("click") && mClickResizingEnabled) {
+  } else if (eventType.EqualsLiteral("click") &&
+             StaticPrefs::browser_enable_click_image_resizing()) {
     ResetZoomLevel();
     mShouldResize = true;
     if (mImageIsResized) {
@@ -606,6 +600,10 @@ nsresult ImageDocument::CreateSyntheticDocument() {
   imageLoader->SetLoadingEnabled(true);
 
   return NS_OK;
+}
+
+void ImageDocument::DefaultCheckOverflowing() {
+  CheckOverflowing(StaticPrefs::browser_enable_automatic_image_resizing());
 }
 
 nsresult ImageDocument::CheckOverflowing(bool changeState) {
