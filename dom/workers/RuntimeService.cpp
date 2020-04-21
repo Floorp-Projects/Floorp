@@ -24,7 +24,6 @@
 #include "jsfriendapi.h"
 #include "js/ContextOptions.h"
 #include "js/LocaleSensitive.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -2229,13 +2228,10 @@ WorkerThreadPrimaryRunnable::Run() {
   class MOZ_STACK_CLASS SetThreadHelper final {
     // Raw pointer: this class is on the stack.
     WorkerPrivate* mWorkerPrivate;
-    RefPtr<AbstractThread> mAbstractThread;
 
    public:
     SetThreadHelper(WorkerPrivate* aWorkerPrivate, WorkerThread* aThread)
-        : mWorkerPrivate(aWorkerPrivate),
-          mAbstractThread(AbstractThread::CreateXPCOMThreadWrapper(
-              NS_GetCurrentThread(), false)) {
+        : mWorkerPrivate(aWorkerPrivate) {
       MOZ_ASSERT(aWorkerPrivate);
       MOZ_ASSERT(aThread);
 
