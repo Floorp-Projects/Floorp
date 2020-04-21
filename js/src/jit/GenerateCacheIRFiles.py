@@ -196,15 +196,11 @@ def gen_compiler_method(name, operands):
 
     method_name = 'emit' + name
 
-    # If there are no operands, just generate a `bool emitFoo();` signature.`
-    if not operands:
-        return 'MOZ_MUST_USE bool {}();\\\n'.format(method_name)
-
-    # If there are operands we generate the signature of the method that needs
-    # to be implemented and a separate function forwarding to it. For example:
+    # We generate the signature of the method that needs to be implemented and a
+    # separate function forwarding to it. For example:
     #
     #   MOZ_MUST_USE bool emitGuardShape(ObjOperandId objId, uint32_t shapeOffset);
-    #   MOZ_MUST_USE bool emitGuardShape() {
+    #   MOZ_MUST_USE bool emitGuardShape(CacheIRReader& reader) {
     #     ObjOperandId objId = reader.objOperandId();
     #     uint32_t shapeOffset = reader.stubOffset();
     #     return emitGuardShape(objId, shapeOffset);
@@ -212,18 +208,19 @@ def gen_compiler_method(name, operands):
     args_names = []
     args_sig = []
     operands_code = ''
-    for opnd_name, opnd_type in six.iteritems(operands):
-        vartype, suffix, readexpr = operand_compiler_info[opnd_type]
-        varname = opnd_name + suffix
-        args_names.append(varname)
-        args_sig.append('{} {}'.format(vartype, varname))
-        operands_code += '  {} {} = {};\\\n'.format(vartype, varname, readexpr)
+    if operands:
+        for opnd_name, opnd_type in six.iteritems(operands):
+            vartype, suffix, readexpr = operand_compiler_info[opnd_type]
+            varname = opnd_name + suffix
+            args_names.append(varname)
+            args_sig.append('{} {}'.format(vartype, varname))
+            operands_code += '  {} {} = {};\\\n'.format(vartype, varname, readexpr)
 
     # Generate signature.
     code = 'MOZ_MUST_USE bool {}({});\\\n'.format(method_name, ', '.join(args_sig))
 
     # Generate the method forwarding to it.
-    code += 'MOZ_MUST_USE bool {}() {{\\\n'.format(method_name)
+    code += 'MOZ_MUST_USE bool {}(CacheIRReader& reader) {{\\\n'.format(method_name)
     code += operands_code
     code += '  return {}({});\\\n'.format(method_name, ', '.join(args_names))
     code += '}\\\n'

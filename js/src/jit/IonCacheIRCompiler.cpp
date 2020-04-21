@@ -516,11 +516,12 @@ JitCode* IonCacheIRCompiler::compile() {
 
   allocator.fixupAliasedInputs(masm);
 
+  CacheIRReader reader(writer_);
   do {
     switch (reader.readOp()) {
-#define DEFINE_OP(op, ...)           \
-  case CacheOp::op:                  \
-    if (!emit##op()) return nullptr; \
+#define DEFINE_OP(op, ...)                 \
+  case CacheOp::op:                        \
+    if (!emit##op(reader)) return nullptr; \
     break;
       CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
@@ -528,9 +529,6 @@ JitCode* IonCacheIRCompiler::compile() {
       default:
         MOZ_CRASH("Invalid op");
     }
-#ifdef DEBUG
-    assertAllArgumentsConsumed();
-#endif
     allocator.nextOp();
   } while (reader.more());
 
