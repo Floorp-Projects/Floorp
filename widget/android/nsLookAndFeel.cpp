@@ -472,13 +472,8 @@ void nsLookAndFeel::EnsureInitSystemColors() {
 }
 
 void nsLookAndFeel::EnsureInitShowPassword() {
-  if (!mInitializedShowPassword) {
-    if (XRE_IsParentProcess()) {
-      mShowPassword =
-          jni::IsAvailable() && java::GeckoAppShell::GetShowPasswordSetting();
-    } else {
-      ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
-    }
+  if (!mInitializedShowPassword && jni::IsAvailable()) {
+    mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
     mInitializedShowPassword = true;
   }
 }
