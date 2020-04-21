@@ -24,7 +24,7 @@ const EXPECTED_REQUESTS = [
     causeType: "websocket",
     causeUri: TOP_URL,
     stack: [
-      { fn: "openSocket", file: TOP_FILE_NAME, line: 6 },
+      { fn: "openSocket", file: TOP_URL, line: 6 },
       { file: TOP_FILE_NAME, line: 3 },
     ],
   },
@@ -33,7 +33,7 @@ const EXPECTED_REQUESTS = [
     url: EXAMPLE_URL + WORKER_FILE_NAME,
     causeType: "script",
     causeUri: TOP_URL,
-    stack: [{ file: TOP_FILE_NAME, line: 9 }],
+    stack: [{ file: TOP_URL, line: 9 }],
   },
   {
     method: "GET",
@@ -41,7 +41,7 @@ const EXPECTED_REQUESTS = [
     causeType: "websocket",
     causeUri: TOP_URL,
     stack: [
-      { fn: "openWorkerSocket", file: WORKER_FILE_NAME, line: 5 },
+      { fn: "openWorkerSocket", file: EXAMPLE_URL + WORKER_FILE_NAME, line: 5 },
       { file: WORKER_FILE_NAME, line: 2 },
     ],
   },

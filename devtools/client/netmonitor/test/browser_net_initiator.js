@@ -46,16 +46,14 @@ const EXPECTED_REQUESTS = [
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: INITIATOR_URL,
-    stack: [
-      { fn: "performXhrRequestCallback", file: INITIATOR_FILE_NAME, line: 30 },
-    ],
+    stack: [{ fn: "performXhrRequestCallback", file: INITIATOR_URL, line: 30 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: INITIATOR_URL,
-    stack: [{ fn: "performFetchRequest", file: INITIATOR_FILE_NAME, line: 35 }],
+    stack: [{ fn: "performFetchRequest", file: INITIATOR_URL, line: 35 }],
   },
   {
     method: "GET",
@@ -65,12 +63,12 @@ const EXPECTED_REQUESTS = [
     stack: [
       {
         fn: "performPromiseFetchRequestCallback",
-        file: INITIATOR_FILE_NAME,
+        file: INITIATOR_URL,
         line: 41,
       },
       {
         fn: "performPromiseFetchRequest",
-        file: INITIATOR_FILE_NAME,
+        file: INITIATOR_URL,
         line: 40,
         asyncCause: "promise callback",
       },
@@ -84,12 +82,12 @@ const EXPECTED_REQUESTS = [
     stack: [
       {
         fn: "performTimeoutFetchRequestCallback2",
-        file: INITIATOR_FILE_NAME,
+        file: INITIATOR_URL,
         line: 48,
       },
       {
         fn: "performTimeoutFetchRequestCallback1",
-        file: INITIATOR_FILE_NAME,
+        file: INITIATOR_URL,
         line: 47,
         asyncCause: "setTimeout handler",
       },
@@ -114,9 +112,7 @@ const EXPECTED_REQUESTS = [
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: INITIATOR_URL,
-    stack: [
-      { fn: "performBeaconRequest", file: INITIATOR_FILE_NAME, line: 70 },
-    ],
+    stack: [{ fn: "performBeaconRequest", file: INITIATOR_URL, line: 70 }],
   },
 ];
 
