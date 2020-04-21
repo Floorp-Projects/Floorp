@@ -57,7 +57,8 @@ interface nsIProtocolProxyFilter : nsISupports
    *        is the proxy (or list of proxies) that should be used in place of
    *        aProxy.  This can be just be aProxy if the filter chooses not to
    *        modify the proxy.  It can also be null to indicate that a direct
-   *        connection should be used.
+   *        connection should be used.  Use nsIProtocolProxyService.newProxyInfo
+   *        to construct nsIProxyInfo objects.
    */
   void applyFilter(in nsIURI aURI, in nsIProxyInfo aProxy,
                    in nsIProxyProtocolFilterResult aCallback);
@@ -88,8 +89,8 @@ interface nsIProtocolProxyChannelFilter : nsISupports
    *        is the proxy (or list of proxies) that should be used in place of
    *        aProxy.  This can be just be aProxy if the filter chooses not to
    *        modify the proxy.  It can also be null to indicate that a direct
-   *        connection should be used.  Use aProxyService.newProxyInfo to
-   *        construct nsIProxyInfo objects.
+   *        connection should be used.  Use nsIProtocolProxyService.newProxyInfo
+   *        to construct nsIProxyInfo objects.
    */
   void applyFilter(in nsIChannel aChannel, in nsIProxyInfo aProxy,
                    in nsIProxyProtocolFilterResult aCallback);
