@@ -46,13 +46,13 @@
 #about-config-search {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: 0.8;
+  fill-opacity: 0.4;
   box-sizing: border-box;
   width: 100%;
-  background-image: url("chrome://global/skin/icons/search-textbox.svg");
+  background-image: url("chrome://browser/skin/search-glass.svg");
   background-repeat: no-repeat;
-  background-position: 9px center;
-  background-size: 12px 12px;
+  background-position: 8px center;
+  background-size: 16px;
   z-index: 1;
   /* Set horizontal margin to 0 to ensure alignment with table. */
   margin-inline: 0;
@@ -71,12 +71,12 @@
 :root:dir(ltr) #about-config-search {
   /* Be explicit about padding direction since
    * `about-config-search` is forced to be LTR. */
-  padding-left: 30px;
+  padding-left: 32px;
 }
 
 :root:dir(rtl) #about-config-search {
-  background-position-x: right 9px;
-  padding-right: 30px;
+  background-position-x: right 8px;
+  padding-right: 32px;
 }
 
 #show-all {
