@@ -2,7 +2,7 @@
 
 # isDisabledAsUnsupported
 
-`fun isDisabledAsUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L134)
+`fun isDisabledAsUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L137)
 
 Returns whether or not this [Addon](index.md) is currently disabled because it is not
 supported. This is based on the installed extension state in the engine. An

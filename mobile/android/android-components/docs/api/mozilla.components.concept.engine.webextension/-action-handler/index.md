@@ -2,7 +2,7 @@
 
 # ActionHandler
 
-`interface ActionHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L167)
+`interface ActionHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L172)
 
 A handler for web extension (browser and page) actions.
 

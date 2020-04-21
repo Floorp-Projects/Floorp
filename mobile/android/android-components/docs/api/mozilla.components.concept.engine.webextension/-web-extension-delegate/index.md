@@ -12,6 +12,7 @@ a new tab.
 
 | Name | Summary |
 |---|---|
+| [onAllowedInPrivateBrowsingChanged](on-allowed-in-private-browsing-changed.md) | `open fun onAllowedInPrivateBrowsingChanged(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension in private browsing allowed is set. |
 | [onBrowserActionDefined](on-browser-action-defined.md) | `open fun onBrowserActionDefined(extension: `[`WebExtension`](../-web-extension/index.md)`, action: `[`Action`](../-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension defines a browser action. To listen for session-specific overrides of [Action](../-action/index.md)s and other action-specific events (e.g. opening a popup) see [WebExtension.registerActionHandler](../-web-extension/register-action-handler.md). |
 | [onDisabled](on-disabled.md) | `open fun onDisabled(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension was disabled successfully. |
 | [onEnabled](on-enabled.md) | `open fun onEnabled(extension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension was enabled successfully. |
