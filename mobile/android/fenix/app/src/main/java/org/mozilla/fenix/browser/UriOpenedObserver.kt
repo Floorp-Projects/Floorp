@@ -29,10 +29,6 @@ class UriOpenedObserver(
         activity.metrics
     )
 
-    init {
-        sessionManager.register(this, owner)
-    }
-
     /**
      * Currently, [Session.Observer.onLoadingStateChanged] is called multiple times the first
      * time a new session loads a page. This is inflating our telemetry numbers, so we need to
@@ -63,6 +59,15 @@ class UriOpenedObserver(
                 metrics.track(Event.UriOpened)
             }
         }
+    }
+
+    init {
+        sessionManager.register(this, owner)
+        sessionManager.selectedSession?.register(singleSessionObserver, owner)
+    }
+
+    override fun onSessionSelected(session: Session) {
+        session.register(singleSessionObserver, owner)
     }
 
     override fun onAllSessionsRemoved() {

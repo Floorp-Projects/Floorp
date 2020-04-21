@@ -249,6 +249,14 @@ This ping is intended to provide an understanding of startup performance.
 The ping is intended to be captured by performance testing automation to report results there, in addition to user telemetry. We place these metrics into their own ping in order to isolate them and make this process easier.
 
 
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/fenix/issues/8803>
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
