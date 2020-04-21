@@ -15,6 +15,7 @@ XPIDL_MODULE = 'widget_cocoa'
 
 EXPORTS += [
     'CFTypeRefPtr.h',
+    'DesktopBackgroundImage.h',
     'MediaHardwareKeysEventSourceMac.h',
     'MediaHardwareKeysEventSourceMacMediaCenter.h',
     'MediaPlayerWrapper.h',
@@ -78,6 +79,7 @@ UNIFIED_SOURCES += [
 
 # These files cannot be built in unified mode because they cause symbol conflicts
 SOURCES += [
+    'DesktopBackgroundImage.mm',
     'MediaHardwareKeysEventSourceMac.mm',
     'MediaHardwareKeysEventSourceMacMediaCenter.mm',
     'MediaKeysEventSourceFactory.cpp',
