@@ -194,19 +194,4 @@ interface nsIBrowser : nsISupports
 
   /** If `true`, this browser supports the `performProcessSwitch` method */
   readonly attribute bool canPerformProcessSwitch;
-
-  /**
-   * Helper method for invoking `E10SUtils.getRemoteTypeForPrincipal` from
-   * `DocumentLoadListener`.
-   *
-   * FIXME: DocumentLoadListener should make process selection decisions without
-   * an `nsIBrowser`, as the implementation does not depend on which browser
-   * it's being called on.
-   */
-  AString getRemoteTypeForPrincipal(in nsIPrincipal aPrincipal,
-                                    in boolean aRemoteTabs,
-                                    in boolean aRemoteSubframes,
-                                    in AString aPreferredRemoteType,
-                                    in nsIPrincipal aCurrentPrincipal,
-                                    in boolean aIsSubframe);
 };
