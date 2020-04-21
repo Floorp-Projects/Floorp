@@ -980,7 +980,7 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
     MOZ_ASSERT(!isWebsocket || !needTunnel, "Websocket and tunnel?!");
   }
 
-  LOG(("nsHttpConnection::AddTransaction for %s%s",
+  LOG(("nsHttpConnection::AddTransaction [this=%p] for %s%s", this,
        mSpdySession ? "SPDY" : "QUIC",
        needTunnel ? " over tunnel" : (isWebsocket ? " websocket" : "")));
 

@@ -81,6 +81,21 @@ class UnxpectedAuthPrompt2 {
   }
 }
 
+class SimpleAuthPrompt2 {
+  constructor(signal) {
+    this.signal = signal;
+    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIAuthPrompt2]);
+  }
+  asyncPromptAuth(channel, callback, context, encryptionLevel, authInfo) {
+    this.signal.triggered = true;
+    executeSoon(function() {
+      authInfo.username = "user";
+      authInfo.password = "pass";
+      callback.onAuthAvailable(context, authInfo);
+    });
+  }
+}
+
 class AuthRequestor {
   constructor(prompt) {
     this.prompt = prompt;
@@ -211,12 +226,26 @@ class http2ProxyCode {
       const target = headers[":authority"];
 
       const authorization_token = headers["proxy-authorization"];
-      if (
-        "authorization-token" != authorization_token ||
-        target == "407.example.com:443"
-      ) {
+      if (target == "407.example.com:443") {
         stream.respond({ ":status": 407 });
         // Deliberately send no Proxy-Authenticate header
+        stream.end();
+        return;
+      }
+      if (target == "407.basic.example.com:443") {
+        // we want to return a different response than 407 to not re-request
+        // credentials (and thus loop) but also not 200 to not let the channel
+        // attempt to waste time connecting a non-existing https server - hence
+        // 418 I'm a teapot :)
+        if ("Basic dXNlcjpwYXNz" == authorization_token) {
+          stream.respond({ ":status": 418 });
+          stream.end();
+          return;
+        }
+        stream.respond({
+          ":status": 407,
+          "proxy-authenticate": "Basic realm='foo'",
+        });
         stream.end();
         return;
       }
@@ -379,6 +408,31 @@ add_task(async function proxy_auth_failure() {
   Assert.equal(proxy_connect_response_code, 407);
   Assert.equal(http_code, undefined);
   Assert.equal(auth_prompt.triggered, false, "Auth prompt didn't trigger");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 407"
+  );
+});
+
+// The proxy responses with 407 with Proxy-Authenticate header presence. Make
+// sure that we prompt the auth prompt to ask for credentials.
+add_task(async function proxy_auth_basic() {
+  const chan = make_channel(`https://407.basic.example.com/`);
+  const auth_prompt = { triggered: false };
+  chan.notificationCallbacks = new AuthRequestor(
+    () => new SimpleAuthPrompt2(auth_prompt)
+  );
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    chan,
+    CL_EXPECT_FAILURE
+  );
+
+  // 418 indicates we pass the basic authentication.
+  Assert.equal(status, Cr.NS_ERROR_PROXY_CONNECTION_REFUSED);
+  Assert.equal(proxy_connect_response_code, 418);
+  Assert.equal(http_code, undefined);
+  Assert.equal(auth_prompt.triggered, true, "Auth prompt should trigger");
   Assert.equal(
     await proxy_session_counter(),
     1,

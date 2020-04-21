@@ -223,7 +223,8 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   void ForcePlainText();
   void MapStreamToHttpConnection(nsISocketTransport* aTransport,
                                  nsHttpConnectionInfo* aConnInfo,
-                                 int32_t httpResponseCode);
+                                 const nsACString& aFlat407Headers,
+                                 int32_t aHttpResponseCode);
 
   [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader* reader,
                                       uint32_t count,
