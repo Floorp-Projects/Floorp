@@ -6,8 +6,8 @@
 %include ../../shared/findBar.inc.css
 
 findbar {
-  background: @scopeBarBackground@;
-  border-top: @scopeBarSeparatorBorder@;
+  background-image: linear-gradient(#e8e8e8, #d0d0d0);
+  border-top-color: #888;
 }
 
 .findbar-container {
@@ -15,7 +15,7 @@ findbar {
 }
 
 label.findbar-find-fast {
-  color: @scopeBarTitleColor@;
+  color: #6d6d6d;
   margin: 0;
   margin-inline-start: 12px;
 }

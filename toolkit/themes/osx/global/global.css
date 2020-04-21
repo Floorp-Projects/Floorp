@@ -17,7 +17,7 @@
   --arrowpanel-border-radius: 3.5px;
   --panel-disabled-color: GrayText;
 
-  --focus-ring-box-shadow: @focusRingShadow@;
+  --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
   /* ::::: Styles ::::: */
   -moz-appearance: dialog;
   background-color: #FFFFFF;
@@ -167,7 +167,6 @@ xul|notification > xul|hbox > xul|button {
   -moz-appearance: none;
   border-radius: 10000px;
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
-  text-shadow: @loweredShadow@;
   color: @roundButtonColor@;
   background: @roundButtonBackgroundImage@;
   box-shadow: @roundButtonShadow@;
