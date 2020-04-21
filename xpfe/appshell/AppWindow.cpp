@@ -971,7 +971,12 @@ NS_IMETHODIMP AppWindow::SetVisibility(bool aVisibility) {
   // mWindow to null and posibly destroy the nsIWidget while its Show method
   // is on the stack. We need to keep it alive until Show finishes.
   nsCOMPtr<nsIWidget> window = mWindow;
-  window->Show(aVisibility);
+  {
+    // Ensure that MozAfterPaint events are not fired before the window is
+    // completely visible.
+    nsAutoScriptBlocker scriptBlocker;
+    window->Show(aVisibility);
+  }
 
   nsCOMPtr<nsIWindowMediator> windowMediator(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
