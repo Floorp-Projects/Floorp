@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+:host {
+  margin: 0 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-appearance: listbox;
+}
+
+html|input {
+  position: absolute;
+  top: 0;
+  left: 0;
+%ifdef XP_MACOSX
+  box-shadow: var(--focus-ring-box-shadow);
+  border: none;
+%else
+  border: 1px solid Highlight;
+%endif
+  margin-inline-start: -4px;
+  padding: 1px;
+  font: inherit;
+}
+
+.scrollbar-topmost {
+  position: relative;
+  z-index: 2147483647;
+}
