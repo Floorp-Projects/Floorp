@@ -5,6 +5,7 @@
 #include ../../shared/jar.inc.mn
 
 toolkit.jar:
+* skin/classic/global/arrowpanel.css
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
   skin/classic/global/checkbox.css

@@ -453,6 +453,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   margin: 0;
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 %endif
+  padding: var(--arrowpanel-padding);
   max-width: 29em;
 }
 
@@ -460,7 +461,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   display: block;
   position: relative;
   height: 10px;
-  margin-bottom: -1px;
 }
 
 /* In customize mode, the overflow button should look both 'disabled' and 'open'.
