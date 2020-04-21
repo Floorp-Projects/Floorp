@@ -11,7 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
+  ExperimentAPI:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -96,21 +97,11 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * Send initial data to page including experiment information
    */
   AWGetStartupData() {
-    return this.wrapPromise(
-      ExperimentAPI.ready().then(() => {
-        const experimentData = ExperimentAPI.getExperiment({
-          group: "aboutwelcome",
-        });
-        if (experimentData && experimentData.slug) {
-          log.debug(
-            `Loading about:welcome with experiment: ${experimentData.slug}`
-          );
-        } else {
-          log.debug("Loading about:welcome without experiment");
-        }
-        return Cu.cloneInto(experimentData || {}, this.contentWindow);
-      })
-    );
+    // TODO: Fetch this from Experiments
+    const experimentData = ExperimentAPI.getExperiment({
+      group: "aboutwelcome",
+    });
+    return Cu.cloneInto(experimentData, this.contentWindow);
   }
 
   AWGetFxAMetricsFlowURI() {
