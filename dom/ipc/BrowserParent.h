@@ -49,10 +49,6 @@ namespace a11y {
 class DocAccessibleParent;
 }
 
-namespace jsipc {
-class CpowHolder;
-}  // namespace jsipc
-
 namespace layers {
 struct TextureFactoryIdentifier;
 }  // namespace layers
@@ -345,16 +341,9 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows,
-      nsTArray<ipc::StructuredCloneData>* aRetVal);
-
-  mozilla::ipc::IPCResult RecvRpcMessage(
-      const nsString& aMessage, const ClonedMessageData& aData,
-      nsTArray<CpowEntry>&& aCpows,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMessage,
-                                           nsTArray<CpowEntry>&& aCpows,
                                            const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvNotifyIMEFocus(
@@ -750,7 +739,6 @@ class BrowserParent final : public PBrowserParent,
 
   bool ReceiveMessage(
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
-      mozilla::jsipc::CpowHolder* aCpows,
       nsTArray<ipc::StructuredCloneData>* aJSONRetVal = nullptr);
 
   mozilla::ipc::IPCResult RecvAsyncAuthPrompt(const nsCString& aUri,

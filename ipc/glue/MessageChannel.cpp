@@ -1453,7 +1453,6 @@ bool MessageChannel::Send(Message* aMsg, Message* aReply) {
   if (DispatchingSyncMessageNestedLevel() == IPC::Message::NOT_NESTED &&
       msg->nested_level() > IPC::Message::NOT_NESTED) {
     // Don't allow sending CPOWs while we're dispatching a sync message.
-    // If you want to do that, use sendRpcMessage instead.
     IPC_LOG("Nested level forbids send");
     mLastSendError = SyncSendError::SendingCPOWWhileDispatchingSync;
     return false;

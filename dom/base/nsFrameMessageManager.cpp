@@ -51,7 +51,6 @@
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "nsQueryObject.h"
@@ -184,16 +183,6 @@ void mozilla::dom::ipc::UnpackClonedMessageDataForParent(
 void mozilla::dom::ipc::UnpackClonedMessageDataForChild(
     const ClonedMessageData& aClonedData, StructuredCloneData& aData) {
   aData.BorrowFromClonedMessageDataForChild(aClonedData);
-}
-
-bool SameProcessCpowHolder::ToObject(JSContext* aCx,
-                                     JS::MutableHandle<JSObject*> aObjp) {
-  if (!mObj) {
-    return true;
-  }
-
-  aObjp.set(mObj);
-  return JS_WrapObject(aCx, aObjp);
 }
 
 void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
@@ -444,10 +433,11 @@ static bool AllowMessage(size_t aDataLength, const nsAString& aMessageName) {
   return aDataLength < kMaxMessageSize;
 }
 
-void nsFrameMessageManager::SendMessage(
-    JSContext* aCx, const nsAString& aMessageName, JS::Handle<JS::Value> aObj,
-    JS::Handle<JSObject*> aObjects, bool aIsSync, nsTArray<JS::Value>& aResult,
-    ErrorResult& aError) {
+void nsFrameMessageManager::SendSyncMessage(JSContext* aCx,
+                                            const nsAString& aMessageName,
+                                            JS::Handle<JS::Value> aObj,
+                                            nsTArray<JS::Value>& aResult,
+                                            ErrorResult& aError) {
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!GetParentManager(),
@@ -456,7 +446,7 @@ void nsFrameMessageManager::SendMessage(
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
       "nsFrameMessageManager::SendMessage", OTHER, aMessageName);
 
-  if (sSendingSyncMessage && aIsSync) {
+  if (sSendingSyncMessage) {
     // No kind of blocking send should be issued on top of a sync message.
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -489,12 +479,9 @@ void nsFrameMessageManager::SendMessage(
   nsTArray<StructuredCloneData> retval;
 
   TimeStamp start = TimeStamp::Now();
-  sSendingSyncMessage |= aIsSync;
-  bool ok = mCallback->DoSendBlockingMessage(aCx, aMessageName, data, aObjects,
-                                             &retval, aIsSync);
-  if (aIsSync) {
-    sSendingSyncMessage = false;
-  }
+  sSendingSyncMessage = true;
+  bool ok = mCallback->DoSendBlockingMessage(aMessageName, data, &retval);
+  sSendingSyncMessage = false;
 
   uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
   if (latencyMs >= kMinTelemetrySyncMessageManagerLatencyMs) {
@@ -525,13 +512,11 @@ void nsFrameMessageManager::SendMessage(
 }
 
 nsresult nsFrameMessageManager::DispatchAsyncMessageInternal(
-    JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData,
-    JS::Handle<JSObject*> aCpows) {
+    JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData) {
   if (mIsBroadcaster) {
     uint32_t len = mChildManagers.Length();
     for (uint32_t i = 0; i < len; ++i) {
-      mChildManagers[i]->DispatchAsyncMessageInternal(aCx, aMessage, aData,
-                                                      aCpows);
+      mChildManagers[i]->DispatchAsyncMessageInternal(aCx, aMessage, aData);
     }
     return NS_OK;
   }
@@ -540,7 +525,7 @@ nsresult nsFrameMessageManager::DispatchAsyncMessageInternal(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = mCallback->DoSendAsyncMessage(aCx, aMessage, aData, aCpows);
+  nsresult rv = mCallback->DoSendAsyncMessage(aMessage, aData);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -549,8 +534,7 @@ nsresult nsFrameMessageManager::DispatchAsyncMessageInternal(
 
 void nsFrameMessageManager::DispatchAsyncMessage(
     JSContext* aCx, const nsAString& aMessageName, JS::Handle<JS::Value> aObj,
-    JS::Handle<JSObject*> aObjects, JS::Handle<JS::Value> aTransfers,
-    ErrorResult& aError) {
+    JS::Handle<JS::Value> aTransfers, ErrorResult& aError) {
   StructuredCloneData data;
   if (!aObj.isUndefined() &&
       !GetParamsForMessage(aCx, aObj, aTransfers, data)) {
@@ -569,7 +553,7 @@ void nsFrameMessageManager::DispatchAsyncMessage(
     return;
   }
 
-  aError = DispatchAsyncMessageInternal(aCx, aMessageName, data, aObjects);
+  aError = DispatchAsyncMessageInternal(aCx, aMessageName, data);
 }
 
 class MMListenerRemover {
@@ -594,8 +578,7 @@ class MMListenerRemover {
 void nsFrameMessageManager::ReceiveMessage(
     nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader, bool aTargetClosed,
     const nsAString& aMessage, bool aIsSync, StructuredCloneData* aCloneData,
-    mozilla::jsipc::CpowHolder* aCpows, nsTArray<StructuredCloneData>* aRetVal,
-    ErrorResult& aError) {
+    nsTArray<StructuredCloneData>* aRetVal, ErrorResult& aError) {
   MOZ_ASSERT(aTarget);
 
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
@@ -655,21 +638,6 @@ void nsFrameMessageManager::ReceiveMessage(
       JSAutoRealm ar(cx, objectGlobal);
 
       RootedDictionary<ReceiveMessageArgument> argument(cx);
-
-      JS::Rooted<JSObject*> cpows(cx);
-      if (aCpows && !aCpows->ToObject(cx, &cpows)) {
-        aError.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      if (!cpows) {
-        cpows = JS_NewPlainObject(cx);
-        if (!cpows) {
-          aError.Throw(NS_ERROR_UNEXPECTED);
-          return;
-        }
-      }
-      argument.mObjects = cpows;
 
       JS::Rooted<JS::Value> json(cx, JS::NullValue());
       if (aCloneData && aCloneData->DataLength()) {
@@ -800,8 +768,8 @@ void nsFrameMessageManager::ReceiveMessage(
   RefPtr<nsFrameMessageManager> kungFuDeathGrip = GetParentManager();
   if (kungFuDeathGrip) {
     kungFuDeathGrip->ReceiveMessage(aTarget, aTargetFrameLoader, aTargetClosed,
-                                    aMessage, aIsSync, aCloneData, aCpows,
-                                    aRetVal, aError);
+                                    aMessage, aIsSync, aCloneData, aRetVal,
+                                    aError);
   }
 }
 
@@ -1346,9 +1314,8 @@ nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager =
 class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
                                          public Runnable {
  public:
-  nsAsyncMessageToSameProcessChild(JS::RootingContext* aRootingCx,
-                                   JS::Handle<JSObject*> aCpows)
-      : nsSameProcessAsyncMessageBase(aRootingCx, aCpows),
+  nsAsyncMessageToSameProcessChild()
+      : nsSameProcessAsyncMessageBase(),
         mozilla::Runnable("nsAsyncMessageToSameProcessChild") {}
   NS_IMETHOD Run() override {
     nsFrameMessageManager* ppm =
@@ -1378,12 +1345,10 @@ class SameParentProcessMessageManagerCallback : public MessageManagerCallback {
     return true;
   }
 
-  nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
-                              StructuredCloneData& aData,
-                              JS::Handle<JSObject*> aCpows) override {
-    JS::RootingContext* rcx = JS::RootingContext::get(aCx);
+  nsresult DoSendAsyncMessage(const nsAString& aMessage,
+                              StructuredCloneData& aData) override {
     RefPtr<nsAsyncMessageToSameProcessChild> ev =
-        new nsAsyncMessageToSameProcessChild(rcx, aCpows);
+        new nsAsyncMessageToSameProcessChild();
 
     nsresult rv = ev->Init(aMessage, aData);
     if (NS_FAILED(rv)) {
@@ -1409,11 +1374,9 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
     MOZ_COUNT_DTOR(ChildProcessMessageManagerCallback);
   }
 
-  bool DoSendBlockingMessage(JSContext* aCx, const nsAString& aMessage,
+  bool DoSendBlockingMessage(const nsAString& aMessage,
                              StructuredCloneData& aData,
-                             JS::Handle<JSObject*> aCpows,
-                             nsTArray<StructuredCloneData>* aRetVal,
-                             bool aIsSync) override {
+                             nsTArray<StructuredCloneData>* aRetVal) override {
     mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
     if (!cc) {
       return true;
@@ -1422,21 +1385,11 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
     if (!BuildClonedMessageDataForChild(cc, aData, data)) {
       return false;
     }
-    nsTArray<mozilla::jsipc::CpowEntry> cpows;
-    if (aCpows && !cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-      return false;
-    }
-    if (aIsSync) {
-      return cc->SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
-                                 aRetVal);
-    }
-    return cc->SendRpcMessage(PromiseFlatString(aMessage), data, cpows,
-                              aRetVal);
+    return cc->SendSyncMessage(PromiseFlatString(aMessage), data, aRetVal);
   }
 
-  nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
-                              StructuredCloneData& aData,
-                              JS::Handle<JSObject*> aCpows) override {
+  nsresult DoSendAsyncMessage(const nsAString& aMessage,
+                              StructuredCloneData& aData) override {
     mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
     if (!cc) {
       return NS_OK;
@@ -1445,11 +1398,7 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
     if (!BuildClonedMessageDataForChild(cc, aData, data)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
-    nsTArray<mozilla::jsipc::CpowEntry> cpows;
-    if (aCpows && !cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (!cc->SendAsyncMessage(PromiseFlatString(aMessage), cpows, data)) {
+    if (!cc->SendAsyncMessage(PromiseFlatString(aMessage), data)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -1461,9 +1410,7 @@ class nsAsyncMessageToSameProcessParent
     : public nsSameProcessAsyncMessageBase,
       public SameProcessMessageQueue::Runnable {
  public:
-  nsAsyncMessageToSameProcessParent(JS::RootingContext* aRootingCx,
-                                    JS::Handle<JSObject*> aCpows)
-      : nsSameProcessAsyncMessageBase(aRootingCx, aCpows) {}
+  nsAsyncMessageToSameProcessParent() : nsSameProcessAsyncMessageBase() {}
   nsresult HandleMessage() override {
     nsFrameMessageManager* ppm =
         nsFrameMessageManager::sSameProcessParentManager;
@@ -1484,31 +1431,26 @@ class SameChildProcessMessageManagerCallback : public MessageManagerCallback {
     MOZ_COUNT_DTOR(SameChildProcessMessageManagerCallback);
   }
 
-  bool DoSendBlockingMessage(JSContext* aCx, const nsAString& aMessage,
+  bool DoSendBlockingMessage(const nsAString& aMessage,
                              StructuredCloneData& aData,
-                             JS::Handle<JSObject*> aCpows,
-                             nsTArray<StructuredCloneData>* aRetVal,
-                             bool aIsSync) override {
+                             nsTArray<StructuredCloneData>* aRetVal) override {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
     queue->Flush();
 
     if (nsFrameMessageManager::sSameProcessParentManager) {
-      SameProcessCpowHolder cpows(JS::RootingContext::get(aCx), aCpows);
       RefPtr<nsFrameMessageManager> ppm =
           nsFrameMessageManager::sSameProcessParentManager;
-      ppm->ReceiveMessage(ppm, nullptr, aMessage, true, &aData, &cpows, aRetVal,
+      ppm->ReceiveMessage(ppm, nullptr, aMessage, true, &aData, aRetVal,
                           IgnoreErrors());
     }
     return true;
   }
 
-  nsresult DoSendAsyncMessage(JSContext* aCx, const nsAString& aMessage,
-                              StructuredCloneData& aData,
-                              JS::Handle<JSObject*> aCpows) override {
+  nsresult DoSendAsyncMessage(const nsAString& aMessage,
+                              StructuredCloneData& aData) override {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-    JS::RootingContext* rcx = JS::RootingContext::get(aCx);
     RefPtr<nsAsyncMessageToSameProcessParent> ev =
-        new nsAsyncMessageToSameProcessParent(rcx, aCpows);
+        new nsAsyncMessageToSameProcessParent();
     nsresult rv = ev->Init(aMessage, aData);
 
     if (NS_FAILED(rv)) {
@@ -1592,12 +1534,9 @@ void nsFrameMessageManager::MarkForCC() {
   }
 }
 
-nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(
-    JS::RootingContext* aRootingCx, JS::Handle<JSObject*> aCpows)
-    : mCpows(aRootingCx, aCpows)
+nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase()
 #ifdef DEBUG
-      ,
-      mCalledInit(false)
+    : mCalledInit(false)
 #endif
 {
 }
@@ -1624,10 +1563,8 @@ void nsSameProcessAsyncMessageBase::ReceiveMessage(
   // Make sure that we have called Init() and it has succeeded.
   MOZ_ASSERT(mCalledInit);
   if (aManager) {
-    SameProcessCpowHolder cpows(RootingCx(), mCpows);
-
     RefPtr<nsFrameMessageManager> mm = aManager;
     mm->ReceiveMessage(aTarget, aTargetFrameLoader, mMessage, false, &mData,
-                       &cpows, nullptr, IgnoreErrors());
+                       nullptr, IgnoreErrors());
   }
 }

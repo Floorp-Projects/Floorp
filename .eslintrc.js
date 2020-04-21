@@ -541,7 +541,6 @@ module.exports = {
     },
     {
       files: [
-        "dom/base/test/chrome/cpows_parent.xhtml",
         "dom/base/test/chrome/file_bug1139964.xhtml",
         "dom/base/test/chrome/file_bug549682.xhtml",
         "dom/base/test/chrome/file_bug616841.xhtml",
