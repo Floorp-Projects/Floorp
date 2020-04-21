@@ -329,6 +329,7 @@ var Impl = {
   _shutdownBarrier: new AsyncShutdown.Barrier(
     "TelemetryController: Waiting for clients."
   ),
+  _shutdownState: "Shutdown not started.",
   // This is a private barrier blocked by pending async ping activity (sending & saving).
   _connectionsBarrier: new AsyncShutdown.Barrier(
     "TelemetryController: Waiting for pending ping activity"
@@ -916,6 +917,9 @@ var Impl = {
     if (!this._initialized) {
       return;
     }
+    let start = TelemetryUtils.monotonicNow();
+    let now = () => TelemetryUtils.monotonicNow() - start;
+    this._shutdownStep = "_cleanupOnShutdown begin " + now();
 
     Services.prefs.removeObserver(PREF_BRANCH_LOG, configureLogging);
     this._detachObservers();
@@ -923,40 +927,55 @@ var Impl = {
     // Now do an orderly shutdown.
     try {
       if (this._delayedNewPingTask) {
+        this._shutdownStep = "awaiting delayed new ping task " + now();
         await this._delayedNewPingTask.finalize();
       }
 
+      this._shutdownStep = "UpdatePing.shutdown() " + now();
       UpdatePing.shutdown();
 
+      this._shutdownStep = "TelemetryEventPing.shutdown() " + now();
       TelemetryEventPing.shutdown();
+      this._shutdownStep = "EcosystemTelemetry.shutdown() " + now();
       EcosystemTelemetry.shutdown();
+      this._shutdownStep = "await TelemetryPrioPing.shutdown() " + now();
       await TelemetryPrioPing.shutdown();
 
       // Stop the datachoices infobar display.
+      this._shutdownStep = "TelemetryReportingPolicy.shutdown() " + now();
       TelemetryReportingPolicy.shutdown();
+      this._shutdownStep = "TelemetryEnvironment.shutdown() " + now();
       TelemetryEnvironment.shutdown();
 
       // Stop any ping sending.
+      this._shutdownStep = "await TelemetrySend.shutdown() " + now();
       await TelemetrySend.shutdown();
 
       // Send latest data.
+      this._shutdownStep = "await TelemetryHealthPing.shutdown() " + now();
       await TelemetryHealthPing.shutdown();
 
+      this._shutdownStep = "await TelemetrySession.shutdown() " + now();
       await TelemetrySession.shutdown();
+      this._shutdownStep = "await Services.telemetry.shutdown() " + now();
       await Services.telemetry.shutdown();
 
       // First wait for clients processing shutdown.
+      this._shutdownStep = "await this._shutdownBarrier.wait() " + now();
       await this._shutdownBarrier.wait();
 
       // ... and wait for any outstanding async ping activity.
+      this._shutdownStep = "await this._connectionsBarrier.wait() " + now();
       await this._connectionsBarrier.wait();
 
       if (AppConstants.platform !== "android") {
         // No PingSender on Android.
+        this._shutdownStep = "TelemetrySend.flushPingSenderBatch " + now();
         TelemetrySend.flushPingSenderBatch();
       }
 
       // Perform final shutdown operations.
+      this._shutdownStep = "await TelemetryStorage.shutdown() " + now();
       await TelemetryStorage.shutdown();
     } finally {
       // Reset state.
@@ -964,6 +983,7 @@ var Impl = {
       this._initStarted = false;
       this._shutDown = true;
     }
+    this._shutdownStep = "_cleanupOnShutdown end " + now();
   },
 
   shutdown() {
@@ -1036,6 +1056,7 @@ var Impl = {
       connectionsBarrier: this._connectionsBarrier.state,
       sendModule: TelemetrySend.getShutdownState(),
       haveDelayedNewProfileTask: !!this._delayedNewPingTask,
+      shutdownStep: this._shutdownStep,
     };
   },
 
