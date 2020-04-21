@@ -45,7 +45,7 @@ class FileManager final : public FileManagerBase<FileManager> {
   static MOZ_MUST_USE nsCOMPtr<nsIFile> GetCheckedFileForId(nsIFile* aDirectory,
                                                             int64_t aId);
 
-  static nsresult InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
+  static nsresult InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
                                 const nsACString& aOrigin,
                                 uint32_t aTelemetryId);
 
