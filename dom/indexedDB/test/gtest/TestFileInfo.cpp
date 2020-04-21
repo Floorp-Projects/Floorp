@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/StaticMutex.h"
 #include "nsTArray.h"
 
@@ -153,10 +154,9 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_Invalidate)
     const auto fileManager = MakeRefPtr<TestFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
-    auto fileInfos = nsTArray<SafeRefPtr<TestFileInfo>>{};
-    for (const auto id : TestFileManager::kDBOnlyFileInfoIds) {
-      fileInfos.EmplaceBack(fileManager->GetFileInfo(id));
-    }
+    const auto fileInfos = TransformIntoNewArray(
+        TestFileManager::kDBOnlyFileInfoIds,
+        [&fileManager](const auto id) { return fileManager->GetFileInfo(id); });
 
     fileManager->Invalidate();
 
