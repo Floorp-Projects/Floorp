@@ -901,6 +901,18 @@
   value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
 
+# Image document's automatic image sizing.
+- name: browser.enable_automatic_image_resizing
+  type: bool
+  value: true
+  mirror: always
+
+# Image document's click-to-resize.
+- name: browser.enable_click_image_resizing
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 # Render animations and videos as a solid color
 - name: browser.measurement.render_anims_and_video_solid
   type: RelaxedAtomicBool

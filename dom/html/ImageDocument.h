@@ -49,7 +49,7 @@ class ImageDocument final : public MediaDocument,
 
   friend class ImageListener;
 
-  void DefaultCheckOverflowing() { CheckOverflowing(mResizeImageByDefault); }
+  void DefaultCheckOverflowing();
 
   // WebIDL API
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
@@ -108,8 +108,6 @@ class ImageDocument final : public MediaDocument,
   int32_t mImageWidth;
   int32_t mImageHeight;
 
-  bool mResizeImageByDefault;
-  bool mClickResizingEnabled;
   bool mImageIsOverflowingHorizontally;
   bool mImageIsOverflowingVertically;
   // mImageIsResized is true if the image is currently resized

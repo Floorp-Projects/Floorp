@@ -80,9 +80,6 @@ pref("image.cache.size", 1048576); // bytes
 pref("browser.offline-apps.notify", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
 
-// Automatically shrink-to-fit image documents.
-pref("browser.enable_automatic_image_resizing", true);
-
 /* disable some protocol warnings */
 pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.sms", false);
@@ -293,9 +290,6 @@ pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inch
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
-
-// prevent click image resizing for nsImageDocument
-pref("browser.enable_click_image_resizing", false);
 
 // open in tab preferences
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most window

@@ -325,8 +325,6 @@ pref("browser.display.show_image_placeholders", true);
 pref("browser.display.show_loading_image_placeholder", false);
 // min font device pixel size at which to turn on high quality
 pref("browser.display.auto_quality_min_font_size", 20);
-pref("browser.enable_automatic_image_resizing", false);
-pref("browser.enable_click_image_resizing", true);
 
 // See http://whatwg.org/specs/web-apps/current-work/#ping
 pref("browser.send_pings", false);
