@@ -13,6 +13,6 @@ class Config(val componentsVersion: String) {
         // Synchronized build configuration for all modules
         const val compileSdkVersion = 29
         const val minSdkVersion = 21
-        const val targetSdkVersion = 28
+        const val targetSdkVersion = 29
     }
 }

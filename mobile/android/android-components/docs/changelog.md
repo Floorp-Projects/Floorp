@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **All components**
+  * Increased `targetSdkVersion` to 29 (Android Q)
+
 * **browser-session**
   * `SnapshotSerializer` no longer restores source of a `Session`, added `Session.Source.RESTORED`
 
@@ -45,7 +48,7 @@ permalink: /changelog/
 
 * **feature-fullscreen**
   * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
-  
+
   * **feature-qr**
     * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
