@@ -354,9 +354,10 @@ bool BaselineCacheIRCompiler::emitGuardSpecificObject() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardSpecificAtom() {
+bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
+                                                    uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
+  Register str = allocator.useRegister(masm, strId);
   AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
@@ -364,7 +365,7 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom() {
     return false;
   }
 
-  Address atomAddr(stubAddress(reader.stubOffset()));
+  Address atomAddr(stubAddress(expectedOffset));
 
   Label done;
   masm.branchPtr(Assembler::Equal, atomAddr, str, &done);

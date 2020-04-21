@@ -840,11 +840,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return guardSpecificObject(obj, expected);
   }
 
-  FieldOffset guardSpecificAtom(StringOperandId str, JSAtom* expected) {
-    writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
-    return addStubField(uintptr_t(expected), StubField::Type::String);
-  }
-
   Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
     Int32OperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetIndexFromString, str);
@@ -1121,14 +1116,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(MetaTwoByteKind::ScriptedTemplateObject));
     reuseStubField(calleeOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
-  }
-
-  void loadInt32TruthyResult(ValOperandId integer) {
-    writeOpWithOperandId(CacheOp::LoadInt32TruthyResult, integer);
-  }
-
-  void loadDoubleTruthyResult(ValOperandId dbl) {
-    writeOpWithOperandId(CacheOp::LoadDoubleTruthyResult, dbl);
   }
 
   CACHE_IR_WRITER_GENERATED
