@@ -26,7 +26,8 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
  public:
   NS_INLINE_DECL_REFCOUNTING(DocumentChannelParent, override);
 
-  explicit DocumentChannelParent(dom::CanonicalBrowsingContext* aContext);
+  explicit DocumentChannelParent(dom::CanonicalBrowsingContext* aContext,
+                                 nsILoadContext* aLoadContext);
 
   bool Init(const DocumentChannelCreationArgs& aArgs);
 
@@ -46,8 +47,8 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
  private:
   // DocumentChannelListener
-  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus,
-                                bool aSwitchingToNewProcess) override {
+  void DisconnectChildListeners(nsresult aStatus,
+                                nsresult aLoadGroupStatus) override {
     if (CanSend()) {
       Unused << SendDisconnectChildListeners(aStatus, aLoadGroupStatus);
     }

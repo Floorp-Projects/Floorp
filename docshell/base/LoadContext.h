@@ -36,6 +36,21 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               dom::Element* aTopFrameElement, OriginAttributes& aAttrs)
       : mTopFrameElement(do_GetWeakReference(aTopFrameElement)),
+        mNestedFrameId(0),
+        mIsContent(aToCopy.mIsContent),
+        mUseRemoteTabs(aToCopy.mUseRemoteTabs),
+        mUseRemoteSubframes(aToCopy.mUseRemoteSubframes),
+        mUseTrackingProtection(aToCopy.mUseTrackingProtection),
+#ifdef DEBUG
+        mIsNotNull(aToCopy.mIsNotNull),
+#endif
+        mOriginAttributes(aAttrs) {
+  }
+
+  LoadContext(const IPC::SerializedLoadContext& aToCopy,
+              uint64_t aNestedFrameId, OriginAttributes& aAttrs)
+      : mTopFrameElement(nullptr),
+        mNestedFrameId(aNestedFrameId),
         mIsContent(aToCopy.mIsContent),
         mUseRemoteTabs(aToCopy.mUseRemoteTabs),
         mUseRemoteSubframes(aToCopy.mUseRemoteSubframes),
@@ -51,6 +66,7 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
               bool aUseRemoteSubframes, bool aUseTrackingProtection,
               const OriginAttributes& aAttrs)
       : mTopFrameElement(do_GetWeakReference(aTopFrameElement)),
+        mNestedFrameId(0),
         mIsContent(aIsContent),
         mUseRemoteTabs(aUseRemoteTabs),
         mUseRemoteSubframes(aUseRemoteSubframes),
@@ -66,6 +82,7 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   // Constructor taking reserved origin attributes.
   explicit LoadContext(OriginAttributes& aAttrs)
       : mTopFrameElement(nullptr),
+        mNestedFrameId(0),
         mIsContent(false),
         mUseRemoteTabs(false),
         mUseRemoteSubframes(false),
@@ -84,6 +101,7 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   ~LoadContext() {}
 
   nsWeakPtr mTopFrameElement;
+  uint64_t mNestedFrameId;
   bool mIsContent;
   bool mUseRemoteTabs;
   bool mUseRemoteSubframes;

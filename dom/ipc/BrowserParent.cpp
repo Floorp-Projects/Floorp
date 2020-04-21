@@ -3796,6 +3796,7 @@ class FakeChannel final : public nsIChannel,
     elem.forget(aElement);
     return NS_OK;
   }
+  NS_IMETHOD GetNestedFrameId(uint64_t*) NO_IMPL;
   NS_IMETHOD GetIsContent(bool*) NO_IMPL;
   NS_IMETHOD GetUsePrivateBrowsing(bool*) NO_IMPL;
   NS_IMETHOD SetUsePrivateBrowsing(bool) NO_IMPL;

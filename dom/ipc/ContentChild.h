@@ -797,10 +797,6 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvDisplayLoadError(
       const MaybeDiscarded<BrowsingContext>& aContext, const nsAString& aURI);
 
-  mozilla::ipc::IPCResult RecvStopLoad(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      const uint32_t aStopFlags);
-
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else
