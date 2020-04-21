@@ -201,7 +201,8 @@ NS_IMETHODIMP
 nsMacShellService::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest, uint32_t aStateFlags,
                                  nsresult aStatus) {
-  if (aStateFlags & STATE_STOP) {
+  if (NS_SUCCEEDED(aStatus) && (aStateFlags & STATE_STOP) &&
+      (aRequest == nullptr)) {
     nsCOMPtr<nsIObserverService> os(
         do_GetService("@mozilla.org/observer-service;1"));
     if (os)
