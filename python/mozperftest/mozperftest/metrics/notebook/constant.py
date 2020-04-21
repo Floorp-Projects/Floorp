@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from types import MappingProxyType
 
-from .customtransforms import custom_single_json_retriever
+from .transforms import single_json
 
 
 class Constant(object):
@@ -23,7 +23,7 @@ class Constant(object):
         self.__here = Path(os.path.dirname(os.path.abspath(__file__)))
         # XXX This needs to be more dynamic
         self.__predefined_transformers = {
-            "SingleJsonRetriever": custom_single_json_retriever.SingleJsonRetriever
+            "SingleJsonRetriever": single_json.SingleJsonRetriever
         }
 
     @property
