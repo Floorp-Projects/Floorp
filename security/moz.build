@@ -141,8 +141,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 if CONFIG['OS_TARGET'] == 'Android':
     sandbox_vars['CFLAGS'] = [
         '-include', TOPSRCDIR + '/security/manager/android_stub.h',
-        # Setting sandbox_vars['DEFINES'] is broken currently.
-        '-DCHECK_FORK_GETPID',
     ]
     if CONFIG['ANDROID_VERSION']:
         sandbox_vars['CFLAGS'] += ['-DANDROID_VERSION=' + CONFIG['ANDROID_VERSION']]
