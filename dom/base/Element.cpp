@@ -3212,6 +3212,11 @@ void Element::GetGridFragments(nsTArray<RefPtr<Grid>>& aResult) {
   }
 }
 
+bool Element::HasGridFragments() {
+  return !!nsGridContainerFrame::GetGridFrameWithComputedInfo(
+      GetPrimaryFrame());
+}
+
 already_AddRefed<DOMMatrixReadOnly> Element::GetTransformToAncestor(
     Element& aAncestor) {
   nsIFrame* primaryFrame = GetPrimaryFrame();
