@@ -11,7 +11,7 @@ browser.jar:
 * skin/classic/browser/compacttheme.css
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
-* skin/classic/browser/pageInfo.css
+  skin/classic/browser/pageInfo.css
   skin/classic/browser/pageInfo.png
 * skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
