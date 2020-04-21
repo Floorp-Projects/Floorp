@@ -729,12 +729,13 @@ bool IonCacheIRCompiler::emitGuardSpecificObject() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardSpecificAtom() {
+bool IonCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
+                                               uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
+  Register str = allocator.useRegister(masm, strId);
   AutoScratchRegister scratch(allocator, masm);
 
-  JSAtom* atom = &stringStubField(reader.stubOffset())->asAtom();
+  JSAtom* atom = &stringStubField(expectedOffset)->asAtom();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

@@ -217,9 +217,10 @@
 
 - name: GuardSpecificAtom
   shared: false
+  gen_boilerplate: true
   operands:
     str: StrId
-    expected: StringField
+    expected: AtomField
 
 - name: GuardSpecificSymbol
   shared: false
@@ -1260,11 +1261,13 @@
 
 - name: LoadInt32TruthyResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: ValId
 
 - name: LoadDoubleTruthyResult
   shared: true
+  gen_boilerplate: true
   operands:
     input: ValId
 
