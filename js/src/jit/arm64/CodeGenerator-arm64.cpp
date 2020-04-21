@@ -1936,9 +1936,9 @@ void CodeGenerator::visitUMod(LUMod* ins) {
 
 void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
   const MEffectiveAddress* mir = ins->mir();
-  const ARMRegister base = toXRegister(ins->base());
-  const ARMRegister index = toXRegister(ins->index());
-  const ARMRegister output = toXRegister(ins->output());
+  const ARMRegister base = toWRegister(ins->base());
+  const ARMRegister index = toWRegister(ins->index());
+  const ARMRegister output = toWRegister(ins->output());
 
   masm.Add(output, base, Operand(index, vixl::LSL, mir->scale()));
   masm.Add(output, output, Operand(mir->displacement()));
