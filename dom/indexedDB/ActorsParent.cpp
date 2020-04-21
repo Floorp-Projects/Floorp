@@ -25490,11 +25490,13 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     }
   } else {
     nsCString flatCloneData;
-    flatCloneData.SetLength(cloneDataSize);
-    auto iter = cloneData.Start();
-    if (NS_WARN_IF(!cloneData.ReadBytes(iter, flatCloneData.BeginWriting(),
-                                        cloneDataSize))) {
+    if (!flatCloneData.SetLength(cloneDataSize, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+    {
+      auto iter = cloneData.Start();
+      MOZ_ALWAYS_TRUE(cloneData.ReadBytes(iter, flatCloneData.BeginWriting(),
+                                          cloneDataSize));
     }
 
     // Compress the bytes before adding into the database.
