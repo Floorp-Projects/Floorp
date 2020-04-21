@@ -1782,8 +1782,6 @@ nsISerialEventTarget* GetCurrentThreadSerialEventTarget();
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget();
 
-void DispatchAsMicroTask(already_AddRefed<nsIRunnable> aRunnable);
-
 // Returns the number of CPUs, like PR_GetNumberOfProcessors, except
 // that it can return a cached value on platforms where sandboxing
 // would prevent reading the current value (currently Linux).  CPU
