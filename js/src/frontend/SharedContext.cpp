@@ -152,7 +152,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                           generatorKind == GeneratorKind::Generator);
   immutableFlags_.setFlag(ImmutableFlags::IsAsync,
                           asyncKind == FunctionAsyncKind::AsyncFunction);
-  immutableFlags_.setFlag(ImmutableFlags::IsFunction);
 }
 
 bool FunctionBox::hasFunctionCreationData() const {
