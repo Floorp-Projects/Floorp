@@ -1549,11 +1549,7 @@ var BookmarkingUI = {
   init() {
     CustomizableUI.addListener(this);
 
-    if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-      let starButtonBox = document.getElementById("star-button-box");
-      starButtonBox.setAttribute("animationsenabled", "true");
-      this.star.addEventListener("mouseover", this, { once: true });
-    }
+    this.star.addEventListener("mouseover", this, { once: true });
   },
 
   _hasBookmarksObserver: false,

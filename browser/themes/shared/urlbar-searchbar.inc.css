@@ -492,81 +492,83 @@
   list-style-image: url("chrome://global/skin/icons/more.svg");
 }
 
-@keyframes bookmark-animation {
-  from {
-    transform: translateX(0);
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes bookmark-animation {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-627px);
+    }
   }
-  to {
-    transform: translateX(-627px);
+
+  @keyframes bookmark-animation-rtl {
+    from {
+      transform: scaleX(-1) translateX(0);
+    }
+    to {
+      transform: scaleX(-1) translateX(-627px);
+    }
   }
-}
 
-@keyframes bookmark-animation-rtl {
-  from {
-    transform: scaleX(-1) translateX(0);
+  #star-button-box {
+    position: relative;
   }
-  to {
-    transform: scaleX(-1) translateX(-627px);
+
+  /* Preload the bookmark animations to prevent a flicker during the first playing
+     of the animations. */
+  #star-button[preloadanimations] + #star-button-animatable-box > #star-button-animatable-image {
+    background-image: url("chrome://browser/skin/bookmark-animation.svg"),
+                      url("chrome://browser/skin/library-bookmark-animation.svg");
+    background-size: 0, 0;
   }
-}
 
-#star-button-box[animationsenabled] {
-  position: relative;
-}
+  #star-button[starred][animate] {
+    fill: transparent;
+    position: relative;
+  }
 
-/* Preload the bookmark animations to prevent a flicker during the first playing
-   of the animations. */
-#star-button[preloadanimations] + #star-button-animatable-box > #star-button-animatable-image {
-  background-image: url("chrome://browser/skin/bookmark-animation.svg"),
-                    url("chrome://browser/skin/library-bookmark-animation.svg");
-  background-size: 0, 0;
-}
+  #star-button[starred][animate] + #star-button-animatable-box {
+    display: block;
+    position: absolute;
+    overflow: hidden;
+    top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
+    /* .urlbar-icon has width 28px. Each frame is 33px wide. Set margin-inline-start
+       to be half the difference, -2.5px. */
+    margin-inline-start: -2.5px;
+    width: 33px; /* Width of each frame within the SVG sprite */
+    height: 33px; /* Height of each frame within the SVG sprite */
+  }
 
-#star-button-box[animationsenabled] > #star-button[starred][animate] {
-  fill: transparent;
-  position: relative;
-}
+  :root[uidensity=compact] #star-button[starred][animate] + #star-button-animatable-box {
+    /* .urlbar-icon has width 24px in this case */
+    margin-inline-start: -4.5px;
+  }
 
-#star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
-  display: block;
-  position: absolute;
-  overflow: hidden;
-  top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
-  /* .urlbar-icon has width 28px. Each frame is 33px wide. Set margin-inline-start
-     to be half the difference, -2.5px. */
-  margin-inline-start: -2.5px;
-  width: 33px; /* Width of each frame within the SVG sprite */
-  height: 33px; /* Height of each frame within the SVG sprite */
-}
+  :root[uidensity=touch] #star-button[starred][animate] + #star-button-animatable-box {
+    /* .urlbar-icon has width 30px in this case */
+    margin-inline-start: -1.5px;
+  }
 
-:root[uidensity=compact] #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
-  /* .urlbar-icon has width 24px in this case */
-  margin-inline-start: -4.5px;
-}
+  #star-button[starred][animate] + #star-button-animatable-box > #star-button-animatable-image {
+    background-image: url("chrome://browser/skin/bookmark-animation.svg");
+    background-size: auto;
+    list-style-image: none;
+    height: var(--toolbarbutton-height);
+    min-height: 33px; /* Minimum height must be equal to the height of the SVG sprite */
+    animation-name: bookmark-animation;
+    animation-fill-mode: forwards;
+    animation-iteration-count: 1;
+    animation-timing-function: steps(19);
+    animation-duration: 317ms;
+    width: 660px;
+    -moz-context-properties: fill, stroke;
+    stroke: var(--toolbarbutton-icon-fill-attention);
+  }
 
-:root[uidensity=touch] #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
-  /* .urlbar-icon has width 30px in this case */
-  margin-inline-start: -1.5px;
-}
-
-#star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box > #star-button-animatable-image {
-  background-image: url("chrome://browser/skin/bookmark-animation.svg");
-  background-size: auto;
-  list-style-image: none;
-  height: var(--toolbarbutton-height);
-  min-height: 33px; /* Minimum height must be equal to the height of the SVG sprite */
-  animation-name: bookmark-animation;
-  animation-fill-mode: forwards;
-  animation-iteration-count: 1;
-  animation-timing-function: steps(19);
-  animation-duration: 317ms;
-  width: 660px;
-  -moz-context-properties: fill, stroke;
-  stroke: var(--toolbarbutton-icon-fill-attention);
-}
-
-#star-button-box[animationsenabled] > #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {
-  animation-name: bookmark-animation-rtl;
+  #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {
+    animation-name: bookmark-animation-rtl;
+  }
 }
 
 @keyframes pocket-animation {
