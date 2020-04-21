@@ -596,22 +596,24 @@
   ) {
     static get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/tree.css"/>
-      <html:slot name="treecols"/>
-      <stack flex="1">
-        <hbox flex="1">
-          <hbox flex="1">
-            <html:slot name="treechildren"/>
+      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+      <html:slot name="treecols"></html:slot>
+      <stack class="tree-stack" flex="1">
+        <hbox class="tree-rows" flex="1">
+          <hbox flex="1" class="tree-bodybox">
+            <html:slot name="treechildren"></html:slot>
           </hbox>
           <scrollbar height="0" minwidth="0" minheight="0" orient="vertical"
-                     id="vscroll-scrollbar" class="scrollbar-topmost"/>
+                     class="hidevscroll-scrollbar scrollbar-topmost"
+                     ></scrollbar>
         </hbox>
-        <html:input type="text" hidden="hidden"/>
+        <html:input class="tree-input" type="text" hidden="true"/>
       </stack>
-      <hbox id="hscroll-box">
-        <scrollbar orient="horizontal" flex="1" increment="16" class="scrollbar-topmost"/>
-        <scrollcorner id="vscroll-scrollcorner"/>
-      </hbox>`;
+      <hbox class="hidehscroll-box">
+        <scrollbar orient="horizontal" flex="1" increment="16" class="scrollbar-topmost" ></scrollbar>
+        <scrollcorner class="hidevscroll-scrollcorner"></scrollcorner>
+      </hbox>
+      `;
     }
 
     constructor() {
@@ -642,9 +644,9 @@
 
     static get inheritedAttributes() {
       return {
-        "#hscroll-box": "collapsed=hidehscroll",
-        "#vscroll-scrollbar": "collapsed=hidevscroll",
-        "#vscroll-scrollcorner": "collapsed=hidevscroll",
+        ".hidehscroll-box": "collapsed=hidehscroll",
+        ".hidevscroll-scrollbar": "collapsed=hidevscroll",
+        ".hidevscroll-scrollcorner": "collapsed=hidevscroll",
       };
     }
 
@@ -1095,7 +1097,7 @@
 
     get inputField() {
       if (!this._inputField) {
-        this._inputField = this.shadowRoot.querySelector("input");
+        this._inputField = this.shadowRoot.querySelector(".tree-input");
         this._inputField.addEventListener("blur", () => this.stopEditing(true));
       }
       return this._inputField;

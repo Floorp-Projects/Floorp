@@ -29,7 +29,7 @@ toolkit.jar:
   skin/classic/global/toolbar.css
   skin/classic/global/toolbarbutton.css
   skin/classic/global/tooltip.css
-* skin/classic/global/tree-components.css
+* skin/classic/global/tree.css
   skin/classic/global/wizard.css
 * skin/classic/global/alerts/alert.css                               (alerts/alert.css)
   skin/classic/global/arrow/panelarrow-horizontal.svg                (arrow/panelarrow-horizontal.svg)
