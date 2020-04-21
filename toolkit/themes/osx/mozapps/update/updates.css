@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../global/shared.inc
-
 /* Elevation Dialog */
 /* Specify the size for the UI so it has a fixed size. 3rd
    party themes should typically specify the same values. */
@@ -57,7 +55,6 @@
   -moz-appearance: toolbarbutton;
   color: ButtonText;
   min-height: 22px;
-  text-shadow: @loweredShadow@;
 }
 
 #updateFinishedName {
