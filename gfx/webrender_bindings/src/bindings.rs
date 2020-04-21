@@ -510,6 +510,7 @@ extern "C" {
     // by commenting out the path that adds an external image ID
     fn gfx_use_wrench() -> bool;
     fn gfx_wr_resource_path_override() -> *const c_char;
+    fn gfx_wr_use_optimized_shaders() -> bool;
     // TODO: make gfx_critical_error() work.
     // We still have problem to pass the error message from render/render_backend
     // thread to main thread now.
@@ -1142,6 +1143,8 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
         }
     };
 
+    let use_optimized_shaders = unsafe { gfx_wr_use_optimized_shaders() };
+
     let cached_programs = match pc {
         Some(cached_programs) => Some(Rc::clone(cached_programs.rc_get())),
         None => None,
@@ -1150,6 +1153,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
     Device::new(
         gl,
         resource_override_path,
+        use_optimized_shaders,
         upload_method,
         cached_programs,
         false,
@@ -1427,6 +1431,7 @@ pub extern "C" fn wr_window_new(
                 }
             }
         },
+        use_optimized_shaders: unsafe { gfx_wr_use_optimized_shaders() },
         renderer_id: Some(window_id.0),
         upload_method,
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
