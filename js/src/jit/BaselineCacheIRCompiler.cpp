@@ -665,10 +665,11 @@ bool BaselineCacheIRCompiler::emitLoadFrameNumActualArgsResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadFrameArgumentResult() {
+bool BaselineCacheIRCompiler::emitLoadFrameArgumentResult(
+    Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -690,10 +691,11 @@ bool BaselineCacheIRCompiler::emitLoadFrameArgumentResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult() {
+bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -701,7 +703,7 @@ bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult() {
     return false;
   }
 
-  masm.load32(stubAddress(reader.stubOffset()), scratch);
+  masm.load32(stubAddress(offsetOffset), scratch);
   BaseIndex slot(obj, scratch, TimesOne);
 
   // Check for uninitialized lexicals.
@@ -712,10 +714,11 @@ bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult() {
+bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -724,7 +727,7 @@ bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult() {
     return false;
   }
 
-  masm.load32(stubAddress(reader.stubOffset()), scratch);
+  masm.load32(stubAddress(offsetOffset), scratch);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
 
   // Check for uninitialized lexicals.

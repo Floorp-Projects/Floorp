@@ -808,22 +808,26 @@
 
 - name: LoadInt32ArrayLengthResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: LoadArgumentsObjectArgResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     index: Int32Id
 
 - name: LoadArgumentsObjectLengthResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
 - name: LoadFunctionLengthResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 
@@ -836,36 +840,43 @@
 
 - name: LoadStringLengthResult
   shared: true
+  gen_boilerplate: true
   operands:
     str: StrId
 
 - name: LoadFrameCalleeResult
   shared: false
+  gen_boilerplate: true
   operands:
 
 - name: LoadFrameNumActualArgsResult
   shared: false
+  gen_boilerplate: true
   operands:
 
 - name: LoadFrameArgumentResult
   shared: false
+  gen_boilerplate: true
   operands:
     index: Int32Id
 
 - name: LoadEnvironmentFixedSlotResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
 
 - name: LoadEnvironmentDynamicSlotResult
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
 
 - name: LoadObjectResult
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
 

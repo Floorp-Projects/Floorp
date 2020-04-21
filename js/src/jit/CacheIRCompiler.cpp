@@ -2336,10 +2336,10 @@ static void EmitStoreResult(MacroAssembler& masm, Register reg,
   masm.assumeUnreachable("Should have monitored result");
 }
 
-bool CacheIRCompiler::emitLoadInt32ArrayLengthResult() {
+bool CacheIRCompiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -3055,10 +3055,10 @@ bool CacheIRCompiler::emitTruncateDoubleToUInt32() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult() {
+bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -3082,10 +3082,10 @@ bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadFunctionLengthResult() {
+bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   FailurePath* failure;
@@ -3109,10 +3109,10 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult() {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadStringLengthResult() {
+bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
+  Register str = allocator.useRegister(masm, strId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.loadStringLength(str, scratch);
@@ -3149,11 +3149,12 @@ bool CacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   return true;
 }
 
-bool CacheIRCompiler::emitLoadArgumentsObjectArgResult() {
+bool CacheIRCompiler::emitLoadArgumentsObjectArgResult(ObjOperandId objId,
+                                                       Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
@@ -4097,10 +4098,10 @@ bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitLoadObjectResult() {
+bool CacheIRCompiler::emitLoadObjectResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
   if (output.hasValue()) {
     masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
