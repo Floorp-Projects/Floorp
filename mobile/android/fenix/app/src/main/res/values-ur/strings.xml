@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">نجی Firefox Preview</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (نجی)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">نجی %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (نجی)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">مزید اختیارات</string>
@@ -243,7 +243,7 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">بک مارک تلاش کریں</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">اکاؤنٹ کی ترتیبات</string>
+    <string name="preferences_account_settings">اکاؤنٹ کی سیٹنگز</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ایپس میں ربط کھولیں</string>
 
@@ -280,10 +280,6 @@
 
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">آخری بار سینک کیا گیا: کبھی نہیں</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s پر %s%s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -577,7 +573,7 @@
     <!-- Site permissions preferences header -->
     <string name="permissions_header">اجازتیں</string>
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">ترتیبات پر جائیں</string>
+    <string name="phone_feature_go_to_settings">سیٹنگز پر جائیں</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
@@ -1147,7 +1143,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">اپنے لاگ ان اور پاس ورڈ کو محفوظ کریں</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">اگر آپ کے پاس کوئی اور آلہ ہے تو اپنے محفوظ کردہ لاگ انز اور پاس ورڈز تک رسائی سے بچنے کیلئے آلہ لاک پیٹرن ، پن ، یا پاس ورڈ کو ترتیب دیں۔</string>
+    <string name="logins_warning_dialog_message">اگر آپ کے پاس کوئی اور آلہ ہے تو اپنے محفوظ کردہ لاگ انز اور پاس ورڈز تک رسائی سے بچنے کیلئے آلہ لاک پیٹرن ، پن ، یا پاس ورڈ کو سیٹنگ دیں۔</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">بعد میں</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1216,7 +1212,7 @@
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">اس کی اجازت دینے کے لئے:</string>
     <!-- First step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_settings">1. Android کی ترتیبات پر جائیں</string>
+    <string name="phone_feature_blocked_step_settings">1. Android کی سیٹنگز پر جائیں</string>
 
     <!-- Second step for the allowing a permission -->
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>اجازتوں</b> پر دبایں]]></string>

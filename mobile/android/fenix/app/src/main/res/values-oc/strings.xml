@@ -41,7 +41,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Modificar lo marcapagina</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Gestionari de moduls complementaris</string>
+    <string name="browser_menu_add_ons">Moduls</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -49,7 +49,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Paramètres</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Vòstra bibliotèca</string>
+    <string name="browser_menu_library">Bibliotèca</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Version ordenador</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->

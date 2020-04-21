@@ -2,6 +2,8 @@
 <resources>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Zasebni %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (zasebno)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Več možnosti</string>
@@ -109,6 +111,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Videz</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Povezava ni mogoča. Neprepoznavna URL shema.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Izbrani jezik</string>
@@ -203,6 +209,10 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj bližnjico zasebnega brskanja</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Dostopnost</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Strežnik Firefox računov po meri</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Sinhronizacijski strežnik po meri</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
     <!-- Preference shown on banner to sign into account -->
@@ -217,6 +227,8 @@
     <string name="preferences_sign_in_description">Sinhronizirajte zaznamke, gesla in ostalo s Firefox Računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Račun</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Ponovno se povežite za nadaljevanje sinhronizacije</string>
     <!-- Preference for language -->
     <string name="preferences_language">Jezik</string>
     <!-- Preference for data choices -->
@@ -279,10 +291,17 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Zadnja sinhronizacija: nikoli</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s na %2$s %3$s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prejeti zavihki</string>
 
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Obvestila za zavihke, prejete od drugih naprav Firefox.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Zavihek prejet</string>
     <!-- When multiple tabs have been received -->
@@ -295,6 +314,8 @@
     <string name="preferences_tracking_protection_settings">Zaščita pred sledenjem</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Zaščita pred sledenjem</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Zavrnite vsebine in skripte, ki vam sledijo na spletu</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Izjeme</string>
     <!-- Preference description for tracking protection exceptions -->
@@ -306,6 +327,9 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Več o tem</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Izklopljeno povsod, pojdite v Nastavitve in ga vklopite.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrija</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -314,8 +338,12 @@
     <string name="preferences_usage_data_description">Pošilja podatke o učinkovitosti, uporabi, strojni opremi in prilagoditvah organizaciji Mozilla, da lahko naredi %1$s boljši</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Podatki za trženje</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Deli podatke o možnostih, ki jih uporabljate v %1$su z Leanplumom, našim ponudnikom mobilnega oglaševanja.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Poskusi</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Dovoli Mozilli namestitev in pridobivanje informacij eksperimentalnih funkcij</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Poročevalec o sesutju</string>
 
@@ -333,9 +361,14 @@
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijava</string>
 
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Prijavite se, če se želite ponovno povezati</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Odstrani račun</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Obiščite <b>firefox.com/pair</b> v Firefoxu na vašem računalniku, da pridobite vašo QR kodo]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Odpri kamero</string>
     <!-- Button to cancel pairing -->
@@ -453,6 +486,9 @@
     <string name="history_menu_open_in_private_tab_button">Odpri v zasebnem zavihku</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d izbranih</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Izbriši %1$d predmetov</string>
@@ -471,6 +507,8 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Oprostite. %1$s ne more naložiti te strani.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Spodaj lahko poskusite obnoviti ali zapreti ta zavihek.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Pošlji poročilo o sesutju Mozilli</string>
     <!-- Close tab button text on the tab crash page -->
@@ -515,10 +553,15 @@
     <string name="bookmark_menu_delete_button">Izbriši</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">Shrani</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d izbranih</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Uredi zaznamek</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Uredi mapo</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Prijavite se za ogled sinhroniziranih zaznamkov</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -536,6 +579,9 @@
 
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">Ni zaznamkov</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Izbrisan %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
     <string name="bookmark_deletion_multiple_snackbar_message">Brisanje izbranih zaznamkov</string>
     <!-- Bookmark undo button for deletion snackbar action -->
@@ -558,6 +604,8 @@
     <string name="clear_permissions">Počisti dovoljenja</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Počisti dovoljenje</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Počisti dovoljenja na vseh straneh</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Samodejno predvajanje</string>
     <!-- Preference for altering the camera access for all websites -->
@@ -579,14 +627,25 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Izjeme</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Vklopljeno</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Izklopljeno</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Dovoli zvok in video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Zavrni zvok in video samo na mobilnih podatkih</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Zvok in Video se bosta predvajala na Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Zavrni samo zvok</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Zavrni zvok in video</string>
+
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Vključeno</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Izključeno</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -654,6 +713,8 @@
     <string name="sync_offline">Brez povezave</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Poveži drugo napravo</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Če želite poslati zavihek, se v Firefox prijavite v vsaj še eni napravi.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Razumem</string>
     <!-- Add new device screen title -->
@@ -717,8 +778,12 @@
     <string name="tab_collection_dialog_positive">Izbriši</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Prekliči</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Vstop v celozaslonski način</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Spletni naslov kopiran</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Povečajte ali zmanjšajte besedilo na spletnih straneh</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Velikost pisave</string>
 
@@ -803,14 +868,21 @@
     <string name="onboarding_firefox_account_stay_signed_out">Ostanite odjavljeni</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync je vklopljen</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Prijava ni uspela</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s pomaga preprečiti, da bi vam spletne strani sledile na spletu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Običajno</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description">Zavrača manj sledilcev, vendar omogoča normalno nalaganje strani</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Zavrača več sledilcev za večjo zaščito in boljše delovanje, vendar lahko povzroči nedelovanje nekaterih strani</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -819,6 +891,9 @@
     <string name="onboarding_toolbar_position_description">Poskusite enoročno brskanje z orodno vrstico spodaj ali pa jo premaknite na vrh.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Brskajte zasebno</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Odprite zasebni zavihek enkrat: Tapnite ikono %s.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Odpri nastavitve</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -835,6 +910,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Izberite si temo</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Prihranite nekaj baterije in ne obremenjujte oči s temnim načinom.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Samodejno</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -858,6 +935,8 @@
     <string name="sign_in_with_camera">Prijavite se s kamero</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Namesto tega uporabite e-pošto</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s se bo prenehal sinhronizirati z vašim računom, vendar ne bo izbrisal podatkov o brskanju na tej napravi.</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Prekliči</string>
 
@@ -881,6 +960,10 @@
     <string name="preference_enhanced_tracking_protection_standard">Običajno (priporočeno)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Uravnoteženo za zaščito in učinkovitost delovanja.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Strani se bodo nalagale normalno, vendar bo zavrnjenih manj sledilcev.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Kaj je zavrnjeno s standardno zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -891,10 +974,14 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Strogo (priporočljivo)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Močnejša zaščita, ki pa lahko povzroči nedelovanje nekaterih strani ali vsebine.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Kaj je zavrnjeno s strogo zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Po meri</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">Izberite, katere sledilce in skripte želite zavračati</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Kaj je zavrnjeno z zaščito pred sledenjem po meri</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Piškotke</string>
@@ -923,6 +1010,8 @@
     <string name="enhanced_tracking_protection_allowed">Dovoljeno</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sledilci družbenih omrežij</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Omeji zmožnost družbenih omrežij, da bi sledile vašemu brskanju po spletu.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Spletni sledilni piškotki</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -931,6 +1020,8 @@
     <string name="etp_fingerprinters_title">Sledilci prstnih odtisov</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s zavrača sledilce na tej strani, ko je ščit obarvan vijolično. Tapnite ga in si oglejte, kaj je zavrnjeno.</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Izboljšana zaščita pred sledenjem je za te spletne strani izključena</string>
     <!-- About page Your rights link text -->
@@ -1088,6 +1179,9 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Več o tem</string>
 
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Povezava Več o tem</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Vnesite ime iskalnika</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1096,6 +1190,8 @@
     <string name="search_add_custom_engine_error_empty_search_string">Vnesite iskalni niz</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Prepričajte se, da se iskalni niz ujema z obliko primera</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Napaka pri povezovanju z &quot;%s&quot;</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Ustvarjeno %s</string>
 
@@ -1123,6 +1219,14 @@
     <string name="quick_settings_sheet_secure_connection">Varna povezava</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Nevarna povezava</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Ali ste prepričani, da želite počistiti vsa dovoljenja na vseh straneh?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Ali ste prepričani, da želite počistiti vsa dovoljenja za to stran?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Ali ste prepričani, da želite počistiti to dovoljenje za to stran?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Ni izjem</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Top članki</string>
     <!-- Bookmark deletion confirmation -->

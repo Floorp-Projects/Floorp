@@ -121,7 +121,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Pesquisar</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">Acompanhar idioma do dispositivo</string>
+    <string name="default_locale_text">Usar idioma do dispositivo</string>
 
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Pesquisar idioma</string>
@@ -795,7 +795,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Dimensionamento automático de fontes</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Acompanhar a configuração de tamanho das fontes de caracteres do Android. Desative para definir aqui o tamanho.</string>
+    <string name="preference_accessibility_auto_size_summary">Usar a configuração do Android de tamanho de fonte de caracteres. Desative para definir aqui o tamanho.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Excluir dados de navegação</string>
@@ -817,7 +817,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">Encerra a sessão de acesso da maioria dos sites</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Encerra sessões de acesso da maioria dos sites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Imagens e arquivos em cache</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -829,7 +829,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Excluir dados de navegação ao sair</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Excluir automaticamente os dados de navegação quando você selecionar &quot;Sair&quot; no menu principal.</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Excluir dados de navegação automaticamente ao selecionar &quot;Sair&quot; no menu principal.</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação quando você selecionar \&quot;Sair\&quot; no menu principal.</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
