@@ -789,27 +789,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return loadArgumentFixedSlot_(slotIndex);
   }
 
-  void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
-                                      TypedThingLayout layout,
-                                      Scalar::Type type, OperandId rhs) {
-    writeOpWithOperandId(CacheOp::StoreTypedObjectScalarProperty, obj);
-    addStubField(offset, StubField::Type::RawWord);
-    buffer_.writeByte(uint32_t(layout));
-    buffer_.writeByte(uint32_t(type));
-    writeOperandId(rhs);
-  }
-
-  void storeTypedElement(ObjOperandId obj, TypedThingLayout layout,
-                         Scalar::Type elementType, Int32OperandId index,
-                         OperandId rhs, bool handleOOB) {
-    writeOpWithOperandId(CacheOp::StoreTypedElement, obj);
-    buffer_.writeByte(uint32_t(layout));
-    buffer_.writeByte(uint32_t(elementType));
-    writeOperandId(index);
-    writeOperandId(rhs);
-    buffer_.writeByte(uint32_t(handleOOB));
-  }
-
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc, CallFlags flags) {
     // Some native functions can be implemented faster if we know that
@@ -941,6 +920,8 @@ class MOZ_RAII CacheIRReader {
   }
 
   Int32OperandId int32OperandId() { return Int32OperandId(buffer_.readByte()); }
+
+  uint32_t rawOperandId() { return buffer_.readByte(); }
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
