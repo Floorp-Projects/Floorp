@@ -19,7 +19,7 @@ Login Manager test: input value change right after onsubmit event
       chromeScript.addMessageListener("formSubmissionProcessed", function processed(...args) {
         info("got formSubmissionProcessed");
         chromeScript.removeMessageListener("formSubmissionProcessed", processed);
-        resolve(...args);
+        resolve(args[0]);
       });
     });
   }

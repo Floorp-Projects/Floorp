@@ -162,7 +162,7 @@ function getSubmitMessage(aFilterFn = undefined) {
           "formSubmissionProcessed",
           processed
         );
-        resolve(...args);
+        resolve(args[0]);
       }
     );
   });
