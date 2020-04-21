@@ -227,10 +227,6 @@ endef
 cargo_host_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_HOST_TARGET))_LINKER
 cargo_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_TARGET))_LINKER
 
-# Defining all of this for ASan/TSan builds results in crashes while running
-# some crates's build scripts (!), so disable it for now.
-# See https://github.com/rust-lang/cargo/issues/5754
-ifndef NATIVE_SANITIZERS
 # Cargo needs the same linker flags as the C/C++ compiler,
 # but not the final libraries. Filter those out because they
 # cause problems on macOS 10.7; see bug 1365993 for details.
@@ -257,7 +253,13 @@ export $(cargo_host_linker_env_var):=$(topsrcdir)/build/cargo-host-linker
 export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker
 WRAP_HOST_LINKER_LIBPATHS:=$(HOST_LINKER_LIBPATHS)
 endif
+
+# Defining all of this for ASan/TSan builds results in crashes while running
+# some crates's build scripts (!), so disable it for now.
+# See https://github.com/rust-lang/cargo/issues/5754
+ifndef NATIVE_SANITIZERS
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
+endif # NATIVE_SANITIZERS
 
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
@@ -275,8 +277,6 @@ else
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_LINKER)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_LINKER)
 endif
-
-endif # NATIVE_SANITIZERS
 
 ifdef RUST_LIBRARY_FILE
 
