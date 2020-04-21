@@ -121,8 +121,7 @@ class WindowProxyHolder;
   FIELD(UserAgentOverride, nsString)                                         \
   FIELD(EmbedderElementType, Maybe<nsString>)                                \
   FIELD(MessageManagerGroup, nsString)                                       \
-  FIELD(MaxTouchPointsOverride, uint8_t)                                     \
-  FIELD(WatchedByDevtools, bool)
+  FIELD(MaxTouchPointsOverride, uint8_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -259,8 +258,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
 
   // Triggers a load in the process which currently owns this BrowsingContext.
-  nsresult LoadURI(nsDocShellLoadState* aLoadState,
-                   bool aSetNavigating = false);
+  nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
 
   nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
@@ -352,19 +350,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   BrowsingContextGroup* Group() { return mGroup; }
-
-  // WebIDL bindings for nsILoadContext
-  Nullable<WindowProxyHolder> GetAssociatedWindow();
-  Nullable<WindowProxyHolder> GetTopWindow();
-  Element* GetTopFrameElement();
-  bool GetIsContent() { return IsContent(); }
-  void SetUsePrivateBrowsing(bool aUsePrivateBrowsing, ErrorResult& aError);
-  // Needs a different name to disambiguate from the xpidl method with
-  // the same signature but different return value.
-  void SetUseTrackingProtectionWebIDL(bool aUseTrackingProtection);
-  bool UseTrackingProtectionWebIDL() { return UseTrackingProtection(); }
-  void GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal,
-                           ErrorResult& aError);
 
   bool InRDMPane() const { return GetInRDMPane(); }
 
@@ -696,8 +681,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               const bool& aAllowContentRetargetingOnChildren,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
-              ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
 
   template <size_t I, typename T>

@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.install call fails when xpinstall is disabled
-async function test() {
+function test() {
   Harness.installDisabledCallback = install_disabled;
   Harness.installBlockedCallback = allow_blocked;
   Harness.installConfirmCallback = confirm_install;
@@ -13,9 +13,7 @@ async function test() {
       "Unsigned XPI": TESTROOT + "amosigned.xpi",
     })
   );
-  let tab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
-  gBrowser.selectedTab = tab;
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TESTROOT);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
   ContentTask.spawn(
     gBrowser.selectedBrowser,

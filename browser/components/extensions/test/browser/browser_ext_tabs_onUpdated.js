@@ -215,15 +215,11 @@ add_task(async function test_without_tabs_permission() {
   await do_test_update(async function background() {
     const url =
       "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
-    let tab = null;
+    const tab = await browser.tabs.create({ url });
     let count = 0;
 
     browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
-      // An attention change can happen during tabs.create, so
-      // we can't compare against tab yet.
-      if (!("attention" in changeInfo)) {
-        browser.test.assertEq(tabId, tab.id, "Check tab id");
-      }
+      browser.test.assertEq(tabId, tab.id, "Check tab id");
       browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
 
       browser.test.assertFalse(
@@ -241,9 +237,7 @@ add_task(async function test_without_tabs_permission() {
 
       if (changeInfo.status == "complete") {
         count++;
-        if (count === 1) {
-          browser.tabs.reload(tabId);
-        } else {
+        if (count === 2) {
           browser.test.log("Reload complete");
           browser.tabs.onUpdated.removeListener(onUpdated);
           browser.tabs.remove(tabId);
@@ -252,7 +246,7 @@ add_task(async function test_without_tabs_permission() {
       }
     });
 
-    tab = await browser.tabs.create({ url });
+    browser.tabs.reload(tab.id);
   }, false /* withPermissions */);
 });
 

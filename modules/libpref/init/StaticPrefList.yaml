@@ -962,13 +962,6 @@
   value: true
   mirror: always
 
-# If set, use DocumentChannel to directly initiate loads from
-# parent-process BrowsingContexts
-- name: browser.tabs.documentchannel.parent-initiated
-  type: bool
-  value: true
-  mirror: always
-
 - name: browser.tabs.remote.desktopbehavior
   type: bool
   value: false

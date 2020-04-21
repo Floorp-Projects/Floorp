@@ -189,14 +189,13 @@ async function testSearchEngine(engineDetails) {
       await test.preTest(tab);
     }
 
-    let promises = [
-      BrowserTestUtils.waitForDocLoadAndStopIt(test.searchURL, tab),
-      BrowserTestUtils.browserStopped(tab.linkedBrowser, null, true),
-    ];
+    let stateChangePromise = promiseStateChangeURI();
 
     await test.run(tab);
 
-    await Promise.all(promises);
+    let receivedURI = await stateChangePromise;
+
+    Assert.equal(receivedURI, test.searchURL);
   }
 
   engine.alias = undefined;

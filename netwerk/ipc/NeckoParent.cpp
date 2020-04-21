@@ -254,7 +254,7 @@ const char* NeckoParent::CreateChannelLoadContext(
         break;
       }
       case PBrowserOrId::TTabId: {
-        aResult = new LoadContext(aSerialized, nullptr, attrs);
+        aResult = new LoadContext(aSerialized, aBrowser.get_TabId(), attrs);
         break;
       }
       default:
@@ -409,7 +409,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
 
 already_AddRefed<PDocumentChannelParent>
 NeckoParent::AllocPDocumentChannelParent(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    PBrowserParent* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext,
+    const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& args) {
   // We still create the actor even if the BrowsingContext isn't available,
   // so that we can send the reject message using it from
@@ -419,13 +420,32 @@ NeckoParent::AllocPDocumentChannelParent(
     context = aContext.get_canonical();
   }
 
-  RefPtr<DocumentChannelParent> p = new DocumentChannelParent(context);
+  nsCOMPtr<nsIPrincipal> requestingPrincipal;
+  // We only have the requesting principal in case of TYPE_SUBDOCUMENT.
+  // If we don't have an embedder window global, then it is probably a race and
+  // we will deal with that later in the code path.
+  if (context && !aContext.IsDiscarded() && context->GetParent()) {
+    if (RefPtr<WindowGlobalParent> embedderWGP =
+            context->GetParentWindowGlobal()) {
+      requestingPrincipal = embedderWGP->DocumentPrincipal();
+    }
+  }
+
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char* error = CreateChannelLoadContext(
+      aBrowser, Manager(), aSerialized, requestingPrincipal, loadContext);
+  if (error) {
+    return nullptr;
+  }
+  RefPtr<DocumentChannelParent> p =
+      new DocumentChannelParent(context, loadContext);
   return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
-    PDocumentChannelParent* aActor,
+    PDocumentChannelParent* aActor, PBrowserParent* aBrowser,
     const MaybeDiscarded<BrowsingContext>& aContext,
+    const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& aArgs) {
   DocumentChannelParent* p = static_cast<DocumentChannelParent*>(aActor);
 

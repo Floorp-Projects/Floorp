@@ -106,7 +106,7 @@ class RemoteWebNavigation {
       Ci.nsIRemoteTab.NAVIGATE_URL,
       { uri }
     );
-    this._browser.browsingContext.loadURI(aURI, {
+    this._browser.frameLoader.browsingContext.loadURI(aURI, {
       ...aLoadURIOptions,
       cancelContentJSEpoch,
     });
@@ -115,7 +115,7 @@ class RemoteWebNavigation {
     this._sendMessage("WebNavigation:Reload", { loadFlags: aReloadFlags });
   }
   stop(aStopFlags) {
-    this._browser.browsingContext.stop(aStopFlags);
+    this._sendMessage("WebNavigation:Stop", { loadFlags: aStopFlags });
   }
 
   get document() {

@@ -4167,21 +4167,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDisplayLoadError(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvStopLoad(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    const uint32_t aStopFlags) {
-  if (aContext.IsNullOrDiscarded()) {
-    return IPC_OK();
-  }
-  BrowsingContext* context = aContext.get();
-
-  if (nsIDocShell* docShell = context->GetDocShell()) {
-    nsDocShell::Cast(docShell)->Stop(aStopFlags);
-  }
-
-  return IPC_OK();
-}
-
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 mozilla::ipc::IPCResult ContentChild::RecvInitSandboxTesting(
     Endpoint<PSandboxTestingChild>&& aEndpoint) {

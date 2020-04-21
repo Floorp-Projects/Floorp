@@ -5,29 +5,6 @@
 
 interface nsIDocShell;
 
-interface mixin LoadContextMixin {
-  readonly attribute WindowProxy? associatedWindow;
-
-  readonly attribute WindowProxy? topWindow;
-
-  readonly attribute Element? topFrameElement;
-
-  readonly attribute boolean isContent;
- 
-  [SetterThrows] 
-  attribute boolean usePrivateBrowsing;
-
-  readonly attribute boolean useRemoteTabs;
-
-  readonly attribute boolean useRemoteSubframes;
-
-  [BinaryName="useTrackingProtectionWebIDL"]
-  attribute boolean useTrackingProtection;
-
-  [NewObject, Throws]
-  readonly attribute any originAttributes;
-};
-
 [Exposed=Window, ChromeOnly]
 interface BrowsingContext {
   static BrowsingContext? get(unsigned long long aId);
@@ -89,8 +66,6 @@ interface BrowsingContext {
   void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
 };
 
-BrowsingContext includes LoadContextMixin;
-
 [Exposed=Window, ChromeOnly]
 interface CanonicalBrowsingContext : BrowsingContext {
   sequence<WindowGlobalParent> getWindowGlobals();
@@ -126,8 +101,6 @@ interface CanonicalBrowsingContext : BrowsingContext {
    */
   [Throws]
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
-
-  void stop(unsigned long aStopFlags);
 
   [Throws]
   Promise<unsigned long long> changeFrameRemoteness(

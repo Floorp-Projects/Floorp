@@ -14,6 +14,7 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
@@ -31,9 +32,6 @@
   }
 
 namespace mozilla {
-namespace dom {
-class CanonicalBrowsingContext;
-}
 namespace net {
 using ChildEndpointPromise =
     MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
@@ -94,15 +92,15 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
+                                nsILoadContext* aLoadContext,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
   bool Open(nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
-            uint32_t aCacheKey, const Maybe<uint64_t>& aChannelId,
+            uint32_t aCacheKey, const uint64_t& aChannelId,
             const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
             Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
             bool aHasGesture, nsresult* aRv);
-  bool OpenFromParent(nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -162,8 +160,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // our reference to it.
   void DocumentChannelBridgeDisconnected();
 
-  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus,
-                                bool aSwitchingToNewProcess = false);
+  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus);
 
   base::ProcessId OtherPid() const {
     if (mDocumentChannelBridge) {
@@ -183,19 +180,14 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
                              uint32_t aLoadFlags);
 
-  dom::CanonicalBrowsingContext* GetBrowsingContext() const;
-
-  nsIChannel* GetChannel() const { return mChannel; }
-
-  uint32_t GetLoadType() const { return mLoadStateLoadType; }
-
  protected:
   virtual ~DocumentLoadListener();
 
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
   // this is complete.
-  void TriggerRedirectToRealChannel(const Maybe<uint64_t>& aDestinationProcess);
+  void TriggerRedirectToRealChannel(
+      const Maybe<uint64_t>& aDestinationProcess = Nothing());
 
   // Called once the content-process side on setting up a replacement
   // channel is complete. May wait for the new parent channel to
@@ -329,6 +321,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // the bridge to call DisonnectDocumentChannelBridge when it
   // shuts down to break this.
   RefPtr<ADocumentChannelBridge> mDocumentChannelBridge;
+
+  nsCOMPtr<nsILoadContext> mLoadContext;
 
   // The original URI of the current channel. If there are redirects,
   // then the value on the channel gets overwritten with the original
