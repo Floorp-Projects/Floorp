@@ -4333,19 +4333,43 @@ class BaseCompiler final : public BaseCompilerInterface {
     pushResults(type, fr.stackResultsBase(loc.bytes()));
   }
 
-  // A combination of popBlockResults + pushBlockResults, to shuffle the top
-  // stack values into the expected block result locations for the given type.
-  StackHeight topBlockResults(ResultType type) {
+  // A combination of popBlockResults + pushBlockResults, used when entering a
+  // block with a control-flow join (loops) or split (if) to shuffle the
+  // fallthrough block parameters into the locations expected by the
+  // continuation.
+  void topBlockParams(ResultType type) {
+    // This function should only be called when entering a block with a
+    // control-flow join at the entry, where there are no live temporaries in
+    // the current block.
+    StackHeight base = controlItem().stackHeight;
+    MOZ_ASSERT(fr.stackResultsBase(stackConsumed(type.length())) == base);
+    popBlockResults(type, base, ContinuationKind::Fallthrough);
+    pushBlockResults(type);
+  }
+
+  // A combination of popBlockResults + pushBlockResults, used before branches
+  // where we don't know the target (br_if / br_table).  If and when the branch
+  // is taken, the stack results will be shuffled down into place.  For br_if
+  // that has fallthrough, the parameters for the untaken branch flow through to
+  // the continuation.
+  StackHeight topBranchParams(ResultType type) {
     if (type.empty()) {
       return fr.stackHeight();
     }
-    StackHeight base = fr.stackResultsBase(stackConsumed(type.length()));
-    popBlockResults(type, base, ContinuationKind::Fallthrough);
-    pushBlockResults(type);
+    // There may be temporary values that need spilling; delay computation of
+    // the stack results base until after the popRegisterResults(), which spills
+    // if needed.
+    ABIResultIter iter(type);
+    popRegisterResults(iter);
+    StackHeight base = fr.stackResultsBase(stackConsumed(iter.remaining()));
+    if (!iter.done()) {
+      popStackResults(iter, base);
+    }
+    pushResults(type, base);
     return base;
   }
 
-  // Conditional branches with fallthrough are preceded by a topBlockResults, so
+  // Conditional branches with fallthrough are preceded by a topBranchParams, so
   // we know that there are no stack results that need to be materialized.  In
   // that case, we can just shuffle the whole block down before popping the
   // stack.
@@ -7180,7 +7204,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <typename Cond, typename Lhs, typename Rhs>
   void jumpConditionalWithResults(BranchState* b, Cond cond, Lhs lhs, Rhs rhs) {
     if (b->hasBlockResults()) {
-      StackHeight resultsBase = topBlockResults(b->resultType);
+      StackHeight resultsBase = topBranchParams(b->resultType);
       if (b->stackHeight != resultsBase) {
         Label notTaken;
         branchTo(b->invertBranch ? cond : Assembler::InvertCondition(cond), lhs,
@@ -8741,7 +8765,7 @@ bool BaseCompiler::emitLoop() {
   if (!deadCode_) {
     // Loop entry is a control join, so shuffle the entry parameters into the
     // well-known locations.
-    topBlockResults(params);
+    topBlockParams(params);
     masm.nopAlign(CodeAlignment);
     masm.bind(&controlItem(0).label);
     // The interrupt check barfs if there are live registers.
@@ -8791,7 +8815,7 @@ bool BaseCompiler::emitIf() {
     // Because params can flow immediately to results in the case of an empty
     // "then" or "else" block, and the result of an if/then is a join in
     // general, we shuffle params eagerly to the result allocations.
-    topBlockResults(params);
+    topBlockParams(params);
     emitBranchPerform(&b);
   }
 
@@ -9061,7 +9085,7 @@ bool BaseCompiler::emitBrTable() {
 
   freeIntegerResultRegisters(branchParams);
 
-  StackHeight resultsBase = topBlockResults(branchParams);
+  StackHeight resultsBase = topBranchParams(branchParams);
 
   Label dispatchCode;
   masm.branch32(Assembler::Below, rc, Imm32(depths.length()), &dispatchCode);
