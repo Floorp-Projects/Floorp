@@ -1298,6 +1298,9 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+	/* Win32 does not support more than 16 elements in the dash array. */
+	if (style->num_dashes > 16)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	/* Win32 does not support a dash offset. */
 	if (style->num_dashes > 0 && style->dash_offset != 0.0)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
