@@ -25313,54 +25313,50 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
     mUniqueIndexTable.ref().MarkImmutable();
   }
 
-  const nsTArray<FileAddInfo>& fileAddInfos = mParams.fileAddInfos();
+  auto storedFileInfosOrErr = TransformIntoNewArray(
+      mParams.fileAddInfos(),
+      [](const auto& fileAddInfo) {
+        MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFileBase::eBlob ||
+                   fileAddInfo.type() == StructuredCloneFileBase::eMutableFile);
 
-  if (!fileAddInfos.IsEmpty()) {
-    const uint32_t count = fileAddInfos.Length();
+        const DatabaseOrMutableFile& file = fileAddInfo.file();
 
-    if (NS_WARN_IF(!mStoredFileInfos.SetCapacity(count, fallible))) {
-      return false;
-    }
+        switch (fileAddInfo.type()) {
+          case StructuredCloneFileBase::eBlob: {
+            MOZ_ASSERT(
+                file.type() ==
+                DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
 
-    for (const auto& fileAddInfo : fileAddInfos) {
-      MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFileBase::eBlob ||
-                 fileAddInfo.type() == StructuredCloneFileBase::eMutableFile);
+            auto* const fileActor = static_cast<DatabaseFile*>(
+                file.get_PBackgroundIDBDatabaseFileParent());
+            MOZ_ASSERT(fileActor);
 
-      const DatabaseOrMutableFile& file = fileAddInfo.file();
+            return StoredFileInfo::CreateForBlob(fileActor->GetFileInfoPtr(),
+                                                 fileActor);
+          }
 
-      switch (fileAddInfo.type()) {
-        case StructuredCloneFileBase::eBlob: {
-          MOZ_ASSERT(file.type() ==
-                     DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
+          case StructuredCloneFileBase::eMutableFile: {
+            MOZ_ASSERT(file.type() ==
+                       DatabaseOrMutableFile::TPBackgroundMutableFileParent);
 
-          auto* const fileActor = static_cast<DatabaseFile*>(
-              file.get_PBackgroundIDBDatabaseFileParent());
-          MOZ_ASSERT(fileActor);
+            auto mutableFileActor = static_cast<MutableFile*>(
+                file.get_PBackgroundMutableFileParent());
+            MOZ_ASSERT(mutableFileActor);
 
-          mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForBlob(
-              fileActor->GetFileInfoPtr(), fileActor));
-          break;
+            return StoredFileInfo::CreateForMutableFile(
+                mutableFileActor->GetFileInfoPtr());
+          }
+
+          default:
+            MOZ_CRASH("Should never get here!");
         }
-
-        case StructuredCloneFileBase::eMutableFile: {
-          MOZ_ASSERT(file.type() ==
-                     DatabaseOrMutableFile::TPBackgroundMutableFileParent);
-
-          auto mutableFileActor = static_cast<MutableFile*>(
-              file.get_PBackgroundMutableFileParent());
-          MOZ_ASSERT(mutableFileActor);
-
-          mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForMutableFile(
-              mutableFileActor->GetFileInfoPtr()));
-
-          break;
-        }
-
-        default:
-          MOZ_CRASH("Should never get here!");
-      }
-    }
+      },
+      fallible);
+  if (NS_WARN_IF(storedFileInfosOrErr.isErr())) {
+    return false;
   }
+  
+  mStoredFileInfos = storedFileInfosOrErr.unwrap();
 
   if (mDataOverThreshold) {
     mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForStructuredClone(
