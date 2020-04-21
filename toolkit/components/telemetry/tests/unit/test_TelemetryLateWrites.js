@@ -38,7 +38,6 @@ const STACK2 = [
   [2, 10],
   [3, 15],
 ];
-const isFromTerminatorWatchdog = false;
 // XXX The only error checking is for a zero-sized stack.
 const STACK_BOGUS = [];
 
@@ -83,8 +82,6 @@ function write_late_writes_file(stack, suffix) {
     contents += element[0] + " " + element[1].toString(16) + "\n";
   }
 
-  contents += isFromTerminatorWatchdog ? 1 : 0 + "\n";
-
   write_string_to_file(file, contents);
 }
 
@@ -100,8 +97,6 @@ function run_test() {
   Assert.equal(lateWrites.memoryMap.length, 0);
   Assert.ok("stacks" in lateWrites);
   Assert.equal(lateWrites.stacks.length, 0);
-  Assert.ok("isFromTerminatorWatchdog" in lateWrites);
-  Assert.equal(lateWrites.isFromTerminatorWatchdog, false);
 
   do_test_pending();
   Telemetry.asyncFetchTelemetryData(function() {
@@ -143,9 +138,6 @@ function actual_test() {
       return unevalCanonicalStack == obj;
     };
   }
-  Assert.ok("isFromTerminatorWatchdog" in lateWrites);
-  Assert.equal(lateWrites.isFromTerminatorWatchdog, false);
-
   Assert.equal(uneval_STACKS.filter(stackChecker(first_stack)).length, 1);
   Assert.equal(uneval_STACKS.filter(stackChecker(second_stack)).length, 1);
 

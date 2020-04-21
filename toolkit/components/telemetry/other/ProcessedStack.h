@@ -48,15 +48,12 @@ class ProcessedStack {
   void AddFrame(const Frame& aFrame);
   const Module& GetModule(unsigned aIndex) const;
   void AddModule(const Module& aFrame);
-  const bool& GetIsFromTerminatorWatchdog() const;
-  void SetIsFromTerminatorWatchdog(const bool aIsFromTerminatorWatchdog);
 
   void Clear();
 
  private:
   std::vector<Module> mModules;
   std::vector<Frame> mStack;
-  bool mIsFromTerminatorWatchdog;
 };
 
 // Get the current list of loaded modules, filter and pair it to the provided
