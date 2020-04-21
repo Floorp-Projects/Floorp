@@ -7018,7 +7018,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
   nsresult EnsureDatabaseActorIsAlive();
 
-  void MetadataToSpec(DatabaseSpec& aSpec);
+  mozilla::Result<DatabaseSpec, nsresult> MetadataToSpec() const;
 
   void AssertMetadataConsistency(const FullDatabaseMetadata& aMetadata)
 #ifdef DEBUG
@@ -22322,16 +22322,18 @@ nsresult OpenDatabaseOp::EnsureDatabaseActorIsAlive() {
     return NS_OK;
   }
 
-  auto factory = static_cast<Factory*>(Manager());
+  auto* const factory = static_cast<Factory*>(Manager());
 
-  DatabaseSpec spec;
-  MetadataToSpec(spec);
+  auto specOrErr = MetadataToSpec();
+  if (NS_WARN_IF(specOrErr.isErr())) {
+    return specOrErr.unwrapErr();
+  }
 
   // Transfer ownership to IPDL.
   mDatabase->SetActorAlive();
 
   if (!factory->SendPBackgroundIDBDatabaseConstructor(
-          mDatabase.unsafeGetRawPtr(), spec, this)) {
+          mDatabase.unsafeGetRawPtr(), specOrErr.inspect(), this)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -22339,31 +22341,54 @@ nsresult OpenDatabaseOp::EnsureDatabaseActorIsAlive() {
   return NS_OK;
 }
 
-void OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec) {
+Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mMetadata);
 
-  aSpec.metadata() = mMetadata->mCommonMetadata;
+  DatabaseSpec spec;
+  spec.metadata() = mMetadata->mCommonMetadata;
 
-  for (const auto& objectStoreEntry : mMetadata->mObjectStores) {
-    FullObjectStoreMetadata* metadata = objectStoreEntry.GetData();
-    MOZ_ASSERT(objectStoreEntry.GetKey());
-    MOZ_ASSERT(metadata);
+  auto objectStoresOrErr = TransformIntoNewArrayAbortOnErr(
+      mMetadata->mObjectStores,
+      [](const auto& objectStoreEntry)
+          -> mozilla::Result<ObjectStoreSpec, nsresult> {
+        FullObjectStoreMetadata* metadata = objectStoreEntry.GetData();
+        MOZ_ASSERT(objectStoreEntry.GetKey());
+        MOZ_ASSERT(metadata);
 
-    // XXX This should really be fallible...
-    ObjectStoreSpec* objectStoreSpec = aSpec.objectStores().AppendElement();
-    objectStoreSpec->metadata() = metadata->mCommonMetadata;
+        ObjectStoreSpec objectStoreSpec;
+        objectStoreSpec.metadata() = metadata->mCommonMetadata;
 
-    for (const auto& indexEntry : metadata->mIndexes) {
-      FullIndexMetadata* indexMetadata = indexEntry.GetData();
-      MOZ_ASSERT(indexEntry.GetKey());
-      MOZ_ASSERT(indexMetadata);
+        auto indexesOrErr = TransformIntoNewArray(
+            metadata->mIndexes,
+            [](const auto& indexEntry) {
+              FullIndexMetadata* indexMetadata = indexEntry.GetData();
+              MOZ_ASSERT(indexEntry.GetKey());
+              MOZ_ASSERT(indexMetadata);
 
-      // XXX This should really be fallible...
-      IndexMetadata* metadata = objectStoreSpec->indexes().AppendElement();
-      *metadata = indexMetadata->mCommonMetadata;
-    }
+              return indexMetadata->mCommonMetadata;
+            },
+            fallible);
+
+        if (NS_WARN_IF(indexesOrErr.isErr())) {
+          return Err(indexesOrErr.unwrapErr());
+        }
+        // XXX Assign rather than use the ctor, since the ctor always copies
+        // indexes.
+        objectStoreSpec.indexes() = indexesOrErr.unwrap();
+
+        return objectStoreSpec;
+      },
+      fallible);
+  if (NS_WARN_IF(objectStoresOrErr.isErr())) {
+    return Err(objectStoresOrErr.unwrapErr());
   }
+
+  // XXX Assign rather than use the ctor, since the ctor always copies
+  // objectStores.
+  spec.objectStores() = objectStoresOrErr.unwrap();
+
+  return spec;
 }
 
 #ifdef DEBUG
