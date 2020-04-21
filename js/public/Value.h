@@ -1327,6 +1327,7 @@ extern JS_PUBLIC_DATA const HandleValue NullHandleValue;
 extern JS_PUBLIC_DATA const HandleValue UndefinedHandleValue;
 extern JS_PUBLIC_DATA const HandleValue TrueHandleValue;
 extern JS_PUBLIC_DATA const HandleValue FalseHandleValue;
+extern JS_PUBLIC_DATA const Handle<mozilla::Maybe<Value>> NothingHandleValue;
 
 }  // namespace JS
 

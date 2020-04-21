@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 
 #include <type_traits>
 #include <utility>
@@ -1464,6 +1465,33 @@ class MutableWrappedPtrOperations<UniquePtr<T, D>, Container>
     return uniquePtr().release();
   }
   void reset(T* ptr = T()) { uniquePtr().reset(ptr); }
+};
+
+template <typename T, typename Container>
+class WrappedPtrOperations<mozilla::Maybe<T>, Container> {
+  const mozilla::Maybe<T>& maybe() const {
+    return static_cast<const Container*>(this)->get();
+  }
+
+ public:
+  // This only supports a subset of Maybe's interface.
+  bool isSome() const { return maybe().isSome(); }
+  bool isNothing() const { return maybe().isNothing(); }
+  const T value() const { return maybe().value(); }
+  const T* operator->() const { return maybe().ptr(); }
+  const T& operator*() const { return maybe().ref(); }
+};
+
+template <typename T, typename Container>
+class MutableWrappedPtrOperations<mozilla::Maybe<T>, Container>
+    : public WrappedPtrOperations<mozilla::Maybe<T>, Container> {
+  mozilla::Maybe<T>& maybe() { return static_cast<Container*>(this)->get(); }
+
+ public:
+  // This only supports a subset of Maybe's interface.
+  T* operator->() { return maybe().ptr(); }
+  T& operator*() { return maybe().ref(); }
+  void reset() { return maybe().reset(); }
 };
 
 namespace gc {
