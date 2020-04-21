@@ -320,7 +320,14 @@ class WebRTCParent extends JSWindowActorParent {
     if (videoDevices.length && sharingScreen) {
       camAllowed = false;
     }
-    if (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) {
+    // Don't use persistent permissions from the top-level principal
+    // if we're in a cross-origin iframe and permission delegation is not
+    // allowed, or when we're handling a potentially insecure third party
+    // through a wildcard ("*") allow attribute.
+    if (
+      (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) ||
+      aRequest.secondOrigin
+    ) {
       camAllowed = false;
       micAllowed = false;
     }
@@ -441,10 +448,7 @@ function prompt(aActor, aBrowser, aRequest) {
     // If the request comes from a popup, we don't want to show the prompt,
     // but we do want to allow the request if the user previously gave permission.
     if (isPopup) {
-      if (
-        aRequest.secondOrigin ||
-        !aActor.checkRequestAllowed(aRequest, principal, aBrowser)
-      ) {
+      if (!aActor.checkRequestAllowed(aRequest, principal, aBrowser)) {
         aActor.denyRequest(aRequest);
       }
       return;
@@ -607,12 +611,7 @@ function prompt(aActor, aBrowser, aRequest) {
       // it is handled synchronously before we add the notification.
       // Handling of ALLOW is delayed until the popupshowing event,
       // to avoid granting permissions automatically to background tabs.
-      // If we have a secondOrigin, it means this request is lacking explicit
-      // trust, and we should always prompt even in with persistent permission.
-      if (
-        !aRequest.secondOrigin &&
-        aActor.checkRequestAllowed(aRequest, principal, aBrowser)
-      ) {
+      if (aActor.checkRequestAllowed(aRequest, principal, aBrowser)) {
         this.remove();
         return true;
       }

@@ -553,6 +553,65 @@ var gTests = [
   },
   {
     desc:
+      "Don't reprompt while actively sharing in maybe unsafe permission delegation",
+    run: async function checkNoRepromptNoDelegate() {
+      // Check that we get a prompt.
+      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true, "frame4");
+      await promise;
+      await observerPromise;
+
+      // Check the secondName of the notification should be the third party
+      is(
+        PopupNotifications.getNotification("webRTC-shareDevices").options
+          .secondName,
+        "test1.example.com",
+        "Use third party's origin as secondName"
+      );
+
+      const notification = PopupNotifications.panel.firstElementChild;
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
+      await promiseMessage("ok", () =>
+        EventUtils.synthesizeMouseAtCenter(notification.button, {})
+      );
+      await observerPromise1;
+      await observerPromise2;
+
+      let state = await getMediaCaptureState();
+      is(!!state.audio, true, "expected microphone to be shared");
+      is(!!state.video, true, "expected camera to be shared");
+      await indicator;
+      await checkSharingUI({ audio: true, video: true });
+
+      // Check that we now don't get a prompt.
+      observerPromise = expectObserverCalled("getUserMedia:request");
+      observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
+      observerPromise2 = expectObserverCalled("recording-device-events");
+      promise = promiseMessage("ok");
+      await promiseRequestDevice(true, true, "frame4");
+      await promise;
+      await observerPromise;
+
+      await promiseNoPopupNotification("webRTC-shareDevices");
+      await observerPromise1;
+      await observerPromise2;
+
+      state = await getMediaCaptureState();
+      is(!!state.audio, true, "expected microphone to be shared");
+      is(!!state.video, true, "expected camera to be shared");
+      await checkSharingUI({ audio: true, video: true });
+
+      // Cleanup.
+      await closeStream(false, "frame4");
+    },
+  },
+  {
+    desc:
       "Prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
     run: async function checkPromptNoDelegateScreenSharing() {
       await promptNoDelegateScreenSharing("test1.example.com");
