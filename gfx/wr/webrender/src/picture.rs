@@ -3671,6 +3671,7 @@ impl<'a> PictureUpdateState<'a> {
         data_stores: &mut DataStores,
         composite_state: &CompositeState,
     ) {
+        profile_scope!("UpdatePictures");
         profile_marker!("UpdatePictures");
 
         let mut state = PictureUpdateState {

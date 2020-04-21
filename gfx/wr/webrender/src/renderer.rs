@@ -3737,6 +3737,8 @@ impl Renderer {
     }
 
     fn update_texture_cache(&mut self) {
+        profile_scope!("update_texture_cache");
+
         let _gm = self.gpu_profile.start_marker("texture cache update");
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
         self.pending_texture_cache_updates = false;
@@ -4196,6 +4198,8 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
+        profile_scope!("draw_picture_cache_target");
+
         self.profile_counters.rendered_picture_cache_tiles.inc();
         let _gm = self.gpu_profile.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
@@ -4920,6 +4924,8 @@ impl Renderer {
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
+        profile_scope!("draw_color_target");
+
         self.profile_counters.color_passes.inc();
         let _gm = self.gpu_profile.start_marker("color target");
 
@@ -5181,6 +5187,8 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
+        profile_scope!("draw_alpha_target");
+
         self.profile_counters.alpha_passes.inc();
         let _gm = self.gpu_profile.start_marker("alpha target");
         let alpha_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_ALPHA);
@@ -5295,6 +5303,8 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
+        profile_scope!("draw_texture_cache_target");
+
         let texture_source = TextureSource::TextureCache(*texture, Swizzle::default());
         let projection = {
             let (texture, _) = self.texture_resolver
@@ -5631,6 +5641,8 @@ impl Renderer {
     }
 
     fn bind_frame_data(&mut self, frame: &mut Frame) {
+        profile_scope!("bind_frame_data");
+
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SETUP_DATA);
 
         self.vertex_data_textures[self.current_vertex_data_textures].update(
@@ -5645,6 +5657,8 @@ impl Renderer {
     }
 
     fn update_native_surfaces(&mut self) {
+        profile_scope!("update_native_surfaces");
+
         match self.compositor_config {
             CompositorConfig::Native { ref mut compositor, .. } => {
                 for op in self.pending_native_surface_updates.drain(..) {
@@ -5689,6 +5703,8 @@ impl Renderer {
         results: &mut RenderResults,
         clear_framebuffer: bool,
     ) {
+        profile_scope!("draw_frame");
+
         // These markers seem to crash a lot on Android, see bug 1559834
         #[cfg(not(target_os = "android"))]
         let _gm = self.gpu_profile.start_marker("draw frame");
@@ -5721,6 +5737,8 @@ impl Renderer {
 
             match pass.kind {
                 RenderPassKind::MainFramebuffer { ref main_target, .. } => {
+                    profile_scope!("main target");
+
                     if let Some(device_size) = device_size {
                         results.stats.color_target_count += 1;
 
@@ -5811,6 +5829,8 @@ impl Renderer {
                     ref mut texture_cache,
                     ref mut picture_cache,
                 } => {
+                    profile_scope!("offscreen target");
+
                     let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters);
                     let color_tex = self.allocate_target_texture(color, &mut frame.profile_counters);
 
