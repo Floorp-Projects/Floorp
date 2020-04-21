@@ -87,6 +87,7 @@ class MachCommands(MachCommandBase):
         return self.run_process([python_path] + args,
                                 pass_thru=True,  # Allow user to run Python interactively.
                                 ensure_exit_code=False,  # Don't throw on non-zero exit code.
+                                python_unbuffered=False,  # Leave input buffered.
                                 append_env=append_env)
 
     @Command('python-test', category='testing',
