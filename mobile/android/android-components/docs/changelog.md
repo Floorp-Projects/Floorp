@@ -21,6 +21,10 @@ permalink: /changelog/
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor, now requires a new parameter `onShouldShowRequestPermissionRationale` a lambda to allow the feature to query [ActivityCompat.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/core/app/ActivityCompat#shouldShowRequestPermissionRationale(android.app.Activity,%20java.lang.String)) or [Fragment.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/fragment/app/Fragment#shouldShowRequestPermissionRationale(java.lang.String)). This allows the `SitePermissionsFeature` to handle when a user clicks "Deny & don't ask again" button in a system permission dialog, for more information see [issue #6565](https://github.com/mozilla-mobile/android-components/issues/6565).
 
+* **ui-widgets**
+  * 🆕 New component for standardized Mozilla widgets and styles. A living style guide will be published soon that helps explain design choices made.
+  * First version includes styling for buttons: `NeutralButton`, `PositiveButton`, and `DestructiveButton`
+
 * **feature-addons**
   * Added `AddonsManagerAdapter.updateAddon` and `AddonsManagerAdapter.updateAddons` to allow partial updates.
   * ⚠️ **This is a breaking change**: `AddonsManagerAdapterDelegate.onNotYetSupportedSectionClicked(unsupportedAddons: ArrayList<Addon>)` is changed to `AddonsManagerAdapterDelegate.onNotYetSupportedSectionClicked(unsupportedAddons: List<Addon>)`.
