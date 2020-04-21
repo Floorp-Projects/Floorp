@@ -80,7 +80,7 @@ class EventTargetWrapper : public AbstractThread {
       nsCOMPtr<nsIRunnable> event =
           NewRunnableMethod("EventTargetWrapper::FireTailDispatcher", this,
                             &EventTargetWrapper::FireTailDispatcher);
-      DispatchAsMicroTask(event.forget());
+      nsContentUtils::RunInStableState(event.forget());
     }
 
     return mTailDispatcher.ref();
