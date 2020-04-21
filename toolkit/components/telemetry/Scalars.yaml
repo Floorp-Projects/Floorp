@@ -2658,23 +2658,6 @@ telemetry:
       - 'main'
       - 'content'
 
-  failed_late_write:
-    bug_numbers:
-      - 1610134
-    description: >
-      The number of times a late write stack failed to be parsed.
-    expires: never
-    kind: uint
-    notification_emails:
-      - emalysz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
 telemetry.discarded:
   accumulations:
     bug_numbers:
