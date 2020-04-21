@@ -1138,7 +1138,7 @@ function validateRequests(requests, monitor) {
           );
           is(
             stacktrace[j].filename.split("/").pop(),
-            frame.file,
+            frame.file.split("/").pop(),
             `Request #${i} has the correct file on JS stack frame #${j}`
           );
           is(
