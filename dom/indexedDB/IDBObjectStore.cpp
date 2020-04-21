@@ -773,12 +773,12 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
 
   Key key;
   StructuredCloneWriteInfo cloneWriteInfo(mTransaction->Database());
-  nsTArray<IndexUpdateInfo> updateInfo;
+  nsTArray<IndexUpdateInfo> updateInfos;
 
   {
     const auto autoStateRestore =
         mTransaction->TemporarilyTransitionToInactive();
-    GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfo, aRv);
+    GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfos, aRv);
   }
 
   if (aRv.Failed()) {
@@ -801,7 +801,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   const size_t kMaxMessageSize = maximalSizeFromPref - kMaxIDBMsgOverhead;
 
   const size_t indexUpdateInfoSize =
-      std::accumulate(updateInfo.cbegin(), updateInfo.cend(), 0u,
+      std::accumulate(updateInfos.cbegin(), updateInfos.cend(), 0u,
                       [](size_t old, const IndexUpdateInfo& updateInfo) {
                         return old + updateInfo.value().GetBuffer().Length() +
                                updateInfo.localizedValue().GetBuffer().Length();
@@ -825,7 +825,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
       std::move(cloneWriteInfo.mCloneBuffer.data());
   commonParams.cloneInfo().offsetToKeyProp() = cloneWriteInfo.mOffsetToKeyProp;
   commonParams.key() = key;
-  commonParams.indexUpdateInfos().SwapElements(updateInfo);
+  commonParams.indexUpdateInfos() = std::move(updateInfos);
 
   // Convert any blobs or mutable files into FileAddInfo.
   nsTArray<StructuredCloneFileChild>& files = cloneWriteInfo.mFiles;
@@ -833,7 +833,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   if (!files.IsEmpty()) {
     const uint32_t count = files.Length();
 
-    FallibleTArray<FileAddInfo> fileAddInfos;
+    auto& fileAddInfos = commonParams.fileAddInfos();
     if (NS_WARN_IF(!fileAddInfos.SetCapacity(count, fallible))) {
       aRv = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
@@ -841,74 +841,65 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
 
     IDBDatabase* const database = mTransaction->Database();
 
-    for (uint32_t index = 0; index < count; index++) {
-      StructuredCloneFileChild& file = files[index];
+    for (auto& file : files) {
+      auto fileAddInfoOrErr = [&file,
+                               database]() -> Result<FileAddInfo, nsresult> {
+        switch (file.Type()) {
+          case StructuredCloneFileBase::eBlob: {
+            MOZ_ASSERT(file.HasBlob());
+            MOZ_ASSERT(!file.HasMutableFile());
 
-      FileAddInfo* const fileAddInfo = fileAddInfos.AppendElement(fallible);
-      MOZ_ASSERT(fileAddInfo);
+            PBackgroundIDBDatabaseFileChild* const fileActor =
+                database->GetOrCreateFileActorForBlob(file.MutableBlob());
+            if (NS_WARN_IF(!fileActor)) {
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
 
-      switch (file.Type()) {
-        case StructuredCloneFileBase::eBlob: {
-          MOZ_ASSERT(file.HasBlob());
-          MOZ_ASSERT(!file.HasMutableFile());
-
-          PBackgroundIDBDatabaseFileChild* const fileActor =
-              database->GetOrCreateFileActorForBlob(file.MutableBlob());
-          if (NS_WARN_IF(!fileActor)) {
-            IDB_REPORT_INTERNAL_ERR();
-            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            return nullptr;
+            return FileAddInfo{fileActor, StructuredCloneFileBase::eBlob};
           }
 
-          fileAddInfo->file() = fileActor;
-          fileAddInfo->type() = StructuredCloneFileBase::eBlob;
+          case StructuredCloneFileBase::eMutableFile: {
+            MOZ_ASSERT(file.HasMutableFile());
+            MOZ_ASSERT(!file.HasBlob());
 
-          break;
-        }
+            PBackgroundMutableFileChild* const mutableFileActor =
+                file.MutableFile().GetBackgroundActor();
+            if (NS_WARN_IF(!mutableFileActor)) {
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
 
-        case StructuredCloneFileBase::eMutableFile: {
-          MOZ_ASSERT(file.HasMutableFile());
-          MOZ_ASSERT(!file.HasBlob());
-
-          PBackgroundMutableFileChild* const mutableFileActor =
-              file.MutableFile().GetBackgroundActor();
-          if (NS_WARN_IF(!mutableFileActor)) {
-            IDB_REPORT_INTERNAL_ERR();
-            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            return nullptr;
+            return FileAddInfo{mutableFileActor,
+                               StructuredCloneFileBase::eMutableFile};
           }
 
-          fileAddInfo->file() = mutableFileActor;
-          fileAddInfo->type() = StructuredCloneFileBase::eMutableFile;
+          case StructuredCloneFileBase::eWasmBytecode:
+          case StructuredCloneFileBase::eWasmCompiled: {
+            MOZ_ASSERT(file.HasBlob());
+            MOZ_ASSERT(!file.HasMutableFile());
 
-          break;
-        }
+            PBackgroundIDBDatabaseFileChild* const fileActor =
+                database->GetOrCreateFileActorForBlob(file.MutableBlob());
+            if (NS_WARN_IF(!fileActor)) {
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
 
-        case StructuredCloneFileBase::eWasmBytecode:
-        case StructuredCloneFileBase::eWasmCompiled: {
-          MOZ_ASSERT(file.HasBlob());
-          MOZ_ASSERT(!file.HasMutableFile());
-
-          PBackgroundIDBDatabaseFileChild* const fileActor =
-              database->GetOrCreateFileActorForBlob(file.MutableBlob());
-          if (NS_WARN_IF(!fileActor)) {
-            IDB_REPORT_INTERNAL_ERR();
-            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            return nullptr;
+            return FileAddInfo{fileActor, file.Type()};
           }
 
-          fileAddInfo->file() = fileActor;
-          fileAddInfo->type() = file.Type();
-
-          break;
+          default:
+            MOZ_CRASH("Should never get here!");
         }
+      }();
 
-        default:
-          MOZ_CRASH("Should never get here!");
+      if (fileAddInfoOrErr.isErr()) {
+        aRv = fileAddInfoOrErr.unwrapErr();
+        return nullptr;
       }
+      fileAddInfos.AppendElement(fileAddInfoOrErr.unwrap());
     }
-
-    commonParams.fileAddInfos().SwapElements(fileAddInfos);
   }
 
   const auto& params =
