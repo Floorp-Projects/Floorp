@@ -34,7 +34,7 @@
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
       <hbox flex="1" part="innerbox">
         <vbox part="drop-indicator-bar" hidden="true">
           <image part="drop-indicator"/>
@@ -42,7 +42,7 @@
         <arrowscrollbox class="menupopup-arrowscrollbox" flex="1" orient="vertical"
                         exportparts="scrollbox: arrowscrollbox-scrollbox"
                         smoothscroll="false" part="arrowscrollbox">
-          <html:slot></html:slot>
+          <html:slot/>
         </arrowscrollbox>
       </hbox>
     `;
@@ -591,7 +591,8 @@
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
+      <html:link rel="stylesheet" href="chrome://global/content/widgets.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/arrowpanel.css"/>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
           <image class="panel-arrow" part="arrow"/>
