@@ -34,10 +34,16 @@ def get_cmd_output(*args, **kwargs):
         # On Python 2 on Windows, close_fds prevents the process from inheriting
         # stdout/stderr. Elsewhere, it simply prevents it from inheriting extra
         # file descriptors, which is what we want.
-        close_fds=os.name != 'nt', universal_newlines=True, **kwargs)
+        close_fds=os.name != 'nt', **kwargs)
     stdout, stderr = proc.communicate()
-    stdout = six.ensure_text(stdout, encoding=system_encoding, errors='replace')
-    stderr = six.ensure_text(stderr, encoding=system_encoding, errors='replace')
+    # Normally we would set the `encoding` and `errors` arguments in the
+    # constructor to subprocess.Popen, but those arguments were added in 3.6
+    # and we need to support back to 3.5, so instead we need to do this
+    # nonsense.
+    stdout = six.ensure_text(stdout, encoding=system_encoding,
+                             errors='replace').replace('\r\n', '\n')
+    stderr = six.ensure_text(stderr, encoding=system_encoding,
+                             errors='replace').replace('\r\n', '\n')
     return proc.wait(), stdout, stderr
 
 
