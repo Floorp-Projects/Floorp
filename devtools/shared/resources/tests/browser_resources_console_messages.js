@@ -295,7 +295,11 @@ function logRuntimeMessages(browser) {
 
 // Copied from devtools/shared/webconsole/test/chrome/common.js
 function checkConsoleAPICall(call, expected) {
-  is(call.arguments.length, expected.arguments.length, "number of arguments");
+  is(
+    call.arguments?.length || 0,
+    expected.arguments?.length || 0,
+    "number of arguments"
+  );
 
   checkObject(call, expected);
 }
