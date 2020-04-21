@@ -935,9 +935,9 @@ impl RenderBackend {
         }
 
         while let RenderBackendStatus::Continue = status {
-            profile_scope!("handle_msg");
-
             while let Ok(msg) = self.scene_rx.try_recv() {
+                profile_scope!("rb_msg");
+
                 match msg {
                     SceneBuilderResult::Transactions(txns, result_tx) => {
                         self.process_transaction(

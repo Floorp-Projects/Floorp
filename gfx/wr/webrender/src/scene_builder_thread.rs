@@ -84,6 +84,8 @@ impl Transaction {
     }
 
     fn rasterize_blobs(&mut self, is_low_priority: bool) {
+        profile_scope!("rasterize_blobs");
+
         if let Some(ref mut rasterizer) = self.blob_rasterizer {
             let mut rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
             // try using the existing allocation if our current list is empty
@@ -589,6 +591,8 @@ impl SceneBuilderThread {
 
     /// Do the bulk of the work of the scene builder thread.
     fn process_transaction(&mut self, txn: &mut Transaction) -> Box<BuiltTransaction> {
+        profile_scope!("process_transaction");
+
         if let Some(ref hooks) = self.hooks {
             hooks.pre_scene_build();
         }

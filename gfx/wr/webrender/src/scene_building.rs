@@ -395,6 +395,8 @@ impl<'a> SceneBuilder<'a> {
         interners: &mut Interners,
         stats: &SceneStats,
     ) -> BuiltScene {
+        profile_scope!("build_scene");
+
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
         let root_pipeline = scene.pipelines.get(&root_pipeline_id).unwrap();
