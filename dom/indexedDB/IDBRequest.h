@@ -50,7 +50,7 @@ class IDBRequest : public DOMEventTargetHelper {
   RefPtr<IDBIndex> mSourceAsIndex;
   RefPtr<IDBCursor> mSourceAsCursor;
 
-  RefPtr<IDBTransaction> mTransaction;
+  SafeRefPtr<IDBTransaction> mTransaction;
 
   JS::Heap<JS::Value> mResultVal;
   RefPtr<DOMException> mError;
@@ -65,19 +65,17 @@ class IDBRequest : public DOMEventTargetHelper {
  public:
   class ResultCallback;
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(JSContext* aCx,
-                                                IDBDatabase* aDatabase,
-                                                IDBTransaction* aTransaction);
+  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+      JSContext* aCx, IDBDatabase* aDatabase,
+      SafeRefPtr<IDBTransaction> aTransaction);
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(JSContext* aCx,
-                                                IDBObjectStore* aSource,
-                                                IDBDatabase* aDatabase,
-                                                IDBTransaction* aTransaction);
+  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+      JSContext* aCx, IDBObjectStore* aSource, IDBDatabase* aDatabase,
+      SafeRefPtr<IDBTransaction> aTransaction);
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(JSContext* aCx,
-                                                IDBIndex* aSource,
-                                                IDBDatabase* aDatabase,
-                                                IDBTransaction* aTransaction);
+  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+      JSContext* aCx, IDBIndex* aSource, IDBDatabase* aDatabase,
+      SafeRefPtr<IDBTransaction> aTransaction);
 
   static void CaptureCaller(JSContext* aCx, nsAString& aFilename,
                             uint32_t* aLineNo, uint32_t* aColumn);
@@ -138,10 +136,29 @@ class IDBRequest : public DOMEventTargetHelper {
     GetResult(aResult, aRv);
   }
 
-  IDBTransaction* GetTransaction() const {
+  Maybe<IDBTransaction&> MaybeTransactionRef() const {
     AssertIsOnOwningThread();
 
-    return mTransaction;
+    return mTransaction ? SomeRef(*mTransaction) : Nothing();
+  }
+
+  IDBTransaction& MutableTransactionRef() const {
+    AssertIsOnOwningThread();
+
+    return *mTransaction;
+  }
+
+  SafeRefPtr<IDBTransaction> AcquireTransaction() const {
+    AssertIsOnOwningThread();
+
+    return mTransaction.clonePtr();
+  }
+
+  // For WebIDL binding.
+  RefPtr<IDBTransaction> GetTransaction() const {
+    AssertIsOnOwningThread();
+
+    return AsRefPtr(mTransaction.clonePtr());
   }
 
   IDBRequestReadyState ReadyState() const;
@@ -196,7 +213,7 @@ class IDBOpenDBRequest final : public IDBRequest {
 
   bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
-  void SetTransaction(IDBTransaction* aTransaction);
+  void SetTransaction(SafeRefPtr<IDBTransaction> aTransaction);
 
   void DispatchNonTransactionError(nsresult aErrorCode);
 

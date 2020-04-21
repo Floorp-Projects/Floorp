@@ -122,17 +122,17 @@ class IDBTransaction final
 #endif
 
  public:
-  static MOZ_MUST_USE RefPtr<IDBTransaction> CreateVersionChange(
+  static MOZ_MUST_USE SafeRefPtr<IDBTransaction> CreateVersionChange(
       IDBDatabase* aDatabase,
       indexedDB::BackgroundVersionChangeTransactionChild* aActor,
       IDBOpenDBRequest* aOpenRequest, int64_t aNextObjectStoreId,
       int64_t aNextIndexId);
 
-  static MOZ_MUST_USE RefPtr<IDBTransaction> Create(
+  static MOZ_MUST_USE SafeRefPtr<IDBTransaction> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
       const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
 
-  static IDBTransaction* GetCurrent();
+  static Maybe<IDBTransaction&> MaybeCurrent();
 
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -381,6 +381,14 @@ class IDBTransaction final
 
   bool HasTransactionChild() const;
 };
+
+inline bool ReferenceEquals(const Maybe<IDBTransaction&>& aLHS,
+                            const Maybe<IDBTransaction&>& aRHS) {
+  if (aLHS.isNothing() != aRHS.isNothing()) {
+    return false;
+  }
+  return aLHS.isNothing() || &aLHS.ref() == &aRHS.ref();
+}
 
 }  // namespace dom
 }  // namespace mozilla

@@ -88,13 +88,11 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
     Append(kQuote);
   }
 
-  explicit LoggingString(IDBTransaction* aTransaction)
+  explicit LoggingString(const IDBTransaction& aTransaction)
       : nsAutoCString(kOpenBracket) {
-    MOZ_ASSERT(aTransaction);
-
     NS_NAMED_LITERAL_CSTRING(kCommaSpace, ", ");
 
-    const nsTArray<nsString>& stores = aTransaction->ObjectStoreNamesInternal();
+    const nsTArray<nsString>& stores = aTransaction.ObjectStoreNamesInternal();
 
     for (uint32_t count = stores.Length(), index = 0; index < count; index++) {
       Append(kQuote);
@@ -109,7 +107,7 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
     Append(kCloseBracket);
     Append(kCommaSpace);
 
-    switch (aTransaction->GetMode()) {
+    switch (aTransaction.GetMode()) {
       case IDBTransaction::Mode::ReadOnly:
         AppendLiteral("\"readonly\"");
         break;

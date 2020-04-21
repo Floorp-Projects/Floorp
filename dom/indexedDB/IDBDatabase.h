@@ -147,9 +147,9 @@ class IDBDatabase final : public DOMEventTargetHelper {
   // DatabaseInfo.
   void RevertToPreviousState();
 
-  void RegisterTransaction(IDBTransaction* aTransaction);
+  void RegisterTransaction(IDBTransaction& aTransaction);
 
-  void UnregisterTransaction(IDBTransaction* aTransaction);
+  void UnregisterTransaction(IDBTransaction& aTransaction);
 
   void AbortTransactions(bool aShouldWarn);
 
