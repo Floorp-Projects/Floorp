@@ -102,7 +102,8 @@ function check_submit_pending(tab, crashes) {
         }
       }
 
-      // NB: Despite appearances, this doesn't use a CPOW.
+      // The pageshow event fortunately gets propagated to the containing
+      // browser across process boundaries.
       BrowserTestUtils.waitForEvent(browser, "pageshow", true).then(
         csp_pageshow
       );

@@ -911,7 +911,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
         if (loaded && focused && !finished) {
           finished = true;
           if (isChildProcess) {
-            sendAsyncMessage("WaitForFocus:ChildFocused", {}, null);
+            sendAsyncMessage("WaitForFocus:ChildFocused", {});
           } else {
             SimpleTest._pendingWaitForFocusCount--;
             SimpleTest.executeSoon(function() {

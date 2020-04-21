@@ -63,8 +63,8 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
   let context = nsContextMenu.contentData.context;
 
-  // The event is a CPOW that can't be passed into the native openPopupAtScreen
-  // function. Therefore we synthesize a new MouseEvent to propagate the
+  // We don't have access to the original event here, as that happened in
+  // another process. Therefore we synthesize a new MouseEvent to propagate the
   // inputSource to the subsequently triggered popupshowing event.
   var newEvent = document.createEvent("MouseEvent");
   newEvent.initNSMouseEvent(

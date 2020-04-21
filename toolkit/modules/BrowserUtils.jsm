@@ -211,10 +211,6 @@ var BrowserUtils = {
     return Services.io.newFileURI(aFile);
   },
 
-  makeURIFromCPOW(aCPOWURI) {
-    return Services.io.newURI(aCPOWURI.spec);
-  },
-
   /**
    * For a given DOM element, returns its position in "screen"
    * coordinates. In a content process, the coordinates returned will
@@ -354,42 +350,6 @@ var BrowserUtils = {
       mimeType == "application/json" ||
       mimeType == "application/xml"
     );
-  },
-
-  /**
-   * Return true if we should FAYT for this node + window (could be CPOW):
-   *
-   * @param elt
-   *        The element that is focused
-   */
-  shouldFastFind(elt) {
-    if (elt) {
-      let win = elt.ownerGlobal;
-      if (elt instanceof win.HTMLInputElement && elt.mozIsTextField(false)) {
-        return false;
-      }
-
-      if (elt.isContentEditable || win.document.designMode == "on") {
-        return false;
-      }
-
-      if (
-        elt instanceof win.HTMLTextAreaElement ||
-        elt instanceof win.HTMLSelectElement ||
-        elt instanceof win.HTMLObjectElement ||
-        elt instanceof win.HTMLEmbedElement
-      ) {
-        return false;
-      }
-
-      if (elt instanceof win.HTMLIFrameElement && elt.mozbrowser) {
-        // If we're targeting a mozbrowser iframe, it should be allowed to
-        // handle FastFind itself.
-        return false;
-      }
-    }
-
-    return true;
   },
 
   /**

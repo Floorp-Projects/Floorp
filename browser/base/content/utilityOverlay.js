@@ -389,8 +389,6 @@ function openLinkIn(url, where, params) {
   }
 
   if (where == "save") {
-    // TODO(1073187): propagate referrerPolicy.
-    // ContentClick.jsm passes isContentWindowPrivate for saveURL instead of passing a CPOW initiatingDoc
     if ("isContentWindowPrivate" in params) {
       saveURL(
         url,
