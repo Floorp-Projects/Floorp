@@ -378,4 +378,12 @@ open class FenixApplication : LocaleAwareApplication() {
         // This method is not covered by our internal crash reporting: be very careful when modifying it.
         StartupTimeline.onApplicationInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing is critical.
     }
+
+    override fun onConfigurationChanged(config: android.content.res.Configuration) {
+        // Workaround for androidx appcompat issue where follow system day/night mode config changes
+        // are not triggered when also using createConfigurationContext like we do in LocaleManager
+        // https://issuetracker.google.com/issues/143570309#comment3
+        applicationContext.resources.configuration.uiMode = config.uiMode
+        super.onConfigurationChanged(config)
+    }
 }
