@@ -300,11 +300,6 @@ def generate_cacheirops_header(c_out, yaml_path):
     # CACHE_IR_OPS items.
     ops_items = []
 
-    # CACHE_IR_SHARED_OPS and CACHE_IR_UNSHARED_OPS items. These will go away
-    # when all ops have generated boilerplate.
-    ops_shared = []
-    ops_unshared = []
-
     # Generated CacheIRWriter methods.
     writer_methods = []
 
@@ -321,9 +316,6 @@ def generate_cacheirops_header(c_out, yaml_path):
         shared = op['shared']
         assert isinstance(shared, bool)
 
-        gen_boilerplate = op.get('gen_boilerplate', False)
-        assert isinstance(gen_boilerplate, bool)
-
         custom_writer = op.get('custom_writer', False)
         assert isinstance(custom_writer, bool)
 
@@ -333,28 +325,14 @@ def generate_cacheirops_header(c_out, yaml_path):
             operands_str = 'None'
         ops_items.append('_({}, {})'.format(name, operands_str))
 
-        if gen_boilerplate:
-            writer_methods.append(gen_writer_method(name, operands, custom_writer))
-            if shared:
-                compiler_shared_methods.append(gen_compiler_method(name, operands))
-            else:
-                compiler_unshared_methods.append(gen_compiler_method(name, operands))
+        writer_methods.append(gen_writer_method(name, operands, custom_writer))
+        if shared:
+            compiler_shared_methods.append(gen_compiler_method(name, operands))
         else:
-            if shared:
-                ops_shared.append('_({})'.format(name))
-            else:
-                ops_unshared.append('_({})'.format(name))
+            compiler_unshared_methods.append(gen_compiler_method(name, operands))
 
     contents = '#define CACHE_IR_OPS(_)\\\n'
     contents += '\\\n'.join(ops_items)
-    contents += '\n\n'
-
-    contents += '#define CACHE_IR_SHARED_OPS(_)\\\n'
-    contents += '\\\n'.join(ops_shared)
-    contents += '\n\n'
-
-    contents += '#define CACHE_IR_UNSHARED_OPS(_)\\\n'
-    contents += '\\\n'.join(ops_unshared)
     contents += '\n\n'
 
     contents += '#define CACHE_IR_WRITER_GENERATED \\\n'
