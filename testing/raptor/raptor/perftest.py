@@ -141,13 +141,10 @@ either Raptor or browsertime."""
         # - win10-aarch64 : no support for geckodriver see 1582757
         # - fennec_aurora: no conditioned profiles created see 1606199
         # - reference browser: no conditioned profiles created see 1606767
-        # - crashes for fennec68 and fenix, to be fixed, see 1626729
         self.using_condprof = not (
              (self.config["platform"] == "win" and self.config["processor"] == "aarch64")
              or self.config["binary"] == "org.mozilla.fennec_aurora"
              or self.config["binary"] == "org.mozilla.reference.browser.raptor"
-             or self.config["binary"] == "org.mozilla.firefox"
-             or self.config["binary"].startswith("org.mozilla.fenix")
              or self.config["no_conditioned_profile"]
         )
         if self.using_condprof:
