@@ -9,32 +9,35 @@
 #define mozilla_dom_workers_workerprivate_h__
 
 #include "MainThreadUtils.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerStatus.h"
-#include "mozilla/Assertions.h"
+#include "ScriptLoader.h"
+#include "js/ContextOptions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/PerformanceCounter.h"
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/ThreadBound.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UseCounter.h"
+#include "mozilla/dom/ClientSource.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/Worker.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerLoadInfo.h"
+#include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
+#include "mozilla/dom/workerinternals/Queue.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
 #include "nsILoadInfo.h"
 #include "nsTObserverArray.h"
-
-#include "js/ContextOptions.h"
-#include "mozilla/dom/RemoteWorkerChild.h"
-#include "mozilla/dom/Worker.h"
-#include "mozilla/dom/WorkerLoadInfo.h"
-#include "mozilla/dom/workerinternals/JSSettings.h"
-#include "mozilla/dom/workerinternals/Queue.h"
-#include "mozilla/PerformanceCounter.h"
-#include "mozilla/ThreadBound.h"
 
 class nsIThreadInternal;
 
@@ -453,17 +456,13 @@ class WorkerPrivate : public RelativeTimeline {
 
   void DumpCrashInformation(nsACString& aString);
 
-  bool EnsureClientSource();
+  ClientType GetClientType() const;
 
   bool EnsureCSPEventListener();
 
   void EnsurePerformanceStorage();
 
   void EnsurePerformanceCounter();
-
-  Maybe<ClientInfo> GetClientInfo() const;
-
-  const ClientState GetClientState() const;
 
   bool GetExecutionGranted() const;
   void SetExecutionGranted(bool aGranted);
@@ -473,10 +472,6 @@ class WorkerPrivate : public RelativeTimeline {
 
   JSExecutionManager* GetExecutionManager() const;
   void SetExecutionManager(JSExecutionManager* aManager);
-
-  const Maybe<ServiceWorkerDescriptor> GetController();
-
-  void Control(const ServiceWorkerDescriptor& aServiceWorker);
 
   void ExecutionReady();
 
@@ -624,10 +619,9 @@ class WorkerPrivate : public RelativeTimeline {
     return GetServiceWorkerDescriptor().Scope();
   }
 
-  nsIURI* GetBaseURI() const {
-    AssertIsOnMainThread();
-    return mLoadInfo.mBaseURI;
-  }
+  // This value should never change after the script load completes. Before
+  // then, it may only be called on the main thread.
+  nsIURI* GetBaseURI() const { return mLoadInfo.mBaseURI; }
 
   void SetBaseURI(nsIURI* aBaseURI);
 
@@ -1047,6 +1041,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   void ReportUseCounters();
 
+  UniquePtr<ClientSource> CreateClientSource();
+
   Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetOwnerEmbedderPolicy() const;
 
   class EventTarget;
@@ -1070,7 +1066,7 @@ class WorkerPrivate : public RelativeTimeline {
   // This is the worker name for shared workers and dedicated workers.
   nsString mWorkerName;
 
-  WorkerType mWorkerType;
+  const WorkerType mWorkerType;
 
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
@@ -1193,8 +1189,6 @@ class WorkerPrivate : public RelativeTimeline {
     nsCOMPtr<nsITimer> mGCTimer;
 
     RefPtr<MemoryReporter> mMemoryReporter;
-
-    UniquePtr<ClientSource> mClientSource;
 
     // While running a nested event loop, whether a sync loop or a debugger
     // event loop we want to keep track of which global is running it, if any,
