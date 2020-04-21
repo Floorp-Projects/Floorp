@@ -25,9 +25,9 @@ const EXPECTED_REQUESTS = [
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
-      { fn: "startWorkerInner", file: TOP_FILE_NAME, line: 11 },
-      { fn: "startWorker", file: TOP_FILE_NAME, line: 8 },
-      { file: TOP_FILE_NAME, line: 4 },
+      { fn: "startWorkerInner", file: TOP_URL, line: 11 },
+      { fn: "startWorker", file: TOP_URL, line: 8 },
+      { file: TOP_URL, line: 4 },
     ],
   },
   {
@@ -36,8 +36,8 @@ const EXPECTED_REQUESTS = [
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
-      { fn: "importScriptsFromWorker", file: WORKER_FILE_NAME, line: 14 },
-      { file: WORKER_FILE_NAME, line: 10 },
+      { fn: "importScriptsFromWorker", file: WORKER_URL, line: 14 },
+      { file: WORKER_URL, line: 10 },
     ],
   },
   {
@@ -46,8 +46,8 @@ const EXPECTED_REQUESTS = [
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
-      { fn: "importScriptsFromWorker", file: WORKER_FILE_NAME, line: 14 },
-      { file: WORKER_FILE_NAME, line: 10 },
+      { fn: "importScriptsFromWorker", file: WORKER_URL, line: 14 },
+      { file: WORKER_URL, line: 10 },
     ],
   },
   {
@@ -56,8 +56,8 @@ const EXPECTED_REQUESTS = [
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
-      { fn: "startWorkerFromWorker", file: WORKER_FILE_NAME, line: 7 },
-      { file: WORKER_FILE_NAME, line: 3 },
+      { fn: "startWorkerFromWorker", file: WORKER_URL, line: 7 },
+      { file: WORKER_URL, line: 3 },
     ],
   },
   {
@@ -66,8 +66,8 @@ const EXPECTED_REQUESTS = [
     causeType: "xhr",
     causeUri: TOP_URL,
     stack: [
-      { fn: "createJSONRequest", file: WORKER_FILE_NAME, line: 22 },
-      { file: WORKER_FILE_NAME, line: 18 },
+      { fn: "createJSONRequest", file: WORKER_URL, line: 22 },
+      { file: WORKER_URL, line: 18 },
     ],
   },
   {
@@ -76,8 +76,8 @@ const EXPECTED_REQUESTS = [
     causeType: "fetch",
     causeUri: TOP_URL,
     stack: [
-      { fn: "fetchThing", file: WORKER_FILE_NAME, line: 29 },
-      { file: WORKER_FILE_NAME, line: 26 },
+      { fn: "fetchThing", file: WORKER_URL, line: 29 },
+      { file: WORKER_URL, line: 26 },
     ],
   },
 ];
