@@ -8,9 +8,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { objectToPropBag } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
-).BrowserUtils;
 // This is redefined below, for strange and unfortunate reasons.
 var { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
@@ -20,10 +17,6 @@ function Prompter() {
   // Note that EmbedPrompter clones this implementation.
 }
 
-/**
- * Implements nsIPromptService and nsIPromptFactory
- * @class Prompter
- */
 Prompter.prototype = {
   classID: Components.ID("{1c978d25-b37f-43a8-a2d6-0c7a239ead87}"),
   QueryInterface: ChromeUtils.generateQI([
@@ -62,227 +55,46 @@ Prompter.prototype = {
 
   /* ----------  nsIPromptService  ---------- */
 
-  /**
-   * Puts up an alert dialog with an OK button.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   */
   alert(domWin, title, text) {
     let p = this.pickPrompter({ domWin });
     p.alert(title, text);
   },
 
-  /**
-   * Puts up an alert dialog with an OK button.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   */
   alertBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     p.alert(...promptArgs);
   },
 
-  /**
-   * Puts up an alert dialog with an OK button.
-   *
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @returns {Promise} A promise which resolves when the prompt is dismissed.
-   */
-  asyncAlert(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.alert(...promptArgs);
-  },
-
-  /**
-   * Puts up an alert dialog with an OK button and a labeled checkbox.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   */
   alertCheck(domWin, title, text, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     p.alertCheck(title, text, checkLabel, checkValue);
   },
 
-  /**
-   * Puts up an alert dialog with an OK button and a labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   */
   alertCheckBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     p.alertCheck(...promptArgs);
   },
 
-  /**
-   * Puts up an alert dialog with an OK button and a labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ checked: Boolean }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncAlertCheck(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.alertCheck(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with OK and Cancel buttons.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   confirm(domWin, title, text) {
     let p = this.pickPrompter({ domWin });
     return p.confirm(title, text);
   },
 
-  /**
-   * Puts up a dialog with OK and Cancel buttons.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   confirmBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.confirm(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog with OK and Cancel buttons.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncConfirm(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.confirm(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   */
   confirmCheck(domWin, title, text, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.confirmCheck(title, text, checkLabel, checkValue);
   },
 
-  /**
-   * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel
-   */
   confirmCheckBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.confirmCheck(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncConfirmCheck(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.confirmCheck(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
-   *
-   * Buttons are numbered 0 - 2. Button 0 is the default button unless one of
-   * the Button Default Flags is specified.
-   *
-   * A button may use a predefined title, specified by one of the Button Title
-   * Flags values.  Each title value can be multiplied by a position value to
-   * assign the title to a particular button.  If BUTTON_TITLE_IS_STRING is
-   * used for a button, the string parameter for that button will be used.  If
-   * the value for a button position is zero, the button will not be shown.
-   *
-   * In general, flags is constructed per the following example:
-   *
-   * flags = (BUTTON_POS_0) * (BUTTON_TITLE_AAA) +
-   *         (BUTTON_POS_1) * (BUTTON_TITLE_BBB) +
-   *         BUTTON_POS_1_DEFAULT;
-   *
-   * where "AAA" and "BBB" correspond to one of the button titles.
-   *
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Number} flags - A combination of Button Flags.
-   * @param {String} button0 - Used when button 0 uses TITLE_IS_STRING.
-   * @param {String} button1 - Used when button 1 uses TITLE_IS_STRING.
-   * @param {String} button2 - Used when button 2 uses TITLE_IS_STRING.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        Null if no checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method
-   *        is called and the final checked state after this method returns.
-   * @returns {Number} The index of the button pressed.
-   */
   confirmEx(
     domWin,
     title,
@@ -307,141 +119,41 @@ Prompter.prototype = {
     );
   },
 
-  /**
-   * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Number} flags - A combination of Button Flags.
-   * @param {String} button0 - Used when button 0 uses TITLE_IS_STRING.
-   * @param {String} button1 - Used when button 1 uses TITLE_IS_STRING.
-   * @param {String} button2 - Used when button 2 uses TITLE_IS_STRING.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        Null if no checkbox.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Number} The index of the button pressed.
-   */
-  confirmExBC(browsingContext, modalType, ...promptArgs) {
+  confirmExBC(
+    browsingContext,
+    modalType,
+    title,
+    text,
+    flags,
+    button0,
+    button1,
+    button2,
+    checkLabel,
+    checkValue
+  ) {
     let p = this.pickPrompter({ browsingContext, modalType });
-    return p.confirmEx(...promptArgs);
+    return p.confirmEx(
+      title,
+      text,
+      flags,
+      button0,
+      button1,
+      button2,
+      checkLabel,
+      checkValue
+    );
   },
 
-  /**
-   * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Number} flags - A combination of Button Flags.
-   * @param {String} button0 - Used when button 0 uses TITLE_IS_STRING.
-   * @param {String} button1 - Used when button 1 uses TITLE_IS_STRING.
-   * @param {String} button2 - Used when button 2 uses TITLE_IS_STRING.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        Null if no checkbox.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ buttonNumClicked: Number, checked: Boolean }>>}
-   */
-  asyncConfirmEx(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.confirmEx(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with an edit field and an optional, labeled checkbox.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} value - Contains the default value for the dialog field
-   *        when this method is called (null value is ok).  Upon return, if
-   *        the user pressed OK, then this parameter contains a newly
-   *        allocated string value.
-   *        Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   prompt(domWin, title, text, value, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.nsIPrompt_prompt(title, text, value, checkLabel, checkValue);
   },
 
-  /**
-   * Puts up a dialog with an edit field and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} value - Contains the default value for the dialog field
-   *        when this method is called (null value is ok).  Upon return, if
-   *        the user pressed OK, then this parameter contains a newly
-   *        allocated string value.
-   *        Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   promptBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.nsIPrompt_prompt(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog with an edit field and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} value - The default value for the dialog text field.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean, value: String }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncPrompt(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.nsIPrompt_prompt(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with an edit field, a password field, and an optional,
-   * labeled checkbox.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} user - Contains the default value for the username
-   *        field when this method is called (null value is ok).
-   *        Upon return, if the user pressed OK, then this parameter contains
-   *        a newly allocated string value. Otherwise, the parameter's value
-   *        is unmodified.
-   * @param {Object} pass - Contains the default value for the password field
-   *        when this method is called (null value is ok). Upon return, if the
-   *        user pressed OK, this parameter contains a newly allocated string
-   *        value. Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   promptUsernameAndPassword(
     domWin,
     title,
@@ -462,74 +174,11 @@ Prompter.prototype = {
     );
   },
 
-  /**
-   * Puts up a dialog with an edit field, a password field, and an optional,
-   * labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} user - Contains the default value for the username
-   *        field when this method is called (null value is ok).
-   *        Upon return, if the user pressed OK, then this parameter contains
-   *        a newly allocated string value. Otherwise, the parameter's value
-   *        is unmodified.
-   * @param {Object} pass - Contains the default value for the password field
-   *        when this method is called (null value is ok). Upon return, if the
-   *        user pressed OK, this parameter contains a newly allocated string
-   *        value. Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   promptUsernameAndPasswordBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.nsIPrompt_promptUsernameAndPassword(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog with an edit field, a password field, and an optional,
-   * labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} user - Default value for the username field.
-   * @param {String} pass - Contains the default value for the password field.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean, user: String, pass: String }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncPromptUsernameAndPassword(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.nsIPrompt_promptUsernameAndPassword(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog with a password field and an optional, labeled checkbox.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} pass - Contains the default value for the password field
-   *        when this method is called (null value is ok). Upon return, if the
-   *        user pressed OK, this parameter contains a newly allocated string
-   *        value. Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   promptPassword(domWin, title, text, pass, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.nsIPrompt_promptPassword(
@@ -541,175 +190,31 @@ Prompter.prototype = {
     );
   },
 
-  /**
-   * Puts up a dialog with a password field and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {Object} pass - Contains the default value for the password field
-   *        when this method is called (null value is ok). Upon return, if the
-   *        user pressed OK, this parameter contains a newly allocated string
-   *        value. Otherwise, the parameter's value is unmodified.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   promptPasswordBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.nsIPrompt_promptPassword(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog with a password field and an optional, labeled checkbox.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String} pass - Contains the default value for the password field.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Boolean} checkValue - The initial checked state of the checkbox.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean, pass: String }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncPromptPassword(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.nsIPrompt_promptPassword(...promptArgs);
-  },
-
-  /**
-   * Puts up a dialog box which has a list box of strings from which the user
-   * may make a single selection.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String[]} list - The list of strings to display.
-   * @param {Object} selected - Contains the index of the selected item in the
-   *        list when this method returns true.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   select(domWin, title, text, list, selected) {
     let p = this.pickPrompter({ domWin });
     return p.select(title, text, list, selected);
   },
 
-  /**
-   * Puts up a dialog box which has a list box of strings from which the user
-   * may make a single selection.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String[]} list - The list of strings to display.
-   * @param {Object} selected - Contains the index of the selected item in the
-   *        list when this method returns true.
-   * @returns {Boolean} true for OK, false for Cancel.
-   */
   selectBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.select(...promptArgs);
   },
 
-  /**
-   * Puts up a dialog box which has a list box of strings from which the user
-   * may make a single selection.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {String} title - Text to appear in the title of the dialog.
-   * @param {String} text - Text to appear in the body of the dialog.
-   * @param {String[]} list - The list of strings to display.
-   * @returns {Promise<nsIPropertyBag<{ selected: Number, ok: Boolean  }>>}
-   *          A promise which resolves when the prompt is dismissed.
-   */
-  asyncSelect(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType, async: true });
-    return p.select(...promptArgs);
-  },
-
-  /**
-   * Requests a username and a password. Shows a dialog with username and
-   * password field, depending on flags also a domain field.
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {Number} level - Security level of the credential transmission.
-   *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo - Authentication information object.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean}
-   *          true: Authentication can proceed using the values
-   *          in the authInfo object.
-   *          false: Authentication should be cancelled, usually because the
-   *          user did not provide username/password.
-   */
   promptAuth(domWin, channel, level, authInfo, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.promptAuth(channel, level, authInfo, checkLabel, checkValue);
   },
 
-  /**
-   * Requests a username and a password. Shows a dialog with username and
-   * password field, depending on flags also a domain field.
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {Number} level - Security level of the credential transmission.
-   *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo - Authentication information object.
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after this method returns.
-   * @returns {Boolean}
-   *          true: Authentication can proceed using the values
-   *          in the authInfo object.
-   *          false: Authentication should be cancelled, usually because the
-   *          user did not provide username/password.
-   */
   promptAuthBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.promptAuth(...promptArgs);
   },
 
-  /**
-   * Asynchronously prompt the user for a username and password.
-   * This has largely the same semantics as promptUsernameAndPassword(),
-   * but returns immediately after calling and returns the entered
-   * data in a callback.
-   *
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {nsIAuthPromptCallback} callback - Called once the prompt has been
-   *        closed.
-   * @param {nsISupports} context
-   * @param {Number} level - Security level of the credential transmission.
-   *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after the callback.
-   * @returns {nsICancelable} Interface to cancel prompt.
-   */
   asyncPromptAuth(
     domWin,
     channel,
@@ -732,30 +237,6 @@ Prompter.prototype = {
     );
   },
 
-  /**
-   * Asynchronously prompt the user for a username and password.
-   * This has largely the same semantics as promptUsernameAndPassword(),
-   * but returns immediately after calling and returns the entered
-   * data in a callback.
-   *
-   * @param {BrowsingContext} browsingContext - The browsing context the
-   *        prompt should be opened for.
-   * @param {Number} modalType - The modal type of the prompt.
-   *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
-   * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {nsIAuthPromptCallback} callback - Called once the prompt has been
-   *        closed.
-   * @param {nsISupports} context
-   * @param {Number} level - Security level of the credential transmission.
-   *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after the callback.
-   * @returns {nsICancelable} Interface to cancel prompt.
-   */
   asyncPromptAuthBC(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType });
     return p.asyncPromptAuth(...promptArgs);
@@ -1002,12 +483,7 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function() {
 });
 
 class ModalPrompter {
-  constructor({
-    browsingContext = null,
-    domWin = null,
-    modalType = null,
-    async = false,
-  }) {
+  constructor({ browsingContext = null, domWin = null, modalType = null }) {
     if (browsingContext && domWin) {
       throw new Error("Pass either browsingContext or domWin");
     }
@@ -1030,8 +506,6 @@ class ModalPrompter {
 
     // Use given modal type or fallback to default
     this.modalType = modalType || ModalPrompter.defaultModalType;
-
-    this.async = async;
 
     this.QueryInterface = ChromeUtils.generateQI([
       Ci.nsIPrompt,
@@ -1074,31 +548,11 @@ class ModalPrompter {
 
   /* ---------- internal methods ---------- */
 
-  /**
-   * Synchronous wrapper around {@link ModalPrompter#openPrompt}
-   * @param {Object} args Prompt arguments. When prompt has been closed, they are updated to reflect the result state.
-   */
-  openPromptSync(args) {
-    let closed = false;
-    this.openPrompt(args)
-      .then(returnedArgs => {
-        if (returnedArgs) {
-          for (let key in returnedArgs) {
-            args[key] = returnedArgs[key];
-          }
-        }
-      })
-      .finally(() => {
-        closed = true;
-      });
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
-  }
-
-  async openPrompt(args) {
+  openPrompt(args) {
     if (!this.browsingContext) {
       // We don't have a browsing context, fallback to a window prompt.
       this.openWindowPrompt(null, args);
-      return args;
+      return;
     }
 
     // Select prompts are not part of CommonDialog
@@ -1125,7 +579,7 @@ class ModalPrompter {
       Cu.reportError(error);
       // We can't get the prompt actor, fallback to window prompt.
       this.openWindowPrompt(this._domWin, args);
-      return args;
+      return;
     }
 
     let docShell =
@@ -1166,27 +620,46 @@ class ModalPrompter {
         .generateUUID()
         .toString();
 
+    let closed = false;
+
     args.promptPrincipal = this._domWin.document.nodePrincipal;
     args.inPermitUnload = inPermitUnload;
     args._remoteId = id;
 
-    let returnedArgs;
+    actor
+      .sendQuery("Prompt:Open", args)
+      .then(returnedArgs => {
+        // Copy the response from the closed prompt into our args, it will be
+        // read by our caller.
+        if (!returnedArgs) {
+          return;
+        }
 
-    try {
-      returnedArgs = await actor.sendQuery("Prompt:Open", args);
-      if (returnedArgs && returnedArgs.promptAborted) {
-        throw Components.Exception(
-          "prompt aborted by user",
-          Cr.NS_ERROR_NOT_AVAILABLE
-        );
-      }
-    } finally {
-      if (windowUtils) {
-        windowUtils.leaveModalState();
-      }
-      PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
+        if (returnedArgs.promptAborted) {
+          throw Components.Exception(
+            "prompt aborted by user",
+            Cr.NS_ERROR_NOT_AVAILABLE
+          );
+        }
+
+        if (returnedArgs._remoteId !== id) {
+          return;
+        }
+
+        for (let key in returnedArgs) {
+          args[key] = returnedArgs[key];
+        }
+      })
+      .finally(() => {
+        closed = true;
+      });
+
+    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+
+    if (windowUtils) {
+      windowUtils.leaveModalState();
     }
-    return returnedArgs;
+    PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
   }
 
   /**
@@ -1217,31 +690,6 @@ class ModalPrompter {
       propBag
     );
     PromptUtils.propBagToObject(propBag, args);
-  }
-
-  /**
-   * Calls async prompt method and optionally runs promise chained task on
-   * result data. Converts result data to nsIPropertyBag.
-   * @param {Object} args - Prompt arguments.
-   * @param {Function} [task] - Function which is called with the modified
-   *  prompt args object once the prompt has been closed. Must return a
-   *  result object for the prompt caller.
-   * @returns {Promise<nsIPropertyBag>} - Resolves with a property bag holding the
-   * prompt result properties. Resolves once prompt has been closed.
-   */
-  async openPromptAsync(args, task) {
-    let result = await this.openPrompt(args);
-    // If task is not defined, the prompt method does not return
-    // anything. In this case we can resolve without value.
-    if (!task) {
-      return undefined;
-    }
-    // Convert task result to nsIPropertyBag and resolve
-    let taskResult = task(result);
-    if (!(taskResult instanceof Object)) {
-      throw new Error("task must return object");
-    }
-    return objectToPropBag(taskResult);
   }
 
   /*
@@ -1289,11 +737,7 @@ class ModalPrompter {
       text,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args);
-    }
-
-    return this.openPromptSync(args);
+    this.openPrompt(args);
   }
 
   alertCheck(title, text, checkLabel, checkValue) {
@@ -1301,28 +745,18 @@ class ModalPrompter {
       title = PromptUtils.getLocalizedString("Alert");
     }
 
-    // For sync calls checkValue is an XPCOM inout. XPCOM wraps primitves in
-    // objects for call by reference.
-    // The async version of this method uses call by value.
-    let checked = this.async ? checkValue : checkValue.value;
-
     let args = {
       promptType: "alertCheck",
       title,
       text,
       checkLabel,
-      checked,
+      checked: checkValue.value,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        checked: result.checked,
-      }));
-    }
+    this.openPrompt(args);
 
-    this.openPromptSync(args);
+    // Checkbox state always returned, even if cancel clicked.
     checkValue.value = args.checked;
-    return undefined;
   }
 
   confirm(title, text) {
@@ -1337,11 +771,9 @@ class ModalPrompter {
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({ ok: result.ok }));
-    }
+    this.openPrompt(args);
 
-    this.openPromptSync(args);
+    // Did user click Ok or Cancel?
     return args.ok;
   }
 
@@ -1350,28 +782,21 @@ class ModalPrompter {
       title = PromptUtils.getLocalizedString("ConfirmCheck");
     }
 
-    let checked = this.async ? checkValue : checkValue.value;
-
     let args = {
       promptType: "confirmCheck",
       title,
       text,
       checkLabel,
-      checked,
+      checked: checkValue.value,
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        // Checkbox state always returned, even if cancel clicked.
-        checked: result.checked,
-        // Did user click Ok or Cancel?
-        ok: result.ok,
-      }));
-    }
+    this.openPrompt(args);
 
-    this.openPromptSync(args);
+    // Checkbox state always returned, even if cancel clicked.
     checkValue.value = args.checked;
+
+    // Did user click Ok or Cancel?
     return args.ok;
   }
 
@@ -1394,7 +819,7 @@ class ModalPrompter {
       title,
       text,
       checkLabel,
-      checked: this.async ? checkValue : checkValue.value,
+      checked: checkValue.value,
       ok: false,
       buttonNumClicked: 1,
     };
@@ -1420,15 +845,12 @@ class ModalPrompter {
       }
     }
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        checked: !!result.checked,
-        buttonNumClicked: result.buttonNumClicked,
-      }));
-    }
+    this.openPrompt(args);
 
-    this.openPromptSync(args);
+    // Checkbox state always returned, even if cancel clicked.
     checkValue.value = args.checked;
+
+    // Get the number of the button the user clicked.
     return args.buttonNumClicked;
   }
 
@@ -1441,21 +863,13 @@ class ModalPrompter {
       promptType: "prompt",
       title,
       text,
-      value: this.async ? value : value.value,
+      value: value.value,
       checkLabel,
-      checked: this.async ? checkValue : checkValue.value,
+      checked: checkValue.value,
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        checked: !!result.checked,
-        value: result.value,
-        ok: result.ok,
-      }));
-    }
-
-    this.openPromptSync(args);
+    this.openPrompt(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -1485,23 +899,14 @@ class ModalPrompter {
       promptType: "promptUserAndPass",
       title,
       text,
-      user: this.async ? user : user.value,
-      pass: this.async ? pass : pass.value,
+      user: user.value,
+      pass: pass.value,
       checkLabel,
-      checked: this.async ? checkValue : checkValue.value,
+      checked: checkValue.value,
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        checked: result.checked,
-        user: result.user,
-        pass: result.pass,
-        ok: result.ok,
-      }));
-    }
-
-    this.openPromptSync(args);
+    this.openPrompt(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -1525,21 +930,13 @@ class ModalPrompter {
       promptType: "promptPassword",
       title,
       text,
-      pass: this.async ? pass : pass.value,
+      pass: pass.value,
       checkLabel,
-      checked: this.async ? checkValue : checkValue.value,
+      checked: checkValue.value,
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        checked: result.checked,
-        pass: result.pass,
-        ok: result.ok,
-      }));
-    }
-
-    this.openPromptSync(args);
+    this.openPrompt(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;
@@ -1565,14 +962,7 @@ class ModalPrompter {
       ok: false,
     };
 
-    if (this.async) {
-      return this.openPromptAsync(args, result => ({
-        selected: result.selected,
-        ok: result.ok,
-      }));
-    }
-
-    this.openPromptSync(args);
+    this.openPrompt(args);
 
     // Did user click Ok or Cancel?
     let ok = args.ok;

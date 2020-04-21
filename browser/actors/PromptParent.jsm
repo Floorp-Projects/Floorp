@@ -254,7 +254,7 @@ class PromptParent extends JSWindowActorParent {
    * @resolves {Object}
    *           The arguments returned from the window prompt.
    */
-  async openWindowPrompt(args, browsingContext = this.browsingContext) {
+  openWindowPrompt(args, browsingContext = this.browsingContext) {
     const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
     const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
     let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
@@ -296,6 +296,6 @@ class PromptParent extends JSWindowActorParent {
         PromptUtils.fireDialogEvent(win, "DOMModalDialogClosed", browser);
       }
     }
-    return args;
+    return Promise.resolve(args);
   }
 }
