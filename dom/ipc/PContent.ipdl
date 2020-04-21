@@ -1046,9 +1046,6 @@ parent:
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);
 
-    sync GetShowPasswordSetting()
-        returns (bool showPassword);
-
     // Notify the parent of the presence or absence of private docshells
     async PrivateDocShellsExist(bool aExist);
 
