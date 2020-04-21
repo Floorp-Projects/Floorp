@@ -55,8 +55,17 @@ class ImageDocument final : public MediaDocument,
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   bool ImageIsOverflowing() const {
-    return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
+    return ImageIsOverflowingHorizontally() || ImageIsOverflowingVertically();
   }
+
+  bool ImageIsOverflowingVertically() const {
+    return mImageHeight > mVisibleHeight;
+  }
+
+  bool ImageIsOverflowingHorizontally() const {
+    return mImageWidth > mVisibleWidth;
+  }
+
   bool ImageIsResized() const { return mImageIsResized; }
   // ShrinkToFit is called from xpidl methods and we don't have a good
   // way to mark those MOZ_CAN_RUN_SCRIPT yet.
@@ -107,8 +116,6 @@ class ImageDocument final : public MediaDocument,
   int32_t mImageWidth;
   int32_t mImageHeight;
 
-  bool mImageIsOverflowingHorizontally;
-  bool mImageIsOverflowingVertically;
   // mImageIsResized is true if the image is currently resized
   bool mImageIsResized;
   // mShouldResize is true if the image should be resized when it doesn't fit
