@@ -132,8 +132,6 @@ ImageDocument::ImageDocument()
       mVisibleHeight(0.0),
       mImageWidth(0),
       mImageHeight(0),
-      mImageIsOverflowingHorizontally(false),
-      mImageIsOverflowingVertically(false),
       mImageIsResized(false),
       mShouldResize(false),
       mFirstResize(false),
@@ -372,7 +370,7 @@ void ImageDocument::RestoreImage() {
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, true);
 
   if (ImageIsOverflowing()) {
-    if (!mImageIsOverflowingVertically) {
+    if (!ImageIsOverflowingVertically()) {
       SetModeClass(eOverflowingHorizontalOnly);
     } else {
       SetModeClass(eOverflowingVertical);
@@ -600,6 +598,9 @@ void ImageDocument::DefaultCheckOverflowing() {
 }
 
 nsresult ImageDocument::CheckOverflowing(bool changeState) {
+  const bool imageWasOverflowing = ImageIsOverflowing();
+  const bool imageWasOverflowingVertically = ImageIsOverflowingVertically();
+
   {
     nsPresContext* context = GetPresContext();
     if (!context) {
@@ -613,13 +614,10 @@ nsresult ImageDocument::CheckOverflowing(bool changeState) {
         nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.height);
   }
 
-  bool imageWasOverflowing = ImageIsOverflowing();
-  bool imageWasOverflowingVertically = mImageIsOverflowingVertically;
-  mImageIsOverflowingHorizontally = mImageWidth > mVisibleWidth;
-  mImageIsOverflowingVertically = mImageHeight > mVisibleHeight;
-  bool windowBecameBigEnough = imageWasOverflowing && !ImageIsOverflowing();
-  bool verticalOverflowChanged =
-      mImageIsOverflowingVertically != imageWasOverflowingVertically;
+  const bool windowBecameBigEnough =
+      imageWasOverflowing && !ImageIsOverflowing();
+  const bool verticalOverflowChanged =
+      imageWasOverflowingVertically != ImageIsOverflowingVertically();
 
   if (changeState || mShouldResize || mFirstResize || windowBecameBigEnough ||
       verticalOverflowChanged) {
@@ -628,7 +626,7 @@ nsresult ImageDocument::CheckOverflowing(bool changeState) {
     } else if (mImageIsResized || mFirstResize || windowBecameBigEnough) {
       RestoreImage();
     } else if (!mImageIsResized && verticalOverflowChanged) {
-      if (mImageIsOverflowingVertically) {
+      if (ImageIsOverflowingVertically()) {
         SetModeClass(eOverflowingVertical);
       } else {
         SetModeClass(eOverflowingHorizontalOnly);
