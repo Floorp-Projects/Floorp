@@ -137,9 +137,11 @@ function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
 }
 
 function checkConsoleAPICall(call, expected) {
-  if (expected.level != "trace" && expected.arguments) {
-    is(call.arguments.length, expected.arguments.length, "number of arguments");
-  }
+  is(
+    call.arguments?.length || 0,
+    expected.arguments?.length || 0,
+    "number of arguments"
+  );
 
   checkObject(call, expected);
 }
