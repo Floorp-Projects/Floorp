@@ -37,7 +37,7 @@ object FeatureFlags {
      *
      * https://github.com/mozilla-mobile/fenix/issues/9059
      */
-    val webPushIntegration = Config.channel.isNightlyOrDebug
+    const val webPushIntegration = true
 
     /**
      * Enables picture-in-picture feature
