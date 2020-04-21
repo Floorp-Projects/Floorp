@@ -49,7 +49,8 @@ VRFieldOfView::VRFieldOfView(nsISupports* aParent,
       mLeftDegrees(aSrc.leftDegrees) {}
 
 bool VRDisplayCapabilities::HasPosition() const {
-  return bool(mFlags & gfx::VRDisplayCapabilityFlags::Cap_Position);
+  return bool(mFlags & gfx::VRDisplayCapabilityFlags::Cap_Position) ||
+         bool(mFlags & gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated);
 }
 
 bool VRDisplayCapabilities::HasOrientation() const {
@@ -266,7 +267,9 @@ void VRPose::GetLinearVelocity(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv) {
   const bool valid =
-      bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position);
+      bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) ||
+      bool(mVRState.flags &
+           gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated);
   SetFloat32Array(aCx, this, aRetval, mLinearVelocity,
                   valid ? mVRState.pose.linearVelocity : nullptr, 3, aRv);
 }

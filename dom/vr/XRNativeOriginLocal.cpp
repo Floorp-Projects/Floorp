@@ -19,7 +19,8 @@ gfx::PointDouble3D XRNativeOriginLocal::GetPosition() {
   if (!mInitialPositionValid) {
     const gfx::VRHMDSensorState& sensorState = mDisplay->GetSensorState();
     gfx::PointDouble3D origin;
-    if (sensorState.flags & VRDisplayCapabilityFlags::Cap_Position) {
+    if (sensorState.flags & VRDisplayCapabilityFlags::Cap_Position ||
+        sensorState.flags & VRDisplayCapabilityFlags::Cap_PositionEmulated) {
       mInitialPosition.x = sensorState.pose.position[0];
       mInitialPosition.y = sensorState.pose.position[1];
       mInitialPosition.z = sensorState.pose.position[2];

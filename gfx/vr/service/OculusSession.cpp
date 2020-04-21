@@ -1266,7 +1266,7 @@ void OculusSession::UpdateControllerPose(VRSystemState& aState,
         controllerState.flags |=
             dom::GamepadCapabilityFlags::Cap_LinearAcceleration;
         controllerState.flags |=
-            dom::GamepadCapabilityFlags::Cap_TargetRaySpacePosition;
+            dom::GamepadCapabilityFlags::Cap_GripSpacePosition;
       }
 
       if (bNewController || trackingState.HandStatusFlags[handIdx] &
@@ -1409,7 +1409,8 @@ void OculusSession::UpdateControllerInputs(VRSystemState& aState,
 
       MOZ_ASSERT(axisIdx == kNumOculusAxes);
     }
-    SetControllerSelectionAndSqueezeFrameId(controllerState, aState.displayState.lastSubmittedFrameId);
+    SetControllerSelectionAndSqueezeFrameId(
+        controllerState, aState.displayState.lastSubmittedFrameId);
   }
 }
 
