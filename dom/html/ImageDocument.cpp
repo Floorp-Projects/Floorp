@@ -298,13 +298,11 @@ void ImageDocument::ShrinkToFit() {
     RefPtr<HTMLImageElement> img = HTMLImageElement::FromNode(mImageContent);
     uint32_t imageHeight = img->Height();
     nsDOMTokenList* classList = img->ClassList();
-    ErrorResult ignored;
     if (imageHeight > mVisibleHeight) {
-      classList->Add(NS_LITERAL_STRING("overflowingVertical"), ignored);
+      classList->Add(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
     } else {
-      classList->Remove(NS_LITERAL_STRING("overflowingVertical"), ignored);
+      classList->Remove(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
     }
-    ignored.SuppressException();
     return;
   }
 #if defined(MOZ_WIDGET_ANDROID)
@@ -433,33 +431,31 @@ void ImageDocument::OnHasTransparency() {
   }
 
   nsDOMTokenList* classList = mImageContent->ClassList();
-  mozilla::ErrorResult rv;
-  classList->Add(NS_LITERAL_STRING("transparent"), rv);
+  classList->Add(NS_LITERAL_STRING("transparent"), IgnoreErrors());
 }
 
 void ImageDocument::SetModeClass(eModeClasses mode) {
   nsDOMTokenList* classList = mImageContent->ClassList();
-  ErrorResult rv;
 
   if (mode == eShrinkToFit) {
-    classList->Add(NS_LITERAL_STRING("shrinkToFit"), rv);
+    classList->Add(NS_LITERAL_STRING("shrinkToFit"), IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("shrinkToFit"), rv);
+    classList->Remove(NS_LITERAL_STRING("shrinkToFit"), IgnoreErrors());
   }
 
   if (mode == eOverflowingVertical) {
-    classList->Add(NS_LITERAL_STRING("overflowingVertical"), rv);
+    classList->Add(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("overflowingVertical"), rv);
+    classList->Remove(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
   }
 
   if (mode == eOverflowingHorizontalOnly) {
-    classList->Add(NS_LITERAL_STRING("overflowingHorizontalOnly"), rv);
+    classList->Add(NS_LITERAL_STRING("overflowingHorizontalOnly"),
+                   IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("overflowingHorizontalOnly"), rv);
+    classList->Remove(NS_LITERAL_STRING("overflowingHorizontalOnly"),
+                      IgnoreErrors());
   }
-
-  rv.SuppressException();
 }
 
 void ImageDocument::OnSizeAvailable(imgIRequest* aRequest,
@@ -607,10 +603,6 @@ void ImageDocument::DefaultCheckOverflowing() {
 }
 
 nsresult ImageDocument::CheckOverflowing(bool changeState) {
-  /* Create a scope so that the ComputedStyle gets destroyed before we might
-   * call RebuildStyleData.  Also, holding onto pointers to the
-   * presentation through style resolution is potentially dangerous.
-   */
   {
     nsPresContext* context = GetPresContext();
     if (!context) {
@@ -647,7 +639,6 @@ nsresult ImageDocument::CheckOverflowing(bool changeState) {
     }
   }
   mFirstResize = false;
-
   return NS_OK;
 }
 
