@@ -10,8 +10,8 @@
     "message": "Des requêtes DNS chiffrées et plus sûres",
     "description": "Bold title is shown to ask the user if they wish to disable DoH"
   },
-  "doorhangerBody": {
-    "message": "Le respect de votre vie privée est important. Désormais, et lorsque cela est possible, Firefox envoie vos requêtes DNS de manière sécurisée vers un service fourni par Cloudflare pour vous protéger pendant votre navigation.",
+  "doorhangerBodyNew": {
+    "message": "Le respect de votre vie privée est important. Désormais, et lorsque cela est possible, Firefox envoie vos requêtes DNS de manière sécurisée vers un service fourni par un partenaire pour vous protéger pendant votre navigation.",
     "description": "This text is shown to ask the user if they wish to disable DoH"
   },
   "doorhangerButtonOk": {
