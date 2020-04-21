@@ -86,7 +86,7 @@ class SharedGL final {
     }
   }
 
-  static already_AddRefed<GLContextEGL> CreateContext() {
+  static already_AddRefed<GLContextEGL> CreateContextImpl(bool aUseGles) {
     sMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(!sContext);
 
@@ -94,10 +94,14 @@ class SharedGL final {
     EGLDisplay eglDisplay = egl->fGetDisplay(EGL_DEFAULT_DISPLAY);
     MOZ_ASSERT(eglDisplay == egl->Display());
     EGLConfig eglConfig;
-    CreateConfig(egl, &eglConfig, /* bpp */ 24, /* depth buffer? */ false);
+    CreateConfig(egl, &eglConfig, /* bpp */ 24, /* depth buffer? */ false,
+                 aUseGles);
     EGLint attributes[] = {LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2, LOCAL_EGL_NONE};
     EGLContext eglContext =
         egl->fCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, attributes);
+    if (!eglContext) {
+      return nullptr;
+    }
     RefPtr<GLContextEGL> gl = new GLContextEGL(
         egl, CreateContextFlags::NONE, SurfaceCaps::Any(),
         /* offscreen? */ false, eglConfig, EGL_NO_SURFACE, eglContext);
@@ -108,6 +112,14 @@ class SharedGL final {
 
     // Yield the current state made in constructor.
     UnmakeCurrent(gl);
+    return gl.forget();
+  }
+
+  static already_AddRefed<GLContextEGL> CreateContext() {
+    RefPtr<GLContextEGL> gl = CreateContextImpl(/* aUseGles */ false);
+    if (!gl) {
+      gl = CreateContextImpl(/* aUseGles */ true);
+    }
     return gl.forget();
   }
 
