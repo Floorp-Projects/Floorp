@@ -33,5 +33,6 @@ bootstrap(React, ReactDOM).then(connection => {
     getToolboxStore: () => {
       throw new Error("Cannot connect to Toolbox store when running Launchpad");
     },
+    panelWin: window,
   });
 });
