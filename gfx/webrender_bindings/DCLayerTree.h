@@ -37,7 +37,7 @@ namespace wr {
 // will never render a surface larger than this.
 #define VIRTUAL_SURFACE_SIZE (1024 * 1024)
 
-class DCLayer;
+class DCTile;
 class DCSurface;
 
 /**
@@ -168,7 +168,7 @@ class DCSurface {
   void DestroyTile(int32_t aX, int32_t aY);
 
   IDCompositionVisual2* GetVisual() const { return mVisual; }
-  DCLayer* GetLayer(int32_t aX, int32_t aY) const;
+  DCTile* GetTile(int32_t aX, int32_t aY) const;
 
   struct TileKey {
     TileKey(int32_t aX, int32_t aY) : mX(aX), mY(aY) {}
@@ -205,19 +205,15 @@ class DCSurface {
   wr::DeviceIntSize mTileSize;
   bool mIsOpaque;
   bool mAllocatedRectDirty;
-  std::unordered_map<TileKey, UniquePtr<DCLayer>, TileKeyHashFn> mDCLayers;
+  std::unordered_map<TileKey, UniquePtr<DCTile>, TileKeyHashFn> mDCTiles;
   wr::DeviceIntPoint mVirtualOffset;
   RefPtr<IDCompositionVirtualSurface> mVirtualSurface;
 };
 
-/**
- Represents a tile within a surface.
- TODO(gw): We should probably rename this to DCTile as a follow up.
- */
-class DCLayer {
+class DCTile {
  public:
-  explicit DCLayer(DCLayerTree* aDCLayerTree);
-  ~DCLayer();
+  explicit DCTile(DCLayerTree* aDCLayerTree);
+  ~DCTile();
   bool Initialize(int aX, int aY, wr::DeviceIntSize aSize, bool aIsOpaque);
 
   gfx::IntRect mValidRect;
