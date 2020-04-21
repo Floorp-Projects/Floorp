@@ -101,10 +101,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   Address stubAddress(uint32_t offset) const;
 
  private:
-#define DEFINE_OP(op) MOZ_MUST_USE bool emit##op();
-  CACHE_IR_UNSHARED_OPS(DEFINE_OP)
-#undef DEFINE_OP
-
   CACHE_IR_COMPILER_UNSHARED_GENERATED
 };
 
