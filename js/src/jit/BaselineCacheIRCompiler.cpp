@@ -340,16 +340,17 @@ bool BaselineCacheIRCompiler::emitGuardHasProxyHandler(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardSpecificObject() {
+bool BaselineCacheIRCompiler::emitGuardSpecificObject(ObjOperandId objId,
+                                                      uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  Address addr(stubAddress(reader.stubOffset()));
+  Address addr(stubAddress(expectedOffset));
   masm.branchPtr(Assembler::NotEqual, addr, obj, failure->label());
   return true;
 }

@@ -534,11 +534,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return offset;
   }
 
-  void reuseStubField(FieldOffset offset) {
-    MOZ_ASSERT(offset < stubDataSize_ / sizeof(uintptr_t));
-    buffer_.writeByte(offset);
-  }
-
   void writeShapeField(Shape* shape) {
     MOZ_ASSERT(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
@@ -606,6 +601,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeScalarTypeImm(Scalar::Type type) {
     MOZ_ASSERT(size_t(type) <= UINT8_MAX);
     buffer_.writeByte(uint8_t(type));
+  }
+  void writeMetaTwoByteKindImm(MetaTwoByteKind kind) {
+    static_assert(sizeof(MetaTwoByteKind) == sizeof(uint8_t),
+                  "MetaTwoByteKind must fit in a byte");
+    buffer_.writeByte(uint8_t(kind));
   }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
@@ -753,16 +753,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardGroup(obj, group);
   }
 
-  FieldOffset guardSpecificObject(ObjOperandId obj, JSObject* expected) {
-    assertSameCompartment(expected);
-    writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
-    return addStubField(uintptr_t(expected), StubField::Type::JSObject);
-  }
-
-  FieldOffset guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
+  void guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
     // Guard object is a specific function. This implies immutable fields on
     // the JSFunction struct itself are unchanged.
-    return guardSpecificObject(obj, expected);
+    guardSpecificObject(obj, expected);
   }
 
   ValOperandId loadArgumentFixedSlot(
@@ -851,20 +845,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   // These generate no code, but save the template object in a stub
   // field for BaselineInspector.
-  void metaNativeTemplateObject(JSObject* templateObject,
-                                FieldOffset calleeOffset) {
-    writeOp(CacheOp::MetaTwoByte);
-    buffer_.writeByte(uint32_t(MetaTwoByteKind::NativeTemplateObject));
-    reuseStubField(calleeOffset);
-    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
+  void metaNativeTemplateObject(JSFunction* callee, JSObject* templateObject) {
+    metaTwoByte_(MetaTwoByteKind::NativeTemplateObject, callee, templateObject);
   }
 
-  void metaScriptedTemplateObject(JSObject* templateObject,
-                                  FieldOffset calleeOffset) {
-    writeOp(CacheOp::MetaTwoByte);
-    buffer_.writeByte(uint32_t(MetaTwoByteKind::ScriptedTemplateObject));
-    reuseStubField(calleeOffset);
-    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
+  void metaScriptedTemplateObject(JSFunction* callee,
+                                  JSObject* templateObject) {
+    metaTwoByte_(MetaTwoByteKind::ScriptedTemplateObject, callee,
+                 templateObject);
   }
 
   CACHE_IR_WRITER_GENERATED
