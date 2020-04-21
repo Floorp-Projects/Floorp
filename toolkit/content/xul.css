@@ -305,6 +305,10 @@ tooltip {
 %endif
 }
 
+panel[type="arrow"][animating] {
+  pointer-events: none;
+}
+
 /******** grid **********/
 
 grid {

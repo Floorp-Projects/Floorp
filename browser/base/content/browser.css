@@ -1019,13 +1019,10 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   -moz-appearance: none;
   background: transparent;
   border: none;
-  -moz-font-smoothing-background-color: unset;
-
   /* The popup inherits -moz-image-region from the button, must reset it */
   -moz-image-region: auto;
 }
 
-/* Keep in sync with xul.css */
 @supports -moz-bool-pref("xul.panel-animations.enabled") {
 %ifdef MOZ_WIDGET_COCOA
   /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
