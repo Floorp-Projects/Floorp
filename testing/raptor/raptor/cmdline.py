@@ -189,7 +189,8 @@ def create_parser(mach_interface=False):
             help="path to ffmpeg executable (for `--video=true`)")
     add_arg('--browsertime-geckodriver', dest='browsertime_geckodriver',
             help="path to geckodriver executable")
-
+    add_arg('--verbose', dest="verbose", action="store_true", default=False,
+            help="Verbose output")
     add_logging_group(parser)
     return parser
 

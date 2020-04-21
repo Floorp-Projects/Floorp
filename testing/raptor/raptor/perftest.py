@@ -97,9 +97,11 @@ either Raptor or browsertime."""
         conditioned_profile_scenario='settled',
         extra_prefs={},
         project="mozilla-central",
+        verbose=False,
         **kwargs
     ):
         self._dirs_to_remove = []
+        self.verbose = verbose
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == "HOST_IP":
@@ -130,7 +132,8 @@ either Raptor or browsertime."""
             "disable_perf_tuning": disable_perf_tuning,
             "conditioned_profile_scenario": conditioned_profile_scenario,
             "extra_prefs": extra_prefs,
-            "project": project
+            "project": project,
+            "verbose": verbose
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
