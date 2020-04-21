@@ -135,13 +135,6 @@ const proto = {
       actor: this.actorID,
     };
 
-    // Unsafe objects must be treated carefully.
-    if (DevToolsUtils.isCPOW(this.obj)) {
-      // Cross-process object wrappers can't be accessed.
-      g.class = "CPOW";
-      return g;
-    }
-
     const unwrapped = DevToolsUtils.unwrap(this.obj);
     if (unwrapped === undefined) {
       // Objects belonging to an invisible-to-debugger compartment might be proxies,

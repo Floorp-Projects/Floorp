@@ -76,22 +76,16 @@ function waitForContentMessage(name) {
  * @param {String} name The message name. Should be one of the messages defined
  * in doc_frame_script.js
  * @param {Object} data Optional data to send along
- * @param {Object} objects Optional CPOW objects to send along
  * @param {Boolean} expectResponse If set to false, don't wait for a response
  * with the same name from the content script. Defaults to true.
  * @return {Promise} Resolves to the response data if a response is expected,
  * immediately resolves otherwise
  */
-function executeInContent(
-  name,
-  data = {},
-  objects = {},
-  expectResponse = true
-) {
+function executeInContent(name, data = {}, expectResponse = true) {
   info("Sending message " + name + " to content");
   const mm = gBrowser.selectedBrowser.messageManager;
 
-  mm.sendAsyncMessage(name, data, objects);
+  mm.sendAsyncMessage(name, data);
   if (expectResponse) {
     return waitForContentMessage(name);
   }

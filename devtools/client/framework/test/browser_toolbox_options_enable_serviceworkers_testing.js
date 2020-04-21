@@ -85,7 +85,7 @@ function toggleServiceWorkersTestingCheckbox() {
 function reload() {
   const promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  executeInContent("devtools:test:reload", {}, {}, false);
+  executeInContent("devtools:test:reload", {}, false);
   return promise;
 }
 

@@ -678,9 +678,9 @@ MessageManagerTunnel.prototype = {
 
     debug(`${name} inner -> outer, sync: ${sync}`);
     if (sync) {
-      return this.outerChildMM.sendSyncMessage(name, data, objects, principal);
+      return this.outerChildMM.sendSyncMessage(name, data);
     }
-    this.outerChildMM.sendAsyncMessage(name, data, objects, principal);
+    this.outerChildMM.sendAsyncMessage(name, data);
     return undefined;
   },
 
