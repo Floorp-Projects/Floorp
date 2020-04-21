@@ -38,7 +38,6 @@ class WebConsoleConnectionProxy {
     this._connecter = null;
 
     this._onPageError = this._onPageError.bind(this);
-    this._onLogMessage = this._onLogMessage.bind(this);
     this._onNetworkEvent = this._onNetworkEvent.bind(this);
     this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
     this._onTabNavigated = this._onTabNavigated.bind(this);
@@ -140,7 +139,6 @@ class WebConsoleConnectionProxy {
   _addWebConsoleFrontEventListeners() {
     this.webConsoleFront.on("networkEvent", this._onNetworkEvent);
     this.webConsoleFront.on("networkEventUpdate", this._onNetworkEventUpdate);
-    this.webConsoleFront.on("logMessage", this._onLogMessage);
     this.webConsoleFront.on("pageError", this._onPageError);
     this.webConsoleFront.on(
       "lastPrivateContextExited",
@@ -160,7 +158,6 @@ class WebConsoleConnectionProxy {
   _removeWebConsoleFrontEventListeners() {
     this.webConsoleFront.off("networkEvent", this._onNetworkEvent);
     this.webConsoleFront.off("networkEventUpdate", this._onNetworkEventUpdate);
-    this.webConsoleFront.off("logMessage", this._onLogMessage);
     this.webConsoleFront.off("pageError", this._onPageError);
     this.webConsoleFront.off(
       "lastPrivateContextExited",
@@ -180,22 +177,22 @@ class WebConsoleConnectionProxy {
    *          went wrong.
    */
   async _getCachedMessages() {
-    const messageTypes = ["PageError"];
-    if (this.webConsoleFront.traits.newCacheStructure) {
-      messageTypes.push("LogMessage");
-    }
+    const response = await this.webConsoleFront.getCachedMessages([
+      "PageError",
+    ]);
 
-    const response = await this.webConsoleFront.getCachedMessages(messageTypes);
-    if (this.webConsoleFront.traits.newCacheStructure) {
-      messageTypes.push("LogMessage");
-    }
     if (response.error) {
       throw new Error(
         `Web Console getCachedMessages error: ${response.error} ${response.message}`
       );
     }
 
-    return response.messages;
+    if (this.webConsoleFront.traits.newCacheStructure) {
+      return response.messages;
+    }
+
+    // On older server, we're also getting cached LogMessages, so we need to remove them
+    return response.messages.filter(message => message._type !== "LogMessage");
   }
 
   /**
@@ -221,22 +218,6 @@ class WebConsoleConnectionProxy {
       return;
     }
     packet.type = "pageError";
-    this.dispatchMessageAdd(packet);
-  }
-
-  /**
-   * The "logMessage" message type handler. We redirect any message to the UI
-   * for displaying.
-   *
-   * @private
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onLogMessage(packet) {
-    if (!this.webConsoleUI) {
-      return;
-    }
-    packet.type = "logMessage";
     this.dispatchMessageAdd(packet);
   }
 
