@@ -628,7 +628,7 @@ public class WebExtensionController {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ EnableSource.USER })
+    @IntDef({ EnableSource.USER, EnableSource.APP })
     @interface EnableSources {}
 
     /** Contains the possible values for the <code>source</code> parameter in {@link #enable} and
