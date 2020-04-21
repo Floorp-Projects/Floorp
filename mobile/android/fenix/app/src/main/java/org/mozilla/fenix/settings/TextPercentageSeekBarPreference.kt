@@ -37,6 +37,8 @@ import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 
 import java.text.NumberFormat
+import kotlin.math.PI
+import kotlin.math.roundToInt
 
 /**
  * Preference based on android.preference.SeekBarPreference but uses support preference as a base.
@@ -54,6 +56,7 @@ import java.text.NumberFormat
  * Other [SeekBar] specific attributes (e.g. `title, summary, defaultValue, min, max`)
  * can be set directly on the preference widget layout.
  */
+@SuppressWarnings("LargeClass")
 class TextPercentageSeekBarPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -268,6 +271,9 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         updateExampleTextValue(mSeekBarValue)
         updateLabelValue(mSeekBarValue)
         mSeekBar?.isEnabled = isEnabled
+        mSeekBar?.let {
+            it.thumbOffset = it.thumb.intrinsicWidth.div(2 * PI).roundToInt()
+        }
     }
 
     override fun onSetInitialValue(initialValue: Any?) {
