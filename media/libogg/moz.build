@@ -14,11 +14,17 @@ EXPORTS.ogg += [
     'include/ogg/os_types.h',
 ]
 
-UNIFIED_SOURCES += [
+all_sources = [
     'src/ogg_alloc.c',
     'src/ogg_bitwise.c',
     'src/ogg_framing.c',
 ]
+
+UNIFIED_SOURCES += all_sources
+
+if CONFIG['MOZ_WASM_SANDBOXING_OGG']:
+    SANDBOXED_WASM_LIBRARY_NAME = 'oggwasm'
+    WASM_SOURCES += all_sources
 
 FINAL_LIBRARY = 'gkmedias'
 
