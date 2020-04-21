@@ -2093,20 +2093,23 @@ bool IonCacheIRCompiler::emitReturnFromIC() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardAndGetIterator() {
+bool IonCacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
+                                                 uint32_t iterOffset,
+                                                 uint32_t enumeratorsAddrOffset,
+                                                 ObjOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
   AutoScratchRegister niScratch(allocator, masm);
 
   PropertyIteratorObject* iterobj =
-      &objectStubField(reader.stubOffset())->as<PropertyIteratorObject>();
+      &objectStubField(iterOffset)->as<PropertyIteratorObject>();
   NativeIterator** enumerators =
-      rawWordStubField<NativeIterator**>(reader.stubOffset());
+      rawWordStubField<NativeIterator**>(enumeratorsAddrOffset);
 
-  Register output = allocator.defineRegister(masm, reader.objOperandId());
+  Register output = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

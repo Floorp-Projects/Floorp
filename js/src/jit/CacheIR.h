@@ -581,6 +581,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                   "GuardClassKind must fit in a byte");
     buffer_.writeByte(uint8_t(kind));
   }
+  void writeValueTypeImm(ValueType type) {
+    static_assert(sizeof(ValueType) == sizeof(uint8_t),
+                  "ValueType must fit in uint8_t");
+    buffer_.writeByte(uint8_t(type));
+  }
   void writeJSWhyMagicImm(JSWhyMagic whyMagic) {
     static_assert(JS_WHY_MAGIC_COUNT <= UINT8_MAX,
                   "JSWhyMagic must fit in uint8_t");
@@ -614,6 +619,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writePointer(JS_FUNC_TO_DATA_PTR(void*, native));
   }
   void writeStaticStringImm(const char* str) { writePointer(str); }
+
+  uint32_t newOperandId() { return nextOperandId_++; }
 
   CacheIRWriter(const CacheIRWriter&) = delete;
   CacheIRWriter& operator=(const CacheIRWriter&) = delete;
@@ -688,13 +695,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return ObjOperandId(val.id());
   }
 
-  Int32OperandId guardToBoolean(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToBoolean, val);
-    writeOperandId(res);
-    return res;
-  }
-
   StringOperandId guardToString(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardToString, val);
     return StringOperandId(val.id());
@@ -710,71 +710,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return BigIntOperandId(val.id());
   }
 
-  Int32OperandId guardToInt32(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToInt32, val);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardToInt32Index(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToInt32Index, val);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardToTypedArrayIndex(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToTypedArrayIndex, val);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardToInt32ModUint32(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToInt32ModUint32, val);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardToUint8Clamped(ValOperandId val) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardToUint8Clamped, val);
-    writeOperandId(res);
-    return res;
-  }
-
   NumberOperandId guardIsNumber(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNumber, val);
     return NumberOperandId(val.id());
-  }
-
-  void guardType(ValOperandId val, ValueType type) {
-    writeOpWithOperandId(CacheOp::GuardType, val);
-    static_assert(sizeof(type) == sizeof(uint8_t),
-                  "JS::ValueType should fit in a byte");
-    buffer_.writeByte(uint32_t(type));
-  }
-
-  void guardIsObjectOrNull(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsObjectOrNull, val);
-  }
-
-  void guardIsNullOrUndefined(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsNullOrUndefined, val);
-  }
-
-  void guardIsNotNullOrUndefined(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsNotNullOrUndefined, val);
-  }
-
-  void guardIsNull(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsNull, val);
-  }
-
-  void guardIsUndefined(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsUndefined, val);
   }
 
   void guardShapeForClass(ObjOperandId obj, Shape* shape) {
@@ -840,77 +778,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return guardSpecificObject(obj, expected);
   }
 
-  Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetIndexFromString, str);
-    writeOperandId(res);
-    return res;
-  }
-
-  Int32OperandId guardAndGetInt32FromString(StringOperandId str) {
-    Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetInt32FromString, str);
-    writeOperandId(res);
-    return res;
-  }
-
-  NumberOperandId guardAndGetNumberFromString(StringOperandId str) {
-    NumberOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
-    writeOperandId(res);
-    return res;
-  }
-
-  NumberOperandId guardAndGetNumberFromBoolean(Int32OperandId boolean) {
-    NumberOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetNumberFromBoolean, boolean);
-    writeOperandId(res);
-    return res;
-  }
-
-  ObjOperandId guardAndGetIterator(ObjOperandId obj,
-                                   PropertyIteratorObject* iter,
-                                   NativeIterator** enumeratorsAddr) {
-    ObjOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardAndGetIterator, obj);
-    addStubField(uintptr_t(iter), StubField::Type::JSObject);
-    addStubField(uintptr_t(enumeratorsAddr), StubField::Type::RawWord);
-    writeOperandId(res);
-    return res;
-  }
-
   void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
     writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);
     writeOperandId(rhs);
-  }
-
-  ObjOperandId loadObject(JSObject* obj) {
-    assertSameCompartment(obj);
-    ObjOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadObject, res);
-    addStubField(uintptr_t(obj), StubField::Type::JSObject);
-    return res;
-  }
-
-  ObjOperandId loadProto(ObjOperandId obj) {
-    ObjOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadProto, obj);
-    writeOperandId(res);
-    return res;
-  }
-
-  ObjOperandId loadEnclosingEnvironment(ObjOperandId obj) {
-    ObjOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadEnclosingEnvironment, obj);
-    writeOperandId(res);
-    return res;
-  }
-
-  ObjOperandId loadWrapperTarget(ObjOperandId obj) {
-    ObjOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadWrapperTarget, obj);
-    writeOperandId(res);
-    return res;
   }
 
   Int32OperandId truncateDoubleToUInt32(ValOperandId val) {

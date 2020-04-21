@@ -1723,18 +1723,20 @@ bool BaselineCacheIRCompiler::emitLoadArgumentDynamicSlot() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardAndGetIterator() {
+bool BaselineCacheIRCompiler::emitGuardAndGetIterator(
+    ObjOperandId objId, uint32_t iterOffset, uint32_t enumeratorsAddrOffset,
+    ObjOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register obj = allocator.useRegister(masm, objId);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
   AutoScratchRegister niScratch(allocator, masm);
 
-  Address iterAddr(stubAddress(reader.stubOffset()));
-  Address enumeratorsAddr(stubAddress(reader.stubOffset()));
+  Address iterAddr(stubAddress(iterOffset));
+  Address enumeratorsAddr(stubAddress(enumeratorsAddrOffset));
 
-  Register output = allocator.defineRegister(masm, reader.objOperandId());
+  Register output = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
