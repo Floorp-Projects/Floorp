@@ -5671,11 +5671,7 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult(ValOperandId valId) {
 }
 
 // This op generates no code. It is consumed by BaselineInspector.
-bool CacheIRCompiler::emitMetaTwoByte() {
-  mozilla::Unused << reader.readByte();  // meta kind
-  mozilla::Unused << reader.readByte();  // payload byte 1
-  mozilla::Unused << reader.readByte();  // payload byte 2
-
+bool CacheIRCompiler::emitMetaTwoByte(MetaTwoByteKind, uint32_t, uint32_t) {
   return true;
 }
 

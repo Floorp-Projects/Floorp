@@ -5234,10 +5234,9 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
-  FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
+    writer.guardSpecificFunction(calleeObjId, calleeFunc);
   } else {
     // Guard that object is a scripted function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
@@ -5257,7 +5256,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
 
   if (templateObj) {
     MOZ_ASSERT(isSpecialized);
-    writer.metaScriptedTemplateObject(templateObj, calleeOffset);
+    writer.metaScriptedTemplateObject(calleeFunc, templateObj);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
@@ -5400,10 +5399,9 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
-  FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
+    writer.guardSpecificFunction(calleeObjId, calleeFunc);
     writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
   } else {
     // Guard that object is a native function
@@ -5424,7 +5422,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
   if (templateObj) {
     MOZ_ASSERT(isSpecialized);
-    writer.metaNativeTemplateObject(templateObj, calleeOffset);
+    writer.metaNativeTemplateObject(calleeFunc, templateObj);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;

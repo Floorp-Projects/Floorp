@@ -242,6 +242,7 @@
 
 - name: GuardSpecificObject
   shared: false
+  gen_boilerplate: true
   operands:
     obj: ObjId
     expected: ObjectField
@@ -787,9 +788,11 @@
 # Meta ops generate no code, but contain data for BaselineInspector.
 - name: MetaTwoByte
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
     kind: MetaTwoByteKindImm
-    offset: FieldOffset
+    functionObject: ObjectField
     templateObject: ObjectField
 
 - name: LoadFixedSlotResult
