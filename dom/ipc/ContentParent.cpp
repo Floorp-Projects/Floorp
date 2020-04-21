@@ -137,6 +137,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
+// Needed for NewJavaScriptChild and ReleaseJavaScriptChild
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -328,7 +329,6 @@ using namespace mozilla::intl;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::net;
-using namespace mozilla::jsipc;
 using namespace mozilla::psm;
 using namespace mozilla::widget;
 using mozilla::loader::PScriptCacheParent;
@@ -599,10 +599,6 @@ static bool sHasSeenPrivateDocShell = false;
 // case between StartUp() and ShutDown().
 static bool sCanLaunchSubprocesses;
 
-// Set to true if the DISABLE_UNSAFE_CPOW_WARNINGS environment variable is
-// set.
-static bool sDisableUnsafeCPOWWarnings = false;
-
 // Set to true when the first content process gets created.
 static bool sCreatedFirstContentProcess = false;
 
@@ -662,8 +658,6 @@ void ContentParent::StartUp() {
 
   BackgroundChild::Startup();
   ClientManager::Startup();
-
-  sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = MakeUnique<SandboxBrokerPolicyFactory>();
@@ -1546,7 +1540,7 @@ void ContentParent::ShutDownMessageManager() {
 
   mMessageManager->ReceiveMessage(mMessageManager, nullptr,
                                   CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                                  nullptr, nullptr, nullptr, IgnoreErrors());
+                                  nullptr, nullptr, IgnoreErrors());
 
   mMessageManager->SetOsPid(-1);
   mMessageManager->Disconnect();
@@ -1910,14 +1904,6 @@ void ContentParent::NotifyTabDestroyed(const TabId& aTabId,
       !TryToRecycle()) {
     MaybeAsyncSendShutDownMessage();
   }
-}
-
-jsipc::CPOWManager* ContentParent::GetCPOWManager() {
-  if (PJavaScriptParent* p =
-          LoneManagedOrNullAsserts(ManagedPJavaScriptParent())) {
-    return CPOWManagerFor(p);
-  }
-  return nullptr;
 }
 
 TestShellParent* ContentParent::CreateTestShell() {
@@ -3165,11 +3151,11 @@ mozilla::ipc::IPCResult ContentParent::RecvInitBackground(
 
 mozilla::jsipc::PJavaScriptParent* ContentParent::AllocPJavaScriptParent() {
   MOZ_ASSERT(ManagedPJavaScriptParent().IsEmpty());
-  return NewJavaScriptParent();
+  return jsipc::NewJavaScriptParent();
 }
 
 bool ContentParent::DeallocPJavaScriptParent(PJavaScriptParent* parent) {
-  ReleaseJavaScriptParent(parent);
+  jsipc::ReleaseJavaScriptParent(parent);
   return true;
 }
 
@@ -3896,56 +3882,34 @@ mozilla::ipc::IPCResult ContentParent::RecvNotificationEvent(
 
 mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals) {
+    nsTArray<StructuredCloneData>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvSyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvSyncMessage", aMsg, aData);
 
-  CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
 
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aRetvals,
-                        IgnoreErrors());
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvRpcMessage(
-    const nsString& aMsg, const ClonedMessageData& aData,
-    nsTArray<CpowEntry>&& aCpows, nsTArray<StructuredCloneData>* aRetvals) {
-  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvRpcMessage",
-                                             OTHER, aMsg);
-  MMPrinter::Print("ContentParent::RecvRpcMessage", aMsg, aData);
-
-  CrossProcessCpowHolder cpows(this, aCpows);
-  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
-  if (ppm) {
-    ipc::StructuredCloneData data;
-    ipc::UnpackClonedMessageDataForParent(aData, data);
-
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aRetvals,
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, aRetvals,
                         IgnoreErrors());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
-    const nsString& aMsg, nsTArray<CpowEntry>&& aCpows,
-    const ClonedMessageData& aData) {
+    const nsString& aMsg, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvAsyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvAsyncMessage", aMsg, aData);
 
-  CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
 
-    ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, &cpows, nullptr,
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, nullptr,
                         IgnoreErrors());
   }
   return IPC_OK();
@@ -4140,20 +4104,13 @@ bool ContentParent::DoLoadMessageManagerScript(const nsAString& aURL,
   return SendLoadProcessScript(nsString(aURL));
 }
 
-nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
-                                           const nsAString& aMessage,
-                                           StructuredCloneData& aHelper,
-                                           JS::Handle<JSObject*> aCpows) {
+nsresult ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
+                                           StructuredCloneData& aHelper) {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForParent(this, aHelper, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
-  nsTArray<CpowEntry> cpows;
-  jsipc::CPOWManager* mgr = GetCPOWManager();
-  if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  if (!SendAsyncMessage(nsString(aMessage), cpows, data)) {
+  if (!SendAsyncMessage(nsString(aMessage), data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

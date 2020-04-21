@@ -940,12 +940,7 @@ parent:
     // PrefService message
     sync GetGfxVars() returns (GfxVarUpdate[] vars);
 
-    sync SyncMessage(nsString aMessage, ClonedMessageData aData,
-                     CpowEntry[] aCpows)
-      returns (StructuredCloneData[] retval);
-
-    nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                                        CpowEntry[] aCpows)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (StructuredCloneData[] retval);
 
     async ShowAlert(nsIAlertNotification alert);
@@ -1556,8 +1551,7 @@ both:
                                            BrowsingContextTransaction aTransaction,
                                            uint64_t aEpoch);
 
-    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       ClonedMessageData aData);
+    async AsyncMessage(nsString aMessage, ClonedMessageData aData);
 
     /**
      * Notify `push-subscription-modified` observers in the parent and child.

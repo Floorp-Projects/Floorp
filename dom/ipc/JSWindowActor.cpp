@@ -323,7 +323,6 @@ void JSWindowActor::ReceiveMessageOrQuery(
     JS::Handle<JS::Value> aData, ErrorResult& aRv) {
   // The argument which we want to pass to IPC.
   RootedDictionary<ReceiveMessageArgument> argument(aCx);
-  argument.mObjects = JS_NewPlainObject(aCx);
   argument.mTarget = this;
   argument.mName = aMetadata.messageName();
   argument.mData = aData;
