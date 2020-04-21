@@ -50,6 +50,16 @@
         });
       }
 
+      function performFavicon() {
+        return new Promise(function (resolve) {
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = "favicon_request";
+          document.querySelector("head").appendChild(link);
+          link.addEventListener("devtools:test:favicon", resolve);
+        });
+      }
+
       function performLazyLoadingImage() {
         return new Promise(function (resolve) {
           const lazyImgs = document.querySelectorAll("img[loading='lazy']");
@@ -75,6 +85,7 @@
         await performFetchRequest();
         await performPromiseFetchRequest();
         await performTimeoutFetchRequest();
+        await performFavicon();
         await performLazyLoadingImage();
 
         // Finally, send a beacon request

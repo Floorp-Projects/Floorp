@@ -6,7 +6,7 @@
    verifyRequestItemTarget, waitFor, waitForDispatch, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
    testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData,
-   toggleBlockedUrl */
+   toggleBlockedUrl, registerFaviconNotifier */
 
 "use strict";
 
@@ -14,6 +14,10 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this
+);
+
+const { LinkHandlerParent } = ChromeUtils.import(
+  "resource:///actors/LinkHandlerParent.jsm"
 );
 
 const {
@@ -1131,26 +1135,33 @@ function validateRequests(requests, monitor) {
       // if "stack" is array, check the details about the top stack frames
       if (Array.isArray(stack)) {
         stack.forEach((frame, j) => {
-          is(
-            stacktrace[j].functionName,
-            frame.fn,
-            `Request #${i} has the correct function on JS stack frame #${j}`
-          );
-          is(
-            stacktrace[j].filename.split("/").pop(),
-            frame.file.split("/").pop(),
-            `Request #${i} has the correct file on JS stack frame #${j}`
-          );
-          is(
-            stacktrace[j].lineNumber,
-            frame.line,
-            `Request #${i} has the correct line number on JS stack frame #${j}`
-          );
-          is(
-            stacktrace[j].asyncCause,
-            frame.asyncCause,
-            `Request #${i} has the correct async cause on JS stack frame #${j}`
-          );
+          // If the `fn` is "*", it means the request is triggered from chrome
+          // resources, e.g. `resource:///modules/XX.jsm`, so we skip checking
+          // the function name for now (bug 1280266).
+          if (frame.file.startsWith("resource:///")) {
+            todo(false, "Requests from chrome resource should not be included");
+          } else {
+            is(
+              stacktrace[j].functionName,
+              frame.fn,
+              `Request #${i} has the correct function on JS stack frame #${j}`
+            );
+            is(
+              stacktrace[j].filename.split("/").pop(),
+              frame.file.split("/").pop(),
+              `Request #${i} has the correct file on JS stack frame #${j}`
+            );
+            is(
+              stacktrace[j].lineNumber,
+              frame.line,
+              `Request #${i} has the correct line number on JS stack frame #${j}`
+            );
+            is(
+              stacktrace[j].asyncCause,
+              frame.asyncCause,
+              `Request #${i} has the correct async cause on JS stack frame #${j}`
+            );
+          }
         });
       }
     } else {
@@ -1223,6 +1234,27 @@ async function toggleBlockedUrl(element, monitor, store, action = "block") {
 
 function clickElement(element, monitor) {
   EventUtils.synthesizeMouseAtCenter(element, {}, monitor.panelWin);
+}
+
+/**
+ * Register a listener to be notified when a favicon finished loading and
+ * dispatch a "devtools:test:favicon" event to the favicon's link element.
+ *
+ * @param {Browser} browser
+ *        Target browser to observe the favicon load.
+ */
+function registerFaviconNotifier(browser) {
+  const listener = async (name, data) => {
+    if (name == "SetIcon" || name == "SetFailedIcon") {
+      await SpecialPowers.spawn(browser, [], async () => {
+        content.document
+          .querySelector("link[rel='icon']")
+          .dispatchEvent(new content.CustomEvent("devtools:test:favicon"));
+      });
+      LinkHandlerParent.removeListenerForTests(listener);
+    }
+  };
+  LinkHandlerParent.addListenerForTests(listener);
 }
 
 /**
