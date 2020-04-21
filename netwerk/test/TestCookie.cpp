@@ -5,6 +5,7 @@
 
 #include "TestCommon.h"
 #include "gtest/gtest.h"
+#include "nsContentUtils.h"
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
 #include "nsICookie.h"
@@ -124,7 +125,15 @@ void GetACookie(nsICookieService* aCookieService, const char* aSpec,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aSpec);
 
-  Unused << aCookieService->GetCookieStringFromHttp(uri, nullptr, aCookie);
+  nsCOMPtr<nsIIOService> service = do_GetIOService();
+
+  nsCOMPtr<nsIChannel> channel;
+  Unused << service->NewChannelFromURI(
+      uri, nullptr, nsContentUtils::GetSystemPrincipal(),
+      nsContentUtils::GetSystemPrincipal(), 0, nsIContentPolicy::TYPE_DOCUMENT,
+      getter_AddRefs(channel));
+
+  Unused << aCookieService->GetCookieStringFromHttp(uri, channel, aCookie);
 }
 
 // The cookie string is returned via aCookie.
@@ -188,6 +197,7 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   // XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by
   // default"
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
+  Preferences::SetBool("network.cookieJarSettings.unblocked_for_testing", true);
 }
 
 TEST(TestCookie, TestCookieMain)
