@@ -252,6 +252,9 @@ already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
   Unused << aThread->IsOnCurrentThread(&onCurrentThread);
 
   if (onCurrentThread) {
+    MOZ_ASSERT(
+        !sCurrentThreadTLS.get(),
+        "There can only be a single EventTargetWrapper available on a thread");
     sCurrentThreadTLS.set(wrapper);
     return wrapper.forget();
   }
@@ -259,26 +262,14 @@ already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
   // Set the thread-local sCurrentThreadTLS to point to the wrapper on the
   // target thread. This ensures that sCurrentThreadTLS is as expected by
   // AbstractThread::GetCurrent() on the target thread.
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("AbstractThread::CreateXPCOMThreadWrapper",
-                             [wrapper]() { sCurrentThreadTLS.set(wrapper); });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "AbstractThread::CreateXPCOMThreadWrapper", [wrapper]() {
+        MOZ_ASSERT(!sCurrentThreadTLS.get(),
+                   "There can only be a single EventTargetWrapper available on "
+                   "a thread");
+        sCurrentThreadTLS.set(wrapper);
+      });
   aThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   return wrapper.forget();
 }
-
-/* static  */
-already_AddRefed<AbstractThread> AbstractThread::CreateEventTargetWrapper(
-    nsIEventTarget* aEventTarget, bool aRequireTailDispatch) {
-  MOZ_ASSERT(aEventTarget);
-  nsCOMPtr<nsIThread> thread(do_QueryInterface(aEventTarget));
-  Unused << thread;  // simpler than DebugOnly<nsCOMPtr<nsIThread>>
-  MOZ_ASSERT(!thread,
-             "nsIThread should be wrapped by CreateXPCOMThreadWrapper!");
-
-  RefPtr<EventTargetWrapper> wrapper =
-      new EventTargetWrapper(aEventTarget, aRequireTailDispatch);
-
-  return wrapper.forget();
-}
-
 }  // namespace mozilla
