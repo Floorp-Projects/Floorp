@@ -1,0 +1,3 @@
+# basic metadata
+include MANIFEST.in LICENSE NEWS README.md versioneer.py
+include src/ecdsa/_version.py

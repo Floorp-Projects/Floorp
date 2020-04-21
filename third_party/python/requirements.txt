@@ -38,6 +38,9 @@ fluent.syntax==0.15.1 \
     --hash=sha256:3d3c95b9de82df498172d9447576e787e809b753c6f7f5acf64a9ef8d7782c81 \
     --hash=sha256:e95bb3abfe7cf51b2c6d1e92d57335f07c737ba57bbbba18e57618bd15f78d4b \
     # via compare-locales
+ecdsa==0.15 \
+    --hash=sha256:867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061 \
+    --hash=sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277
 jsmin==2.1.0 \
     --hash=sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56 \
     # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
