@@ -123,14 +123,13 @@ class WebElementEventTarget {
     });
   }
 
-  receiveMessage({ name, data, objects }) {
+  receiveMessage({ name, data }) {
     if (name != "Marionette:DOM:OnEvent") {
       return;
     }
 
     let ev = {
       type: data.type,
-      target: objects.target,
     };
     this.dispatchEvent(ev);
   }
@@ -208,7 +207,7 @@ class ContentEventObserverService {
 
   handleEvent({ type, target }) {
     logger.trace(`Received DOM event ${type}`);
-    this.sendAsyncMessage("Marionette:DOM:OnEvent", { type }, { target });
+    this.sendAsyncMessage("Marionette:DOM:OnEvent", { type });
   }
 }
 this.ContentEventObserverService = ContentEventObserverService;
