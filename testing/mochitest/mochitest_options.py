@@ -11,6 +11,7 @@ from urlparse import urlparse
 import json
 import os
 import tempfile
+import sys
 
 from mozprofile import DEFAULT_PORTS
 import mozinfo
@@ -632,7 +633,12 @@ class MochitestArguments(ArgumentContainer):
         if parser.app != 'android':
             if options.app is None:
                 if build_obj:
-                    options.app = build_obj.get_binary_path()
+                    from mozbuild.base import BinaryNotFoundException
+                    try:
+                        options.app = build_obj.get_binary_path()
+                    except BinaryNotFoundException as e:
+                        print('{}\n\n{}\n'.format(e, e.help()))
+                        sys.exit(1)
                 else:
                     parser.error(
                         "could not find the application path, --appname must be specified")

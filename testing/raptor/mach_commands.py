@@ -9,6 +9,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import json
+import logging
 import os
 import shutil
 import socket
@@ -18,7 +19,11 @@ import sys
 import mozfile
 from mach.decorators import Command, CommandProvider
 from mozboot.util import get_state_dir
-from mozbuild.base import MachCommandBase, MozbuildObject
+from mozbuild.base import (
+    MachCommandBase,
+    MozbuildObject,
+    BinaryNotFoundException,
+)
 from mozbuild.base import MachCommandConditions as Conditions
 from raptor.power import enable_charging, disable_charging
 
@@ -241,6 +246,14 @@ class MachRaptor(MachCommandBase):
                 device = ADBAndroid(verbose=True)
                 disable_charging(device)
             return raptor.run_test(sys.argv[2:], kwargs)
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'raptor',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'raptor',
+                     {'help': e.help()},
+                     '{help}')
+            return 1
         except Exception as e:
             print(repr(e))
             return 1

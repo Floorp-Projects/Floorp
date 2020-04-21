@@ -17,6 +17,7 @@ from mach.decorators import (
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
+    BinaryNotFoundException,
 )
 
 
@@ -155,6 +156,7 @@ class MachCommands(MachCommandBase):
 
             exitcode = None
             timeout = 1800
+            binary_not_found_exception = None
             try:
                 runner = FirefoxRunner(profile=profile,
                                        binary=self.get_binary_path(),
@@ -163,7 +165,8 @@ class MachCommands(MachCommandBase):
                                        process_args=kp_kwargs)
                 runner.start(debug_args=valgrind_args)
                 exitcode = runner.wait(timeout=timeout)
-
+            except BinaryNotFoundException as e:
+                binary_not_found_exception = e
             finally:
                 errs = outputHandler.error_count
                 supps = outputHandler.suppression_count
@@ -182,7 +185,15 @@ class MachCommands(MachCommandBase):
                     status = 1  # turns the TBPL job orange
                     # We've already printed details of the errors.
 
-                if exitcode is None:
+                if binary_not_found_exception:
+                    status = 2  # turns the TBPL job red
+                    self.log(logging.ERROR, 'valgrind-fail-errors',
+                             {'error': str(binary_not_found_exception)},
+                             'TEST-UNEXPECTED-FAIL | valgrind-test | {error}')
+                    self.log(logging.INFO, 'valgrind-fail-errors',
+                             {'help': binary_not_found_exception.help()},
+                             '{help}')
+                elif exitcode is None:
                     status = 2  # turns the TBPL job red
                     self.log(logging.ERROR, 'valgrind-fail-timeout',
                              {'timeout': timeout},

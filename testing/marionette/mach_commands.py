@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import functools
+import logging
 import os
 import sys
 
@@ -19,6 +20,7 @@ from mach.decorators import (
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
+    BinaryNotFoundException,
 )
 
 SUPPORTED_APPS = ['firefox', 'android', 'thunderbird']
@@ -88,6 +90,15 @@ class MarionetteTest(MachCommandBase):
 
         if not kwargs.get("binary") and \
                 (conditions.is_firefox(self) or conditions.is_thunderbird(self)):
-            kwargs["binary"] = self.get_binary_path("app")
+            try:
+                kwargs["binary"] = self.get_binary_path("app")
+            except BinaryNotFoundException as e:
+                self.log(logging.ERROR, 'marionette-test',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'marionette-test',
+                         {'help': e.help()},
+                         '{help}')
+                return 1
 
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
