@@ -21,10 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
-  ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
-  RemoteSettingsExperimentLoader:
-    "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["Normandy"];
@@ -107,18 +103,6 @@ var Normandy = {
     CleanupManager.addCleanupHandler(() =>
       Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure)
     );
-
-    try {
-      await ExperimentManager.onStartup();
-    } catch (err) {
-      log.error("Failed to initialize ExperimentManager:", err);
-    }
-
-    try {
-      await RemoteSettingsExperimentLoader.init();
-    } catch (err) {
-      log.error("Failed to initialize RemoteSettingsExperimentLoader:", err);
-    }
 
     try {
       await AddonStudies.init();
