@@ -177,8 +177,6 @@ nsresult CookieService::Init() {
   os->AddObserver(this, "profile-do-change", true);
   os->AddObserver(this, "last-pb-context-exited", true);
 
-  mPermissionService = CookiePermission::GetOrCreate();
-
   return NS_OK;
 }
 
@@ -1065,6 +1063,17 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
     return newCookie;
   }
 
+  // check permissions from site permission list.
+  if (!CookieCommons::CheckCookiePermission(aChannel, cookieData)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
+                      "cookie rejected by permission manager");
+    CookieCommons::NotifyRejected(
+        aHostURI, aChannel,
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
+        OPERATION_WRITE);
+    return newCookie;
+  }
+
   int64_t currentTimeInUsec = PR_Now();
   // create a new Cookie and copy attributes
   RefPtr<Cookie> cookie = Cookie::Create(
@@ -1073,32 +1082,7 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
       Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
       cookieData.isSession(), cookieData.isSecure(), cookieData.isHttpOnly(),
       aOriginAttributes, cookieData.sameSite(), cookieData.rawSameSite());
-  if (!cookie) {
-    return newCookie;
-  }
-
-  // check permissions from site permission list, or ask the user,
-  // to determine if we can set the cookie
-  if (mPermissionService) {
-    bool permission;
-    mPermissionService->CanSetCookie(
-        aHostURI, aChannel,
-        static_cast<nsICookie*>(static_cast<Cookie*>(cookie)),
-        &cookieData.isSession(), &cookieData.expiry(), &permission);
-    if (!permission) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
-                        "cookie rejected by permission manager");
-      CookieCommons::NotifyRejected(
-          aHostURI, aChannel,
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
-          OPERATION_WRITE);
-      return newCookie;
-    }
-
-    // update isSession and expiry attributes, in case they changed
-    cookie->SetIsSession(cookieData.isSession());
-    cookie->SetExpiry(cookieData.expiry());
-  }
+  MOZ_ASSERT(cookie);
 
   // add the cookie to the list. AddCookie() takes care of logging.
   // we get the current time again here, since it may have changed during

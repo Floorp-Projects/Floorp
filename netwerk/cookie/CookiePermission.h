@@ -6,7 +6,6 @@
 #define mozilla_net_CookiePermission_h
 
 #include "nsICookiePermission.h"
-#include "mozilla/PermissionManager.h"
 
 namespace mozilla {
 namespace net {
@@ -23,10 +22,6 @@ class CookiePermission final : public nsICookiePermission {
 
  private:
   ~CookiePermission() = default;
-
-  bool EnsureInitialized() { return (mPermMgr != nullptr) || Init(); };
-
-  RefPtr<mozilla::PermissionManager> mPermMgr;
 };
 
 }  // namespace net

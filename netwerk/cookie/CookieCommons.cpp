@@ -6,7 +6,10 @@
 #include "Cookie.h"
 #include "CookieCommons.h"
 #include "mozilla/ContentBlockingNotifier.h"
+#include "nsICookiePermission.h"
+#include "nsICookieService.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsScriptSecurityManager.h"
 
 namespace mozilla {
 namespace net {
@@ -177,6 +180,81 @@ bool CookieCommons::CheckHttpValue(const CookieStruct& aCookieData) {
       0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
       0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x3B, 0x00};
   return aCookieData.value().FindCharInSet(illegalCharacters, 0) == -1;
+}
+
+// static
+bool CookieCommons::CheckCookiePermission(nsIChannel* aChannel,
+                                          CookieStruct& aCookieData) {
+  if (!aChannel) {
+    // No channel, let's assume this is a system-principal request.
+    return true;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  nsIScriptSecurityManager* ssm =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+  MOZ_ASSERT(ssm);
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  rv = ssm->GetChannelURIPrincipal(aChannel, getter_AddRefs(channelPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (!channelPrincipal->GetIsContentPrincipal()) {
+    return true;
+  }
+
+  uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
+  rv = cookieJarSettings->CookiePermission(channelPrincipal, &cookiePermission);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  if (cookiePermission == nsICookiePermission::ACCESS_ALLOW) {
+    return true;
+  }
+
+  if (cookiePermission == nsICookiePermission::ACCESS_SESSION) {
+    aCookieData.isSession() = true;
+    return true;
+  }
+
+  if (cookiePermission == nsICookiePermission::ACCESS_DENY) {
+    return false;
+  }
+
+  // Here we can have any legacy permission value.
+
+  // now we need to figure out what type of accept policy we're dealing with
+  // if we accept cookies normally, just bail and return
+  if (StaticPrefs::network_cookie_lifetimePolicy() ==
+      nsICookieService::ACCEPT_NORMALLY) {
+    return true;
+  }
+
+  // declare this here since it'll be used in all of the remaining cases
+  int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
+  int64_t delta = aCookieData.expiry() - currentTime;
+
+  // We are accepting the cookie, but,
+  // if it's not a session cookie, we may have to limit its lifetime.
+  if (!aCookieData.isSession() && delta > 0) {
+    if (StaticPrefs::network_cookie_lifetimePolicy() ==
+        nsICookieService::ACCEPT_SESSION) {
+      // limit lifetime to session
+      aCookieData.isSession() = true;
+    }
+  }
+
+  return true;
 }
 
 }  // namespace net

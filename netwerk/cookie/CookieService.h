@@ -8,7 +8,6 @@
 
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
-#include "nsICookiePermission.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -185,7 +184,6 @@ class CookieService final : public nsICookieService,
                                   const nsTArray<nsString>& aParams);
 
   // cached members.
-  nsCOMPtr<nsICookiePermission> mPermissionService;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   nsCOMPtr<nsIIDNService> mIDNService;

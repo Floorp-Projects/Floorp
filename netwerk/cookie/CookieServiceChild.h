@@ -16,7 +16,6 @@
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
 
-class nsICookiePermission;
 class nsIEffectiveTLDService;
 class nsILoadInfo;
 
@@ -82,7 +81,6 @@ class CookieServiceChild final : public PCookieServiceChild,
 
   CookiesMap mCookiesMap;
   nsCOMPtr<nsITimer> mCookieTimer;
-  nsCOMPtr<nsICookiePermission> mPermissionService;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 };

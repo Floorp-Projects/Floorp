@@ -4,11 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsICookie;
-interface nsIURI;
-interface nsIChannel;
-interface nsIPrincipal;
-
 typedef long nsCookieAccess;
 
 /**
@@ -37,38 +32,4 @@ interface nsICookiePermission : nsISupports
    * and ACCESS_LIMIT_THIRD_PARTY, now removed, but maybe still stored in some
    * ancient user profiles.
    */
-
-  /**
-   * canSetCookie
-   *
-   * this method is called to test whether or not the given URI/channel may
-   * set a specific cookie.  this method is always preceded by a call to
-   * canAccess. it may modify the isSession and expiry attributes of the
-   * cookie via the aIsSession and aExpiry parameters, in order to limit
-   * or extend the lifetime of the cookie. this is useful, for instance, to
-   * downgrade a cookie to session-only if it fails to meet certain criteria.
-   *
-   * @param aURI
-   *        the URI trying to set the cookie
-   * @param aChannel
-   *        the channel corresponding to aURI
-   * @param aCookie
-   *        the cookie being added to the cookie database
-   * @param aIsSession
-   *        when canSetCookie is invoked, this is the current isSession attribute
-   *        of the cookie. canSetCookie may leave this value unchanged to
-   *        preserve this attribute of the cookie.
-   * @param aExpiry
-   *        when canSetCookie is invoked, this is the current expiry time of
-   *        the cookie. canSetCookie may leave this value unchanged to
-   *        preserve this attribute of the cookie.
-   *
-   * @return true if the cookie can be set.
-   */
-  boolean canSetCookie(in nsIURI     aURI,
-                       in nsIChannel aChannel,
-                       in nsICookie aCookie,
-                       inout boolean aIsSession,
-                       inout int64_t aExpiry);
 };
-
