@@ -23,14 +23,6 @@ add_task(async function({ client }) {
   info("Page domain has been enabled");
 
   const { frameTree } = await Page.getFrameTree();
-  ok(!!frameTree.frame, "getFrameTree exposes one frame");
-  is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
-  ok(frameTree.frame.id, "getFrameTree's frame has an id");
-  is(
-    frameTree.frame.url,
-    INITIAL_DOC,
-    "getFrameTree's frame has the right url"
-  );
 
   // Save the given `promise` resolution into the `promises` global Set
   function recordPromise(name, promise) {

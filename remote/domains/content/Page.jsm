@@ -142,18 +142,24 @@ class Page extends ContentProcessDomain {
   }
 
   getFrameTree() {
-    const frameId = this.docShell.browsingContext.id.toString();
+    const getFrames = context => {
+      const frameTree = {
+        frame: this._getFrameDetails(context),
+      };
+
+      if (context.children.length > 0) {
+        const frames = [];
+        for (const childContext of context.children) {
+          frames.push(getFrames(childContext));
+        }
+        frameTree.childFrames = frames;
+      }
+
+      return frameTree;
+    };
+
     return {
-      frameTree: {
-        frame: {
-          id: frameId,
-          url: this.content.location.href,
-          loaderId: null,
-          securityOrigin: null,
-          mimeType: null,
-        },
-        childFrames: [],
-      },
+      frameTree: getFrames(this.docShell.browsingContext),
     };
   }
 
@@ -344,6 +350,23 @@ class Page extends ContentProcessDomain {
 
   _devicePixelRatio() {
     return this.content.devicePixelRatio;
+  }
+
+  _getFrameDetails(context) {
+    const frame = {
+      id: context.id.toString(),
+      loaderId: null,
+      name: null,
+      url: context.docShell.domWindow.location.href,
+      securityOrigin: null,
+      mimeType: null,
+    };
+
+    if (context.parent) {
+      frame.parentId = context.parent.id.toString();
+    }
+
+    return frame;
   }
 
   _getScrollbarSize() {

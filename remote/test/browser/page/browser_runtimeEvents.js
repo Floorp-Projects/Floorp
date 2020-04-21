@@ -51,10 +51,6 @@ add_task(async function testCDP({ client }) {
   );
 
   const { frameTree } = await Page.getFrameTree();
-  ok(!!frameTree.frame, "getFrameTree exposes one frame");
-  is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
-  ok(!!frameTree.frame.id, "getFrameTree's frame has an id");
-  is(frameTree.frame.url, TEST_DOC, "getFrameTree's frame has the right url");
   is(
     frameTree.frame.id,
     context.auxData.frameId,
