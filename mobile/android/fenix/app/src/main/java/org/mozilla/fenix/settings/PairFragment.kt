@@ -4,11 +4,13 @@
 
 package org.mozilla.fenix.settings
 
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
@@ -94,8 +96,18 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
         grantResults: IntArray
     ) {
         when (requestCode) {
-            REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
-                it.onPermissionsResult(permissions, grantResults)
+            REQUEST_CODE_CAMERA_PERMISSIONS -> {
+                if (ContextCompat.checkSelfPermission(
+                        context!!,
+                        android.Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    qrFeature.withFeature {
+                        it.onPermissionsResult(permissions, grantResults)
+                    }
+                } else {
+                    findNavController().popBackStack(R.id.turnOnSyncFragment, false)
+                }
             }
         }
     }
