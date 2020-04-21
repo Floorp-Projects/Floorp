@@ -97,6 +97,9 @@
 #include "TelemetryHistogram.h"
 #include "TelemetryOrigin.h"
 #include "TelemetryScalar.h"
+#ifndef ANDROID
+#  include "nsTerminator.h"
+#endif
 
 namespace {
 
@@ -949,8 +952,8 @@ static bool IsValidBreakpadId(const std::string& breakpadId) {
 
 // Read a stack from the given file name. In case of any error, aStack is
 // unchanged.
-static void ReadStack(PathCharPtr aFileName,
-                      Telemetry::ProcessedStack& aStack) {
+static void ReadLateWriteStack(PathCharPtr aFileName,
+                               Telemetry::ProcessedStack& aStack) {
   IFStream file(aFileName);
 
   size_t numModules;
@@ -1014,6 +1017,14 @@ static void ReadStack(PathCharPtr aFileName,
     stack.AddFrame(frame);
   }
 
+  bool isFromTerminatorWatchdog;
+  file >> isFromTerminatorWatchdog;
+  if (file.fail()) {
+    ScalarAdd(mozilla::Telemetry::ScalarID::TELEMETRY_FAILED_LATE_WRITE, 1);
+    return;
+  }
+  stack.SetIsFromTerminatorWatchdog(isFromTerminatorWatchdog);
+
   aStack = stack;
 }
 
@@ -1033,9 +1044,12 @@ void TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir) {
     }
 
     Telemetry::ProcessedStack stack;
-    ReadStack(file->NativePath().get(), stack);
+    ReadLateWriteStack(file->NativePath().get(), stack);
     if (stack.GetStackSize() != 0) {
       mLateWritesStacks.AddStack(stack);
+      if (stack.GetIsFromTerminatorWatchdog()) {
+        mLateWritesStacks.SetIsFromTerminatorWatchdog(true);
+      }
     }
     // Delete the file so that we don't report it again on the next run.
     file->Remove(false);
@@ -1056,16 +1070,23 @@ TelemetryImpl::GetLateWrites(JSContext* cx, JS::MutableHandle<JS::Value> ret) {
   // CreateJSStackObject, but we would still need to figure out where to call
   // JS_RemoveObjectRoot. Would it be ok to never call JS_RemoveObjectRoot
   // and just set the pointer to nullptr is the telemetry destructor?
-
-  JSObject* report;
+  JS::Rooted<JSObject*> temp(cx, JS_NewPlainObject(cx));
   if (!mCachedTelemetryData) {
     CombinedStacks empty;
-    report = CreateJSStackObject(cx, empty);
+    temp = CreateJSStackObject(cx, empty);
   } else {
-    report = CreateJSStackObject(cx, mLateWritesStacks);
+    temp = CreateJSStackObject(cx, mLateWritesStacks);
   }
 
-  if (report == nullptr) {
+  // Add this information afer we CreateJSStackObject because
+  // the function is used elsewhere, not just for latewrites.
+  JS::Rooted<JSObject*> report(cx, temp);
+  bool isFromTerminatorWatchdog =
+      mLateWritesStacks.GetIsFromTerminatorWatchdog();
+  bool ok = JS_DefineProperty(cx, report, "isFromTerminatorWatchdog",
+                              isFromTerminatorWatchdog, JSPROP_ENUMERATE);
+
+  if (temp == nullptr || !ok) {
     return NS_ERROR_FAILURE;
   }
 

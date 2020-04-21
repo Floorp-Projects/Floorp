@@ -18,6 +18,7 @@ class nsTerminator final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   nsTerminator();
+  static bool IsCheckingLateWrites();
 
  private:
   nsresult SelfInit();
