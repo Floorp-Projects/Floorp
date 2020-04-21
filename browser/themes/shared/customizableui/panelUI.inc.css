@@ -356,8 +356,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: -moz-box;
 }
 
-.cui-widget-panel,
-.cui-widget-panel::part(arrowcontent) {
+.cui-widget-panel {
   --arrowpanel-padding: 4px 0;
 }
 
