@@ -15,7 +15,7 @@ import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat.MULTIPLY
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -77,7 +77,11 @@ internal class ColorViewHolder(
     private val checkDrawable: Drawable? by lazy {
         // Get the height of the row
         val typedValue = TypedValue()
-        itemView.context.theme.resolveAttribute(android.R.attr.listPreferredItemHeight, typedValue, true)
+        itemView.context.theme.resolveAttribute(
+            android.R.attr.listPreferredItemHeight,
+            typedValue,
+            true
+        )
         var height = typedValue.getDimension(itemView.context.resources.displayMetrics).toInt()
 
         // Remove padding for the shadow
@@ -100,7 +104,10 @@ internal class ColorViewHolder(
 
         // Set the background to look like this item's color
         itemView.background = itemView.background.apply {
-            colorFilter = createBlendModeColorFilterCompat(colorItem.color, MULTIPLY)
+            colorFilter = createBlendModeColorFilterCompat(
+                colorItem.color,
+                BlendModeCompat.MODULATE
+            )
         }
         itemView.contentDescription = colorItem.contentDescription
 
