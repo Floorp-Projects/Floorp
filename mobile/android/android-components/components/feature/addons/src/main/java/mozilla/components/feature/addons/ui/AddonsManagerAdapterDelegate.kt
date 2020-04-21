@@ -29,5 +29,5 @@ interface AddonsManagerAdapterDelegate {
      *
      * @param unsupportedAddons The list of unsupported [Addon].
      */
-    fun onNotYetSupportedSectionClicked(unsupportedAddons: ArrayList<Addon>) = Unit
+    fun onNotYetSupportedSectionClicked(unsupportedAddons: List<Addon>) = Unit
 }

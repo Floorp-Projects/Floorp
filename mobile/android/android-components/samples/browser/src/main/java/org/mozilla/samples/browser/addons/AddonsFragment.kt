@@ -32,7 +32,7 @@ import org.mozilla.samples.browser.ext.components
 class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     private lateinit var recyclerView: RecyclerView
     private val scope = CoroutineScope(Dispatchers.IO)
-
+    private var adapter: AddonsManagerAdapter? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -69,12 +69,16 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 val addons = context.components.addonManager.getAddons()
 
                 scope.launch(Dispatchers.Main) {
-                    val adapter = AddonsManagerAdapter(
-                        addonCollectionProvider = addonCollectionProvider,
-                        addonsManagerDelegate = this@AddonsFragment,
-                        addons = addons
-                    )
-                    recyclerView.adapter = adapter
+                    if (adapter == null) {
+                        adapter = AddonsManagerAdapter(
+                                addonCollectionProvider = addonCollectionProvider,
+                                addonsManagerDelegate = this@AddonsFragment,
+                                addons = addons
+                        )
+                        recyclerView.adapter = adapter
+                    } else {
+                        adapter?.updateAddons(addons)
+                    }
                 }
             } catch (e: AddonManagerException) {
                 scope.launch(Dispatchers.Main) {
@@ -106,9 +110,9 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         showPermissionDialog(addon)
     }
 
-    override fun onNotYetSupportedSectionClicked(unsupportedAddons: ArrayList<Addon>) {
+    override fun onNotYetSupportedSectionClicked(unsupportedAddons: List<Addon>) {
         val intent = Intent(context, NotYetSupportedAddonActivity::class.java)
-        intent.putExtra("add_ons", unsupportedAddons)
+        intent.putExtra("add_ons", ArrayList(unsupportedAddons))
         requireContext().startActivity(intent)
     }
 
@@ -151,10 +155,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                this@AddonsFragment.view?.let { view ->
-                    bindRecyclerView(view)
-                }
-
+                adapter?.updateAddon(it)
                 addonProgressOverlay.visibility = View.GONE
                 isInstallationInProgress = false
             },
