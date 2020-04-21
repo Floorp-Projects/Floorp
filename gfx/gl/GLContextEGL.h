@@ -24,7 +24,7 @@ class GLContextEGL : public GLContext {
   static already_AddRefed<GLContextEGL> CreateGLContext(
       GLLibraryEGL*, CreateContextFlags flags, const SurfaceCaps& caps,
       bool isOffscreen, EGLConfig config, EGLSurface surface,
-      nsACString* const out_failureId);
+      const bool useGles, nsACString* const out_failureId);
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
@@ -90,6 +90,10 @@ class GLContextEGL : public GLContext {
   static already_AddRefed<GLContextEGL> CreateEGLPBufferOffscreenContext(
       CreateContextFlags flags, const gfx::IntSize& size,
       const SurfaceCaps& minCaps, nsACString* const out_FailureId);
+  static already_AddRefed<GLContextEGL> CreateEGLPBufferOffscreenContextImpl(
+      CreateContextFlags flags, const gfx::IntSize& size,
+      const SurfaceCaps& minCaps, bool aUseGles,
+      nsACString* const out_FailureId);
 
 #if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)
   static EGLSurface CreateEGLSurfaceForCompositorWidget(
@@ -135,8 +139,8 @@ class GLContextEGL : public GLContext {
 #endif  // defined(MOZ_WIDGET_ANDROID)
 };
 
-bool CreateConfig(GLLibraryEGL*, EGLConfig* config, int32_t depth,
-                  bool enableDepthBuffer);
+bool CreateConfig(GLLibraryEGL* const egl, EGLConfig* aConfig, int32_t depth,
+                  bool aEnableDepthBuffer, bool aUseGles);
 
 }  // namespace gl
 }  // namespace mozilla
