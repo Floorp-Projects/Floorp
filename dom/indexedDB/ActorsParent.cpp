@@ -12364,20 +12364,20 @@ void ConnectionPool::Cleanup() {
 
   if (!mCompleteCallbacks.IsEmpty()) {
     // Run all callbacks manually now.
-    // TODO: Can a callback cause another entry to be added to
-    // mCompleteCallbacks? This would be skipped when iterating like this.
-    for (uint32_t count = mCompleteCallbacks.Length(), index = 0; index < count;
-         index++) {
-      // TODO: Why do we need to move the callback here to a local variable?
-      // mCompleteCallbacks is cleared afterwards anyway.
-      const auto completeCallback = std::move(mCompleteCallbacks[index]);
-      MOZ_ASSERT(completeCallback);
-      MOZ_ASSERT(completeCallback->mCallback);
 
-      Unused << completeCallback->mCallback->Run();
+    {
+      auto completeCallbacks = std::move(mCompleteCallbacks);
+      for (const auto& completeCallback : completeCallbacks) {
+        MOZ_ASSERT(completeCallback);
+        MOZ_ASSERT(completeCallback->mCallback);
+
+        Unused << completeCallback->mCallback->Run();
+      }
+
+      // We expect no new callbacks being completed by running the existing
+      // ones.
+      MOZ_ASSERT(mCompleteCallbacks.IsEmpty());
     }
-
-    mCompleteCallbacks.Clear();
 
     // And make sure they get processed.
     nsIThread* currentThread = NS_GetCurrentThread();
