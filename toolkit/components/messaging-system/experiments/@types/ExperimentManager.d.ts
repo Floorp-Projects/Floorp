@@ -12,6 +12,15 @@ export interface RecipeArgs {
   branches: Branch[];
 }
 
+export interface Recipe {
+  id: string;
+  // Processed by Remote Settings, Normandy
+  filter_expression?: string;
+  // Processed by RemoteSettingsExperimentLoader
+  targeting?: string;
+  arguments: RecipeArgs;
+}
+
 export interface Enrollment {
   slug: string;
   enrollmentId: string;
