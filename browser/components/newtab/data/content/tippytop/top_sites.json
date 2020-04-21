@@ -139,9 +139,15 @@
   },
   {
     "title": "yandex",
-    "url": "https://www.yandex.com/",
+    "urls": ["https://www.yandex.com/", "https://www.yandex.com.tr/"],
     "image_url": "images/yandex-com@2x.png",
     "favicon_url": "favicons/yandex-com.png"
+  },
+  {
+    "title": "yandex-ru",
+    "urls": ["https://www.yandex.by/", "https://www.yandex.kz/", "https://www.yandex.ru/", "https://www.yandex.ua/", "https://www.yandex.uz/"],
+    "image_url": "images/yandex-ru@2x.png",
+    "favicon_url": "favicons/yandex-ru.png"
   },
   {
     "title": "youtube",
