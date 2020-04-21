@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -51,7 +53,7 @@ interface BrowserToolbarViewInteractor {
     fun onBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
     fun onScrolled(offset: Int)
 }
-
+@SuppressWarnings("LargeClass")
 class BrowserToolbarView(
     private val container: ViewGroup,
     private val shouldUseBottomToolbar: Boolean,
@@ -97,6 +99,10 @@ class BrowserToolbarView(
 
             popupWindow.elevation =
                 view.context.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
+
+            // This is a workaround for SDK<23 to allow popup dismissal on outside or back button press
+            // See: https://github.com/mozilla-mobile/fenix/issues/10027
+            popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
             customView.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
             customView.paste_and_go.isVisible =
