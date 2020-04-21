@@ -4,12 +4,17 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import logging
 import os
 import sys
 
 from mach.decorators import CommandProvider, Command
 
-from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
+from mozbuild.base import (
+    MachCommandBase,
+    MachCommandConditions as conditions,
+    BinaryNotFoundException,
+)
 
 
 def create_parser_tests():
@@ -75,7 +80,16 @@ class TelemetryTest(MachCommandBase):
                 tests.append(obj["file_relpath"])
             del kwargs["test_objects"]
         if not kwargs.get("binary") and conditions.is_firefox(self):
-            kwargs["binary"] = self.get_binary_path("app")
+            try:
+                kwargs["binary"] = self.get_binary_path("app")
+            except BinaryNotFoundException as e:
+                self.log(logging.ERROR, 'telemetry-tests-client',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'telemetry-tests-client',
+                         {'help': e.help()},
+                         '{help}')
+                return 1
         if not kwargs.get("server_root"):
             kwargs["server_root"] = "toolkit/components/telemetry/tests/marionette/harness/www"
         return run_telemetry(tests, topsrcdir=self.topsrcdir, **kwargs)

@@ -42,7 +42,7 @@ import contextlib
 
 from six import StringIO
 from mach.decorators import CommandArgument, CommandProvider, Command
-from mozbuild.base import MachCommandBase
+from mozbuild.base import MachCommandBase, BinaryNotFoundException
 from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
@@ -503,9 +503,16 @@ class MachBrowsertime(MachCommandBase):
             if not specifies_binaryPath:
                 try:
                     extra_args.extend(('--firefox.binaryPath', self.get_binary_path()))
-                except Exception:
-                    print('Please run |./mach build| '
-                          'or specify a Firefox binary with --firefox.binaryPath.')
+                except BinaryNotFoundException as e:
+                    self.log(logging.ERROR,
+                             'browsertime',
+                             {'error': str(e)},
+                             'ERROR: {error}')
+                    self.log(logging.INFO,
+                             'browsertime',
+                             {},
+                             'Please run |./mach build| '
+                             'or specify a Firefox binary with --firefox.binaryPath.')
                     return 1
 
         if extra_args:

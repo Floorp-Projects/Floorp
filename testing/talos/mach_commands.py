@@ -6,12 +6,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
 import os
 import sys
 import json
 import socket
 
-from mozbuild.base import MozbuildObject, MachCommandBase
+from mozbuild.base import (
+    MozbuildObject,
+    MachCommandBase,
+    BinaryNotFoundException,
+)
 from mach.decorators import CommandProvider, Command
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -26,7 +31,17 @@ class TalosRunner(MozbuildObject):
         3. Run mozharness
         """
 
-        self.init_variables(talos_args)
+        try:
+            self.init_variables(talos_args)
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'talos',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'raptor',
+                     {'help': e.help()},
+                     '{help}')
+            return 1
+
         self.make_config()
         self.write_config()
         self.make_args()

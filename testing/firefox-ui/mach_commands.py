@@ -4,12 +4,14 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import logging
 import os
 import sys
 
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
+    BinaryNotFoundException,
 )
 
 from mach.decorators import (
@@ -90,6 +92,16 @@ class MachCommands(MachCommandBase):
              parser=setup_argument_parser_functional,
              )
     def run_firefox_ui_functional(self, **kwargs):
-        kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
+        try:
+            kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
+        except BinaryNotFoundException as e:
+            self.log(logging.ERROR, 'firefox-ui-functional',
+                     {'error': str(e)},
+                     'ERROR: {error}')
+            self.log(logging.INFO, 'firefox-ui-functional',
+                     {'help': e.help()},
+                     '{help}')
+            return 1
+
         return run_firefox_ui_test(testtype='functional',
                                    topsrcdir=self.topsrcdir, **kwargs)
