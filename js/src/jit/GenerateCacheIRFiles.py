@@ -68,6 +68,7 @@ operand_writer_info = {
     'NumId': ('NumberOperandId', 'writeOperandId'),
     'BigIntId': ('BigIntOperandId', 'writeOperandId'),
     'ValTagId': ('ValueTagOperandId', 'writeOperandId'),
+    'RawId': ('OperandId', 'writeOperandId'),
 
     'ShapeField': ('Shape*', 'writeShapeField'),
     'GroupField': ('ObjectGroup*', 'writeGroupField'),
@@ -156,6 +157,7 @@ operand_compiler_info = {
     'NumId': ('NumberOperandId', 'Id', 'reader.numberOperandId()'),
     'BigIntId': ('BigIntOperandId', 'Id', 'reader.bigIntOperandId()'),
     'ValTagId': ('ValueTagOperandId', 'Id', 'reader.valueTagOperandId()'),
+    'RawId': ('uint32_t', 'Id', 'reader.rawOperandId()'),
 
     'ShapeField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
     'GroupField': ('uint32_t', 'Offset', 'reader.stubOffset()'),
@@ -257,7 +259,7 @@ def generate_cacheirops_header(c_out, yaml_path):
         'NumId': 'Id',
         'BigIntId': 'Id',
         'ValTagId': 'Id',
-        'AnyId': 'Id',
+        'RawId': 'Id',
 
         'ShapeField': 'Field',
         'GroupField': 'Field',

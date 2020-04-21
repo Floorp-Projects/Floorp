@@ -630,12 +630,13 @@
 
 - name: StoreTypedObjectScalarProperty
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     offset: RawWordField
     layout: TypedThingLayoutImm
     type: ScalarTypeImm
-    rhs: ValId
+    rhs: RawId
 
 - name: StoreDenseElement
   shared: false
@@ -669,12 +670,13 @@
 
 - name: StoreTypedElement
   shared: true
+  gen_boilerplate: true
   operands:
     obj: ObjId
     layout: TypedThingLayoutImm
     elementType: ScalarTypeImm
     index: Int32Id
-    rhs: AnyId
+    rhs: RawId
     handleOOB: BoolImm
 
 - name: CallNativeSetter

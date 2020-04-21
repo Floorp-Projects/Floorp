@@ -3684,16 +3684,18 @@ bool CacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitStoreTypedElement() {
+bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
+                                            TypedThingLayout layout,
+                                            Scalar::Type elementType,
+                                            Int32OperandId indexId,
+                                            uint32_t rhsId, bool handleOOB) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  TypedThingLayout layout = reader.typedThingLayout();
-  Scalar::Type type = reader.scalarType();
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
 
   Maybe<Register> valInt32;
   Maybe<Register> valBigInt;
-  switch (type) {
+  switch (elementType) {
     case Scalar::Int8:
     case Scalar::Uint8:
     case Scalar::Int16:
@@ -3701,7 +3703,7 @@ bool CacheIRCompiler::emitStoreTypedElement() {
     case Scalar::Int32:
     case Scalar::Uint32:
     case Scalar::Uint8Clamped:
-      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
+      valInt32.emplace(allocator.useRegister(masm, Int32OperandId(rhsId)));
       break;
 
     case Scalar::Float32:
@@ -3709,12 +3711,12 @@ bool CacheIRCompiler::emitStoreTypedElement() {
       // Float register must be preserved. The SetProp ICs use the fact that
       // baseline has them available, as well as fixed temps on
       // LSetPropertyCache.
-      allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId), FloatReg0);
       break;
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-      valBigInt.emplace(allocator.useRegister(masm, reader.bigIntOperandId()));
+      valBigInt.emplace(allocator.useRegister(masm, BigIntOperandId(rhsId)));
       break;
 
     case Scalar::MaxTypedArrayViewType:
@@ -3722,12 +3724,10 @@ bool CacheIRCompiler::emitStoreTypedElement() {
       MOZ_CRASH("Unsupported TypedArray type");
   }
 
-  bool handleOOB = reader.readBool();
-
   AutoScratchRegister scratch1(allocator, masm);
   Maybe<AutoScratchRegister> scratch2;
   Maybe<AutoSpectreBoundsScratchRegister> spectreScratch;
-  if (Scalar::isBigIntType(type)) {
+  if (Scalar::isBigIntType(elementType)) {
     scratch2.emplace(allocator, masm);
   } else {
     spectreScratch.emplace(allocator, masm);
@@ -3748,9 +3748,10 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   // Load the elements vector.
   LoadTypedThingData(masm, layout, obj, scratch1);
 
-  BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+  BaseIndex dest(scratch1, index,
+                 ScaleFromElemWidth(Scalar::byteSize(elementType)));
 
-  if (Scalar::isBigIntType(type)) {
+  if (Scalar::isBigIntType(elementType)) {
 #ifdef JS_PUNBOX64
     Register64 temp(scratch2->get());
 #else
@@ -3760,19 +3761,19 @@ bool CacheIRCompiler::emitStoreTypedElement() {
 #endif
 
     masm.loadBigInt64(*valBigInt, temp);
-    masm.storeToTypedBigIntArray(type, temp, dest);
+    masm.storeToTypedBigIntArray(elementType, temp, dest);
 
 #ifndef JS_PUNBOX64
     masm.pop(obj);
 #endif
-  } else if (type == Scalar::Float32) {
+  } else if (elementType == Scalar::Float32) {
     ScratchFloat32Scope fpscratch(masm);
     masm.convertDoubleToFloat32(FloatReg0, fpscratch);
-    masm.storeToTypedFloatArray(type, fpscratch, dest);
-  } else if (type == Scalar::Float64) {
-    masm.storeToTypedFloatArray(type, FloatReg0, dest);
+    masm.storeToTypedFloatArray(elementType, fpscratch, dest);
+  } else if (elementType == Scalar::Float64) {
+    masm.storeToTypedFloatArray(elementType, FloatReg0, dest);
   } else {
-    masm.storeToTypedIntArray(type, *valInt32, dest);
+    masm.storeToTypedIntArray(elementType, *valInt32, dest);
   }
 
   masm.bind(&done);
@@ -3938,12 +3939,12 @@ bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
+bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
+    ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
+    Scalar::Type type, uint32_t rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  StubFieldOffset offset(reader.stubOffset(), StubField::Type::RawWord);
-  TypedThingLayout layout = reader.typedThingLayout();
-  Scalar::Type type = reader.scalarType();
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
 
   Maybe<Register> valInt32;
   Maybe<Register> valBigInt;
@@ -3955,7 +3956,7 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
     case Scalar::Int32:
     case Scalar::Uint32:
     case Scalar::Uint8Clamped:
-      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
+      valInt32.emplace(allocator.useRegister(masm, Int32OperandId(rhsId)));
       break;
 
     case Scalar::Float32:
@@ -3963,12 +3964,12 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
       // Float register must be preserved. The SetProp ICs use the fact that
       // baseline has them available, as well as fixed temps on
       // LSetPropertyCache.
-      allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId), FloatReg0);
       break;
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-      valBigInt.emplace(allocator.useRegister(masm, reader.bigIntOperandId()));
+      valBigInt.emplace(allocator.useRegister(masm, BigIntOperandId(rhsId)));
       break;
 
     case Scalar::MaxTypedArrayViewType:
