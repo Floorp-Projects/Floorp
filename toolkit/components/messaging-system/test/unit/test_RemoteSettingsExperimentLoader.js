@@ -72,11 +72,11 @@ add_task(async function test_init() {
 add_task(async function test_updateRecipes() {
   const loader = ExperimentFakes.rsLoader();
   const PASS_FILTER_RECIPE = {
-    filter_expression: "true",
+    targeting: "true",
     arguments: ExperimentFakes.recipe("foo"),
   };
   const FAIL_FILTER_RECIPE = {
-    filter_expression: "false",
+    targeting: "false",
     arguments: ExperimentFakes.recipe("foo"),
   };
   sinon.stub(loader, "setTimer");
@@ -102,5 +102,24 @@ add_task(async function test_updateRecipes() {
       "rs-loader"
     ),
     "should call .onRecipe with argument data"
+  );
+});
+
+add_task(async function test_checkTargeting() {
+  const loader = ExperimentFakes.rsLoader();
+  equal(
+    await loader.checkTargeting({}),
+    true,
+    "should return true if .targeting is not defined"
+  );
+  equal(
+    await loader.checkTargeting({ targeting: "'foo'" }),
+    true,
+    "should return true for truthy expression"
+  );
+  equal(
+    await loader.checkTargeting({ targeting: "aPropertyThatDoesNotExist" }),
+    false,
+    "should return false for falsey expression"
   );
 });
