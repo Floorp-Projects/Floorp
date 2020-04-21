@@ -198,7 +198,7 @@ const stateManager = {
 
     let doorhangerShown = await browser.experiments.doorhanger.show({
       name: browser.i18n.getMessage("doorhangerName"),
-      text: "<> " + browser.i18n.getMessage("doorhangerBody"),
+      text: "<> " + browser.i18n.getMessage("doorhangerBodyNew"),
       okLabel: browser.i18n.getMessage("doorhangerButtonOk"),
       okAccessKey: browser.i18n.getMessage("doorhangerButtonOkAccessKey"),
       cancelLabel: browser.i18n.getMessage("doorhangerButtonCancel2"),
