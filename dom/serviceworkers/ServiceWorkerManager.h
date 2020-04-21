@@ -245,11 +245,11 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
                    const nsString& aLine, uint32_t aLineNumber,
                    uint32_t aColumnNumber, uint32_t aFlags, JSExnType aExnType);
 
-  MOZ_MUST_USE RefPtr<GenericErrorResultPromise> MaybeClaimClient(
+  [[nodiscard]] RefPtr<GenericErrorResultPromise> MaybeClaimClient(
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo* aWorkerRegistration);
 
-  MOZ_MUST_USE RefPtr<GenericErrorResultPromise> MaybeClaimClient(
+  [[nodiscard]] RefPtr<GenericErrorResultPromise> MaybeClaimClient(
       const ClientInfo& aClientInfo,
       const ServiceWorkerDescriptor& aServiceWorker);
 
