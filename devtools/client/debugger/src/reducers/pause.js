@@ -638,6 +638,12 @@ export function getSelectedFrameId(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).selectedFrameId;
 }
 
+export function isTopFrameSelected(state: State, thread: ThreadId) {
+  const selectedFrameId = getSelectedFrameId(state, thread);
+  const topFrame = getTopFrame(state, thread);
+  return selectedFrameId == topFrame?.id;
+}
+
 export function getTopFrame(state: State, thread: ThreadId) {
   const frames = getFrames(state, thread);
   return frames?.[0];
