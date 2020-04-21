@@ -15,6 +15,7 @@ import { selectLocation } from "../sources";
 import { fetchScopes } from "./fetchScopes";
 import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";
+import { features } from "../../utils/prefs";
 import assert from "../../utils/assert";
 
 import type { ThreadId, Context, ThreadContext } from "../../types";
@@ -56,15 +57,19 @@ export function selectThread(cx: Context, thread: ThreadId) {
  */
 export function command(cx: ThreadContext, type: Command) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
-    if (type) {
-      return dispatch({
-        type: "COMMAND",
-        command: type,
-        cx,
-        thread: cx.thread,
-        [PROMISE]: client[type](cx.thread),
-      });
+    if (!type) {
+      return;
     }
+
+    const frame = features.frameStep && getSelectedFrame(getState(), cx.thread);
+
+    return dispatch({
+      type: "COMMAND",
+      command: type,
+      cx,
+      thread: cx.thread,
+      [PROMISE]: client[type](cx.thread, frame?.id),
+    });
   };
 }
 

@@ -75,6 +75,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.features.overlay-step-buttons", true);
   pref("devtools.debugger.features.watchpoints", true);
+  pref("devtools.debugger.features.frame-step", true);
   pref("devtools.editor.tabsize", 2);
 }
 
@@ -152,6 +153,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   inlinePreview: ["Bool", "inline-preview"],
   watchpoints: ["Bool", "watchpoints"],
   windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
+  frameStep: ["Bool", "frame-step"],
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

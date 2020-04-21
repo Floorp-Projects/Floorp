@@ -980,7 +980,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Define the JS hook functions for stepping.
    */
-  _makeSteppingHooks: function({ steppingType, completion }) {
+  _makeSteppingHooks: function({ steppingType, startFrame, completion }) {
     // Bind these methods and state because some of the hooks are called
     // with 'this' set to the current frame. Rather than repeating the
     // binding in each _makeOnX method, just do it once here and pass it
@@ -988,7 +988,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const steppingHookState = {
       pauseAndRespond: (frame, onPacket = k => k) =>
         this._pauseAndRespond(frame, { type: "resumeLimit" }, onPacket),
-      startFrame: this.youngestFrame,
+      startFrame: startFrame || this.youngestFrame,
       steppingType,
       completion,
     };
@@ -1009,25 +1009,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns A promise that resolves to true once the hooks are attached, or is
    *          rejected with an error packet.
    */
-  _handleResumeLimit: async function({ resumeLimit }) {
+  _handleResumeLimit: async function({ resumeLimit, frameActorID }) {
     const steppingType = resumeLimit.type;
-    if (!["break", "step", "next", "finish", "warp"].includes(steppingType)) {
+    if (!["break", "step", "next", "finish"].includes(steppingType)) {
       return Promise.reject({
         error: "badParameterType",
         message: "Unknown resumeLimit type",
       });
     }
 
-    if (steppingType == "warp") {
-      // Time warp resume limits are handled by the caller.
-      return true;
+    let frame = this.youngestFrame;
+
+    if (frameActorID) {
+      frame = this._framesPool.get(frameActorID).frame;
+      if (!frame) {
+        throw new Error("Frame should exist in the frames pool.");
+      }
     }
 
-    return this._attachSteppingHooks(
-      this.youngestFrame,
-      steppingType,
-      undefined
-    );
+    return this._attachSteppingHooks(frame, steppingType, undefined);
   },
 
   _attachSteppingHooks: function(frame, steppingType, completion) {
@@ -1047,6 +1047,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks({
       steppingType,
       completion,
+      startFrame: frame,
     });
 
     if (steppingType === "step") {
@@ -1090,7 +1091,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Handle a protocol request to resume execution of the debuggee.
    */
-  onResume: async function({ resumeLimit }) {
+  onResume: async function({ resumeLimit, frameActorID }) {
     if (this._state !== "paused") {
       return {
         error: "wrongState",
@@ -1118,7 +1119,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     try {
       if (resumeLimit) {
-        await this._handleResumeLimit({ resumeLimit });
+        await this._handleResumeLimit({ resumeLimit, frameActorID });
       } else {
         this._clearSteppingHooks();
       }

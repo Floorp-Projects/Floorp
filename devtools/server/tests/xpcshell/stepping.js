@@ -1,5 +1,5 @@
 "use strict";
-/* exported global arithmetic composition chaining */
+/* exported global arithmetic composition chaining nested */
 
 const obj = { b };
 
@@ -24,4 +24,13 @@ function composition() {
 function chaining() {
   debugger;
   a().b();
+}
+
+function c() {
+  return b();
+}
+
+function nested() {
+  debugger;
+  c();
 }
