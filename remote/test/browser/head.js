@@ -288,6 +288,40 @@ function getContentProperty(prop) {
 }
 
 /**
+ * Retrieve all frames for the current tab as flattened list.
+ */
+function getFlattendFrameList() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const frames = new Map();
+
+    function getFrameDetails(context) {
+      const frame = {
+        id: context.id.toString(),
+        parentId: context.parent ? context.parent.id.toString() : null,
+        loaderId: null,
+        name: null,
+        url: context.docShell.domWindow.location.href,
+        securityOrigin: null,
+        mimeType: null,
+      };
+
+      if (context.parent) {
+        frame.parentId = context.parent.id.toString();
+      }
+
+      frames.set(context.id.toString(), frame);
+
+      for (const childContext of context.children) {
+        getFrameDetails(childContext);
+      }
+    }
+
+    getFrameDetails(content.docShell.browsingContext);
+    return frames;
+  });
+}
+
+/**
  * Return a new promise, which resolves after ms have been elapsed
  */
 function timeoutPromise(ms) {
