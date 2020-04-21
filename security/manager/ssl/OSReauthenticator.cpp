@@ -203,9 +203,9 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
               ("User logged in successfully."));
     } else {
-      MOZ_LOG(
-          gCredentialManagerSecretLog, LogLevel::Debug,
-          ("Login failed with %lx (%lx).", sts, LsaNtStatusToWinError(sts)));
+      err = LsaNtStatusToWinError(sts);
+      MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
+              ("Login failed with %lx (%lx).", sts, err));
       continue;
     }
 
@@ -225,6 +225,8 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
               ("Login successfully (correct user)."));
       reauthenticated = true;
       break;
+    } else {
+      err = ERROR_LOGON_FAILURE;
     }
   }
   return NS_OK;
