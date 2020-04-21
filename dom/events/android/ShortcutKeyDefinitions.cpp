@@ -25,7 +25,9 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_HOME", nullptr, u"shift", u"cmd_selectBeginLine"},
     {u"keypress", u"VK_END", nullptr, u"shift", u"cmd_selectEndLine"},
     {u"keypress", u"VK_BACK", nullptr, u"alt", u"cmd_deleteToBeginningOfLine"},
+    {u"keypress", u"VK_BACK", nullptr, u"control", u"cmd_deleteWordBackward"},
     {u"keypress", u"VK_DELETE", nullptr, u"alt", u"cmd_deleteToEndOfLine"},
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
@@ -64,7 +66,9 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_HOME", nullptr, u"shift,control", u"cmd_selectTop"},
     {u"keypress", u"VK_END", nullptr, u"shift,control", u"cmd_selectBottom"},
     {u"keypress", u"VK_BACK", nullptr, u"alt", u"cmd_deleteToBeginningOfLine"},
+    {u"keypress", u"VK_BACK", nullptr, u"control", u"cmd_deleteWordBackward"},
     {u"keypress", u"VK_DELETE", nullptr, u"alt", u"cmd_deleteToEndOfLine"},
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
@@ -106,7 +110,9 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_HOME", nullptr, u"shift,control", u"cmd_selectTop"},
     {u"keypress", u"VK_END", nullptr, u"shift,control", u"cmd_selectBottom"},
     {u"keypress", u"VK_BACK", nullptr, u"alt", u"cmd_deleteToBeginningOfLine"},
+    {u"keypress", u"VK_BACK", nullptr, u"control", u"cmd_deleteWordBackward"},
     {u"keypress", u"VK_DELETE", nullptr, u"alt", u"cmd_deleteToEndOfLine"},
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
@@ -145,7 +151,9 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_HOME", nullptr, u"shift,control", u"cmd_selectTop"},
     {u"keypress", u"VK_END", nullptr, u"shift,control", u"cmd_selectBottom"},
     {u"keypress", u"VK_BACK", nullptr, u"alt", u"cmd_deleteToBeginningOfLine"},
+    {u"keypress", u"VK_BACK", nullptr, u"control", u"cmd_deleteWordBackward"},
     {u"keypress", u"VK_DELETE", nullptr, u"alt", u"cmd_deleteToEndOfLine"},
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
