@@ -20,7 +20,6 @@
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
-#include "nsIProcessSwitchRequestor.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIMultiPartChannel.h"
 
@@ -88,7 +87,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIParentChannel,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
-                             public nsIProcessSwitchRequestor,
                              public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
@@ -109,7 +107,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIPROCESSSWITCHREQUESTOR
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
 
   // We suspend the underlying channel when replacing ourselves with
@@ -217,6 +214,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
+
+  bool HasCrossOriginOpenerPolicyMismatch();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
