@@ -16,9 +16,82 @@ Before trying to integrate a modified component into an *external* app try to re
 
 * Add a **user interface test** for a sample app: The UI test will prevent regressions in your sample app scenario and allows other developers to *replay* your scenario when changing component code.
 
-## Using a local Maven repository to test local component code
+## Testing local components code
 
-Even if you are able to reproduce the scenario *inside* the repository you may still want to test your code with an external app consuming the component.  You can do that by *publishing* the component to your *local* Maven repository and configuring the app to pull the dependency from there.
+Even if you are able to reproduce the scenario *inside* the repository you may still want to test your code with an external app consuming the component.  You can do that by *publishing* the component to your *local* Maven repository and configuring the app to pull the dependency from there. This can be achieved manually, or via an automated flow described below.
+
+### Automated flow: using auto-publication to test local component code
+
+*android-component* repository contains scripts necessary to automatically determine if there are any local changes, publish them to a local maven repository, and to configure consuming application to use the latest published local version.
+
+Add the following to your project's `settings.gradle`. This code will execute during the project's Gradle initialization phase, and will trigger android-component's auto-publication scripts when `local.properties` is configured.
+
+```
+def runCmd(cmd, workingDir, successMessage, captureStdout=true) {
+    def proc = cmd.execute(null, new File(workingDir))
+    def standardOutput = captureStdout ? new ByteArrayOutputStream() : System.out
+    proc.consumeProcessOutput(standardOutput, System.err)
+    proc.waitFor()
+
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}");
+    } else {
+        log(successMessage)
+    }
+    return captureStdout ? standardOutput : null
+}
+
+Properties localProperties = null
+String settingAndroidComponentsPath = "autoPublish.android-components.dir"
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    log('Loaded local.properties')
+}
+
+if (localProperties != null) {
+    localProperties.each { prop ->
+        gradle.ext.set("localProperties.${prop.key}", prop.value)
+    }
+
+    String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
+
+    if (androidComponentsLocalPath != null) {
+        log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
+        def publishAcCmd = ["./automation/publish_to_maven_local_if_modified.py"]
+        runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components for local development.", false)
+    } else {
+        log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
+    }
+}
+```
+
+Also, add the following to application's `build.gradle`. This will configure your project to use the latest locally published version of `android-components`.
+```
+if (gradle.hasProperty('localProperties.autoPublish.android-components.dir')) {
+    ext.acSrcDir = gradle."localProperties.autoPublish.android-components.dir"
+    apply from: "../${acSrcDir}/substitute-local-ac.gradle"
+}
+```
+
+Finally, to enable this workflow, in your project's `local.properties` file, add the following:
+```
+autoPublish.android-components.dir=../android-components
+```
+
+With all of the above done, your project will now be built against your local checkout of `android-components`. This automation is practically zero-cost - if there are no local changes in `android-components`, no additional work will be performed.
+
+To disable this flow and test against a released version, comment out the `autoPublish` line in `local.properties`.
+
+#### Hints for working with an auto-publication workflow
+- it may be worth it to clean up your local .m2 directory now-and-then, as old builds start to accumulate
+- after making changes to `android-components`, press `sync with gradle` in your project's Android Studio to see those changes reflected in your project
+- simply pressing `play` in your project's Android Studio should always produce a build with latest `android-components`, even if you didn't `sync` beforehand.
+
+### Manual flow: using a local Maven repository to test local component code
+
+This is the fully manual version of the above flow. Generally not recommended for day-to-day use since it's error-prone and more cumbersome.
 
 #### Setup version number
 
