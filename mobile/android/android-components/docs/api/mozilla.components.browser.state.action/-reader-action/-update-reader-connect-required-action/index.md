@@ -2,7 +2,7 @@
 
 # UpdateReaderConnectRequiredAction
 
-`data class UpdateReaderConnectRequiredAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L422)
+`data class UpdateReaderConnectRequiredAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L428)
 
 Updates the [ReaderState.connectRequired](../../../mozilla.components.browser.state.state/-reader-state/connect-required.md) flag.
 

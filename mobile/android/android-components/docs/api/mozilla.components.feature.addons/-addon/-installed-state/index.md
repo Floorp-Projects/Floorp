@@ -2,7 +2,7 @@
 
 # InstalledState
 
-`data class InstalledState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L96)
+`data class InstalledState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/Addon.kt#L98)
 
 Returns a list of id resources per each item on the [Addon.permissions](../permissions.md) list.
 Holds the state of the installed web extension of this add-on.
@@ -11,12 +11,13 @@ Holds the state of the installed web extension of this add-on.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `InstalledState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, optionsPageUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, openOptionsPageInTab: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, supported: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, disabledAsUnsupported: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Returns a list of id resources per each item on the [Addon.permissions](../permissions.md) list. Holds the state of the installed web extension of this add-on. |
+| [&lt;init&gt;](-init-.md) | `InstalledState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, optionsPageUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, openOptionsPageInTab: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, supported: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, disabledAsUnsupported: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, allowedInPrivateBrowsing: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Returns a list of id resources per each item on the [Addon.permissions](../permissions.md) list. Holds the state of the installed web extension of this add-on. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [allowedInPrivateBrowsing](allowed-in-private-browsing.md) | `val allowedInPrivateBrowsing: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>true if this addon should be allowed to run in private browsing pages, false otherwise. |
 | [disabledAsUnsupported](disabled-as-unsupported.md) | `val disabledAsUnsupported: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [enabled](enabled.md) | `val enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Indicates if this [Addon](../index.md) is enabled to interact with web content or not, defaults to false. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The ID of the installed web extension. |
