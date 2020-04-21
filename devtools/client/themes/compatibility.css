@@ -235,8 +235,15 @@
 }
 
 .compatibility-settings__target-browsers-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
   align-items: center;
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
   column-gap: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-settings__target-browsers-item-label {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 2/-1;
 }
