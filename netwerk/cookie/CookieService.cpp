@@ -417,6 +417,7 @@ NS_IMETHODIMP
 CookieService::SetCookieString(nsIURI* aHostURI,
                                const nsACString& aCookieHeader,
                                nsIChannel* aChannel) {
+  NS_ENSURE_ARG(aHostURI);
   return SetCookieStringCommon(aHostURI, aCookieHeader, aChannel, false);
 }
 
@@ -424,6 +425,8 @@ NS_IMETHODIMP
 CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
                                        const nsACString& aCookieHeader,
                                        nsIChannel* aChannel) {
+  NS_ENSURE_ARG(aHostURI);
+  NS_ENSURE_ARG(aChannel);
   return SetCookieStringCommon(aHostURI, aCookieHeader, aChannel, true);
 }
 
@@ -431,7 +434,7 @@ nsresult CookieService::SetCookieStringCommon(nsIURI* aHostURI,
                                               const nsACString& aCookieHeader,
                                               nsIChannel* aChannel,
                                               bool aFromHttp) {
-  NS_ENSURE_ARG(aHostURI);
+  MOZ_ASSERT(aHostURI);
 
   uint32_t rejectedReason = 0;
   ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(

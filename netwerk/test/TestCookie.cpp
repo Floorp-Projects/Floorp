@@ -64,19 +64,7 @@ void SetTime(PRTime offsetTime, nsAutoCString& serverString,
   cookieString.Append(timeStringPreset);
 }
 
-void SetACookie(nsICookieService* aCookieService, const char* aSpec,
-                const char* aCookieString) {
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aSpec);
-
-  nsresult rv = aCookieService->SetCookieStringFromHttp(
-      uri, nsDependentCString(aCookieString), nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-}
-
-// Custom Cookie Generator specifically for the needs of same-site cookies!
-// Hands off unless you know exactly what you are doing!
-void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec,
+void SetACookieInternal(nsICookieService* aCookieService, const char* aSpec,
                         const char* aCookieString, bool aAllowed) {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aSpec);
@@ -107,6 +95,16 @@ void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec,
   nsresult rv = aCookieService->SetCookieStringFromHttp(
       uri, nsDependentCString(aCookieString), dummyChannel);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void SetACookieJarBlocked(nsICookieService* aCookieService, const char* aSpec,
+                          const char* aCookieString) {
+  SetACookieInternal(aCookieService, aSpec, aCookieString, false);
+}
+
+void SetACookie(nsICookieService* aCookieService, const char* aSpec,
+                const char* aCookieString) {
+  SetACookieInternal(aCookieService, aSpec, aCookieString, true);
 }
 
 void SetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
@@ -922,17 +920,17 @@ TEST(TestCookie, TestCookieMain)
 
   // None of these cookies will be set because using
   // CookieJarSettings::GetBlockingAll().
-  SetASameSiteCookie(cookieService, "http://samesite.test", "unset=yes", false);
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "unspecified=yes; samesite", false);
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "empty=yes; samesite=", false);
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "bogus=yes; samesite=bogus", false);
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "strict=yes; samesite=strict", false);
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "lax=yes; samesite=lax", false);
+  SetACookieJarBlocked(cookieService, "http://samesite.test", "unset=yes");
+  SetACookieJarBlocked(cookieService, "http://samesite.test",
+                       "unspecified=yes; samesite");
+  SetACookieJarBlocked(cookieService, "http://samesite.test",
+                       "empty=yes; samesite=");
+  SetACookieJarBlocked(cookieService, "http://samesite.test",
+                       "bogus=yes; samesite=bogus");
+  SetACookieJarBlocked(cookieService, "http://samesite.test",
+                       "strict=yes; samesite=strict");
+  SetACookieJarBlocked(cookieService, "http://samesite.test",
+                       "lax=yes; samesite=lax");
 
   cookies.SetLength(0);
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
@@ -941,22 +939,20 @@ TEST(TestCookie, TestCookieMain)
 
   // Set cookies with various incantations of the samesite attribute:
   // No same site attribute present
-  SetASameSiteCookie(cookieService, "http://samesite.test", "unset=yes", true);
+  SetACookie(cookieService, "http://samesite.test", "unset=yes");
   // samesite attribute present but with no value
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "unspecified=yes; samesite", true);
+  SetACookie(cookieService, "http://samesite.test",
+             "unspecified=yes; samesite");
   // samesite attribute present but with an empty value
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "empty=yes; samesite=", true);
+  SetACookie(cookieService, "http://samesite.test", "empty=yes; samesite=");
   // samesite attribute present but with an invalid value
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "bogus=yes; samesite=bogus", true);
+  SetACookie(cookieService, "http://samesite.test",
+             "bogus=yes; samesite=bogus");
   // samesite=strict
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "strict=yes; samesite=strict", true);
+  SetACookie(cookieService, "http://samesite.test",
+             "strict=yes; samesite=strict");
   // samesite=lax
-  SetASameSiteCookie(cookieService, "http://samesite.test",
-                     "lax=yes; samesite=lax", true);
+  SetACookie(cookieService, "http://samesite.test", "lax=yes; samesite=lax");
 
   cookies.SetLength(0);
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
@@ -1037,7 +1033,7 @@ TEST(TestCookie, SameSiteLax)
 
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
 
-  SetASameSiteCookie(cookieService, "http://samesite.test", "unset=yes", true);
+  SetACookie(cookieService, "http://samesite.test", "unset=yes");
 
   nsTArray<RefPtr<nsICookie>> cookies;
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
@@ -1056,7 +1052,7 @@ TEST(TestCookie, SameSiteLax)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
   EXPECT_EQ(cookies.Length(), (uint64_t)0);
 
-  SetASameSiteCookie(cookieService, "http://samesite.test", "unset=yes", true);
+  SetACookie(cookieService, "http://samesite.test", "unset=yes");
 
   cookies.SetLength(0);
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));

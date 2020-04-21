@@ -25,7 +25,7 @@ function run_test() {
   });
 
   let set = "foo=b;max-age=3600, c=d;path=/";
-  cs.setCookieStringFromHttp(uri, set, null);
+  cs.setCookieStringFromHttp(uri, set, channel);
 
   let expected = "foo=b";
   let actual = cs.getCookieStringFromHttp(uri, channel);

@@ -315,7 +315,7 @@ void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
 nsresult CookieServiceChild::SetCookieStringInternal(
     nsIURI* aHostURI, nsIChannel* aChannel, const nsACString& aCookieString,
     bool aFromHttp) {
-  NS_ENSURE_ARG(aHostURI);
+  MOZ_ASSERT(aHostURI);
 
   // Fast past: don't bother sending IPC messages about nullprincipal'd
   // documents.
@@ -567,6 +567,7 @@ NS_IMETHODIMP
 CookieServiceChild::SetCookieString(nsIURI* aHostURI,
                                     const nsACString& aCookieString,
                                     nsIChannel* aChannel) {
+  NS_ENSURE_ARG(aHostURI);
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString, false);
 }
 
@@ -574,6 +575,8 @@ NS_IMETHODIMP
 CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
                                             const nsACString& aCookieString,
                                             nsIChannel* aChannel) {
+  NS_ENSURE_ARG(aHostURI);
+  NS_ENSURE_ARG(aChannel);
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString, true);
 }
 
