@@ -201,11 +201,11 @@ linux64-clang-9-win-cross:
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.xz
     dependencies:
-        win64-clang-cl-1stage: toolchain-win64-clang-cl-1stage
+        win64-clang-cl-2stage: toolchain-win64-clang-cl-2stage
     fetches:
         toolchain:
             - linux64-clang-9
-        win64-clang-cl-1stage:
+        win64-clang-cl-2stage:
             - artifact: clang.tar.bz2
               extract: false
 
@@ -284,10 +284,10 @@ win64-clang-cl:
             - cmake
             - ninja
 
-win64-clang-cl-1stage:
-    description: "Clang-cl toolchain 1-stage quick build"
+win64-clang-cl-2stage:
+    description: "Clang-cl toolchain 2-stage quick build"
     treeherder:
-        symbol: TW64(clang-cl-1stage)
+        symbol: TW64(clang-cl-2stage)
     worker-type: b-win2012
     worker:
         env:
@@ -295,9 +295,9 @@ win64-clang-cl-1stage:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-win64-1stage.json'
+            - 'build/build-clang/clang-win64-2stage.json'
         resources:
-            - 'build/build-clang/clang-win64-1stage.json'
+            - 'build/build-clang/clang-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.bz2
         tooltool-downloads: internal

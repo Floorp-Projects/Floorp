@@ -1,5 +1,5 @@
 {
-    "stages": "1",
+    "stages": "2",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
