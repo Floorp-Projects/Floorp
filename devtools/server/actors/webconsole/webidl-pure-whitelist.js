@@ -39,6 +39,7 @@ module.exports = {
     ["prototype", "querySelectorAll"],
     ["prototype", "getAsFlexContainer"],
     ["prototype", "getGridFragments"],
+    ["prototype", "hasGridFragments"],
     ["prototype", "getElementsWithGrid"],
   ],
   FormData: [

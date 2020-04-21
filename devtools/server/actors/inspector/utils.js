@@ -109,7 +109,7 @@ function getNodeFlexType(node) {
 
 function getNodeGridType(node) {
   return {
-    isContainer: node.getGridFragments && node.getGridFragments().length,
+    isContainer: node.hasGridFragments && node.hasGridFragments(),
     isItem: !!findGridParentContainerForNode(node),
   };
 }

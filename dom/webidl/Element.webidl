@@ -327,6 +327,12 @@ partial interface Element {
   sequence<Grid> getGridFragments();
 
   /**
+   * Returns whether there are any grid fragments on this element.
+   */
+  [ChromeOnly, Pure]
+  boolean hasGridFragments();
+
+  /**
    * Returns a sequence of all the descendent elements of this element
    * that have display:grid or display:inline-grid style and generate
    * a frame.
