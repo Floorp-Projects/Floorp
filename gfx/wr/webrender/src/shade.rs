@@ -9,7 +9,6 @@ use euclid::default::Transform3D;
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
     desc,
-    MAX_VERTEX_TEXTURE_WIDTH,
     BlendMode, DebugFlags, ImageBufferKind, RendererError, RendererOptions,
     TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
@@ -505,18 +504,9 @@ fn create_prim_shader(
     device: &mut Device,
     features: &[&'static str],
 ) -> Result<Program, ShaderError> {
-    let mut prefix = format!(
-        "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
-        MAX_VERTEX_TEXTURE_WIDTH
-    );
-
-    for feature in features {
-        prefix.push_str(&format!("#define WR_FEATURE_{}\n", feature));
-    }
-
     debug!("PrimShader {}", name);
 
-    device.create_program(name, prefix)
+    device.create_program(name, features)
 }
 
 fn create_clip_shader(
@@ -524,18 +514,9 @@ fn create_clip_shader(
     device: &mut Device,
     features: &[&'static str],
 ) -> Result<Program, ShaderError> {
-    let mut prefix = format!(
-        "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
-        MAX_VERTEX_TEXTURE_WIDTH
-    );
-
-    for feature in features {
-        prefix.push_str(&format!("#define WR_FEATURE_{}\n", feature));
-    }
-
     debug!("ClipShader {}", name);
 
-    device.create_program(name, prefix)
+    device.create_program(name, features)
 }
 
 // NB: If you add a new shader here, make sure to deinitialize it

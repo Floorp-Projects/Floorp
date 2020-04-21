@@ -5037,6 +5037,7 @@ name = "webrender_build"
 version = "0.0.1"
 dependencies = [
  "bitflags",
+ "lazy_static",
  "serde",
 ]
 
