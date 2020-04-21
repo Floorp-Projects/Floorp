@@ -112,6 +112,8 @@ class SitePermissionsExceptionsFragment :
             requireContext().components.core.permissionStorage.deleteAllSitePermissions()
             launch(Main) {
                 showEmptyListMessage()
+                // Reload the selected session.
+                requireContext().components.useCases.sessionUseCases.reload()
             }
         }
     }
