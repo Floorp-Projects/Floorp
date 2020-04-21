@@ -27,3 +27,29 @@ async function createLocalClient() {
   await client.connect();
   return client;
 }
+
+async function initResourceWatcherAndTarget(tab) {
+  const { TargetList } = require("devtools/shared/resources/target-list");
+  const {
+    ResourceWatcher,
+  } = require("devtools/shared/resources/resource-watcher");
+
+  // Create a TargetList for the test tab
+  const client = await createLocalClient();
+
+  let target;
+  if (tab) {
+    target = await client.mainRoot.getTab({ tab });
+  } else {
+    const descriptor = await client.mainRoot.getMainProcess();
+    target = await descriptor.getTarget();
+  }
+
+  const targetList = new TargetList(client.mainRoot, target);
+  await targetList.startListening();
+
+  // Now create a ResourceWatcher
+  const resourceWatcher = new ResourceWatcher(targetList);
+
+  return { client, resourceWatcher, targetList };
+}
