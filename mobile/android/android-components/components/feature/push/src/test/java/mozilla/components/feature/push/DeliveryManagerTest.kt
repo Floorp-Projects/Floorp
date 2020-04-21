@@ -16,13 +16,13 @@ class DeliveryManagerTest {
         val connection: PushConnection = mock()
         var invoked = false
 
-        DeliveryManager.with(connection) { invoked = true }
+        DeliveryManager.runWithInitialized(connection) { invoked = true }
 
         assertFalse(invoked)
 
         `when`(connection.isInitialized()).thenReturn(true)
 
-        DeliveryManager.with(connection) { invoked = true }
+        DeliveryManager.runWithInitialized(connection) { invoked = true }
 
         assertTrue(invoked)
     }
