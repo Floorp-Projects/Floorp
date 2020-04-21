@@ -249,7 +249,7 @@ class WasmGlobalObject : public NativeObject {
   static bool construct(JSContext*, unsigned, Value*);
 
   static WasmGlobalObject* create(JSContext* cx, wasm::HandleVal value,
-                                  bool isMutable);
+                                  bool isMutable, HandleObject proto);
   bool isNewborn() { return getReservedSlot(CELL_SLOT).isUndefined(); }
 
   wasm::ValType type() const;
@@ -437,7 +437,7 @@ class WasmTableObject : public NativeObject {
   // and must be initialized before use.
 
   static WasmTableObject* create(JSContext* cx, const wasm::Limits& limits,
-                                 wasm::TableKind tableKind);
+                                 wasm::TableKind tableKind, HandleObject proto);
   wasm::Table& table() const;
 };
 
