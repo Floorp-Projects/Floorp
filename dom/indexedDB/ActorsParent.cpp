@@ -3900,31 +3900,29 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
-                            uint32_t aTelemetryId,
-                            nsCOMPtr<nsIFileURL>* aResult) {
-  MOZ_ASSERT(aDatabaseFile);
+Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
+    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
+    const uint32_t aTelemetryId) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
-  MOZ_ASSERT(aResult);
 
   nsresult rv;
 
   nsCOMPtr<nsIProtocolHandler> protocolHandler(
       do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", &rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   nsCOMPtr<nsIFileProtocolHandler> fileHandler(
       do_QueryInterface(protocolHandler, &rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   nsCOMPtr<nsIURIMutator> mutator;
-  rv = fileHandler->NewFileURIMutator(aDatabaseFile, getter_AddRefs(mutator));
+  rv = fileHandler->NewFileURIMutator(&aDatabaseFile, getter_AddRefs(mutator));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   // aDirectoryLockId should only be -1 when we are called from
@@ -3944,15 +3942,16 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
     telemetryFilenameClause.Append(NS_ConvertUTF16toUTF8(kSQLiteSuffix));
   }
 
+  nsCOMPtr<nsIFileURL> result;
   rv = NS_MutateURI(mutator)
            .SetQuery(NS_LITERAL_CSTRING("cache=private") +
                      directoryLockIdClause + telemetryFilenameClause)
-           .Finalize(*aResult);
+           .Finalize(result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  return NS_OK;
+  return result;
 }
 
 nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
@@ -4072,62 +4071,62 @@ nsresult SetJournalMode(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
+template <typename V>
+auto ValOrErr(V&& aVal, const nsresult aRv) {
+  return NS_SUCCEEDED(aRv) ? aVal : Result<V, nsresult>{Err(aRv)};
+}
+
 template <class FileOrURLType>
 struct StorageOpenTraits;
 
 template <>
-struct StorageOpenTraits<nsIFileURL*> {
-  static nsresult Open(mozIStorageService* aStorageService,
-                       nsIFileURL* aFileURL,
-                       nsCOMPtr<mozIStorageConnection>* aConnection) {
-    return aStorageService->OpenDatabaseWithFileURL(
-        aFileURL, getter_AddRefs(*aConnection));
+struct StorageOpenTraits<nsIFileURL> {
+  static Result<nsCOMPtr<mozIStorageConnection>, nsresult> Open(
+      mozIStorageService& aStorageService, nsIFileURL& aFileURL) {
+    nsCOMPtr<mozIStorageConnection> connection;
+    nsresult rv = aStorageService.OpenDatabaseWithFileURL(
+        &aFileURL, getter_AddRefs(connection));
+    return ValOrErr(std::move(connection), rv);
   }
 
 #ifdef DEBUG
-  static void GetPath(nsIFileURL* aFileURL, nsCString& aPath) {
-    MOZ_ALWAYS_SUCCEEDS(aFileURL->GetFileName(aPath));
+  static void GetPath(nsIFileURL& aFileURL, nsCString& aPath) {
+    MOZ_ALWAYS_SUCCEEDS(aFileURL.GetFileName(aPath));
   }
 #endif
 };
 
 template <>
-struct StorageOpenTraits<nsIFile*> {
-  static nsresult Open(mozIStorageService* aStorageService, nsIFile* aFile,
-                       nsCOMPtr<mozIStorageConnection>* aConnection) {
-    return aStorageService->OpenUnsharedDatabase(aFile,
-                                                 getter_AddRefs(*aConnection));
+struct StorageOpenTraits<nsIFile> {
+  static Result<nsCOMPtr<mozIStorageConnection>, nsresult> Open(
+      mozIStorageService& aStorageService, nsIFile& aFile) {
+    nsCOMPtr<mozIStorageConnection> connection;
+    nsresult rv = aStorageService.OpenUnsharedDatabase(
+        &aFile, getter_AddRefs(connection));
+    return ValOrErr(std::move(connection), rv);
   }
 
 #ifdef DEBUG
-  static void GetPath(nsIFile* aFile, nsCString& aPath) {
+  static void GetPath(nsIFile& aFile, nsCString& aPath) {
     nsString path;
-    MOZ_ALWAYS_SUCCEEDS(aFile->GetPath(path));
+    MOZ_ALWAYS_SUCCEEDS(aFile.GetPath(path));
 
     LossyCopyUTF16toASCII(path, aPath);
   }
 #endif
 };
 
-template <template <class> class SmartPtr, class FileOrURLType>
-struct StorageOpenTraits<SmartPtr<FileOrURLType>>
-    : public StorageOpenTraits<FileOrURLType*> {};
-
 template <class FileOrURLType>
-nsresult OpenDatabaseAndHandleBusy(
-    mozIStorageService* aStorageService, FileOrURLType aFileOrURL,
-    nsCOMPtr<mozIStorageConnection>* aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDatabaseAndHandleBusy(
+    mozIStorageService& aStorageService, FileOrURLType& aFileOrURL) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aStorageService);
-  MOZ_ASSERT(aFileOrURL);
-  MOZ_ASSERT(aConnection);
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = StorageOpenTraits<FileOrURLType>::Open(aStorageService,
-                                                       aFileOrURL, &connection);
+  auto connectionOrErr =
+      StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL);
 
-  if (rv == NS_ERROR_STORAGE_BUSY) {
+  if (connectionOrErr.isErr() &&
+      connectionOrErr.inspectErr() == NS_ERROR_STORAGE_BUSY) {
 #ifdef DEBUG
     {
       nsCString path;
@@ -4149,123 +4148,123 @@ nsresult OpenDatabaseAndHandleBusy(
     while (true) {
       PR_Sleep(PR_MillisecondsToInterval(100));
 
-      rv = StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL,
-                                                  &connection);
-      if (rv != NS_ERROR_STORAGE_BUSY ||
+      connectionOrErr =
+          StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL);
+      if (!connectionOrErr.isErr() ||
+          connectionOrErr.inspectErr() != NS_ERROR_STORAGE_BUSY ||
           TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
         break;
       }
     }
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(connectionOrErr.isErr())) {
+    return Err(connectionOrErr.unwrapErr());
   }
 
-  *aConnection = std::move(connection);
-  return NS_OK;
+  return connectionOrErr;
 }
 
-nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
-                                 const nsAString& aName,
-                                 const nsACString& aOrigin,
-                                 int64_t aDirectoryLockId,
-                                 uint32_t aTelemetryId,
-                                 mozIStorageConnection** aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
+    nsIFile& aDBFile, nsIFile& aFMDirectory, const nsAString& aName,
+    const nsACString& aOrigin, const int64_t aDirectoryLockId,
+    const uint32_t aTelemetryId) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDBFile);
-  MOZ_ASSERT(aFMDirectory);
   MOZ_ASSERT(aDirectoryLockId >= -1);
-  MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("CreateStorageConnection", DOM);
 
-  nsresult rv;
   bool exists;
 
-  nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId, &dbFileUrl);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto dbFileUrlOrErr =
+      GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId);
+  if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
+    return Err(dbFileUrlOrErr.unwrapErr());
   }
 
+  auto dbFileUrl = dbFileUrlOrErr.unwrap();
+
+  nsresult rv;
   nsCOMPtr<mozIStorageService> ss =
       do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, &connection);
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // If we're just opening the database during origin initialization, then
-    // we don't want to erase any files. The failure here will fail origin
-    // initialization too.
-    if (aName.IsVoid()) {
-      return rv;
-    }
+  auto connectionOrErr = OpenDatabaseAndHandleBusy(*ss, *dbFileUrl);
+  if (connectionOrErr.isErr()) {
+    if (connectionOrErr.inspectErr() == NS_ERROR_FILE_CORRUPTED) {
+      // If we're just opening the database during origin initialization, then
+      // we don't want to erase any files. The failure here will fail origin
+      // initialization too.
+      if (aName.IsVoid()) {
+        return Err(rv);
+      }
 
-    // Nuke the database file.
-    rv = aDBFile->Remove(false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = aFMDirectory->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (exists) {
-      bool isDirectory;
-      rv = aFMDirectory->IsDirectory(&isDirectory);
+      // Nuke the database file.
+      rv = aDBFile.Remove(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (NS_WARN_IF(!isDirectory)) {
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        return Err(rv);
       }
 
-      rv = aFMDirectory->Remove(true);
+      rv = aFMDirectory.Exists(&exists);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
+
+      if (exists) {
+        bool isDirectory;
+        rv = aFMDirectory.IsDirectory(&isDirectory);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
+        if (NS_WARN_IF(!isDirectory)) {
+          IDB_REPORT_INTERNAL_ERR();
+          return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        }
+
+        rv = aFMDirectory.Remove(true);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
+      }
+
+      connectionOrErr = OpenDatabaseAndHandleBusy(*ss, *dbFileUrl);
     }
 
-    rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, &connection);
+    if (NS_WARN_IF(connectionOrErr.isErr())) {
+      return Err(connectionOrErr.unwrapErr());
+    }
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto connection = connectionOrErr.unwrap();
 
   rv = SetDefaultPragmas(connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   rv = connection->EnableModule(NS_LITERAL_CSTRING("filesystem"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   // Check to make sure that the database schema is correct.
   int32_t schemaVersion;
   rv = connection->GetSchemaVersion(&schemaVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   // Unknown schema will fail origin initialization too.
   if (!schemaVersion && aName.IsVoid()) {
     IDB_WARNING("Unable to open IndexedDB database, schema is not set!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   if (schemaVersion > kSQLiteSchemaVersion) {
     IDB_WARNING("Unable to open IndexedDB database, schema is too high!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   bool journalModeSet = false;
@@ -4279,7 +4278,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         rv = connection->ExecuteSimpleSQL(nsPrintfCString(
             "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
       }
 
@@ -4300,12 +4299,12 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = SetJournalMode(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       journalModeSet = true;
@@ -4326,7 +4325,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
     if (newDatabase) {
       rv = CreateTables(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
@@ -4340,22 +4339,22 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
                              "VALUES (:name, :origin)"),
           getter_AddRefs(stmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = stmt->BindStringByIndex(0, aName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = stmt->BindUTF8StringByIndex(1, aOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = stmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
     } else {
       // This logic needs to change next time we change the schema!
@@ -4412,7 +4411,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
             rv = UpgradeSchemaFrom18_0To19_0(connection);
             break;
           case MakeSchemaVersion(19, 0):
-            rv = UpgradeSchemaFrom19_0To20_0(aFMDirectory, connection);
+            rv = UpgradeSchemaFrom19_0To20_0(&aFMDirectory, connection);
             break;
           case MakeSchemaVersion(20, 0):
             rv = UpgradeSchemaFrom20_0To21_0(connection);
@@ -4436,16 +4435,16 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
             IDB_WARNING(
                 "Unable to open IndexedDB database, no upgrade path is "
                 "available!");
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         }
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
 
         rv = connection->GetSchemaVersion(&schemaVersion);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
       }
 
@@ -4459,7 +4458,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
       rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
 #ifdef DEBUG
@@ -4484,13 +4483,13 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
       rv = connection->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size;"),
                                        getter_AddRefs(stmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       bool hasResult;
       rv = stmt->ExecuteStep(&hasResult);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       MOZ_ASSERT(hasResult);
@@ -4498,7 +4497,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
       int32_t pageSize;
       rv = stmt->GetInt32(0, &pageSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
@@ -4508,18 +4507,18 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         rv = connection->ExecuteSimpleSQL(
             NS_LITERAL_CSTRING("PRAGMA journal_mode = DELETE;"));
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
 
         rv = connection->CreateStatement(
             NS_LITERAL_CSTRING("PRAGMA journal_mode;"), getter_AddRefs(stmt));
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
 
         rv = stmt->ExecuteStep(&hasResult);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
 
         MOZ_ASSERT(hasResult);
@@ -4527,7 +4526,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         nsCString journalMode;
         rv = stmt->GetUTF8String(0, journalMode);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
 
         if (journalMode.EqualsLiteral("delete")) {
@@ -4536,7 +4535,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
           rv = connection->ExecuteSimpleSQL(nsPrintfCString(
               "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
+            return Err(rv);
           }
 
           // We will need to VACUUM in order to change the page size.
@@ -4552,7 +4551,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
     if (vacuumNeeded) {
       rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
     }
 
@@ -4562,14 +4561,14 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         rv = connection->ExecuteSimpleSQL(
             NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(FULL);"));
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return Err(rv);
         }
       }
 
       int64_t fileSize;
-      rv = aDBFile->GetFileSize(&fileSize);
+      rv = aDBFile.GetFileSize(&fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       MOZ_ASSERT(fileSize > 0);
@@ -4586,22 +4585,22 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
                              ", last_vacuum_size = :size;"),
           getter_AddRefs(vacuumTimeStmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = vacuumTimeStmt->BindInt64ByIndex(1, fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = vacuumTimeStmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
     }
   }
@@ -4609,12 +4608,11 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
   if (!journalModeSet) {
     rv = SetJournalMode(connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
-  connection.forget(aConnection);
-  return NS_OK;
+  return connection;
 }
 
 nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
@@ -4628,79 +4626,75 @@ nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
   return fileOrErr.unwrap();
 }
 
-nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
-                              uint32_t aTelemetryId,
-                              nsCOMPtr<mozIStorageConnection>* aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetStorageConnection(
+    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
+    const uint32_t aTelemetryId) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aDirectoryLockId >= 0);
-  MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("GetStorageConnection", DOM);
 
   bool exists;
-  nsresult rv = aDatabaseFile->Exists(&exists);
+  nsresult rv = aDatabaseFile.Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (NS_WARN_IF(!exists)) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId,
-                          &dbFileUrl);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto dbFileUrlOrErr =
+      GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId);
+  if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
+    return Err(dbFileUrlOrErr.unwrapErr());
   }
 
   nsCOMPtr<mozIStorageService> ss =
       do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, &connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto connectionOrErr =
+      OpenDatabaseAndHandleBusy(*ss, *dbFileUrlOrErr.inspect());
+  if (NS_WARN_IF(connectionOrErr.isErr())) {
+    return Err(connectionOrErr.unwrapErr());
   }
+
+  auto connection = connectionOrErr.unwrap();
 
   rv = SetDefaultPragmas(connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   rv = SetJournalMode(connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  *aConnection = std::move(connection);
-  return NS_OK;
+  return connection;
 }
 
-nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
-                              int64_t aDirectoryLockId, uint32_t aTelemetryId,
-                              nsCOMPtr<mozIStorageConnection>* aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetStorageConnection(
+    const nsAString& aDatabaseFilePath, const int64_t aDirectoryLockId,
+    const uint32_t aTelemetryId) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
   MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, kSQLiteSuffix));
   MOZ_ASSERT(aDirectoryLockId >= 0);
-  MOZ_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
   if (NS_WARN_IF(!dbFile)) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  return GetStorageConnection(dbFile, aDirectoryLockId, aTelemetryId,
-                              aConnection);
+  return GetStorageConnection(*dbFile, aDirectoryLockId, aTelemetryId);
 }
 
 /*******************************************************************************
@@ -7111,7 +7105,7 @@ class DeleteDatabaseOp final : public FactoryOp {
  private:
   ~DeleteDatabaseOp() override = default;
 
-  void LoadPreviousVersion(nsIFile* aDatabaseFile);
+  void LoadPreviousVersion(nsIFile& aDatabaseFile);
 
   nsresult DatabaseOpen() override;
 
@@ -12132,18 +12126,17 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
 
   MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
 
-  nsCOMPtr<mozIStorageConnection> storageConnection;
-  nsresult rv =
+  auto storageConnectionOrErr =
       GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
-                           aDatabase.TelemetryId(), &storageConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
+                           aDatabase.TelemetryId());
+  if (NS_WARN_IF(storageConnectionOrErr.isErr())) {
+    return Err(storageConnectionOrErr.unwrapErr());
   }
 
-  RefPtr<DatabaseConnection> connection =
-      new DatabaseConnection(storageConnection, aDatabase.GetFileManagerPtr());
+  RefPtr<DatabaseConnection> connection = new DatabaseConnection(
+      storageConnectionOrErr.unwrap(), aDatabase.GetFileManagerPtr());
 
-  rv = connection->Init();
+  nsresult rv = connection->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -16792,15 +16785,13 @@ nsCOMPtr<nsIFile> FileManager::GetCheckedFileForId(nsIFile* aDirectory,
 }
 
 // static
-nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
+nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
                                     const nsACString& aOrigin,
                                     uint32_t aTelemetryId) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aDatabaseFile);
 
   bool exists;
-  nsresult rv = aDirectory->Exists(&exists);
+  nsresult rv = aDirectory.Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -16810,7 +16801,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
   }
 
   bool isDirectory;
-  rv = aDirectory->IsDirectory(&isDirectory);
+  rv = aDirectory.IsDirectory(&isDirectory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -16820,7 +16811,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
   }
 
   nsCOMPtr<nsIFile> journalDirectory;
-  rv = aDirectory->Clone(getter_AddRefs(journalDirectory));
+  rv = aDirectory.Clone(getter_AddRefs(journalDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -16858,13 +16849,14 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
     }
 
     if (hasElements) {
-      nsCOMPtr<mozIStorageConnection> connection;
-      rv = CreateStorageConnection(aDatabaseFile, aDirectory, VoidString(),
-                                   aOrigin, /* aDirectoryLockId */ -1,
-                                   aTelemetryId, getter_AddRefs(connection));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      auto connectionOrErr = CreateStorageConnection(
+          aDatabaseFile, aDirectory, VoidString(), aOrigin,
+          /* aDirectoryLockId */ -1, aTelemetryId);
+      if (NS_WARN_IF(connectionOrErr.isErr())) {
+        return connectionOrErr.unwrapErr();
       }
+
+      auto connection = connectionOrErr.unwrap();
 
       mozStorageTransaction transaction(connection, false);
 
@@ -16909,7 +16901,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
 
         if (!flag) {
           nsCOMPtr<nsIFile> file;
-          rv = aDirectory->Clone(getter_AddRefs(file));
+          rv = aDirectory.Clone(getter_AddRefs(file));
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -17451,7 +17443,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    rv = FileManager::InitDirectory(fmDirectory, databaseFile, aOrigin,
+    rv = FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
                                     TelemetryIdForFile(databaseFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
@@ -18816,13 +18808,13 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   const nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv =
-      GetStorageConnection(databaseFile, mDirectoryLockId,
-                           TelemetryIdForFile(databaseFile), &connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto connectionOrErr = GetStorageConnection(*databaseFile, mDirectoryLockId,
+                                              TelemetryIdForFile(databaseFile));
+  if (NS_WARN_IF(connectionOrErr.isErr())) {
     return;
   }
+
+  const auto connection = connectionOrErr.unwrap();
 
   AutoClose autoClose(connection);
 
@@ -18832,7 +18824,7 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   }
 
   bool databaseIsOk;
-  rv = CheckIntegrity(connection, &databaseIsOk);
+  nsresult rv = CheckIntegrity(connection, &databaseIsOk);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -21507,13 +21499,14 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateStorageConnection(dbFile, fmDirectory, databaseName, mOrigin,
-                               mDirectoryLockId, mTelemetryId,
-                               getter_AddRefs(connection));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto connectionOrErr =
+      CreateStorageConnection(*dbFile, *fmDirectory, databaseName, mOrigin,
+                              mDirectoryLockId, mTelemetryId);
+  if (NS_WARN_IF(connectionOrErr.isErr())) {
+    return connectionOrErr.unwrapErr();
   }
+
+  auto connection = connectionOrErr.unwrap();
 
   AutoSetProgressHandler asph;
   rv = asph.Register(*connection, this);
@@ -22583,9 +22576,8 @@ void OpenDatabaseOp::VersionChangeOp::Cleanup() {
   TransactionDatabaseOperationBase::Cleanup();
 }
 
-void DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile) {
+void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(mState == State::DatabaseWorkOpen);
   MOZ_ASSERT(!mPreviousVersion);
 
@@ -22599,11 +22591,12 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile) {
     return;
   }
 
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = OpenDatabaseAndHandleBusy(ss, aDatabaseFile, &connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto connectionOrErr = OpenDatabaseAndHandleBusy(*ss, aDatabaseFile);
+  if (NS_WARN_IF(connectionOrErr.isErr())) {
     return;
   }
+
+  const auto connection = connectionOrErr.unwrap();
 
 #ifdef DEBUG
   {
@@ -22745,7 +22738,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   if (exists) {
     // Parts of this function may fail but that shouldn't prevent us from
     // deleting the file eventually.
-    LoadPreviousVersion(dbFile);
+    LoadPreviousVersion(*dbFile);
 
     mState = State::BeginVersionChange;
   } else {
