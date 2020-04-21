@@ -13,8 +13,8 @@ class MessageSender {
     this.listeners[name] = listener;
   }
 
-  sendAsyncMessage(name, data, objects) {
-    this.sent.push({ name, data, objects });
+  sendAsyncMessage(name, data) {
+    this.sent.push({ name, data });
   }
 }
 
@@ -63,7 +63,6 @@ add_test(function test_addEventListener() {
   deepEqual(ipc.sent[0], {
     name: "Marionette:DOM:AddEventListener",
     data: { type: "click" },
-    objects: undefined,
   });
 
   run_next_test();
@@ -93,7 +92,6 @@ add_test(function test_WebElementEventTarget_addEventListener_once() {
   deepEqual(ipc.sent[1], {
     name: "Marionette:DOM:RemoveEventListener",
     data: { type: "click" },
-    objects: undefined,
   });
 
   run_next_test();
@@ -132,7 +130,6 @@ add_test(function test_WebElementEventTarget_removeEventListener() {
   deepEqual(ipc.sent[ipc.sent.length - 1], {
     name: "Marionette:DOM:RemoveEventListener",
     data: { type: "click" },
-    objects: undefined,
   });
 
   run_next_test();
@@ -272,7 +269,6 @@ add_test(function test_ContentEventObserverService_handleEvent() {
   deepEqual(ipc.sent[0], {
     name: "Marionette:DOM:OnEvent",
     data: { type: "click" },
-    objects: { target: win },
   });
 
   run_next_test();
