@@ -42,7 +42,7 @@ with Files('mach_commands.py'):
     BUG_COMPONENT = ('Testing', 'Python Test')
 
 with Files('mozperftest/**'):
-    BUG_COMPONENT = ('Testing', 'Performance')
+    BUG_COMPONENT = ('Testing', 'mozperftest')
 
 
 SPHINX_PYTHON_PACKAGE_DIRS += [

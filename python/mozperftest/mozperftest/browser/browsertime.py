@@ -77,6 +77,16 @@ class BrowsertimeRunner(NodeRunner):
             "default": None,
             "help": "Path to the desktop browser, or Android app name.",
         },
+        "--browsertime-clobber": {
+            "action": "store_true",
+            "default": False,
+            "help": "Force-update the installation.",
+        },
+        "--browsertime-install-url": {
+            "type": str,
+            "default": None,
+            "help": "Use this URL as the install url.",
+        },
     }
 
     def __init__(self, env, mach_cmd):
@@ -200,10 +210,12 @@ class BrowsertimeRunner(NodeRunner):
         site_packages = os.path.abspath(req.satisfied_by.location)
         return not site_packages.startswith(venv_site_lib)
 
-    def setup(self, should_clobber=False, new_upstream_url=""):
+    def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package.
         """
         super(BrowsertimeRunner, self).setup()
+        should_clobber = self.get_arg("browsertime-clobber")
+        install_url = self.get_arg("browsertime-install-url")
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -218,7 +230,7 @@ class BrowsertimeRunner(NodeRunner):
         sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
         import setup_helper
 
-        if not new_upstream_url:
+        if install_url is None:
             self.setup_prerequisites()
 
         # preparing ~/.mozbuild/browsertime
@@ -230,18 +242,18 @@ class BrowsertimeRunner(NodeRunner):
 
         package_json_path = mozpath.join(self.state_path, "package.json")
 
-        if new_upstream_url:
+        if install_url is not None:
             self.info(
                 "Updating browsertime node module version in {package_json_path} "
-                "to {new_upstream_url}",
-                new_upstream_url=new_upstream_url,
+                "to {install_url}",
+                install_url=install_url,
                 package_json_path=package_json_path,
             )
 
-            if not re.search("/tarball/[a-f0-9]{40}$", new_upstream_url):
+            if not re.search("/tarball/[a-f0-9]{40}$", install_url):
                 raise ValueError(
                     "New upstream URL does not end with /tarball/[a-f0-9]{40}: '{}'".format(
-                        new_upstream_url
+                        install_url
                     )
                 )
 
@@ -250,10 +262,8 @@ class BrowsertimeRunner(NodeRunner):
                     f.read(), object_pairs_hook=collections.OrderedDict
                 )
 
-            existing_body["devDependencies"]["browsertime"] = new_upstream_url
-
+            existing_body["devDependencies"]["browsertime"] = install_url
             updated_body = json.dumps(existing_body)
-
             with open(package_json_path, "w") as f:
                 f.write(updated_body)
 
@@ -276,9 +286,9 @@ class BrowsertimeRunner(NodeRunner):
         setup_helper.package_setup(
             self.state_path,
             "browsertime",
-            should_update=new_upstream_url != "",
+            should_update=install_url is not None,
             should_clobber=should_clobber,
-            no_optional=new_upstream_url or AUTOMATION,
+            no_optional=install_url or AUTOMATION,
         )
 
     def append_env(self, append_path=True):
@@ -437,6 +447,7 @@ class BrowsertimeRunner(NodeRunner):
         return args_list
 
     def __call__(self, metadata):
+        self.setup()
         cycles = self.get_arg("browser-cycles", 1)
         for cycle in range(1, cycles + 1):
             metadata.run_hook("before_cycle", cycle=cycle)
