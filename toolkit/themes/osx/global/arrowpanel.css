@@ -1,0 +1,47 @@
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+%include ../../shared/arrowpanel.inc.css
+
+:host([side="top"]),
+:host([side="bottom"]) {
+  margin-inline: -25px;
+}
+
+:host([side="left"]),
+:host([side="right"]) {
+  margin-block: -25px;
+}
+
+.panel-arrowcontent {
+  border-radius: var(--arrowpanel-border-radius);
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  margin: 1px;
+}
+
+:host([side="top"]) .panel-arrow,
+:host([side="bottom"]) .panel-arrow {
+  margin-inline: 16px;
+}
+
+:host([side="top"]) .panel-arrow {
+  margin-bottom: -1px;
+}
+
+:host([side="bottom"]) .panel-arrow {
+  margin-top: -1px;
+}
+
+:host([side="left"]) .panel-arrow,
+:host([side="right"]) .panel-arrow {
+  margin-block: 16px;
+}
+
+:host([side="left"]) .panel-arrow {
+  margin-right: -1px;
+}
+
+:host([side="right"]) .panel-arrow {
+  margin-left: -1px;
+}

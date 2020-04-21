@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+:host([animating]) {
+  pointer-events: none;
+}
+
+.panel-arrowcontent {
+  padding: var(--arrowpanel-padding);
+  color: var(--arrowpanel-color);
+  background: var(--arrowpanel-background);
+}
+
+:host(.panel-no-padding) .panel-arrowcontent {
+  padding: 0;
+  overflow: hidden; /* Don't let panel content overflow the border-radius */
+}
+
+:host([orient="vertical"]) .panel-arrowcontent {
+  -moz-box-orient: vertical;
+}
+
+.panel-arrowcontent > html|slot {
+  /* Make border-radius: inherit work on slotted children */
+  border-radius: inherit;
+}
+
+.panel-arrow {
+  -moz-context-properties: fill, stroke;
+  fill: var(--arrowpanel-background);
+  stroke: var(--arrowpanel-border-color);
+  position: relative;
+}
+
+:host([side="top"]) .panel-arrow,
+:host([side="bottom"]) .panel-arrow {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+}
+
+:host([side="left"]) .panel-arrow,
+:host([side="right"]) .panel-arrow {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+}
+
+:host([side="bottom"]) .panel-arrow {
+  transform: scaleY(-1);
+}
+
+:host([side="right"]) .panel-arrow {
+  transform: scaleX(-1);
+}
