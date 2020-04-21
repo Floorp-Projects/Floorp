@@ -80,10 +80,10 @@ platform(linux,mac) == linear-aligned-border-radius.yaml linear-aligned-border-r
 platform(linux,mac) fuzzy-range(<=1,*1404) == repeat-border-radius.yaml repeat-border-radius.png
 
 == conic.yaml conic-ref.yaml
-fuzzy(1,56) == conic-simple.yaml conic-simple.png
+fuzzy(1,57) == conic-simple.yaml conic-simple.png
 fuzzy(255,166) == conic-angle.yaml conic-angle.png
 == conic-center.yaml conic-center.png
-fuzzy(1,1) == conic-angle-wraparound.yaml conic-angle.yaml
+fuzzy(1,2) == conic-angle-wraparound.yaml conic-angle.yaml
 fuzzy(1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml
 fuzzy(1,115) == conic-color-wheel.yaml conic-color-wheel.png
 
