@@ -123,7 +123,7 @@ impl DebugRenderer {
     pub fn new(device: &mut Device) -> Result<Self, ShaderError> {
         let font_program = device.create_program_linked(
             "debug_font",
-            String::new(),
+            &[],
             &DESC_FONT,
         )?;
         device.bind_program(&font_program);
@@ -131,7 +131,7 @@ impl DebugRenderer {
 
         let color_program = device.create_program_linked(
             "debug_color",
-            String::new(),
+            &[],
             &DESC_COLOR,
         )?;
 
