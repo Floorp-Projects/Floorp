@@ -18,6 +18,7 @@
 //! This module defines the `compile()` function which uses Cranelift to compile a single
 //! WebAssembly function.
 
+use log::{debug, info};
 use std::fmt;
 use std::mem;
 

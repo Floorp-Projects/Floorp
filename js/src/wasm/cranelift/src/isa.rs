@@ -21,6 +21,7 @@
 //! The main entry point is the `make_isa()` function which allocates a configured `TargetISA`
 //! object.
 
+use log::warn;
 use std::env;
 
 use cranelift_codegen::isa;

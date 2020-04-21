@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#[macro_use]
-extern crate log;
-
 mod bindings; // High-level bindings for C++ data structures.
 mod compile; // Cranelift function compiler.
 mod isa; // `TargetISA` configuration.
 mod utils; // Helpers for other source files.
 mod wasm2clif; // WebAssembly to Cranelift translation callbacks.
 
+use log::{self, error, info};
 use std::ptr;
 
 use crate::bindings::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
