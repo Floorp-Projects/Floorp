@@ -73,7 +73,8 @@ class SitePermissionsFeatureTest {
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
     }
 
@@ -90,7 +91,8 @@ class SitePermissionsFeatureTest {
             onNeedToRequestPermissions = {
                 wasCalled = true
             },
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
 
         sitePermissionFeature.start()
@@ -102,6 +104,35 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `when users click the deny & don't ask again button in a system permission dialog, we must store the site permission`() {
+        val session = getSelectedSession()
+        var wasCalled = false
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(Permission.AppAudio(id = "permission")))
+        }
+        val feature = SitePermissionsFeature(
+            context = testContext,
+            sessionManager = mockSessionManager,
+            onShouldShowRequestPermissionRationale = {
+                wasCalled = true
+                false
+            },
+            fragmentManager = mockFragmentManager,
+            onNeedToRequestPermissions = mock(),
+            storage = mockStorage
+        )
+        runBlocking {
+            feature.coroutineScopeInitializer = { this }
+            session.appPermissionRequest = Consumable.from(mockPermissionRequest)
+
+            feature.onPermissionsResult(arrayOf("permission"), arrayOf<Int>().toIntArray())
+            assertTrue(wasCalled)
+        }
+        verify(mockStorage).findSitePermissionsBy(anyString())
+        verify(mockStorage).save(any())
+    }
+
+    @Test
     fun `requesting an invalid content permission request will reject the permission request`() {
         val session = getSelectedSession()
 
@@ -110,7 +141,8 @@ class SitePermissionsFeatureTest {
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
             },
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
 
         sitePermissionFeature.start()
@@ -137,7 +169,8 @@ class SitePermissionsFeatureTest {
             onNeedToRequestPermissions = {
                 wasCalled = true
             },
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
 
         sitePermissionFeature.start()
@@ -173,7 +206,8 @@ class SitePermissionsFeatureTest {
                 wasCalled = true
             },
             sessionId = customTabSession.id,
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
 
         sitePermissionFeature.start()
@@ -418,12 +452,14 @@ class SitePermissionsFeatureTest {
     fun `storing a new SitePermissions must call save on the store`() {
         val sitePermissionsList = listOf(ContentGeoLocation())
         val request: PermissionRequest = mock()
-
+        val mockSession: Session = mock {
+            whenever(url).thenReturn(" http://mozilla.org")
+        }
         runBlocking {
             sitePermissionFeature.coroutineScopeInitializer = {
                 this
             }
-            sitePermissionFeature.storeSitePermissions(mock(), request, sitePermissionsList, ALLOWED)
+            sitePermissionFeature.storeSitePermissions(mockSession, request, sitePermissionsList, ALLOWED)
         }
         verify(mockStorage).findSitePermissionsBy(anyString())
         verify(mockStorage).save(any())
@@ -465,6 +501,9 @@ class SitePermissionsFeatureTest {
             val mockRequest: PermissionRequest = mock()
             val sitePermissionFromStorage: SitePermissions = mock()
             val permissions = listOf(permission)
+            val mockSession: Session = mock {
+                whenever(url).thenReturn(" http://mozilla.org")
+            }
             doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
             doReturn(permissions).`when`(mockRequest).permissions
 
@@ -473,13 +512,14 @@ class SitePermissionsFeatureTest {
                 sessionManager = mockSessionManager,
                 fragmentManager = mockFragmentManager,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-                storage = mockStorage
+                storage = mockStorage,
+                onShouldShowRequestPermissionRationale = mock()
             )
 
             try {
                 runBlocking {
                     feature.coroutineScopeInitializer = { this }
-                    feature.storeSitePermissions(mock(), mockRequest, permissions, ALLOWED)
+                    feature.storeSitePermissions(mockSession, mockRequest, permissions, ALLOWED)
                 }
                 verify(mockStorage, times(index + 1)).findSitePermissionsBy(anyString())
                 verify(mockStorage, times(index + 1)).update(any())
@@ -493,7 +533,9 @@ class SitePermissionsFeatureTest {
     @Test
     fun `requesting a content permissions with an already stored allowed permissions will auto granted it and not show a prompt`() {
         val request: PermissionRequest = mock()
-        val mockSession: Session = mock()
+        val mockSession: Session = mock {
+            whenever(url).thenReturn(" http://mozilla.org")
+        }
         val mockConsumable: Consumable<PermissionRequest> = mock()
         val sitePermissionFromStorage: SitePermissions = mock()
         val permissionList = listOf(ContentGeoLocation())
@@ -515,7 +557,7 @@ class SitePermissionsFeatureTest {
     @Test
     fun `requesting a content permissions with an already stored blocked permission will auto block it and not show a prompt`() {
         val request: PermissionRequest = mock()
-        val mockSession: Session = mock()
+        val mockSession: Session = mock { whenever(url).thenReturn(" http://mozilla.org") }
         val mockConsumable: Consumable<PermissionRequest> = mock()
         val sitePermissionFromStorage: SitePermissions = mock()
         val permissionList = listOf(ContentGeoLocation())
@@ -837,7 +879,8 @@ class SitePermissionsFeatureTest {
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
-            fragmentManager = mockFragmentManager
+            fragmentManager = mockFragmentManager,
+            onShouldShowRequestPermissionRationale = mock()
         )
 
         mockSessionManager.add(session)
@@ -938,7 +981,7 @@ class SitePermissionsFeatureTest {
             whenever(uri).thenReturn(" http://mozilla.org")
         }
 
-        val sitePermissions = sitePermissionFeature.getInitialSitePermissions(mockPermissionRequest)
+        val sitePermissions = sitePermissionFeature.getInitialSitePermissions(mock(), mockPermissionRequest)
 
         assertEquals("mozilla.org", sitePermissions.origin)
         assertEquals(BLOCKED, sitePermissions.location)

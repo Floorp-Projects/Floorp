@@ -50,7 +50,8 @@ class SitePermissionsRulesTest {
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
-            fragmentManager = mock()
+            fragmentManager = mock(),
+            onShouldShowRequestPermissionRationale = mock()
         )
     }
 

@@ -175,10 +175,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                     location = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     microphone = SitePermissionsRules.Action.ASK_TO_ALLOW
-                )
-            ) { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
-            },
+                ),
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+                },
+                onShouldShowRequestPermissionRationale = { shouldShowRequestPermissionRationale(it) }
+            ),
             owner = this,
             view = layout
         )
