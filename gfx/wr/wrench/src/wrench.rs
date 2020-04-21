@@ -232,6 +232,7 @@ impl Wrench {
         window: &mut WindowWrapper,
         proxy: Option<EventsLoopProxy>,
         shader_override_path: Option<PathBuf>,
+        use_optimized_shaders: bool,
         dp_ratio: f32,
         save_type: Option<SaveType>,
         size: DeviceIntSize,
@@ -274,6 +275,7 @@ impl Wrench {
         let opts = webrender::RendererOptions {
             device_pixel_ratio: dp_ratio,
             resource_override_path: shader_override_path,
+            use_optimized_shaders,
             recorder,
             enable_subpixel_aa: !no_subpixel_aa,
             debug_flags,

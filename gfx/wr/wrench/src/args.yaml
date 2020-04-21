@@ -21,6 +21,9 @@ args:
       long: shaders
       help: Override path for shaders
       takes_value: true
+  - use_unoptimized_shaders:
+      long: use-unoptimized-shaders
+      help: Use unoptimized shaders rather than the shaders optimized at build-time
   - rebuild:
       short: r
       long: rebuild
