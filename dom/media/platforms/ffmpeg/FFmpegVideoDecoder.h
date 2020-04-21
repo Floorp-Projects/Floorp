@@ -111,6 +111,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #ifdef MOZ_WAYLAND_USE_VAAPI
   AVBufferRef* mVAAPIDeviceContext;
   const bool mDisableHardwareDecoding;
+  VADisplay mDisplay;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;

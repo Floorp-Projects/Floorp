@@ -159,7 +159,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION(av_frame_get_color_range, AV_FUNC_AVUTIL_ALL)
 #ifdef MOZ_WAYLAND
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config, AV_FUNC_58)
-  AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_create, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_init, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_alloc, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_buffer_ref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_buffer_unref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_hwframe_transfer_get_formats, AV_FUNC_58)
@@ -181,8 +182,21 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   if (mVALib) {
     VA_FUNC_OPTION_SILENT(vaExportSurfaceHandle)
     VA_FUNC_OPTION_SILENT(vaSyncSurface)
+    VA_FUNC_OPTION_SILENT(vaInitialize)
+    VA_FUNC_OPTION_SILENT(vaTerminate)
   }
-#  undef VA_FUNC_OPTION
+#  undef VA_FUNC_OPTION_SILENT
+
+#  define VAW_FUNC_OPTION_SILENT(func)                                   \
+    if (!(func = (decltype(func))PR_FindSymbol(mVALibWayland, #func))) { \
+      FFMPEG_LOG("Couldn't load function " #func);                       \
+    }
+
+  // mVALibWayland is optional and may not be present.
+  if (mVALibWayland) {
+    VAW_FUNC_OPTION_SILENT(vaGetDisplayWl)
+  }
+#  undef VAW_FUNC_OPTION_SILENT
 #endif
 
   avcodec_register_all();
@@ -218,6 +232,9 @@ void FFmpegLibWrapper::Unlink() {
   if (mVALib) {
     PR_UnloadLibrary(mVALib);
   }
+  if (mVALibWayland) {
+    PR_UnloadLibrary(mVALibWayland);
+  }
 #endif
   PodZero(this);
 }
@@ -226,13 +243,16 @@ void FFmpegLibWrapper::Unlink() {
 bool FFmpegLibWrapper::IsVAAPIAvailable() {
 #  define VA_FUNC_LOADED(func) (func != nullptr)
   return VA_FUNC_LOADED(avcodec_get_hw_config) &&
-         VA_FUNC_LOADED(av_hwdevice_ctx_create) &&
+         VA_FUNC_LOADED(av_hwdevice_ctx_alloc) &&
+         VA_FUNC_LOADED(av_hwdevice_ctx_init) &&
          VA_FUNC_LOADED(av_buffer_ref) && VA_FUNC_LOADED(av_buffer_unref) &&
          VA_FUNC_LOADED(av_hwframe_transfer_get_formats) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_create_derived) &&
          VA_FUNC_LOADED(av_hwframe_ctx_alloc) && VA_FUNC_LOADED(av_dict_set) &&
          VA_FUNC_LOADED(av_dict_free) &&
-         VA_FUNC_LOADED(vaExportSurfaceHandle) && VA_FUNC_LOADED(vaSyncSurface);
+         VA_FUNC_LOADED(vaExportSurfaceHandle) &&
+         VA_FUNC_LOADED(vaSyncSurface) && VA_FUNC_LOADED(vaInitialize) &&
+         VA_FUNC_LOADED(vaTerminate) && VA_FUNC_LOADED(vaGetDisplayWl);
 }
 #endif
 
