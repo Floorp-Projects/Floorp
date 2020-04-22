@@ -1260,14 +1260,10 @@ Maybe<LexicalScope::Data*> NewLexicalScopeData(JSContext* cx,
   BindingNameVector lets(cx);
   BindingNameVector consts(cx);
 
-  // Unlike other scopes with bindings which are body-level, it is unknown
-  // if pc->sc()->allBindingsClosedOver() is correct at the time of
-  // finishing parsing a lexical scope.
-  //
-  // Instead, pc->sc()->allBindingsClosedOver() is checked in
-  // EmitterScope::enterLexical. Also see comment there.
+  bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
+
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    BindingName binding(bi.name(), bi.closedOver());
+    BindingName binding(bi.name(), allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::Let:
         if (!lets.append(binding)) {
