@@ -13772,18 +13772,15 @@ bool Database::InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable) {
     return true;
   }
 
-  nsTArray<RefPtr<T>> elementsToInvalidate;
-  if (NS_WARN_IF(!elementsToInvalidate.SetCapacity(count, fallible))) {
+  const auto elementsToInvalidateOrErr = TransformIntoNewArray(
+      aTable, [](const auto& entry) { return entry.GetKey(); }, fallible);
+  if (elementsToInvalidateOrErr.isErr()) {
     return false;
-  }
-
-  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
-    elementsToInvalidate.AppendElement(iter.Get()->GetKey());
   }
 
   IDB_REPORT_INTERNAL_ERR();
 
-  for (const auto& elementToInvalidate : elementsToInvalidate) {
+  for (const auto& elementToInvalidate : elementsToInvalidateOrErr.inspect()) {
     MOZ_ASSERT(elementToInvalidate);
 
     elementToInvalidate->Invalidate();
