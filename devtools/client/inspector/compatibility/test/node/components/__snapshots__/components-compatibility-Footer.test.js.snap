@@ -6,6 +6,7 @@ exports[`Footer component renders 1`] = `
 >
   <button
     className="compatibility-footer__button"
+    onClick={[Function]}
     title="Settings"
   >
     <img

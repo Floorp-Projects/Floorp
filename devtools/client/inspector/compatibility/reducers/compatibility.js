@@ -11,6 +11,7 @@ const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
+  COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_START,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
@@ -22,6 +23,7 @@ const {
 } = require("devtools/client/inspector/compatibility/actions/index");
 
 const INITIAL_STATE = {
+  isSettingsVisibile: false,
   isTopLevelTargetProcessing: false,
   selectedNode: null,
   selectedNodeIssues: [],
@@ -60,6 +62,9 @@ const reducers = {
   },
   [COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
     return Object.assign({}, state, { selectedNodeIssues: issues });
+  },
+  [COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY](state, { visibility }) {
+    return Object.assign({}, state, { isSettingsVisibile: visibility });
   },
   [COMPATIBILITY_UPDATE_TARGET_BROWSERS_START](state) {
     return Object.assign({}, state, { isTopLevelTargetProcessing: true });

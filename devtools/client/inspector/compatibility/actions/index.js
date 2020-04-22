@@ -29,6 +29,9 @@ createEnum(
     // Updates the selected node issues.
     "COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES",
 
+    // Updates the settings panel visibility.
+    "COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY",
+
     // Updates the target browsers.
     "COMPATIBILITY_UPDATE_TARGET_BROWSERS_START",
     "COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS",
