@@ -4825,7 +4825,7 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
   // Percentage chance we skip an extension storage sync (kinto life support).
-  pref("services.sync.extension-storage.skipPercentageChance", 20);
+  pref("services.sync.extension-storage.skipPercentageChance", 50);
 #endif // MOZ_SERVICES_SYNC
 
 // Marionette is the remote protocol that lets OOP programs communicate with,
