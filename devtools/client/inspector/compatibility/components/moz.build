@@ -13,6 +13,7 @@ DevToolsModules(
     "NodeItem.js",
     "NodeList.js",
     "NodePane.js",
+    "Settings.js",
     "UnsupportedBrowserItem.js",
     "UnsupportedBrowserList.js",
 )

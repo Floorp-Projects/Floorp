@@ -9,6 +9,8 @@
 
 const { shallow } = require("enzyme");
 const React = require("react");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+const configureStore = require("redux-mock-store").default;
 
 const Footer = React.createFactory(
   require("devtools/client/inspector/compatibility/components/Footer")
@@ -16,7 +18,9 @@ const Footer = React.createFactory(
 
 describe("Footer component", () => {
   it("renders", () => {
-    const pane = shallow(Footer());
-    expect(pane).toMatchSnapshot();
+    const mockStore = configureStore([thunk]);
+    const store = mockStore({});
+    const wrapper = shallow(Footer({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
   });
 });

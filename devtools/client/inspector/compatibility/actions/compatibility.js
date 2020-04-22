@@ -24,6 +24,7 @@ const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
+  COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_START,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_FAILURE,
@@ -91,6 +92,13 @@ function updateSelectedNode(node) {
     }
 
     dispatch({ type: COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE });
+  };
+}
+
+function updateSettingsVisibility(visibility) {
+  return {
+    type: COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY,
+    visibility,
   };
 }
 
@@ -209,6 +217,7 @@ async function _updateTopLevelTargetIssues(target, targetBrowsers, dispatch) {
 module.exports = {
   updateNodes,
   updateSelectedNode,
+  updateSettingsVisibility,
   updateTargetBrowsers,
   updateTopLevelTarget,
 };

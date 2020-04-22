@@ -4,34 +4,38 @@ exports[`CompatibilityApp component renders zero issues 1`] = `
 <section
   className="compatibility-app theme-sidebar inspector-tabpanel"
 >
-  <Accordion
-    className="compatibility-app__main"
-    items={
-      Array [
-        Object {
-          "component": <IssuePane
-            issues={Array []}
-          />,
-          "header": "Selected Element",
-          "id": "compatibility-app--selected-element-pane",
-          "opened": true,
-        },
-        Object {
-          "component": Array [
-            <IssuePane
+  <div
+    className="compatibility-app__container"
+  >
+    <Accordion
+      className="compatibility-app__main"
+      items={
+        Array [
+          Object {
+            "component": <IssuePane
               issues={Array []}
             />,
-            null,
-          ],
-          "header": "All Issues",
-          "id": "compatibility-app--all-elements-pane",
-          "opened": true,
-        },
-      ]
-    }
-  />
-  <Footer
-    className="compatibility-app__footer"
-  />
+            "header": "Selected Element",
+            "id": "compatibility-app--selected-element-pane",
+            "opened": true,
+          },
+          Object {
+            "component": Array [
+              <IssuePane
+                issues={Array []}
+              />,
+              null,
+            ],
+            "header": "All Issues",
+            "id": "compatibility-app--all-elements-pane",
+            "opened": true,
+          },
+        ]
+      }
+    />
+    <Connect(Footer)
+      className="compatibility-app__footer"
+    />
+  </div>
 </section>
 `;
