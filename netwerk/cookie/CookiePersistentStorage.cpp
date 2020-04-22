@@ -706,16 +706,20 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
 
     // Create a new Cookie and assign the data. We don't know the cookie
     // creation time, so just use the current time to generate a unique one.
-    RefPtr<Cookie> newCookie = Cookie::Create(
-        Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
-        Substring(buffer, cookieIndex, buffer.Length() - cookieIndex), host,
-        Substring(buffer, pathIndex, secureIndex - pathIndex - 1), expires,
-        lastAccessedCounter,
-        Cookie::GenerateUniqueCreationTime(currentTimeInUsec), false,
+    CookieStruct cookieData(
+        nsCString(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1)),
+        nsCString(
+            Substring(buffer, cookieIndex, buffer.Length() - cookieIndex)),
+        nsCString(host),
+        nsCString(Substring(buffer, pathIndex, secureIndex - pathIndex - 1)),
+        expires, lastAccessedCounter,
+        Cookie::GenerateUniqueCreationTime(currentTimeInUsec), isHttpOnly,
+        false /* aIsSession */,
         Substring(buffer, secureIndex, expiresIndex - secureIndex - 1)
             .EqualsLiteral(kTrue),
-        isHttpOnly, OriginAttributes(), nsICookie::SAMESITE_NONE,
-        nsICookie::SAMESITE_NONE);
+        nsICookie::SAMESITE_NONE, nsICookie::SAMESITE_NONE);
+
+    RefPtr<Cookie> newCookie = Cookie::Create(cookieData, OriginAttributes());
     if (!newCookie) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1938,14 +1942,8 @@ void CookiePersistentStorage::InitDBConn() {
     CookieDomainTuple& tuple = mReadArray[i];
     MOZ_ASSERT(!tuple.cookie->isSession());
 
-    RefPtr<Cookie> cookie = Cookie::Create(
-        tuple.cookie->name(), tuple.cookie->value(), tuple.cookie->host(),
-        tuple.cookie->path(), tuple.cookie->expiry(),
-        tuple.cookie->lastAccessed(), tuple.cookie->creationTime(),
-        tuple.cookie->isSession(), tuple.cookie->isSecure(),
-        tuple.cookie->isHttpOnly(), tuple.originAttributes,
-        tuple.cookie->sameSite(), tuple.cookie->rawSameSite());
-
+    RefPtr<Cookie> cookie =
+        Cookie::Create(*tuple.cookie, tuple.originAttributes);
     AddCookieToList(tuple.key.mBaseDomain, tuple.key.mOriginAttributes, cookie);
   }
 

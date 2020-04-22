@@ -54,14 +54,6 @@ class Cookie final : public nsICookie {
 
   // public helper to create an Cookie object.
   static already_AddRefed<Cookie> Create(
-      const nsACString& aName, const nsACString& aValue,
-      const nsACString& aHost, const nsACString& aPath, int64_t aExpiry,
-      int64_t aLastAccessed, int64_t aCreationTime, bool aIsSession,
-      bool aIsSecure, bool aIsHttpOnly,
-      const OriginAttributes& aOriginAttributes, int32_t aSameSite,
-      int32_t aRawSameSite);
-
-  static already_AddRefed<Cookie> Create(
       const CookieStruct& aCookieData,
       const OriginAttributes& aOriginAttributes);
 
@@ -97,6 +89,9 @@ class Cookie final : public nsICookie {
   inline void SetExpiry(int64_t aExpiry) { mData.expiry() = aExpiry; }
   inline void SetLastAccessed(int64_t aTime) { mData.lastAccessed() = aTime; }
   inline void SetIsSession(bool aIsSession) { mData.isSession() = aIsSession; }
+  inline bool SetIsHttpOnly(bool aIsHttpOnly) {
+    return mData.isHttpOnly() = aIsHttpOnly;
+  }
   // Set the creation time manually, overriding the monotonicity checks in
   // Create(). Use with caution!
   inline void SetCreationTime(int64_t aTime) { mData.creationTime() = aTime; }
@@ -104,6 +99,8 @@ class Cookie final : public nsICookie {
   bool IsStale() const;
 
   const CookieStruct& ToIPC() const { return mData; }
+
+  already_AddRefed<Cookie> Clone() const;
 
  protected:
   virtual ~Cookie() = default;
