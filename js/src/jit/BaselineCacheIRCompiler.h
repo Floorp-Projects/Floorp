@@ -69,7 +69,10 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void updateReturnValue();
 
   enum class NativeCallType { Native, ClassHook };
-  bool emitCallNativeShared(NativeCallType callType);
+  bool emitCallNativeShared(NativeCallType callType, ObjOperandId calleeId,
+                            Int32OperandId argcId, CallFlags flags,
+                            mozilla::Maybe<bool> ignoresReturnValue,
+                            mozilla::Maybe<uint32_t> targetOffset);
 
   MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
       TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm);

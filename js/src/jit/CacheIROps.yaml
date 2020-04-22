@@ -24,6 +24,12 @@
 # If true, generate CacheIRWriter and CacheIRCompiler boilerplate. This
 # attribute is temporary until all ops have been converted.
 #
+# custom_writer (optional)
+# ========================
+# If true, the generated CacheIRWriter method will be private and has a trailing
+# '_'. This is useful for ops that need custom CacheIRWriter logic on top of the
+# generated code.
+#
 # operands
 # ========
 # List of operands. There are three kinds:
@@ -45,8 +51,10 @@
 
 - name: GuardToObject
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsObjectOrNull
   shared: true
@@ -87,23 +95,31 @@
 
 - name: GuardToString
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardToSymbol
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardToBigInt
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardIsNumber
   shared: true
+  gen_boilerplate: true
+  custom_writer: true
   operands:
-    val: ValId
+    input: ValId
 
 - name: GuardToInt32
   shared: true
@@ -457,12 +473,16 @@
 
 - name: LoadArgumentFixedSlot
   shared: false
+  gen_boilerplate: true
+  custom_writer: true
   operands:
     result: ValId
     slotIndex: ByteImm
 
 - name: LoadArgumentDynamicSlot
   shared: false
+  gen_boilerplate: true
+  custom_writer: true
   operands:
     result: ValId
     argc: Int32Id
@@ -740,18 +760,22 @@
 
 - name: CallNativeFunction
   shared: false
+  gen_boilerplate: true
+  custom_writer: true
   operands:
     callee: ObjId
     argc: Int32Id
     flags: CallFlagsImm
 #ifdef JS_SIMULATOR
-    rawTarget: RawPointerField
+    target: RawPointerField
 #else
     ignoresReturnValue: BoolImm
 #endif
 
 - name: CallClassHook
   shared: false
+  gen_boilerplate: true
+  custom_writer: true
   operands:
     callee: ObjId
     argc: Int32Id

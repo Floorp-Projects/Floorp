@@ -693,29 +693,29 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   // shouldn't bake in stub values.
   StubField readStubFieldForIon(uint32_t offset, StubField::Type type) const;
 
-  ObjOperandId guardToObject(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardToObject, val);
-    return ObjOperandId(val.id());
+  ObjOperandId guardToObject(ValOperandId input) {
+    guardToObject_(input);
+    return ObjOperandId(input.id());
   }
 
-  StringOperandId guardToString(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardToString, val);
-    return StringOperandId(val.id());
+  StringOperandId guardToString(ValOperandId input) {
+    guardToString_(input);
+    return StringOperandId(input.id());
   }
 
-  SymbolOperandId guardToSymbol(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardToSymbol, val);
-    return SymbolOperandId(val.id());
+  SymbolOperandId guardToSymbol(ValOperandId input) {
+    guardToSymbol_(input);
+    return SymbolOperandId(input.id());
   }
 
-  BigIntOperandId guardToBigInt(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardToBigInt, val);
-    return BigIntOperandId(val.id());
+  BigIntOperandId guardToBigInt(ValOperandId input) {
+    guardToBigInt_(input);
+    return BigIntOperandId(input.id());
   }
 
-  NumberOperandId guardIsNumber(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsNumber, val);
-    return NumberOperandId(val.id());
+  NumberOperandId guardIsNumber(ValOperandId input) {
+    guardIsNumber_(input);
+    return NumberOperandId(input.id());
   }
 
   void guardShapeForClass(ObjOperandId obj, Shape* shape) {
@@ -775,29 +775,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     }
     MOZ_ASSERT(slotIndex >= 0);
     MOZ_ASSERT(slotIndex <= UINT8_MAX);
-
-    ValOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadArgumentFixedSlot, res);
-    buffer_.writeByte(uint32_t(slotIndex));
-    return res;
+    return loadArgumentFixedSlot_(slotIndex);
   }
 
   ValOperandId loadArgumentDynamicSlot(
       ArgumentKind kind, Int32OperandId argcId,
       CallFlags flags = CallFlags(CallFlags::Standard)) {
-    ValOperandId res(nextOperandId_++);
-
     bool addArgc;
     int32_t slotIndex = GetIndexOfArgument(kind, flags, &addArgc);
     if (addArgc) {
-      writeOpWithOperandId(CacheOp::LoadArgumentDynamicSlot, res);
-      writeOperandId(argcId);
-      buffer_.writeByte(uint32_t(slotIndex));
-    } else {
-      writeOpWithOperandId(CacheOp::LoadArgumentFixedSlot, res);
-      buffer_.writeByte(uint32_t(slotIndex));
+      return loadArgumentDynamicSlot_(argcId, slotIndex);
     }
-    return res;
+    return loadArgumentFixedSlot_(slotIndex);
   }
 
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
@@ -823,10 +812,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc, CallFlags flags) {
-    writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
-    writeOperandId(argc);
-    writeCallFlagsImm(flags);
-
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
     bool ignoresReturnValue =
@@ -845,20 +830,17 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                           : calleeFunc->native();
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
     void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
-    addStubField(uintptr_t(redirected), StubField::Type::RawWord);
+    callNativeFunction_(calleeId, argc, flags, redirected);
 #else
     // If we are not running in the simulator, we generate different jitcode
     // to find the ignoresReturnValue version of a native function.
-    buffer_.writeByte(ignoresReturnValue);
+    callNativeFunction_(calleeId, argc, flags, ignoresReturnValue);
 #endif
   }
 
   void callAnyNativeFunction(ObjOperandId calleeId, Int32OperandId argc,
                              CallFlags flags) {
     MOZ_ASSERT(!flags.isSameRealm());
-    writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
-    writeOperandId(argc);
-    writeCallFlagsImm(flags);
 #ifdef JS_SIMULATOR
     // The simulator requires native calls to be redirected to a
     // special swi instruction. If we are calling an arbitrary native
@@ -868,28 +850,24 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     JSNative target = CallAnyNative;
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
     void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
-    addStubField(uintptr_t(redirected), StubField::Type::RawWord);
+    callNativeFunction_(calleeId, argc, flags, redirected);
 #else
-    buffer_.writeByte(/*ignoresReturnValue = */ false);
+    callNativeFunction_(calleeId, argc, flags,
+                        /* ignoresReturnValue = */ false);
 #endif
   }
 
   void callClassHook(ObjOperandId calleeId, Int32OperandId argc, JSNative hook,
                      CallFlags flags) {
-    writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
-    writeOperandId(argc);
     MOZ_ASSERT(!flags.isSameRealm());
-    writeCallFlagsImm(flags);
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
-
 #ifdef JS_SIMULATOR
     // The simulator requires VM calls to be redirected to a special
     // swi instruction to handle them, so we store the redirected
     // pointer in the stub and use that instead of the original one.
     target = Simulator::RedirectNativeFunction(target, Args_General3);
 #endif
-
-    addStubField(uintptr_t(target), StubField::Type::RawWord);
+    callClassHook_(calleeId, argc, flags, target);
   }
 
   // These generate no code, but save the template object in a stub

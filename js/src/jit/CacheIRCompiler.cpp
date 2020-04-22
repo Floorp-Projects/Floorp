@@ -1334,9 +1334,8 @@ bool CacheIRCompiler::emitFailurePath(size_t index) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsNumber() {
+bool CacheIRCompiler::emitGuardIsNumber(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValOperandId inputId = reader.valOperandId();
   JSValueType knownType = allocator.knownType(inputId);
 
   // Doubles and ints are numbers!
@@ -1354,9 +1353,8 @@ bool CacheIRCompiler::emitGuardIsNumber() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToObject() {
+bool CacheIRCompiler::emitGuardToObject(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_OBJECT) {
     return true;
   }
@@ -1487,9 +1485,8 @@ bool CacheIRCompiler::emitGuardToBoolean(ValOperandId inputId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToString() {
+bool CacheIRCompiler::emitGuardToString(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_STRING) {
     return true;
   }
@@ -1503,9 +1500,8 @@ bool CacheIRCompiler::emitGuardToString() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToSymbol() {
+bool CacheIRCompiler::emitGuardToSymbol(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_SYMBOL) {
     return true;
   }
@@ -1519,9 +1515,8 @@ bool CacheIRCompiler::emitGuardToSymbol() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToBigInt() {
+bool CacheIRCompiler::emitGuardToBigInt(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_BIGINT) {
     return true;
   }

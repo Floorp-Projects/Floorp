@@ -99,7 +99,7 @@ operand_writer_info = {
 }
 
 
-def gen_writer_method(name, operands):
+def gen_writer_method(name, operands, custom_writer):
     """Generates a CacheIRWRiter method for a single opcode."""
 
     # Generate a single method that writes the opcode and each operand.
@@ -113,6 +113,8 @@ def gen_writer_method(name, operands):
 
     # Method names start with a lowercase letter.
     method_name = name[0].lower() + name[1:]
+    if custom_writer:
+        method_name += '_'
 
     args_sig = []
     ret_type = 'void'
@@ -128,12 +130,17 @@ def gen_writer_method(name, operands):
                 args_sig.append('{} {}'.format(argtype, opnd_name))
                 operands_code += '  {}({});\\\n'.format(write_method, opnd_name)
 
-    code = '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(args_sig))
+    code = ''
+    if custom_writer:
+        code += 'private:\\\n'
+    code += '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(args_sig))
     code += '  writeOp(CacheOp::{});\\\n'.format(name)
     code += operands_code
     if ret_type != 'void':
         code += '  return result;\\\n'
     code += '}'
+    if custom_writer:
+        code += '\\\npublic:'
     return code
 
 
@@ -311,6 +318,10 @@ def generate_cacheirops_header(c_out, yaml_path):
         assert isinstance(shared, bool)
 
         gen_boilerplate = op.get('gen_boilerplate', False)
+        assert isinstance(gen_boilerplate, bool)
+
+        custom_writer = op.get('custom_writer', False)
+        assert isinstance(custom_writer, bool)
 
         if operands:
             operands_str = ', '.join([mapping[v] for v in operands.values()])
@@ -319,7 +330,7 @@ def generate_cacheirops_header(c_out, yaml_path):
         ops_items.append('_({}, {})'.format(name, operands_str))
 
         if gen_boilerplate:
-            writer_methods.append(gen_writer_method(name, operands))
+            writer_methods.append(gen_writer_method(name, operands, custom_writer))
             if shared:
                 compiler_shared_methods.append(gen_compiler_method(name, operands))
             else:
