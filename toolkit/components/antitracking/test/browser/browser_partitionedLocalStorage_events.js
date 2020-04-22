@@ -184,7 +184,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
   // Two ePartitionOrDeny iframes in the same tab in the same origin see
   // the same localStorage values but no storage events are received from each
-  // other.
+  // other if storage principal and dFPI are disbled.
   add_task(async _ => {
     log(test);
 
@@ -294,7 +294,11 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
           ifr2.contentWindow.postMessage("getEvents", "*");
         });
 
-        is(events, 0, "No events");
+        if (obj.withStoragePrincipalEnabled || obj.dynamicFPITest) {
+          is(events, 1, "one event");
+        } else {
+          is(events, 0, "No events");
+        }
       }
     );
 
