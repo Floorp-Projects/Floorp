@@ -77,7 +77,7 @@ runNetworkTest(() => {
   }
 
   // Test getConfiguration
-  var config = {
+  const config = {
     bundlePolicy: "max-bundle",
     iceTransportPolicy: "relay",
     peerIdentity: null,
@@ -86,7 +86,13 @@ runNetworkTest(() => {
       { urls: ["turn:[::1]:3478"], username:"p", credential:"p", credentialType:"password" },
     ],
   };
-  var pc = new RTCPeerConnection(config);
+  // Make sure sdpSemantics is not exposed in getConfiguration
+  const configWithExtraProps = Object.assign({},
+                                             config,
+                                             {sdpSemantics: "plan-b"});
+  ok("sdpSemantics" in configWithExtraProps, "sdpSemantics control");
+
+  const pc = new RTCPeerConnection(configWithExtraProps);
   is(JSON.stringify(toComparable(pc.getConfiguration())),
      JSON.stringify(toComparable(config)), "getConfiguration");
   pc.close();
@@ -117,7 +123,7 @@ runNetworkTest(() => {
     return promise;
   }).then(warning => {
     is(warning.split('"')[1],
-       "onaddstream is deprecated! Use peerConnection.ontrack instead.",
+       "WebRTC: onaddstream is deprecated! Use peerConnection.ontrack instead.",
        "warning logged");
     var remainder = warning.split('"').slice(2).join('"');
     info(remainder);

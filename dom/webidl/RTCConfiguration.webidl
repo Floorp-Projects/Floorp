@@ -36,4 +36,9 @@ dictionary RTCConfiguration {
     RTCBundlePolicy bundlePolicy = "balanced";
     DOMString? peerIdentity = null;
     sequence<RTCCertificate> certificates;
+
+    // Non-standard. Only here to be able to detect and warn in web console.
+    // Uses DOMString over enum as a trade-off between type errors and safety.
+    // TODO: Remove once sdpSemantics usage drops to zero (bug 1632243).
+    DOMString sdpSemantics;
 };
