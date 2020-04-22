@@ -5,7 +5,6 @@ import collections
 import json
 import os
 import pathlib
-import stat
 import sys
 import re
 import shutil
@@ -14,64 +13,16 @@ from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
 from mozperftest.browser.noderunner import NodeRunner
-from mozperftest.utils import host_platform
+from mozperftest.browser.browsertime.setup import (
+    system_prerequisites,
+    append_system_env,
+)
 
 
 AUTOMATION = "MOZ_AUTOMATION" in os.environ
 BROWSERTIME_SRC_ROOT = os.path.dirname(__file__)
 PILLOW_VERSION = "6.0.0"
 PYSSIM_VERSION = "0.4"
-
-# Map from `host_platform()` to a `fetch`-like syntax.
-host_fetches = {
-    "darwin": {
-        "ffmpeg": {
-            "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip",  # noqa
-            # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.1-macos64-static",
-        }
-    },
-    "linux64": {
-        "ffmpeg": {
-            "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz",  # noqa
-            # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.4-i686-static",
-        },
-        # TODO: install a static ImageMagick.  All easily available binaries are
-        # not statically linked, so they will (mostly) fail at runtime due to
-        # missing dependencies.  For now we require folks to install ImageMagick
-        # globally with their package manager of choice.
-    },
-    "win64": {
-        "ffmpeg": {
-            "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip",  # noqa
-            # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.1-win64-static",
-        },
-        "ImageMagick": {
-            "type": "static-url",
-            # 'url': 'https://imagemagick.org/download/binaries/ImageMagick-7.0.8-39-portable-Q16-x64.zip',  # noqa
-            # imagemagick.org doesn't keep old versions; the mirror below does.
-            "url": "https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-7.0.8-39-portable-Q16-x64.zip",  # noqa
-            # An extension to `fetch` syntax.
-            "path": "ImageMagick-7.0.8",
-        },
-    },
-}
-
-
-def add_option(env, name, value):
-    options = env.get_arg("browsertime-extra-options", "")
-    options += ",%s=%s" % (name, value)
-    env.set_arg("browsertime-extra-options", options)
-
-
-def add_options(env, options):
-    for name, value in options:
-        add_option(env, name, value)
 
 
 class BrowsertimeRunner(NodeRunner):
@@ -82,23 +33,23 @@ class BrowsertimeRunner(NodeRunner):
     activated = True
 
     arguments = {
-        "--cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
-        "--binary": {
+        "cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
+        "binary": {
             "type": str,
             "default": None,
             "help": "Path to the desktop browser, or Android app name.",
         },
-        "--clobber": {
+        "clobber": {
             "action": "store_true",
             "default": False,
             "help": "Force-update the installation.",
         },
-        "--install-url": {
+        "install-url": {
             "type": str,
             "default": None,
             "help": "Use this URL as the install url.",
         },
-        "--extra-options": {
+        "extra-options": {
             "type": str,
             "default": "",
             "help": "Extra options passed to browsertime.js",
@@ -133,86 +84,6 @@ class BrowsertimeRunner(NodeRunner):
             root, "node_modules", "browsertime", "bin", "browsertime.js"
         )
 
-    def setup_prerequisites(self):
-        """Install browsertime and visualmetrics.py prerequisites.
-        """
-
-        from mozbuild.action.tooltool import unpack_file
-        from mozbuild.artifact_cache import ArtifactCache
-
-        if not AUTOMATION and host_platform().startswith("linux"):
-            # On Linux ImageMagick needs to be installed manually, and `mach bootstrap` doesn't
-            # do that (yet).  Provide some guidance.
-            try:
-                from shutil import which
-            except ImportError:
-                from shutil_which import which
-
-            im_programs = ("compare", "convert", "mogrify")
-            for im_program in im_programs:
-                prog = which(im_program)
-                if not prog:
-                    print(
-                        "Error: On Linux, ImageMagick must be on the PATH. "
-                        "Install ImageMagick manually and try again (or update PATH). "
-                        "On Ubuntu and Debian, try `sudo apt-get install imagemagick`. "
-                        "On Fedora, try `sudo dnf install imagemagick`. "
-                        "On CentOS, try `sudo yum install imagemagick`."
-                    )
-                    return 1
-
-        # Download the visualmetrics.py requirements.
-        artifact_cache = ArtifactCache(
-            self.artifact_cache_path, log=self.log, skip_cache=False
-        )
-
-        fetches = host_fetches[host_platform()]
-        for tool, fetch in sorted(fetches.items()):
-            archive = artifact_cache.fetch(fetch["url"])
-            # TODO: assert type, verify sha256 (and size?).
-
-            if fetch.get("unpack", True):
-                cwd = os.getcwd()
-                try:
-                    mkdir(self.state_path)
-                    os.chdir(self.state_path)
-                    self.info("Unpacking temporary location {path}", path=archive)
-
-                    if "win64" in host_platform() and "imagemagick" in tool.lower():
-                        # Windows archive does not contain a subfolder
-                        # so we make one for it here
-                        mkdir(fetch.get("path"))
-                        os.chdir(os.path.join(self.state_path, fetch.get("path")))
-                        unpack_file(archive)
-                        os.chdir(self.state_path)
-                    else:
-                        unpack_file(archive)
-
-                    # Make sure the expected path exists after extraction
-                    path = os.path.join(self.state_path, fetch.get("path"))
-                    if not os.path.exists(path):
-                        raise Exception("Cannot find an extracted directory: %s" % path)
-
-                    try:
-                        # Some archives provide binaries that don't have the
-                        # executable bit set so we need to set it here
-                        for root, dirs, files in os.walk(path):
-                            for edir in dirs:
-                                loc_to_change = os.path.join(root, edir)
-                                st = os.stat(loc_to_change)
-                                os.chmod(loc_to_change, st.st_mode | stat.S_IEXEC)
-                            for efile in files:
-                                loc_to_change = os.path.join(root, efile)
-                                st = os.stat(loc_to_change)
-                                os.chmod(loc_to_change, st.st_mode | stat.S_IEXEC)
-                    except Exception as e:
-                        raise Exception(
-                            "Could not set executable bit in %s, error: %s"
-                            % (path, str(e))
-                        )
-                finally:
-                    os.chdir(cwd)
-
     def _need_install(self, package):
         from pip._internal.req.constructors import install_req_from_line
 
@@ -230,8 +101,7 @@ class BrowsertimeRunner(NodeRunner):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package.
         """
         super(BrowsertimeRunner, self).setup()
-        should_clobber = self.get_arg("browsertime-clobber")
-        install_url = self.get_arg("browsertime-install-url")
+        install_url = self.get_arg("install-url")
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -243,11 +113,10 @@ class BrowsertimeRunner(NodeRunner):
         if os.path.exists(self.browsertime_js):
             return
 
-        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
-        import setup_helper
-
         if install_url is None:
-            self.setup_prerequisites()
+            system_prerequisites(
+                self.state_path, self.artifact_cache_path, self.log, self.info
+            )
 
         # preparing ~/.mozbuild/browsertime
         for file in ("package.json", "package-lock.json"):
@@ -283,10 +152,17 @@ class BrowsertimeRunner(NodeRunner):
             with open(package_json_path, "w") as f:
                 f.write(updated_body)
 
+        self._setup_node_packages(package_json_path)
+
+    def _setup_node_packages(self, package_json_path):
         # Install the browsertime Node.js requirements.
+        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        import setup_helper
+
         if not setup_helper.check_node_executables_valid():
             return
 
+        should_clobber = self.get_arg("clobber")
         # To use a custom `geckodriver`, set
         # os.environ[b"GECKODRIVER_BASE_URL"] = bytes(url)
         # to an endpoint with binaries named like
@@ -299,6 +175,8 @@ class BrowsertimeRunner(NodeRunner):
             "Installing browsertime node module from {package_json}",
             package_json=package_json_path,
         )
+        install_url = self.get_arg("install-url")
+
         setup_helper.package_setup(
             self.state_path,
             "browsertime",
@@ -309,72 +187,7 @@ class BrowsertimeRunner(NodeRunner):
 
     def append_env(self, append_path=True):
         env = super(BrowsertimeRunner, self).append_env(append_path)
-        fetches = host_fetches[host_platform()]
-
-        # Ensure that bare `ffmpeg` and ImageMagick commands
-        # {`convert`,`compare`,`mogrify`} are found.  The `visualmetrics.py`
-        # script doesn't take these as configuration, so we do this (for now).
-        # We should update the script itself to accept this configuration.
-        path = env.get("PATH", "").split(os.pathsep)
-        path_to_ffmpeg = mozpath.join(self.state_path, fetches["ffmpeg"]["path"])
-
-        path_to_imagemagick = None
-        if "ImageMagick" in fetches:
-            path_to_imagemagick = mozpath.join(
-                self.state_path, fetches["ImageMagick"]["path"]
-            )
-
-        if path_to_imagemagick:
-            # ImageMagick ships ffmpeg (on Windows, at least) so we
-            # want to ensure that our ffmpeg goes first, just in case.
-            path.insert(
-                0,
-                self.state_path
-                if host_platform().startswith("win")
-                else mozpath.join(path_to_imagemagick, "bin"),
-            )  # noqa
-        path.insert(
-            0,
-            path_to_ffmpeg
-            if host_platform().startswith("linux")
-            else mozpath.join(path_to_ffmpeg, "bin"),
-        )  # noqa
-
-        # On windows, we need to add the ImageMagick directory to the path
-        # otherwise compare won't be found, and the built-in OS convert
-        # method will be used instead of the ImageMagick one.
-        if "win64" in host_platform() and path_to_imagemagick:
-            # Bug 1596237 - In the windows ImageMagick distribution, the ffmpeg
-            # binary is directly located in the root directory, so here we
-            # insert in the 3rd position to avoid taking precedence over ffmpeg
-            path.insert(2, path_to_imagemagick)
-
-        # On macOs, we can't install our own ImageMagick because the
-        # System Integrity Protection (SIP) won't let us set DYLD_LIBRARY_PATH
-        # unless we deactivate SIP with "csrutil disable".
-        # So we're asking the user to install it.
-        #
-        # if ImageMagick was installed via brew, we want to make sure we
-        # include the PATH
-        if host_platform() == "darwin":
-            for p in os.environ["PATH"].split(os.pathsep):
-                p = p.strip()
-                if not p or p in path:
-                    continue
-                path.append(p)
-
-        if path_to_imagemagick:
-            env.update(
-                {
-                    # See https://imagemagick.org/script/download.php.
-                    # Harmless on other platforms.
-                    "LD_LIBRARY_PATH": mozpath.join(path_to_imagemagick, "lib"),
-                    "DYLD_LIBRARY_PATH": mozpath.join(path_to_imagemagick, "lib"),
-                    "MAGICK_HOME": path_to_imagemagick,
-                }
-            )
-
-        return env
+        return append_system_env(env, self.state_path, append_path)
 
     def extra_default_args(self, args=[]):
         # Add Mozilla-specific default arguments.  This is tricky because browsertime is quite
