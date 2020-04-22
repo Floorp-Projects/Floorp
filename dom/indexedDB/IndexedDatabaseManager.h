@@ -104,7 +104,7 @@ class IndexedDatabaseManager final {
 
   void ClearBackgroundActor();
 
-  MOZ_MUST_USE SafeRefPtr<FileManager> GetFileManager(
+  [[nodiscard]] SafeRefPtr<FileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsACString& aOrigin,
       const nsAString& aDatabaseName);
 

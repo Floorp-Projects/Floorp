@@ -32,8 +32,8 @@ class IDBFileRequest final : public DOMRequest {
  public:
   class ResultCallback;
 
-  static MOZ_MUST_USE RefPtr<IDBFileRequest> Create(IDBFileHandle* aFileHandle,
-                                                    bool aWrapAsDOMRequest);
+  [[nodiscard]] static RefPtr<IDBFileRequest> Create(IDBFileHandle* aFileHandle,
+                                                     bool aWrapAsDOMRequest);
 
   void SetEncoding(const nsAString& aEncoding) {
     mEncoding = aEncoding;
