@@ -3103,6 +3103,11 @@
   value: true
   mirror: always
 
+- name: dom.window.content.untrusted.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 - name: dom.worker.canceling.timeoutMilliseconds
   type: RelaxedAtomicUint32
   value: 30000    # 30 seconds

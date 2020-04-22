@@ -502,10 +502,7 @@ partial interface Window {
                                                optional DOMString options = "",
                                                any... extraArguments);
 
-  [
-#ifdef NIGHTLY_BUILD
-   ChromeOnly,
-#endif
+  [Func="nsGlobalWindowInner::ContentPropertyEnabled",
    NonEnumerable, Replaceable, Throws, NeedsCallerType]
   readonly attribute object? content;
 
