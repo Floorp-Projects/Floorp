@@ -315,6 +315,7 @@ class RaptorControlServer:
         self.results_handler = results_handler
         self.browser_proc = None
         self._finished = False
+        self._is_shutting_down = False
         self._runtime_error = None
         self.device = None
         self.app_name = None
@@ -410,6 +411,7 @@ class RaptorControlServer:
         """Wait timeout seconds for the process to exit. If it hasn't
         exited by then, kill it.
         """
+        self._is_shutting_down = True
         if self.device is not None:
             self.device.stop_application(self.app_name)
         else:
@@ -417,6 +419,7 @@ class RaptorControlServer:
             if self.browser_proc.poll() is None:
                 self.browser_proc.kill()
         self._finished = True
+        self._is_shutting_down = False
 
     def submit_supporting_data(self, supporting_data):
         """
