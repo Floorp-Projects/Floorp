@@ -135,9 +135,11 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromBorderBox(
 
 nscoord nsIFrame::SynthesizeBaselineBOffsetFromContentBox(
     mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const {
-  MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
-  const auto bp =
-      GetLogicalUsedBorderAndPadding(aWM).ApplySkipSides(GetLogicalSkipSides());
+  mozilla::WritingMode wm = GetWritingMode();
+  MOZ_ASSERT(!aWM.IsOrthogonalTo(wm));
+  const auto bp = GetLogicalUsedBorderAndPadding(wm)
+                      .ApplySkipSides(GetLogicalSkipSides())
+                      .ConvertTo(aWM, wm);
 
   if (MOZ_UNLIKELY(aWM.IsCentralBaseline())) {
     nscoord contentBoxBSize = BSize(aWM) - bp.BStartEnd(aWM);
