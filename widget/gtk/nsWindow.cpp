@@ -1948,6 +1948,15 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     // widget will get a focus-in-event signal.
     if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
+      if (!mIsX11Display &&
+          Preferences::GetBool("testing.browserTestHarness.running", false)) {
+        // Wayland does not support focus changes so we need to workaround it
+        // by window hide/show sequence but only when it's running in testsuite.
+        owningWindow->NativeShow(false);
+        owningWindow->NativeShow(true);
+        return;
+      }
+
       uint32_t timestamp = GDK_CURRENT_TIME;
 
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
