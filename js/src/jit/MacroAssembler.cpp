@@ -2631,6 +2631,16 @@ void MacroAssembler::Push(JSValueType type, Register reg) {
   framePushed_ += sizeof(Value);
 }
 
+void MacroAssembler::Push(const Register64 reg) {
+#if JS_BITS_PER_WORD == 64
+  Push(reg.reg);
+#else
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Big-endian not supported.");
+  Push(reg.high);
+  Push(reg.low);
+#endif
+}
+
 void MacroAssembler::PushValue(const Address& addr) {
   MOZ_ASSERT(addr.base != getStackPointer());
   pushValue(addr);

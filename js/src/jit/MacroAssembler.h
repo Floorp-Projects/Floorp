@@ -387,6 +387,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(const ValueOperand& val);
   void Push(const Value& val);
   void Push(JSValueType type, Register reg);
+  void Push(const Register64 reg);
   void PushValue(const Address& addr);
   void PushEmptyRooted(VMFunctionData::RootType rootType);
   inline CodeOffset PushWithPatch(ImmWord word);
