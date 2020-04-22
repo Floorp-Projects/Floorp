@@ -1,4 +1,5 @@
-const CONTAINERS_URL = "chrome://browser/content/preferences/dialogs/containers.xhtml";
+const CONTAINERS_URL =
+  "chrome://browser/content/preferences/dialogs/containers.xhtml";
 
 add_task(async function setup() {
   await openPreferencesViaOpenPreferencesAPI("containers", { leaveOpen: true });

@@ -1698,7 +1698,9 @@ var gPrivacyPane = {
   },
 
   clearSiteData() {
-    gSubDialog.open("chrome://browser/content/preferences/dialogs/clearSiteData.xhtml");
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml"
+    );
   },
 
   // GEOLOCATION

@@ -6,7 +6,8 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function test() {
   waitForExplicitFinish();
-  const connectionURL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+  const connectionURL =
+    "chrome://browser/content/preferences/dialogs/connection.xhtml";
   let closeable = false;
   let finalTest = false;
 
