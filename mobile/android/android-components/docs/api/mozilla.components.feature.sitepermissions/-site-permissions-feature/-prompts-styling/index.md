@@ -2,7 +2,7 @@
 
 # PromptsStyling
 
-`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L535)
+`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L551)
 
 ### Constructors
 
