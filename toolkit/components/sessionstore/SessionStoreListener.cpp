@@ -487,7 +487,7 @@ int CollectPositions(BrowsingContext* aBrowsingContext,
 
   /* Collect data from all child frame */
   // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (auto& child : aBrowsingContext->GetChildren()) {
+  for (auto& child : aBrowsingContext->Children()) {
     aPositionDescendants[currentIdx] +=
         CollectPositions(child, aPositions, aPositionDescendants);
   }
@@ -576,7 +576,7 @@ int CollectInputs(BrowsingContext* aBrowsingContext,
 
   /* Collect data from all child frame */
   // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (auto& child : aBrowsingContext->GetChildren()) {
+  for (auto& child : aBrowsingContext->Children()) {
     aInputs[currentIdx].descendants +=
         CollectInputs(child, aInputs, aIdVals, aXPathVals);
   }

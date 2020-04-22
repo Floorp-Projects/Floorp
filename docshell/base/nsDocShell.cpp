@@ -7145,12 +7145,6 @@ nsresult nsDocShell::RestoreFromHistory() {
   // Order the mContentViewer setup just like Embed does.
   mContentViewer = nullptr;
 
-  if (!mWillChangeProcess) {
-    // Move the browsing context's children to the cache. If we're
-    // detaching them, we'll detach them from there.
-    mBrowsingContext->CacheChildren();
-  }
-
   // Now that we're about to switch documents, forget all of our children.
   // Note that we cached them as needed up in CaptureState above.
   DestroyChildren();
@@ -7269,7 +7263,6 @@ nsresult nsDocShell::RestoreFromHistory() {
   // <head> is parsed.
   document->NotifyPossibleTitleChange(false);
 
-  BrowsingContext::Children contexts(childShells.Count());
   // Now we simulate appending child docshells for subframes.
   for (i = 0; i < childShells.Count(); ++i) {
     nsIDocShellTreeItem* childItem = childShells.ObjectAt(i);
@@ -7306,8 +7299,6 @@ nsresult nsDocShell::RestoreFromHistory() {
     // child inherits our mPrivateBrowsingId, which is what we want.
     AddChild(childItem);
 
-    contexts.AppendElement(childShell->GetBrowsingContext());
-
     childShell->SetAllowJavascript(allowJavascript);
     childShell->SetAllowMetaRedirects(allowRedirects);
     childShell->SetAllowSubframes(allowSubframes);
@@ -7321,10 +7312,6 @@ nsresult nsDocShell::RestoreFromHistory() {
 
     rv = childShell->BeginRestore(nullptr, false);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (!contexts.IsEmpty()) {
-    mBrowsingContext->RestoreChildren(std::move(contexts));
   }
 
   // Make sure to restore the window state after adding the child shells back
@@ -7878,10 +7865,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   }
 
   mContentViewer = nullptr;
-
-  // Move the browsing ontext's children to the cache. If we're
-  // detaching them, we'll detach them from there.
-  mBrowsingContext->CacheChildren();
 
   // Now that we're about to switch documents, forget all of our children.
   // Note that we cached them as needed up in CaptureState above.
