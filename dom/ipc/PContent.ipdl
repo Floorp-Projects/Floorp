@@ -342,12 +342,6 @@ struct KeyValuePair
     nsString value;
 };
 
-union SyncedContextInitializer
-{
-    BrowsingContextInitializer;
-    WindowContextInitializer;
-};
-
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -832,7 +826,8 @@ child:
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
-    async RegisterBrowsingContextGroup(uint64_t aGroupId, SyncedContextInitializer[] aInits);
+    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits,
+                                       WindowContextInitializer[] aWindowInits);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
     // Initialize top-level actor for testing content process sandbox.
@@ -1569,23 +1564,44 @@ both:
                     uint32_t flags);
 
     /**
-     * Creates a new BrowsingContext, initialized with the values provided in
-     * `BrowsingContextInitializer`.
-     *
-     * This message may only be sent to the parent in limited situations. If the
-     * new BrowsingContext has a parent window, it must be owned by the
-     * embedding process, otherwise it must be owned by the opener, if set.
+     * Sync the BrowsingContext with id 'aContextId' and name 'aName' to the
+     * parent, and attach it to the BrowsingContext 'aParentContext'. If
+     * 'aParentContext' is 'nullptr' the BrowsingContext is a root in the
+     * BrowsingContext tree. AttachBrowsingContext must only be called at most
+     * once for any child BrowsingContext, and only for BrowsingContexts where
+     * the parent and the child context contains their nsDocShell.
      */
-    async CreateBrowsingContext(uint64_t aGroupId, BrowsingContextInitializer aInit);
+    async AttachBrowsingContext(BrowsingContextInitializer aInit);
 
     /**
-     * Discards the passed-in BrowsingContext. If the BrowsingContext has
-     * already been discarded, this message does nothing.
-     * The response promise is fulfilled when the process has flagged the
-     * BrowsingContext as discarded.
+     * Remove the synced BrowsingContext with id 'aContextId' from the parent.
+     * DetachBrowsingContext is only needed to be called once for any
+     * BrowsingContext, since detaching a node in the BrowsingContext detaches
+     * the entire sub-tree rooted at that node. Calling DetachBrowsingContext
+     * with an already detached BrowsingContext effectively does nothing. Note
+     * that it is not an error to call DetachBrowsingContext on a
+     * BrowsingContext belonging to an already detached subtree.
+     *
+     * As the passed-in context is allowed to already be detached, it is passed
+     * by id, rather than using BrowsingContext's serializer.
+     *
+     * Callers should keep the BrowsingContext alive until this async request is
+     * resolved or rejected, in order to ensure that in-flight messages still
+     * have valid targets.
      */
-    async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext)
-            returns (bool unused);
+    async DetachBrowsingContext(uint64_t aContextId) returns (bool unused);
+
+    /**
+     * Removes all of 'aContext'\'s children, and caches them in the
+     * BrowsingContextGroup.
+     */
+    async CacheBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext);
+
+    /**
+     * Re-attach all BrowsingContexts in a 'aContext'.
+     */
+    async RestoreBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext,
+                                         MaybeDiscardedBrowsingContext[] aChildren);
 
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
