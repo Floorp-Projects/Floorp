@@ -136,7 +136,9 @@ XPCOMUtils.defineLazyGetter(
   () => ExtensionCommon.LocaleData
 );
 
-XPCOMUtils.defineLazyGetter(this, "NO_PROMPT_PERMISSIONS", () => {
+XPCOMUtils.defineLazyGetter(this, "LAZY_NO_PROMPT_PERMISSIONS", async () => {
+  // Wait until all extension API schemas have been loaded and parsed.
+  await Management.lazyInit();
   return new Set(
     Schemas.getPermissionNames([
       "PermissionNoPrompt",
@@ -687,9 +689,7 @@ class ExtensionData {
 
   // Returns whether the front end should prompt for this permission
   static async shouldPromptFor(permission) {
-    // Schema might not be initialized yet, let's wait
-    await Management.lazyInit();
-    return !NO_PROMPT_PERMISSIONS.has(permission);
+    return !(await LAZY_NO_PROMPT_PERMISSIONS).has(permission);
   }
 
   // Compute the difference between two sets of permissions, suitable
