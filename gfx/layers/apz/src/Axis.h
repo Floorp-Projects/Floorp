@@ -55,16 +55,6 @@ class VelocityTracker {
   virtual Maybe<float> AddPosition(ParentLayerCoord aPos,
                                    uint32_t aTimestampMs) = 0;
   /**
-   * Record movement of the dynamic toolbar along this axis by |aDelta|
-   * over the given time range. Movement of the dynamic toolbar means
-   * that physical movement by |aDelta| has occurred, but this will not
-   * be reflected in future positions passed to AddPosition().
-   * Returns the velocity of the dynamic toolbar movement.
-   */
-  virtual float HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                             uint32_t aEndTimestampMs,
-                                             ParentLayerCoord aDelta) = 0;
-  /**
    * Compute an estimate of the axis's current velocity, based on recent
    * position samples. It's up to implementation how many samples to consider
    * and how to perform the computation.
@@ -98,10 +88,6 @@ class Axis {
                                     uint32_t aTimestampMs);
 
  public:
-  void HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                    uint32_t aEndTimestampMs,
-                                    ParentLayerCoord aDelta);
-
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.

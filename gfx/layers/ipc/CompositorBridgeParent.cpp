@@ -1180,14 +1180,6 @@ bool CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
   return true;
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
-AndroidDynamicToolbarAnimator*
-CompositorBridgeParent::GetAndroidDynamicToolbarAnimator() {
-  return mApzcTreeManager ? mApzcTreeManager->GetAndroidDynamicToolbarAnimator()
-                          : nullptr;
-}
-#endif
-
 RefPtr<APZSampler> CompositorBridgeParent::GetAPZSampler() {
   return mApzSampler;
 }

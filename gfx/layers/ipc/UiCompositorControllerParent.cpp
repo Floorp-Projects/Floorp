@@ -104,11 +104,6 @@ UiCompositorControllerParent::RecvInvalidateAndRender() {
 mozilla::ipc::IPCResult UiCompositorControllerParent::RecvMaxToolbarHeight(
     const int32_t& aHeight) {
   mMaxToolbarHeight = aHeight;
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    mAnimator->SetMaxToolbarHeight(mMaxToolbarHeight);
-  }
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
 }
@@ -129,11 +124,6 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvFixedBottomOffset(
 
 mozilla::ipc::IPCResult UiCompositorControllerParent::RecvPinned(
     const bool& aPinned, const int32_t& aReason) {
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    mAnimator->SetPinned(aPinned, aReason);
-  }
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
 }
@@ -141,11 +131,6 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvPinned(
 mozilla::ipc::IPCResult
 UiCompositorControllerParent::RecvToolbarAnimatorMessageFromUI(
     const int32_t& aMessage) {
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    mAnimator->ToolbarAnimatorMessageFromUI(aMessage);
-  }
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
 }
@@ -201,12 +186,7 @@ mozilla::ipc::IPCResult
 UiCompositorControllerParent::RecvToolbarPixelsToCompositor(
     Shmem&& aMem, const ScreenIntSize& aSize) {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    // By adopting the Shmem, the animator is responsible for deallocating.
-    mAnimator->AdoptToolbarPixels(std::move(aMem), aSize);
-  } else {
-    DeallocShmem(aMem);
-  }
+  DeallocShmem(aMem);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
@@ -219,17 +199,6 @@ void UiCompositorControllerParent::ActorDealloc() {
   Shutdown();
   Release();  // For AddRef in Initialize()
 }
-
-#if defined(MOZ_WIDGET_ANDROID)
-void UiCompositorControllerParent::RegisterAndroidDynamicToolbarAnimator(
-    AndroidDynamicToolbarAnimator* aAnimator) {
-  MOZ_ASSERT(!mAnimator);
-  mAnimator = aAnimator;
-  if (mAnimator) {
-    mAnimator->SetMaxToolbarHeight(mMaxToolbarHeight);
-  }
-}
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
 void UiCompositorControllerParent::ToolbarAnimatorMessageFromCompositor(
     int32_t aMessage) {
@@ -332,16 +301,6 @@ void UiCompositorControllerParent::Initialize() {
     return;
   }
   state->mUiControllerParent = this;
-#if defined(MOZ_WIDGET_ANDROID)
-  AndroidDynamicToolbarAnimator* animator =
-      state->mParent->GetAndroidDynamicToolbarAnimator();
-  // It is possible the compositor has already started shutting down and
-  // the AndroidDynamicToolbarAnimator could be a nullptr. Or this could be
-  // non-Fennec in which case the animator is null anyway.
-  if (animator) {
-    animator->Initialize(mRootLayerTreeId);
-  }
-#endif
 }
 
 void UiCompositorControllerParent::Open(
@@ -356,11 +315,6 @@ void UiCompositorControllerParent::Open(
 
 void UiCompositorControllerParent::Shutdown() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    mAnimator->Shutdown();
-  }
-#endif  // defined(MOZ_WIDGET_ANDROID)
   LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(mRootLayerTreeId);
   if (state) {
