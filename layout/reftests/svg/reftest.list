@@ -225,7 +225,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-800000) =
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-fuzzy-if(geckoview,0-4,0-1) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+fuzzy-if(geckoview,0-4,0-9) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img.html foreignObject-img-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg
