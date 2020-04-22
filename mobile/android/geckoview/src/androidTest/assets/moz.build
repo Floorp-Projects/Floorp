@@ -50,10 +50,7 @@ for addon, files in addons.items():
     inputs = [indir]
     for file in files:
         inputs.append('%s/%s' % (indir, file))
-
-    GENERATED_FILES += [xpi]
-    GENERATED_FILES[xpi].script = '/toolkit/mozapps/extensions/test/create_xpi.py'
-    GENERATED_FILES[xpi].py2 = True
-    GENERATED_FILES[xpi].inputs = inputs
+    GeneratedFile(xpi, script='/toolkit/mozapps/extensions/test/create_xpi.py',
+                  inputs=inputs)
 
     TEST_HARNESS_FILES.testing.mochitest.tests.junit += ['!%s' % xpi]
