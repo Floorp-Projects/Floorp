@@ -20,12 +20,7 @@ tabmodalprompt {
   border: 1px solid threeDDarkShadow;
 }
 
-.tabmodalprompt-topContainer {
-  padding: 20px;
-}
-
 .tabmodalprompt-buttonContainer {
-  padding: 12px 20px 15px;
   background-color: hsla(0,0%,0%,.05);
   border-top: 1px solid hsla(0,0%,0%,.05);
 }
