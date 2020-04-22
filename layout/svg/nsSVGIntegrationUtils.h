@@ -12,6 +12,7 @@
 #include "gfxRect.h"
 #include "nsRegionFwd.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 class gfxContext;
