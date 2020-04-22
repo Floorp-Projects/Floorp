@@ -5,9 +5,18 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const Types = require("devtools/client/inspector/compatibility/types");
+
+const BrowserIcon = createFactory(
+  require("devtools/client/inspector/compatibility/components/BrowserIcon")
+);
 
 const {
   updateSettingsVisibility,
@@ -18,8 +27,65 @@ const CLOSE_ICON = "chrome://devtools/skin/images/close.svg";
 class Settings extends PureComponent {
   static get propTypes() {
     return {
+      defaultTargetBrowsers: PropTypes.arrayOf(PropTypes.shape(Types.browser))
+        .isRequired,
       updateSettingsVisibility: PropTypes.func.isRequired,
     };
+  }
+
+  _renderTargetBrowsers() {
+    const { defaultTargetBrowsers } = this.props;
+
+    return dom.section(
+      {
+        className: "compatibility-settings__target-browsers",
+      },
+      dom.header(
+        {
+          className: "compatibility-settings__target-browsers-header",
+        },
+        "Target Browsers"
+      ),
+      dom.ul(
+        {
+          className: "compatibility-settings__target-browsers-list",
+        },
+        defaultTargetBrowsers.map(({ id, name, status, version }) =>
+          dom.li(
+            {
+              className: "compatibility-settings__target-browsers-item",
+            },
+            BrowserIcon({ id, title: `${name} ${status}` }),
+            `${name} ${status} (${version})`
+          )
+        )
+      )
+    );
+  }
+
+  _renderHeader() {
+    return dom.header(
+      {
+        className: "compatibility-settings__header",
+      },
+      dom.label(
+        {
+          className: "compatibility-settings__header-label",
+        },
+        "Settings"
+      ),
+      dom.button(
+        {
+          className: "compatibility-settings__header-button",
+          title: "Close settings",
+          onClick: this.props.updateSettingsVisibility,
+        },
+        dom.img({
+          className: "compatibility-settings__header-icon",
+          src: CLOSE_ICON,
+        })
+      )
+    );
   }
 
   render() {
@@ -27,31 +93,17 @@ class Settings extends PureComponent {
       {
         className: "compatibility-settings",
       },
-      dom.header(
-        {
-          className: "compatibility-settings__header",
-        },
-        dom.label(
-          {
-            className: "compatibility-settings__header-label",
-          },
-          "Settings"
-        ),
-        dom.button(
-          {
-            className: "compatibility-settings__header-button",
-            title: "Close settings",
-            onClick: this.props.updateSettingsVisibility,
-          },
-          dom.img({
-            className: "compatibility-settings__header-icon",
-            src: CLOSE_ICON,
-          })
-        )
-      )
+      this._renderHeader(),
+      this._renderTargetBrowsers()
     );
   }
 }
+
+const mapStateToProps = state => {
+  return {
+    defaultTargetBrowsers: state.compatibility.defaultTargetBrowsers,
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
@@ -59,4 +111,4 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-module.exports = connect(null, mapDispatchToProps)(Settings);
+module.exports = connect(mapStateToProps, mapDispatchToProps)(Settings);

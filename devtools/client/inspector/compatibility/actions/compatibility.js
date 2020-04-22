@@ -12,8 +12,14 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
   return new MDNCompatibility(cssPropertiesCompatData);
 });
 
+const UserSettings = require("devtools/client/inspector/compatibility/UserSettings");
+
 const {
   COMPATIBILITY_APPEND_NODE,
+  COMPATIBILITY_INIT_USER_SETTINGS_START,
+  COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
+  COMPATIBILITY_INIT_USER_SETTINGS_FAILURE,
+  COMPATIBILITY_INIT_USER_SETTINGS_COMPLETE,
   COMPATIBILITY_UPDATE_NODE,
   COMPATIBILITY_UPDATE_NODES_START,
   COMPATIBILITY_UPDATE_NODES_SUCCESS,
@@ -34,6 +40,30 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
 } = require("devtools/client/inspector/compatibility/actions/index");
+
+function initUserSettings() {
+  return async ({ dispatch, getState }) => {
+    dispatch({ type: COMPATIBILITY_INIT_USER_SETTINGS_START });
+
+    try {
+      const defaultTargetBrowsers = UserSettings.getDefaultTargetBrowsers();
+      const targetBrowsers = defaultTargetBrowsers;
+
+      dispatch({
+        type: COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
+        defaultTargetBrowsers,
+        targetBrowsers,
+      });
+    } catch (error) {
+      dispatch({
+        type: COMPATIBILITY_INIT_USER_SETTINGS_FAILURE,
+        error,
+      });
+    }
+
+    dispatch({ type: COMPATIBILITY_INIT_USER_SETTINGS_COMPLETE });
+  };
+}
 
 function updateNodes(selector) {
   return async ({ dispatch, getState }) => {
@@ -215,6 +245,7 @@ async function _updateTopLevelTargetIssues(target, targetBrowsers, dispatch) {
 }
 
 module.exports = {
+  initUserSettings,
   updateNodes,
   updateSelectedNode,
   updateSettingsVisibility,

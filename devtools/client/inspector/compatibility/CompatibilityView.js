@@ -10,17 +10,11 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-loader.lazyRequireGetter(
-  this,
-  "browsersDataset",
-  "devtools/client/inspector/compatibility/lib/dataset/browsers.json"
-);
-
 const compatibilityReducer = require("devtools/client/inspector/compatibility/reducers/compatibility");
 const {
+  initUserSettings,
   updateNodes,
   updateSelectedNode,
-  updateTargetBrowsers,
   updateTopLevelTarget,
 } = require("devtools/client/inspector/compatibility/actions/compatibility");
 
@@ -84,19 +78,13 @@ class CompatibilityView {
       compatibilityApp
     );
 
+    this.inspector.store.dispatch(initUserSettings());
+
     this.inspector.on("new-root", this._onTopLevelTargetChanged);
     this.inspector.selection.on("new-node-front", this._onSelectedNodeChanged);
     this.inspector.sidebar.on(
       "compatibilityview-selected",
       this._onPanelSelected
-    );
-
-    this._initTargetBrowsers();
-  }
-
-  _initTargetBrowsers() {
-    this.inspector.store.dispatch(
-      updateTargetBrowsers(_getDefaultTargetBrowsers())
     );
   }
 
@@ -168,44 +156,6 @@ class CompatibilityView {
 
     changesFront.on("add-change", this._onChangeAdded);
   }
-}
-
-/**
- * Return target browsers that will be checked as default.
- * The default target browsers includes major browsers that have been releasing as `esr`,
- * `release`, `beta` or `nightly`.
- *
- * @return e.g, [{ id: "firefox", name: "Firefox", version: "70", status: "nightly"},...]
- */
-function _getDefaultTargetBrowsers() {
-  const TARGET_BROWSER_ID = [
-    "firefox",
-    "firefox_android",
-    "chrome",
-    "chrome_android",
-    "safari",
-    "safari_ios",
-    "edge",
-  ];
-  const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
-
-  // Retrieve the information that matches to the browser id and the status
-  // from the browsersDataset.
-  // For the structure of then browsersDataset,
-  // see https://github.com/mdn/browser-compat-data/blob/master/browsers/firefox.json
-  const targets = [];
-  for (const id of TARGET_BROWSER_ID) {
-    const { name, releases } = browsersDataset[id];
-
-    for (const version in releases) {
-      const { status } = releases[version];
-
-      if (TARGET_BROWSER_STATUS.includes(status)) {
-        targets.push({ id, name, version, status });
-      }
-    }
-  }
-  return targets;
 }
 
 module.exports = CompatibilityView;
