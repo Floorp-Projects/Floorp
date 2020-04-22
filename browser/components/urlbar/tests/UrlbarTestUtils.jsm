@@ -160,6 +160,7 @@ var UrlbarTestUtils = {
         keyword: result.payload.keyword,
         query: result.payload.query,
         suggestion: result.payload.suggestion,
+        isSearchHistory: result.payload.isSearchHistory,
         inPrivateWindow: result.payload.inPrivateWindow,
         isPrivateEngine: result.payload.isPrivateEngine,
       };

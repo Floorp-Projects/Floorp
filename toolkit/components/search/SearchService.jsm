@@ -481,9 +481,16 @@ var gInitialized = false;
 var gReinitializing = false;
 
 // nsISearchParseSubmissionResult
-function ParseSubmissionResult(engine, terms, termsOffset, termsLength) {
+function ParseSubmissionResult(
+  engine,
+  terms,
+  termsParameterName,
+  termsOffset,
+  termsLength
+) {
   this._engine = engine;
   this._terms = terms;
+  this._termsParameterName = termsParameterName;
   this._termsOffset = termsOffset;
   this._termsLength = termsLength;
 }
@@ -493,6 +500,9 @@ ParseSubmissionResult.prototype = {
   },
   get terms() {
     return this._terms;
+  },
+  get termsParameterName() {
+    return this._termsParameterName;
   },
   get termsOffset() {
     return this._termsOffset;
@@ -504,7 +514,7 @@ ParseSubmissionResult.prototype = {
 };
 
 const gEmptyParseSubmissionResult = Object.freeze(
-  new ParseSubmissionResult(null, "", -1, 0)
+  new ParseSubmissionResult(null, "", "", -1, 0)
 );
 
 /**
@@ -3577,7 +3587,14 @@ SearchService.prototype = {
       return gEmptyParseSubmissionResult;
     }
 
-    return new ParseSubmissionResult(mapEntry.engine, terms, offset, length);
+    let submission = new ParseSubmissionResult(
+      mapEntry.engine,
+      terms,
+      mapEntry.termsParameterName,
+      offset,
+      length
+    );
+    return submission;
   },
 
   // nsIObserver

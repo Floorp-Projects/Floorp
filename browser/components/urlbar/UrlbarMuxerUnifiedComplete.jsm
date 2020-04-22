@@ -55,9 +55,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    * @param {UrlbarQueryContext} context The query context.
    */
   sort(context) {
+    // Remove search suggestions that are duplicates of search history results.
+    context.results = this._dedupeSearchHistoryAndSuggestions(context.results);
+
     // A Search in a Private Window result should only be shown when there are
     // other results, and all of them are searches. It should also not be shown
     // if the user typed an alias, because it's an explicit search engine choice.
+    // We don't show it if there is a search history result. This is because
+    // search history results are RESULT_TYPE.SEARCH but they arrive faster than
+    // search suggestions in most cases because they are being fetched locally.
+    // This leads to the private search result flickering as the suggestions
+    // load in after the search history result.
     let searchInPrivateWindowIndex = context.results.findIndex(
       r => r.type == UrlbarUtils.RESULT_TYPE.SEARCH && r.payload.inPrivateWindow
     );
@@ -74,7 +82,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // Remove the result.
       context.results.splice(searchInPrivateWindowIndex, 1);
     }
-
     if (!context.results.length) {
       return;
     }
@@ -134,6 +141,75 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
     context.results = sortedResults;
+  }
+
+  /**
+   * Takes a list of results and dedupes search history and suggestions. Prefers
+   * search history. Also removes duplicate search history results.
+   * @param {array} results
+   *   A list of results from a UrlbarQueryContext.
+   * @returns {array}
+   *   The deduped list of results.
+   */
+  _dedupeSearchHistoryAndSuggestions(results) {
+    if (
+      !UrlbarPrefs.get("restyleSearches") ||
+      !UrlbarPrefs.get("browser.search.suggest.enabled") ||
+      !UrlbarPrefs.get("suggest.searches")
+    ) {
+      return results;
+    }
+
+    let suggestionResults = [];
+    // historyEnginesBySuggestion maps:
+    //   suggestion ->
+    //     set of engines providing that suggestion from search history
+    let historyEnginesBySuggestion = new Map();
+    for (let i = 0; i < results.length; i++) {
+      let result = results[i];
+      if (
+        !result.heuristic &&
+        groupFromResult(result) == UrlbarUtils.RESULT_GROUP.SUGGESTION
+      ) {
+        if (result.payload.isSearchHistory) {
+          let historyEngines = historyEnginesBySuggestion.get(
+            result.payload.suggestion
+          );
+          if (!historyEngines) {
+            historyEngines = new Set();
+            historyEnginesBySuggestion.set(
+              result.payload.suggestion,
+              historyEngines
+            );
+          }
+          historyEngines.add(result.payload.engine);
+        } else {
+          // Unshift so that we iterate and remove in reverse order below.
+          suggestionResults.unshift([result, i]);
+        }
+      }
+    }
+    for (
+      let i = 0;
+      historyEnginesBySuggestion.size && i < suggestionResults.length;
+      i++
+    ) {
+      let [result, index] = suggestionResults[i];
+      let historyEngines = historyEnginesBySuggestion.get(
+        result.payload.suggestion
+      );
+      if (historyEngines && historyEngines.has(result.payload.engine)) {
+        // This suggestion result has the same suggestion and engine as a search
+        // history result.
+        results.splice(index, 1);
+        historyEngines.delete(result.payload.engine);
+        if (!historyEngines.size) {
+          historyEnginesBySuggestion.delete(result.payload.suggestion);
+        }
+      }
+    }
+
+    return results;
   }
 }
 

@@ -299,8 +299,9 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    * @return An object with the following properties, or null if the URL does
    *         not represent a search result:
    *         {
-   *           engineName: The display name of the search engine.
+   *           engine: The search engine, as an nsISearchEngine.
    *           terms: The originally sought terms extracted from the URI.
+   *           termsParameterName: The engine's search-string parameter.
    *         }
    *
    * @remarks The asynchronous ensureInitialized function must be called before
@@ -317,8 +318,9 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
     let parseUrlResult = Services.search.parseSubmissionURL(url);
     return (
       parseUrlResult.engine && {
-        engineName: parseUrlResult.engine.name,
+        engine: parseUrlResult.engine,
         terms: parseUrlResult.terms,
+        termsParameterName: parseUrlResult.termsParameterName,
       }
     );
   },

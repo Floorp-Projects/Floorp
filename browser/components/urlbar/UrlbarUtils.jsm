@@ -609,6 +609,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       query: {
         type: "string",
       },
+      isSearchHistory: {
+        type: "boolean",
+      },
       suggestion: {
         type: "string",
       },
