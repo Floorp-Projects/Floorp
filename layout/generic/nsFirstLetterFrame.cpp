@@ -384,7 +384,7 @@ nsIFrame::LogicalSides nsFirstLetterFrame::GetLogicalSkipSides(
     // properties that could trigger a call to GetSkipSides.  Then again,
     // it's not really an error to call GetSkipSides on any frame, so
     // that's why we handle it properly.
-    return LogicalSides(eLogicalSideBitsAll);
+    return LogicalSides(mWritingMode, eLogicalSideBitsAll);
   }
-  return LogicalSides();  // first continuation displays all sides
+  return LogicalSides(mWritingMode);  // first continuation displays all sides
 }
