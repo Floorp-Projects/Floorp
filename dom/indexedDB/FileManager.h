@@ -39,11 +39,11 @@ class FileManager final : public FileManagerBase<FileManager> {
   static MutexType sMutex;
 
  public:
-  [[nodiscard]] static nsCOMPtr<nsIFile> GetFileForId(nsIFile* aDirectory,
-                                                      int64_t aId);
+  static MOZ_MUST_USE nsCOMPtr<nsIFile> GetFileForId(nsIFile* aDirectory,
+                                                     int64_t aId);
 
-  [[nodiscard]] static nsCOMPtr<nsIFile> GetCheckedFileForId(
-      nsIFile* aDirectory, int64_t aId);
+  static MOZ_MUST_USE nsCOMPtr<nsIFile> GetCheckedFileForId(nsIFile* aDirectory,
+                                                            int64_t aId);
 
   static nsresult InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
                                 const nsACString& aOrigin,
@@ -69,21 +69,21 @@ class FileManager final : public FileManagerBase<FileManager> {
 
   nsresult Init(nsIFile* aDirectory, mozIStorageConnection* aConnection);
 
-  [[nodiscard]] nsCOMPtr<nsIFile> GetDirectory();
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetDirectory();
 
-  [[nodiscard]] nsCOMPtr<nsIFile> GetCheckedDirectory();
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetCheckedDirectory();
 
-  [[nodiscard]] nsCOMPtr<nsIFile> GetJournalDirectory();
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalDirectory();
 
-  [[nodiscard]] nsCOMPtr<nsIFile> EnsureJournalDirectory();
+  MOZ_MUST_USE nsCOMPtr<nsIFile> EnsureJournalDirectory();
 
-  [[nodiscard]] nsresult SyncDeleteFile(int64_t aId);
+  MOZ_MUST_USE nsresult SyncDeleteFile(int64_t aId);
 
   // XXX When getting rid of FileHelper, this method should be removed/made
   // private.
-  [[nodiscard]] nsresult SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile);
+  MOZ_MUST_USE nsresult SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile);
 
-  [[nodiscard]] nsresult AsyncDeleteFile(int64_t aFileId);
+  MOZ_MUST_USE nsresult AsyncDeleteFile(int64_t aFileId);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)
 

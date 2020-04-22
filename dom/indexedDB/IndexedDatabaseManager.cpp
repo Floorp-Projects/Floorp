@@ -60,7 +60,7 @@ using namespace mozilla::ipc;
 
 class FileManagerInfo {
  public:
-  [[nodiscard]] SafeRefPtr<FileManager> GetFileManager(
+  MOZ_MUST_USE SafeRefPtr<FileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsAString& aName) const;
 
   void AddFileManager(SafeRefPtr<FileManager> aFileManager);

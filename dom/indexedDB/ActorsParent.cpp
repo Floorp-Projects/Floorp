@@ -422,7 +422,7 @@ struct FullDatabaseMetadata {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullDatabaseMetadata)
 
-  [[nodiscard]] SafeRefPtr<FullDatabaseMetadata> Duplicate() const;
+  MOZ_MUST_USE SafeRefPtr<FullDatabaseMetadata> Duplicate() const;
 
  private:
   ~FullDatabaseMetadata() = default;
@@ -5790,7 +5790,7 @@ class Factory final : public PBackgroundIDBFactoryParent {
 #endif
 
  public:
-  [[nodiscard]] static RefPtr<Factory> Create(const LoggingInfo& aLoggingInfo);
+  static MOZ_MUST_USE RefPtr<Factory> Create(const LoggingInfo& aLoggingInfo);
 
   DatabaseLoggingInfo* GetLoggingInfo() const {
     AssertIsOnBackgroundThread();
@@ -6059,7 +6059,7 @@ class Database final
                     mFactory.forget());
   }
 
-  [[nodiscard]] SafeRefPtr<FileInfo> GetBlob(const IPCBlob& aID);
+  MOZ_MUST_USE SafeRefPtr<FileInfo> GetBlob(const IPCBlob& aID);
 
   void UnmapBlob(const nsID& aID);
 
@@ -6235,7 +6235,7 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
    * been written to disk), then return an input stream. Otherwise, if mBlobImpl
    * is null (because the contents have been written to disk), returns null.
    */
-  [[nodiscard]] nsCOMPtr<nsIInputStream> GetInputStream(ErrorResult& rv) const;
+  MOZ_MUST_USE nsCOMPtr<nsIInputStream> GetInputStream(ErrorResult& rv) const;
 
   /**
    * To be called upon successful copying of the stream GetInputStream()
@@ -6409,10 +6409,10 @@ class TransactionBase {
     return NS_FAILED(mResultCode);
   }
 
-  [[nodiscard]] RefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
+  MOZ_MUST_USE RefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
       IndexOrObjectStoreId aObjectStoreId) const;
 
-  [[nodiscard]] RefPtr<FullIndexMetadata> GetMetadataForIndexId(
+  MOZ_MUST_USE RefPtr<FullIndexMetadata> GetMetadataForIndexId(
       FullObjectStoreMetadata* const aObjectStoreMetadata,
       IndexOrObjectStoreId aIndexId) const;
 
@@ -6689,7 +6689,7 @@ class MutableFile : public BackgroundMutableFileParentBase {
   const SafeRefPtr<FileInfo> mFileInfo;
 
  public:
-  [[nodiscard]] static RefPtr<MutableFile> Create(
+  static MOZ_MUST_USE RefPtr<MutableFile> Create(
       nsIFile* aFile, SafeRefPtr<Database> aDatabase,
       SafeRefPtr<FileInfo> aFileInfo);
 
@@ -9145,9 +9145,9 @@ class MOZ_STACK_CLASS FileHelper final {
 
   nsresult Init();
 
-  [[nodiscard]] nsCOMPtr<nsIFile> GetFile(const FileInfo& aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetFile(const FileInfo& aFileInfo);
 
-  [[nodiscard]] nsCOMPtr<nsIFile> GetJournalFile(const FileInfo& aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(const FileInfo& aFileInfo);
 
   nsresult CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
                                 nsIInputStream& aInputStream, bool aCompress);
