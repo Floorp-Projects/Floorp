@@ -4614,10 +4614,6 @@ pref("browser.sanitizer.loglevel", "Warn");
 // To disable blocking of auth prompts, set the limit to -1.
 pref("prompts.authentication_dialog_abuse_limit", 2);
 
-// The prompt type to use for search service prompts.
-// See nsIPromptService::MODAL_TYPE fields for possible values.
-pref("prompts.modalType.searchService", 2);
-
 // Payment Request API preferences
 pref("dom.payments.loglevel", "Warn");
 pref("dom.payments.defaults.saveCreditCard", false);

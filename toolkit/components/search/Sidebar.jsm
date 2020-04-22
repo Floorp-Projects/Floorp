@@ -8,8 +8,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function nsSidebar() {}
 
 nsSidebar.prototype = {
-  pendingAddSearchProvider: Promise.resolve(),
-
   init(window) {
     this.window = window;
   },
@@ -36,14 +34,10 @@ nsSidebar.prototype = {
       return;
     }
 
-    this.pendingAddSearchProvider = this.pendingAddSearchProvider.finally(
-      () => {
-        return sidebarActor.sendQuery("Search:AddEngine", {
-          pageURL: this.window.document.documentURIObject.spec,
-          engineURL,
-        });
-      }
-    );
+    sidebarActor.sendAsyncMessage("Search:AddEngine", {
+      pageURL: this.window.document.documentURIObject.spec,
+      engineURL,
+    });
   },
 
   // This function exists to implement window.external.IsSearchProviderInstalled(),

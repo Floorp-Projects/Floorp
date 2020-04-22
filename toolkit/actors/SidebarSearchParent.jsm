@@ -7,9 +7,6 @@
 var EXPORTED_SYMBOLS = ["SidebarSearchParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -17,23 +14,15 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "promptModalType",
-  "prompts.modalType.searchService",
-  Services.prompt.MODAL_TYPE_WINDOW
-);
-
 class SidebarSearchParent extends JSWindowActorParent {
   receiveMessage(msg) {
     if (msg.name == "Search:AddEngine") {
-      return this.addSearchEngine(msg.data);
+      this.addSearchEngine(msg.data);
     }
-    return Promise.reject("Unsupported message");
   }
 
   // Called when a webpage calls window.external.AddSearchProvider
-  async addSearchEngine({ pageURL, engineURL }) {
+  addSearchEngine({ pageURL, engineURL }) {
     pageURL = NetUtil.newURI(pageURL);
     engineURL = NetUtil.newURI(engineURL, null, pageURL);
 
@@ -80,23 +69,12 @@ class SidebarSearchParent extends JSWindowActorParent {
         brandName,
         engineURL.spec,
       ]);
-      await Services.prompt.asyncAlert(
-        this.browsingContext,
-        promptModalType,
-        title,
-        msg
-      );
-      return undefined;
+      Services.ww.getNewPrompter(browser.ownerGlobal).alert(title, msg);
+      return;
     }
 
-    return Services.search
-      .addEngine(
-        engineURL.spec,
-        iconURL ? iconURL.spec : null,
-        true,
-        null,
-        this.browsingContext
-      )
+    Services.search
+      .addEngine(engineURL.spec, iconURL ? iconURL.spec : null, true)
       .catch(ex =>
         Cu.reportError(
           "Unable to add search engine to the search service: " + ex
