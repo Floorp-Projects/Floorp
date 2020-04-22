@@ -133,7 +133,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - macosx
 
 macosx64-fuzzing/debug:
@@ -180,7 +180,7 @@ macosx64-fuzzing/debug:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - macosx
 
 macosx64-devedition/opt:
