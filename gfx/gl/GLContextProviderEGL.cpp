@@ -285,11 +285,12 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     surface = mozilla::gl::CreateSurfaceFromNativeWindow(egl, aWindow, config);
   }
 
-  CreateContextFlags flags = aUseGles
-                                 ? CreateContextFlags::NONE
-                                 : CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+  CreateContextFlags flags = CreateContextFlags::NONE;
   if (aWebRender && aUseGles) {
-    flags = CreateContextFlags::PREFER_ES3;
+    flags |= CreateContextFlags::PREFER_ES3;
+  }
+  if (!aWebRender) {
+    flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
 
   SurfaceCaps caps = SurfaceCaps::Any();
