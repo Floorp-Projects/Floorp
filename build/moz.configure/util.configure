@@ -227,7 +227,7 @@ def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
 
         os.write(fd, ensure_binary(source))
         os.close(fd)
-        cmd = compiler + [path] + list(flags)
+        cmd = compiler + list(flags) + [path]
         kwargs = {'onerror': onerror}
         return check_cmd_output(*cmd, **kwargs)
     finally:
