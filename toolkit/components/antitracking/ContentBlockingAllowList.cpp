@@ -145,13 +145,6 @@ nsresult ContentBlockingAllowList::Check(
     return;
   }
 
-  if (aDocumentPrincipal->SchemeIs("chrome") ||
-      aDocumentPrincipal->SchemeIs("about")) {
-    returnInputArgument.release();
-    *aPrincipal = nullptr;
-    return;
-  }
-
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
