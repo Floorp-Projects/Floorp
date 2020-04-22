@@ -21,6 +21,34 @@ const IDB_VERSION = 2;
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
 
+// We batch operations in order to reduce round-trip latency to the IndexedDB
+// database thread. The trade-offs are that the more records in the batch, the
+// more time we spend on this thread in structured serialization, and the
+// greater the chance to jank PBackground and this thread when the responses
+// come back. The initial choice of 250 was made targeting 2-3ms on a fast
+// machine and 10-15ms on a slow machine.
+// Every chunk waits for success before starting the next, and
+// the final chunk's completion will fire transaction.oncomplete .
+function bulkOperationHelper(store, operation, list, listIndex = 0) {
+  const CHUNK_LENGTH = 250;
+  const max = Math.min(listIndex + CHUNK_LENGTH, list.length);
+  let request;
+  for (; listIndex < max; listIndex++) {
+    request = store[operation](list[listIndex]);
+  }
+  if (listIndex < list.length) {
+    // On error, `transaction.onerror` is called.
+    request.onsuccess = bulkOperationHelper.bind(
+      null,
+      store,
+      operation,
+      list,
+      listIndex
+    );
+  }
+  // otherwise, we're done, and the transaction will complete on its own.
+}
+
 const Agent = {
   /**
    * Return the canonical JSON serialization of the specified records.
@@ -161,22 +189,14 @@ async function importDumpIDB(bucket, collection, records) {
   const db = await openIDB(IDB_NAME, IDB_VERSION);
 
   // Each entry of the dump will be stored in the records store.
-  // They are indexed by `_cid`, and their status is `synced`.
+  // They are indexed by `_cid`.
   const cid = bucket + "/" + collection;
   await executeIDB(db, IDB_RECORDS_STORE, store => {
-    // Chain the put operations together, the last one will be waited by
-    // the `transaction.oncomplete` callback.
-    let i = 0;
-    putNext();
-
-    function putNext() {
-      if (i == records.length) {
-        return;
-      }
-      const entry = { ...records[i], _status: "synced", _cid: cid };
-      store.put(entry).onsuccess = putNext; // On error, `transaction.onerror` is called.
-      ++i;
-    }
+    // We can just modify the items in-place, as we got them from loadJSONDump.
+    records.forEach(item => {
+      item._cid = cid;
+    });
+    bulkOperationHelper(store, "put", records);
   });
 
   // Store the highest timestamp as the collection timestamp (or zero if dump is empty).
