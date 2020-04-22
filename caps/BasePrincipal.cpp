@@ -479,18 +479,6 @@ BasePrincipal::IsThirdPartyPrincipal(nsIPrincipal* aPrin, bool* aRes) {
   }
   return aPrin->IsThirdPartyURI(prinURI, aRes);
 }
-NS_IMETHODIMP
-BasePrincipal::IsThirdPartyChannel(nsIChannel* aChan, bool* aRes) {
-  *aRes = true;
-  nsCOMPtr<nsIURI> prinURI;
-  nsresult rv = GetURI(getter_AddRefs(prinURI));
-  if (NS_FAILED(rv) || !prinURI) {
-    return NS_OK;
-  }
-  ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
-
-  return thirdPartyUtil->IsThirdPartyChannel(aChan, prinURI, aRes);
-}
 
 NS_IMETHODIMP
 BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
