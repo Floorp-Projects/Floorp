@@ -62,6 +62,7 @@ add_task(async function() {
         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
         "tracking.example.com,tracking.example.org",
       ],
+      ["privacy.trackingprotection.testing.report_blocked_node", true],
     ],
   });
 

@@ -5994,6 +5994,13 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
       UnblockEmbedderLoadEventForFailure();
 
+      // We don't really need to add the blocked node if we are not testing.
+      // This could save a IPC here.
+      if (!StaticPrefs::
+              privacy_trackingprotection_testing_report_blocked_node()) {
+        return NS_OK;
+      }
+
       RefPtr<BrowsingContext> bc = GetBrowsingContext();
       RefPtr<BrowsingContext> parentBC = bc->GetParent();
 
