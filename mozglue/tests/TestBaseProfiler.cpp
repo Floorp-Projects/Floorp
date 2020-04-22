@@ -61,18 +61,17 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
 void TestPowerOfTwoMask() {
   printf("TestPowerOfTwoMask...\n");
 
-  static_assert(MakePowerOfTwoMask<uint32_t, 0>().MaskValue() == 0, "");
+  static_assert(MakePowerOfTwoMask<uint32_t, 0>().MaskValue() == 0);
   constexpr PowerOfTwoMask<uint32_t> c0 = MakePowerOfTwoMask<uint32_t, 0>();
   MOZ_RELEASE_ASSERT(c0.MaskValue() == 0);
 
-  static_assert(MakePowerOfTwoMask<uint32_t, 0xFFu>().MaskValue() == 0xFFu, "");
+  static_assert(MakePowerOfTwoMask<uint32_t, 0xFFu>().MaskValue() == 0xFFu);
   constexpr PowerOfTwoMask<uint32_t> cFF =
       MakePowerOfTwoMask<uint32_t, 0xFFu>();
   MOZ_RELEASE_ASSERT(cFF.MaskValue() == 0xFFu);
 
-  static_assert(
-      MakePowerOfTwoMask<uint32_t, 0xFFFFFFFFu>().MaskValue() == 0xFFFFFFFFu,
-      "");
+  static_assert(MakePowerOfTwoMask<uint32_t, 0xFFFFFFFFu>().MaskValue() ==
+                0xFFFFFFFFu);
   constexpr PowerOfTwoMask<uint32_t> cFFFFFFFF =
       MakePowerOfTwoMask<uint32_t, 0xFFFFFFFFu>();
   MOZ_RELEASE_ASSERT(cFFFFFFFF.MaskValue() == 0xFFFFFFFFu);
@@ -114,23 +113,21 @@ void TestPowerOfTwoMask() {
 void TestPowerOfTwo() {
   printf("TestPowerOfTwo...\n");
 
-  static_assert(MakePowerOfTwo<uint32_t, 1>().Value() == 1, "");
+  static_assert(MakePowerOfTwo<uint32_t, 1>().Value() == 1);
   constexpr PowerOfTwo<uint32_t> c1 = MakePowerOfTwo<uint32_t, 1>();
   MOZ_RELEASE_ASSERT(c1.Value() == 1);
-  static_assert(MakePowerOfTwo<uint32_t, 1>().Mask().MaskValue() == 0, "");
+  static_assert(MakePowerOfTwo<uint32_t, 1>().Mask().MaskValue() == 0);
 
-  static_assert(MakePowerOfTwo<uint32_t, 128>().Value() == 128, "");
+  static_assert(MakePowerOfTwo<uint32_t, 128>().Value() == 128);
   constexpr PowerOfTwo<uint32_t> c128 = MakePowerOfTwo<uint32_t, 128>();
   MOZ_RELEASE_ASSERT(c128.Value() == 128);
-  static_assert(MakePowerOfTwo<uint32_t, 128>().Mask().MaskValue() == 127, "");
+  static_assert(MakePowerOfTwo<uint32_t, 128>().Mask().MaskValue() == 127);
 
-  static_assert(MakePowerOfTwo<uint32_t, 0x80000000u>().Value() == 0x80000000u,
-                "");
+  static_assert(MakePowerOfTwo<uint32_t, 0x80000000u>().Value() == 0x80000000u);
   constexpr PowerOfTwo<uint32_t> cMax = MakePowerOfTwo<uint32_t, 0x80000000u>();
   MOZ_RELEASE_ASSERT(cMax.Value() == 0x80000000u);
-  static_assert(
-      MakePowerOfTwo<uint32_t, 0x80000000u>().Mask().MaskValue() == 0x7FFFFFFFu,
-      "");
+  static_assert(MakePowerOfTwo<uint32_t, 0x80000000u>().Mask().MaskValue() ==
+                0x7FFFFFFFu);
 
   struct TestDataU32 {
     uint32_t mInput;
