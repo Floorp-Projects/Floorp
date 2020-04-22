@@ -203,9 +203,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let aliasEngine = await this._maybeGetAlias(queryContext);
     if (!aliasEngine) {
-      // UnifiedComplete matches queries starting with "@" to token alias
-      // engines. If the string starts with "@", but an alias engine is not yet
-      // matched, then UnifiedComplete might still be returning token alias
+      // Autofill matches queries starting with "@" to token alias engines.
+      // If the string starts with "@", but an alias engine is not yet
+      // matched, then autofill might still be filtering token alias
       // engine results. We don't want to mix search suggestions with those
       // engine results, so we return early. See bug 1551049 comment 1 for
       // discussion on how to improve this behavior.
