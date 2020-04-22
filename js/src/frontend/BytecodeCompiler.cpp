@@ -936,8 +936,7 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
   //
   // NOTE: Keep in sync with JSScript::relazify().
   constexpr uint32_t NonLazyFlagsMask =
-      uint32_t(BaseScript::ImmutableFlags::HasNonSyntacticScope) |
-      uint32_t(BaseScript::ImmutableFlags::NeedsFunctionEnvironmentObjects);
+      uint32_t(BaseScript::ImmutableFlags::HasNonSyntacticScope);
 
   // These flags are expected to match between lazy and full parsing.
   constexpr uint32_t MatchedFlagsMask = ~NonLazyFlagsMask;

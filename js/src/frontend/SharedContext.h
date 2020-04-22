@@ -593,6 +593,9 @@ class FunctionBox : public SharedContext {
   void setFunctionHasExtraBodyVarScope() {
     immutableFlags_.setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
   }
+  void setNeedsFunctionEnvironmentObjects() {
+    immutableFlags_.setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
+  }
 
   bool hasSimpleParameterList() const {
     return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;

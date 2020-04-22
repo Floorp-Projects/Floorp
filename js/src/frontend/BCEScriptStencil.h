@@ -23,7 +23,6 @@ struct BytecodeEmitter;
 class BCEScriptStencil : public ScriptStencil {
   BytecodeEmitter& bce_;
 
-  bool getNeedsFunctionEnvironmentObjects(BytecodeEmitter& bce) const;
   void init(BytecodeEmitter& bce, UniquePtr<ImmutableScriptData> immutableData);
 
  public:
