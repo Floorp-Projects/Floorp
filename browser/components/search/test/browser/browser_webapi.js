@@ -21,7 +21,12 @@ function AddSearchProvider(...args) {
   );
 }
 
-function promiseDialogOpened() {
+const tabModalEnabled =
+  Services.prefs.getIntPref("prompts.modalType.searchService") !==
+    Services.prompt.MODAL_TYPE_WINDOW &&
+  Services.prefs.getBoolPref("prompts.tab_modal.enabled");
+
+function promiseWindowDialogOpened() {
   return new Promise((resolve, reject) => {
     Services.wm.addListener({
       onOpenWindow(xulWin) {
@@ -40,6 +45,54 @@ function promiseDialogOpened() {
   });
 }
 
+function promiseTabDialogOpened() {
+  return new Promise(resolve => {
+    let browser = gBrowser.selectedBrowser;
+    BrowserTestUtils.waitForEvent(browser, "DOMWillOpenModalDialog").then(
+      () => {
+        // Wait for the next event tick to make sure the prompt has opened.
+        SimpleTest.executeSoon(() => {
+          let promptBox = gBrowser.getTabModalPromptBox(
+            gBrowser.selectedBrowser
+          );
+          resolve(promptBox.listPrompts()[0].Dialog);
+        });
+      }
+    );
+  });
+}
+
+function promiseDialogOpened() {
+  if (tabModalEnabled) {
+    return promiseTabDialogOpened();
+  }
+  return promiseWindowDialogOpened();
+}
+
+function acceptDialog(dialog) {
+  if (tabModalEnabled) {
+    dialog.ui.button0.click();
+  } else {
+    dialog.document.getElementById("commonDialog").acceptDialog();
+  }
+  return BrowserTestUtils.waitForEvent(
+    gBrowser.selectedBrowser,
+    "DOMModalDialogClosed"
+  );
+}
+
+function cancelDialog(dialog) {
+  if (tabModalEnabled) {
+    dialog.ui.button1.click();
+  } else {
+    dialog.document.getElementById("commonDialog").cancelDialog();
+  }
+  return BrowserTestUtils.waitForEvent(
+    gBrowser.selectedBrowser,
+    "DOMModalDialogClosed"
+  );
+}
+
 add_task(async function test_working() {
   gBrowser.selectedTab = AddSearchProvider(ROOT + "testEngine.xml");
 
@@ -54,7 +107,7 @@ add_task(async function test_working() {
     getString("addEngineConfirmation", "Foo", "example.com"),
     "Should have seen the right install message"
   );
-  dialog.document.getElementById("commonDialog").cancelDialog();
+  await cancelDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });
@@ -75,7 +128,7 @@ add_task(async function test_HTTP() {
     getString("addEngineConfirmation", "Foo", "example.com"),
     "Should have seen the right install message"
   );
-  dialog.document.getElementById("commonDialog").cancelDialog();
+  await cancelDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });
@@ -94,7 +147,7 @@ add_task(async function test_relative() {
     getString("addEngineConfirmation", "Foo", "example.com"),
     "Should have seen the right install message"
   );
-  dialog.document.getElementById("commonDialog").cancelDialog();
+  await cancelDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });
@@ -110,7 +163,7 @@ add_task(async function test_invalid() {
     getString("error_invalid_engine_msg2", brandName, url),
     "Should have seen the right error message"
   );
-  dialog.document.getElementById("commonDialog").acceptDialog();
+  await acceptDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });
@@ -126,7 +179,7 @@ add_task(async function test_missing() {
     getString("error_loading_engine_msg2", brandName, url),
     "Should have seen the right error message"
   );
-  dialog.document.getElementById("commonDialog").acceptDialog();
+  await acceptDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });
@@ -142,7 +195,7 @@ add_task(async function test_missing_namespace() {
     getString("error_invalid_engine_msg2", brandName, url),
     "Should have seen the right error message"
   );
-  dialog.document.getElementById("commonDialog").acceptDialog();
+  await acceptDialog(dialog);
 
   gBrowser.removeCurrentTab();
 });

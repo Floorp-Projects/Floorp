@@ -7,11 +7,21 @@
 var EXPORTED_SYMBOLS = ["SidebarSearchParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "promptModalType",
+  "prompts.modalType.searchService",
+  Services.prompt.MODAL_TYPE_WINDOW
 );
 
 class SidebarSearchParent extends JSWindowActorParent {
@@ -69,12 +79,23 @@ class SidebarSearchParent extends JSWindowActorParent {
         brandName,
         engineURL.spec,
       ]);
-      Services.ww.getNewPrompter(browser.ownerGlobal).alert(title, msg);
+      Services.prompt.asyncAlert(
+        this.browsingContext,
+        promptModalType,
+        title,
+        msg
+      );
       return;
     }
 
     Services.search
-      .addEngine(engineURL.spec, iconURL ? iconURL.spec : null, true)
+      .addEngine(
+        engineURL.spec,
+        iconURL ? iconURL.spec : null,
+        true,
+        null,
+        this.browsingContext
+      )
       .catch(ex =>
         Cu.reportError(
           "Unable to add search engine to the search service: " + ex
