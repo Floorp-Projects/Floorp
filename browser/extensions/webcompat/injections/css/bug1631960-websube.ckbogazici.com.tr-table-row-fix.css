@@ -1,0 +1,13 @@
+/**
+ * websube.ckbogazici.com.tr - Browser is not supported message
+ * Bug #1631960 - https://bugzilla.mozilla.org/show_bug.cgi?id=1631960
+ * WebCompat issue #51714 - https://webcompat.com/issues/51714
+ *
+ * websube.ckbogazici.com.tr has a table-row with position:relative
+ * causing its child elements to be shifted to the left due to
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1289682. Resetting position
+ * fixes the issue
+ */
+#pt1\:pt_root {
+  position: unset;
+}
