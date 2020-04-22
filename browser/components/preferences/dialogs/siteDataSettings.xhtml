@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/dialogs/siteDataSettings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/siteDataSettings.css" type="text/css"?>
+
+<window id="SiteDataSettingsDialog" windowtype="Browser:SiteDataSettings"
+        data-l10n-id="site-data-settings-window"
+        data-l10n-attrs="title"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        style="width: 45em;"
+        onload="gSiteDataSettings.init();"
+        onkeypress="gSiteDataSettings.onKeyPress(event);"
+        persist="screenX screenY width height">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/siteDataSettings.js"/>
+
+  <vbox flex="1" class="contentPane">
+    <description id="settingsDescription" data-l10n-id="site-data-settings-description"/>
+    <separator class="thin"/>
+
+    <hbox id="searchBoxContainer">
+      <search-textbox id="searchBox" flex="1"
+        data-l10n-id="site-data-search-textbox"
+        data-l10n-attrs="placeholder"/>
+    </hbox>
+    <separator class="thin"/>
+
+    <listheader>
+      <treecol flex="4" width="50" data-l10n-id="site-data-column-host" id="hostCol"/>
+      <treecol flex="1" width="50" data-l10n-id="site-data-column-cookies" id="cookiesCol"/>
+      <!-- Sorted by usage so the user can quickly see which sites use the most data. -->
+      <treecol flex="2" width="50" data-l10n-id="site-data-column-storage" id="usageCol" data-isCurrentSortCol="true"/>
+      <treecol flex="2" width="50" data-l10n-id="site-data-column-last-used" id="lastAccessedCol" />
+    </listheader>
+    <richlistbox seltype="multiple" id="sitesList" orient="vertical" flex="1"/>
+  </vbox>
+
+  <hbox align="start">
+    <button id="removeSelected" data-l10n-id="site-data-remove-selected"/>
+    <button id="removeAll"/>
+  </hbox>
+
+  <vbox align="end">
+    <hbox>
+        <button id="cancel" data-l10n-id="site-data-button-cancel"/>
+        <button id="save" data-l10n-id="site-data-button-save"/>
+    </hbox>
+  </vbox>
+
+</window>

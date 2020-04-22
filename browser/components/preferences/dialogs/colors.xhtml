@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+
+<window type="child"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="colors-window"
+        data-l10n-attrs="title, style"
+        persist="lastSelected screenX screenY">
+<dialog id="ColorsDialog"
+        buttons="accept,cancel,help"
+        helpTopic="prefs-fonts-and-colors">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/colors.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+
+  <keyset>
+    <key data-l10n-id="colors-close-key" modifiers="accel" oncommand="Preferences.close(event)"/>
+  </keyset>
+
+  <hbox>
+    <groupbox flex="1">
+      <label><html:h2 data-l10n-id="colors-text-and-background"/></label>
+      <hbox align="center">
+        <label data-l10n-id="colors-text-header" control="foregroundtextmenu"/>
+        <spacer flex="1"/>
+        <html:input type="color" id="foregroundtextmenu"
+                    preference="browser.display.foreground_color"/>
+      </hbox>
+      <hbox align="center" style="margin-top: 5px">
+        <label data-l10n-id="colors-background" control="backgroundmenu" />
+        <spacer flex="1"/>
+        <html:input type="color" id="backgroundmenu"
+                    preference="browser.display.background_color"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox align="center">
+        <checkbox id="browserUseSystemColors" data-l10n-id="colors-use-system"
+                  preference="browser.display.use_system_colors"/>
+      </hbox>
+    </groupbox>
+
+    <groupbox flex="1">
+      <label><html:h2 data-l10n-id="colors-links-header"/></label>
+      <hbox align="center">
+        <label data-l10n-id="colors-unvisited-links" control="unvisitedlinkmenu" />
+        <spacer flex="1"/>
+        <html:input type="color" id="unvisitedlinkmenu"
+                    preference="browser.anchor_color"/>
+      </hbox>
+      <hbox align="center" style="margin-top: 5px">
+        <label data-l10n-id="colors-visited-links" control="visitedlinkmenu" />
+        <spacer flex="1"/>
+        <html:input type="color" id="visitedlinkmenu"
+                    preference="browser.visited_color"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox align="center">
+        <checkbox id="browserUnderlineAnchors" data-l10n-id="colors-underline-links"
+                  preference="browser.underline_anchors"/>
+      </hbox>
+    </groupbox>
+  </hbox>
+
+  <label data-l10n-id="colors-page-override" control="useDocumentColors" />
+  <hbox>
+    <menulist id="useDocumentColors" preference="browser.display.document_color_use" flex="1">
+      <menupopup>
+        <menuitem data-l10n-id="colors-page-override-option-always"
+                  value="2" id="documentColorAlways"/>
+        <menuitem data-l10n-id="colors-page-override-option-auto"
+                  value="0" id="documentColorAutomatic"/>
+        <menuitem data-l10n-id="colors-page-override-option-never"
+                  value="1" id="documentColorNever"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+
+  <!-- Load the script after the elements for layout issues (bug 1501755). -->
+  <script src="chrome://browser/content/preferences/dialogs/colors.js"/>
+</dialog>
+</window>

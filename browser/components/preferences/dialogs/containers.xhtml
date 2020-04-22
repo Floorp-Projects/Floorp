@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/containers-dialog.css" type="text/css"?>
+
+<window id="ContainersDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-attrs="title, style"
+        onload="gContainersManager.onLoad();"
+        onunload="gContainersManager.uninit();"
+        persist="screenX screenY width height"
+        onkeypress="gContainersManager.onWindowKeyPress(event);">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/containers.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/containers.js"/>
+
+  <keyset>
+    <key data-l10n-id="containers-window-close" modifiers="accel" oncommand="window.close();"/>
+  </keyset>
+
+  <vbox class="contentPane" hidden="true" id="containers-content">
+    <hbox align="start">
+      <label id="nameLabel" control="name"
+             data-l10n-id="containers-name-label"
+             data-l10n-attrs="style"/>
+      <html:input id="name" type="text" data-l10n-id="containers-name-text" oninput="gContainersManager.checkForm();" />
+    </hbox>
+    <hbox align="center" id="colorWrapper">
+      <label id="colorLabel" control="color"
+             data-l10n-id="containers-color-label"
+             data-l10n-attrs="style"/>
+    </hbox>
+    <hbox align="center" id="iconWrapper">
+      <label id="iconLabel" control="icon"
+             data-l10n-id="containers-icon-label"
+             data-l10n-attrs="style"/>
+    </hbox>
+  </vbox>
+
+  <hbox class="actionButtons" pack="end">
+    <button id="btnApplyChanges" disabled="true" oncommand="gContainersManager.onApplyChanges();"
+            data-l10n-id="containers-button-done"/>
+  </hbox>
+</window>

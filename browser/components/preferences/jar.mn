@@ -3,38 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/preferences/applicationManager.xhtml
-    content/browser/preferences/applicationManager.js
-    content/browser/preferences/blocklists.xhtml
-    content/browser/preferences/blocklists.js
-    content/browser/preferences/browserLanguages.xhtml
-    content/browser/preferences/browserLanguages.js
-    content/browser/preferences/clearSiteData.css
-    content/browser/preferences/clearSiteData.js
-    content/browser/preferences/clearSiteData.xhtml
-    content/browser/preferences/colors.xhtml
-    content/browser/preferences/colors.js
-    content/browser/preferences/connection.xhtml
-    content/browser/preferences/connection.js
-    content/browser/preferences/fonts.xhtml
-    content/browser/preferences/fonts.js
-    content/browser/preferences/handlers.css
-    content/browser/preferences/languages.xhtml
-    content/browser/preferences/languages.js
-    content/browser/preferences/permissions.xhtml
-    content/browser/preferences/sitePermissions.xhtml
-    content/browser/preferences/sitePermissions.js
-    content/browser/preferences/sitePermissions.css
-    content/browser/preferences/containers.xhtml
-    content/browser/preferences/containers.js
-    content/browser/preferences/permissions.js
-    content/browser/preferences/sanitize.xhtml
-    content/browser/preferences/sanitize.js
-    content/browser/preferences/selectBookmark.xhtml
-    content/browser/preferences/selectBookmark.js
-    content/browser/preferences/siteDataSettings.xhtml
-    content/browser/preferences/siteDataSettings.js
-*   content/browser/preferences/siteDataRemoveSelected.xhtml
-    content/browser/preferences/siteDataRemoveSelected.js
-    content/browser/preferences/translation.xhtml
-    content/browser/preferences/translation.js
+   content/browser/preferences/preferences.js
+   content/browser/preferences/extensionControlled.js
+*  content/browser/preferences/preferences.xhtml
+   content/browser/preferences/subdialogs.js
+
+   content/browser/preferences/main.js
+   content/browser/preferences/home.js
+   content/browser/preferences/search.js
+   content/browser/preferences/privacy.js
+   content/browser/preferences/containers.js
+   content/browser/preferences/sync.js
+   content/browser/preferences/fxaPairDevice.xhtml
+   content/browser/preferences/fxaPairDevice.js
+   content/browser/preferences/findInPage.js

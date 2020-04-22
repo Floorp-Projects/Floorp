@@ -1,0 +1,114 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Home panel -->
+
+<script src="chrome://browser/content/preferences/home.js"/>
+<html:template id="template-paneHome">
+<hbox id="firefoxHomeCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneHome">
+  <html:h1 style="-moz-box-flex: 1;" data-l10n-id="pane-home-title"/>
+  <button id="restoreDefaultHomePageBtn"
+          is="highlightable-button"
+          class="homepage-button check-home-page-controlled"
+          data-preference-related="browser.startup.homepage"
+          data-l10n-id="home-restore-defaults"
+          preference="pref.browser.homepage.disable_button.restore_default"/>
+</hbox>
+
+<groupbox id="homepageGroup"
+          data-category="paneHome"
+          hidden="true">
+  <label><html:h2 data-l10n-id="home-new-windows-tabs-header"/></label>
+  <description data-l10n-id="home-new-windows-tabs-description2" />
+
+  <hbox id="homepageAndNewWindowsOption">
+    <label control="homeMode" data-l10n-id="home-homepage-mode-label" flex="1" />
+
+    <vbox class="homepageMenuItemContainer" flex="1">
+      <html:input id="homePrefHidden"
+                  type="text"
+                  preference="browser.startup.homepage"
+                  hidden="true" />
+      <menulist id="homeMode"
+                class="check-home-page-controlled"
+                data-preference-related="browser.startup.homepage">
+        <menupopup>
+          <menuitem value="0" data-l10n-id="home-mode-choice-default" />
+          <menuitem value="2" data-l10n-id="home-mode-choice-custom" />
+          <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
+        </menupopup>
+      </menulist>
+
+      <vbox id="customSettings" hidden="true">
+        <box role="combobox">
+          <html:input id="homePageUrl"
+                      type="text"
+                      is="autocomplete-input"
+                      class="uri-element check-home-page-controlled"
+                      style="-moz-box-flex: 1;"
+                      data-preference-related="browser.startup.homepage"
+                      data-l10n-id="home-homepage-custom-url"
+                      autocompletepopup="homePageUrlAutocomplete"
+                      autocompletesearch="unifiedcomplete" />
+          <popupset>
+            <panel id="homePageUrlAutocomplete"
+                   is="autocomplete-richlistbox-popup"
+                   type="autocomplete-richlistbox"
+                   noautofocus="true"/>
+          </popupset>
+        </box>
+        <hbox class="homepage-buttons">
+          <button id="useCurrentBtn"
+                  is="highlightable-button"
+                  flex="1"
+                  class="homepage-button check-home-page-controlled"
+                  data-l10n-id="use-current-pages"
+                  data-l10n-args='{"tabCount": 0}'
+                  disabled="true"
+                  preference="pref.browser.homepage.disable_button.current_page"/>
+          <button id="useBookmarkBtn"
+                  is="highlightable-button"
+                  flex="1"
+                  class="homepage-button check-home-page-controlled"
+                  data-l10n-id="choose-bookmark"
+                  preference="pref.browser.homepage.disable_button.bookmark_page"
+                  search-l10n-ids="select-bookmark-window.title, select-bookmark-desc"/>
+        </hbox>
+      </vbox>
+    </vbox>
+  </hbox>
+  <hbox id="browserHomePageExtensionContent"
+        align="center" hidden="true" class="extension-controlled">
+    <description control="disableHomePageExtension" flex="1" />
+    <button id="disableHomePageExtension"
+            is="highlightable-button"
+            class="extension-controlled-button accessory-button"
+            data-l10n-id="disable-extension" />
+  </hbox>
+
+  <hbox id="newTabsOption">
+    <label control="newTabMode" data-l10n-id="home-newtabs-mode-label" flex="1" />
+
+    <menulist id="newTabMode"
+                flex="1"
+                preference="browser.newtabpage.enabled">
+      <menupopup>
+        <menuitem value="0" data-l10n-id="home-mode-choice-default" />
+        <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
+      </menupopup>
+    </menulist>
+  </hbox>
+  <hbox id="browserNewTabExtensionContent"
+        align="center" hidden="true" class="extension-controlled">
+    <description control="disableNewTabExtension" flex="1" />
+    <button id="disableNewTabExtension"
+            is="highlightable-button"
+            class="extension-controlled-button accessory-button"
+            data-l10n-id="disable-extension" />
+  </hbox>
+</groupbox>
+</html:template>
