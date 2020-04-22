@@ -1138,27 +1138,6 @@ class nsWindow::LayerViewSupport final
     }
   }
 
-  void SetPinned(bool aPinned, int32_t aReason) {
-    RefPtr<UiCompositorControllerChild> child =
-        GetUiCompositorControllerChild();
-    if (!child) {
-      return;
-    }
-
-    if (AndroidBridge::IsJavaUiThread()) {
-      child->SetPinned(aPinned, aReason);
-      return;
-    }
-
-    if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-      uiThread->Dispatch(
-          NewRunnableMethod<bool, int32_t>(
-              "LayerViewSupport::SetPinned", child,
-              &UiCompositorControllerChild::SetPinned, aPinned, aReason),
-          nsIThread::DISPATCH_NORMAL);
-    }
-  }
-
   void SendToolbarAnimatorMessage(int32_t aMessage) {
     RefPtr<UiCompositorControllerChild> child =
         GetUiCompositorControllerChild();
@@ -1257,22 +1236,6 @@ class nsWindow::LayerViewSupport final
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
       child->EnableLayerUpdateNotifications(aEnable);
-    }
-  }
-
-  void SendToolbarPixelsToCompositor(int32_t aWidth, int32_t aHeight,
-                                     jni::IntArray::Param aPixels) {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      Shmem mem;
-      child->AllocPixelBuffer(aPixels->Length() * sizeof(int32_t), &mem);
-      aPixels->CopyTo(mem.get<int32_t>(), mem.Size<int32_t>());
-      if (!child->ToolbarPixelsToCompositor(mem,
-                                            ScreenIntSize(aWidth, aHeight))) {
-        child->DeallocPixelBuffer(mem);
-      }
     }
   }
 

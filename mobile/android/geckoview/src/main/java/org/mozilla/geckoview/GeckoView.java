@@ -504,11 +504,6 @@ public class GeckoView extends FrameLayout {
         return mSession.getPanZoomController();
     }
 
-    public @NonNull DynamicToolbarAnimator getDynamicToolbarAnimator() {
-        ThreadUtils.assertOnUiThread();
-        return mSession.getDynamicToolbarAnimator();
-    }
-
     @Override
     public void onAttachedToWindow() {
         if (mSession != null) {
