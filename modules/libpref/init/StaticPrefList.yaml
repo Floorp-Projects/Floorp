@@ -7940,11 +7940,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-- name: privacy.trackingprotection.testing.report_blocked_node
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether to spoof user locale to English (used as part of Resist
 # Fingerprinting).
 # 0 - will prompt
