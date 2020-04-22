@@ -542,6 +542,16 @@ class Element : public FragmentOrElement {
     }
   }
 
+  // AccessibilityRole
+  void GetRole(nsAString& aValue) const {
+    if (!GetAttr(nsGkAtoms::role, aValue)) {
+      SetDOMStringToNull(aValue);
+    }
+  }
+  void SetRole(const nsAString& aValue, ErrorResult& aRv) {
+    SetAttr(nsGkAtoms::role, aValue, aRv);
+  }
+
  protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the

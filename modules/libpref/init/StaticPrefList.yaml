@@ -184,6 +184,11 @@
   value: false
   mirror: always
 
+- name: accessibility.ARIAReflection.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #ifdef ANDROID
   #---------------------------------------------------------------------------
   # Prefs starting with "android."
