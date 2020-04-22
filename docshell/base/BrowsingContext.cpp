@@ -93,10 +93,14 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
+BrowsingContext* BrowsingContext::GetParent() const {
+  return mParentWindow ? mParentWindow->GetBrowsingContext() : nullptr;
+}
+
 BrowsingContext* BrowsingContext::Top() {
   BrowsingContext* bc = this;
-  while (bc->mParent) {
-    bc = bc->mParent;
+  while (bc->mParentWindow) {
+    bc = bc->GetParent();
   }
   return bc;
 }
@@ -365,10 +369,7 @@ BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
       mEmbeddedByThisProcess(false),
       mUseRemoteTabs(false),
       mUseRemoteSubframes(false) {
-  if (mParentWindow) {
-    MOZ_RELEASE_ASSERT(mParentWindow->Group() == mGroup);
-    mParent = mParentWindow->GetBrowsingContext();
-  }
+  MOZ_RELEASE_ASSERT(!mParentWindow || mParentWindow->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
 }
@@ -470,7 +471,7 @@ void BrowsingContext::Attach(bool aFromIPC) {
             ("%s: Connecting 0x%08" PRIx64 " to 0x%08" PRIx64
              " (private=%d, remote=%d, fission=%d, oa=%s)",
              XRE_IsParentProcess() ? "Parent" : "Child", Id(),
-             mParent ? mParent->Id() : 0, (int)mPrivateBrowsingId,
+             GetParent() ? GetParent()->Id() : 0, (int)mPrivateBrowsingId,
              (int)mUseRemoteTabs, (int)mUseRemoteSubframes, suffix.get()));
   }
 
@@ -508,7 +509,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
-           mParent ? mParent->Id() : 0));
+           GetParent() ? GetParent()->Id() : 0));
 
   // This will only ever be null if the cycle-collector has unlinked us. Don't
   // try to detach ourselves in that case.
@@ -707,7 +708,7 @@ BrowsingContext* BrowsingContext::FindWithName(
 
     do {
       Span<RefPtr<BrowsingContext>> siblings;
-      BrowsingContext* parent = current->mParent;
+      BrowsingContext* parent = current->GetParent();
 
       if (!parent) {
         // We've reached the root of the tree, consider browsing
@@ -774,8 +775,8 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(
   }
 
   if (aName.LowerCaseEqualsLiteral("_parent")) {
-    if (mParent) {
-      return aRequestingContext.CanAccess(mParent) ? mParent.get() : nullptr;
+    if (BrowsingContext* parent = GetParent()) {
+      return aRequestingContext.CanAccess(parent) ? parent : nullptr;
     }
     return this;
   }
@@ -1195,8 +1196,8 @@ NS_IMETHODIMP BrowsingContext::GetUseTrackingProtection(
     return NS_OK;
   }
 
-  if (mParent) {
-    return mParent->GetUseTrackingProtection(aUseTrackingProtection);
+  if (GetParent()) {
+    return GetParent()->GetUseTrackingProtection(aUseTrackingProtection);
   }
 
   return NS_OK;
@@ -1283,7 +1284,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
     tmp->mFields.SetWithoutSyncing<IDX_IsPopupSpam>(false);
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mParentWindow, mParent, mGroup,
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mParentWindow, mGroup,
                                   mEmbedderElement, mWindowContexts,
                                   mCurrentWindowContext, mSessionStorageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -1291,8 +1292,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
-      mDocShell, mParentWindow, mParent, mGroup, mEmbedderElement,
-      mWindowContexts, mCurrentWindowContext, mSessionStorageManager)
+      mDocShell, mParentWindow, mGroup, mEmbedderElement, mWindowContexts,
+      mCurrentWindowContext, mSessionStorageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 class RemoteLocationProxy
@@ -1538,17 +1539,17 @@ void BrowsingContext::GetOpener(JSContext* aCx,
   }
 }
 
+// We never throw an error, but the implementation in nsGlobalWindow does and
+// we need to use the same signature.
 Nullable<WindowProxyHolder> BrowsingContext::GetParent(ErrorResult& aError) {
   if (mIsDiscarded) {
     return nullptr;
   }
 
-  // We never throw an error, but the implementation in nsGlobalWindow does and
-  // we need to use the same signature.
-  if (!mParent) {
-    return WindowProxyHolder(this);
+  if (GetParent()) {
+    return WindowProxyHolder(GetParent());
   }
-  return WindowProxyHolder(mParent.get());
+  return WindowProxyHolder(this);
 }
 
 void BrowsingContext::PostMessageMoz(JSContext* aCx,
@@ -1719,7 +1720,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserActivationState>) {
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
-  MOZ_ASSERT(!mParent, "Set muted flag on non top-level context!");
+  MOZ_ASSERT(!GetParent(), "Set muted flag on non top-level context!");
   USER_ACTIVATION_LOG("Set audio muted %d for %s browsing context 0x%08" PRIx64,
                       GetMuted(), XRE_IsParentProcess() ? "Parent" : "Child",
                       Id());
