@@ -360,12 +360,23 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishEagerFunction(
 
   funbox->functionScopeBindings().set(*bindings);
 
+  // See: JSFunction::needsCallObject()
+  if (FunctionScopeHasClosedOverBindings(pc_) ||
+      funbox->needsCallObjectRegardlessOfBindings()) {
+    funbox->setNeedsFunctionEnvironmentObjects();
+  }
+
   if (funbox->isNamedLambda()) {
     BINJS_TRY_DECL(
         recursiveBinding,
         NewLexicalScopeData(cx_, pc_->namedLambdaScope(), alloc_, pc_));
 
     funbox->namedLambdaBindings().set(*recursiveBinding);
+
+    // See: JSFunction::needsNamedLambdaEnvironment()
+    if (LexicalScopeHasClosedOverBindings(pc_, pc_->namedLambdaScope())) {
+      funbox->setNeedsFunctionEnvironmentObjects();
+    }
   }
 
   return Ok();

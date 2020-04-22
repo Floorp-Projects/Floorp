@@ -223,6 +223,9 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // function has var bindings or a sloppy-direct-eval. For example,
   //    `function(x = eval("")) { var y; }`
   FunctionHasExtraBodyVarScope = 1 << 25,
+
+  // Whether this function needs a call object or named lambda environment.
+  NeedsFunctionEnvironmentObjects = 1 << 26,
   // ----
 
   // Bytecode Emitter Flags
@@ -233,10 +236,7 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // True if the script has a non-syntactic scope on its dynamic scope chain.
   // That is, there are objects about which we know nothing between the
   // outermost syntactic scope and the global.
-  HasNonSyntacticScope = 1 << 26,
-
-  // Whether this function needs a call object or named lambda environment.
-  NeedsFunctionEnvironmentObjects = 1 << 27,
+  HasNonSyntacticScope = 1 << 27,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {

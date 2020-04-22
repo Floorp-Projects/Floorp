@@ -4047,7 +4047,6 @@ void JSScript::relazify(JSRuntime* rt) {
   //
   // NOTE: Keep in sync with CheckFlagsOnDelazification.
   clearFlag(ImmutableFlags::HasNonSyntacticScope);
-  clearFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
 
   // We should not still be in any side-tables for the debugger or
   // code-coverage. The finalizer will not be able to clean them up once

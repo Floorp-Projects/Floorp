@@ -1875,6 +1875,10 @@ mozilla::Maybe<LexicalScope::Data*> NewLexicalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
+bool FunctionScopeHasClosedOverBindings(ParseContext* pc);
+bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
+                                       ParseContext::Scope& scope);
+
 JSFunction* AllocNewFunction(JSContext* cx,
                              Handle<FunctionCreationData> dataHandle);
 

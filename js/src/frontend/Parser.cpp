@@ -1211,6 +1211,29 @@ Maybe<FunctionScope::Data*> NewFunctionScopeData(
   return Some(bindings);
 }
 
+// Compute if `NewFunctionScopeData` would return any binding list with any
+// entry marked as closed-over. This is done without the need to allocate the
+// binding list. If true, an EnvironmentObject will be needed at runtime.
+bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
+  bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
+
+  for (BindingIter bi = pc->functionScope().bindings(pc); bi; bi++) {
+    switch (bi.kind()) {
+      case BindingKind::FormalParameter:
+      case BindingKind::Var:
+        if (allBindingsClosedOver || bi.closedOver()) {
+          return true;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return false;
+}
+
 Maybe<FunctionScope::Data*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs,
     IsFieldInitializer isFieldInitializer) {
@@ -1295,6 +1318,30 @@ Maybe<LexicalScope::Data*> NewLexicalScopeData(JSContext* cx,
   }
 
   return Some(bindings);
+}
+
+// Compute if `NewLexicalScopeData` would return any binding list with any entry
+// marked as closed-over. This is done without the need to allocate the binding
+// list. If true, an EnvironmentObject will be needed at runtime.
+bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
+                                       ParseContext::Scope& scope) {
+  bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
+
+  for (BindingIter bi = scope.bindings(pc); bi; bi++) {
+    switch (bi.kind()) {
+      case BindingKind::Let:
+      case BindingKind::Const:
+        if (allBindingsClosedOver || bi.closedOver()) {
+          return true;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return false;
 }
 
 Maybe<LexicalScope::Data*> ParserBase::newLexicalScopeData(
@@ -1634,9 +1681,20 @@ bool PerHandlerParser<ParseHandler>::finishFunctionScopes(
     }
   }
 
+  // See: JSFunction::needsCallObject()
+  if (FunctionScopeHasClosedOverBindings(pc_) ||
+      funbox->needsCallObjectRegardlessOfBindings()) {
+    funbox->setNeedsFunctionEnvironmentObjects();
+  }
+
   if (funbox->isNamedLambda() && !isStandaloneFunction) {
     if (!propagateFreeNamesAndMarkClosedOverBindings(pc_->namedLambdaScope())) {
       return false;
+    }
+
+    // See: JSFunction::needsNamedLambdaEnvironment()
+    if (LexicalScopeHasClosedOverBindings(pc_, pc_->namedLambdaScope())) {
+      funbox->setNeedsFunctionEnvironmentObjects();
     }
   }
 
