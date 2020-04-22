@@ -318,7 +318,7 @@ class OptimizeStrategies(TryConfig):
     def try_config(self, strategy, **kwargs):
         if strategy:
             if ':' not in strategy:
-                strategy = "taskgraph.optimize:experimental.{}".format(strategy)
+                strategy = "taskgraph.optimize:tryselect.{}".format(strategy)
 
             try:
                 obj = find_object(strategy)

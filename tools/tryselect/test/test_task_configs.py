@@ -42,9 +42,9 @@ TASK_CONFIG_TESTS = {
     ],
     'strategy': [
         ([], None),
-        (['--strategy', 'seta'], {'optimize-strategies': 'taskgraph.optimize:experimental.seta'}),
+        (['--strategy', 'seta'], {'optimize-strategies': 'taskgraph.optimize:tryselect.seta'}),
         (['--strategy', 'taskgraph.optimize:experimental.seta'], {'optimize-strategies': 'taskgraph.optimize:experimental.seta'}),  # noqa
-        (['--strategy', 'taskgraph.optimize:experimental'], SystemExit),
+        (['--strategy', 'taskgraph.optimize:tryselect'], SystemExit),
         (['--strategy', 'foo'], SystemExit),
         (['--strategy', 'foo:bar'], SystemExit),
     ],

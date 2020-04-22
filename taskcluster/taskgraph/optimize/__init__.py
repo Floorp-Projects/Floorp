@@ -259,6 +259,12 @@ class OptimizationStrategy(object):
         return False
 
 
+@register_strategy('always')
+class Always(OptimizationStrategy):
+    def should_remove_task(self, task, params, arg):
+        return True
+
+
 @six.add_metaclass(ABCMeta)
 class CompositeStrategy(OptimizationStrategy):
 
@@ -369,11 +375,14 @@ import_sibling_modules()
 
 
 # Register composite strategies.
+register_strategy('build', args=('skip-unless-schedules',))(Alias)
 register_strategy('test', args=(Any('skip-unless-schedules', 'seta'), 'backstop'))(All)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
 register_strategy('fuzzing-builds', args=('skip-unless-schedules', 'seta'))(Any)
 
+
+# Strategy overrides used by |mach try| and/or shadow-scheduler tasks.
 
 class experimental(object):
     """Experimental strategies either under development or used as benchmarks.
@@ -425,3 +434,30 @@ class experimental(object):
     }
     """Provides a stable history of SETA's performance in the event we make it
     non-default in the future. Only useful as a benchmark."""
+
+
+class ExperimentalOverride(object):
+    """Overrides dictionaries that are stored in a container with new values.
+
+    This can be used to modify all strategies in a collection the same way,
+    presumably with strategies affecting kinds of tasks tangential to the
+    current context.
+
+    Args:
+        base (object): A container class supporting attribute access.
+        overrides (dict): Values to update any accessed dictionaries with.
+    """
+    def __init__(self, base, overrides):
+        self.base = base
+        self.overrides = overrides
+
+    def __getattr__(self, name):
+        val = getattr(self.base, name).copy()
+        val.update(self.overrides)
+        return val
+
+
+tryselect = ExperimentalOverride(experimental, {
+    'build': Alias('always'),
+    'fuzzing-builds': Alias('always'),
+})
