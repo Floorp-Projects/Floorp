@@ -7,9 +7,9 @@
 #ifndef mozilla_layers_APZInputBridge_h
 #define mozilla_layers_APZInputBridge_h
 
-#include "APZUtils.h"               // for APZWheelAction
-#include "mozilla/EventForwards.h"  // for WidgetInputEvent, nsEventStatus
-#include "Units.h"                  // for LayoutDeviceIntPoint
+#include "mozilla/EventForwards.h"    // for WidgetInputEvent, nsEventStatus
+#include "mozilla/layers/APZUtils.h"  // for APZWheelAction
+#include "Units.h"                    // for LayoutDeviceIntPoint
 
 namespace mozilla {
 
