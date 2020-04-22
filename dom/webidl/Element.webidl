@@ -287,6 +287,7 @@ Element includes ParentNode;
 Element includes Animatable;
 Element includes GeometryUtils;
 Element includes AccessibilityRole;
+Element includes AriaAttributes;
 
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
