@@ -3186,12 +3186,11 @@ void Element::RequestPointerLock(CallerType aCallerType) {
 }
 
 already_AddRefed<Flex> Element::GetAsFlexContainer() {
-  nsIFrame* frame = GetPrimaryFrame();
-
   // We need the flex frame to compute additional info, and use
   // that annotated version of the frame.
   nsFlexContainerFrame* flexFrame =
-      nsFlexContainerFrame::GetFlexFrameWithComputedInfo(frame);
+      nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
+          GetPrimaryFrame(FlushType::Layout));
 
   if (flexFrame) {
     RefPtr<Flex> flex = new Flex(this, flexFrame);
@@ -3202,7 +3201,8 @@ already_AddRefed<Flex> Element::GetAsFlexContainer() {
 
 void Element::GetGridFragments(nsTArray<RefPtr<Grid>>& aResult) {
   nsGridContainerFrame* frame =
-      nsGridContainerFrame::GetGridFrameWithComputedInfo(GetPrimaryFrame());
+      nsGridContainerFrame::GetGridFrameWithComputedInfo(
+          GetPrimaryFrame(FlushType::Layout));
 
   // If we get a nsGridContainerFrame from the prior call,
   // all the next-in-flow frames will also be nsGridContainerFrames.
@@ -3214,7 +3214,7 @@ void Element::GetGridFragments(nsTArray<RefPtr<Grid>>& aResult) {
 
 bool Element::HasGridFragments() {
   return !!nsGridContainerFrame::GetGridFrameWithComputedInfo(
-      GetPrimaryFrame());
+      GetPrimaryFrame(FlushType::Layout));
 }
 
 already_AddRefed<DOMMatrixReadOnly> Element::GetTransformToAncestor(
