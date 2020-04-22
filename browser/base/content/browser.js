@@ -2255,6 +2255,10 @@ var gBrowserInit = {
     });
 
     scheduleIdleTask(() => {
+      CombinedStopReload.animationDisabledDuringStartup = false;
+    });
+
+    scheduleIdleTask(() => {
       // setup simple gestures support
       gGestureSupport.init(true);
 
@@ -5540,6 +5544,8 @@ var LinkTargetDisplay = {
 };
 
 var CombinedStopReload = {
+  animationDisabledDuringStartup: true,
+
   // Try to initialize. Returns whether initialization was successful, which
   // may mean we had already initialized.
   ensureInitialized() {
@@ -5652,6 +5658,7 @@ var CombinedStopReload = {
       aWebProgress.isTopLevel &&
       aWebProgress.isLoadingDocument &&
       !gBrowser.tabAnimationsInProgress &&
+      !this.animationDisabledDuringStartup &&
       this.stopReloadContainer.closest("#nav-bar-customization-target") &&
       window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
 
@@ -5675,6 +5682,7 @@ var CombinedStopReload = {
       aWebProgress.isTopLevel &&
       !aWebProgress.isLoadingDocument &&
       !gBrowser.tabAnimationsInProgress &&
+      !this.animationDisabledDuringStartup &&
       this._loadTimeExceedsMinimumForAnimation() &&
       this.stopReloadContainer.closest("#nav-bar-customization-target") &&
       window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
