@@ -586,6 +586,8 @@ StaticAutoPtr<LinkedList<ContentParent>> ContentParent::sContentParents;
 UniquePtr<SandboxBrokerPolicyFactory>
     ContentParent::sSandboxBrokerPolicyFactory;
 #endif
+StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
+    ContentParent::sBrowsingContextGroupHolder;
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
@@ -643,6 +645,9 @@ void ContentParent::StartUp() {
   // FIXME Bug 1023701 - Stop using ContentParent static methods in
   // child process
   sCanLaunchSubprocesses = true;
+
+  sBrowsingContextGroupHolder = new nsTArray<RefPtr<BrowsingContextGroup>>();
+  ClearOnShutdown(&sBrowsingContextGroupHolder);
 
   if (!XRE_IsParentProcess()) {
     return;
@@ -5895,54 +5900,56 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionStorageData(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
-    uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit) {
-  RefPtr<WindowGlobalParent> parent;
+mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
+    BrowsingContext::IPCInitializer&& aInit) {
+  RefPtr<CanonicalBrowsingContext> parent;
   if (aInit.mParentId != 0) {
-    parent = WindowGlobalParent::GetByInnerWindowId(aInit.mParentId);
-    if (!parent) {
-      return IPC_FAIL(this, "Parent doesn't exist in parent process");
-    }
+    parent = CanonicalBrowsingContext::Get(aInit.mParentId);
+    MOZ_RELEASE_ASSERT(parent, "Parent doesn't exist in parent process");
   }
 
-  if (parent && parent->GetContentParent() != this) {
+  if (parent && !parent->IsOwnedByProcess(ChildID())) {
     // We're trying attach a child BrowsingContext to a parent
-    // WindowContext in another process. This is illegal since the
-    // only thing that could create that child BrowsingContext is the parent
-    // window's process.
-    return IPC_FAIL(this,
-                    "Must create BrowsingContext from the parent's process");
-  }
+    // BrowsingContext in another process. This is illegal since the
+    // only thing that could create that child BrowsingContext is a
+    // parent docshell in the same process as that BrowsingContext.
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "Trying to attach to out of process parent context");
 
-  RefPtr<BrowsingContext> opener;
-  if (aInit.GetOpenerId() != 0) {
-    opener = BrowsingContext::Get(aInit.GetOpenerId());
-    if (!opener) {
-      return IPC_FAIL(this, "Opener doesn't exist in parent process");
-    }
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
+            ("ParentIPC: Trying to attach to out of process parent context "
+             "0x%08" PRIx64,
+             aInit.mParentId));
+    return IPC_OK();
   }
 
   RefPtr<BrowsingContext> child = BrowsingContext::Get(aInit.mId);
-  if (child) {
-    // This is highly suspicious. BrowsingContexts should only be created once,
-    // so finding one indicates that someone is doing something they shouldn't.
-    return IPC_FAIL(this, "A BrowsingContext with this ID already exists");
+  if (child && !child->IsCached()) {
+    // This is highly suspicious. BrowsingContexts should only be
+    // attached at most once, but finding one indicates that someone
+    // is doing something they shouldn't.
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "Trying to attach already attached browsing context");
+
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
+            ("ParentIPC: Trying to attach already attached 0x%08" PRIx64
+             " to 0x%08" PRIx64,
+             aInit.mId, aInit.mParentId));
+    return IPC_OK();
   }
 
-  // Ensure that the passed-in BrowsingContextGroup is valid.
-  RefPtr<BrowsingContextGroup> group =
-      BrowsingContextGroup::GetOrCreate(aGroupId);
-  if (parent && parent->Group() != group) {
-    return IPC_FAIL(this, "Parent is not in the given group");
-  }
-  if (opener && opener->Group() != group) {
-    return IPC_FAIL(this, "Opener is not in the given group");
-  }
-  if (!parent && !opener && !group->Toplevels().IsEmpty()) {
-    return IPC_FAIL(this, "Unrelated context must be created in a new group");
+  if (!child) {
+    RefPtr<BrowsingContextGroup> group =
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.GetOpenerId());
+    child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
   }
 
-  BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
+  child->Attach(/* aFromIPC */ true);
+
+  child->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendAttachBrowsingContext(child->GetIPCInitializer());
+  });
+
   return IPC_OK();
 }
 
@@ -5972,21 +5979,95 @@ bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
   return true;
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvDiscardBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    DiscardBrowsingContextResolver&& aResolve) {
-  if (!aContext.IsNullOrDiscarded()) {
-    RefPtr<CanonicalBrowsingContext> context = aContext.get_canonical();
-    if (!CheckBrowsingContextEmbedder(context, "discard")) {
-      return IPC_FAIL(this, "Illegal Discard attempt");
-    }
+mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
+    uint64_t aContextId, DetachBrowsingContextResolver&& aResolve) {
+  // NOTE: Immediately resolve the promise, as we've received the message. This
+  // will allow the content process to discard references to this BC.
+  aResolve(true);
 
-    context->Detach(/* aFromIPC */ true);
+  // NOTE: It's OK if we don't have this context anymore. It was just already
+  // detached, return.
+  RefPtr<CanonicalBrowsingContext> context =
+      CanonicalBrowsingContext::Get(aContextId);
+  if (!context || context->IsDiscarded()) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to detach already detached"));
+    return IPC_OK();
   }
 
-  // Resolve the promise, as we've received and handled the message. This will
-  // allow the content process to fully-discard references to this BC.
-  aResolve(true);
+  if (!CheckBrowsingContextEmbedder(context, "detach")) {
+    return IPC_FAIL(this, "Illegal Detach() attempt");
+  }
+
+  context->Detach(/* aFromIPC */ true);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to cache already detached"));
+    return IPC_OK();
+  }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
+
+  if (!CheckBrowsingContextOwnership(context, "cache")) {
+    // We're trying to cache a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+    return IPC_OK();
+  }
+
+  context->CacheChildren(/* aFromIPC */ true);
+
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendCacheBrowsingContextChildren(context);
+  });
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren) {
+  if (aContext.IsNullOrDiscarded()) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to restore already detached"));
+    return IPC_OK();
+  }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
+
+  if (!CheckBrowsingContextOwnership(context, "restore")) {
+    // We're trying to cache a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+    return IPC_OK();
+  }
+
+  // Remove any null or discarded child BrowsingContexts, creating a list with
+  // only active contexts.
+  // Modify the existing BrowsingContext as it will be passed to each other
+  // process using `SendRestoreBrowsingContextChildren`.
+  nsTArray<RefPtr<BrowsingContext>> children(aChildren.Length());
+  aChildren.RemoveElementsBy(
+      [&](const MaybeDiscarded<BrowsingContext>& child) -> bool {
+        if (child.IsNullOrDiscarded()) {
+          return true;
+        }
+        children.AppendElement(child.get());
+        return false;
+      });
+
+  context->RestoreChildren(std::move(children), /* aFromIPC */ true);
+
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendRestoreBrowsingContextChildren(context, aChildren);
+  });
+
   return IPC_OK();
 }
 
@@ -6297,6 +6378,18 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
 
   Unused << cp->SendWindowPostMessage(context, message, aData);
   return IPC_OK();
+}
+
+/* static */
+void ContentParent::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  sBrowsingContextGroupHolder->AppendElement(aBCG);
+}
+
+/* static */
+void ContentParent::ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  if (sBrowsingContextGroupHolder) {
+    sBrowsingContextGroupHolder->RemoveElement(aBCG);
+  }
 }
 
 void ContentParent::OnBrowsingContextGroupSubscribe(
