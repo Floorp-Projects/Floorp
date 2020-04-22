@@ -5902,13 +5902,13 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionStorageData(
 
 mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
     BrowsingContext::IPCInitializer&& aInit) {
-  RefPtr<CanonicalBrowsingContext> parent;
+  RefPtr<WindowGlobalParent> parent;
   if (aInit.mParentId != 0) {
-    parent = CanonicalBrowsingContext::Get(aInit.mParentId);
+    parent = WindowGlobalParent::GetByInnerWindowId(aInit.mParentId);
     MOZ_RELEASE_ASSERT(parent, "Parent doesn't exist in parent process");
   }
 
-  if (parent && !parent->IsOwnedByProcess(ChildID())) {
+  if (parent && parent->GetContentParent() != this) {
     // We're trying attach a child BrowsingContext to a parent
     // BrowsingContext in another process. This is illegal since the
     // only thing that could create that child BrowsingContext is a
@@ -6000,73 +6000,6 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
   }
 
   context->Detach(/* aFromIPC */ true);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
-    const MaybeDiscarded<BrowsingContext>& aContext) {
-  if (aContext.IsNullOrDiscarded()) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Trying to cache already detached"));
-    return IPC_OK();
-  }
-  CanonicalBrowsingContext* context = aContext.get_canonical();
-
-  if (!CheckBrowsingContextOwnership(context, "cache")) {
-    // We're trying to cache a child BrowsingContext in another child
-    // process. This is illegal since the owner of the BrowsingContext
-    // is the proccess with the in-process docshell, which is tracked
-    // by OwnerProcessId.
-    return IPC_OK();
-  }
-
-  context->CacheChildren(/* aFromIPC */ true);
-
-  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendCacheBrowsingContextChildren(context);
-  });
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren) {
-  if (aContext.IsNullOrDiscarded()) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Trying to restore already detached"));
-    return IPC_OK();
-  }
-  CanonicalBrowsingContext* context = aContext.get_canonical();
-
-  if (!CheckBrowsingContextOwnership(context, "restore")) {
-    // We're trying to cache a child BrowsingContext in another child
-    // process. This is illegal since the owner of the BrowsingContext
-    // is the proccess with the in-process docshell, which is tracked
-    // by OwnerProcessId.
-    return IPC_OK();
-  }
-
-  // Remove any null or discarded child BrowsingContexts, creating a list with
-  // only active contexts.
-  // Modify the existing BrowsingContext as it will be passed to each other
-  // process using `SendRestoreBrowsingContextChildren`.
-  nsTArray<RefPtr<BrowsingContext>> children(aChildren.Length());
-  aChildren.RemoveElementsBy(
-      [&](const MaybeDiscarded<BrowsingContext>& child) -> bool {
-        if (child.IsNullOrDiscarded()) {
-          return true;
-        }
-        children.AppendElement(child.get());
-        return false;
-      });
-
-  context->RestoreChildren(std::move(children), /* aFromIPC */ true);
-
-  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendRestoreBrowsingContextChildren(context, aChildren);
-  });
 
   return IPC_OK();
 }

@@ -1169,7 +1169,7 @@ void SessionStoreUtils::CollectedSessionStorage(
   }
 
   // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (BrowsingContext* child : aBrowsingContext->GetChildren()) {
+  for (BrowsingContext* child : aBrowsingContext->Children()) {
     window = child->GetDOMWindow();
     if (!window) {
       return;
@@ -1279,7 +1279,7 @@ static void CollectFrameTreeData(JSContext* aCx,
   uint32_t trailingNullCounter = 0;
 
   // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (auto& child : aBrowsingContext->GetChildren()) {
+  for (auto& child : aBrowsingContext->Children()) {
     NullableRootedDictionary<CollectedData> data(aCx);
     CollectFrameTreeData(aCx, child, data, aFunc);
     if (data.IsNull()) {
