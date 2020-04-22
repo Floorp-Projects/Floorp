@@ -154,3 +154,5 @@ pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inheri
 test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-1.html zoom-hack-ref.html
 test-pref(layout.css.zoom-transform-hack.enabled,false) != zoom-hack-1.html zoom-hack-ref.html
 test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-2.html zoom-hack-ref.html
+
+== transform-anon-block-1.html transform-anon-block-1-ref.html
