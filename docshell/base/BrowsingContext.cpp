@@ -261,19 +261,11 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   return context.forget();
 }
 
-already_AddRefed<BrowsingContext> BrowsingContext::Create(
-    BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
+already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
     Type aType) {
-  RefPtr<BrowsingContext> bc(CreateDetached(aParent, aOpener, aName, aType));
-  bc->EnsureAttached();
-  return bc.forget();
-}
-
-already_AddRefed<BrowsingContext> BrowsingContext::CreateWindowless(
-    BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
-    Type aType) {
-  RefPtr<BrowsingContext> bc(CreateDetached(aParent, aOpener, aName, aType));
-  bc->mWindowless = true;
+  RefPtr<BrowsingContext> bc(
+      CreateDetached(nullptr, nullptr, EmptyString(), aType));
+  bc->mWindowless = bc->IsContent();
   bc->EnsureAttached();
   return bc.forget();
 }
