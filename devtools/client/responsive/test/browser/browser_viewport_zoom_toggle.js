@@ -59,7 +59,7 @@ addRDMTask(
     // reset the docShell before toggling RDM, which makes checking the initial zoom of the
     // RDM pane not useful.
 
-    const preZoomUIZoom = uiDocShell.contentViewer.fullZoom;
+    const preZoomUIZoom = uiDocShell.browsingContext.fullZoom;
     is(
       preZoomUIZoom,
       INITIAL_ZOOM_LEVEL,
@@ -70,7 +70,7 @@ addRDMTask(
     setZoomForBrowser(browser, MID_RDM_ZOOM_LEVEL);
 
     // The UI zoom should be unchanged by this.
-    const postZoomUIZoom = uiDocShell.contentViewer.fullZoom;
+    const postZoomUIZoom = uiDocShell.browsingContext.fullZoom;
     is(
       postZoomUIZoom,
       preZoomUIZoom,

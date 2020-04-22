@@ -438,10 +438,6 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   nsIntRect mBounds;
 
-  // mTextZoom/mPageZoom record the textzoom/pagezoom of the first (galley)
-  // presshell only.
-  float mTextZoom;  // Text zoom, defaults to 1.0
-  float mPageZoom;
   float mOverrideDPPX;  // DPPX overrided, defaults to 0.0
 
   int16_t mNumURLStarts;
@@ -461,8 +457,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   unsigned mClosingWhilePrinting : 1;
 
 #  if NS_PRINT_PREVIEW
-  unsigned mPrintPreviewZoomed : 1;
-
   // These data members support delayed printing when the document is loading
   unsigned mPrintIsPending : 1;
   unsigned mPrintDocIsFullyLoaded : 1;
@@ -470,8 +464,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
 
   RefPtr<nsPrintJob> mPrintJob;
-  float mOriginalPrintPreviewScale;
-  float mPrintPreviewZoom;
   UniquePtr<AutoPrintEventDispatcher> mAutoBeforeAndAfterPrint;
 #  endif  // NS_PRINT_PREVIEW
 
@@ -580,8 +572,6 @@ void nsDocumentViewer::PrepareToStartLoad() {
 nsDocumentViewer::nsDocumentViewer()
     : mParentWidget(nullptr),
       mAttachedToParent(false),
-      mTextZoom(1.0),
-      mPageZoom(1.0),
       mOverrideDPPX(0.0),
       mNumURLStarts(0),
       mDestroyBlockedCount(0),
@@ -594,11 +584,8 @@ nsDocumentViewer::nsDocumentViewer()
 #ifdef NS_PRINTING
       mClosingWhilePrinting(false),
 #  if NS_PRINT_PREVIEW
-      mPrintPreviewZoomed(false),
       mPrintIsPending(false),
       mPrintDocIsFullyLoaded(false),
-      mOriginalPrintPreviewScale(0.0),
-      mPrintPreviewZoom(1.0),
 #  endif  // NS_PRINT_PREVIEW
 #endif    // NS_PRINTING
       mHintCharsetSource(kCharsetUninitialized),
@@ -807,8 +794,8 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
 
     mViewManager->SetWindowDimensions(width, height);
     mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
-    mPresContext->SetTextZoom(mTextZoom);
-    mPresContext->SetFullZoom(mPageZoom);
+    // We rely on the default zoom not being initialized until here.
+    mPresContext->RecomputeBrowsingContextDependentData();
     mPresContext->SetOverrideDPPX(mOverrideDPPX);
   }
 
@@ -2697,130 +2684,10 @@ void nsDocumentViewer::CallChildren(CallChildFunc aFunc) {
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::SetTextZoom(float aTextZoom) {
-  // If we don't have a document, then we need to bail.
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (GetIsPrintPreview()) {
-    return NS_OK;
-  }
-
-  bool textZoomChange = (mTextZoom != aTextZoom);
-  mTextZoom = aTextZoom;
-
-  auto childFn = [aTextZoom](nsDocumentViewer* aChild) {
-    aChild->SetTextZoom(aTextZoom);
-  };
-  auto presContextFn = [aTextZoom](nsPresContext* aPc) {
-    aPc->SetTextZoom(aTextZoom);
-  };
-  PropagateToPresContextsHelper(childFn, presContextFn);
-
-  // Dispatch TextZoomChange event only if text zoom value has changed.
-  if (textZoomChange) {
-    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
-                                        NS_LITERAL_STRING("TextZoomChange"),
-                                        CanBubble::eYes, Cancelable::eYes);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetTextZoom(float* aTextZoom) {
-  NS_ENSURE_ARG_POINTER(aTextZoom);
-  nsPresContext* pc = GetPresContext();
-  *aTextZoom = pc ? pc->TextZoom() : 1.0f;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetFullZoom(float aFullZoom) {
-#ifdef NS_PRINT_PREVIEW
-  if (GetIsPrintPreview()) {
-    nsPresContext* pc = GetPresContext();
-    NS_ENSURE_TRUE(pc, NS_OK);
-    PresShell* presShell = pc->GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_OK);
-
-    if (!mPrintPreviewZoomed) {
-      mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
-      mPrintPreviewZoomed = true;
-    }
-
-    mPrintPreviewZoom = aFullZoom;
-    pc->SetPrintPreviewScale(aFullZoom * mOriginalPrintPreviewScale);
-    nsPageSequenceFrame* pf = presShell->GetPageSequenceFrame();
-    if (pf) {
-      nsIFrame* f = do_QueryFrame(pf);
-      presShell->FrameNeedsReflow(f, IntrinsicDirty::Resize, NS_FRAME_IS_DIRTY);
-    }
-
-    nsIFrame* rootFrame = presShell->GetRootFrame();
-    if (rootFrame) {
-      rootFrame->InvalidateFrame();
-    }
-    return NS_OK;
-  }
-#endif
-
-  // If we don't have a document, then we need to bail.
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool fullZoomChange = (mPageZoom != aFullZoom);
-
-  // Dispatch PreFullZoomChange event only if fullzoom value really has changed.
-  if (fullZoomChange) {
-    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
-                                        NS_LITERAL_STRING("PreFullZoomChange"),
-                                        CanBubble::eYes, Cancelable::eYes);
-  }
-
-  mPageZoom = aFullZoom;
-
-  auto childFn = [aFullZoom](nsDocumentViewer* aChild) {
-    aChild->SetFullZoom(aFullZoom);
-  };
-  auto presContextFn = [aFullZoom](nsPresContext* aPc) {
-    aPc->SetFullZoom(aFullZoom);
-  };
-  PropagateToPresContextsHelper(childFn, presContextFn);
-
-  // Dispatch FullZoomChange event only if fullzoom value really has changed.
-  if (fullZoomChange) {
-    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
-                                        NS_LITERAL_STRING("FullZoomChange"),
-                                        CanBubble::eYes, Cancelable::eYes);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetFullZoom(float* aFullZoom) {
-  NS_ENSURE_ARG_POINTER(aFullZoom);
-#ifdef NS_PRINT_PREVIEW
-  if (GetIsPrintPreview()) {
-    *aFullZoom = mPrintPreviewZoom;
-    return NS_OK;
-  }
-#endif
-  // Check the prescontext first because it might have a temporary
-  // setting for print-preview
-  nsPresContext* pc = GetPresContext();
-  *aFullZoom = pc ? pc->GetFullZoom() : mPageZoom;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::GetDeviceFullZoomForTest(float* aDeviceFullZoom) {
   NS_ENSURE_ARG_POINTER(aDeviceFullZoom);
   nsPresContext* pc = GetPresContext();
-  *aDeviceFullZoom = pc ? pc->GetDeviceFullZoom() : mPageZoom;
+  *aDeviceFullZoom = pc ? pc->GetDeviceFullZoom() : 1.0;
   return NS_OK;
 }
 
@@ -3441,8 +3308,7 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
 
     rv = printJob->Initialize(this, mContainer, mDocument,
                               float(AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                  mPageZoom);
+                                  float(mDeviceContext->AppUnitsPerDevPixel()));
     if (NS_FAILED(rv)) {
       printJob->Destroy();
       return rv;
@@ -3515,8 +3381,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 
     rv = printJob->Initialize(this, mContainer, doc,
                               float(AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                  mPageZoom);
+                                  float(mDeviceContext->AppUnitsPerDevPixel()));
     if (NS_FAILED(rv)) {
       printJob->Destroy();
       return rv;
@@ -3529,7 +3394,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     mAutoBeforeAndAfterPrint = std::move(autoBeforeAndAfterPrint);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener);
-  mPrintPreviewZoomed = false;
   if (NS_FAILED(rv)) {
     OnDonePrinting();
   }
@@ -3717,8 +3581,6 @@ nsDocumentViewer::ExitPrintPreview() {
   nsCOMPtr<nsIDocShell> docShell(mContainer);
   ResetFocusState(docShell);
 
-  SetTextZoom(mTextZoom);
-  SetFullZoom(mPageZoom);
   SetOverrideDPPX(mOverrideDPPX);
   Show();
 #  endif  // NS_PRINT_PREVIEW

@@ -36,9 +36,7 @@ addLoadEvent(function() {
   ok(equal, "Show/hide should have no effect - " +
      "got " + str1 + " but expected " + str2);
 
-  var viewer =
-    SpecialPowers.wrap($("ourFrame")).contentWindow.docShell.contentViewer;
-  viewer.fullZoom = 2;
+  SpecialPowers.setFullZoom($("ourFrame").contentWindow, 2);
 
   s3 = snapshotWindow(window);
 

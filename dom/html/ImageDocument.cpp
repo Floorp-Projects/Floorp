@@ -689,31 +689,20 @@ void ImageDocument::UpdateTitleAndCharset() {
 }
 
 void ImageDocument::ResetZoomLevel() {
-  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-  if (docShell) {
-    if (nsContentUtils::IsChildOfSameType(this)) {
-      return;
-    }
+  if (nsContentUtils::IsChildOfSameType(this)) {
+    return;
+  }
 
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      cv->SetFullZoom(mOriginalZoomLevel);
-    }
+  if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
+    bc->SetFullZoom(mOriginalZoomLevel);
   }
 }
 
 float ImageDocument::GetZoomLevel() {
-  float zoomLevel = mOriginalZoomLevel;
-  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-  if (docShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      cv->GetFullZoom(&zoomLevel);
-    }
+  if (BrowsingContext* bc = GetBrowsingContext()) {
+    return bc->FullZoom();
   }
-  return zoomLevel;
+  return mOriginalZoomLevel;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)

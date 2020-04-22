@@ -60,10 +60,6 @@ const TYPE_PRINT = 'print'; // test and reference will be printed to PDF's and
 const URL_TARGET_TYPE_TEST = 0;      // first url
 const URL_TARGET_TYPE_REFERENCE = 1; // second url, if any
 
-function markupDocumentViewer() {
-    return docShell.contentViewer;
-}
-
 function webNavigation() {
     return docShell.QueryInterface(Ci.nsIWebNavigation);
 }
@@ -184,20 +180,20 @@ function StartTestURI(type, uri, uriTargetType, timeout)
 function setupTextZoom(contentRootElement) {
     if (!contentRootElement || !contentRootElement.hasAttribute('reftest-text-zoom'))
         return;
-    markupDocumentViewer().textZoom =
+    docShell.browsingContext.textZoom =
         contentRootElement.getAttribute('reftest-text-zoom');
 }
 
 function setupFullZoom(contentRootElement) {
     if (!contentRootElement || !contentRootElement.hasAttribute('reftest-zoom'))
         return;
-    markupDocumentViewer().fullZoom =
+    docShell.browsingContext.fullZoom =
         contentRootElement.getAttribute('reftest-zoom');
 }
 
 function resetZoomAndTextZoom() {
-    markupDocumentViewer().fullZoom = 1.0;
-    markupDocumentViewer().textZoom = 1.0;
+    docShell.browsingContext.fullZoom = 1.0;
+    docShell.browsingContext.textZoom = 1.0;
 }
 
 function doPrintMode(contentRootElement) {
@@ -1633,7 +1629,7 @@ function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement)
     }
 
     var win = content;
-    var scale = markupDocumentViewer().fullZoom;
+    var scale = docShell.browsingContext.fullZoom;
 
     var rects = [ ];
     if (shouldSnapshotWholePage(contentRootElement)) {

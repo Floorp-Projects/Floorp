@@ -732,11 +732,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     mIsCreatingPrintPreview = true;
     SetIsPrintPreview(true);
-    nsCOMPtr<nsIContentViewer> viewer = do_QueryInterface(mDocViewerPrint);
-    if (viewer) {
-      viewer->SetTextZoom(1.0f);
-      viewer->SetFullZoom(1.0f);
-    }
   }
 
   // Create a print session and let the print settings know about it.

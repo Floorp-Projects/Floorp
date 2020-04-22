@@ -219,8 +219,9 @@ class ResponsiveUI {
     if (this.isBrowserUIEnabled) {
       this.browserWindow.addEventListener("FullZoomChange", this);
     } else {
-      this._toolWindow.docShell.contentViewer.fullZoom = 1;
-      this._toolWindow.docShell.contentViewer.textZoom = 1;
+      const bc = BrowsingContext.getFromWindow(this._toolWindow);
+      bc.fullZoom = 1;
+      bc.textZoom = 1;
 
       this.tab.linkedBrowser.addEventListener("FullZoomChange", this);
     }

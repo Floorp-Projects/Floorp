@@ -49,8 +49,7 @@ function doTests()
   var f = document.getElementById("f");
   var fBounds = f.getBoundingClientRect();
 
-  var fshell = f.contentWindow.docShell;
-  var fmudv = fshell.contentViewer;
+  var fbc = f.contentWindow.docShell.browsingContext;
 
   isRounded(f.contentWindow.mozInnerScreenX,
             window.mozInnerScreenX + fBounds.left,
@@ -59,7 +58,7 @@ function doTests()
             window.mozInnerScreenY + fBounds.top,
             "frame screen Y");
 
-  fmudv.fullZoom *= 2;
+  fbc.fullZoom *= 2;
   var frameDomWindowUtils = f.contentWindow.windowUtils;
   is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
@@ -72,7 +71,7 @@ function doTests()
   isRounded(f.contentWindow.mozInnerScreenY*2,
             window.mozInnerScreenY + fBounds.top,
             "zoomed frame screen Y");
-  fmudv.fullZoom = 1.0;
+  fbc.fullZoom = 1.0;
 
   SimpleTest.finish();
 }

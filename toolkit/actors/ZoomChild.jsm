@@ -6,6 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["ZoomChild"];
 
+/**
+ * FIXME(emilio): Most of this code is a bit useless and could be changed by an
+ * event listener in the parent process I suspect.
+ */
 class ZoomChild extends JSWindowActorChild {
   constructor() {
     super();
@@ -28,12 +32,12 @@ class ZoomChild extends JSWindowActorChild {
 
   set fullZoom(value) {
     this._cache.fullZoom = Number(value.toFixed(2));
-    this._markupViewer.fullZoom = value;
+    this.browsingContext.fullZoom = value;
   }
 
   set textZoom(value) {
     this._cache.textZoom = Number(value.toFixed(2));
-    this._markupViewer.textZoom = value;
+    this.browsingContext.textZoom = value;
   }
 
   refreshFullZoom() {
@@ -52,7 +56,7 @@ class ZoomChild extends JSWindowActorChild {
    * @private
    */
   _refreshZoomValue(valueName) {
-    let actualZoomValue = this._markupViewer[valueName];
+    let actualZoomValue = this.browsingContext[valueName];
     // Round to remove any floating-point error.
     actualZoomValue = Number(actualZoomValue.toFixed(2));
     if (actualZoomValue != this._cache[valueName]) {
@@ -60,10 +64,6 @@ class ZoomChild extends JSWindowActorChild {
       return true;
     }
     return false;
-  }
-
-  get _markupViewer() {
-    return this.docShell.contentViewer;
   }
 
   receiveMessage(message) {
@@ -103,7 +103,7 @@ class ZoomChild extends JSWindowActorChild {
 
     if (event.type == "FullZoomChange") {
       if (this.refreshFullZoom()) {
-        this.sendAsyncMessage("FullZoomChange", { value: this.fullZoom });
+        this.sendAsyncMessage("FullZoomChange", {});
       }
       return;
     }
@@ -124,7 +124,7 @@ class ZoomChild extends JSWindowActorChild {
 
     if (event.type == "TextZoomChange") {
       if (this.refreshTextZoom()) {
-        this.sendAsyncMessage("TextZoomChange", { value: this.textZoom });
+        this.sendAsyncMessage("TextZoomChange", {});
       }
     }
   }
