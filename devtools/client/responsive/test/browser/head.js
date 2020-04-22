@@ -914,7 +914,9 @@ async function testViewportZoomWidthAndHeight(msg, ui, zoom, width, height) {
 function promiseContentReflow(ui) {
   return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     return new Promise(resolve => {
-      content.window.requestAnimationFrame(resolve);
+      content.window.requestAnimationFrame(() => {
+        content.window.requestAnimationFrame(resolve);
+      })
     });
   });
 }
@@ -925,7 +927,7 @@ function promiseContentReflow(ui) {
 function promiseRDMZoom(ui, browser, zoom) {
   return new Promise(resolve => {
     const currentZoom = ZoomManager.getZoomForBrowser(browser);
-    if (currentZoom == zoom) {
+    if (currentZoom.toFixed(2) == zoom.toFixed(2)) {
       resolve();
       return;
     }
