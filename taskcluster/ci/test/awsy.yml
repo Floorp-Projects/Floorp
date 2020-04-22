@@ -31,7 +31,7 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
-            (linux|win|mac)(?!.*shippable)(?!.*ccov).*/opt: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+            (linux|win|mac)(?!.*shippable).*/opt: []
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     fission-run-on-projects:
         by-test-platform:
@@ -52,7 +52,7 @@ awsy-tp6:
         by-test-platform:
             .*-ccov/.*: []  # don't run on coverage
             .*-devedition/.*: []  # don't run on devedition
-            (linux|win|mac)(?!.*shippable)(?!.*ccov).*/opt: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+            (linux|win|mac)(?!.*shippable)(?!.*ccov).*/opt: []
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
@@ -61,7 +61,10 @@ awsy-tp6:
 awsy-dmd:
     description: "Are we slim yet - dmd enabled"
     treeherder-symbol: SY(sy-d)
-    run-on-projects: ['try']
+    run-on-projects:
+        by-test-platform:
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['try']
     mozharness:
         extra-options:
             - --dmd
@@ -76,7 +79,10 @@ awsy-base:
 awsy-base-dmd:
     description: "Are we slim yet - about:blank base case - dmd enabled"
     treeherder-symbol: SY(ab-d)
-    run-on-projects: ['try']
+    run-on-projects:
+        by-test-platform:
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['try']
     mozharness:
         extra-options:
             - --base
