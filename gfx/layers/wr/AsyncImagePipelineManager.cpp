@@ -227,7 +227,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     gfxCriticalNote << "WebRenderTextureHost is not used";
   }
 
-  bool useExternalImage = !gfxEnv::EnableWebRenderRecording() && wrTexture;
+  bool useExternalImage = !!wrTexture;
   aPipeline->mUseExternalImage = useExternalImage;
 
   // The non-external image code path falls back to converting the texture into

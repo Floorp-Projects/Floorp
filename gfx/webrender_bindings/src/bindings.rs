@@ -34,8 +34,8 @@ use rayon;
 use swgl_bindings::SwCompositor;
 use tracy_rs::register_thread_with_profiler;
 use webrender::{
-    api::units::*, api::*, set_profiler_hooks, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap,
+    api::units::*, api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle,
+    Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap,
     NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer,
     RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod,
     VertexUsageHint, WrShaders,
@@ -503,12 +503,6 @@ extern "C" {
     fn is_in_main_thread() -> bool;
     fn is_glcontext_gles(glcontext_ptr: *mut c_void) -> bool;
     fn is_glcontext_angle(glcontext_ptr: *mut c_void) -> bool;
-    // Enables binary recording that can be used with `wrench replay`
-    // Outputs a wr-record-*.bin file for each window that is shown
-    // Note: wrench will panic if external images are used, they can
-    // be disabled in WebRenderBridgeParent::ProcessWebRenderCommands
-    // by commenting out the path that adds an external image ID
-    fn gfx_use_wrench() -> bool;
     fn gfx_wr_resource_path_override() -> *const c_char;
     fn gfx_wr_use_optimized_shaders() -> bool;
     // TODO: make gfx_critical_error() work.
@@ -1324,13 +1318,6 @@ pub extern "C" fn wr_window_new(
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
-    let recorder: Option<Box<dyn ApiRecordingReceiver>> = if unsafe { gfx_use_wrench() } {
-        let name = format!("wr-record-{}.bin", window_id.0);
-        Some(Box::new(BinaryRecorder::new(&PathBuf::from(name))))
-    } else {
-        None
-    };
-
     let native_gl = if unsafe { is_glcontext_gles(gl_context) } {
         unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) }
     } else {
@@ -1410,7 +1397,6 @@ pub extern "C" fn wr_window_new(
         enable_subpixel_aa: cfg!(not(target_os = "android")),
         support_low_priority_transactions,
         allow_texture_swizzling,
-        recorder: recorder,
         blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(
             workers.clone(),
             workers_low_priority.clone(),

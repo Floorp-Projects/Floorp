@@ -14,7 +14,6 @@ use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, Scrol
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
-use api::channel::Payload;
 use api::units::*;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use api::CaptureBits;
@@ -38,8 +37,6 @@ use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::interned::*;
 use crate::profiler::{BackendProfileCounters, ResourceProfileCounters};
-use crate::record::ApiRecordingReceiver;
-use crate::record::LogRecorder;
 use crate::render_task_graph::RenderTaskGraphCounters;
 use crate::renderer::{AsyncPropertySampler, PipelineInfo};
 use crate::resource_cache::ResourceCache;
@@ -57,12 +54,13 @@ use serde::{Serialize, Deserialize};
 use serde_json;
 #[cfg(feature = "replay")]
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
+#[cfg(feature = "capture")]
+use std::path::PathBuf;
 #[cfg(feature = "replay")]
 use crate::frame_builder::Frame;
 use time::precise_time_ns;
@@ -769,8 +767,6 @@ pub struct RenderBackend {
     documents: FastHashMap<DocumentId, Document>,
 
     notifier: Box<dyn RenderNotifier>,
-    recorder: Option<Box<dyn ApiRecordingReceiver>>,
-    logrecorder: Option<Box<LogRecorder>>,
     tile_cache_logger: TileCacheLogger,
     sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
     size_of_ops: Option<MallocSizeOfOps>,
@@ -795,7 +791,6 @@ impl RenderBackend {
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
         frame_config: FrameBuilderConfig,
-        recorder: Option<Box<dyn ApiRecordingReceiver>>,
         sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
         size_of_ops: Option<MallocSizeOfOps>,
         debug_flags: DebugFlags,
@@ -814,8 +809,6 @@ impl RenderBackend {
             default_compositor_kind : frame_config.compositor_kind,
             documents: FastHashMap::default(),
             notifier,
-            recorder,
-            logrecorder: None,
             tile_cache_logger: TileCacheLogger::new(500usize),
             sampler,
             size_of_ops,
@@ -833,7 +826,6 @@ impl RenderBackend {
         &mut self,
         document_id: DocumentId,
         message: SceneMsg,
-        frame_counter: u32,
         txn: &mut Transaction,
     ) {
         let doc = self.documents.get_mut(&document_id).expect("No document?");
@@ -866,14 +858,6 @@ impl RenderBackend {
                 preserve_frame_state,
             } => {
                 profile_scope!("SetDisplayList");
-
-                if let Some(ref mut r) = self.recorder {
-                    r.write_payload(frame_counter, &Payload::construct_data(
-                        epoch,
-                        pipeline_id,
-                        &list_data,
-                    ));
-                }
 
                 let built_display_list =
                     BuiltDisplayList::from_data(list_data, list_descriptor);
@@ -996,14 +980,6 @@ impl RenderBackend {
 
             status = match self.api_rx.recv() {
                 Ok(msg) => {
-                    if let Some(ref mut r) = self.logrecorder {
-                        r.write_msg(frame_counter, &msg);
-                    }
-
-
-                    if let Some(ref mut r) = self.recorder {
-                        r.write_msg(frame_counter, &msg);
-                    }
                     self.process_api_msg(msg, &mut profile_counters, &mut frame_counter)
                 }
                 Err(..) => { RenderBackendStatus::ShutDown(None) }
@@ -1301,49 +1277,10 @@ impl RenderBackend {
                                 root_pipeline_id: doc.loaded_scene.root_pipeline_id,
                             };
                             tx.send(captured).unwrap();
-
-                            // notify the active recorder
-                            if let Some(ref mut r) = self.recorder {
-                                let pipeline_id = doc.loaded_scene.root_pipeline_id.unwrap();
-                                let epoch =  doc.loaded_scene.pipeline_epochs[&pipeline_id];
-                                let pipeline = &doc.loaded_scene.pipelines[&pipeline_id];
-                                let scene_msg = SceneMsg::SetDisplayList {
-                                    list_descriptor: pipeline.display_list.descriptor().clone(),
-                                    list_data: pipeline.display_list.data().to_vec(),
-                                    epoch,
-                                    pipeline_id,
-                                    background: pipeline.background_color,
-                                    viewport_size: pipeline.viewport_size,
-                                    content_size: pipeline.content_size,
-                                    preserve_frame_state: false,
-                                };
-                                let txn = TransactionMsg::scene_message(scene_msg);
-                                r.write_msg(*frame_counter, &ApiMsg::UpdateDocuments(vec![*id], vec![txn]));
-                                r.write_payload(*frame_counter, &Payload::construct_data(
-                                    epoch,
-                                    pipeline_id,
-                                    pipeline.display_list.data(),
-                                ));
-                            }
                         }
 
                         // Note: we can't pass `LoadCapture` here since it needs to arrive
                         // before the `PublishDocument` messages sent by `load_capture`.
-                        return RenderBackendStatus::Continue;
-                    }
-                    DebugCommand::SetTransactionLogging(value) => {
-                        match (value, self.logrecorder.as_ref()) {
-                            (true, None) => {
-                                    let current_time = time::now_utc().to_local();
-                                    let name = format!("wr-log-{}.log",
-                                        current_time.strftime("%Y%m%d_%H%M%S").unwrap()
-                                    );
-                                    self.logrecorder = LogRecorder::new(&PathBuf::from(name));
-                            },
-                            (false, _) => self.logrecorder = None,
-                            _ => (),
-                        };
-
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::ClearCaches(mask) => {
@@ -1497,7 +1434,6 @@ impl RenderBackend {
                     self.process_scene_msg(
                         document_id,
                         scene_msg,
-                        *frame_counter,
                         &mut txn,
                     )
                 }

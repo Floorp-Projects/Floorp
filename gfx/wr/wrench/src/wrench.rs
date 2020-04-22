@@ -10,7 +10,6 @@ use dwrote;
 #[cfg(all(unix, not(target_os = "android")))]
 use font_loader::system_fonts;
 use winit::EventsLoopProxy;
-use crate::ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -20,7 +19,6 @@ use webrender;
 use webrender::api::*;
 use webrender::api::units::*;
 use webrender::{DebugFlags, RenderResults, ShaderPrecacheFlags};
-use crate::yaml_frame_writer::YamlFrameWriterReceiver;
 use crate::{WindowWrapper, NotifierEvent};
 
 // TODO(gw): This descriptor matches what we currently support for fonts
@@ -36,12 +34,6 @@ pub enum FontDescriptor {
         style: u32,
         stretch: u32,
     },
-}
-
-pub enum SaveType {
-    Yaml,
-    Ron,
-    Binary,
 }
 
 struct NotifierData {
@@ -234,7 +226,6 @@ impl Wrench {
         shader_override_path: Option<PathBuf>,
         use_optimized_shaders: bool,
         dp_ratio: f32,
-        save_type: Option<SaveType>,
         size: DeviceIntSize,
         do_rebuild: bool,
         no_subpixel_aa: bool,
@@ -251,17 +242,6 @@ impl Wrench {
     ) -> Self {
         println!("Shader override path: {:?}", shader_override_path);
 
-        let recorder = save_type.map(|save_type| match save_type {
-            SaveType::Yaml => Box::new(
-                YamlFrameWriterReceiver::new(&PathBuf::from("yaml_frames")),
-            ) as Box<dyn webrender::ApiRecordingReceiver>,
-            SaveType::Ron => Box::new(RonFrameWriter::new(&PathBuf::from("ron_frames"))) as
-                Box<dyn webrender::ApiRecordingReceiver>,
-            SaveType::Binary => Box::new(webrender::BinaryRecorder::new(
-                &PathBuf::from("wr-record.bin"),
-            )) as Box<dyn webrender::ApiRecordingReceiver>,
-        });
-
         let mut debug_flags = DebugFlags::ECHO_DRIVER_MESSAGES;
         debug_flags.set(DebugFlags::DISABLE_BATCHING, no_batch);
         let callbacks = Arc::new(Mutex::new(blob::BlobCallbacks::new()));
@@ -276,7 +256,6 @@ impl Wrench {
             device_pixel_ratio: dp_ratio,
             resource_override_path: shader_override_path,
             use_optimized_shaders,
-            recorder,
             enable_subpixel_aa: !no_subpixel_aa,
             debug_flags,
             enable_clear_scissor: !no_scissor,
