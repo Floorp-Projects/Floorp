@@ -422,17 +422,22 @@ impl SpatialNode {
                     &state.nearest_scrolling_ancestor_viewport,
                 );
 
+                // Snap the parent reference frame offset so that animated transforms, including those
+                // caused by scrolling, are snapped.
+                let mut snapped_cs_scale_offset = state.coordinate_system_relative_scale_offset;
+                snapped_cs_scale_offset.offset = snap_offset(snapped_cs_scale_offset.offset, WorldVector2D::new(1.0, 1.0), global_device_pixel_scale);
+
                 // The transformation for the bounds of our viewport is the parent reference frame
                 // transform, plus any accumulated scroll offset from our parents, plus any offset
                 // provided by our own sticky positioning.
                 let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset;
-                self.viewport_transform = state.coordinate_system_relative_scale_offset
+                self.viewport_transform = snapped_cs_scale_offset
                     .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale).to_untyped());
 
                 // The transformation for any content inside of us is the viewport transformation, plus
                 // whatever scrolling offset we supply as well.
                 let added_offset = accumulated_offset + self.scroll_offset();
-                self.content_transform = state.coordinate_system_relative_scale_offset
+                self.content_transform = snapped_cs_scale_offset
                     .offset(snap_offset(added_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale).to_untyped());
 
                 if let SpatialNodeType::StickyFrame(ref mut info) = self.node_type {
