@@ -35,6 +35,7 @@ async function clearPermissions() {
 SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.trackingTable", "moztest-track-simple"],
            ["privacy.trackingprotection.enabled", true],
+           ["privacy.trackingprotection.testing.report_blocked_node", true],
            ["channelclassifier.allowlist_example", true],
            ["dom.security.skip_remote_script_assertion_in_system_priv_context", true]]},
   test);
