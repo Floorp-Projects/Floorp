@@ -916,7 +916,7 @@ function promiseContentReflow(ui) {
     return new Promise(resolve => {
       content.window.requestAnimationFrame(() => {
         content.window.requestAnimationFrame(resolve);
-      })
+      });
     });
   });
 }
