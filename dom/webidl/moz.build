@@ -13,6 +13,9 @@ with Files("APZTestData.webidl"):
 with Files("AccessibleNode.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
+with Files("AccessibilityRole.webidl"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
 with Files("Addon*"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
@@ -1128,5 +1131,6 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'comm/mail', 'mobile/android', 'xulrun
 
 if CONFIG['ACCESSIBILITY']:
     WEBIDL_FILES += [
+        'AccessibilityRole.webidl',
         'AccessibleNode.webidl',
     ]

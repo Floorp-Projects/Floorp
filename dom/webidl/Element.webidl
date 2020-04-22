@@ -286,6 +286,7 @@ Element includes NonDocumentTypeChildNode;
 Element includes ParentNode;
 Element includes Animatable;
 Element includes GeometryUtils;
+Element includes AccessibilityRole;
 
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
