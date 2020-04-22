@@ -646,13 +646,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(
       uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
-      const MaybeDiscarded<BrowsingContext>& aContext);
-
-  mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren);
-
   mozilla::ipc::IPCResult RecvWindowClose(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
   mozilla::ipc::IPCResult RecvWindowFocus(

@@ -134,7 +134,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void CanonicalDiscard();
 
   using Type = BrowsingContext::Type;
-  CanonicalBrowsingContext(BrowsingContext* aParent,
+  CanonicalBrowsingContext(WindowContext* aParentWindow,
                            BrowsingContextGroup* aGroup,
                            uint64_t aBrowsingContextId,
                            uint64_t aOwnerProcessId,

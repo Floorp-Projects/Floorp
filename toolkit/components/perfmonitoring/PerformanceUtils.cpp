@@ -99,7 +99,7 @@ nsresult GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
   }
 
   // Measure this window's descendents.
-  for (const auto& frame : bc->GetChildren()) {
+  for (const auto& frame : bc->Children()) {
     if (auto* childWin = nsGlobalWindowOuter::Cast(frame->GetDOMWindow())) {
       MOZ_TRY(GetTabSizes(childWin, aSizes));
     }
