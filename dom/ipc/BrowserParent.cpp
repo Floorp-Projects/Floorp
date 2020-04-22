@@ -2813,6 +2813,18 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+BrowserParent::RecvReportBlockedEmbedderNodeByClassifier() {
+  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
+
+  if (!bridge) {
+    return IPC_OK();
+  }
+
+  Unused << bridge->SendAddBlockedNodeByClassifier();
+  return IPC_OK();
+}
+
 bool BrowserParent::GetWebProgressListener(
     nsIBrowser** aOutBrowser, nsIWebProgress** aOutManager,
     nsIWebProgressListener** aOutListener) {
