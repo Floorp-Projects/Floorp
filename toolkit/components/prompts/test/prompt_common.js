@@ -1,9 +1,12 @@
-const { Cc, Ci } = SpecialPowers;
+const { Cc, Ci, Cu: ChromeUtils } = SpecialPowers;
+
+const { propBagToObject } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+).BrowserUtils;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
-  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm")
-    .Services;
+  const Services = SpecialPowers.Services;
   return (
     Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
     Services.prefs.getBoolPref(prefName)
@@ -18,6 +21,133 @@ var gChromeScript = SpecialPowers.loadChromeScript(
   SimpleTest.getTestFileURL("chromeScript.js")
 );
 SimpleTest.registerCleanupFunction(() => gChromeScript.destroy());
+
+async function runPromptCombinations(window, testFunc) {
+  let util = new PromptTestUtil(window);
+  let run = () => {
+    info(
+      `Running tests (isTabModal=${isTabModal}, usePromptService=${util.usePromptService}, useBrowsingContext=${util.useBrowsingContext}, useAsync=${util.useAsync})`
+    );
+    return testFunc(util);
+  };
+
+  // Prompt service with dom window parent only supports window prompts
+  util.usePromptService = true;
+  util.useBrowsingContext = false;
+  isTabModal = false;
+  util.modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+  util.useAsync = false;
+  await run();
+
+  let modalTypes = [Ci.nsIPrompt.MODAL_TYPE_WINDOW];
+  // if tab/content prompts are disabled by pref, only test window prompts
+  if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
+    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_TAB);
+    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_CONTENT);
+  }
+
+  for (let type of modalTypes) {
+    util.modalType = type;
+    isTabModal = type !== Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+
+    // Prompt service with browsing context sync
+    util.usePromptService = true;
+    util.useBrowsingContext = true;
+    util.useAsync = false;
+    await run();
+
+    // Prompt service with browsing context async
+    util.usePromptService = true;
+    util.useBrowsingContext = true;
+    util.useAsync = true;
+    await run();
+
+    // nsIPrompt
+    // modalType is set via nsIWritablePropertyBag (legacy)
+    util.usePromptService = false;
+    util.useBrowsingContext = false;
+    util.useAsync = false;
+    await run();
+  }
+}
+
+class PromptTestUtil {
+  constructor(window) {
+    this.window = window;
+    this.browsingContext = SpecialPowers.wrap(
+      window
+    ).windowGlobalChild.browsingContext;
+    this.promptService = SpecialPowers.Services.prompt;
+    this.nsPrompt = Cc["@mozilla.org/prompter;1"]
+      .getService(Ci.nsIPromptFactory)
+      .getPrompt(window, Ci.nsIPrompt);
+
+    this.usePromptService = null;
+    this.useBrowsingContext = null;
+    this.useAsync = null;
+    this.modalType = null;
+  }
+
+  get _prompter() {
+    if (this.usePromptService) {
+      return this.promptService;
+    }
+    return this.nsPrompt;
+  }
+
+  async prompt(funcName, promptArgs) {
+    if (
+      this.useBrowsingContext == null ||
+      this.usePromptService == null ||
+      this.useAsync == null ||
+      this.modalType == null
+    ) {
+      throw new Error("Not initialized");
+    }
+    let args = [];
+    if (this.usePromptService) {
+      if (this.useBrowsingContext) {
+        if (this.useAsync) {
+          funcName = `async${funcName[0].toUpperCase()}${funcName.substring(
+            1
+          )}`;
+        } else {
+          funcName += "BC";
+        }
+        args = [this.browsingContext, this.modalType];
+      } else {
+        args = [this.window];
+      }
+    } else {
+      let bag = this.nsPrompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+      bag.setPropertyAsUint32("modalType", this.modalType);
+    }
+    // Append the prompt arguments
+    args = args.concat(promptArgs);
+
+    let interfaceName = this.usePromptService ? "Services.prompt" : "prompt";
+    ok(
+      this._prompter[funcName],
+      `${interfaceName} should have method ${funcName}.`
+    );
+
+    info(`Calling ${interfaceName}.${funcName}(${args})`);
+    let result = this._prompter[funcName](...args);
+    is(
+      this.useAsync,
+      result != null &&
+        result.constructor != null &&
+        result.constructor.name === "Promise",
+      "If method is async it should return a promise."
+    );
+
+    if (this.useAsync) {
+      let propBag = await result;
+      return propBag && propBagToObject(propBag);
+    }
+    return result;
+  }
+}
 
 function onloadPromiseFor(id) {
   var iframe = document.getElementById(id);
