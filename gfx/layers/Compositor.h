@@ -300,12 +300,6 @@ class Compositor : public TextureSourceProvider {
    */
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) = 0;
 
-  /**
-   * Declare an offset to use when rendering layers. This will be ignored when
-   * rendering to a target instead of the screen.
-   */
-  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) = 0;
-
   void DrawGeometry(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
                     const EffectChain& aEffectChain, gfx::Float aOpacity,
                     const gfx::Matrix4x4& aTransform,

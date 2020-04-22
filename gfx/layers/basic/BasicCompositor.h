@@ -149,8 +149,6 @@ class BasicCompositor : public Compositor {
   int32_t GetMaxTextureSize() const override;
   void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
 
-  void SetScreenRenderOffset(const ScreenPoint& aOffset) override {}
-
   void MakeCurrent(MakeCurrentFlags aFlags = 0) override {}
 
 #ifdef MOZ_DUMP_PAINTING
