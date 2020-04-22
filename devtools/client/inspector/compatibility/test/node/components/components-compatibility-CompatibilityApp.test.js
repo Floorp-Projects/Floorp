@@ -28,4 +28,17 @@ describe("CompatibilityApp component", () => {
     const wrapper = shallow(CompatibilityApp({ store })).dive();
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("renders with settings", () => {
+    const mockStore = configureStore([thunk]);
+    const store = mockStore({
+      compatibility: {
+        isSettingsVisibile: true,
+        selectedNodeIssues: [],
+        topLevelTargetIssues: [],
+      },
+    });
+    const wrapper = shallow(CompatibilityApp({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
 });
