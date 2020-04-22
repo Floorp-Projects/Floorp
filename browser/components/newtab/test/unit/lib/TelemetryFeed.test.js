@@ -20,9 +20,6 @@ import injector from "inject!lib/TelemetryFeed.jsm";
 
 const FAKE_UUID = "{foo-123-foo}";
 const FAKE_ROUTER_MESSAGE_PROVIDER = [{ id: "cfr", enabled: true }];
-const FAKE_ROUTER_MESSAGE_PROVIDER_COHORT = [
-  { id: "cfr", enabled: true, cohort: "cohort_group" },
-];
 const FAKE_TELEMETRY_ID = "foo123";
 
 describe("TelemetryFeed", () => {
@@ -39,6 +36,7 @@ describe("TelemetryFeed", () => {
   let fakeHomePageUrl;
   let fakeHomePage;
   let fakeExtensionSettingsStore;
+  let ExperimentAPI = { getExperiment: () => {} };
   class PingCentre {
     sendPing() {}
     uninit() {}
@@ -105,6 +103,7 @@ describe("TelemetryFeed", () => {
     globals.set("ClientID", {
       getClientID: sandbox.spy(async () => FAKE_TELEMETRY_ID),
     });
+    globals.set("ExperimentAPI", ExperimentAPI);
     sandbox
       .stub(ASRouterPreferences, "providers")
       .get(() => FAKE_ROUTER_MESSAGE_PROVIDER);
@@ -832,9 +831,9 @@ describe("TelemetryFeed", () => {
           return "release";
         },
       });
-      sandbox
-        .stub(ASRouterPreferences, "providers")
-        .get(() => FAKE_ROUTER_MESSAGE_PROVIDER_COHORT);
+      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+        slug: "SOME-CFR-EXP",
+      });
       const data = {
         action: "cfr_user_event",
         event: "IMPRESSION",
@@ -1828,6 +1827,23 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(global.Cu.reportError);
       assert.notCalled(instance.sendStructuredIngestionEvent);
+    });
+  });
+  describe("#isInCFRCohort", () => {
+    it("should return false if there is no CFR experiment registered", () => {
+      assert.ok(!instance.isInCFRCohort);
+    });
+    it("should return false if getExperiment throws", () => {
+      sandbox.stub(ExperimentAPI, "getExperiment").throws();
+
+      assert.ok(!instance.isInCFRCohort);
+    });
+    it("should return true if there is a CFR experiment registered", () => {
+      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+        slug: "SOME-CFR-EXP",
+      });
+
+      assert.ok(instance.isInCFRCohort);
     });
   });
 });
