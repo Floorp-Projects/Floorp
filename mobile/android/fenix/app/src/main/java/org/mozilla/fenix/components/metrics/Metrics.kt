@@ -32,6 +32,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
@@ -191,6 +192,21 @@ sealed class Event {
             // If the event is not in the allow list, we don't want to track it
             require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
         }
+    }
+
+    data class TipDisplayed(val identifier: String) : Event() {
+        override val extras: Map<Tip.displayedKeys, String>?
+            get() = hashMapOf(Tip.displayedKeys.identifier to identifier)
+    }
+
+    data class TipPressed(val identifier: String) : Event() {
+        override val extras: Map<Tip.pressedKeys, String>?
+            get() = hashMapOf(Tip.pressedKeys.identifier to identifier)
+    }
+
+    data class TipClosed(val identifier: String) : Event() {
+        override val extras: Map<Tip.closedKeys, String>?
+            get() = hashMapOf(Tip.closedKeys.identifier to identifier)
     }
 
     data class ToolbarPositionChanged(val position: Position) : Event() {

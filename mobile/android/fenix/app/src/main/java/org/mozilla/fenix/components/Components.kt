@@ -10,16 +10,16 @@ import android.content.Intent
 import androidx.core.net.toUri
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
+import mozilla.components.feature.addons.migration.SupportedAddonsChecker
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
-import mozilla.components.feature.addons.migration.SupportedAddonsChecker
-import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.ClipboardHandler
+import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
 

@@ -137,6 +137,12 @@ class Settings private constructor(
         default = true
     )
 
+    // If any of the prefs have been modified, quit displaying the fenix moved tip
+    fun shouldDisplayFenixMovingTip(): Boolean =
+        preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_fenix_nightly_tip), true) &&
+            preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip), true) &&
+            preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_fenix_tip), true)
+
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
         default = ""
@@ -249,6 +255,11 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection),
         default = true
     )
+
+    fun isDefaultBrowser(): Boolean {
+        val browsers = BrowsersCache.all(appContext)
+        return browsers.isDefaultBrowser
+    }
 
     val shouldUseAutoBatteryTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_auto_battery_theme),

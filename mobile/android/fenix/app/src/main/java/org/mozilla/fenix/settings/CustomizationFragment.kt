@@ -21,6 +21,8 @@ import org.mozilla.fenix.ext.showToolbar
 /**
  * Lets the user customize the UI.
  */
+
+@Suppress("TooManyFunctions")
 class CustomizationFragment : PreferenceFragmentCompat() {
     private lateinit var radioLightTheme: RadioButtonPreference
     private lateinit var radioDarkTheme: RadioButtonPreference

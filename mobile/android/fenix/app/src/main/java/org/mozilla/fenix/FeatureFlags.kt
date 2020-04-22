@@ -43,4 +43,9 @@ object FeatureFlags {
      * Enables picture-in-picture feature
      */
     val pictureInPicture = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables tip feature
+     */
+    val tips = Config.channel.isDebug
 }

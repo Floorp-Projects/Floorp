@@ -19,7 +19,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/pbm_shortcut_popup_background">
+            android:background="@drawable/cfr_background_gradient">
 
         <TextView
                 android:id="@+id/cfr_message"
@@ -38,21 +38,22 @@
                 app:fontFamily="@font/metropolis_medium" />
 
         <Button
-                android:id="@+id/cfr_pos_button"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/rounded_gray_corners"
-                android:text="@string/cfr_pos_button_text"
-                android:textAllCaps="false"
-                android:textColor="@color/above_dark_theme"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cfr_message"
-                style="@style/MetropolisButton"/>
+            android:id="@+id/cfr_pos_button"
+            style="@style/MetropolisButton"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/rounded_gray_corners"
+            android:text="@string/cfr_pos_button_text"
+            android:textAllCaps="false"
+            android:textColor="@color/above_dark_theme"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cfr_message" />
 
         <Button
                 android:id="@+id/cfr_neg_button"

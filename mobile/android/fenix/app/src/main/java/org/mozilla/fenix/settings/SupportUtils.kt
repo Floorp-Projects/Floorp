@@ -21,13 +21,15 @@ import java.util.Locale
 
 object SupportUtils {
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
-    const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
     const val POCKET_TRENDING_URL = "https://getpocket.com/fenix-top-articles"
     const val WIKIPEDIA_URL = "https://www.wikipedia.org/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+    const val FIREFOX_BETA_PLAY_STORE_URL = "market://details?id=org.mozilla.firefox_beta"
+    const val FIREFOX_NIGHTLY_PLAY_STORE_URL = "market://details?id=org.mozilla.fennec_aurora"
     const val YOUTUBE_URL = "https://www.youtube.com/"
 
     enum class SumoTopic(internal val topicStr: String) {
+        FENIX_MOVING("sync-delist"),
         HELP("faq-android"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),

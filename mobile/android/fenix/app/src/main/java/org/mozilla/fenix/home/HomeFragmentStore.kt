@@ -13,6 +13,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.components.tips.Tip
 
 /**
  * The [Store] for holding the [HomeFragmentState] and applying [HomeFragmentAction]s.
@@ -58,7 +59,8 @@ data class HomeFragmentState(
     val expandedCollections: Set<Long>,
     val mode: Mode,
     val tabs: List<Tab>,
-    val topSites: List<TopSite>
+    val topSites: List<TopSite>,
+    val tip: Tip? = null
 ) : State
 
 sealed class HomeFragmentAction : Action {
@@ -66,7 +68,8 @@ sealed class HomeFragmentAction : Action {
         val tabs: List<Tab>,
         val topSites: List<TopSite>,
         val mode: Mode,
-        val collections: List<TabCollection>
+        val collections: List<TabCollection>,
+        val tip: Tip? = null
     ) :
         HomeFragmentAction()
 
@@ -77,6 +80,7 @@ sealed class HomeFragmentAction : Action {
     data class ModeChange(val mode: Mode, val tabs: List<Tab> = emptyList()) : HomeFragmentAction()
     data class TabsChange(val tabs: List<Tab>) : HomeFragmentAction()
     data class TopSitesChange(val topSites: List<TopSite>) : HomeFragmentAction()
+    data class RemoveTip(val tip: Tip) : HomeFragmentAction()
 }
 
 private fun homeFragmentStateReducer(
@@ -88,7 +92,8 @@ private fun homeFragmentStateReducer(
             collections = action.collections,
             mode = action.mode,
             tabs = action.tabs,
-            topSites = action.topSites
+            topSites = action.topSites,
+            tip = action.tip
         )
         is HomeFragmentAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -105,5 +110,6 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.ModeChange -> state.copy(mode = action.mode, tabs = action.tabs)
         is HomeFragmentAction.TabsChange -> state.copy(tabs = action.tabs)
         is HomeFragmentAction.TopSitesChange -> state.copy(topSites = action.topSites)
+        is HomeFragmentAction.RemoveTip -> { state.copy(tip = null) }
     }
 }

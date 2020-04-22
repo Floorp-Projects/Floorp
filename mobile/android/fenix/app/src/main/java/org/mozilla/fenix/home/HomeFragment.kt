@@ -77,6 +77,8 @@ import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.tips.FenixTipManager
+import org.mozilla.fenix.components.tips.providers.MigrationTipProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
@@ -199,7 +201,8 @@ class HomeFragment : Fragment() {
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
                     tabs = emptyList(),
-                    topSites = requireComponents.core.topSiteStorage.cachedTopSites
+                    topSites = requireComponents.core.topSiteStorage.cachedTopSites,
+                    tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
                 )
             )
         }
@@ -379,7 +382,8 @@ class HomeFragment : Fragment() {
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
                 tabs = getListOfSessions().toTabs(),
-                topSites = components.core.topSiteStorage.cachedTopSites
+                topSites = components.core.topSiteStorage.cachedTopSites,
+                tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
             )
         )
 

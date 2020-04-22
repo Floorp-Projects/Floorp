@@ -35,6 +35,7 @@ import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Tab
+import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -163,6 +164,8 @@ interface SessionControlController {
      * @see [TabSessionInteractor.onOpenNewTabClicked]
      */
     fun handleonOpenNewTabClicked()
+
+    fun handleCloseTip(tip: Tip)
 }
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -384,6 +387,10 @@ class DefaultSessionControlController(
 
     override fun handleonOpenNewTabClicked() {
         openSearchScreen()
+    }
+
+    override fun handleCloseTip(tip: Tip) {
+        fragmentStore.dispatch(HomeFragmentAction.RemoveTip(tip))
     }
 
     private fun showCollectionCreationFragment(

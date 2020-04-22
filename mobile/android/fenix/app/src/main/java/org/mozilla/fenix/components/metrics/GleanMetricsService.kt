@@ -39,6 +39,7 @@ import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -497,6 +498,18 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.AddonsOpenInToolbarMenu -> EventWrapper<NoExtraKeys>(
             { Addons.openAddonInToolbarMenu.record(it) }
+        )
+        is Event.TipDisplayed -> EventWrapper(
+            { Tip.displayed.record(it) },
+            { Tip.displayedKeys.valueOf(it) }
+        )
+        is Event.TipPressed -> EventWrapper(
+            { Tip.pressed.record(it) },
+            { Tip.pressedKeys.valueOf(it) }
+        )
+        is Event.TipClosed -> EventWrapper(
+            { Tip.closed.record(it) },
+            { Tip.closedKeys.valueOf(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

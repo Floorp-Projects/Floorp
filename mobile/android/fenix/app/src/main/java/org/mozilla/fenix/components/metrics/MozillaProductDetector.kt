@@ -12,14 +12,14 @@ object MozillaProductDetector {
     enum class MozillaProducts(val productName: String) {
         // Browsers
         FIREFOX("org.mozilla.firefox"),
+        FIREFOX_NIGHTLY("org.mozilla.fennec_aurora"),
         FIREFOX_BETA("org.mozilla.firefox_beta"),
-        FIREFOX_AURORA("org.mozilla.fennec_aurora"),
-        FIREFOX_NIGHTLY("org.mozilla.fennec"),
         FIREFOX_FDROID("org.mozilla.fennec_fdroid"),
         FIREFOX_LITE("org.mozilla.rocket"),
         REFERENCE_BROWSER("org.mozilla.reference.browser"),
         REFERENCE_BROWSER_DEBUG("org.mozilla.reference.browser.debug"),
         FENIX("org.mozilla.fenix"),
+        FENIX_NIGHTLY("org.mozilla.fenix.nightly"),
         FOCUS("org.mozilla.focus"),
         KLAR("org.mozilla.klar"),
 
@@ -43,7 +43,7 @@ object MozillaProductDetector {
         return mozillaProducts
     }
 
-    private fun packageIsInstalled(context: Context, packageName: String): Boolean {
+    fun packageIsInstalled(context: Context, packageName: String): Boolean {
         try {
             context.packageManager.getPackageInfo(packageName, 0)
         } catch (e: PackageManager.NameNotFoundException) {

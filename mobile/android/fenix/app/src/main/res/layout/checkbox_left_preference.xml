@@ -6,13 +6,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="48dp"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:paddingStart="8dp"
-    android:paddingBottom="8dp"
+    android:paddingStart="16dp"
     android:layout_marginBottom="8dp"
     android:paddingEnd="?android:attr/scrollbarSize">
 

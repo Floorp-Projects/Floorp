@@ -1044,6 +1044,50 @@ history:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
+tip:
+  displayed:
+    type: event
+    description: >
+      The tip was displayed
+    extra_keys:
+      identifier:
+        description: "The identifier of the tip displayed"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9328
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9836
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  pressed:
+    type: event
+    description: >
+      The tip's button was pressed
+    extra_keys:
+      identifier:
+        description: "The identifier of the tip the action was taken on"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9328
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9836
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  closed:
+    type: event
+    description: >
+      The tip was closed
+    extra_keys:
+      identifier:
+        description: "The identifier of the tip closed"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9328
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9836
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
 reader_mode:
   available:
     type: event
