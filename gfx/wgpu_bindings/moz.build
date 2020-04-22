@@ -16,7 +16,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
                   script='/build/RunCbindgen.py',
                   entry_point='generate',
                   inputs=[
-                    '/gfx/wgpu/wgpu-remote',
+                    '/gfx/wgpu_bindings',
                   ])
 
     EXPORTS.mozilla.webgpu.ffi += [
