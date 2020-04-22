@@ -30,11 +30,6 @@ class Options:
             "help": "Test to run. Can be a single test file or a directory of tests "
             "(to run recursively). If omitted, the entire suite is run.",
         },
-        "--extra-options": {
-            "type": str,
-            "default": "",
-            "help": "Extra options passed through",
-        },
         "--output": {
             "type": str,
             "default": "artifacts",

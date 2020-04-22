@@ -6,6 +6,7 @@ import shutil
 
 from mozperftest.tests.support import get_running_env
 from mozperftest.environment import BROWSER
+from mozperftest.browser.browsertime import add_options
 
 
 HERE = os.path.dirname(__file__)
@@ -33,6 +34,15 @@ def test_browser():
     assert mach_cmd.run_process.call_count == 1
     # XXX more checks
     assert mach_cmd.run_process.call_args[0][-1][-1] == os.path.join(HERE, "example.js")
+
+
+def test_add_options():
+    mach_cmd, metadata, env = get_running_env()
+    options = [("one", 1), ("two", 2)]
+    add_options(env, options)
+    extra = env.get_arg("browser_browsertime_extra_options")
+    assert "one=1" in extra
+    assert "two=2" in extra
 
 
 if __name__ == "__main__":
