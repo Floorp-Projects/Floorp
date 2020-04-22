@@ -10,15 +10,21 @@ use std::collections::HashSet;
 use std::fmt::Write;
 use webrender_build::shader::{ShaderFeatureFlags, get_shader_features};
 
+// Shader key is in "name feature,feature" format.
+// File name needs to be formatted as "name_feature_feature".
+fn shader_file(shader_key: &str) -> String {
+    shader_key.replace(' ', "_").replace(',', "_")
+}
+
 fn write_load_shader(shader_keys: &[String]) {
-    let shaders: Vec<_> = shader_keys.iter().map(|s| s.replace(',', "_")).collect();
     let mut load_shader = String::new();
-    for s in &shaders {
-        let _ = write!(load_shader, "#include \"{}.h\"\n", s);
+    for s in shader_keys {
+        let _ = write!(load_shader, "#include \"{}.h\"\n", shader_file(s));
     }
     load_shader.push_str("ProgramLoader load_shader(const char* name) {\n");
-    for s in &shaders {
-        let _ = write!(load_shader, "  if (!strcmp(name, \"{0}\")) {{ return {0}_program::loader; }}\n", s);
+    for s in shader_keys {
+        let _ = write!(load_shader, "  if (!strcmp(name, \"{}\")) {{ return {}_program::loader; }}\n",
+                       s, shader_file(s));
     }
     load_shader.push_str("  return nullptr;\n}\n");
     std::fs::write(std::env::var("OUT_DIR").unwrap() + "/load_shader.h", load_shader).unwrap();
@@ -46,19 +52,21 @@ fn process_imports(shader_dir: &str, shader: &str, included: &mut HashSet<String
 }
 
 fn translate_shader(shader_key: &str, shader_dir: &str) {
-    let mut imported = String::new();
-    imported.push_str("#define SWGL 1\n");
-    imported.push_str("#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n");
+    let mut imported = String::from("#define SWGL 1\n");
+    let _ = write!(imported, "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
+                   webrender_build::MAX_VERTEX_TEXTURE_WIDTH);
 
-    let mut features = shader_key.split(',');
-    let basename = features.next().unwrap();
-    for feature in features {
-        let _ = write!(imported, "#define WR_FEATURE_{}\n", feature);
+    let (basename, features) =
+        shader_key.split_at(shader_key.find(' ').unwrap_or(shader_key.len()));
+    if !features.is_empty() {
+        for feature in features.trim().split(',') {
+            let _ = write!(imported, "#define WR_FEATURE_{}\n", feature);
+        }
     }
 
     process_imports(shader_dir, basename, &mut HashSet::new(), &mut imported);
 
-    let shader = shader_key.replace(',', "_");
+    let shader = shader_file(shader_key);
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let imp_name = format!("{}/{}.c", out_dir, shader);
@@ -108,7 +116,7 @@ fn main() {
     let mut shaders: Vec<String> = Vec::new();
     for (name, features) in get_shader_features(shader_flags) {
         shaders.extend(features.iter().map(|f| {
-            if f.is_empty() { name.to_owned() } else { format!("{},{}", name, f) }
+            if f.is_empty() { name.to_owned() } else { format!("{} {}", name, f) }
         }));
     }
 
