@@ -31,7 +31,7 @@ class TestFileManager final : public FileManagerBase<TestFileManager> {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestFileManager)
 
-  MOZ_MUST_USE nsresult AsyncDeleteFile(const int64_t aFileId) {
+  [[nodiscard]] nsresult AsyncDeleteFile(const int64_t aFileId) {
     MOZ_RELEASE_ASSERT(!mFileInfos.Contains(aFileId));
 
     if (mStats) {
@@ -41,7 +41,7 @@ class TestFileManager final : public FileManagerBase<TestFileManager> {
     return NS_OK;
   }
 
-  MOZ_MUST_USE nsresult SyncDeleteFile(const int64_t aFileId) {
+  [[nodiscard]] nsresult SyncDeleteFile(const int64_t aFileId) {
     MOZ_RELEASE_ASSERT(!mFileInfos.Contains(aFileId));
 
     if (mStats) {

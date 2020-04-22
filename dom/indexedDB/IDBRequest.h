@@ -65,15 +65,15 @@ class IDBRequest : public DOMEventTargetHelper {
  public:
   class ResultCallback;
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+  [[nodiscard]] static RefPtr<IDBRequest> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+  [[nodiscard]] static RefPtr<IDBRequest> Create(
       JSContext* aCx, IDBObjectStore* aSource, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 
-  static MOZ_MUST_USE RefPtr<IDBRequest> Create(
+  [[nodiscard]] static RefPtr<IDBRequest> Create(
       JSContext* aCx, IDBIndex* aSource, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 
@@ -207,7 +207,7 @@ class IDBOpenDBRequest final : public IDBRequest {
   bool mIncreasedActiveDatabaseCount;
 
  public:
-  static MOZ_MUST_USE RefPtr<IDBOpenDBRequest> Create(
+  [[nodiscard]] static RefPtr<IDBOpenDBRequest> Create(
       JSContext* aCx, SafeRefPtr<IDBFactory> aFactory,
       nsIGlobalObject* aGlobal);
 
