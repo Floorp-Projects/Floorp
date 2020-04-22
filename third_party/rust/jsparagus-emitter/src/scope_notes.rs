@@ -1,4 +1,4 @@
-use crate::emitter::BytecodeOffset;
+use crate::bytecode_offset::BytecodeOffset;
 use crate::gcthings::GCThingIndex;
 
 /// Maps to js::ScopeNote in m-c/js/src/vm//JSScript.h.

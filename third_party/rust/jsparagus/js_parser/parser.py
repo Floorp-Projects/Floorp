@@ -10,21 +10,14 @@ from . import parser_tables
 from .lexer import JSLexer
 
 
-Script_entry_state = 0  # ew, magic number, get pgen to emit this
-
-
-class JSParser(jsparagus.runtime.Parser):
-    def __init__(self):
-        jsparagus.runtime.Parser.__init__(
-            self,
-            parser_tables.actions,
-            parser_tables.error_codes,
-            Script_entry_state,
-            parser_tables.DefaultMethods()
-        )
+# "type: ignore" because mypy can't see inside js_parser.parser_tables.
+class JSParser(parser_tables.Parser):  # type: ignore
+    def __init__(self, goal='Script', builder=None):
+        super().__init__(goal, builder)
+        self._goal = goal
 
     def clone(self):
-        return JSParser()
+        return JSParser(self._goal, self.methods)
 
     def on_recover(self, error_code, lexer, stv):
         """Check that ASI error recovery is really acceptable."""
@@ -45,6 +38,6 @@ class JSParser(jsparagus.runtime.Parser):
 
 
 def parse_Script(text):
-    lexer = JSLexer(JSParser())
+    lexer = JSLexer(JSParser('Script'))
     lexer.write(text)
     return lexer.close()

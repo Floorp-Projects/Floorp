@@ -437,15 +437,15 @@ class RustParserWriter:
         self.write(0, "")
         self.write(0, "pub trait ParserTrait<'alloc, Value> {")
         self.write(1, "fn shift(&mut self, tv: TermValue<Value>) -> Result<'alloc, bool>;")
-        self.write(1, "fn replay(&mut self, tv: TermValue<Value>);")
+        self.write(1, "fn unshift(&mut self);")
         self.write(1, "fn rewind(&mut self, n: usize) {")
         self.write(2, "for _ in 0..n {")
-        self.write(3, "let tv = self.pop();")
-        self.write(3, "self.replay(tv);")
+        self.write(3, "self.unshift();")
         self.write(2, "}")
         self.write(1, "}")
-        self.write(1, "fn epsilon(&mut self, state: usize);")
         self.write(1, "fn pop(&mut self) -> TermValue<Value>;")
+        self.write(1, "fn replay(&mut self, tv: TermValue<Value>);")
+        self.write(1, "fn epsilon(&mut self, state: usize);")
         self.write(1, "fn check_not_on_new_line(&mut self, peek: usize) -> Result<'alloc, bool>;")
         self.write(0, "}")
         self.write(0, "")
@@ -474,9 +474,6 @@ class RustParserWriter:
             assert isinstance(act, Action)
             if isinstance(act, Reduce):
                 yield "value"
-                for i in reversed(range(act.replay)):
-                    var = i + 1
-                    yield var
             elif isinstance(act, FunCall):
                 def map_with_offset(args):
                     for a in args:
@@ -519,10 +516,8 @@ class RustParserWriter:
                            self.nonterminal_to_camel(act.nt))
                 if value != "value":
                     self.write(indent, "let value = {};", value)
-                for i in range(act.replay):
-                    self.write(indent, "parser.replay(s{});", i + 1)
                 self.write(indent, "parser.replay(TermValue { term, value });")
-                self.write(indent, "Ok(false)")
+                self.write(indent, "return Ok(false)")
                 return False
             elif isinstance(act, CheckNotOnNewLine):
                 assert -act.offset > 0
@@ -600,8 +595,10 @@ class RustParserWriter:
                 )
                 if act.update_stack() and not has_accept:
                     reducer = act.reduce_with()
+                    if reducer.replay > 0:
+                        self.write(indent, "parser.rewind({});", reducer.replay)
                     depth = reducer.pop + reducer.replay
-                    for i in range(depth):
+                    for i in range(reducer.replay, depth):
                         name = 's'
                         if i + 1 not in used_variables:
                             name = '_s'
@@ -629,15 +626,20 @@ class RustParserWriter:
             self.write(0, "where")
             self.write(1, "Handler: {}", ' + '.join(map(self.type_to_rust, traits)))
             self.write(0, "{")
-            self.write(1, "match state {")
+            self.write(1, "let mut state = state;")
+            self.write(1, "loop {")
+            self.write(2, "match state {")
             assert len(self.states[self.shift_count:]) == self.action_count
             for state in self.states[self.shift_count:]:
-                self.write(2, "{} => {{", state.index)
+                self.write(3, "{} => {{", state.index)
                 for ctx in self.parse_table.debug_context(state.index, None):
-                    self.write(3, "// {}", ctx)
+                    self.write(4, "// {}", ctx)
                 for act, d in state.edges():
-                    self.write(3, "// {} --> {}", str(act), d)
-                    is_packed = {}  # Map variable names to a boolean to know if the data is packed or not.
+                    self.write(4, "// {} --> {}", str(act), d)
+
+                    # Map variable names to a boolean, True if the data is
+                    # packed.
+                    is_packed = {}
                     try:
                         used_variables = set(collect_uses(act))
                         fallthrough = write_action(3, act, is_packed)
@@ -647,10 +649,15 @@ class RustParserWriter:
                         print(self.parse_table.debug_context(state.index, "\n", "# "))
                         raise exc
                     if fallthrough:
-                        self.write(3, "parser.epsilon({});", d)
-                        self.write(3, "return Ok(false)")
-                self.write(2, "}")
-            self.write(2, '_ => panic!("no such state: {}", state),')
+                        assert 0 <= d < self.shift_count + self.action_count
+                        if d >= self.shift_count:
+                            self.write(4, "state = {}", d)
+                        else:
+                            self.write(4, "parser.epsilon({});", d)
+                            self.write(4, "return Ok(false)")
+                self.write(3, "}")
+            self.write(3, '_ => panic!("no such state: {}", state),')
+            self.write(2, "}")
             self.write(1, "}")
             self.write(0, "}")
             self.write(0, "")

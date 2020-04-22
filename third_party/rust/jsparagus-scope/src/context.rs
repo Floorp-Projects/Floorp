@@ -3,7 +3,7 @@ use crate::data::{
     ScopeIndex,
 };
 use crate::free_name_tracker::FreeNameTracker;
-use ast::associated_data::AssociatedData;
+use ast::associated_data::{AssociatedData, Key as AssociatedDataKey};
 use ast::source_atom_set::SourceAtomSetIndex;
 use ast::source_location_accessor::SourceLocationAccessor;
 use ast::type_id::NodeTypeIdAccessor;
@@ -284,6 +284,9 @@ struct GlobalContext {
     /// Runtime Semantics: GlobalDeclarationInstantiation ( script, env )
     /// https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
     ///
+    /// Step 8. Let functionsToInitialize be a new empty List.
+    functions_to_initialize: Vec<AssociatedDataKey>,
+
     /// Step 9. Let declaredFunctionNames be a new empty List.
     declared_function_names: IndexSet<SourceAtomSetIndex>,
 
@@ -301,12 +304,12 @@ struct GlobalContext {
     scope_index: ScopeIndex,
 
     name_tracker: FreeNameTracker,
-    // FIXME: Step 8. Let functionsToInitialize be a new empty List.
 }
 
 impl GlobalContext {
     fn new(scope_index: ScopeIndex) -> Self {
         Self {
+            functions_to_initialize: Vec::new(),
             declared_function_names: IndexSet::new(),
             declared_var_names: IndexSet::new(),
             let_names: Vec::new(),
@@ -359,7 +362,10 @@ impl GlobalContext {
         self.const_names.push(name);
     }
 
-    fn declare_function(&mut self, name: SourceAtomSetIndex) {
+    fn declare_function<T>(&mut self, name: SourceAtomSetIndex, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
         // Step 10. For each d in varDeclarations, in reverse list order, do
         // Step 10.a. If d is neither a VariableDeclaration nor a ForBinding
         //            nor a BindingIdentifier, then
@@ -387,9 +393,8 @@ impl GlobalContext {
 
         // Step 10.a.iv.4. Insert d as the first element of
         //                 functionsToInitialize.
-        //
-        // FIXME: Collect Function node.
-        //self.functions_to_initialize.insert(name, fun);
+        self.functions_to_initialize
+            .push(AssociatedDataKey::new(fun));
     }
 
     fn remove_function_names_from_var_names(&mut self) {
@@ -410,6 +415,7 @@ impl GlobalContext {
             self.declared_var_names.len() + self.declared_function_names.len(),
             self.let_names.len(),
             self.const_names.len(),
+            self.functions_to_initialize,
         );
 
         // Runtime Semantics: GlobalDeclarationInstantiation ( script, env )
@@ -464,10 +470,23 @@ impl GlobalContext {
 /// Collected while visiting Block's fields, and used when leaving Block.
 #[derive(Debug)]
 struct BlockContext {
+    /// https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
+    /// Runtime Semantics: BlockDeclarationInstantiation ( code, env )
+    ///
     /// Step 3. Let declarations be the LexicallyScopedDeclarations of code.
     let_names: Vec<SourceAtomSetIndex>,
     fun_names: Vec<SourceAtomSetIndex>,
     const_names: Vec<SourceAtomSetIndex>,
+
+    /// https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
+    /// 13.2.14 Runtime Semantics: BlockDeclarationInstantiation ( code, env )
+    ///
+    /// Step 4.b. If d is a FunctionDeclaration, a GeneratorDeclaration, an
+    ///           AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration,
+    ///           then
+    ///
+    /// FIXME: Support Annex B.
+    functions: Vec<AssociatedDataKey>,
 
     /// Scope associated to this context.
     scope_index: ScopeIndex,
@@ -480,6 +499,7 @@ impl BlockContext {
             let_names: Vec::new(),
             fun_names: Vec::new(),
             const_names: Vec::new(),
+            functions: Vec::new(),
             scope_index,
             name_tracker: FreeNameTracker::new(),
         }
@@ -501,13 +521,25 @@ impl BlockContext {
         self.const_names.push(name);
     }
 
-    fn declare_function(&mut self, name: SourceAtomSetIndex) {
+    fn declare_function<T>(&mut self, name: SourceAtomSetIndex, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
         // https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
         // Runtime Semantics: BlockDeclarationInstantiation ( code, env )
         //
         // Step 3. Let declarations be the LexicallyScopedDeclarations of code.
 
         self.fun_names.push(name);
+
+        // https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
+        // 13.2.14 Runtime Semantics:
+        //   BlockDeclarationInstantiation ( code, env )
+        //
+        // Step 4.b. If d is a FunctionDeclaration, a GeneratorDeclaration, an
+        //           AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration,
+        //           then
+        self.functions.push(AssociatedDataKey::new(fun));
     }
 
     fn into_scope_data(self, enclosing: ScopeIndex) -> ScopeData {
@@ -517,6 +549,7 @@ impl BlockContext {
             self.let_names.len() + self.fun_names.len(),
             self.const_names.len(),
             enclosing,
+            self.functions,
         );
 
         // https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
@@ -914,10 +947,13 @@ impl ScopeContext {
             .note_use(name);
     }
 
-    pub fn before_function_declaration(&mut self, name: SourceAtomSetIndex) {
+    pub fn before_function_declaration<T>(&mut self, name: SourceAtomSetIndex, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
         match self.context_stack.innermost_lexical() {
-            Context::Global(ref mut context) => context.declare_function(name),
-            Context::Block(ref mut context) => context.declare_function(name),
+            Context::Global(ref mut context) => context.declare_function(name, fun),
+            Context::Block(ref mut context) => context.declare_function(name, fun),
         }
     }
 }
