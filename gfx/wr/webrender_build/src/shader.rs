@@ -27,7 +27,7 @@ pub enum ShaderKind {
     Fragment,
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ShaderVersion {
     Gl,
     Gles,
