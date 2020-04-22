@@ -41,14 +41,14 @@
 }
 
 #identity-box:hover:not(.no-hover):not([open=true]),
-#notification-popup-box:hover,
+.notification-anchor-icon:hover,
 #tracking-protection-icon-container:hover:not([open=true]) {
   background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;
 }
 
 #identity-box:hover:active:not(.no-hover),
-#notification-popup-box:hover:active,
+.notification-anchor-icon:hover:active,
 #identity-box[open=true],
 #tracking-protection-icon-container:hover:active,
 #tracking-protection-icon-container[open=true] {
@@ -104,12 +104,18 @@
 #identity-icon,
 #permissions-granted-icon,
 #tracking-protection-icon,
-.notification-anchor-icon,
 #blocked-permissions-container > .blocked-permission-icon {
   width: 16px;
   height: 16px;
   margin-inline-start: 4px;
   -moz-context-properties: fill, fill-opacity;
+}
+
+.notification-anchor-icon {
+  width: 20px;
+  height: 28px;
+  padding: 6px 2px;
+  -moz-context-properties: fill, fill-opacity
 }
 
 #tracking-protection-icon {
