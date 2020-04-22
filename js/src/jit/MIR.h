@@ -4224,6 +4224,74 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
   ALLOW_CLONE(MTruncateToInt32)
 };
 
+// Takes a Value or typed input and returns a suitable Int64 using the
+// ToBigInt algorithm, possibly calling out to the VM for string, etc inputs.
+class MToInt64 : public MUnaryInstruction, public ToInt64Policy::Data {
+  explicit MToInt64(MDefinition* arg) : MUnaryInstruction(classOpcode, arg) {
+    setResultType(MIRType::Int64);
+    setGuard();  // May bail on non-Bool, non-BigInt, or invalid Strings.
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(ToInt64)
+  TRIVIAL_NEW_WRAPPERS
+
+  void computeRange(TempAllocator& alloc) override;
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  ALLOW_CLONE(MToInt64)
+};
+
+// Takes a BigInt pointer and returns its toInt64 value.
+class MTruncateBigIntToInt64 : public MUnaryInstruction,
+                               public NoTypePolicy::Data {
+  explicit MTruncateBigIntToInt64(MDefinition* arg)
+      : MUnaryInstruction(classOpcode, arg) {
+    MOZ_ASSERT(arg->type() == MIRType::BigInt);
+    setResultType(MIRType::Int64);
+  }
+
+ public:
+  INSTRUCTION_HEADER(TruncateBigIntToInt64)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  ALLOW_CLONE(MTruncateBigIntToInt64)
+};
+
+// Takes an Int64 and returns a fresh BigInt pointer.
+class MInt64ToBigInt : public MUnaryInstruction, public NoTypePolicy::Data {
+  explicit MInt64ToBigInt(MDefinition* arg)
+      : MUnaryInstruction(classOpcode, arg) {
+    MOZ_ASSERT(arg->type() == MIRType::Int64);
+    setResultType(MIRType::BigInt);
+  }
+
+ public:
+  INSTRUCTION_HEADER(Int64ToBigInt)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  ALLOW_CLONE(MInt64ToBigInt)
+};
+
 // Converts any type to a string
 class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
  public:
