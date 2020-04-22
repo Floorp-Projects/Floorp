@@ -2737,14 +2737,6 @@ nsDocumentViewer::GetTextZoom(float* aTextZoom) {
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetEffectiveTextZoom(float* aEffectiveTextZoom) {
-  NS_ENSURE_ARG_POINTER(aEffectiveTextZoom);
-  nsPresContext* pc = GetPresContext();
-  *aEffectiveTextZoom = pc ? pc->EffectiveTextZoom() : 1.0f;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::SetFullZoom(float aFullZoom) {
 #ifdef NS_PRINT_PREVIEW
   if (GetIsPrintPreview()) {
