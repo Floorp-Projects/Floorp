@@ -40,21 +40,6 @@ int64_t Cookie::GenerateUniqueCreationTime(int64_t aCreationTime) {
   return ++gLastCreationTime;
 }
 
-// static
-already_AddRefed<Cookie> Cookie::Create(
-    const nsACString& aName, const nsACString& aValue, const nsACString& aHost,
-    const nsACString& aPath, int64_t aExpiry, int64_t aLastAccessed,
-    int64_t aCreationTime, bool aIsSession, bool aIsSecure, bool aIsHttpOnly,
-    const OriginAttributes& aOriginAttributes, int32_t aSameSite,
-    int32_t aRawSameSite) {
-  CookieStruct cookieData(nsCString(aName), nsCString(aValue), nsCString(aHost),
-                          nsCString(aPath), aExpiry, aLastAccessed,
-                          aCreationTime, aIsHttpOnly, aIsSession, aIsSecure,
-                          aSameSite, aRawSameSite);
-
-  return Create(cookieData, aOriginAttributes);
-}
-
 already_AddRefed<Cookie> Cookie::Create(
     const CookieStruct& aCookieData,
     const OriginAttributes& aOriginAttributes) {
@@ -218,6 +203,10 @@ Cookie::GetExpires(uint64_t* aExpires) {
 bool Cookie::ValidateRawSame(const CookieStruct& aCookieData) {
   return aCookieData.rawSameSite() == aCookieData.sameSite() ||
          aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE;
+}
+
+already_AddRefed<Cookie> Cookie::Clone() const {
+  return Create(mData, OriginAttributesRef());
 }
 
 NS_IMPL_ISUPPORTS(Cookie, nsICookie)
