@@ -40,6 +40,34 @@ class ShutdownError extends IndexedDBError {
   }
 }
 
+// We batch operations in order to reduce round-trip latency to the IndexedDB
+// database thread. The trade-offs are that the more records in the batch, the
+// more time we spend on this thread in structured serialization, and the
+// greater the chance to jank PBackground and this thread when the responses
+// come back. The initial choice of 250 was made targeting 2-3ms on a fast
+// machine and 10-15ms on a slow machine.
+// Every chunk waits for success before starting the next, and
+// the final chunk's completion will fire transaction.oncomplete .
+function bulkOperationHelper(store, operation, list, listIndex = 0) {
+  const CHUNK_LENGTH = 250;
+  const max = Math.min(listIndex + CHUNK_LENGTH, list.length);
+  let request;
+  for (; listIndex < max; listIndex++) {
+    request = store[operation](list[listIndex]);
+  }
+  if (listIndex < list.length) {
+    // On error, `transaction.onerror` is called.
+    request.onsuccess = bulkOperationHelper.bind(
+      null,
+      store,
+      operation,
+      list,
+      listIndex
+    );
+  }
+  // otherwise, we're done, and the transaction will complete on its own.
+}
+
 /**
  * Database is a tiny wrapper with the objective
  * of providing major kinto-offline-client collection API.
@@ -100,19 +128,13 @@ class Database {
       await executeIDB(
         "records",
         store => {
-          // Chain the put operations together, the last one will be waited by
-          // the `transaction.oncomplete` callback.
-          let i = 0;
-          putNext();
-
-          function putNext() {
-            if (i == toInsert.length) {
-              return;
-            }
-            const entry = { ...toInsert[i], _cid };
-            store.put(entry).onsuccess = putNext; // On error, `transaction.onerror` is called.
-            ++i;
-          }
+          bulkOperationHelper(
+            store,
+            "put",
+            toInsert.map(item => {
+              return Object.assign({ _cid }, item);
+            })
+          );
         },
         { desc: "importBulk() in " + this.identifier }
       );
@@ -127,18 +149,13 @@ class Database {
       await executeIDB(
         "records",
         store => {
-          // Chain the delete operations together, the last one will be waited by
-          // the `transaction.oncomplete` callback.
-          let i = 0;
-          deleteNext();
-
-          function deleteNext() {
-            if (i == toDelete.length) {
-              return;
-            }
-            store.delete([_cid, toDelete[i].id]).onsuccess = deleteNext; // On error, `transaction.onerror` is called.
-            ++i;
-          }
+          bulkOperationHelper(
+            store,
+            "delete",
+            toDelete.map(item => {
+              return [_cid, item.id];
+            })
+          );
         },
         { desc: "deleteBulk() in " + this.identifier }
       );
