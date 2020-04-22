@@ -56,7 +56,8 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1609991-cracked.com-flex-basis-fix.css',
   'injections/css/bug1610016-gaana.com-input-position-fix.css',
   'injections/css/bug1610344-directv.com.co-hide-unsupported-message.css',
-  'injections/css/bug1630280-dominos.ch-hide-overlay.css',
+  'injections/css/bug1631960-websube.ckbogazici.com.tr-table-row-fix.css',
+  'injections/css/bug1632019-everyman.co-gallery-width-fix.css',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
