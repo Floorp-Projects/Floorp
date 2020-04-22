@@ -18,7 +18,7 @@ def temp_file(name="temp"):
         shutil.rmtree(tempdir)
 
 
-def get_running_env():
+def get_running_env(**kwargs):
     from mozbuild.base import MozbuildObject
 
     config = MozbuildObject.from_environment()
@@ -35,7 +35,7 @@ def get_running_env():
         "browsertime-clobber": False,
         "browsertime-install-url": None,
     }
-
+    mach_args.update(kwargs)
     env = MachEnvironment(mach_cmd, "script", **mach_args)
     metadata = Metadata(mach_cmd, env, "script")
     return mach_cmd, metadata, env

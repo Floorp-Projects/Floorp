@@ -40,7 +40,7 @@ def test_add_options():
     mach_cmd, metadata, env = get_running_env()
     options = [("one", 1), ("two", 2)]
     add_options(env, options)
-    extra = env.get_arg("browser_browsertime_extra_options")
+    extra = env.get_arg("browsertime-extra-options")
     assert "one=1" in extra
     assert "two=2" in extra
 

@@ -47,8 +47,17 @@ class MachEnvironment:
         # see if we want to restrict to existing keys
         self._mach_args[self._normalize(name)] = value
 
-    def get_arg(self, name, default=None):
-        return self._mach_args.get(self._normalize(name), default)
+    def get_arg(self, name, default=None, layer=None):
+        name = self._normalize(name)
+        marker = object()
+        res = self._mach_args.get(name, marker)
+        if res is marker:
+            # trying with the name prefixed with the layer name
+            if layer is not None and not name.startswith(layer.name):
+                name = "%s_%s" % (layer.name, name)
+                return self._mach_args.get(name, default)
+            return default
+        return res
 
     def get_layer(self, name):
         for layer in self.layers:
