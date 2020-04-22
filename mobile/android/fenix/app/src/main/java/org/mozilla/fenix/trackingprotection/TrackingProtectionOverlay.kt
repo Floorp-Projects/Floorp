@@ -4,17 +4,17 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.MeasureSpec
-import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.PopupWindow
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.view.marginTop
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
@@ -44,63 +44,63 @@ class TrackingProtectionOverlay(
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {
+        val trackingOnboardingDialog = Dialog(context)
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
         val isBottomToolbar = Settings.getInstance(context).shouldUseBottomToolbar
+
         layout.drop_down_triangle.isGone = isBottomToolbar
         layout.pop_up_triangle.isVisible = isBottomToolbar
+
         layout.onboarding_message.text =
             context.getString(
                 R.string.etp_onboarding_message_2,
                 context.getString(R.string.app_name)
             )
 
-        val res = context.resources
-        val trackingOnboarding = PopupWindow(
-            layout,
-            res.getDimensionPixelSize(R.dimen.tp_onboarding_width),
-            WindowManager.LayoutParams.WRAP_CONTENT
-        ).apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            isOutsideTouchable = true
-            isFocusable = true
-            elevation = res.getDimension(R.dimen.mozac_browser_menu_elevation)
-            animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
-        }
-
         val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
         closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
         closeButton.setOnClickListener {
-            trackingOnboarding.dismiss()
+            trackingOnboardingDialog.dismiss()
         }
 
-        // Measure layout view
-        val spec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        layout.measure(spec, spec)
-
-        val containerHeight = layout.measuredHeight
-        val triangleHeight =
-            (res.getDimension(R.dimen.tp_onboarding_triangle_height) / res.displayMetrics.density).toInt()
+        val res = context.resources
+        val triangleWidthPx = res.getDimension(R.dimen.tp_onboarding_triangle_height)
+        val triangleMarginStartPx = res.getDimension(R.dimen.tp_onboarding_triangle_margin_start)
 
         val toolbar = getToolbar()
         val trackingProtectionIcon: View =
             toolbar.findViewById(R.id.mozac_browser_toolbar_tracking_protection_indicator)
 
-        val xOffset = res.getDimensionPixelSize(R.dimen.tp_onboarding_x_offset)
+        val xOffset = triangleMarginStartPx + triangleWidthPx / 2
 
-        // Positioning the popup above the tp anchor.
-        val yOffset = if (isBottomToolbar) {
-            -containerHeight - (toolbar.height / 3 * 2) + triangleHeight
+        val gravity = if (isBottomToolbar) {
+            Gravity.START or Gravity.BOTTOM
         } else {
-            CFR_Y_OFFSET
+            Gravity.START or Gravity.TOP
         }
 
-        trackingOnboarding.showAsDropDown(trackingProtectionIcon, xOffset, yOffset)
+        trackingOnboardingDialog.apply {
+            setContentView(layout)
+            setCancelable(false)
+        }
+
+        trackingOnboardingDialog.window?.let {
+            it.setGravity(gravity)
+            val attr = it.attributes
+            attr.x =
+                (trackingProtectionIcon.x + trackingProtectionIcon.width / 2 - xOffset).toInt()
+            attr.y =
+                (trackingProtectionIcon.y + trackingProtectionIcon.height - trackingProtectionIcon.marginTop).toInt()
+            it.attributes = attr
+            it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+
+        trackingOnboardingDialog.show()
         settings.incrementTrackingProtectionOnboardingCount()
     }
 
     private companion object {
-        private const val CFR_Y_OFFSET = -24
         private const val BUTTON_INCREASE_DPS = 12
     }
 }

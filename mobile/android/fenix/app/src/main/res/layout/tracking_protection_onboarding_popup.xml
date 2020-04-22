@@ -11,9 +11,9 @@
     <ImageView
         android:visibility="gone"
         android:id="@+id/drop_down_triangle"
-        android:layout_width="16dp"
+        android:layout_width="@dimen/tp_onboarding_triangle_width"
         android:layout_height="@dimen/tp_onboarding_triangle_height"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="@dimen/tp_onboarding_triangle_margin_start"
         android:importantForAccessibility="no"
         android:rotation="0"
         app:srcCompat="@drawable/ic_triangle"

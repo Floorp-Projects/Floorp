@@ -46,7 +46,7 @@ class Settings private constructor(
     companion object {
         const val showLoginsSecureWarningSyncMaxCount = 1
         const val showLoginsSecureWarningMaxCount = 1
-        const val trackingProtectionOnboardingMaximumCount = 2
+        const val trackingProtectionOnboardingMaximumCount = 1
         const val FENIX_PREFERENCES = "fenix_preferences"
 
         private const val BLOCKED_INT = 0
