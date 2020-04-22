@@ -20,6 +20,7 @@ const {
 class Accordion extends Component {
   static get propTypes() {
     return {
+      className: PropTypes.string,
       // A list of all items to be rendered using an Accordion component.
       items: PropTypes.arrayOf(
         PropTypes.shape({
@@ -243,7 +244,9 @@ class Accordion extends Component {
   render() {
     return ul(
       {
-        className: "accordion",
+        className:
+          "accordion" +
+          (this.props.className ? ` ${this.props.className}` : ""),
         tabIndex: -1,
       },
       this.props.items.map(item => this.renderItem(item))

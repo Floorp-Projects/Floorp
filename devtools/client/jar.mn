@@ -207,6 +207,7 @@ devtools.jar:
     skin/images/pane-collapse.svg (themes/images/pane-collapse.svg)
     skin/images/pane-expand.svg (themes/images/pane-expand.svg)
     skin/images/help.svg (themes/images/help.svg)
+    skin/images/report.svg (themes/images/report.svg)
     skin/images/reveal.svg (themes/images/reveal.svg)
     skin/images/select-arrow.svg (themes/images/select-arrow.svg)
     skin/images/settings.svg (themes/images/settings.svg)

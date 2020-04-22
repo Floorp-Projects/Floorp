@@ -6,6 +6,7 @@
 
 DevToolsModules(
     "CompatibilityApp.js",
+    "Footer.js",
     "IssueItem.js",
     "IssueList.js",
     "IssuePane.js",
