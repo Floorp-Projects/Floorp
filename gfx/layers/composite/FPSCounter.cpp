@@ -276,7 +276,7 @@ void FPSCounter::PrintFPS() {
 }
 
 void FPSCounter::PrintHistogram(std::map<int, int>& aHistogram) {
-  if (aHistogram.size() == 0) {
+  if (aHistogram.empty()) {
     return;
   }
 
