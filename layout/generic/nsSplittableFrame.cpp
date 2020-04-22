@@ -225,17 +225,16 @@ nscoord nsSplittableFrame::GetEffectiveComputedBSize(
 
 nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
     const ReflowInput* aReflowInput) const {
-  LogicalSides skip(mWritingMode);
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    skip |= eLogicalSideBitsBBoth;
-    return skip;
+    return LogicalSides(eLogicalSideBitsBBoth);
   }
 
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
-    return skip;
+    return LogicalSides();
   }
 
+  LogicalSides skip;
   if (GetPrevContinuation()) {
     skip |= eLogicalSideBitsBStart;
   }
@@ -271,16 +270,13 @@ nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
 }
 
 LogicalSides nsSplittableFrame::PreReflowBlockLevelLogicalSkipSides() const {
-  LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(IS_TRUE_OVERFLOW_CONTAINER(this))) {
-    skip |= mozilla::eLogicalSideBitsBBoth;
-    return skip;
+    return LogicalSides(mozilla::eLogicalSideBitsBBoth);
   }
   if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak !=
                  StyleBoxDecorationBreak::Clone) &&
       GetPrevInFlow()) {
-    skip |= mozilla::eLogicalSideBitsBStart;
-    return skip;
+    return LogicalSides(mozilla::eLogicalSideBitsBStart);
   }
-  return skip;
+  return LogicalSides();
 }
