@@ -14,12 +14,10 @@ const { MockRegistrar } = ChromeUtils.import(
 // Only need to stub the methods actually called by nsSearchService
 var promptService = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
-  confirmEx() {},
+  asyncConfirmEx() {},
+  asyncAlert() {},
 };
-var prompt = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
-  alert() {},
-};
+
 // Override the prompt service and nsIPrompt, since the search service currently
 // prompts in response to certain installation failures we test here
 // XXX this should disappear once bug 863474 is fixed
@@ -27,7 +25,6 @@ MockRegistrar.register(
   "@mozilla.org/embedcomp/prompt-service;1",
   promptService
 );
-MockRegistrar.register("@mozilla.org/prompter;1", prompt);
 
 // First test inits the search service
 add_task(async function init_search_service() {
