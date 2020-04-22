@@ -22,7 +22,7 @@ use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::LineDecoration;
 use crate::prim_store::picture::Picture;
 use crate::prim_store::text_run::TextRun;
-use crate::render_backend::DocumentView;
+use crate::render_backend::SceneView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
 use std::iter;
@@ -90,7 +90,7 @@ impl Transaction {
 pub struct BuiltTransaction {
     pub document_id: DocumentId,
     pub built_scene: Option<BuiltScene>,
-    pub view: DocumentView,
+    pub view: SceneView,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
@@ -110,7 +110,7 @@ pub struct LoadScene {
     pub document_id: DocumentId,
     pub scene: Scene,
     pub font_instances: SharedFontInstanceMap,
-    pub view: DocumentView,
+    pub view: SceneView,
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
     pub interners: Interners,
@@ -225,7 +225,7 @@ struct Document {
     scene: Scene,
     interners: Interners,
     stats: SceneStats,
-    view: DocumentView,
+    view: SceneView,
     /// A set of pipelines that the caller has requested be
     /// made available as output textures.
     output_pipelines: FastHashSet<PipelineId>,
@@ -238,13 +238,11 @@ impl Document {
             interners: Interners::default(),
             stats: SceneStats::empty(),
             output_pipelines: FastHashSet::default(),
-            view: DocumentView {
+            view: SceneView {
                 device_rect,
                 layer,
                 device_pixel_ratio,
-                pan: DeviceIntPoint::zero(),
                 page_zoom_factor: 1.0,
-                pinch_zoom_factor: 1.0,
                 quality_settings: QualitySettings::default(),
             },
         }
@@ -733,7 +731,7 @@ impl SceneBuilderThread {
             render_frame: txn.render_frame,
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
-            view: doc.view.clone(),
+            view: doc.view,
             rasterized_blobs: replace(&mut txn.rasterized_blobs, Vec::new()),
             resource_updates: replace(&mut txn.resource_updates, Vec::new()),
             blob_rasterizer: replace(&mut txn.blob_rasterizer, None),

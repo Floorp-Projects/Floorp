@@ -66,33 +66,50 @@ use crate::frame_builder::Frame;
 use time::precise_time_ns;
 use crate::util::{Recycler, VecHelper, drain_filter};
 
-
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct DocumentView {
+    scene: SceneView,
+    frame: FrameView,
+}
+
+/// Some rendering parameters applying at the scene level.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Copy, Clone)]
+pub struct SceneView {
     pub device_rect: DeviceIntRect,
     pub layer: DocumentLayer,
-    pub pan: DeviceIntPoint,
     pub device_pixel_ratio: f32,
     pub page_zoom_factor: f32,
-    pub pinch_zoom_factor: f32,
     pub quality_settings: QualitySettings,
+}
+
+impl SceneView {
+    pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
+        DevicePixelScale::new(
+            self.device_pixel_ratio *
+            self.page_zoom_factor
+        )
+    }
+}
+
+/// Some rendering parameters applying at the frame level.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Copy, Clone)]
+pub struct FrameView {
+    pan: DeviceIntPoint,
+    pinch_zoom_factor: f32,
 }
 
 impl DocumentView {
     pub fn accumulated_scale_factor(&self) -> DevicePixelScale {
         DevicePixelScale::new(
-            self.device_pixel_ratio *
-            self.page_zoom_factor *
-            self.pinch_zoom_factor
-        )
-    }
-
-    pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
-        DevicePixelScale::new(
-            self.device_pixel_ratio *
-            self.page_zoom_factor
+            self.scene.device_pixel_ratio *
+            self.scene.page_zoom_factor *
+            self.frame.pinch_zoom_factor
         )
     }
 }
@@ -446,13 +463,17 @@ impl Document {
             id,
             removed_pipelines: Vec::new(),
             view: DocumentView {
-                device_rect: size.into(),
-                layer,
-                pan: DeviceIntPoint::zero(),
-                page_zoom_factor: 1.0,
-                pinch_zoom_factor: 1.0,
-                device_pixel_ratio: default_device_pixel_ratio,
-                quality_settings: QualitySettings::default(),
+                scene: SceneView {
+                    device_rect: size.into(),
+                    layer,
+                    page_zoom_factor: 1.0,
+                    device_pixel_ratio: default_device_pixel_ratio,
+                    quality_settings: QualitySettings::default(),
+                },
+                frame: FrameView {
+                    pan: DeviceIntPoint::new(0, 0),
+                    pinch_zoom_factor: 1.0,
+                },
             },
             stamp: FrameStamp::first(id),
             scene: BuiltScene::empty(),
@@ -478,7 +499,7 @@ impl Document {
     }
 
     fn has_pixels(&self) -> bool {
-        !self.view.device_rect.size.is_empty_or_negative()
+        !self.view.scene.device_rect.size.is_empty_or_negative()
     }
 
     fn process_frame_msg(
@@ -535,8 +556,8 @@ impl Document {
                 tx.send(self.shared_hit_tester.clone()).unwrap();
             }
             FrameMsg::SetPan(pan) => {
-                if self.view.pan != pan {
-                    self.view.pan = pan;
+                if self.view.frame.pan != pan {
+                    self.view.frame.pan = pan;
                     self.hit_tester_is_valid = false;
                     self.frame_is_valid = false;
                 }
@@ -565,8 +586,8 @@ impl Document {
                 self.dynamic_properties.add_transforms(property_bindings);
             }
             FrameMsg::SetPinchZoom(factor) => {
-                if self.view.pinch_zoom_factor != factor.get() {
-                    self.view.pinch_zoom_factor = factor.get();
+                if self.view.frame.pinch_zoom_factor != factor.get() {
+                    self.view.frame.pinch_zoom_factor = factor.get();
                     self.frame_is_valid = false;
                 }
             }
@@ -594,7 +615,7 @@ impl Document {
         tile_cache_logger: &mut TileCacheLogger,
     ) -> RenderedDocument {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
-        let pan = self.view.pan.to_f32() / accumulated_scale_factor;
+        let pan = self.view.frame.pan.to_f32() / accumulated_scale_factor;
 
         // Advance to the next frame.
         self.stamp.advance();
@@ -609,8 +630,8 @@ impl Document {
                 gpu_cache,
                 self.stamp,
                 accumulated_scale_factor,
-                self.view.layer,
-                self.view.device_rect.origin,
+                self.view.scene.layer,
+                self.view.scene.device_rect.origin,
                 pan,
                 resource_profile,
                 &self.dynamic_properties,
@@ -637,7 +658,7 @@ impl Document {
 
     fn rebuild_hit_tester(&mut self) {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
-        let pan = self.view.pan.to_f32() / accumulated_scale_factor;
+        let pan = self.view.frame.pan.to_f32() / accumulated_scale_factor;
 
         self.scene.spatial_tree.update_tree(
             pan,
@@ -957,7 +978,7 @@ impl RenderBackend {
 
             if let Some(doc) = self.documents.get_mut(&txn.document_id) {
                 doc.removed_pipelines.append(&mut txn.removed_pipelines);
-                doc.view = txn.view;
+                doc.view.scene = txn.view;
 
                 if let Some(built_scene) = txn.built_scene.take() {
                     doc.new_async_scene_ready(
@@ -1704,7 +1725,7 @@ impl RenderBackend {
                 resource_sequence_id: config.resource_id,
                 documents: self.documents
                     .iter()
-                    .map(|(id, doc)| (*id, doc.view.clone()))
+                    .map(|(id, doc)| (*id, doc.view))
                     .collect(),
             };
             config.serialize_for_frame(&backend, "backend");
@@ -1832,7 +1853,7 @@ impl RenderBackend {
             resource_sequence_id: 0,
             documents: self.documents
                 .iter()
-                .map(|(id, doc)| (*id, doc.view.clone()))
+                .map(|(id, doc)| (*id, doc.view))
                 .collect(),
         };
 
@@ -1957,7 +1978,7 @@ impl RenderBackend {
             match self.documents.entry(id) {
                 Occupied(entry) => {
                     let doc = entry.into_mut();
-                    doc.view = view.clone();
+                    doc.view = view;
                     doc.loaded_scene = scene.clone();
                     doc.data_stores = data_stores;
                     doc.dynamic_properties = properties;
@@ -1971,7 +1992,7 @@ impl RenderBackend {
                         id,
                         scene: BuiltScene::empty(),
                         removed_pipelines: Vec::new(),
-                        view: view.clone(),
+                        view,
                         stamp: FrameStamp::first(id),
                         frame_builder: FrameBuilder::new(),
                         dynamic_properties: properties,
@@ -2021,7 +2042,7 @@ impl RenderBackend {
             scenes_to_build.push(LoadScene {
                 document_id: id,
                 scene,
-                view: view.clone(),
+                view: view.scene.clone(),
                 config: self.frame_config.clone(),
                 font_instances: self.resource_cache.get_font_instances(),
                 build_frame,
