@@ -1702,23 +1702,23 @@ bool BaselineCacheIRCompiler::emitReturnFromIC() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadArgumentFixedSlot() {
+bool BaselineCacheIRCompiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
+                                                        uint8_t slotIndex) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand resultReg =
-      allocator.defineValueRegister(masm, reader.valOperandId());
-  Address addr =
-      allocator.addressOf(masm, BaselineFrameSlot(reader.readByte()));
+  ValueOperand resultReg = allocator.defineValueRegister(masm, resultId);
+  Address addr = allocator.addressOf(masm, BaselineFrameSlot(slotIndex));
   masm.loadValue(addr, resultReg);
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadArgumentDynamicSlot() {
+bool BaselineCacheIRCompiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
+                                                          Int32OperandId argcId,
+                                                          uint8_t slotIndex) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand resultReg =
-      allocator.defineValueRegister(masm, reader.valOperandId());
-  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
+  ValueOperand resultReg = allocator.defineValueRegister(masm, resultId);
+  Register argcReg = allocator.useRegister(masm, argcId);
   BaseValueIndex addr =
-      allocator.addressOf(masm, argcReg, BaselineFrameSlot(reader.readByte()));
+      allocator.addressOf(masm, argcReg, BaselineFrameSlot(slotIndex));
   masm.loadValue(addr, resultReg);
   return true;
 }
@@ -2556,15 +2556,17 @@ void BaselineCacheIRCompiler::pushFunApplyArgs(Register argcReg,
   }
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
+bool BaselineCacheIRCompiler::emitCallNativeShared(
+    NativeCallType callType, ObjOperandId calleeId, Int32OperandId argcId,
+    CallFlags flags, Maybe<bool> ignoresReturnValue,
+    Maybe<uint32_t> targetOffset) {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   AutoScratchRegister scratch2(allocator, masm);
 
-  Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
-  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
+  Register calleeReg = allocator.useRegister(masm, calleeId);
+  Register argcReg = allocator.useRegister(masm, argcId);
 
-  CallFlags flags = reader.callFlags();
   bool isConstructing = flags.isConstructing();
   bool isSameRealm = flags.isSameRealm();
 
@@ -2619,11 +2621,10 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
       // swi instruction to handle them, so we store the redirected
       // pointer in the stub and use that instead of the original one.
       // (See CacheIRWriter::callNativeFunction.)
-      Address redirectedAddr(stubAddress(reader.stubOffset()));
+      Address redirectedAddr(stubAddress(*targetOffset));
       masm.callWithABI(redirectedAddr);
 #else
-      bool ignoresReturnValue = reader.readBool();
-      if (ignoresReturnValue) {
+      if (*ignoresReturnValue) {
         masm.loadPtr(Address(calleeReg, JSFunction::offsetOfJitInfo()),
                      calleeReg);
         masm.callWithABI(
@@ -2634,7 +2635,7 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
 #endif
     } break;
     case NativeCallType::ClassHook: {
-      Address nativeAddr(stubAddress(reader.stubOffset()));
+      Address nativeAddr(stubAddress(*targetOffset));
       masm.callWithABI(nativeAddr);
     } break;
   }
@@ -2656,14 +2657,39 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeFunction() {
+#ifdef JS_SIMULATOR
+bool BaselineCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                     Int32OperandId argcId,
+                                                     CallFlags flags,
+                                                     uint32_t targetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitCallNativeShared(NativeCallType::Native);
+  Maybe<bool> ignoresReturnValue;
+  Maybe<uint32_t> targetOffset_ = mozilla::Some(targetOffset);
+  return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
+                              ignoresReturnValue, targetOffset_);
 }
-
-bool BaselineCacheIRCompiler::emitCallClassHook() {
+#else
+bool BaselineCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                     Int32OperandId argcId,
+                                                     CallFlags flags,
+                                                     bool ignoresReturnValue) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitCallNativeShared(NativeCallType::ClassHook);
+  Maybe<bool> ignoresReturnValue_ = mozilla::Some(ignoresReturnValue);
+  Maybe<uint32_t> targetOffset;
+  return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
+                              ignoresReturnValue_, targetOffset);
+}
+#endif
+
+bool BaselineCacheIRCompiler::emitCallClassHook(ObjOperandId calleeId,
+                                                Int32OperandId argcId,
+                                                CallFlags flags,
+                                                uint32_t targetOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Maybe<bool> ignoresReturnValue;
+  Maybe<uint32_t> targetOffset_ = mozilla::Some(targetOffset);
+  return emitCallNativeShared(NativeCallType::ClassHook, calleeId, argcId,
+                              flags, ignoresReturnValue, targetOffset_);
 }
 
 // Helper function for loading call arguments from the stack.  Loads

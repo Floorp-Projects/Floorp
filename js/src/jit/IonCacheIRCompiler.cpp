@@ -2345,19 +2345,37 @@ bool IonCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitCallNativeFunction() {
+#ifdef JS_SIMULATOR
+bool IonCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                Int32OperandId argcId,
+                                                CallFlags flags,
+                                                uint32_t targetOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+#else
+bool IonCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                Int32OperandId argcId,
+                                                CallFlags flags,
+                                                bool ignoresReturnValue) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+#endif
+
+bool IonCacheIRCompiler::emitCallClassHook(ObjOperandId calleeId,
+                                           Int32OperandId argcId,
+                                           CallFlags flags,
+                                           uint32_t targetOffset) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitCallClassHook() {
+bool IonCacheIRCompiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
+                                                   uint8_t slotIndex) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitLoadArgumentFixedSlot() {
-  MOZ_CRASH("Call ICs not used in ion");
-}
-
-bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot() {
+bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
+                                                     Int32OperandId argcId,
+                                                     uint8_t slotIndex) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
