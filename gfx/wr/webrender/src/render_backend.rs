@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
+use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
@@ -30,7 +30,7 @@ use crate::glyph_rasterizer::{FontInstance};
 use crate::gpu_cache::GpuCache;
 use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
-use crate::internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+use crate::internal_types::{DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::picture::{RetainedTiles, TileCacheLogger};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
@@ -398,10 +398,6 @@ struct Document {
     /// The builder object that prodces frames, kept around to preserve some retained state.
     frame_builder: FrameBuilder,
 
-    /// A set of pipelines that the caller has requested be
-    /// made available as output textures.
-    output_pipelines: FastHashSet<PipelineId>,
-
     /// A data structure to allow hit testing against rendered frames. This is updated
     /// every time we produce a fully rendered frame.
     hit_tester: Option<Arc<HitTester>>,
@@ -461,7 +457,6 @@ impl Document {
             stamp: FrameStamp::first(id),
             scene: BuiltScene::empty(),
             frame_builder: FrameBuilder::new(),
-            output_pipelines: FastHashSet::default(),
             hit_tester: None,
             shared_hit_tester: Arc::new(SharedHitTester::new()),
             dynamic_properties: SceneProperties::new(),
@@ -665,11 +660,6 @@ impl Document {
         }
     }
 
-    pub fn discard_frame_state_for_pipeline(&mut self, pipeline_id: PipelineId) {
-        self.scene.spatial_tree
-            .discard_frame_state_for_pipeline(pipeline_id);
-    }
-
     /// Returns true if any nodes actually changed position or false otherwise.
     pub fn scroll_nearest_scrolling_ancestor(
         &mut self,
@@ -822,90 +812,6 @@ impl RenderBackend {
         }
     }
 
-    fn process_scene_msg(
-        &mut self,
-        document_id: DocumentId,
-        message: SceneMsg,
-        txn: &mut Transaction,
-    ) {
-        let doc = self.documents.get_mut(&document_id).expect("No document?");
-
-        match message {
-            SceneMsg::UpdateEpoch(pipeline_id, epoch) => {
-                txn.epoch_updates.push((pipeline_id, epoch));
-            }
-            SceneMsg::SetPageZoom(factor) => {
-                doc.view.page_zoom_factor = factor.get();
-            }
-            SceneMsg::SetQualitySettings { settings } => {
-                doc.view.quality_settings = settings;
-            }
-            SceneMsg::SetDocumentView {
-                device_rect,
-                device_pixel_ratio,
-            } => {
-                doc.view.device_rect = device_rect;
-                doc.view.device_pixel_ratio = device_pixel_ratio;
-            }
-            SceneMsg::SetDisplayList {
-                epoch,
-                pipeline_id,
-                background,
-                viewport_size,
-                content_size,
-                list_descriptor,
-                list_data,
-                preserve_frame_state,
-            } => {
-                profile_scope!("SetDisplayList");
-
-                let built_display_list =
-                    BuiltDisplayList::from_data(list_data, list_descriptor);
-
-                if !preserve_frame_state {
-                    doc.discard_frame_state_for_pipeline(pipeline_id);
-                }
-
-                let display_list_len = built_display_list.data().len();
-                let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
-                    built_display_list.times();
-
-                txn.display_list_updates.push(DisplayListUpdate {
-                    built_display_list,
-                    pipeline_id,
-                    epoch,
-                    background,
-                    viewport_size,
-                    content_size,
-                    timings: TransactionTimings {
-                        builder_start_time_ns,
-                        builder_end_time_ns,
-                        send_time_ns,
-                        scene_build_start_time_ns: 0,
-                        scene_build_end_time_ns: 0,
-                        blob_rasterization_end_time_ns: 0,
-                        display_list_len,
-                    },
-                });
-            }
-            SceneMsg::SetRootPipeline(pipeline_id) => {
-                profile_scope!("SetRootPipeline");
-                txn.set_root_pipeline = Some(pipeline_id);
-            }
-            SceneMsg::RemovePipeline(pipeline_id) => {
-                profile_scope!("RemovePipeline");
-                txn.removed_pipelines.push((pipeline_id, document_id));
-            }
-            SceneMsg::EnableFrameOutput(pipeline_id, enable) => {
-                if enable {
-                    doc.output_pipelines.insert(pipeline_id);
-                } else {
-                    doc.output_pipelines.remove(&pipeline_id);
-                }
-            }
-        }
-    }
-
     fn next_namespace_id(&self) -> IdNamespace {
         IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
     }
@@ -1051,6 +957,7 @@ impl RenderBackend {
 
             if let Some(doc) = self.documents.get_mut(&txn.document_id) {
                 doc.removed_pipelines.append(&mut txn.removed_pipelines);
+                doc.view = txn.view;
 
                 if let Some(built_scene) = txn.built_scene.take() {
                     doc.new_async_scene_ready(
@@ -1178,6 +1085,11 @@ impl RenderBackend {
                 );
                 let old = self.documents.insert(document_id, document);
                 debug_assert!(old.is_none());
+
+                self.scene_tx.send(
+                    SceneBuilderRequest::AddDocument(document_id, initial_size, layer)
+                ).unwrap();
+
             }
             ApiMsg::DeleteDocument(document_id) => {
                 self.documents.remove(&document_id);
@@ -1405,38 +1317,40 @@ impl RenderBackend {
         let use_high_priority = transaction_msgs.iter()
             .any(|transaction_msg| !transaction_msg.low_priority);
 
-        let mut txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
+        let txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
             .map(|(&document_id, mut transaction_msg)| {
+
+                self.resource_cache.pre_scene_building_update(
+                    &mut transaction_msg.resource_updates,
+                    &mut profile_counters.resources,
+                );
+
+                // TODO(nical) I believe this is wrong. We should discard this state when swapping the
+                // scene after it is built.
+                for msg in &transaction_msg.scene_ops {
+                    if let SceneMsg::SetDisplayList { preserve_frame_state: false, pipeline_id, .. } = *msg {
+                        self.documents
+                            .get_mut(&document_id)
+                            .unwrap()
+                            .scene
+                            .spatial_tree
+                            .discard_frame_state_for_pipeline(pipeline_id);
+                    }
+                }
+
                 let mut txn = Box::new(Transaction {
                     document_id,
-                    display_list_updates: Vec::new(),
-                    removed_pipelines: Vec::new(),
-                    epoch_updates: Vec::new(),
-                    request_scene_build: None,
                     blob_rasterizer: None,
                     blob_requests: Vec::new(),
                     resource_updates: transaction_msg.resource_updates,
                     frame_ops: transaction_msg.frame_ops,
+                    scene_ops: transaction_msg.scene_ops,
                     rasterized_blobs: Vec::new(),
                     notifications: transaction_msg.notifications,
-                    set_root_pipeline: None,
                     render_frame: transaction_msg.generate_frame,
                     invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
+                    fonts: self.resource_cache.get_font_instances(),
                 });
-
-                self.resource_cache.pre_scene_building_update(
-                    &mut txn.resource_updates,
-                    &mut profile_counters.resources,
-                );
-
-                for scene_msg in transaction_msg.scene_ops.drain(..) {
-                    let _timer = profile_counters.total_time.timer();
-                    self.process_scene_msg(
-                        document_id,
-                        scene_msg,
-                        &mut txn,
-                    )
-                }
 
                 let blobs_to_rasterize = get_blob_image_updates(&txn.resource_updates);
                 if !blobs_to_rasterize.is_empty() {
@@ -1453,19 +1367,7 @@ impl RenderBackend {
             !txn.can_skip_scene_builder() || txn.blob_rasterizer.is_some()
         });
 
-        if use_scene_builder {
-            for txn in txns.iter_mut() {
-                let doc = self.documents.get_mut(&txn.document_id).unwrap();
-
-                if txn.should_build_scene() {
-                    txn.request_scene_build = Some(SceneRequest {
-                        view: doc.view.clone(),
-                        font_instances: self.resource_cache.get_font_instances(),
-                        output_pipelines: doc.output_pipelines.clone(),
-                    });
-                }
-            }
-        } else {
+        if !use_scene_builder {
             self.prepare_for_frames();
             self.maybe_force_nop_documents(
                 frame_counter,
@@ -2072,7 +1974,6 @@ impl RenderBackend {
                         view: view.clone(),
                         stamp: FrameStamp::first(id),
                         frame_builder: FrameBuilder::new(),
-                        output_pipelines: FastHashSet::default(),
                         dynamic_properties: properties,
                         hit_tester: None,
                         shared_hit_tester: Arc::new(SharedHitTester::new()),
@@ -2122,7 +2023,6 @@ impl RenderBackend {
                 scene,
                 view: view.clone(),
                 config: self.frame_config.clone(),
-                output_pipelines: self.documents[&id].output_pipelines.clone(),
                 font_instances: self.resource_cache.get_font_instances(),
                 build_frame,
                 interners,
