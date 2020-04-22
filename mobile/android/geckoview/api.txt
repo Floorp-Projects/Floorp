@@ -64,7 +64,6 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
-import org.mozilla.geckoview.DynamicToolbarAnimator;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -360,36 +359,6 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull String, @NonNull File, @NonNull JSONObject);
   }
 
-  @UiThread public final class DynamicToolbarAnimator {
-    method @Nullable public DynamicToolbarAnimator.ToolbarChromeProxy getToolbarChromeProxy();
-    method public void hideToolbar(boolean);
-    method public boolean isPinned();
-    method public boolean isPinnedBy(@NonNull DynamicToolbarAnimator.PinReason);
-    method public void setMaxToolbarHeight(int);
-    method public void setPinned(boolean, @NonNull DynamicToolbarAnimator.PinReason);
-    method public void setToolbarChromeProxy(@Nullable DynamicToolbarAnimator.ToolbarChromeProxy);
-    method public void showToolbar(boolean);
-  }
-
-  @AnyThread public static final enum DynamicToolbarAnimator.PinReason {
-    method public static DynamicToolbarAnimator.PinReason valueOf(String);
-    method public static DynamicToolbarAnimator.PinReason[] values();
-    enum_constant public static final DynamicToolbarAnimator.PinReason ACTION_MODE;
-    enum_constant public static final DynamicToolbarAnimator.PinReason CARET_DRAG;
-    enum_constant public static final DynamicToolbarAnimator.PinReason CUSTOM_TAB;
-    enum_constant public static final DynamicToolbarAnimator.PinReason DISABLED;
-    enum_constant public static final DynamicToolbarAnimator.PinReason FULL_SCREEN;
-    enum_constant public static final DynamicToolbarAnimator.PinReason PAGE_LOADING;
-    enum_constant public static final DynamicToolbarAnimator.PinReason RELAYOUT;
-    field public final int value;
-  }
-
-  public static interface DynamicToolbarAnimator.ToolbarChromeProxy {
-    method @UiThread @Nullable default public Bitmap getBitmapOfToolbarChrome();
-    method @UiThread default public boolean isToolbarChromeVisible();
-    method @UiThread default public void toggleToolbarChrome(boolean);
-  }
-
   public class GeckoDisplay {
     ctor protected GeckoDisplay(GeckoSession);
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
@@ -603,7 +572,6 @@ package org.mozilla.geckoview {
     method @AnyThread @Nullable public ContentBlocking.Delegate getContentBlockingDelegate();
     method @UiThread @Nullable public GeckoSession.ContentDelegate getContentDelegate();
     method @AnyThread @NonNull public static String getDefaultUserAgent();
-    method @UiThread @NonNull public DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
@@ -1190,7 +1158,6 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
     method public void coverUntilFirstPaint(int);
     method public boolean getAutofillEnabled();
-    method @NonNull public DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
     method public int onGenericMotionEventForResult(@NonNull MotionEvent);

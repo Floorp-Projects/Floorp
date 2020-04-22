@@ -16,6 +16,8 @@ exclude: true
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
   ([bug 1626979]({{bugzilla}}1626979))
+- ⚠️ Remove the `DynamicToolbarAnimator` API along with accesors on `GeckoView` and `GeckoSession`.
+  ([bug 1627716]({{bugzilla}}1627716))
 
 [77.1]: {{javadoc_uri}}/GeckoRuntime.html#appendAppNotesToCrashReport-java.lang.String-
 
@@ -673,4 +675,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 266a352d20a71acc3052a2a9184e5a95a183145b
+[api-version]: 562c75192093098207d596f83a159dcb9df2d3e6
