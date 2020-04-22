@@ -21,7 +21,7 @@ taskgraph:
     repositories:
         mobile:
             name: android-components
-    cached-task-prefix: mobile.android-components
+    cached-task-prefix: mobile.v2.android-components
     decision-parameters: 'ac_taskgraph:get_decision_parameters'
 
 workers:
