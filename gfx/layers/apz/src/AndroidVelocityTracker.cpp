@@ -32,7 +32,7 @@ static const uint8_t kPolyDegree = kDegree + 1;
 static const uint8_t kHistorySize = 20;
 
 AndroidVelocityTracker::AndroidVelocityTracker()
-    : mLastEventTime(0), mAdditionalDelta(0) {}
+    : mLastEventTime(0) {}
 
 void AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos,
                                            uint32_t aTimestampMs) {
@@ -46,8 +46,6 @@ Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
   if ((aTimestampMs - mLastEventTime) >= kAssumePointerMoveStoppedTimeMs) {
     Clear();
   }
-
-  aPos += mAdditionalDelta;
 
   if (aTimestampMs == mLastEventTime) {
     // If we get a sample with the same timestamp as the previous one,
@@ -72,24 +70,6 @@ Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
   auto start = mHistory[mHistory.Length() - 2];
   auto end = mHistory[mHistory.Length() - 1];
   return Some((end.second - start.second) / (end.first - start.first));
-}
-
-float AndroidVelocityTracker::HandleDynamicToolbarMovement(
-    uint32_t aStartTimestampMs, uint32_t aEndTimestampMs,
-    ParentLayerCoord aDelta) {
-  // If the dynamic toolbar is moving, the page content is moving relative
-  // to the screen. The positions passed to AddPosition() reflect the position
-  // of the finger relative to the page content, but we want the velocity we
-  // compute to be based on the physical movement of the finger (that is, its
-  // position relative to the screen). To accomplish this, we maintain
-  // |mAdditionalDelta|, a delta representing the amount by which the page has
-  // moved relative to the screen, and add it to every position recorded in
-  // the history in AddPosition().
-  mAdditionalDelta += aDelta;
-
-  float timeDelta = aEndTimestampMs - aStartTimestampMs;
-  MOZ_ASSERT(timeDelta != 0);
-  return aDelta / timeDelta;
 }
 
 static float VectorDot(const float* a, const float* b, uint32_t m) {
@@ -296,7 +276,6 @@ Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
 }
 
 void AndroidVelocityTracker::Clear() {
-  mAdditionalDelta = 0;
   mHistory.Clear();
 }
 

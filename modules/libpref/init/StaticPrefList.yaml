@@ -1011,13 +1011,6 @@
 #endif
   mirror: always
 
-# The percentage of the screen that needs to be scrolled before toolbar
-# manipulation is allowed.
-- name: browser.ui.scroll-toolbar-threshold
-  type: RelaxedAtomicInt32
-  value: 10
-  mirror: always
-
 # When true, zooming will be enabled on all sites, even ones that declare
 # user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable

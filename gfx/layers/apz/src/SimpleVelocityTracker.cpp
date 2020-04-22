@@ -65,22 +65,6 @@ Maybe<float> SimpleVelocityTracker::AddPosition(ParentLayerCoord aPos,
   return Some(newVelocity);
 }
 
-float SimpleVelocityTracker::HandleDynamicToolbarMovement(
-    uint32_t aStartTimestampMs, uint32_t aEndTimestampMs,
-    ParentLayerCoord aDelta) {
-  float timeDelta = aEndTimestampMs - aStartTimestampMs;
-  MOZ_ASSERT(timeDelta != 0);
-  // Negate the delta to convert from spatial coordinates (e.g. toolbar
-  // has moved up --> negative delta) to scroll coordinates (e.g. toolbar
-  // has moved up --> scroll offset is increasing).
-  float velocity = -aDelta / timeDelta;
-  velocity = ApplyFlingCurveToVelocity(velocity);
-  mVelocitySampleTimeMs = aEndTimestampMs;
-
-  AddVelocityToQueue(aEndTimestampMs, velocity);
-  return velocity;
-}
-
 Maybe<float> SimpleVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   float velocity = 0;
   int count = 0;

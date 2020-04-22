@@ -74,16 +74,6 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos,
   }
 }
 
-void Axis::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                        uint32_t aEndTimestampMs,
-                                        ParentLayerCoord aDelta) {
-  // mVelocityTracker is controller-thread only
-  APZThreadUtils::AssertOnControllerThread();
-
-  mVelocity = mVelocityTracker->HandleDynamicToolbarMovement(
-      aStartTimestampMs, aEndTimestampMs, aDelta);
-}
-
 void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;

@@ -333,12 +333,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'apz/src/AndroidAPZ.cpp',
-        'apz/src/AndroidDynamicToolbarAnimator.cpp',
         'apz/src/AndroidFlingPhysics.cpp',
         'apz/src/AndroidVelocityTracker.cpp',
-    ]
-    EXPORTS.mozilla.layers += [
-        'apz/src/AndroidDynamicToolbarAnimator.h',
     ]
 
 UNIFIED_SOURCES += [

@@ -7,9 +7,6 @@
 #define include_gfx_ipc_UiCompositorControllerParent_h
 
 #include "mozilla/layers/PUiCompositorControllerParent.h"
-#if defined(MOZ_WIDGET_ANDROID)
-#  include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
-#endif  // defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/RefPtr.h"
 
@@ -57,10 +54,6 @@ class UiCompositorControllerParent final
   void ActorDealloc() override;
 
   // Class specific functions
-#if defined(MOZ_WIDGET_ANDROID)
-  void RegisterAndroidDynamicToolbarAnimator(
-      AndroidDynamicToolbarAnimator* aAnimator);
-#endif  // MOZ_WIDGET_ANDROID
   void ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
   bool AllocPixelBuffer(const int32_t aSize, Shmem* aMem);
 
@@ -82,7 +75,6 @@ class UiCompositorControllerParent final
   LayersId mRootLayerTreeId;
 
 #if defined(MOZ_WIDGET_ANDROID)
-  RefPtr<AndroidDynamicToolbarAnimator> mAnimator;
   bool mCompositorLayersUpdateEnabled;  // Flag set to true when the UI thread
                                         // is expecting to be notified when a
                                         // layer has been updated
