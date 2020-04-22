@@ -89,7 +89,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
-import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
@@ -186,7 +185,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
         return getSessionById()?.also { session ->
             val browserToolbarController = DefaultBrowserToolbarController(
-                store = browserFragmentStore,
                 activity = requireActivity(),
                 navController = findNavController(),
                 readerModeController = DefaultReaderModeController(
@@ -194,24 +192,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     (activity as HomeActivity).browsingModeManager.mode.isPrivate,
                     view.readerViewControlsBar
                 ),
-                browsingModeManager = (activity as HomeActivity).browsingModeManager,
                 sessionManager = requireComponents.core.sessionManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 engineView = engineView,
                 swipeRefresh = swipeRefresh,
                 browserAnimator = browserAnimator,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
-                getSupportUrl = {
-                    SupportUtils.getSumoURLForTopic(
-                        context,
-                        SupportUtils.SumoTopic.HELP
-                    )
-                },
                 openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).apply {
                     action = Intent.ACTION_VIEW
                 },
-                bookmarkTapped = { lifecycleScope.launch { bookmarkTapped(it) } },
-                scope = lifecycleScope,
+                bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
+                scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSiteStorage = requireComponents.core.topSiteStorage,
                 sharedViewModel = sharedViewModel
@@ -226,7 +217,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar,
                 interactor = browserInteractor,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
-                lifecycleOwner = this.viewLifecycleOwner
+                lifecycleOwner = viewLifecycleOwner
             )
 
             toolbarIntegration.set(
@@ -725,7 +716,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      */
     private fun showQuickSettingsDialog() {
         val session = getSessionById() ?: return
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             val sitePermissions: SitePermissions? = withContext(IO) {
                 session.url.toUri().host?.let { host ->
                     val storage = requireContext().components.core.permissionStorage

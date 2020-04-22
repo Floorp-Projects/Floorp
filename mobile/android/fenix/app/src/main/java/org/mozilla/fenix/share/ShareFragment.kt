@@ -79,7 +79,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),
                 recentAppsStorage = RecentAppsStorage(requireContext()),
-                lifecycleScope = lifecycleScope
+                viewLifecycleScope = viewLifecycleOwner.lifecycleScope
             ) { result ->
                 consumePrompt {
                     when (result) {

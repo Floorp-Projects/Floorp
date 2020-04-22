@@ -291,7 +291,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             else -> throw IllegalStateException("Illegal event type in onDeleteSome")
         }
 
-        lifecycleScope.allowUndo(
+        viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!, message,
             getString(R.string.bookmark_undo_deletion), {
                 pendingBookmarksToDelete.removeAll(selected)

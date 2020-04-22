@@ -65,7 +65,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         super.onViewCreated(view, savedInstanceState)
         initToolbar()
 
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             val context = requireContext()
 
             withContext(IO) {
@@ -155,7 +155,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                    lifecycleScope.launch(IO) {
+                    viewLifecycleOwner.lifecycleScope.launch(IO) {
                         requireComponents.core.bookmarksStorage.deleteNode(args.guidToEdit)
                         requireComponents.analytics.metrics.track(Event.RemoveBookmark)
 
@@ -194,7 +194,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
     }
 
     private fun updateBookmarkNode(title: String?, url: String?) {
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             try {
                 requireComponents.let { components ->
                     if (title != bookmarkNode?.title || url != bookmarkNode?.url) {

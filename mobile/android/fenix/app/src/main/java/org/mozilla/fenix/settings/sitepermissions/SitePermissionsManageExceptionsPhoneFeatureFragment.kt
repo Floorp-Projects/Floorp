@@ -163,7 +163,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
             PhoneFeature.AUTOPLAY_AUDIBLE -> sitePermissions.copy(autoplayAudible = status)
             PhoneFeature.AUTOPLAY_INAUDIBLE -> sitePermissions.copy(autoplayInaudible = status)
         }
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
         }
     }

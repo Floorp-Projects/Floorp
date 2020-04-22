@@ -69,7 +69,7 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 Log.d(LOG_TAG, "onAuthenticationSucceeded")
-                lifecycleScope.launch(Main) {
+                viewLifecycleOwner.lifecycleScope.launch(Main) {
                     // Workaround for likely biometric library bug
                     // https://github.com/mozilla-mobile/fenix/issues/8438
                     delay(SHORT_DELAY_MS)

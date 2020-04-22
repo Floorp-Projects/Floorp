@@ -136,7 +136,7 @@ class SavedLoginsFragment : Fragment() {
 
     private fun loadAndMapLogins() {
         var deferredLogins: Deferred<List<Login>>? = null
-        val fetchLoginsJob = lifecycleScope.launch(IO) {
+        val fetchLoginsJob = viewLifecycleOwner.lifecycleScope.launch(IO) {
             deferredLogins = async {
                 requireContext().components.core.passwordsStorage.list()
             }

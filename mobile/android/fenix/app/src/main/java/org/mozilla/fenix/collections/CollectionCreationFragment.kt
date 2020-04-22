@@ -77,7 +77,6 @@ class CollectionCreationFragment : DialogFragment() {
                 ::dismiss,
                 requireComponents.analytics,
                 requireComponents.core.tabCollectionStorage,
-                requireComponents.useCases.tabsUseCases,
                 requireComponents.core.sessionManager,
                 viewLifecycleOwner.lifecycleScope
             )

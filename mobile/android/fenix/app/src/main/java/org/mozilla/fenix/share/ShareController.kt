@@ -68,7 +68,7 @@ class DefaultShareController(
     private val snackbar: FenixSnackbar,
     private val navController: NavController,
     private val recentAppsStorage: RecentAppsStorage,
-    private val lifecycleScope: CoroutineScope,
+    private val viewLifecycleScope: CoroutineScope,
     private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {
 
@@ -83,7 +83,7 @@ class DefaultShareController(
     }
 
     override fun handleShareToApp(app: AppShareOption) {
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleScope.launch(Dispatchers.IO) {
             recentAppsStorage.updateRecentApp(app.activityName)
         }
 

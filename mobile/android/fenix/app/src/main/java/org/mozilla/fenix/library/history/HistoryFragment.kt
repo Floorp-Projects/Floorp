@@ -106,7 +106,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
     }
 
     private fun deleteHistoryItems(items: Set<HistoryItem>) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             context?.components?.run {
                 for (item in items) {
                     analytics.metrics.track(Event.HistoryItemRemoved)
@@ -155,7 +155,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             true
         }
         R.id.delete_history_multi_select -> {
-            lifecycleScope.launch(Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Main) {
                 deleteSelectedHistory(historyStore.state.mode.selectedItems, requireComponents)
                 viewModel.invalidate()
                 historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
@@ -216,7 +216,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
                     historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
-                    lifecycleScope.launch {
+                    viewLifecycleOwner.lifecycleScope.launch {
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.historyStorage.deleteEverything()
                         launch(Main) {

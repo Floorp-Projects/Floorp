@@ -57,7 +57,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
         super.onResume()
         showToolbar(getString(R.string.bookmark_add_folder_fragment_label))
 
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             sharedViewModel.selectedFolder = withContext(IO) {
                 sharedViewModel.selectedFolder
                     ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
@@ -95,7 +95,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     return true
                 }
                 this.view?.hideKeyboard()
-                lifecycleScope.launch(IO) {
+                viewLifecycleOwner.lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid, bookmarkNameEdit.text.toString(), null
                     )

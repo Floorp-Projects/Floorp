@@ -50,7 +50,7 @@ class SelectBookmarkFolderFragment : Fragment() {
         super.onResume()
         showToolbar(getString(R.string.bookmark_select_folder_fragment_label))
 
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             bookmarkNode = withContext(IO) {
                 val context = requireContext()
                 context.components.core.bookmarksStorage
@@ -74,7 +74,7 @@ class SelectBookmarkFolderFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.add_folder_button -> {
-                lifecycleScope.launch(Main) {
+                viewLifecycleOwner.lifecycleScope.launch(Main) {
                     nav(
                         R.id.bookmarkSelectFolderFragment,
                         SelectBookmarkFolderFragmentDirections

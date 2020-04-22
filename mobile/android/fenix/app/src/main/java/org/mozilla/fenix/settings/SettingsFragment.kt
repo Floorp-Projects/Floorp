@@ -51,7 +51,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val accountObserver = object : AccountObserver {
         private fun updateAccountUi(profile: Profile? = null) {
             val context = context ?: return
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 updateAccountUIState(
                     context = context,
                     profile = profile
@@ -125,7 +125,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         // update it here if we're not going through the `onCreate->onStart->onResume` lifecycle chain.
         update(shouldUpdateAccountUIState = !creatingFragment)
 
-        view!!.findViewById<RecyclerView>(R.id.recycler_view)?.hideInitialScrollBar(lifecycleScope)
+        view!!.findViewById<RecyclerView>(R.id.recycler_view)
+            ?.hideInitialScrollBar(viewLifecycleOwner.lifecycleScope)
 
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
         creatingFragment = false
@@ -376,10 +377,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceSignIn?.isVisible = false
 
             profile?.avatar?.url?.let { avatarUrl ->
-                lifecycleScope.launch(Main) {
-                    val roundedDrawable = avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
+                viewLifecycleOwner.lifecycleScope.launch(Main) {
+                    val roundedDrawable =
+                        avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
                     preferenceFirefoxAccount?.icon =
-                        roundedDrawable ?: AppCompatResources.getDrawable(context, R.drawable.ic_account)
+                        roundedDrawable ?: AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.ic_account
+                        )
                 }
             }
             preferenceSignIn?.onPreferenceClickListener = null
@@ -420,7 +425,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 settings.overrideSyncTokenServer.isNotEmpty() ||
                 settings.showSecretDebugMenuThisSession
         // Only enable changes to these prefs when the user isn't connected to an account.
-        val enabled = requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
+        val enabled =
+            requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
         preferenceFxAOverride?.apply {
             isVisible = show
             isEnabled = enabled

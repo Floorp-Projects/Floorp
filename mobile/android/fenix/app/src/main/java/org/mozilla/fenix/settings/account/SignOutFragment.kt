@@ -61,7 +61,7 @@ class SignOutFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.signOutDisconnect.setOnClickListener {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 requireComponents
                     .backgroundServices.accountAbnormalities.userRequestedLogout()
                 accountManager.logoutAsync().await()

@@ -109,7 +109,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             context = activity as HomeActivity,
             store = searchStore,
             navController = findNavController(),
-            lifecycleScope = viewLifecycleOwner.lifecycleScope,
+            viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             clearToolbarFocus = ::clearToolbarFocus
         )
 

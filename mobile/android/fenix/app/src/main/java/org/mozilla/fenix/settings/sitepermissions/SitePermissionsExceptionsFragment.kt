@@ -108,7 +108,7 @@ class SitePermissionsExceptionsFragment :
     }
 
     private fun deleteAllSitePermissions() {
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             requireContext().components.core.permissionStorage.deleteAllSitePermissions()
             launch(Main) {
                 showEmptyListMessage()

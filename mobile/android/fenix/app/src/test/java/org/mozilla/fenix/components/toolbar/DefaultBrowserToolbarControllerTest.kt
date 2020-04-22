@@ -46,7 +46,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
@@ -71,12 +70,10 @@ class DefaultBrowserToolbarControllerTest {
     private var swipeRefreshLayout: SwipeRefreshLayout = mockk(relaxed = true)
     private var activity: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
-    private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private var navController: NavController = mockk(relaxed = true)
     private var findInPageLauncher: () -> Unit = mockk(relaxed = true)
     private val engineView: EngineView = mockk(relaxed = true)
     private val currentSession: Session = mockk(relaxed = true)
-    private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -104,12 +101,10 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             activity = activity,
             navController = navController,
-            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
             browserAnimator = browserAnimator,
             customTabSession = null,
-            getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = scope,
             swipeRefresh = swipeRefreshLayout,
@@ -118,7 +113,6 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = readerModeController,
             sessionManager = mockk(),
-            store = mockk(),
             sharedViewModel = mockk()
         )
 
@@ -200,12 +194,10 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             activity = activity,
             navController = navController,
-            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
             browserAnimator = browserAnimator,
             customTabSession = null,
-            getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = this,
             swipeRefresh = swipeRefreshLayout,
@@ -214,7 +206,6 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            store = mockk(),
             sharedViewModel = mockk()
         )
 
@@ -353,12 +344,10 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             activity = activity,
             navController = navController,
-            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
             browserAnimator = browserAnimator,
             customTabSession = null,
-            getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = this,
             swipeRefresh = swipeRefreshLayout,
@@ -367,7 +356,6 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            store = mockk(),
             sharedViewModel = mockk()
         )
         controller.ioScope = this
@@ -560,12 +548,10 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             activity = activity,
             navController = navController,
-            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
             browserAnimator = browserAnimator,
             customTabSession = currentSession,
-            getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = scope,
             swipeRefresh = swipeRefreshLayout,
@@ -574,7 +560,6 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            store = mockk(),
             sharedViewModel = mockk()
         )
 
@@ -602,12 +587,10 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             activity = activity,
             navController = navController,
-            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
             browserAnimator = browserAnimator,
             customTabSession = null,
-            getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = testScope,
             swipeRefresh = swipeRefreshLayout,
@@ -616,7 +599,6 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            store = mockk(),
             sharedViewModel = mockk()
         )
 

@@ -55,13 +55,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     // Navigate away from this fragment when we encounter auth problems or logout events.
     private val accountStateObserver = object : AccountObserver {
         override fun onAuthenticationProblems() {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 findNavController().popBackStack()
             }
         }
 
         override fun onLoggedOut() {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 findNavController().popBackStack()
 
                 // Remove the device name when we log out.
@@ -266,7 +266,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun syncNow() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
             requireComponents.backgroundServices.accountManager.syncNowAsync(SyncReason.User)
@@ -285,7 +285,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             return false
         }
         // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             context?.let {
                 accountManager.authenticatedAccount()
                     ?.deviceConstellation()
@@ -336,7 +336,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private val syncStatusObserver = object : SyncStatusObserver {
         override fun onStarted() {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
@@ -347,7 +347,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         // Sync stopped successfully.
         override fun onIdle() {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
@@ -364,7 +364,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         // Sync stopped after encountering a problem.
         override fun onError(error: Exception?) {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)

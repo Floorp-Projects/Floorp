@@ -98,10 +98,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
     private fun bindRecyclerView(view: View) {
         val recyclerView = view.add_ons_list
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             try {
                 val addons = requireContext().components.addonManager.getAddons()
-                lifecycleScope.launch(Dispatchers.Main) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         val adapter = AddonsManagerAdapter(
                             requireContext().components.addonCollectionProvider,
@@ -117,9 +117,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                     }
                 }
             } catch (e: AddonManagerException) {
-                lifecycleScope.launch(Dispatchers.Main) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
-                        showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                        showSnackBar(
+                            view,
+                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
+                        )
                         isInstallationInProgress = false
                         view.add_ons_progress_bar.isVisible = false
                         view.add_ons_empty_message.isVisible = true
@@ -220,7 +223,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                     val rootView = activity?.getRootView() ?: view
                     showSnackBar(
                         rootView,
-                        getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName)
+                        getString(
+                            R.string.mozac_feature_addons_failed_to_install,
+                            addon.translatedName
+                        )
                     )
                     addonProgressOverlay?.visibility = View.GONE
                     isInstallationInProgress = false

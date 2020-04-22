@@ -66,7 +66,7 @@ class DefaultSearchControllerTest {
             context = context,
             store = store,
             navController = navController,
-            lifecycleScope = lifecycleScope,
+            viewLifecycleScope = lifecycleScope,
             clearToolbarFocus = clearToolbarFocus
         )
 
@@ -96,7 +96,7 @@ class DefaultSearchControllerTest {
             context = context,
             store = store,
             navController = navController,
-            lifecycleScope = this,
+            viewLifecycleScope = this,
             clearToolbarFocus = clearToolbarFocus
         )
 

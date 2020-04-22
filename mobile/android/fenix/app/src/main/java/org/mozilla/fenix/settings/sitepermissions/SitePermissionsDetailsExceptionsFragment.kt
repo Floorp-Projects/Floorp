@@ -44,7 +44,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(sitePermissions.origin)
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             val context = requireContext()
             sitePermissions =
                 requireNotNull(context.components.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
@@ -96,7 +96,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun clearSitePermissions() {
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
             withContext(Main) {
                 requireView().findNavController().popBackStack()

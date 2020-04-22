@@ -175,7 +175,7 @@ class DefaultSessionControlController(
     private val fragmentStore: HomeFragmentStore,
     private val navController: NavController,
     private val browsingModeManager: BrowsingModeManager,
-    private val lifecycleScope: CoroutineScope,
+    private val viewLifecycleScope: CoroutineScope,
     private val closeTab: (sessionId: String) -> Unit,
     private val closeAllTabs: (isPrivateMode: Boolean) -> Unit,
     private val getListOfTabs: () -> List<Tab>,
@@ -255,7 +255,7 @@ class DefaultSessionControlController(
     override fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab) {
         metrics.track(Event.CollectionTabRemoved)
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleScope.launch(Dispatchers.IO) {
             tabCollectionStorage.removeTabFromCollection(collection, tab)
         }
     }
@@ -304,7 +304,7 @@ class DefaultSessionControlController(
             metrics.track(Event.PocketTopSiteRemoved)
         }
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleScope.launch(Dispatchers.IO) {
             topSiteStorage.removeTopSite(topSite)
         }
     }

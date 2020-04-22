@@ -214,7 +214,7 @@ class HomeFragment : Fragment() {
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),
                 browsingModeManager = browsingModeManager,
-                lifecycleScope = viewLifecycleOwner.lifecycleScope,
+                viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
                 closeTab = ::closeTab,
                 closeAllTabs = ::closeAllTabs,
                 getListOfTabs = ::getListOfTabs,
@@ -688,7 +688,7 @@ class HomeFragment : Fragment() {
                 HomeMenu.Item.Quit -> activity?.let { activity ->
                     deleteAndQuit(
                         activity,
-                        lifecycleScope,
+                        viewLifecycleOwner.lifecycleScope,
                         view?.let { view -> FenixSnackbar.make(
                             view = view,
                             isDisplayedWithBrowserToolbar = false
@@ -827,7 +827,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun scrollToTheTop() {
-        lifecycleScope.launch(Main) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             delay(ANIM_SCROLL_DELAY)
             sessionControlView!!.view.smoothScrollToPosition(0)
         }

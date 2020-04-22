@@ -94,7 +94,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
     }
 
     private fun showUpdaterDialog(addon: Addon) {
-        lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             val updateAttempt = updateAttemptStorage.findUpdateAttemptBy(addon.id)
             updateAttempt?.let {
                 withContext(Main) {

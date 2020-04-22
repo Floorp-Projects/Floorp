@@ -29,7 +29,6 @@ import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
@@ -59,18 +58,15 @@ interface BrowserToolbarController {
 
 @Suppress("LargeClass")
 class DefaultBrowserToolbarController(
-    private val store: BrowserFragmentStore,
     private val activity: Activity,
     private val navController: NavController,
     private val readerModeController: ReaderModeController,
-    private val browsingModeManager: BrowsingModeManager,
     private val sessionManager: SessionManager,
     private val findInPageLauncher: () -> Unit,
     private val engineView: EngineView,
     private val browserAnimator: BrowserAnimator,
     private val swipeRefresh: SwipeRefreshLayout,
     private val customTabSession: Session?,
-    private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
     private val bookmarkTapped: (Session) -> Unit,
     private val scope: CoroutineScope,

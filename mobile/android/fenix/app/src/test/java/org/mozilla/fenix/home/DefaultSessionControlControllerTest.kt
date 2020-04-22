@@ -88,7 +88,7 @@ class DefaultSessionControlControllerTest {
             fragmentStore = fragmentStore,
             navController = navController,
             browsingModeManager = browsingModeManager,
-            lifecycleScope = MainScope(),
+            viewLifecycleScope = MainScope(),
             closeTab = closeTab,
             closeAllTabs = closeAllTabs,
             getListOfTabs = getListOfTabs,
