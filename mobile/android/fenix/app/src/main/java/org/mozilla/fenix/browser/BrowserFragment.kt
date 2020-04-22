@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.search.SearchFeature
@@ -222,13 +223,21 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun getContextMenuCandidates(
         context: Context,
         view: View
-    ): List<ContextMenuCandidate> = ContextMenuCandidate.defaultCandidates(
-        context,
-        context.components.useCases.tabsUseCases,
-        context.components.useCases.contextMenuUseCases,
-        view,
-        FenixSnackbarDelegate(view)
-    )
+    ): List<ContextMenuCandidate> {
+        val contextMenuCandidateAppLinksUseCases = AppLinksUseCases(
+            requireContext(),
+            { true }
+        )
+
+        return ContextMenuCandidate.defaultCandidates(
+            context,
+            context.components.useCases.tabsUseCases,
+            context.components.useCases.contextMenuUseCases,
+            view,
+            FenixSnackbarDelegate(view)
+        ) + ContextMenuCandidate.createOpenInExternalAppCandidate(requireContext(),
+            contextMenuCandidateAppLinksUseCases)
+    }
 
     companion object {
         private const val SHARED_TRANSITION_MS = 200L
