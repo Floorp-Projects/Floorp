@@ -14,7 +14,11 @@ const blobDataAsString = `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV
 // Helper method to open link in new tab and return the content of the first <pre> under <body>
 // Link is selected by using string argument 'selector' as id
 async function open_in_new_tab_and_return_content(selector) {
-  const loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const loaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    RESOURCE_LINK
+  );
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
   await loaded;
 
