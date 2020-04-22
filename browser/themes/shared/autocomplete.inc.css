@@ -133,8 +133,12 @@
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title {
-  color: GrayText;
+  color: var(--grey-60);
   font-size: 1em;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title .ac-emphasize-text-title {
+  font-weight: 600;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] > .ac-title {
@@ -144,5 +148,5 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
   -moz-context-properties: fill;
-  fill: GrayText;
+  fill: var(--grey-60);
 }
