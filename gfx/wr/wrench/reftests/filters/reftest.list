@@ -46,7 +46,7 @@ skip_on(android,device) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.
 != filter-blur-huge.yaml blank.yaml
 != filter-drop-shadow-huge.yaml blank.yaml
 != filter-drop-shadow-transform-huge.yaml blank.yaml
-== filter-drop-shadow-blur-clamping.yaml filter-drop-shadow-blur-clamping-ref.yaml
+fuzzy(3,79400) == filter-drop-shadow-blur-clamping.yaml filter-drop-shadow-blur-clamping-ref.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
 == filter-blur-clamping.yaml filter-blur-clamping-ref.yaml
 skip_on(android,device) fuzzy(1,104) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on  Pixel2
