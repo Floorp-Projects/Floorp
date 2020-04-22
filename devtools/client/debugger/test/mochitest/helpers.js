@@ -581,7 +581,6 @@ async function clearDebuggerPreferences(prefs = []) {
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
   Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
-  Services.prefs.clearUserPref("javascript.enabled");
   await pushPref("devtools.debugger.log-actions", true);
   for (const pref of prefs) {
     await pushPref(...pref);
