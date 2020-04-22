@@ -74,7 +74,7 @@ class WebExtension(Perftest):
 
         self.install_raptor_webext()
 
-    def wait_for_test_finish(self, test, timeout):
+    def wait_for_test_finish(self, test, timeout, process_exists_callback=None):
         # this is a 'back-stop' i.e. if for some reason Raptor doesn't finish for some
         # serious problem; i.e. the test was unable to send a 'page-timeout' to the control
         # server, etc. Therefore since this is a 'back-stop' we want to be generous here;
@@ -101,6 +101,12 @@ class WebExtension(Perftest):
 
         elapsed_time = 0
         while not self.control_server._finished:
+            # Ignore check if the control server shutdown the app
+            if not self.control_server._is_shutting_down:
+                # If the application is no longer running immediately bail out
+                if callable(process_exists_callback) and not process_exists_callback():
+                    raise RuntimeError("Process has been unexpectedly closed")
+
             if self.config["enable_control_server_wait"]:
                 response = self.control_server_wait_get()
                 if response == "webext_shutdownBrowser":
