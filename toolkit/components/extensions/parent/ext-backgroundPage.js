@@ -91,7 +91,7 @@ class BackgroundPage extends HiddenExtensionPage {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
-    extension.emit("startup");
+    extension.emit("background-page-started");
   }
 
   shutdown() {
@@ -127,6 +127,25 @@ this.backgroundPage = class extends ExtensionAPI {
     ) {
       return;
     }
+
+    // Used by runtime messaging to wait for background page listeners.
+    let bgStartupPromise = new Promise(resolve => {
+      let done = () => {
+        extension.off("background-page-started", done);
+        extension.off("background-page-aborted", done);
+        extension.off("shutdown", done);
+        resolve();
+      };
+      extension.on("background-page-started", done);
+      extension.on("background-page-aborted", done);
+      extension.on("shutdown", done);
+    });
+
+    extension.wakeupBackground = () => {
+      extension.emit("background-page-event");
+      extension.wakeupBackground = () => bgStartupPromise;
+      return bgStartupPromise;
+    };
 
     if (extension.startupReason !== "APP_STARTUP" || !DELAYED_STARTUP) {
       return this.build();
