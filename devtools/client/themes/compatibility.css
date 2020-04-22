@@ -151,10 +151,10 @@
 .compatibility-footer {
   border-top: 1px solid var(--theme-splitter-color);
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
-.compatibility-footer__feedback-button {
+.compatibility-footer__button {
   background: none;
   border: none;
   display: flex;
@@ -162,14 +162,14 @@
   column-gap: var(--compatibility-base-unit);
 }
 
-.compatibility-footer__feedback-icon {
+.compatibility-footer__icon {
   -moz-context-properties: fill;
   fill: var(--theme-icon-color);
   width: calc(var(--compatibility-base-unit) * 4);
   height: calc(var(--compatibility-base-unit) * 4);
 }
 
-.compatibility-footer__feedback-label {
+.compatibility-footer__label {
   color: var(--theme-toolbar-color);
   font-size: calc(var(--compatibility-base-unit) * 3);
 }
