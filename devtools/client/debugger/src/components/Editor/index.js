@@ -482,7 +482,11 @@ class Editor extends PureComponent<Props, State> {
     }
 
     if (ev.metaKey) {
-      return continueToHere(cx, sourceLine);
+      return continueToHere(cx, {
+        line: sourceLine,
+        column: undefined,
+        sourceId: selectedSource.id,
+      });
     }
 
     return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
