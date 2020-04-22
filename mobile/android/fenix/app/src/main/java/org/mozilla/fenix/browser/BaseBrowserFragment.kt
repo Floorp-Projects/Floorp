@@ -327,14 +327,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
-            if (FeatureFlags.pictureInPicture) {
-                pipFeature = PictureInPictureFeature(
-                    requireComponents.core.sessionManager,
-                    requireActivity(),
-                    customTabSessionId,
-                    ::pipModeChanged
-                )
-            }
+            pipFeature = PictureInPictureFeature(
+                requireComponents.core.sessionManager,
+                requireActivity(),
+                customTabSessionId,
+                ::pipModeChanged
+            )
 
             appLinksFeature.set(
                 feature = AppLinksFeature(
