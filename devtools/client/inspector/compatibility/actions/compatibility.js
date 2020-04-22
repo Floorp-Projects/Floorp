@@ -47,7 +47,7 @@ function initUserSettings() {
 
     try {
       const defaultTargetBrowsers = UserSettings.getDefaultTargetBrowsers();
-      const targetBrowsers = defaultTargetBrowsers;
+      const targetBrowsers = UserSettings.getTargetBrowsers();
 
       dispatch({
         type: COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
@@ -137,6 +137,8 @@ function updateTargetBrowsers(targetBrowsers) {
     dispatch({ type: COMPATIBILITY_UPDATE_TARGET_BROWSERS_START });
 
     try {
+      UserSettings.setTargetBrowsers(targetBrowsers);
+
       const { selectedNode, topLevelTarget } = getState().compatibility;
 
       if (selectedNode) {
