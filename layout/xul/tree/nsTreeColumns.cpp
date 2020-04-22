@@ -14,6 +14,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/TreeColumnsBinding.h"
+#include "mozilla/dom/XULTreeElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
