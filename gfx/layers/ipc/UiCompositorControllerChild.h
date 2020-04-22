@@ -40,17 +40,14 @@ class UiCompositorControllerChild final
   bool InvalidateAndRender();
   bool SetMaxToolbarHeight(const int32_t& aHeight);
   bool SetFixedBottomOffset(int32_t aOffset);
-  bool SetPinned(const bool& aPinned, const int32_t& aReason);
   bool ToolbarAnimatorMessageFromUI(const int32_t& aMessage);
   bool SetDefaultClearColor(const uint32_t& aColor);
   bool RequestScreenPixels();
   bool EnableLayerUpdateNotifications(const bool& aEnable);
-  bool ToolbarPixelsToCompositor(Shmem& aMem, const ScreenIntSize& aSize);
 
   void Destroy();
 
   void SetBaseWidget(nsBaseWidget* aWidget);
-  bool AllocPixelBuffer(const int32_t aSize, Shmem* aMem);
   bool DeallocPixelBuffer(Shmem& aMem);
 
  protected:

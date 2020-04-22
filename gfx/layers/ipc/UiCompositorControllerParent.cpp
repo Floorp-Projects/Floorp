@@ -122,19 +122,6 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvFixedBottomOffset(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult UiCompositorControllerParent::RecvPinned(
-    const bool& aPinned, const int32_t& aReason) {
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-UiCompositorControllerParent::RecvToolbarAnimatorMessageFromUI(
-    const int32_t& aMessage) {
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult UiCompositorControllerParent::RecvDefaultClearColor(
     const uint32_t& aColor) {
   LayerTreeState* state =
@@ -177,16 +164,6 @@ UiCompositorControllerParent::RecvEnableLayerUpdateNotifications(
 #if defined(MOZ_WIDGET_ANDROID)
   // Layers updates are need by Robocop test which enables them
   mCompositorLayersUpdateEnabled = aEnable;
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-UiCompositorControllerParent::RecvToolbarPixelsToCompositor(
-    Shmem&& aMem, const ScreenIntSize& aSize) {
-#if defined(MOZ_WIDGET_ANDROID)
-  DeallocShmem(aMem);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
