@@ -16,13 +16,31 @@
 namespace mozilla {
 namespace dom {
 
-BrowsingContextGroup::BrowsingContextGroup() {
-  if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->HoldBrowsingContextGroup(this);
-  } else {
-    ContentParent::HoldBrowsingContextGroup(this);
+static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
+
+static StaticAutoPtr<
+    nsDataHashtable<nsUint64HashKey, RefPtr<BrowsingContextGroup>>>
+    sBrowsingContextGroups;
+
+already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
+    uint64_t aId) {
+  if (!sBrowsingContextGroups) {
+    sBrowsingContextGroups =
+        new nsDataHashtable<nsUint64HashKey, RefPtr<BrowsingContextGroup>>();
+    ClearOnShutdown(&sBrowsingContextGroups);
   }
 
+  auto entry = sBrowsingContextGroups->LookupForAdd(aId);
+  RefPtr<BrowsingContextGroup> group =
+      entry.OrInsert([&] { return do_AddRef(new BrowsingContextGroup(aId)); });
+  return group.forget();
+}
+
+already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
+  return GetOrCreate(nsContentUtils::GenerateBrowsingContextId());
+}
+
+BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
   mTimerEventQueue = ThrottledEventQueue::Create(
       GetMainThreadSerialEventTarget(), "BrowsingContextGroup timer queue");
 
@@ -36,6 +54,10 @@ bool BrowsingContextGroup::Contains(BrowsingContext* aBrowsingContext) {
 
 void BrowsingContextGroup::Register(BrowsingContext* aBrowsingContext) {
   MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
+  MOZ_DIAGNOSTIC_ASSERT(this == sChromeGroup ? aBrowsingContext->IsChrome()
+                                             : aBrowsingContext->IsContent(),
+                        "Only chrome BCs may exist in the chrome group, and "
+                        "only content BCs may exist in other groups");
   mContexts.PutEntry(aBrowsingContext);
 }
 
@@ -48,11 +70,7 @@ void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
     // all subscribers.
     UnsubscribeAllContentParents();
 
-    if (XRE_IsContentProcess()) {
-      ContentChild::GetSingleton()->ReleaseBrowsingContextGroup(this);
-    } else {
-      ContentParent::ReleaseBrowsingContextGroup(this);
-    }
+    sBrowsingContextGroups->Remove(Id());
     // We may have been deleted here as the ContentChild/Parent may
     // have held the last references to `this`.
     // Do not access any members at this point.
@@ -115,7 +133,7 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
   CollectContextInitializers(mToplevels, inits);
 
   // Send all of our contexts to the target content process.
-  Unused << aProcess->SendRegisterBrowsingContextGroup(inits);
+  Unused << aProcess->SendRegisterBrowsingContextGroup(Id(), inits);
 
   // If the focused or active BrowsingContexts belong in this group, tell the
   // newly subscribed process.
@@ -196,13 +214,11 @@ void BrowsingContextGroup::FlushPostMessageEvents() {
   }
 }
 
-static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
-
 /* static */
 BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   if (!sChromeGroup && XRE_IsParentProcess()) {
-    sChromeGroup = new BrowsingContextGroup();
+    sChromeGroup = BrowsingContextGroup::Create();
     ClearOnShutdown(&sChromeGroup);
   }
 
@@ -251,18 +267,20 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Select(
   if (aOpener) {
     return do_AddRef(aOpener->Group());
   }
-  return MakeAndAddRef<BrowsingContextGroup>();
+  return Create();
 }
 
-already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Select(
-    uint64_t aParentId, uint64_t aOpenerId) {
-  RefPtr<WindowContext> parent = WindowContext::GetById(aParentId);
-  MOZ_RELEASE_ASSERT(parent || aParentId == 0);
+void BrowsingContextGroup::GetAllGroups(
+    nsTArray<RefPtr<BrowsingContextGroup>>& aGroups) {
+  aGroups.Clear();
+  if (!sBrowsingContextGroups) {
+    return;
+  }
 
-  RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerId);
-  MOZ_RELEASE_ASSERT(opener || aOpenerId == 0);
-
-  return Select(parent, opener);
+  aGroups.SetCapacity(sBrowsingContextGroups->Count());
+  for (auto& group : *sBrowsingContextGroups) {
+    aGroups.AppendElement(group.GetData());
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
