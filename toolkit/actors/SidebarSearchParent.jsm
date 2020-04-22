@@ -27,12 +27,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 class SidebarSearchParent extends JSWindowActorParent {
   receiveMessage(msg) {
     if (msg.name == "Search:AddEngine") {
-      this.addSearchEngine(msg.data);
+      return this.addSearchEngine(msg.data);
     }
+    return Promise.reject("Unsupported message");
   }
 
   // Called when a webpage calls window.external.AddSearchProvider
-  addSearchEngine({ pageURL, engineURL }) {
+  async addSearchEngine({ pageURL, engineURL }) {
     pageURL = NetUtil.newURI(pageURL);
     engineURL = NetUtil.newURI(engineURL, null, pageURL);
 
@@ -79,16 +80,16 @@ class SidebarSearchParent extends JSWindowActorParent {
         brandName,
         engineURL.spec,
       ]);
-      Services.prompt.asyncAlert(
+      await Services.prompt.asyncAlert(
         this.browsingContext,
         promptModalType,
         title,
         msg
       );
-      return;
+      return undefined;
     }
 
-    Services.search
+    return Services.search
       .addEngine(
         engineURL.spec,
         iconURL ? iconURL.spec : null,

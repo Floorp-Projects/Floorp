@@ -1106,9 +1106,7 @@ SearchEngine.prototype = {
       }
     }
 
-    function promptError(strings = {}, error = undefined) {
-      onError(error);
-
+    async function promptError(strings = {}, error = undefined) {
       if (engine._engineToUpdate) {
         // We're in an update, so just fail quietly
         SearchUtils.log("updating " + engine._engineToUpdate.name + " failed");
@@ -1126,12 +1124,13 @@ SearchEngine.prototype = {
         engine._location,
       ]);
 
-      Services.prompt.asyncAlert(
+      await Services.prompt.asyncAlert(
         engine._reqContext,
         promptModalType,
         title,
         text
       );
+      onError(error);
     }
 
     if (!bytes) {
