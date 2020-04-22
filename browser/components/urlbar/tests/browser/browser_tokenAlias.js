@@ -6,15 +6,24 @@
 "use strict";
 
 const ALIAS = "@test";
+const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function init() {
-  await Services.search.addEngineWithDetails("Test", {
+  // Add a default engine with suggestions, to avoid hitting the network when
+  // fetching them.
+  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
+  defaultEngine.alias = "@default";
+  let oldDefaultEngine = await Services.search.getDefault();
+  Services.search.setDefault(defaultEngine);
+  let engine = await Services.search.addEngineWithDetails("Test", {
     alias: ALIAS,
     template: "http://example.com/?search={searchTerms}",
   });
   registerCleanupFunction(async function() {
-    let engine = Services.search.getEngineByName("Test");
     await Services.search.removeEngine(engine);
+    Services.search.setDefault(oldDefaultEngine);
   });
 
   // Search results aren't shown in quantumbar unless search suggestions are

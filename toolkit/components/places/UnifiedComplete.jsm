@@ -1448,7 +1448,11 @@ Search.prototype = {
     // Otherwise treat it as a possible URL.  When the string has only one slash
     // at the end, we still treat it as an URL.
     let query, params;
-    if (UrlbarTokenizer.looksLikeOrigin(this._searchString)) {
+    if (
+      UrlbarTokenizer.looksLikeOrigin(this._searchString, {
+        ignoreWhitelist: true,
+      })
+    ) {
       [query, params] = this._originQuery;
     } else {
       [query, params] = this._urlQuery;
@@ -1550,7 +1554,9 @@ Search.prototype = {
       searchStr = searchStr.slice(0, -1);
     }
     // If the search string looks more like a url than a domain, bail out.
-    if (!UrlbarTokenizer.looksLikeOrigin(searchStr)) {
+    if (
+      !UrlbarTokenizer.looksLikeOrigin(searchStr, { ignoreWhitelist: true })
+    ) {
       return false;
     }
 
