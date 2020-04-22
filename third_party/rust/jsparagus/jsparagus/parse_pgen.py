@@ -71,11 +71,11 @@ pgen_grammar = Grammar(
         ],
         'nt_def': [
             prod([Optional('COMMENT'), Optional('goal'), 'nt', 'IDENT', '{',
-                  gen.Optional('prods'), '}'], 'nt_def'),
+                  Optional('prods'), '}'], 'nt_def'),
         ],
         'prods': list_of('prod', allow_comments=True),
         'prod': [
-            prod(['terms', gen.Optional('reducer'), ';'], 'prod'),
+            prod(['terms', Optional('reducer'), ';'], 'prod'),
         ],
         'terms': list_of('term'),
         'term': [
@@ -91,7 +91,7 @@ pgen_grammar = Grammar(
         ],
         'expr': [
             prod(['MATCH'], 'expr_match'),
-            prod(['IDENT', '(', gen.Optional('expr_args'), ')'], 'expr_call'),
+            prod(['IDENT', '(', Optional('expr_args'), ')'], 'expr_call'),
             prod(['Some', '(', 'expr', ')'], 'expr_some'),
             prod(['None'], 'expr_none'),
         ],
@@ -184,7 +184,7 @@ class AstBuilder:
         return (symbols, reducer)
 
     def optional(self, sym):
-        return gen.Optional(sym)
+        return Optional(sym)
 
     def ident(self, sym):
         return sym

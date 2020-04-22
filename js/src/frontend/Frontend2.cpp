@@ -10,6 +10,7 @@
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/Range.h"                  // mozilla::Range
 #include "mozilla/Span.h"                   // mozilla::{Span, MakeSpan}
+#include "mozilla/Variant.h"                // mozilla::AsVariant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
@@ -17,13 +18,14 @@
 #include "jsapi.h"
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
+#include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
-#include "frontend/Stencil.h"  // ScopeCreationData, RegExpCreationData, RegExpIndex
-#include "frontend/TokenStream.h"  // TokenStreamAnyChars
-#include "gc/Rooting.h"            // RootedScriptSourceObject
+#include "frontend/Stencil.h"           // ScopeCreationData, RegExpIndex
+#include "frontend/TokenStream.h"       // TokenStreamAnyChars
+#include "gc/Rooting.h"                 // RootedScriptSourceObject
 #ifndef ENABLE_NEW_REGEXP
 #  include "irregexp/RegExpParser.h"  // irregexp::ParsePatternSyntax
 #endif
@@ -38,7 +40,6 @@
 #endif
 #include "vm/JSAtom.h"         // AtomizeUTF8Chars
 #include "vm/JSScript.h"       // JSScript
-#include "vm/RegExpObject.h"   // RegexpObject
 #include "vm/Scope.h"          // BindingName
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote
@@ -91,6 +92,10 @@ class SmooshScriptStencil : public ScriptStencil {
       return false;
     }
 
+    if (!createGCThings(cx)) {
+      return false;
+    }
+
     if (!createScopeCreationData(cx)) {
       return false;
     }
@@ -104,44 +109,7 @@ class SmooshScriptStencil : public ScriptStencil {
 
   virtual bool finishGCThings(
       JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const override {
-    uint32_t ngcthings = output.Length();
-    for (size_t i = 0; i < ngcthings; i++) {
-      SmooshGCThing& item = result_.gcthings.data[i];
-
-      switch (item.kind) {
-        case SmooshGCThingKind::ScopeIndex: {
-          // compilationInfo_.scopeCreationData is filed by
-          // `createScopeCreationData`, and i-th item corresponds to
-          // the i-th scope.
-          MutableHandle<ScopeCreationData> data =
-              compilationInfo_.scopeCreationData[item.index];
-          Scope* scope = data.get().createScope(cx);
-          if (!scope) {
-            return false;
-          }
-
-          output[i] = JS::GCCellPtr(scope);
-
-          break;
-        }
-        case SmooshGCThingKind::RegExpIndex: {
-          // compilationInfo_.regExpData is filed by
-          // `createRegExpData`, and i-th item corresponds to
-          // the i-th RegExp.
-          RegExpCreationData& data = compilationInfo_.regExpData[item.index];
-          RegExpObject* regexp = data.createRegExp(cx);
-          if (!regexp) {
-            return false;
-          }
-
-          output[i] = JS::GCCellPtr(regexp);
-
-          break;
-        }
-      }
-    }
-
-    return true;
+    return EmitScriptThingsVector(cx, compilationInfo_, gcThings, output);
   }
 
   virtual void initAtomMap(GCPtrAtom* atoms) const override {
@@ -171,6 +139,31 @@ class SmooshScriptStencil : public ScriptStencil {
         return false;
       }
       allAtoms_[i] = atom;
+    }
+
+    return true;
+  }
+
+  bool createGCThings(JSContext* cx) {
+    size_t ngcthings = result_.gcthings.len;
+    if (!gcThings.reserve(ngcthings)) {
+      return false;
+    }
+
+    for (size_t i = 0; i < ngcthings; i++) {
+      SmooshGCThing& item = result_.gcthings.data[i];
+
+      switch (item.kind) {
+        case SmooshGCThingKind::ScopeIndex: {
+          gcThings.infallibleAppend(mozilla::AsVariant(ScopeIndex(item.index)));
+          break;
+        }
+        case SmooshGCThingKind::RegExpIndex: {
+          gcThings.infallibleAppend(
+              mozilla::AsVariant(RegExpIndex(item.index)));
+          break;
+        }
+      }
     }
 
     return true;

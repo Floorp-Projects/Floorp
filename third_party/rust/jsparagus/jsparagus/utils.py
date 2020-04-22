@@ -1,5 +1,6 @@
 """List of functions which are useful in many places."""
 
+import sys
 import typing
 
 
@@ -17,3 +18,26 @@ def keep_until(
         yield e
         if pred(e):
             return
+
+
+def consume(iterator: typing.Iterable[T], progress: bool) -> None:
+    """Drain the iterator. If progress is true, print dots on stdout."""
+    i = 0
+    to_feed = str(i)
+    try:
+        for _ in iterator:
+            if progress:
+                if len(to_feed) > 0:
+                    sys.stdout.write(to_feed[0])
+                    to_feed = to_feed[1:]
+                else:
+                    sys.stdout.write(".")
+                i += 1
+                if i % 100 == 0:
+                    sys.stdout.write("\n")
+                    to_feed = str(i)
+                sys.stdout.flush()
+    finally:
+        if progress and i != 0:
+            sys.stdout.write("\n")
+            sys.stdout.flush()

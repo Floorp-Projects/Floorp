@@ -1,20 +1,35 @@
 use crate::context::ScopeContext;
+use crate::data::ScopeDataMap;
+use ast::associated_data::AssociatedData;
 use ast::{types::*, visit::Pass};
-use std::marker::PhantomData;
+
+pub struct ScopeDataMapAndFunctionMap<'alloc> {
+    pub scope_data_map: ScopeDataMap,
+    pub function_map: AssociatedData<&'alloc Function<'alloc>>,
+}
 
 /// Visit all nodes in the AST, and invoke ScopeContext methods.
 /// FIXME: This should be rewritten with grammar extension.
 #[derive(Debug)]
 pub struct ScopePass<'alloc> {
-    pub context: ScopeContext,
-    phantom: PhantomData<&'alloc ()>,
+    context: ScopeContext,
+    function_map: AssociatedData<&'alloc Function<'alloc>>,
 }
 
 impl<'alloc> ScopePass<'alloc> {
     pub fn new() -> Self {
         Self {
             context: ScopeContext::new(),
-            phantom: PhantomData,
+            function_map: AssociatedData::new(),
+        }
+    }
+}
+
+impl<'alloc> From<ScopePass<'alloc>> for ScopeDataMapAndFunctionMap<'alloc> {
+    fn from(pass: ScopePass<'alloc>) -> ScopeDataMapAndFunctionMap<'alloc> {
+        ScopeDataMapAndFunctionMap {
+            scope_data_map: pass.context.into(),
+            function_map: pass.function_map,
         }
     }
 }
@@ -91,6 +106,7 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         } else {
             panic!("FunctionDeclaration should have name");
         };
-        self.context.before_function_declaration(name);
+        self.context.before_function_declaration(name, ast);
+        self.function_map.insert(ast, ast);
     }
 }

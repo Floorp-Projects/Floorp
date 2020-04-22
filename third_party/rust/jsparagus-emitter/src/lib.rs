@@ -1,12 +1,13 @@
 mod array_emitter;
 mod ast_emitter;
 mod block_emitter;
+mod bytecode_offset;
 mod compilation_info;
+mod control_structures;
 mod dis;
 mod emitter;
 mod emitter_scope;
 mod expression_emitter;
-mod forward_jump_emitter;
 mod gcthings;
 mod object_emitter;
 pub mod opcode;
@@ -16,18 +17,21 @@ mod regexp;
 mod scope_notes;
 mod script_atom_set;
 mod script_emitter;
+mod stencil;
 
 extern crate jsparagus_ast as ast;
 extern crate jsparagus_scope as scope;
 
-pub use crate::emitter::{EmitError, EmitOptions, EmitResult};
+pub use crate::emitter::{EmitError, EmitOptions};
 pub use crate::gcthings::GCThing;
 pub use crate::regexp::RegExpItem;
 pub use crate::scope_notes::ScopeNote;
+pub use crate::stencil::{EmitResult, ScriptStencil};
 pub use dis::dis;
 
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
+use scope::ScopeDataMapAndFunctionMap;
 
 pub fn emit<'alloc>(
     ast: &'alloc ast::types::Program<'alloc>,
@@ -35,7 +39,7 @@ pub fn emit<'alloc>(
     atoms: SourceAtomSet<'alloc>,
     slices: SourceSliceList<'alloc>,
 ) -> Result<EmitResult<'alloc>, EmitError> {
-    let scope_data_map = scope::generate_scope_data(ast);
+    let ScopeDataMapAndFunctionMap { scope_data_map, .. } = scope::generate_scope_data(ast);
     ast_emitter::emit_program(ast, options, atoms, slices, scope_data_map)
 }
 
@@ -64,16 +68,19 @@ mod tests {
         // println!("{:?}", parse_result);
 
         let emit_options = EmitOptions::new();
-        let bc = emit(
-            &mut ast::types::Program::Script(parse_result.unbox()),
+
+        let result = emit(
+            alloc.alloc(ast::types::Program::Script(parse_result.unbox())),
             &emit_options,
             atoms.replace(SourceAtomSet::new_uninitialized()),
             slices.replace(SourceSliceList::new()),
         )
-        .expect("Should work!")
-        .bytecode;
-        println!("{}", dis(&bc));
-        bc
+        .expect("Should work!");
+
+        let bytecode = &result.scripts[0].bytecode;
+
+        println!("{}", dis(&bytecode));
+        bytecode.to_vec()
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use crate::frame_slot::FrameSlot;
-use ast::associated_data::AssociatedData;
+use ast::associated_data::{AssociatedData, Key as AssociatedDataKey};
 use ast::source_atom_set::SourceAtomSetIndex;
 use ast::source_location_accessor::SourceLocationAccessor;
 use ast::type_id::NodeTypeIdAccessor;
@@ -73,16 +73,25 @@ pub struct GlobalScopeData {
 
     /// Corrsponds to GlobalScope::Data.{length, trailingNames}.
     pub bindings: Vec<BindingName>,
+
+    /// Functions in this scope.
+    pub functions: Vec<AssociatedDataKey>,
 }
 
 impl GlobalScopeData {
-    pub fn new(var_count: usize, let_count: usize, const_count: usize) -> Self {
+    pub fn new(
+        var_count: usize,
+        let_count: usize,
+        const_count: usize,
+        functions: Vec<AssociatedDataKey>,
+    ) -> Self {
         let capacity = var_count + let_count + const_count;
 
         Self {
             let_start: var_count,
             const_start: var_count + let_count,
             bindings: Vec::with_capacity(capacity),
+            functions,
         }
     }
 
@@ -153,10 +162,18 @@ pub struct LexicalScopeData {
     ///
     /// A parameter for ScopeCreationData::create.
     pub enclosing: ScopeIndex,
+
+    /// Functions in this scope.
+    pub functions: Vec<AssociatedDataKey>,
 }
 
 impl LexicalScopeData {
-    pub fn new(let_count: usize, const_count: usize, enclosing: ScopeIndex) -> Self {
+    pub fn new(
+        let_count: usize,
+        const_count: usize,
+        enclosing: ScopeIndex,
+        functions: Vec<AssociatedDataKey>,
+    ) -> Self {
         let capacity = let_count + const_count;
 
         Self {
@@ -165,6 +182,7 @@ impl LexicalScopeData {
             // Set to the correct value in EmitterScopeStack::enter_lexical.
             first_frame_slot: FrameSlot::new(0),
             enclosing,
+            functions,
         }
     }
 

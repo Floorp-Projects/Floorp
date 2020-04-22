@@ -14,8 +14,8 @@ See infer_types() for more.
 """
 
 from __future__ import annotations
+# mypy: disallow-untyped-defs, disallow-incomplete-defs, disallow-untyped-calls
 
-import collections
 from dataclasses import dataclass
 import typing
 from . import grammar
@@ -47,16 +47,16 @@ class Type:
             _all_types[key] = obj
         return _all_types[key]
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> typing.Tuple[str, typing.Tuple[TypeParameter, ...]]:
         return (self.name, self.args)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.args:
             return '{}<{}>'.format(self.name, ', '.join(map(str, self.args)))
         else:
             return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.args:
             return 'Type({!r}, {!r})'.format(self.name, self.args)
         else:
@@ -89,18 +89,21 @@ class TypeVar:
     """
     __slots__ = ['name', 'precedence', 'value']
 
-    name: str
+    name: typing.Optional[str]
     precedence: int
     value: typing.Optional[TypeOrTypeVar]
 
-    def __init__(self, name=None, precedence=0):
+    def __init__(
+            self,
+            name: typing.Optional[str] = None,
+            precedence: int = 0
+    ) -> None:
         assert (precedence > 0) == (name is not None)
-        assert name is None or isinstance(name, str)
         self.name = name
         self.precedence = precedence
         self.value = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'TypeVar({!r})'.format(self.name)
 
 
@@ -109,13 +112,13 @@ TypeParameter = typing.Union[Type, TypeVar, Lifetime]
 
 
 class JsparagusTypeError(Exception):
-    def annotate(self, line):
+    def annotate(self, line: str) -> None:
         message, *rest = self.args
         message = line + "\n" + message
         self.args = message, *rest
 
     @classmethod
-    def clash(cls, expected, actual):
+    def clash(cls, expected: TypeParameter, actual: TypeParameter) -> JsparagusTypeError:
         return cls("expected type {}, got type {}".format(expected, actual))
 
 
@@ -222,6 +225,7 @@ def infer_types(g: grammar.Grammar) -> None:
             return nt_def.type
         else:
             nt_name = nt if isinstance(nt, str) else nt.name
+            assert isinstance(nt_name, str)
             return TypeVar(nt_name, 2)
 
     nt_types = {
