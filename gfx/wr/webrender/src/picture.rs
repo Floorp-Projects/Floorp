@@ -5813,6 +5813,20 @@ impl PicturePrimitive {
                         }
                         inflation_factor = clamp_blur_radius(max, scale_factors) * BLUR_SAMPLE_SCALE;
                     }
+                    PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+                        // TODO(gw): This is incorrect, since we don't consider the drop shadow
+                        //           offset. However, fixing that is a larger task, so this is
+                        //           an improvement on the current case (this at least works where
+                        //           the offset of the drop-shadow is ~0, which is often true).
+
+                        // Can't use max_by_key here since f32 isn't Ord
+                        let mut max_blur_radius: f32 = 0.0;
+                        for shadow in shadows {
+                            max_blur_radius = max_blur_radius.max(shadow.blur_radius);
+                        }
+
+                        inflation_factor = clamp_blur_radius(max_blur_radius, scale_factors) * BLUR_SAMPLE_SCALE;
+                    }
                     _ => {}
                 }
             }
