@@ -109,6 +109,7 @@ function checkLoads(aWindow, aWhitelisted, tpEnabled) {
 
 SpecialPowers.pushPrefEnv(
   {"set": [["privacy.trackingprotection.enabled", true],
+           ["privacy.trackingprotection.testing.report_blocked_node", true],
            ["channelclassifier.allowlist_example", true]]},
   test);
 

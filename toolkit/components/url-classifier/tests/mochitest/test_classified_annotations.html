@@ -131,6 +131,7 @@ function checkLoads(aWindow, aData) {
 function cleanup() {
   SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
   SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
+  SpecialPowers.clearUserPref("privacy.trackingprotection.testing.report_blocked_node");
 
   UrlClassifierTestUtils.cleanupTestTrackers();
 }
@@ -148,6 +149,7 @@ async function test() {
   // any URIs unless 'https://allowlisted.example.com' is added in the
   // permission manager (see test_allowlisted_annotations.html)
   await SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.testing.report_blocked_node", true);
 
   await testOnWindow().then(function(aWindow) {
     aWindow.close();

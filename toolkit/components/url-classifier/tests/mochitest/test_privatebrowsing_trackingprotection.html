@@ -111,6 +111,7 @@ SpecialPowers.pushPrefEnv(
   {"set": [
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", true],
+      ["privacy.trackingprotection.testing.report_blocked_node", true],
   ]}, test);
 
 async function test() {
