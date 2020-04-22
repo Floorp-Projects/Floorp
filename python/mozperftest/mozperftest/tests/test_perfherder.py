@@ -5,6 +5,8 @@ import json
 
 from mozperftest.tests.support import get_running_env, temp_file
 from mozperftest.environment import METRICS
+from mozperftest.utils import silence
+
 
 HERE = os.path.dirname(__file__)
 
@@ -25,7 +27,7 @@ def test_metrics():
 
     with temp_file() as output:
         env.set_arg("output", output)
-        with metrics as m:
+        with metrics as m, silence():
             m(metadata)
         output_file = metadata.get_output()
         with open(output_file) as f:
