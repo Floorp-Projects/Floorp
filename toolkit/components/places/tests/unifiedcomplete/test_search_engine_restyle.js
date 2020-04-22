@@ -11,42 +11,50 @@ add_task(async function test_searchEngine() {
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
-  let uri1 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=1");
-  let uri2 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=2");
+  let uri = NetUtil.newURI("http://s.example.com/search?q=Terms");
   await PlacesTestUtils.addVisits({
-    uri: uri1,
-    title: "Terms - SearchEngine Search",
-  });
-  await PlacesTestUtils.addBookmarkWithDetails({
-    uri: uri2,
+    uri,
     title: "Terms - SearchEngine Search",
   });
 
-  info("Past search terms should be styled, unless bookmarked");
+  info("Past search terms should be styled.");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
   await check_autocomplete({
     search: "term",
     matches: [
       makeSearchMatch("Terms", {
         engineName: "SearchEngine",
+        searchSuggestion: "Terms",
+        isSearchHistory: true,
         style: ["favicon"],
       }),
+    ],
+  });
+
+  info("Bookmarked past searches should not be restyled");
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri,
+    title: "Terms - SearchEngine Search",
+  });
+
+  await check_autocomplete({
+    search: "term",
+    matches: [
       {
-        uri: uri2,
+        uri,
         title: "Terms - SearchEngine Search",
         style: ["bookmark"],
       },
     ],
   });
 
+  await PlacesUtils.bookmarks.eraseEverything();
+
   info("Past search terms should not be styled if restyling is disabled");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", false);
   await check_autocomplete({
     search: "term",
-    matches: [
-      { uri: uri1, title: "Terms - SearchEngine Search" },
-      { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] },
-    ],
+    matches: [{ uri, title: "Terms - SearchEngine Search" }],
   });
 
   await cleanup();

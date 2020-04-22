@@ -198,6 +198,11 @@ interface nsISearchParseSubmissionResult : nsISupports
   readonly attribute AString terms;
 
   /**
+   * The name of the query parameter used by `engine` for queries. E.g. "q".
+   */
+  readonly attribute AString termsParameterName;
+
+  /**
    * The offset of the string |terms| in the URL passed in to
    * nsISearchEngine::parseSubmissionURL, or -1 if the URL does not represent
    * a search submission.

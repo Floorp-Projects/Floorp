@@ -287,6 +287,7 @@ add_task(async function test_onProviderResultsRequested() {
         engine: "Test engine",
         suggestion: undefined,
         keyword: undefined,
+        isSearchHistory: false,
         icon: "",
         keywordOffer: false,
       },

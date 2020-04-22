@@ -278,6 +278,7 @@ function makeSearchResult(
         typeof query != "undefined" ? query : queryContext.searchString.trim(),
         UrlbarUtils.HIGHLIGHT.TYPED,
       ],
+      isSearchHistory: false,
       icon: [engineIconUri ? engineIconUri : ""],
       keywordOffer,
     })

@@ -1913,10 +1913,8 @@ Search.prototype = {
       return;
     }
 
-    // Do not apply the special style if the user is doing a search from the
-    // location bar but the entered terms match an irrelevant portion of the
-    // URL. For example, "https://www.google.com/search?q=terms&client=firefox"
-    // when searching for "Firefox".
+    // Here we check that the user typed all or part of the search string in the
+    // search history result.
     let terms = parseResult.terms.toLowerCase();
     if (
       this._searchTokens.length &&
@@ -1925,15 +1923,46 @@ Search.prototype = {
       return;
     }
 
+    // The URL for the search suggestion formed by the user's typed query.
+    let [typedSuggestionUrl] = UrlbarUtils.getSearchQueryUrl(
+      parseResult.engine,
+      this._searchTokens.map(t => t.value).join(" ")
+    );
+
+    let historyParams = new URL(match.value).searchParams;
+    let typedParams = new URL(typedSuggestionUrl).searchParams;
+
+    // Checking the two URLs have the same query parameters with the same
+    // values, or a subset value in the case of the query parameter.
+    // Parameter order doesn't matter.
+    if (
+      Array.from(historyParams).length != Array.from(typedParams).length ||
+      !Array.from(historyParams.entries()).every(
+        ([key, value]) =>
+          // We want to match all non-search-string GET parameters exactly, to avoid
+          // restyling non-first pages of search results, or image results as web
+          // results.
+          // We let termsParameterName through because we already checked that the
+          // typed query is a subset of the search history query above with
+          // this._searchTokens.every(...).
+          key == parseResult.termsParameterName ||
+          value === typedParams.get(key)
+      )
+    ) {
+      return;
+    }
+
     // Turn the match into a searchengine action with a favicon.
     match.value = makeActionUrl("searchengine", {
-      engineName: parseResult.engineName,
+      engineName: parseResult.engine.name,
       input: parseResult.terms,
+      searchSuggestion: parseResult.terms,
       searchQuery: parseResult.terms,
+      isSearchHistory: true,
     });
-    match.comment = parseResult.engineName;
+    match.comment = parseResult.engine.name;
     match.icon = match.icon || match.iconUrl;
-    match.style = "action searchengine favicon";
+    match.style = "action searchengine favicon suggestion";
   },
 
   _addMatch(match) {

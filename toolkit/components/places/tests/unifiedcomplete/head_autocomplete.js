@@ -445,6 +445,9 @@ function makeSearchMatch(input, extra = {}) {
     params.searchSuggestion = extra.searchSuggestion;
     style.push("suggestion");
   }
+  if ("isSearchHistory" in extra) {
+    params.isSearchHistory = extra.isSearchHistory;
+  }
   return {
     uri: makeActionURI("searchengine", params),
     title: params.engineName,

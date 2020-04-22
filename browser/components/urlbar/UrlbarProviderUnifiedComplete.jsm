@@ -213,6 +213,7 @@ function makeUrlbarResult(tokens, info) {
               action.params.searchQuery.trim(),
               UrlbarUtils.HIGHLIGHT.TYPED,
             ],
+            isSearchHistory: !!action.params.isSearchHistory,
             icon: [info.icon],
             keywordOffer,
           })
