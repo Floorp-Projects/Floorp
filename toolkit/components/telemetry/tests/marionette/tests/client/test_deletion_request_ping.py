@@ -9,7 +9,7 @@ from telemetry_harness.ping_filters import ANY_PING, DELETION_REQUEST_PING, MAIN
 class TestDeletionRequestPing(TelemetryTestCase):
     """Tests for "deletion-request" ping."""
 
-    def test_optout_ping_across_sessions(self):
+    def test_deletion_request_ping_across_sessions(self):
         """Test the "deletion-request" ping behaviour across sessions."""
 
         # Get the client_id.
@@ -34,7 +34,7 @@ class TestDeletionRequestPing(TelemetryTestCase):
         # Trigger an environment change, which isn't allowed to send a ping.
         self.install_addon()
 
-        # Ensure we've sent no pings since "optout".
+        # Ensure we've sent no pings since "disabling telemetry".
         self.assertEqual(self.ping_server.pings[-1], ping)
 
         # Turn Telemetry back on.
