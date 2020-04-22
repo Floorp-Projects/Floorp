@@ -22,40 +22,31 @@ class BugbugTimeoutException(Exception):
     pass
 
 
-class platform(object):
-    """Strategies for dealing with platforms."""
+@register_strategy("platform-debug")
+class SkipUnlessDebug(OptimizationStrategy):
+    """Only run debug platforms."""
 
-    @staticmethod
-    def all(task, params):
-        """Don't filter any platforms."""
-        return False
-
-    @staticmethod
-    def debug(task, params):
-        """Only run debug platforms."""
+    def should_remove_task(self, task, params, arg):
         return not (task.attributes.get('build_type') == "debug")
 
 
-@register_strategy("bugbug-all", args=(platform.all, 0.7))
-@register_strategy("bugbug-all-low", args=(platform.all, 0.5))
-@register_strategy("bugbug-all-high", args=(platform.all, 0.9))
-@register_strategy("bugbug-debug", args=(platform.debug, 0.5))
-@register_strategy("bugbug-try", args=(platform.debug, 0.5))
-@register_strategy("bugbug-reduced", args=(platform.all, 0.7, True))
-@register_strategy("bugbug-reduced-high", args=(platform.all, 0.9, True))
+@register_strategy("bugbug", args=(0.7,))
+@register_strategy("bugbug-low", args=(0.5,))
+@register_strategy("bugbug-high", args=(0.9,))
+@register_strategy("bugbug-reduced", args=(0.7, True))
+@register_strategy("bugbug-reduced-high", args=(0.9, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
     Args:
-        filterfn (func): A function to further reduce tasks after the bugbug
-                         algorithm.
+        confidence_threshold (float): The minimum confidence threshold (in
+            range [0, 1]) needed for a task to be scheduled.
     """
     BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
     RETRY_TIMEOUT = 4 * 60  # seconds
     RETRY_INTERVAL = 5      # seconds
 
-    def __init__(self, filterfn, confidence_threshold, use_reduced_tasks=False):
-        self.filterfn = filterfn
+    def __init__(self, confidence_threshold, use_reduced_tasks=False):
         self.confidence_threshold = confidence_threshold
         self.use_reduced_tasks = use_reduced_tasks
 
@@ -121,4 +112,4 @@ class BugBugPushSchedules(OptimizationStrategy):
         elif not bool(set(task.attributes['test_manifests']) & groups):
             return True
 
-        return self.filterfn(task, params)
+        return False

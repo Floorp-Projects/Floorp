@@ -394,22 +394,22 @@ class experimental(object):
     """
 
     bugbug_all = {
-        'test': Any('skip-unless-schedules', 'bugbug-all'),
+        'test': Any('skip-unless-schedules', 'bugbug'),
     }
     """Doesn't limit platforms, medium confidence threshold."""
 
     bugbug_all_low = {
-        'test': Any('skip-unless-schedules', 'bugbug-all-low'),
+        'test': Any('skip-unless-schedules', 'bugbug-low'),
     }
     """Doesn't limit platforms, low confidence threshold."""
 
     bugbug_all_high = {
-        'test': Any('skip-unless-schedules', 'bugbug-all-high'),
+        'test': Any('skip-unless-schedules', 'bugbug-high'),
     }
     """Doesn't limit platforms, high confidence threshold."""
 
     bugbug_debug = {
-        'test': Any('skip-unless-schedules', 'bugbug-debug'),
+        'test': Any('skip-unless-schedules', 'bugbug', 'platform-debug'),
     }
     """Restricts tests to debug platforms."""
 

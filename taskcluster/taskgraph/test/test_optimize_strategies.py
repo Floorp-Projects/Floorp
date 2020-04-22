@@ -10,8 +10,9 @@ from datetime import datetime
 from mozunit import main
 from time import mktime
 
+from taskgraph.optimize import registry
 from taskgraph.optimize.backstop import Backstop
-from taskgraph.optimize.bugbug import BugBugPushSchedules, BugbugTimeoutException, platform
+from taskgraph.optimize.bugbug import BugBugPushSchedules, BugbugTimeoutException
 from taskgraph.task import Task
 
 
@@ -63,38 +64,50 @@ def idfn(param):
     return None
 
 
+@pytest.mark.parametrize("strategy,expected", [
+    pytest.param(
+        'platform-debug',
+        ['task-1', 'task-2'],
+    ),
+], ids=idfn)
+def test_optimization_strategy(responses, params, tasks, strategy, expected):
+    opt = registry[strategy]
+    labels = [t.label for t in tasks if not opt.should_remove_task(t, params, None)]
+    assert sorted(labels) == sorted(expected)
+
+
 @pytest.mark.parametrize("args,data,expected", [
     # empty
     pytest.param(
-        (platform.all, 0.1),
+        (0.1,),
         {},
         [],
     ),
 
     # only tasks without test manifests selected
     pytest.param(
-        (platform.all, 0.1),
+        (0.1,),
         {'tasks': {'task-1': 0.9, 'task-2': 0.1, 'task-3': 0.5}},
         ['task-2'],
     ),
 
     # tasks containing groups selected
     pytest.param(
-        (platform.all, 0.1),
+        (0.1,),
         {'groups': {'foo/test.ini': 0.4}},
         ['task-0'],
     ),
 
     # tasks matching "tasks" or "groups" selected
     pytest.param(
-        (platform.all, 0.1),
+        (0.1,),
         {'tasks': {'task-2': 0.2}, 'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75}},
         ['task-0', 'task-1', 'task-2'],
     ),
 
     # tasks matching "tasks" or "groups" selected, when they exceed the confidence threshold
     pytest.param(
-        (platform.all, 0.5),
+        (0.5,),
         {
             'tasks': {'task-2': 0.2, 'task-4': 0.5},
             'groups': {'foo/test.ini': 0.65, 'bar/test.ini': 0.25}
@@ -104,7 +117,7 @@ def idfn(param):
 
     # tasks matching "reduced_tasks" are selected, when they exceed the confidence threshold
     pytest.param(
-        (platform.all, 0.7, True),
+        (0.7, True),
         {
             'tasks': {'task-2': 0.7, 'task-4': 0.7},
             'reduced_tasks': {'task-4': 0.7},
@@ -113,15 +126,6 @@ def idfn(param):
         ['task-4'],
     ),
 
-    # debug platform filter
-    pytest.param(
-        (platform.debug, 0.5),
-        {
-            'tasks': {'task-2': 0.6, 'task-3': 0.6},
-            'groups': {'foo/test.ini': 0.6, 'bar/test.ini': 0.6}
-        },
-        ['task-1', 'task-2'],
-    ),
 ], ids=idfn)
 def test_bugbug_push_schedules(responses, params, tasks, args, data, expected):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)
@@ -152,7 +156,7 @@ def test_bugbug_timeout(monkeypatch, responses, params, tasks):
     # Make sure the test runs fast.
     monkeypatch.setattr(time, 'sleep', lambda i: None)
 
-    opt = BugBugPushSchedules(platform.all, 0.5)
+    opt = BugBugPushSchedules(0.5)
     with pytest.raises(BugbugTimeoutException):
         opt.should_remove_task(tasks[0], params, None)
 
