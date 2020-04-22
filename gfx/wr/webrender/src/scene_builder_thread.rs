@@ -5,7 +5,7 @@
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
 use api::{BuiltDisplayList, ColorF, NotificationRequest, Checkpoint, IdNamespace};
-use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind};
+use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
 use api::units::LayoutSize;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
@@ -21,7 +21,6 @@ use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::LineDecoration;
 use crate::prim_store::picture::Picture;
 use crate::prim_store::text_run::TextRun;
-use crate::resource_cache::FontInstanceMap;
 use crate::render_backend::DocumentView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
@@ -130,7 +129,7 @@ pub struct DisplayListUpdate {
 /// Contains the render backend data needed to build a scene.
 pub struct SceneRequest {
     pub view: DocumentView,
-    pub font_instances: FontInstanceMap,
+    pub font_instances: SharedFontInstanceMap,
     pub output_pipelines: FastHashSet<PipelineId>,
 }
 
@@ -139,7 +138,7 @@ pub struct LoadScene {
     pub document_id: DocumentId,
     pub scene: Scene,
     pub output_pipelines: FastHashSet<PipelineId>,
-    pub font_instances: FontInstanceMap,
+    pub font_instances: SharedFontInstanceMap,
     pub view: DocumentView,
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
