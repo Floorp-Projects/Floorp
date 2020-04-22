@@ -119,6 +119,10 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "string",
         },
+        distributionID: {
+          required: true,
+          type: "string",
+        },
         userAgent: {
           required: true,
           type: "string",
