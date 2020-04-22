@@ -60,6 +60,9 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         # give our control server the browser process so it can shut it down later
         self.control_server.browser_proc = proc
 
+    def process_exists(self):
+        return self.runner.is_running()
+
     def run_test(self, test, timeout):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
         # unless otheriwse specified in the test INI by using 'cold = true'
@@ -169,7 +172,7 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
             # set our control server flag to indicate we are running the browser/app
             self.control_server._finished = False
 
-            self.wait_for_test_finish(test, timeout)
+            self.wait_for_test_finish(test, timeout, self.process_exists)
 
     def __run_test_warm(self, test, timeout):
         self.run_test_setup(test)
@@ -183,7 +186,7 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         # set our control server flag to indicate we are running the browser/app
         self.control_server._finished = False
 
-        self.wait_for_test_finish(test, timeout)
+        self.wait_for_test_finish(test, timeout, self.process_exists)
 
     def run_test_teardown(self, test):
         # browser should be closed by now but this is a backup-shutdown (if not in debug-mode)
