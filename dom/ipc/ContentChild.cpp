@@ -851,18 +851,7 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
 
   referrerInfo.swap(*aReferrerInfo);
 
-  RefPtr<nsDocShell> openerDocShell =
-      static_cast<nsDocShell*>(opener->GetDocShell());
-  if (!openerDocShell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentViewer> cv;
-  nsresult rv = openerDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_SUCCEEDED(rv) && cv) {
-    cv->GetFullZoom(aFullZoom);
-  }
-
+  *aFullZoom = parent->FullZoom();
   return NS_OK;
 }
 
