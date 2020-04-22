@@ -47,16 +47,15 @@ web-platform-tests:
     treeherder-symbol: W(wpt)
     chunks:
         by-test-platform:
-            android.*: 18
-            linux.*64-asan/opt: 28
-            linux.*64-ccov/debug: 24
-            linux.*64-ccov/opt: 24
-            linux.*/debug: 18
-            macosx*/opt: 8
-            macosx.*/debug: 20
-            windows.*/debug: 18
-            windows10-64-ccov/opt: 18
-            default: 12
+            android.*: 16
+            linux.*64-asan/opt: 22
+            linux.*64-ccov/opt: 20
+            linux.*/debug: 16
+            macosx.*/debug: 18
+            windows7.*/opt: 12
+            windows.*/debug: 14
+            windows10-64-ccov/opt: 14
+            default: 10
     max-run-time:
         by-test-platform:
             .*-ccov/.*: 10800
@@ -76,6 +75,38 @@ web-platform-tests:
         chunked: true
         extra-options:
             - --test-type=testharness
+            - --skip-implementation-status=backlog
+            - --skip-implementation-status=not-implementing
+
+web-platform-tests-backlog:
+    description: "Web platform test (backlog) run"
+    suite: web-platform-tests
+    treeherder-symbol: W-b(wpt)
+    chunks:
+        by-test-platform:
+            android.*: 4
+            linux.*64-asan/opt: 5
+            linux.*64-ccov/opt: 4
+            linux.*/debug: 3
+            macosx.*/debug: 3
+            windows7.*/opt: 3
+            windows7.*/debug: 4
+            windows10.*/debug: 3
+            windows10-64-ccov/opt: 4
+            default: 2
+    max-run-time:
+        by-test-platform:
+            .*-ccov/.*: 3600
+            default: 2700
+    e10s: true
+    run-on-projects: ['mozilla-central']
+    tier: 2
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --skip-implementation-status=implementing
+            - --skip-implementation-status=not-implementing
 
 web-platform-tests-reftest:
     description: "Web platform reftest run"
@@ -91,6 +122,7 @@ web-platform-tests-reftest:
             linux1804-64(-qr|-asan)/.*: 6
             linux1804-64(-shippable|-devedition)?/opt: 3
             macosx10.*-64/debug: 6
+            macosx10.*-64/opt: 3
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
             default: 4
@@ -103,6 +135,32 @@ web-platform-tests-reftest:
     mozharness:
         extra-options:
             - --test-type=reftest
+            - --skip-implementation-status=backlog
+            - --skip-implementation-status=not-implementing
+
+web-platform-tests-reftest-backlog:
+    description: "Web platform reftest (backlog) run"
+    schedules-component: web-platform-tests-reftest
+    treeherder-symbol: W-b(Wr)
+    virtualization:
+        by-test-platform:
+            windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
+            default: virtual
+    chunks:
+        by-test-platform:
+            linux1804-64(-qr|-asan)/.*: 2
+            macosx10.*-64/debug: 2
+            windows.*-(32|64)(-qr)?/debug: 2
+            android.*: 2
+            default: 1
+    e10s: true
+    run-on-projects: ['mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test-type=reftest
+            - --skip-implementation-status=implementing
+            - --skip-implementation-status=not-implementing
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"

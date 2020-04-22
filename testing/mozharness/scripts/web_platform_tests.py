@@ -93,6 +93,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "default": [],
             "help": "Defines an extra user preference."}
          ],
+        [["--skip-implementation-status"], {
+            "action": "extend",
+            "dest": "skip_implementation_status",
+            "default": [],
+            "help": "Defines a way to not run a specific implementation status "
+                    " (i.e. not implemented)."}
+         ],
         [["--include"], {
             "action": "store",
             "dest": "include",
@@ -222,7 +229,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
                 "--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0),
                 "--no-pause-after-test",
-                "--skip-implementation-status=not-implementing",
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                          "wpt_instruments.txt")]
 
@@ -254,6 +260,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--disable-e10s")
         if c["enable_webrender"]:
             cmd.append("--enable-webrender")
+
+        for implementation_status in c["skip_implementation_status"]:
+            cmd.append("--skip-implementation-status=%s" % implementation_status)
 
         if not (self.verify_enabled or self.per_test_coverage):
             test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))

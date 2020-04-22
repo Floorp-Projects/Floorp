@@ -1292,6 +1292,7 @@ CHUNK_SUITES_BLACKLIST = (
     'web-platform-tests',
     'web-platform-tests-crashtest',
     'web-platform-tests-reftest',
+    'web-platform-tests-reftest-backlog',
     'web-platform-tests-wdspec',
 )
 """These suites will be chunked at test runtime rather than here in the taskgraph."""
