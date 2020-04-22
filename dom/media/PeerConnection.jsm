@@ -39,7 +39,7 @@ function logMsg(msg, file, line, flag, winID) {
   let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
   let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
   scriptError.initWithWindowID(
-    msg,
+    `WebRTC: ${msg}`,
     file,
     null,
     line,
@@ -397,6 +397,17 @@ class RTCPeerConnection {
       Services.prefs.getBoolPref("media.peerconnection.ice.relay_only")
     ) {
       rtcConfig.iceTransportPolicy = "relay";
+    }
+    if ("sdpSemantics" in rtcConfig) {
+      if (rtcConfig.sdpSemantics == "plan-b") {
+        this.logWarning(
+          `Outdated and non-standard {sdpSemantics: "plan-b"} is not ` +
+            `supported! WebRTC may be unreliable. Please update code to ` +
+            `follow standard "unified-plan".`
+        );
+      }
+      // Don't let it show up in getConfiguration.
+      delete rtcConfig.sdpSemantics;
     }
     this._config = Object.assign({}, rtcConfig);
 
