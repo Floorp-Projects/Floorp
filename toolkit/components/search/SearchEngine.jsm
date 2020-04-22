@@ -20,13 +20,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gChromeReg: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "promptModalType",
-  "prompts.modalType.searchService",
-  Services.prompt.MODAL_TYPE_WINDOW
-);
-
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -766,9 +759,6 @@ EngineURL.prototype = {
  * @param {boolean} options.isBuiltin
  *   Indicates whether the engine is a app-provided or not. If it is, it will
  *   be treated as read-only.
- * @param {BrowsingContext} [options.reqContext]
- *   The browsing context of the site the request to add the engine came from.
- *   If provided, this will act as the parent for any prompt dialogs.
  */
 function SearchEngine(options = {}) {
   if (!("isBuiltin" in options)) {
@@ -781,7 +771,6 @@ function SearchEngine(options = {}) {
   this._definedAlias = null;
   this._urls = [];
   this._metaData = {};
-  this._reqContext = options.reqContext;
 
   let file, uri;
   if ("name" in options) {
@@ -1023,7 +1012,7 @@ SearchEngine.prototype = {
     return null;
   },
 
-  async _confirmAddEngine() {
+  _confirmAddEngine() {
     var stringBundle = Services.strings.createBundle(SEARCH_BUNDLE);
     var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
 
@@ -1048,37 +1037,28 @@ SearchEngine.prototype = {
       "addEngineAddButtonLabel"
     );
 
-    let ps = Services.prompt;
-    let buttonFlags =
+    var ps = Services.prompt;
+    var buttonFlags =
       ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
       ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1 +
       ps.BUTTON_POS_0_DEFAULT;
 
-    let promptResult;
-    try {
-      promptResult = await ps.asyncConfirmEx(
-        this._reqContext,
-        promptModalType,
-        titleMessage,
-        dialogMessage,
-        buttonFlags,
-        addButtonLabel,
-        null,
-        null, // button 1 & 2 names not used
-        checkboxMessage,
-        false
-      );
-    } catch (error) {
-      // Prompting failed or the user navigated away, deny the request.
-      return { confirmed: false, useNow: false };
-    }
-
+    var checked = { value: false };
     // confirmEx returns the index of the button that was pressed.  Since "Add"
     // is button 0, we want to return the negation of that value.
-    return {
-      confirmed: !promptResult.getProperty("buttonNumClicked"),
-      useNow: promptResult.getProperty("checked"),
-    };
+    var confirm = !ps.confirmEx(
+      null,
+      titleMessage,
+      dialogMessage,
+      buttonFlags,
+      addButtonLabel,
+      null,
+      null, // button 1 & 2 names not used
+      checkboxMessage,
+      checked
+    );
+
+    return { confirmed: confirm, useNow: checked.value };
   },
 
   /**
@@ -1091,7 +1071,7 @@ SearchEngine.prototype = {
    * @param {nsISearchEngine} engine
    *  The engine being loaded.
    */
-  async _onLoad(bytes, engine) {
+  _onLoad(bytes, engine) {
     /**
      * Handle an error during the load of an engine by notifying the engine's
      * error callback, if any.
@@ -1106,7 +1086,9 @@ SearchEngine.prototype = {
       }
     }
 
-    async function promptError(strings = {}, error = undefined) {
+    function promptError(strings = {}, error = undefined) {
+      onError(error);
+
       if (engine._engineToUpdate) {
         // We're in an update, so just fail quietly
         SearchUtils.log("updating " + engine._engineToUpdate.name + " failed");
@@ -1124,13 +1106,7 @@ SearchEngine.prototype = {
         engine._location,
       ]);
 
-      await Services.prompt.asyncAlert(
-        engine._reqContext,
-        promptModalType,
-        title,
-        text
-      );
-      onError(error);
+      Services.ww.getNewPrompter(null).alert(title, text);
     }
 
     if (!bytes) {
@@ -1203,7 +1179,7 @@ SearchEngine.prototype = {
       // This property is only ever true for engines added via
       // nsISearchService::addEngine.
       if (engine._confirm) {
-        var confirmation = await engine._confirmAddEngine();
+        var confirmation = engine._confirmAddEngine();
         SearchUtils.log(
           "_onLoad: confirm is " +
             confirmation.confirmed +
