@@ -1021,8 +1021,10 @@ class nsIFrame : public nsQueryFrame {
     return ContentSize(GetWritingMode());
   }
   mozilla::LogicalSize ContentSize(mozilla::WritingMode aWritingMode) const {
-    const auto bp = GetLogicalUsedBorderAndPadding(aWritingMode)
-                        .ApplySkipSides(GetLogicalSkipSides());
+    mozilla::WritingMode wm = GetWritingMode();
+    const auto bp = GetLogicalUsedBorderAndPadding(wm)
+                        .ApplySkipSides(GetLogicalSkipSides())
+                        .ConvertTo(aWritingMode, wm);
     const auto size = GetLogicalSize(aWritingMode);
     return mozilla::LogicalSize(
         aWritingMode,
