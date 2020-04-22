@@ -13,6 +13,7 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    components/featuregates/featuregates/index
    search/index
    components/normandy/normandy/index
+   components/prompts/prompts/index
    modules/subprocess/toolkit_modules/subprocess/index
    components/telemetry/index
    components/glean/index
