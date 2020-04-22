@@ -29,6 +29,7 @@ DIRS += [
     'vr',
     'config',
     'webrender_bindings',
+    'wgpu_bindings',
 ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:

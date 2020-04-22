@@ -56,7 +56,7 @@ extern crate audio_thread_priority;
 extern crate mdns_service;
 extern crate neqo_glue;
 #[cfg(feature = "webgpu")]
-extern crate wgpu_remote;
+extern crate wgpu_bindings;
 
 #[cfg(feature = "wasm_library_sandboxing")]
 extern crate rlbox_lucet_sandbox;
