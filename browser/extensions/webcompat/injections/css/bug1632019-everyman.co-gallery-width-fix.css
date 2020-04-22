@@ -1,0 +1,13 @@
+/**
+ * everyman.co - Unable to view the gallery due to preview being too big
+ * Bug #1632019 - https://bugzilla.mozilla.org/show_bug.cgi?id=1632019
+ * WebCompat issue #50968 - https://webcompat.com/issues/50968
+ *
+ * everyman.co has product gallery with image preview taking
+ * too much space and making the site unusable. Applying min-width
+ * to ancestor element fixes the issue. See also
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1316534
+ */
+.product-gallery {
+  min-width: 0;
+}
