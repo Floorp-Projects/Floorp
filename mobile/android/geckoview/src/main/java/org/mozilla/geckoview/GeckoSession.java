@@ -156,36 +156,14 @@ public class GeckoSession implements Parcelable {
     // gfx/layers/ipc/UiCompositorControllerMessageTypes.h and must be kept in sync. Any
     // new AnimatorMessageType added here must also be added there.
     //
-    // Sent from compositor when the static toolbar wants to hide.
-    /* package */ final static int STATIC_TOOLBAR_NEEDS_UPDATE      = 0;
-    // Sent from compositor when the static toolbar image has been updated and is ready to
-    // animate.
-    /* package */ final static int STATIC_TOOLBAR_READY             = 1;
-    // Sent to compositor when the real toolbar has been hidden.
-    /* package */ final static int TOOLBAR_HIDDEN                   = 2;
-    // Sent to compositor when the real toolbar is visible.
-    /* package */ final static int TOOLBAR_VISIBLE                  = 3;
-    // Sent from compositor when the static toolbar has been made visible so the real
-    // toolbar should be shown.
-    /* package */ final static int TOOLBAR_SHOW                     = 4;
     // Sent from compositor after first paint
-    /* package */ final static int FIRST_PAINT                      = 5;
-    // Sent to compositor requesting toolbar be shown immediately
-    /* package */ final static int REQUEST_SHOW_TOOLBAR_IMMEDIATELY = 6;
-    // Sent to compositor requesting toolbar be shown animated
-    /* package */ final static int REQUEST_SHOW_TOOLBAR_ANIMATED    = 7;
-    // Sent to compositor requesting toolbar be hidden immediately
-    /* package */ final static int REQUEST_HIDE_TOOLBAR_IMMEDIATELY = 8;
-    // Sent to compositor requesting toolbar be hidden animated
-    /* package */ final static int REQUEST_HIDE_TOOLBAR_ANIMATED    = 9;
+    /* package */ final static int FIRST_PAINT                      = 0;
     // Sent from compositor when a layer has been updated
-    /* package */ final static int LAYERS_UPDATED                   = 10;
-    // Sent to compositor when the toolbar snapshot fails.
-    /* package */ final static int TOOLBAR_SNAPSHOT_FAILED          = 11;
+    /* package */ final static int LAYERS_UPDATED                   = 1;
     // Special message sent from UiCompositorControllerChild once it is open
-    /* package */ final static int COMPOSITOR_CONTROLLER_OPEN       = 20;
+    /* package */ final static int COMPOSITOR_CONTROLLER_OPEN       = 2;
     // Special message sent from controller to query if the compositor controller is open.
-    /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 21;
+    /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 3;
 
     /* protected */ class Compositor extends JNIObject {
         public boolean isReady() {
