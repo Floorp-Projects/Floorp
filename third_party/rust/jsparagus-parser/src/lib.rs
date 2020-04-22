@@ -3,6 +3,7 @@
 mod lexer;
 pub mod numeric_value;
 mod parser;
+mod queue_stack;
 mod simulator;
 
 #[cfg(test)]

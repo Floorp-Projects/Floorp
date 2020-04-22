@@ -1,55 +1,75 @@
-from .ordered import OrderedFrozenSet
-from .grammar import InitNt, Nt
-from . import types
+from __future__ import annotations
+# mypy: disallow-untyped-defs, disallow-incomplete-defs, disallow-untyped-calls
+
+import typing
+
+from .grammar import Element, InitNt, Nt
+from . import types, grammar
 
 
 class Action:
-    __slots__ = [
-        "read",    # Set of trait names which are consumed by this action.
-        "write",   # Set of trait names which are mutated by this action.
-        "_hash",   # Cached hash.
-    ]
+    __slots__ = ["read", "write", "_hash"]
 
-    def __init__(self, read, write):
-        assert isinstance(read, list)
-        assert isinstance(write, list)
+    # Set of trait names which are consumed by this action.
+    read: typing.List[str]
+
+    # Set of trait names which are mutated by this action.
+    write: typing.List[str]
+
+    # Cached hash.
+    _hash: typing.Optional[int]
+
+    def __init__(self, read: typing.List[str], write: typing.List[str]) -> None:
         self.read = read
         self.write = write
         self._hash = None
 
-    def is_inconsistent(self):
-        """Returns True whether this action is inconsistent. An action can be
+    def is_inconsistent(self) -> bool:
+        """Returns True if this action is inconsistent. An action can be
         inconsistent if the parameters it is given cannot be evaluated given
         its current location in the parse table. Such as CheckNotOnNewLine.
         """
         return False
 
-    def is_condition(self):
+    def is_condition(self) -> bool:
         "Unordered condition, which accept or not to reach the next state."
         return False
 
-    def condition(self):
+    def condition(self) -> Action:
         "Return the conditional action."
-        raise TypeError("Action::condition_flag not implemented")
+        raise TypeError("Action.condition not implemented")
 
-    def update_stack(self):
+    def update_stack(self) -> bool:
         """Change the parser stack, and resume at a different location. If this function
         is defined, then the function reduce_with should be implemented."""
         return False
 
-    def reduce_with(self):
-        "Returns the non-terminal with which this action is reducing with."
+    def reduce_with(self) -> Reduce:
+        """Returns the Reduce action with which this action is reducing."""
         assert self.update_stack()
-        raise TypeError("Action::reduce_to not implemented.")
+        raise TypeError("Action.reduce_with not implemented.")
 
-    def shifted_action(self, shifted_term):
-        "Returns the same action shifted by a given amount."
+    def shifted_action(self, shifted_term: Element) -> ShiftedAction:
+        """Transpose this action with shifting the given terminal or Nt.
+
+        That is, the sequence of:
+        - performing the action `self`, then
+        - shifting `shifted_term`
+        has the same effect as:
+        - shifting `shifted_term`, then
+        - performing the action `self.shifted_action(shifted_term)`.
+
+        If the resulting shifted action would be a no-op, instead return True.
+
+        If this is a conditional action and `shifted_term` indicates that the
+        condition wasn't met, return False.
+        """
         return self
 
-    def maybe_add(self, other):
+    def maybe_add(self, other: Action) -> typing.Optional[Action]:
         """Implement the fact of concatenating actions into a new action which can have
         a single state instead of multiple states which are following each others."""
-        actions = []
+        actions: typing.List[Action] = []
         if isinstance(self, Seq):
             actions.extend(list(self.actions))
         else:
@@ -58,15 +78,16 @@ class Action:
             actions.extend(list(other.actions))
         else:
             actions.append(other)
-        if any([a.is_condition() for a in actions]):
+        if any(a.is_condition() for a in actions):
             return None
-        if any([a.update_stack() for a in actions[:-1]]):
+        if any(a.update_stack() for a in actions[:-1]):
             return None
         return Seq(actions)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if self.__class__ != other.__class__:
             return False
+        assert isinstance(other, Action)
         if sorted(self.read) != sorted(other.read):
             return False
         if sorted(self.write) != sorted(other.write):
@@ -76,11 +97,11 @@ class Action:
                 return False
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if self._hash is not None:
             return self._hash
 
-        def hashed_content():
+        def hashed_content() -> typing.Iterator[object]:
             yield self.__class__
             yield "rd"
             for alias in self.read:
@@ -94,11 +115,17 @@ class Action:
         self._hash = hash(tuple(hashed_content()))
         return self._hash
 
-    def __lt__(self, other):
+    def __lt__(self, other: Action) -> bool:
         return hash(self) < hash(other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
+
+    def stable_str(self, states: typing.Any) -> str:
+        return str(self)
+
+
+ShiftedAction = typing.Union[Action, bool]
 
 
 class Reduce(Action):
@@ -106,58 +133,64 @@ class Reduce(Action):
     non-terminal. The replay attribute of a reduce action corresponds to the
     number of stack elements which would have to be popped and pushed again
     using the parser table after reducing this operation. """
-    __slots__ = 'nt', 'replay', 'pop'
+    __slots__ = ['nt', 'replay', 'pop']
 
-    def __init__(self, nt, pop, replay=0):
-        name = nt.name
-        if isinstance(name, InitNt):
-            name = "Start_" + name.goal.name
+    nt: Nt
+    pop: int
+    replay: int
+
+    def __init__(self, nt: Nt, pop: int, replay: int = 0) -> None:
+        nt_name = nt.name
+        if isinstance(nt_name, InitNt):
+            name = "Start_" + str(nt_name.goal.name)
+        else:
+            name = nt_name
         super().__init__([], ["nt_" + name])
         self.nt = nt    # Non-terminal which is reduced
         self.pop = pop  # Number of stack elements which should be replayed.
         self.replay = replay  # List of terms to shift back
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Reduce({}, {}, {})".format(self.nt, self.pop, self.replay)
 
-    def update_stack(self):
+    def update_stack(self) -> bool:
         return True
 
-    def reduce_with(self):
+    def reduce_with(self) -> Reduce:
         return self
 
-    def shifted_action(self, shifted_term):
+    def shifted_action(self, shifted_term: Element) -> Reduce:
         return Reduce(self.nt, self.pop, replay=self.replay + 1)
 
 
 class Lookahead(Action):
     """Define a Lookahead assertion which is meant to either accept or reject
     sequences of terminal/non-terminals sequences."""
-    __slots__ = 'terms', 'accept'
+    __slots__ = ['terms', 'accept']
 
-    def __init__(self, terms, accept):
-        assert isinstance(terms, (OrderedFrozenSet, frozenset))
-        assert all(not isinstance(t, Nt) for t in terms)
-        assert isinstance(accept, bool)
+    terms: typing.FrozenSet[str]
+    accept: bool
+
+    def __init__(self, terms: typing.FrozenSet[str], accept: bool):
         super().__init__([], [])
         self.terms = terms
         self.accept = accept
 
-    def is_inconsistent(self):
+    def is_inconsistent(self) -> bool:
         # A lookahead restriction cannot be encoded in code, it has to be
         # solved using fix_with_lookahead.
         return True
 
-    def is_condition(self):
+    def is_condition(self) -> bool:
         return True
 
-    def condition(self):
+    def condition(self) -> Lookahead:
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Lookahead({}, {})".format(self.terms, self.accept)
 
-    def shifted_action(self, shifted_term):
+    def shifted_action(self, shifted_term: Element) -> ShiftedAction:
         if isinstance(shifted_term, Nt):
             return True
         if shifted_term in self.terms:
@@ -169,52 +202,57 @@ class CheckNotOnNewLine(Action):
     """Check whether the terminal at the given stack offset is on a new line or
     not. If not this would produce an Error, otherwise this rule would be
     shifted."""
-    __slots__ = 'offset',
+    __slots__ = ['offset']
 
-    def __init__(self, offset=0):
+    offset: int
+
+    def __init__(self, offset: int = 0) -> None:
         # assert offset >= -1 and "Smaller offsets are not supported on all backends."
         super().__init__([], [])
         self.offset = offset
 
-    def is_inconsistent(self):
+    def is_inconsistent(self) -> bool:
         # We can only look at stacked terminals. Having an offset of 0 implies
         # that we are looking for the next terminal, which is not yet shifted.
         # Therefore this action is inconsistent as long as the terminal is not
         # on the stack.
         return self.offset >= 0
 
-    def is_condition(self):
+    def is_condition(self) -> bool:
         return True
 
-    def condition(self):
+    def condition(self) -> CheckNotOnNewLine:
         return self
 
-    def shifted_action(self, shifted_term):
+    def shifted_action(self, shifted_term: Element) -> ShiftedAction:
         if isinstance(shifted_term, Nt):
             return True
         return CheckNotOnNewLine(self.offset - 1)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "CheckNotOnNewLine({})".format(self.offset)
 
 
 class FilterFlag(Action):
     """Define a filter which check for one value of the flag, and continue to the
     next state if the top of the flag stack matches the expected value."""
-    __slots__ = 'flag', 'value'
+    __slots__ = ['flag', 'value']
 
-    def __init__(self, flag, value):
+    flag: str
+    value: object
+
+    def __init__(self, flag: str, value: object) -> None:
         super().__init__(["flag_" + flag], [])
         self.flag = flag
         self.value = value
 
-    def is_condition(self):
+    def is_condition(self) -> bool:
         return True
 
-    def condition(self):
+    def condition(self) -> FilterFlag:
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "FilterFlag({}, {})".format(self.flag, self.value)
 
 
@@ -224,27 +262,42 @@ class PushFlag(Action):
     default state machine and is popped by PopFlag, as-if this was another
     reduce action. This is particularly useful to raise the parse table from a
     LR(0) to an LR(k) without needing as much state duplications."""
-    __slots__ = 'flag', 'value'
+    __slots__ = ['flag', 'value']
 
-    def __init__(self, flag, value):
+    flag: str
+    value: object
+
+    def __init__(self, flag: str, value: object) -> None:
         super().__init__([], ["flag_" + flag])
         self.flag = flag
         self.value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "PushFlag({}, {})".format(self.flag, self.value)
 
 
 class PopFlag(Action):
     """Define an action which pops a flag from the flag bit stack."""
-    __slots__ = 'flag',
+    __slots__ = ['flag']
 
-    def __init__(self, flag):
+    flag: str
+
+    def __init__(self, flag: str) -> None:
         super().__init__(["flag_" + flag], ["flag_" + flag])
         self.flag = flag
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "PopFlag({})".format(self.flag)
+
+
+# OutputExpr: An expression mini-language that compiles very directly to code
+# in the output language (Rust or Python). An OutputExpr is one of:
+#
+# str - an identifier in the generated code
+# int - an index into the runtime stack
+# None or Some(FunCallArg) - an optional value
+#
+OutputExpr = typing.Union[str, int, None, grammar.Some]
 
 
 class FunCall(Action):
@@ -252,15 +305,26 @@ class FunCall(Action):
     pushpathne non-terminal. The replay attribute of a reduce action correspond
     to the number of stack elements which would have to be popped and pushed
     again using the parser table after reducing this operation. """
-    __slots__ = 'trait', 'method', 'offset', 'args', 'fallible', 'set_to'
+    __slots__ = ['trait', 'method', 'offset', 'args', 'fallible', 'set_to']
 
-    def __init__(self, method, args,
-                 trait=types.Type("AstBuilder"),
-                 fallible=False,
-                 set_to="val",
-                 offset=0,
-                 alias_read=[],
-                 alias_write=[]):
+    trait: types.Type
+    method: str
+    offset: int
+    args: typing.Tuple[OutputExpr, ...]
+    fallible: bool
+    set_to: str
+
+    def __init__(
+            self,
+            method: str,
+            args: typing.Tuple[OutputExpr, ...],
+            trait: types.Type = types.Type("AstBuilder"),
+            fallible: bool = False,
+            set_to: str = "val",
+            offset: int = 0,
+            alias_read: typing.List[str] = [],
+            alias_write: typing.List[str] = []
+    ) -> None:
         super().__init__(alias_read, alias_write)
         self.trait = trait        # Trait on which this method is implemented.
         self.method = method      # Method and argument to be read for calling it.
@@ -269,21 +333,22 @@ class FunCall(Action):
         self.args = args          # Tuple of arguments offsets.
         self.set_to = set_to      # Temporary variable name to set with the result.
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{} = {}::{}({}){} [off: {}]".format(
             self.set_to, self.trait, self.method,
             ", ".join(map(str, self.args)),
             self.fallible and '?' or '',
             self.offset)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "FunCall({})".format(', '.join(map(repr, [
             self.trait, self.method, self.fallible, self.read, self.write,
             self.args, self.set_to, self.offset
         ])))
 
-    def shifted_action(self, shifted_term):
-        return FunCall(self.method, self.args,
+    def shifted_action(self, shifted_term: Element) -> FunCall:
+        return FunCall(self.method,
+                       self.args,
                        trait=self.trait,
                        fallible=self.fallible,
                        set_to=self.set_to,
@@ -296,10 +361,11 @@ class Seq(Action):
     """Aggregate multiple actions in one statement. Note, that the aggregated
     actions should not contain any condition or action which are mutating the
     state. Only the last action aggregated can update the parser stack"""
-    __slots__ = 'actions',
+    __slots__ = ['actions']
 
-    def __init__(self, actions):
-        assert isinstance(actions, list)
+    actions: typing.Tuple[Action, ...]
+
+    def __init__(self, actions: typing.Sequence[Action]) -> None:
         read = [rd for a in actions for rd in a.read]
         write = [wr for a in actions for wr in a.write]
         super().__init__(read, write)
@@ -307,24 +373,31 @@ class Seq(Action):
         assert all([not a.is_condition() for a in actions[1:]])
         assert all([not a.update_stack() for a in actions[:-1]])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{{ {} }}".format("; ".join(map(str, self.actions)))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Seq({})".format(repr(self.actions))
 
-    def is_condition(self):
+    def is_condition(self) -> bool:
         return self.actions[0].is_condition()
 
-    def condition(self):
+    def condition(self) -> Action:
         return self.actions[0]
 
-    def update_stack(self):
+    def update_stack(self) -> bool:
         return self.actions[-1].update_stack()
 
-    def reduce_with(self):
+    def reduce_with(self) -> Reduce:
         return self.actions[-1].reduce_with()
 
-    def shifted_action(self, shift):
-        actions = list(map(lambda a: a.shifted_action(shift), self.actions))
+    def shifted_action(self, shift: Element) -> ShiftedAction:
+        actions: typing.List[Action] = []
+        for a in self.actions:
+            b = a.shifted_action(shift)
+            if isinstance(b, bool):
+                if b is False:
+                    return False
+            else:
+                actions.append(b)
         return Seq(actions)

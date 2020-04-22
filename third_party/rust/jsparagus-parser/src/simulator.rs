@@ -53,7 +53,7 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
             self.sim_state_stack.push(state);
             self.sim_node_stack.push(tv);
             // Execute any actions, such as reduce actions.
-            while state >= TABLES.shift_count {
+            if state >= TABLES.shift_count {
                 assert!(state < TABLES.action_count + TABLES.shift_count);
                 if noop_actions(self, state)? {
                     return Ok(true);
@@ -69,6 +69,19 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
         }
         Ok(false)
     }
+    fn unshift(&mut self) {
+        let tv = self.pop();
+        self.replay(tv)
+    }
+    fn pop(&mut self) -> TermValue<()> {
+        if let Some(s) = self.sim_node_stack.pop() {
+            self.sim_state_stack.pop();
+            return s;
+        }
+        let t = self.node_stack[self.sp - 1].term;
+        self.sp -= 1;
+        TermValue { term: t, value: () }
+    }
     fn replay(&mut self, tv: TermValue<()>) {
         self.replay_stack.push(tv)
     }
@@ -82,15 +95,6 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
             self.sp -= 1;
         }
         *self.sim_state_stack.last_mut().unwrap() = state;
-    }
-    fn pop(&mut self) -> TermValue<()> {
-        if let Some(s) = self.sim_node_stack.pop() {
-            self.sim_state_stack.pop();
-            return s;
-        }
-        let t = self.node_stack[self.sp - 1].term;
-        self.sp -= 1;
-        TermValue { term: t, value: () }
     }
     fn check_not_on_new_line(&mut self, _peek: usize) -> Result<'alloc, bool> {
         Ok(true)

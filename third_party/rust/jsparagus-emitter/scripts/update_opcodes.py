@@ -389,6 +389,9 @@ def generate_emit_methods(out_f, opcodes, types):
             assert len(params) == 1
             assert params[0][0] == 'u32'
             params[0] = ('GCThingIndex', params[0][1])
+        elif 'JOF_JUMP' in opcode.format_:
+            assert params[0][0] == 'i32'
+            params[0] = ('BytecodeOffsetDiff', params[0][1])
         else:
             assert int(opcode.nuses) != -1
 

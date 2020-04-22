@@ -5,17 +5,19 @@
 // Most of this functionality isn't used yet.
 #![allow(dead_code)]
 
-use crate::compilation_info::CompilationInfo;
-use crate::gcthings::{GCThing, GCThingIndex, GCThingList};
+use crate::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
+use crate::gcthings::{GCThingIndex, GCThingList};
 use crate::opcode::Opcode;
 use crate::regexp::{RegExpItem, RegExpList};
-use crate::scope_notes::{ScopeNote, ScopeNoteIndex, ScopeNoteList};
+use crate::scope_notes::{ScopeNoteIndex, ScopeNoteList};
 use crate::script_atom_set::{ScriptAtomSet, ScriptAtomSetIndex};
+use crate::stencil::ScriptStencil;
 use ast::source_atom_set::SourceAtomSetIndex;
 use byteorder::{ByteOrder, LittleEndian};
-use scope::data::{ScopeData, ScopeIndex};
+use scope::data::ScopeIndex;
 use scope::frame_slot::FrameSlot;
 use std::cmp;
+use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fmt;
 
@@ -98,25 +100,6 @@ pub enum SrcNoteType {
 #[allow(non_camel_case_types)]
 pub type u24 = u32;
 
-/// For tracking bytecode offsets in jumps
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[must_use]
-pub struct BytecodeOffset {
-    pub offset: usize,
-}
-
-impl BytecodeOffset {
-    fn new(offset: usize) -> Self {
-        Self { offset }
-    }
-}
-
-impl From<BytecodeOffset> for usize {
-    fn from(offset: BytecodeOffset) -> usize {
-        offset.offset
-    }
-}
-
 /// Low-level bytecode emitter.
 pub struct InstructionWriter {
     bytecode: Vec<u8>,
@@ -126,6 +109,8 @@ pub struct InstructionWriter {
     scope_notes: ScopeNoteList,
 
     regexps: RegExpList,
+
+    last_jump_target_offset: Option<BytecodeOffset>,
 
     main_offset: BytecodeOffset,
 
@@ -159,40 +144,6 @@ impl EmitOptions {
     }
 }
 
-/// The output of bytecode-compiling a script or module.
-#[derive(Debug)]
-pub struct EmitResult<'alloc> {
-    pub bytecode: Vec<u8>,
-    pub atoms: Vec<SourceAtomSetIndex>,
-    pub all_atoms: Vec<&'alloc str>,
-    pub slices: Vec<&'alloc str>,
-    pub regexps: Vec<RegExpItem>,
-    pub gcthings: Vec<GCThing>,
-    pub scopes: Vec<ScopeData>,
-    pub scope_notes: Vec<ScopeNote>,
-
-    // Line and column numbers for the first character of source.
-    pub lineno: usize,
-    pub column: usize,
-
-    pub main_offset: usize,
-    pub max_fixed_slots: FrameSlot,
-    pub maximum_stack_depth: u32,
-    pub body_scope_index: u32,
-    pub num_ic_entries: u32,
-    pub num_type_sets: u32,
-
-    pub strict: bool,
-    pub bindings_accessed_dynamically: bool,
-    pub has_call_site_obj: bool,
-    pub is_for_eval: bool,
-    pub is_module: bool,
-    pub is_function: bool,
-    pub has_non_syntactic_scope: bool,
-    pub needs_function_environment_objects: bool,
-    pub has_module_goal: bool,
-}
-
 /// The error of bytecode-compilation.
 #[derive(Clone, Debug)]
 pub enum EmitError {
@@ -215,54 +166,14 @@ impl InstructionWriter {
             gcthings: GCThingList::new(),
             scope_notes: ScopeNoteList::new(),
             regexps: RegExpList::new(),
-            main_offset: BytecodeOffset::new(0),
+            last_jump_target_offset: None,
+            main_offset: BytecodeOffset::from(0usize),
             max_fixed_slots: FrameSlot::new(0),
             stack_depth: 0,
             maximum_stack_depth: 0,
             body_scope_index: None,
             num_ic_entries: 0,
             num_type_sets: 0,
-        }
-    }
-
-    pub fn into_emit_result<'alloc>(
-        self,
-        compilation_info: CompilationInfo<'alloc>,
-    ) -> EmitResult<'alloc> {
-        EmitResult {
-            bytecode: self.bytecode,
-            atoms: self.atoms.into(),
-            all_atoms: compilation_info.atoms.into(),
-            slices: compilation_info.slices.into(),
-            regexps: self.regexps.into(),
-            gcthings: self.gcthings.into(),
-            scopes: compilation_info.scope_data_map.into(),
-            scope_notes: self.scope_notes.into(),
-
-            lineno: 1,
-            column: 0,
-
-            main_offset: self.main_offset.into(),
-            max_fixed_slots: self.max_fixed_slots,
-
-            // These values probably can't be out of range for u32, as we would
-            // have hit other limits first. Release-assert anyway.
-            maximum_stack_depth: self.maximum_stack_depth.try_into().unwrap(),
-            body_scope_index: usize::from(self.body_scope_index.expect("body scope should be set"))
-                .try_into()
-                .unwrap(),
-            num_ic_entries: self.num_ic_entries.try_into().unwrap(),
-            num_type_sets: self.num_type_sets.try_into().unwrap(),
-
-            strict: false,
-            bindings_accessed_dynamically: false,
-            has_call_site_obj: false,
-            is_for_eval: false,
-            is_module: false,
-            is_function: false,
-            has_non_syntactic_scope: false,
-            needs_function_environment_objects: false,
-            has_module_goal: false,
         }
     }
 
@@ -302,6 +213,10 @@ impl InstructionWriter {
 
     fn write_offset(&mut self, offset: i32) {
         self.write_i32(offset);
+    }
+
+    fn write_bytecode_offset_diff(&mut self, offset: BytecodeOffsetDiff) {
+        self.write_i32(i32::from(offset));
     }
 
     fn write_f64(&mut self, val: f64) {
@@ -376,21 +291,52 @@ impl InstructionWriter {
         }
     }
 
+    fn set_last_jump_target_offset(&mut self, target: BytecodeOffset) {
+        self.last_jump_target_offset = Some(target);
+    }
+
+    fn get_end_of_bytecode(&mut self, offset: BytecodeOffset) -> usize {
+        // find the offset after the end of bytecode associated with this offset.
+        let target_opcode = Opcode::try_from(self.bytecode[offset.offset]).unwrap();
+        offset.offset + target_opcode.instruction_length()
+    }
+
     pub fn get_atom_index(&mut self, value: SourceAtomSetIndex) -> ScriptAtomSetIndex {
         self.atoms.insert(value)
     }
 
-    pub fn patch_jump_target(&mut self, jumplist: Vec<BytecodeOffset>) {
-        let target = self.bytecode_offset();
+    pub fn emit_jump_target_and_patch(&mut self, jumplist: Vec<BytecodeOffset>) {
+        let mut target = self.bytecode_offset();
+        let last_jump = self.last_jump_target_offset;
+        match last_jump {
+            Some(offset) => {
+                if self.get_end_of_bytecode(offset) != target.offset {
+                    self.jump_target();
+                    self.set_last_jump_target_offset(target);
+                } else {
+                    target = offset;
+                }
+            }
+            None => {
+                self.jump_target();
+                self.set_last_jump_target_offset(target);
+            }
+        }
+
         for jump in jumplist {
-            let new_target = (target.offset - jump.offset) as i32;
-            let index = jump.offset + 1;
-            LittleEndian::write_i32(&mut self.bytecode[index..index + 4], new_target);
+            self.patch_jump_to_target(target, jump);
         }
     }
 
+    pub fn patch_jump_to_target(&mut self, target: BytecodeOffset, jump: BytecodeOffset) {
+        let diff = target.diff_from(jump).into();
+        let index = jump.offset + 1;
+        // FIXME: Use native endian instead of little endian
+        LittleEndian::write_i32(&mut self.bytecode[index..index + 4], diff);
+    }
+
     pub fn bytecode_offset(&mut self) -> BytecodeOffset {
-        BytecodeOffset::new(self.bytecode.len())
+        BytecodeOffset::from(self.bytecode.len())
     }
 
     pub fn stack_depth(&self) -> usize {
@@ -1020,44 +966,44 @@ impl InstructionWriter {
         self.write_u8(depth_hint);
     }
 
-    pub fn goto_(&mut self, offset: i32) {
+    pub fn goto_(&mut self, offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Goto);
-        self.write_i32(offset);
+        self.write_bytecode_offset_diff(offset);
     }
 
-    pub fn if_eq(&mut self, forward_offset: i32) {
+    pub fn if_eq(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::IfEq);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn if_ne(&mut self, offset: i32) {
+    pub fn if_ne(&mut self, offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::IfNe);
-        self.write_i32(offset);
+        self.write_bytecode_offset_diff(offset);
     }
 
-    pub fn and_(&mut self, forward_offset: i32) {
+    pub fn and_(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::And);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn or_(&mut self, forward_offset: i32) {
+    pub fn or_(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Or);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn coalesce(&mut self, forward_offset: i32) {
+    pub fn coalesce(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Coalesce);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn case_(&mut self, forward_offset: i32) {
+    pub fn case_(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Case);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn default_(&mut self, forward_offset: i32) {
+    pub fn default_(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Default);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
     pub fn return_(&mut self) {
@@ -1112,9 +1058,9 @@ impl InstructionWriter {
         self.write_u24(resume_index);
     }
 
-    pub fn gosub(&mut self, forward_offset: i32) {
+    pub fn gosub(&mut self, forward_offset: BytecodeOffsetDiff) {
         self.emit_op(Opcode::Gosub);
-        self.write_i32(forward_offset);
+        self.write_bytecode_offset_diff(forward_offset);
     }
 
     pub fn finally(&mut self) {
@@ -1455,5 +1401,42 @@ impl InstructionWriter {
 
     pub fn switch_to_main(&mut self) {
         self.main_offset = self.bytecode_offset();
+    }
+}
+
+impl From<InstructionWriter> for ScriptStencil {
+    fn from(emit: InstructionWriter) -> Self {
+        Self {
+            bytecode: emit.bytecode,
+            atoms: emit.atoms.into(),
+            regexps: emit.regexps.into(),
+            gcthings: emit.gcthings.into(),
+            scope_notes: emit.scope_notes.into(),
+
+            lineno: 1,
+            column: 0,
+
+            main_offset: emit.main_offset.into(),
+            max_fixed_slots: emit.max_fixed_slots,
+
+            // These values probably can't be out of range for u32, as we would
+            // have hit other limits first. Release-assert anyway.
+            maximum_stack_depth: emit.maximum_stack_depth.try_into().unwrap(),
+            body_scope_index: usize::from(emit.body_scope_index.expect("body scope should be set"))
+                .try_into()
+                .unwrap(),
+            num_ic_entries: emit.num_ic_entries.try_into().unwrap(),
+            num_type_sets: emit.num_type_sets.try_into().unwrap(),
+
+            strict: false,
+            bindings_accessed_dynamically: false,
+            has_call_site_obj: false,
+            is_for_eval: false,
+            is_module: false,
+            is_function: false,
+            has_non_syntactic_scope: false,
+            needs_function_environment_objects: false,
+            has_module_goal: false,
+        }
     }
 }

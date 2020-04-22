@@ -1,7 +1,12 @@
 """Parse a grammar written in ECMArkup."""
 
+from __future__ import annotations
+# mypy: no-implicit-optional
+
 import os
 import collections
+from typing import Dict, Iterable, Optional, Tuple
+
 from jsparagus import parse_pgen, gen, grammar, extension, types
 from jsparagus.lexer import LexicalGrammar
 from jsparagus.ordered import OrderedSet, OrderedFrozenSet
@@ -89,7 +94,7 @@ class ESGrammarBuilder:
         # syntactic grammar.
         if terminal_names is None:
             terminal_names = frozenset()
-        self.terminal_names = terminal_names
+        self.terminal_names = frozenset(terminal_names)
         self.reset()
 
     def reset(self):
@@ -493,14 +498,24 @@ def finish_grammar(nt_defs, goals, variable_terminals, synthetic_terminals,
 
 
 def parse_esgrammar(
-        text,
+        text: str,
         *,
-        filename=None,
-        extensions=[],
-        goals=None,
-        terminal_names=None,
-        synthetic_terminals=None,
-        single_grammar=True):
+        filename: Optional[str] = None,
+        extensions: Iterable[Tuple[os.PathLike, int, str]] = (),
+        goals: Optional[Iterable[str]] = None,
+        terminal_names: Iterable[str] = (),
+        synthetic_terminals: Optional[Dict[str, OrderedSet[str]]] = None,
+        single_grammar: bool = True
+) -> grammar.Grammar:
+    if not text.endswith("\n\n"):
+        # Horrible hack: add a blank line at the end of the document so that
+        # the esgrammar grammar can use newlines as delimiters. :-P
+        text += "\n"
+
+    terminal_names = frozenset(terminal_names)
+    if synthetic_terminals is None:
+        synthetic_terminals = {}
+
     builder = ESGrammarBuilder(terminal_names)
     parser = ESGrammarParser(builder=builder, goal="grammar")
     lexer = ESGrammarLexer(parser, filename=filename)
@@ -517,10 +532,14 @@ def parse_esgrammar(
         result = lexer.close()
         grammar_extensions.append(result)
 
+    if goals is None:
+        # Default to the first nonterminal in the input.
+        goals = [nt_defs[0][0]]
+
     return finish_grammar(
         nt_defs,
         goals=goals,
-        variable_terminals=set(terminal_names) - set(synthetic_terminals),
+        variable_terminals=terminal_names - frozenset(synthetic_terminals),
         synthetic_terminals=synthetic_terminals,
         single_grammar=single_grammar,
         extensions=grammar_extensions)
