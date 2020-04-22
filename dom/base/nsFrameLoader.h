@@ -133,17 +133,19 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
   void SendIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
-  // When creating a nsFrameLoader which is a static clone, two methods are
-  // called at different stages. The `CreateStaticClone` method is first called
-  // on the source nsFrameLoader, passing in the destination frameLoader as the
-  // `aDest` argument. This is done during the static clone operation on the
-  // original document.
+  // When creating a nsFrameLoaderOwner which is a static clone, a
+  // `nsFrameLoader` is not immediately attached to it. Instead, it is added to
+  // the static clone document's `PendingFrameStaticClones` list.
   //
-  // After the original document's clone is complete, the `FinishStaticClone`
-  // method is called on the target nsFrameLoader, which clones the inner
-  // document of the source nsFrameLoader.
-  nsresult CreateStaticClone(nsFrameLoader* aDest);
-  nsresult FinishStaticClone();
+  // After the parent document has been fully cloned, a new frameloader will be
+  // created for the cloned iframe, and `FinishStaticClone` will be called on
+  // it, which will clone the inner document of the source nsFrameLoader.
+  //
+  // The `aCloneDocShell` and `aCloneDocument` outparameters will be filled with
+  // the values from the newly cloned subframe.
+  nsresult FinishStaticClone(nsFrameLoader* aStaticCloneOf,
+                             nsIDocShell** aCloneDocShell,
+                             Document** aCloneDocument);
 
   // WebIDL methods
 
@@ -485,10 +487,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   RefPtr<Document> mContainerDocWhileDetached;
-
-  // When performing a static clone, this holds the other nsFrameLoader which
-  // this object is a static clone of.
-  RefPtr<nsFrameLoader> mStaticCloneOf;
 
   // When performing a process switch, this value is used rather than mURIToLoad
   // to identify the process-switching load which should be resumed in the
