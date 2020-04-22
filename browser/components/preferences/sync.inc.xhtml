@@ -1,0 +1,244 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Sync panel -->
+
+<script src="chrome://browser/content/preferences/sync.js"/>
+<html:template id="template-paneSync">
+<hbox id="firefoxAccountCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneSync">
+  <html:h1 data-l10n-id="pane-sync-title2"/>
+</hbox>
+
+<deck id="weavePrefsDeck" data-category="paneSync" hidden="true"
+      data-hidden-from-search="true">
+  <groupbox id="noFxaAccount">
+    <hbox>
+      <vbox flex="1">
+        <label id="noFxaCaption"><html:h2 data-l10n-id="sync-signedout-caption"/></label>
+        <description id="noFxaDescription" flex="1" data-l10n-id="sync-signedout-description"/>
+      </vbox>
+      <vbox>
+        <image class="fxaSyncIllustration"/>
+      </vbox>
+    </hbox>
+    <hbox id="fxaNoLoginStatus" align="center" flex="1">
+      <vbox flex="1">
+        <hbox align="center" flex="1">
+          <button id="noFxaSignIn"
+                  is="highlightable-button"
+                  class="accessory-button"
+                  data-l10n-id="sync-signedout-account-signin2"/>
+        </hbox>
+      </vbox>
+    </hbox>
+    <label class="fxaMobilePromo" data-l10n-id="sync-mobile-promo">
+      <html:img
+        src="chrome://browser/skin/logo-android.svg"
+        data-l10n-name="android-icon"
+        class="androidIcon"/>
+      <html:a
+        data-l10n-name="android-link"
+        class="fxaMobilePromo-android text-link" target="_blank"/>
+      <html:img
+        src="chrome://browser/skin/logo-ios.svg"
+        data-l10n-name="ios-icon"
+        class="iOSIcon"/>
+      <html:a
+        data-l10n-name="ios-link"
+        class="fxaMobilePromo-ios text-link" target="_blank"/>
+    </label>
+  </groupbox>
+
+  <vbox id="hasFxaAccount">
+    <hbox>
+      <vbox id="fxaContentWrapper" flex="1">
+        <groupbox id="fxaGroup">
+          <label class="search-header" hidden="true"><html:h2 data-l10n-id="pane-sync-title2"/></label>
+
+          <deck id="fxaLoginStatus" flex="1">
+
+            <!-- logged in and verified and all is good -->
+            <hbox id="fxaLoginVerified" align="center" flex="1">
+              <image id="openChangeProfileImage"
+                     class="fxaProfileImage actionable"
+                     role="button"
+                     data-l10n-id="sync-profile-picture"/>
+              <vbox flex="1" pack="center">
+                <hbox flex="1" align="baseline">
+                  <label id="fxaDisplayName" hidden="true">
+                    <html:h2 id="fxaDisplayNameHeading"/>
+                  </label>
+                  <label id="fxaEmailAddress" flex="1" crop="end"/>
+                  <button id="fxaUnlinkButton"
+                          is="highlightable-button"
+                          class="accessory-button"
+                          data-l10n-id="sync-sign-out"/>
+                </hbox>
+                <hbox>
+                  <html:a id="verifiedManage" class="openLink"
+                          data-l10n-id="sync-manage-account"/>
+                </hbox>
+              </vbox>
+            </hbox>
+
+            <!-- logged in to an unverified account -->
+            <hbox id="fxaLoginUnverified">
+              <vbox>
+                <image class="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1" pack="center">
+                <hbox align="center">
+                  <image class="fxaLoginRejectedWarning"/>
+                  <description flex="1"
+                    class="l10nArgsEmailAddress"
+                    data-l10n-id="sync-signedin-unverified"
+                    data-l10n-args='{"email": ""}'/>
+                </hbox>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="verifyFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-resend-verification"/>
+                  <button id="unverifiedUnlinkFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-remove-account"/>
+                </hbox>
+              </vbox>
+            </hbox>
+
+            <!-- logged in locally but server rejected credentials -->
+            <hbox id="fxaLoginRejected">
+              <vbox>
+                <image class="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1" pack="center">
+                <hbox align="center">
+                  <image class="fxaLoginRejectedWarning"/>
+                  <description flex="1"
+                    class="l10nArgsEmailAddress"
+                    data-l10n-id="sync-signedin-login-failure"
+                    data-l10n-args='{"email": ""}'/>
+                </hbox>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="rejectReSignIn"
+                          is="highlightable-button"
+                          data-l10n-id="sync-sign-in"/>
+                  <button id="rejectUnlinkFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-remove-account"/>
+                </hbox>
+              </vbox>
+            </hbox>
+          </deck>
+        </groupbox>
+
+        <groupbox>
+          <label control="fxaSyncComputerName">
+            <html:h2 data-l10n-id="sync-device-name-header"/>
+          </label>
+          <hbox id="fxaDeviceName">
+            <html:input id="fxaSyncComputerName" type="text" disabled="true"/>
+            <button id="fxaChangeDeviceName"
+                    is="highlightable-button"
+                    class="needs-account-ready"
+                    data-l10n-id="sync-device-name-change"/>
+            <button id="fxaCancelChangeDeviceName"
+                    is="highlightable-button"
+                    data-l10n-id="sync-device-name-cancel"
+                    hidden="true"/>
+            <button id="fxaSaveChangeDeviceName"
+                    is="highlightable-button"
+                    data-l10n-id="sync-device-name-save"
+                    hidden="true"/>
+          </hbox>
+        </groupbox>
+
+        <groupbox>
+          <deck id="syncStatus" flex="1">
+            <!-- sync not yet configured. -->
+            <vbox id="syncNotConfigured">
+              <label>
+                <html:h2 data-l10n-id="prefs-syncing-off"/>
+              </label>
+              <hbox class="sync-group sync-not-configured">
+                <vbox flex="1">
+                  <label data-l10n-id="prefs-sync-offer-setup-label"/>
+                </vbox>
+                <vbox>
+                  <button id="syncSetup"
+                          is="highlightable-button"
+                          class="accessory-button needs-account-ready"
+                          data-l10n-id="prefs-sync-setup"/>
+                </vbox>
+              </hbox>
+            </vbox>
+
+            <vbox id="syncConfigured">
+              <hbox>
+                <html:h2 data-l10n-id="prefs-syncing-on"/>
+                <spacer flex="1"/>
+                <button id="syncNow"
+                        class="accessory-button needs-account-ready"
+                        data-l10n-id="prefs-sync-now"
+                        data-l10n-attrs="labelnotsyncing, accesskeynotsyncing, labelsyncing"/>
+              </hbox>
+              <vbox class="sync-group sync-configured">
+                <label data-l10n-id="sync-currently-syncing-heading"/>
+                <html:div class="sync-engines-list">
+                  <html:div engine_preference="services.sync.engine.bookmarks">
+                    <image class="sync-engine-image sync-engine-bookmarks"/>
+                    <label data-l10n-id="sync-currently-syncing-bookmarks"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.history">
+                    <image class="sync-engine-image sync-engine-history"/>
+                    <label data-l10n-id="sync-currently-syncing-history"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.tabs">
+                    <image class="sync-engine-image sync-engine-tabs"/>
+                    <label data-l10n-id="sync-currently-syncing-tabs"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.passwords">
+                    <image class="sync-engine-image sync-engine-passwords"/>
+                    <label data-l10n-id="sync-currently-syncing-logins-passwords"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.addresses">
+                    <image class="sync-engine-image sync-engine-addresses"/>
+                    <label data-l10n-id="sync-currently-syncing-addresses"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.creditcards">
+                    <image class="sync-engine-image sync-engine-creditcards"/>
+                    <label data-l10n-id="sync-currently-syncing-creditcards"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.addons">
+                    <image class="sync-engine-image sync-engine-addons"/>
+                    <label data-l10n-id="sync-currently-syncing-addons"/>
+                  </html:div>
+                  <html:div engine_preference="services.sync.engine.prefs">
+                    <image class="sync-engine-image sync-engine-prefs"/>
+                    <label data-l10n-id="sync-currently-syncing-prefs"/>
+                  </html:div>
+                </html:div>
+                <hbox>
+                  <button id="syncChangeOptions"
+                          is="highlightable-button"
+                          data-l10n-id="sync-change-options"/>
+                  <spacer flex="1"/>
+                </hbox>
+              </vbox>
+            </vbox>
+          </deck>
+        </groupbox>
+      </vbox>
+    </hbox>
+    <vbox align="start">
+      <label id="connect-another-device"
+             is="text-link"
+             class="fxaMobilePromo"
+             data-l10n-id="sync-connect-another-device"/>
+    </vbox>
+  </vbox>
+</deck>
+</html:template>

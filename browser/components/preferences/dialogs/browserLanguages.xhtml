@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+
+<window type="child"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="browser-languages-window"
+        data-l10n-attrs="title, style"
+        persist="screenX screenY"
+        onload="gBrowserLanguagesDialog.onLoad();">
+<dialog id="BrowserLanguagesDialog"
+        buttons="accept,cancel,help"
+        helpTopic="change-language">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/languages.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/preferences/dialogs/browserLanguages.js"/>
+
+  <description data-l10n-id="browser-languages-description"/>
+
+  <box flex="1" style="display: grid; grid-template-rows: 1fr auto; grid-template-columns: 1fr auto;">
+    <richlistbox id="selectedLocales"/>
+    <vbox>
+      <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
+      <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
+      <button id="remove" class="action-button" disabled="true" data-l10n-id="languages-customize-remove"/>
+    </vbox>
+
+    <menulist id="availableLocales"
+              class="available-locales-list"
+              data-l10n-id="browser-languages-select-language"
+              data-l10n-attrs="placeholder,label">
+      <menupopup/>
+    </menulist>
+    <button id="add"
+            class="add-browser-language action-button"
+            data-l10n-id="languages-customize-add"
+            disabled="true"/>
+  </box>
+  <hbox id="warning-message" class="message-bar message-bar-warning" hidden="true">
+    <image class="message-bar-icon"/>
+    <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
+  </hbox>
+</dialog>
+</window>

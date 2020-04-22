@@ -1,0 +1,222 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<?xml-stylesheet href="chrome://global/skin/in-content/common.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/dialogs/handlers.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/search.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/containers.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/privacy.css"?>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        role="document"
+        id="preferences-root">
+
+<head>
+  <!-- @CSP: The 'oncommand' handler for 'focusSearch1' can not easily be rewritten (see Bug 371900)
+       hence we are allowing the inline handler in the script-src directive using the hash
+       sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ==
+       Additionally we should remove 'unsafe-inline' from style-src, see Bug 1579160 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon: https: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'" />
+
+  <title data-l10n-id="pref-page-title"></title>
+
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/branding/brandings.ftl"/>
+  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <link rel="localization" href="browser/preferences/preferences.ftl"/>
+  <!-- Used by fontbuilder.js -->
+  <link rel="localization" href="browser/preferences/fonts.ftl"/>
+
+  <!-- Links below are only used for search-l10n-ids into subdialogs -->
+  <link rel="localization" href="browser/preferences/blocklists.ftl"/>
+  <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+  <link rel="localization" href="browser/preferences/colors.ftl"/>
+  <link rel="localization" href="browser/preferences/connection.ftl"/>
+  <link rel="localization" href="browser/preferences/languages.ftl"/>
+  <link rel="localization" href="browser/preferences/permissions.ftl"/>
+  <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
+  <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+  <link rel="localization" href="browser/aboutDialog.ftl"/>
+  <link rel="localization" href="browser/sanitize.ftl"/>
+  <link rel="localization" href="toolkit/updates/history.ftl"/>
+  <link rel="localization" href="security/certificates/deviceManager.ftl"/>
+  <link rel="localization" href="security/certificates/certManager.ftl"/>
+
+  <link rel="shortcut icon" href="chrome://global/skin/icons/settings.svg"/>
+
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/preferences/preferences.js"/>
+  <script src="chrome://browser/content/preferences/extensionControlled.js"/>
+  <script src="chrome://browser/content/preferences/findInPage.js"/>
+  <script src="chrome://browser/content/preferences/subdialogs.js"/>
+</head>
+
+<html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+           id="preferences-body">
+
+  <stringbundle id="pkiBundle"
+                src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="browserBundle"
+                src="chrome://browser/locale/browser.properties"/>
+
+  <stack id="preferences-stack" flex="1">
+  <hbox flex="1">
+
+    <vbox class="navigation">
+      <!-- category list -->
+      <richlistbox id="categories">
+        <richlistitem id="category-general"
+                      class="category"
+                      value="paneGeneral"
+                      helpTopic="prefs-main"
+                      data-l10n-id="category-general"
+                      data-l10n-attrs="tooltiptext"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-general-title"></label>
+        </richlistitem>
+
+        <richlistitem id="category-home"
+                      class="category"
+                      value="paneHome"
+                      helpTopic="prefs-home"
+                      data-l10n-id="category-home"
+                      data-l10n-attrs="tooltiptext"
+                      align="center"
+                      hidden="false">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-home-title"></label>
+        </richlistitem>
+
+        <richlistitem id="category-search"
+                      class="category"
+                      value="paneSearch"
+                      helpTopic="prefs-search"
+                      data-l10n-id="category-search"
+                      data-l10n-attrs="tooltiptext"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-search-title"></label>
+        </richlistitem>
+
+        <richlistitem id="category-containers"
+                      class="category"
+                      value="paneContainers"
+                      helpTopic="prefs-containers"
+                      hidden="true"/>
+
+        <richlistitem id="category-privacy"
+                      class="category"
+                      value="panePrivacy"
+                      helpTopic="prefs-privacy"
+                      data-l10n-id="category-privacy"
+                      data-l10n-attrs="tooltiptext"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-privacy-title"></label>
+        </richlistitem>
+
+        <richlistitem id="category-sync"
+                      class="category"
+                      hidden="true"
+                      value="paneSync"
+                      helpTopic="prefs-weave"
+                      data-l10n-id="category-sync2"
+                      data-l10n-attrs="tooltiptext"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-sync-title2"></label>
+        </richlistitem>
+      </richlistbox>
+
+      <spacer flex="1"/>
+
+      <hbox class="sidebar-footer-button" pack="center">
+        <label id="addonsButton" is="text-link">
+          <hbox align="center">
+            <image class="sidebar-footer-icon addons-icon"/>
+            <label class="sidebar-footer-label" flex="1" data-l10n-id="addons-button-label"></label>
+          </hbox>
+        </label>
+      </hbox>
+
+      <hbox class="sidebar-footer-button help-button" pack="center">
+        <label id="helpButton" is="text-link">
+          <hbox align="center">
+            <image class="sidebar-footer-icon help-icon"/>
+            <label class="sidebar-footer-label" flex="1" data-l10n-id="help-button-label"></label>
+          </hbox>
+        </label>
+      </hbox>
+    </vbox>
+
+    <keyset>
+      <!-- If you change the code within the oncommand handler of 'focusSearch1' you have to update the current hash of
+           sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ== within the CSP above. -->
+      <key data-l10n-id="focus-search" key="" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
+    </keyset>
+
+    <vbox class="main-content" flex="1" align="start">
+      <vbox class="pane-container">
+        <hbox class="sticky-container" pack="end" align="start">
+          <hbox id="policies-container" align="stretch" flex="1" hidden="true">
+            <hbox align="center">
+              <image class="info-icon"></image>
+            </hbox>
+            <hbox align="center" flex="1">
+              <label class="policies-label"
+                     flex="1"
+                     href="about:policies"
+                     useoriginprincipal="true"
+                     is="text-link"
+                     data-l10n-id="managed-notice"/>
+            </hbox>
+          </hbox>
+          <search-textbox
+            id="searchInput"
+            data-l10n-id="search-input-box"
+            data-l10n-attrs="placeholder, style"
+            hidden="true"/>
+        </hbox>
+        <vbox id="mainPrefPane">
+#include searchResults.inc.xhtml
+#include main.inc.xhtml
+#include home.inc.xhtml
+#include search.inc.xhtml
+#include privacy.inc.xhtml
+#include containers.inc.xhtml
+#include sync.inc.xhtml
+        </vbox>
+      </vbox>
+    </vbox>
+  </hbox>
+
+  <stack id="dialogStack" hidden="true"/>
+  <vbox id="dialogTemplate" class="dialogOverlay" align="center" pack="center" topmost="true" hidden="true">
+    <vbox class="dialogBox"
+          pack="end"
+          role="dialog"
+          aria-labelledby="dialogTitle">
+      <hbox class="dialogTitleBar" align="center">
+        <label class="dialogTitle" flex="1"/>
+        <button class="dialogClose close-icon"
+                data-l10n-id="close-button"/>
+      </hbox>
+      <browser class="dialogFrame"
+               autoscroll="false"
+               disablehistory="true"/>
+    </vbox>
+  </vbox>
+  </stack>
+</html:body>
+</html>
