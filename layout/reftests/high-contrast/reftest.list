@@ -17,7 +17,7 @@ fuzzy-if(cocoaWidget,255-255,80-80) == backplate-bg-image-005.html backplate-bg-
 fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
 
 fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
-fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) fuzzy-if(!nativeThemePref,0-21,0-6) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
 fuzzy-if(cocoaWidget,255-255,1495-1495) fuzzy-if(winWidget,255-255,353-353) fuzzy-if(Android,255-255,700-700) == backplate-bg-image-010.html backplate-bg-image-010-ref.html
 fuzzy-if(cocoaWidget,255-255,284-320) == backplate-bg-image-011.html backplate-bg-image-011-ref.html
