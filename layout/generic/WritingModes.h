@@ -1100,22 +1100,28 @@ struct LogicalSides final {
     return (mBits & aSideBits) == aSideBits;
   }
   LogicalSides operator|(LogicalSides aOther) const {
-    // FIXME: Check writing modes here.
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
     return *this | LogicalSideBits(aOther.mBits);
   }
   LogicalSides operator|(LogicalSideBits aSideBits) const {
     return LogicalSides(mWritingMode, LogicalSideBits(mBits | aSideBits));
   }
   LogicalSides& operator|=(LogicalSides aOther) {
-    // FIXME: Check writing modes here.
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
     return *this |= LogicalSideBits(aOther.mBits);
   }
   LogicalSides& operator|=(LogicalSideBits aSideBits) {
     mBits |= aSideBits;
     return *this;
   }
-  bool operator==(LogicalSides aOther) const { return mBits == aOther.mBits; }
-  bool operator!=(LogicalSides aOther) const { return !(*this == aOther); }
+  bool operator==(LogicalSides aOther) const {
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
+    return mBits == aOther.mBits;
+  }
+  bool operator!=(LogicalSides aOther) const {
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
+    return !(*this == aOther);
+  }
 
 #ifdef DEBUG
   WritingMode GetWritingMode() const { return mWritingMode; }
@@ -1390,6 +1396,7 @@ class LogicalMargin {
   }
 
   LogicalMargin& ApplySkipSides(LogicalSides aSkipSides) {
+    CHECK_WRITING_MODE(aSkipSides.GetWritingMode());
     if (aSkipSides.BStart()) {
       BStart() = 0;
     }
