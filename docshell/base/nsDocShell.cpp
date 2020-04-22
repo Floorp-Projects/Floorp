@@ -5994,52 +5994,32 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
       UnblockEmbedderLoadEventForFailure();
 
-      // We don't really need to add the blocked node if we are not testing.
-      // This could save a IPC here.
-      if (!StaticPrefs::
-              privacy_trackingprotection_testing_report_blocked_node()) {
+      // frameElement is our nsIContent to be annotated
+      RefPtr<Element> frameElement;
+      nsPIDOMWindowOuter* thisWindow = GetWindow();
+      if (!thisWindow) {
         return NS_OK;
       }
 
-      RefPtr<BrowsingContext> bc = GetBrowsingContext();
-      RefPtr<BrowsingContext> parentBC = bc->GetParent();
-
-      if (!parentBC) {
+      frameElement = thisWindow->GetFrameElement();
+      if (!frameElement) {
         return NS_OK;
       }
 
-      if (parentBC->IsInProcess()) {
-        // We can directly add the blocked node in the parent document if the
-        // parent is in the same process.
-        nsCOMPtr<nsPIDOMWindowOuter> parentOuter = parentBC->GetDOMWindow();
-
-        if (!parentOuter) {
-          return NS_OK;
-        }
-
-        nsCOMPtr<nsPIDOMWindowInner> parentInner =
-            parentOuter->GetCurrentInnerWindow();
-
-        if (!parentInner) {
-          return NS_OK;
-        }
-
-        RefPtr<Document> parentDoc;
-        parentDoc = parentInner->GetExtantDoc();
-        if (!parentDoc) {
-          return NS_OK;
-        }
-
-        parentDoc->AddBlockedNodeByClassifier(bc->GetEmbedderElement());
-      } else {
-        // If the parent is out-of-process, we send to the process of the
-        // document which embeds the frame to add the blocked node there.
-        RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
-        if (browserChild) {
-          Unused << browserChild->SendReportBlockedEmbedderNodeByClassifier();
-        }
+      // Parent window
+      nsCOMPtr<nsIDocShellTreeItem> parentItem;
+      GetInProcessSameTypeParent(getter_AddRefs(parentItem));
+      if (!parentItem) {
+        return NS_OK;
       }
 
+      RefPtr<Document> parentDoc;
+      parentDoc = parentItem->GetDocument();
+      if (!parentDoc) {
+        return NS_OK;
+      }
+
+      parentDoc->AddBlockedNodeByClassifier(frameElement);
       return NS_OK;
     }
 
