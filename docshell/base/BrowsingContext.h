@@ -72,13 +72,15 @@ class WindowProxyHolder;
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
-// This defines the default do-nothing implementations for DidSet()
-// and CanSet() for all the fields. They may be overloaded to provide
-// different behavior for a specific field.
-// DidSet() is used to run code in any process that sees the
-// the value updated (note: even if the value itself didn't change).
-// CanSet() is used to verify that the setting is allowed, and will
-// assert if it fails in Debug builds.
+//
+// The `DidSet` and `CanSet` methods may be overloaded to provide different
+// behavior for a specific field.
+//  * `DidSet` is called to run code in every process whenever the value is
+//    updated (This currently occurs even if the value didn't change, though
+//    this may change in the future).
+//  * `CanSet` is called before attempting to set the value, in both the process
+//    which calls `Set`, and the parent process, and will kill the misbehaving
+//    process if it fails.
 #define MOZ_EACH_BC_FIELD(FIELD)                                             \
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
