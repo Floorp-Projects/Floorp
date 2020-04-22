@@ -342,6 +342,12 @@ struct KeyValuePair
     nsString value;
 };
 
+union SyncedContextInitializer
+{
+    BrowsingContextInitializer;
+    WindowContextInitializer;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -826,8 +832,7 @@ child:
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
-    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits,
-                                       WindowContextInitializer[] aWindowInits);
+    async RegisterBrowsingContextGroup(SyncedContextInitializer[] aInits);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
     // Initialize top-level actor for testing content process sandbox.
@@ -1590,18 +1595,6 @@ both:
      * have valid targets.
      */
     async DetachBrowsingContext(uint64_t aContextId) returns (bool unused);
-
-    /**
-     * Removes all of 'aContext'\'s children, and caches them in the
-     * BrowsingContextGroup.
-     */
-    async CacheBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext);
-
-    /**
-     * Re-attach all BrowsingContexts in a 'aContext'.
-     */
-    async RestoreBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext,
-                                         MaybeDiscardedBrowsingContext[] aChildren);
 
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
