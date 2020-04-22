@@ -285,11 +285,6 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       [self] { self->mFlushObserver = new CheckerboardFlushObserver(self); }));
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(StaticPrefs::apz_printtree);
-#ifdef MOZ_WIDGET_ANDROID
-  if (AndroidDynamicToolbarAnimator::IsEnabled()) {
-    mToolbarAnimator = new AndroidDynamicToolbarAnimator(this);
-  }
-#endif  // (MOZ_WIDGET_ANDROID)
 }
 
 APZCTreeManager::~APZCTreeManager() = default;
@@ -1494,31 +1489,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   // Use a RAII class for updating the focus sequence number of this event
   AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
 
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mToolbarAnimator) {
-    ScreenPoint scrollOffset;
-    {
-      RecursiveMutexAutoLock lock(mTreeLock);
-      RefPtr<AsyncPanZoomController> apzc = FindRootContentOrRootApzc();
-      if (apzc) {
-        scrollOffset = ViewAs<ScreenPixel>(
-            apzc->GetCurrentAsyncScrollOffset(
-                AsyncPanZoomController::eForHitTesting),
-            PixelCastJustification::ScreenIsParentLayerForRoot);
-      }
-    }
-    RefPtr<APZCTreeManager> self = this;
-    nsEventStatus isConsumed =
-        mToolbarAnimator->ReceiveInputEvent(self, aEvent, scrollOffset);
-    // Check if the mToolbarAnimator consumed the event.
-    if (isConsumed == nsEventStatus_eConsumeNoDefault) {
-      APZCTM_LOG("Dynamic toolbar consumed event");
-      result.mStatus = isConsumed;
-      return result;
-    }
-  }
-#endif  // (MOZ_WIDGET_ANDROID)
-
   CompositorHitTestInfo hitResult = CompositorHitTestInvisibleToHit;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
@@ -2409,17 +2379,6 @@ void APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
   *aOutFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
 }
 
-void APZCTreeManager::ProcessDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                                    uint32_t aEndTimestampMs,
-                                                    ScreenCoord aDeltaY) {
-  if (mApzcForInputBlock) {
-    mApzcForInputBlock->HandleDynamicToolbarMovement(
-        aStartTimestampMs, aEndTimestampMs,
-        ViewAs<ParentLayerPixel>(
-            aDeltaY, PixelCastJustification::ScreenIsParentLayerForRoot));
-  }
-}
-
 void APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
   APZThreadUtils::AssertOnControllerThread();
 
@@ -2549,22 +2508,8 @@ void APZCTreeManager::FlushRepaintsToClearScreenToGeckoTransform() {
   });
 }
 
-void APZCTreeManager::AdjustScrollForSurfaceShift(const ScreenPoint& aShift) {
-  RecursiveMutexAutoLock lock(mTreeLock);
-  RefPtr<AsyncPanZoomController> apzc = FindRootContentOrRootApzc();
-  if (apzc) {
-    apzc->AdjustScrollForSurfaceShift(aShift);
-  }
-}
-
 void APZCTreeManager::ClearTree() {
   AssertOnUpdaterThread();
-
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mToolbarAnimator) {
-    mToolbarAnimator->ClearTreeManager();
-  }
-#endif
 
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
@@ -3207,31 +3152,6 @@ AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
         AsyncPanZoomController* apzc = aNode->GetApzc();
         return apzc && apzc->GetLayersId() == aLayersId &&
                apzc->IsRootContent();
-      });
-  return resultNode ? resultNode->GetApzc() : nullptr;
-}
-
-AsyncPanZoomController* APZCTreeManager::FindRootContentOrRootApzc() const {
-  mTreeLock.AssertCurrentThreadIn();
-
-  // Note: this is intended to find the same "root" that would be found
-  // by AsyncCompositionManager::ApplyAsyncContentTransformToTree inside
-  // the MOZ_WIDGET_ANDROID block. That is, it should find the RCD node if there
-  // is one, or the root APZC if there is not.
-  // Since BreadthFirstSearch is a pre-order search, we first do a search for
-  // the RCD, and then if we don't find one, we do a search for the root APZC.
-  HitTestingTreeNode* resultNode = BreadthFirstSearch<ReverseIterator>(
-      mRootNode.get(), [](HitTestingTreeNode* aNode) {
-        AsyncPanZoomController* apzc = aNode->GetApzc();
-        return apzc && apzc->IsRootContent();
-      });
-  if (resultNode) {
-    return resultNode->GetApzc();
-  }
-  resultNode = BreadthFirstSearch<ReverseIterator>(
-      mRootNode.get(), [](HitTestingTreeNode* aNode) {
-        AsyncPanZoomController* apzc = aNode->GetApzc();
-        return (apzc != nullptr);
       });
   return resultNode ? resultNode->GetApzc() : nullptr;
 }
@@ -4004,13 +3924,6 @@ float APZCTreeManager::GetDPI() const {
   APZThreadUtils::AssertOnControllerThread();
   return mDPI;
 }
-
-#if defined(MOZ_WIDGET_ANDROID)
-AndroidDynamicToolbarAnimator*
-APZCTreeManager::GetAndroidDynamicToolbarAnimator() {
-  return mToolbarAnimator;
-}
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
 APZCTreeManager::FixedPositionInfo::FixedPositionInfo(
     const HitTestingTreeNode* aNode) {

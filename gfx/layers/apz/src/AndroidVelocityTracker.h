@@ -24,9 +24,6 @@ class AndroidVelocityTracker : public VelocityTracker {
   void StartTracking(ParentLayerCoord aPos, uint32_t aTimestamp) override;
   Maybe<float> AddPosition(ParentLayerCoord aPos,
                            uint32_t aTimestampMs) override;
-  float HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                     uint32_t aEndTimestampMs,
-                                     ParentLayerCoord aDelta) override;
   Maybe<float> ComputeVelocity(uint32_t aTimestampMs) override;
   void Clear() override;
 
@@ -37,9 +34,6 @@ class AndroidVelocityTracker : public VelocityTracker {
   // The last time an event was added to the tracker (in milliseconds),
   // or zero if no events have been added.
   uint32_t mLastEventTime;
-  // The amount by which the page has moved relative to the screen (caused
-  // by dynamic toolbar movement) since we have started tracking velocity.
-  ParentLayerCoord mAdditionalDelta;
 };
 
 }  // namespace layers
