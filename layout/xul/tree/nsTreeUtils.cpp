@@ -85,7 +85,7 @@ nsIContent* nsTreeUtils::GetDescendantChild(nsIContent* aContainer,
   return nullptr;
 }
 
-nsresult nsTreeUtils::UpdateSortIndicators(Element* aColumn,
+nsresult nsTreeUtils::UpdateSortIndicators(dom::Element* aColumn,
                                            const nsAString& aDirection) {
   aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection,
                    true);
@@ -112,7 +112,7 @@ nsresult nsTreeUtils::UpdateSortIndicators(Element* aColumn,
   return NS_OK;
 }
 
-nsresult nsTreeUtils::GetColumnIndex(Element* aColumn, int32_t* aResult) {
+nsresult nsTreeUtils::GetColumnIndex(dom::Element* aColumn, int32_t* aResult) {
   nsIContent* parentContent = aColumn->GetParent();
   if (parentContent && parentContent->NodeInfo()->Equals(nsGkAtoms::treecols,
                                                          kNameSpaceID_XUL)) {
