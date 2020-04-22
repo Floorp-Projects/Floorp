@@ -1179,6 +1179,17 @@ var Policies = {
     },
   },
 
+  PDFjs: {
+    onBeforeAddons(manager, param) {
+      if ("Enabled" in param) {
+        setAndLockPref("pdfjs.disabled", !param.Enabled);
+      }
+      if ("EnablePermissions" in param) {
+        setAndLockPref("pdfjs.enablePermissions", !param.Enabled);
+      }
+    },
+  },
+
   Permissions: {
     onBeforeUIStartup(manager, param) {
       if (param.Camera) {
