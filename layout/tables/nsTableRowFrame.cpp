@@ -552,12 +552,12 @@ void nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 nsIFrame::LogicalSides nsTableRowFrame::GetLogicalSkipSides(
     const ReflowInput* aReflowInput) const {
-  LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
-    return skip;
+    return LogicalSides();
   }
 
+  LogicalSides skip;
   if (nullptr != GetPrevInFlow()) {
     skip |= eLogicalSideBitsBStart;
   }
