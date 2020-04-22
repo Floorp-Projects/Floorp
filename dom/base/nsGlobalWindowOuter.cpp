@@ -2406,11 +2406,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       // them into the JS slots. If we nullify them after, the slot values and
       // the objects will be out of sync.
       newInnerWindow->ClearDocumentDependentSlots(cx);
-
-      // When replacing an initial about:blank document we call
-      // ExecutionReady again to update the client creation URL.
-      rv = newInnerWindow->ExecutionReady();
-      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       newInnerWindow->InitDocumentDependentState(cx);
 
@@ -2418,10 +2413,18 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       JS::Rooted<JSObject*> obj(cx, newInnerGlobal);
       rv = kungFuDeathGrip->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = newInnerWindow->ExecutionReady();
-      NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // We would check the storage access in below function, so we need to
+    // set the flag before it.
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetHasStoragePermission(aDocument->HasStoragePermission());
+
+    // When replacing an initial about:blank document we call
+    // ExecutionReady again to update the client creation URL.
+    rv = newInnerWindow->ExecutionReady();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (mArguments) {
       newInnerWindow->DefineArgumentsProperty(mArguments);
@@ -2513,10 +2516,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->GetWindowGlobalChild()
         ->WindowContext()
         ->SetCookieJarSettings(Some(cookieJarSettings));
-
-    newInnerWindow->GetWindowGlobalChild()
-        ->WindowContext()
-        ->SetHasStoragePermission(aDocument->HasStoragePermission());
   }
 
   mHasStorageAccess = false;
