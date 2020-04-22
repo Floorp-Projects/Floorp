@@ -4,42 +4,36 @@
 
 package org.mozilla.fenix.browser
 
-import android.content.Context
 import androidx.lifecycle.LifecycleOwner
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.components.metrics.MetricController
 
 class UriOpenedObserverTest {
 
-    private lateinit var context: Context
-    private lateinit var owner: LifecycleOwner
-    private lateinit var sessionManager: SessionManager
-    private lateinit var metrics: MetricController
+    private val owner: LifecycleOwner = mockk(relaxed = true)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val metrics: MetricController = mockk()
+    private val ads: AdsTelemetry = mockk()
+    private lateinit var observer: UriOpenedObserver
 
     @Before
     fun setup() {
-        context = mockk(relaxed = true)
-        owner = mockk(relaxed = true)
-        sessionManager = mockk(relaxed = true)
-        metrics = mockk(relaxed = true)
+        observer = UriOpenedObserver(owner, sessionManager, metrics, ads)
     }
 
     @Test
     fun `registers self as observer`() {
-        val observer = UriOpenedObserver(context, owner, sessionManager, metrics)
         verify { sessionManager.register(observer, owner) }
     }
 
     @Test
     fun `registers single session observer`() {
-        val observer = UriOpenedObserver(context, owner, sessionManager, metrics)
         val session: Session = mockk(relaxed = true)
 
         observer.onSessionAdded(session)
@@ -47,19 +41,5 @@ class UriOpenedObserverTest {
 
         observer.onSessionRemoved(session)
         verify { session.unregister(observer.singleSessionObserver) }
-    }
-
-    @Test
-    fun `tracks that a url was loaded`() {
-        val observer = UriOpenedObserver(context, owner, sessionManager, metrics).singleSessionObserver
-        val session: Session = mockk(relaxed = true)
-        every { session.url } returns "https://mozilla.com"
-
-        observer.onLoadingStateChanged(session, loading = false)
-        verify(exactly = 0) { metrics.track(Event.UriOpened) }
-
-        observer.onLoadingStateChanged(session, loading = true)
-        observer.onLoadingStateChanged(session, loading = false)
-        verify { metrics.track(Event.UriOpened) }
     }
 }

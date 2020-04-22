@@ -2007,11 +2007,12 @@ browser.search:
       description: >
         Records counts of SERP pages with adverts displayed. The key format is ‘<provider-name>’.
       send_in_pings:
+        - baseline
         - metrics
       bugs:
         - https://github.com/mozilla-mobile/fenix/issues/6558
       data_reviews:
-        - https://github.com/mozilla-mobile/fenix/issues/6558
+        - https://github.com/mozilla-mobile/fenix/pull/10112
       notification_emails:
         - fenix-core@mozilla.com
       expires: "2020-09-01"
@@ -2020,11 +2021,12 @@ browser.search:
       description: >
         Records clicks of adverts on SERP pages. The key format is ‘<provider-name>’.
       send_in_pings:
+        - baseline
         - metrics
       bugs:
         - https://github.com/mozilla-mobile/fenix/issues/6558
       data_reviews:
-        - https://github.com/mozilla-mobile/fenix/issues/6558
+        - https://github.com/mozilla-mobile/fenix/pull/10112
       notification_emails:
         - fenix-core@mozilla.com
       expires: "2020-09-01"

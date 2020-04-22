@@ -1,5 +1,10 @@
-package org.mozilla.fenix.ads
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+package org.mozilla.fenix.search.telemetry.ads
+
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -11,16 +16,19 @@ import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import org.json.JSONObject
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.containsAds
-import org.mozilla.fenix.ext.toList
+import org.mozilla.fenix.search.telemetry.SearchProviderCookie
+import org.mozilla.fenix.search.telemetry.SearchProviderModel
 
 class AdsTelemetry(private val metrics: MetricController) {
 
-    private val providerList = listOf(
+    @VisibleForTesting
+    internal val providerList = listOf(
         SearchProviderModel(
             name = "google",
             regexp = "^https:\\/\\/www\\.google\\.(?:.+)\\/search",
@@ -38,7 +46,8 @@ class AdsTelemetry(private val metrics: MetricController) {
             codePrefixes = listOf("ff"),
             followOnParams = listOf("oq", "ved", "ei"),
             extraAdServersRegexps = listOf(
-                "^https:\\/\\/duckduckgo.com\\/y\\.js"
+                "^https:\\/\\/duckduckgo.com\\/y\\.js",
+                "^https:\\/\\/www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
             )
         ),
         SearchProviderModel(
@@ -48,7 +57,7 @@ class AdsTelemetry(private val metrics: MetricController) {
         ),
         SearchProviderModel(
             name = "baidu",
-            regexp = "^https:\\/\\/www\\.baidu\\.com\\/(?:s|baidu)",
+            regexp = "^https:\\/\\/www\\.baidu\\.com\\/from=844b\\/(?:s|baidu)",
             queryParam = "wd",
             codeParam = "tn",
             codePrefixes = listOf("34046034_", "monline_"),
@@ -108,7 +117,8 @@ class AdsTelemetry(private val metrics: MetricController) {
         }
     }
 
-    private fun getProviderForUrl(url: String): SearchProviderModel? {
+    @VisibleForTesting
+    internal fun getProviderForUrl(url: String): SearchProviderModel? {
         for (provider in providerList) {
             if (Regex(provider.regexp).containsMatchIn(url)) {
                 return provider
@@ -138,7 +148,8 @@ class AdsTelemetry(private val metrics: MetricController) {
             }
     }
 
-    private inner class AdsTelemetryContentMessageHandler : MessageHandler {
+    @VisibleForTesting
+    internal inner class AdsTelemetryContentMessageHandler : MessageHandler {
 
         override fun onMessage(message: Any, source: EngineSession?): Any? {
             if (message is JSONObject) {
@@ -164,10 +175,14 @@ class AdsTelemetry(private val metrics: MetricController) {
     }
 
     companion object {
-        private const val ADS_EXTENSION_ID = "mozacBrowserAds"
-        private const val ADS_EXTENSION_RESOURCE_URL = "resource://android/assets/extensions/ads/"
+        @VisibleForTesting
+        internal const val ADS_EXTENSION_ID = "mozacBrowserAds"
+        @VisibleForTesting
+        internal const val ADS_EXTENSION_RESOURCE_URL = "resource://android/assets/extensions/ads/"
+        @VisibleForTesting
+        internal const val ADS_MESSAGE_SESSION_URL_KEY = "url"
+        @VisibleForTesting
+        internal const val ADS_MESSAGE_DOCUMENT_URLS_KEY = "urls"
         private const val ADS_MESSAGE_ID = "MozacBrowserAds"
-        private const val ADS_MESSAGE_SESSION_URL_KEY = "url"
-        private const val ADS_MESSAGE_DOCUMENT_URLS_KEY = "urls"
     }
 }
