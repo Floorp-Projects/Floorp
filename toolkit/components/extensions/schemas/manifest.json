@@ -429,7 +429,8 @@
             "enum": [
               "alarms",
               "mozillaAddons",
-              "storage"
+              "storage",
+              "unlimitedStorage"
             ]
           }
         ]
@@ -438,13 +439,7 @@
         "id": "Permission",
         "choices": [
           { "$ref": "PermissionNoPrompt" },
-          { "$ref": "OptionalPermission" },
-          {
-            "type": "string",
-            "enum": [
-              "unlimitedStorage"
-            ]
-          }
+          { "$ref": "OptionalPermission" }
         ]
       },
       {
