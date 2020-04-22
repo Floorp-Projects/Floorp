@@ -299,12 +299,12 @@ void nsTableColGroupFrame::RemoveFrame(ChildListID aListID,
 
 nsIFrame::LogicalSides nsTableColGroupFrame::GetLogicalSkipSides(
     const ReflowInput* aReflowInput) const {
-  LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
-    return skip;
+    return LogicalSides();
   }
 
+  LogicalSides skip;
   if (nullptr != GetPrevInFlow()) {
     skip |= eLogicalSideBitsBStart;
   }
