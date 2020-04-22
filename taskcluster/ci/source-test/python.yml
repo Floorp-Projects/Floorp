@@ -336,11 +336,36 @@ mozbuild:
             - 'python/mach/**'
             - 'python/mozboot/**'
             - 'python/mozbuild/**'
-            - 'python/mozperftest/**'
             - 'python/mozterm/**'
             - 'python/mozversioncontrol/**'
             - 'testing/mozbase/**'
             - 'testing/xpcshell/xpcshellcommandline.py'
+
+mozperftest:
+    description: mozperftest unit tests
+    platform:
+        - linux1804-64/opt
+        - macosx1014-64/opt
+        - windows10-64/opt
+    python-version: [3]
+    treeherder:
+        symbol: mpu
+    run:
+        using: python-test
+        subsuite: mozperftest
+    fetches:
+        toolchain:
+            by-platform:
+                linux1804-64/opt:
+                    - linux64-node-10
+                macosx1014-64/opt:
+                    - macosx64-node-10
+                windows10-64/opt:
+                    - win64-node-10
+    when:
+        files-changed:
+            - 'testing/performance/**'
+            - 'python/mozperftest/**'
 
 condprof:
     description: testing/condprofile unit tests
