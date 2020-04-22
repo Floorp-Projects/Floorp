@@ -17,16 +17,6 @@ const TEST_CASES = [
     hidden: false,
   },
   {
-    type: "chrome page",
-    testURL: "chrome://global/skin/in-content/info-pages.css",
-    hidden: true,
-  },
-  {
-    type: "content-privileged about page",
-    testURL: "about:robots",
-    hidden: true,
-  },
-  {
     type: "non-chrome about page",
     testURL: "about:about",
     hidden: true,
