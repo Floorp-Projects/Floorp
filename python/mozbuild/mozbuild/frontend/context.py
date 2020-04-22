@@ -1040,8 +1040,8 @@ GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory({
     'script': six.text_type,
     'inputs': list,
     'force': bool,
-    'py2': bool,
-    'flags': list, })
+    'flags': list,
+})
 
 
 class Files(SubContext):

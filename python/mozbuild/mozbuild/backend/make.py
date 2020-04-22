@@ -88,14 +88,10 @@ class MakeBackend(CommonBackend):
             ret.append('GARBAGE += %s' % stub_file)
             ret.append('EXTRA_MDDEPEND_FILES += %s' % dep_file)
 
-            if obj.py2:
-                action = 'py_action'
-            else:
-                action = 'py3_action'
             ret.append((
                     """{stub}: {script}{inputs}{backend}{force}
 \t$(REPORT_BUILD)
-\t$(call {action},file_generate,{locale}{script} """  # wrap for E501
+\t$(call py3_action,file_generate,{locale}{script} """  # wrap for E501
                     """{method} {output} {dep_file} {stub}{inputs}{flags})
 \t@$(TOUCH) $@
 """).format(
@@ -110,7 +106,6 @@ class MakeBackend(CommonBackend):
                 # with a different locale as input. IS_LANGUAGE_REPACK will reliably be set
                 # in this situation, so simply force the generation to run in that case.
                 force=force,
-                action=action,
                 locale='--locale=$(AB_CD) ' if obj.localized else '',
                 script=obj.script,
                 method=obj.method
