@@ -564,7 +564,9 @@ void AutoSuppressEventHandlingAndSuspend::SuppressBrowsingContext(
     }
   }
 
-  for (const auto& bc : aBC->Children()) {
+  BrowsingContext::Children children;
+  aBC->GetChildren(children);
+  for (const auto& bc : children) {
     SuppressBrowsingContext(bc);
   }
 }
