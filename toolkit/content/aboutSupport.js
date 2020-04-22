@@ -75,6 +75,7 @@ var snapshotFormatters = {
     }
     $("version-box").textContent = version;
     $("buildid-box").textContent = data.buildID;
+    $("distributionid-box").textContent = data.distributionID;
     if (data.updateChannel) {
       $("updatechannel-box").textContent = data.updateChannel;
     }
