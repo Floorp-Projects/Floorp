@@ -979,6 +979,15 @@
   value: true
   mirror: always
 
+- name: browser.tabs.documentchannel.ppdc
+  type: bool
+#if defined(ANDROID)
+  value: false  # Disabled due to reftest start failures.
+#else
+  value: true
+#endif
+  mirror: always
+
 - name: browser.tabs.remote.desktopbehavior
   type: bool
   value: false
