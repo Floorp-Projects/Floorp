@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-locale**
+  * Added fix for respecting RTL/LTR changes when activity is recreated in Android 8
+
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor, now requires a new parameter `onShouldShowRequestPermissionRationale` a lambda to allow the feature to query [ActivityCompat.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/core/app/ActivityCompat#shouldShowRequestPermissionRationale(android.app.Activity,%20java.lang.String)) or [Fragment.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/fragment/app/Fragment#shouldShowRequestPermissionRationale(java.lang.String)). This allows the `SitePermissionsFeature` to handle when a user clicks "Deny & don't ask again" button in a system permission dialog, for more information see [issue #6565](https://github.com/mozilla-mobile/android-components/issues/6565).
 
