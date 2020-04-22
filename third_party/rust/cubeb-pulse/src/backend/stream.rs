@@ -387,13 +387,20 @@ impl<'ctx> PulseStream<'ctx> {
                             minreq: buffer_size_bytes / 4
                         };
                         let device_name = super::try_cstr_from(output_device as *const _);
+                        let mut stream_flags = pulse::StreamFlags::AUTO_TIMING_UPDATE
+                            | pulse::StreamFlags::INTERPOLATE_TIMING
+                            | pulse::StreamFlags::START_CORKED
+                            | pulse::StreamFlags::ADJUST_LATENCY;
+                        if device_name.is_some()
+                            || stream_params
+                                .prefs()
+                                .contains(StreamPrefs::DISABLE_DEVICE_SWITCHING) {
+                          stream_flags |= pulse::StreamFlags::DONT_MOVE;
+                        }
                         let _ = s.connect_playback(
                             device_name,
                             &battr,
-                            pulse::StreamFlags::AUTO_TIMING_UPDATE
-                                | pulse::StreamFlags::INTERPOLATE_TIMING
-                                | pulse::StreamFlags::START_CORKED
-                                | pulse::StreamFlags::ADJUST_LATENCY,
+                            stream_flags,
                             None,
                             None,
                         );
@@ -426,13 +433,20 @@ impl<'ctx> PulseStream<'ctx> {
                             minreq: buffer_size_bytes
                         };
                         let device_name = super::try_cstr_from(input_device as *const _);
+                        let mut stream_flags = pulse::StreamFlags::AUTO_TIMING_UPDATE
+                            | pulse::StreamFlags::INTERPOLATE_TIMING
+                            | pulse::StreamFlags::START_CORKED
+                            | pulse::StreamFlags::ADJUST_LATENCY;
+                        if device_name.is_some()
+                            || stream_params
+                                .prefs()
+                                .contains(StreamPrefs::DISABLE_DEVICE_SWITCHING) {
+                            stream_flags |= pulse::StreamFlags::DONT_MOVE;
+                        }
                         let _ = s.connect_record(
                             device_name,
                             &battr,
-                            pulse::StreamFlags::AUTO_TIMING_UPDATE
-                                | pulse::StreamFlags::INTERPOLATE_TIMING
-                                | pulse::StreamFlags::START_CORKED
-                                | pulse::StreamFlags::ADJUST_LATENCY,
+                            stream_flags,
                         );
 
                         stm.input_stream = Some(s);
