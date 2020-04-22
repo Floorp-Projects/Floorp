@@ -201,6 +201,7 @@ OptimizationSchema = voluptuous.Any(
     {'always': None},
     # optimize strategy aliases for build kind
     {'build': list(schedules.ALL_COMPONENTS)},
+    {'build-fuzzing': list(schedules.ALL_COMPONENTS)},
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
     {'index-search': [text_type]},
@@ -214,7 +215,6 @@ OptimizationSchema = voluptuous.Any(
     {'test': list(schedules.ALL_COMPONENTS)},
     {'test-inclusive': list(schedules.ALL_COMPONENTS)},
     {'test-try': list(schedules.ALL_COMPONENTS)},
-    {'fuzzing-builds': list(schedules.ALL_COMPONENTS)},
 )
 
 # shortcut for a string where task references are allowed

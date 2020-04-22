@@ -125,7 +125,7 @@ linux64-fuzzing/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - linux
 
 linux64/debug:
@@ -837,7 +837,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - linux
 
 linux64-asan-fuzzing/opt:
@@ -883,7 +883,7 @@ linux64-asan-fuzzing/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - linux
 
 linux64-asan-fuzzing-ccov/opt:
@@ -971,7 +971,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - linux
 
 linux64-asan-reporter-nightly/opt:

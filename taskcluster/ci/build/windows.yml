@@ -203,7 +203,7 @@ win64-fuzzing/debug:
             - win64-nasm
             - win64-node
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - windows
 
 win64-plain/debug:
@@ -998,7 +998,7 @@ win64-asan-fuzzing/opt:
             - win64-nasm
             - win64-node
     optimization:
-        fuzzing-builds:
+        build-fuzzing:
             - windows
 
 win32-devedition/opt:
