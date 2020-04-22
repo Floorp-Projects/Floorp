@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 loader.lazyRequireGetter(
   this,
   "browsersDataset",
@@ -20,6 +22,8 @@ const TARGET_BROWSER_ID = [
   "edge",
 ];
 const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
+
+const TARGET_BROWSER_PREF = "devtools.inspector.compatibility.target-browsers";
 
 function getDefaultTargetBrowsers() {
   // Retrieve the information that matches to the browser id and the status
@@ -43,4 +47,17 @@ function getDefaultTargetBrowsers() {
   return targets;
 }
 
-module.exports = { getDefaultTargetBrowsers };
+function getTargetBrowsers() {
+  const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF);
+  return targetsString ? JSON.parse(targetsString) : getDefaultTargetBrowsers();
+}
+
+function setTargetBrowsers(targets) {
+  Services.prefs.setCharPref(TARGET_BROWSER_PREF, JSON.stringify(targets));
+}
+
+module.exports = {
+  getDefaultTargetBrowsers,
+  getTargetBrowsers,
+  setTargetBrowsers,
+};
