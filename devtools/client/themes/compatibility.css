@@ -6,7 +6,7 @@
   --compatibility-base-unit: 4px;
   --compatibility-cause-color: var(--theme-text-color-alt);
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
-  --compatibility-unsupported-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
+  --compatibility-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
 }
 
 .compatibility-app {
@@ -104,16 +104,17 @@
   justify-content: end;
   list-style: none;
   padding: 0;
-  gap: calc(var(--compatibility-base-unit) * 2);
+  gap: var(--compatibility-base-unit);
 }
 
-.compatibility-unsupported-browser-item {
-  width: var(--compatibility-unsupported-browser-icon-size);
-  height: var(--compatibility-unsupported-browser-icon-size);
+.compatibility-browser-icon {
+  display: inline-block;
+  width: var(--compatibility-browser-icon-size);
+  height: var(--compatibility-browser-icon-size);
   position: relative;
 }
 
-.compatibility-unsupported-browser-item--mobile::after {
+.compatibility-browser-icon--mobile::after {
   content: "";
   width: calc(var(--compatibility-base-unit) * 2);
   height: calc(var(--compatibility-base-unit) * 3);
@@ -129,7 +130,7 @@
   bottom: calc(var(--compatibility-base-unit) * -1);
 }
 
-.compatibility-unsupported-browser-item__icon {
+.compatibility-browser-icon__image {
   width: 100%;
   height: 100%;
   fill: var(--theme-icon-dimmed-color);
@@ -186,6 +187,7 @@
   width: 100%;
   height: 100%;
   background-color: var(--theme-body-background);
+  overflow: auto;
 }
 
 .compatibility-settings__header {
@@ -211,4 +213,30 @@
   fill: var(--theme-icon-color);
   width: calc(var(--compatibility-base-unit) * 4);
   height: calc(var(--compatibility-base-unit) * 4);
+}
+
+.compatibility-settings__target-browsers-header {
+  font-size: calc(var(--compatibility-base-unit) * 3);
+  line-height: calc(var(--compatibility-base-unit) * 4);
+  padding-block: var(--compatibility-base-unit);
+  padding-inline: calc(var(--compatibility-base-unit) * 4);
+  background-color: var(--theme-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.compatibility-settings__target-browsers-list {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding-block: calc(var(--compatibility-base-unit) * 3);
+  padding-inline: calc(var(--compatibility-base-unit) * 4);
+  row-gap: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-settings__target-browsers-item {
+  display: flex;
+  align-items: center;
+  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
+  column-gap: calc(var(--compatibility-base-unit) * 2);
 }
