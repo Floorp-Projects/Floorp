@@ -18,6 +18,7 @@ EXTRA_JS_MODULES += [
     'UrlbarProviderSearchSuggestions.jsm',
     'UrlbarProviderSearchTips.jsm',
     'UrlbarProvidersManager.jsm',
+    'UrlbarProviderTokenAliasEngines.jsm',
     'UrlbarProviderTopSites.jsm',
     'UrlbarProviderUnifiedComplete.jsm',
     'UrlbarResult.jsm',
