@@ -1012,12 +1012,6 @@ class SpecialPowersParent extends JSWindowActorParent {
         // This is either an Extension, or (if useAddonManager is set) a MockExtension.
         let extension = this._extensions.get(id);
         extension.on("startup", (eventName, ext) => {
-          if (!ext) {
-            // ext is only set by the "startup" event from Extension.jsm.
-            // Unfortunately ext-backgroundPage.js emits an event with the same
-            // name, but without the extension object as parameter.
-            return;
-          }
           if (AppConstants.platform === "android") {
             // We need a way to notify the embedding layer that a new extension
             // has been installed, so that the java layer can be updated too.

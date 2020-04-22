@@ -2394,7 +2394,9 @@ var XPIProvider = {
         let data = Cu.readUTF8URI(url);
         this.builtInAddons = JSON.parse(data);
       } catch (e) {
-        logger.debug("List of valid built-in add-ons could not be parsed.");
+        if (AppConstants.DEBUG) {
+          logger.debug("List of built-in add-ons is missing or invalid.", e);
+        }
       }
 
       this.registerBuiltinDictionaries();

@@ -126,7 +126,7 @@ add_task(async function test_unload_extension_during_background_page_startup() {
 
   let bgStartupPromise = new Promise(resolve => {
     function onBackgroundPageDone(eventName) {
-      extension.extension.off("startup", onBackgroundPageDone);
+      extension.extension.off("background-page-started", onBackgroundPageDone);
       extension.extension.off("background-page-aborted", onBackgroundPageDone);
 
       if (eventName === "background-page-aborted") {
@@ -137,7 +137,7 @@ add_task(async function test_unload_extension_during_background_page_startup() {
         resolve("bg_fully_loaded");
       }
     }
-    extension.extension.on("startup", onBackgroundPageDone);
+    extension.extension.on("background-page-started", onBackgroundPageDone);
     extension.extension.on("background-page-aborted", onBackgroundPageDone);
   });
 
