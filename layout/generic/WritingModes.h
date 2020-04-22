@@ -117,6 +117,44 @@ enum LineRelativeDir {
 };
 
 /**
+ * LogicalSides represents a set of logical sides.
+ */
+struct LogicalSides final {
+  LogicalSides() : mBits(0) {}
+  explicit LogicalSides(LogicalSideBits aSideBits) {
+    MOZ_ASSERT((aSideBits & ~eLogicalSideBitsAll) == 0, "illegal side bits");
+    mBits = aSideBits;
+  }
+  bool IsEmpty() const { return mBits == 0; }
+  bool BStart() const { return mBits & eLogicalSideBitsBStart; }
+  bool BEnd() const { return mBits & eLogicalSideBitsBEnd; }
+  bool IStart() const { return mBits & eLogicalSideBitsIStart; }
+  bool IEnd() const { return mBits & eLogicalSideBitsIEnd; }
+  bool Contains(LogicalSideBits aSideBits) const {
+    MOZ_ASSERT((aSideBits & ~eLogicalSideBitsAll) == 0, "illegal side bits");
+    return (mBits & aSideBits) == aSideBits;
+  }
+  LogicalSides operator|(LogicalSides aOther) const {
+    return LogicalSides(LogicalSideBits(mBits | aOther.mBits));
+  }
+  LogicalSides operator|(LogicalSideBits aSideBits) const {
+    return *this | LogicalSides(aSideBits);
+  }
+  LogicalSides& operator|=(LogicalSides aOther) {
+    mBits |= aOther.mBits;
+    return *this;
+  }
+  LogicalSides& operator|=(LogicalSideBits aSideBits) {
+    return *this |= LogicalSides(aSideBits);
+  }
+  bool operator==(LogicalSides aOther) const { return mBits == aOther.mBits; }
+  bool operator!=(LogicalSides aOther) const { return !(*this == aOther); }
+
+ private:
+  uint8_t mBits;
+};
+
+/**
  * mozilla::WritingMode is an immutable class representing a
  * writing mode.
  *
@@ -1072,71 +1110,6 @@ class LogicalSize {
 };
 
 /**
- * LogicalSides represents a set of logical sides.
- */
-struct LogicalSides final {
-  explicit LogicalSides(WritingMode aWritingMode)
-      :
-#ifdef DEBUG
-        mWritingMode(aWritingMode),
-#endif
-        mBits(0) {
-  }
-  LogicalSides(WritingMode aWritingMode, LogicalSideBits aSideBits)
-      :
-#ifdef DEBUG
-        mWritingMode(aWritingMode),
-#endif
-        mBits(aSideBits) {
-    MOZ_ASSERT((aSideBits & ~eLogicalSideBitsAll) == 0, "illegal side bits");
-  }
-  bool IsEmpty() const { return mBits == 0; }
-  bool BStart() const { return mBits & eLogicalSideBitsBStart; }
-  bool BEnd() const { return mBits & eLogicalSideBitsBEnd; }
-  bool IStart() const { return mBits & eLogicalSideBitsIStart; }
-  bool IEnd() const { return mBits & eLogicalSideBitsIEnd; }
-  bool Contains(LogicalSideBits aSideBits) const {
-    MOZ_ASSERT((aSideBits & ~eLogicalSideBitsAll) == 0, "illegal side bits");
-    return (mBits & aSideBits) == aSideBits;
-  }
-  LogicalSides operator|(LogicalSides aOther) const {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return *this | LogicalSideBits(aOther.mBits);
-  }
-  LogicalSides operator|(LogicalSideBits aSideBits) const {
-    return LogicalSides(mWritingMode, LogicalSideBits(mBits | aSideBits));
-  }
-  LogicalSides& operator|=(LogicalSides aOther) {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return *this |= LogicalSideBits(aOther.mBits);
-  }
-  LogicalSides& operator|=(LogicalSideBits aSideBits) {
-    mBits |= aSideBits;
-    return *this;
-  }
-  bool operator==(LogicalSides aOther) const {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return mBits == aOther.mBits;
-  }
-  bool operator!=(LogicalSides aOther) const {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return !(*this == aOther);
-  }
-
-#ifdef DEBUG
-  WritingMode GetWritingMode() const { return mWritingMode; }
-#else
-  WritingMode GetWritingMode() const { return WritingMode::Unknown(); }
-#endif
-
- private:
-#ifdef DEBUG
-  WritingMode mWritingMode;
-#endif
-  uint8_t mBits;
-};
-
-/**
  * Flow-relative margin
  */
 class LogicalMargin {
@@ -1396,7 +1369,6 @@ class LogicalMargin {
   }
 
   LogicalMargin& ApplySkipSides(LogicalSides aSkipSides) {
-    CHECK_WRITING_MODE(aSkipSides.GetWritingMode());
     if (aSkipSides.BStart()) {
       BStart() = 0;
     }
