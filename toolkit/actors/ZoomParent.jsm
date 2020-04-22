@@ -32,7 +32,6 @@ class ZoomParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "FullZoomChange": {
-        browser._fullZoom = message.data.value;
         let event = document.createEvent("Events");
         event.initEvent("FullZoomChange", true, false);
         browser.dispatchEvent(event);
@@ -47,7 +46,6 @@ class ZoomParent extends JSWindowActorParent {
       }
 
       case "TextZoomChange": {
-        browser._textZoom = message.data.value;
         let event = document.createEvent("Events");
         event.initEvent("TextZoomChange", true, false);
         browser.dispatchEvent(event);

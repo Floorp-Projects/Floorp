@@ -5,12 +5,9 @@
 <script><![CDATA[
 var docviewer;
 function do_onload() {
-  var docShell = SpecialPowers.wrap(parent).docShell;
-  docviewer = docShell.contentViewer;
-
   setTimeout(function() {
     clearTimeout(timer);
-    docviewer.textZoom = 1;
+    SpecialPowers.setTextZoom(parent, 1);
     document.documentElement.removeAttribute("class");
   }, 500);
   setTimeout(doe,50, 0.2);
@@ -19,14 +16,14 @@ do_onload();
 
 var timer;
 function doe(i) {
-  docviewer.textZoom += i;
+  SpecialPowers.setTextZoom(parent, SpecialPowers.getTextZoom(parent) + i);
 
-  if (docviewer.textZoom >=4)
+  if (SpecialPowers.getTextZoom(parent) >= 4)
     i = -0.2;
 
-  if (docviewer.textZoom <=0)
+  if (SpecialPowers.getTextZoom(parent) <= 0)
     i = 0.2;
-  window.status = docviewer.textZoom;
+  window.status = SpecialPowers.getTextZoom(parent);
   timer = setTimeout(doe, 50, i);
 }
 ]]></script>
