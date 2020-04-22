@@ -153,6 +153,7 @@ add_task(async function inputDoesntMatchHeuristicResult() {
 
 // Selecting a non-heuristic (non-first) search engine result with an alias and
 // empty query should put the alias in the urlbar and highlight it.
+// Also checks that internal aliases appear with the "@" keyword.
 add_task(async function nonHeuristicAliases() {
   // Get the list of token alias engines (those with aliases that start with
   // "@").
@@ -537,8 +538,8 @@ add_task(async function hiddenEngine() {
 });
 
 /**
- * This test checks that if an engine is marked as hidden then
- * it should not appear in the popup when using the "@" token alias in the search bar.
+ * This test checks that if an engine is marked as hidden then it should not
+ * appear in the popup when using the "@" token alias in the search bar.
  */
 add_task(async function hiddenEngine() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

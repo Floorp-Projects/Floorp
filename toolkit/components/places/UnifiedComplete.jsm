@@ -1004,14 +1004,12 @@ Search.prototype = {
     // Check for Preloaded Sites Expiry before Autofill
     await this._checkPreloadedSitesExpiry();
 
-    // If the query is simply "@", then the results should be a list of all the
-    // search engines with "@" aliases, without a hueristic result.
-    if (this._trimmedOriginalSearchString == "@") {
-      let added = await this._addSearchEngineTokenAliasMatches();
-      if (added) {
-        this._autocompleteSearch.finishSearch(true);
-        return;
-      }
+    // If the query is simply "@" and we have tokenAliasEngines then return
+    // early. UrlbarProviderTokenAliasEngines will add engine results.
+    let tokenAliasEngines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
+    if (this._trimmedOriginalSearchString == "@" && tokenAliasEngines.length) {
+      this._autocompleteSearch.finishSearch(true);
+      return;
     }
 
     // Add the first heuristic result, if any.  Set _addingHeuristicResult
@@ -1254,25 +1252,6 @@ Search.prototype = {
     value = value.substr(value.indexOf(this._searchString));
 
     this._addAutofillMatch(value, url, Infinity, ["preloaded-top-site"]);
-    return true;
-  },
-
-  /**
-   * Adds matches for all the engines with "@" aliases, if any.
-   *
-   * @returns {bool} True if any results were added, false if not.
-   */
-  async _addSearchEngineTokenAliasMatches() {
-    let engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
-    if (!engines || !engines.length) {
-      return false;
-    }
-    for (let { engine, tokenAliases } of engines) {
-      this._addSearchEngineMatch({
-        engine,
-        alias: tokenAliases[0],
-      });
-    }
     return true;
   },
 
