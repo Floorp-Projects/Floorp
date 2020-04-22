@@ -41,6 +41,9 @@ permalink: /changelog/
 * **browser-tabstray**
   * The iconView is no longer required in the template.
 
+* **Developer ergonomics**
+  * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)

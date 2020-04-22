@@ -88,7 +88,7 @@ if (localProperties != null) {
 
     if (appServicesLocalPath != null) {
         logger.lifecycle("Enabling automatic publication of application-services from: $appServicesLocalPath")
-        def publishAppServicesCmd = ["./gradlew", "autoPublishForLocalDevelopment"]
+        def publishAppServicesCmd = ["./automation/publish_to_maven_local_if_modified.py"]
         runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.")
     } else {
         logger.lifecycle("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
