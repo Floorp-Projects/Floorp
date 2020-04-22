@@ -11,6 +11,8 @@
 #include "nsIContent.h"
 #include "nsTreeColumns.h"
 
+using mozilla::dom::XULTreeElement;
+
 NS_IMPL_ISUPPORTS(nsTreeImageListener, imgINotificationObserver)
 
 nsTreeImageListener::nsTreeImageListener(nsTreeBodyFrame* aTreeFrame)

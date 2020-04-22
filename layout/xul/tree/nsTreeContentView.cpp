@@ -16,6 +16,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
+#include "mozilla/dom/XULTreeElement.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Document.h"
 

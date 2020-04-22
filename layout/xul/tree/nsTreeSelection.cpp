@@ -18,6 +18,7 @@
 #include "nsTreeColumns.h"
 
 using namespace mozilla;
+using dom::XULTreeElement;
 
 // A helper class for managing our ranges of selection.
 struct nsTreeRange {

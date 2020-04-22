@@ -66,6 +66,7 @@
 
 using namespace mozilla;
 using mozilla::dom::Document;
+using mozilla::dom::Element;
 using mozilla::dom::Event;
 using mozilla::dom::KeyboardEvent;
 
