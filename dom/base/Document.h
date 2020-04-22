@@ -87,6 +87,7 @@ class nsContentList;
 class nsDocShell;
 class nsDOMNavigationTiming;
 class nsFrameLoader;
+class nsFrameLoaderOwner;
 class nsGlobalWindowInner;
 class nsHtml5TreeOpExecutor;
 class nsHTMLCSSStyleSheet;
@@ -3905,6 +3906,20 @@ class Document : public nsINode,
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
 
+  // Subframes need to be static cloned after the main document has been
+  // embedded within a script global. A `PendingFrameStaticClone` is a static
+  // clone which has not yet been performed.
+  //
+  // The getter returns a direct reference to an internal array which is
+  // manipulated from within printing code.
+  struct PendingFrameStaticClone {
+    RefPtr<nsFrameLoaderOwner> mElement;
+    RefPtr<nsFrameLoader> mStaticCloneOf;
+  };
+  nsTArray<PendingFrameStaticClone> TakePendingFrameStaticClones();
+  void AddPendingFrameStaticClone(nsFrameLoaderOwner* aElement,
+                                  nsFrameLoader* aStaticCloneOf);
+
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -4955,6 +4970,8 @@ class Document : public nsINode,
   nsTArray<RefPtr<nsFrameLoader>> mInitializableFrameLoaders;
   nsTArray<nsCOMPtr<nsIRunnable>> mFrameLoaderFinalizers;
   RefPtr<nsRunnableMethod<Document>> mFrameLoaderRunner;
+
+  nsTArray<PendingFrameStaticClone> mPendingFrameStaticClones;
 
   // The layout history state that should be used by nodes in this
   // document.  We only actually store a pointer to it when:
