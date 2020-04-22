@@ -38,8 +38,10 @@ const ExperimentFakes = {
     const loader = new _RemoteSettingsExperimentLoader();
     // Replace RS client with a fake
     Object.defineProperty(loader, "remoteSettingsClient", {
-      get: () => ({ get: () => Promise.resolve([]) }),
+      value: { get: () => Promise.resolve([]) },
     });
+    // Replace xman with a fake
+    loader.manager = this.manager();
 
     return loader;
   },

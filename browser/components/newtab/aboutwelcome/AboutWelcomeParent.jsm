@@ -19,10 +19,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  const { AboutWelcomeLog } = ChromeUtils.import(
-    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeLog.jsm"
+  const { Logger } = ChromeUtils.import(
+    "resource://messaging-system/lib/Logger.jsm"
   );
-  return new AboutWelcomeLog("AboutWelcomeParent.jsm");
+  return new Logger("AboutWelcomeParent");
 });
 
 XPCOMUtils.defineLazyGetter(
