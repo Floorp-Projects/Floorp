@@ -113,8 +113,6 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
 
   IDBCursorDirection GetDirection() const;
 
-  RefPtr<IDBRequest> Request() const;
-
   virtual void GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                       ErrorResult& aRv) = 0;
 

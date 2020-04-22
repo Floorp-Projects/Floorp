@@ -213,11 +213,6 @@ IDBCursorDirection IDBCursor::GetDirection() const {
   }
 }
 
-RefPtr<IDBRequest> IDBCursor::Request() const {
-  AssertIsOnOwningThread();
-  return mRequest;
-}
-
 template <IDBCursor::Type CursorType>
 void IDBTypedCursor<CursorType>::GetSource(
     OwningIDBObjectStoreOrIDBIndex& aSource) const {
