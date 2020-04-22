@@ -14,6 +14,23 @@ using namespace mozilla;
 const long NUM_OF_FRAMES = 512;
 const uint32_t NUM_OF_CHANNELS = 2;
 
+#ifdef LOG
+#  undef LOG
+#endif
+//#define LOGGING_ENABLED
+#ifdef LOGGING_ENABLED
+#  if defined(__ANDROID__)
+#    define LOG(args...) \
+      __android_log_print(ANDROID_LOG_INFO, "MockCubeb", ##args)
+#  else
+#    define LOG(args...)       \
+      fprintf(stderr, ##args); \
+      fprintf(stderr, "\n")
+#  endif
+#else
+#  define LOG(...)
+#endif
+
 struct cubeb_ops {
   int (*init)(cubeb** context, char const* context_name);
   char const* (*get_backend_id)(cubeb* context);
@@ -198,7 +215,7 @@ class MockCubebStream {
 // should do, depending on what is being tested.
 class MockCubeb {
  public:
-  MockCubeb() : ops(&mock_ops) {}
+  MockCubeb() : ops(&mock_ops) { LOG("MockCubeb(%p) created", this); }
   ~MockCubeb() = default;
   // Cubeb backend implementation
   // This allows passing this class as a cubeb* instance.
@@ -364,6 +381,8 @@ class MockCubeb {
     // they will always contain the device ids of the latest initialized stream
     mInputDeviceID = input_device;
     mOutputDeviceID = output_device;
+    LOG("MockCubeb(%p) StreamInit: Input id = %p, Output id = %p", this,
+        mInputDeviceID, mOutputDeviceID);
     return CUBEB_OK;
   }
 
