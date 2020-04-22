@@ -45,10 +45,10 @@ extern const char16_t* kUpgradeNeededEventType;
 extern const char16_t* kVersionChangeEventType;
 extern const char16_t* kCloseEventType;
 
-[[nodiscard]] RefPtr<Event> CreateGenericEvent(EventTarget* aOwner,
-                                               const nsDependentString& aType,
-                                               Bubbles aBubbles,
-                                               Cancelable aCancelable);
+MOZ_MUST_USE RefPtr<Event> CreateGenericEvent(EventTarget* aOwner,
+                                              const nsDependentString& aType,
+                                              Bubbles aBubbles,
+                                              Cancelable aCancelable);
 
 }  // namespace indexedDB
 
@@ -57,15 +57,15 @@ class IDBVersionChangeEvent final : public Event {
   Nullable<uint64_t> mNewVersion;
 
  public:
-  [[nodiscard]] static RefPtr<IDBVersionChangeEvent> Create(
+  static MOZ_MUST_USE RefPtr<IDBVersionChangeEvent> Create(
       EventTarget* aOwner, const nsDependentString& aName, uint64_t aOldVersion,
       uint64_t aNewVersion);
 
-  [[nodiscard]] static RefPtr<IDBVersionChangeEvent> Create(
+  static MOZ_MUST_USE RefPtr<IDBVersionChangeEvent> Create(
       EventTarget* aOwner, const nsDependentString& aName,
       uint64_t aOldVersion);
 
-  [[nodiscard]] static RefPtr<IDBVersionChangeEvent> Constructor(
+  static MOZ_MUST_USE RefPtr<IDBVersionChangeEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
       const IDBVersionChangeEventInit& aOptions);
 
@@ -86,7 +86,7 @@ class IDBVersionChangeEvent final : public Event {
 
   ~IDBVersionChangeEvent() = default;
 
-  [[nodiscard]] static RefPtr<IDBVersionChangeEvent> CreateInternal(
+  static MOZ_MUST_USE RefPtr<IDBVersionChangeEvent> CreateInternal(
       EventTarget* aOwner, const nsAString& aType, uint64_t aOldVersion,
       const Nullable<uint64_t>& aNewVersion);
 };

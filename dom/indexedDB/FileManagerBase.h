@@ -27,7 +27,7 @@ class FileManagerBase {
   using MutexType = StaticMutex;
   using AutoLock = mozilla::detail::BaseAutoLock<MutexType&>;
 
-  [[nodiscard]] SafeRefPtr<FileInfo> GetFileInfo(int64_t aId) const {
+  MOZ_MUST_USE SafeRefPtr<FileInfo> GetFileInfo(int64_t aId) const {
     if (!AssertValid()) {
       // In release, the assertions are disabled.
       return nullptr;
@@ -45,7 +45,7 @@ class FileManagerBase {
     return {fileInfo, AcquireStrongRefFromRawPtr{}};
   }
 
-  [[nodiscard]] SafeRefPtr<FileInfo> CreateFileInfo() {
+  MOZ_MUST_USE SafeRefPtr<FileInfo> CreateFileInfo() {
     if (!AssertValid()) {
       // In release, the assertions are disabled.
       return nullptr;
