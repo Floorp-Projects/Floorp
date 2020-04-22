@@ -51,6 +51,9 @@ class _RemoteSettingsExperimentLoader {
     // Are we in the middle of updating recipes already?
     this._updating = false;
 
+    // Make it possible to override for testing
+    this.manager = ExperimentManager;
+
     XPCOMUtils.defineLazyGetter(this, "remoteSettingsClient", () => {
       return RemoteSettings(COLLECTION_ID);
     });
@@ -92,6 +95,18 @@ class _RemoteSettingsExperimentLoader {
     this._initialized = false;
   }
 
+  testFilterExpression(expression) {
+    log.debug("Testing filter expression:", expression);
+    return ASRouterTargeting.isMatch(
+      expression,
+      this.manager.filterContext,
+      err => {
+        log.debug("Targeting failed because of an error");
+        Cu.reportError(err);
+      }
+    );
+  }
+
   async updateRecipes(trigger) {
     if (this._updating || !this._initialized) {
       return;
@@ -105,32 +120,27 @@ class _RemoteSettingsExperimentLoader {
 
     try {
       recipes = await this.remoteSettingsClient.get();
+      log.debug(`Got ${recipes.length} recipes from Remote Settings`);
     } catch (e) {
+      log.debug("Error getting recipes from remote settings.");
       loadingError = true;
       Cu.reportError(e);
     }
 
+    let matches = 0;
     if (recipes && !loadingError) {
-      log.debug("Updating ExperimentManager with new recipes");
       for (const r of recipes) {
-        if (
-          await ASRouterTargeting.isMatch(
-            r.filter_expression,
-            ExperimentManager.filterContext,
-            err => {
-              log.debug("Targeting failed because of an error");
-              Cu.reportError(err);
-            }
-          )
-        ) {
+        if (await this.testFilterExpression(r.filter_expression)) {
+          matches++;
           log.debug(`${r.id} passed filter_expression`);
-          await ExperimentManager.onRecipe(r.arguments, "rs-loader");
+          await this.manager.onRecipe(r.arguments, "rs-loader");
         } else {
           log.debug(`${r.id} failed filter_expression`);
         }
       }
 
-      ExperimentManager.onFinalize("rs-loader");
+      log.debug(`${matches} recipes matched. Finalizing ExperimentManager.`);
+      this.manager.onFinalize("rs-loader");
     }
 
     if (trigger !== "timer") {

@@ -1315,8 +1315,6 @@ pref("trailhead.firstrun.branches", "join-dynamic");
 
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", true);
-// See Console.jsm LOG_LEVELS for all possible values
-pref("browser.aboutwelcome.log", "warn");
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);
@@ -1325,6 +1323,7 @@ pref("browser.messaging-system.personalized-cfr.scores", "{}");
 pref("browser.messaging-system.personalized-cfr.score-threshold", 5000);
 
 // Experiment Manager
+// See Console.jsm LOG_LEVELS for all possible values
 pref("messaging-system.log", "warn");
 pref("messaging-system.rsexperimentloader.enabled", true);
 
